@@ -71,8 +71,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import EventBridge schema using the `name` and `registry_name`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import EventBridge schema using the `name` and `registry_name`. For example:
+
+```terraform
+import {
+  to = aws_schemas_schema.test
+  id = "name/registry"
+}
+```
+
+Using `terraform import`, import EventBridge schema using the `name` and `registry_name`. For example:
 
 ```console
-$ terraform import aws_schemas_schema.test name/registry
+% terraform import aws_schemas_schema.test name/registry
 ```

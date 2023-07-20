@@ -192,8 +192,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import EventBridge Connection using the `name`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import EventBridge connection using the `name`. For example:
+
+```terraform
+import {
+  to = aws_cloudwatch_event_connection.test
+  id = "ngrok-connection"
+}
+```
+
+Using `terraform import`, import EventBridge EventBridge connection using the `name`. For example:
 
 ```console
-$ terraform import aws_cloudwatch_event_connection.test ngrok-connection
+% terraform import aws_cloudwatch_event_connection.test ngrok-connection
 ```

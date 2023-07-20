@@ -45,8 +45,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import Redshift Snapshot Copy Grants by name. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Redshift Snapshot Copy Grants by name. For example:
+
+```terraform
+import {
+  to = aws_redshift_snapshot_copy_grant.test
+  id = "my-grant"
+}
+```
+
+Using `terraform import`, import Redshift Snapshot Copy Grants by name. For example:
 
 ```console
-$ terraform import aws_redshift_snapshot_copy_grant.test my-grant
+% terraform import aws_redshift_snapshot_copy_grant.test my-grant
 ```

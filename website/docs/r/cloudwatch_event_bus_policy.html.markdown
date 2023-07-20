@@ -150,7 +150,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import EventBridge permissions using the `event_bus_name`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import an EventBridge policy using the `event_bus_name`. For example:
 
 ```terraform
 import {
@@ -159,7 +159,7 @@ import {
 }
 ```
 
-Using `terraform import`, import EventBridge permissions using the `event_bus_name`. For example:
+Using `terraform import`, import an EventBridge policy using the `event_bus_name`. For example:
 
 ```console
 % terraform import aws_cloudwatch_event_bus_policy.DevAccountAccess example-event-bus

@@ -215,7 +215,7 @@ import {
 Using the ID of the record, which is the zone identifier, record name, and record type, separated by underscores (`_`):
 
 ```console
-$ terraform import aws_route53_record.myrecord Z4KAPRWWNC7JR_dev.example.com_NS
+% terraform import aws_route53_record.myrecord Z4KAPRWWNC7JR_dev.example.com_NS
 ```
 
 If the record also contains a set identifier, append it:

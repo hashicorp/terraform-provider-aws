@@ -127,17 +127,17 @@ import {
 Import a route in route table `rtb-656C65616E6F72` with an IPv4 destination CIDR of `10.42.0.0/16`:
 
 ```console
-$ terraform import aws_route.my_route rtb-656C65616E6F72_10.42.0.0/16
+% terraform import aws_route.my_route rtb-656C65616E6F72_10.42.0.0/16
 ```
 
 Import a route in route table `rtb-656C65616E6F72` with an IPv6 destination CIDR of `2620:0:2d0:200::8/125`:
 
 ```console
-$ terraform import aws_route.my_route rtb-656C65616E6F72_2620:0:2d0:200::8/125
+% terraform import aws_route.my_route rtb-656C65616E6F72_2620:0:2d0:200::8/125
 ```
 
 Import a route in route table `rtb-656C65616E6F72` with a managed prefix list destination of `pl-0570a1d2d725c16be`:
 
 ```console
-$ terraform import aws_route.my_route rtb-656C65616E6F72_pl-0570a1d2d725c16be
+% terraform import aws_route.my_route rtb-656C65616E6F72_pl-0570a1d2d725c16be
 ```

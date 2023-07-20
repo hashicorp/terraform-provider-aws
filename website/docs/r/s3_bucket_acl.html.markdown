@@ -228,8 +228,8 @@ If the owner (account ID) of the source bucket _differs_ from the account used t
 
 If the owner (account ID) of the source bucket _differs_ from the account used to configure the Terraform AWS Provider, and the source bucket is **configured** with a [canned ACL][1] (i.e. predefined grant), imported using the `bucket`, `expected_bucket_owner`, and `acl` separated by commas (`,`):
 
-```
-$ terraform import aws_s3_bucket_acl.example bucket-name,123456789012,private
+```console
+% terraform import aws_s3_bucket_acl.example bucket-name,123456789012,private
 ```
 
 [1]: https://docs.aws.amazon.com/AmazonS3/latest/userguide/acl-overview.html#canned-acl

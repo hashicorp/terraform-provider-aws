@@ -60,8 +60,17 @@ This resource exports no additional attributes.
 
 ## Import
 
-Import EMR Managed Scaling Policies using the EMR Cluster identifier. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import EMR Managed Scaling Policies using the EMR Cluster identifier. For example:
+
+```terraform
+import {
+  to = aws_emr_managed_scaling_policy.example
+  id = "j-123456ABCDEF"
+}
+```
+
+Using `terraform import`, import EMR Managed Scaling Policies using the EMR Cluster identifier. For example:
 
 ```console
-$ terraform import aws_emr_managed_scaling_policy.example j-123456ABCDEF
+% terraform import aws_emr_managed_scaling_policy.example j-123456ABCDEF
 ```

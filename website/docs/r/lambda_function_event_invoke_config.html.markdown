@@ -177,6 +177,6 @@ Name without qualifier (all versions and aliases):
 
 Name with qualifier:
 
-```
-$ terraform import aws_lambda_function_event_invoke_config.example my_function:production
+```console
+% terraform import aws_lambda_function_event_invoke_config.example my_function:production
 ```
