@@ -16,6 +16,8 @@ Manages a CloudFormation StackSet Instance. Instances are managed in the account
 
 ## Example Usage
 
+### Basic Usage
+
 ```terraform
 resource "aws_cloudformation_stack_set_instance" "example" {
   account_id     = "123456789012"
@@ -113,9 +115,16 @@ The `operation_preferences` configuration block supports the following arguments
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `id` - StackSet name, target AWS account ID, and target AWS region separated by commas (`,`)
-* `organizational_unit_id` - The organization root ID or organizational unit (OU) IDs specified for `deployment_targets`.
-* `stack_id` - Stack identifier
+* `id` - Unique identifier for the resource. If `deployment_targets` is set, this is a comma-delimited string combining stack set name, organizational unit IDs (`/`-delimited), and region (ie. `mystack,ou-123/ou-456,us-east-1`). Otherwise, this is a comma-delimited string combining stack set name, AWS account ID, and region (ie. `mystack,123456789012,us-east-1`).
+* `organizational_unit_id` - The organization root ID or organizational unit (OU) ID in which the stack is deployed.
+* `stack_id` - Stack identifier.
+* `stack_instance_summaries` - List of stack instances created from an organizational unit deployment target. This will only be populated when `deployment_targets` is set. See [`stack_instance_summaries`](#stack_instance_summaries-attribute-reference).
+
+### `stack_instance_summaries` Attribute Reference
+
+* `account_id` - AWS account ID in which the stack is deployed.
+* `organizational_unit_id` - Organizational unit ID in which the stack is deployed.
+* `stack_id` - Stack identifier.
 
 ## Timeouts
 
@@ -127,13 +136,13 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import CloudFormation StackSet Instances that target an AWS Account ID using the StackSet name, target AWS account ID, and target AWS region separated by commas (`,`). For example:
+Import CloudFormation StackSet Instances that target an AWS account using the stack set name, AWS account ID, and region separated by commas (`,`). For example:
 
 ```
 $ terraform import aws_cloudformation_stack_set_instance.example example,123456789012,us-east-1
 ```
 
-Import CloudFormation StackSet Instances that target AWS Organizational Units using the StackSet name, a slash (`/`) separated list of organizational unit IDs, and target AWS region separated by commas (`,`). For example:
+Import CloudFormation StackSet Instances that target AWS organizational units using the stack set name, a slash (`/`) separated list of organizational unit IDs, and region separated by commas (`,`). For example:
 
 ```
 $ terraform import aws_cloudformation_stack_set_instance.example example,ou-sdas-123123123/ou-sdas-789789789,us-east-1
