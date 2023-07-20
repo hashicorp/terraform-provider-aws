@@ -126,8 +126,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import the Trust relationship using the directory ID and remote domain name, separated by a `/`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import the Trust relationship using the directory ID and remote domain name, separated by a `/`. For example:
 
+```terraform
+import {
+  to = aws_directory_service_trust.example
+  id = "d-926724cf57/directory.example.com"
+}
 ```
-$ terraform import aws_directory_service_trust.example d-926724cf57/directory.example.com
+
+Using `terraform import`, import the Trust relationship using the directory ID and remote domain name, separated by a `/`. For example:
+
+```console
+% terraform import aws_directory_service_trust.example d-926724cf57/directory.example.com
 ```

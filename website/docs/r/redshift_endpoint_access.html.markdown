@@ -54,8 +54,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import Redshift endpoint access using the `name`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Redshift endpoint access using the `name`. For example:
 
+```terraform
+import {
+  to = aws_redshift_endpoint_access.example
+  id = "example"
+}
 ```
-$ terraform import aws_redshift_endpoint_access.example example
+
+Using `terraform import`, import Redshift endpoint access using the `name`. For example:
+
+```console
+% terraform import aws_redshift_endpoint_access.example example
 ```

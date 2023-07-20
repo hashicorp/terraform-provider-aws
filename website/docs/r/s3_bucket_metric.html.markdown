@@ -68,8 +68,17 @@ This resource exports no additional attributes.
 
 ## Import
 
-Import S3 bucket metric configurations using `bucket:metric`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import S3 bucket metric configurations using `bucket:metric`. For example:
 
+```terraform
+import {
+  to = aws_s3_bucket_metric.my-bucket-entire-bucket
+  id = "my-bucket:EntireBucket"
+}
 ```
-$ terraform import aws_s3_bucket_metric.my-bucket-entire-bucket my-bucket:EntireBucket
+
+Using `terraform import`, import S3 bucket metric configurations using `bucket:metric`. For example:
+
+```console
+% terraform import aws_s3_bucket_metric.my-bucket-entire-bucket my-bucket:EntireBucket
 ```

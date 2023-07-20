@@ -50,8 +50,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import `aws_transfer_tag` using the Transfer Family resource identifier and key, separated by a comma (`,`). For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_transfer_tag` using the Transfer Family resource identifier and key, separated by a comma (`,`). For example:
 
+```terraform
+import {
+  to = aws_transfer_tag.example
+  id = "arn:aws:transfer:us-east-1:123456789012:server/s-1234567890abcdef0,Name"
+}
 ```
-$ terraform import aws_transfer_tag.example arn:aws:transfer:us-east-1:123456789012:server/s-1234567890abcdef0,Name
+
+Using `terraform import`, import `aws_transfer_tag` using the Transfer Family resource identifier and key, separated by a comma (`,`). For example:
+
+```console
+% terraform import aws_transfer_tag.example arn:aws:transfer:us-east-1:123456789012:server/s-1234567890abcdef0,Name
 ```

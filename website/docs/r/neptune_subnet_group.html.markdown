@@ -43,8 +43,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import Neptune Subnet groups using the `name`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Neptune Subnet groups using the `name`. For example:
 
+```terraform
+import {
+  to = aws_neptune_subnet_group.default
+  id = "production-subnet-group"
+}
 ```
-$ terraform import aws_neptune_subnet_group.default production-subnet-group
+
+Using `terraform import`, import Neptune Subnet groups using the `name`. For example:
+
+```console
+% terraform import aws_neptune_subnet_group.default production-subnet-group
 ```

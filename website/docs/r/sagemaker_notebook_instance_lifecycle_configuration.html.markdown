@@ -38,8 +38,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import Models using the `name`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import models using the `name`. For example:
 
+```terraform
+import {
+  to = aws_sagemaker_notebook_instance_lifecycle_configuration.lc
+  id = "foo"
+}
 ```
-$ terraform import aws_sagemaker_notebook_instance_lifecycle_configuration.lc foo
+
+Using `terraform import`, import models using the `name`. For example:
+
+```console
+% terraform import aws_sagemaker_notebook_instance_lifecycle_configuration.lc foo
 ```

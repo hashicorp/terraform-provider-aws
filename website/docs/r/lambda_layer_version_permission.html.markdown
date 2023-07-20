@@ -48,10 +48,19 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import Lambda Layer Permissions using `layer_name` and `version_number`, separated by a comma (`,`). For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Lambda Layer Permissions using `layer_name` and `version_number`, separated by a comma (`,`). For example:
 
-```sh
-$ terraform import aws_lambda_layer_version_permission.example arn:aws:lambda:us-west-2:123456654321:layer:test_layer1,1
+```terraform
+import {
+  to = aws_lambda_layer_version_permission.example
+  id = "arn:aws:lambda:us-west-2:123456654321:layer:test_layer1,1"
+}
+```
+
+Using `terraform import`, import Lambda Layer Permissions using `layer_name` and `version_number`, separated by a comma (`,`). For example:
+
+```console
+% terraform import aws_lambda_layer_version_permission.example arn:aws:lambda:us-west-2:123456654321:layer:test_layer1,1
 ```
 
 [1]: https://docs.aws.amazon.com/lambda/latest/dg/access-control-resource-based.html#permissions-resource-xaccountlayer

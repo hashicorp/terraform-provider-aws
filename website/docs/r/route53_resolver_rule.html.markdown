@@ -71,8 +71,17 @@ Values are `NOT_SHARED`, `SHARED_BY_ME` or `SHARED_WITH_ME`
 
 ## Import
 
-Import Route53 Resolver rules using the `id`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Route53 Resolver rules using the `id`. For example:
 
+```terraform
+import {
+  to = aws_route53_resolver_rule.sys
+  id = "rslvr-rr-0123456789abcdef0"
+}
 ```
-$ terraform import aws_route53_resolver_rule.sys rslvr-rr-0123456789abcdef0
+
+Using `terraform import`, import Route53 Resolver rules using the `id`. For example:
+
+```console
+% terraform import aws_route53_resolver_rule.sys rslvr-rr-0123456789abcdef0
 ```

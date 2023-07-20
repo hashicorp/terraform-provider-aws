@@ -36,8 +36,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import DAX Subnet Group using the `name`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import DAX Subnet Group using the `name`. For example:
 
+```terraform
+import {
+  to = aws_dax_subnet_group.example
+  id = "my_dax_sg"
+}
 ```
-$ terraform import aws_dax_subnet_group.example my_dax_sg
+
+Using `terraform import`, import DAX Subnet Group using the `name`. For example:
+
+```console
+% terraform import aws_dax_subnet_group.example my_dax_sg
 ```

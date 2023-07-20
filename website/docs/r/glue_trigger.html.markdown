@@ -168,8 +168,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import Glue Triggers using `name`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Glue Triggers using `name`. For example:
 
+```terraform
+import {
+  to = aws_glue_trigger.MyTrigger
+  id = "MyTrigger"
+}
 ```
-$ terraform import aws_glue_trigger.MyTrigger MyTrigger
+
+Using `terraform import`, import Glue Triggers using `name`. For example:
+
+```console
+% terraform import aws_glue_trigger.MyTrigger MyTrigger
 ```

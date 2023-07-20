@@ -40,8 +40,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import Codecommit repository using repository name. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Codecommit repository using repository name. For example:
 
+```terraform
+import {
+  to = aws_codecommit_repository.imported
+  id = "ExistingRepo"
+}
 ```
-$ terraform import aws_codecommit_repository.imported ExistingRepo
+
+Using `terraform import`, import Codecommit repository using repository name. For example:
+
+```console
+% terraform import aws_codecommit_repository.imported ExistingRepo
 ```

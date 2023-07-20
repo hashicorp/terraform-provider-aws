@@ -186,8 +186,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import Amplify branch using `app_id` and `branch_name`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Amplify branch using `app_id` and `branch_name`. For example:
 
+```terraform
+import {
+  to = aws_amplify_branch.master
+  id = "d2ypk4k47z8u6/master"
+}
 ```
-$ terraform import aws_amplify_branch.master d2ypk4k47z8u6/master
+
+Using `terraform import`, import Amplify branch using `app_id` and `branch_name`. For example:
+
+```console
+% terraform import aws_amplify_branch.master d2ypk4k47z8u6/master
 ```

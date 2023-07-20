@@ -45,8 +45,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import `aws_appsync_api_cache` using the AppSync API ID. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_appsync_api_cache` using the AppSync API ID. For example:
 
+```terraform
+import {
+  to = aws_appsync_api_cache.example
+  id = "xxxxx"
+}
 ```
-$ terraform import aws_appsync_api_cache.example xxxxx
+
+Using `terraform import`, import `aws_appsync_api_cache` using the AppSync API ID. For example:
+
+```console
+% terraform import aws_appsync_api_cache.example xxxxx
 ```

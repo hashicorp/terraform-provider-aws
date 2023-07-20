@@ -99,8 +99,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import ECS clusters using the `name`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import ECS clusters using the `name`. For example:
 
+```terraform
+import {
+  to = aws_ecs_cluster.stateless
+  id = "stateless-app"
+}
 ```
-$ terraform import aws_ecs_cluster.stateless stateless-app
+
+Using `terraform import`, import ECS clusters using the `name`. For example:
+
+```console
+% terraform import aws_ecs_cluster.stateless stateless-app
 ```

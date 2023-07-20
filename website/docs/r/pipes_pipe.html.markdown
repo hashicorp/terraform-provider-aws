@@ -534,8 +534,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import Pipes using the `name`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import pipes using the `name`. For example:
 
+```terraform
+import {
+  to = aws_pipes_pipe.example
+  id = "my-pipe"
+}
 ```
-$ terraform import aws_pipes_pipe.example my-pipe
+
+Using `terraform import`, import pipes using the `name`. For example:
+
+```console
+% terraform import aws_pipes_pipe.example my-pipe
 ```

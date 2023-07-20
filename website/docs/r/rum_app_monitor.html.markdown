@@ -58,8 +58,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import Cloudwatch RUM App Monitor using the `name`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Cloudwatch RUM App Monitor using the `name`. For example:
 
+```terraform
+import {
+  to = aws_rum_app_monitor.example
+  id = "example"
+}
 ```
-$ terraform import aws_rum_app_monitor.example example
+
+Using `terraform import`, import Cloudwatch RUM App Monitor using the `name`. For example:
+
+```console
+% terraform import aws_rum_app_monitor.example example
 ```

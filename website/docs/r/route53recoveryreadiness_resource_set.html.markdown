@@ -71,16 +71,25 @@ This resource exports the following attributes in addition to the arguments abov
 * `resources.#.component_id` - Unique identified for DNS Target Resources, use for readiness checks.
 * `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
-## Import
-
-Import Route53 Recovery Readiness resource set name using the resource set name. For example:
-
-```
-$ terraform import aws_route53recoveryreadiness_resource_set.my-cw-alarm-set
-```
-
 ## Timeouts
 
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
 - `delete` - (Default `5m`)
+
+## Import
+
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Route53 Recovery Readiness resource set name using the resource set name. For example:
+
+```terraform
+import {
+  to = aws_route53recoveryreadiness_resource_set.my-cw-alarm-set
+  id = "example"
+}
+```
+
+Using `terraform import`, import Route53 Recovery Readiness resource set name using the resource set name. For example:
+
+```console
+% terraform import aws_route53recoveryreadiness_resource_set.my-cw-alarm-set example
+```

@@ -64,8 +64,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import `aws_rolesanywhere_profile` using its `id`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_rolesanywhere_profile` using its `id`. For example:
 
+```terraform
+import {
+  to = aws_rolesanywhere_profile.example
+  id = "db138a85-8925-4f9f-a409-08231233cacf"
+}
 ```
-$ terraform import aws_rolesanywhere_profile.example db138a85-8925-4f9f-a409-08231233cacf
+
+Using `terraform import`, import `aws_rolesanywhere_profile` using its `id`. For example:
+
+```console
+% terraform import aws_rolesanywhere_profile.example db138a85-8925-4f9f-a409-08231233cacf
 ```

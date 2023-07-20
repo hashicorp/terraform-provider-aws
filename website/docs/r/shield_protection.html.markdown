@@ -52,8 +52,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import Shield protection resources using specifying their ID. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Shield protection resources using specifying their ID. For example:
 
+```terraform
+import {
+  to = aws_shield_protection.example
+  id = "ff9592dc-22f3-4e88-afa1-7b29fde9669a"
+}
 ```
-$ terraform import aws_shield_protection.example ff9592dc-22f3-4e88-afa1-7b29fde9669a
+
+Using `terraform import`, import Shield protection resources using specifying their ID. For example:
+
+```console
+% terraform import aws_shield_protection.example ff9592dc-22f3-4e88-afa1-7b29fde9669a
 ```

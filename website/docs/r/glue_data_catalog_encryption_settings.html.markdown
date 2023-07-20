@@ -58,8 +58,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import Glue Data Catalog Encryption Settings using `CATALOG-ID` (AWS account ID if not custom). For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Glue Data Catalog Encryption Settings using `CATALOG-ID` (AWS account ID if not custom). For example:
 
+```terraform
+import {
+  to = aws_glue_data_catalog_encryption_settings.example
+  id = "123456789012"
+}
 ```
-$ terraform import aws_glue_data_catalog_encryption_settings.example 123456789012
+
+Using `terraform import`, import Glue Data Catalog Encryption Settings using `CATALOG-ID` (AWS account ID if not custom). For example:
+
+```console
+% terraform import aws_glue_data_catalog_encryption_settings.example 123456789012
 ```

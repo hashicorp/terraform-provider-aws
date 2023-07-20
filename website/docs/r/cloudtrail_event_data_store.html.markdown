@@ -116,8 +116,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import Event data stores using their `arn`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import event data stores using their `arn`. For example:
 
+```terraform
+import {
+  to = aws_cloudtrail_event_data_store.example
+  id = "arn:aws:cloudtrail:us-east-1:123456789123:eventdatastore/22333815-4414-412c-b155-dd254033gfhf"
+}
 ```
-$ terraform import aws_cloudtrail_event_data_store.example arn:aws:cloudtrail:us-east-1:123456789123:eventdatastore/22333815-4414-412c-b155-dd254033gfhf
+
+Using `terraform import`, import event data stores using their `arn`. For example:
+
+```console
+% terraform import aws_cloudtrail_event_data_store.example arn:aws:cloudtrail:us-east-1:123456789123:eventdatastore/22333815-4414-412c-b155-dd254033gfhf
 ```

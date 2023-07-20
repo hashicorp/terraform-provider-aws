@@ -70,8 +70,17 @@ This resource exports no additional attributes.
 
 ## Import
 
-Import IAM user group membership using the user name and group names separated by `/`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import IAM user group membership using the user name and group names separated by `/`. For example:
 
+```terraform
+import {
+  to = aws_iam_user_group_membership.example1
+  id = "user1/group1/group2"
+}
 ```
-$ terraform import aws_iam_user_group_membership.example1 user1/group1/group2
+
+Using `terraform import`, import IAM user group membership using the user name and group names separated by `/`. For example:
+
+```console
+% terraform import aws_iam_user_group_membership.example1 user1/group1/group2
 ```

@@ -61,8 +61,17 @@ This resource exports no additional attributes.
 
 ## Import
 
-Import MediaStore Container Policy using the MediaStore Container Name. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import MediaStore Container Policy using the MediaStore Container Name. For example:
 
+```terraform
+import {
+  to = aws_media_store_container_policy.example
+  id = "example"
+}
 ```
-$ terraform import aws_media_store_container_policy.example example
+
+Using `terraform import`, import MediaStore Container Policy using the MediaStore Container Name. For example:
+
+```console
+% terraform import aws_media_store_container_policy.example example
 ```

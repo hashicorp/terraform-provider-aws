@@ -64,8 +64,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import Global Accelerator custom routing endpoint groups using the `id`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Global Accelerator custom routing endpoint groups using the `id`. For example:
 
+```terraform
+import {
+  to = aws_globalaccelerator_custom_routing_endpoint_group.example
+  id = "arn:aws:globalaccelerator::111111111111:accelerator/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx/listener/xxxxxxx/endpoint-group/xxxxxxxx"
+}
 ```
-$ terraform import aws_globalaccelerator_custom_routing_endpoint_group.example arn:aws:globalaccelerator::111111111111:accelerator/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx/listener/xxxxxxx/endpoint-group/xxxxxxxx
+
+Using `terraform import`, import Global Accelerator custom routing endpoint groups using the `id`. For example:
+
+```console
+% terraform import aws_globalaccelerator_custom_routing_endpoint_group.example arn:aws:globalaccelerator::111111111111:accelerator/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx/listener/xxxxxxx/endpoint-group/xxxxxxxx
 ```

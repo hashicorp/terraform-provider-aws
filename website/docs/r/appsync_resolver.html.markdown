@@ -174,8 +174,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import `aws_appsync_resolver` using the `api_id`, a hyphen, `type`, a hypen and `field`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_appsync_resolver` using the `api_id`, a hyphen, `type`, a hypen and `field`. For example:
 
+```terraform
+import {
+  to = aws_appsync_resolver.example
+  id = "abcdef123456-exampleType-exampleField"
+}
 ```
-$ terraform import aws_appsync_resolver.example abcdef123456-exampleType-exampleField
+
+Using `terraform import`, import `aws_appsync_resolver` using the `api_id`, a hyphen, `type`, a hypen and `field`. For example:
+
+```console
+% terraform import aws_appsync_resolver.example abcdef123456-exampleType-exampleField
 ```

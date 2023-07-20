@@ -52,8 +52,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import Default VPCs using the `vpc id`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Default VPCs using the VPC `id`. For example:
 
+```terraform
+import {
+  to = aws_default_vpc.default
+  id = "vpc-a01106c2"
+}
 ```
-$ terraform import aws_default_vpc.default vpc-a01106c2
+
+Using `terraform import`, import Default VPCs using the VPC `id`. For example:
+
+```console
+% terraform import aws_default_vpc.default vpc-a01106c2
 ```

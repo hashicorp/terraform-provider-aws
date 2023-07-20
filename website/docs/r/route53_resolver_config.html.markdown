@@ -41,8 +41,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import Route 53 Resolver configs using the Route 53 Resolver config ID. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Route 53 Resolver configs using the Route 53 Resolver config ID. For example:
 
+```terraform
+import {
+  to = aws_route53_resolver_config.example
+  id = "rslvr-rc-715aa20c73a23da7"
+}
 ```
-$ terraform import aws_route53_resolver_config.example rslvr-rc-715aa20c73a23da7
+
+Using `terraform import`, import Route 53 Resolver configs using the Route 53 Resolver config ID. For example:
+
+```console
+% terraform import aws_route53_resolver_config.example rslvr-rc-715aa20c73a23da7
 ```

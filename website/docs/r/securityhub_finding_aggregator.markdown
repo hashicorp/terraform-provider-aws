@@ -71,8 +71,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import an existing Security Hub finding aggregator using the `arn`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import an existing Security Hub finding aggregator using the `arn`. For example:
 
+```terraform
+import {
+  to = aws_securityhub_finding_aggregator.example
+  id = "arn:aws:securityhub:eu-west-1:123456789098:finding-aggregator/abcd1234-abcd-1234-1234-abcdef123456"
+}
 ```
-$ terraform import aws_securityhub_finding_aggregator.example arn:aws:securityhub:eu-west-1:123456789098:finding-aggregator/abcd1234-abcd-1234-1234-abcdef123456
+
+Using `terraform import`, import an existing Security Hub finding aggregator using the `arn`. For example:
+
+```console
+% terraform import aws_securityhub_finding_aggregator.example arn:aws:securityhub:eu-west-1:123456789098:finding-aggregator/abcd1234-abcd-1234-1234-abcdef123456
 ```

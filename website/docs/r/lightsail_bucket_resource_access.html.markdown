@@ -46,8 +46,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import `aws_lightsail_bucket_resource_access` using the `id` attribute. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_lightsail_bucket_resource_access` using the `id` attribute. For example:
 
+```terraform
+import {
+  to = aws_lightsail_bucket_resource_access.test
+  id = "example-bucket,example-instance"
+}
 ```
-$ terraform import aws_lightsail_bucket_resource_access.test example-bucket,example-instance
+
+Using `terraform import`, import `aws_lightsail_bucket_resource_access` using the `id` attribute. For example:
+
+```console
+% terraform import aws_lightsail_bucket_resource_access.test example-bucket,example-instance
 ```

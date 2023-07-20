@@ -72,10 +72,19 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import RDS Aurora Cluster Database Activity Streams using the `resource_arn`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import RDS Aurora Cluster Database Activity Streams using the `resource_arn`. For example:
 
+```terraform
+import {
+  to = aws_rds_cluster_activity_stream.default
+  id = "arn:aws:rds:us-west-2:123456789012:cluster:aurora-cluster-demo"
+}
 ```
-$ terraform import aws_rds_cluster_activity_stream.default arn:aws:rds:us-west-2:123456789012:cluster:aurora-cluster-demo
+
+Using `terraform import`, import RDS Aurora Cluster Database Activity Streams using the `resource_arn`. For example:
+
+```console
+% terraform import aws_rds_cluster_activity_stream.default arn:aws:rds:us-west-2:123456789012:cluster:aurora-cluster-demo
 ```
 
 [1]: https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/DBActivityStreams.html
