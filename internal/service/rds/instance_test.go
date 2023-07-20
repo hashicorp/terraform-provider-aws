@@ -10187,20 +10187,20 @@ func testAccInstanceConfig_Outpost_BackupTarget(rName string, backupTarget strin
 		testAccInstanceConfig_Outpost(rName),
 		fmt.Sprintf(`
 resource "aws_db_instance" "test" {
-  identifier                = %[1]q
-  allocated_storage         = 20
-  backup_retention_period   = %[3]d
-  engine                    = data.aws_rds_orderable_db_instance.test.engine
-  engine_version            = data.aws_rds_orderable_db_instance.test.engine_version
-  instance_class            = data.aws_rds_orderable_db_instance.test.instance_class
-  db_name                   = "test"
-  parameter_group_name      = "default.${data.aws_rds_engine_version.default.parameter_group_family}"
-  skip_final_snapshot       = true
-  password                  = "avoid-plaintext-passwords"
-  username                  = "tfacctest"
-  db_subnet_group_name      = aws_db_subnet_group.test.name
-  storage_encrypted         = true
-  backup_target             = %[2]q
+  identifier              = %[1]q
+  allocated_storage       = 20
+  backup_retention_period = %[3]d
+  engine                  = data.aws_rds_orderable_db_instance.test.engine
+  engine_version          = data.aws_rds_orderable_db_instance.test.engine_version
+  instance_class          = data.aws_rds_orderable_db_instance.test.instance_class
+  db_name                 = "test"
+  parameter_group_name    = "default.${data.aws_rds_engine_version.default.parameter_group_family}"
+  skip_final_snapshot     = true
+  password                = "avoid-plaintext-passwords"
+  username                = "tfacctest"
+  db_subnet_group_name    = aws_db_subnet_group.test.name
+  storage_encrypted       = true
+  backup_target           = %[2]q
 }
 `, rName, backupTarget, backupRetentionPeriod))
 }
