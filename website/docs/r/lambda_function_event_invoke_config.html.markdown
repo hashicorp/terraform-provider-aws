@@ -109,15 +109,15 @@ The following arguments are required:
 
 * `destination` - (Required) Amazon Resource Name (ARN) of the destination resource. See the [Lambda Developer Guide](https://docs.aws.amazon.com/lambda/latest/dg/invocation-async.html#invocation-async-destinations) for acceptable resource types and associated IAM permissions.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - Fully qualified Lambda Function name or Amazon Resource Name (ARN)
 
 ## Import
 
-Lambda Function Event Invoke Configs can be imported using the fully qualified Function name or Amazon Resource Name (ARN), e.g.,
+Import Lambda Function Event Invoke Configs using the fully qualified Function name or Amazon Resource Name (ARN). For example:
 
 ARN without qualifier (all versions and aliases):
 

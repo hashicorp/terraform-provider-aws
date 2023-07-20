@@ -48,9 +48,9 @@ resource "aws_xray_sampling_rule" "example" {
 * `attributes` - (Optional) Matches attributes derived from the request.
 * `tags` - (Optional) Key-value mapping of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The name of the sampling rule.
 * `arn` - The ARN of the sampling rule.
@@ -58,7 +58,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-XRay Sampling Rules can be imported using the name, e.g.,
+Import XRay Sampling Rules using the name. For example:
 
 ```
 $ terraform import aws_xray_sampling_rule.example example

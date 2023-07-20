@@ -21,14 +21,14 @@ resource "aws_neptune_cluster_snapshot" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `db_cluster_identifier` - (Required) The DB Cluster Identifier from which to take the snapshot.
 * `db_cluster_snapshot_identifier` - (Required) The Identifier for the snapshot.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `allocated_storage` - Specifies the allocated storage size in gigabytes (GB).
 * `availability_zones` - List of EC2 Availability Zones that instances in the DB cluster snapshot can be restored in.
@@ -51,7 +51,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-`aws_neptune_cluster_snapshot` can be imported by using the cluster snapshot identifier, e.g.,
+Import `aws_neptune_cluster_snapshot` using the cluster snapshot identifier. For example:
 
 ```
 $ terraform import aws_neptune_cluster_snapshot.example my-cluster-snapshot

@@ -21,14 +21,14 @@ resource "aws_docdb_cluster_snapshot" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `db_cluster_identifier` - (Required) The DocumentDB Cluster Identifier from which to take the snapshot.
 * `db_cluster_snapshot_identifier` - (Required) The Identifier for the snapshot.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `availability_zones` - List of EC2 Availability Zones that instances in the DocumentDB cluster snapshot can be restored in.
 * `db_cluster_snapshot_arn` - The Amazon Resource Name (ARN) for the DocumentDB Cluster Snapshot.
@@ -49,7 +49,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-`aws_docdb_cluster_snapshot` can be imported by using the cluster snapshot identifier, e.g.,
+Import `aws_docdb_cluster_snapshot` using the cluster snapshot identifier. For example:
 
 ```
 $ terraform import aws_docdb_cluster_snapshot.example my-cluster-snapshot

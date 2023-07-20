@@ -41,15 +41,15 @@ The following arguments are optional:
 
 * `send_email_notification` - (Optional) Whether a welcome email is sent to a user after the user is created in the user pool.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - Unique ID of the appstream User Stack association.
 
 ## Import
 
-AppStream User Stack Association can be imported by using the `user_name`, `authentication_type`, and `stack_name`, separated by a slash (`/`), e.g.,
+Import AppStream User Stack Association using the `user_name`, `authentication_type`, and `stack_name`, separated by a slash (`/`). For example:
 
 ```
 $ terraform import aws_appstream_user_stack_association.example userName/auhtenticationType/stackName

@@ -28,7 +28,7 @@ resource "aws_directory_service_radius_settings" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `authentication_protocol` - (Optional) The protocol specified for your RADIUS endpoints. Valid values: `PAP`, `CHAP`, `MS-CHAPv1`, `MS-CHAPv2`.
 * `directory_id` - (Required) The identifier of the directory for which you want to manager RADIUS settings.
@@ -40,9 +40,9 @@ The following arguments are supported:
 * `shared_secret` - (Required) Required for enabling RADIUS on the directory.
 * `use_same_username` - (Optional) Not currently used.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The directory identifier.
 
@@ -55,7 +55,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-RADIUS settings can be imported using the directory ID, e.g.,
+Import RADIUS settings using the directory ID. For example:
 
 ```
 $ terraform import aws_directory_service_radius_settings.example d-926724cf57

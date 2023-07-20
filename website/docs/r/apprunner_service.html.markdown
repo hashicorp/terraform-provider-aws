@@ -256,9 +256,9 @@ The `source_code_version` block supports the following arguments:
 * `type` - (Required) Type of version identifier. For a git-based repository, branches represent versions. Valid values: `BRANCH`.
 * `value`- (Required) Source code version. For a git-based repository, a branch name maps to a specific version. App Runner uses the most recent commit to the branch.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the App Runner service.
 * `service_id` - An alphanumeric ID that App Runner generated for this service. Unique within the AWS Region.
@@ -268,7 +268,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-App Runner Services can be imported by using the `arn`, e.g.,
+Import App Runner Services using the `arn`. For example:
 
 ```
 $ terraform import aws_apprunner_service.example arn:aws:apprunner:us-east-1:1234567890:service/example/0a03292a89764e5882c41d8f991c82fe

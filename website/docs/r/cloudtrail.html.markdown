@@ -365,9 +365,9 @@ The following arguments are optional:
 * `not_starts_with` (Optional) - A list of values that excludes events that match the first few characters of the event record field specified as the value of `field`.
 * `starts_with` (Optional) - A list of values that includes events that match the first few characters of the event record field specified as the value of `field`.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the trail.
 * `home_region` - Region in which the trail was created.
@@ -376,7 +376,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Cloudtrails can be imported using the `name`, e.g.,
+Import Cloudtrails using the `name`. For example:
 
 ```
 $ terraform import aws_cloudtrail.sample my-sample-trail

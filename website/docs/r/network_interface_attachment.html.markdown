@@ -22,15 +22,15 @@ resource "aws_network_interface_attachment" "test" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `instance_id` - (Required) Instance ID to attach.
 * `network_interface_id` - (Required) ENI ID to attach.
 * `device_index` - (Required) Network interface index (int).
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `instance_id` - Instance ID.
 * `network_interface_id` - Network interface ID.
@@ -39,7 +39,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Elastic network interface (ENI) Attachments can be imported using its Attachment ID e.g.,
+Import Elastic network interface (ENI) Attachments using its Attachment ID. For example:
 
 ```
 terraform import aws_network_interface_attachment.secondary_nic eni-attach-0a33842b4ec347c4c

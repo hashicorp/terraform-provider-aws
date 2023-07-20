@@ -47,9 +47,9 @@ The following arguments are required:
         * `namespace` - The namespace where the EMR Containers cluster is running
 * `type` - The type of the container provider
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the cluster.
 * `id` - The ID of the cluster.
@@ -57,7 +57,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-EKS Clusters can be imported using the `id`, e.g.
+Import EKS Clusters using the `id`. For example:
 
 ```
 $ terraform import aws_emrcontainers_virtual_cluster.example a1b2c3d4e5f6g7h8i9j10k11l

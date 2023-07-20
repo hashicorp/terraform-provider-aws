@@ -52,16 +52,16 @@ The following arguments are required:
 * `license_type` - (Required) The type of license for the workspace license association. Valid values are `ENTERPRISE` and `ENTERPRISE_FREE_TRIAL`.
 * `workspace_id` - (Required) The workspace id.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `free_trial_expiration` - If `license_type` is set to `ENTERPRISE_FREE_TRIAL`, this is the expiration date of the free trial.
 * `license_expiration` - If `license_type` is set to `ENTERPRISE`, this is the expiration date of the enterprise license.
 
 ## Import
 
-Grafana workspace license association can be imported using the workspace's `id`, e.g.,
+Import Grafana workspace license association using the workspace's `id`. For example:
 
 ```
 $ terraform import aws_grafana_license_association.example g-2054c75a02

@@ -22,17 +22,17 @@ resource "aws_ec2_serial_console_access" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `enabled` - (Optional) Whether or not serial console access is enabled. Valid values are `true` or `false`. Defaults to `true`.
 
-## Attributes Reference
+## Attribute Reference
 
-No additional attributes are exported.
+This resource exports no additional attributes.
 
 ## Import
 
-Serial console access state can be imported, e.g.,
+Import serial console access state. For example:
 
 ```
 $ terraform import aws_ec2_serial_console_access.example default

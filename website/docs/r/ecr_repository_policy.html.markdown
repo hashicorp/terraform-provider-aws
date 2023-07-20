@@ -56,21 +56,21 @@ resource "aws_ecr_repository_policy" "foopolicy" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `repository` - (Required) Name of the repository to apply the policy.
 * `policy` - (Required) The policy document. This is a JSON formatted string. For more information about building IAM policy documents with Terraform, see the [AWS IAM Policy Document Guide](https://learn.hashicorp.com/terraform/aws/iam-policy)
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `repository` - The name of the repository.
 * `registry_id` - The registry ID where the repository was created.
 
 ## Import
 
-ECR Repository Policy can be imported using the repository name, e.g.,
+Import ECR Repository Policy using the repository name. For example:
 
 ```
 $ terraform import aws_ecr_repository_policy.example example

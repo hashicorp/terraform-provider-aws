@@ -25,7 +25,7 @@ data "aws_connect_bot_association" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This data source supports the following arguments:
 
 * `instance_id` - (Required) Identifier of the Amazon Connect instance. You can find the instanceId in the ARN of the instance.
 * `lex_bot` - (Required) Configuration information of an Amazon Lex (V1) bot. Detailed below.

@@ -1,0 +1,11 @@
+```release-note:bug
+resource/aws_cloudformation_stack_set_instance: Fix error when deploying to organizational units with no accounts.
+```
+
+```release-note:enhancement
+resource/aws_cloudformation_stack_set_instance: Changes to `deployment_targets` now force a new resource.
+```
+
+```release-note:enhancement
+resource/aws_cloudformation_stack_set_instance: Added the `stack_instance_summaries` attribute to track all account and stack IDs for deployments to organizational units.
+```

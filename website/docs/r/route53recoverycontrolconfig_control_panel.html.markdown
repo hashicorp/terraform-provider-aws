@@ -26,9 +26,9 @@ The following arguments are required:
 * `cluster_arn` - (Required) ARN of the cluster in which this control panel will reside.
 * `name` - (Required) Name describing the control panel.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the control panel.
 * `default_control_panel` - Whether a control panel is default.
@@ -37,7 +37,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Route53 Recovery Control Config Control Panel can be imported via the control panel arn, e.g.,
+Import Route53 Recovery Control Config Control Panel using the control panel arn. For example:
 
 ```
 $ terraform import aws_route53recoverycontrolconfig_control_panel.mypanel arn:aws:route53-recovery-control::313517334327:controlpanel/1bfba17df8684f5dab0467b71424f7e8

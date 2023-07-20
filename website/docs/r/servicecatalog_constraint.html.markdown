@@ -77,9 +77,9 @@ The `type` you specify determines what must be included in the `parameters` JSON
 
 * `TEMPLATE`: Specify the Rules property. For more information, see [Template Constraint Rules](http://docs.aws.amazon.com/servicecatalog/latest/adminguide/reference-template_constraint_rules.html).
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - Constraint identifier.
 * `owner` - Owner of the constraint.
@@ -95,7 +95,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-`aws_servicecatalog_constraint` can be imported using the constraint ID, e.g.,
+Import `aws_servicecatalog_constraint` using the constraint ID. For example:
 
 ```
 $ terraform import aws_servicecatalog_constraint.example cons-nmdkb6cgxfcrs

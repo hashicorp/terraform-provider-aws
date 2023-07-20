@@ -80,9 +80,9 @@ The following arguments are optional:
 * `actions` - (Required) List of IAM actions to grant or revoke permissions on.
 * `principal` - (Required) ARN of the principal. See the [ResourcePermission documentation](https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ResourcePermission.html) for the applicable ARN values.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the folder.
 * `created_time` - The time that the folder was created.
@@ -102,7 +102,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-A QuickSight folder can be imported using the AWS account ID and folder ID name separated by a comma (`,`) e.g.,
+Import a QuickSight folder using the AWS account ID and folder ID name separated by a comma (`,`). For example:
 
 ```
 $ terraform import aws_quicksight_folder.example 123456789012,example-id

@@ -22,7 +22,9 @@ data "aws_workspaces_directory" "example" {
 
 * `directory_id` - (Required) Directory identifier for registration in WorkSpaces service.
 
-## Attributes Reference
+## Attribute Reference
+
+This data source exports the following attributes in addition to the arguments above:
 
 * `id` - WorkSpaces directory identifier.
 * `alias` - Directory alias.

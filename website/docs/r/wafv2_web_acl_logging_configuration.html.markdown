@@ -10,8 +10,6 @@ description: |-
 
 This resource creates a WAFv2 Web ACL Logging Configuration.
 
-~> **NOTE:** To start logging from a WAFv2 Web ACL, you need to create an Amazon Kinesis Data Firehose resource, such as the [`aws_kinesis_firehose_delivery_stream`](/docs/providers/aws/r/kinesis_firehose_delivery_stream.html) resource. Make sure to create the firehose with a PUT source (not a stream) in the region where you are operating. If you are capturing logs for Amazon CloudFront, create the firehose in the US East (N. Virginia) region. It is important to name the data firehose, CloudWatch log group, and/or S3 bucket with a prefix of `aws-waf-logs-`.
-
 !> **WARNING:** When logging from a WAFv2 Web ACL to a CloudWatch Log Group, the WAFv2 service tries to create or update a generic Log Resource Policy named `AWSWAF-LOGS`. However, if there are a large number of Web ACLs or if the account frequently creates and deletes Web ACLs, this policy may exceed the maximum policy size. As a result, this resource type will fail to be created. More details about this issue can be found in [this issue](https://github.com/hashicorp/terraform-provider-aws/issues/25296). To prevent this issue, you can manage a specific resource policy. Please refer to the [example](#with-cloudwatch-log-group-and-managed-cloudwatch-log-resource-policy) below for managing a CloudWatch Log Group with a managed CloudWatch Log Resource Policy.
 
 ## Example Usage
@@ -96,7 +94,7 @@ data "aws_iam_policy_document" "example" {
     effect = "Allow"
     principals {
       identifiers = ["delivery.logs.amazonaws.com"]
-      type        = "AWS"
+      type        = "Service"
     }
     actions   = ["logs:CreateLogStream", "logs:PutLogEvents"]
     resources = ["${aws_cloudwatch_log_group.example.arn}:*"]

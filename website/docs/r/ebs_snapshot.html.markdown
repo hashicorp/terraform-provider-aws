@@ -33,7 +33,7 @@ resource "aws_ebs_snapshot" "example_snapshot" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `volume_id` - (Required) The Volume ID of which to make a snapshot.
 * `description` - (Optional) A description of what the snapshot is.
@@ -43,9 +43,9 @@ The following arguments are supported:
 * `temporary_restore_days` - (Optional) Specifies the number of days for which to temporarily restore an archived snapshot. Required for temporary restores only. The snapshot will be automatically re-archived after this period.
 * `tags` - (Optional) A map of tags to assign to the snapshot. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - Amazon Resource Name (ARN) of the EBS Snapshot.
 * `id` - The snapshot ID (e.g., snap-59fcb34e).
@@ -66,7 +66,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-EBS Snapshot can be imported using the `id`, e.g.,
+Import EBS Snapshot using the `id`. For example:
 
 ```
 $ terraform import aws_ebs_snapshot.id snap-049df61146c4d7901

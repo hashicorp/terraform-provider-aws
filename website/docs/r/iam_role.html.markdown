@@ -200,9 +200,9 @@ This configuration block supports the following:
 * `name` - (Required) Name of the role policy.
 * `policy` - (Required) Policy document as a JSON formatted string. For more information about building IAM policy documents with Terraform, see the [AWS IAM Policy Document Guide](https://learn.hashicorp.com/tutorials/terraform/aws-iam-policy).
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - Amazon Resource Name (ARN) specifying the role.
 * `create_date` - Creation date of the IAM role.
@@ -213,7 +213,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-IAM Roles can be imported using the `name`, e.g.,
+Import IAM Roles using the `name`. For example:
 
 ```
 $ terraform import aws_iam_role.developer developer_name

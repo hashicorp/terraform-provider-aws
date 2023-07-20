@@ -15,8 +15,8 @@ github.com/apparentlymart/go-textseg/v13 v13.0.0 h1:Y+KvPE1NYz0xl601PVImeQfFyEy6
 github.com/apparentlymart/go-textseg/v13 v13.0.0/go.mod h1:ZK2fH7c4NqDTLtiYLvIkEghdlcqw7yxLeM89kiTRPUo=
 github.com/armon/go-radix v0.0.0-20180808171621-7fddfc383310 h1:BUAU3CGlLvorLI26FmByPp2eC2qla6E1Tw+scpcg/to=
 github.com/armon/go-radix v0.0.0-20180808171621-7fddfc383310/go.mod h1:ufUuZ+zHj4x4TnLV4JWEpy2hxWSpsRywHrMgIH9cCH8=
-github.com/aws/aws-sdk-go v1.44.300 h1:Zn+3lqgYahIf9yfrwZ+g+hq/c3KzUBaQ8wqY/ZXiAbY=
-github.com/aws/aws-sdk-go v1.44.300/go.mod h1:aVsgQcEevwlmQ7qHE9I3h+dtQgpqhFB+i8Phjh7fkwI=
+github.com/aws/aws-sdk-go v1.44.302 h1:ST3ko6GrJKn3Xi+nAvxjG3uk/V1pW8KC52WLeIxqqNk=
+github.com/aws/aws-sdk-go v1.44.302/go.mod h1:aVsgQcEevwlmQ7qHE9I3h+dtQgpqhFB+i8Phjh7fkwI=
 github.com/aws/aws-sdk-go-v2 v1.18.1/go.mod h1:uzbQtefpm44goOPmdKyAlXSNcwlRgF3ePWVW6EtJvvw=
 github.com/aws/aws-sdk-go-v2 v1.19.0 h1:klAT+y3pGFBU/qVf1uzwttpBbiuozJYWzNLHioyDJ+k=
 github.com/aws/aws-sdk-go-v2 v1.19.0/go.mod h1:uzbQtefpm44goOPmdKyAlXSNcwlRgF3ePWVW6EtJvvw=
@@ -61,8 +61,8 @@ github.com/aws/aws-sdk-go-v2/service/directoryservice v1.17.4 h1:J7g2WByJ2//UFZF
 github.com/aws/aws-sdk-go-v2/service/directoryservice v1.17.4/go.mod h1:hVeyz4w9zt6iTjQoIHw4zQRu285bi3oOCHCWM06adsU=
 github.com/aws/aws-sdk-go-v2/service/docdbelastic v1.1.13 h1:mWxg2G4k946JcCxmArvtrkMzGWYNltwtM9AYTIE9zC4=
 github.com/aws/aws-sdk-go-v2/service/docdbelastic v1.1.13/go.mod h1:z1GUIssmpbun+BSKm/P2e6nLvb1ktjmCHxSWz/h+L08=
-github.com/aws/aws-sdk-go-v2/service/ec2 v1.104.0 h1:ZAMo7nKaJM9kkCEc9YkldTvMJgJa+4mizrqe4EqTRPs=
-github.com/aws/aws-sdk-go-v2/service/ec2 v1.104.0/go.mod h1:/0btVmMZJ0sn9JQ2N96XszlQNeRCJhhXOS/sPZgDeew=
+github.com/aws/aws-sdk-go-v2/service/ec2 v1.105.0 h1:8lYKOgr+FTjPFk6fHRDuZ4e96p3ULA+ZCKzB2nIwif8=
+github.com/aws/aws-sdk-go-v2/service/ec2 v1.105.0/go.mod h1:/0btVmMZJ0sn9JQ2N96XszlQNeRCJhhXOS/sPZgDeew=
 github.com/aws/aws-sdk-go-v2/service/finspace v1.10.3 h1:+P6NkW7sBycavrx5GeQ6Nv6MCNaGG3U40T6xtGsnU34=
 github.com/aws/aws-sdk-go-v2/service/finspace v1.10.3/go.mod h1:WrKUw3XuTqYKWMIZenAgK9X2pSgGDK5UjXES+2ZKCAo=
 github.com/aws/aws-sdk-go-v2/service/fis v1.14.13 h1:8LtPeIL1B4vLgEMbHyL4PF4uHNjCFNZEo7GBv/pTF90=
@@ -118,8 +118,8 @@ github.com/aws/aws-sdk-go-v2/service/rolesanywhere v1.2.3 h1:eBHBCWj1A8jG/kDl7h8
 github.com/aws/aws-sdk-go-v2/service/rolesanywhere v1.2.3/go.mod h1:K8FYlaTsoiUxAhvLdlXq0ZBofM8gH5BSbB4mBir0jW4=
 github.com/aws/aws-sdk-go-v2/service/route53domains v1.15.1 h1:/Ee1E7OYAumqf46sU6vMI98e5fBIrUmuGI0DxpdAHmk=
 github.com/aws/aws-sdk-go-v2/service/route53domains v1.15.1/go.mod h1:DROsXQRGn8+TXcBeknaMza5f+nIGCam+fK0qykKcQTo=
-github.com/aws/aws-sdk-go-v2/service/s3control v1.31.8 h1:H0uglcT0an4djZ/8nqJBw2TU0zEiMPH8pndTrUXoU5M=
-github.com/aws/aws-sdk-go-v2/service/s3control v1.31.8/go.mod h1:ccjSIMDjJpoJVhF223gq4IeT3owN/MQ0X0o2KwCrwx8=
+github.com/aws/aws-sdk-go-v2/service/s3control v1.31.9 h1:Sw3J4S2l/OMivnnrchiU+E6ZJqOQkCZLVjd+sx5Jbxw=
+github.com/aws/aws-sdk-go-v2/service/s3control v1.31.9/go.mod h1:ccjSIMDjJpoJVhF223gq4IeT3owN/MQ0X0o2KwCrwx8=
 github.com/aws/aws-sdk-go-v2/service/scheduler v1.1.14 h1:8GZ9kHmuj/gIL8diTsH8/p4QJ7BnS4LWQTFxMm0G/po=
 github.com/aws/aws-sdk-go-v2/service/scheduler v1.1.14/go.mod h1:tLA2mJS1Pp4wOYt8SqkxDXHo5VKmYX39k/wR1Jk6kek=
 github.com/aws/aws-sdk-go-v2/service/securitylake v1.4.4 h1:cKWN+c4kK8kZxluiI/aQLqRS8vsQ1DgpN/ZDunbjb6w=
@@ -243,8 +243,8 @@ github.com/hashicorp/terraform-plugin-go v0.18.0 h1:IwTkOS9cOW1ehLd/rG0y+u/TGLK9
 github.com/hashicorp/terraform-plugin-go v0.18.0/go.mod h1:l7VK+2u5Kf2y+A+742GX0ouLut3gttudmvMgN0PA74Y=
 github.com/hashicorp/terraform-plugin-log v0.9.0 h1:i7hOA+vdAItN1/7UrfBqBwvYPQ9TFvymaRGZED3FCV0=
 github.com/hashicorp/terraform-plugin-log v0.9.0/go.mod h1:rKL8egZQ/eXSyDqzLUuwUYLVdlYeamldAHSxjUFADow=
-github.com/hashicorp/terraform-plugin-mux v0.11.1 h1:cDCrmkrNHf/c2zC1oREIMdgCYWi1QP9U/qNXeNSYoFk=
-github.com/hashicorp/terraform-plugin-mux v0.11.1/go.mod h1:eMZPcv8b5y+alMeQmocgaphPj4zAnM3uXiMLd1emqMQ=
+github.com/hashicorp/terraform-plugin-mux v0.11.2 h1:XMkAmWQN+6F+l4jwNeqdPom/8Vly6ZNDxHoKjiRHx5c=
+github.com/hashicorp/terraform-plugin-mux v0.11.2/go.mod h1:qjoF/pI49rILSNQzKIuDtU+ZX9mpQD0B8YNE1GceLPc=
 github.com/hashicorp/terraform-plugin-sdk/v2 v2.27.0 h1:I8efBnjuDrgPjNF1MEypHy48VgcTIUY4X6rOFunrR3Y=
 github.com/hashicorp/terraform-plugin-sdk/v2 v2.27.0/go.mod h1:cUEP4ly/nxlHy5HzD6YRrHydtlheGvGRJDhiWqqVik4=
 github.com/hashicorp/terraform-plugin-testing v1.3.0 h1:4Pn8fSspPCRUc5zRGPNZYc00VhQmQPEH6y6Pv4e/42M=

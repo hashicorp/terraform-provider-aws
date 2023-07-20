@@ -83,9 +83,9 @@ The following arguments are optional:
 
 ~> **NOTE:** Clearing `password` or `temporary_password` does not reset user's password in Cognito.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `status` - current user status.
 * `sub` - unique user id that is never reassignable to another user.
@@ -93,7 +93,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Cognito User can be imported using the `user_pool_id`/`name` attributes concatenated, e.g.,
+Import Cognito User using the `user_pool_id`/`name` attributes concatenated. For example:
 
 ```
 $ terraform import aws_cognito_user.user us-east-1_vG78M4goG/user

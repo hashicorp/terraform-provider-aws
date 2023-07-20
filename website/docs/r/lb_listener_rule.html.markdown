@@ -206,7 +206,7 @@ resource "aws_lb_listener_rule" "oidc" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `listener_arn` - (Required, Forces New Resource) The ARN of the listener to which to attach the rule.
 * `priority` - (Optional) The priority for the rule between `1` and `50000`. Leaving it unset will automatically set the rule with next available priority after currently existing highest rule. A listener can't have multiple rules with the same priority.
@@ -321,9 +321,9 @@ Query String Value Blocks (for `query_string.values`) support the following:
 * `key` - (Optional) Query string key pattern to match.
 * `value` - (Required) Query string value pattern to match.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The ARN of the rule (matches `arn`)
 * `arn` - The ARN of the rule (matches `id`)
@@ -331,7 +331,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Rules can be imported using their ARN, e.g.,
+Import Rules using their ARN. For example:
 
 ```
 $ terraform import aws_lb_listener_rule.front_end arn:aws:elasticloadbalancing:us-west-2:187416307283:listener-rule/app/test/8e4497da625e2d8a/9ab28ade35828f96/67b3d2d36dd7c26b
