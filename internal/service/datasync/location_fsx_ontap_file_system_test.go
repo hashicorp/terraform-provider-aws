@@ -13,7 +13,6 @@ import (
 	"github.com/aws/aws-sdk-go/service/datasync"
 	"github.com/aws/aws-sdk-go/service/fsx"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
@@ -27,6 +26,7 @@ func TestAccDataSyncLocationFSxOntapFileSystem_basic(t *testing.T) {
 	var locationFsxOntap1 datasync.DescribeLocationFsxOntapOutput
 	resourceName := "aws_datasync_location_fsx_ontap_file_system.test"
 	fsResourceName := "aws_fsx_ontap_file_system.test"
+	svmResourceName := "aws_fsx_ontap_storage_virtual_machine.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
@@ -45,16 +45,17 @@ func TestAccDataSyncLocationFSxOntapFileSystem_basic(t *testing.T) {
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "datasync", regexp.MustCompile(`location/loc-.+`)),
 					resource.TestCheckResourceAttrPair(resourceName, "fsx_filesystem_arn", fsResourceName, "arn"),
 					resource.TestCheckResourceAttr(resourceName, "subdirectory", "/"),
+					resource.TestCheckResourceAttrPair(resourceName, "svm_arn", svmResourceName, "arn"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					resource.TestMatchResourceAttr(resourceName, "uri", regexp.MustCompile(`^fsxo://.+/`)),
 					resource.TestCheckResourceAttrSet(resourceName, "creation_time"),
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateIdFunc:       testAccLocationFSxOntapImportStateID(resourceName)
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateIdFunc: testAccLocationFSxOntapImportStateID(resourceName),
 			},
 		},
 	})
@@ -103,17 +104,17 @@ func TestAccDataSyncLocationFSxOntapFileSystem_subdirectory(t *testing.T) {
 		CheckDestroy:             testAccCheckLocationFSxOntapDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccLocationFSxOntapFileSystemConfig_subdirectory(Name, "/subdirectory1/"),
+				Config: testAccLocationFSxOntapFileSystemConfig_subdirectory("/subdirectory1/"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLocationFSxOntapExists(ctx, resourceName, &locationFsxOntap1),
 					resource.TestCheckResourceAttr(resourceName, "subdirectory", "/subdirectory1/"),
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateIdFunc:       testAccLocationFSxOntapImportStateID(resourceName),
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateIdFunc: testAccLocationFSxOntapImportStateID(resourceName),
 			},
 		},
 	})
@@ -135,7 +136,7 @@ func TestAccDataSyncLocationFSxOntapFileSystem_tags(t *testing.T) {
 		CheckDestroy:             testAccCheckLocationFSxOntapDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccLocationFSxOntapFileSystemConfig_tags1(Name, "key1", "value1"),
+				Config: testAccLocationFSxOntapFileSystemConfig_tags1("key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLocationFSxOntapExists(ctx, resourceName, &locationFsxOntap1),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -143,13 +144,13 @@ func TestAccDataSyncLocationFSxOntapFileSystem_tags(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateIdFunc:       testAccLocationFSxOntapImportStateID(resourceName),
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateIdFunc: testAccLocationFSxOntapImportStateID(resourceName),
 			},
 			{
-				Config: testAccLocationFSxOntapFileSystemConfig_tags2(Name, "key1", "value1updated", "key2", "value2"),
+				Config: testAccLocationFSxOntapFileSystemConfig_tags2("key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLocationFSxOntapExists(ctx, resourceName, &locationFsxOntap1),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
@@ -158,7 +159,7 @@ func TestAccDataSyncLocationFSxOntapFileSystem_tags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccLocationFSxOntapFileSystemConfig_tags1(Name, "key1", "value1"),
+				Config: testAccLocationFSxOntapFileSystemConfig_tags1("key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLocationFSxOntapExists(ctx, resourceName, &locationFsxOntap1),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -238,10 +239,11 @@ func testAccLocationFSxOntapImportStateID(resourceName string) resource.ImportSt
 }
 
 func testAccLocationFSxOntapFileSystemConfig_basic() string {
-	return acctest.ConfigCompose(testAccLocationFSxOntapFileSystemConfig_base(), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccFSxOntapFileSystemBaseConfig(), fmt.Sprintf(`
 resource "aws_datasync_location_fsx_ontap_file_system" "test" {
 	fsx_filesystem_arn  = aws_fsx_ontap_file_system.test.arn
 	security_group_arns = [aws_security_group.test.arn]
+	storage_virtual_machine_arn = aws_fsx_ontap_storage_virtual_machine.test.arn
 
 	protocol {
 		nfs {
@@ -254,22 +256,23 @@ resource "aws_datasync_location_fsx_ontap_file_system" "test" {
 `))
 }
 
-func testAccLocationFSxOntapFileSystemConfig_subdirectory(, subdirectory string) string {
-	return acctest.ConfigCompose(testAccLocationFSxOntapFileSystemConfig_baseFS(), fmt.Sprintf(`
+func testAccLocationFSxOntapFileSystemConfig_subdirectory(subdirectory string) string {
+	return acctest.ConfigCompose(testAccFSxOntapFileSystemBaseConfig(), fmt.Sprintf(`
 resource "aws_datasync_location_fsx_ontap_file_system" "test" {
   fsx_filesystem_arn  = aws_fsx_ontap_file_system.test.arn
+	security_group_arns = [aws_security_group.test.arn]
+	storage_virtual_machine_arn = aws_fsx_ontap_storage_virtual_machine.test.arn
   subdirectory        = %[1]q
 }
 `, subdirectory))
 }
 
-func testAccLocationFSxOntapFileSystemConfig_tags1(, key1, value1 string) string {
-	return acctest.ConfigCompose(testAccLocationFSxOntapFileSystemConfig_baseFS(), fmt.Sprintf(`
+func testAccLocationFSxOntapFileSystemConfig_tags1(key1, value1 string) string {
+	return acctest.ConfigCompose(testAccFSxOntapFileSystemBaseConfig(), fmt.Sprintf(`
 resource "aws_datasync_location_fsx_ontap_file_system" "test" {
   fsx_filesystem_arn  = aws_fsx_ontap_file_system.test.arn
-  user                = "SomeUser"
-  password            = "SuperSecretPassw0rd"
   security_group_arns = [aws_security_group.test.arn]
+	storage_virtual_machine_arn = aws_fsx_ontap_storage_virtual_machine.test.arn
 
   tags = {
     %[1]q = %[2]q
@@ -278,13 +281,12 @@ resource "aws_datasync_location_fsx_ontap_file_system" "test" {
 `, key1, value1))
 }
 
-func testAccLocationFSxOntapFileSystemConfig_tags2(, key1, value1, key2, value2 string) string {
-	return acctest.ConfigCompose(testAccLocationFSxOntapFileSystemConfig_baseFS(), fmt.Sprintf(`
+func testAccLocationFSxOntapFileSystemConfig_tags2(key1, value1, key2, value2 string) string {
+	return acctest.ConfigCompose(testAccFSxOntapFileSystemBaseConfig(), fmt.Sprintf(`
 resource "aws_datasync_location_fsx_ontap_file_system" "test" {
   fsx_filesystem_arn  = aws_fsx_ontap_file_system.test.arn
-  user                = "SomeUser"
-  password            = "SuperSecretPassw0rd"
   security_group_arns = [aws_security_group.test.arn]
+	storage_virtual_machine_arn = aws_fsx_ontap_storage_virtual_machine.test.arn
 
   tags = {
     %[1]q = %[2]q
@@ -340,6 +342,11 @@ func testAccFSxOntapFileSystemBaseConfig() string {
 		deployment_type     = "SINGLE_AZ_1"
 		throughput_capacity = 512
 		preferred_subnet_id = aws_subnet.test.id
+	}
+
+	resource "aws_fsx_ontap_storage_virtual_machine" "test" {
+		file_system_id = aws_fsx_ontap_file_system.test.id
+  	name           = "test"
 	}
 `)
 }
