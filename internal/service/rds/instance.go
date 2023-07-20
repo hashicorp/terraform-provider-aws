@@ -146,14 +146,11 @@ func ResourceInstance() *schema.Resource {
 				ValidateFunc: validation.IntBetween(0, 35),
 			},
 			"backup_target": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-				ForceNew: true,
-				ValidateFunc: validation.StringInSlice([]string{
-					"region",
-					"outposts",
-				}, false),
+				Type:         schema.TypeString,
+				Optional:     true,
+				Computed:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.StringInSlice(backupTarget_Values(), false),
 			},
 			"backup_window": {
 				Type:         schema.TypeString,
