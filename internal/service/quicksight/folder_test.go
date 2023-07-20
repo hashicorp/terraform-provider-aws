@@ -231,6 +231,49 @@ func TestAccQuickSightFolder_parentFolder(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
+				Config: testAccFolderConfig_parentFolder(rId, rName, parentId2, parentName2),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckFolderExists(ctx, resourceName, &folder),
+					acctest.CheckResourceAttrRegionalARN(resourceName, "parent_folder_arn", "quicksight", fmt.Sprintf("folder/%s", parentId2)),
+				),
+			},
+		},
+	})
+}
+
+func TestAccQuickSightFolder_parentFolderNested(t *testing.T) {
+	ctx := acctest.Context(t)
+	var folder quicksight.Folder
+	rId := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	parentId1 := rId + "-parent1"
+	parentName1 := rName + "-parent1"
+	parentId2 := rId + "-parent2"
+	parentName2 := rName + "-parent2"
+	resourceName := "aws_quicksight_folder.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, quicksight.EndpointsID)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, quicksight.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckFolderDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccFolderConfig_parentFolder(rId, rName, parentId1, parentName1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckFolderExists(ctx, resourceName, &folder),
+					acctest.CheckResourceAttrRegionalARN(resourceName, "parent_folder_arn", "quicksight", fmt.Sprintf("folder/%s", parentId1)),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
 				Config: testAccFolderConfig_parentFolder2(rId, rName, parentId1, parentName1, parentId2, parentName2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFolderExists(ctx, resourceName, &folder),
@@ -400,7 +443,7 @@ resource "aws_quicksight_folder" "test" {
 `, rId, rName, parentId, parentName)
 }
 
-func testAccFolderConfig_parentFolder2(rId, rName, parentId, parentName, parentId2, parentName2 string) string {
+func testAccFolderConfig_parentFolder2(rId, rName, parentId1, parentName1, parentId2, parentName2 string) string {
 	return fmt.Sprintf(`
 resource "aws_quicksight_folder" "parent" {
   folder_id = %[3]q
@@ -408,8 +451,8 @@ resource "aws_quicksight_folder" "parent" {
 }
 
 resource "aws_quicksight_folder" "parent2" {
-  folder_id = %[5]q
-  name      = %[6]q
+  folder_id         = %[5]q
+  name              = %[6]q
   parent_folder_arn = aws_quicksight_folder.parent.arn
 }
 
@@ -418,5 +461,5 @@ resource "aws_quicksight_folder" "test" {
   name              = %[2]q
   parent_folder_arn = aws_quicksight_folder.parent2.arn
 }
-`, rId, rName, parentId, parentName, parentId2, parentName2)
+`, rId, rName, parentId1, parentName1, parentId2, parentName2)
 }
