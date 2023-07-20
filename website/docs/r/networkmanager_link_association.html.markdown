@@ -24,19 +24,19 @@ resource "aws_networkmanager_link_association" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `device_id` - (Required) The ID of the device.
 * `global_network_id` - (Required) The ID of the global network.
 * `link_id` - (Required) The ID of the link.
 
-## Attributes Reference
+## Attribute Reference
 
-No additional attributes are exported.
+This resource exports no additional attributes.
 
 ## Import
 
-`aws_networkmanager_link_association` can be imported using the global network ID, link ID and device ID, e.g.
+Import `aws_networkmanager_link_association` using the global network ID, link ID and device ID. For example:
 
 ```
 $ terraform import aws_networkmanager_link_association.example global-network-0d47f6t230mz46dy4,link-444555aaabbb11223,device-07f6fd08867abc123

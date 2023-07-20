@@ -35,7 +35,7 @@ resource "aws_app_cookie_stickiness_policy" "foo" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `name` - (Required) Name of the stickiness policy.
 * `load_balancer` - (Required) Name of load balancer to which the policy
@@ -45,9 +45,9 @@ The following arguments are supported:
 balancer.
 * `cookie_name` - (Required) Application cookie whose lifetime the ELB's cookie should follow.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - ID of the policy.
 * `name` - Name of the stickiness policy.
@@ -57,7 +57,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Application cookie stickiness policies can be imported using the ELB name, port, and policy name separated by colons (`:`), e.g.,
+Import Application cookie stickiness policies using the ELB name, port, and policy name separated by colons (`:`). For example:
 
 ```sh
 $ terraform import aws_app_cookie_stickiness_policy.example my-elb:80:my-policy

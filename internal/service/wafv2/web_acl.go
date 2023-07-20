@@ -63,6 +63,7 @@ func ResourceWebACL() *schema.Resource {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
+				"association_config": associationConfigSchema(),
 				"capacity": {
 					Type:     schema.TypeInt,
 					Computed: true,
@@ -176,13 +177,14 @@ func resourceWebACLCreate(ctx context.Context, d *schema.ResourceData, meta inte
 
 	name := d.Get("name").(string)
 	input := &wafv2.CreateWebACLInput{
-		CaptchaConfig:    expandCaptchaConfig(d.Get("captcha_config").([]interface{})),
-		DefaultAction:    expandDefaultAction(d.Get("default_action").([]interface{})),
-		Name:             aws.String(name),
-		Rules:            expandWebACLRules(d.Get("rule").(*schema.Set).List()),
-		Scope:            aws.String(d.Get("scope").(string)),
-		Tags:             getTagsIn(ctx),
-		VisibilityConfig: expandVisibilityConfig(d.Get("visibility_config").([]interface{})),
+		AssociationConfig: expandAssociationConfig(d.Get("association_config").([]interface{})),
+		CaptchaConfig:     expandCaptchaConfig(d.Get("captcha_config").([]interface{})),
+		DefaultAction:     expandDefaultAction(d.Get("default_action").([]interface{})),
+		Name:              aws.String(name),
+		Rules:             expandWebACLRules(d.Get("rule").(*schema.Set).List()),
+		Scope:             aws.String(d.Get("scope").(string)),
+		Tags:              getTagsIn(ctx),
+		VisibilityConfig:  expandVisibilityConfig(d.Get("visibility_config").([]interface{})),
 	}
 
 	if v, ok := d.GetOk("custom_response_body"); ok && v.(*schema.Set).Len() > 0 {
@@ -231,6 +233,9 @@ func resourceWebACLRead(ctx context.Context, d *schema.ResourceData, meta interf
 	arn := aws.StringValue(webACL.ARN)
 	d.Set("arn", arn)
 	d.Set("capacity", webACL.Capacity)
+	if err := d.Set("association_config", flattenAssociationConfig(webACL.AssociationConfig)); err != nil {
+		return diag.Errorf("setting association_config: %s", err)
+	}
 	if err := d.Set("captcha_config", flattenCaptchaConfig(webACL.CaptchaConfig)); err != nil {
 		return diag.Errorf("setting captcha_config: %s", err)
 	}
@@ -260,14 +265,15 @@ func resourceWebACLUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		input := &wafv2.UpdateWebACLInput{
-			CaptchaConfig:    expandCaptchaConfig(d.Get("captcha_config").([]interface{})),
-			DefaultAction:    expandDefaultAction(d.Get("default_action").([]interface{})),
-			Id:               aws.String(d.Id()),
-			LockToken:        aws.String(d.Get("lock_token").(string)),
-			Name:             aws.String(d.Get("name").(string)),
-			Rules:            expandWebACLRules(d.Get("rule").(*schema.Set).List()),
-			Scope:            aws.String(d.Get("scope").(string)),
-			VisibilityConfig: expandVisibilityConfig(d.Get("visibility_config").([]interface{})),
+			AssociationConfig: expandAssociationConfig(d.Get("association_config").([]interface{})),
+			CaptchaConfig:     expandCaptchaConfig(d.Get("captcha_config").([]interface{})),
+			DefaultAction:     expandDefaultAction(d.Get("default_action").([]interface{})),
+			Id:                aws.String(d.Id()),
+			LockToken:         aws.String(d.Get("lock_token").(string)),
+			Name:              aws.String(d.Get("name").(string)),
+			Rules:             expandWebACLRules(d.Get("rule").(*schema.Set).List()),
+			Scope:             aws.String(d.Get("scope").(string)),
+			VisibilityConfig:  expandVisibilityConfig(d.Get("visibility_config").([]interface{})),
 		}
 
 		if v, ok := d.GetOk("custom_response_body"); ok && v.(*schema.Set).Len() > 0 {

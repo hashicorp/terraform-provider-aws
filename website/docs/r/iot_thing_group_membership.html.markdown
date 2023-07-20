@@ -27,15 +27,15 @@ resource "aws_iot_thing_group_membership" "example" {
 * `thing_group_name` - (Required) The name of the group to which you are adding a thing.
 * `override_dynamic_group` - (Optional) Override dynamic thing groups with static thing groups when 10-group limit is reached. If a thing belongs to 10 thing groups, and one or more of those groups are dynamic thing groups, adding a thing to a static group removes the thing from the last dynamic group.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The membership ID.
 
 ## Import
 
-IoT Thing Group Membership can be imported using the thing group name and thing name.
+Import IoT Thing Group Membership using the thing group name and thing name. For example:
 
 ```
 $ terraform import aws_iot_thing_group_membership.example thing_group_name/thing_name

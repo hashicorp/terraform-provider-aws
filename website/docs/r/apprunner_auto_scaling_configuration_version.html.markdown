@@ -36,9 +36,9 @@ The following arguments supported:
 * `min_size` - (Optional, Forces new resource) Minimal number of instances that App Runner provisions for your service.
 * `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of this auto scaling configuration version.
 * `auto_scaling_configuration_revision` - The revision of this auto scaling configuration.
@@ -48,7 +48,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-App Runner AutoScaling Configuration Versions can be imported by using the `arn`, e.g.,
+Import App Runner AutoScaling Configuration Versions using the `arn`. For example:
 
 ```
 $ terraform import aws_apprunner_auto_scaling_configuration_version.example "arn:aws:apprunner:us-east-1:1234567890:autoscalingconfiguration/example/1/69bdfe0115224b0db49398b7beb68e0f

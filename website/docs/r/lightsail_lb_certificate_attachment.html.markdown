@@ -36,20 +36,20 @@ resource "aws_lightsail_lb_certificate_attachment" "test" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `lb_name` - (Required) The name of the load balancer to which you want to associate the SSL/TLS certificate.
 * `certificate_name` - (Required) The name of your SSL/TLS certificate.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - A combination of attributes to create a unique id: `lb_name`,`certificate_name`
 
 ## Import
 
-`aws_lightsail_lb_certificate_attachment` can be imported by using the name attribute, e.g.,
+Import `aws_lightsail_lb_certificate_attachment` using the name attribute. For example:
 
 ```
 $ terraform import aws_lightsail_lb_certificate_attachment.test example-load-balancer,example-certificate

@@ -61,7 +61,7 @@ resource "aws_rolesanywhere_trust_anchor" "test" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `enabled` - (Optional) Whether or not the Trust Anchor should be enabled.
 * `name` - (Required) The name of the Trust Anchor.
@@ -80,9 +80,9 @@ The following arguments are supported:
 * `acm_pca_arn` - (Optional, required when `source_type` is `AWS_ACM_PCA`) The ARN of an ACM Private Certificate Authority.
 * `x509_certificate_data` - (Optional, required when `source_type` is `CERTIFICATE_BUNDLE`)
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - Amazon Resource Name (ARN) of the Trust Anchor
 * `id` - The Trust Anchor ID.
@@ -90,7 +90,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-`aws_rolesanywhere_trust_anchor` can be imported using its `id`, e.g.
+Import `aws_rolesanywhere_trust_anchor` using its `id`. For example:
 
 ```
 $ terraform import aws_rolesanywhere_trust_anchor.example 92b2fbbb-984d-41a3-a765-e3cbdb69ebb1

@@ -6,6 +6,9 @@ import (
 	{{- if .FmtPkg }}
 	"fmt"
 	{{- end }}
+	{{- if .TimePkg }}
+	"time"
+	{{- end }}
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"

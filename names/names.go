@@ -29,6 +29,7 @@ const (
 	AccountEndpointID                    = "account"
 	ACMEndpointID                        = "acm"
 	AuditManagerEndpointID               = "auditmanager"
+	CleanRoomsEndpointID                 = "cleanrooms"
 	CloudWatchLogsEndpointID             = "logs"
 	ComprehendEndpointID                 = "comprehend"
 	ComputeOptimizerEndpointID           = "computeoptimizer"
@@ -108,6 +109,10 @@ func readCSVIntoServiceData() error {
 		}
 
 		if l[ColExclude] != "" {
+			continue
+		}
+
+		if l[ColNotImplemented] != "" {
 			continue
 		}
 

@@ -39,12 +39,10 @@ func ResourceSigningProfile() *schema.Resource {
 
 		Schema: map[string]*schema.Schema{
 			"platform_id": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-				ValidateFunc: validation.StringInSlice([]string{
-					"AWSLambda-SHA384-ECDSA"},
-					false),
+				Type:         schema.TypeString,
+				Required:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.StringInSlice(PlatformID_Values(), false),
 			},
 			"name": {
 				Type:          schema.TypeString,
@@ -88,6 +86,22 @@ func ResourceSigningProfile() *schema.Resource {
 			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
+			},
+			"signing_material": {
+				Type:     schema.TypeList,
+				MaxItems: 1,
+				Computed: true,
+				Optional: true,
+				ForceNew: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"certificate_arn": {
+							Type:     schema.TypeString,
+							Required: true,
+							ForceNew: true,
+						},
+					},
+				},
 			},
 			"platform_display_name": {
 				Type:     schema.TypeString,
@@ -154,6 +168,10 @@ func resourceSigningProfileCreate(ctx context.Context, d *schema.ResourceData, m
 		}
 	}
 
+	if v, ok := d.Get("signing_material").([]interface{}); ok && len(v) > 0 {
+		signingProfileInput.SigningMaterial = expandSigningMaterial(v)
+	}
+
 	_, err := conn.PutSigningProfileWithContext(ctx, signingProfileInput)
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating Signer signing profile: %s", err)
@@ -185,14 +203,15 @@ func resourceSigningProfileRead(ctx context.Context, d *schema.ResourceData, met
 	if err := d.Set("platform_id", signingProfileOutput.PlatformId); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting signer signing profile platform id: %s", err)
 	}
-
-	if err := d.Set("signature_validity_period", []interface{}{
-		map[string]interface{}{
-			"value": signingProfileOutput.SignatureValidityPeriod.Value,
-			"type":  signingProfileOutput.SignatureValidityPeriod.Type,
-		},
-	}); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting signer signing profile signature validity period: %s", err)
+	if signingProfileOutput.SignatureValidityPeriod != nil {
+		if err := d.Set("signature_validity_period", []interface{}{
+			map[string]interface{}{
+				"value": signingProfileOutput.SignatureValidityPeriod.Value,
+				"type":  signingProfileOutput.SignatureValidityPeriod.Type,
+			},
+		}); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting signer signing profile signature validity period: %s", err)
+		}
 	}
 
 	if err := d.Set("platform_display_name", signingProfileOutput.PlatformDisplayName); err != nil {
@@ -217,6 +236,11 @@ func resourceSigningProfileRead(ctx context.Context, d *schema.ResourceData, met
 
 	if err := d.Set("status", signingProfileOutput.Status); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting signer signing profile status: %s", err)
+	}
+	if signingProfileOutput.SigningMaterial != nil {
+		if err := d.Set("signing_material", flattenSigningMaterial(signingProfileOutput.SigningMaterial)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting signer signing profile material: %s", err)
+		}
 	}
 
 	setTagsOut(ctx, signingProfileOutput.Tags)
@@ -255,6 +279,33 @@ func resourceSigningProfileDelete(ctx context.Context, d *schema.ResourceData, m
 	return diags
 }
 
+func expandSigningMaterial(in []interface{}) *signer.SigningMaterial {
+	if len(in) == 0 {
+		return nil
+	}
+
+	m := in[0].(map[string]interface{})
+	var out signer.SigningMaterial
+
+	if v, ok := m["certificate_arn"].(string); ok && v != "" {
+		out.CertificateArn = aws.String(v)
+	}
+
+	return &out
+}
+
+func flattenSigningMaterial(apiObject *signer.SigningMaterial) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	m := map[string]interface{}{
+		"certificate_arn": aws.StringValue(apiObject.CertificateArn),
+	}
+
+	return []interface{}{m}
+}
+
 func flattenSigningProfileRevocationRecord(apiObject *signer.SigningProfileRevocationRecord) interface{} {
 	if apiObject == nil {
 		return []interface{}{}
@@ -275,4 +326,13 @@ func flattenSigningProfileRevocationRecord(apiObject *signer.SigningProfileRevoc
 	}
 
 	return []interface{}{tfMap}
+}
+
+func PlatformID_Values() []string {
+	return []string{
+		"AWSLambda-SHA384-ECDSA",
+		"Notation-OCI-SHA384-ECDSA",
+		"AWSIoTDeviceManagement-SHA256-ECDSA",
+		"AmazonFreeRTOS-TI-CC3220SF",
+		"AmazonFreeRTOS-Default"}
 }

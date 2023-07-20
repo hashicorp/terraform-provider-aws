@@ -7,16 +7,21 @@
 package opsworks
 
 import (
-	"errors"
+	"context"
 	"fmt"
 	"log"
+	"strings"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/opsworks"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/go-multierror"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
+	"github.com/hashicorp/terraform-provider-aws/internal/sweep/sdk"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func init() {
@@ -110,11 +115,11 @@ func sweepApplication(region string) error {
 			d := r.Data(nil)
 			d.SetId(aws.StringValue(app.AppId))
 
-			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
+			sweepResources = append(sweepResources, sdk.NewSweepResource(r, d, client))
 		}
 	}
 
-	return sweep.SweepOrchestratorWithContext(ctx, sweepResources)
+	return sweep.SweepOrchestrator(ctx, sweepResources)
 }
 
 func sweepInstance(region string) error {
@@ -163,11 +168,11 @@ func sweepInstance(region string) error {
 			d.SetId(aws.StringValue(instance.InstanceId))
 			d.Set("status", instance.Status)
 
-			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
+			sweepResources = append(sweepResources, sdk.NewSweepResource(r, d, client))
 		}
 	}
 
-	return sweep.SweepOrchestratorWithContext(ctx, sweepResources)
+	return sweep.SweepOrchestrator(ctx, sweepResources)
 }
 
 func sweepRDSDBInstance(region string) error {
@@ -216,11 +221,11 @@ func sweepRDSDBInstance(region string) error {
 			d.SetId(aws.StringValue(dbInstance.DbInstanceIdentifier))
 			d.Set("rds_db_instance_arn", dbInstance.RdsDbInstanceArn)
 
-			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
+			sweepResources = append(sweepResources, sdk.NewSweepResource(r, d, client))
 		}
 	}
 
-	return sweep.SweepOrchestratorWithContext(ctx, sweepResources)
+	return sweep.SweepOrchestrator(ctx, sweepResources)
 }
 
 func sweepStacks(region string) error {
@@ -260,10 +265,10 @@ func sweepStacks(region string) error {
 			d.Set("use_opsworks_security_groups", true)
 		}
 
-		sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
+		sweepResources = append(sweepResources, sdk.NewSweepResource(r, d, client))
 	}
 
-	return sweep.SweepOrchestratorWithContext(ctx, sweepResources)
+	return sweep.SweepOrchestrator(ctx, sweepResources)
 }
 
 func sweepLayers(region string) error {
@@ -321,11 +326,11 @@ func sweepLayers(region string) error {
 				}
 			}
 
-			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
+			sweepResources = append(sweepResources, sdk.NewSweepResource(r, d, client))
 		}
 	}
 
-	return sweep.SweepOrchestratorWithContext(ctx, sweepResources)
+	return sweep.SweepOrchestrator(ctx, sweepResources)
 }
 
 func sweepUserProfiles(region string) error {
@@ -352,23 +357,29 @@ func sweepUserProfiles(region string) error {
 		r := ResourceUserProfile()
 		d := r.Data(nil)
 		d.SetId(aws.StringValue(profile.IamUserArn))
-		sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
+		sweepResources = append(sweepResources, newUserProfileSweeper(r, d, client))
 	}
 
-	err = sweep.SweepOrchestratorWithContext(ctx, sweepResources)
+	return sweep.SweepOrchestrator(ctx, sweepResources)
+}
 
-	var errs *multierror.Error
-	if errors.As(err, &errs) {
-		var es *multierror.Error
-		for _, e := range errs.Errors {
-			if tfawserr.ErrMessageContains(err, opsworks.ErrCodeValidationException, "Cannot delete self") {
-				log.Printf("[WARN] Ignoring error: %s", e.Error())
-			} else {
-				es = multierror.Append(es, e)
-			}
-		}
-		return es.ErrorOrNil()
+type userProfileSweeper struct {
+	d         *schema.ResourceData
+	sweepable sweep.Sweepable
+}
+
+func newUserProfileSweeper(resource *schema.Resource, d *schema.ResourceData, client *conns.AWSClient) *userProfileSweeper {
+	return &userProfileSweeper{
+		d:         d,
+		sweepable: sdk.NewSweepResource(resource, d, client),
 	}
+}
 
+func (ups userProfileSweeper) Delete(ctx context.Context, timeout time.Duration, optFns ...tfresource.OptionsFunc) error {
+	err := ups.sweepable.Delete(ctx, timeout, optFns...)
+	if err != nil && strings.Contains(err.Error(), "Cannot delete self") {
+		log.Printf("[WARN] Skipping OpsWorks User Profile (%s): %s", ups.d.Id(), err)
+		return nil
+	}
 	return err
 }

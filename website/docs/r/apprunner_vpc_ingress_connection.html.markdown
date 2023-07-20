@@ -45,9 +45,9 @@ The `ingress_vpc_configuration` block supports the following argument:
 * `vpc_id` - (Required) The ID of the VPC that is used for the VPC endpoint.
 * `vpc_endpoint_id` - (Required) The ID of the VPC endpoint that your App Runner service connects to.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - The Amazon Resource Name (ARN) of the VPC Ingress Connection.
 * `domain_name` - The domain name associated with the VPC Ingress Connection resource.
@@ -56,7 +56,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-App Runner VPC Ingress Connection can be imported by using the `arn`, e.g.,
+Import App Runner VPC Ingress Connection using the `arn`. For example:
 
 ```
 $ terraform import aws_apprunner_vpc_ingress_connection.example "arn:aws:apprunner:us-west-2:837424938642:vpcingressconnection/example/b379f86381d74825832c2e82080342fa"

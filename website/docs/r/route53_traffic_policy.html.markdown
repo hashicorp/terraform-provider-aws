@@ -43,9 +43,9 @@ The following arguments are optional:
 
 * `comment` - (Optional) Comment for the traffic policy.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - ID of the traffic policy
 * `type` - DNS type of the resource record sets that Amazon Route 53 creates when you use a traffic policy to create a traffic policy instance.
@@ -53,7 +53,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Route53 Traffic Policy can be imported using the `id` and `version`, e.g.
+Import Route53 Traffic Policy using the `id` and `version`. For example:
 
 ```
 $ terraform import aws_route53_traffic_policy.example 01a52019-d16f-422a-ae72-c306d2b6df7e/1

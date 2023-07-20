@@ -42,7 +42,7 @@ resource "aws_appmesh_gateway_route" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `name` - (Required) Name to use for the gateway route. Must be between 1 and 255 characters in length.
 * `mesh_name` - (Required) Name of the service mesh in which to create the gateway route. Must be between 1 and 255 characters in length.
@@ -83,11 +83,16 @@ The `http_route` and `http2_route`'s `action` object additionally supports the f
 The `rewrite` object supports the following:
 
 * `hostname` - (Optional) Host name to rewrite.
+* `path` - (Optional) Exact path to rewrite.
 * `prefix` - (Optional) Specified beginning characters to rewrite.
 
 The `hostname` object supports the following:
 
 * `default_target_hostname` - (Required) Default target host name to write to. Valid values: `ENABLED`, `DISABLED`.
+
+The `path` object supports the following:
+
+* `exact` - (Required) Value used to replace matched path.
 
 The `prefix` object supports the following:
 
@@ -147,9 +152,9 @@ The `query_parameter`'s `match` object supports the following:
 
 * `exact` - (Optional) The exact query parameter to match on.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - ID of the gateway route.
 * `arn` - ARN of the gateway route.
@@ -160,8 +165,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-App Mesh gateway routes can be imported using `mesh_name` and `virtual_gateway_name` together with the gateway route's `name`,
-e.g.,
+Import App Mesh gateway routes using `mesh_name` and `virtual_gateway_name` together with the gateway route's `name`. For example:
 
 ```
 $ terraform import aws_appmesh_gateway_route.example mesh/gw1/example-gateway-route

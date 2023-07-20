@@ -27,7 +27,7 @@ resource "aws_docdb_cluster_parameter_group" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `name` - (Optional, Forces new resource) The name of the DocumentDB cluster parameter group. If omitted, Terraform will assign a random, unique name.
 * `name_prefix` - (Optional, Forces new resource) Creates a unique name beginning with the specified prefix. Conflicts with `name`.
@@ -44,9 +44,9 @@ Parameter blocks support the following:
 * `value` - (Required) The value of the DocumentDB parameter.
 * `apply_method` - (Optional) Valid values are `immediate` and `pending-reboot`. Defaults to `pending-reboot`.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The DocumentDB cluster parameter group name.
 * `arn` - The ARN of the DocumentDB cluster parameter group.
@@ -54,7 +54,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-DocumentDB Cluster Parameter Groups can be imported using the `name`, e.g.,
+Import DocumentDB Cluster Parameter Groups using the `name`. For example:
 
 ```
 $ terraform import aws_docdb_cluster_parameter_group.cluster_pg production-pg-1

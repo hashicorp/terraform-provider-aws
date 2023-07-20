@@ -24,9 +24,9 @@ The following arguments are required:
 
 * `user_name` - (Required) Name of the user.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition, the following attributes are exported:
+This data source exports the following attributes in addition to the arguments above:
 
 * `id` - Name of the user.
 * `access_string` - Access permissions string used for this user.

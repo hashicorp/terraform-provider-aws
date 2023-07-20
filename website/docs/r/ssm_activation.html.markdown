@@ -47,7 +47,7 @@ resource "aws_ssm_activation" "foo" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `name` - (Optional) The default name of the registered managed instance.
 * `description` - (Optional) The description of the resource that you want to register.
@@ -56,9 +56,9 @@ The following arguments are supported:
 * `registration_limit` - (Optional) The maximum number of managed instances you want to register. The default value is 1 instance.
 * `tags` - (Optional) A map of tags to assign to the object. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The activation ID.
 * `activation_code` - The code the system generates when it processes the activation.
@@ -73,7 +73,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-AWS SSM Activation can be imported using the `id`, e.g.,
+Import AWS SSM Activation using the `id`. For example:
 
 ```sh
 $ terraform import aws_ssm_activation.example e488f2f6-e686-4afb-8a04-ef6dfEXAMPLE

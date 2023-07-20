@@ -34,16 +34,16 @@ The following arguments are optional:
 * `deregister_on_destroy` - (Optional) Flag to deregister AuditManager in the account upon destruction. Defaults to `false` (ie. AuditManager will remain active in the account, even if this resource is removed).
 * `kms_key` - (Optional) KMS key identifier.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - Unique identifier for the account registration. Since registration is applied per AWS region, this will be the active region name (ex. `us-east-1`).
 * `status` - Status of the account registration request.
 
 ## Import
 
-Audit Manager Account Registration resources can be imported using the `id`, e.g.,
+Import Audit Manager Account Registration resources using the `id`. For example:
 
 ```
 $ terraform import aws_auditmanager_account_registration.example us-east-1

@@ -63,7 +63,7 @@ resource "aws_s3_bucket" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `bucket` - (Required) Name of the bucket this analytics configuration is associated with.
 * `name` - (Required) Unique identifier of the analytics configuration for the bucket.
@@ -95,13 +95,13 @@ The `s3_bucket_destination` configuration supports the following:
 * `format` - (Optional) Output format of exported analytics data. Allowed values: `CSV`. Default value: `CSV`.
 * `prefix` - (Optional) Prefix to append to exported analytics data.
 
-## Attributes Reference
+## Attribute Reference
 
-No additional attributes are exported.
+This resource exports no additional attributes.
 
 ## Import
 
-S3 bucket analytics configurations can be imported using `bucket:analytics`, e.g.,
+Import S3 bucket analytics configurations using `bucket:analytics`. For example:
 
 ```
 $ terraform import aws_s3_bucket_analytics_configuration.my-bucket-entire-bucket my-bucket:EntireBucket

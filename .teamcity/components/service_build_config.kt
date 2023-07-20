@@ -1,4 +1,5 @@
 import jetbrains.buildServer.configs.kotlin.AbsoluteId
+import jetbrains.buildServer.configs.kotlin.BuildSteps
 import jetbrains.buildServer.configs.kotlin.BuildType
 import jetbrains.buildServer.configs.kotlin.DslContext
 import jetbrains.buildServer.configs.kotlin.ParameterDisplay
@@ -53,7 +54,7 @@ class Service(name: String, spec: ServiceSpec) {
 
             val serviceDir = "./internal/service/$packageName"
             steps {
-                configureGoEnv()
+                ConfigureGoEnv()
                 script {
                     name = "Compile Test Binary"
                     workingDir = serviceDir
@@ -104,9 +105,9 @@ class Service(name: String, spec: ServiceSpec) {
     }
 }
 
-fun configureGoEnv(): ScriptBuildStep {
-    return ScriptBuildStep {
+fun BuildSteps.ConfigureGoEnv() {
+    step(ScriptBuildStep {
         name = "Configure GOENV"
         scriptContent = File("./scripts/configure_goenv.sh").readText()
-    }
+    })
 }

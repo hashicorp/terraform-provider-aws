@@ -49,21 +49,21 @@ resource "aws_backup_vault_policy" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `backup_vault_name` - (Required) Name of the backup vault to add policy for.
 * `policy` - (Required) The backup vault access policy document in JSON format.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The name of the vault.
 * `backup_vault_arn` - The ARN of the vault.
 
 ## Import
 
-Backup vault policy can be imported using the `name`, e.g.,
+Import Backup vault policy using the `name`. For example:
 
 ```
 $ terraform import aws_backup_vault_policy.test TestVault

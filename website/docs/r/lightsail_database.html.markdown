@@ -100,7 +100,7 @@ resource "aws_lightsail_database" "test" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `name` - (Required) The name to use for your new Lightsail database resource. Names be unique within each AWS Region in your Lightsail account.
 * `availability_zone` - The Availability Zone in which to create your new database. Use the us-east-2a case-sensitive format.
@@ -165,9 +165,9 @@ A Bundle Id can have the following infix added in order to use the HA option of 
 
 A Bundle ID ends with one of the following suffix: `1_0`
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The ARN of the Lightsail instance (matches `arn`).
 * `arn` - The ARN of the Lightsail instance (matches `id`).
@@ -186,7 +186,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Lightsail Databases can be imported using their name, e.g.
+Import Lightsail Databases using their name. For example:
 
 ```
 $ terraform import aws_lightsail_database.foo 'bar'
