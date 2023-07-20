@@ -68,7 +68,7 @@ Using `terraform import`, import IAM User Login Profiles without password inform
 % terraform import aws_iam_user_login_profile.example myusername
 ```
 
-Since Terraform has no method to read the PGP or password information during import, use the [Terraform resource `lifecycle` configuration block `ignore_changes` argument](https://www.terraform.io/docs/configuration/meta-arguments/lifecycle.html#ignore_changes) to ignore them unless password recreation is desiredE.g.,
+Since Terraform has no method to read the PGP or password information during import, use the [Terraform resource `lifecycle` configuration block `ignore_changes` argument](https://www.terraform.io/docs/configuration/meta-arguments/lifecycle.html#ignore_changes) to ignore them (unless you want to recreate a password). For example:
 
 ```terraform
 resource "aws_iam_user_login_profile" "example" {
