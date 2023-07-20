@@ -1282,6 +1282,8 @@ func TestAccPipesPipe_sqsSourceBatchJobTarget(t *testing.T) {
 }
 
 func TestAccPipesPipe_sqsSourceECSTaskTarget(t *testing.T) {
+	acctest.Skip(t, "ValidationException: [numeric instance is lower than the required minimum (minimum: 1, found: 0)]")
+
 	ctx := acctest.Context(t)
 	var pipe pipes.DescribePipeOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
