@@ -75,11 +75,11 @@ func expandCaptchaConfig(l []interface{}) *wafv2.CaptchaConfig {
 }
 
 func expandAssociationConfig(l []interface{}) *wafv2.AssociationConfig {
-	configuration := &wafv2.AssociationConfig{}
-
 	if len(l) == 0 || l[0] == nil {
-		return configuration
+		return nil
 	}
+
+	configuration := &wafv2.AssociationConfig{}
 
 	m := l[0].(map[string]interface{})
 	if v, ok := m["request_body"]; ok {
