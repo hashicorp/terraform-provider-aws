@@ -63,7 +63,6 @@ func ResourceWebACL() *schema.Resource {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
-				"association_config": associationConfigSchema(),
 				"capacity": {
 					Type:     schema.TypeInt,
 					Computed: true,
@@ -186,10 +185,6 @@ func resourceWebACLCreate(ctx context.Context, d *schema.ResourceData, meta inte
 		VisibilityConfig: expandVisibilityConfig(d.Get("visibility_config").([]interface{})),
 	}
 
-	if v, ok := d.GetOk("association_config"); ok {
-		input.AssociationConfig = expandAssociationConfig(v.([]interface{}))
-	}
-
 	if v, ok := d.GetOk("custom_response_body"); ok && v.(*schema.Set).Len() > 0 {
 		input.CustomResponseBodies = expandCustomResponseBodies(v.(*schema.Set).List())
 	}
@@ -235,9 +230,6 @@ func resourceWebACLRead(ctx context.Context, d *schema.ResourceData, meta interf
 	webACL := output.WebACL
 	arn := aws.StringValue(webACL.ARN)
 	d.Set("arn", arn)
-	if err := d.Set("association_config", flattenAssociationConfig(webACL.AssociationConfig)); err != nil {
-		return diag.Errorf("setting association_config: %s", err)
-	}
 	d.Set("capacity", webACL.Capacity)
 	if err := d.Set("captcha_config", flattenCaptchaConfig(webACL.CaptchaConfig)); err != nil {
 		return diag.Errorf("setting captcha_config: %s", err)
@@ -276,10 +268,6 @@ func resourceWebACLUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 			Rules:            expandWebACLRules(d.Get("rule").(*schema.Set).List()),
 			Scope:            aws.String(d.Get("scope").(string)),
 			VisibilityConfig: expandVisibilityConfig(d.Get("visibility_config").([]interface{})),
-		}
-
-		if v, ok := d.GetOk("association_config"); ok && v.(*schema.Set).Len() > 0 {
-			input.AssociationConfig = expandAssociationConfig(v.(*schema.Set).List())
 		}
 
 		if v, ok := d.GetOk("custom_response_body"); ok && v.(*schema.Set).Len() > 0 {

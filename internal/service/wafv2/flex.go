@@ -144,36 +144,6 @@ func expandAllowAction(l []interface{}) *wafv2.AllowAction {
 	return action
 }
 
-func expandAssociationConfig(l []interface{}) *wafv2.AssociationConfig {
-	configuration := &wafv2.AssociationConfig{}
-
-	if len(l) == 0 || l[0] == nil {
-		return configuration
-	}
-
-	m := l[0].(map[string]interface{})
-	if v, ok := m["request_body"]; ok {
-		inner := v.([]interface{})
-		if len(inner) == 0 || inner[0] == nil {
-			return configuration
-		}
-
-		m = inner[0].(map[string]interface{})
-
-		if t, ok := m["key"]; ok {
-			if v, ok := m["default_size_inspection_limit"]; ok {
-				configuration.RequestBody = map[string]*wafv2.RequestBodyAssociatedResourceTypeConfig{
-					t.(string): {
-						DefaultSizeInspectionLimit: aws.String(v.(string)),
-					},
-				}
-			}
-		}
-	}
-
-	return configuration
-}
-
 func expandBlockAction(l []interface{}) *wafv2.BlockAction {
 	action := &wafv2.BlockAction{}
 
@@ -1406,26 +1376,6 @@ func flattenAllow(a *wafv2.AllowAction) []interface{} {
 
 	if a.CustomRequestHandling != nil {
 		m["custom_request_handling"] = flattenCustomRequestHandling(a.CustomRequestHandling)
-	}
-
-	return []interface{}{m}
-}
-
-func flattenAssociationConfig(config *wafv2.AssociationConfig) []interface{} {
-	if config == nil {
-		return []interface{}{}
-	}
-	if config.RequestBody == nil {
-		return []interface{}{}
-	}
-
-	m := map[string]interface{}{}
-	for k, v := range config.RequestBody {
-		body := map[string]interface{}{
-			"key":                           aws.StringValue(&k),
-			"default_size_inspection_limit": aws.StringValue(v.DefaultSizeInspectionLimit),
-		}
-		m["request_body"] = []interface{}{body}
 	}
 
 	return []interface{}{m}

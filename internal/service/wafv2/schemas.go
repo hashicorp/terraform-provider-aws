@@ -1235,37 +1235,3 @@ func managedRuleGroupConfigATPResponseInspectionSchema() *schema.Schema {
 		},
 	}
 }
-
-func associationConfigSchema() *schema.Schema {
-	return &schema.Schema{
-		Type:     schema.TypeList,
-		MaxItems: 1,
-		Optional: true,
-		Elem: &schema.Resource{
-			Schema: map[string]*schema.Schema{
-				"request_body": {
-					Type:     schema.TypeList,
-					MaxItems: 1,
-					Optional: true,
-					Elem: &schema.Resource{
-						Schema: map[string]*schema.Schema{
-							"key": {
-								Type:     schema.TypeString,
-								Required: true,
-								ValidateFunc: validation.All(
-									validation.StringLenBetween(1, 128),
-									validation.StringMatch(regexp.MustCompile(`^[\w\-]+$`), "must contain only alphanumeric, hyphen, and underscore characters"),
-								),
-							},
-							"default_size_inspection_limit": {
-								Type:         schema.TypeString,
-								Required:     true,
-								ValidateFunc: validation.StringInSlice(wafv2.SizeInspectionLimit_Values(), false),
-							},
-						},
-					},
-				},
-			},
-		},
-	}
-}

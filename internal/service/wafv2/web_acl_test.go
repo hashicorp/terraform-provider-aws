@@ -11,7 +11,6 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/cloudfront"
 	"github.com/aws/aws-sdk-go/service/wafv2"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -2387,79 +2386,6 @@ func TestAccWAFV2WebACL_tokenDomains(t *testing.T) {
 			},
 		},
 	})
-}
-
-func TestAccWAFV2WebACL_AssociationConfig(t *testing.T) {
-	ctx := acctest.Context(t)
-	var v wafv2.WebACL
-	webACLName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_wafv2_web_acl.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck: func() {
-			acctest.PreCheck(ctx, t)
-			acctest.PreCheckRegion(t, "us-east-1")
-			acctest.PreCheckPartitionHasService(t, wafv2.EndpointsID)
-			acctest.PreCheckPartitionHasService(t, cloudfront.EndpointsID)
-			testAccPreCheckScopeCloudfront(ctx, t)
-		},
-		ErrorCheck:               acctest.ErrorCheck(t, wafv2.EndpointsID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckWebACLDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccWebACLConfig_associationConfig(webACLName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckWebACLExists(ctx, resourceName, &v),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`global/webacl/.+$`)),
-					resource.TestCheckResourceAttr(resourceName, "name", webACLName),
-					resource.TestCheckResourceAttr(resourceName, "scope", "CLOUDFRONT"),
-					resource.TestCheckResourceAttr(resourceName, "description", webACLName),
-					resource.TestCheckResourceAttr(resourceName, "rule.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "default_action.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "default_action.0.allow.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "default_action.0.block.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "association_config.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "association_config.0.request_body.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "association_config.0.request_body.0.key", "CLOUDFRONT"),
-					resource.TestCheckResourceAttr(resourceName, "association_config.0.request_body.0.default_size_inspection_limit", "KB_32"),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-				ImportStateIdFunc: testAccWebACLImportStateIdFunc(resourceName),
-			},
-		},
-	})
-}
-
-func testAccWebACLConfig_associationConfig(name string) string {
-	return fmt.Sprintf(`
-resource "aws_wafv2_web_acl" "test" {
-  name        = %[1]q
-  description = %[1]q
-  scope       = "CLOUDFRONT"
-
-  default_action {
-    allow {}
-  }
-
-  visibility_config {
-    cloudwatch_metrics_enabled = false
-    metric_name                = "friendly-metric-name"
-    sampled_requests_enabled   = false
-  }
-
-  association_config {
-	request_body {
-      key                           = "CLOUDFRONT"
-      default_size_inspection_limit = "KB_32"
-	}
-  }
-}
-`, name)
 }
 
 func testAccCheckWebACLDestroy(ctx context.Context) resource.TestCheckFunc {

@@ -349,7 +349,6 @@ resource "aws_wafv2_web_acl" "test" {
 
 The following arguments are supported:
 
-* `association_config` - (Optional) Specifies custom configurations for the associations between the web ACL and protected resources. See [`association_config`](#association_config) below for details.
 * `custom_response_body` - (Optional) Defines custom response bodies that can be referenced by `custom_response` actions. See [`custom_response_body`](#custom_response_body) below for details.
 * `default_action` - (Required) Action to perform if none of the `rules` contained in the WebACL match. See [`default_ action`](#default_action) below for details.
 * `description` - (Optional) Friendly description of the WebACL.
@@ -359,12 +358,6 @@ The following arguments are supported:
 * `tags` - (Optional) Map of key-value pairs to associate with the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `token_domains` - (Optional) Specifies the domains that AWS WAF should accept in a web request token. This enables the use of tokens across multiple protected websites. When AWS WAF provides a token, it uses the domain of the AWS resource that the web ACL is protecting. If you don't specify a list of token domains, AWS WAF accepts tokens only for the domain of the protected resource. With a token domain list, AWS WAF accepts the resource's host domain plus all domains in the token domain list, including their prefixed subdomains.
 * `visibility_config` - (Required) Defines and enables Amazon CloudWatch metrics and web request sample collection. See [`visibility_config`](#visibility_config) below for details.
-
-### `association_config`
-
-Each `association_config` block supports the following arguments:
-
-* `request_body` - (Optional) Customizes the maximum size of the request body that your protected CloudFront distributions forward to AWS WAF for inspection. See [`request_body`](#request_body) below for details.
 
 ### `custom_response_body`
 
@@ -594,13 +587,6 @@ The `rate_based_statement` block supports the following arguments:
 * `forwarded_ip_config` - (Optional) Configuration for inspecting IP addresses in an HTTP header that you specify, instead of using the IP address that's reported by the web request origin. If `aggregate_key_type` is set to `FORWARDED_IP`, this block is required. See [`forwarded_ip_config`](#forwarded_ip_config) below for details.
 * `limit` - (Required) Limit on requests per 5-minute period for a single originating IP address.
 * `scope_down_statement` - (Optional) Optional nested statement that narrows the scope of the rate-based statement to matching web requests. This can be any nestable statement, and you can nest statements at any level below this scope-down statement. See [`statement`](#statement) above for details.
-
-#### `request_body`
-
-The `request_body` block supports the following arguments:
-
-* `key` - (Required) Unique key identifying the associated resource type.
-* `default_size_inspection_limit` - (Required) Specifies the maximum size of the web request body component that an associated CloudFront distribution should send to AWS WAF for inspection.
 
 #### `regex_match_statement`
 

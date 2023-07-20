@@ -2126,24 +2126,6 @@ func testAccPreCheckScopeRegional(ctx context.Context, t *testing.T) {
 	}
 }
 
-func testAccPreCheckScopeCloudfront(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).WAFV2Conn(ctx)
-
-	input := &wafv2.ListRuleGroupsInput{
-		Scope: aws.String(wafv2.ScopeCloudfront),
-	}
-
-	_, err := conn.ListRuleGroupsWithContext(ctx, input)
-
-	if acctest.PreCheckSkipError(err) {
-		t.Skipf("skipping acceptance testing: %s", err)
-	}
-
-	if err != nil {
-		t.Fatalf("unexpected PreCheck error: %s", err)
-	}
-}
-
 func testAccCheckRuleGroupDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		for _, rs := range s.RootModule().Resources {
