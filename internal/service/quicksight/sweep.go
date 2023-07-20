@@ -95,7 +95,7 @@ func sweepDashboards(region string) error {
 		return fmt.Errorf("listing QuickSight Dashboards: %w", err)
 	}
 
-	if err := sweep.SweepOrchestratorWithContext(ctx, sweepResources); err != nil {
+	if err := sweep.SweepOrchestrator(ctx, sweepResources); err != nil {
 		return fmt.Errorf("sweeping QuickSight Dashboards for %s: %w", region, err)
 	}
 
@@ -147,7 +147,7 @@ func sweepDataSets(region string) error {
 		return fmt.Errorf("listing QuickSight Data Sets: %w", err)
 	}
 
-	if err := sweep.SweepOrchestratorWithContext(ctx, sweepResources); err != nil {
+	if err := sweep.SweepOrchestrator(ctx, sweepResources); err != nil {
 		return fmt.Errorf("sweeping QuickSight Data Sets for %s: %w", region, err)
 	}
 
@@ -199,7 +199,7 @@ func sweepDataSources(region string) error {
 		return fmt.Errorf("listing QuickSight Data Sources: %w", err)
 	}
 
-	if err := sweep.SweepOrchestratorWithContext(ctx, sweepResources); err != nil {
+	if err := sweep.SweepOrchestrator(ctx, sweepResources); err != nil {
 		return fmt.Errorf("sweeping QuickSight Data Sources for %s: %w", region, err)
 	}
 
@@ -243,7 +243,7 @@ func sweepFolders(region string) error {
 		return fmt.Errorf("listing QuickSight Folders: %w", err)
 	}
 
-	if err := sweep.SweepOrchestratorWithContext(ctx, sweepResources); err != nil {
+	if err := sweep.SweepOrchestrator(ctx, sweepResources); err != nil {
 		return fmt.Errorf("sweeping QuickSight Folders for %s: %w", region, err)
 	}
 
@@ -296,7 +296,7 @@ func sweepTemplates(region string) error {
 		return fmt.Errorf("listing QuickSight Templates: %w", err)
 	}
 
-	if err := sweep.SweepOrchestratorWithContext(ctx, sweepResources); err != nil {
+	if err := sweep.SweepOrchestrator(ctx, sweepResources); err != nil {
 		return fmt.Errorf("sweeping QuickSight Templates for %s: %w", region, err)
 	}
 
@@ -342,7 +342,7 @@ func sweepUsers(region string) error {
 		return fmt.Errorf("listing QuickSight Users: %w", err)
 	}
 
-	if err := sweep.SweepOrchestratorWithContext(ctx, sweepResources); err != nil {
+	if err := sweep.SweepOrchestrator(ctx, sweepResources); err != nil {
 		return fmt.Errorf("sweeping QuickSight Users for %s: %w", region, err)
 	}
 

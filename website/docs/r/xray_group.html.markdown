@@ -38,9 +38,9 @@ resource "aws_xray_group" "example" {
 * `insights_enabled` - (Required) Specifies whether insights are enabled.
 * `notifications_enabled` - (Optional) Specifies whether insight notifications are enabled.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The ARN of the Group.
 * `arn` - The ARN of the Group.
@@ -48,7 +48,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-XRay Groups can be imported using the ARN, e.g.,
+Import XRay Groups using the ARN. For example:
 
 ```
 $ terraform import aws_xray_group.example arn:aws:xray:us-west-2:1234567890:group/example-group/TNGX7SW5U6QY36T4ZMOUA3HVLBYCZTWDIOOXY3CJAXTHSS3YCWUA

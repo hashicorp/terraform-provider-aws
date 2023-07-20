@@ -132,9 +132,9 @@ The following arguments are optional:
 * `warning` - (Optional) Color (hexadecimal) that applies to warning and informational messages.
 * `warning_foreground` - (Optional) Color (hexadecimal) that applies to any text or other elements that appear over the warning color.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the theme.
 * `created_time` - The time that the theme was created.
@@ -154,7 +154,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-A QuickSight Theme can be imported using the AWS account ID and theme ID separated by a comma (`,`) e.g.,
+Import a QuickSight Theme using the AWS account ID and theme ID separated by a comma (`,`). For example:
 
 ```
 $ terraform import aws_quicksight_theme.example 123456789012,example-id

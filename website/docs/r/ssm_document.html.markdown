@@ -68,7 +68,7 @@ DOC
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `name` - (Required) The name of the document.
 * `attachments_source` - (Optional) One or more configuration blocks describing attachments sources to a version of a document. Defined below.
@@ -88,9 +88,9 @@ The `attachments_source` block supports the following:
 * `values` - (Required) The value describing the location of an attachment to a document
 * `name` - (Optional) The name of the document attachment file
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `created_date` - The date the document was created.
 * `description` - The description of the document.
@@ -122,7 +122,7 @@ The permissions mapping supports the following:
 
 ## Import
 
-SSM Documents can be imported using the name, e.g.,
+Import SSM Documents using the name. For example:
 
 ```
 $ terraform import aws_ssm_document.example example

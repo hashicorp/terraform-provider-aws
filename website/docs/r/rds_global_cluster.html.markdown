@@ -200,7 +200,7 @@ resource "aws_rds_cluster_instance" "primary" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `global_cluster_identifier` - (Required, Forces new resources) Global cluster identifier.
 * `database_name` - (Optional, Forces new resources) Name for an automatically created database on cluster creation.
@@ -211,9 +211,9 @@ The following arguments are supported:
 * `source_db_cluster_identifier` - (Optional) Amazon Resource Name (ARN) to use as the primary DB Cluster of the Global Cluster on creation. Terraform cannot perform drift detection of this value.
 * `storage_encrypted` - (Optional, Forces new resources) Specifies whether the DB cluster is encrypted. The default is `false` unless `source_db_cluster_identifier` is specified and encrypted. Terraform will only perform drift detection if a configuration value is provided.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - RDS Global Cluster Amazon Resource Name (ARN)
 * `global_cluster_members` - Set of objects containing Global Cluster members.
@@ -232,7 +232,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-`aws_rds_global_cluster` can be imported by using the RDS Global Cluster identifier, e.g.,
+Import `aws_rds_global_cluster` using the RDS Global Cluster identifier. For example:
 
 ```
 $ terraform import aws_rds_global_cluster.example example

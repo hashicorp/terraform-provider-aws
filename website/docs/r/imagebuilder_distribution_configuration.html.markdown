@@ -119,9 +119,9 @@ The following arguments are optional:
 * `account_id` - The account ID that this configuration applies to.
 * `launch_template_id` - (Required) The ID of the Amazon EC2 launch template to use.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - (Required) Amazon Resource Name (ARN) of the distribution configuration.
 * `date_created` - Date the distribution configuration was created.
@@ -130,7 +130,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-`aws_imagebuilder_distribution_configurations` resources can be imported by using the Amazon Resource Name (ARN), e.g.,
+Import `aws_imagebuilder_distribution_configurations` resources using the Amazon Resource Name (ARN). For example:
 
 ```
 $ terraform import aws_imagebuilder_distribution_configuration.example arn:aws:imagebuilder:us-east-1:123456789012:distribution-configuration/example

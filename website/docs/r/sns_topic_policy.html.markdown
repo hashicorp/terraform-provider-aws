@@ -68,20 +68,20 @@ data "aws_iam_policy_document" "sns_topic_policy" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `arn` - (Required) The ARN of the SNS topic
 * `policy` - (Required) The fully-formed AWS policy as JSON. For more information about building AWS IAM policy documents with Terraform, see the [AWS IAM Policy Document Guide](https://learn.hashicorp.com/terraform/aws/iam-policy).
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `owner` - The AWS Account ID of the SNS topic owner
 
 ## Import
 
-SNS Topic Policy can be imported using the topic ARN, e.g.,
+Import SNS Topic Policy using the topic ARN. For example:
 
 ```
 $ terraform import aws_sns_topic_policy.user_updates arn:aws:sns:us-west-2:0123456789012:my-topic

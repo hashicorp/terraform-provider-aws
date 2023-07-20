@@ -21,21 +21,21 @@ resource "aws_route53_resolver_rule_association" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `resolver_rule_id` - (Required) The ID of the resolver rule that you want to associate with the VPC.
 * `vpc_id` - (Required) The ID of the VPC that you want to associate the resolver rule with.
 * `name` - (Optional) A name for the association that you're creating between a resolver rule and a VPC.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The ID of the resolver rule association.
 
 ## Import
 
-Route53 Resolver rule associations can be imported using the `id`, e.g.,
+Import Route53 Resolver rule associations using the `id`. For example:
 
 ```
 $ terraform import aws_route53_resolver_rule_association.example rslvr-rrassoc-97242eaf88example

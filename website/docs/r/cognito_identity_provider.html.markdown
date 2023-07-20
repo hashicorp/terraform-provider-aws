@@ -39,7 +39,7 @@ resource "aws_cognito_identity_provider" "example_provider" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `user_pool_id` (Required) - The user pool id
 * `provider_name` (Required) - The provider name
@@ -48,13 +48,13 @@ The following arguments are supported:
 * `idp_identifiers` (Optional) - The list of identity providers.
 * `provider_details` (Optional) - The map of identity details, such as access token
 
-## Attributes Reference
+## Attribute Reference
 
-No additional attributes are exported.
+This resource exports no additional attributes.
 
 ## Import
 
-`aws_cognito_identity_provider` resources can be imported using their User Pool ID and Provider Name, e.g.,
+Import `aws_cognito_identity_provider` resources using their User Pool ID and Provider Name. For example:
 
 ```
 $ terraform import aws_cognito_identity_provider.example us-west-2_abc123:CorpAD

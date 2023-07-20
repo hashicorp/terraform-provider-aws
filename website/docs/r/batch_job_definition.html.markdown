@@ -158,9 +158,9 @@ The following arguments are optional:
 
 * `attempt_duration_seconds` - (Optional) The time duration in seconds after which AWS Batch terminates your jobs if they have not finished. The minimum value for the timeout is `60` seconds.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - The Amazon Resource Name of the job definition.
 * `revision` - The revision of the job definition.
@@ -168,7 +168,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Batch Job Definition can be imported using the `arn`, e.g.,
+Import Batch Job Definition using the `arn`. For example:
 
 ```
 $ terraform import aws_batch_job_definition.test arn:aws:batch:us-east-1:123456789012:job-definition/sample

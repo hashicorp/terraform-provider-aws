@@ -36,7 +36,7 @@ resource "aws_redshift_parameter_group" "bar" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `name` - (Required) The name of the Redshift parameter group.
 * `family` - (Required) The family of the Redshift parameter group.
@@ -51,9 +51,9 @@ Parameter blocks support the following:
 
 You can read more about the parameters that Redshift supports in the [documentation](http://docs.aws.amazon.com/redshift/latest/mgmt/working-with-parameter-groups.html)
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - Amazon Resource Name (ARN) of parameter group
 * `id` - The Redshift parameter group name.
@@ -61,7 +61,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Redshift Parameter Groups can be imported using the `name`, e.g.,
+Import Redshift Parameter Groups using the `name`. For example:
 
 ```
 $ terraform import aws_redshift_parameter_group.paramgroup1 parameter-group-test-terraform

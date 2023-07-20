@@ -22,17 +22,17 @@ resource "aws_ebs_encryption_by_default" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `enabled` - (Optional) Whether or not default EBS encryption is enabled. Valid values are `true` or `false`. Defaults to `true`.
 
-## Attributes Reference
+## Attribute Reference
 
-No additional attributes are exported.
+This resource exports no additional attributes.
 
 ## Import
 
-Default EBS encryption state can be imported, e.g.,
+Import the default EBS encryption state. For example:
 
 ```
 $ terraform import aws_ebs_encryption_by_default.example default

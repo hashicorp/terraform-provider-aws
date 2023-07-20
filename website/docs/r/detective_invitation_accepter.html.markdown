@@ -32,19 +32,19 @@ resource "aws_detective_invitation_accepter" "member" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `graph_arn` - (Required) ARN of the behavior graph that the member account is accepting the invitation for.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - Unique identifier (ID) of the Detective invitation accepter.
 
 ## Import
 
-`aws_detective_invitation_accepter` can be imported using the graph ARN, e.g.
+Import `aws_detective_invitation_accepter` using the graph ARN. For example:
 
 ```
 $ terraform import aws_detective_invitation_accepter.example arn:aws:detective:us-east-1:123456789101:graph:231684d34gh74g4bae1dbc7bd807d02d

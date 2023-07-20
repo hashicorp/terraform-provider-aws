@@ -65,6 +65,7 @@ func ResourceAgent() *schema.Resource {
 			"private_link_endpoint": {
 				Type:          schema.TypeString,
 				Optional:      true,
+				Computed:      true,
 				ForceNew:      true,
 				ConflictsWith: []string{"activation_key"},
 			},

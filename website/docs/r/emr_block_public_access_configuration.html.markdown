@@ -84,13 +84,13 @@ This block is used to define a range of TCP ports that should form exceptions to
 * `min_range` - (Required) The first port in the range of TCP ports.
 * `max_range` - (Required) The final port in the range of TCP ports.
 
-## Attributes Reference
+## Attribute Reference
 
-No additional attributes are exported.
+This resource exports no additional attributes.
 
 ## Import
 
-The current EMR Block Public Access Configuration can be imported, e.g.,
+Import the current EMR Block Public Access Configuration. For example:
 
 ```
 $ terraform import aws_emr_block_public_access_configuration.example current

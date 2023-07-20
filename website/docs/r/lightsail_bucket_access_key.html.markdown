@@ -25,13 +25,13 @@ resource "aws_lightsail_bucket_access_key_access_key" "test" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `bucket_name` - (Required) The name of the bucket that the new access key will belong to, and grant access to.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - A combination of attributes separated by a `,` to create a unique id: `bucket_name`,`access_key_id`
 * `access_key_id` - The ID of the access key.
@@ -41,7 +41,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-`aws_lightsail_bucket_access_key` can be imported by using the `id` attribute, e.g.,
+Import `aws_lightsail_bucket_access_key` using the `id` attribute. For example:
 
 ```
 $ terraform import aws_lightsail_bucket_access_key.test example-bucket,AKIA47VOQ2KPR7LLRZ6D

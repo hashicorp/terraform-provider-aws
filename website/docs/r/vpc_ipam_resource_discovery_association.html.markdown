@@ -29,15 +29,15 @@ resource "aws_vpc_ipam_resource_discovery_association" "test" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `ipam_id` - (Required) The ID of the IPAM to associate.
 * `ipam_resource_discovery_id` - (Required) The ID of the Resource Discovery to associate.
 * `tags` - (Optional) A map of tags to add to the IPAM resource discovery association resource.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - The Amazon Resource Name (ARN) of IPAM Resource Discovery Association.
 * `id` - The ID of the IPAM Resource Discovery Association.
@@ -50,7 +50,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-IPAMs can be imported using the `ipam resource discovery association id`, e.g.
+Import IPAMs using the `ipam resource discovery association id`. For example:
 
 ```
 $ terraform import aws_vpc_ipam_resource_discovery_association.example ipam-res-disco-assoc-0178368ad2146a492

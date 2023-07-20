@@ -24,7 +24,7 @@ resource "aws_internet_gateway" "gw" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `vpc_id` - (Optional) The VPC ID to create in.  See the [aws_internet_gateway_attachment](internet_gateway_attachment.html) resource for an alternate way to attach an Internet Gateway to a VPC.
 * `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
@@ -43,9 +43,9 @@ resource "aws_instance" "foo" {
 }
 ```
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The ID of the Internet Gateway.
 * `arn` - The ARN of the Internet Gateway.
@@ -62,7 +62,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Internet Gateways can be imported using the `id`, e.g.,
+Import Internet Gateways using the `id`. For example:
 
 ```
 $ terraform import aws_internet_gateway.gw igw-c0a643a9

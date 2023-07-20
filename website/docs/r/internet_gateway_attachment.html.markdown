@@ -27,14 +27,14 @@ resource "aws_internet_gateway" "example" {}
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `internet_gateway_id` - (Required) The ID of the internet gateway.
 * `vpc_id` - (Required) The ID of the VPC.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The ID of the VPC and Internet Gateway separated by a colon.
 
@@ -47,7 +47,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Internet Gateway Attachments can be imported using the `id`, e.g.
+Import Internet Gateway Attachments using the `id`. For example:
 
 ```
 $ terraform import aws_internet_gateway_attachment.example igw-c0a643a9:vpc-123456

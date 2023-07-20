@@ -28,7 +28,7 @@ resource "aws_wafregional_sql_injection_match_set" "sql_injection_match_set" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `name` - (Required) The name or description of the SizeConstraintSet.
 * `sql_injection_match_tuple` - (Optional) The parts of web requests that you want AWS WAF to inspect for malicious SQL code and, if you want AWS WAF to inspect a header, the name of the header.
@@ -53,15 +53,15 @@ The following arguments are supported:
   See [docs](https://docs.aws.amazon.com/waf/latest/APIReference/API_regional_FieldToMatch.html)
   for all supported values.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The ID of the WAF SqlInjectionMatchSet.
 
 ## Import
 
-WAF Regional Sql Injection Match Set can be imported using the id, e.g.,
+Import WAF Regional Sql Injection Match Set using the id. For example:
 
 ```
 $ terraform import aws_wafregional_sql_injection_match_set.sql_injection_match_set a1b2c3d4-d5f6-7777-8888-9999aaaabbbbcccc
