@@ -49,7 +49,7 @@ In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashico
 
 ```terraform
 import {
-  to = terraform import aws_route53recoveryreadiness_readiness_check.my-cw-alarm-check
+  to = aws_route53recoveryreadiness_readiness_check.my-cw-alarm-check
   id = "example"
 }
 ```
