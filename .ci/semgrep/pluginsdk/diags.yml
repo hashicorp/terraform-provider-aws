@@ -4,9 +4,8 @@ rules:
     languages: [go]
     message: Prefer `sdkdiag.AppendFromErr` to `diag.FromErr`
     paths:
-      include:
-        - internal/conns
-        - internal/provider
+      exclude:
+        - internal/service
     patterns:
       - pattern: diag.FromErr($ERR)
     severity: WARNING
