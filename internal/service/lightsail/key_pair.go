@@ -20,6 +20,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/vault/helper/pgpkeys"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -27,12 +28,13 @@ const (
 	ResKeyPair = "KeyPair"
 )
 
-// @SDKResource("aws_lightsail_key_pair")
+// @SDKResource("aws_lightsail_key_pair", name=KeyPair)
+// @Tags(identifierAttribute="id")
 func ResourceKeyPair() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceKeyPairCreate,
 		ReadWithoutTimeout:   resourceKeyPairRead,
-		UpdateWithoutTimeout: schema.NoopContext,
+		UpdateWithoutTimeout: resourceKeyPairUpdate,
 		DeleteWithoutTimeout: resourceKeyPairDelete,
 
 		Schema: map[string]*schema.Schema{
@@ -91,6 +93,7 @@ func ResourceKeyPair() *schema.Resource {
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
+		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
@@ -202,7 +205,14 @@ func resourceKeyPairRead(ctx context.Context, d *schema.ResourceData, meta inter
 	d.Set("name", resp.KeyPair.Name)
 	d.Set("fingerprint", resp.KeyPair.Fingerprint)
 
+	setTagsOut(ctx, resp.KeyPair.Tags)
+
 	return diags
+}
+
+func resourceKeyPairUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	// Tags only.
+	return resourceKeyPairRead(ctx, d, meta)
 }
 
 func resourceKeyPairDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {

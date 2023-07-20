@@ -128,6 +128,47 @@ func TestAccLightsailKeyPair_namePrefix(t *testing.T) {
 	})
 }
 
+func TestAccLightsailKeyPair_tags(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resourceName := "aws_lightsail_key_pair.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, strings.ToLower(lightsail.ServiceID)),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckKeyPairDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccKeyPairConfig_tags1(rName, "key1", "value1"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckKeyPairExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+				),
+			},
+			{
+				Config: testAccKeyPairConfig_tags2(rName, "key1", "value1", "key2", "value2"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckKeyPairExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+				),
+			},
+			{
+				Config: testAccKeyPairConfig_tags1(rName, "key2", "value2"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckKeyPairExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckKeyPairExists(ctx context.Context, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -189,7 +230,7 @@ func testAccCheckKeyPairDestroy(ctx context.Context) resource.TestCheckFunc {
 func testAccKeyPairConfig_basic(lightsailName string) string {
 	return fmt.Sprintf(`
 resource "aws_lightsail_key_pair" "test" {
-  name = "%s"
+  name = %[1]q
 }
 `, lightsailName)
 }
@@ -224,6 +265,31 @@ resource "aws_lightsail_key_pair" "lightsail_key_pair_test_prefixed" {
   name_prefix = "cts"
 }
 `
+}
+
+func testAccKeyPairConfig_tags1(lightsailName, key1, value1 string) string {
+	return fmt.Sprintf(`
+resource "aws_lightsail_key_pair" "test" {
+  name = %[1]q
+
+  tags = {
+    %[2]q = %[3]q
+  }
+}
+`, lightsailName, key1, value1)
+}
+
+func testAccKeyPairConfig_tags2(lightsailName, key1, value1, key2, value2 string) string {
+	return fmt.Sprintf(`
+resource "aws_lightsail_key_pair" "test" {
+  name = %[1]q
+
+  tags = {
+    %[2]q = %[3]q
+    %[4]q = %[5]q
+  }
+}
+`, lightsailName, key1, value1, key2, value2)
 }
 
 const testKeyPairPubKey1 = `mQENBFXbjPUBCADjNjCUQwfxKL+RR2GA6pv/1K+zJZ8UWIF9S0lk7cVIEfJiprzzwiMwBS5cD0da
