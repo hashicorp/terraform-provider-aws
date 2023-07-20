@@ -37848,20 +37848,6 @@ var awsusgovPartition = partition{
 				}: endpoint{},
 			},
 		},
-		"savingsplans": service{
-			PartitionEndpoint: "aws-us-gov-global",
-			IsRegionalized:    boxedFalse,
-			Endpoints: serviceEndpoints{
-				endpointKey{
-					Region: "aws-us-gov-global",
-				}: endpoint{
-					Hostname: "savingsplans.amazonaws.com",
-					CredentialScope: credentialScope{
-						Region: "us-gov-west-1",
-					},
-				},
-			},
-		},
 		"secretsmanager": service{
 			Endpoints: serviceEndpoints{
 				endpointKey{
