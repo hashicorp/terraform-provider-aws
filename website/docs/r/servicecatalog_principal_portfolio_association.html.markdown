@@ -31,7 +31,7 @@ The following arguments are required:
 The following arguments are optional:
 
 * `accept_language` - (Optional) Language code. Valid values: `en` (English), `jp` (Japanese), `zh` (Chinese). Default value is `en`.
-* `principal_type` - (Optional) Principal type. Setting this argument empty (e.g., `principal_type = ""`) will result in an error. Valid value is `IAM`. Default is `IAM`.
+* `principal_type` - (Optional) Principal type. Setting this argument empty (e.g., `principal_type = ""`) will result in an error. Valid values are `IAM` and `IAM_PATTERN`. Default is `IAM`.
 
 ## Attributes Reference
 
