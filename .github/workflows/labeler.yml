@@ -7,7 +7,7 @@ on:
       - closed
       - opened
       - labeled
-  pull_request:
+  pull_request_target:
     types:
       - opened
       - closed
@@ -37,7 +37,7 @@ jobs:
               echo "username="${{ github.event.assignee.user.login || github.event.issue.user.login }} >> $GITHUB_OUTPUT
               ;;
 
-            pull_request)
+            pull_request_target)
               echo "username="${{ github.event.pull_request.user.login }} >> $GITHUB_OUTPUT
               ;;
 
@@ -76,19 +76,19 @@ jobs:
 
         # Adds prioritized to newly opened maintainer pull requests
       - name: 'Add prioritized to maintainer PRs'
-        if: github.event_name == 'pull_request' && github.event.action == 'opened' && needs.community_check.outputs.maintainer == 'true'
+        if: github.event_name == 'pull_request_target' && github.event.action == 'opened' && needs.community_check.outputs.maintainer == 'true'
         run: |
           echo "LABELS_TO_ADD="$(echo "$LABELS_TO_ADD" | jq -c '. + ["prioritized"]') >> $GITHUB_ENV
 
         # Adds partner for newly opened partner pull requests
       - name: 'Add partner to partner PRs'
-        if: github.event_name == 'pull_request' && github.event.action == 'opened' && needs.community_check.outputs.partner == 'true'
+        if: github.event_name == 'pull_request_target' && github.event.action == 'opened' && needs.community_check.outputs.partner == 'true'
         run: |
           echo "LABELS_TO_ADD="$(echo "$LABELS_TO_ADD" | jq -c '. + ["partner"]') >> $GITHUB_ENV
 
         # Adds external-maintainer to newly opened external maintainer pull requests
       - name: 'Add external-maintainer to external maintainer PRs'
-        if: github.event_name == 'pull_request' && github.event.action == 'opened' && needs.community_check.outputs.core_contributor == 'true'
+        if: github.event_name == 'pull_request_target' && github.event.action == 'opened' && needs.community_check.outputs.core_contributor == 'true'
         run: |
           echo "LABELS_TO_ADD="$(echo "$LABELS_TO_ADD" | jq -c '. + ["external-maintainer"]') >> $GITHUB_ENV
 
@@ -151,7 +151,7 @@ jobs:
   # Apply service-level labels to pull requests
   main_pr_labels:
     name: 'Main Pull Request Labels'
-    if: github.event_name == 'pull_request' && github.event.action == 'opened'
+    if: github.event_name == 'pull_request_target' && github.event.action == 'opened'
     runs-on: ubuntu-latest
     steps:
       - name: 'Checkout Repo'
@@ -168,7 +168,7 @@ jobs:
   # Pull Request size labeler
   pr_size_labeler:
     name: 'Size Labeler for Pull Requests'
-    if: github.event_name == 'pull_request' && github.event.action == 'opened'
+    if: github.event_name == 'pull_request_target' && github.event.action == 'opened'
     runs-on: ubuntu-latest
     steps:
       - name: 'Apply Size Labels'
