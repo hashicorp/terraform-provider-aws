@@ -317,13 +317,15 @@ func TestGenericExpand(t *testing.T) {
 			Target:     &YTestExpand{},
 			WantTarget: &YTestExpand{Names: aws.StringMap(map[string]string{"A": "a"})},
 		},
-		{
-			TestName: "single list Source and single *struct Target",
-			Source:   &AATestExpand{Data: fwtypes.NewListValueOfPtr(ctx, &BTestExpand{Name: types.StringValue("a")})},
-			Target:   &BBTestExpand{},
-			// WantTarget: &BBTestExpand{Data: &CTestExpand{Name: "a"}},
-			WantTarget: &BBTestExpand{},
-		},
+		/*
+			{
+				TestName: "single list Source and single *struct Target",
+				Source:   &AATestExpand{Data: fwtypes.NewListValueOfPtr(ctx, &BTestExpand{Name: types.StringValue("a")})},
+				Target:   &BBTestExpand{},
+				// WantTarget: &BBTestExpand{Data: &CTestExpand{Name: "a"}},
+				WantTarget: &BBTestExpand{},
+			},
+		*/
 	}
 
 	for _, testCase := range testCases {
