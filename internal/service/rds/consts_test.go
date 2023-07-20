@@ -13,4 +13,5 @@ const (
 	sqlServerPreferredInstanceClasses       = `"db.t2.small", "db.t3.small"`
 	sqlServerSEPreferredInstanceClasses     = `"db.m5.large", "db.m4.large", "db.r4.large"`
 	oracleSE2PreferredInstanceClasses       = `"db.m5.large", "db.m4.large", "db.r4.large"`
+	outpostPreferredInstanceClasses         = `"db.m5.large", "db.r5.large"` // https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/rds-on-outposts.db-instance-classes.html
 )
