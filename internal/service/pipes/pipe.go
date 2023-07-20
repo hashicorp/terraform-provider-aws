@@ -232,6 +232,10 @@ func resourcePipeUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 			Name:         aws.String(d.Id()),
 			RoleArn:      aws.String(d.Get("role_arn").(string)),
 			Target:       aws.String(d.Get("target").(string)),
+			// Reset state in case it's a deletion, have to set the input to an empty string otherwise it doesn't get overwritten.
+			TargetParameters: &awstypes.PipeTargetParameters{
+				InputTemplate: aws.String(""),
+			},
 		}
 
 		if d.HasChange("enrichment") {
@@ -252,14 +256,7 @@ func resourcePipeUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 
 		if d.HasChange("target_parameters") {
 			if v, ok := d.GetOk("target_parameters"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-				tfMap := v.([]interface{})[0].(map[string]interface{})
-				input.TargetParameters = expandPipeTargetParameters(tfMap)
-
-				// expandPipeTargetParameters ignores empty input_template.
-				// Reset state in case it's a deletion, have to set the input to an empty string otherwise it doesn't get overwritten.
-				if v, ok := tfMap["input_template"].(string); ok {
-					input.TargetParameters.InputTemplate = aws.String(v)
-				}
+				input.TargetParameters = expandPipeTargetParameters(v.([]interface{})[0].(map[string]interface{}))
 			}
 		}
 
