@@ -83,11 +83,16 @@ The `http_route` and `http2_route`'s `action` object additionally supports the f
 The `rewrite` object supports the following:
 
 * `hostname` - (Optional) Host name to rewrite.
+* `path` - (Optional) Exact path to rewrite.
 * `prefix` - (Optional) Specified beginning characters to rewrite.
 
 The `hostname` object supports the following:
 
 * `default_target_hostname` - (Required) Default target host name to write to. Valid values: `ENABLED`, `DISABLED`.
+
+The `path` object supports the following:
+
+* `exact` - (Required) Value used to replace matched path.
 
 The `prefix` object supports the following:
 
@@ -160,8 +165,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-App Mesh gateway routes can be imported using `mesh_name` and `virtual_gateway_name` together with the gateway route's `name`,
-e.g.,
+Import App Mesh gateway routes using `mesh_name` and `virtual_gateway_name` together with the gateway route's `name`. For example:
 
 ```
 $ terraform import aws_appmesh_gateway_route.example mesh/gw1/example-gateway-route

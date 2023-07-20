@@ -46,7 +46,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Egress-only Internet gateways can be imported using the `id`, e.g.,
+Import Egress-only Internet gateways using the `id`. For example:
 
 ```
 $ terraform import aws_egress_only_internet_gateway.example eigw-015e0e244e24dfe8a

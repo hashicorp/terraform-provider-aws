@@ -41,7 +41,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-`aws_lightsail_certificate` can be imported using the certificate name, e.g.
+Import `aws_lightsail_certificate` using the certificate name. For example:
 
 ```shell
 $ terraform import aws_lightsail_certificate.test CertificateName

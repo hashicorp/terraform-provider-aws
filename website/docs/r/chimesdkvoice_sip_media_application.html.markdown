@@ -52,7 +52,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-A ChimeSDKVoice SIP Media Application can be imported using the `id`, e.g.,
+Import a ChimeSDKVoice SIP Media Application using the `id`. For example:
 
 ```
 $ terraform import aws_chimesdkvoice_sip_media_application.example abcdef123456

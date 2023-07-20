@@ -150,7 +150,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-EventBridge permissions can be imported using the `event_bus_name`, e.g.,
+Import EventBridge permissions using the `event_bus_name`. For example:
 
 ```shell
 $ terraform import aws_cloudwatch_event_bus_policy.DevAccountAccess example-event-bus

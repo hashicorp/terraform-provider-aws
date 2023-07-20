@@ -52,7 +52,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-SageMaker Apps can be imported using the `id`, e.g.,
+Import SageMaker Apps using the `id`. For example:
 
 ```
 $ terraform import aws_sagemaker_app.example arn:aws:sagemaker:us-west-2:012345678912:app/domain-id/user-profile-name/app-type/app-name

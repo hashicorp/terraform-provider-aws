@@ -152,7 +152,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Backup selection can be imported using the role plan_id and id separated by `|`.
+Import Backup selection using the role plan_id and id separated by `|`. For example:
 
 ```
 $ terraform import aws_backup_selection.example plan-id|selection-id

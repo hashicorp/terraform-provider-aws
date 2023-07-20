@@ -43,7 +43,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Inspector Delegated Admin Account can be imported using the `account_id`, e.g.,
+Import Inspector Delegated Admin Account using the `account_id`. For example:
 
 ```
 $ terraform import aws_inspector2_delegated_admin_account.example 012345678901

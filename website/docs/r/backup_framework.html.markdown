@@ -164,7 +164,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Backup Framework can be imported using the `id` which corresponds to the name of the Backup Framework, e.g.,
+Import Backup Framework using the `id` which corresponds to the name of the Backup Framework. For example:
 
 ```
 $ terraform import aws_backup_framework.test <id>

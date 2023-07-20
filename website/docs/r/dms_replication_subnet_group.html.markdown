@@ -104,7 +104,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Replication subnet groups can be imported using the `replication_subnet_group_id`, e.g.,
+Import Replication subnet groups using the `replication_subnet_group_id`. For example:
 
 ```
 $ terraform import aws_dms_replication_subnet_group.test test-dms-replication-subnet-group-tf

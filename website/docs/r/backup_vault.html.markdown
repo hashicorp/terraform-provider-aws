@@ -45,7 +45,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Backup vault can be imported using the `name`, e.g.,
+Import Backup vault using the `name`. For example:
 
 ```
 $ terraform import aws_backup_vault.test-vault TestVault

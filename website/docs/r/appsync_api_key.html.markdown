@@ -41,7 +41,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-`aws_appsync_api_key` can be imported using the AppSync API ID and key separated by `:`, e.g.,
+Import `aws_appsync_api_key` using the AppSync API ID and key separated by `:`. For example:
 
 ```
 $ terraform import aws_appsync_api_key.example xxxxx:yyyyy

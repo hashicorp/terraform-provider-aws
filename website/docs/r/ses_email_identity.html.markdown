@@ -32,7 +32,7 @@ resource "aws_ses_email_identity" "example" {
 
 ## Import
 
-SES email identities can be imported using the email address.
+Import SES email identities using the email address. For example:
 
 ```
 $ terraform import aws_ses_email_identity.example email@example.com

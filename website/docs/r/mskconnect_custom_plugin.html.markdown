@@ -76,7 +76,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-MSK Connect Custom Plugin can be imported using the plugin's `arn`, e.g.,
+Import MSK Connect Custom Plugin using the plugin's `arn`. For example:
 
 ```
 $ terraform import aws_mskconnect_custom_plugin.example 'arn:aws:kafkaconnect:eu-central-1:123456789012:custom-plugin/debezium-example/abcdefgh-1234-5678-9abc-defghijklmno-4'

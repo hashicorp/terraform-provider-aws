@@ -60,7 +60,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Transfer AS2 Connector can be imported using the `connector_id`, e.g.,
+Import Transfer AS2 Connector using the `connector_id`. For example:
 
 ```
 $ terraform import aws_transfer_connector.example c-4221a88afd5f4362a

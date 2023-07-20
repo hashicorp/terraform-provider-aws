@@ -848,7 +848,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-WAFv2 Web ACLs can be imported using `ID/Name/Scope` e.g.,
+Import WAFv2 Web ACLs using `ID/Name/Scope`. For example:
 
 ```
 $ terraform import aws_wafv2_web_acl.example a1b2c3d4-d5f6-7777-8888-9999aaaabbbbcccc/example/REGIONAL

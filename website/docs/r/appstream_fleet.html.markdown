@@ -96,7 +96,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-`aws_appstream_fleet` can be imported using the id, e.g.,
+Import `aws_appstream_fleet` using the id. For example:
 
 ```
 $ terraform import aws_appstream_fleet.example fleetNameExample

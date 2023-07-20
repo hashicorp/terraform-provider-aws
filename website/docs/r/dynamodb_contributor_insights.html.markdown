@@ -31,7 +31,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-`aws_dynamodb_contributor_insights` can be imported using the format `name:table_name/index:index_name`, followed by the account number, e.g.,
+Import `aws_dynamodb_contributor_insights` using the format `name:table_name/index:index_name`, followed by the account number. For example:
 
 ```
 $ terraform import aws_dynamodb_contributor_insights.test name:ExampleTableName/index:ExampleIndexName/123456789012

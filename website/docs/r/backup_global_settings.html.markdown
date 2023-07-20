@@ -34,7 +34,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Backup Global Settings can be imported using the `id`, e.g.,
+Import Backup Global Settings using the `id`. For example:
 
 ```
 $ terraform import aws_backup_global_settings.example 123456789012

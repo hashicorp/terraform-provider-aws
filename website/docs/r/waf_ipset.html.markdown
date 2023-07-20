@@ -53,7 +53,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-WAF IPSets can be imported using their ID, e.g.,
+Import WAF IPSets using their ID. For example:
 
 ```
 $ terraform import aws_waf_ipset.example a1b2c3d4-d5f6-7777-8888-9999aaaabbbbcccc

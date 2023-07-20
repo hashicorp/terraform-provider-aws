@@ -54,7 +54,7 @@ This resource exports no additional attributes.
 
 ## Import
 
-`aws_api_gateway_base_path_mapping` can be imported by using the domain name and base path, e.g.,
+Import `aws_api_gateway_base_path_mapping` using the domain name and base path. For example:
 
 For empty `base_path` (e.g., root path (`/`)):
 

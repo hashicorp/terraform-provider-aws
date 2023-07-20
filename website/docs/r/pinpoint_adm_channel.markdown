@@ -41,7 +41,7 @@ This resource exports no additional attributes.
 
 ## Import
 
-Pinpoint ADM Channel can be imported using the `application-id`, e.g.,
+Import Pinpoint ADM Channel using the `application-id`. For example:
 
 ```
 $ terraform import aws_pinpoint_adm_channel.channel application-id

@@ -35,7 +35,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Redshift Hsm Client Certificates support import by `hsm_client_certificate_identifier`, e.g.,
+Import Redshift HSM Client Certificates using `hsm_client_certificate_identifier`. For example:
 
 ```console
 $ terraform import aws_redshift_hsm_client_certificate.test example

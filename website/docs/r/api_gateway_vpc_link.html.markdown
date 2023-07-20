@@ -51,7 +51,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-API Gateway VPC Link can be imported using the `id`, e.g.,
+Import API Gateway VPC Link using the `id`. For example:
 
 ```
 $ terraform import aws_api_gateway_vpc_link.example 12345abcde

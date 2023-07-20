@@ -728,7 +728,7 @@ A `text_document_statistics` block supports the following attributes:
 
 ## Import
 
-Amazon Kendra Indexes can be imported using its `id`, e.g.,
+Import Amazon Kendra Indexes using its `id`. For example:
 
 ```
 $ terraform import aws_kendra_index.example 12345678-1234-5678-9123-123456789123

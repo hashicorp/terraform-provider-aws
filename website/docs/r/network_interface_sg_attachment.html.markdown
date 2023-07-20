@@ -95,9 +95,7 @@ This resource exports no additional attributes.
 
 ## Import
 
-Network Interface Security Group attachments can be imported using the associated network interface ID and security group ID, separated by an underscore (`_`).
-
-For example:
+Import Network Interface Security Group attachments using the associated network interface ID and security group ID, separated by an underscore (`_`). For example:
 
 ```
 $ terraform import aws_network_interface_sg_attachment.sg_attachment eni-1234567890abcdef0_sg-1234567890abcdef0

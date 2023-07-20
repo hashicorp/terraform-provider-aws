@@ -534,7 +534,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Pipes can be imported using the `name`. For example:
+Import Pipes using the `name`. For example:
 
 ```
 $ terraform import aws_pipes_pipe.example my-pipe

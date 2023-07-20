@@ -48,7 +48,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Security Hub invite acceptance can be imported using the account ID, e.g.,
+Import Security Hub invite acceptance using the account ID. For example:
 
 ```
 $ terraform import aws_securityhub_invite_accepter.example 123456789012

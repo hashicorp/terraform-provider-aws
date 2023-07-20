@@ -67,7 +67,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-`aws_servicecatalog_provisioning_artifact` can be imported using the provisioning artifact ID and product ID separated by a colon, e.g.,
+Import `aws_servicecatalog_provisioning_artifact` using the provisioning artifact ID and product ID separated by a colon. For example:
 
 ```
 $ terraform import aws_servicecatalog_provisioning_artifact.example pa-ij2b6lusy6dec:prod-el3an0rma3

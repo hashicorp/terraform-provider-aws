@@ -86,7 +86,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-SSM Parameters can be imported using the `parameter store name`, e.g.,
+Import SSM Parameters using the `parameter store name`. For example:
 
 ```
 $ terraform import aws_ssm_parameter.my_param /my_path/my_paramname

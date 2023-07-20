@@ -129,7 +129,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-ECS Task Sets can be imported via the `task_set_id`, `service`, and `cluster` separated by commas (`,`) e.g.
+Import ECS Task Sets using the `task_set_id`, `service`, and `cluster` separated by commas (`,`). For example:
 
 ```
 $ terraform import aws_ecs_task_set.example ecs-svc/7177320696926227436,arn:aws:ecs:us-west-2:123456789101:service/example/example-1234567890,arn:aws:ecs:us-west-2:123456789101:cluster/example

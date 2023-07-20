@@ -192,7 +192,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-EventBridge Connection can be imported using the `name`, e.g.,
+Import EventBridge Connection using the `name`. For example:
 
 ```console
 $ terraform import aws_cloudwatch_event_connection.test ngrok-connection

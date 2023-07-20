@@ -104,7 +104,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-CloudSearch Domains can be imported using the `name`, e.g.,
+Import CloudSearch Domains using the `name`. For example:
 
 ```
 $ terraform import aws_cloudsearch_domain.example example-domain

@@ -70,7 +70,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-FSx Volumes can be imported using the `id`, e.g.,
+Import FSx Volumes using the `id`. For example:
 
 ```
 $ terraform import aws_fsx_openzfs_volume.example fsvol-543ab12b1ca672f33

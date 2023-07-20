@@ -14,9 +14,7 @@ Provides an AWS App Mesh virtual router resource.
 
 Because of backward incompatible API changes (read [here](https://github.com/awslabs/aws-app-mesh-examples/issues/92) and [here](https://github.com/awslabs/aws-app-mesh-examples/issues/94)), `aws_appmesh_virtual_router` resource definitions created with provider versions earlier than v2.3.0 will need to be modified:
 
-* Remove service `service_names` from the `spec` argument.
-AWS has created a `aws_appmesh_virtual_service` resource for each of service names.
-These resource can be imported using `terraform import`.
+* Remove service `service_names` from the `spec` argument. AWS has created a `aws_appmesh_virtual_service` resource for each service name. Import these resource using `terraform import`.
 
 * Add a `listener` configuration block to the `spec` argument.
 
@@ -77,8 +75,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-App Mesh virtual routers can be imported using `mesh_name` together with the virtual router's `name`,
-e.g.,
+Import App Mesh virtual routers using `mesh_name` together with the virtual router's `name`. For example:
 
 ```
 $ terraform import aws_appmesh_virtual_router.serviceb simpleapp/serviceB

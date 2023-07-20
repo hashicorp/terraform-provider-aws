@@ -88,7 +88,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Object Lambda Access Points can be imported using the `account_id` and `name`, separated by a colon (`:`), e.g.
+Import Object Lambda Access Points using the `account_id` and `name`, separated by a colon (`:`). For example:
 
 ```
 $ terraform import aws_s3control_object_lambda_access_point.example 123456789012:example

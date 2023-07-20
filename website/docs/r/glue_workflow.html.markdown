@@ -67,7 +67,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Glue Workflows can be imported using `name`, e.g.,
+Import Glue Workflows using `name`. For example:
 
 ```
 $ terraform import aws_glue_workflow.MyWorkflow MyWorkflow

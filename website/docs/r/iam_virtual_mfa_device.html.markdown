@@ -48,7 +48,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-IAM Virtual MFA Devices can be imported using the `arn`, e.g.,
+Import IAM Virtual MFA Devices using the `arn`. For example:
 
 ```
 $ terraform import aws_iam_virtual_mfa_device.example arn:aws:iam::123456789012:mfa/example

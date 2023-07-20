@@ -79,7 +79,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Glacier Vaults can be imported using the `name`, e.g.,
+Import Glacier Vaults using the `name`. For example:
 
 ```
 $ terraform import aws_glacier_vault.archive my_archive

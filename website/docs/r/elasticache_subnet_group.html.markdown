@@ -57,7 +57,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-ElastiCache Subnet Groups can be imported using the `name`, e.g.,
+Import ElastiCache Subnet Groups using the `name`. For example:
 
 ```
 $ terraform import aws_elasticache_subnet_group.bar tf-test-cache-subnet

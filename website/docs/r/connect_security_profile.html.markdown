@@ -53,7 +53,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Amazon Connect Security Profiles can be imported using the `instance_id` and `security_profile_id` separated by a colon (`:`), e.g.,
+Import Amazon Connect Security Profiles using the `instance_id` and `security_profile_id` separated by a colon (`:`). For example:
 
 ```
 $ terraform import aws_connect_security_profile.example f1288a1f-6193-445a-b47e-af739b2:c1d4e5f6-1b3c-1b3c-1b3c-c1d4e5f6c1d4e5

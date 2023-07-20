@@ -66,7 +66,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-VPC Lattice Auth Policy can be imported using the `example_id_arg`, e.g.,
+Import VPC Lattice Auth Policy using the `example_id_arg`. For example:
 
 ```
 $ terraform import aws_vpclattice_auth_policy.example rft-8012925589

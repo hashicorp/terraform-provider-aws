@@ -71,7 +71,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-EventBridge schema can be imported using the `name` and `registry_name`, e.g.,
+Import EventBridge schema using the `name` and `registry_name`. For example:
 
 ```console
 $ terraform import aws_schemas_schema.test name/registry

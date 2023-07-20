@@ -106,7 +106,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-`aws_kendra_faq` can be imported using the unique identifiers of the FAQ and index separated by a slash (`/`), e.g.,
+Import `aws_kendra_faq` using the unique identifiers of the FAQ and index separated by a slash (`/`). For example:
 
 ```
 $ terraform import aws_kendra_faq.example faq-123456780/idx-8012925589

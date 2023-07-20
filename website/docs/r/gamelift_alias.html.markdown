@@ -51,7 +51,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-GameLift Aliases can be imported using the ID, e.g.,
+Import GameLift Aliases using the ID. For example:
 
 ```
 $ terraform import aws_gamelift_alias.example <alias-id>

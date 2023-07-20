@@ -346,7 +346,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-DLM lifecycle policies can be imported by their policy ID:
+Import DLM lifecycle policies using their policy ID. For example:
 
 ```
 $ terraform import aws_dlm_lifecycle_policy.example policy-abcdef12345678901

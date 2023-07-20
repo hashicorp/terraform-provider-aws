@@ -95,7 +95,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Data catalogs can be imported using their `name`, e.g.,
+Import Data catalogs using their `name`. For example:
 
 ```
 $ terraform import aws_athena_data_catalog.example example-data-catalog

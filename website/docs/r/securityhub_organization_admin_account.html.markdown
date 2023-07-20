@@ -46,7 +46,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Security Hub Organization Admin Accounts can be imported using the AWS account ID, e.g.,
+Import Security Hub Organization Admin Accounts using the AWS account ID. For example:
 
 ```
 $ terraform import aws_securityhub_organization_admin_account.example 123456789012

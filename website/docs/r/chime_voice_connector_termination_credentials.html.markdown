@@ -62,7 +62,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Chime Voice Connector Termination Credentials can be imported using the `voice_connector_id`, e.g.,
+Import Chime Voice Connector Termination Credentials using the `voice_connector_id`. For example:
 
 ```
 $ terraform import aws_chime_voice_connector_termination_credentials.default abcdef1ghij2klmno3pqr4

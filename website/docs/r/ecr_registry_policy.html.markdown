@@ -55,7 +55,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-ECR Registry Policy can be imported using the registry id, e.g.,
+Import ECR Registry Policy using the registry id. For example:
 
 ```
 $ terraform import aws_ecr_registry_policy.example 123456789012

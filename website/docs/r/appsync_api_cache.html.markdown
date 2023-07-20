@@ -45,7 +45,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-`aws_appsync_api_cache` can be imported using the AppSync API ID, e.g.,
+Import `aws_appsync_api_cache` using the AppSync API ID. For example:
 
 ```
 $ terraform import aws_appsync_api_cache.example xxxxx

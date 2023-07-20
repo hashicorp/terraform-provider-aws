@@ -67,7 +67,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Configuration Recorder can be imported using the name, e.g.,
+Import Configuration Recorder using the name. For example:
 
 ```
 $ terraform import aws_config_configuration_recorder.foo example

@@ -69,7 +69,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-`aws_apigatewayv2_deployment` can be imported by using the API identifier and deployment identifier, e.g.,
+Import `aws_apigatewayv2_deployment` using the API identifier and deployment identifier. For example:
 
 ```
 $ terraform import aws_apigatewayv2_deployment.example aabbccddee/1122334

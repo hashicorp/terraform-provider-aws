@@ -62,7 +62,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-AccessAnalyzer ArchiveRule can be imported using the `analyzer_name/rule_name`, e.g.,
+Import AccessAnalyzer ArchiveRule using the `analyzer_name/rule_name`. For example:
 
 ```
 $ terraform import aws_accessanalyzer_archive_rule.example example-analyzer/example-rule

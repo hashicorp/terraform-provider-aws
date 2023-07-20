@@ -70,7 +70,7 @@ This resource exports no additional attributes.
 
 ## Import
 
-CloudSearch domain service access policies can be imported using the domain name, e.g.,
+Import CloudSearch domain service access policies using the domain name. For example:
 
 ```
 $ terraform import aws_cloudsearch_domain_service_access_policy.example example-domain

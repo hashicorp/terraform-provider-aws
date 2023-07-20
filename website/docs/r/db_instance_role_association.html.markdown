@@ -41,7 +41,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-`aws_db_instance_role_association` can be imported using the DB Instance Identifier and IAM Role ARN separated by a comma (`,`), e.g.,
+Import `aws_db_instance_role_association` using the DB Instance Identifier and IAM Role ARN separated by a comma (`,`). For example:
 
 ```
 $ terraform import aws_db_instance_role_association.example my-db-instance,arn:aws:iam::123456789012:role/my-role

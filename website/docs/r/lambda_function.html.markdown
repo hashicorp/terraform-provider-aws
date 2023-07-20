@@ -375,7 +375,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Lambda Functions can be imported using the `function_name`, e.g.,
+Import Lambda Functions using the `function_name`. For example:
 
 ```
 $ terraform import aws_lambda_function.test_lambda my_test_lambda_function

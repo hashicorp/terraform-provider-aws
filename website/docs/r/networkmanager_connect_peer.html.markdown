@@ -112,7 +112,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-`aws_networkmanager_connect_peer` can be imported using the connect peer ID, e.g.
+Import `aws_networkmanager_connect_peer` using the connect peer ID. For example:
 
 ```
 $ terraform import aws_networkmanager_connect_peer.example connect-peer-061f3e96275db1acc

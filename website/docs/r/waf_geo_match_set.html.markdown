@@ -57,7 +57,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-WAF Geo Match Set can be imported using their ID, e.g.,
+Import WAF Geo Match Set using their ID. For example:
 
 ```
 $ terraform import aws_waf_geo_match_set.example a1b2c3d4-d5f6-7777-8888-9999aaaabbbbcccc

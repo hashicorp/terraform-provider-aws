@@ -75,7 +75,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Prefix Lists can be imported using the `id`, e.g.,
+Import Prefix Lists using the `id`. For example:
 
 ```
 $ terraform import aws_ec2_managed_prefix_list.default pl-0570a1d2d725c16be

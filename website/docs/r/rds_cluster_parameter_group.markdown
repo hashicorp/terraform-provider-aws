@@ -62,7 +62,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-RDS Cluster Parameter Groups can be imported using the `name`, e.g.,
+Import RDS Cluster Parameter Groups using the `name`. For example:
 
 ```
 $ terraform import aws_rds_cluster_parameter_group.cluster_pg production-pg-1

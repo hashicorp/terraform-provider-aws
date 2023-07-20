@@ -79,7 +79,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-IAM Access Keys can be imported using the identifier, e.g.,
+Import IAM Access Keys using the identifier. For example:
 
 ```
 $ terraform import aws_iam_access_key.example AKIA1234567890

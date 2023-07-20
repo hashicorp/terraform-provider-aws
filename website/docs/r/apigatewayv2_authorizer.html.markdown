@@ -78,7 +78,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-`aws_apigatewayv2_authorizer` can be imported by using the API identifier and authorizer identifier, e.g.,
+Import `aws_apigatewayv2_authorizer` using the API identifier and authorizer identifier. For example:
 
 ```
 $ terraform import aws_apigatewayv2_authorizer.example aabbccddee/1122334

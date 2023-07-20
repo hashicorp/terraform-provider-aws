@@ -100,7 +100,7 @@ any cleanup task during the destroying process.
 
 ## Import
 
-DocumentDB Clusters can be imported using the `cluster_identifier`, e.g.,
+Import DocumentDB Clusters using the `cluster_identifier`. For example:
 
 ```
 $ terraform import aws_docdb_cluster.docdb_cluster docdb-prod-cluster

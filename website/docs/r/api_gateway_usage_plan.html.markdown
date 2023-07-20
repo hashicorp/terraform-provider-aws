@@ -142,7 +142,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-AWS API Gateway Usage Plan can be imported using the `id`, e.g.,
+Import AWS API Gateway Usage Plan using the `id`. For example:
 
 ```sh
 $ terraform import aws_api_gateway_usage_plan.myusageplan <usage_plan_id>

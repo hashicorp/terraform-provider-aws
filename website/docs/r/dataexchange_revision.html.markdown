@@ -35,7 +35,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-DataExchange Revisions can be imported by their `data-set-id:revision-id`:
+Import DataExchange Revisions using their `data-set-id:revision-id`. For example:
 
 ```
 $ terraform import aws_dataexchange_revision.example 4fa784c7-ccb4-4dbf-ba4f-02198320daa1:4fa784c7-ccb4-4dbf-ba4f-02198320daa1

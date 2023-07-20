@@ -36,7 +36,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-EC2 Availability Zone Groups can be imported using the group name, e.g.,
+Import EC2 Availability Zone Groups using the group name. For example:
 
 ```
 $ terraform import aws_ec2_availability_zone_group.example us-west-2-lax-1

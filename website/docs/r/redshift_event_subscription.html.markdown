@@ -70,7 +70,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Redshift Event Subscriptions can be imported using the `name`, e.g.,
+Import Redshift Event Subscriptions using the `name`. For example:
 
 ```
 $ terraform import aws_redshift_event_subscription.default redshift-event-sub

@@ -245,7 +245,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-SSM Patch Baselines can be imported by their baseline ID, e.g.,
+Import SSM Patch Baselines using their baseline ID. For example:
 
 ```
 $ terraform import aws_ssm_patch_baseline.example pb-12345678

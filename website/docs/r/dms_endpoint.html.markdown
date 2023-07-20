@@ -208,7 +208,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Endpoints can be imported using the `endpoint_id`, e.g.,
+Import Endpoints using the `endpoint_id`. For example:
 
 ```
 $ terraform import aws_dms_endpoint.test test-dms-endpoint-tf

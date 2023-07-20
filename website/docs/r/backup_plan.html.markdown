@@ -90,7 +90,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Backup Plan can be imported using the `id`, e.g.,
+Import Backup Plan using the `id`. For example:
 
 ```
 $ terraform import aws_backup_plan.test <id>

@@ -83,7 +83,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Workspaces can be imported using their ID, e.g.,
+Import Workspaces using their ID. For example:
 
 ```
 $ terraform import aws_workspaces_workspace.example ws-9z9zmbkhv

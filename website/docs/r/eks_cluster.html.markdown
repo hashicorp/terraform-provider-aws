@@ -296,7 +296,7 @@ Note that the `update` timeout is used separately for both `version` and `vpc_co
 
 ## Import
 
-EKS Clusters can be imported using the `name`, e.g.,
+Import EKS Clusters using the `name`. For example:
 
 ```
 $ terraform import aws_eks_cluster.my_cluster my_cluster

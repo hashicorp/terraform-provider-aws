@@ -67,7 +67,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-The EFS file system policies can be imported using the `id`, e.g.,
+Import the EFS file system policies using the `id`. For example:
 
 ```
 $ terraform import aws_efs_file_system_policy.foo fs-6fa144c6

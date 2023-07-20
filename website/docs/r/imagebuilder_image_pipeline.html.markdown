@@ -76,7 +76,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-`aws_imagebuilder_image_pipeline` resources can be imported using the Amazon Resource Name (ARN), e.g.,
+Import `aws_imagebuilder_image_pipeline` resources using the Amazon Resource Name (ARN). For example:
 
 ```
 $ terraform import aws_imagebuilder_image_pipeline.example arn:aws:imagebuilder:us-east-1:123456789012:image-pipeline/example

@@ -43,7 +43,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Redshift Serverless Namespaces can be imported using the `namespace_name`, e.g.,
+Import Redshift Serverless Namespaces using the `namespace_name`. For example:
 
 ```
 $ terraform import aws_redshiftserverless_namespace.example example

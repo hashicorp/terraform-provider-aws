@@ -41,7 +41,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-VPN Gateways can be imported using the `vpn gateway id`, e.g.,
+Import VPN Gateways using the `vpn gateway id`. For example:
 
 ```
 $ terraform import aws_vpn_gateway.testvpngateway vgw-9a4cacf3

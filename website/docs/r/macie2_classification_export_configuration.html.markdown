@@ -51,7 +51,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-`aws_macie2_classification_export_configuration` can be imported using the account ID and region, e.g.,
+Import `aws_macie2_classification_export_configuration` using the account ID and region. For example:
 
 ```
 $ terraform import aws_macie2_classification_export_configuration.example 123456789012:us-west-2

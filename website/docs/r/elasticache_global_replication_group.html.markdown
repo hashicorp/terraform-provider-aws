@@ -151,7 +151,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-ElastiCache Global Replication Groups can be imported using the `global_replication_group_id`, e.g.,
+Import ElastiCache Global Replication Groups using the `global_replication_group_id`. For example:
 
 ```
 $ terraform import aws_elasticache_global_replication_group.my_global_replication_group okuqm-global-replication-group-1

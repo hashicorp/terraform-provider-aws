@@ -50,7 +50,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Transcribe VocabularyFilter can be imported using the `vocabulary_filter_name`, e.g.,
+Import Transcribe VocabularyFilter using the `vocabulary_filter_name`. For example:
 
 ```
 $ terraform import aws_transcribe_vocabulary_filter.example example-name

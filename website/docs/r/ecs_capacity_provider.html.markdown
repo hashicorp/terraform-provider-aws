@@ -74,7 +74,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-ECS Capacity Providers can be imported using the `name`, e.g.,
+Import ECS Capacity Providers using the `name`. For example:
 
 ```
 $ terraform import aws_ecs_capacity_provider.example example

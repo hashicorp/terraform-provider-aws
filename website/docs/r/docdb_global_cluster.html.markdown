@@ -130,7 +130,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-`aws_docdb_global_cluster` can be imported by using the Global Cluster identifier, e.g.
+Import `aws_docdb_global_cluster` using the Global Cluster identifier. For example:
 
 ```
 $ terraform import aws_docdb_global_cluster.example example

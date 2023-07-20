@@ -503,7 +503,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Launch Templates can be imported using the `id`, e.g.,
+Import Launch Templates using the `id`. For example:
 
 ```
 $ terraform import aws_launch_template.web lt-12345678

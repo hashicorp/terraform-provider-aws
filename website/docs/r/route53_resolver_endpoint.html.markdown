@@ -74,7 +74,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
- Route 53 Resolver endpoints can be imported using the Route 53 Resolver endpoint ID, e.g.,
+Import  Route 53 Resolver endpoints using the Route 53 Resolver endpoint ID. For example:
 
 ```
 $ terraform import aws_route53_resolver_endpoint.foo rslvr-in-abcdef01234567890

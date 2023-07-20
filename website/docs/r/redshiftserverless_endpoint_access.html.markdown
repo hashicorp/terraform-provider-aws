@@ -53,7 +53,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Redshift Serverless Endpoint Access can be imported using the `endpoint_name`, e.g.,
+Import Redshift Serverless Endpoint Access using the `endpoint_name`. For example:
 
 ```
 $ terraform import aws_redshiftserverless_endpoint_access.example example

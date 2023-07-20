@@ -95,7 +95,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-SESv2 (Simple Email V2) Email Identity can be imported using the `email_identity`, e.g.,
+Import SESv2 (Simple Email V2) Email Identity using the `email_identity`. For example:
 
 ```
 $ terraform import aws_sesv2_email_identity.example example.com

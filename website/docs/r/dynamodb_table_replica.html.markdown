@@ -89,7 +89,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-DynamoDB table replicas can be imported using the `table-name:main-region`, _e.g._,
+Import DynamoDB table replicas using the `table-name:main-region`. For example:
 
 ~> **Note:** When importing, use the region where the initial or _main_ global table resides, _not_ the region of the replica.
 

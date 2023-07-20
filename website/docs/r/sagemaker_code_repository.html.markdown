@@ -72,7 +72,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-SageMaker Code Repositories can be imported using the `name`, e.g.,
+Import SageMaker Code Repositories using the `name`. For example:
 
 ```
 $ terraform import aws_sagemaker_code_repository.test_code_repository my-code-repo

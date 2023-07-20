@@ -110,7 +110,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-ECR Replication Configuration can be imported using the `registry_id`, e.g.,
+Import ECR Replication Configuration using the `registry_id`. For example:
 
 ```
 $ terraform import aws_ecr_replication_configuration.service 012345678912

@@ -77,7 +77,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-`aws_datasync_agent` can be imported by using the DataSync Agent Amazon Resource Name (ARN), e.g.,
+Import `aws_datasync_agent` using the DataSync Agent Amazon Resource Name (ARN). For example:
 
 ```
 $ terraform import aws_datasync_agent.example arn:aws:datasync:us-east-1:123456789012:agent/agent-12345678901234567

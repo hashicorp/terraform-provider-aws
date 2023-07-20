@@ -38,7 +38,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-`aws_api_gateway_request_validator` can be imported using `REST-API-ID/REQUEST-VALIDATOR-ID`, e.g.,
+Import `aws_api_gateway_request_validator` using `REST-API-ID/REQUEST-VALIDATOR-ID`. For example:
 
 ```
 $ terraform import aws_api_gateway_request_validator.example 12345abcde/67890fghij

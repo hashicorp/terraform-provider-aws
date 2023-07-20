@@ -225,7 +225,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-`aws_ec2_fleet` can be imported by using the Fleet identifier, e.g.,
+Import `aws_ec2_fleet` using the Fleet identifier. For example:
 
 ```
 $ terraform import aws_ec2_fleet.example fleet-b9b55d27-c5fc-41ac-a6f3-48fcc91f080c

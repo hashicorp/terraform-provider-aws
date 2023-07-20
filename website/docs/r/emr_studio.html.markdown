@@ -56,7 +56,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-EMR studios can be imported using the `id`, e.g.,
+Import EMR studios using the `id`. For example:
 
 ```
 $ terraform import aws_emr_studio.studio es-123456ABCDEF

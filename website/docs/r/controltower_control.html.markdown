@@ -46,7 +46,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Control Tower Controls can be imported using their `organizational_unit_arn/control_identifier`, e.g.,
+Import Control Tower Controls using their `organizational_unit_arn/control_identifier`. For example:
 
 ```
 $ terraform import aws_controltower_control.example arn:aws:organizations::123456789101:ou/o-qqaejywet/ou-qg5o-ufbhdtv3,arn:aws:controltower:us-east-1::control/WTDSMKDKDNLE

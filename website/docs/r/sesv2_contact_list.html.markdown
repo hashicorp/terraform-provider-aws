@@ -69,7 +69,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-SESv2 (Simple Email V2) Contact List can be imported using the `example_id_arg`, e.g.,
+Import SESv2 (Simple Email V2) Contact List using the `example_id_arg`. For example:
 
 ```
 $ terraform import aws_sesv2_contact_list.example example

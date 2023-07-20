@@ -41,7 +41,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
- Route 53 Resolver DNSSEC configs can be imported using the Route 53 Resolver DNSSEC config ID, e.g.,
+Import  Route 53 Resolver DNSSEC configs using the Route 53 Resolver DNSSEC config ID. For example:
 
 ```
 $ terraform import aws_route53_resolver_dnssec_config.example rdsc-be1866ecc1683e95

@@ -60,7 +60,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Cloudfront Field Level Encryption Profile can be imported using the `id`, e.g.
+Import Cloudfront Field Level Encryption Profile using the `id`. For example:
 
 ```
 $ terraform import aws_cloudfront_field_level_encryption_profile.profile K3D5EWEUDCCXON

@@ -74,7 +74,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-RDS DB Instance Reservations can be imported using the `instance_id`, e.g.,
+Import RDS DB Instance Reservations using the `instance_id`. For example:
 
 ```
 $ terraform import aws_rds_reserved_instance.reservation_instance CustomReservationID

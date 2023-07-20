@@ -163,7 +163,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Default Network ACLs can be imported using the `id`, e.g.,
+Import Default Network ACLs using the `id`. For example:
 
 ```
 $ terraform import aws_default_network_acl.sample acl-7aaabd18

@@ -40,7 +40,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Redshift Snapshot Schedule can be imported using the `identifier`, e.g.,
+Import Redshift Snapshot Schedule using the `identifier`. For example:
 
 ```
 $ terraform import aws_redshift_snapshot_schedule.default tf-redshift-snapshot-schedule

@@ -264,7 +264,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-DynamoDB tables can be imported using the `name`, e.g.,
+Import DynamoDB tables using the `name`. For example:
 
 ```
 $ terraform import aws_dynamodb_table.basic-dynamodb-table GameScores

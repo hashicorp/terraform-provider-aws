@@ -32,7 +32,7 @@ This resource exports no additional attributes.
 
 ## Import
 
-Default EBS encryption state can be imported, e.g.,
+Import the default EBS encryption state. For example:
 
 ```
 $ terraform import aws_ebs_encryption_by_default.example default

@@ -99,7 +99,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-ECS clusters can be imported using the `name`, e.g.,
+Import ECS clusters using the `name`. For example:
 
 ```
 $ terraform import aws_ecs_cluster.stateless stateless-app

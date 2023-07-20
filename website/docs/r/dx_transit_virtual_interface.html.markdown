@@ -68,7 +68,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Direct Connect transit virtual interfaces can be imported using the `vif id`, e.g.,
+Import Direct Connect transit virtual interfaces using the `vif id`. For example:
 
 ```
 $ terraform import aws_dx_transit_virtual_interface.test dxvif-33cc44dd

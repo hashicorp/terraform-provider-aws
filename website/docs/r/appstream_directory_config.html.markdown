@@ -46,7 +46,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-`aws_appstream_directory_config` can be imported using the id, e.g.,
+Import `aws_appstream_directory_config` using the id. For example:
 
 ```
 $ terraform import aws_appstream_directory_config.example directoryNameExample

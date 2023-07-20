@@ -58,7 +58,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-MediaLive InputSecurityGroup can be imported using the `id`, e.g.,
+Import MediaLive InputSecurityGroup using the `id`. For example:
 
 ```
 $ terraform import aws_medialive_input_security_group.example 123456

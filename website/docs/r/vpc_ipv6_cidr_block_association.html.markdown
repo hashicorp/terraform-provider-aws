@@ -49,7 +49,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-`aws_vpc_ipv6_cidr_block_association` can be imported by using the VPC CIDR Association ID, e.g.,
+Import `aws_vpc_ipv6_cidr_block_association` using the VPC CIDR Association ID. For example:
 
 ```
 $ terraform import aws_vpc_ipv6_cidr_block_association.example vpc-cidr-assoc-xxxxxxxx

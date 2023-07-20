@@ -76,7 +76,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-FSx OpenZFS snapshot can be imported using the `id`, e.g.,
+Import FSx OpenZFS snapshot using the `id`. For example:
 
 ```
 $ terraform import aws_fsx_openzfs_snapshot.example fs-543ab12b1ca672f33

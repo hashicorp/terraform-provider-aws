@@ -79,7 +79,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-MAIL FROM domain can be imported using the `domain` attribute, e.g.,
+Import MAIL FROM domain using the `domain` attribute. For example:
 
 ```
 $ terraform import aws_ses_domain_mail_from.example example.com

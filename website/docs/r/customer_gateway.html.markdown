@@ -48,7 +48,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Customer Gateways can be imported using the `id`, e.g.,
+Import Customer Gateways using the `id`. For example:
 
 ```
 $ terraform import aws_customer_gateway.main cgw-b4dc3961

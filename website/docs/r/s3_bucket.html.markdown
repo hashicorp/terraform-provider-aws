@@ -363,7 +363,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-S3 bucket can be imported using the `bucket`, e.g.,
+Import S3 bucket using the `bucket`. For example:
 
 ```
 $ terraform import aws_s3_bucket.bucket bucket-name

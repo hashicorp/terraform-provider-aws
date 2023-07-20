@@ -104,7 +104,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-FSx Storage Virtual Machine can be imported using the `id`, e.g.,
+Import FSx Storage Virtual Machine using the `id`. For example:
 
 ```
 $ terraform import aws_fsx_ontap_storage_virtual_machine.example svm-12345678abcdef123

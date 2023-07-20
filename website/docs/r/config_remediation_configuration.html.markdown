@@ -105,7 +105,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Remediation Configurations can be imported using the name config_rule_name, e.g.,
+Import Remediation Configurations using the name config_rule_name. For example:
 
 ```
 $ terraform import aws_config_remediation_configuration.this example

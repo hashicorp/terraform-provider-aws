@@ -61,7 +61,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-IAM Group Policies can be imported using the `group_name:group_policy_name`, e.g.,
+Import IAM Group Policies using the `group_name:group_policy_name`. For example:
 
 ```
 $ terraform import aws_iam_group_policy.mypolicy group_of_mypolicy_name:mypolicy_name

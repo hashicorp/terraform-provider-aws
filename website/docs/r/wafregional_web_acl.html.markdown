@@ -159,7 +159,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-WAF Regional Web ACL can be imported using the id, e.g.,
+Import WAF Regional Web ACL using the id. For example:
 
 ```
 $ terraform import aws_wafregional_web_acl.wafacl a1b2c3d4-d5f6-7777-8888-9999aaaabbbbcccc

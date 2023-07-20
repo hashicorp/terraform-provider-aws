@@ -79,7 +79,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-SNS platform applications can be imported using the ARN, e.g.,
+Import SNS platform applications using the ARN. For example:
 
 ```
 $ terraform import aws_sns_platform_application.gcm_application arn:aws:sns:us-west-2:0123456789012:app/GCM/gcm_application

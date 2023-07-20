@@ -54,7 +54,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-GameLift Builds can be imported using the ID, e.g.,
+Import GameLift Builds using the ID. For example:
 
 ```
 $ terraform import aws_gamelift_build.example <build-id>

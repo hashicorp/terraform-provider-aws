@@ -357,7 +357,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Chime SDK Media Pipelines Media Insights Pipeline Configuration can be imported using the `id`, e.g.,
+Import Chime SDK Media Pipelines Media Insights Pipeline Configuration using the `id`. For example:
 
 ```
 $ terraform import aws_chimesdkmediapipelines_media_insights_pipeline_configuration.example abcdef123456

@@ -55,7 +55,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-IAM Signing Certificates can be imported using the `id`, e.g.,
+Import IAM Signing Certificates using the `id`. For example:
 
 ```
 $ terraform import aws_iam_signing_certificate.certificate IDIDIDIDID:user-name

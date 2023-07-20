@@ -40,7 +40,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-CloudWatch Synthetics Group can be imported using the `name`, e.g.,
+Import CloudWatch Synthetics Group using the `name`. For example:
 
 ```
 $ terraform import aws_synthetics_group.example example

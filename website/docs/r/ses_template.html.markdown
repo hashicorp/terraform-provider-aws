@@ -39,7 +39,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-SES templates can be imported using the template name, e.g.,
+Import SES templates using the template name. For example:
 
 ```
 $ terraform import aws_ses_template.MyTemplate MyTemplate

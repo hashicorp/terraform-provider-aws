@@ -76,7 +76,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Cognito User Pool Domains can be imported using the `domain`, e.g.,
+Import Cognito User Pool Domains using the `domain`. For example:
 
 ```
 $ terraform import aws_cognito_user_pool_domain.main auth.example.org

@@ -38,7 +38,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Models can be imported using the `name`, e.g.,
+Import Models using the `name`. For example:
 
 ```
 $ terraform import aws_sagemaker_notebook_instance_lifecycle_configuration.lc foo

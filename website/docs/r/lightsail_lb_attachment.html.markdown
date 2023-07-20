@@ -59,7 +59,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-`aws_lightsail_lb_attachment` can be imported by using the name attribute, e.g.,
+Import `aws_lightsail_lb_attachment` using the name attribute. For example:
 
 ```
 $ terraform import aws_lightsail_lb_attachment.test example-load-balancer,example-instance

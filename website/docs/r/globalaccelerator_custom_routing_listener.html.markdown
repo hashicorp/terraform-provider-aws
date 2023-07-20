@@ -63,7 +63,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Global Accelerator custom routing listeners can be imported using the `id`, e.g.,
+Import Global Accelerator custom routing listeners using the `id`. For example:
 
 ```
 $ terraform import aws_globalaccelerator_custom_routing_listener.example arn:aws:globalaccelerator::111111111111:accelerator/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx/listener/xxxxxxxx

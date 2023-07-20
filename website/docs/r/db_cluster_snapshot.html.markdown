@@ -53,7 +53,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-`aws_db_cluster_snapshot` can be imported by using the cluster snapshot identifier, e.g.,
+Import `aws_db_cluster_snapshot` using the cluster snapshot identifier. For example:
 
 ```
 $ terraform import aws_db_cluster_snapshot.example my-cluster-snapshot

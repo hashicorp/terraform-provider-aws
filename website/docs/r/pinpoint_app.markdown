@@ -66,7 +66,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Pinpoint App can be imported using the `application-id`, e.g.,
+Import Pinpoint App using the `application-id`. For example:
 
 ```
 $ terraform import aws_pinpoint_app.name application-id

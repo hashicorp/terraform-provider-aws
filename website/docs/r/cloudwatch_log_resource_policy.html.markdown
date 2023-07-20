@@ -78,7 +78,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-CloudWatch log resource policies can be imported using the policy name, e.g.,
+Import CloudWatch log resource policies using the policy name. For example:
 
 ```
 $ terraform import aws_cloudwatch_log_resource_policy.MyPolicy MyPolicy

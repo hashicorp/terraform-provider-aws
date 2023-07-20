@@ -113,17 +113,15 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-S3 bucket versioning can be imported in one of two ways.
+Import S3 bucket versioning using the `bucket` or using the `bucket` and `expected_bucket_owner` separated by a comma (`,`). For example:
 
-If the owner (account ID) of the source bucket is the same account used to configure the Terraform AWS Provider,
-the S3 bucket versioning resource should be imported using the `bucket` e.g.,
+If the owner (account ID) of the source bucket is the same account used to configure the Terraform AWS Provider, import using the `bucket`:
 
 ```
 $ terraform import aws_s3_bucket_versioning.example bucket-name
 ```
 
-If the owner (account ID) of the source bucket differs from the account used to configure the Terraform AWS Provider,
-the S3 bucket versioning resource should be imported using the `bucket` and `expected_bucket_owner` separated by a comma (`,`) e.g.,
+If the owner (account ID) of the source bucket differs from the account used to configure the Terraform AWS Provider, import using the `bucket` and `expected_bucket_owner` separated by a comma (`,`):
 
 ```
 $ terraform import aws_s3_bucket_versioning.example bucket-name,123456789012

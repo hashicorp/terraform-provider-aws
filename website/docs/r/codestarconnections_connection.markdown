@@ -81,7 +81,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-CodeStar connections can be imported using the ARN, e.g.,
+Import CodeStar connections using the ARN. For example:
 
 ```
 $ terraform import aws_codestarconnections_connection.test-connection arn:aws:codestar-connections:us-west-1:0123456789:connection/79d4d357-a2ee-41e4-b350-2fe39ae59448

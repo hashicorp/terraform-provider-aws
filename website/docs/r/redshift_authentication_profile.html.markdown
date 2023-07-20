@@ -40,7 +40,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Redshift Authentication Profiles support import by `authentication_profile_name`, e.g.,
+Import Redshift Authentication by `authentication_profile_name`. For example:
 
 ```console
 $ terraform import aws_redshift_authentication_profile.test example

@@ -99,7 +99,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Network Firewall Logging Configurations can be imported using the `firewall_arn` e.g
+Import Network Firewall Logging Configurations using the `firewall_arn`. For example:
 
 ```
 $ terraform import aws_networkfirewall_logging_configuration.example arn:aws:network-firewall:us-west-1:123456789012:firewall/example

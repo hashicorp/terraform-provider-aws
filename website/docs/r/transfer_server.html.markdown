@@ -150,7 +150,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Transfer Servers can be imported using the `server id`, e.g.,
+Import Transfer Servers using the `server id`. For example:
 
 ```
 $ terraform import aws_transfer_server.example s-12345678

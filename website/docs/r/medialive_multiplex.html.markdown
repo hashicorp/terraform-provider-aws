@@ -74,7 +74,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-MediaLive Multiplex can be imported using the `id`, e.g.,
+Import MediaLive Multiplex using the `id`. For example:
 
 ```
 $ terraform import aws_medialive_multiplex.example 12345678

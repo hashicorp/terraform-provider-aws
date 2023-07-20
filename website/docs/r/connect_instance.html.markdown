@@ -82,7 +82,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Connect instances can be imported using the `id`, e.g.,
+Import Connect instances using the `id`. For example:
 
 ```
 $ terraform import aws_connect_instance.example f1288a1f-6193-445a-b47e-af739b2

@@ -39,7 +39,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Elastic network interface (ENI) Attachments can be imported using its Attachment ID e.g.,
+Import Elastic network interface (ENI) Attachments using its Attachment ID. For example:
 
 ```
 terraform import aws_network_interface_attachment.secondary_nic eni-attach-0a33842b4ec347c4c

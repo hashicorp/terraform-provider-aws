@@ -61,7 +61,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Event Archive can be imported using their name, for example
+Import Event Archive using their name. For example:
 
 ```console
 $ terraform import aws_cloudwatch_event_archive.imported_event_archive order-archive

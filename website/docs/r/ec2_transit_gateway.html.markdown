@@ -57,7 +57,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-`aws_ec2_transit_gateway` can be imported by using the EC2 Transit Gateway identifier, e.g.,
+Import `aws_ec2_transit_gateway` using the EC2 Transit Gateway identifier. For example:
 
 ```
 $ terraform import aws_ec2_transit_gateway.example tgw-12345678

@@ -151,7 +151,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-`aws_api_gateway_deployment` can be imported using `REST-API-ID/DEPLOYMENT-ID`, e.g.,
+Import `aws_api_gateway_deployment` using `REST-API-ID/DEPLOYMENT-ID`. For example:
 
 ```
 $ terraform import aws_api_gateway_deployment.example aabbccddee/1122334

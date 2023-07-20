@@ -61,4 +61,4 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-DynamoDB table items cannot be imported.
+You cannot import DynamoDB table items.

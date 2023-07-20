@@ -59,7 +59,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-IVS (Interactive Video) Recording Configuration can be imported using the ARN, e.g.,
+Import IVS (Interactive Video) Recording Configuration using the ARN. For example:
 
 ```
 $ terraform import aws_ivs_recording_configuration.example arn:aws:ivs:us-west-2:326937407773:recording-configuration/KAk1sHBl2L47

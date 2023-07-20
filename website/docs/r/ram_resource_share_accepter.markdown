@@ -71,7 +71,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Resource share accepters can be imported using the resource share ARN, e.g.,
+Import Resource share accepters using the resource share ARN. For example:
 
 ```
 $ terraform import aws_ram_resource_share_accepter.example arn:aws:ram:us-east-1:123456789012:resource-share/c4b56393-e8d9-89d9-6dc9-883752de4767

@@ -57,7 +57,7 @@ This resource exports no additional attributes.
 
 ## Import
 
-Pinpoint APNs Channel can be imported using the `application-id`, e.g.,
+Import Pinpoint APNs Channel using the `application-id`. For example:
 
 ```
 $ terraform import aws_pinpoint_apns_channel.apns application-id

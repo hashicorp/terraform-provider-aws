@@ -37,7 +37,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-SES Receipt Filter can be imported using their `name`, e.g.,
+Import SES Receipt Filter using their `name`. For example:
 
 ```
 $ terraform import aws_ses_receipt_filter.test some-filter

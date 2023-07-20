@@ -30,7 +30,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Firewall Manager administrator account association can be imported using the account ID, e.g.,
+Import Firewall Manager administrator account association using the account ID. For example:
 
 ```
 $ terraform import aws_fms_admin_account.example 123456789012

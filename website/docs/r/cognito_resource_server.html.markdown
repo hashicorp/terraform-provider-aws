@@ -69,7 +69,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-`aws_cognito_resource_server` can be imported using their User Pool ID and Identifier, e.g.,
+Import `aws_cognito_resource_server` using their User Pool ID and Identifier. For example:
 
 ```
 $ terraform import aws_cognito_resource_server.example "us-west-2_abc123|https://example.com"

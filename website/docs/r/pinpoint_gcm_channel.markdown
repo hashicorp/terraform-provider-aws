@@ -38,7 +38,7 @@ This resource exports no additional attributes.
 
 ## Import
 
-Pinpoint GCM Channel can be imported using the `application-id`, e.g.,
+Import Pinpoint GCM Channel using the `application-id`. For example:
 
 ```
 $ terraform import aws_pinpoint_gcm_channel.gcm application-id

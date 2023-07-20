@@ -80,7 +80,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-An AWS FinSpace Kx User can be imported using the `id` (environment ID and user name, comma-delimited), e.g.,
+Import an AWS FinSpace Kx User using the `id` (environment ID and user name, comma-delimited). For example:
 
 ```
 $ terraform import aws_finspace_kx_user.example n3ceo7wqxoxcti5tujqwzs,my-tf-kx-user

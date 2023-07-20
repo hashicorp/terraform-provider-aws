@@ -50,7 +50,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-`aws_licensemanager_grant` can be imported using the grant arn.
+Import `aws_licensemanager_grant` using the grant arn. For example:
 
 ```shell
 $ terraform import aws_licensemanager_grant.test arn:aws:license-manager::123456789011:grant:g-01d313393d9e443d8664cc054db1e089

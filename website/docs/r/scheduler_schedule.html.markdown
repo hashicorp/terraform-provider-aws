@@ -189,7 +189,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Schedules can be imported using the combination `group_name/name`. For example:
+Import Schedules using the combination `group_name/name`. For example:
 
 ```
 $ terraform import aws_scheduler_schedule.example my-schedule-group/my-schedule

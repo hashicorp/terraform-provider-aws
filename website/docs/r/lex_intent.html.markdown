@@ -261,7 +261,7 @@ included as an argument because the resource will add it automatically when upda
 
 ## Import
 
-Intents can be imported using their name.
+Import Intents using their name. For example:
 
 ```
 $ terraform import aws_lex_intent.order_flowers_intent OrderFlowers

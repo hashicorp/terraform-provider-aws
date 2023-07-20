@@ -65,7 +65,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Replication tasks can be imported using the `replication_task_id`, e.g.,
+Import Replication tasks using the `replication_task_id`. For example:
 
 ```
 $ terraform import aws_dms_replication_task.test test-dms-replication-task-tf

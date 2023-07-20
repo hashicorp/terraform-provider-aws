@@ -55,7 +55,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-VPC Endpoint Services can be imported using ID of the connection, which is the `VPC Endpoint Service ID` and `VPC Endpoint ID` separated by underscore (`_`). e.g.
+Import VPC Endpoint Services using ID of the connection, which is the `VPC Endpoint Service ID` and `VPC Endpoint ID` separated by underscore (`_`).. For example:
 
 ```
 $ terraform import aws_vpc_endpoint_connection_accepter.foo vpce-svc-0f97a19d3fa8220bc_vpce-010601a6db371e263

@@ -87,7 +87,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-SageMaker Workteams can be imported using the `workteam_name`, e.g.,
+Import SageMaker Workteams using the `workteam_name`. For example:
 
 ```
 $ terraform import aws_sagemaker_workteam.example example

@@ -358,7 +358,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Elasticsearch domains can be imported using the `domain_name`, e.g.,
+Import Elasticsearch domains using the `domain_name`. For example:
 
 ```
 $ terraform import aws_elasticsearch_domain.example domain_name

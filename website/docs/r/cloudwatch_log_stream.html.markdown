@@ -38,7 +38,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Cloudwatch Log Stream can be imported using the stream's `log_group_name` and `name`, e.g.,
+Import Cloudwatch Log Stream using the stream's `log_group_name` and `name`. For example:
 
 ```
 $ terraform import aws_cloudwatch_log_stream.foo Yada:SampleLogStream1234

@@ -43,7 +43,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-App Runner Connections can be imported by using the `connection_name`, e.g.,
+Import App Runner Connections using the `connection_name`. For example:
 
 ```
 $ terraform import aws_apprunner_connection.example example

@@ -69,7 +69,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-OpenSearchServerless Collection can be imported using the `id`, e.g.,
+Import OpenSearchServerless Collection using the `id`. For example:
 
 ```
 $ terraform import aws_opensearchserverless_collection.example example

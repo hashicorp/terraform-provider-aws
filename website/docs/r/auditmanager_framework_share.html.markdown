@@ -43,7 +43,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Audit Manager Framework Share can be imported using the `id`, e.g.,
+Import Audit Manager Framework Share using the `id`. For example:
 
 ```
 $ terraform import aws_auditmanager_framework_share.example abcdef-123456

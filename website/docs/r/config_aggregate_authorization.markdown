@@ -36,7 +36,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Config aggregate authorizations can be imported using `account_id:region`, e.g.,
+Import Config aggregate authorizations using `account_id:region`. For example:
 
 ```
 $ terraform import aws_config_aggregate_authorization.example 123456789012:us-east-1

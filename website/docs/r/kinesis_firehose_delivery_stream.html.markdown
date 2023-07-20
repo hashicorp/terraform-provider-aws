@@ -854,7 +854,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Kinesis Firehose Delivery streams can be imported using the stream ARN, e.g.,
+Import Kinesis Firehose Delivery streams using the stream ARN. For example:
 
 ```
 $ terraform import aws_kinesis_firehose_delivery_stream.foo arn:aws:firehose:us-east-1:XXX:deliverystream/example

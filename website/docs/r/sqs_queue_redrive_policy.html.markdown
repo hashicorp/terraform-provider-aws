@@ -52,7 +52,7 @@ This resource exports no additional attributes.
 
 ## Import
 
-SQS Queue Redrive Policies can be imported using the queue URL, e.g.,
+Import SQS Queue Redrive Policies using the queue URL. For example:
 
 ```
 $ terraform import aws_sqs_queue_redrive_policy.test https://queue.amazonaws.com/0123456789012/myqueue

@@ -167,7 +167,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Elastic Transcoder presets can be imported using the `id`, e.g.,
+Import Elastic Transcoder presets using the `id`. For example:
 
 ```
 $ terraform import aws_elastictranscoder_preset.basic_preset 1407981661351-cttk8b

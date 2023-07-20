@@ -61,7 +61,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-A Lambda Provisioned Concurrency Configuration can be imported using the `function_name` and `qualifier` separated by a comma (`,`), e.g.,
+Import a Lambda Provisioned Concurrency Configuration using the `function_name` and `qualifier` separated by a comma (`,`). For example:
 
 ```
 $ terraform import aws_lambda_provisioned_concurrency_config.example my_function,production

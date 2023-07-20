@@ -54,7 +54,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Redshift endpoint access can be imported using the `name`, e.g.,
+Import Redshift endpoint access using the `name`. For example:
 
 ```
 $ terraform import aws_redshift_endpoint_access.example example

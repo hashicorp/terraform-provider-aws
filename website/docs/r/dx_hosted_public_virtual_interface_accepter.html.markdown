@@ -90,7 +90,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Direct Connect hosted public virtual interfaces can be imported using the `vif id`, e.g.,
+Import Direct Connect hosted public virtual interfaces using the `vif id`. For example:
 
 ```
 $ terraform import aws_dx_hosted_public_virtual_interface_accepter.test dxvif-33cc44dd

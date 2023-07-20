@@ -32,7 +32,7 @@ This resource exports no additional attributes.
 
 ## Import
 
-Serial console access state can be imported, e.g.,
+Import serial console access state. For example:
 
 ```
 $ terraform import aws_ec2_serial_console_access.example default

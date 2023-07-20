@@ -89,7 +89,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-ElastiCache users can be imported using the `user_id`, e.g.,
+Import ElastiCache users using the `user_id`. For example:
 
 ```
 $ terraform import aws_elasticache_user.my_user userId1

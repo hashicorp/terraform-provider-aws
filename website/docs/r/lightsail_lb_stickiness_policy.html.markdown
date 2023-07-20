@@ -45,7 +45,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-`aws_lightsail_lb_stickiness_policy` can be imported by using the `lb_name` attribute, e.g.,
+Import `aws_lightsail_lb_stickiness_policy` using the `lb_name` attribute. For example:
 
 ```
 $ terraform import aws_lightsail_lb_stickiness_policy.test example-load-balancer

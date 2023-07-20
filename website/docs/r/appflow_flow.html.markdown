@@ -399,7 +399,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-AppFlow flows can be imported using the `arn`, e.g.:
+Import AppFlow flows using the `arn`. For example:
 
 ```
 $ terraform import aws_appflow_flow.example arn:aws:appflow:us-west-2:123456789012:flow/example-flow

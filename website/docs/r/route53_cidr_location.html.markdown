@@ -40,7 +40,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-CIDR locations can be imported using their the CIDR collection ID and location name, e.g.,
+Import CIDR locations using their the CIDR collection ID and location name. For example:
 
 ```
 $ terraform import aws_route53_cidr_location.example 9ac32814-3e67-0932-6048-8d779cc6f511,office

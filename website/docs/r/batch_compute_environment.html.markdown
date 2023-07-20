@@ -220,7 +220,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-AWS Batch compute can be imported using the `compute_environment_name`, e.g.,
+Import AWS Batch compute using the `compute_environment_name`. For example:
 
 ```
 $ terraform import aws_batch_compute_environment.sample sample

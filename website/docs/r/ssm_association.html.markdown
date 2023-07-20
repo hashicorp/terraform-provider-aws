@@ -121,7 +121,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-SSM associations can be imported using the `association_id`, e.g.,
+Import SSM associations using the `association_id`. For example:
 
 ```
 $ terraform import aws_ssm_association.test-association 10abcdef-0abc-1234-5678-90abcdef123456

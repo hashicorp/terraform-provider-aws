@@ -34,7 +34,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Models can be imported using the `id`, e.g.,
+Import Models using the `id`. For example:
 
 ```
 $ terraform import aws_sagemaker_servicecatalog_portfolio_status.example us-east-1

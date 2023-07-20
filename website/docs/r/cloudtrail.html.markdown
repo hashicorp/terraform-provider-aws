@@ -376,7 +376,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Cloudtrails can be imported using the `name`, e.g.,
+Import Cloudtrails using the `name`. For example:
 
 ```
 $ terraform import aws_cloudtrail.sample my-sample-trail
