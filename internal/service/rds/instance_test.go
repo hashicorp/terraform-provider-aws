@@ -4425,7 +4425,7 @@ func TestAccRDSInstance_NoNationalCharacterSet_oracle(t *testing.T) {
 	})
 }
 
-func TestAccRDSInstance_coIPEnabled(t *testing.T) {
+func TestAccRDSInstance_CoIPEnabled(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v rds.DBInstance
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
