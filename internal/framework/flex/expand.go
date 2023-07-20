@@ -10,6 +10,7 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
+	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/types"
@@ -100,27 +101,8 @@ func (visitor expandVisitor) visit(ctx context.Context, fieldName string, valFro
 	switch vFrom := vFrom.(type) {
 	// Simple types.
 	case basetypes.BoolValuable:
-		v, diags := vFrom.ToBoolValue(ctx)
-		if err := fwdiag.DiagnosticsError(diags); err != nil {
-			return err
-		}
-		switch vFrom := v.ValueBool(); kTo {
-		case reflect.Bool:
-			//
-			// types.Bool -> bool.
-			//
-			valTo.SetBool(vFrom)
-			return nil
-		case reflect.Ptr:
-			switch valTo.Type().Elem().Kind() {
-			case reflect.Bool:
-				//
-				// types.Bool -> *bool.
-				//
-				valTo.Set(reflect.ValueOf(aws.Bool(vFrom)))
-				return nil
-			}
-		}
+		diags := visitor.bool(ctx, vFrom, valTo)
+		return fwdiag.DiagnosticsError(diags)
 
 	case basetypes.Float64Valuable:
 		v, diags := vFrom.ToFloat64Value(ctx)
@@ -335,4 +317,37 @@ func (visitor expandVisitor) visit(ctx context.Context, fieldName string, valFro
 	}
 
 	return fmt.Errorf("incompatible (%s): %s", tFrom, kTo)
+}
+
+func (visitor expandVisitor) bool(ctx context.Context, vFrom basetypes.BoolValuable, vTo reflect.Value) diag.Diagnostics {
+	v, diags := vFrom.ToBoolValue(ctx)
+	if diags.HasError() {
+		return diags
+	}
+
+	switch vFrom := v.ValueBool(); vTo.Kind() {
+	case reflect.Bool:
+		//
+		// types.Bool -> bool.
+		//
+		vTo.SetBool(vFrom)
+		return diags
+	case reflect.Ptr:
+		switch vTo.Type().Elem().Kind() {
+		case reflect.Bool:
+			//
+			// types.Bool -> *bool.
+			//
+			vTo.Set(reflect.ValueOf(aws.Bool(vFrom)))
+			return diags
+		}
+	}
+
+	diags.Append(visitor.newIncompatibleTypesError(ctx, vFrom, vTo))
+
+	return diags
+}
+
+func (visitor expandVisitor) newIncompatibleTypesError(ctx context.Context, vFrom attr.Value, vTo reflect.Value) diag.ErrorDiagnostic {
+	return diag.NewErrorDiagnostic("Incompatible types", fmt.Sprintf("%s cannot be expanded to %s", vFrom.Type(ctx), vTo.Kind()))
 }
