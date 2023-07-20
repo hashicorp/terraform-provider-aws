@@ -1666,17 +1666,19 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta in
 		// Only one attribute can be modified at a time, else we get
 		// "InvalidParameterCombination: Fields for multiple attribute types specified"
 		if d.HasChange("instance_type") {
-			log.Printf("[INFO] Modifying instance type %s", d.Id())
+			if !d.HasChange("capacity_reservation_specification.0.capacity_reservation_target.0.capacity_reservation_id") {
+				log.Printf("[INFO] Modifying instance type %s", d.Id())
 
-			input := &ec2.ModifyInstanceAttributeInput{
-				InstanceId: aws.String(d.Id()),
-				InstanceType: &ec2.AttributeValue{
-					Value: aws.String(d.Get("instance_type").(string)),
-				},
-			}
+				input := &ec2.ModifyInstanceAttributeInput{
+					InstanceId: aws.String(d.Id()),
+					InstanceType: &ec2.AttributeValue{
+						Value: aws.String(d.Get("instance_type").(string)),
+					},
+				}
 
-			if err := modifyInstanceAttributeWithStopStart(ctx, conn, input); err != nil {
-				return sdkdiag.AppendErrorf(diags, "updating EC2 Instance (%s) type: %s", d.Id(), err)
+				if err := modifyInstanceAttributeWithStopStart(ctx, conn, input); err != nil {
+					return sdkdiag.AppendErrorf(diags, "updating EC2 Instance (%s) type: %s", d.Id(), err)
+				}
 			}
 		}
 
@@ -1943,12 +1945,30 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta in
 	if d.HasChange("capacity_reservation_specification") && !d.IsNewResource() {
 		if v, ok := d.GetOk("capacity_reservation_specification"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 			if v := expandCapacityReservationSpecification(v.([]interface{})[0].(map[string]interface{})); v != nil && (v.CapacityReservationPreference != nil || v.CapacityReservationTarget != nil) {
+				if err := StopInstance(ctx, conn, d.Id(), InstanceStopTimeout); err != nil {
+					return sdkdiag.AppendErrorf(diags, "stopping EC2 Instance (%s): %w", d.Id(), err)
+				}
+
+				if d.HasChange("capacity_reservation_specification.0.capacity_reservation_target.0.capacity_reservation_id") && d.HasChange("instance_type") {
+					input := &ec2.ModifyInstanceAttributeInput{
+						InstanceId: aws.String(d.Id()),
+						InstanceType: &ec2.AttributeValue{
+							Value: aws.String(d.Get("instance_type").(string)),
+						},
+					}
+
+					if _, err := conn.ModifyInstanceAttributeWithContext(ctx, input); err != nil {
+						return sdkdiag.AppendErrorf(diags, "modifying EC2 Instance (%s) attribute: %w", d.Id(), err)
+					}
+				}
+
 				input := &ec2.ModifyInstanceCapacityReservationAttributesInput{
 					CapacityReservationSpecification: v,
 					InstanceId:                       aws.String(d.Id()),
 				}
 
 				log.Printf("[DEBUG] Modifying EC2 Instance capacity reservation attributes: %s", input)
+
 				_, err := conn.ModifyInstanceCapacityReservationAttributesWithContext(ctx, input)
 
 				if err != nil {
@@ -1957,6 +1977,24 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta in
 
 				if _, err := WaitInstanceCapacityReservationSpecificationUpdated(ctx, conn, d.Id(), v); err != nil {
 					return sdkdiag.AppendErrorf(diags, "waiting for EC2 Instance (%s) capacity reservation attributes update: %s", d.Id(), err)
+				}
+
+				// Reference: https://github.com/hashicorp/terraform-provider-aws/issues/16433.
+				_, err = tfresource.RetryWhenAWSErrMessageContains(ctx, ec2PropagationTimeout,
+					func() (interface{}, error) {
+						return conn.StartInstancesWithContext(ctx, &ec2.StartInstancesInput{
+							InstanceIds: aws.StringSlice([]string{d.Id()}),
+						})
+					},
+					errCodeInvalidParameterValue, "LaunchPlan instance type does not match attribute value",
+				)
+
+				if err != nil {
+					return sdkdiag.AppendErrorf(diags, "starting EC2 Instance (%s): %w", d.Id(), err)
+				}
+
+				if _, err := WaitInstanceStarted(ctx, conn, d.Id(), InstanceStartTimeout); err != nil {
+					return sdkdiag.AppendErrorf(diags, "waiting for EC2 Instance (%s) start: %w", d.Id(), err)
 				}
 			}
 		}
