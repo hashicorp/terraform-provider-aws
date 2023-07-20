@@ -74,7 +74,7 @@ In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashico
 ```terraform
 import {
   to = aws_cognito_resource_server.example
-  id = ""us-west-2_abc123|https://example.com""
+  id = "us-west-2_abc123|https://example.com"
 }
 ```
 

@@ -50,7 +50,7 @@ In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashico
 ```terraform
 import {
   to = aws_sesv2_dedicated_ip_assignment.example
-  id = ""0.0.0.0,my-pool""
+  id = "0.0.0.0,my-pool"
 }
 ```
 

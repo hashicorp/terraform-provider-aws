@@ -78,10 +78,8 @@ In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashico
 
 ```terraform
 import {
-  to = \
-
-  id = "   aws_lambda_layer_version.test_layer \
-    arn:aws:lambda:_REGION_:_ACCOUNT_ID_:layer:_LAYER_NAME_:_LAYER_VERSION_"
+  to = aws_lambda_layer_version.test_layer
+  id = "arn:aws:lambda:_REGION_:_ACCOUNT_ID_:layer:_LAYER_NAME_:_LAYER_VERSION_"
 }
 ```
 

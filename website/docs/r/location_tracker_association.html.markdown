@@ -52,7 +52,7 @@ In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashico
 ```terraform
 import {
   to = aws_location_tracker_association.example
-  id = ""tracker_name|consumer_arn""
+  id = "tracker_name|consumer_arn"
 }
 ```
 
