@@ -74,6 +74,51 @@ func expandCaptchaConfig(l []interface{}) *wafv2.CaptchaConfig {
 	return configuration
 }
 
+func expandAssociationConfig(l []interface{}) *wafv2.AssociationConfig {
+	if len(l) == 0 || l[0] == nil {
+		return nil
+	}
+
+	configuration := &wafv2.AssociationConfig{}
+
+	m := l[0].(map[string]interface{})
+	if v, ok := m["request_body"]; ok {
+		inner := v.([]interface{})
+		if len(inner) == 0 || inner[0] == nil {
+			return configuration
+		}
+
+		m = inner[0].(map[string]interface{})
+		if len(m) > 0 {
+			configuration.RequestBody = make(map[string]*wafv2.RequestBodyAssociatedResourceTypeConfig)
+		}
+
+		if v, ok := m["cloudfront"]; ok {
+			inner = v.([]interface{})
+			configuration.RequestBody[wafv2.AssociatedResourceTypeCloudfront] = expandRequestBodyConfigItem(inner)
+		}
+	}
+
+	return configuration
+}
+
+func expandRequestBodyConfigItem(l []interface{}) *wafv2.RequestBodyAssociatedResourceTypeConfig {
+	configuration := &wafv2.RequestBodyAssociatedResourceTypeConfig{}
+
+	if len(l) == 0 || l[0] == nil {
+		return configuration
+	}
+
+	m := l[0].(map[string]interface{})
+	if v, ok := m["default_size_inspection_limit"]; ok {
+		if v != "" {
+			configuration.DefaultSizeInspectionLimit = aws.String(v.(string))
+		}
+	}
+
+	return configuration
+}
+
 func expandRuleLabels(l []interface{}) []*wafv2.Label {
 	if len(l) == 0 || l[0] == nil {
 		return nil
@@ -1424,6 +1469,29 @@ func flattenCaptchaConfig(config *wafv2.CaptchaConfig) interface{} {
 	}
 
 	return []interface{}{m}
+}
+
+func flattenAssociationConfig(config *wafv2.AssociationConfig) interface{} {
+	associationConfig := []interface{}{}
+	if config == nil {
+		return associationConfig
+	}
+	if config.RequestBody == nil {
+		return associationConfig
+	}
+
+	cloudfrontRequestBodyConfig := config.RequestBody[wafv2.AssociatedResourceTypeCloudfront]
+	if cloudfrontRequestBodyConfig != nil {
+		associationConfig = append(associationConfig, map[string]interface{}{
+			"request_body": []map[string]interface{}{{
+				"cloudfront": []map[string]interface{}{{
+					"default_size_inspection_limit": aws.StringValue(cloudfrontRequestBodyConfig.DefaultSizeInspectionLimit),
+				}},
+			}},
+		})
+	}
+
+	return associationConfig
 }
 
 func flattenChallenge(a *wafv2.ChallengeAction) []interface{} {
