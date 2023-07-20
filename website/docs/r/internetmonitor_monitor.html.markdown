@@ -41,9 +41,9 @@ Defines the health event threshold percentages, for performance score and availa
 * `availability_score_threshold` - (Optional) The health event threshold percentage set for availability scores.
 * `performance_score_threshold` - (Optional) The health event threshold percentage set for performance scores.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the Monitor.
 * `id` - Name of the monitor.
@@ -51,7 +51,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Internet Monitor Monitors can be imported using the `monitor_name`, e.g.,
+Import Internet Monitor Monitors using the `monitor_name`. For example:
 
 ```
 $ terraform import aws_internetmonitor_monitor.some some-monitor

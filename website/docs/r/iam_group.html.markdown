@@ -23,14 +23,14 @@ resource "aws_iam_group" "developers" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `name` - (Required) The group's name. The name must consist of upper and lowercase alphanumeric characters with no spaces. You can also include any of the following characters: `=,.@-_.`. Group names are not distinguished by case. For example, you cannot create groups named both "ADMINS" and "admins".
 * `path` - (Optional, default "/") Path in which to create the group.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The group's ID.
 * `arn` - The ARN assigned by AWS for this group.
@@ -42,7 +42,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-IAM Groups can be imported using the `name`, e.g.,
+Import IAM Groups using the `name`. For example:
 
 ```
 $ terraform import aws_iam_group.developers developers

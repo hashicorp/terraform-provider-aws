@@ -36,9 +36,9 @@ The following arguments are optional:
 
 * `comment` - (Optional) Comment describing the delegation request.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `delegation_id` - Unique identifier for the delegation.
 * `id` - Unique identifier for the resource. This is a comma-separated string containing `assessment_id`, `role_arn`, and `control_set_id`.
@@ -46,7 +46,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Audit Manager Assessment Delegation can be imported using the `id`, e.g.,
+Import Audit Manager Assessment Delegation using the `id`. For example:
 
 ```
 $ terraform import aws_auditmanager_assessment_delegation.example abcdef-123456,arn:aws:iam::012345678901:role/example,example

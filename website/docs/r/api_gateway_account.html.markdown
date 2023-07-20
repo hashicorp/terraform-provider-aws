@@ -63,13 +63,13 @@ resource "aws_iam_role_policy" "cloudwatch" {
 
 ## Argument Reference
 
-The following argument is supported:
+This resource supports the following arguments:
 
 * `cloudwatch_role_arn` - (Optional) ARN of an IAM role for CloudWatch (to allow logging & monitoring). See more [in AWS Docs](https://docs.aws.amazon.com/apigateway/latest/developerguide/how-to-stage-settings.html#how-to-stage-settings-console). Logging & monitoring can be enabled/disabled and otherwise tuned on the API Gateway Stage level.
 
-## Attributes Reference
+## Attribute Reference
 
-The following attribute is exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `throttle_settings` - Account-Level throttle settings. See exported fields below.
 
@@ -80,7 +80,7 @@ The following attribute is exported:
 
 ## Import
 
-API Gateway Accounts can be imported using the word `api-gateway-account`, e.g.,
+Import API Gateway Accounts using the word `api-gateway-account`. For example:
 
 ```
 $ terraform import aws_api_gateway_account.demo api-gateway-account

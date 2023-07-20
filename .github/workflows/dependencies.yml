@@ -9,8 +9,11 @@ on:
 
 jobs:
   community_check:
+    if: github.event_name == 'pull_request_target'
     uses: ./.github/workflows/community-check.yml
     secrets: inherit
+    with:
+      username: ${{ github.event.pull_request.user.login }}
 
   changes:
     needs: community_check
@@ -20,7 +23,7 @@ jobs:
       changed: ${{ steps.filter.outputs.changed }}
     steps:
       - uses: dorny/paths-filter@4512585405083f25c027a35db413c2b3b9006d50
-        if: github.event_name == 'pull_request_target' && needs.community_check.outputs.maintainer == 'false'
+        if: needs.community_check.outputs.maintainer == 'false'
         id: filter
         with:
           filters: |

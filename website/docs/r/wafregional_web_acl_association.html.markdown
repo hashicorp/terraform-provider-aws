@@ -175,20 +175,20 @@ resource "aws_wafregional_web_acl_association" "association" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `web_acl_id` - (Required) The ID of the WAF Regional WebACL to create an association.
 * `resource_arn` - (Required) ARN of the resource to associate with. For example, an Application Load Balancer or API Gateway Stage.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The ID of the association
 
 ## Import
 
-WAF Regional Web ACL Association can be imported using their `web_acl_id:resource_arn`, e.g.,
+Import WAF Regional Web ACL Association using their `web_acl_id:resource_arn`. For example:
 
 ```
 $ terraform import aws_wafregional_web_acl_association.foo web_acl_id:resource_arn

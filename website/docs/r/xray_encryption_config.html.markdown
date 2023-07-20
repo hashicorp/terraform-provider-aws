@@ -56,15 +56,15 @@ resource "aws_xray_encryption_config" "example" {
 * `type` - (Required) The type of encryption. Set to `KMS` to use your own key for encryption. Set to `NONE` for default encryption.
 * `key_id` - (Optional) An AWS KMS customer master key (CMK) ARN.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - Region name.
 
 ## Import
 
-XRay Encryption Config can be imported using the region name, e.g.,
+Import XRay Encryption Config using the region name. For example:
 
 ```
 $ terraform import aws_xray_encryption_config.example us-west-2

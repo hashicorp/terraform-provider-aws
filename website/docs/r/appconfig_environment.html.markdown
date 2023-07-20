@@ -40,7 +40,7 @@ resource "aws_appconfig_application" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `application_id` - (Required, Forces new resource) AppConfig application ID. Must be between 4 and 7 characters in length.
 * `name` - (Required) Name for the environment. Must be between 1 and 64 characters in length.
@@ -55,9 +55,9 @@ The `monitor` block supports the following:
 * `alarm_arn` - (Required) ARN of the Amazon CloudWatch alarm.
 * `alarm_role_arn` - (Optional) ARN of an IAM role for AWS AppConfig to monitor `alarm_arn`.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the AppConfig Environment.
 * `id` - (**Deprecated**) AppConfig environment ID and application ID separated by a colon (`:`).
@@ -68,7 +68,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-AppConfig Environments can be imported by using the environment ID and application ID separated by a colon (`:`), e.g.,
+Import AppConfig Environments using the environment ID and application ID separated by a colon (`:`). For example:
 
 ```
 $ terraform import aws_appconfig_environment.example 71abcde:11xxxxx

@@ -34,15 +34,15 @@ EOF
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `api_id` - (Required) GraphQL API ID.
 * `format` - (Required) The type format: `SDL` or `JSON`.
 * `definition` - (Required) The type definition.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - The ARN of the type.
 * `description` - The type description.
@@ -51,7 +51,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Appsync Types can be imported using the `id` e.g.,
+Import Appsync Types using the `id`. For example:
 
 ```
 $ terraform import aws_appsync_type.example api-id:format:name

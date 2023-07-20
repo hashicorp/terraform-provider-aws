@@ -75,21 +75,21 @@ resource "aws_route53_query_log" "example_com" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `cloudwatch_log_group_arn` - (Required) CloudWatch log group ARN to send query logs.
 * `zone_id` - (Required) Route53 hosted zone ID to enable query logs.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - The Amazon Resource Name (ARN) of the Query Logging Config.
 * `id` - The query logging configuration ID
 
 ## Import
 
-Route53 query logging configurations can be imported using their ID, e.g.,
+Import Route53 query logging configurations using their ID. For example:
 
 ```
 $ terraform import aws_route53_query_log.example_com xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx

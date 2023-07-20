@@ -103,7 +103,7 @@ can be done using the [`auto_accept`](vpc_peering_connection.html#auto_accept) a
 Connection has to be made active manually using other means. See [notes](vpc_peering_connection.html#notes) below for
 more information.
 
-The following arguments are supported:
+This argument supports the following arguments:
 
 * `peer_owner_id` - (Optional) The AWS account ID of the owner of the peer VPC.
    Defaults to the account ID the [AWS provider][1] is currently connected to.
@@ -126,9 +126,9 @@ must have support for the DNS hostnames enabled. This can be done using the [`en
 * `allow_remote_vpc_dns_resolution` - (Optional) Allow a local VPC to resolve public DNS hostnames to
 private IP addresses when queried from instances in the peer VPC.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The ID of the VPC Peering Connection.
 * `accept_status` - The status of the VPC Peering Connection request.
@@ -150,7 +150,7 @@ or accept the connection manually using the AWS Management Console, AWS CLI, thr
 
 ## Import
 
-VPC Peering resources can be imported using the `vpc peering id`, e.g.,
+Import VPC Peering resources using the `vpc peering id`. For example:
 
 ```sh
 $ terraform import aws_vpc_peering_connection.test_connection pcx-111aaa111

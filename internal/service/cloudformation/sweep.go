@@ -105,7 +105,7 @@ func sweepStackSetInstances(region string) error {
 		return fmt.Errorf("error listing CloudFormation StackSets (%s): %w", region, err)
 	}
 
-	err = sweep.SweepOrchestratorWithContext(ctx, sweepResources)
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
 
 	if err != nil {
 		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error sweeping CloudFormation StackSet Instances (%s): %w", region, err))
@@ -151,7 +151,7 @@ func sweepStackSets(region string) error {
 		return fmt.Errorf("error listing CloudFormation StackSets (%s): %w", region, err)
 	}
 
-	err = sweep.SweepOrchestratorWithContext(ctx, sweepResources)
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
 
 	if err != nil {
 		return fmt.Errorf("error sweeping CloudFormation StackSets (%s): %w", region, err)

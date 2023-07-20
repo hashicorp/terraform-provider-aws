@@ -60,7 +60,7 @@ resource "aws_glue_data_quality_ruleset" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `description` - (Optional) Description of the data quality ruleset.
 * `name` - (Required, Forces new resource) Name of the data quality ruleset.
@@ -74,9 +74,9 @@ The following arguments are supported:
 * `database_name` - (Required, Forces new resource) Name of the database where the AWS Glue table exists.
 * `table_name` - (Required, Forces new resource) Name of the AWS Glue table.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the Glue Data Quality Ruleset.
 * `created_on` - The time and date that this data quality ruleset was created.
@@ -86,7 +86,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Glue Data Quality Ruleset can be imported using the `name`, e.g.,
+Import Glue Data Quality Ruleset using the `name`. For example:
 
 ```
 $ terraform import aws_glue_data_quality_ruleset.example exampleName

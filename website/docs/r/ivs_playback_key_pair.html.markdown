@@ -32,9 +32,9 @@ The following arguments are optional:
 * `name` - (Optional) Playback Key Pair name.
 * `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the Playback Key Pair.
 * `fingerprint` - Key-pair identifier.
@@ -49,7 +49,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-IVS (Interactive Video) Playback Key Pair can be imported using the ARN, e.g.,
+Import IVS (Interactive Video) Playback Key Pair using the ARN. For example:
 
 ```
 $ terraform import aws_ivs_playback_key_pair.example arn:aws:ivs:us-west-2:326937407773:playback-key/KDJRJNQhiQzA

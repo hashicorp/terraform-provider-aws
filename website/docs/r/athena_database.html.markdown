@@ -25,7 +25,7 @@ resource "aws_athena_database" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `bucket` - (Required) Name of S3 bucket to save the results of the query execution.
 * `name` - (Required) Name of the database to create.
@@ -47,15 +47,15 @@ The following arguments are supported:
 * `encryption_option` - (Required) Type of key; one of `SSE_S3`, `SSE_KMS`, `CSE_KMS`
 * `kms_key` - (Optional) KMS key ARN or ID; required for key types `SSE_KMS` and `CSE_KMS`.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - Database name
 
 ## Import
 
-Athena Databases can be imported using their name, e.g.,
+Import Athena Databases using their name. For example:
 
 ```
 $ terraform import aws_athena_database.example example

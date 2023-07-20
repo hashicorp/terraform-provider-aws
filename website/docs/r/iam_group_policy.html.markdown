@@ -41,7 +41,7 @@ resource "aws_iam_group" "my_developers" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `policy` - (Required) The policy document. This is a JSON formatted string. For more information about building IAM policy documents with Terraform, see the [AWS IAM Policy Document Guide](https://learn.hashicorp.com/terraform/aws/iam-policy)
 * `name` - (Optional) The name of the policy. If omitted, Terraform will
@@ -50,9 +50,9 @@ assign a random, unique name.
   prefix. Conflicts with `name`.
 * `group` - (Required) The IAM group to attach to the policy.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The group policy ID.
 * `group` - The group to which this policy applies.
@@ -61,7 +61,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-IAM Group Policies can be imported using the `group_name:group_policy_name`, e.g.,
+Import IAM Group Policies using the `group_name:group_policy_name`. For example:
 
 ```
 $ terraform import aws_iam_group_policy.mypolicy group_of_mypolicy_name:mypolicy_name

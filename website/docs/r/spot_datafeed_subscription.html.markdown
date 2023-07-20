@@ -31,13 +31,13 @@ resource "aws_spot_datafeed_subscription" "default" {
 * `bucket` - (Required) The Amazon S3 bucket in which to store the Spot instance data feed.
 * `prefix` - (Optional) Path of folder inside bucket to place spot pricing data.
 
-## Attributes Reference
+## Attribute Reference
 
-No additional attributes are exported.
+This resource exports no additional attributes.
 
 ## Import
 
-A Spot Datafeed Subscription can be imported using the word `spot-datafeed-subscription`, e.g.,
+Import a Spot Datafeed Subscription using the word `spot-datafeed-subscription`. For example:
 
 ```
 $ terraform import aws_spot_datafeed_subscription.mysubscription spot-datafeed-subscription

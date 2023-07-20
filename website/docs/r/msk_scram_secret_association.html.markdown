@@ -77,20 +77,20 @@ resource "aws_secretsmanager_secret_policy" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `cluster_arn` - (Required, Forces new resource) Amazon Resource Name (ARN) of the MSK cluster.
 * `secret_arn_list` - (Required) List of AWS Secrets Manager secret ARNs.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - Amazon Resource Name (ARN) of the MSK cluster.
 
 ## Import
 
-MSK SCRAM Secret Associations can be imported using the `id` e.g.,
+Import MSK SCRAM Secret Associations using the `id`. For example:
 
 ```
 $ terraform import aws_msk_scram_secret_association.example arn:aws:kafka:us-west-2:123456789012:cluster/example/279c0212-d057-4dba-9aa9-1c4e5a25bfc7-3

@@ -68,7 +68,7 @@ func init() {
 
 	resource.AddTestSweepers("aws_route53_resolver_query_log_config_association", &resource.Sweeper{
 		Name: "aws_route53_resolver_query_log_config_association",
-		F:    sweepQueryLogAssociationsConfigs,
+		F:    sweepQueryLogConfigAssociations,
 	})
 
 	resource.AddTestSweepers("aws_route53_resolver_query_log_config", &resource.Sweeper{
@@ -129,7 +129,7 @@ func sweepDNSSECConfig(region string) error {
 		return fmt.Errorf("error listing Route53 Resolver DNSSEC Configs (%s): %w", region, err)
 	}
 
-	err = sweep.SweepOrchestratorWithContext(ctx, sweepResources)
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
 
 	if err != nil {
 		return fmt.Errorf("error sweeping Route53 Resolver DNSSEC Configs (%s): %w", region, err)
@@ -173,7 +173,7 @@ func sweepEndpoints(region string) error {
 		return fmt.Errorf("error listing Route53 Resolver Endpoints (%s): %w", region, err)
 	}
 
-	err = sweep.SweepOrchestratorWithContext(ctx, sweepResources)
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
 
 	if err != nil {
 		return fmt.Errorf("error sweeping Route53 Resolver Endpoints (%s): %w", region, err)
@@ -218,7 +218,7 @@ func sweepFirewallConfigs(region string) error {
 		return fmt.Errorf("error listing Route53 Resolver Firewall Configs (%s): %w", region, err)
 	}
 
-	err = sweep.SweepOrchestratorWithContext(ctx, sweepResources)
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
 
 	if err != nil {
 		return fmt.Errorf("error sweeping Route53 Resolver Firewall Configs (%s): %w", region, err)
@@ -262,7 +262,7 @@ func sweepFirewallDomainLists(region string) error {
 		return fmt.Errorf("error listing Route53 Resolver Firewall Domain Lists (%s): %w", region, err)
 	}
 
-	err = sweep.SweepOrchestratorWithContext(ctx, sweepResources)
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
 
 	if err != nil {
 		return fmt.Errorf("error sweeping Route53 Resolver Firewall Domain Lists (%s): %w", region, err)
@@ -306,7 +306,7 @@ func sweepFirewallRuleGroupAssociations(region string) error {
 		return fmt.Errorf("error listing Route53 Resolver Firewall Rule Group Associations (%s): %w", region, err)
 	}
 
-	err = sweep.SweepOrchestratorWithContext(ctx, sweepResources)
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
 
 	if err != nil {
 		return fmt.Errorf("error sweeping Route53 Resolver Firewall Rule Group Associations (%s): %w", region, err)
@@ -350,7 +350,7 @@ func sweepFirewallRuleGroups(region string) error {
 		return fmt.Errorf("error listing Route53 Resolver Firewall Rule Groups (%s): %w", region, err)
 	}
 
-	err = sweep.SweepOrchestratorWithContext(ctx, sweepResources)
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
 
 	if err != nil {
 		return fmt.Errorf("error sweeping Route53 Resolver Firewall Rule Groups (%s): %w", region, err)
@@ -417,7 +417,7 @@ func sweepFirewallRules(region string) error {
 		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error listing Route53 Resolver Firewall Rule Groups (%s): %w", region, err))
 	}
 
-	err = sweep.SweepOrchestratorWithContext(ctx, sweepResources)
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
 
 	if err != nil {
 		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error sweeping Route53 Resolver Firewall Rules (%s): %w", region, err))
@@ -426,7 +426,7 @@ func sweepFirewallRules(region string) error {
 	return sweeperErrs.ErrorOrNil()
 }
 
-func sweepQueryLogAssociationsConfigs(region string) error {
+func sweepQueryLogConfigAssociations(region string) error {
 	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
@@ -463,7 +463,7 @@ func sweepQueryLogAssociationsConfigs(region string) error {
 		return fmt.Errorf("error listing Route53 Resolver Query Log Config Associations (%s): %w", region, err)
 	}
 
-	err = sweep.SweepOrchestratorWithContext(ctx, sweepResources)
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
 
 	if err != nil {
 		return fmt.Errorf("error sweeping Route53 Resolver Query Log Config Associations (%s): %w", region, err)
@@ -507,7 +507,7 @@ func sweepQueryLogsConfig(region string) error {
 		return fmt.Errorf("error listing Route53 Resolver Query Log Configs (%s): %w", region, err)
 	}
 
-	err = sweep.SweepOrchestratorWithContext(ctx, sweepResources)
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
 
 	if err != nil {
 		return fmt.Errorf("error sweeping Route53 Resolver Query Log Configs (%s): %w", region, err)
@@ -553,7 +553,7 @@ func sweepRuleAssociations(region string) error {
 		return fmt.Errorf("error listing Route53 Resolver Rule Associations (%s): %w", region, err)
 	}
 
-	err = sweep.SweepOrchestratorWithContext(ctx, sweepResources)
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
 
 	if err != nil {
 		return fmt.Errorf("error sweeping Route53 Resolver Rule Associations (%s): %w", region, err)
@@ -601,7 +601,7 @@ func sweepRules(region string) error {
 		return fmt.Errorf("error listing Route53 Resolver Rules (%s): %w", region, err)
 	}
 
-	err = sweep.SweepOrchestratorWithContext(ctx, sweepResources)
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
 
 	if err != nil {
 		return fmt.Errorf("error sweeping Route53 Resolver Rules (%s): %w", region, err)

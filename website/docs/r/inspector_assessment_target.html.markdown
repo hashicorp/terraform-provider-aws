@@ -28,20 +28,20 @@ resource "aws_inspector_assessment_target" "foo" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `name` - (Required) The name of the assessment target.
 * `resource_group_arn` (Optional) Inspector Resource Group Amazon Resource Name (ARN) stating tags for instance matching. If not specified, all EC2 instances in the current AWS account and region are included in the assessment target.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - The target assessment ARN.
 
 ## Import
 
-Inspector Classic Assessment Targets can be imported via their Amazon Resource Name (ARN), e.g.,
+Import Inspector Classic Assessment Targets using their Amazon Resource Name (ARN). For example:
 
 ```sh
 $ terraform import aws_inspector_assessment_target.example arn:aws:inspector:us-east-1:123456789012:target/0-xxxxxxx

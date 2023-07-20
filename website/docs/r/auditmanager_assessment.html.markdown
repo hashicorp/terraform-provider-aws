@@ -79,9 +79,9 @@ The following arguments are optional:
 
 * `service_name` - (Required) Name of the Amazon Web Service.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - Amazon Resource Name (ARN) of the assessment.
 * `id` - Unique identifier for the assessment.
@@ -90,7 +90,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Audit Manager Assessments can be imported using the assessment `id`, e.g.,
+Import Audit Manager Assessments using the assessment `id`. For example:
 
 ```
 $ terraform import aws_auditmanager_assessment.example abc123-de45

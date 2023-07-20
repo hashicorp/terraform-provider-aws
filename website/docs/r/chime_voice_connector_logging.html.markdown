@@ -27,21 +27,21 @@ resource "aws_chime_voice_connector_logging" "default" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `voice_connector_id` - (Required) The Amazon Chime Voice Connector ID.
 * `enable_sip_logs` - (Optional) When true, enables SIP message logs for sending to Amazon CloudWatch Logs.
 * `enable_media_metric_logs` - (Optional) When true, enables logging of detailed media metrics for Voice Connectors to Amazon CloudWatch logs.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The Amazon Chime Voice Connector ID.
 
 ## Import
 
-Chime Voice Connector Logging can be imported using the `voice_connector_id`, e.g.,
+Import Chime Voice Connector Logging using the `voice_connector_id`. For example:
 
 ```
 $ terraform import aws_chime_voice_connector_logging.default abcdef1ghij2klmno3pqr4
