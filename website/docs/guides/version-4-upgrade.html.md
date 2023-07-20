@@ -3552,5 +3552,5 @@ be compatible with EC2-Classic as AWS completes their EC2-Classic networking ret
 
 These resources should be considered deprecated and will be removed in version 5.0.0.
 
-* [Account Associations](/docs/providers/aws/r/macie_member_account_association.html)
-* [S3 Bucket Associations](/docs/providers/aws/r/macie_s3_bucket_association.html)
+* Macie Member Account Association
+* Macie S3 Bucket Association
