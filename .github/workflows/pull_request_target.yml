@@ -60,11 +60,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: 'Checkout Repo'
-        if: ${{ !github.event.act }}
         uses: actions/checkout@c85c95e3d7251135ab7dc9ce3241c5835cc595a9
 
       - name: 'Apply Labels'
-        if: ${{ !github.event.act }}
         uses: actions/labeler@ba790c862c380240c6d5e7427be5ace9a05c754b # v4.0.3
         with:
           configuration-path: .github/labeler-pr-triage.yml
@@ -76,7 +74,6 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: 'Apply Size Labels'
-        if: ${{ !github.event.act }}
         uses: codelytv/pr-size-labeler@54ef36785e9f4cb5ecf1949cfc9b00dbb621d761 # v1.8.1
         with:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
