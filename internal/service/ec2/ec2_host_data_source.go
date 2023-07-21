@@ -33,6 +33,10 @@ func DataSourceHost() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"asset_id": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"auto_placement": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -118,6 +122,7 @@ func dataSourceHostRead(ctx context.Context, d *schema.ResourceData, meta interf
 		Resource:  fmt.Sprintf("dedicated-host/%s", d.Id()),
 	}.String()
 	d.Set("arn", arn)
+	d.Set("asset_id", host.AssetId)
 	d.Set("auto_placement", host.AutoPlacement)
 	d.Set("availability_zone", host.AvailabilityZone)
 	d.Set("cores", host.HostProperties.Cores)

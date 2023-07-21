@@ -151,7 +151,7 @@ func sweepClusterParameterGroups(region string) error {
 		return fmt.Errorf("error listing RDS Cluster Parameter Groups (%s): %w", region, err)
 	}
 
-	err = sweep.SweepOrchestratorWithContext(ctx, sweepResources)
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
 
 	if err != nil {
 		return fmt.Errorf("error sweeping RDS Cluster Parameter Groups (%s): %w", region, err)
@@ -201,7 +201,7 @@ func sweepClusterSnapshots(region string) error {
 		return fmt.Errorf("error listing RDS DB Cluster Snapshots (%s): %w", region, err)
 	}
 
-	err = sweep.SweepOrchestratorWithContext(ctx, sweepResources)
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
 
 	if err != nil {
 		return fmt.Errorf("error sweeping RDS DB Cluster Snapshots (%s): %w", region, err)
@@ -265,7 +265,7 @@ func sweepClusters(region string) error {
 		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error listing RDS Clusters (%s): %w", region, err))
 	}
 
-	err = sweep.SweepOrchestratorWithContext(ctx, sweepResources)
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
 	if err != nil {
 		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error sweeping RDS Clusters (%s): %w", region, err))
 	}
@@ -308,7 +308,7 @@ func sweepEventSubscriptions(region string) error {
 		return fmt.Errorf("error listing RDS Event Subscriptions (%s): %w", region, err)
 	}
 
-	err = sweep.SweepOrchestratorWithContext(ctx, sweepResources)
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
 
 	if err != nil {
 		return fmt.Errorf("error sweeping RDS Event Subscriptions (%s): %w", region, err)
@@ -354,7 +354,7 @@ func sweepGlobalClusters(region string) error {
 		return fmt.Errorf("error listing RDS Global Clusters (%s): %w", region, err)
 	}
 
-	err = sweep.SweepOrchestratorWithContext(ctx, sweepResources)
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
 
 	if err != nil {
 		return fmt.Errorf("error sweeping RDS Global Clusters (%s): %w", region, err)
@@ -403,7 +403,7 @@ func sweepInstances(region string) error {
 		return fmt.Errorf("error listing RDS DB Instances (%s): %w", region, err)
 	}
 
-	err = sweep.SweepOrchestratorWithContext(ctx, sweepResources)
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
 
 	if err != nil {
 		return fmt.Errorf("error sweeping RDS DB Instances (%s): %w", region, err)
@@ -453,7 +453,7 @@ func sweepOptionGroups(region string) error {
 		return fmt.Errorf("error listing RDS Option Groups (%s): %w", region, err)
 	}
 
-	err = sweep.SweepOrchestratorWithContext(ctx, sweepResources)
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
 
 	if err != nil {
 		return fmt.Errorf("error sweeping RDS Option Groups (%s): %w", region, err)
@@ -503,7 +503,7 @@ func sweepParameterGroups(region string) error {
 		return fmt.Errorf("error listing RDS DB Parameter Groups (%s): %w", region, err)
 	}
 
-	err = sweep.SweepOrchestratorWithContext(ctx, sweepResources)
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
 
 	if err != nil {
 		return fmt.Errorf("error sweeping RDS DB Parameter Groups (%s): %w", region, err)
@@ -547,7 +547,7 @@ func sweepProxies(region string) error {
 		return fmt.Errorf("error listing RDS DB Proxies (%s): %w", region, err)
 	}
 
-	err = sweep.SweepOrchestratorWithContext(ctx, sweepResources)
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
 
 	if err != nil {
 		return fmt.Errorf("error sweeping RDS DB Proxies (%s): %w", region, err)
@@ -597,7 +597,7 @@ func sweepSnapshots(region string) error {
 		return fmt.Errorf("error listing RDS DB Snapshots (%s): %w", region, err)
 	}
 
-	err = sweep.SweepOrchestratorWithContext(ctx, sweepResources)
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
 
 	if err != nil {
 		return fmt.Errorf("error sweeping RDS DB Snapshots (%s): %w", region, err)
@@ -641,7 +641,7 @@ func sweepSubnetGroups(region string) error {
 		return fmt.Errorf("error listing RDS DB Subnet Groups (%s): %w", region, err)
 	}
 
-	err = sweep.SweepOrchestratorWithContext(ctx, sweepResources)
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
 
 	if err != nil {
 		return fmt.Errorf("error sweeping RDS DB Subnet Groups (%s): %w", region, err)
@@ -689,7 +689,7 @@ func sweepInstanceAutomatedBackups(region string) error {
 		return fmt.Errorf("error listing RDS Instance Automated Backups (%s): %w", region, err)
 	}
 
-	err = sweep.SweepOrchestratorWithContext(ctx, sweepResources)
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
 
 	if err != nil {
 		return fmt.Errorf("error sweeping RDS Instance Automated Backups (%s): %w", region, err)

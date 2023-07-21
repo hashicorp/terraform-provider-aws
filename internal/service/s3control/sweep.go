@@ -87,7 +87,7 @@ func sweepAccessPoints(region string) error {
 		return fmt.Errorf("error listing S3 Access Points (%s): %w", region, err)
 	}
 
-	err = sweep.SweepOrchestratorWithContext(ctx, sweepResources)
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
 
 	if err != nil {
 		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error sweeping S3 Access Points (%s): %w", region, err))
@@ -139,7 +139,7 @@ func sweepMultiRegionAccessPoints(region string) error {
 		return fmt.Errorf("error listing S3 Multi-Region Access Points (%s): %w", region, err)
 	}
 
-	err = sweep.SweepOrchestratorWithContext(ctx, sweepResources)
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
 
 	if err != nil {
 		return fmt.Errorf("error sweeping S3 Multi-Region Access Points (%s): %w", region, err)
@@ -186,7 +186,7 @@ func sweepObjectLambdaAccessPoints(region string) error {
 		return fmt.Errorf("error listing S3 Object Lambda Access Points (%s): %w", region, err)
 	}
 
-	err = sweep.SweepOrchestratorWithContext(ctx, sweepResources)
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
 
 	if err != nil {
 		return fmt.Errorf("error sweeping S3 Object Lambda Access Points (%s): %w", region, err)
@@ -239,7 +239,7 @@ func sweepStorageLensConfigurations(region string) error {
 		return fmt.Errorf("error listing S3 Storage Lens Configurations (%s): %w", region, err)
 	}
 
-	err = sweep.SweepOrchestratorWithContext(ctx, sweepResources)
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
 
 	if err != nil {
 		return fmt.Errorf("error sweeping S3 Storage Lens Configurations (%s): %w", region, err)

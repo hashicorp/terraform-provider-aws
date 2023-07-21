@@ -161,9 +161,9 @@ resource "aws_kinesis_firehose_delivery_stream" "extended_s3_stream" {
   name        = "terraform-kinesis-firehose-extended-s3-test-stream"
   destination = "extended_s3"
   extended_s3_configuration {
-    role_arn    = aws_iam_role.firehose_role.arn
-    bucket_arn  = aws_s3_bucket.bucket.arn
-    buffer_size = 64
+    role_arn       = aws_iam_role.firehose_role.arn
+    bucket_arn     = aws_s3_bucket.bucket.arn
+    buffering_size = 64
     # https://docs.aws.amazon.com/firehose/latest/dev/dynamic-partitioning.html
     dynamic_partitioning_configuration {
       enabled = "true"
@@ -554,7 +554,7 @@ resource "aws_kinesis_firehose_delivery_stream" "test_stream" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `name` - (Required) A name to identify the stream. This is unique to the AWS account and region the Stream is created in. When using for WAF logging, name must be prefixed with `aws-waf-logs-`. See [AWS Documentation](https://docs.aws.amazon.com/waf/latest/developerguide/waf-policies.html#waf-policies-logging-config) for more details.
 * `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
@@ -835,9 +835,9 @@ Required when using [dynamic partitioning](https://docs.aws.amazon.com/firehose/
 
 ~> **NOTE:** You can enable dynamic partitioning only when you create a new delivery stream. Once you enable dynamic partitioning on a delivery stream, it cannot be disabled on this delivery stream. Therefore, Terraform will recreate the resource whenever dynamic partitioning is enabled or disabled.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - The Amazon Resource Name (ARN) specifying the Stream
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
@@ -854,10 +854,19 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Kinesis Firehose Delivery streams can be imported using the stream ARN, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Kinesis Firehose Delivery streams using the stream ARN. For example:
 
+```terraform
+import {
+  to = aws_kinesis_firehose_delivery_stream.foo
+  id = "arn:aws:firehose:us-east-1:XXX:deliverystream/example"
+}
 ```
-$ terraform import aws_kinesis_firehose_delivery_stream.foo arn:aws:firehose:us-east-1:XXX:deliverystream/example
+
+Using `terraform import`, import Kinesis Firehose Delivery streams using the stream ARN. For example:
+
+```console
+% terraform import aws_kinesis_firehose_delivery_stream.foo arn:aws:firehose:us-east-1:XXX:deliverystream/example
 ```
 
 Note: Import does not work for stream destination `s3`. Consider using `extended_s3` since `s3` destination is deprecated.

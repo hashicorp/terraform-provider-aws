@@ -347,8 +347,9 @@ resource "aws_wafv2_web_acl" "test" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
+* `association_config` - (Optional) Specifies custom configurations for the associations between the web ACL and protected resources. See [`association_config`](#association_config-block) below for details.
 * `custom_response_body` - (Optional) Defines custom response bodies that can be referenced by `custom_response` actions. See [`custom_response_body`](#custom_response_body-block) below for details.
 * `default_action` - (Required) Action to perform if none of the `rules` contained in the WebACL match. See [`default_action`](#default_action-block) below for details.
 * `description` - (Optional) Friendly description of the WebACL.
@@ -358,6 +359,12 @@ The following arguments are supported:
 * `tags` - (Optional) Map of key-value pairs to associate with the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `token_domains` - (Optional) Specifies the domains that AWS WAF should accept in a web request token. This enables the use of tokens across multiple protected websites. When AWS WAF provides a token, it uses the domain of the AWS resource that the web ACL is protecting. If you don't specify a list of token domains, AWS WAF accepts tokens only for the domain of the protected resource. With a token domain list, AWS WAF accepts the resource's host domain plus all domains in the token domain list, including their prefixed subdomains.
 * `visibility_config` - (Required) Defines and enables Amazon CloudWatch metrics and web request sample collection. See [`visibility_config`](#visibility_config-block) below for details.
+
+### `association_config` Block
+
+The `association_config` block supports the following arguments:
+
+* `request_body` - (Optional) Customizes the request body that your protected resource forward to AWS WAF for inspection. See [`request_body`](#request_body-block) below for details.
 
 ### `custom_response_body` Block
 
@@ -837,9 +844,21 @@ The `immunity_time_property` block supports the following arguments:
 
 * `immunity_time` - (Optional) The amount of time, in seconds, that a CAPTCHA or challenge timestamp is considered valid by AWS WAF. The default setting is 300.
 
-## Attributes Reference
+### `request_body` Block
 
-In addition to all arguments above, the following attributes are exported:
+The `request_body` block supports the following arguments:
+
+* `cloudfront` - (Optional) Customizes the request body that your protected CloudFront distributions forward to AWS WAF for inspection. See [`cloudfront`](#cloudfront-block) below for details.
+
+### `cloudfront` Block
+
+The `cloudfront` block supports the following arguments:
+
+* `default_size_inspection_limit` - (Required) Specifies the maximum size of the web request body component that an associated CloudFront distribution should send to AWS WAF for inspection. This applies to statements in the web ACL that inspect the body or JSON body. Valid values are `KB_16`, `KB_32`, `KB_48` and `KB_64`.
+
+## Attribute Reference
+
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - The ARN of the WAF WebACL.
 * `capacity` - Web ACL capacity units (WCUs) currently being used by this web ACL.
@@ -848,8 +867,17 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-WAFv2 Web ACLs can be imported using `ID/Name/Scope` e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import WAFv2 Web ACLs using `ID/Name/Scope`. For example:
 
+```terraform
+import {
+  to = aws_wafv2_web_acl.example
+  id = "a1b2c3d4-d5f6-7777-8888-9999aaaabbbbcccc/example/REGIONAL"
+}
 ```
-$ terraform import aws_wafv2_web_acl.example a1b2c3d4-d5f6-7777-8888-9999aaaabbbbcccc/example/REGIONAL
+
+Using `terraform import`, import WAFv2 Web ACLs using `ID/Name/Scope`. For example:
+
+```console
+% terraform import aws_wafv2_web_acl.example a1b2c3d4-d5f6-7777-8888-9999aaaabbbbcccc/example/REGIONAL
 ```

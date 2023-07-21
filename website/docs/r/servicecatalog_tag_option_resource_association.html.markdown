@@ -30,9 +30,9 @@ The following arguments are required:
 * `resource_id` - (Required) Resource identifier.
 * `tag_option_id` - (Required) Tag Option identifier.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - Identifier of the association.
 * `resource_arn` - ARN of the resource.
@@ -50,8 +50,17 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-`aws_servicecatalog_tag_option_resource_association` can be imported using the tag option ID and resource ID, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_servicecatalog_tag_option_resource_association` using the tag option ID and resource ID. For example:
 
+```terraform
+import {
+  to = aws_servicecatalog_tag_option_resource_association.example
+  id = "tag-pjtvyakdlyo3m:prod-dnigbtea24ste"
+}
 ```
-$ terraform import aws_servicecatalog_tag_option_resource_association.example tag-pjtvyakdlyo3m:prod-dnigbtea24ste
+
+Using `terraform import`, import `aws_servicecatalog_tag_option_resource_association` using the tag option ID and resource ID. For example:
+
+```console
+% terraform import aws_servicecatalog_tag_option_resource_association.example tag-pjtvyakdlyo3m:prod-dnigbtea24ste
 ```

@@ -78,9 +78,9 @@ The following arguments are optional:
 * `dns_resolvers` - (Optional) A list of IP addresses of DNS resolver endpoints for the VPC connection.
 * `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the VPC connection.
 * `availability_status` - The availability status of the VPC connection. Valid values are `AVAILABLE`, `UNAVAILABLE` or `PARTIALLY_AVAILABLE`.
@@ -97,8 +97,17 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-QuickSight VPC connection can be imported using the AWS account ID and VPC connection ID separated by commas (`,`) e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import QuickSight VPC connection using the AWS account ID and VPC connection ID separated by commas (`,`). For example:
 
+```terraform
+import {
+  to = aws_quicksight_vpc_connection.example
+  id = "123456789012,example"
+}
 ```
-$ terraform import aws_quicksight_vpc_connection.example 123456789012,example
+
+Using `terraform import`, import QuickSight VPC connection using the AWS account ID and VPC connection ID separated by commas (`,`). For example:
+
+```console
+% terraform import aws_quicksight_vpc_connection.example 123456789012,example
 ```

@@ -242,16 +242,22 @@ func resourcePipeUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 			input.Enrichment = aws.String(d.Get("enrichment").(string))
 		}
 
-		if v, ok := d.GetOk("enrichment_parameters"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-			input.EnrichmentParameters = expandPipeEnrichmentParameters(v.([]interface{})[0].(map[string]interface{}))
+		if d.HasChange("enrichment_parameters") {
+			if v, ok := d.GetOk("enrichment_parameters"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+				input.EnrichmentParameters = expandPipeEnrichmentParameters(v.([]interface{})[0].(map[string]interface{}))
+			}
 		}
 
-		if v, ok := d.GetOk("source_parameters"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-			input.SourceParameters = expandUpdatePipeSourceParameters(v.([]interface{})[0].(map[string]interface{}))
+		if d.HasChange("source_parameters") {
+			if v, ok := d.GetOk("source_parameters"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+				input.SourceParameters = expandUpdatePipeSourceParameters(v.([]interface{})[0].(map[string]interface{}))
+			}
 		}
 
-		if v, ok := d.GetOk("target_parameters"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-			input.TargetParameters = expandPipeTargetParameters(v.([]interface{})[0].(map[string]interface{}))
+		if d.HasChange("target_parameters") {
+			if v, ok := d.GetOk("target_parameters"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+				input.TargetParameters = expandPipeTargetParameters(v.([]interface{})[0].(map[string]interface{}))
+			}
 		}
 
 		output, err := conn.UpdatePipe(ctx, input)

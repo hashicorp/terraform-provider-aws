@@ -522,9 +522,9 @@ The following arguments are optional:
 * `include_fec` - (Optional) Enables column only or column and row based FEC.
 * `row_length` - (Optional) The width of the FEC protection matrix.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the Channel.
 * `channel_id` - ID of the Channel.
@@ -539,8 +539,17 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-MediaLive Channel can be imported using the `channel_id`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import MediaLive Channel using the `channel_id`. For example:
 
+```terraform
+import {
+  to = aws_medialive_channel.example
+  id = "1234567"
+}
 ```
-$ terraform import aws_medialive_channel.example 1234567
+
+Using `terraform import`, import MediaLive Channel using the `channel_id`. For example:
+
+```console
+% terraform import aws_medialive_channel.example 1234567
 ```
