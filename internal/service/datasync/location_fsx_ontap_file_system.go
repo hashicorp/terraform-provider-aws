@@ -33,7 +33,7 @@ func ResourceLocationFSxOntapFileSystem() *schema.Resource {
 			StateContext: func(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 				idParts := strings.Split(d.Id(), "#")
 				if len(idParts) != 2 || idParts[0] == "" || idParts[1] == "" {
-					return nil, fmt.Errorf("Unexpected format of ID (%q), expected DataSyncLocationArn#FsxArn", d.Id())
+					return nil, fmt.Errorf("Unexpected format of ID (%q), expected DataSyncLocationArn#FsxSVMArn", d.Id())
 				}
 
 				DSArn := idParts[0]
@@ -52,10 +52,8 @@ func ResourceLocationFSxOntapFileSystem() *schema.Resource {
 				Computed: true,
 			},
 			"fsx_filesystem_arn": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: verify.ValidARN,
+				Type:     schema.TypeString,
+				Computed: true,
 			},
 			"protocol": {
 				Type:     schema.TypeList,
@@ -65,10 +63,11 @@ func ResourceLocationFSxOntapFileSystem() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"nfs": {
-							Type:     schema.TypeList,
-							Required: true,
-							ForceNew: true,
-							MaxItems: 1,
+							Type:         schema.TypeList,
+							Optional:     true,
+							ForceNew:     true,
+							MaxItems:     1,
+							ExactlyOneOf: []string{"protocol.0.nfs", "protocol.0.smb"},
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"mount_options": {
@@ -80,10 +79,10 @@ func ResourceLocationFSxOntapFileSystem() *schema.Resource {
 											Schema: map[string]*schema.Schema{
 												"version": {
 													Type:         schema.TypeString,
-													Default:      datasync.NfsVersionAutomatic,
+													Default:      datasync.NfsVersionNfs3,
 													Optional:     true,
 													ForceNew:     true,
-													ValidateFunc: validation.StringInSlice(datasync.NfsVersion_Values(), false),
+													ValidateFunc: validation.StringInSlice(FSxOntapNfsVersion_Values(), false),
 												},
 											},
 										},
@@ -92,10 +91,11 @@ func ResourceLocationFSxOntapFileSystem() *schema.Resource {
 							},
 						},
 						"smb": {
-							Type:     schema.TypeList,
-							Required: true,
-							ForceNew: true,
-							MaxItems: 1,
+							Type:         schema.TypeList,
+							Optional:     true,
+							ForceNew:     true,
+							MaxItems:     1,
+							ExactlyOneOf: []string{"protocol.0.nfs", "protocol.0.smb"},
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"domain": {
@@ -116,7 +116,7 @@ func ResourceLocationFSxOntapFileSystem() *schema.Resource {
 													Default:      datasync.NfsVersionAutomatic,
 													Optional:     true,
 													ForceNew:     true,
-													ValidateFunc: validation.StringInSlice(datasync.NfsVersion_Values(), false),
+													ValidateFunc: validation.StringInSlice(FSxOntapSmbVersion_Values(), false),
 												},
 											},
 										},
@@ -140,12 +140,6 @@ func ResourceLocationFSxOntapFileSystem() *schema.Resource {
 					},
 				},
 			},
-			"svm_arn": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: verify.ValidARN,
-			},
 			"security_group_arns": {
 				Type:     schema.TypeSet,
 				Required: true,
@@ -156,6 +150,12 @@ func ResourceLocationFSxOntapFileSystem() *schema.Resource {
 					Type:         schema.TypeString,
 					ValidateFunc: verify.ValidARN,
 				},
+			},
+			"storage_virtual_machine_arn": {
+				Type:         schema.TypeString,
+				Required:     true,
+				ForceNew:     true,
+				ValidateFunc: verify.ValidARN,
 			},
 			"subdirectory": {
 				Type:         schema.TypeString,
@@ -188,11 +188,10 @@ func resourceLocationFSxOntapFileSystemCreate(ctx context.Context, d *schema.Res
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DataSyncConn(ctx)
 
-	svmArn := d.Get("svm_arn").(string)
 	input := &datasync.CreateLocationFsxOntapInput{
 		Protocol:                 expandProtocol(d.Get("protocol").([]interface{})),
 		SecurityGroupArns:        flex.ExpandStringSet(d.Get("security_group_arns").(*schema.Set)),
-		StorageVirtualMachineArn: aws.String(svmArn),
+		StorageVirtualMachineArn: aws.String(d.Get("storage_virtual_machine_arn").(string)),
 		Tags:                     getTagsIn(ctx),
 	}
 
@@ -238,14 +237,10 @@ func resourceLocationFSxOntapFileSystemRead(ctx context.Context, d *schema.Resou
 	}
 
 	d.Set("arn", output.LocationArn)
+	d.Set("fsx_filesystem_arn", output.FsxFilesystemArn)
+	d.Set("storage_virtual_machine_arn", output.StorageVirtualMachineArn)
 	d.Set("subdirectory", subdirectory)
 	d.Set("uri", output.LocationUri)
-	d.Set("filesystem_arn", output.FsxFilesystemArn)
-	d.Set("svm_arn", output.StorageVirtualMachineArn)
-
-	if err := d.Set("security_group_arns", flex.FlattenStringSet(output.SecurityGroupArns)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting security_group_arns: %s", err)
-	}
 
 	if err := d.Set("creation_time", output.CreationTime.Format(time.RFC3339)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting creation_time: %s", err)
@@ -253,6 +248,10 @@ func resourceLocationFSxOntapFileSystemRead(ctx context.Context, d *schema.Resou
 
 	if err := d.Set("protocol", flattenProtocol(output.Protocol)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting protocol: %s", err)
+	}
+
+	if err := d.Set("security_group_arns", flex.FlattenStringSet(output.SecurityGroupArns)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting security_group_arns: %s", err)
 	}
 
 	return diags
@@ -286,4 +285,19 @@ func resourceLocationFSxOntapFileSystemDelete(ctx context.Context, d *schema.Res
 	}
 
 	return diags
+}
+
+func FSxOntapNfsVersion_Values() []string {
+	return []string{
+		datasync.NfsVersionNfs3,
+	}
+}
+
+func FSxOntapSmbVersion_Values() []string {
+	return []string{
+		datasync.SmbVersionAutomatic,
+		datasync.SmbVersionSmb2,
+		datasync.SmbVersionSmb3,
+		datasync.SmbVersionSmb20,
+	}
 }

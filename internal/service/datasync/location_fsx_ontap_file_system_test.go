@@ -20,7 +20,6 @@ import (
 	tfdatasync "github.com/hashicorp/terraform-provider-aws/internal/service/datasync"
 )
 
-// SMB Testing
 func TestAccDataSyncLocationFSxOntapFileSystem_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var locationFsxOntap1 datasync.DescribeLocationFsxOntapOutput
@@ -45,9 +44,9 @@ func TestAccDataSyncLocationFSxOntapFileSystem_basic(t *testing.T) {
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "datasync", regexp.MustCompile(`location/loc-.+`)),
 					resource.TestCheckResourceAttrPair(resourceName, "fsx_filesystem_arn", fsResourceName, "arn"),
 					resource.TestCheckResourceAttr(resourceName, "subdirectory", "/"),
-					resource.TestCheckResourceAttrPair(resourceName, "svm_arn", svmResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "storage_virtual_machine_arn", svmResourceName, "arn"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-					resource.TestMatchResourceAttr(resourceName, "uri", regexp.MustCompile(`^fsxo://.+/`)),
+					resource.TestMatchResourceAttr(resourceName, "uri", regexp.MustCompile(`^fsxn-(nfs|smb)://.+/`)),
 					resource.TestCheckResourceAttrSet(resourceName, "creation_time"),
 				),
 			},
@@ -241,14 +240,13 @@ func testAccLocationFSxOntapImportStateID(resourceName string) resource.ImportSt
 func testAccLocationFSxOntapFileSystemConfig_basic() string {
 	return acctest.ConfigCompose(testAccFSxOntapFileSystemBaseConfig(), fmt.Sprintf(`
 resource "aws_datasync_location_fsx_ontap_file_system" "test" {
-	fsx_filesystem_arn  = aws_fsx_ontap_file_system.test.arn
 	security_group_arns = [aws_security_group.test.arn]
 	storage_virtual_machine_arn = aws_fsx_ontap_storage_virtual_machine.test.arn
 
 	protocol {
 		nfs {
 			mount_options {
-				version = "AUTOMATIC"
+				version = "NFS3"
 			}
 		}
 	}
@@ -259,10 +257,17 @@ resource "aws_datasync_location_fsx_ontap_file_system" "test" {
 func testAccLocationFSxOntapFileSystemConfig_subdirectory(subdirectory string) string {
 	return acctest.ConfigCompose(testAccFSxOntapFileSystemBaseConfig(), fmt.Sprintf(`
 resource "aws_datasync_location_fsx_ontap_file_system" "test" {
-  fsx_filesystem_arn  = aws_fsx_ontap_file_system.test.arn
 	security_group_arns = [aws_security_group.test.arn]
 	storage_virtual_machine_arn = aws_fsx_ontap_storage_virtual_machine.test.arn
   subdirectory        = %[1]q
+
+	protocol {
+		nfs {
+			mount_options {
+				version = "NFS3"
+			}
+		}
+	}
 }
 `, subdirectory))
 }
@@ -270,13 +275,20 @@ resource "aws_datasync_location_fsx_ontap_file_system" "test" {
 func testAccLocationFSxOntapFileSystemConfig_tags1(key1, value1 string) string {
 	return acctest.ConfigCompose(testAccFSxOntapFileSystemBaseConfig(), fmt.Sprintf(`
 resource "aws_datasync_location_fsx_ontap_file_system" "test" {
-  fsx_filesystem_arn  = aws_fsx_ontap_file_system.test.arn
   security_group_arns = [aws_security_group.test.arn]
 	storage_virtual_machine_arn = aws_fsx_ontap_storage_virtual_machine.test.arn
 
   tags = {
     %[1]q = %[2]q
   }
+
+	protocol {
+		nfs {
+			mount_options {
+				version = "NFS3"
+			}
+		}
+	}
 }
 `, key1, value1))
 }
@@ -284,7 +296,6 @@ resource "aws_datasync_location_fsx_ontap_file_system" "test" {
 func testAccLocationFSxOntapFileSystemConfig_tags2(key1, value1, key2, value2 string) string {
 	return acctest.ConfigCompose(testAccFSxOntapFileSystemBaseConfig(), fmt.Sprintf(`
 resource "aws_datasync_location_fsx_ontap_file_system" "test" {
-  fsx_filesystem_arn  = aws_fsx_ontap_file_system.test.arn
   security_group_arns = [aws_security_group.test.arn]
 	storage_virtual_machine_arn = aws_fsx_ontap_storage_virtual_machine.test.arn
 
@@ -292,6 +303,14 @@ resource "aws_datasync_location_fsx_ontap_file_system" "test" {
     %[1]q = %[2]q
     %[3]q = %[4]q
   }
+
+	protocol {
+		nfs {
+			mount_options {
+				version = "NFS3"
+			}
+		}
+	}
 }
 `, key1, value1, key2, value2))
 }
@@ -316,13 +335,6 @@ func testAccFSxOntapFileSystemBaseConfig() string {
 
 		ingress {
 			cidr_blocks = [aws_vpc.test.cidr_block]
-			from_port   = 0
-			protocol    = -1
-			to_port     = 0
-		}
-
-		ingress {
-			cidr_blocks = [aws_vpc.test2.cidr_block]
 			from_port   = 0
 			protocol    = -1
 			to_port     = 0

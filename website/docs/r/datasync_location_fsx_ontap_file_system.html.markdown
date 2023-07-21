@@ -5,14 +5,7 @@ page_title: "AWS: aws_datasync_location_fsx_ontap_file_system"
 description: |-
   Terraform resource for managing an AWS DataSync Location FSx Ontap File System.
 ---
-<!---
-TIP: A few guiding principles for writing documentation:
-1. Use simple language while avoiding jargon and figures of speech.
-2. Focus on brevity and clarity to keep a reader's attention.
-3. Use active voice and present tense whenever you can.
-4. Document your feature as it exists now; do not mention the future or past if you can help it.
-5. Use accessible and inclusive language.
---->`
+
 # Resource: aws_datasync_location_fsx_ontap_file_system
 
 Terraform resource for managing an AWS DataSync Location FSx Ontap File System.
@@ -22,7 +15,18 @@ Terraform resource for managing an AWS DataSync Location FSx Ontap File System.
 ### Basic Usage
 
 ```terraform
-resource "aws_datasync_location_fsx_ontap_file_system" "example" {
+resource "aws_datasync_location_fsx_ontap_file_system" "test" {
+	fsx_filesystem_arn  = aws_fsx_ontap_file_system.test.arn
+	security_group_arns = [aws_security_group.test.arn]
+	storage_virtual_machine_arn = aws_fsx_ontap_storage_virtual_machine.test.arn
+
+	protocol {
+		nfs {
+			mount_options {
+				version = "NFS3"
+			}
+		}
+	}
 }
 ```
 
@@ -30,31 +34,53 @@ resource "aws_datasync_location_fsx_ontap_file_system" "example" {
 
 The following arguments are required:
 
-* `example_arg` - (Required) Concise argument description. Do not begin the description with "An", "The", "Defines", "Indicates", or "Specifies," as these are verbose. In other words, "Indicates the amount of storage," can be rewritten as "Amount of storage," without losing any information.
+* `protocol` - (Required) The data transfer protocol that DataSync uses to access your Amazon FSx file system. See [Protocol](#protocol) below.
+* `security_group_arns` - (Required) The security groups that provide access to your file system's preferred subnet. The security groups must allow outbbound traffic on the following ports (depending on the protocol you use):
+    * Network File System (NFS): TCP ports 111, 635, and 2049
+    * Server Message Block (SMB): TCP port 445
+* `storage_virtual_machine_arn` - (Required) The ARN of the SVM in your file system where you want to copy data to of from.
 
 The following arguments are optional:
 
-* `optional_arg` - (Optional) Concise argument description. Do not begin the description with "An", "The", "Defines", "Indicates", or "Specifies," as these are verbose. In other words, "Indicates the amount of storage," can be rewritten as "Amount of storage," without losing any information.
+* `subdirectory` - (Optional) Path to the file share in the SVM where you'll copy your data. You can specify a junction path (also known as a mount point), qtree path (for NFS file shares), or share name (for SMB file shares) (e.g. `/vol1`, `/vol1/tree1`, `share1`).
+* `tags` - (Optional) Key-value pairs of resource tags to assign to the DataSync Location. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+
+### Protocol
+
+* `nfs` - Network File System (NFS) protocol that DataSync uses to access your FSx ONTAP file system. See [NFS](#nfs) below.
+* `smb` - Server Message Block (SMB) protocol that DataSync uses to access your FSx ONTAP file system. See [SMB] (#smb) below.
+
+### NFS
+
+* `mount_options` - (Required) Mount options that are available for DataSync to access an NFS location. See [NFS Mount Options](#nfs-mount-options) below.
+
+### NFS Mount Options
+
+* `version` - (Optional) The specific NFS version that you want DataSync to use for mounting your NFS share. Valid values: `NFS3`. Default: `NFS3`
+
+### SMB
+
+* `domain` - Fully qualified domain name of the Microsoft Active Directory (AD) that your storage virtual machine belongs to.
+* `mount_options` - Mount options that are available for DataSync to access an SMB location. See [SMB Mount Options](#smb-mount-options) below.
+* `password` - Password of a user who has permission to access your SVM.
+* `user` - Username that can mount the location and access the files, folders, and metadata that you need in the SVM.
+
+### SMB Mount Options
+
+* `version` - (Optional) SMB version that you want DataSync to use for mounting your SMB share. Valid values: `AUTOMATIC`, `SMB3`, `SMB2` `SMB2_0`. Default: `AUTOMATIC`
 
 ## Attributes Reference
 
 In addition to all arguments above, the following attributes are exported:
 
-* `arn` - ARN of the Location FSx Ontap File System. Do not begin the description with "An", "The", "Defines", "Indicates", or "Specifies," as these are verbose. In other words, "Indicates the amount of storage," can be rewritten as "Amount of storage," without losing any information.
-* `example_attribute` - Concise description. Do not begin the description with "An", "The", "Defines", "Indicates", or "Specifies," as these are verbose. In other words, "Indicates the amount of storage," can be rewritten as "Amount of storage," without losing any information.
-
-## Timeouts
-
-[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
-
-* `create` - (Default `60m`)
-* `update` - (Default `180m`)
-* `delete` - (Default `90m`)
+* `arn` - ARN of the DataSync Location for the FSx Ontap File System.
+* `fsx_filesystem_arn` - ARN of the FSx Ontap File System.
+* `uri` - URI of the FSx ONTAP file system location
 
 ## Import
 
-DataSync Location FSx Ontap File System can be imported using the `example_id_arg`, e.g.,
+DataSync Location FSx Ontap File System can be imported using the `DataSync-ARN#FSx-ontap-svm-ARN`, e.g.,
 
 ```
-$ terraform import aws_datasync_location_fsx_ontap_file_system.example rft-8012925589
+$ terraform import aws_datasync_location_fsx_ontap_file_system.example arn:aws:datasync:us-west-2:123456789012:location/loc-12345678901234567#arn:aws:fsx:us-west-2:123456789012:storage-virtual-machine/svm-12345678abcdef123
 ```

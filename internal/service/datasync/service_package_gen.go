@@ -62,6 +62,14 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
+			Factory:  ResourceLocationFSxOntapFileSystem,
+			TypeName: "aws_datasync_location_fsx_ontap_file_system",
+			Name:     "Location FSx Ontap File System",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "id",
+			},
+		},
+		{
 			Factory:  ResourceLocationFSxWindowsFileSystem,
 			TypeName: "aws_datasync_location_fsx_windows_file_system",
 			Name:     "Location FSx Windows File System",
