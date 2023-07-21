@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 //go:build sweep
 // +build sweep
 
@@ -52,7 +55,7 @@ func init() {
 
 func sweepApplications(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
@@ -91,7 +94,7 @@ func sweepApplications(region string) error {
 		errs = multierror.Append(errs, fmt.Errorf("error listing AppConfig Applications: %w", err))
 	}
 
-	if err = sweep.SweepOrchestratorWithContext(ctx, sweepResources); err != nil {
+	if err = sweep.SweepOrchestrator(ctx, sweepResources); err != nil {
 		errs = multierror.Append(errs, fmt.Errorf("error sweeping AppConfig Applications for %s: %w", region, err))
 	}
 
@@ -105,7 +108,7 @@ func sweepApplications(region string) error {
 
 func sweepConfigurationProfiles(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
@@ -168,7 +171,7 @@ func sweepConfigurationProfiles(region string) error {
 		errs = multierror.Append(errs, fmt.Errorf("error listing AppConfig Applications: %w", err))
 	}
 
-	if err = sweep.SweepOrchestratorWithContext(ctx, sweepResources); err != nil {
+	if err = sweep.SweepOrchestrator(ctx, sweepResources); err != nil {
 		errs = multierror.Append(errs, fmt.Errorf("error sweeping AppConfig Configuration Profiles for %s: %w", region, err))
 	}
 
@@ -182,7 +185,7 @@ func sweepConfigurationProfiles(region string) error {
 
 func sweepDeploymentStrategies(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
@@ -227,7 +230,7 @@ func sweepDeploymentStrategies(region string) error {
 		errs = multierror.Append(errs, fmt.Errorf("error listing AppConfig Deployment Strategies: %w", err))
 	}
 
-	if err = sweep.SweepOrchestratorWithContext(ctx, sweepResources); err != nil {
+	if err = sweep.SweepOrchestrator(ctx, sweepResources); err != nil {
 		errs = multierror.Append(errs, fmt.Errorf("error sweeping AppConfig Deployment Strategies for %s: %w", region, err))
 	}
 
@@ -241,7 +244,7 @@ func sweepDeploymentStrategies(region string) error {
 
 func sweepEnvironments(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
@@ -300,7 +303,7 @@ func sweepEnvironments(region string) error {
 		errs = multierror.Append(errs, fmt.Errorf("error listing AppConfig Applications: %w", err))
 	}
 
-	if err = sweep.SweepOrchestratorWithContext(ctx, sweepResources); err != nil {
+	if err = sweep.SweepOrchestrator(ctx, sweepResources); err != nil {
 		errs = multierror.Append(errs, fmt.Errorf("error sweeping AppConfig Environments for %s: %w", region, err))
 	}
 
@@ -314,7 +317,7 @@ func sweepEnvironments(region string) error {
 
 func sweepHostedConfigurationVersions(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
@@ -402,7 +405,7 @@ func sweepHostedConfigurationVersions(region string) error {
 		errs = multierror.Append(errs, fmt.Errorf("error listing AppConfig Applications: %w", err))
 	}
 
-	if err = sweep.SweepOrchestratorWithContext(ctx, sweepResources); err != nil {
+	if err = sweep.SweepOrchestrator(ctx, sweepResources); err != nil {
 		errs = multierror.Append(errs, fmt.Errorf("error sweeping AppConfig Hosted Configuration Versions for %s: %w", region, err))
 	}
 

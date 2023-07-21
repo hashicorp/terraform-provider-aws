@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package rds
 
 import (
@@ -15,8 +18,8 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/rds/types"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/rds"
-	"github.com/aws/smithy-go"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	tfawserr_sdkv2 "github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
@@ -141,6 +144,13 @@ func ResourceInstance() *schema.Resource {
 				Optional:     true,
 				Computed:     true,
 				ValidateFunc: validation.IntBetween(0, 35),
+			},
+			"backup_target": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Computed:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.StringInSlice(backupTarget_Values(), false),
 			},
 			"backup_window": {
 				Type:         schema.TypeString,
@@ -849,6 +859,9 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 		if _, ok := d.GetOk("timezone"); ok {
 			diags = sdkdiag.AppendErrorf(diags, `"timezone" doesn't work with restores"`)
 		}
+		if _, ok := d.GetOk("backup_target"); ok {
+			diags = sdkdiag.AppendErrorf(diags, `"backup_target" doesn't work with restores"`)
+		}
 		if diags.HasError() {
 			return diags
 		}
@@ -1044,6 +1057,10 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 		if v, ok := d.GetOkExists("backup_retention_period"); ok {
 			modifyDbInstanceInput.BackupRetentionPeriod = aws.Int64(int64(v.(int)))
 			requiresModifyDbInstance = true
+		}
+
+		if v, ok := d.GetOk("backup_target"); ok {
+			input.BackupTarget = aws.String(v.(string))
 		}
 
 		if v, ok := d.GetOk("backup_window"); ok {
@@ -1259,6 +1276,10 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 			input.AvailabilityZone = aws.String(v.(string))
 		}
 
+		if v, ok := d.GetOk("backup_target"); ok {
+			input.BackupTarget = aws.String(v.(string))
+		}
+
 		if v, ok := d.GetOk("custom_iam_instance_profile"); ok {
 			input.CustomIamInstanceProfile = aws.String(v.(string))
 		}
@@ -1402,6 +1423,10 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 
 		if v, ok := d.GetOk("availability_zone"); ok {
 			input.AvailabilityZone = aws.String(v.(string))
+		}
+
+		if v, ok := d.GetOk("backup_target"); ok {
+			input.BackupTarget = aws.String(v.(string))
 		}
 
 		if v, ok := d.GetOk("backup_window"); ok {
@@ -1563,7 +1588,7 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 
 	var instance *rds.DBInstance
 	var err error
-	if instance, err = waitDBInstanceAvailableSDKv1(ctx, conn, d.Get("identifier").(string), d.Timeout(schema.TimeoutCreate)); err != nil {
+	if instance, err = waitDBInstanceAvailableSDKv1(ctx, conn, identifier, d.Timeout(schema.TimeoutCreate)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for RDS DB Instance (%s) create: %s", identifier, err)
 	}
 
@@ -1623,6 +1648,7 @@ func resourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta inte
 	d.Set("auto_minor_version_upgrade", v.AutoMinorVersionUpgrade)
 	d.Set("availability_zone", v.AvailabilityZone)
 	d.Set("backup_retention_period", v.BackupRetentionPeriod)
+	d.Set("backup_target", v.BackupTarget)
 	d.Set("backup_window", v.PreferredBackupWindow)
 	d.Set("ca_cert_identifier", v.CACertificateIdentifier)
 	d.Set("character_set_name", v.CharacterSetName)
@@ -1897,12 +1923,11 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta in
 				},
 				func(err error) (bool, error) {
 					// Retry for IAM eventual consistency.
-					apiErr, ok := errs.As[smithy.APIError](err)
-					if ok && apiErr.ErrorCode() == errCodeInvalidParameterValue && strings.Contains(apiErr.ErrorMessage(), "IAM role ARN value is invalid or does not include the required permissions") {
+					if tfawserr_sdkv2.ErrMessageContains(err, errCodeInvalidParameterValue, "IAM role ARN value is invalid or does not include the required permissions") {
 						return true, err
 					}
 
-					if ok && apiErr.ErrorCode() == errCodeInvalidParameterCombination && strings.Contains(apiErr.ErrorMessage(), "disable deletion pro") {
+					if tfawserr_sdkv2.ErrMessageContains(err, errCodeInvalidParameterCombination, "disable deletion pro") {
 						return true, err
 					}
 
@@ -2182,8 +2207,7 @@ func dbInstanceModify(ctx context.Context, conn *rds_sdkv2.Client, resourceID st
 		},
 		func(err error) (bool, error) {
 			// Retry for IAM eventual consistency.
-			apiErr, ok := errs.As[smithy.APIError](err)
-			if ok && apiErr.ErrorCode() == errCodeInvalidParameterValue && strings.Contains(apiErr.ErrorMessage(), "IAM role ARN value is invalid or does not include the required permissions") {
+			if tfawserr_sdkv2.ErrMessageContains(err, errCodeInvalidParameterValue, "IAM role ARN value is invalid or does not include the required permissions") {
 				return true, err
 			}
 
@@ -2373,17 +2397,16 @@ func findDBInstanceByIDSDKv1(ctx context.Context, conn *rds.RDS, id string) (*rd
 			LastRequest: input,
 		}
 	}
+
 	if err != nil {
 		return nil, err
 	}
 
-	if output == nil || len(output.DBInstances) == 0 || output.DBInstances[0] == nil {
+	if output == nil {
 		return nil, tfresource.NewEmptyResultError(input)
 	}
 
-	dbInstance := output.DBInstances[0]
-
-	return dbInstance, nil
+	return tfresource.AssertSinglePtrResult(output.DBInstances)
 }
 
 // findDBInstanceByIDSDKv2 in general should be called with a DbiResourceId of the form
@@ -2419,15 +2442,16 @@ func findDBInstanceByIDSDKv2(ctx context.Context, conn *rds_sdkv2.Client, id str
 			LastRequest: input,
 		}
 	}
+
 	if err != nil {
 		return nil, err
 	}
 
-	if output == nil || len(output.DBInstances) == 0 {
+	if output == nil {
 		return nil, tfresource.NewEmptyResultError(input)
 	}
 
-	return &output.DBInstances[0], nil
+	return tfresource.AssertSingleValueResult(output.DBInstances)
 }
 
 func statusDBInstanceSDKv1(ctx context.Context, conn *rds.RDS, id string) retry.StateRefreshFunc {

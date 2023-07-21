@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 //go:build sweep
 // +build sweep
 
@@ -41,7 +44,7 @@ func init() {
 
 func sweepObjects(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
 		return fmt.Errorf("getting client: %s", err)
 	}
@@ -92,7 +95,7 @@ func sweepObjects(region string) error {
 		})
 	}
 
-	if err := sweep.SweepOrchestratorWithContext(ctx, sweepables); err != nil {
+	if err := sweep.SweepOrchestrator(ctx, sweepables); err != nil {
 		errs = multierror.Append(errs, fmt.Errorf("sweeping DynamoDB Backups for %s: %w", region, err))
 	}
 
@@ -116,7 +119,7 @@ func (os objectSweeper) Delete(ctx context.Context, timeout time.Duration, optFn
 
 func sweepBuckets(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
 		return fmt.Errorf("getting client: %s", err)
 	}
@@ -163,7 +166,7 @@ func sweepBuckets(region string) error {
 		sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 	}
 
-	if err := sweep.SweepOrchestratorWithContext(ctx, sweepResources); err != nil {
+	if err := sweep.SweepOrchestrator(ctx, sweepResources); err != nil {
 		errs = multierror.Append(errs, fmt.Errorf("sweeping S3 Buckets for %s: %w", region, err))
 	}
 

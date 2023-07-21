@@ -1,3 +1,6 @@
+# Copyright (c) HashiCorp, Inc.
+# SPDX-License-Identifier: MPL-2.0
+
 // This configuration file sets up Actions variables for use when automating GitHub Projects.
 // Currently, this consists only of the main team project proof of concept, but more may be added at a later date.
 

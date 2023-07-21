@@ -20,13 +20,13 @@ data "aws_kendra_index" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This data source supports the following arguments:
 
 * `id` - (Required) Returns information on a specific Index by id.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all of the arguments above, the following attributes are exported:
+This data source exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the Index.
 * `capacity_units` - Block that sets the number of additional document storage and query capacity units that should be used by the index. Documented below.

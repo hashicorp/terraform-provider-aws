@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 //go:build sweep
 // +build sweep
 
@@ -31,7 +34,7 @@ func init() {
 
 func sweepBudgetActions(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
@@ -67,7 +70,7 @@ func sweepBudgetActions(region string) error {
 		return fmt.Errorf("error listing Budget Actions (%s): %w", region, err)
 	}
 
-	err = sweep.SweepOrchestratorWithContext(ctx, sweepResources)
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
 
 	if err != nil {
 		return fmt.Errorf("error sweeping Budget Actions (%s): %w", region, err)
@@ -78,7 +81,7 @@ func sweepBudgetActions(region string) error {
 
 func sweepBudgets(region string) error { // nosemgrep:ci.budgets-in-func-name
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
@@ -120,7 +123,7 @@ func sweepBudgets(region string) error { // nosemgrep:ci.budgets-in-func-name
 		return fmt.Errorf("error listing Budgets (%s): %w", region, err)
 	}
 
-	err = sweep.SweepOrchestratorWithContext(ctx, sweepResources)
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
 
 	if err != nil {
 		return fmt.Errorf("error sweeping Budgets (%s): %w", region, err)

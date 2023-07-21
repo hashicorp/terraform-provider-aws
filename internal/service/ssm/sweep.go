@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 //go:build sweep
 // +build sweep
 
@@ -20,6 +23,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
+	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv1"
+	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv2"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
@@ -50,7 +55,7 @@ func init() {
 
 func sweepResourceDefaultPatchBaselines(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
 		return fmt.Errorf("getting client: %w", err)
 	}
@@ -63,6 +68,10 @@ func sweepResourceDefaultPatchBaselines(region string) error {
 	paginator := patchBaselinesPaginator(conn, ownerIsSelfFilter())
 	for paginator.HasMorePages() {
 		page, err := paginator.NextPage(ctx)
+		if awsv2.SkipSweepError(err) {
+			log.Printf("[WARN] Skipping Default Patch Baselines sweep for %s: %s", region, errs)
+			break
+		}
 		if err != nil {
 			errs = multierror.Append(errs, fmt.Errorf("listing Default Patch Baselines for %s: %w", region, err))
 			break
@@ -84,13 +93,8 @@ func sweepResourceDefaultPatchBaselines(region string) error {
 		}
 	}
 
-	if err := sweep.SweepOrchestratorWithContext(ctx, sweepables); err != nil {
+	if err := sweep.SweepOrchestrator(ctx, sweepables); err != nil {
 		errs = multierror.Append(errs, fmt.Errorf("sweeping Default Patch Baselines for %s: %w", region, err))
-	}
-
-	if sweep.SkipSweepError(err) {
-		log.Printf("[WARN] Skipping Default Patch Baselines sweep for %s: %s", region, errs)
-		return nil
 	}
 
 	return errs.ErrorOrNil()
@@ -116,7 +120,7 @@ func (s defaultPatchBaselineSweeper) Delete(ctx context.Context, timeout time.Du
 
 func sweepMaintenanceWindows(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 
 	if err != nil {
 		return fmt.Errorf("getting client: %s", err)
@@ -130,7 +134,7 @@ func sweepMaintenanceWindows(region string) error {
 	for {
 		output, err := conn.DescribeMaintenanceWindowsWithContext(ctx, input)
 
-		if sweep.SkipSweepError(err) {
+		if awsv1.SkipSweepError(err) {
 			log.Printf("[WARN] Skipping SSM Maintenance Window sweep for %s: %s", region, err)
 			return nil
 		}
@@ -154,9 +158,7 @@ func sweepMaintenanceWindows(region string) error {
 			}
 
 			if err != nil {
-				sweeperErr := fmt.Errorf("deleting SSM Maintenance Window (%s): %w", id, err)
-				log.Printf("[ERROR] %s", sweeperErr)
-				sweeperErrs = multierror.Append(sweeperErrs, sweeperErr)
+				sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("deleting SSM Maintenance Window (%s): %w", id, err))
 				continue
 			}
 		}
@@ -173,7 +175,7 @@ func sweepMaintenanceWindows(region string) error {
 
 func sweepResourcePatchBaselines(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
 		return fmt.Errorf("getting client: %w", err)
 	}
@@ -186,6 +188,10 @@ func sweepResourcePatchBaselines(region string) error {
 	paginator := patchBaselinesPaginator(conn, ownerIsSelfFilter())
 	for paginator.HasMorePages() {
 		page, err := paginator.NextPage(ctx)
+		if awsv2.SkipSweepError(err) {
+			log.Printf("[WARN] Skipping Patch Baselines sweep for %s: %s", region, errs)
+			break
+		}
 		if err != nil {
 			errs = multierror.Append(errs, fmt.Errorf("listing Patch Baselines for %s: %w", region, err))
 			break
@@ -202,13 +208,8 @@ func sweepResourcePatchBaselines(region string) error {
 		}
 	}
 
-	if err := sweep.SweepOrchestratorWithContext(ctx, sweepables); err != nil {
+	if err := sweep.SweepOrchestrator(ctx, sweepables); err != nil {
 		errs = multierror.Append(errs, fmt.Errorf("sweeping Patch Baselines for %s: %w", region, err))
-	}
-
-	if sweep.SkipSweepError(err) {
-		log.Printf("[WARN] Skipping Patch Baselines sweep for %s: %s", region, errs)
-		return nil
 	}
 
 	return errs.ErrorOrNil()
@@ -216,7 +217,7 @@ func sweepResourcePatchBaselines(region string) error {
 
 func sweepResourceDataSyncs(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 
 	if err != nil {
 		return fmt.Errorf("getting client: %w", err)
@@ -251,11 +252,11 @@ func sweepResourceDataSyncs(region string) error {
 		errs = multierror.Append(errs, fmt.Errorf("listing SSM Resource Data Sync for %s: %w", region, err))
 	}
 
-	if err := sweep.SweepOrchestratorWithContext(ctx, sweepResources); err != nil {
+	if err := sweep.SweepOrchestrator(ctx, sweepResources); err != nil {
 		errs = multierror.Append(errs, fmt.Errorf("sweeping SSM Resource Data Sync for %s: %w", region, err))
 	}
 
-	if sweep.SkipSweepError(errs.ErrorOrNil()) {
+	if awsv1.SkipSweepError(errs.ErrorOrNil()) {
 		log.Printf("[WARN] Skipping SSM Resource Data Sync sweep for %s: %s", region, errs)
 		return nil
 	}

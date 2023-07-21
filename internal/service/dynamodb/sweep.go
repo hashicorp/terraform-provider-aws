@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 //go:build sweep
 // +build sweep
 
@@ -35,7 +38,7 @@ func init() {
 
 func sweepTables(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
@@ -92,7 +95,7 @@ func sweepTables(region string) error {
 		errs = multierror.Append(errs, fmt.Errorf("error concurrently reading DynamoDB Tables: %w", err))
 	}
 
-	if err = sweep.SweepOrchestratorWithContext(ctx, sweepResources); err != nil {
+	if err = sweep.SweepOrchestrator(ctx, sweepResources); err != nil {
 		errs = multierror.Append(errs, fmt.Errorf("error sweeping DynamoDB Tables for %s: %w", region, err))
 	}
 
@@ -106,7 +109,7 @@ func sweepTables(region string) error {
 
 func sweepBackups(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
@@ -148,7 +151,7 @@ func sweepBackups(region string) error {
 		errs = multierror.Append(errs, fmt.Errorf("reading DynamoDB Backups: %w", err))
 	}
 
-	if err = sweep.SweepOrchestratorWithContext(ctx, sweepables); err != nil {
+	if err = sweep.SweepOrchestrator(ctx, sweepables); err != nil {
 		errs = multierror.Append(errs, fmt.Errorf("sweeping DynamoDB Backups for %s: %w", region, err))
 	}
 

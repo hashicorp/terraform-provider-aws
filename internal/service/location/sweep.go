@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 //go:build sweep
 // +build sweep
 
@@ -48,7 +51,7 @@ func init() {
 
 func sweepGeofenceCollections(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
@@ -82,7 +85,7 @@ func sweepGeofenceCollections(region string) error {
 		errs = multierror.Append(errs, fmt.Errorf("error listing Location Service Geofence Collection for %s: %w", region, err))
 	}
 
-	if err := sweep.SweepOrchestratorWithContext(ctx, sweepResources); err != nil {
+	if err := sweep.SweepOrchestrator(ctx, sweepResources); err != nil {
 		errs = multierror.Append(errs, fmt.Errorf("error sweeping Location Service Geofence Collection for %s: %w", region, err))
 	}
 
@@ -96,7 +99,7 @@ func sweepGeofenceCollections(region string) error {
 
 func sweepMaps(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
@@ -130,7 +133,7 @@ func sweepMaps(region string) error {
 		errs = multierror.Append(errs, fmt.Errorf("error listing Location Service Map for %s: %w", region, err))
 	}
 
-	if err := sweep.SweepOrchestratorWithContext(ctx, sweepResources); err != nil {
+	if err := sweep.SweepOrchestrator(ctx, sweepResources); err != nil {
 		errs = multierror.Append(errs, fmt.Errorf("error sweeping Location Service Map for %s: %w", region, err))
 	}
 
@@ -144,7 +147,7 @@ func sweepMaps(region string) error {
 
 func sweepPlaceIndexes(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
@@ -178,7 +181,7 @@ func sweepPlaceIndexes(region string) error {
 		errs = multierror.Append(errs, fmt.Errorf("error listing Location Service Place Index for %s: %w", region, err))
 	}
 
-	if err := sweep.SweepOrchestratorWithContext(ctx, sweepResources); err != nil {
+	if err := sweep.SweepOrchestrator(ctx, sweepResources); err != nil {
 		errs = multierror.Append(errs, fmt.Errorf("error sweeping Location Service Place Index for %s: %w", region, err))
 	}
 
@@ -192,7 +195,7 @@ func sweepPlaceIndexes(region string) error {
 
 func sweepRouteCalculators(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
@@ -226,7 +229,7 @@ func sweepRouteCalculators(region string) error {
 		errs = multierror.Append(errs, fmt.Errorf("error listing Location Service Route Calculator for %s: %w", region, err))
 	}
 
-	if err := sweep.SweepOrchestratorWithContext(ctx, sweepResources); err != nil {
+	if err := sweep.SweepOrchestrator(ctx, sweepResources); err != nil {
 		errs = multierror.Append(errs, fmt.Errorf("error sweeping Location Service Route Calculator for %s: %w", region, err))
 	}
 
@@ -240,7 +243,7 @@ func sweepRouteCalculators(region string) error {
 
 func sweepTrackers(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
@@ -274,7 +277,7 @@ func sweepTrackers(region string) error {
 		errs = multierror.Append(errs, fmt.Errorf("error listing Location Service Tracker for %s: %w", region, err))
 	}
 
-	if err := sweep.SweepOrchestratorWithContext(ctx, sweepResources); err != nil {
+	if err := sweep.SweepOrchestrator(ctx, sweepResources); err != nil {
 		errs = multierror.Append(errs, fmt.Errorf("error sweeping Location Service Tracker for %s: %w", region, err))
 	}
 
@@ -288,7 +291,7 @@ func sweepTrackers(region string) error {
 
 func sweepTrackerAssociations(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
@@ -339,7 +342,7 @@ func sweepTrackerAssociations(region string) error {
 		errs = multierror.Append(errs, fmt.Errorf("error listing Location Service Tracker for %s: %w", region, err))
 	}
 
-	if err := sweep.SweepOrchestratorWithContext(ctx, sweepResources); err != nil {
+	if err := sweep.SweepOrchestrator(ctx, sweepResources); err != nil {
 		errs = multierror.Append(errs, fmt.Errorf("error sweeping Location Service Tracker Association for %s: %w", region, err))
 	}
 

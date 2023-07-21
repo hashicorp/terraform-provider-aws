@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 //go:build sweep
 // +build sweep
 
@@ -54,7 +57,7 @@ func init() {
 
 func sweepGroups(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
 		return fmt.Errorf("getting client: %s", err)
 	}
@@ -87,7 +90,7 @@ func sweepGroups(region string) error {
 		return fmt.Errorf("error listing CloudWatch Logs Log Groups (%s): %w", region, err)
 	}
 
-	err = sweep.SweepOrchestratorWithContext(ctx, sweepResources)
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
 
 	if err != nil {
 		return fmt.Errorf("error sweeping CloudWatch Logs Log Groups (%s): %w", region, err)
@@ -98,7 +101,7 @@ func sweepGroups(region string) error {
 
 func sweeplogQueryDefinitions(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
 		return fmt.Errorf("getting client: %s", err)
 	}
@@ -131,7 +134,7 @@ func sweeplogQueryDefinitions(region string) error {
 		return fmt.Errorf("error listing CloudWatch Logs Query Definitions (%s): %w", region, err)
 	}
 
-	err = sweep.SweepOrchestratorWithContext(ctx, sweepResources)
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
 
 	if err != nil {
 		return fmt.Errorf("error sweeping CloudWatch Logs Query Definitions (%s): %w", region, err)
@@ -142,7 +145,7 @@ func sweeplogQueryDefinitions(region string) error {
 
 func sweepResourcePolicies(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
 		return fmt.Errorf("getting client: %s", err)
 	}
@@ -175,7 +178,7 @@ func sweepResourcePolicies(region string) error {
 		return fmt.Errorf("error listing CloudWatch Logs Resource Policies (%s): %w", region, err)
 	}
 
-	err = sweep.SweepOrchestratorWithContext(ctx, sweepResources)
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
 
 	if err != nil {
 		return fmt.Errorf("error sweeping CloudWatch Logs Resource Policies (%s): %w", region, err)

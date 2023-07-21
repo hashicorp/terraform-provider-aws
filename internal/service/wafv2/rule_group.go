@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package wafv2
 
 import (
@@ -53,80 +56,82 @@ func ResourceRuleGroup() *schema.Resource {
 			},
 		},
 
-		Schema: map[string]*schema.Schema{
-			"arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"capacity": {
-				Type:         schema.TypeInt,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.IntAtLeast(1),
-			},
-			"custom_response_body": customResponseBodySchema(),
-			"description": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validation.StringLenBetween(1, 256),
-			},
-			"lock_token": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"name": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-				ValidateFunc: validation.All(
-					validation.StringLenBetween(1, 128),
-					validation.StringMatch(regexp.MustCompile(`^[a-zA-Z0-9-_]+$`), "must contain only alphanumeric hyphen and underscore characters"),
-				),
-			},
-			"rule": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"action": {
-							Type:     schema.TypeList,
-							Required: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"allow":     allowConfigSchema(),
-									"block":     blockConfigSchema(),
-									"captcha":   captchaConfigSchema(),
-									"challenge": challengeConfigSchema(),
-									"count":     countConfigSchema(),
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"arn": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"capacity": {
+					Type:         schema.TypeInt,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: validation.IntAtLeast(1),
+				},
+				"custom_response_body": customResponseBodySchema(),
+				"description": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ValidateFunc: validation.StringLenBetween(1, 256),
+				},
+				"lock_token": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"name": {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+					ValidateFunc: validation.All(
+						validation.StringLenBetween(1, 128),
+						validation.StringMatch(regexp.MustCompile(`^[a-zA-Z0-9-_]+$`), "must contain only alphanumeric hyphen and underscore characters"),
+					),
+				},
+				"rule": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"action": {
+								Type:     schema.TypeList,
+								Required: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"allow":     allowConfigSchema(),
+										"block":     blockConfigSchema(),
+										"captcha":   captchaConfigSchema(),
+										"challenge": challengeConfigSchema(),
+										"count":     countConfigSchema(),
+									},
 								},
 							},
+							"captcha_config": outerCaptchaConfigSchema(),
+							"name": {
+								Type:         schema.TypeString,
+								Required:     true,
+								ValidateFunc: validation.StringLenBetween(1, 128),
+							},
+							"priority": {
+								Type:     schema.TypeInt,
+								Required: true,
+							},
+							"rule_label":        ruleLabelsSchema(),
+							"statement":         ruleGroupRootStatementSchema(ruleGroupRootStatementSchemaLevel),
+							"visibility_config": visibilityConfigSchema(),
 						},
-						"captcha_config": outerCaptchaConfigSchema(),
-						"name": {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: validation.StringLenBetween(1, 128),
-						},
-						"priority": {
-							Type:     schema.TypeInt,
-							Required: true,
-						},
-						"rule_label":        ruleLabelsSchema(),
-						"statement":         ruleGroupRootStatementSchema(ruleGroupRootStatementSchemaLevel),
-						"visibility_config": visibilityConfigSchema(),
 					},
 				},
-			},
-			"scope": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringInSlice(wafv2.Scope_Values(), false),
-			},
-			names.AttrTags:      tftags.TagsSchema(),
-			names.AttrTagsAll:   tftags.TagsSchemaComputed(),
-			"visibility_config": visibilityConfigSchema(),
+				"scope": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: validation.StringInSlice(wafv2.Scope_Values(), false),
+				},
+				names.AttrTags:      tftags.TagsSchema(),
+				names.AttrTagsAll:   tftags.TagsSchemaComputed(),
+				"visibility_config": visibilityConfigSchema(),
+			}
 		},
 
 		CustomizeDiff: verify.SetTagsDiff,

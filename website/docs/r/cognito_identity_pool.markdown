@@ -66,9 +66,9 @@ backend and the Cognito service to communicate about the developer provider.
 * `provider_name` (Optional) - The provider name for an Amazon Cognito Identity User Pool.
 * `server_side_token_check` (Optional) - Whether server-side token validation is enabled for the identity provider’s token or not.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - An identity pool ID, e.g. `us-west-2:1a234567-8901-234b-5cde-f6789g01h2i3`.
 * `arn` - The ARN of the identity pool.
@@ -76,8 +76,17 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Cognito Identity Pool can be imported using its ID, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Cognito Identity Pool using its ID. For example:
 
+```terraform
+import {
+  to = aws_cognito_identity_pool.mypool
+  id = "us-west-2:1a234567-8901-234b-5cde-f6789g01h2i3"
+}
 ```
-$ terraform import aws_cognito_identity_pool.mypool us-west-2:1a234567-8901-234b-5cde-f6789g01h2i3
+
+Using `terraform import`, import Cognito Identity Pool using its ID. For example:
+
+```console
+% terraform import aws_cognito_identity_pool.mypool us-west-2:1a234567-8901-234b-5cde-f6789g01h2i3
 ```

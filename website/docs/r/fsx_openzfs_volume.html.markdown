@@ -22,7 +22,7 @@ resource "aws_fsx_openzfs_volume" "test" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `name` - (Required) The name of the Volume. You can use a maximum of 203 alphanumeric characters, plus the underscore (_) special character.
 * `parent_volume_id` - (Required) The volume id of volume that will be the parent volume for the volume being created, this could be the root volume created from the `aws_fsx_openzfs_file_system` resource with the `root_volume_id` or the `id` property of another `aws_fsx_openzfs_volume`.
@@ -52,9 +52,9 @@ The following arguments are supported:
 * `storage_capacity_quota_gib` - (Required) - The amount of storage that the user or group can use in gibibytes (GiB). Valid values between `0` and `2147483647`
 * `Type` - (Required) - A value that specifies whether the quota applies to a user or group. Valid values are `USER` or `GROUP`.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - Amazon Resource Name of the file system.
 * `id` - Identifier of the file system, e.g., `fsvol-12345678`
@@ -70,8 +70,17 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-FSx Volumes can be imported using the `id`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import FSx Volumes using the `id`. For example:
 
+```terraform
+import {
+  to = aws_fsx_openzfs_volume.example
+  id = "fsvol-543ab12b1ca672f33"
+}
 ```
-$ terraform import aws_fsx_openzfs_volume.example fsvol-543ab12b1ca672f33
+
+Using `terraform import`, import FSx Volumes using the `id`. For example:
+
+```console
+% terraform import aws_fsx_openzfs_volume.example fsvol-543ab12b1ca672f33
 ```

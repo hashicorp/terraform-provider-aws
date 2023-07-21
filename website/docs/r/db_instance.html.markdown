@@ -187,7 +187,7 @@ resource "aws_db_instance" "default" {
 For more detailed documentation about each argument, refer to the [AWS official
 documentation](http://docs.aws.amazon.com/AmazonRDS/latest/APIReference/API_CreateDBInstance.html).
 
-The following arguments are supported:
+This argument supports the following arguments:
 
 * `allocated_storage` - (Required unless a `snapshot_identifier` or `replicate_source_db` is provided) The allocated storage in gibibytes. If `max_allocated_storage` is configured, this argument represents the initial storage allocation and differences from the configuration will be ignored automatically when Storage Autoscaling occurs. If `replicate_source_db` is set, the value is ignored during the creation of the instance.
 * `allow_major_version_upgrade` - (Optional) Indicates that major version
@@ -207,6 +207,7 @@ Defaults to true.
   Must be greater than `0` if the database is used as a source for a [Read Replica][instance-replication],
   uses [low-downtime updates](#low-downtime-updates),
   or will use [RDS Blue/Green deployments][blue-green].
+* `backup_target` - (Optional, Forces new resource) Specifies where automated backups and manual snapshots are stored. Possible values are `region` (default) and `outposts`. See [Working with Amazon RDS on AWS Outposts](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/rds-on-outposts.html) for more information.
 * `backup_window` - (Optional) The daily time range (in UTC) during which automated backups are created if they are enabled.
   Example: "09:46-10:16". Must not overlap with `maintenance_window`.
 * `blue_green_update` - (Optional) Enables low-downtime updates using [RDS Blue/Green deployments][blue-green].
@@ -232,7 +233,7 @@ for additional read replica contraints.
 * `domain_iam_role_name` - (Optional, but required if domain is provided) The name of the IAM role to be used when making API calls to the Directory Service.
 * `enabled_cloudwatch_logs_exports` - (Optional) Set of log types to enable for exporting to CloudWatch logs. If omitted, no logs will be exported. Valid values (depending on `engine`). MySQL and MariaDB: `audit`, `error`, `general`, `slowquery`. PostgreSQL: `postgresql`, `upgrade`. MSSQL: `agent` , `error`. Oracle: `alert`, `audit`, `listener`, `trace`.
 * `engine` - (Required unless a `snapshot_identifier` or `replicate_source_db` is provided) The database engine to use. For supported values, see the Engine parameter in [API action CreateDBInstance](https://docs.aws.amazon.com/AmazonRDS/latest/APIReference/API_CreateDBInstance.html). Note that for Amazon Aurora instances the engine must match the [DB cluster](/docs/providers/aws/r/rds_cluster.html)'s engine'. For information on the difference between the available Aurora MySQL engines see [Comparison between Aurora MySQL 1 and Aurora MySQL 2](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/AuroraMySQL.Updates.20180206.html) in the Amazon RDS User Guide.
-* `engine_version` - (Optional) The engine version to use. If `auto_minor_version_upgrade` is enabled, you can provide a prefix of the version such as `5.7` (for `5.7.10`). The actual engine version used is returned in the attribute `engine_version_actual`, see [Attributes Reference](#attributes-reference) below. For supported values, see the EngineVersion parameter in [API action CreateDBInstance](https://docs.aws.amazon.com/AmazonRDS/latest/APIReference/API_CreateDBInstance.html). Note that for Amazon Aurora instances the engine version must match the [DB cluster](/docs/providers/aws/r/rds_cluster.html)'s engine version'.
+* `engine_version` - (Optional) The engine version to use. If `auto_minor_version_upgrade` is enabled, you can provide a prefix of the version such as `5.7` (for `5.7.10`). The actual engine version used is returned in the attribute `engine_version_actual`, see [Attribute Reference](#attribute-reference) below. For supported values, see the EngineVersion parameter in [API action CreateDBInstance](https://docs.aws.amazon.com/AmazonRDS/latest/APIReference/API_CreateDBInstance.html). Note that for Amazon Aurora instances the engine version must match the [DB cluster](/docs/providers/aws/r/rds_cluster.html)'s engine version'.
 * `final_snapshot_identifier` - (Optional) The name of your final DB snapshot
 when this DB instance is deleted. Must be provided if `skip_final_snapshot` is
 set to `false`. The value must begin with a letter, only contain alphanumeric characters and hyphens, and not end with a hyphen or contain two consecutive hyphens. Must not be provided when deleting a read replica.
@@ -380,9 +381,9 @@ https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/USER_UpgradeDBInstance.Ma
 [blue-green]:
 https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/blue-green-deployments.html
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `address` - The hostname of the RDS instance. See also `endpoint` and `port`.
 * `arn` - The ARN of the RDS instance.
@@ -407,7 +408,6 @@ in a Route 53 Alias record).
 * `maintenance_window` - The instance maintenance window.
 * `master_user_secret` - A block that specifies the master user secret. Only available when `manage_master_user_password` is set to true. [Documented below](#master_user_secret).
 * `multi_az` - If the RDS instance is multi AZ enabled.
-* `name` - The database name.
 * `port` - The database port.
 * `resource_id` - The RDS Resource ID of this instance.
 * `status` - The RDS instance status.
@@ -443,8 +443,17 @@ The `master_user_secret` configuration block supports the following attributes:
 
 ## Import
 
-DB Instances can be imported using the `identifier`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import DB Instances using the `identifier`. For example:
 
+```terraform
+import {
+  to = aws_db_instance.default
+  id = "mydb-rds-instance"
+}
 ```
-$ terraform import aws_db_instance.default mydb-rds-instance
+
+Using `terraform import`, import DB Instances using the `identifier`. For example:
+
+```console
+% terraform import aws_db_instance.default mydb-rds-instance
 ```

@@ -67,7 +67,7 @@ resource "aws_route_table" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `vpc_id` - (Required) The VPC ID.
 * `route` - (Optional) A list of route objects. Their keys are documented below. This argument is processed in [attribute-as-blocks mode](https://www.terraform.io/docs/configuration/attr-as-blocks.html).
@@ -100,9 +100,9 @@ One of the following target arguments must be supplied:
 
 Note that the default route, mapping the VPC's CIDR block to "local", is created implicitly and cannot be specified.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 ~> **NOTE:** Only the target that is entered is exported as a readable
 attribute once the route resource is created.
@@ -122,9 +122,17 @@ attribute once the route resource is created.
 
 ## Import
 
-Route Tables can be imported using the route table `id`. For example, to import
-route table `rtb-4e616f6d69`, use this command:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Route Tables using the route table `id`. For example:
 
+```terraform
+import {
+  to = aws_route_table.public_rt
+  id = "rtb-4e616f6d69"
+}
 ```
-$ terraform import aws_route_table.public_rt rtb-4e616f6d69
+
+Using `terraform import`, import Route Tables using the route table `id`. For example:
+
+```console
+% terraform import aws_route_table.public_rt rtb-4e616f6d69
 ```

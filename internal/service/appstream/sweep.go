@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 //go:build sweep
 // +build sweep
 
@@ -37,7 +40,7 @@ func init() {
 
 func sweepDirectoryConfigs(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
@@ -70,7 +73,7 @@ func sweepDirectoryConfigs(region string) error {
 		return fmt.Errorf("error listing AppStream Directory Configs (%s): %w", region, err)
 	}
 
-	err = sweep.SweepOrchestratorWithContext(ctx, sweepResources)
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
 
 	if err != nil {
 		return fmt.Errorf("error sweeping AppStream Directory Configs (%s): %w", region, err)
@@ -81,7 +84,7 @@ func sweepDirectoryConfigs(region string) error {
 
 func sweepFleets(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
@@ -114,7 +117,7 @@ func sweepFleets(region string) error {
 		return fmt.Errorf("error listing AppStream Fleets (%s): %w", region, err)
 	}
 
-	err = sweep.SweepOrchestratorWithContext(ctx, sweepResources)
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
 
 	if err != nil {
 		return fmt.Errorf("error sweeping AppStream Fleets (%s): %w", region, err)
@@ -125,7 +128,7 @@ func sweepFleets(region string) error {
 
 func sweepImageBuilders(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
@@ -158,7 +161,7 @@ func sweepImageBuilders(region string) error {
 		return fmt.Errorf("error listing AppStream Image Builders (%s): %w", region, err)
 	}
 
-	err = sweep.SweepOrchestratorWithContext(ctx, sweepResources)
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
 
 	if err != nil {
 		return fmt.Errorf("error sweeping AppStream Image Builders (%s): %w", region, err)
@@ -169,7 +172,7 @@ func sweepImageBuilders(region string) error {
 
 func sweepStacks(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
@@ -202,7 +205,7 @@ func sweepStacks(region string) error {
 		return fmt.Errorf("error listing AppStream Stacks (%s): %w", region, err)
 	}
 
-	err = sweep.SweepOrchestratorWithContext(ctx, sweepResources)
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
 
 	if err != nil {
 		return fmt.Errorf("error sweeping AppStream Stacks (%s): %w", region, err)

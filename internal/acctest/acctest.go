@@ -1,8 +1,12 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package acctest
 
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"log"
 	"os"
@@ -393,6 +397,27 @@ func MatchResourceAttrRegionalARN(resourceName, attributeName, arnService string
 			AccountID: AccountID(),
 			Partition: Partition(),
 			Region:    Region(),
+			Resource:  arnResourceRegexp.String(),
+			Service:   arnService,
+		}.String()
+
+		attributeMatch, err := regexp.Compile(arnRegexp)
+
+		if err != nil {
+			return fmt.Errorf("unable to compile ARN regexp (%s): %w", arnRegexp, err)
+		}
+
+		return resource.TestMatchResourceAttr(resourceName, attributeName, attributeMatch)(s)
+	}
+}
+
+// MatchResourceAttrRegionalARNRegion ensures the Terraform state regexp matches a formatted ARN with the specified region
+func MatchResourceAttrRegionalARNRegion(resourceName, attributeName, arnService, region string, arnResourceRegexp *regexp.Regexp) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		arnRegexp := arn.ARN{
+			AccountID: AccountID(),
+			Partition: Partition(),
+			Region:    region,
 			Resource:  arnResourceRegexp.String(),
 			Service:   arnService,
 		}.String()
@@ -2290,6 +2315,22 @@ func CheckResourceAttrGreaterThanOrEqualValue(n, key string, val int) resource.T
 
 		if v < val {
 			return fmt.Errorf("got %d, want >= %d", v, val)
+		}
+
+		return nil
+	})
+}
+
+func CheckResourceAttrIsJSONString(n, key string) resource.TestCheckFunc {
+	return resource.TestCheckResourceAttrWith(n, key, func(value string) error {
+		var m map[string]*json.RawMessage
+
+		if err := json.Unmarshal([]byte(value), &m); err != nil {
+			return err
+		}
+
+		if len(m) == 0 {
+			return errors.New(`empty JSON string`)
 		}
 
 		return nil

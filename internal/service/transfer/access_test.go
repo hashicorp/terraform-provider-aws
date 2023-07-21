@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package transfer_test
 
 import (
@@ -184,7 +187,7 @@ func testAccCheckAccessExists(ctx context.Context, n string, v *transfer.Describ
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).TransferConn(ctx)
 
-		output, err := tftransfer.FindAccessByServerIDAndExternalID(ctx, conn, serverID, externalID)
+		output, err := tftransfer.FindAccessByTwoPartKey(ctx, conn, serverID, externalID)
 
 		if err != nil {
 			return err
@@ -210,7 +213,7 @@ func testAccCheckAccessDestroy(ctx context.Context) resource.TestCheckFunc {
 			if err != nil {
 				return fmt.Errorf("error parsing Transfer Access ID: %w", err)
 			}
-			_, err = tftransfer.FindAccessByServerIDAndExternalID(ctx, conn, serverID, externalID)
+			_, err = tftransfer.FindAccessByTwoPartKey(ctx, conn, serverID, externalID)
 
 			if tfresource.NotFound(err) {
 				continue

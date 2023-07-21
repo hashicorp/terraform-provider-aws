@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 //go:build sweep
 // +build sweep
 
@@ -12,6 +15,7 @@ import (
 	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
+	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv2"
 )
 
 func init() {
@@ -33,19 +37,18 @@ func init() {
 
 func sweepContainerServices(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
 		return fmt.Errorf("Error getting client: %s", err)
 	}
 	conn := client.LightsailClient(ctx)
 
 	input := &lightsail.GetContainerServicesInput{}
-	var sweeperErrs *multierror.Error
 	sweepResources := make([]sweep.Sweepable, 0)
 
 	output, err := conn.GetContainerServices(ctx, input)
 
-	if sweep.SkipSweepError(err) {
+	if awsv2.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping Lightsail Container Service sweep for %s: %s", region, err)
 		return nil
 	}
@@ -62,25 +65,16 @@ func sweepContainerServices(region string) error {
 		sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 	}
 
-	if sweep.SkipSweepError(err) {
-		log.Printf("[WARN] Skipping Lightsail Container Services sweep for %s: %s", region, err)
-		return sweeperErrs.ErrorOrNil()
+	if err := sweep.SweepOrchestrator(ctx, sweepResources); err != nil {
+		return fmt.Errorf("error sweeping Lightsail Container Services for %s: %w", region, err)
 	}
 
-	if err != nil {
-		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error listing Lightsail Container Services  for %s: %w", region, err))
-	}
-
-	if err := sweep.SweepOrchestratorWithContext(ctx, sweepResources); err != nil {
-		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error sweeping Lightsail Container Services for %s: %w", region, err))
-	}
-
-	return sweeperErrs.ErrorOrNil()
+	return nil
 }
 
 func sweepInstances(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
 		return fmt.Errorf("Error getting client: %s", err)
 	}
@@ -92,7 +86,7 @@ func sweepInstances(region string) error {
 	for {
 		output, err := conn.GetInstances(ctx, input)
 
-		if sweep.SkipSweepError(err) {
+		if awsv2.SkipSweepError(err) {
 			log.Printf("[WARN] Skipping Lightsail Instance sweep for %s: %s", region, err)
 			return nil
 		}
@@ -129,7 +123,7 @@ func sweepInstances(region string) error {
 
 func sweepStaticIPs(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
 		return fmt.Errorf("Error getting client: %s", err)
 	}
@@ -140,7 +134,7 @@ func sweepStaticIPs(region string) error {
 	for {
 		output, err := conn.GetStaticIps(ctx, input)
 		if err != nil {
-			if sweep.SkipSweepError(err) {
+			if awsv2.SkipSweepError(err) {
 				log.Printf("[WARN] Skipping Lightsail Static IP sweep for %s: %s", region, err)
 				return nil
 			}

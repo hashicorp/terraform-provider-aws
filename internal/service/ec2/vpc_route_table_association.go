@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ec2
 
 import (
@@ -72,8 +75,7 @@ func resourceRouteTableAssociationCreate(ctx context.Context, d *schema.Resource
 		input.SubnetId = aws.String(v.(string))
 	}
 
-	log.Printf("[DEBUG] Creating Route Table Association: %s", input)
-	output, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, RouteTableAssociationPropagationTimeout,
+	output, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, ec2PropagationTimeout,
 		func() (interface{}, error) {
 			return conn.AssociateRouteTableWithContext(ctx, input)
 		},
@@ -86,7 +88,6 @@ func resourceRouteTableAssociationCreate(ctx context.Context, d *schema.Resource
 
 	d.SetId(aws.StringValue(output.(*ec2.AssociateRouteTableOutput).AssociationId))
 
-	log.Printf("[DEBUG] Waiting for Route Table Association (%s) creation", d.Id())
 	if _, err := WaitRouteTableAssociationCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for Route Table Association (%s) create: %s", d.Id(), err)
 	}
@@ -98,7 +99,7 @@ func resourceRouteTableAssociationRead(ctx context.Context, d *schema.ResourceDa
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
-	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(ctx, propagationTimeout, func() (interface{}, error) {
+	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(ctx, ec2PropagationTimeout, func() (interface{}, error) {
 		return FindRouteTableAssociationByID(ctx, conn, d.Id())
 	}, d.IsNewResource())
 
@@ -150,7 +151,6 @@ func resourceRouteTableAssociationUpdate(ctx context.Context, d *schema.Resource
 
 	d.SetId(aws.StringValue(output.NewAssociationId))
 
-	log.Printf("[DEBUG] Waiting for Route Table Association (%s) update", d.Id())
 	if _, err := WaitRouteTableAssociationUpdated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for Route Table Association (%s) update: %s", d.Id(), err)
 	}
@@ -230,7 +230,6 @@ func routeTableAssociationDelete(ctx context.Context, conn *ec2.EC2, association
 		return fmt.Errorf("deleting Route Table Association (%s): %w", associationID, err)
 	}
 
-	log.Printf("[DEBUG] Waiting for Route Table Association (%s) deletion", associationID)
 	if _, err := WaitRouteTableAssociationDeleted(ctx, conn, associationID, timeout); err != nil {
 		return fmt.Errorf("deleting Route Table Association (%s): waiting for completion: %w", associationID, err)
 	}

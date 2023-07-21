@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package opensearchserverless
 
 import (
@@ -23,8 +26,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
-	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
+	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -198,7 +201,7 @@ func (r *resourceCollection) Read(ctx context.Context, req resource.ReadRequest,
 		return
 	}
 
-	out, err := FindCollectionByID(ctx, conn, state.ID.ValueString())
+	out, err := findCollectionByID(ctx, conn, state.ID.ValueString())
 	if tfresource.NotFound(err) {
 		resp.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		resp.State.RemoveResource(ctx)
@@ -339,7 +342,7 @@ func waitCollectionDeleted(ctx context.Context, conn *opensearchserverless.Clien
 
 func statusCollection(ctx context.Context, conn *opensearchserverless.Client, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := FindCollectionByID(ctx, conn, id)
+		output, err := findCollectionByID(ctx, conn, id)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil

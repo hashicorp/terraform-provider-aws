@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 //go:build sweep
 // +build sweep
 
@@ -63,7 +66,7 @@ func init() {
 
 func sweepBackups(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
@@ -94,7 +97,7 @@ func sweepBackups(region string) error {
 		errs = multierror.Append(errs, fmt.Errorf("error listing FSx Backups for %s: %w", region, err))
 	}
 
-	if err = sweep.SweepOrchestratorWithContext(ctx, sweepResources); err != nil {
+	if err = sweep.SweepOrchestrator(ctx, sweepResources); err != nil {
 		errs = multierror.Append(errs, fmt.Errorf("error sweeping FSx Backups for %s: %w", region, err))
 	}
 
@@ -108,7 +111,7 @@ func sweepBackups(region string) error {
 
 func sweepLustreFileSystems(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
@@ -143,7 +146,7 @@ func sweepLustreFileSystems(region string) error {
 		errs = multierror.Append(errs, fmt.Errorf("error listing FSx Lustre File Systems for %s: %w", region, err))
 	}
 
-	if err = sweep.SweepOrchestratorWithContext(ctx, sweepResources); err != nil {
+	if err = sweep.SweepOrchestrator(ctx, sweepResources); err != nil {
 		errs = multierror.Append(errs, fmt.Errorf("error sweeping FSx Lustre File Systems for %s: %w", region, err))
 	}
 
@@ -157,7 +160,7 @@ func sweepLustreFileSystems(region string) error {
 
 func sweepOntapFileSystems(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
@@ -192,7 +195,7 @@ func sweepOntapFileSystems(region string) error {
 		errs = multierror.Append(errs, fmt.Errorf("error listing FSx ONTAP File Systems for %s: %w", region, err))
 	}
 
-	if err = sweep.SweepOrchestratorWithContext(ctx, sweepResources); err != nil {
+	if err = sweep.SweepOrchestrator(ctx, sweepResources); err != nil {
 		errs = multierror.Append(errs, fmt.Errorf("error sweeping FSx ONTAP File Systems for %s: %w", region, err))
 	}
 
@@ -206,7 +209,7 @@ func sweepOntapFileSystems(region string) error {
 
 func sweepOntapStorageVirtualMachine(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
@@ -237,7 +240,7 @@ func sweepOntapStorageVirtualMachine(region string) error {
 		errs = multierror.Append(errs, fmt.Errorf("error listing FSx ONTAP Storage Virtual Machine for %s: %w", region, err))
 	}
 
-	if err = sweep.SweepOrchestratorWithContext(ctx, sweepResources); err != nil {
+	if err = sweep.SweepOrchestrator(ctx, sweepResources); err != nil {
 		errs = multierror.Append(errs, fmt.Errorf("error sweeping FSx ONTAP Storage Virtual Machine for %s: %w", region, err))
 	}
 
@@ -251,7 +254,7 @@ func sweepOntapStorageVirtualMachine(region string) error {
 
 func sweepOntapVolume(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
@@ -289,7 +292,7 @@ func sweepOntapVolume(region string) error {
 		errs = multierror.Append(errs, fmt.Errorf("error listing FSx ONTAP Volume for %s: %w", region, err))
 	}
 
-	if err = sweep.SweepOrchestratorWithContext(ctx, sweepResources); err != nil {
+	if err = sweep.SweepOrchestrator(ctx, sweepResources); err != nil {
 		errs = multierror.Append(errs, fmt.Errorf("error sweeping FSx ONTAP Volume for %s: %w", region, err))
 	}
 
@@ -303,7 +306,7 @@ func sweepOntapVolume(region string) error {
 
 func sweepOpenZFSFileSystems(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
@@ -338,7 +341,7 @@ func sweepOpenZFSFileSystems(region string) error {
 		errs = multierror.Append(errs, fmt.Errorf("error listing FSx OpenZFS File Systems for %s: %w", region, err))
 	}
 
-	if err = sweep.SweepOrchestratorWithContext(ctx, sweepResources); err != nil {
+	if err = sweep.SweepOrchestrator(ctx, sweepResources); err != nil {
 		errs = multierror.Append(errs, fmt.Errorf("error sweeping FSx OpenZFS File Systems for %s: %w", region, err))
 	}
 
@@ -352,7 +355,7 @@ func sweepOpenZFSFileSystems(region string) error {
 
 func sweepOpenZFSVolume(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
@@ -390,7 +393,7 @@ func sweepOpenZFSVolume(region string) error {
 		errs = multierror.Append(errs, fmt.Errorf("error listing FSx OpenZFS Volume for %s: %w", region, err))
 	}
 
-	if err = sweep.SweepOrchestratorWithContext(ctx, sweepResources); err != nil {
+	if err = sweep.SweepOrchestrator(ctx, sweepResources); err != nil {
 		errs = multierror.Append(errs, fmt.Errorf("error sweeping FSx OpenZFS Volume for %s: %w", region, err))
 	}
 
@@ -404,7 +407,7 @@ func sweepOpenZFSVolume(region string) error {
 
 func sweepWindowsFileSystems(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
@@ -440,7 +443,7 @@ func sweepWindowsFileSystems(region string) error {
 		errs = multierror.Append(errs, fmt.Errorf("error listing FSx Windows File Systems for %s: %w", region, err))
 	}
 
-	if err = sweep.SweepOrchestratorWithContext(ctx, sweepResources); err != nil {
+	if err = sweep.SweepOrchestrator(ctx, sweepResources); err != nil {
 		errs = multierror.Append(errs, fmt.Errorf("error sweeping FSx Windows File Systems for %s: %w", region, err))
 	}
 

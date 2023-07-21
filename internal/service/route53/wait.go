@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package route53
 
 import (
@@ -27,8 +30,6 @@ const (
 )
 
 func waitChangeInfoStatusInsync(ctx context.Context, conn *route53.Route53, changeID string) (*route53.ChangeInfo, error) { //nolint:unparam
-	rand.Seed(time.Now().UTC().UnixNano())
-
 	// Route53 is vulnerable to throttling so longer delays, poll intervals helps significantly to avoid
 
 	stateConf := &retry.StateChangeConf{

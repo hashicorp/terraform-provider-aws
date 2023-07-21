@@ -23,7 +23,7 @@ resource "aws_sagemaker_user_profile" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `user_profile_name` - (Required) The name for the User Profile.
 * `domain_id` - (Required) The ID of the associated Domain.
@@ -108,9 +108,9 @@ The following arguments are supported:
 * `cross_account_model_register_role_arn` - (Optional) The Amazon Resource Name (ARN) of the SageMaker model registry account. Required only to register model versions created by a different SageMaker Canvas AWS account than the AWS account in which SageMaker model registry is set up.
 * `status` - (Optional) Describes whether the integration to the model registry is enabled or disabled in the Canvas application.. Valid values are `ENABLED` and `DISABLED`.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The user profile Amazon Resource Name (ARN).
 * `arn` - The user profile Amazon Resource Name (ARN).
@@ -119,8 +119,17 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-SageMaker User Profiles can be imported using the `arn`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import SageMaker User Profiles using the `arn`. For example:
 
+```terraform
+import {
+  to = aws_sagemaker_user_profile.test_user_profile
+  id = "arn:aws:sagemaker:us-west-2:123456789012:user-profile/domain-id/profile-name"
+}
 ```
-$ terraform import aws_sagemaker_user_profile.test_user_profile arn:aws:sagemaker:us-west-2:123456789012:user-profile/domain-id/profile-name
+
+Using `terraform import`, import SageMaker User Profiles using the `arn`. For example:
+
+```console
+% terraform import aws_sagemaker_user_profile.test_user_profile arn:aws:sagemaker:us-west-2:123456789012:user-profile/domain-id/profile-name
 ```

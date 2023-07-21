@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 //go:build sweep
 // +build sweep
 
@@ -28,7 +31,7 @@ func init() {
 
 func sweepProjects(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
@@ -69,7 +72,7 @@ func sweepProjects(region string) error {
 		errs = multierror.Append(errs, fmt.Errorf("error listing DeviceFarm Project for %s: %w", region, err))
 	}
 
-	if err := sweep.SweepOrchestratorWithContext(ctx, sweepResources); err != nil {
+	if err := sweep.SweepOrchestrator(ctx, sweepResources); err != nil {
 		errs = multierror.Append(errs, fmt.Errorf("error sweeping DeviceFarm Project for %s: %w", region, err))
 	}
 
@@ -83,7 +86,7 @@ func sweepProjects(region string) error {
 
 func sweepTestGridProjects(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
@@ -124,7 +127,7 @@ func sweepTestGridProjects(region string) error {
 		errs = multierror.Append(errs, fmt.Errorf("error listing DeviceFarm Test Grid Project for %s: %w", region, err))
 	}
 
-	if err := sweep.SweepOrchestratorWithContext(ctx, sweepResources); err != nil {
+	if err := sweep.SweepOrchestrator(ctx, sweepResources); err != nil {
 		errs = multierror.Append(errs, fmt.Errorf("error sweeping DeviceFarm Test Grid Project for %s: %w", region, err))
 	}
 

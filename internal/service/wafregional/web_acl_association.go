@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package wafregional
 
 import (
@@ -60,7 +63,7 @@ func resourceWebACLAssociationCreate(ctx context.Context, d *schema.ResourceData
 	// create association and wait on retryable error
 	// no response body
 	var err error
-	err = retry.RetryContext(ctx, 2*time.Minute, func() *retry.RetryError {
+	err = retry.RetryContext(ctx, 5*time.Minute, func() *retry.RetryError {
 		_, err = conn.AssociateWebACLWithContext(ctx, params)
 		if err != nil {
 			if tfawserr.ErrCodeEquals(err, wafregional.ErrCodeWAFUnavailableEntityException) {

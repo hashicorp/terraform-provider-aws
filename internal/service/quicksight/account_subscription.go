@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package quicksight
 
 import (
@@ -35,96 +38,98 @@ func ResourceAccountSubscription() *schema.Resource {
 			Delete: schema.DefaultTimeout(10 * time.Minute),
 		},
 
-		Schema: map[string]*schema.Schema{
-			"account_name": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"account_subscription_status": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"active_directory_name": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
-			},
-			"admin_group": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MinItems: 1,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-				ForceNew: true,
-			},
-			"authentication_method": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringInSlice(quicksight.AuthenticationMethodOption_Values(), false),
-			},
-			"author_group": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MinItems: 1,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-				ForceNew: true,
-			},
-			"aws_account_id": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ForceNew:     true,
-				ValidateFunc: verify.ValidAccountID,
-			},
-			"contact_number": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
-			},
-			"directory_id": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
-			},
-			"edition": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringInSlice(quicksight.Edition_Values(), false),
-			},
-			"email_address": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
-			},
-			"first_name": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
-			},
-			"last_name": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
-			},
-			"notification_email": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"reader_group": {
-				Type:     schema.TypeList,
-				Optional: true,
-				ForceNew: true,
-				MinItems: 1,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			"realm": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"account_name": {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				"account_subscription_status": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"active_directory_name": {
+					Type:     schema.TypeString,
+					Optional: true,
+					ForceNew: true,
+				},
+				"admin_group": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MinItems: 1,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+					ForceNew: true,
+				},
+				"authentication_method": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: validation.StringInSlice(quicksight.AuthenticationMethodOption_Values(), false),
+				},
+				"author_group": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MinItems: 1,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+					ForceNew: true,
+				},
+				"aws_account_id": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					Computed:     true,
+					ForceNew:     true,
+					ValidateFunc: verify.ValidAccountID,
+				},
+				"contact_number": {
+					Type:     schema.TypeString,
+					Optional: true,
+					ForceNew: true,
+				},
+				"directory_id": {
+					Type:     schema.TypeString,
+					Optional: true,
+					ForceNew: true,
+				},
+				"edition": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: validation.StringInSlice(quicksight.Edition_Values(), false),
+				},
+				"email_address": {
+					Type:     schema.TypeString,
+					Optional: true,
+					ForceNew: true,
+				},
+				"first_name": {
+					Type:     schema.TypeString,
+					Optional: true,
+					ForceNew: true,
+				},
+				"last_name": {
+					Type:     schema.TypeString,
+					Optional: true,
+					ForceNew: true,
+				},
+				"notification_email": {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				"reader_group": {
+					Type:     schema.TypeList,
+					Optional: true,
+					ForceNew: true,
+					MinItems: 1,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+				"realm": {
+					Type:     schema.TypeString,
+					Optional: true,
+					ForceNew: true,
+				},
+			}
 		},
 	}
 }

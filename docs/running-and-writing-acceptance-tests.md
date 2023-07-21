@@ -61,8 +61,8 @@ export AWS_DEFAULT_REGION=us-gov-west-1
 Tests can then be run by specifying a regular expression defining the tests to
 run and the package in which the tests are defined:
 
-```sh
-$ make testacc TESTS=TestAccCloudWatchDashboard_updateName PKG=cloudwatch
+```console
+% make testacc TESTS=TestAccCloudWatchDashboard_updateName PKG=cloudwatch
 ==> Checking that code complies with gofmt requirements...
 TF_ACC=1 go test ./internal/service/cloudwatch/... -v -count 1 -parallel 20 -run=TestAccCloudWatchDashboard_updateName -timeout 180m
 === RUN   TestAccCloudWatchDashboard_updateName
@@ -78,8 +78,8 @@ write the regular expression. For example, to run all tests of the
 `aws_cloudwatch_dashboard` resource rather than just the updateName test, you
 can start testing like this:
 
-```sh
-$ make testacc TESTS=TestAccCloudWatchDashboard PKG=cloudwatch
+```console
+% make testacc TESTS=TestAccCloudWatchDashboard PKG=cloudwatch
 ==> Checking that code complies with gofmt requirements...
 TF_ACC=1 go test ./internal/service/cloudwatch/... -v -count 1 -parallel 20 -run=TestAccCloudWatchDashboard -timeout 180m
 === RUN   TestAccCloudWatchDashboard_basic
@@ -1123,7 +1123,7 @@ Then add the actual implementation. Preferably, if a paginated SDK call is avail
 ```go
 func sweepThings(region string) error {
   ctx := sweep.Context(region)
-  client, err := sweep.SharedRegionalSweepClient(region)
+  client, err := sweep.SharedRegionalSweepClient(ctx, region)
 
   if err != nil {
     return fmt.Errorf("getting client: %w", err)
@@ -1157,7 +1157,6 @@ func sweepThings(region string) error {
       // Otherwise, do not include it.
       if err != nil {
         err := fmt.Errorf("reading Example Thing (%s): %w", id, err)
-        log.Printf("[ERROR] %s", err)
         errs = multierror.Append(errs, err)
         continue
       }
@@ -1168,29 +1167,30 @@ func sweepThings(region string) error {
     return !lastPage
   })
 
-  if err != nil {
-    errs = multierror.Append(errs, fmt.Errorf("listing Example Thing for %s: %w", region, err))
-  }
-
-  if err := sweep.SweepOrchestrator(sweepResources); err != nil {
-    errs = multierror.Append(errs, fmt.Errorf("sweeping Example Thing for %s: %w", region, err))
-  }
-
   if sweep.SkipSweepError(err) {
     log.Printf("[WARN] Skipping Example Thing sweep for %s: %s", region, errs)
     return nil
+  }
+  if err != nil {
+    errs = multierror.Append(errs, fmt.Errorf("listing Example Things for %s: %w", region, err))
+  }
+
+  if err := sweep.SweepOrchestrator(sweepResources); err != nil {
+    errs = multierror.Append(errs, fmt.Errorf("sweeping Example Things for %s: %w", region, err))
   }
 
   return errs.ErrorOrNil()
 }
 ```
 
-Otherwise, if no paginated SDK call is available:
+If no paginated SDK call is available,
+consider generating one using the [`listpages` generator](https://github.com/hashicorp/terraform-provider-aws/blob/main/internal/generate/listpages/README.md),
+or implement the sweeper as follows:
 
 ```go
 func sweepThings(region string) error {
   ctx := sweep.Context(region)
-  client, err := sweep.SharedRegionalSweepClient(region)
+  client, err := sweep.SharedRegionalSweepClient(ctx, region)
 
   if err != nil {
     return fmt.Errorf("getting client: %w", err)
@@ -1204,6 +1204,14 @@ func sweepThings(region string) error {
 
   for {
     output, err := conn.ListThings(input)
+    if sweep.SkipSweepError(err) {
+      log.Printf("[WARN] Skipping Example Thing sweep for %s: %s", region, errs)
+      return nil
+    }
+    if err != nil {
+      errs = multierror.Append(errs, fmt.Errorf("listing Example Things for %s: %w", region, err))
+      return errs.ErrorOrNil()
+    }
 
     for _, thing := range output.Things {
       r := ResourceThing()
@@ -1222,7 +1230,6 @@ func sweepThings(region string) error {
       // Otherwise, do not include it.
       if err != nil {
         err := fmt.Errorf("reading Example Thing (%s): %w", id, err)
-        log.Printf("[ERROR] %s", err)
         errs = multierror.Append(errs, err)
         continue
       }
@@ -1239,11 +1246,6 @@ func sweepThings(region string) error {
 
   if err := sweep.SweepOrchestrator(sweepResources); err != nil {
     errs = multierror.Append(errs, fmt.Errorf("sweeping Example Thing for %s: %w", region, err))
-  }
-
-  if sweep.SkipSweepError(err) {
-    log.Printf("[WARN] Skipping Example Thing sweep for %s: %s", region, errs)
-    return nil
   }
 
   return errs.ErrorOrNil()

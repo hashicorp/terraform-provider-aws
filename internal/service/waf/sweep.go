@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 //go:build sweep
 // +build sweep
 
@@ -131,7 +134,7 @@ func init() {
 
 func sweepByteMatchSet(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
@@ -192,7 +195,7 @@ func sweepByteMatchSet(region string) error {
 		errs = multierror.Append(errs, fmt.Errorf("error concurrently reading WAF Byte Match Sets: %w", err))
 	}
 
-	if err = sweep.SweepOrchestratorWithContext(ctx, sweepResources); err != nil {
+	if err = sweep.SweepOrchestrator(ctx, sweepResources); err != nil {
 		errs = multierror.Append(errs, fmt.Errorf("error sweeping WAF Byte Match Set for %s: %w", region, err))
 	}
 
@@ -206,7 +209,7 @@ func sweepByteMatchSet(region string) error {
 
 func sweepGeoMatchSet(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
@@ -267,7 +270,7 @@ func sweepGeoMatchSet(region string) error {
 		errs = multierror.Append(errs, fmt.Errorf("error concurrently reading WAF Geo Match Sets: %w", err))
 	}
 
-	if err = sweep.SweepOrchestratorWithContext(ctx, sweepResources); err != nil {
+	if err = sweep.SweepOrchestrator(ctx, sweepResources); err != nil {
 		errs = multierror.Append(errs, fmt.Errorf("error sweeping WAF Geo Match Set for %s: %w", region, err))
 	}
 
@@ -281,7 +284,7 @@ func sweepGeoMatchSet(region string) error {
 
 func sweepIPSet(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
@@ -342,7 +345,7 @@ func sweepIPSet(region string) error {
 		errs = multierror.Append(errs, fmt.Errorf("error concurrently reading WAF IP Sets: %w", err))
 	}
 
-	if err = sweep.SweepOrchestratorWithContext(ctx, sweepResources); err != nil {
+	if err = sweep.SweepOrchestrator(ctx, sweepResources); err != nil {
 		errs = multierror.Append(errs, fmt.Errorf("error sweeping WAF IP Set for %s: %w", region, err))
 	}
 
@@ -356,7 +359,7 @@ func sweepIPSet(region string) error {
 
 func sweepRateBasedRules(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
@@ -417,7 +420,7 @@ func sweepRateBasedRules(region string) error {
 		errs = multierror.Append(errs, fmt.Errorf("error concurrently reading WAF Rate Based Rules: %w", err))
 	}
 
-	if err = sweep.SweepOrchestratorWithContext(ctx, sweepResources); err != nil {
+	if err = sweep.SweepOrchestrator(ctx, sweepResources); err != nil {
 		errs = multierror.Append(errs, fmt.Errorf("error sweeping WAF Rate Based Rule for %s: %w", region, err))
 	}
 
@@ -431,7 +434,7 @@ func sweepRateBasedRules(region string) error {
 
 func sweepRegexMatchSet(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
@@ -492,7 +495,7 @@ func sweepRegexMatchSet(region string) error {
 		errs = multierror.Append(errs, fmt.Errorf("error concurrently reading WAF Regex Match Sets: %w", err))
 	}
 
-	if err = sweep.SweepOrchestratorWithContext(ctx, sweepResources); err != nil {
+	if err = sweep.SweepOrchestrator(ctx, sweepResources); err != nil {
 		errs = multierror.Append(errs, fmt.Errorf("error sweeping WAF Regex Match Set for %s: %w", region, err))
 	}
 
@@ -506,7 +509,7 @@ func sweepRegexMatchSet(region string) error {
 
 func sweepRegexPatternSet(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
@@ -567,7 +570,7 @@ func sweepRegexPatternSet(region string) error {
 		errs = multierror.Append(errs, fmt.Errorf("error concurrently reading WAF Regex Pattern Sets: %w", err))
 	}
 
-	if err = sweep.SweepOrchestratorWithContext(ctx, sweepResources); err != nil {
+	if err = sweep.SweepOrchestrator(ctx, sweepResources); err != nil {
 		errs = multierror.Append(errs, fmt.Errorf("error sweeping WAF Regex Pattern Set for %s: %w", region, err))
 	}
 
@@ -581,7 +584,7 @@ func sweepRegexPatternSet(region string) error {
 
 func sweepRuleGroups(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
@@ -642,7 +645,7 @@ func sweepRuleGroups(region string) error {
 		errs = multierror.Append(errs, fmt.Errorf("error concurrently reading WAF Rule Groups: %w", err))
 	}
 
-	if err = sweep.SweepOrchestratorWithContext(ctx, sweepResources); err != nil {
+	if err = sweep.SweepOrchestrator(ctx, sweepResources); err != nil {
 		errs = multierror.Append(errs, fmt.Errorf("error sweeping WAF Rule Group for %s: %w", region, err))
 	}
 
@@ -656,7 +659,7 @@ func sweepRuleGroups(region string) error {
 
 func sweepRules(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
@@ -721,7 +724,7 @@ func sweepRules(region string) error {
 		errs = multierror.Append(errs, fmt.Errorf("error concurrently reading WAF Rules: %w", err))
 	}
 
-	if err = sweep.SweepOrchestratorWithContext(ctx, sweepResources); err != nil {
+	if err = sweep.SweepOrchestrator(ctx, sweepResources); err != nil {
 		errs = multierror.Append(errs, fmt.Errorf("error sweeping WAF Rules for %s: %w", region, err))
 	}
 
@@ -735,7 +738,7 @@ func sweepRules(region string) error {
 
 func sweepSizeConstraintSet(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
@@ -796,7 +799,7 @@ func sweepSizeConstraintSet(region string) error {
 		errs = multierror.Append(errs, fmt.Errorf("error concurrently reading WAF Size Constraint Sets: %w", err))
 	}
 
-	if err = sweep.SweepOrchestratorWithContext(ctx, sweepResources); err != nil {
+	if err = sweep.SweepOrchestrator(ctx, sweepResources); err != nil {
 		errs = multierror.Append(errs, fmt.Errorf("error sweeping WAF Size Constraint Sets for %s: %w", region, err))
 	}
 
@@ -810,7 +813,7 @@ func sweepSizeConstraintSet(region string) error {
 
 func sweepSQLInjectionMatchSet(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
@@ -871,7 +874,7 @@ func sweepSQLInjectionMatchSet(region string) error {
 		errs = multierror.Append(errs, fmt.Errorf("error concurrently reading WAF SQL Injection Matches: %w", err))
 	}
 
-	if err = sweep.SweepOrchestratorWithContext(ctx, sweepResources); err != nil {
+	if err = sweep.SweepOrchestrator(ctx, sweepResources); err != nil {
 		errs = multierror.Append(errs, fmt.Errorf("error sweeping WAF SQL Injection Matches for %s: %w", region, err))
 	}
 
@@ -885,7 +888,7 @@ func sweepSQLInjectionMatchSet(region string) error {
 
 func sweepWebACLs(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
@@ -950,7 +953,7 @@ func sweepWebACLs(region string) error {
 		errs = multierror.Append(errs, fmt.Errorf("error concurrently reading WAF Web ACLs: %w", err))
 	}
 
-	if err = sweep.SweepOrchestratorWithContext(ctx, sweepResources); err != nil {
+	if err = sweep.SweepOrchestrator(ctx, sweepResources); err != nil {
 		errs = multierror.Append(errs, fmt.Errorf("error sweeping WAF Web ACLs for %s: %w", region, err))
 	}
 
@@ -964,7 +967,7 @@ func sweepWebACLs(region string) error {
 
 func sweepXSSMatchSet(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
@@ -1025,7 +1028,7 @@ func sweepXSSMatchSet(region string) error {
 		errs = multierror.Append(errs, fmt.Errorf("error concurrently reading WAF XSS Match Sets: %w", err))
 	}
 
-	if err = sweep.SweepOrchestratorWithContext(ctx, sweepResources); err != nil {
+	if err = sweep.SweepOrchestrator(ctx, sweepResources); err != nil {
 		errs = multierror.Append(errs, fmt.Errorf("error sweeping WAF XSS Match Sets for %s: %w", region, err))
 	}
 

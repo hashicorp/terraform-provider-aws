@@ -84,7 +84,7 @@ resource "aws_api_gateway_method_settings" "path_specific" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `rest_api_id` - (Required) ID of the REST API
 * `stage_name` - (Required) Name of the stage
@@ -104,14 +104,23 @@ The following arguments are supported:
 * `require_authorization_for_cache_control` - (Optional) Whether authorization is required for a cache invalidation request.
 * `unauthorized_cache_control_header_strategy` - (Optional) How to handle unauthorized requests for cache invalidation. The available values are `FAIL_WITH_403`, `SUCCEED_WITH_RESPONSE_HEADER`, `SUCCEED_WITHOUT_RESPONSE_HEADER`.
 
-## Attributes Reference
+## Attribute Reference
 
-No additional attributes are exported.
+This resource exports no additional attributes.
 
 ## Import
 
-`aws_api_gateway_method_settings` can be imported using `REST-API-ID/STAGE-NAME/METHOD-PATH`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_api_gateway_method_settings` using `REST-API-ID/STAGE-NAME/METHOD-PATH`. For example:
 
+```terraform
+import {
+  to = aws_api_gateway_method_settings.example
+  id = "12345abcde/example/test/GET"
+}
 ```
-$ terraform import aws_api_gateway_method_settings.example 12345abcde/example/test/GET
+
+Using `terraform import`, import `aws_api_gateway_method_settings` using `REST-API-ID/STAGE-NAME/METHOD-PATH`. For example:
+
+```console
+% terraform import aws_api_gateway_method_settings.example 12345abcde/example/test/GET
 ```

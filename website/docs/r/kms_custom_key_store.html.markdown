@@ -33,9 +33,9 @@ The following arguments are required:
 * `key_store_password` - (Required) Password for `kmsuser` on CloudHSM.
 * `trust_anchor_certificate` - (Required) Customer certificate used for signing on CloudHSM.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The Custom Key Store ID
 
@@ -49,8 +49,17 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-KMS (Key Management) Custom Key Store can be imported using the `id`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import KMS (Key Management) Custom Key Store using the `id`. For example:
 
+```terraform
+import {
+  to = aws_kms_custom_key_store.example
+  id = "cks-5ebd4ef395a96288e"
+}
 ```
-$ terraform import aws_kms_custom_key_store.example cks-5ebd4ef395a96288e
+
+Using `terraform import`, import KMS (Key Management) Custom Key Store using the `id`. For example:
+
+```console
+% terraform import aws_kms_custom_key_store.example cks-5ebd4ef395a96288e
 ```

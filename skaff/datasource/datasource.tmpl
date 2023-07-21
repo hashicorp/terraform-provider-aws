@@ -138,7 +138,9 @@ func DataSource{{ .DataSource }}() *schema.Resource {
 					},
 				},
 			},
+			{{- if .IncludeTags }}
 			"tags":         tftags.TagsSchemaComputed(), {{- if .IncludeComments }} // TIP: Many, but not all, data sources have `tags` attributes.{{- end }}
+			{{- end }}
 		},
 	}
 }
@@ -237,12 +239,14 @@ func dataSource{{ .DataSource }}Read(ctx context.Context, d *schema.ResourceData
 	// below. Many data sources do include tags so this a reminder to include them
 	// where possible.
 	{{- end }}
+	{{- if .IncludeTags }}
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", KeyValueTags(out.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return append(diags, create.DiagError(names.{{ .Service }}, create.ErrActionSetting, DSName{{ .DataSource }}, d.Id(), err)...)
 	}
+	{{- end }}
 	{{ if .IncludeComments }}
 	// TIP: -- 6. Return diags
 	{{- end }}
