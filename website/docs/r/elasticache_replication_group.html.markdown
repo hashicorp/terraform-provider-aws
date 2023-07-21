@@ -247,8 +247,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import ElastiCache Replication Groups using the `replication_group_id`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import ElastiCache Replication Groups using the `replication_group_id`. For example:
 
+```terraform
+import {
+  to = aws_elasticache_replication_group.my_replication_group
+  id = "replication-group-1"
+}
 ```
-$ terraform import aws_elasticache_replication_group.my_replication_group replication-group-1
+
+Using `terraform import`, import ElastiCache Replication Groups using the `replication_group_id`. For example:
+
+```console
+% terraform import aws_elasticache_replication_group.my_replication_group replication-group-1
 ```

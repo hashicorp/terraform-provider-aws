@@ -169,8 +169,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import Network Firewall Policies using their `arn`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Network Firewall Policies using their `arn`. For example:
 
+```terraform
+import {
+  to = aws_networkfirewall_firewall_policy.example
+  id = "arn:aws:network-firewall:us-west-1:123456789012:firewall-policy/example"
+}
 ```
-$ terraform import aws_networkfirewall_firewall_policy.example arn:aws:network-firewall:us-west-1:123456789012:firewall-policy/example
+
+Using `terraform import`, import Network Firewall Policies using their `arn`. For example:
+
+```console
+% terraform import aws_networkfirewall_firewall_policy.example arn:aws:network-firewall:us-west-1:123456789012:firewall-policy/example
 ```

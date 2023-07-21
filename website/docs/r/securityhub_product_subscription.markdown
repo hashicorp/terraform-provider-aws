@@ -75,8 +75,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import Security Hub product subscriptions using `product_arn,arn`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Security Hub product subscriptions using `product_arn,arn`. For example:
 
-```sh
-$ terraform import aws_securityhub_product_subscription.example arn:aws:securityhub:eu-west-1:733251395267:product/alertlogic/althreatmanagement,arn:aws:securityhub:eu-west-1:123456789012:product-subscription/alertlogic/althreatmanagement
+```terraform
+import {
+  to = aws_securityhub_product_subscription.example
+  id = "arn:aws:securityhub:eu-west-1:733251395267:product/alertlogic/althreatmanagement,arn:aws:securityhub:eu-west-1:123456789012:product-subscription/alertlogic/althreatmanagement"
+}
+```
+
+Using `terraform import`, import Security Hub product subscriptions using `product_arn,arn`. For example:
+
+```console
+% terraform import aws_securityhub_product_subscription.example arn:aws:securityhub:eu-west-1:733251395267:product/alertlogic/althreatmanagement,arn:aws:securityhub:eu-west-1:123456789012:product-subscription/alertlogic/althreatmanagement
 ```

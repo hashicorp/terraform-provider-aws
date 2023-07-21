@@ -54,8 +54,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import WAF Regional Geo Match Set using the id. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import WAF Regional Geo Match Set using the id. For example:
 
+```terraform
+import {
+  to = aws_wafregional_geo_match_set.geo_match_set
+  id = "a1b2c3d4-d5f6-7777-8888-9999aaaabbbbcccc"
+}
 ```
-$ terraform import aws_wafregional_geo_match_set.geo_match_set a1b2c3d4-d5f6-7777-8888-9999aaaabbbbcccc
+
+Using `terraform import`, import WAF Regional Geo Match Set using the id. For example:
+
+```console
+% terraform import aws_wafregional_geo_match_set.geo_match_set a1b2c3d4-d5f6-7777-8888-9999aaaabbbbcccc
 ```

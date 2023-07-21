@@ -42,8 +42,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import Direct Connect Gateways using the `gateway id`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Direct Connect Gateways using the gateway `id`. For example:
 
+```terraform
+import {
+  to = aws_dx_gateway.test
+  id = "abcd1234-dcba-5678-be23-cdef9876ab45"
+}
 ```
-$ terraform import aws_dx_gateway.test abcd1234-dcba-5678-be23-cdef9876ab45
+
+Using `terraform import`, import Direct Connect Gateways using the gateway `id`. For example:
+
+```console
+% terraform import aws_dx_gateway.test abcd1234-dcba-5678-be23-cdef9876ab45
 ```

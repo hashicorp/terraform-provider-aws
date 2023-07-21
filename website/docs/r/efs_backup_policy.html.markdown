@@ -48,8 +48,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import the EFS backup policies using the `id`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import the EFS backup policies using the `id`. For example:
 
+```terraform
+import {
+  to = aws_efs_backup_policy.example
+  id = "fs-6fa144c6"
+}
 ```
-$ terraform import aws_efs_backup_policy.example fs-6fa144c6
+
+Using `terraform import`, import the EFS backup policies using the `id`. For example:
+
+```console
+% terraform import aws_efs_backup_policy.example fs-6fa144c6
 ```

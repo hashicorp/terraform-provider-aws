@@ -49,8 +49,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import VPC Endpoint Subnet Associations using `vpc_endpoint_id` together with `subnet_id`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import VPC Endpoint Subnet Associations using `vpc_endpoint_id` together with `subnet_id`. For example:
 
+```terraform
+import {
+  to = aws_vpc_endpoint_subnet_association.example
+  id = "vpce-aaaaaaaa/subnet-bbbbbbbbbbbbbbbbb"
+}
 ```
-$ terraform import aws_vpc_endpoint_subnet_association.example vpce-aaaaaaaa/subnet-bbbbbbbbbbbbbbbbb
+
+Using `terraform import`, import VPC Endpoint Subnet Associations using `vpc_endpoint_id` together with `subnet_id`. For example:
+
+```console
+% terraform import aws_vpc_endpoint_subnet_association.example vpce-aaaaaaaa/subnet-bbbbbbbbbbbbbbbbb
 ```

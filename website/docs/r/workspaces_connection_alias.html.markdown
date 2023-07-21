@@ -46,8 +46,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import WorkSpaces Connection Alias using the connection alias ID. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import WorkSpaces Connection Alias using the connection alias ID. For example:
 
+```terraform
+import {
+  to = aws_workspaces_connection_alias.example
+  id = "rft-8012925589"
+}
 ```
-$ terraform import aws_workspaces_connection_alias.example rft-8012925589
+
+Using `terraform import`, import WorkSpaces Connection Alias using the connection alias ID. For example:
+
+```console
+% terraform import aws_workspaces_connection_alias.example rft-8012925589
 ```

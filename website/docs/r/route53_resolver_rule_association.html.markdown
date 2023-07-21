@@ -35,8 +35,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import Route53 Resolver rule associations using the `id`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Route53 Resolver rule associations using the `id`. For example:
 
+```terraform
+import {
+  to = aws_route53_resolver_rule_association.example
+  id = "rslvr-rrassoc-97242eaf88example"
+}
 ```
-$ terraform import aws_route53_resolver_rule_association.example rslvr-rrassoc-97242eaf88example
+
+Using `terraform import`, import Route53 Resolver rule associations using the `id`. For example:
+
+```console
+% terraform import aws_route53_resolver_rule_association.example rslvr-rrassoc-97242eaf88example
 ```

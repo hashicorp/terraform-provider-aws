@@ -794,8 +794,17 @@ for more information.
 
 ## Import
 
-Import Auto Scaling Groups using the `name`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Auto Scaling Groups using the `name`. For example:
 
+```terraform
+import {
+  to = aws_autoscaling_group.web
+  id = "web-asg"
+}
 ```
-$ terraform import aws_autoscaling_group.web web-asg
+
+Using `terraform import`, import Auto Scaling Groups using the `name`. For example:
+
+```console
+% terraform import aws_autoscaling_group.web web-asg
 ```

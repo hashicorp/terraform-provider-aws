@@ -69,8 +69,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import OpenSearchServerless Collection using the `id`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import OpenSearchServerless Collection using the `id`. For example:
 
+```terraform
+import {
+  to = aws_opensearchserverless_collection.example
+  id = "example"
+}
 ```
-$ terraform import aws_opensearchserverless_collection.example example
+
+Using `terraform import`, import OpenSearchServerless Collection using the `id`. For example:
+
+```console
+% terraform import aws_opensearchserverless_collection.example example
 ```

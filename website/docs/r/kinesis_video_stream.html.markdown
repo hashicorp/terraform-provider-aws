@@ -59,10 +59,19 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import Kinesis Streams using the `arn`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Kinesis Streams using the `arn`. For example:
 
+```terraform
+import {
+  to = aws_kinesis_video_stream.test_stream
+  id = "arn:aws:kinesisvideo:us-west-2:123456789012:stream/terraform-kinesis-test/1554978910975"
+}
 ```
-$ terraform import aws_kinesis_video_stream.test_stream arn:aws:kinesisvideo:us-west-2:123456789012:stream/terraform-kinesis-test/1554978910975
+
+Using `terraform import`, import Kinesis Streams using the `arn`. For example:
+
+```console
+% terraform import aws_kinesis_video_stream.test_stream arn:aws:kinesisvideo:us-west-2:123456789012:stream/terraform-kinesis-test/1554978910975
 ```
 
 [1]: https://aws.amazon.com/documentation/kinesis/

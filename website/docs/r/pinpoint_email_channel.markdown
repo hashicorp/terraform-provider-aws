@@ -81,8 +81,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import Pinpoint Email Channel using the `application-id`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Pinpoint Email Channel using the `application-id`. For example:
 
+```terraform
+import {
+  to = aws_pinpoint_email_channel.email
+  id = "application-id"
+}
 ```
-$ terraform import aws_pinpoint_email_channel.email application-id
+
+Using `terraform import`, import Pinpoint Email Channel using the `application-id`. For example:
+
+```console
+% terraform import aws_pinpoint_email_channel.email application-id
 ```

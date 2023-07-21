@@ -169,13 +169,22 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import `aws_storagegateway_gateway` using the gateway Amazon Resource Name (ARN). For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_storagegateway_gateway` using the gateway Amazon Resource Name (ARN). For example:
 
-```
-$ terraform import aws_storagegateway_gateway.example arn:aws:storagegateway:us-east-1:123456789012:gateway/sgw-12345678
+```terraform
+import {
+  to = aws_storagegateway_gateway.example
+  id = "arn:aws:storagegateway:us-east-1:123456789012:gateway/sgw-12345678"
+}
 ```
 
-Certain resource arguments, like `gateway_ip_address` do not have a Storage Gateway API method for reading the information after creation, either omit the argument from the Terraform configuration or use [`ignore_changes`](https://www.terraform.io/docs/configuration/meta-arguments/lifecycle.html#ignore_changes) to hide the difference, e.g.,
+Using `terraform import`, import `aws_storagegateway_gateway` using the gateway Amazon Resource Name (ARN). For example:
+
+```console
+% terraform import aws_storagegateway_gateway.example arn:aws:storagegateway:us-east-1:123456789012:gateway/sgw-12345678
+```
+
+Certain resource arguments, like `gateway_ip_address` do not have a Storage Gateway API method for reading the information after creation, either omit the argument from the Terraform configuration or use [`ignore_changes`](https://www.terraform.io/docs/configuration/meta-arguments/lifecycle.html#ignore_changes) to hide the difference. For example:
 
 ```terraform
 resource "aws_storagegateway_gateway" "example" {

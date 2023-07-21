@@ -63,8 +63,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import Resource Explorer views using the `arn`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Resource Explorer views using the `arn`. For example:
 
+```terraform
+import {
+  to = aws_resourceexplorer2_view.example
+  id = "arn:aws:resource-explorer-2:us-west-2:123456789012:view/exampleview/e0914f6c-6c27-4b47-b5d4-6b28381a2421"
+}
 ```
-$ terraform import aws_resourceexplorer2_view.example arn:aws:resource-explorer-2:us-west-2:123456789012:view/exampleview/e0914f6c-6c27-4b47-b5d4-6b28381a2421
+
+Using `terraform import`, import Resource Explorer views using the `arn`. For example:
+
+```console
+% terraform import aws_resourceexplorer2_view.example arn:aws:resource-explorer-2:us-west-2:123456789012:view/exampleview/e0914f6c-6c27-4b47-b5d4-6b28381a2421
 ```

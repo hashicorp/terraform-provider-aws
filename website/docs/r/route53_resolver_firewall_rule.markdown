@@ -59,8 +59,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import  Route 53 Resolver DNS Firewall rules using the Route 53 Resolver DNS Firewall rule group ID and domain list ID separated by ':'. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import  Route 53 Resolver DNS Firewall rules using the Route 53 Resolver DNS Firewall rule group ID and domain list ID separated by ':'. For example:
 
+```terraform
+import {
+  to = aws_route53_resolver_firewall_rule.example
+  id = "rslvr-frg-0123456789abcdef:rslvr-fdl-0123456789abcdef"
+}
 ```
-$ terraform import aws_route53_resolver_firewall_rule.example rslvr-frg-0123456789abcdef:rslvr-fdl-0123456789abcdef
+
+Using `terraform import`, import  Route 53 Resolver DNS Firewall rules using the Route 53 Resolver DNS Firewall rule group ID and domain list ID separated by ':'. For example:
+
+```console
+% terraform import aws_route53_resolver_firewall_rule.example rslvr-frg-0123456789abcdef:rslvr-fdl-0123456789abcdef
 ```

@@ -51,8 +51,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import `aws_location_map` resources using the map name. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_location_map` resources using the map name. For example:
 
+```terraform
+import {
+  to = aws_location_map.example
+  id = "example"
+}
 ```
-$ terraform import aws_location_map.example example
+
+Using `terraform import`, import `aws_location_map` resources using the map name. For example:
+
+```console
+% terraform import aws_location_map.example example
 ```

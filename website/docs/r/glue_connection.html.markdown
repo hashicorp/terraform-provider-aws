@@ -95,8 +95,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import Glue Connections using the `CATALOG-ID` (AWS account ID if not custom) and `NAME`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Glue Connections using the `CATALOG-ID` (AWS account ID if not custom) and `NAME`. For example:
 
+```terraform
+import {
+  to = aws_glue_connection.MyConnection
+  id = "123456789012:MyConnection"
+}
 ```
-$ terraform import aws_glue_connection.MyConnection 123456789012:MyConnection
+
+Using `terraform import`, import Glue Connections using the `CATALOG-ID` (AWS account ID if not custom) and `NAME`. For example:
+
+```console
+% terraform import aws_glue_connection.MyConnection 123456789012:MyConnection
 ```

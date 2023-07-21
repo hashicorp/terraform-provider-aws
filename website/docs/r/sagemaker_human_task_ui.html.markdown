@@ -50,8 +50,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import SageMaker Human Task UIs using the `human_task_ui_name`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import SageMaker Human Task UIs using the `human_task_ui_name`. For example:
 
+```terraform
+import {
+  to = aws_sagemaker_human_task_ui.example
+  id = "example"
+}
 ```
-$ terraform import aws_sagemaker_human_task_ui.example example
+
+Using `terraform import`, import SageMaker Human Task UIs using the `human_task_ui_name`. For example:
+
+```console
+% terraform import aws_sagemaker_human_task_ui.example example
 ```

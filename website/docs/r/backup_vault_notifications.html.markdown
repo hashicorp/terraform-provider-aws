@@ -69,8 +69,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import Backup vault notifications using the `name`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Backup vault notifications using the `name`. For example:
 
+```terraform
+import {
+  to = aws_backup_vault_notifications.test
+  id = "TestVault"
+}
 ```
-$ terraform import aws_backup_vault_notifications.test TestVault
+
+Using `terraform import`, import Backup vault notifications using the `name`. For example:
+
+```console
+% terraform import aws_backup_vault_notifications.test TestVault
 ```

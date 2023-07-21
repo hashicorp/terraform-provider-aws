@@ -160,8 +160,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import Lightsail Container Service using the `name`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Lightsail Container Service using the `name`. For example:
 
-```shell
-$ terraform import aws_lightsail_container_service.my_container_service container-service-1
+```terraform
+import {
+  to = aws_lightsail_container_service.my_container_service
+  id = "container-service-1"
+}
+```
+
+Using `terraform import`, import Lightsail Container Service using the `name`. For example:
+
+```console
+% terraform import aws_lightsail_container_service.my_container_service container-service-1
 ```

@@ -103,10 +103,19 @@ consisting of a DNS name and a port number
 
 ## Import
 
-Import DAX Clusters using the `cluster_name`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import DAX Clusters using the `cluster_name`. For example:
 
+```terraform
+import {
+  to = aws_dax_cluster.my_cluster
+  id = "my_cluster"
+}
 ```
-$ terraform import aws_dax_cluster.my_cluster my_cluster
+
+Using `terraform import`, import DAX Clusters using the `cluster_name`. For example:
+
+```console
+% terraform import aws_dax_cluster.my_cluster my_cluster
 ```
 
 [1]: http://docs.aws.amazon.com/amazondynamodb/latest/developerguide/DAX.concepts.cluster.html#DAX.concepts.nodes

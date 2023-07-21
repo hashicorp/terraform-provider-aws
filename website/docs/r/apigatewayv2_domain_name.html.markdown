@@ -97,8 +97,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import `aws_apigatewayv2_domain_name` using the domain name. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_apigatewayv2_domain_name` using the domain name. For example:
 
+```terraform
+import {
+  to = aws_apigatewayv2_domain_name.example
+  id = "ws-api.example.com"
+}
 ```
-$ terraform import aws_apigatewayv2_domain_name.example ws-api.example.com
+
+Using `terraform import`, import `aws_apigatewayv2_domain_name` using the domain name. For example:
+
+```console
+% terraform import aws_apigatewayv2_domain_name.example ws-api.example.com
 ```

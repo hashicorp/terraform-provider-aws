@@ -375,8 +375,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import Lambda Functions using the `function_name`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Lambda Functions using the `function_name`. For example:
 
+```terraform
+import {
+  to = aws_lambda_function.test_lambda
+  id = "my_test_lambda_function"
+}
 ```
-$ terraform import aws_lambda_function.test_lambda my_test_lambda_function
+
+Using `terraform import`, import Lambda Functions using the `function_name`. For example:
+
+```console
+% terraform import aws_lambda_function.test_lambda my_test_lambda_function
 ```

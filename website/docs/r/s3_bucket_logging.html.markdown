@@ -77,16 +77,36 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import S3 bucket logging using the `bucket` or using the `bucket` and `expected_bucket_owner` separated by a comma (`,`). For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import S3 bucket logging using the `bucket` or using the `bucket` and `expected_bucket_owner` separated by a comma (`,`). For example:
 
 If the owner (account ID) of the source bucket is the same account used to configure the Terraform AWS Provider, import using the `bucket`:
 
-```
-$ terraform import aws_s3_bucket_logging.example bucket-name
+```terraform
+import {
+  to = aws_s3_bucket_logging.example
+  id = "bucket-name"
+}
 ```
 
 If the owner (account ID) of the source bucket differs from the account used to configure the Terraform AWS Provider, import using the `bucket` and `expected_bucket_owner` separated by a comma (`,`):
 
+```terraform
+import {
+  to = aws_s3_bucket_logging.example
+  id = "bucket-name,123456789012"
+}
 ```
-$ terraform import aws_s3_bucket_logging.example bucket-name,123456789012
+
+**Using `terraform import` to import** S3 bucket logging using the `bucket` or using the `bucket` and `expected_bucket_owner` separated by a comma (`,`). For example:
+
+If the owner (account ID) of the source bucket is the same account used to configure the Terraform AWS Provider, import using the `bucket`:
+
+```console
+% terraform import aws_s3_bucket_logging.example bucket-name
+```
+
+If the owner (account ID) of the source bucket differs from the account used to configure the Terraform AWS Provider, import using the `bucket` and `expected_bucket_owner` separated by a comma (`,`):
+
+```console
+% terraform import aws_s3_bucket_logging.example bucket-name,123456789012
 ```

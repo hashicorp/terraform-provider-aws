@@ -90,8 +90,17 @@ A level block supports the following additional attributes:
 
 ## Import
 
-Import Amazon Connect User Hierarchy Structures using the `instance_id`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Amazon Connect User Hierarchy Structures using the `instance_id`. For example:
 
+```terraform
+import {
+  to = aws_connect_user_hierarchy_structure.example
+  id = "f1288a1f-6193-445a-b47e-af739b2"
+}
 ```
-$ terraform import aws_connect_user_hierarchy_structure.example f1288a1f-6193-445a-b47e-af739b2
+
+Using `terraform import`, import Amazon Connect User Hierarchy Structures using the `instance_id`. For example:
+
+```console
+% terraform import aws_connect_user_hierarchy_structure.example f1288a1f-6193-445a-b47e-af739b2
 ```

@@ -80,8 +80,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import Batch Job Queue using the `arn`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Batch Job Queue using the `arn`. For example:
 
+```terraform
+import {
+  to = aws_batch_job_queue.test_queue
+  id = "arn:aws:batch:us-east-1:123456789012:job-queue/sample"
+}
 ```
-$ terraform import aws_batch_job_queue.test_queue arn:aws:batch:us-east-1:123456789012:job-queue/sample
+
+Using `terraform import`, import Batch Job Queue using the `arn`. For example:
+
+```console
+% terraform import aws_batch_job_queue.test_queue arn:aws:batch:us-east-1:123456789012:job-queue/sample
 ```

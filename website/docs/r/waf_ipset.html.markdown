@@ -53,8 +53,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import WAF IPSets using their ID. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import WAF IPSets using their ID. For example:
 
+```terraform
+import {
+  to = aws_waf_ipset.example
+  id = "a1b2c3d4-d5f6-7777-8888-9999aaaabbbbcccc"
+}
 ```
-$ terraform import aws_waf_ipset.example a1b2c3d4-d5f6-7777-8888-9999aaaabbbbcccc
+
+Using `terraform import`, import WAF IPSets using their ID. For example:
+
+```console
+% terraform import aws_waf_ipset.example a1b2c3d4-d5f6-7777-8888-9999aaaabbbbcccc
 ```

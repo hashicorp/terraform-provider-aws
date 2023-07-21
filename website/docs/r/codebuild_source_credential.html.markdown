@@ -52,8 +52,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import CodeBuild Source Credential using the CodeBuild Source Credential arn. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import CodeBuild Source Credential using the CodeBuild Source Credential arn. For example:
 
+```terraform
+import {
+  to = aws_codebuild_source_credential.example
+  id = "arn:aws:codebuild:us-west-2:123456789:token:github"
+}
 ```
-$ terraform import aws_codebuild_source_credential.example arn:aws:codebuild:us-west-2:123456789:token:github
+
+Using `terraform import`, import CodeBuild Source Credential using the CodeBuild Source Credential arn. For example:
+
+```console
+% terraform import aws_codebuild_source_credential.example arn:aws:codebuild:us-west-2:123456789:token:github
 ```
