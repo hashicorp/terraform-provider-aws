@@ -145,6 +145,7 @@ func resourceNATGatewayRead(ctx context.Context, d *schema.ResourceData, meta in
 		return diag.Errorf("reading EC2 NAT Gateway (%s): %s", d.Id(), err)
 	}
 
+	log.Printf("[FP] reading")
 	secondaryPrivateAddresses := schema.NewSet(schema.HashString, nil)
 	for _, address := range ng.NatGatewayAddresses {
 		// Length check guarantees the attributes are always set (#30865).
