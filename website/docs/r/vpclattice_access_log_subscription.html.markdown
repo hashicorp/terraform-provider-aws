@@ -40,8 +40,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import VPC Lattice Access Log Subscription using the access log subscription ID. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import VPC Lattice Access Log Subscription using the access log subscription ID. For example:
 
+```terraform
+import {
+  to = aws_vpclattice_access_log_subscription.example
+  id = "rft-8012925589"
+}
 ```
-$ terraform import aws_vpclattice_access_log_subscription.example rft-8012925589
+
+Using `terraform import`, import VPC Lattice Access Log Subscription using the access log subscription ID. For example:
+
+```console
+% terraform import aws_vpclattice_access_log_subscription.example rft-8012925589
 ```

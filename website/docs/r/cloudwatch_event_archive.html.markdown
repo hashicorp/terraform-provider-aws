@@ -61,8 +61,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import Event Archive using their name. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import an EventBridge archive using the `name`. For example:
+
+```terraform
+import {
+  to = aws_cloudwatch_event_archive.imported_event_archive.test
+  id = "order-archive"
+}
+```
+
+Using `terraform import`, import an EventBridge archive using the `name`. For example:
 
 ```console
-$ terraform import aws_cloudwatch_event_archive.imported_event_archive order-archive
+% terraform import aws_cloudwatch_event_archive.imported_event_archive order-archive
 ```

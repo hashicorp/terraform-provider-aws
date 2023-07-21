@@ -54,8 +54,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import `aws_ec2_tag` using the EC2 resource identifier and key, separated by a comma (`,`). For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_ec2_tag` using the EC2 resource identifier and key, separated by a comma (`,`). For example:
 
+```terraform
+import {
+  to = aws_ec2_tag.example
+  id = "tgw-attach-1234567890abcdef,Name"
+}
 ```
-$ terraform import aws_ec2_tag.example tgw-attach-1234567890abcdef,Name
+
+Using `terraform import`, import `aws_ec2_tag` using the EC2 resource identifier and key, separated by a comma (`,`). For example:
+
+```console
+% terraform import aws_ec2_tag.example tgw-attach-1234567890abcdef,Name
 ```

@@ -139,8 +139,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import WAF Web ACL using the `id`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import WAF Web ACL using the `id`. For example:
 
+```terraform
+import {
+  to = aws_waf_web_acl.main
+  id = "0c8e583e-18f3-4c13-9e2a-67c4805d2f94"
+}
 ```
-$ terraform import aws_waf_web_acl.main 0c8e583e-18f3-4c13-9e2a-67c4805d2f94
+
+Using `terraform import`, import WAF Web ACL using the `id`. For example:
+
+```console
+% terraform import aws_waf_web_acl.main 0c8e583e-18f3-4c13-9e2a-67c4805d2f94
 ```

@@ -79,8 +79,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import Glacier Vaults using the `name`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Glacier Vaults using the `name`. For example:
 
+```terraform
+import {
+  to = aws_glacier_vault.archive
+  id = "my_archive"
+}
 ```
-$ terraform import aws_glacier_vault.archive my_archive
+
+Using `terraform import`, import Glacier Vaults using the `name`. For example:
+
+```console
+% terraform import aws_glacier_vault.archive my_archive
 ```

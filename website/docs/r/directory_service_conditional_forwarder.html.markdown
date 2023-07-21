@@ -38,8 +38,17 @@ This resource exports no additional attributes.
 
 ## Import
 
-Import Conditional forwarders using the directory id and remote_domain_name. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import conditional forwarders using the directory id and remote_domain_name. For example:
 
+```terraform
+import {
+  to = aws_directory_service_conditional_forwarder.example
+  id = "d-1234567890:example.com"
+}
 ```
-$ terraform import aws_directory_service_conditional_forwarder.example d-1234567890:example.com
+
+Using `terraform import`, import conditional forwarders using the directory id and remote_domain_name. For example:
+
+```console
+% terraform import aws_directory_service_conditional_forwarder.example d-1234567890:example.com
 ```

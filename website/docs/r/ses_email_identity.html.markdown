@@ -32,8 +32,17 @@ resource "aws_ses_email_identity" "example" {
 
 ## Import
 
-Import SES email identities using the email address. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import SES email identities using the email address. For example:
 
+```terraform
+import {
+  to = aws_ses_email_identity.example
+  id = "email@example.com"
+}
 ```
-$ terraform import aws_ses_email_identity.example email@example.com
+
+Using `terraform import`, import SES email identities using the email address. For example:
+
+```console
+% terraform import aws_ses_email_identity.example email@example.com
 ```

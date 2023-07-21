@@ -52,10 +52,39 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import Security Hub standards subscriptions using the standards subscription ARN. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Security Hub standards subscriptions using the standards subscription ARN. For example:
 
+```terraform
+import {
+  to = aws_securityhub_standards_subscription.cis
+  id = "arn:aws:securityhub:eu-west-1:123456789012:subscription/cis-aws-foundations-benchmark/v/1.2.0"
+}
 ```
-$ terraform import aws_securityhub_standards_subscription.cis arn:aws:securityhub:eu-west-1:123456789012:subscription/cis-aws-foundations-benchmark/v/1.2.0
-$ terraform import aws_securityhub_standards_subscription.pci_321 arn:aws:securityhub:eu-west-1:123456789012:subscription/pci-dss/v/3.2.1
-$ terraform import aws_securityhub_standards_subscription.nist_800_53_rev_5 arn:aws:securityhub:eu-west-1:123456789012:subscription/nist-800-53/v/5.0.0
+
+```terraform
+import {
+  to = aws_securityhub_standards_subscription.pci_321
+  id = "arn:aws:securityhub:eu-west-1:123456789012:subscription/pci-dss/v/3.2.1"
+}
+```
+
+```terraform
+import {
+  to = aws_securityhub_standards_subscription.nist_800_53_rev_5
+  id = "arn:aws:securityhub:eu-west-1:123456789012:subscription/nist-800-53/v/5.0.0"
+}
+```
+
+Using `terraform import`, import Security Hub standards subscriptions using the standards subscription ARN. For example:
+
+```console
+% terraform import aws_securityhub_standards_subscription.cis arn:aws:securityhub:eu-west-1:123456789012:subscription/cis-aws-foundations-benchmark/v/1.2.0
+```
+
+```console
+% terraform import aws_securityhub_standards_subscription.pci_321 arn:aws:securityhub:eu-west-1:123456789012:subscription/pci-dss/v/3.2.1
+```
+
+```console
+% terraform import aws_securityhub_standards_subscription.nist_800_53_rev_5 arn:aws:securityhub:eu-west-1:123456789012:subscription/nist-800-53/v/5.0.0
 ```

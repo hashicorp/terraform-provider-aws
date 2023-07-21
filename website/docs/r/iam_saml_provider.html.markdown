@@ -37,8 +37,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import IAM SAML Providers using the `arn`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import IAM SAML Providers using the `arn`. For example:
 
+```terraform
+import {
+  to = aws_iam_saml_provider.default
+  id = "arn:aws:iam::123456789012:saml-provider/SAMLADFS"
+}
 ```
-$ terraform import aws_iam_saml_provider.default arn:aws:iam::123456789012:saml-provider/SAMLADFS
+
+Using `terraform import`, import IAM SAML Providers using the `arn`. For example:
+
+```console
+% terraform import aws_iam_saml_provider.default arn:aws:iam::123456789012:saml-provider/SAMLADFS
 ```

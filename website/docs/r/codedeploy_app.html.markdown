@@ -61,8 +61,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import CodeDeploy Applications using the `name`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import CodeDeploy Applications using the `name`. For example:
 
+```terraform
+import {
+  to = aws_codedeploy_app.example
+  id = "my-application"
+}
 ```
-$ terraform import aws_codedeploy_app.example my-application
+
+Using `terraform import`, import CodeDeploy Applications using the `name`. For example:
+
+```console
+% terraform import aws_codedeploy_app.example my-application
 ```

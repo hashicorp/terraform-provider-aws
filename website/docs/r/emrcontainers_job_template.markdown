@@ -100,8 +100,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import EKS job templates using the `id`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import EKS job templates using the `id`. For example:
 
+```terraform
+import {
+  to = aws_emrcontainers_job_template.example
+  id = "a1b2c3d4e5f6g7h8i9j10k11l"
+}
 ```
-$ terraform import aws_emrcontainers_job_template.example a1b2c3d4e5f6g7h8i9j10k11l
+
+Using `terraform import`, import EKS job templates using the `id`. For example:
+
+```console
+% terraform import aws_emrcontainers_job_template.example a1b2c3d4e5f6g7h8i9j10k11l
 ```

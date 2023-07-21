@@ -93,8 +93,17 @@ This resource exports no additional attributes.
 
 ## Import
 
-Import SSM Contact Plan using the Contact ARN. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import SSM Contact Plan using the Contact ARN. For example:
 
+```terraform
+import {
+  to = aws_ssmcontacts_plan.example
+  id = "{ARNValue}"
+}
 ```
-$ terraform import aws_ssmcontacts_plan.example {ARNValue}
+
+Using `terraform import`, import SSM Contact Plan using the Contact ARN. For example:
+
+```console
+% terraform import aws_ssmcontacts_plan.example {ARNValue}
 ```

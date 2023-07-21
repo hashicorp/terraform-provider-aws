@@ -443,8 +443,17 @@ For `instance_market_options`, in addition to the arguments above, the following
 
 ## Import
 
-Import Instances using the `id`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import instances using the `id`. For example:
 
+```terraform
+import {
+  to = aws_instance.web
+  id = "i-12345678"
+}
 ```
-$ terraform import aws_instance.web i-12345678
+
+Using `terraform import`, import instances using the `id`. For example:
+
+```console
+% terraform import aws_instance.web i-12345678
 ```

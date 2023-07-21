@@ -55,8 +55,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import `aws_ec2_transit_gateway_connect_peer` using the EC2 Transit Gateway Connect Peer identifier. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_ec2_transit_gateway_connect_peer` using the EC2 Transit Gateway Connect Peer identifier. For example:
 
+```terraform
+import {
+  to = aws_ec2_transit_gateway_connect_peer.example
+  id = "tgw-connect-peer-12345678"
+}
 ```
-$ terraform import aws_ec2_transit_gateway_connect_peer.example tgw-connect-peer-12345678
+
+Using `terraform import`, import `aws_ec2_transit_gateway_connect_peer` using the EC2 Transit Gateway Connect Peer identifier. For example:
+
+```console
+% terraform import aws_ec2_transit_gateway_connect_peer.example tgw-connect-peer-12345678
 ```

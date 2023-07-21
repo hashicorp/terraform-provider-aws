@@ -251,8 +251,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import Cognito User Pools using the `id`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Cognito User Pools using the `id`. For example:
 
+```terraform
+import {
+  to = aws_cognito_user_pool.pool
+  id = "us-west-2_abc123"
+}
 ```
-$ terraform import aws_cognito_user_pool.pool us-west-2_abc123
+
+Using `terraform import`, import Cognito User Pools using the `id`. For example:
+
+```console
+% terraform import aws_cognito_user_pool.pool us-west-2_abc123
 ```

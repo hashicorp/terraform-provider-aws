@@ -102,8 +102,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import Elastic Transcoder pipelines using the `id`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Elastic Transcoder pipelines using the `id`. For example:
 
+```terraform
+import {
+  to = aws_elastictranscoder_pipeline.basic_pipeline
+  id = "1407981661351-cttk8b"
+}
 ```
-$ terraform import aws_elastictranscoder_pipeline.basic_pipeline 1407981661351-cttk8b
+
+Using `terraform import`, import Elastic Transcoder pipelines using the `id`. For example:
+
+```console
+% terraform import aws_elastictranscoder_pipeline.basic_pipeline 1407981661351-cttk8b
 ```

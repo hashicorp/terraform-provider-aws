@@ -57,8 +57,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import SNS Data Protection Topic Policy using the topic ARN. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import SNS Data Protection Topic Policy using the topic ARN. For example:
 
+```terraform
+import {
+  to = aws_sns_topic_data_protection_policy.example
+  id = "arn:aws:sns:us-west-2:0123456789012:example"
+}
 ```
-$ terraform import aws_sns_topic_data_protection_policy.example arn:aws:sns:us-west-2:0123456789012:example
+
+Using `terraform import`, import SNS Data Protection Topic Policy using the topic ARN. For example:
+
+```console
+% terraform import aws_sns_topic_data_protection_policy.example arn:aws:sns:us-west-2:0123456789012:example
 ```

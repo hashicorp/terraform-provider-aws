@@ -150,10 +150,19 @@ or accept the connection manually using the AWS Management Console, AWS CLI, thr
 
 ## Import
 
-Import VPC Peering resources using the `vpc peering id`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import VPC Peering resources using the VPC peering `id`. For example:
 
-```sh
-$ terraform import aws_vpc_peering_connection.test_connection pcx-111aaa111
+```terraform
+import {
+  to = aws_vpc_peering_connection.test_connection
+  id = "pcx-111aaa111"
+}
+```
+
+Using `terraform import`, import VPC Peering resources using the VPC peering `id`. For example:
+
+```console
+% terraform import aws_vpc_peering_connection.test_connection pcx-111aaa111
 ```
 
 [1]: /docs/providers/aws/index.html

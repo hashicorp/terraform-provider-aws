@@ -41,8 +41,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import `aws_lightsail_bucket` using the `name` attribute. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_lightsail_bucket` using the `name` attribute. For example:
 
+```terraform
+import {
+  to = aws_lightsail_bucket.test
+  id = "example-bucket"
+}
 ```
-$ terraform import aws_lightsail_bucket.test example-bucket
+
+Using `terraform import`, import `aws_lightsail_bucket` using the `name` attribute. For example:
+
+```console
+% terraform import aws_lightsail_bucket.test example-bucket
 ```

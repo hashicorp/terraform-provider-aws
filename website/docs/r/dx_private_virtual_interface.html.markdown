@@ -62,8 +62,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import Direct Connect private virtual interfaces using the `vif id`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Direct Connect private virtual interfaces using the VIF `id`. For example:
 
+```terraform
+import {
+  to = aws_dx_private_virtual_interface.test
+  id = "dxvif-33cc44dd"
+}
 ```
-$ terraform import aws_dx_private_virtual_interface.test dxvif-33cc44dd
+
+Using `terraform import`, import Direct Connect private virtual interfaces using the VIF `id`. For example:
+
+```console
+% terraform import aws_dx_private_virtual_interface.test dxvif-33cc44dd
 ```

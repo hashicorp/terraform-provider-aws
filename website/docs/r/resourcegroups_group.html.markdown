@@ -68,8 +68,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import Resource groups using the `name`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import resource groups using the `name`. For example:
 
+```terraform
+import {
+  to = aws_resourcegroups_group.foo
+  id = "resource-group-name"
+}
 ```
-$ terraform import aws_resourcegroups_group.foo resource-group-name
+
+Using `terraform import`, import resource groups using the `name`. For example:
+
+```console
+% terraform import aws_resourcegroups_group.foo resource-group-name
 ```

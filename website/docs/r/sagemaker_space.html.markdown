@@ -75,8 +75,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import SageMaker Spaces using the `id`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import SageMaker Spaces using the `id`. For example:
 
+```terraform
+import {
+  to = aws_sagemaker_space.test_space
+  id = "arn:aws:sagemaker:us-west-2:123456789012:space/domain-id/space-name"
+}
 ```
-$ terraform import aws_sagemaker_space.test_space arn:aws:sagemaker:us-west-2:123456789012:space/domain-id/space-name
+
+Using `terraform import`, import SageMaker Spaces using the `id`. For example:
+
+```console
+% terraform import aws_sagemaker_space.test_space arn:aws:sagemaker:us-west-2:123456789012:space/domain-id/space-name
 ```

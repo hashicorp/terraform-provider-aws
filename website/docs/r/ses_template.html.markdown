@@ -39,8 +39,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import SES templates using the template name. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import SES templates using the template name. For example:
 
+```terraform
+import {
+  to = aws_ses_template.MyTemplate
+  id = "MyTemplate"
+}
 ```
-$ terraform import aws_ses_template.MyTemplate MyTemplate
+
+Using `terraform import`, import SES templates using the template name. For example:
+
+```console
+% terraform import aws_ses_template.MyTemplate MyTemplate
 ```

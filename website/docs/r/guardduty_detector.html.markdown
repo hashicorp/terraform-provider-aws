@@ -111,10 +111,19 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import GuardDuty detectors using the detector ID. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import GuardDuty detectors using the detector ID. For example:
 
+```terraform
+import {
+  to = aws_guardduty_detector.MyDetector
+  id = "00b00fd5aecc0ab60a708659477e9617"
+}
 ```
-$ terraform import aws_guardduty_detector.MyDetector 00b00fd5aecc0ab60a708659477e9617
+
+Using `terraform import`, import GuardDuty detectors using the detector ID. For example:
+
+```console
+% terraform import aws_guardduty_detector.MyDetector 00b00fd5aecc0ab60a708659477e9617
 ```
 
 The ID of the detector can be retrieved via the [AWS CLI](https://awscli.amazonaws.com/v2/documentation/api/latest/reference/guardduty/list-detectors.html) using `aws guardduty list-detectors`.

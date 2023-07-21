@@ -111,8 +111,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import Firewall Manager policies using the policy ID. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Firewall Manager policies using the policy ID. For example:
 
+```terraform
+import {
+  to = aws_fms_policy.example
+  id = "5be49585-a7e3-4c49-dde1-a179fe4a619a"
+}
 ```
-$ terraform import aws_fms_policy.example 5be49585-a7e3-4c49-dde1-a179fe4a619a
+
+Using `terraform import`, import Firewall Manager policies using the policy ID. For example:
+
+```console
+% terraform import aws_fms_policy.example 5be49585-a7e3-4c49-dde1-a179fe4a619a
 ```

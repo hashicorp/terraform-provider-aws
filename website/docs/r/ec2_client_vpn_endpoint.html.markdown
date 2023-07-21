@@ -92,8 +92,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import AWS Client VPN endpoints using the `id` value found via `aws ec2 describe-client-vpn-endpoints`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import AWS Client VPN endpoints using the `id` value found via `aws ec2 describe-client-vpn-endpoints`. For example:
 
+```terraform
+import {
+  to = aws_ec2_client_vpn_endpoint.example
+  id = "cvpn-endpoint-0ac3a1abbccddd666"
+}
 ```
-$ terraform import aws_ec2_client_vpn_endpoint.example cvpn-endpoint-0ac3a1abbccddd666
+
+Using `terraform import`, import AWS Client VPN endpoints using the `id` value found via `aws ec2 describe-client-vpn-endpoints`. For example:
+
+```console
+% terraform import aws_ec2_client_vpn_endpoint.example cvpn-endpoint-0ac3a1abbccddd666
 ```

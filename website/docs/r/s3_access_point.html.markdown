@@ -102,14 +102,36 @@ Note: S3 access points only support secure access by HTTPS. HTTP isn't supported
 
 ## Import
 
-Import this resource using the `account_id` and `name` separated by a colon (`:`) for Access Points associated with an AWS Partition S3 Bucket. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import this resource using the `account_id` and `name` separated by a colon (`:`) for Access Points associated with an AWS Partition S3 Bucket or the ARN for Access Points associated with an S3 on Outposts Bucket. For example:
 
-```
-$ terraform import aws_s3_access_point.example 123456789012:example
+Import using the `account_id` and `name` separated by a colon (`:`) for Access Points associated with an AWS Partition S3 Bucket:
+
+```terraform
+import {
+  to = aws_s3_access_point.example
+  id = "123456789012:example"
+}
 ```
 
-Import this resource using the ARN for Access Points associated with an S3 on Outposts Bucket. For example:
+Import using the ARN for Access Points associated with an S3 on Outposts Bucket:
 
+```terraform
+import {
+  to = aws_s3_access_point.example
+  id = "arn:aws:s3-outposts:us-east-1:123456789012:outpost/op-1234567890123456/accesspoint/example"
+}
 ```
-$ terraform import aws_s3_access_point.example arn:aws:s3-outposts:us-east-1:123456789012:outpost/op-1234567890123456/accesspoint/example
+
+**Using `terraform import` to import.** For example:
+
+Import using the `account_id` and `name` separated by a colon (`:`) for Access Points associated with an AWS Partition S3 Bucket:
+
+```console
+% terraform import aws_s3_access_point.example 123456789012:example
+```
+
+Import using the ARN for Access Points associated with an S3 on Outposts Bucket:
+
+```console
+% terraform import aws_s3_access_point.example arn:aws:s3-outposts:us-east-1:123456789012:outpost/op-1234567890123456/accesspoint/example
 ```
