@@ -86,6 +86,7 @@ type fieldVisitor interface {
 
 type expandVisitor struct{}
 
+// visit copies a single Plugin Framework structure field value to its AWS API equivalent.
 func (visitor expandVisitor) visit(ctx context.Context, fieldName string, valFrom, valTo reflect.Value) error {
 	vFrom, ok := valFrom.Interface().(attr.Value)
 	if !ok {
@@ -105,33 +106,8 @@ func (visitor expandVisitor) visit(ctx context.Context, fieldName string, valFro
 		return fwdiag.DiagnosticsError(diags)
 
 	case basetypes.Float64Valuable:
-		v, diags := vFrom.ToFloat64Value(ctx)
-		if err := fwdiag.DiagnosticsError(diags); err != nil {
-			return err
-		}
-		switch vFrom := v.ValueFloat64(); kTo {
-		case reflect.Float32, reflect.Float64:
-			//
-			// types.Float32/types.Float64 -> float32/float64.
-			//
-			valTo.SetFloat(vFrom)
-			return nil
-		case reflect.Ptr:
-			switch valTo.Type().Elem().Kind() {
-			case reflect.Float32:
-				//
-				// types.Float32/types.Float64 -> *float32.
-				//
-				valTo.Set(reflect.ValueOf(aws.Float32(float32(vFrom))))
-				return nil
-			case reflect.Float64:
-				//
-				// types.Float32/types.Float64 -> *float64.
-				//
-				valTo.Set(reflect.ValueOf(aws.Float64(vFrom)))
-				return nil
-			}
-		}
+		diags := visitor.float64(ctx, vFrom, valTo)
+		return fwdiag.DiagnosticsError(diags)
 
 	case basetypes.Int64Valuable:
 		v, diags := vFrom.ToInt64Value(ctx)
@@ -319,6 +295,7 @@ func (visitor expandVisitor) visit(ctx context.Context, fieldName string, valFro
 	return fmt.Errorf("incompatible (%s): %s", tFrom, kTo)
 }
 
+// bool copies a Plugin Framework Bool(ish) value to a compatible AWS API field.
 func (visitor expandVisitor) bool(ctx context.Context, vFrom basetypes.BoolValuable, vTo reflect.Value) diag.Diagnostics {
 	v, diags := vFrom.ToBoolValue(ctx)
 	if diags.HasError() {
@@ -339,6 +316,42 @@ func (visitor expandVisitor) bool(ctx context.Context, vFrom basetypes.BoolValua
 			// types.Bool -> *bool.
 			//
 			vTo.Set(reflect.ValueOf(aws.Bool(vFrom)))
+			return diags
+		}
+	}
+
+	diags.Append(visitor.newIncompatibleTypesError(ctx, vFrom, vTo))
+
+	return diags
+}
+
+// float64 copies a Plugin Framework Float64(ish) value to a compatible AWS API field.
+func (visitor expandVisitor) float64(ctx context.Context, vFrom basetypes.Float64Valuable, vTo reflect.Value) diag.Diagnostics {
+	v, diags := vFrom.ToFloat64Value(ctx)
+	if diags.HasError() {
+		return diags
+	}
+
+	switch vFrom := v.ValueFloat64(); vTo.Kind() {
+	case reflect.Float32, reflect.Float64:
+		//
+		// types.Float32/types.Float64 -> float32/float64.
+		//
+		vTo.SetFloat(vFrom)
+		return diags
+	case reflect.Ptr:
+		switch vTo.Type().Elem().Kind() {
+		case reflect.Float32:
+			//
+			// types.Float32/types.Float64 -> *float32.
+			//
+			vTo.Set(reflect.ValueOf(aws.Float32(float32(vFrom))))
+			return diags
+		case reflect.Float64:
+			//
+			// types.Float32/types.Float64 -> *float64.
+			//
+			vTo.Set(reflect.ValueOf(aws.Float64(vFrom)))
 			return diags
 		}
 	}
