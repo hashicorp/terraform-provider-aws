@@ -122,8 +122,17 @@ attribute once the route resource is created.
 
 ## Import
 
-Import Route Tables using the route table `id`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Route Tables using the route table `id`. For example:
 
+```terraform
+import {
+  to = aws_route_table.public_rt
+  id = "rtb-4e616f6d69"
+}
 ```
-$ terraform import aws_route_table.public_rt rtb-4e616f6d69
+
+Using `terraform import`, import Route Tables using the route table `id`. For example:
+
+```console
+% terraform import aws_route_table.public_rt rtb-4e616f6d69
 ```

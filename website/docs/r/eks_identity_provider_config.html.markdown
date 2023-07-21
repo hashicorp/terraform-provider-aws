@@ -61,8 +61,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import EKS Identity Provider Configurations using the `cluster_name` and `identity_provider_config_name` separated by a colon (`:`). For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import EKS Identity Provider Configurations using the `cluster_name` and `identity_provider_config_name` separated by a colon (`:`). For example:
 
+```terraform
+import {
+  to = aws_eks_identity_provider_config.my_identity_provider_config
+  id = "my_cluster:my_identity_provider_config"
+}
 ```
-$ terraform import aws_eks_identity_provider_config.my_identity_provider_config my_cluster:my_identity_provider_config
+
+Using `terraform import`, import EKS Identity Provider Configurations using the `cluster_name` and `identity_provider_config_name` separated by a colon (`:`). For example:
+
+```console
+% terraform import aws_eks_identity_provider_config.my_identity_provider_config my_cluster:my_identity_provider_config
 ```

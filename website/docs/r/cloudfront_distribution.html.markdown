@@ -466,8 +466,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import CloudFront Distributions using the `id`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import CloudFront Distributions using the `id`. For example:
 
+```terraform
+import {
+  to = aws_cloudfront_distribution.distribution
+  id = "E74FTE3EXAMPLE"
+}
 ```
-$ terraform import aws_cloudfront_distribution.distribution E74FTE3EXAMPLE
+
+Using `terraform import`, import CloudFront Distributions using the `id`. For example:
+
+```console
+% terraform import aws_cloudfront_distribution.distribution E74FTE3EXAMPLE
 ```

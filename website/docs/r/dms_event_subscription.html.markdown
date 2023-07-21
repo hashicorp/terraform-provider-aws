@@ -56,8 +56,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import Event subscriptions using the `name`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import event subscriptions using the `name`. For example:
 
+```terraform
+import {
+  to = aws_dms_event_subscription.test
+  id = "my-awesome-event-subscription"
+}
 ```
-$ terraform import aws_dms_event_subscription.test my-awesome-event-subscription
+
+Using `terraform import`, import event subscriptions using the `name`. For example:
+
+```console
+% terraform import aws_dms_event_subscription.test my-awesome-event-subscription
 ```

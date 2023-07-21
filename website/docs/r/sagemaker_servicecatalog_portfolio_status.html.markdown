@@ -34,8 +34,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import Models using the `id`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import models using the `id`. For example:
 
+```terraform
+import {
+  to = aws_sagemaker_servicecatalog_portfolio_status.example
+  id = "us-east-1"
+}
 ```
-$ terraform import aws_sagemaker_servicecatalog_portfolio_status.example us-east-1
+
+Using `terraform import`, import models using the `id`. For example:
+
+```console
+% terraform import aws_sagemaker_servicecatalog_portfolio_status.example us-east-1
 ```

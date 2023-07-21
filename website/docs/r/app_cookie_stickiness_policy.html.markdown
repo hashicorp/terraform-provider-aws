@@ -57,8 +57,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import Application cookie stickiness policies using the ELB name, port, and policy name separated by colons (`:`). For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import application cookie stickiness policies using the ELB name, port, and policy name separated by colons (`:`). For example:
 
-```sh
-$ terraform import aws_app_cookie_stickiness_policy.example my-elb:80:my-policy
+```terraform
+import {
+  to = aws_app_cookie_stickiness_policy.example
+  id = "my-elb:80:my-policy"
+}
+```
+
+Using `terraform import`, import application cookie stickiness policies using the ELB name, port, and policy name separated by colons (`:`). For example:
+
+```console
+% terraform import aws_app_cookie_stickiness_policy.example my-elb:80:my-policy
 ```

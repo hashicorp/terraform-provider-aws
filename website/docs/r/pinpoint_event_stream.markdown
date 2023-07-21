@@ -76,8 +76,17 @@ This resource exports no additional attributes.
 
 ## Import
 
-Import Pinpoint Event Stream using the `application-id`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Pinpoint Event Stream using the `application-id`. For example:
 
+```terraform
+import {
+  to = aws_pinpoint_event_stream.stream
+  id = "application-id"
+}
 ```
-$ terraform import aws_pinpoint_event_stream.stream application-id
+
+Using `terraform import`, import Pinpoint Event Stream using the `application-id`. For example:
+
+```console
+% terraform import aws_pinpoint_event_stream.stream application-id
 ```

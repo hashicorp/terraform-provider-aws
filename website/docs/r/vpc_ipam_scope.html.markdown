@@ -50,8 +50,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import IPAMs using the `scope_id`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import IPAMs using the `scope_id`. For example:
 
+```terraform
+import {
+  to = aws_vpc_ipam_scope.example
+  id = "ipam-scope-0513c69f283d11dfb"
+}
 ```
-$ terraform import aws_vpc_ipam_scope.example ipam-scope-0513c69f283d11dfb
+
+Using `terraform import`, import IPAMs using the `scope_id`. For example:
+
+```console
+% terraform import aws_vpc_ipam_scope.example ipam-scope-0513c69f283d11dfb
 ```

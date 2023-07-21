@@ -37,8 +37,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import Redshift Cluster IAM Roless using the `cluster_identifier`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Redshift Cluster IAM Roless using the `cluster_identifier`. For example:
 
+```terraform
+import {
+  to = aws_redshift_cluster_iam_roles.examplegroup1
+  id = "example"
+}
 ```
-$ terraform import aws_redshift_cluster_iam_roles.examplegroup1 example
+
+Using `terraform import`, import Redshift Cluster IAM Roless using the `cluster_identifier`. For example:
+
+```console
+% terraform import aws_redshift_cluster_iam_roles.examplegroup1 example
 ```

@@ -46,8 +46,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import Redshift Serverless Resource Policies using the `resource_arn`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Redshift Serverless Resource Policies using the `resource_arn`. For example:
 
+```terraform
+import {
+  to = aws_redshiftserverless_resource_policy.example
+  id = "example"
+}
 ```
-$ terraform import aws_redshiftserverless_resource_policy.example example
+
+Using `terraform import`, import Redshift Serverless Resource Policies using the `resource_arn`. For example:
+
+```console
+% terraform import aws_redshiftserverless_resource_policy.example example
 ```

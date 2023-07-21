@@ -192,8 +192,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import Config Rule using the name. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Config Rule using the name. For example:
 
+```terraform
+import {
+  to = aws_config_config_rule.foo
+  id = "example"
+}
 ```
-$ terraform import aws_config_config_rule.foo example
+
+Using `terraform import`, import Config Rule using the name. For example:
+
+```console
+% terraform import aws_config_config_rule.foo example
 ```

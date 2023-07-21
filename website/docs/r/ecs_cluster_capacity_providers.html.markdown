@@ -54,8 +54,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import ECS cluster capacity providers using the `cluster_name` attribute. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import ECS cluster capacity providers using the `cluster_name` attribute. For example:
 
+```terraform
+import {
+  to = aws_ecs_cluster_capacity_providers.example
+  id = "my-cluster"
+}
 ```
-$ terraform import aws_ecs_cluster_capacity_providers.example my-cluster
+
+Using `terraform import`, import ECS cluster capacity providers using the `cluster_name` attribute. For example:
+
+```console
+% terraform import aws_ecs_cluster_capacity_providers.example my-cluster
 ```

@@ -64,8 +64,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import GameLift Game Session Queues using their `name`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import GameLift Game Session Queues using their `name`. For example:
 
+```terraform
+import {
+  to = aws_gamelift_game_session_queue.example
+  id = "example"
+}
 ```
-$ terraform import aws_gamelift_game_session_queue.example example
+
+Using `terraform import`, import GameLift Game Session Queues using their `name`. For example:
+
+```console
+% terraform import aws_gamelift_game_session_queue.example example
 ```

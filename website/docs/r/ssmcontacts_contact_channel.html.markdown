@@ -75,8 +75,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import SSM Contact Channel using the `ARN`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import SSM Contact Channel using the `ARN`. For example:
 
+```terraform
+import {
+  to = aws_ssmcontacts_contact_channel.example
+  id = "arn:aws:ssm-contacts:us-west-2:123456789012:contact-channel/example"
+}
 ```
-$ terraform import aws_ssmcontacts_contact_channel.example arn:aws:ssm-contacts:us-west-2:123456789012:contact-channel/example
+
+Using `terraform import`, import SSM Contact Channel using the `ARN`. For example:
+
+```console
+% terraform import aws_ssmcontacts_contact_channel.example arn:aws:ssm-contacts:us-west-2:123456789012:contact-channel/example
 ```
