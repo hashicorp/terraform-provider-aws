@@ -110,33 +110,8 @@ func (visitor expandVisitor) visit(ctx context.Context, fieldName string, valFro
 		return fwdiag.DiagnosticsError(diags)
 
 	case basetypes.Int64Valuable:
-		v, diags := vFrom.ToInt64Value(ctx)
-		if err := fwdiag.DiagnosticsError(diags); err != nil {
-			return err
-		}
-		switch vFrom := v.ValueInt64(); kTo {
-		case reflect.Int32, reflect.Int64:
-			//
-			// types.Int32/types.Int64 -> int32/int64.
-			//
-			valTo.SetInt(vFrom)
-			return nil
-		case reflect.Ptr:
-			switch valTo.Type().Elem().Kind() {
-			case reflect.Int32:
-				//
-				// types.Int32/types.Int64 -> *int32.
-				//
-				valTo.Set(reflect.ValueOf(aws.Int32(int32(vFrom))))
-				return nil
-			case reflect.Int64:
-				//
-				// types.Int32/types.Int64 -> *int64.
-				//
-				valTo.Set(reflect.ValueOf(aws.Int64(vFrom)))
-				return nil
-			}
-		}
+		diags := visitor.int64(ctx, vFrom, valTo)
+		return fwdiag.DiagnosticsError(diags)
 
 	case basetypes.StringValuable:
 		v, diags := vFrom.ToStringValue(ctx)
@@ -352,6 +327,42 @@ func (visitor expandVisitor) float64(ctx context.Context, vFrom basetypes.Float6
 			// types.Float32/types.Float64 -> *float64.
 			//
 			vTo.Set(reflect.ValueOf(aws.Float64(vFrom)))
+			return diags
+		}
+	}
+
+	diags.Append(visitor.newIncompatibleTypesError(ctx, vFrom, vTo))
+
+	return diags
+}
+
+// int64 copies a Plugin Framework Int64(ish) value to a compatible AWS API field.
+func (visitor expandVisitor) int64(ctx context.Context, vFrom basetypes.Int64Valuable, vTo reflect.Value) diag.Diagnostics {
+	v, diags := vFrom.ToInt64Value(ctx)
+	if diags.HasError() {
+		return diags
+	}
+
+	switch vFrom := v.ValueInt64(); vTo.Kind() {
+	case reflect.Int32, reflect.Int64:
+		//
+		// types.Int32/types.Int64 -> int32/int64.
+		//
+		vTo.SetInt(vFrom)
+		return diags
+	case reflect.Ptr:
+		switch vTo.Type().Elem().Kind() {
+		case reflect.Int32:
+			//
+			// types.Int32/types.Int64 -> *int32.
+			//
+			vTo.Set(reflect.ValueOf(aws.Int32(int32(vFrom))))
+			return diags
+		case reflect.Int64:
+			//
+			// types.Int32/types.Int64 -> *int64.
+			//
+			vTo.Set(reflect.ValueOf(aws.Int64(vFrom)))
 			return diags
 		}
 	}
