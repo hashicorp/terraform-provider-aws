@@ -2,6 +2,9 @@
 
 BUG FIXES:
 
+* aws_quicksight_analysis: grid layout `optimized_view_port_width` argument changed to optional ([#32644](https://github.com/hashicorp/terraform-provider-aws/issues/32644))
+* aws_quicksight_dashboard: grid layout `optimized_view_port_width` argument changed to optional ([#32644](https://github.com/hashicorp/terraform-provider-aws/issues/32644))
+* aws_quicksight_template: grid layout `optimized_view_port_width` argument changed to optional ([#32644](https://github.com/hashicorp/terraform-provider-aws/issues/32644))
 * resource/aws_finspace_kx_cluster: `database.cache_configurations.db_paths` argument is now optional ([#32579](https://github.com/hashicorp/terraform-provider-aws/issues/32579))
 * resource/aws_finspace_kx_cluster: `database.cache_configurations` argument is now optional ([#32579](https://github.com/hashicorp/terraform-provider-aws/issues/32579))
 
