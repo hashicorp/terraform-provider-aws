@@ -69,7 +69,7 @@ This resource supports the following arguments:
 * `subnet_id` - (Required) The Subnet ID of the subnet in which to place the gateway.
 * `secondary_allocation_ids` - (Optional) A list of secondary allocation EIP IDs for this NAT gateway.
 * `secondary_private_ip_address_count` - (Optional) [Private NAT gateway only] The number of secondary private IPv4 addresses you want to assign to the NAT gateway.
-* `secondary_private_ip_addresses` - (Optional) A list of private IP addresses to assign to the NAT Gateway.
+* `secondary_private_ip_addresses` - (Optional) A list of secondary private IPv4 addresses to assign to the NAT Gateway.
 * `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Attribute Reference

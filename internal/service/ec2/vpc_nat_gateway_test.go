@@ -41,6 +41,9 @@ func TestAccVPCNATGateway_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "network_interface_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "private_ip"),
 					resource.TestCheckResourceAttrSet(resourceName, "public_ip"),
+					resource.TestCheckResourceAttr(resourceName, "secondary_allocation_ids.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "secondary_private_ip_address_count", "0"),
+					resource.TestCheckResourceAttr(resourceName, "secondary_private_ip_addresses.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "tags.#", "0"),
 				),
 			},
@@ -99,8 +102,9 @@ func TestAccVPCNATGateway_ConnectivityType_private(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "network_interface_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "private_ip"),
 					resource.TestCheckResourceAttr(resourceName, "public_ip", ""),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.Name", rName),
+					resource.TestCheckResourceAttr(resourceName, "secondary_allocation_ids.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "secondary_private_ip_address_count", "0"),
+					resource.TestCheckResourceAttr(resourceName, "secondary_private_ip_addresses.#", "0"),
 				),
 			},
 			{
@@ -134,6 +138,9 @@ func TestAccVPCNATGateway_privateIP(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "network_interface_id"),
 					resource.TestCheckResourceAttr(resourceName, "private_ip", "10.0.0.8"),
 					resource.TestCheckResourceAttr(resourceName, "public_ip", ""),
+					resource.TestCheckResourceAttr(resourceName, "secondary_allocation_ids.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "secondary_private_ip_address_count", "0"),
+					resource.TestCheckResourceAttr(resourceName, "secondary_private_ip_addresses.#", "0"),
 				),
 			},
 			{
@@ -210,17 +217,14 @@ func TestAccVPCNATGateway_secondaryAllocationIDs(t *testing.T) {
 					testAccCheckNATGatewayExists(ctx, resourceName, &natGateway),
 					resource.TestCheckResourceAttr(resourceName, "secondary_allocation_ids.#", "1"),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "secondary_allocation_ids.*", eipResourceName, "id"),
+					resource.TestCheckResourceAttr(resourceName, "secondary_private_ip_address_count", "1"),
+					resource.TestCheckResourceAttr(resourceName, "secondary_private_ip_addresses.#", "1"),
 				),
 			},
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
-				ImportStateVerifyIgnore: []string{
-					"secondary_allocation_ids",
-					"secondary_private_ip_addresses",
-					"secondary_private_ip_address_count",
-				},
 			},
 		},
 	})
@@ -244,19 +248,15 @@ func TestAccVPCNATGateway_secondaryPrivateIPAddressCount(t *testing.T) {
 				Config: testAccVPCNATGatewayConfig_secondaryPrivateIPAddressCount(rName, secondaryPrivateIpAddressCount),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckNATGatewayExists(ctx, resourceName, &natGateway),
-					resource.TestCheckResourceAttrSet(resourceName, "secondary_private_ip_address_count"),
+					resource.TestCheckResourceAttr(resourceName, "secondary_allocation_ids.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "secondary_private_ip_address_count", strconv.Itoa(secondaryPrivateIpAddressCount)),
+					resource.TestCheckResourceAttr(resourceName, "secondary_private_ip_addresses.#", strconv.Itoa(secondaryPrivateIpAddressCount)),
 				),
 			},
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
-				ImportStateVerifyIgnore: []string{
-					"secondary_allocation_ids",
-					"secondary_private_ip_addresses",
-					"secondary_private_ip_address_count",
-				},
 			},
 		},
 	})
@@ -281,6 +281,7 @@ func TestAccVPCNATGateway_secondaryPrivateIPAddresses(t *testing.T) {
 					testAccCheckNATGatewayExists(ctx, resourceName, &natGateway),
 					resource.TestCheckResourceAttr(resourceName, "secondary_allocation_ids.#", "1"),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "secondary_allocation_ids.*", eipResourceName, "id"),
+					resource.TestCheckResourceAttr(resourceName, "secondary_private_ip_address_count", "1"),
 					resource.TestCheckResourceAttr(resourceName, "secondary_private_ip_addresses.#", "1"),
 				),
 			},
@@ -288,17 +289,12 @@ func TestAccVPCNATGateway_secondaryPrivateIPAddresses(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
-				ImportStateVerifyIgnore: []string{
-					"secondary_allocation_ids",
-					"secondary_private_ip_addresses",
-					"secondary_private_ip_address_count",
-				},
 			},
 		},
 	})
 }
 
-func TestAccVPCNATGateway_secondaryPrivateIPAddresses_private(t *testing.T) {
+func TestAccVPCNATGateway_SecondaryPrivateIPAddresses_private(t *testing.T) {
 	ctx := acctest.Context(t)
 	var natGateway ec2.NatGateway
 	resourceName := "aws_nat_gateway.test"
@@ -314,6 +310,8 @@ func TestAccVPCNATGateway_secondaryPrivateIPAddresses_private(t *testing.T) {
 				Config: testAccVPCNATGatewayConfig_secondaryPrivateIPAddresses_private(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckNATGatewayExists(ctx, resourceName, &natGateway),
+					resource.TestCheckResourceAttr(resourceName, "secondary_allocation_ids.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "secondary_private_ip_address_count", "7"),
 					resource.TestCheckResourceAttr(resourceName, "secondary_private_ip_addresses.#", "7"),
 				),
 			},
@@ -321,11 +319,6 @@ func TestAccVPCNATGateway_secondaryPrivateIPAddresses_private(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
-				ImportStateVerifyIgnore: []string{
-					"secondary_allocation_ids",
-					"secondary_private_ip_addresses",
-					"secondary_private_ip_address_count",
-				},
 			},
 		},
 	})

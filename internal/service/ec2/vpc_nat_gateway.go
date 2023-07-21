@@ -76,12 +76,14 @@ func ResourceNATGateway() *schema.Resource {
 			"secondary_private_ip_address_count": {
 				Type:          schema.TypeInt,
 				Optional:      true,
+				Computed:      true,
 				ForceNew:      true,
 				ConflictsWith: []string{"secondary_private_ip_addresses"},
 			},
 			"secondary_private_ip_addresses": {
 				Type:          schema.TypeSet,
 				Optional:      true,
+				Computed:      true,
 				ForceNew:      true,
 				Elem:          &schema.Schema{Type: schema.TypeString},
 				ConflictsWith: []string{"secondary_private_ip_address_count"},
@@ -165,19 +167,30 @@ func resourceNATGatewayRead(ctx context.Context, d *schema.ResourceData, meta in
 		return diag.Errorf("reading EC2 NAT Gateway (%s): %s", d.Id(), err)
 	}
 
+	var secondaryAllocationIDs, secondaryPrivateIPAddresses []string
+
 	for _, address := range ng.NatGatewayAddresses {
 		// Length check guarantees the attributes are always set (#30865).
-		if len(ng.NatGatewayAddresses) == 1 || aws.BoolValue(address.IsPrimary) {
+		if isPrimary := aws.BoolValue(address.IsPrimary); isPrimary || len(ng.NatGatewayAddresses) == 1 {
 			d.Set("allocation_id", address.AllocationId)
 			d.Set("association_id", address.AssociationId)
 			d.Set("network_interface_id", address.NetworkInterfaceId)
 			d.Set("private_ip", address.PrivateIp)
 			d.Set("public_ip", address.PublicIp)
-			break
+		} else if !isPrimary {
+			if allocationID := aws.StringValue(address.AllocationId); allocationID != "" {
+				secondaryAllocationIDs = append(secondaryAllocationIDs, allocationID)
+			}
+			if privateIP := aws.StringValue(address.PrivateIp); privateIP != "" {
+				secondaryPrivateIPAddresses = append(secondaryPrivateIPAddresses, privateIP)
+			}
 		}
 	}
 
 	d.Set("connectivity_type", ng.ConnectivityType)
+	d.Set("secondary_allocation_ids", secondaryAllocationIDs)
+	d.Set("secondary_private_ip_address_count", len(secondaryPrivateIPAddresses))
+	d.Set("secondary_private_ip_addresses", secondaryPrivateIPAddresses)
 	d.Set("subnet_id", ng.SubnetId)
 
 	setTagsOut(ctx, ng.Tags)
