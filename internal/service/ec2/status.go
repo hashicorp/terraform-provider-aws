@@ -354,9 +354,25 @@ func StatusNATGatewayState(ctx context.Context, conn *ec2.EC2, id string) retry.
 	}
 }
 
-func StatusNATGatewayAddress(ctx context.Context, conn *ec2.EC2, id, privateIP string) retry.StateRefreshFunc {
+func StatusNATGatewayAddressByNATGatewayIDAndAllocationID(ctx context.Context, conn *ec2.EC2, natGatewayID, allocationID string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := FindNATGatewayAddressByTwoPartKey(ctx, conn, id, privateIP)
+		output, err := FindNATGatewayAddressByNATGatewayIDAndAllocationID(ctx, conn, natGatewayID, allocationID)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, aws.StringValue(output.Status), nil
+	}
+}
+
+func StatusNATGatewayAddressByNATGatewayIDAndPrivateIP(ctx context.Context, conn *ec2.EC2, natGatewayID, privateIP string) retry.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := FindNATGatewayAddressByNATGatewayIDAndPrivateIP(ctx, conn, natGatewayID, privateIP)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil

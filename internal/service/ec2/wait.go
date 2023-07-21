@@ -2093,11 +2093,11 @@ func WaitNATGatewayDeleted(ctx context.Context, conn *ec2.EC2, id string, timeou
 	return nil, err
 }
 
-func WaitNATGatewayAddressAssigned(ctx context.Context, conn *ec2.EC2, id, privateIP string, timeout time.Duration) (*ec2.NatGatewayAddress, error) {
+func WaitNATGatewayAddressAssigned(ctx context.Context, conn *ec2.EC2, natGatewayID, privateIP string, timeout time.Duration) (*ec2.NatGatewayAddress, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending: []string{ec2.NatGatewayAddressStatusAssigning},
 		Target:  []string{ec2.NatGatewayAddressStatusSucceeded},
-		Refresh: StatusNATGatewayAddress(ctx, conn, id, privateIP),
+		Refresh: StatusNATGatewayAddressByNATGatewayIDAndPrivateIP(ctx, conn, natGatewayID, privateIP),
 		Timeout: timeout,
 	}
 
@@ -2114,11 +2114,11 @@ func WaitNATGatewayAddressAssigned(ctx context.Context, conn *ec2.EC2, id, priva
 	return nil, err
 }
 
-func WaitNATGatewayAddressAssociated(ctx context.Context, conn *ec2.EC2, id, privateIP string, timeout time.Duration) (*ec2.NatGatewayAddress, error) {
+func WaitNATGatewayAddressAssociated(ctx context.Context, conn *ec2.EC2, natGatewayID, allocationID string, timeout time.Duration) (*ec2.NatGatewayAddress, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending: []string{ec2.NatGatewayAddressStatusAssociating},
 		Target:  []string{ec2.NatGatewayAddressStatusSucceeded},
-		Refresh: StatusNATGatewayAddress(ctx, conn, id, privateIP),
+		Refresh: StatusNATGatewayAddressByNATGatewayIDAndAllocationID(ctx, conn, natGatewayID, allocationID),
 		Timeout: timeout,
 	}
 
@@ -2135,11 +2135,11 @@ func WaitNATGatewayAddressAssociated(ctx context.Context, conn *ec2.EC2, id, pri
 	return nil, err
 }
 
-func WaitNATGatewayAddressDisassociated(ctx context.Context, conn *ec2.EC2, id, privateIP string, timeout time.Duration) (*ec2.NatGatewayAddress, error) {
+func WaitNATGatewayAddressDisassociated(ctx context.Context, conn *ec2.EC2, natGatewayID, allocationID string, timeout time.Duration) (*ec2.NatGatewayAddress, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending: []string{ec2.NatGatewayAddressStatusDisassociating},
 		Target:  []string{ec2.NatGatewayAddressStatusSucceeded},
-		Refresh: StatusNATGatewayAddress(ctx, conn, id, privateIP),
+		Refresh: StatusNATGatewayAddressByNATGatewayIDAndAllocationID(ctx, conn, natGatewayID, allocationID),
 		Timeout: timeout,
 	}
 
@@ -2156,11 +2156,11 @@ func WaitNATGatewayAddressDisassociated(ctx context.Context, conn *ec2.EC2, id, 
 	return nil, err
 }
 
-func WaitNATGatewayAddressUnassigned(ctx context.Context, conn *ec2.EC2, id, privateIP string, timeout time.Duration) (*ec2.NatGatewayAddress, error) {
+func WaitNATGatewayAddressUnassigned(ctx context.Context, conn *ec2.EC2, natGatewayID, privateIP string, timeout time.Duration) (*ec2.NatGatewayAddress, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending: []string{ec2.NatGatewayAddressStatusUnassigning},
 		Target:  []string{},
-		Refresh: StatusNATGatewayAddress(ctx, conn, id, privateIP),
+		Refresh: StatusNATGatewayAddressByNATGatewayIDAndPrivateIP(ctx, conn, natGatewayID, privateIP),
 		Timeout: timeout,
 	}
 
