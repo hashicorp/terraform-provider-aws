@@ -1,5 +1,9 @@
 ## 5.10.0 (Unreleased)
 
+FEATURES:
+
+* resource/aws_kms_grant: Allow usage of service principal as grantee and revoker. ([#32595](https://github.com/hashicorp/terraform-provider-aws/issues/32595))
+
 BUG FIXES:
 
 * aws_quicksight_analysis: grid layout `optimized_view_port_width` argument changed to optional ([#32644](https://github.com/hashicorp/terraform-provider-aws/issues/32644))
