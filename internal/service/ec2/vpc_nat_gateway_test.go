@@ -500,9 +500,13 @@ resource "aws_nat_gateway" "test" {
 }
 
 func testAccVPCNATGatewayConfig_secondaryAllocationIDs(rName string) string {
-	return acctest.ConfigCompose(testAccNATGatewayConfig_base(rName), `
+	return acctest.ConfigCompose(testAccNATGatewayConfig_base(rName), fmt.Sprintf(`
 resource "aws_eip" "secondary" {
   domain = "vpc"
+
+  tags = {
+    Name = %[1]q
+  }
 }
 
 resource "aws_nat_gateway" "test" {
@@ -510,28 +514,39 @@ resource "aws_nat_gateway" "test" {
   subnet_id                = aws_subnet.public.id
   secondary_allocation_ids = [aws_eip.secondary.id]
 
+  tags = {
+    Name = %[1]q
+  }
+
   depends_on = [aws_internet_gateway.test]
 }
-`)
+`, rName))
 }
 
 func testAccVPCNATGatewayConfig_secondaryPrivateIPAddressCount(rName string, secondaryPrivateIpAddressCount int) string {
-	return acctest.ConfigCompose(testAccNATGatewayConfig_base(rName),
-		fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccNATGatewayConfig_base(rName), fmt.Sprintf(`
 resource "aws_nat_gateway" "test" {
   connectivity_type                  = "private"
   subnet_id                          = aws_subnet.public.id
-  secondary_private_ip_address_count = %d
+  secondary_private_ip_address_count = %[2]d
+
+  tags = {
+    Name = %[1]q
+  }
 
   depends_on = [aws_internet_gateway.test]
 }
-`, secondaryPrivateIpAddressCount))
+`, rName, secondaryPrivateIpAddressCount))
 }
 
 func testAccVPCNATGatewayConfig_secondaryPrivateIPAddresses(rName string) string {
-	return acctest.ConfigCompose(testAccNATGatewayConfig_base(rName), `
+	return acctest.ConfigCompose(testAccNATGatewayConfig_base(rName), fmt.Sprintf(`
 resource "aws_eip" "secondary" {
   domain = "vpc"
+
+  tags = {
+    Name = %[1]q
+  }
 }
 
 resource "aws_nat_gateway" "test" {
@@ -540,19 +555,27 @@ resource "aws_nat_gateway" "test" {
   secondary_allocation_ids       = [aws_eip.secondary.id]
   secondary_private_ip_addresses = ["10.0.1.5"]
 
+  tags = {
+    Name = %[1]q
+  }
+
   depends_on = [aws_internet_gateway.test]
 }
-`)
+`, rName))
 }
 
 func testAccVPCNATGatewayConfig_secondaryPrivateIPAddresses_private(rName string) string {
-	return acctest.ConfigCompose(testAccNATGatewayConfig_base(rName), `
+	return acctest.ConfigCompose(testAccNATGatewayConfig_base(rName), fmt.Sprintf(`
 resource "aws_nat_gateway" "test" {
   connectivity_type              = "private"
   subnet_id                      = aws_subnet.private.id
   secondary_private_ip_addresses = ["10.0.1.5", "10.0.1.6", "10.0.1.7", "10.0.1.8", "10.0.1.9", "10.0.1.10", "10.0.1.11"]
 
+  tags = {
+    Name = %[1]q
+  }
+
   depends_on = [aws_internet_gateway.test]
 }
-`)
+`, rName))
 }
