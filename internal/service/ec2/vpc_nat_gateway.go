@@ -6,6 +6,7 @@ package ec2
 import (
 	"context"
 	"log"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
@@ -33,6 +34,12 @@ func ResourceNATGateway() *schema.Resource {
 
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
+		},
+
+		Timeouts: &schema.ResourceTimeout{
+			Create: schema.DefaultTimeout(10 * time.Minute),
+			Update: schema.DefaultTimeout(10 * time.Minute),
+			Delete: schema.DefaultTimeout(30 * time.Minute),
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -144,7 +151,7 @@ func resourceNATGatewayCreate(ctx context.Context, d *schema.ResourceData, meta 
 
 	d.SetId(aws.StringValue(output.NatGateway.NatGatewayId))
 
-	if _, err := WaitNATGatewayCreated(ctx, conn, d.Id()); err != nil {
+	if _, err := WaitNATGatewayCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
 		return diag.Errorf("waiting for EC2 NAT Gateway (%s) create: %s", d.Id(), err)
 	}
 
@@ -218,7 +225,7 @@ func resourceNATGatewayUpdate(ctx context.Context, d *schema.ResourceData, meta 
 				}
 
 				for _, privateIP := range flex.ExpandStringValueSet(add) {
-					if _, err := WaitNATGatewayAddressAssigned(ctx, conn, d.Id(), privateIP); err != nil {
+					if _, err := WaitNATGatewayAddressAssigned(ctx, conn, d.Id(), privateIP, d.Timeout(schema.TimeoutUpdate)); err != nil {
 						return diag.Errorf("waiting for EC2 NAT Gateway (%s) private IP address (%s) assign: %s", d.Id(), privateIP, err)
 					}
 				}
@@ -237,7 +244,7 @@ func resourceNATGatewayUpdate(ctx context.Context, d *schema.ResourceData, meta 
 				}
 
 				for _, privateIP := range flex.ExpandStringValueSet(del) {
-					if _, err := WaitNATGatewayAddressUnassigned(ctx, conn, d.Id(), privateIP); err != nil {
+					if _, err := WaitNATGatewayAddressUnassigned(ctx, conn, d.Id(), privateIP, d.Timeout(schema.TimeoutUpdate)); err != nil {
 						return diag.Errorf("waiting for EC2 NAT Gateway (%s) private IP address (%s) unassign: %s", d.Id(), privateIP, err)
 					}
 				}
@@ -264,7 +271,7 @@ func resourceNATGatewayDelete(ctx context.Context, d *schema.ResourceData, meta 
 		return diag.Errorf("deleting EC2 NAT Gateway (%s): %s", d.Id(), err)
 	}
 
-	if _, err := WaitNATGatewayDeleted(ctx, conn, d.Id()); err != nil {
+	if _, err := WaitNATGatewayDeleted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
 		return diag.Errorf("waiting for EC2 NAT Gateway (%s) delete: %s", d.Id(), err)
 	}
 
