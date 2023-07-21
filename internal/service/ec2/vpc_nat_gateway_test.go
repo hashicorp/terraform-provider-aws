@@ -37,7 +37,6 @@ func TestAccVPCNATGateway_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "network_interface_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "private_ip"),
 					resource.TestCheckResourceAttrSet(resourceName, "public_ip"),
-					resource.TestCheckResourceAttr(resourceName, "secondary_private_ips.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "tags.#", "0"),
 				),
 			},
@@ -96,7 +95,6 @@ func TestAccVPCNATGateway_ConnectivityType_private(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "network_interface_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "private_ip"),
 					resource.TestCheckResourceAttr(resourceName, "public_ip", ""),
-					resource.TestCheckResourceAttr(resourceName, "secondary_private_ips.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Name", rName),
 				),
@@ -132,57 +130,6 @@ func TestAccVPCNATGateway_privateIP(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "network_interface_id"),
 					resource.TestCheckResourceAttr(resourceName, "private_ip", "10.0.0.8"),
 					resource.TestCheckResourceAttr(resourceName, "public_ip", ""),
-					resource.TestCheckResourceAttr(resourceName, "secondary_private_ips.#", "0"),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-		},
-	})
-}
-
-func TestAccVPCNATGateway_privateIPWithSecondary(t *testing.T) {
-	ctx := acctest.Context(t)
-	var natGateway ec2.NatGateway
-	resourceName := "aws_nat_gateway.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckNATGatewayDestroy(ctx),
-		Steps: []resource.TestStep{
-			// create with secondary ip
-			{
-				Config: testAccVPCNATGatewayConfig_privateIPWithSecondary(rName, "10.0.0.9"),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckNATGatewayExists(ctx, resourceName, &natGateway),
-					resource.TestCheckResourceAttr(resourceName, "allocation_id", ""),
-					resource.TestCheckResourceAttr(resourceName, "association_id", ""),
-					resource.TestCheckResourceAttr(resourceName, "connectivity_type", "private"),
-					resource.TestCheckResourceAttrSet(resourceName, "network_interface_id"),
-					resource.TestCheckResourceAttr(resourceName, "private_ip", "10.0.0.8"),
-					resource.TestCheckResourceAttr(resourceName, "public_ip", ""),
-					resource.TestCheckResourceAttr(resourceName, "secondary_private_ips.0", "10.0.0.9"),
-				),
-			},
-			// delete secondary ip
-			{
-				Config: testAccVPCNATGatewayConfig_privateIPWithSecondary(rName, "10.0.0.10"),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckNATGatewayExists(ctx, resourceName, &natGateway),
-					resource.TestCheckResourceAttr(resourceName, "allocation_id", ""),
-					resource.TestCheckResourceAttr(resourceName, "association_id", ""),
-					resource.TestCheckResourceAttr(resourceName, "connectivity_type", "private"),
-					resource.TestCheckResourceAttrSet(resourceName, "network_interface_id"),
-					resource.TestCheckResourceAttr(resourceName, "private_ip", "10.0.0.8"),
-					resource.TestCheckResourceAttr(resourceName, "public_ip", ""),
-					resource.TestCheckResourceAttr(resourceName, "secondary_private_ips.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "secondary_private_ips.0", "10.0.0.10"),
 				),
 			},
 			{
@@ -375,22 +322,6 @@ resource "aws_nat_gateway" "test" {
   }
 }
 `, rName))
-}
-
-func testAccVPCNATGatewayConfig_privateIPWithSecondary(rName string, secondary string) string {
-	return acctest.ConfigCompose(acctest.ConfigVPCWithSubnets(rName, 1), fmt.Sprintf(`
-resource "aws_nat_gateway" "test" {
-  connectivity_type = "private"
-  private_ip        = "10.0.0.8"
-  subnet_id         = aws_subnet.test[0].id
-
-  secondary_private_ips = [ %[2]q ]
-
-  tags = {
-    Name = %[1]q
-  }
-}
-`, rName, secondary))
 }
 
 func testAccVPCNATGatewayConfig_tags1(rName, tagKey1, tagValue1 string) string {

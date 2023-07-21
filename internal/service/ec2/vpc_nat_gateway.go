@@ -2,9 +2,6 @@ package ec2
 
 import (
 	"context"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
-	"github.com/hashicorp/terraform-provider-aws/internal/flex"
-	"golang.org/x/exp/slices"
 	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -62,14 +59,6 @@ func ResourceNATGateway() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: validation.IsIPv4Address,
 			},
-			"secondary_private_ips": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Computed: true,
-				ForceNew: false,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-				Set:      schema.HashString,
-			},
 			"public_ip": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -111,10 +100,6 @@ func resourceNATGatewayCreate(ctx context.Context, d *schema.ResourceData, meta 
 		input.SubnetId = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("secondary_private_ips"); ok {
-		input.SecondaryPrivateIpAddresses = flex.ExpandStringSet(v.(*schema.Set))
-	}
-
 	output, err := conn.CreateNatGatewayWithContext(ctx, input)
 
 	if err != nil {
@@ -145,8 +130,6 @@ func resourceNATGatewayRead(ctx context.Context, d *schema.ResourceData, meta in
 		return diag.Errorf("reading EC2 NAT Gateway (%s): %s", d.Id(), err)
 	}
 
-	log.Printf("[FP] reading")
-	secondaryPrivateAddresses := schema.NewSet(schema.HashString, nil)
 	for _, address := range ng.NatGatewayAddresses {
 		// Length check guarantees the attributes are always set (#30865).
 		if len(ng.NatGatewayAddresses) == 1 || aws.BoolValue(address.IsPrimary) {
@@ -155,15 +138,10 @@ func resourceNATGatewayRead(ctx context.Context, d *schema.ResourceData, meta in
 			d.Set("network_interface_id", address.NetworkInterfaceId)
 			d.Set("private_ip", address.PrivateIp)
 			d.Set("public_ip", address.PublicIp)
-		} else if !aws.BoolValue(address.IsPrimary) &&
-			address.PrivateIp != nil &&
-			address.Status != nil &&
-			!slices.Contains([]string{ec2.NatGatewayAddressStatusFailed, ec2.NatGatewayAddressStatusDisassociating, ec2.NatGatewayAddressStatusUnassigning}, *address.Status) {
-			secondaryPrivateAddresses.Add(aws.StringValue(address.PrivateIp))
+			break
 		}
 	}
 
-	d.Set("secondary_private_ips", secondaryPrivateAddresses)
 	d.Set("connectivity_type", ng.ConnectivityType)
 	d.Set("subnet_id", ng.SubnetId)
 
@@ -173,36 +151,7 @@ func resourceNATGatewayRead(ctx context.Context, d *schema.ResourceData, meta in
 }
 
 func resourceNATGatewayUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
-
-	if d.HasChanges("secondary_private_ips") {
-		oRaw, nRaw := d.GetChange("secondary_private_ips")
-		o, n := oRaw.(*schema.Set), nRaw.(*schema.Set)
-		add := n.Difference(o)
-		del := o.Difference(n)
-
-		if add.Len() > 0 {
-			_, err := conn.AssignPrivateNatGatewayAddress(&ec2.AssignPrivateNatGatewayAddressInput{
-				NatGatewayId:       aws.String(d.Id()),
-				PrivateIpAddresses: flex.ExpandStringSet(add),
-			})
-			if err != nil {
-				return sdkdiag.AppendErrorf(diags, "adding secondary ip address allocations (%s): %s", d.Id(), err)
-			}
-		}
-
-		if del.Len() > 0 {
-			_, err := conn.UnassignPrivateNatGatewayAddress(&ec2.UnassignPrivateNatGatewayAddressInput{
-				NatGatewayId:       aws.String(d.Id()),
-				PrivateIpAddresses: flex.ExpandStringSet(del),
-			})
-			if err != nil {
-				return sdkdiag.AppendErrorf(diags, "adding secondary ip address allocations (%s): %s", d.Id(), err)
-			}
-		}
-	}
-
+	// Tags only.
 	return resourceNATGatewayRead(ctx, d, meta)
 }
 
