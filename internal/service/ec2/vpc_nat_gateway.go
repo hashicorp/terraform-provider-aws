@@ -84,7 +84,6 @@ func ResourceNATGateway() *schema.Resource {
 				Type:          schema.TypeSet,
 				Optional:      true,
 				Computed:      true,
-				ForceNew:      true,
 				Elem:          &schema.Schema{Type: schema.TypeString},
 				ConflictsWith: []string{"secondary_private_ip_address_count"},
 			},
@@ -199,7 +198,53 @@ func resourceNATGatewayRead(ctx context.Context, d *schema.ResourceData, meta in
 }
 
 func resourceNATGatewayUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	// Tags only.
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
+
+	if d.Get("connectivity_type") == ec2.ConnectivityTypePrivate {
+		if d.HasChanges("secondary_private_ip_addresses") {
+			oRaw, nRaw := d.GetChange("secondary_private_ip_addresses")
+			o, n := oRaw.(*schema.Set), nRaw.(*schema.Set)
+
+			if add := n.Difference(o); add.Len() > 0 {
+				input := &ec2.AssignPrivateNatGatewayAddressInput{
+					NatGatewayId:       aws.String(d.Id()),
+					PrivateIpAddresses: flex.ExpandStringSet(add),
+				}
+
+				_, err := conn.AssignPrivateNatGatewayAddressWithContext(ctx, input)
+
+				if err != nil {
+					return diag.Errorf("assigning EC2 NAT Gateway (%s) private IP addresses: %s", d.Id(), err)
+				}
+
+				for _, privateIP := range flex.ExpandStringValueSet(add) {
+					if _, err := WaitNATGatewayAddressAssigned(ctx, conn, d.Id(), privateIP); err != nil {
+						return diag.Errorf("waiting for EC2 NAT Gateway (%s) private IP address (%s) assign: %s", d.Id(), privateIP, err)
+					}
+				}
+			}
+
+			if del := o.Difference(n); del.Len() > 0 {
+				input := &ec2.UnassignPrivateNatGatewayAddressInput{
+					NatGatewayId:       aws.String(d.Id()),
+					PrivateIpAddresses: flex.ExpandStringSet(del),
+				}
+
+				_, err := conn.UnassignPrivateNatGatewayAddressWithContext(ctx, input)
+
+				if err != nil {
+					return diag.Errorf("unassigning EC2 NAT Gateway (%s) private IP addresses: %s", d.Id(), err)
+				}
+
+				for _, privateIP := range flex.ExpandStringValueSet(del) {
+					if _, err := WaitNATGatewayAddressUnassigned(ctx, conn, d.Id(), privateIP); err != nil {
+						return diag.Errorf("waiting for EC2 NAT Gateway (%s) private IP address (%s) unassign: %s", d.Id(), privateIP, err)
+					}
+				}
+			}
+		}
+	}
+
 	return resourceNATGatewayRead(ctx, d, meta)
 }
 

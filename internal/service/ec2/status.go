@@ -354,6 +354,22 @@ func StatusNATGatewayState(ctx context.Context, conn *ec2.EC2, id string) retry.
 	}
 }
 
+func StatusNATGatewayAddress(ctx context.Context, conn *ec2.EC2, id, privateIP string) retry.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := FindNATGatewayAddressByTwoPartKey(ctx, conn, id, privateIP)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, aws.StringValue(output.Status), nil
+	}
+}
+
 const (
 	RouteStatusReady = "ready"
 )

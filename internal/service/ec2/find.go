@@ -6453,6 +6453,22 @@ func FindNATGatewayByID(ctx context.Context, conn *ec2.EC2, id string) (*ec2.Nat
 	return output, nil
 }
 
+func FindNATGatewayAddressByTwoPartKey(ctx context.Context, conn *ec2.EC2, id, privateIP string) (*ec2.NatGatewayAddress, error) {
+	output, err := FindNATGatewayByID(ctx, conn, id)
+
+	if err != nil {
+		return nil, err
+	}
+
+	for _, v := range output.NatGatewayAddresses {
+		if aws.StringValue(v.PrivateIp) == privateIP {
+			return v, nil
+		}
+	}
+
+	return nil, &retry.NotFoundError{}
+}
+
 func FindPlacementGroupByName(ctx context.Context, conn *ec2.EC2, name string) (*ec2.PlacementGroup, error) {
 	input := &ec2.DescribePlacementGroupsInput{
 		GroupNames: aws.StringSlice([]string{name}),

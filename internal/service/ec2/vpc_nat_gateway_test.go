@@ -307,18 +307,52 @@ func TestAccVPCNATGateway_SecondaryPrivateIPAddresses_private(t *testing.T) {
 		CheckDestroy:             testAccCheckNATGatewayDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVPCNATGatewayConfig_secondaryPrivateIPAddresses_private(rName),
+				Config: testAccVPCNATGatewayConfig_secondaryPrivateIPAddresses_private(rName, 5),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckNATGatewayExists(ctx, resourceName, &natGateway),
 					resource.TestCheckResourceAttr(resourceName, "secondary_allocation_ids.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "secondary_private_ip_address_count", "7"),
-					resource.TestCheckResourceAttr(resourceName, "secondary_private_ip_addresses.#", "7"),
+					resource.TestCheckResourceAttr(resourceName, "secondary_private_ip_address_count", "5"),
+					resource.TestCheckResourceAttr(resourceName, "secondary_private_ip_addresses.#", "5"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "secondary_private_ip_addresses.*", "10.0.1.5"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "secondary_private_ip_addresses.*", "10.0.1.6"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "secondary_private_ip_addresses.*", "10.0.1.7"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "secondary_private_ip_addresses.*", "10.0.1.8"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "secondary_private_ip_addresses.*", "10.0.1.9"),
 				),
 			},
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+			},
+			{
+				Config: testAccVPCNATGatewayConfig_secondaryPrivateIPAddresses_private(rName, 7),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckNATGatewayExists(ctx, resourceName, &natGateway),
+					resource.TestCheckResourceAttr(resourceName, "secondary_allocation_ids.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "secondary_private_ip_address_count", "7"),
+					resource.TestCheckResourceAttr(resourceName, "secondary_private_ip_addresses.#", "7"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "secondary_private_ip_addresses.*", "10.0.1.5"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "secondary_private_ip_addresses.*", "10.0.1.6"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "secondary_private_ip_addresses.*", "10.0.1.7"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "secondary_private_ip_addresses.*", "10.0.1.8"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "secondary_private_ip_addresses.*", "10.0.1.9"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "secondary_private_ip_addresses.*", "10.0.1.10"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "secondary_private_ip_addresses.*", "10.0.1.11"),
+				),
+			},
+			{
+				Config: testAccVPCNATGatewayConfig_secondaryPrivateIPAddresses_private(rName, 4),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckNATGatewayExists(ctx, resourceName, &natGateway),
+					resource.TestCheckResourceAttr(resourceName, "secondary_allocation_ids.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "secondary_private_ip_address_count", "4"),
+					resource.TestCheckResourceAttr(resourceName, "secondary_private_ip_addresses.#", "4"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "secondary_private_ip_addresses.*", "10.0.1.5"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "secondary_private_ip_addresses.*", "10.0.1.6"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "secondary_private_ip_addresses.*", "10.0.1.7"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "secondary_private_ip_addresses.*", "10.0.1.8"),
+				),
 			},
 		},
 	})
@@ -557,12 +591,12 @@ resource "aws_nat_gateway" "test" {
 `, rName))
 }
 
-func testAccVPCNATGatewayConfig_secondaryPrivateIPAddresses_private(rName string) string {
+func testAccVPCNATGatewayConfig_secondaryPrivateIPAddresses_private(rName string, n int) string {
 	return acctest.ConfigCompose(testAccNATGatewayConfig_base(rName), fmt.Sprintf(`
 resource "aws_nat_gateway" "test" {
   connectivity_type              = "private"
   subnet_id                      = aws_subnet.private.id
-  secondary_private_ip_addresses = ["10.0.1.5", "10.0.1.6", "10.0.1.7", "10.0.1.8", "10.0.1.9", "10.0.1.10", "10.0.1.11"]
+  secondary_private_ip_addresses = [for n in range(%[2]d) : "10.0.1.${5 + n}"]
 
   tags = {
     Name = %[1]q
@@ -570,5 +604,5 @@ resource "aws_nat_gateway" "test" {
 
   depends_on = [aws_internet_gateway.test]
 }
-`, rName))
+`, rName, n))
 }

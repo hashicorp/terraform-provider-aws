@@ -2099,6 +2099,97 @@ func WaitNATGatewayDeleted(ctx context.Context, conn *ec2.EC2, id string) (*ec2.
 }
 
 const (
+	natGatewayAddressAssignedTimeout      = 10 * time.Minute
+	natGatewayAddressAssociatedTimeout    = 10 * time.Minute
+	natGatewayAddressDisassociatedTimeout = 10 * time.Minute
+	natGatewayAddressUnassignedTimeout    = 10 * time.Minute
+)
+
+func WaitNATGatewayAddressAssigned(ctx context.Context, conn *ec2.EC2, id, privateIP string) (*ec2.NatGatewayAddress, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending: []string{ec2.NatGatewayAddressStatusAssigning},
+		Target:  []string{ec2.NatGatewayAddressStatusSucceeded},
+		Refresh: StatusNATGatewayAddress(ctx, conn, id, privateIP),
+		Timeout: natGatewayAddressAssignedTimeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*ec2.NatGatewayAddress); ok {
+		if status := aws.StringValue(output.Status); status == ec2.NatGatewayAddressStatusFailed {
+			tfresource.SetLastError(err, errors.New(aws.StringValue(output.FailureMessage)))
+		}
+
+		return output, err
+	}
+
+	return nil, err
+}
+
+func WaitNATGatewayAddressAssociated(ctx context.Context, conn *ec2.EC2, id, privateIP string) (*ec2.NatGatewayAddress, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending: []string{ec2.NatGatewayAddressStatusAssociating},
+		Target:  []string{ec2.NatGatewayAddressStatusSucceeded},
+		Refresh: StatusNATGatewayAddress(ctx, conn, id, privateIP),
+		Timeout: natGatewayAddressAssociatedTimeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*ec2.NatGatewayAddress); ok {
+		if status := aws.StringValue(output.Status); status == ec2.NatGatewayAddressStatusFailed {
+			tfresource.SetLastError(err, errors.New(aws.StringValue(output.FailureMessage)))
+		}
+
+		return output, err
+	}
+
+	return nil, err
+}
+
+func WaitNATGatewayAddressDisassociated(ctx context.Context, conn *ec2.EC2, id, privateIP string) (*ec2.NatGatewayAddress, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending: []string{ec2.NatGatewayAddressStatusDisassociating},
+		Target:  []string{ec2.NatGatewayAddressStatusSucceeded},
+		Refresh: StatusNATGatewayAddress(ctx, conn, id, privateIP),
+		Timeout: natGatewayAddressDisassociatedTimeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*ec2.NatGatewayAddress); ok {
+		if status := aws.StringValue(output.Status); status == ec2.NatGatewayAddressStatusFailed {
+			tfresource.SetLastError(err, errors.New(aws.StringValue(output.FailureMessage)))
+		}
+
+		return output, err
+	}
+
+	return nil, err
+}
+
+func WaitNATGatewayAddressUnassigned(ctx context.Context, conn *ec2.EC2, id, privateIP string) (*ec2.NatGatewayAddress, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending: []string{ec2.NatGatewayAddressStatusUnassigning},
+		Target:  []string{},
+		Refresh: StatusNATGatewayAddress(ctx, conn, id, privateIP),
+		Timeout: natGatewayAddressUnassignedTimeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*ec2.NatGatewayAddress); ok {
+		if status := aws.StringValue(output.Status); status == ec2.NatGatewayAddressStatusFailed {
+			tfresource.SetLastError(err, errors.New(aws.StringValue(output.FailureMessage)))
+		}
+
+		return output, err
+	}
+
+	return nil, err
+}
+
+const (
 	vpnConnectionCreatedTimeout = 40 * time.Minute
 	vpnConnectionDeletedTimeout = 30 * time.Minute
 	vpnConnectionUpdatedTimeout = 30 * time.Minute
