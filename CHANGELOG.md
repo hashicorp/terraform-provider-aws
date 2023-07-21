@@ -1,4 +1,10 @@
 ## 5.10.0 (Unreleased)
+
+BUG FIXES:
+
+* resource/aws_finspace_kx_cluster: `database.cache_configurations.db_paths` argument is now optional ([#32579](https://github.com/hashicorp/terraform-provider-aws/issues/32579))
+* resource/aws_finspace_kx_cluster: `database.cache_configurations` argument is now optional ([#32579](https://github.com/hashicorp/terraform-provider-aws/issues/32579))
+
 ## 5.9.0 (July 20, 2023)
 
 FEATURES:
