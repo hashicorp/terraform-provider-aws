@@ -5,6 +5,7 @@ package ec2
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"time"
 
@@ -12,6 +13,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -103,7 +105,10 @@ func ResourceNATGateway() *schema.Resource {
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
 
-		CustomizeDiff: verify.SetTagsDiff,
+		CustomizeDiff: customdiff.All(
+			resourceNATGatewayCustomizeDiff,
+			verify.SetTagsDiff,
+		),
 	}
 }
 
@@ -127,7 +132,7 @@ func resourceNATGatewayCreate(ctx context.Context, d *schema.ResourceData, meta 
 		input.PrivateIpAddress = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("secondary_allocation_ids"); ok {
+	if v, ok := d.GetOk("secondary_allocation_ids"); ok && v.(*schema.Set).Len() > 0 {
 		input.SecondaryAllocationIds = flex.ExpandStringSet(v.(*schema.Set))
 	}
 
@@ -135,7 +140,7 @@ func resourceNATGatewayCreate(ctx context.Context, d *schema.ResourceData, meta 
 		input.SecondaryPrivateIpAddressCount = aws.Int64(int64(v.(int)))
 	}
 
-	if v, ok := d.GetOk("secondary_private_ip_addresses"); ok {
+	if v, ok := d.GetOk("secondary_private_ip_addresses"); ok && v.(*schema.Set).Len() > 0 {
 		input.SecondaryPrivateIpAddresses = flex.ExpandStringSet(v.(*schema.Set))
 	}
 
@@ -207,7 +212,7 @@ func resourceNATGatewayRead(ctx context.Context, d *schema.ResourceData, meta in
 func resourceNATGatewayUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
-	if d.Get("connectivity_type") == ec2.ConnectivityTypePrivate {
+	if d.Get("connectivity_type").(string) == ec2.ConnectivityTypePrivate {
 		if d.HasChanges("secondary_private_ip_addresses") {
 			oRaw, nRaw := d.GetChange("secondary_private_ip_addresses")
 			o, n := oRaw.(*schema.Set), nRaw.(*schema.Set)
@@ -274,6 +279,27 @@ func resourceNATGatewayDelete(ctx context.Context, d *schema.ResourceData, meta 
 	if _, err := WaitNATGatewayDeleted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
 		return diag.Errorf("waiting for EC2 NAT Gateway (%s) delete: %s", d.Id(), err)
 	}
+
+	return nil
+}
+
+func resourceNATGatewayCustomizeDiff(ctx context.Context, diff *schema.ResourceDiff, meta interface{}) error {
+	switch connectivityType := diff.Get("connectivity_type").(string); connectivityType {
+	case ec2.ConnectivityTypePrivate:
+		if _, ok := diff.GetOk("allocation_id"); ok {
+			return fmt.Errorf(`allocation_id is not supported with connectivity_type = "%s"`, connectivityType)
+		}
+		if v, ok := diff.GetOk("secondary_allocation_ids"); ok && v.(*schema.Set).Len() > 0 {
+			return fmt.Errorf(`secondary_allocation_ids is not supported with connectivity_type = "%s"`, connectivityType)
+		}
+
+	case ec2.ConnectivityTypePublic:
+		if _, ok := diff.GetOk("secondary_private_ip_address_count"); ok {
+			return fmt.Errorf(`secondary_private_ip_address_count is not supported with connectivity_type = "%s"`, connectivityType)
+		}
+	}
+
+	// TODO: Changing secondary_allocation_ids but not secondary_private_ip_addresses.
 
 	return nil
 }
