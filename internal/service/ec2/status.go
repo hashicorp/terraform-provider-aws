@@ -334,28 +334,6 @@ func StatusInstanceRootBlockDeviceDeleteOnTermination(ctx context.Context, conn 
 	}
 }
 
-func StatusNATGatewaySecondaryIPState(ctx context.Context, conn *ec2.EC2, id string, address string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-		output, err := FindNATGatewayByID(ctx, conn, id)
-
-		if tfresource.NotFound(err) {
-			return nil, "", nil
-		}
-
-		if err != nil {
-			return nil, "", err
-		}
-
-		for _, addr := range output.NatGatewayAddresses {
-			if addr.PrivateIp != nil && *addr.PrivateIp == address {
-				return addr, aws.StringValue(addr.Status), nil
-			}
-		}
-
-		return nil, "", nil
-	}
-}
-
 func StatusNATGatewayState(ctx context.Context, conn *ec2.EC2, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := FindNATGatewayByID(ctx, conn, id)

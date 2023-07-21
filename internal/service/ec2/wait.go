@@ -2047,9 +2047,8 @@ func WaitCustomerGatewayDeleted(ctx context.Context, conn *ec2.EC2, id string) (
 }
 
 const (
-	natGatewayCreatedTimeout           = 10 * time.Minute
-	natGatewayDeletedTimeout           = 30 * time.Minute
-	natGatewayAddressAssignmentTimeout = 2 * time.Minute
+	natGatewayCreatedTimeout = 10 * time.Minute
+	natGatewayDeletedTimeout = 30 * time.Minute
 )
 
 func WaitNATGatewayCreated(ctx context.Context, conn *ec2.EC2, id string) (*ec2.NatGateway, error) {
@@ -2071,30 +2070,6 @@ func WaitNATGatewayCreated(ctx context.Context, conn *ec2.EC2, id string) (*ec2.
 	}
 
 	return nil, err
-}
-
-func WaitNATGatewaySecondaryAddresses(ctx context.Context, conn *ec2.EC2, id string, addresses []string) error {
-	for _, addr := range addresses {
-		stateConf := &retry.StateChangeConf{
-			Pending: []string{ec2.NatGatewayAddressStatusAssigning, ec2.NatGatewayAddressStatusAssociating},
-			Target:  []string{ec2.NatGatewayAddressStatusSucceeded},
-			Refresh: StatusNATGatewaySecondaryIPState(ctx, conn, id, addr),
-			Timeout: natGatewayAddressAssignmentTimeout,
-		}
-
-		outputRaw, err := stateConf.WaitForStateContext(ctx)
-
-		if output, ok := outputRaw.(*ec2.NatGatewayAddress); ok {
-			if state := aws.StringValue(output.Status); state == ec2.NatGatewayAddressStatusFailed {
-				tfresource.SetLastError(err, fmt.Errorf("%s: %s", aws.StringValue(output.Status), aws.StringValue(output.FailureMessage)))
-			}
-		}
-
-		if err != nil {
-			return err
-		}
-	}
-	return nil
 }
 
 func WaitNATGatewayDeleted(ctx context.Context, conn *ec2.EC2, id string) (*ec2.NatGateway, error) {

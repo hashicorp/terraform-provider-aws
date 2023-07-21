@@ -183,26 +183,22 @@ func resourceNATGatewayUpdate(ctx context.Context, d *schema.ResourceData, meta 
 		del := o.Difference(n)
 
 		if add.Len() > 0 {
-			_, err := conn.AssignPrivateNatGatewayAddressWithContext(ctx, &ec2.AssignPrivateNatGatewayAddressInput{
+			_, err := conn.AssignPrivateNatGatewayAddress(&ec2.AssignPrivateNatGatewayAddressInput{
 				NatGatewayId:       aws.String(d.Id()),
 				PrivateIpAddresses: flex.ExpandStringSet(add),
 			})
 			if err != nil {
 				return sdkdiag.AppendErrorf(diags, "adding secondary ip address allocations (%s): %s", d.Id(), err)
 			}
-			err = WaitNATGatewaySecondaryAddresses(ctx, conn, d.Id(), flex.ExpandStringValueSet(add))
-			if err != nil {
-				return sdkdiag.AppendErrorf(diags, "adding secondary ip address allocations (%s): %s", d.Id(), err)
-			}
 		}
 
 		if del.Len() > 0 {
-			_, err := conn.UnassignPrivateNatGatewayAddressWithContext(ctx, &ec2.UnassignPrivateNatGatewayAddressInput{
+			_, err := conn.UnassignPrivateNatGatewayAddress(&ec2.UnassignPrivateNatGatewayAddressInput{
 				NatGatewayId:       aws.String(d.Id()),
 				PrivateIpAddresses: flex.ExpandStringSet(del),
 			})
 			if err != nil {
-				return sdkdiag.AppendErrorf(diags, "deleting secondary ip address allocations (%s): %s", d.Id(), err)
+				return sdkdiag.AppendErrorf(diags, "adding secondary ip address allocations (%s): %s", d.Id(), err)
 			}
 		}
 	}
