@@ -62,9 +62,10 @@ jobs:
           include-title: 1
 
   community_note:
+    name: 'Add Community Note'
     runs-on: ubuntu-latest
     steps:
-      - name: Add community note to new Issues
+      - name: 'Add community note to new Issues'
         if: github.event.action == 'opened'
         uses: peter-evans/create-or-update-comment@c6c9a1a66007646a28c153e2a8580a5bad27bcfa
         with:
