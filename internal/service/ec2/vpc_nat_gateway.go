@@ -73,16 +73,16 @@ func ResourceNATGateway() *schema.Resource {
 				ForceNew: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
+			"secondary_private_ip_address_count": {
+				Type:     schema.TypeInt,
+				Optional: true,
+				ForceNew: true,
+			},
 			"secondary_private_ip_addresses": {
 				Type:     schema.TypeSet,
 				Optional: true,
 				ForceNew: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			"secondary_private_ip_address_count": {
-				Type:     schema.TypeInt,
-				Optional: true,
-				ForceNew: true,
 			},
 			"subnet_id": {
 				Type:     schema.TypeString,
@@ -121,12 +121,12 @@ func resourceNATGatewayCreate(ctx context.Context, d *schema.ResourceData, meta 
 		input.SecondaryAllocationIds = flex.ExpandStringSet(v.(*schema.Set))
 	}
 
-	if v, ok := d.GetOk("secondary_private_ip_addresses"); ok {
-		input.SecondaryPrivateIpAddresses = flex.ExpandStringSet(v.(*schema.Set))
-	}
-
 	if v, ok := d.GetOk("secondary_private_ip_address_count"); ok {
 		input.SecondaryPrivateIpAddressCount = aws.Int64(int64(v.(int)))
+	}
+
+	if v, ok := d.GetOk("secondary_private_ip_addresses"); ok {
+		input.SecondaryPrivateIpAddresses = flex.ExpandStringSet(v.(*schema.Set))
 	}
 
 	if v, ok := d.GetOk("subnet_id"); ok {
