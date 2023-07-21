@@ -7,7 +7,6 @@ on:
 jobs:
   community_check:
     name: 'Community Check'
-    needs: trigger_type
     uses: ./.github/workflows/community-check.yml
     secrets: inherit
     with:

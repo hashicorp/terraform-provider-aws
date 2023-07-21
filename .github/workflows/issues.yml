@@ -12,16 +12,13 @@ on:
 jobs:
   community_check:
     name: 'Community Check'
-    needs: trigger_type
     uses: ./.github/workflows/community-check.yml
     secrets: inherit
-    env:
+    with:
       # This is a ternary that sets the variable to the assigned user's login on assigned events,
       # and otherwise sets it to the username of the pull request's author. For more information:
       # https://docs.github.com/en/actions/learn-github-actions/expressions#example
-      USERNAME: ${{ github.event.action == 'assigned' && github.event.assignee.login || github.event.issue.user.login }}
-    with:
-      username: ${{ env.USERNAME }}
+      username: ${{ github.event.action == 'assigned' && github.event.assignee.login || github.event.issue.user.login }}
 
   automation_labeler:
     name: 'Automation Labeler'
