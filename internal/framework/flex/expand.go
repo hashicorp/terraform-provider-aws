@@ -114,27 +114,8 @@ func (visitor expandVisitor) visit(ctx context.Context, fieldName string, valFro
 		return fwdiag.DiagnosticsError(diags)
 
 	case basetypes.StringValuable:
-		v, diags := vFrom.ToStringValue(ctx)
-		if err := fwdiag.DiagnosticsError(diags); err != nil {
-			return err
-		}
-		switch vFrom := v.ValueString(); kTo {
-		case reflect.String:
-			//
-			// types.String -> string.
-			//
-			valTo.SetString(vFrom)
-			return nil
-		case reflect.Ptr:
-			switch valTo.Type().Elem().Kind() {
-			case reflect.String:
-				//
-				// types.String -> *string.
-				//
-				valTo.Set(reflect.ValueOf(aws.String(vFrom)))
-				return nil
-			}
-		}
+		diags := visitor.string(ctx, vFrom, valTo)
+		return fwdiag.DiagnosticsError(diags)
 
 		// Aggregate types.
 	case basetypes.ListValuable:
@@ -363,6 +344,36 @@ func (visitor expandVisitor) int64(ctx context.Context, vFrom basetypes.Int64Val
 			// types.Int32/types.Int64 -> *int64.
 			//
 			vTo.Set(reflect.ValueOf(aws.Int64(vFrom)))
+			return diags
+		}
+	}
+
+	diags.Append(visitor.newIncompatibleTypesError(ctx, vFrom, vTo))
+
+	return diags
+}
+
+// string copies a Plugin Framework String(ish) value to a compatible AWS API field.
+func (visitor expandVisitor) string(ctx context.Context, vFrom basetypes.StringValuable, vTo reflect.Value) diag.Diagnostics {
+	v, diags := vFrom.ToStringValue(ctx)
+	if diags.HasError() {
+		return diags
+	}
+
+	switch vFrom := v.ValueString(); vTo.Kind() {
+	case reflect.String:
+		//
+		// types.String -> string.
+		//
+		vTo.SetString(vFrom)
+		return diags
+	case reflect.Ptr:
+		switch vTo.Type().Elem().Kind() {
+		case reflect.String:
+			//
+			// types.String -> *string.
+			//
+			vTo.Set(reflect.ValueOf(aws.String(vFrom)))
 			return diags
 		}
 	}
