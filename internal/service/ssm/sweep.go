@@ -11,12 +11,12 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
+	ssm_sdkv2 "github.com/aws/aws-sdk-go-v2/service/ssm"
 	"github.com/aws/aws-sdk-go-v2/service/ssm/types"
-	"github.com/aws/aws-sdk-go/service/ssm"
+	ssm_sdkv1 "github.com/aws/aws-sdk-go/service/ssm"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
@@ -50,13 +50,12 @@ func init() {
 
 func sweepResourceDefaultPatchBaselines(region string) error {
 	ctx := sweep.Context(region)
-	c, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
 		return fmt.Errorf("getting client: %w", err)
 	}
-	client := c.(ssmClient)
 
-	conn := client.SSMClient()
+	conn := client.SSMClient(ctx)
 
 	var sweepables []sweep.Sweepable
 	var errs *multierror.Error
@@ -79,8 +78,8 @@ func sweepResourceDefaultPatchBaselines(region string) error {
 				continue
 			}
 			sweepables = append(sweepables, defaultPatchBaselineSweeper{
-				client: client,
-				os:     pb.OperatingSystem,
+				conn: conn,
+				os:   pb.OperatingSystem,
 			})
 		}
 	}
@@ -98,12 +97,12 @@ func sweepResourceDefaultPatchBaselines(region string) error {
 }
 
 type defaultPatchBaselineSweeper struct {
-	client ssmClient
-	os     types.OperatingSystem
+	conn *ssm_sdkv2.Client
+	os   types.OperatingSystem
 }
 
 func (s defaultPatchBaselineSweeper) Delete(ctx context.Context, timeout time.Duration, optFns ...tfresource.OptionsFunc) (err error) {
-	diags := defaultPatchBaselineRestoreOSDefault(ctx, s.client, s.os)
+	diags := defaultPatchBaselineRestoreOSDefault(ctx, s.conn, s.os)
 
 	for _, d := range sdkdiag.Warnings(diags) {
 		log.Printf("[WARN] %s", sdkdiag.DiagnosticString(d))
@@ -123,8 +122,9 @@ func sweepMaintenanceWindows(region string) error {
 		return fmt.Errorf("getting client: %s", err)
 	}
 
-	conn := client.(*conns.AWSClient).SSMConn()
-	input := &ssm.DescribeMaintenanceWindowsInput{}
+	conn := client.SSMConn(ctx)
+
+	input := &ssm_sdkv1.DescribeMaintenanceWindowsInput{}
 	var sweeperErrs *multierror.Error
 
 	for {
@@ -141,7 +141,7 @@ func sweepMaintenanceWindows(region string) error {
 
 		for _, window := range output.WindowIdentities {
 			id := aws.ToString(window.WindowId)
-			input := &ssm.DeleteMaintenanceWindowInput{
+			input := &ssm_sdkv1.DeleteMaintenanceWindowInput{
 				WindowId: window.WindowId,
 			}
 
@@ -149,7 +149,7 @@ func sweepMaintenanceWindows(region string) error {
 
 			_, err := conn.DeleteMaintenanceWindowWithContext(ctx, input)
 
-			if tfawserr.ErrCodeEquals(err, ssm.ErrCodeDoesNotExistException) {
+			if tfawserr.ErrCodeEquals(err, ssm_sdkv1.ErrCodeDoesNotExistException) {
 				continue
 			}
 
@@ -173,13 +173,12 @@ func sweepMaintenanceWindows(region string) error {
 
 func sweepResourcePatchBaselines(region string) error {
 	ctx := sweep.Context(region)
-	c, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
 		return fmt.Errorf("getting client: %w", err)
 	}
-	client := c.(ssmClient)
 
-	conn := client.SSMClient()
+	conn := client.SSMClient(ctx)
 
 	var sweepables []sweep.Sweepable
 	var errs *multierror.Error
@@ -223,13 +222,14 @@ func sweepResourceDataSyncs(region string) error {
 		return fmt.Errorf("getting client: %w", err)
 	}
 
-	conn := client.(*conns.AWSClient).SSMConn()
+	conn := client.SSMConn(ctx)
+
 	sweepResources := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
 
-	input := &ssm.ListResourceDataSyncInput{}
+	input := &ssm_sdkv1.ListResourceDataSyncInput{}
 
-	err = conn.ListResourceDataSyncPagesWithContext(ctx, input, func(page *ssm.ListResourceDataSyncOutput, lastPage bool) bool {
+	err = conn.ListResourceDataSyncPagesWithContext(ctx, input, func(page *ssm_sdkv1.ListResourceDataSyncOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}

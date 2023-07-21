@@ -25,22 +25,6 @@ func statusNamespace(ctx context.Context, conn *redshiftserverless.RedshiftServe
 	}
 }
 
-func statusWorkgroup(ctx context.Context, conn *redshiftserverless.RedshiftServerless, name string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-		output, err := FindWorkgroupByName(ctx, conn, name)
-
-		if tfresource.NotFound(err) {
-			return nil, "", nil
-		}
-
-		if err != nil {
-			return nil, "", err
-		}
-
-		return output, aws.StringValue(output.Status), nil
-	}
-}
-
 func statusEndpointAccess(ctx context.Context, conn *redshiftserverless.RedshiftServerless, name string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := FindEndpointAccessByName(ctx, conn, name)

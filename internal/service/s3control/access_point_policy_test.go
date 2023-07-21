@@ -142,7 +142,7 @@ func testAccAccessPointPolicyImportStateIdFunc(n string) resource.ImportStateIdF
 
 func testAccCheckAccessPointPolicyDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).S3ControlConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).S3ControlConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_s3control_access_point_policy" {
@@ -189,7 +189,7 @@ func testAccCheckAccessPointPolicyExists(ctx context.Context, n string) resource
 			return err
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).S3ControlConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).S3ControlConn(ctx)
 
 		_, _, err = tfs3control.FindAccessPointPolicyAndStatusByTwoPartKey(ctx, conn, accountID, name)
 

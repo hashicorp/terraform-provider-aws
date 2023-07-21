@@ -159,7 +159,7 @@ func testAccCheckInstanceProfileExists(ctx context.Context, n string, v *devicef
 			return fmt.Errorf("No ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DeviceFarmConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DeviceFarmConn(ctx)
 		resp, err := tfdevicefarm.FindInstanceProfileByARN(ctx, conn, rs.Primary.ID)
 		if err != nil {
 			return err
@@ -176,7 +176,7 @@ func testAccCheckInstanceProfileExists(ctx context.Context, n string, v *devicef
 
 func testAccCheckInstanceProfileDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DeviceFarmConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DeviceFarmConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_devicefarm_instance_profile" {

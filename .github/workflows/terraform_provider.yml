@@ -4,7 +4,7 @@ on:
   push:
     branches:
       - main
-      - 'release/**'
+      - "release/**"
   pull_request:
     paths:
       - .github/workflows/terraform_provider.yml
@@ -31,7 +31,7 @@ jobs:
     name: go mod download
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@8e5e7e5ab8b370d6c329ec480221332ada57f0ab
+      - uses: actions/checkout@c85c95e3d7251135ab7dc9ce3241c5835cc595a9
       - uses: actions/setup-go@fac708d6674e30b6ba41289acaab6d4b75aa0753
         with:
           go-version-file: go.mod
@@ -50,7 +50,7 @@ jobs:
     needs: [go_mod_download]
     runs-on: [custom, linux, medium]
     steps:
-      - uses: actions/checkout@8e5e7e5ab8b370d6c329ec480221332ada57f0ab
+      - uses: actions/checkout@c85c95e3d7251135ab7dc9ce3241c5835cc595a9
       - uses: actions/cache@88522ab9f39a2ea568f7027eddc7d8d8bc9d59c8
         continue-on-error: true
         id: cache-terraform-plugin-dir
@@ -86,7 +86,7 @@ jobs:
     needs: [go_build]
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@8e5e7e5ab8b370d6c329ec480221332ada57f0ab
+      - uses: actions/checkout@c85c95e3d7251135ab7dc9ce3241c5835cc595a9
       - uses: actions/setup-go@fac708d6674e30b6ba41289acaab6d4b75aa0753
         with:
           go-version-file: go.mod
@@ -118,7 +118,7 @@ jobs:
     needs: [go_build]
     runs-on: [custom, linux, large]
     steps:
-      - uses: actions/checkout@8e5e7e5ab8b370d6c329ec480221332ada57f0ab
+      - uses: actions/checkout@c85c95e3d7251135ab7dc9ce3241c5835cc595a9
         with:
           fetch-depth: 0
       - uses: actions/setup-go@fac708d6674e30b6ba41289acaab6d4b75aa0753
@@ -147,7 +147,7 @@ jobs:
     needs: [go_build]
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@8e5e7e5ab8b370d6c329ec480221332ada57f0ab
+      - uses: actions/checkout@c85c95e3d7251135ab7dc9ce3241c5835cc595a9
       - uses: actions/setup-go@fac708d6674e30b6ba41289acaab6d4b75aa0753
         with:
           go-version-file: go.mod
@@ -175,7 +175,7 @@ jobs:
     needs: [go_build]
     runs-on: [custom, linux, medium]
     steps:
-      - uses: actions/checkout@8e5e7e5ab8b370d6c329ec480221332ada57f0ab
+      - uses: actions/checkout@c85c95e3d7251135ab7dc9ce3241c5835cc595a9
         with:
           fetch-depth: 0
       - uses: actions/setup-go@fac708d6674e30b6ba41289acaab6d4b75aa0753
@@ -205,7 +205,7 @@ jobs:
     needs: [go_build]
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@8e5e7e5ab8b370d6c329ec480221332ada57f0ab
+      - uses: actions/checkout@c85c95e3d7251135ab7dc9ce3241c5835cc595a9
       - uses: actions/cache@88522ab9f39a2ea568f7027eddc7d8d8bc9d59c8
         continue-on-error: true
         id: cache-terraform-providers-schema
@@ -240,7 +240,7 @@ jobs:
     needs: [terraform_providers_schema]
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@8e5e7e5ab8b370d6c329ec480221332ada57f0ab
+      - uses: actions/checkout@c85c95e3d7251135ab7dc9ce3241c5835cc595a9
       - uses: actions/setup-go@fac708d6674e30b6ba41289acaab6d4b75aa0753
         with:
           go-version-file: go.mod
@@ -265,13 +265,14 @@ jobs:
             -ignore-file-missing-resources aws_alb,aws_alb_listener,aws_alb_listener_certificate,aws_alb_listener_rule,aws_alb_target_group,aws_alb_target_group_attachment \
             -provider-source registry.terraform.io/hashicorp/aws \
             -providers-schema-json terraform-providers-schema/schema.json \
-            -require-resource-subcategory
+            -require-resource-subcategory \
+            -ignore-cdktf-missing-files
 
   markdown-lint:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@8e5e7e5ab8b370d6c329ec480221332ada57f0ab
+      - uses: actions/checkout@c85c95e3d7251135ab7dc9ce3241c5835cc595a9
       - uses: avto-dev/markdown-lint@04d43ee9191307b50935a753da3b775ab695eceb
         with:
-          args: '.'
-          ignore: './docs ./website/docs ./CHANGELOG.md ./internal/service/cloudformation/testdata/examplecompany-exampleservice-exampleresource/docs'
+          args: "."
+          ignore: "./docs ./website/docs ./CHANGELOG.md ./internal/service/cloudformation/testdata/examplecompany-exampleservice-exampleresource/docs"

@@ -113,7 +113,7 @@ func TestAccServiceCatalogServiceAction_update(t *testing.T) {
 
 func testAccCheckServiceActionDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ServiceCatalogConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ServiceCatalogConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_servicecatalog_service_action" {
@@ -151,7 +151,7 @@ func testAccCheckServiceActionExists(ctx context.Context, resourceName string) r
 			return fmt.Errorf("resource not found: %s", resourceName)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ServiceCatalogConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ServiceCatalogConn(ctx)
 
 		input := &servicecatalog.DescribeServiceActionInput{
 			Id: aws.String(rs.Primary.ID),

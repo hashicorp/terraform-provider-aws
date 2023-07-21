@@ -323,7 +323,7 @@ func ResourceScalingPlan() *schema.Resource {
 
 func resourceScalingPlanCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).AutoScalingPlansConn()
+	conn := meta.(*conns.AWSClient).AutoScalingPlansConn(ctx)
 
 	scalingPlanName := d.Get("name").(string)
 	input := &autoscalingplans.CreateScalingPlanInput{
@@ -354,7 +354,7 @@ func resourceScalingPlanCreate(ctx context.Context, d *schema.ResourceData, meta
 
 func resourceScalingPlanRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).AutoScalingPlansConn()
+	conn := meta.(*conns.AWSClient).AutoScalingPlansConn(ctx)
 
 	scalingPlanName, scalingPlanVersion, err := scalingPlanParseResourceID(d.Id())
 
@@ -390,7 +390,7 @@ func resourceScalingPlanRead(ctx context.Context, d *schema.ResourceData, meta i
 
 func resourceScalingPlanUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).AutoScalingPlansConn()
+	conn := meta.(*conns.AWSClient).AutoScalingPlansConn(ctx)
 
 	scalingPlanName, scalingPlanVersion, err := scalingPlanParseResourceID(d.Id())
 
@@ -423,7 +423,7 @@ func resourceScalingPlanUpdate(ctx context.Context, d *schema.ResourceData, meta
 
 func resourceScalingPlanDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).AutoScalingPlansConn()
+	conn := meta.(*conns.AWSClient).AutoScalingPlansConn(ctx)
 
 	scalingPlanName, scalingPlanVersion, err := scalingPlanParseResourceID(d.Id())
 

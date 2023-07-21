@@ -96,7 +96,7 @@ func ResourceClusterSnapshot() *schema.Resource {
 
 func resourceClusterSnapshotCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DocDBConn()
+	conn := meta.(*conns.AWSClient).DocDBConn(ctx)
 
 	params := &docdb.CreateDBClusterSnapshotInput{
 		DBClusterIdentifier:         aws.String(d.Get("db_cluster_identifier").(string)),
@@ -129,7 +129,7 @@ func resourceClusterSnapshotCreate(ctx context.Context, d *schema.ResourceData, 
 
 func resourceClusterSnapshotRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DocDBConn()
+	conn := meta.(*conns.AWSClient).DocDBConn(ctx)
 
 	params := &docdb.DescribeDBClusterSnapshotsInput{
 		DBClusterSnapshotIdentifier: aws.String(d.Id()),
@@ -173,7 +173,7 @@ func resourceClusterSnapshotRead(ctx context.Context, d *schema.ResourceData, me
 
 func resourceClusterSnapshotDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DocDBConn()
+	conn := meta.(*conns.AWSClient).DocDBConn(ctx)
 
 	params := &docdb.DeleteDBClusterSnapshotInput{
 		DBClusterSnapshotIdentifier: aws.String(d.Id()),

@@ -30,4 +30,5 @@ The following arguments are required:
 
 In addition to all arguments above, the following attributes are exported:
 
+* `has_findings` - Indicates whether findings are present for the specified detector.
 * `finding_ids` - A list of finding IDs for the specified detector.

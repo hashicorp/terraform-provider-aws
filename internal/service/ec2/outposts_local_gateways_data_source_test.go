@@ -20,7 +20,7 @@ func TestAccEC2OutpostsLocalGatewaysDataSource_basic(t *testing.T) {
 			{
 				Config: testAccOutpostsLocalGatewaysDataSourceConfig_basic(),
 				Check: resource.ComposeTestCheckFunc(
-					acctest.CheckResourceAttrGreaterThanValue(dataSourceName, "ids.#", "0"),
+					acctest.CheckResourceAttrGreaterThanValue(dataSourceName, "ids.#", 0),
 				),
 			},
 		},

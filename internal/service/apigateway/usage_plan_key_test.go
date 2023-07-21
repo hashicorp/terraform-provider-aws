@@ -115,7 +115,7 @@ func testAccCheckUsagePlanKeyExists(ctx context.Context, n string, v *apigateway
 			return fmt.Errorf("No API Gateway Usage Plan Key ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayConn(ctx)
 
 		output, err := tfapigateway.FindUsagePlanKeyByTwoPartKey(ctx, conn, rs.Primary.Attributes["usage_plan_id"], rs.Primary.Attributes["key_id"])
 
@@ -131,7 +131,7 @@ func testAccCheckUsagePlanKeyExists(ctx context.Context, n string, v *apigateway
 
 func testAccCheckUsagePlanKeyDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_api_gateway_usage_plan_key" {

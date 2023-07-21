@@ -61,7 +61,7 @@ func resourceObjectLambdaAccessPointPolicy() *schema.Resource {
 }
 
 func resourceObjectLambdaAccessPointPolicyCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).S3ControlConn()
+	conn := meta.(*conns.AWSClient).S3ControlConn(ctx)
 
 	accountID := meta.(*conns.AWSClient).AccountID
 	if v, ok := d.GetOk("account_id"); ok {
@@ -93,7 +93,7 @@ func resourceObjectLambdaAccessPointPolicyCreate(ctx context.Context, d *schema.
 }
 
 func resourceObjectLambdaAccessPointPolicyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).S3ControlConn()
+	conn := meta.(*conns.AWSClient).S3ControlConn(ctx)
 
 	accountID, name, err := ObjectLambdaAccessPointParseResourceID(d.Id())
 
@@ -132,7 +132,7 @@ func resourceObjectLambdaAccessPointPolicyRead(ctx context.Context, d *schema.Re
 }
 
 func resourceObjectLambdaAccessPointPolicyUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).S3ControlConn()
+	conn := meta.(*conns.AWSClient).S3ControlConn(ctx)
 
 	accountID, name, err := ObjectLambdaAccessPointParseResourceID(d.Id())
 
@@ -161,7 +161,7 @@ func resourceObjectLambdaAccessPointPolicyUpdate(ctx context.Context, d *schema.
 }
 
 func resourceObjectLambdaAccessPointPolicyDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).S3ControlConn()
+	conn := meta.(*conns.AWSClient).S3ControlConn(ctx)
 
 	accountID, name, err := ObjectLambdaAccessPointParseResourceID(d.Id())
 

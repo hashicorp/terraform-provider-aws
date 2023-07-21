@@ -179,7 +179,7 @@ func resourceRoleImport(ctx context.Context, d *schema.ResourceData, meta interf
 
 func resourceRoleCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).IAMConn()
+	conn := meta.(*conns.AWSClient).IAMConn(ctx)
 
 	assumeRolePolicy, err := structure.NormalizeJsonString(d.Get("assume_role_policy").(string))
 	if err != nil {
@@ -191,7 +191,7 @@ func resourceRoleCreate(ctx context.Context, d *schema.ResourceData, meta interf
 		AssumeRolePolicyDocument: aws.String(assumeRolePolicy),
 		Path:                     aws.String(d.Get("path").(string)),
 		RoleName:                 aws.String(name),
-		Tags:                     GetTagsIn(ctx),
+		Tags:                     getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("description"); ok {
@@ -238,7 +238,7 @@ func resourceRoleCreate(ctx context.Context, d *schema.ResourceData, meta interf
 	d.SetId(roleName)
 
 	// For partitions not supporting tag-on-create, attempt tag after create.
-	if tags := GetTagsIn(ctx); input.Tags == nil && len(tags) > 0 {
+	if tags := getTagsIn(ctx); input.Tags == nil && len(tags) > 0 {
 		err := roleCreateTags(ctx, conn, d.Id(), tags)
 
 		// If default tags only, continue. Otherwise, error.
@@ -256,7 +256,7 @@ func resourceRoleCreate(ctx context.Context, d *schema.ResourceData, meta interf
 
 func resourceRoleRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).IAMConn()
+	conn := meta.(*conns.AWSClient).IAMConn(ctx)
 
 	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(ctx, propagationTimeout, func() (interface{}, error) {
 		return FindRoleByName(ctx, conn, d.Id())
@@ -325,14 +325,14 @@ func resourceRoleRead(ctx context.Context, d *schema.ResourceData, meta interfac
 	}
 	d.Set("managed_policy_arns", managedPolicies)
 
-	SetTagsOut(ctx, role.Tags)
+	setTagsOut(ctx, role.Tags)
 
 	return diags
 }
 
 func resourceRoleUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).IAMConn()
+	conn := meta.(*conns.AWSClient).IAMConn(ctx)
 
 	if d.HasChange("assume_role_policy") {
 		assumeRolePolicy, err := structure.NormalizeJsonString(d.Get("assume_role_policy").(string))
@@ -501,7 +501,7 @@ func resourceRoleUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 
 func resourceRoleDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).IAMConn()
+	conn := meta.(*conns.AWSClient).IAMConn(ctx)
 
 	hasInline := false
 	if v, ok := d.GetOk("inline_policy"); ok && v.(*schema.Set).Len() > 0 {
@@ -818,7 +818,7 @@ func expandRoleInlinePolicies(roleName string, tfList []interface{}) []*iam.PutR
 }
 
 func addRoleInlinePolicies(ctx context.Context, policies []*iam.PutRolePolicyInput, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).IAMConn()
+	conn := meta.(*conns.AWSClient).IAMConn(ctx)
 
 	var errs *multierror.Error
 	for _, policy := range policies {
@@ -836,7 +836,7 @@ func addRoleInlinePolicies(ctx context.Context, policies []*iam.PutRolePolicyInp
 }
 
 func addRoleManagedPolicies(ctx context.Context, roleName string, policies []*string, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).IAMConn()
+	conn := meta.(*conns.AWSClient).IAMConn(ctx)
 
 	var errs *multierror.Error
 	for _, arn := range policies {
@@ -850,7 +850,7 @@ func addRoleManagedPolicies(ctx context.Context, roleName string, policies []*st
 }
 
 func readRoleInlinePolicies(ctx context.Context, roleName string, meta interface{}) ([]*iam.PutRolePolicyInput, error) {
-	conn := meta.(*conns.AWSClient).IAMConn()
+	conn := meta.(*conns.AWSClient).IAMConn(ctx)
 
 	policyNames, err := readRolePolicyNames(ctx, conn, roleName)
 	if err != nil {

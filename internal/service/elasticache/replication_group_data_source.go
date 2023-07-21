@@ -119,7 +119,7 @@ func DataSourceReplicationGroup() *schema.Resource {
 
 func dataSourceReplicationGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ElastiCacheConn()
+	conn := meta.(*conns.AWSClient).ElastiCacheConn(ctx)
 
 	groupID := d.Get("replication_group_id").(string)
 

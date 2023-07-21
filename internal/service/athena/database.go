@@ -106,7 +106,7 @@ func ResourceDatabase() *schema.Resource {
 
 func resourceDatabaseCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).AthenaConn()
+	conn := meta.(*conns.AWSClient).AthenaConn(ctx)
 
 	name := d.Get("name").(string)
 	var queryString bytes.Buffer
@@ -154,7 +154,7 @@ func resourceDatabaseCreate(ctx context.Context, d *schema.ResourceData, meta in
 
 func resourceDatabaseRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).AthenaConn()
+	conn := meta.(*conns.AWSClient).AthenaConn(ctx)
 
 	input := &athena.GetDatabaseInput{
 		DatabaseName: aws.String(d.Id()),
@@ -183,7 +183,7 @@ func resourceDatabaseRead(ctx context.Context, d *schema.ResourceData, meta inte
 
 func resourceDatabaseDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).AthenaConn()
+	conn := meta.(*conns.AWSClient).AthenaConn(ctx)
 
 	queryString := fmt.Sprintf("drop database `%s`", d.Id())
 	if d.Get("force_destroy").(bool) {

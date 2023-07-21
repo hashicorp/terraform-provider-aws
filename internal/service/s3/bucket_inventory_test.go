@@ -142,7 +142,7 @@ func testAccCheckBucketInventoryExistsConfig(ctx context.Context, n string, res 
 			return fmt.Errorf("No S3 bucket inventory configuration ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Conn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Conn(ctx)
 		bucket, name, err := tfs3.BucketInventoryParseID(rs.Primary.ID)
 		if err != nil {
 			return err
@@ -166,7 +166,7 @@ func testAccCheckBucketInventoryExistsConfig(ctx context.Context, n string, res 
 
 func testAccCheckBucketInventoryDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Conn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Conn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_s3_bucket_inventory" {

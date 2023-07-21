@@ -83,18 +83,19 @@ func TestValidationBool(t *testing.T) {
 			f:   ValidateTypeStringNullableBool,
 		},
 		{
-			val: "1",
-			f:   ValidateTypeStringNullableBool,
+			val:             "1",
+			f:               ValidateTypeStringNullableBool,
+			expectedWarning: regexp.MustCompile(`^\w+: the use of values other than "true" and "false" is deprecated and will be removed in a future version of the provider$`),
 		},
 		{
 			val:         "A",
 			f:           ValidateTypeStringNullableBool,
-			expectedErr: regexp.MustCompile(`[\w]+: cannot parse 'A' as boolean`),
+			expectedErr: regexp.MustCompile(`^\w+: cannot parse 'A' as boolean: .+$`),
 		},
 		{
 			val:         1,
 			f:           ValidateTypeStringNullableBool,
-			expectedErr: regexp.MustCompile(`expected type of [\w]+ to be string`),
+			expectedErr: regexp.MustCompile(`^expected type of \w+ to be string$`),
 		},
 	})
 }

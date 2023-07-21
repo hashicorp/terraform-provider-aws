@@ -181,7 +181,7 @@ func testAccCheckGroupExists(ctx context.Context, n string, v *types.Group) reso
 			return fmt.Errorf("No XRay Group ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).XRayClient()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).XRayClient(ctx)
 
 		output, err := tfxray.FindGroupByARN(ctx, conn, rs.Primary.ID)
 
@@ -202,7 +202,7 @@ func testAccCheckGroupDestroy(ctx context.Context) resource.TestCheckFunc {
 				continue
 			}
 
-			conn := acctest.Provider.Meta().(*conns.AWSClient).XRayClient()
+			conn := acctest.Provider.Meta().(*conns.AWSClient).XRayClient(ctx)
 
 			_, err := tfxray.FindGroupByARN(ctx, conn, rs.Primary.ID)
 

@@ -73,7 +73,7 @@ const (
 )
 
 func resourceSinkPolicyPut(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ObservabilityAccessManagerClient()
+	conn := meta.(*conns.AWSClient).ObservabilityAccessManagerClient(ctx)
 
 	sinkIdentifier := d.Get("sink_identifier").(string)
 	policy, err := structure.NormalizeJsonString(d.Get("policy").(string))
@@ -100,7 +100,7 @@ func resourceSinkPolicyPut(ctx context.Context, d *schema.ResourceData, meta int
 }
 
 func resourceSinkPolicyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ObservabilityAccessManagerClient()
+	conn := meta.(*conns.AWSClient).ObservabilityAccessManagerClient(ctx)
 
 	out, err := findSinkPolicyByID(ctx, conn, d.Id())
 

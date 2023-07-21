@@ -175,7 +175,7 @@ func TestAccVPCRouteTableAssociation_disappears(t *testing.T) {
 
 func testAccCheckRouteTableAssociationDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_route_table_association" {
@@ -210,7 +210,7 @@ func testAccCheckRouteTableAssociationExists(ctx context.Context, n string, v *e
 			return fmt.Errorf("No ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
 
 		association, err := tfec2.FindRouteTableAssociationByID(ctx, conn, rs.Primary.ID)
 

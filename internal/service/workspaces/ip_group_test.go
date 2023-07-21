@@ -173,7 +173,7 @@ func testAccCheckIPGroupDestroy(ctx context.Context) resource.TestCheckFunc {
 				continue
 			}
 
-			conn := acctest.Provider.Meta().(*conns.AWSClient).WorkSpacesConn()
+			conn := acctest.Provider.Meta().(*conns.AWSClient).WorkSpacesConn(ctx)
 			resp, err := conn.DescribeIpGroupsWithContext(ctx, &workspaces.DescribeIpGroupsInput{
 				GroupIds: []*string{aws.String(rs.Primary.ID)},
 			})
@@ -207,7 +207,7 @@ func testAccCheckIPGroupExists(ctx context.Context, n string, v *workspaces.IpGr
 			return fmt.Errorf("No Workpsaces IP Group ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).WorkSpacesConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).WorkSpacesConn(ctx)
 		resp, err := conn.DescribeIpGroupsWithContext(ctx, &workspaces.DescribeIpGroupsInput{
 			GroupIds: []*string{aws.String(rs.Primary.ID)},
 		})

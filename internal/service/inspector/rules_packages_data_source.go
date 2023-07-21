@@ -29,7 +29,7 @@ func DataSourceRulesPackages() *schema.Resource {
 
 func dataSourceRulesPackagesRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).InspectorConn()
+	conn := meta.(*conns.AWSClient).InspectorConn(ctx)
 
 	output, err := findRulesPackageARNs(ctx, conn)
 

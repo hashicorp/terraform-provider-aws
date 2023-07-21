@@ -161,12 +161,12 @@ func ResourceImagePipeline() *schema.Resource {
 
 func resourceImagePipelineCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ImageBuilderConn()
+	conn := meta.(*conns.AWSClient).ImageBuilderConn(ctx)
 
 	input := &imagebuilder.CreateImagePipelineInput{
 		ClientToken:                  aws.String(id.UniqueId()),
 		EnhancedImageMetadataEnabled: aws.Bool(d.Get("enhanced_image_metadata_enabled").(bool)),
-		Tags:                         GetTagsIn(ctx),
+		Tags:                         getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("container_recipe_arn"); ok {
@@ -222,7 +222,7 @@ func resourceImagePipelineCreate(ctx context.Context, d *schema.ResourceData, me
 
 func resourceImagePipelineRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ImageBuilderConn()
+	conn := meta.(*conns.AWSClient).ImageBuilderConn(ctx)
 
 	input := &imagebuilder.GetImagePipelineInput{
 		ImagePipelineArn: aws.String(d.Id()),
@@ -275,14 +275,14 @@ func resourceImagePipelineRead(ctx context.Context, d *schema.ResourceData, meta
 
 	d.Set("status", imagePipeline.Status)
 
-	SetTagsOut(ctx, imagePipeline.Tags)
+	setTagsOut(ctx, imagePipeline.Tags)
 
 	return diags
 }
 
 func resourceImagePipelineUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ImageBuilderConn()
+	conn := meta.(*conns.AWSClient).ImageBuilderConn(ctx)
 
 	if d.HasChanges(
 		"description",
@@ -343,7 +343,7 @@ func resourceImagePipelineUpdate(ctx context.Context, d *schema.ResourceData, me
 
 func resourceImagePipelineDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ImageBuilderConn()
+	conn := meta.(*conns.AWSClient).ImageBuilderConn(ctx)
 
 	input := &imagebuilder.DeleteImagePipelineInput{
 		ImagePipelineArn: aws.String(d.Id()),

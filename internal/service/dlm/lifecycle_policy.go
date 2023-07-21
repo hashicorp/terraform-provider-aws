@@ -499,14 +499,14 @@ func ResourceLifecyclePolicy() *schema.Resource {
 
 func resourceLifecyclePolicyCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DLMConn()
+	conn := meta.(*conns.AWSClient).DLMConn(ctx)
 
 	input := dlm.CreateLifecyclePolicyInput{
 		Description:      aws.String(d.Get("description").(string)),
 		ExecutionRoleArn: aws.String(d.Get("execution_role_arn").(string)),
 		PolicyDetails:    expandPolicyDetails(d.Get("policy_details").([]interface{})),
 		State:            aws.String(d.Get("state").(string)),
-		Tags:             GetTagsIn(ctx),
+		Tags:             getTagsIn(ctx),
 	}
 
 	log.Printf("[INFO] Creating DLM lifecycle policy: %s", input)
@@ -525,7 +525,7 @@ func resourceLifecyclePolicyCreate(ctx context.Context, d *schema.ResourceData, 
 
 func resourceLifecyclePolicyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DLMConn()
+	conn := meta.(*conns.AWSClient).DLMConn(ctx)
 
 	log.Printf("[INFO] Reading DLM lifecycle policy: %s", d.Id())
 	out, err := conn.GetLifecyclePolicyWithContext(ctx, &dlm.GetLifecyclePolicyInput{
@@ -550,14 +550,14 @@ func resourceLifecyclePolicyRead(ctx context.Context, d *schema.ResourceData, me
 		return sdkdiag.AppendErrorf(diags, "setting policy details %s", err)
 	}
 
-	SetTagsOut(ctx, out.Policy.Tags)
+	setTagsOut(ctx, out.Policy.Tags)
 
 	return diags
 }
 
 func resourceLifecyclePolicyUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DLMConn()
+	conn := meta.(*conns.AWSClient).DLMConn(ctx)
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		input := dlm.UpdateLifecyclePolicyInput{
@@ -589,7 +589,7 @@ func resourceLifecyclePolicyUpdate(ctx context.Context, d *schema.ResourceData, 
 
 func resourceLifecyclePolicyDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DLMConn()
+	conn := meta.(*conns.AWSClient).DLMConn(ctx)
 
 	log.Printf("[INFO] Deleting DLM lifecycle policy: %s", d.Id())
 	_, err := conn.DeleteLifecyclePolicyWithContext(ctx, &dlm.DeleteLifecyclePolicyInput{

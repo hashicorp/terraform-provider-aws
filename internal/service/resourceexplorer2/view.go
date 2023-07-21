@@ -119,13 +119,13 @@ func (r *resourceView) Create(ctx context.Context, request resource.CreateReques
 		return
 	}
 
-	conn := r.Meta().ResourceExplorer2Client()
+	conn := r.Meta().ResourceExplorer2Client(ctx)
 
 	input := &resourceexplorer2.CreateViewInput{
 		ClientToken:        aws.String(id.UniqueId()),
 		Filters:            r.expandSearchFilter(ctx, data.Filters),
 		IncludedProperties: r.expandIncludedProperties(ctx, data.IncludedProperties),
-		Tags:               GetTagsIn(ctx),
+		Tags:               getTagsIn(ctx),
 		ViewName:           aws.String(data.Name.ValueString()),
 	}
 
@@ -169,7 +169,7 @@ func (r *resourceView) Read(ctx context.Context, request resource.ReadRequest, r
 		return
 	}
 
-	conn := r.Meta().ResourceExplorer2Client()
+	conn := r.Meta().ResourceExplorer2Client(ctx)
 
 	output, err := findViewByARN(ctx, conn, data.ID.ValueString())
 
@@ -220,7 +220,7 @@ func (r *resourceView) Read(ctx context.Context, request resource.ReadRequest, r
 	name := parts[1]
 	data.Name = types.StringValue(name)
 
-	SetTagsOut(ctx, output.Tags)
+	setTagsOut(ctx, output.Tags)
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
@@ -240,7 +240,7 @@ func (r *resourceView) Update(ctx context.Context, request resource.UpdateReques
 		return
 	}
 
-	conn := r.Meta().ResourceExplorer2Client()
+	conn := r.Meta().ResourceExplorer2Client(ctx)
 
 	if !new.Filters.Equal(old.Filters) || !new.IncludedProperties.Equal(old.IncludedProperties) {
 		input := &resourceexplorer2.UpdateViewInput{
@@ -296,7 +296,7 @@ func (r *resourceView) Delete(ctx context.Context, request resource.DeleteReques
 		return
 	}
 
-	conn := r.Meta().ResourceExplorer2Client()
+	conn := r.Meta().ResourceExplorer2Client(ctx)
 
 	tflog.Debug(ctx, "deleting Resource Explorer View", map[string]interface{}{
 		"id": data.ID.ValueString(),

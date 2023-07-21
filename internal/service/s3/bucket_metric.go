@@ -68,7 +68,7 @@ func ResourceBucketMetric() *schema.Resource {
 
 func resourceBucketMetricPut(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).S3Conn()
+	conn := meta.(*conns.AWSClient).S3Conn(ctx)
 	bucket := d.Get("bucket").(string)
 	name := d.Get("name").(string)
 
@@ -119,7 +119,7 @@ func resourceBucketMetricPut(ctx context.Context, d *schema.ResourceData, meta i
 
 func resourceBucketMetricDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).S3Conn()
+	conn := meta.(*conns.AWSClient).S3Conn(ctx)
 
 	bucket, name, err := BucketMetricParseID(d.Id())
 	if err != nil {
@@ -151,7 +151,7 @@ func resourceBucketMetricDelete(ctx context.Context, d *schema.ResourceData, met
 
 func resourceBucketMetricRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).S3Conn()
+	conn := meta.(*conns.AWSClient).S3Conn(ctx)
 
 	bucket, name, err := BucketMetricParseID(d.Id())
 	if err != nil {

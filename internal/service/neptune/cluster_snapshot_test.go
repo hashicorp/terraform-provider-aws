@@ -82,7 +82,7 @@ func TestAccNeptuneClusterSnapshot_disappears(t *testing.T) {
 
 func testAccCheckClusterSnapshotDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).NeptuneConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).NeptuneConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_neptune_cluster_snapshot" {
@@ -117,7 +117,7 @@ func testAccCheckClusterSnapshotExists(ctx context.Context, n string, v *neptune
 			return fmt.Errorf("No Neptune Cluster Snapshot ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).NeptuneConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).NeptuneConn(ctx)
 
 		output, err := tfneptune.FindClusterSnapshotByID(ctx, conn, rs.Primary.ID)
 

@@ -428,7 +428,7 @@ func testAccCheckFirewallDestroy(ctx context.Context) resource.TestCheckFunc {
 				continue
 			}
 
-			conn := acctest.Provider.Meta().(*conns.AWSClient).NetworkFirewallConn()
+			conn := acctest.Provider.Meta().(*conns.AWSClient).NetworkFirewallConn(ctx)
 
 			_, err := tfnetworkfirewall.FindFirewallByARN(ctx, conn, rs.Primary.ID)
 
@@ -458,7 +458,7 @@ func testAccCheckFirewallExists(ctx context.Context, n string) resource.TestChec
 			return fmt.Errorf("No NetworkFirewall Firewall ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).NetworkFirewallConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).NetworkFirewallConn(ctx)
 
 		_, err := tfnetworkfirewall.FindFirewallByARN(ctx, conn, rs.Primary.ID)
 
@@ -467,7 +467,7 @@ func testAccCheckFirewallExists(ctx context.Context, n string) resource.TestChec
 }
 
 func testAccPreCheck(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).NetworkFirewallConn()
+	conn := acctest.Provider.Meta().(*conns.AWSClient).NetworkFirewallConn(ctx)
 
 	input := &networkfirewall.ListFirewallsInput{}
 

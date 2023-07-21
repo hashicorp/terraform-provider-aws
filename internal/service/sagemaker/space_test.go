@@ -256,7 +256,7 @@ func testAccSpace_disappears(t *testing.T) {
 
 func testAccCheckSpaceDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SageMakerConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SageMakerConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_sagemaker_space" {
@@ -297,7 +297,7 @@ func testAccCheckSpaceExists(ctx context.Context, n string, space *sagemaker.Des
 			return fmt.Errorf("No sagmaker domain ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SageMakerConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SageMakerConn(ctx)
 
 		domainID := rs.Primary.Attributes["domain_id"]
 		spaceName := rs.Primary.Attributes["space_name"]

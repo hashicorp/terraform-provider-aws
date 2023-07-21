@@ -97,7 +97,7 @@ func ResourceWebhook() *schema.Resource {
 
 func resourceWebhookCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CodeBuildConn()
+	conn := meta.(*conns.AWSClient).CodeBuildConn(ctx)
 
 	input := &codebuild.CreateWebhookInput{
 		ProjectName:  aws.String(d.Get("project_name").(string)),
@@ -163,7 +163,7 @@ func expandWebhookFilterData(data map[string]interface{}) []*codebuild.WebhookFi
 
 func resourceWebhookRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CodeBuildConn()
+	conn := meta.(*conns.AWSClient).CodeBuildConn(ctx)
 
 	resp, err := conn.BatchGetProjectsWithContext(ctx, &codebuild.BatchGetProjectsInput{
 		Names: []*string{
@@ -216,7 +216,7 @@ func resourceWebhookRead(ctx context.Context, d *schema.ResourceData, meta inter
 
 func resourceWebhookUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CodeBuildConn()
+	conn := meta.(*conns.AWSClient).CodeBuildConn(ctx)
 
 	var err error
 	filterGroups := expandWebhookFilterGroups(d)
@@ -251,7 +251,7 @@ func resourceWebhookUpdate(ctx context.Context, d *schema.ResourceData, meta int
 
 func resourceWebhookDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CodeBuildConn()
+	conn := meta.(*conns.AWSClient).CodeBuildConn(ctx)
 
 	_, err := conn.DeleteWebhookWithContext(ctx, &codebuild.DeleteWebhookInput{
 		ProjectName: aws.String(d.Id()),

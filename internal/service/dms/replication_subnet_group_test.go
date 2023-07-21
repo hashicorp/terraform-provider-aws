@@ -69,7 +69,7 @@ func checkReplicationSubnetGroupExistsProviders(ctx context.Context, n string, p
 				continue
 			}
 
-			conn := provider.Meta().(*conns.AWSClient).DMSConn()
+			conn := provider.Meta().(*conns.AWSClient).DMSConn(ctx)
 			_, err := conn.DescribeReplicationSubnetGroupsWithContext(ctx, &dms.DescribeReplicationSubnetGroupsInput{
 				Filters: []*dms.Filter{
 					{

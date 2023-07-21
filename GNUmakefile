@@ -145,7 +145,7 @@ gen:
 	rm -f internal/conns/*_gen.go
 	rm -f internal/provider/*_gen.go
 	rm -f internal/service/**/*_gen.go
-	rm -f internal/sweep/sweep_test.go
+	rm -f internal/sweep/sweep_test.go internal/sweep/service_packages_gen_test.go
 	rm -f names/caps.md
 	rm -f names/*_gen.go
 	rm -f website/docs/guides/custom-service-endpoints.html.md
@@ -153,10 +153,11 @@ gen:
 	rm -f .ci/.semgrep-configs.yml
 	rm -f .ci/.semgrep-service-name*.yml
 	$(GO_VER) generate ./...
-	# Generate service package data last as it may depend on output of earlier generators.
-	rm -f internal/service/**/service_package_gen.go
+	# Generate service package lists last as they may depend on output of earlier generators.
 	rm -f internal/provider/service_packages_gen.go
-	$(GO_VER) generate ./internal/generate/servicepackages
+	$(GO_VER) generate ./internal/provider
+	rm -f internal/sweep/sweep_test.go internal/sweep/service_packages_gen_test.go
+	$(GO_VER) generate ./internal/sweep
 
 gencheck:
 	@echo "==> Checking generated source code..."
@@ -307,11 +308,6 @@ semgrep: semgrep-validate
 	@echo "==> Running Semgrep static analysis..."
 	@docker run --rm --volume "${PWD}:/src" returntocorp/semgrep semgrep --config .ci/.semgrep.yml
 
-servicepackages:
-	rm -f internal/service/**/service_package_gen.go
-	rm -f internal/provider/service_packages_gen.go
-	$(GO_VER) generate ./internal/generate/servicepackages
-
 skaff:
 	cd skaff && $(GO_VER) install github.com/hashicorp/terraform-provider-aws/skaff
 
@@ -434,7 +430,6 @@ yamllint:
 	sanity \
 	semall \
 	semgrep \
-	servicepackages \
 	skaff \
 	sweep \
 	t \

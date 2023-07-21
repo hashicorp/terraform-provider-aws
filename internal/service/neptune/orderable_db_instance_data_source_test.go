@@ -67,7 +67,7 @@ func TestAccNeptuneOrderableDBInstanceDataSource_preferred(t *testing.T) {
 }
 
 func testAccPreCheckOrderableDBInstance(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).NeptuneConn()
+	conn := acctest.Provider.Meta().(*conns.AWSClient).NeptuneConn(ctx)
 
 	input := &neptune.DescribeOrderableDBInstanceOptionsInput{
 		Engine: aws.String("mysql"),

@@ -356,7 +356,7 @@ func TestAccVPCManagedPrefixList_tags(t *testing.T) {
 
 func testAccCheckManagedPrefixListDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_ec2_managed_prefix_list" {
@@ -391,7 +391,7 @@ func testAccManagedPrefixListExists(ctx context.Context, resourceName string) re
 			return fmt.Errorf("No EC2 Managed Prefix List ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
 
 		_, err := tfec2.FindManagedPrefixListByID(ctx, conn, rs.Primary.ID)
 
@@ -400,7 +400,7 @@ func testAccManagedPrefixListExists(ctx context.Context, resourceName string) re
 }
 
 func testAccPreCheckManagedPrefixList(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
+	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
 
 	input := &ec2.DescribeManagedPrefixListsInput{}
 

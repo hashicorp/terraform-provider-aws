@@ -158,7 +158,7 @@ func TestAccInspectorAssessmentTarget_resourceGroupARN(t *testing.T) {
 
 func testAccCheckTargetAssessmentDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).InspectorConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).InspectorConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_inspector_assessment_target" {
@@ -187,7 +187,7 @@ func testAccCheckTargetExists(ctx context.Context, name string, target *inspecto
 			return fmt.Errorf("Not found: %s", name)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).InspectorConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).InspectorConn(ctx)
 
 		assessmentTarget, err := tfinspector.DescribeAssessmentTarget(ctx, conn, rs.Primary.ID)
 
@@ -207,7 +207,7 @@ func testAccCheckTargetExists(ctx context.Context, name string, target *inspecto
 
 func testAccCheckTargetDisappears(ctx context.Context, assessmentTarget *inspector.AssessmentTarget) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).InspectorConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).InspectorConn(ctx)
 
 		input := &inspector.DeleteAssessmentTargetInput{
 			AssessmentTargetArn: assessmentTarget.Arn,

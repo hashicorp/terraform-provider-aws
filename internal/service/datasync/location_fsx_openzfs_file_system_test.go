@@ -166,7 +166,7 @@ func TestAccDataSyncLocationFSxOpenZFSFileSystem_tags(t *testing.T) {
 
 func testAccCheckLocationFSxOpenZFSDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DataSyncConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DataSyncConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_datasync_location_fsx_openzfs_file_system" {
@@ -197,7 +197,7 @@ func testAccCheckLocationFSxOpenZFSExists(ctx context.Context, resourceName stri
 			return fmt.Errorf("Not found: %s", resourceName)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DataSyncConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DataSyncConn(ctx)
 		output, err := tfdatasync.FindFSxOpenZFSLocationByARN(ctx, conn, rs.Primary.ID)
 
 		if err != nil {

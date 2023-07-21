@@ -421,7 +421,7 @@ func testAccCheckOrganizationManagedRuleExists(ctx context.Context, resourceName
 			return fmt.Errorf("Not Found: %s", resourceName)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ConfigServiceConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ConfigServiceConn(ctx)
 
 		rule, err := tfconfig.DescribeOrganizationConfigRule(ctx, conn, rs.Primary.ID)
 
@@ -441,7 +441,7 @@ func testAccCheckOrganizationManagedRuleExists(ctx context.Context, resourceName
 
 func testAccCheckOrganizationManagedRuleDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ConfigServiceConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ConfigServiceConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_config_organization_managed_rule" {

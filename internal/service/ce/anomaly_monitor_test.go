@@ -191,7 +191,7 @@ func TestAccCEAnomalyMonitor_Dimensional(t *testing.T) {
 
 func testAccCheckAnomalyMonitorExists(ctx context.Context, n string, anomalyMonitor *costexplorer.AnomalyMonitor) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CEConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CEConn(ctx)
 
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -220,7 +220,7 @@ func testAccCheckAnomalyMonitorExists(ctx context.Context, n string, anomalyMoni
 
 func testAccCheckAnomalyMonitorDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CEConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CEConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_ce_anomaly_monitor" {

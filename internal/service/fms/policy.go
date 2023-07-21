@@ -163,11 +163,11 @@ func ResourcePolicy() *schema.Resource {
 
 func resourcePolicyCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).FMSConn()
+	conn := meta.(*conns.AWSClient).FMSConn(ctx)
 
 	input := &fms.PutPolicyInput{
 		Policy:  resourcePolicyExpandPolicy(d),
-		TagList: GetTagsIn(ctx),
+		TagList: getTagsIn(ctx),
 	}
 
 	output, err := conn.PutPolicyWithContext(ctx, input)
@@ -183,7 +183,7 @@ func resourcePolicyCreate(ctx context.Context, d *schema.ResourceData, meta inte
 
 func resourcePolicyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).FMSConn()
+	conn := meta.(*conns.AWSClient).FMSConn(ctx)
 
 	output, err := FindPolicyByID(ctx, conn, d.Id())
 
@@ -232,7 +232,7 @@ func resourcePolicyRead(ctx context.Context, d *schema.ResourceData, meta interf
 
 func resourcePolicyUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).FMSConn()
+	conn := meta.(*conns.AWSClient).FMSConn(ctx)
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		input := &fms.PutPolicyInput{
@@ -251,7 +251,7 @@ func resourcePolicyUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 
 func resourcePolicyDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).FMSConn()
+	conn := meta.(*conns.AWSClient).FMSConn(ctx)
 
 	log.Printf("[DEBUG] Deleting FMS Policy: %s", d.Id())
 	_, err := conn.DeletePolicyWithContext(ctx, &fms.DeletePolicyInput{

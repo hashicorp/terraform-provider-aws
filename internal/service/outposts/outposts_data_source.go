@@ -53,7 +53,7 @@ func DataSourceOutposts() *schema.Resource { // nosemgrep:ci.outposts-in-func-na
 
 func dataSourceOutpostsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics { // nosemgrep:ci.outposts-in-func-name
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).OutpostsConn()
+	conn := meta.(*conns.AWSClient).OutpostsConn(ctx)
 
 	input := &outposts.ListOutpostsInput{}
 

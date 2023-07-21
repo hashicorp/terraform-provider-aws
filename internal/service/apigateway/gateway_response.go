@@ -72,7 +72,7 @@ func ResourceGatewayResponse() *schema.Resource {
 
 func resourceGatewayResponsePut(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).APIGatewayConn()
+	conn := meta.(*conns.AWSClient).APIGatewayConn(ctx)
 
 	input := &apigateway.PutGatewayResponseInput{
 		ResponseType: aws.String(d.Get("response_type").(string)),
@@ -106,7 +106,7 @@ func resourceGatewayResponsePut(ctx context.Context, d *schema.ResourceData, met
 
 func resourceGatewayResponseRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).APIGatewayConn()
+	conn := meta.(*conns.AWSClient).APIGatewayConn(ctx)
 
 	gatewayResponse, err := FindGatewayResponseByTwoPartKey(ctx, conn, d.Get("response_type").(string), d.Get("rest_api_id").(string))
 
@@ -130,7 +130,7 @@ func resourceGatewayResponseRead(ctx context.Context, d *schema.ResourceData, me
 
 func resourceGatewayResponseDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).APIGatewayConn()
+	conn := meta.(*conns.AWSClient).APIGatewayConn(ctx)
 
 	log.Printf("[DEBUG] Deleting API Gateway Gateway Response: %s", d.Id())
 	_, err := conn.DeleteGatewayResponseWithContext(ctx, &apigateway.DeleteGatewayResponseInput{

@@ -137,7 +137,7 @@ func TestAccVPCLatticeAccessLogSubscription_tags(t *testing.T) {
 
 func testAccCheckAccessLogSubscriptionDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).VPCLatticeClient()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).VPCLatticeClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_vpclattice_access_log_subscription" {
@@ -173,7 +173,7 @@ func testAccCheckAccessLogSubscriptionExists(ctx context.Context, name string, a
 			return create.Error(names.VPCLattice, create.ErrActionCheckingExistence, tfvpclattice.ResNameAccessLogSubscription, name, errors.New("not set"))
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).VPCLatticeClient()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).VPCLatticeClient(ctx)
 		resp, err := conn.GetAccessLogSubscription(ctx, &vpclattice.GetAccessLogSubscriptionInput{
 			AccessLogSubscriptionIdentifier: aws.String(rs.Primary.ID),
 		})

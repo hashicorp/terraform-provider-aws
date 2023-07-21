@@ -96,7 +96,7 @@ func ResourceAgent() *schema.Resource {
 
 func resourceAgentCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DataSyncConn()
+	conn := meta.(*conns.AWSClient).DataSyncConn(ctx)
 
 	activationKey := d.Get("activation_key").(string)
 	agentIpAddress := d.Get("ip_address").(string)
@@ -174,7 +174,7 @@ func resourceAgentCreate(ctx context.Context, d *schema.ResourceData, meta inter
 
 	input := &datasync.CreateAgentInput{
 		ActivationKey: aws.String(activationKey),
-		Tags:          GetTagsIn(ctx),
+		Tags:          getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("name"); ok {
@@ -213,7 +213,7 @@ func resourceAgentCreate(ctx context.Context, d *schema.ResourceData, meta inter
 
 func resourceAgentRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DataSyncConn()
+	conn := meta.(*conns.AWSClient).DataSyncConn(ctx)
 
 	output, err := FindAgentByARN(ctx, conn, d.Id())
 
@@ -246,7 +246,7 @@ func resourceAgentRead(ctx context.Context, d *schema.ResourceData, meta interfa
 
 func resourceAgentUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DataSyncConn()
+	conn := meta.(*conns.AWSClient).DataSyncConn(ctx)
 
 	if d.HasChange("name") {
 		input := &datasync.UpdateAgentInput{
@@ -266,7 +266,7 @@ func resourceAgentUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 
 func resourceAgentDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DataSyncConn()
+	conn := meta.(*conns.AWSClient).DataSyncConn(ctx)
 
 	log.Printf("[DEBUG] Deleting DataSync Agent: %s", d.Id())
 	_, err := conn.DeleteAgentWithContext(ctx, &datasync.DeleteAgentInput{

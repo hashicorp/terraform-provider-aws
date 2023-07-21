@@ -136,12 +136,9 @@ func ResourceTable() *schema.Resource {
 				Type:     schema.TypeString,
 				ForceNew: true,
 				Required: true,
-				ValidateFunc: validation.All(
-					validation.StringLenBetween(1, 48),
-					validation.StringMatch(
-						regexp.MustCompile(`^[a-zA-Z0-9][a-zA-Z0-9_]{1,47}$`),
-						"The name must consist of alphanumerics and underscores.",
-					),
+				ValidateFunc: validation.StringMatch(
+					regexp.MustCompile(`^[a-zA-Z0-9][a-zA-Z0-9_]{0,47}$`),
+					"The keyspace name can have up to 48 characters. It must begin with an alpha-numeric character and can only contain alpha-numeric characters and underscores.",
 				),
 			},
 			"point_in_time_recovery": {
@@ -176,12 +173,9 @@ func ResourceTable() *schema.Resource {
 										Type:     schema.TypeString,
 										Required: true,
 										ForceNew: true,
-										ValidateFunc: validation.All(
-											validation.StringLenBetween(1, 48),
-											validation.StringMatch(
-												regexp.MustCompile(`^[a-z0-9][a-z0-9_]{1,47}$`),
-												"The name must consist of lower case alphanumerics and underscores.",
-											),
+										ValidateFunc: validation.StringMatch(
+											regexp.MustCompile(`^[a-z0-9_]{1,48}$`),
+											"The column name can have up to 48 characters. It can only contain lowercase alpha-numeric characters and underscores.",
 										),
 									},
 									"order_by": {
@@ -201,12 +195,9 @@ func ResourceTable() *schema.Resource {
 									"name": {
 										Type:     schema.TypeString,
 										Required: true,
-										ValidateFunc: validation.All(
-											validation.StringLenBetween(1, 48),
-											validation.StringMatch(
-												regexp.MustCompile(`^[a-z0-9][a-z0-9_]{1,47}$`),
-												"The name must consist of lower case alphanumerics and underscores.",
-											),
+										ValidateFunc: validation.StringMatch(
+											regexp.MustCompile(`^[a-z0-9_]{1,48}$`),
+											"The column name can have up to 48 characters. It can only contain lowercase alpha-numeric characters and underscores.",
 										),
 									},
 									"type": {
@@ -230,12 +221,9 @@ func ResourceTable() *schema.Resource {
 										Type:     schema.TypeString,
 										Required: true,
 										ForceNew: true,
-										ValidateFunc: validation.All(
-											validation.StringLenBetween(1, 48),
-											validation.StringMatch(
-												regexp.MustCompile(`^[a-z0-9][a-z0-9_]{1,47}$`),
-												"The name must consist of lower case alphanumerics and underscores.",
-											),
+										ValidateFunc: validation.StringMatch(
+											regexp.MustCompile(`^[a-z0-9_]{1,48}$`),
+											"The column name can have up to 48 characters. It can only contain lowercase alpha-numeric characters and underscores.",
 										),
 									},
 								},
@@ -251,12 +239,9 @@ func ResourceTable() *schema.Resource {
 										Type:     schema.TypeString,
 										Required: true,
 										ForceNew: true,
-										ValidateFunc: validation.All(
-											validation.StringLenBetween(1, 48),
-											validation.StringMatch(
-												regexp.MustCompile(`^[a-z0-9][a-z0-9_]{1,47}$`),
-												"The name must consist of lower case alphanumerics and underscores.",
-											),
+										ValidateFunc: validation.StringMatch(
+											regexp.MustCompile(`^[a-z0-9_]{1,48}$`),
+											"The column name can have up to 48 characters. It can only contain lowercase alpha-numeric characters and underscores.",
 										),
 									},
 								},
@@ -269,12 +254,9 @@ func ResourceTable() *schema.Resource {
 				Type:     schema.TypeString,
 				ForceNew: true,
 				Required: true,
-				ValidateFunc: validation.All(
-					validation.StringLenBetween(1, 48),
-					validation.StringMatch(
-						regexp.MustCompile(`^[a-zA-Z0-9][a-zA-Z0-9_]{1,47}$`),
-						"The name must consist of alphanumerics and underscores.",
-					),
+				ValidateFunc: validation.StringMatch(
+					regexp.MustCompile(`^[a-zA-Z0-9_]{1,48}$`),
+					"The table name can have up to 48 characters. It can only contain alpha-numeric characters and underscores.",
 				),
 			},
 			names.AttrTags:    tftags.TagsSchema(),
@@ -298,7 +280,7 @@ func ResourceTable() *schema.Resource {
 }
 
 func resourceTableCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).KeyspacesConn()
+	conn := meta.(*conns.AWSClient).KeyspacesConn(ctx)
 
 	keyspaceName := d.Get("keyspace_name").(string)
 	tableName := d.Get("table_name").(string)
@@ -306,7 +288,7 @@ func resourceTableCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	input := &keyspaces.CreateTableInput{
 		KeyspaceName: aws.String(keyspaceName),
 		TableName:    aws.String(tableName),
-		Tags:         GetTagsIn(ctx),
+		Tags:         getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("capacity_specification"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
@@ -353,7 +335,7 @@ func resourceTableCreate(ctx context.Context, d *schema.ResourceData, meta inter
 }
 
 func resourceTableRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).KeyspacesConn()
+	conn := meta.(*conns.AWSClient).KeyspacesConn(ctx)
 
 	keyspaceName, tableName, err := TableParseResourceID(d.Id())
 
@@ -424,7 +406,7 @@ func resourceTableRead(ctx context.Context, d *schema.ResourceData, meta interfa
 }
 
 func resourceTableUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).KeyspacesConn()
+	conn := meta.(*conns.AWSClient).KeyspacesConn(ctx)
 
 	keyspaceName, tableName, err := TableParseResourceID(d.Id())
 
@@ -580,7 +562,7 @@ func resourceTableUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 }
 
 func resourceTableDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).KeyspacesConn()
+	conn := meta.(*conns.AWSClient).KeyspacesConn(ctx)
 
 	keyspaceName, tableName, err := TableParseResourceID(d.Id())
 

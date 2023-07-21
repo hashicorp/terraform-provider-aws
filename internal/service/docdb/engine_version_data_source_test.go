@@ -84,7 +84,7 @@ func TestAccDocDBEngineVersionDataSource_defaultOnly(t *testing.T) {
 }
 
 func testAccEngineVersionPreCheck(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).DocDBConn()
+	conn := acctest.Provider.Meta().(*conns.AWSClient).DocDBConn(ctx)
 
 	input := &docdb.DescribeDBEngineVersionsInput{
 		Engine:      aws.String("docdb"),

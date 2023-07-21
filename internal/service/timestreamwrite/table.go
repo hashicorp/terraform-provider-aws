@@ -139,13 +139,13 @@ func ResourceTable() *schema.Resource {
 }
 
 func resourceTableCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).TimestreamWriteConn()
+	conn := meta.(*conns.AWSClient).TimestreamWriteConn(ctx)
 
 	tableName := d.Get("table_name").(string)
 	input := &timestreamwrite.CreateTableInput{
 		DatabaseName: aws.String(d.Get("database_name").(string)),
 		TableName:    aws.String(tableName),
-		Tags:         GetTagsIn(ctx),
+		Tags:         getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("retention_properties"); ok && len(v.([]interface{})) > 0 && v.([]interface{}) != nil {
@@ -159,11 +159,11 @@ func resourceTableCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	output, err := conn.CreateTableWithContext(ctx, input)
 
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error creating Timestream Table (%s): %w", tableName, err))
+		return diag.Errorf("creating Timestream Table (%s): %s", tableName, err)
 	}
 
 	if output == nil || output.Table == nil {
-		return diag.FromErr(fmt.Errorf("error creating Timestream Table (%s): empty output", tableName))
+		return diag.Errorf("creating Timestream Table (%s): empty output", tableName)
 	}
 
 	d.SetId(fmt.Sprintf("%s:%s", aws.StringValue(output.Table.TableName), aws.StringValue(output.Table.DatabaseName)))
@@ -172,7 +172,7 @@ func resourceTableCreate(ctx context.Context, d *schema.ResourceData, meta inter
 }
 
 func resourceTableRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).TimestreamWriteConn()
+	conn := meta.(*conns.AWSClient).TimestreamWriteConn(ctx)
 
 	tableName, databaseName, err := TableParseID(d.Id())
 
@@ -194,7 +194,7 @@ func resourceTableRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	}
 
 	if output == nil || output.Table == nil {
-		return diag.FromErr(fmt.Errorf("error reading Timestream Table (%s): empty output", d.Id()))
+		return diag.Errorf("reading Timestream Table (%s): empty output", d.Id())
 	}
 
 	table := output.Table
@@ -204,11 +204,11 @@ func resourceTableRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	d.Set("database_name", table.DatabaseName)
 
 	if err := d.Set("retention_properties", flattenRetentionProperties(table.RetentionProperties)); err != nil {
-		return diag.FromErr(fmt.Errorf("error setting retention_properties: %w", err))
+		return diag.Errorf("setting retention_properties: %s", err)
 	}
 
 	if err := d.Set("magnetic_store_write_properties", flattenMagneticStoreWriteProperties(table.MagneticStoreWriteProperties)); err != nil {
-		return diag.FromErr(fmt.Errorf("error setting magnetic_store_write_properties: %w", err))
+		return diag.Errorf("setting magnetic_store_write_properties: %s", err)
 	}
 
 	d.Set("table_name", table.TableName)
@@ -217,7 +217,7 @@ func resourceTableRead(ctx context.Context, d *schema.ResourceData, meta interfa
 }
 
 func resourceTableUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).TimestreamWriteConn()
+	conn := meta.(*conns.AWSClient).TimestreamWriteConn(ctx)
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		tableName, databaseName, err := TableParseID(d.Id())
@@ -242,7 +242,7 @@ func resourceTableUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 		_, err = conn.UpdateTableWithContext(ctx, input)
 
 		if err != nil {
-			return diag.FromErr(fmt.Errorf("error updating Timestream Table (%s): %w", d.Id(), err))
+			return diag.Errorf("updating Timestream Table (%s): %s", d.Id(), err)
 		}
 	}
 
@@ -250,7 +250,7 @@ func resourceTableUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 }
 
 func resourceTableDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).TimestreamWriteConn()
+	conn := meta.(*conns.AWSClient).TimestreamWriteConn(ctx)
 
 	tableName, databaseName, err := TableParseID(d.Id())
 
@@ -269,7 +269,7 @@ func resourceTableDelete(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error deleting Timestream Table (%s): %w", d.Id(), err))
+		return diag.Errorf("deleting Timestream Table (%s): %s", d.Id(), err)
 	}
 
 	return nil

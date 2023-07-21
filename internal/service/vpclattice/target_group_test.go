@@ -308,7 +308,7 @@ func TestAccVPCLatticeTargetGroup_alb(t *testing.T) {
 
 func testAccCheckTargetGroupDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).VPCLatticeClient()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).VPCLatticeClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_vpclattice_target_group" {
@@ -344,7 +344,7 @@ func testAccCheckTargetGroupExists(ctx context.Context, name string, targetGroup
 			return create.Error(names.VPCLattice, create.ErrActionCheckingExistence, tfvpclattice.ResNameService, name, errors.New("not set"))
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).VPCLatticeClient()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).VPCLatticeClient(ctx)
 		resp, err := conn.GetTargetGroup(ctx, &vpclattice.GetTargetGroupInput{
 			TargetGroupIdentifier: aws.String(rs.Primary.ID),
 		})

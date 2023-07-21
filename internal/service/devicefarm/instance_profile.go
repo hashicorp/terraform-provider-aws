@@ -70,7 +70,7 @@ func ResourceInstanceProfile() *schema.Resource {
 
 func resourceInstanceProfileCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DeviceFarmConn()
+	conn := meta.(*conns.AWSClient).DeviceFarmConn(ctx)
 
 	name := d.Get("name").(string)
 	input := &devicefarm.CreateInstanceProfileInput{
@@ -101,7 +101,7 @@ func resourceInstanceProfileCreate(ctx context.Context, d *schema.ResourceData, 
 
 	d.SetId(aws.StringValue(output.InstanceProfile.Arn))
 
-	if err := createTags(ctx, conn, d.Id(), GetTagsIn(ctx)); err != nil {
+	if err := createTags(ctx, conn, d.Id(), getTagsIn(ctx)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting DeviceFarm Instance Profile (%s) tags: %s", d.Id(), err)
 	}
 
@@ -110,7 +110,7 @@ func resourceInstanceProfileCreate(ctx context.Context, d *schema.ResourceData, 
 
 func resourceInstanceProfileRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DeviceFarmConn()
+	conn := meta.(*conns.AWSClient).DeviceFarmConn(ctx)
 
 	instaceProf, err := FindInstanceProfileByARN(ctx, conn, d.Id())
 
@@ -137,7 +137,7 @@ func resourceInstanceProfileRead(ctx context.Context, d *schema.ResourceData, me
 
 func resourceInstanceProfileUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DeviceFarmConn()
+	conn := meta.(*conns.AWSClient).DeviceFarmConn(ctx)
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		input := &devicefarm.UpdateInstanceProfileInput{
@@ -176,7 +176,7 @@ func resourceInstanceProfileUpdate(ctx context.Context, d *schema.ResourceData, 
 
 func resourceInstanceProfileDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DeviceFarmConn()
+	conn := meta.(*conns.AWSClient).DeviceFarmConn(ctx)
 
 	log.Printf("[DEBUG] Deleting DeviceFarm Instance Profile: %s", d.Id())
 	_, err := conn.DeleteInstanceProfileWithContext(ctx, &devicefarm.DeleteInstanceProfileInput{

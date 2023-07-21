@@ -604,7 +604,7 @@ func ResourceDataSource() *schema.Resource {
 }
 
 func resourceDataSourceCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).QuickSightConn()
+	conn := meta.(*conns.AWSClient).QuickSightConn(ctx)
 
 	awsAccountId := meta.(*conns.AWSClient).AccountID
 	id := d.Get("data_source_id").(string)
@@ -618,7 +618,7 @@ func resourceDataSourceCreate(ctx context.Context, d *schema.ResourceData, meta 
 		DataSourceId:         aws.String(id),
 		DataSourceParameters: expandDataSourceParameters(d.Get("parameters").([]interface{})),
 		Name:                 aws.String(d.Get("name").(string)),
-		Tags:                 GetTagsIn(ctx),
+		Tags:                 getTagsIn(ctx),
 		Type:                 aws.String(d.Get("type").(string)),
 	}
 
@@ -640,20 +640,20 @@ func resourceDataSourceCreate(ctx context.Context, d *schema.ResourceData, meta 
 
 	_, err := conn.CreateDataSourceWithContext(ctx, params)
 	if err != nil {
-		return diag.Errorf("error creating QuickSight Data Source: %s", err)
+		return diag.Errorf("creating QuickSight Data Source: %s", err)
 	}
 
 	d.SetId(fmt.Sprintf("%s/%s", awsAccountId, id))
 
 	if _, err := waitCreated(ctx, conn, awsAccountId, id); err != nil {
-		return diag.Errorf("error waiting from QuickSight Data Source (%s) creation: %s", d.Id(), err)
+		return diag.Errorf("waiting from QuickSight Data Source (%s) creation: %s", d.Id(), err)
 	}
 
 	return resourceDataSourceRead(ctx, d, meta)
 }
 
 func resourceDataSourceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).QuickSightConn()
+	conn := meta.(*conns.AWSClient).QuickSightConn(ctx)
 
 	awsAccountId, dataSourceId, err := ParseDataSourceID(d.Id())
 	if err != nil {
@@ -674,11 +674,11 @@ func resourceDataSourceRead(ctx context.Context, d *schema.ResourceData, meta in
 	}
 
 	if err != nil {
-		return diag.Errorf("error describing QuickSight Data Source (%s): %s", d.Id(), err)
+		return diag.Errorf("describing QuickSight Data Source (%s): %s", d.Id(), err)
 	}
 
 	if output == nil || output.DataSource == nil {
-		return diag.Errorf("error describing QuickSight Data Source (%s): empty output", d.Id())
+		return diag.Errorf("describing QuickSight Data Source (%s): empty output", d.Id())
 	}
 
 	dataSource := output.DataSource
@@ -689,17 +689,17 @@ func resourceDataSourceRead(ctx context.Context, d *schema.ResourceData, meta in
 	d.Set("name", dataSource.Name)
 
 	if err := d.Set("parameters", flattenParameters(dataSource.DataSourceParameters)); err != nil {
-		return diag.Errorf("error setting parameters: %s", err)
+		return diag.Errorf("setting parameters: %s", err)
 	}
 
 	if err := d.Set("ssl_properties", flattenSSLProperties(dataSource.SslProperties)); err != nil {
-		return diag.Errorf("error setting ssl_properties: %s", err)
+		return diag.Errorf("setting ssl_properties: %s", err)
 	}
 
 	d.Set("type", dataSource.Type)
 
 	if err := d.Set("vpc_connection_properties", flattenVPCConnectionProperties(dataSource.VpcConnectionProperties)); err != nil {
-		return diag.Errorf("error setting vpc_connection_properties: %s", err)
+		return diag.Errorf("setting vpc_connection_properties: %s", err)
 	}
 
 	permsResp, err := conn.DescribeDataSourcePermissionsWithContext(ctx, &quicksight.DescribeDataSourcePermissionsInput{
@@ -708,18 +708,18 @@ func resourceDataSourceRead(ctx context.Context, d *schema.ResourceData, meta in
 	})
 
 	if err != nil {
-		return diag.Errorf("error describing QuickSight Data Source (%s) Permissions: %s", d.Id(), err)
+		return diag.Errorf("describing QuickSight Data Source (%s) Permissions: %s", d.Id(), err)
 	}
 
 	if err := d.Set("permission", flattenPermissions(permsResp.Permissions)); err != nil {
-		return diag.Errorf("error setting permission: %s", err)
+		return diag.Errorf("setting permission: %s", err)
 	}
 
 	return nil
 }
 
 func resourceDataSourceUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).QuickSightConn()
+	conn := meta.(*conns.AWSClient).QuickSightConn(ctx)
 
 	if d.HasChangesExcept("permission", "tags", "tags_all") {
 		awsAccountId, dataSourceId, err := ParseDataSourceID(d.Id())
@@ -752,11 +752,11 @@ func resourceDataSourceUpdate(ctx context.Context, d *schema.ResourceData, meta 
 		_, err = conn.UpdateDataSourceWithContext(ctx, params)
 
 		if err != nil {
-			return diag.Errorf("error updating QuickSight Data Source (%s): %s", d.Id(), err)
+			return diag.Errorf("updating QuickSight Data Source (%s): %s", d.Id(), err)
 		}
 
 		if _, err := waitUpdated(ctx, conn, awsAccountId, dataSourceId); err != nil {
-			return diag.Errorf("error waiting for QuickSight Data Source (%s) to update: %s", d.Id(), err)
+			return diag.Errorf("waiting for QuickSight Data Source (%s) to update: %s", d.Id(), err)
 		}
 	}
 
@@ -788,7 +788,7 @@ func resourceDataSourceUpdate(ctx context.Context, d *schema.ResourceData, meta 
 		_, err = conn.UpdateDataSourcePermissionsWithContext(ctx, params)
 
 		if err != nil {
-			return diag.Errorf("error updating QuickSight Data Source (%s) permissions: %s", dataSourceId, err)
+			return diag.Errorf("updating QuickSight Data Source (%s) permissions: %s", dataSourceId, err)
 		}
 	}
 
@@ -796,7 +796,7 @@ func resourceDataSourceUpdate(ctx context.Context, d *schema.ResourceData, meta 
 }
 
 func resourceDataSourceDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).QuickSightConn()
+	conn := meta.(*conns.AWSClient).QuickSightConn(ctx)
 
 	awsAccountId, dataSourceId, err := ParseDataSourceID(d.Id())
 	if err != nil {
@@ -815,7 +815,7 @@ func resourceDataSourceDelete(ctx context.Context, d *schema.ResourceData, meta 
 	}
 
 	if err != nil {
-		return diag.Errorf("error deleting QuickSight Data Source (%s): %s", d.Id(), err)
+		return diag.Errorf("deleting QuickSight Data Source (%s): %s", d.Id(), err)
 	}
 
 	return nil

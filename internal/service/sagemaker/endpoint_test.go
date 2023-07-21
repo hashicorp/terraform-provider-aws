@@ -238,7 +238,7 @@ func TestAccSageMakerEndpoint_disappears(t *testing.T) {
 
 func testAccCheckEndpointDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SageMakerConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SageMakerConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_sagemaker_endpoint" {
@@ -272,7 +272,7 @@ func testAccCheckEndpointExists(ctx context.Context, n string) resource.TestChec
 			return fmt.Errorf("no SageMaker Endpoint ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SageMakerConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SageMakerConn(ctx)
 		_, err := tfsagemaker.FindEndpointByName(ctx, conn, rs.Primary.ID)
 
 		return err

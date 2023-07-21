@@ -192,7 +192,7 @@ func testAccVoiceProfileDomain_tags(t *testing.T) {
 
 func testAccCheckVoiceProfileDomainDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ChimeSDKVoiceConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ChimeSDKVoiceConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_chimesdkvoice_voice_profile_domain" {
@@ -225,7 +225,7 @@ func testAccCheckVoiceProfileDomainExists(ctx context.Context, name string, voic
 			return create.Error(names.ChimeSDKVoice, create.ErrActionCheckingExistence, tfchimesdkvoice.ResNameVoiceProfileDomain, name, errors.New("not set"))
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ChimeSDKVoiceConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ChimeSDKVoiceConn(ctx)
 		resp, err := tfchimesdkvoice.FindVoiceProfileDomainByID(ctx, conn, rs.Primary.ID)
 		if err != nil {
 			return create.Error(names.ChimeSDKVoice, create.ErrActionCheckingExistence, tfchimesdkvoice.ResNameVoiceProfileDomain, rs.Primary.ID, err)
@@ -238,7 +238,7 @@ func testAccCheckVoiceProfileDomainExists(ctx context.Context, name string, voic
 }
 
 func testAccPreCheck(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).ChimeSDKVoiceConn()
+	conn := acctest.Provider.Meta().(*conns.AWSClient).ChimeSDKVoiceConn(ctx)
 
 	input := &chimesdkvoice.ListVoiceProfileDomainsInput{}
 	_, err := conn.ListVoiceProfileDomainsWithContext(ctx, input)

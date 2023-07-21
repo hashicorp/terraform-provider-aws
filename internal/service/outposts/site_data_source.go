@@ -43,7 +43,7 @@ func DataSourceSite() *schema.Resource {
 
 func dataSourceSiteRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).OutpostsConn()
+	conn := meta.(*conns.AWSClient).OutpostsConn(ctx)
 
 	input := &outposts.ListSitesInput{}
 

@@ -69,7 +69,7 @@ func DataSourceAMIIDs() *schema.Resource {
 
 func dataSourceAMIIDsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	input := &ec2.DescribeImagesInput{
 		IncludeDeprecated: aws.Bool(d.Get("include_deprecated").(bool)),

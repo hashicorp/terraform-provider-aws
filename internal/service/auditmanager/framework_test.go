@@ -176,7 +176,7 @@ func TestAccAuditManagerFramework_optional(t *testing.T) {
 
 func testAccCheckFrameworkDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AuditManagerClient()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AuditManagerClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_auditmanager_framework" {
@@ -210,7 +210,7 @@ func testAccCheckFrameworkExists(ctx context.Context, name string, framework *ty
 			return create.Error(names.AuditManager, create.ErrActionCheckingExistence, tfauditmanager.ResNameFramework, name, errors.New("not set"))
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AuditManagerClient()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AuditManagerClient(ctx)
 		resp, err := tfauditmanager.FindFrameworkByID(ctx, conn, rs.Primary.ID)
 		if err != nil {
 			return create.Error(names.AuditManager, create.ErrActionCheckingExistence, tfauditmanager.ResNameFramework, rs.Primary.ID, err)

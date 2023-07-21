@@ -43,7 +43,7 @@ func DataSourceDelegationSet() *schema.Resource {
 
 func dataSourceDelegationSetRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).Route53Conn()
+	conn := meta.(*conns.AWSClient).Route53Conn(ctx)
 
 	dSetID := d.Get("id").(string)
 

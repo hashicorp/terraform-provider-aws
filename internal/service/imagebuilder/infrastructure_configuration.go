@@ -152,11 +152,11 @@ func ResourceInfrastructureConfiguration() *schema.Resource {
 
 func resourceInfrastructureConfigurationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ImageBuilderConn()
+	conn := meta.(*conns.AWSClient).ImageBuilderConn(ctx)
 
 	input := &imagebuilder.CreateInfrastructureConfigurationInput{
 		ClientToken:                aws.String(id.UniqueId()),
-		Tags:                       GetTagsIn(ctx),
+		Tags:                       getTagsIn(ctx),
 		TerminateInstanceOnFailure: aws.Bool(d.Get("terminate_instance_on_failure").(bool)),
 	}
 
@@ -240,7 +240,7 @@ func resourceInfrastructureConfigurationCreate(ctx context.Context, d *schema.Re
 
 func resourceInfrastructureConfigurationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ImageBuilderConn()
+	conn := meta.(*conns.AWSClient).ImageBuilderConn(ctx)
 
 	input := &imagebuilder.GetInfrastructureConfigurationInput{
 		InfrastructureConfigurationArn: aws.String(d.Id()),
@@ -291,7 +291,7 @@ func resourceInfrastructureConfigurationRead(ctx context.Context, d *schema.Reso
 	d.Set("sns_topic_arn", infrastructureConfiguration.SnsTopicArn)
 	d.Set("subnet_id", infrastructureConfiguration.SubnetId)
 
-	SetTagsOut(ctx, infrastructureConfiguration.Tags)
+	setTagsOut(ctx, infrastructureConfiguration.Tags)
 
 	d.Set("terminate_instance_on_failure", infrastructureConfiguration.TerminateInstanceOnFailure)
 
@@ -300,7 +300,7 @@ func resourceInfrastructureConfigurationRead(ctx context.Context, d *schema.Reso
 
 func resourceInfrastructureConfigurationUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ImageBuilderConn()
+	conn := meta.(*conns.AWSClient).ImageBuilderConn(ctx)
 
 	if d.HasChanges(
 		"description",
@@ -388,7 +388,7 @@ func resourceInfrastructureConfigurationUpdate(ctx context.Context, d *schema.Re
 
 func resourceInfrastructureConfigurationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ImageBuilderConn()
+	conn := meta.(*conns.AWSClient).ImageBuilderConn(ctx)
 
 	input := &imagebuilder.DeleteInfrastructureConfigurationInput{
 		InfrastructureConfigurationArn: aws.String(d.Id()),

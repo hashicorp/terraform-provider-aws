@@ -209,7 +209,7 @@ func ResourceFeatureGroup() *schema.Resource {
 
 func resourceFeatureGroupCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SageMakerConn()
+	conn := meta.(*conns.AWSClient).SageMakerConn(ctx)
 
 	name := d.Get("feature_group_name").(string)
 	input := &sagemaker.CreateFeatureGroupInput{
@@ -218,7 +218,7 @@ func resourceFeatureGroupCreate(ctx context.Context, d *schema.ResourceData, met
 		RecordIdentifierFeatureName: aws.String(d.Get("record_identifier_feature_name").(string)),
 		RoleArn:                     aws.String(d.Get("role_arn").(string)),
 		FeatureDefinitions:          expandFeatureGroupFeatureDefinition(d.Get("feature_definition").([]interface{})),
-		Tags:                        GetTagsIn(ctx),
+		Tags:                        getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("description"); ok {
@@ -267,7 +267,7 @@ func resourceFeatureGroupCreate(ctx context.Context, d *schema.ResourceData, met
 
 func resourceFeatureGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SageMakerConn()
+	conn := meta.(*conns.AWSClient).SageMakerConn(ctx)
 
 	output, err := FindFeatureGroupByName(ctx, conn, d.Id())
 
@@ -314,7 +314,7 @@ func resourceFeatureGroupUpdate(ctx context.Context, d *schema.ResourceData, met
 
 func resourceFeatureGroupDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SageMakerConn()
+	conn := meta.(*conns.AWSClient).SageMakerConn(ctx)
 
 	input := &sagemaker.DeleteFeatureGroupInput{
 		FeatureGroupName: aws.String(d.Id()),

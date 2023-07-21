@@ -38,7 +38,7 @@ func statusPermissions(ctx context.Context, conn *lakeformation.LakeFormation, i
 		}
 
 		if err != nil {
-			return nil, statusFailed, fmt.Errorf("error listing permissions: %w", err)
+			return nil, statusFailed, fmt.Errorf("listing permissions: %w", err)
 		}
 
 		// clean permissions = filter out permissions that do not pertain to this specific resource

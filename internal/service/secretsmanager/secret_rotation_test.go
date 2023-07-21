@@ -148,7 +148,7 @@ func TestAccSecretsManagerSecretRotation_duration(t *testing.T) {
 
 func testAccCheckSecretRotationDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SecretsManagerConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SecretsManagerConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_secretsmanager_secret_rotation" {
@@ -187,7 +187,7 @@ func testAccCheckSecretRotationExists(ctx context.Context, n string, v *secretsm
 			return fmt.Errorf("No Secrets Manager Secret Rotation ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SecretsManagerConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SecretsManagerConn(ctx)
 
 		output, err := tfsecretsmanager.FindSecretByID(ctx, conn, rs.Primary.ID)
 

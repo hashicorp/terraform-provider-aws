@@ -203,7 +203,7 @@ func testAccCheckUserHierarchyGroupExists(ctx context.Context, resourceName stri
 			return err
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ConnectConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ConnectConn(ctx)
 
 		params := &connect.DescribeUserHierarchyGroupInput{
 			HierarchyGroupId: aws.String(userHierarchyGroupID),
@@ -228,7 +228,7 @@ func testAccCheckUserHierarchyGroupDestroy(ctx context.Context) resource.TestChe
 				continue
 			}
 
-			conn := acctest.Provider.Meta().(*conns.AWSClient).ConnectConn()
+			conn := acctest.Provider.Meta().(*conns.AWSClient).ConnectConn(ctx)
 
 			instanceID, userHierarchyGroupID, err := tfconnect.UserHierarchyGroupParseID(rs.Primary.ID)
 

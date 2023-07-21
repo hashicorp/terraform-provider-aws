@@ -134,7 +134,7 @@ func TestAccVPCLatticeServiceNetworkServiceAssociation_tags(t *testing.T) {
 
 func testAccCheckServiceNetworkServiceAssociationDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).VPCLatticeClient()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).VPCLatticeClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_vpclattice_service_network_service_association" {
@@ -170,7 +170,7 @@ func testAccCheckServiceNetworkServiceAssociationExists(ctx context.Context, nam
 			return create.Error(names.VPCLattice, create.ErrActionCheckingExistence, tfvpclattice.ResNameService, name, errors.New("not set"))
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).VPCLatticeClient()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).VPCLatticeClient(ctx)
 		resp, err := conn.GetServiceNetworkServiceAssociation(ctx, &vpclattice.GetServiceNetworkServiceAssociationInput{
 			ServiceNetworkServiceAssociationIdentifier: aws.String(rs.Primary.ID),
 		})

@@ -374,11 +374,11 @@ func schemaCostCategoryRuleExpression() *schema.Resource {
 }
 
 func resourceCostCategoryCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).CEConn()
+	conn := meta.(*conns.AWSClient).CEConn(ctx)
 
 	input := &costexplorer.CreateCostCategoryDefinitionInput{
 		Name:         aws.String(d.Get("name").(string)),
-		ResourceTags: GetTagsIn(ctx),
+		ResourceTags: getTagsIn(ctx),
 		Rules:        expandCostCategoryRules(d.Get("rule").(*schema.Set).List()),
 		RuleVersion:  aws.String(d.Get("rule_version").(string)),
 	}
@@ -411,7 +411,7 @@ func resourceCostCategoryCreate(ctx context.Context, d *schema.ResourceData, met
 }
 
 func resourceCostCategoryRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).CEConn()
+	conn := meta.(*conns.AWSClient).CEConn(ctx)
 
 	costCategory, err := FindCostCategoryByARN(ctx, conn, d.Id())
 
@@ -441,7 +441,7 @@ func resourceCostCategoryRead(ctx context.Context, d *schema.ResourceData, meta 
 }
 
 func resourceCostCategoryUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).CEConn()
+	conn := meta.(*conns.AWSClient).CEConn(ctx)
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		input := &costexplorer.UpdateCostCategoryDefinitionInput{
@@ -470,7 +470,7 @@ func resourceCostCategoryUpdate(ctx context.Context, d *schema.ResourceData, met
 }
 
 func resourceCostCategoryDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).CEConn()
+	conn := meta.(*conns.AWSClient).CEConn(ctx)
 
 	_, err := conn.DeleteCostCategoryDefinitionWithContext(ctx, &costexplorer.DeleteCostCategoryDefinitionInput{
 		CostCategoryArn: aws.String(d.Id()),

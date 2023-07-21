@@ -78,7 +78,7 @@ func ResourceUserPoolUICustomization() *schema.Resource {
 
 func resourceUserPoolUICustomizationPut(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CognitoIDPConn()
+	conn := meta.(*conns.AWSClient).CognitoIDPConn(ctx)
 
 	clientId := d.Get("client_id").(string)
 	userPoolId := d.Get("user_pool_id").(string)
@@ -114,7 +114,7 @@ func resourceUserPoolUICustomizationPut(ctx context.Context, d *schema.ResourceD
 
 func resourceUserPoolUICustomizationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CognitoIDPConn()
+	conn := meta.(*conns.AWSClient).CognitoIDPConn(ctx)
 
 	userPoolId, clientId, err := ParseUserPoolUICustomizationID(d.Id())
 
@@ -157,7 +157,7 @@ func resourceUserPoolUICustomizationRead(ctx context.Context, d *schema.Resource
 
 func resourceUserPoolUICustomizationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CognitoIDPConn()
+	conn := meta.(*conns.AWSClient).CognitoIDPConn(ctx)
 
 	userPoolId, clientId, err := ParseUserPoolUICustomizationID(d.Id())
 

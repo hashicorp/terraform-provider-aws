@@ -291,7 +291,7 @@ func testAccCheckRateBasedRuleDestroy(ctx context.Context) resource.TestCheckFun
 				continue
 			}
 
-			conn := acctest.Provider.Meta().(*conns.AWSClient).WAFRegionalConn()
+			conn := acctest.Provider.Meta().(*conns.AWSClient).WAFRegionalConn(ctx)
 			resp, err := conn.GetRateBasedRuleWithContext(ctx, &waf.GetRateBasedRuleInput{
 				RuleId: aws.String(rs.Primary.ID),
 			})
@@ -325,7 +325,7 @@ func testAccCheckRateBasedRuleExists(ctx context.Context, n string, v *waf.RateB
 			return fmt.Errorf("No WAF Rule ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).WAFRegionalConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).WAFRegionalConn(ctx)
 		resp, err := conn.GetRateBasedRuleWithContext(ctx, &waf.GetRateBasedRuleInput{
 			RuleId: aws.String(rs.Primary.ID),
 		})

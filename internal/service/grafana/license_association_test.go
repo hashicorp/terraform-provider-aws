@@ -60,7 +60,7 @@ func testAccCheckLicenseAssociationExists(ctx context.Context, name string) reso
 			return fmt.Errorf("No Grafana Workspace ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).GrafanaConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).GrafanaConn(ctx)
 
 		_, err := tfgrafana.FindLicensedWorkspaceByID(ctx, conn, rs.Primary.ID)
 
@@ -70,7 +70,7 @@ func testAccCheckLicenseAssociationExists(ctx context.Context, name string) reso
 
 func testAccCheckLicenseAssociationDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).GrafanaConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).GrafanaConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_grafana_license_association" {

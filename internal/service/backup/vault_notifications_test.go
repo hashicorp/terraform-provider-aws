@@ -69,7 +69,7 @@ func TestAccBackupVaultNotification_disappears(t *testing.T) {
 
 func testAccCheckVaultNotificationDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).BackupConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).BackupConn(ctx)
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_backup_vault_notifications" {
 				continue
@@ -99,7 +99,7 @@ func testAccCheckVaultNotificationExists(ctx context.Context, name string, vault
 			return fmt.Errorf("Not found: %s", name)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).BackupConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).BackupConn(ctx)
 		params := &backup.GetBackupVaultNotificationsInput{
 			BackupVaultName: aws.String(rs.Primary.ID),
 		}

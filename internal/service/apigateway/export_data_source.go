@@ -60,7 +60,7 @@ func DataSourceExport() *schema.Resource {
 
 func dataSourceExportRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).APIGatewayConn()
+	conn := meta.(*conns.AWSClient).APIGatewayConn(ctx)
 
 	restApiId := d.Get("rest_api_id").(string)
 	stageName := d.Get("stage_name").(string)

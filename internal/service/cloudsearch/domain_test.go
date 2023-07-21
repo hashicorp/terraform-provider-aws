@@ -300,7 +300,7 @@ func testAccDomainExists(ctx context.Context, n string, v *cloudsearch.DomainSta
 			return fmt.Errorf("No CloudSearch Domain ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudSearchConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudSearchConn(ctx)
 
 		output, err := tfcloudsearch.FindDomainStatusByName(ctx, conn, rs.Primary.ID)
 
@@ -321,7 +321,7 @@ func testAccCheckDomainDestroy(ctx context.Context) resource.TestCheckFunc {
 				continue
 			}
 
-			conn := acctest.Provider.Meta().(*conns.AWSClient).CloudSearchConn()
+			conn := acctest.Provider.Meta().(*conns.AWSClient).CloudSearchConn(ctx)
 
 			_, err := tfcloudsearch.FindDomainStatusByName(ctx, conn, rs.Primary.ID)
 

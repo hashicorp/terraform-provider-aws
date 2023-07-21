@@ -327,7 +327,7 @@ func TestAccGlobalAcceleratorAccelerator_tags(t *testing.T) {
 }
 
 func testAccPreCheck(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).GlobalAcceleratorConn()
+	conn := acctest.Provider.Meta().(*conns.AWSClient).GlobalAcceleratorConn(ctx)
 
 	input := &globalaccelerator.ListAcceleratorsInput{}
 
@@ -351,7 +351,7 @@ func testAccCheckBYOIPExists(ctx context.Context, t *testing.T) {
 
 	parsedAddr := net.ParseIP(requestedAddr)
 
-	conn := acctest.Provider.Meta().(*conns.AWSClient).GlobalAcceleratorConn()
+	conn := acctest.Provider.Meta().(*conns.AWSClient).GlobalAcceleratorConn(ctx)
 
 	input := &globalaccelerator.ListByoipCidrsInput{}
 	cidrs := make([]*globalaccelerator.ByoipCidr, 0)
@@ -391,7 +391,7 @@ func testAccCheckBYOIPExists(ctx context.Context, t *testing.T) {
 
 func testAccCheckAcceleratorExists(ctx context.Context, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).GlobalAcceleratorConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).GlobalAcceleratorConn(ctx)
 
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -410,7 +410,7 @@ func testAccCheckAcceleratorExists(ctx context.Context, n string) resource.TestC
 
 func testAccCheckAcceleratorDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).GlobalAcceleratorConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).GlobalAcceleratorConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_globalaccelerator_accelerator" {

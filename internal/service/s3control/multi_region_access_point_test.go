@@ -205,7 +205,7 @@ func TestAccS3ControlMultiRegionAccessPoint_threeRegions(t *testing.T) {
 
 func testAccCheckMultiRegionAccessPointDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn, err := tfs3control.ConnForMRAP(acctest.Provider.Meta().(*conns.AWSClient))
+		conn, err := tfs3control.ConnForMRAP(ctx, acctest.Provider.Meta().(*conns.AWSClient))
 
 		if err != nil {
 			return err
@@ -256,7 +256,7 @@ func testAccCheckMultiRegionAccessPointExists(ctx context.Context, n string, v *
 			return err
 		}
 
-		conn, err := tfs3control.ConnForMRAP(acctest.Provider.Meta().(*conns.AWSClient))
+		conn, err := tfs3control.ConnForMRAP(ctx, acctest.Provider.Meta().(*conns.AWSClient))
 
 		if err != nil {
 			return err

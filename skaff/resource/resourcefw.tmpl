@@ -242,7 +242,7 @@ func (r *resource{{ .Resource }}) Create(ctx context.Context, req resource.Creat
 
 	// TIP: -- 1. Get a client connection to the relevant service
 	{{- end }}
-	conn := r.Meta().{{ .Service }}{{ if .AWSGoSDKV2 }}Client(){{ else }}Conn(){{ end }}
+	conn := r.Meta().{{ .Service }}{{ if .AWSGoSDKV2 }}Client(ctx){{ else }}Conn(ctx){{ end }}
 	{{ if .IncludeComments }}
 	// TIP: -- 2. Fetch the plan
 	{{- end }}
@@ -349,7 +349,7 @@ func (r *resource{{ .Resource }}) Read(ctx context.Context, req resource.ReadReq
 
 	// TIP: -- 1. Get a client connection to the relevant service
 	{{- end }}
-	conn := r.Meta().{{ .Service }}{{ if .AWSGoSDKV2 }}Client(){{ else }}Conn(){{ end }}
+	conn := r.Meta().{{ .Service }}{{ if .AWSGoSDKV2 }}Client(ctx){{ else }}Conn(ctx){{ end }}
 	{{ if .IncludeComments }}
 	// TIP: -- 2. Fetch the state
 	{{- end }}
@@ -434,7 +434,7 @@ func (r *resource{{ .Resource }}) Update(ctx context.Context, req resource.Updat
 	{{- if .IncludeComments }}
 	// TIP: -- 1. Get a client connection to the relevant service
 	{{- end }}
-	conn := r.Meta().{{ .Service }}{{ if .AWSGoSDKV2 }}Client(){{ else }}Conn(){{ end }}
+	conn := r.Meta().{{ .Service }}{{ if .AWSGoSDKV2 }}Client(ctx){{ else }}Conn(ctx){{ end }}
 	{{ if .IncludeComments }}
 	// TIP: -- 2. Fetch the plan
 	{{- end }}
@@ -552,7 +552,7 @@ func (r *resource{{ .Resource }}) Delete(ctx context.Context, req resource.Delet
 	{{- if .IncludeComments }}
 	// TIP: -- 1. Get a client connection to the relevant service
 	{{- end }}
-	conn := r.Meta().{{ .Service }}{{ if .AWSGoSDKV2 }}Client(){{ else }}Conn(){{ end }}
+	conn := r.Meta().{{ .Service }}{{ if .AWSGoSDKV2 }}Client(ctx){{ else }}Conn(ctx){{ end }}
 	{{ if .IncludeComments }}
 	// TIP: -- 2. Fetch the state
 	{{- end }}

@@ -110,7 +110,7 @@ func ResourcePermission() *schema.Resource {
 
 func resourcePermissionCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).LambdaConn()
+	conn := meta.(*conns.AWSClient).LambdaConn(ctx)
 
 	functionName := d.Get("function_name").(string)
 	statementID := create.Name(d.Get("statement_id").(string), d.Get("statement_id_prefix").(string))
@@ -171,7 +171,7 @@ func resourcePermissionCreate(ctx context.Context, d *schema.ResourceData, meta 
 
 func resourcePermissionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).LambdaConn()
+	conn := meta.(*conns.AWSClient).LambdaConn(ctx)
 
 	functionName := d.Get("function_name").(string)
 	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(ctx, propagationTimeout,
@@ -240,7 +240,7 @@ func resourcePermissionRead(ctx context.Context, d *schema.ResourceData, meta in
 
 func resourcePermissionDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).LambdaConn()
+	conn := meta.(*conns.AWSClient).LambdaConn(ctx)
 
 	functionName := d.Get("function_name").(string)
 
@@ -391,7 +391,7 @@ func resourcePermissionImport(ctx context.Context, d *schema.ResourceData, meta 
 	statementId := idParts[1]
 	log.Printf("[DEBUG] Importing Lambda Permission %s for function name %s", statementId, functionName)
 
-	conn := meta.(*conns.AWSClient).LambdaConn()
+	conn := meta.(*conns.AWSClient).LambdaConn(ctx)
 	getFunctionOutput, err := conn.GetFunctionWithContext(ctx, input)
 	if err != nil {
 		return nil, err

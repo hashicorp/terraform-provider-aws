@@ -509,7 +509,7 @@ func testAccCheckQueueExists(ctx context.Context, resourceName string, function 
 			return err
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ConnectConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ConnectConn(ctx)
 
 		params := &connect.DescribeQueueInput{
 			QueueId:    aws.String(queueID),
@@ -534,7 +534,7 @@ func testAccCheckQueueDestroy(ctx context.Context) resource.TestCheckFunc {
 				continue
 			}
 
-			conn := acctest.Provider.Meta().(*conns.AWSClient).ConnectConn()
+			conn := acctest.Provider.Meta().(*conns.AWSClient).ConnectConn(ctx)
 
 			instanceID, queueID, err := tfconnect.QueueParseID(rs.Primary.ID)
 

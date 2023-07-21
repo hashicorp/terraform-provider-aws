@@ -155,12 +155,12 @@ func ResourceProject() *schema.Resource {
 }
 
 func resourceProjectCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).EvidentlyConn()
+	conn := meta.(*conns.AWSClient).EvidentlyConn(ctx)
 
 	name := d.Get("name").(string)
 	input := &cloudwatchevidently.CreateProjectInput{
 		Name: aws.String(name),
-		Tags: GetTagsIn(ctx),
+		Tags: getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("description"); ok {
@@ -187,7 +187,7 @@ func resourceProjectCreate(ctx context.Context, d *schema.ResourceData, meta int
 }
 
 func resourceProjectRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).EvidentlyConn()
+	conn := meta.(*conns.AWSClient).EvidentlyConn(ctx)
 
 	project, err := FindProjectByNameOrARN(ctx, conn, d.Id())
 
@@ -217,13 +217,13 @@ func resourceProjectRead(ctx context.Context, d *schema.ResourceData, meta inter
 	d.Set("name", project.Name)
 	d.Set("status", project.Status)
 
-	SetTagsOut(ctx, project.Tags)
+	setTagsOut(ctx, project.Tags)
 
 	return nil
 }
 
 func resourceProjectUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).EvidentlyConn()
+	conn := meta.(*conns.AWSClient).EvidentlyConn(ctx)
 
 	// Project has 2 update APIs
 	// UpdateProjectWithContext: Updates the description of an existing project.
@@ -281,7 +281,7 @@ func resourceProjectUpdate(ctx context.Context, d *schema.ResourceData, meta int
 }
 
 func resourceProjectDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).EvidentlyConn()
+	conn := meta.(*conns.AWSClient).EvidentlyConn(ctx)
 
 	log.Printf("[DEBUG] Deleting CloudWatch Evidently Project: %s", d.Id())
 	_, err := conn.DeleteProjectWithContext(ctx, &cloudwatchevidently.DeleteProjectInput{

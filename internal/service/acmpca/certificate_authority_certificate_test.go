@@ -119,7 +119,7 @@ func testAccCheckCertificateAuthorityCertificateExists(ctx context.Context, reso
 			return fmt.Errorf("not found: %s", resourceName)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ACMPCAConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ACMPCAConn(ctx)
 
 		output, err := tfacmpca.FindCertificateAuthorityCertificateByARN(ctx, conn, rs.Primary.ID)
 		if err != nil {

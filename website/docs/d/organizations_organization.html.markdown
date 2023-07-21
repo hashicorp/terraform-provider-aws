@@ -82,9 +82,9 @@ In addition to all arguments above, the following attributes are exported:
 * `master_account_email` - The email address that is associated with the AWS account that is designated as the master account for the organization.
 * `master_account_id` - Unique identifier (ID) of the master account of an organization.
 
-### Master Account Attributes Reference
+### Master Account or Delegated Administrator Attributes Reference
 
-If the account is the master account for the organization, the following attributes are also exported:
+If the account is the master account or a delegated administrator for the organization, the following attributes are also exported:
 
 * `accounts` - List of organization accounts including the master account. For a list excluding the master account, see the `non_master_accounts` attribute. All elements have these attributes:
     * `arn` - ARN of the account

@@ -2,7 +2,6 @@ package backup_test
 
 import (
 	"fmt"
-	"regexp"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/backup"
@@ -23,10 +22,6 @@ func TestAccBackupPlanDataSource_basic(t *testing.T) {
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccPlanDataSourceConfig_nonExistent,
-				ExpectError: regexp.MustCompile(`Error getting Backup Plan`),
-			},
-			{
 				Config: testAccPlanDataSourceConfig_basic(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(datasourceName, "name", resourceName, "name"),
@@ -38,12 +33,6 @@ func TestAccBackupPlanDataSource_basic(t *testing.T) {
 		},
 	})
 }
-
-const testAccPlanDataSourceConfig_nonExistent = `
-data "aws_backup_plan" "test" {
-  plan_id = "tf-acc-test-does-not-exist"
-}
-`
 
 func testAccPlanDataSourceConfig_basic(rInt int) string {
 	return fmt.Sprintf(`

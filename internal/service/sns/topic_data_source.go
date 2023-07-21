@@ -31,7 +31,7 @@ func DataSourceTopic() *schema.Resource {
 }
 
 func dataSourceTopicRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).SNSConn()
+	conn := meta.(*conns.AWSClient).SNSConn(ctx)
 
 	resourceArn := ""
 	name := d.Get("name").(string)

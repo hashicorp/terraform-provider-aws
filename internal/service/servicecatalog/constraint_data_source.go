@@ -66,7 +66,7 @@ func DataSourceConstraint() *schema.Resource {
 
 func dataSourceConstraintRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ServiceCatalogConn()
+	conn := meta.(*conns.AWSClient).ServiceCatalogConn(ctx)
 
 	output, err := WaitConstraintReady(ctx, conn, d.Get("accept_language").(string), d.Get("id").(string), d.Timeout(schema.TimeoutRead))
 

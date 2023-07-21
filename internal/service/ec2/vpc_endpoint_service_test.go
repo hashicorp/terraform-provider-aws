@@ -35,8 +35,8 @@ func TestAccVPCEndpointService_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "acceptance_required", "false"),
 					resource.TestCheckResourceAttr(resourceName, "allowed_principals.#", "0"),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "ec2", regexp.MustCompile(`vpc-endpoint-service/vpce-svc-.+`)),
-					acctest.CheckResourceAttrGreaterThanValue(resourceName, "availability_zones.#", "0"),
-					acctest.CheckResourceAttrGreaterThanValue(resourceName, "base_endpoint_dns_names.#", "0"),
+					acctest.CheckResourceAttrGreaterThanValue(resourceName, "availability_zones.#", 0),
+					acctest.CheckResourceAttrGreaterThanValue(resourceName, "base_endpoint_dns_names.#", 0),
 					resource.TestCheckResourceAttr(resourceName, "gateway_load_balancer_arns.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "manages_vpc_endpoints", "false"),
 					resource.TestCheckResourceAttr(resourceName, "network_load_balancer_arns.#", "1"),
@@ -321,7 +321,7 @@ func TestAccVPCEndpointService_privateDNSName(t *testing.T) {
 
 func testAccCheckVPCEndpointServiceDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_vpc_endpoint_service" {
@@ -356,7 +356,7 @@ func testAccCheckVPCEndpointServiceExists(ctx context.Context, n string, v *ec2.
 			return fmt.Errorf("No EC2 VPC Endpoint Service ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
 
 		output, err := tfec2.FindVPCEndpointServiceConfigurationByID(ctx, conn, rs.Primary.ID)
 

@@ -86,7 +86,7 @@ func TestAccNeptuneEngineVersionDataSource_defaultOnly(t *testing.T) {
 }
 
 func testAccEngineVersionPreCheck(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).NeptuneConn()
+	conn := acctest.Provider.Meta().(*conns.AWSClient).NeptuneConn(ctx)
 
 	input := &neptune.DescribeDBEngineVersionsInput{
 		Engine:      aws.String("neptune"),

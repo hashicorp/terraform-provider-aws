@@ -155,7 +155,7 @@ func ResourceApp() *schema.Resource {
 
 func resourceAppCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).PinpointConn()
+	conn := meta.(*conns.AWSClient).PinpointConn(ctx)
 
 	var name string
 
@@ -172,7 +172,7 @@ func resourceAppCreate(ctx context.Context, d *schema.ResourceData, meta interfa
 	req := &pinpoint.CreateAppInput{
 		CreateApplicationRequest: &pinpoint.CreateApplicationRequest{
 			Name: aws.String(name),
-			Tags: GetTagsIn(ctx),
+			Tags: getTagsIn(ctx),
 		},
 	}
 
@@ -189,7 +189,7 @@ func resourceAppCreate(ctx context.Context, d *schema.ResourceData, meta interfa
 
 func resourceAppRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).PinpointConn()
+	conn := meta.(*conns.AWSClient).PinpointConn(ctx)
 
 	log.Printf("[INFO] Reading Pinpoint App Attributes for %s", d.Id())
 
@@ -239,7 +239,7 @@ func resourceAppRead(ctx context.Context, d *schema.ResourceData, meta interface
 
 func resourceAppUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).PinpointConn()
+	conn := meta.(*conns.AWSClient).PinpointConn(ctx)
 
 	appSettings := &pinpoint.WriteApplicationSettingsRequest{}
 
@@ -274,7 +274,7 @@ func resourceAppUpdate(ctx context.Context, d *schema.ResourceData, meta interfa
 
 func resourceAppDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).PinpointConn()
+	conn := meta.(*conns.AWSClient).PinpointConn(ctx)
 
 	log.Printf("[DEBUG] Deleting Pinpoint Application: %s", d.Id())
 	_, err := conn.DeleteAppWithContext(ctx, &pinpoint.DeleteAppInput{

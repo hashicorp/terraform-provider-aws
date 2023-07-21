@@ -41,7 +41,7 @@ func ResourceOrganizationConfiguration() *schema.Resource {
 
 func resourceOrganizationConfigurationUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SecurityHubConn()
+	conn := meta.(*conns.AWSClient).SecurityHubConn(ctx)
 
 	input := &securityhub.UpdateOrganizationConfigurationInput{
 		AutoEnable: aws.Bool(d.Get("auto_enable").(bool)),
@@ -66,7 +66,7 @@ func resourceOrganizationConfigurationUpdate(ctx context.Context, d *schema.Reso
 
 func resourceOrganizationConfigurationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SecurityHubConn()
+	conn := meta.(*conns.AWSClient).SecurityHubConn(ctx)
 
 	output, err := conn.DescribeOrganizationConfigurationWithContext(ctx, &securityhub.DescribeOrganizationConfigurationInput{})
 

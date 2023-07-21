@@ -581,7 +581,7 @@ func TestAccGameLiftGameServerGroup_vpcSubnets(t *testing.T) {
 
 func testAccCheckGameServerGroupDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).GameLiftConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).GameLiftConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_gamelift_game_server_group" {
@@ -622,7 +622,7 @@ func testAccCheckGameServerGroupExists(ctx context.Context, resourceName string)
 			return fmt.Errorf("resource %s has not set its id", resourceName)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).GameLiftConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).GameLiftConn(ctx)
 
 		input := gamelift.DescribeGameServerGroupInput{
 			GameServerGroupName: aws.String(rs.Primary.ID),

@@ -81,7 +81,7 @@ func (r *resourceFolderMembership) Schema(ctx context.Context, req resource.Sche
 }
 
 func (r *resourceFolderMembership) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-	conn := r.Meta().QuickSightConn()
+	conn := r.Meta().QuickSightConn(ctx)
 
 	var plan resourceFolderMembershipData
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
@@ -124,7 +124,7 @@ func (r *resourceFolderMembership) Create(ctx context.Context, req resource.Crea
 }
 
 func (r *resourceFolderMembership) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
-	conn := r.Meta().QuickSightConn()
+	conn := r.Meta().QuickSightConn(ctx)
 
 	var state resourceFolderMembershipData
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
@@ -169,7 +169,7 @@ func (r *resourceFolderMembership) Update(ctx context.Context, req resource.Upda
 }
 
 func (r *resourceFolderMembership) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
-	conn := r.Meta().QuickSightConn()
+	conn := r.Meta().QuickSightConn(ctx)
 
 	var state resourceFolderMembershipData
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)

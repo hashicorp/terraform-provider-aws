@@ -165,7 +165,7 @@ func TestAccGlobalAcceleratorCustomRoutingAccelerator_update(t *testing.T) {
 
 func testAccCheckCustomRoutingAcceleratorExists(ctx context.Context, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).GlobalAcceleratorConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).GlobalAcceleratorConn(ctx)
 
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -184,7 +184,7 @@ func testAccCheckCustomRoutingAcceleratorExists(ctx context.Context, n string) r
 
 func testAccCheckCustomRoutingAcceleratorDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).GlobalAcceleratorConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).GlobalAcceleratorConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_globalaccelerator_custom_routing_accelerator" {

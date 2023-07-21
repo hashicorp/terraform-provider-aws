@@ -778,7 +778,7 @@ func testAccPermissions_twcWildcardSelectPlus(t *testing.T) {
 
 func testAccCheckPermissionsDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).LakeFormationConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).LakeFormationConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_lakeformation_permissions" {
@@ -810,7 +810,7 @@ func testAccCheckPermissionsExists(ctx context.Context, resourceName string) res
 			return fmt.Errorf("acceptance test: resource not found: %s", resourceName)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).LakeFormationConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).LakeFormationConn(ctx)
 
 		permCount, err := permissionCountForResource(ctx, conn, rs)
 

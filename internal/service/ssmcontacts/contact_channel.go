@@ -73,7 +73,7 @@ const (
 )
 
 func resourceContactChannelCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).SSMContactsClient()
+	conn := meta.(*conns.AWSClient).SSMContactsClient(ctx)
 
 	delivery_address := expandContactChannelAddress(d.Get("delivery_address").([]interface{}))
 	in := &ssmcontacts.CreateContactChannelInput{
@@ -99,7 +99,7 @@ func resourceContactChannelCreate(ctx context.Context, d *schema.ResourceData, m
 }
 
 func resourceContactChannelRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).SSMContactsClient()
+	conn := meta.(*conns.AWSClient).SSMContactsClient(ctx)
 
 	out, err := findContactChannelByID(ctx, conn, d.Id())
 
@@ -121,7 +121,7 @@ func resourceContactChannelRead(ctx context.Context, d *schema.ResourceData, met
 }
 
 func resourceContactChannelUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).SSMContactsClient()
+	conn := meta.(*conns.AWSClient).SSMContactsClient(ctx)
 
 	update := false
 
@@ -153,7 +153,7 @@ func resourceContactChannelUpdate(ctx context.Context, d *schema.ResourceData, m
 }
 
 func resourceContactChannelDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).SSMContactsClient()
+	conn := meta.(*conns.AWSClient).SSMContactsClient(ctx)
 
 	log.Printf("[INFO] Deleting SSMContacts ContactChannel %s", d.Id())
 

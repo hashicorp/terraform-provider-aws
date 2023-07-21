@@ -50,7 +50,7 @@ func DataSourceLocation() *schema.Resource {
 
 func dataSourceLocationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DirectConnectConn()
+	conn := meta.(*conns.AWSClient).DirectConnectConn(ctx)
 	locationCode := d.Get("location_code").(string)
 
 	location, err := FindLocationByCode(ctx, conn, locationCode)

@@ -782,7 +782,7 @@ func testAccDomain_spaceSettingsKernelGatewayAppSettings(t *testing.T) {
 
 func testAccCheckDomainDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SageMakerConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SageMakerConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_sagemaker_domain" {
@@ -825,7 +825,7 @@ func testAccCheckDomainExists(ctx context.Context, n string, codeRepo *sagemaker
 			return fmt.Errorf("No sagmaker domain ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SageMakerConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SageMakerConn(ctx)
 		resp, err := tfsagemaker.FindDomainByName(ctx, conn, rs.Primary.ID)
 		if err != nil {
 			return err

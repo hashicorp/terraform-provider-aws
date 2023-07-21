@@ -156,7 +156,7 @@ func testAccCheckDeploymentExists(ctx context.Context, resourceName string) reso
 			return err
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AppConfigConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AppConfigConn(ctx)
 
 		input := &appconfig.GetDeploymentInput{
 			ApplicationId:    aws.String(appID),

@@ -52,7 +52,7 @@ func DataSourceApplication() *schema.Resource {
 
 func dataSourceApplicationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ServerlessRepoConn()
+	conn := meta.(*conns.AWSClient).ServerlessRepoConn(ctx)
 
 	applicationID := d.Get("application_id").(string)
 	semanticVersion := d.Get("semantic_version").(string)

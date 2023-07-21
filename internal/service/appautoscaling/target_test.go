@@ -253,7 +253,7 @@ func TestAccAppAutoScalingTarget_optionalRoleARN(t *testing.T) {
 
 func testAccCheckTargetDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AppAutoScalingConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AppAutoScalingConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_appautoscaling_target" {
@@ -288,7 +288,7 @@ func testAccCheckTargetExists(ctx context.Context, n string, v *applicationautos
 			return fmt.Errorf("No Application AutoScaling Target ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AppAutoScalingConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AppAutoScalingConn(ctx)
 
 		output, err := tfappautoscaling.FindTargetByThreePartKey(ctx, conn, rs.Primary.ID, rs.Primary.Attributes["service_namespace"], rs.Primary.Attributes["scalable_dimension"])
 

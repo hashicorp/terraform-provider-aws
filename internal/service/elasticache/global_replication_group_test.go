@@ -1446,7 +1446,7 @@ func testAccCheckGlobalReplicationGroupExists(ctx context.Context, resourceName 
 			return fmt.Errorf("No ElastiCache Global Replication Group ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ElastiCacheConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ElastiCacheConn(ctx)
 		grg, err := tfelasticache.FindGlobalReplicationGroupByID(ctx, conn, rs.Primary.ID)
 		if err != nil {
 			return fmt.Errorf("retrieving ElastiCache Global Replication Group (%s): %w", rs.Primary.ID, err)
@@ -1464,7 +1464,7 @@ func testAccCheckGlobalReplicationGroupExists(ctx context.Context, resourceName 
 
 func testAccCheckGlobalReplicationGroupDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ElastiCacheConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ElastiCacheConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_elasticache_global_replication_group" {
@@ -1486,7 +1486,7 @@ func testAccCheckGlobalReplicationGroupDestroy(ctx context.Context) resource.Tes
 }
 
 func testAccPreCheckGlobalReplicationGroup(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).ElastiCacheConn()
+	conn := acctest.Provider.Meta().(*conns.AWSClient).ElastiCacheConn(ctx)
 
 	input := &elasticache.DescribeGlobalReplicationGroupsInput{}
 	_, err := conn.DescribeGlobalReplicationGroupsWithContext(ctx, input)
@@ -1503,7 +1503,7 @@ func testAccPreCheckGlobalReplicationGroup(ctx context.Context, t *testing.T) {
 
 func testAccMatchReplicationGroupActualVersion(ctx context.Context, j *elasticache.ReplicationGroup, r *regexp.Regexp) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ElastiCacheConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ElastiCacheConn(ctx)
 
 		cacheCluster := j.NodeGroups[0].NodeGroupMembers[0]
 		cluster, err := tfelasticache.FindCacheClusterByID(ctx, conn, aws.StringValue(cacheCluster.CacheClusterId))

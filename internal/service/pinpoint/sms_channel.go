@@ -57,7 +57,7 @@ func ResourceSMSChannel() *schema.Resource {
 
 func resourceSMSChannelUpsert(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).PinpointConn()
+	conn := meta.(*conns.AWSClient).PinpointConn(ctx)
 
 	applicationId := d.Get("application_id").(string)
 
@@ -90,7 +90,7 @@ func resourceSMSChannelUpsert(ctx context.Context, d *schema.ResourceData, meta 
 
 func resourceSMSChannelRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).PinpointConn()
+	conn := meta.(*conns.AWSClient).PinpointConn(ctx)
 
 	log.Printf("[INFO] Reading Pinpoint SMS Channel  for application %s", d.Id())
 
@@ -119,7 +119,7 @@ func resourceSMSChannelRead(ctx context.Context, d *schema.ResourceData, meta in
 
 func resourceSMSChannelDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).PinpointConn()
+	conn := meta.(*conns.AWSClient).PinpointConn(ctx)
 
 	log.Printf("[DEBUG] Deleting Pinpoint SMS Channel for application %s", d.Id())
 	_, err := conn.DeleteSmsChannelWithContext(ctx, &pinpoint.DeleteSmsChannelInput{

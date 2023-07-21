@@ -121,7 +121,7 @@ func testAccCheckContributorInsightsExists(ctx context.Context, n string, ci *dy
 			return fmt.Errorf("no DynamodDB Contributor Insights ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DynamoDBConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DynamoDBConn(ctx)
 
 		tableName, indexName, err := tfdynamodb.DecodeContributorInsightsID(rs.Primary.ID)
 		if err != nil {
@@ -141,7 +141,7 @@ func testAccCheckContributorInsightsExists(ctx context.Context, n string, ci *dy
 
 func testAccCheckContributorInsightsDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DynamoDBConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DynamoDBConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_dynamodb_contributor_insights" {

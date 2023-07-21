@@ -66,7 +66,7 @@ func DataSourceUser() *schema.Resource {
 
 func dataSourceUserRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ElastiCacheConn()
+	conn := meta.(*conns.AWSClient).ElastiCacheConn(ctx)
 
 	user, err := FindUserByID(ctx, conn, d.Get("user_id").(string))
 	if tfresource.NotFound(err) {

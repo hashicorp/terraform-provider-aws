@@ -71,7 +71,7 @@ func (r *resourceCIDRCollection) Create(ctx context.Context, request resource.Cr
 		return
 	}
 
-	conn := r.Meta().Route53Conn()
+	conn := r.Meta().Route53Conn(ctx)
 
 	name := data.Name.ValueString()
 	input := &route53.CreateCidrCollectionInput{
@@ -106,7 +106,7 @@ func (r *resourceCIDRCollection) Read(ctx context.Context, request resource.Read
 		return
 	}
 
-	conn := r.Meta().Route53Conn()
+	conn := r.Meta().Route53Conn(ctx)
 
 	output, err := findCIDRCollectionByID(ctx, conn, data.ID.ValueString())
 
@@ -143,7 +143,7 @@ func (r *resourceCIDRCollection) Delete(ctx context.Context, request resource.De
 		return
 	}
 
-	conn := r.Meta().Route53Conn()
+	conn := r.Meta().Route53Conn(ctx)
 
 	tflog.Debug(ctx, "deleting Route 53 CIDR Collection", map[string]interface{}{
 		"id": data.ID.ValueString(),

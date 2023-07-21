@@ -56,7 +56,7 @@ func ResourceFileSystemPolicy() *schema.Resource {
 
 func resourceFileSystemPolicyPut(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EFSConn()
+	conn := meta.(*conns.AWSClient).EFSConn(ctx)
 
 	policy, err := structure.NormalizeJsonString(d.Get("policy").(string))
 
@@ -86,7 +86,7 @@ func resourceFileSystemPolicyPut(ctx context.Context, d *schema.ResourceData, me
 
 func resourceFileSystemPolicyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EFSConn()
+	conn := meta.(*conns.AWSClient).EFSConn(ctx)
 
 	output, err := FindFileSystemPolicyByID(ctx, conn, d.Id())
 
@@ -121,7 +121,7 @@ func resourceFileSystemPolicyRead(ctx context.Context, d *schema.ResourceData, m
 
 func resourceFileSystemPolicyDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EFSConn()
+	conn := meta.(*conns.AWSClient).EFSConn(ctx)
 
 	log.Printf("[DEBUG] Deleting EFS File System Policy: %s", d.Id())
 	_, err := conn.DeleteFileSystemPolicyWithContext(ctx, &efs.DeleteFileSystemPolicyInput{

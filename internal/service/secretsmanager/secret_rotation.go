@@ -81,7 +81,7 @@ func ResourceSecretRotation() *schema.Resource {
 
 func resourceSecretRotationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SecretsManagerConn()
+	conn := meta.(*conns.AWSClient).SecretsManagerConn(ctx)
 	secretID := d.Get("secret_id").(string)
 
 	if v, ok := d.GetOk("rotation_lambda_arn"); ok && v.(string) != "" {
@@ -108,7 +108,7 @@ func resourceSecretRotationCreate(ctx context.Context, d *schema.ResourceData, m
 
 func resourceSecretRotationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SecretsManagerConn()
+	conn := meta.(*conns.AWSClient).SecretsManagerConn(ctx)
 
 	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(ctx, PropagationTimeout, func() (interface{}, error) {
 		return FindSecretByID(ctx, conn, d.Id())
@@ -143,7 +143,7 @@ func resourceSecretRotationRead(ctx context.Context, d *schema.ResourceData, met
 
 func resourceSecretRotationUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SecretsManagerConn()
+	conn := meta.(*conns.AWSClient).SecretsManagerConn(ctx)
 	secretID := d.Get("secret_id").(string)
 
 	if d.HasChanges("rotation_lambda_arn", "rotation_rules") {
@@ -180,7 +180,7 @@ func resourceSecretRotationUpdate(ctx context.Context, d *schema.ResourceData, m
 
 func resourceSecretRotationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SecretsManagerConn()
+	conn := meta.(*conns.AWSClient).SecretsManagerConn(ctx)
 
 	log.Printf("[DEBUG] Deleting Secrets Manager Rotation: %s", d.Id())
 	_, err := conn.CancelRotateSecretWithContext(ctx, &secretsmanager.CancelRotateSecretInput{

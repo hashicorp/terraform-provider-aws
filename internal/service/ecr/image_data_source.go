@@ -68,7 +68,7 @@ func DataSourceImage() *schema.Resource {
 
 func dataSourceImageRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ECRConn()
+	conn := meta.(*conns.AWSClient).ECRConn(ctx)
 
 	input := &ecr.DescribeImagesInput{
 		RepositoryName: aws.String(d.Get("repository_name").(string)),

@@ -295,7 +295,7 @@ func testAccCheckRuleDestroy(ctx context.Context) resource.TestCheckFunc {
 				continue
 			}
 
-			conn := acctest.Provider.Meta().(*conns.AWSClient).WAFConn()
+			conn := acctest.Provider.Meta().(*conns.AWSClient).WAFConn(ctx)
 			resp, err := conn.GetRuleWithContext(ctx, &waf.GetRuleInput{
 				RuleId: aws.String(rs.Primary.ID),
 			})
@@ -328,7 +328,7 @@ func testAccCheckRuleExists(ctx context.Context, n string, v *waf.Rule) resource
 			return fmt.Errorf("No WAF Rule ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).WAFConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).WAFConn(ctx)
 		resp, err := conn.GetRuleWithContext(ctx, &waf.GetRuleInput{
 			RuleId: aws.String(rs.Primary.ID),
 		})
@@ -347,7 +347,7 @@ func testAccCheckRuleExists(ctx context.Context, n string, v *waf.Rule) resource
 }
 
 func testAccPreCheck(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).WAFConn()
+	conn := acctest.Provider.Meta().(*conns.AWSClient).WAFConn(ctx)
 
 	input := &waf.ListRulesInput{}
 

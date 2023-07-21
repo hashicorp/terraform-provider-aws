@@ -55,7 +55,7 @@ func DataSourceVirtualGateway() *schema.Resource {
 
 func dataSourceVirtualGatewayRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).AppMeshConn()
+	conn := meta.(*conns.AWSClient).AppMeshConn(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	virtualGatewayName := d.Get("name").(string)
@@ -85,7 +85,7 @@ func dataSourceVirtualGatewayRead(ctx context.Context, d *schema.ResourceData, m
 	var tags tftags.KeyValueTags
 
 	if meshOwner == meta.(*conns.AWSClient).AccountID {
-		tags, err = ListTags(ctx, conn, arn)
+		tags, err = listTags(ctx, conn, arn)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "listing tags for App Mesh Virtual Gateway (%s): %s", arn, err)

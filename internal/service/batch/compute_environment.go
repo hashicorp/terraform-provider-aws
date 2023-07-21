@@ -267,14 +267,14 @@ func ResourceComputeEnvironment() *schema.Resource {
 
 func resourceComputeEnvironmentCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).BatchConn()
+	conn := meta.(*conns.AWSClient).BatchConn(ctx)
 
 	computeEnvironmentName := create.Name(d.Get("compute_environment_name").(string), d.Get("compute_environment_name_prefix").(string))
 	computeEnvironmentType := d.Get("type").(string)
 	input := &batch.CreateComputeEnvironmentInput{
 		ComputeEnvironmentName: aws.String(computeEnvironmentName),
 		ServiceRole:            aws.String(d.Get("service_role").(string)),
-		Tags:                   GetTagsIn(ctx),
+		Tags:                   getTagsIn(ctx),
 		Type:                   aws.String(computeEnvironmentType),
 	}
 
@@ -307,7 +307,7 @@ func resourceComputeEnvironmentCreate(ctx context.Context, d *schema.ResourceDat
 
 func resourceComputeEnvironmentRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).BatchConn()
+	conn := meta.(*conns.AWSClient).BatchConn(ctx)
 
 	computeEnvironment, err := FindComputeEnvironmentDetailByName(ctx, conn, d.Id())
 
@@ -349,14 +349,14 @@ func resourceComputeEnvironmentRead(ctx context.Context, d *schema.ResourceData,
 		d.Set("eks_configuration", nil)
 	}
 
-	SetTagsOut(ctx, computeEnvironment.Tags)
+	setTagsOut(ctx, computeEnvironment.Tags)
 
 	return diags
 }
 
 func resourceComputeEnvironmentUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).BatchConn()
+	conn := meta.(*conns.AWSClient).BatchConn(ctx)
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		input := &batch.UpdateComputeEnvironmentInput{
@@ -411,7 +411,7 @@ func resourceComputeEnvironmentUpdate(ctx context.Context, d *schema.ResourceDat
 
 func resourceComputeEnvironmentDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).BatchConn()
+	conn := meta.(*conns.AWSClient).BatchConn(ctx)
 
 	log.Printf("[DEBUG] Disabling Batch Compute Environment: %s", d.Id())
 	{

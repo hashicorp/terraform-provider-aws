@@ -1780,7 +1780,7 @@ func TestAccKendraDataSource_CustomDocumentEnrichmentConfiguration_ExtractionHoo
 
 func testAccCheckDataSourceDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).KendraClient()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).KendraClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_kendra_data_source" {
@@ -1823,7 +1823,7 @@ func testAccCheckDataSourceExists(ctx context.Context, name string) resource.Tes
 			return err
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).KendraClient()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).KendraClient(ctx)
 
 		_, err = tfkendra.FindDataSourceByID(ctx, conn, id, indexId)
 

@@ -172,7 +172,7 @@ func TestAccDSRegion_desiredNumberOfDomainControllers(t *testing.T) {
 
 func testAccCheckRegionDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DSConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DSConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_directory_service_region" {
@@ -219,7 +219,7 @@ func testAccCheckRegionExists(ctx context.Context, n string, v *directoryservice
 			return err
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DSConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DSConn(ctx)
 
 		output, err := tfds.FindRegion(ctx, conn, directoryID, regionName)
 

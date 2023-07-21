@@ -30,7 +30,7 @@ func DataSourceDistributedGrants() *schema.Resource {
 
 func dataSourceDistributedGrantsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).LicenseManagerConn()
+	conn := meta.(*conns.AWSClient).LicenseManagerConn(ctx)
 
 	in := &licensemanager.ListDistributedGrantsInput{}
 

@@ -106,7 +106,7 @@ func ResourceFargateProfile() *schema.Resource {
 
 func resourceFargateProfileCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EKSConn()
+	conn := meta.(*conns.AWSClient).EKSConn(ctx)
 
 	clusterName := d.Get("cluster_name").(string)
 	fargateProfileName := d.Get("fargate_profile_name").(string)
@@ -118,7 +118,7 @@ func resourceFargateProfileCreate(ctx context.Context, d *schema.ResourceData, m
 		PodExecutionRoleArn: aws.String(d.Get("pod_execution_role_arn").(string)),
 		Selectors:           expandFargateProfileSelectors(d.Get("selector").(*schema.Set).List()),
 		Subnets:             flex.ExpandStringSet(d.Get("subnet_ids").(*schema.Set)),
-		Tags:                GetTagsIn(ctx),
+		Tags:                getTagsIn(ctx),
 	}
 
 	// mutex lock for creation/deletion serialization
@@ -163,7 +163,7 @@ func resourceFargateProfileCreate(ctx context.Context, d *schema.ResourceData, m
 
 func resourceFargateProfileRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EKSConn()
+	conn := meta.(*conns.AWSClient).EKSConn(ctx)
 
 	clusterName, fargateProfileName, err := FargateProfileParseResourceID(d.Id())
 
@@ -198,7 +198,7 @@ func resourceFargateProfileRead(ctx context.Context, d *schema.ResourceData, met
 		return sdkdiag.AppendErrorf(diags, "setting subnet_ids: %s", err)
 	}
 
-	SetTagsOut(ctx, fargateProfile.Tags)
+	setTagsOut(ctx, fargateProfile.Tags)
 
 	return diags
 }
@@ -213,7 +213,7 @@ func resourceFargateProfileUpdate(ctx context.Context, d *schema.ResourceData, m
 
 func resourceFargateProfileDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EKSConn()
+	conn := meta.(*conns.AWSClient).EKSConn(ctx)
 
 	clusterName, fargateProfileName, err := FargateProfileParseResourceID(d.Id())
 

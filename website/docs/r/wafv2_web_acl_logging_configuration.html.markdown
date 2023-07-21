@@ -14,6 +14,12 @@ Creates a WAFv2 Web ACL Logging Configuration resource.
 If you are capturing logs for Amazon CloudFront, always create the firehose in US East (N. Virginia).
 Be sure to give the data firehose, cloudwatch log group, and/or s3 bucket a name that starts with the prefix `aws-waf-logs-`.
 
+-> **Note:** When logging from a WAFv2 Web ACL to a CloudWatch Log Group the WAFv2 service attempts to create/update a
+generic Log Resource Policy with a name `AWSWAF-LOGS`. If there are a large number of Web ACLs, or the account frequently
+creates and destroys Web ACLs, this policy will hit the max policy size and this resource type will fail to be
+created (more details can be found in [this issue](https://github.com/hashicorp/terraform-provider-aws/issues/25296)). To avoid this
+happening, a specific resource policy can be managed. See [CloudWatch Log Group](#with-cloudwatch-log-group-and-managed-cloudwatch-log-resource-policy) example below.
+
 ## Example Usage
 
 ### With Redacted Fields
@@ -71,6 +77,51 @@ resource "aws_wafv2_web_acl_logging_configuration" "example" {
     }
   }
 }
+```
+
+### With CloudWatch Log Group and managed CloudWatch Log Resource Policy
+
+```terraform
+resource "aws_cloudwatch_log_group" "example" {
+  name = "aws-waf-logs-some-uniq-suffix"
+}
+
+resource "aws_wafv2_web_acl_logging_configuration" "example" {
+  log_destination_configs = [aws_cloudwatch_log_group.example.arn]
+  resource_arn            = aws_wafv2_web_acl.example.arn
+}
+
+resource "aws_cloudwatch_log_resource_policy" "example" {
+  policy_document = data.aws_iam_policy_document.example.json
+  policy_name     = "webacl-policy-uniq-name"
+}
+
+data "aws_iam_policy_document" "example" {
+  version = "2012-10-17"
+  statement {
+    effect = "Allow"
+    principals {
+      identifiers = ["delivery.logs.amazonaws.com"]
+      type        = "AWS"
+    }
+    actions   = ["logs:CreateLogStream", "logs:PutLogEvents"]
+    resources = ["${aws_cloudwatch_log_group.example.arn}:*"]
+    condition {
+      test     = "ArnLike"
+      values   = ["arn:aws:logs:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:*"]
+      variable = "aws:SourceArn"
+    }
+    condition {
+      test     = "StringEquals"
+      values   = [tostring(data.aws_caller_identity.current.account_id)]
+      variable = "aws:SourceAccount"
+    }
+  }
+}
+
+data "aws_region" "current" {}
+
+data "aws_caller_identity" "current" {}
 ```
 
 ## Argument Reference

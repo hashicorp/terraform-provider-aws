@@ -51,7 +51,7 @@ func DataSourceUserSSHKey() *schema.Resource {
 
 func dataSourceUserSSHKeyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).IAMConn()
+	conn := meta.(*conns.AWSClient).IAMConn(ctx)
 
 	encoding := d.Get("encoding").(string)
 	sshPublicKeyId := d.Get("ssh_public_key_id").(string)

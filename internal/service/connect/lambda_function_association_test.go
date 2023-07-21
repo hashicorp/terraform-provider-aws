@@ -70,7 +70,7 @@ func testAccLambdaFunctionAssociation_disappears(t *testing.T) {
 
 func testAccCheckLambdaFunctionAssociationDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ConnectConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ConnectConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_connect_lambda_function_association" {
@@ -117,7 +117,7 @@ func testAccCheckLambdaFunctionAssociationExists(ctx context.Context, resourceNa
 			return err
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ConnectConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ConnectConn(ctx)
 
 		lfaArn, err := tfconnect.FindLambdaFunctionAssociationByARNWithContext(ctx, conn, instanceID, functionArn)
 

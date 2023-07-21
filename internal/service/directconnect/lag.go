@@ -89,14 +89,14 @@ func ResourceLag() *schema.Resource {
 
 func resourceLagCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DirectConnectConn()
+	conn := meta.(*conns.AWSClient).DirectConnectConn(ctx)
 
 	name := d.Get("name").(string)
 	input := &directconnect.CreateLagInput{
 		ConnectionsBandwidth: aws.String(d.Get("connections_bandwidth").(string)),
 		LagName:              aws.String(name),
 		Location:             aws.String(d.Get("location").(string)),
-		Tags:                 GetTagsIn(ctx),
+		Tags:                 getTagsIn(ctx),
 	}
 
 	var connectionIDSpecified bool
@@ -133,7 +133,7 @@ func resourceLagCreate(ctx context.Context, d *schema.ResourceData, meta interfa
 
 func resourceLagRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DirectConnectConn()
+	conn := meta.(*conns.AWSClient).DirectConnectConn(ctx)
 
 	lag, err := FindLagByID(ctx, conn, d.Id())
 
@@ -168,7 +168,7 @@ func resourceLagRead(ctx context.Context, d *schema.ResourceData, meta interface
 
 func resourceLagUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DirectConnectConn()
+	conn := meta.(*conns.AWSClient).DirectConnectConn(ctx)
 
 	if d.HasChange("name") {
 		input := &directconnect.UpdateLagInput{
@@ -189,7 +189,7 @@ func resourceLagUpdate(ctx context.Context, d *schema.ResourceData, meta interfa
 
 func resourceLagDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DirectConnectConn()
+	conn := meta.(*conns.AWSClient).DirectConnectConn(ctx)
 
 	if d.Get("force_destroy").(bool) {
 		lag, err := FindLagByID(ctx, conn, d.Id())

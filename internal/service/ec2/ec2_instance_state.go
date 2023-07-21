@@ -55,7 +55,7 @@ func ResourceInstanceState() *schema.Resource {
 }
 
 func resourceInstanceStateCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 	instanceId := d.Get("instance_id").(string)
 
 	instance, instanceErr := WaitInstanceReadyWithContext(ctx, conn, instanceId, d.Timeout(schema.TimeoutCreate))
@@ -76,7 +76,7 @@ func resourceInstanceStateCreate(ctx context.Context, d *schema.ResourceData, me
 }
 
 func resourceInstanceStateRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	state, err := FindInstanceStateByID(ctx, conn, d.Id())
 
@@ -98,7 +98,7 @@ func resourceInstanceStateRead(ctx context.Context, d *schema.ResourceData, meta
 }
 
 func resourceInstanceStateUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	instance, instanceErr := WaitInstanceReadyWithContext(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate))
 

@@ -27,7 +27,7 @@ func DataSourceRateBasedRule() *schema.Resource {
 
 func dataSourceRateBasedRuleRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).WAFRegionalConn()
+	conn := meta.(*conns.AWSClient).WAFRegionalConn(ctx)
 	name := d.Get("name").(string)
 
 	rules := make([]*waf.RuleSummary, 0)

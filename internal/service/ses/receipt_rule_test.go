@@ -360,7 +360,7 @@ func TestAccSESReceiptRule_disappears(t *testing.T) {
 
 func testAccCheckReceiptRuleDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SESConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SESConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_ses_receipt_rule" {
@@ -395,7 +395,7 @@ func testAccCheckReceiptRuleExists(ctx context.Context, n string, v *ses.Receipt
 			return fmt.Errorf("No SES Receipt Rule ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SESConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SESConn(ctx)
 
 		output, err := tfses.FindReceiptRuleByTwoPartKey(ctx, conn, rs.Primary.ID, rs.Primary.Attributes["rule_set_name"])
 
@@ -421,7 +421,7 @@ func testAccReceiptRuleImportStateIdFunc(resourceName string) resource.ImportSta
 }
 
 func testAccPreCheckReceiptRule(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).SESConn()
+	conn := acctest.Provider.Meta().(*conns.AWSClient).SESConn(ctx)
 
 	input := &ses.DescribeReceiptRuleInput{
 		RuleName:    aws.String("MyRule"),

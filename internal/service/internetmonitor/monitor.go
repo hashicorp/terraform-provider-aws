@@ -114,13 +114,13 @@ func ResourceMonitor() *schema.Resource {
 
 func resourceMonitorCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).InternetMonitorConn()
+	conn := meta.(*conns.AWSClient).InternetMonitorConn(ctx)
 
 	monitorName := d.Get("monitor_name").(string)
 	input := &internetmonitor.CreateMonitorInput{
 		ClientToken: aws.String(id.UniqueId()),
 		MonitorName: aws.String(monitorName),
-		Tags:        GetTagsIn(ctx),
+		Tags:        getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("max_city_networks_to_monitor"); ok {
@@ -171,7 +171,7 @@ func resourceMonitorCreate(ctx context.Context, d *schema.ResourceData, meta int
 
 func resourceMonitorRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).InternetMonitorConn()
+	conn := meta.(*conns.AWSClient).InternetMonitorConn(ctx)
 
 	monitor, err := FindMonitor(ctx, conn, d.Id())
 
@@ -197,14 +197,14 @@ func resourceMonitorRead(ctx context.Context, d *schema.ResourceData, meta inter
 	d.Set("status", monitor.Status)
 	d.Set("resources", flex.FlattenStringSet(monitor.Resources))
 
-	SetTagsOut(ctx, monitor.Tags)
+	setTagsOut(ctx, monitor.Tags)
 
 	return diags
 }
 
 func resourceMonitorUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).InternetMonitorConn()
+	conn := meta.(*conns.AWSClient).InternetMonitorConn(ctx)
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		input := &internetmonitor.UpdateMonitorInput{
@@ -260,7 +260,7 @@ func resourceMonitorUpdate(ctx context.Context, d *schema.ResourceData, meta int
 
 func resourceMonitorDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).InternetMonitorConn()
+	conn := meta.(*conns.AWSClient).InternetMonitorConn(ctx)
 
 	input := &internetmonitor.UpdateMonitorInput{
 		ClientToken: aws.String(id.UniqueId()),

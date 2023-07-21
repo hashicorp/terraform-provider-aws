@@ -185,7 +185,7 @@ func TestAccRUMAppMonitor_disappears(t *testing.T) {
 
 func testAccCheckAppMonitorDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).RUMConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).RUMConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_rum_app_monitor" {
@@ -219,7 +219,7 @@ func testAccCheckAppMonitorExists(ctx context.Context, n string, v *cloudwatchru
 			return fmt.Errorf("No CloudWatch RUM App Monitor ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).RUMConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).RUMConn(ctx)
 
 		output, err := tfcloudwatchrum.FindAppMonitorByName(ctx, conn, rs.Primary.ID)
 

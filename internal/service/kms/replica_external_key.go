@@ -110,7 +110,7 @@ func ResourceReplicaExternalKey() *schema.Resource {
 
 func resourceReplicaExternalKeyCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).KMSConn()
+	conn := meta.(*conns.AWSClient).KMSConn(ctx)
 
 	// e.g. arn:aws:kms:us-east-2:111122223333:key/mrk-1234abcd12ab34cd56ef1234567890ab
 	primaryKeyARN, err := arn.Parse(d.Get("primary_key_arn").(string))
@@ -122,7 +122,7 @@ func resourceReplicaExternalKeyCreate(ctx context.Context, d *schema.ResourceDat
 	input := &kms.ReplicateKeyInput{
 		KeyId:         aws.String(strings.TrimPrefix(primaryKeyARN.Resource, "key/")),
 		ReplicaRegion: aws.String(meta.(*conns.AWSClient).Region),
-		Tags:          GetTagsIn(ctx),
+		Tags:          getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("bypass_policy_lockout_safety_check"); ok {
@@ -191,7 +191,7 @@ func resourceReplicaExternalKeyCreate(ctx context.Context, d *schema.ResourceDat
 		}
 	}
 
-	if tags := KeyValueTags(ctx, GetTagsIn(ctx)); len(tags) > 0 {
+	if tags := KeyValueTags(ctx, getTagsIn(ctx)); len(tags) > 0 {
 		if err := WaitTagsPropagated(ctx, conn, d.Id(), tags); err != nil {
 			return sdkdiag.AppendErrorf(diags, "waiting for KMS Replica External Key (%s) tag propagation: %s", d.Id(), err)
 		}
@@ -202,7 +202,7 @@ func resourceReplicaExternalKeyCreate(ctx context.Context, d *schema.ResourceDat
 
 func resourceReplicaExternalKeyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).KMSConn()
+	conn := meta.(*conns.AWSClient).KMSConn(ctx)
 
 	key, err := findKey(ctx, conn, d.Id(), d.IsNewResource())
 
@@ -251,14 +251,14 @@ func resourceReplicaExternalKeyRead(ctx context.Context, d *schema.ResourceData,
 		d.Set("valid_to", nil)
 	}
 
-	SetTagsOut(ctx, key.tags)
+	setTagsOut(ctx, key.tags)
 
 	return diags
 }
 
 func resourceReplicaExternalKeyUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).KMSConn()
+	conn := meta.(*conns.AWSClient).KMSConn(ctx)
 
 	if hasChange, enabled, state := d.HasChange("enabled"), d.Get("enabled").(bool), d.Get("key_state").(string); hasChange && enabled && state != kms.KeyStatePendingImport {
 		// Enable before any attributes are modified.
@@ -313,7 +313,7 @@ func resourceReplicaExternalKeyUpdate(ctx context.Context, d *schema.ResourceDat
 
 func resourceReplicaExternalKeyDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).KMSConn()
+	conn := meta.(*conns.AWSClient).KMSConn(ctx)
 
 	input := &kms.ScheduleKeyDeletionInput{
 		KeyId: aws.String(d.Id()),

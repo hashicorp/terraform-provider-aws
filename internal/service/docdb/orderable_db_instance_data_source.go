@@ -65,7 +65,7 @@ func DataSourceOrderableDBInstance() *schema.Resource {
 
 func dataSourceOrderableDBInstanceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DocDBConn()
+	conn := meta.(*conns.AWSClient).DocDBConn(ctx)
 
 	input := &docdb.DescribeOrderableDBInstanceOptionsInput{}
 

@@ -119,7 +119,7 @@ func ResourceAddon() *schema.Resource {
 
 func resourceAddonCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EKSConn()
+	conn := meta.(*conns.AWSClient).EKSConn(ctx)
 
 	addonName := d.Get("addon_name").(string)
 	clusterName := d.Get("cluster_name").(string)
@@ -128,7 +128,7 @@ func resourceAddonCreate(ctx context.Context, d *schema.ResourceData, meta inter
 		AddonName:          aws.String(addonName),
 		ClientRequestToken: aws.String(sdkid.UniqueId()),
 		ClusterName:        aws.String(clusterName),
-		Tags:               GetTagsIn(ctx),
+		Tags:               getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("addon_version"); ok {
@@ -191,7 +191,7 @@ func resourceAddonCreate(ctx context.Context, d *schema.ResourceData, meta inter
 
 func resourceAddonRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EKSConn()
+	conn := meta.(*conns.AWSClient).EKSConn(ctx)
 
 	clusterName, addonName, err := AddonParseResourceID(d.Id())
 
@@ -220,14 +220,14 @@ func resourceAddonRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	d.Set("modified_at", aws.TimeValue(addon.ModifiedAt).Format(time.RFC3339))
 	d.Set("service_account_role_arn", addon.ServiceAccountRoleArn)
 
-	SetTagsOut(ctx, addon.Tags)
+	setTagsOut(ctx, addon.Tags)
 
 	return diags
 }
 
 func resourceAddonUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EKSConn()
+	conn := meta.(*conns.AWSClient).EKSConn(ctx)
 
 	clusterName, addonName, err := AddonParseResourceID(d.Id())
 
@@ -292,7 +292,7 @@ func resourceAddonUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 
 func resourceAddonDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EKSConn()
+	conn := meta.(*conns.AWSClient).EKSConn(ctx)
 
 	clusterName, addonName, err := AddonParseResourceID(d.Id())
 

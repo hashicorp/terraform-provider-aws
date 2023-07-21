@@ -389,7 +389,8 @@ data "aws_iam_policy_document" "example_log_policy" {
     principals {
       type = "Service"
       identifiers = [
-        "events.amazonaws.com"
+        "events.amazonaws.com",
+        "delivery.logs.amazonaws.com"
       ]
     }
   }
@@ -406,7 +407,8 @@ data "aws_iam_policy_document" "example_log_policy" {
     principals {
       type = "Service"
       identifiers = [
-        "events.amazonaws.com"
+        "events.amazonaws.com",
+        "delivery.logs.amazonaws.com"
       ]
     }
 

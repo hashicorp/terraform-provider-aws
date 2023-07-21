@@ -74,7 +74,7 @@ func DataSourceProvisioningArtifacts() *schema.Resource {
 
 func dataSourceProvisioningArtifactsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ServiceCatalogConn()
+	conn := meta.(*conns.AWSClient).ServiceCatalogConn(ctx)
 
 	productID := d.Get("product_id").(string)
 	input := &servicecatalog.ListProvisioningArtifactsInput{

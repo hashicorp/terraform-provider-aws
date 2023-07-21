@@ -229,7 +229,7 @@ func TestAccGlueCatalogDatabase_disappears(t *testing.T) {
 
 func testAccCheckDatabaseDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).GlueConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).GlueConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_glue_catalog_database" {
@@ -374,7 +374,7 @@ func testAccCheckCatalogDatabaseExists(ctx context.Context, name string) resourc
 			return err
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).GlueConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).GlueConn(ctx)
 		_, err = tfglue.FindDatabaseByName(ctx, conn, catalogId, dbName)
 
 		return err

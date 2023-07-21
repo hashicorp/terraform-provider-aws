@@ -154,7 +154,7 @@ func ResourceIntegration() *schema.Resource {
 
 func resourceIntegrationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).APIGatewayConn()
+	conn := meta.(*conns.AWSClient).APIGatewayConn(ctx)
 
 	input := &apigateway.PutIntegrationInput{
 		HttpMethod: aws.String(d.Get("http_method").(string)),
@@ -230,7 +230,7 @@ func resourceIntegrationCreate(ctx context.Context, d *schema.ResourceData, meta
 
 func resourceIntegrationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).APIGatewayConn()
+	conn := meta.(*conns.AWSClient).APIGatewayConn(ctx)
 
 	integration, err := FindIntegrationByThreePartKey(ctx, conn, d.Get("http_method").(string), d.Get("resource_id").(string), d.Get("rest_api_id").(string))
 
@@ -275,7 +275,7 @@ func resourceIntegrationRead(ctx context.Context, d *schema.ResourceData, meta i
 
 func resourceIntegrationUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).APIGatewayConn()
+	conn := meta.(*conns.AWSClient).APIGatewayConn(ctx)
 
 	operations := make([]*apigateway.PatchOperation, 0)
 
@@ -463,7 +463,7 @@ func resourceIntegrationUpdate(ctx context.Context, d *schema.ResourceData, meta
 
 func resourceIntegrationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).APIGatewayConn()
+	conn := meta.(*conns.AWSClient).APIGatewayConn(ctx)
 
 	log.Printf("[DEBUG] Deleting API Gateway Integration: %s", d.Id())
 	_, err := conn.DeleteIntegrationWithContext(ctx, &apigateway.DeleteIntegrationInput{

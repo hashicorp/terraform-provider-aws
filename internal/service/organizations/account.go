@@ -108,7 +108,7 @@ func ResourceAccount() *schema.Resource {
 
 func resourceAccountCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).OrganizationsConn()
+	conn := meta.(*conns.AWSClient).OrganizationsConn(ctx)
 
 	var iamUserAccessToBilling *string
 
@@ -127,7 +127,7 @@ func resourceAccountCreate(ctx context.Context, d *schema.ResourceData, meta int
 		d.Get("email").(string),
 		iamUserAccessToBilling,
 		roleName,
-		GetTagsIn(ctx),
+		getTagsIn(ctx),
 		d.Get("create_govcloud").(bool),
 	)
 
@@ -170,7 +170,7 @@ func resourceAccountCreate(ctx context.Context, d *schema.ResourceData, meta int
 
 func resourceAccountRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).OrganizationsConn()
+	conn := meta.(*conns.AWSClient).OrganizationsConn(ctx)
 
 	account, err := FindAccountByID(ctx, conn, d.Id())
 
@@ -203,7 +203,7 @@ func resourceAccountRead(ctx context.Context, d *schema.ResourceData, meta inter
 
 func resourceAccountUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).OrganizationsConn()
+	conn := meta.(*conns.AWSClient).OrganizationsConn(ctx)
 
 	if d.HasChange("parent_id") {
 		o, n := d.GetChange("parent_id")
@@ -224,7 +224,7 @@ func resourceAccountUpdate(ctx context.Context, d *schema.ResourceData, meta int
 
 func resourceAccountDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).OrganizationsConn()
+	conn := meta.(*conns.AWSClient).OrganizationsConn(ctx)
 
 	close := d.Get("close_on_deletion").(bool)
 	var err error

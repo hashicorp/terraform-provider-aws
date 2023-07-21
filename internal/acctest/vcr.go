@@ -270,7 +270,7 @@ func vcrProviderConfigureContextFunc(provider *schema.Provider, configureContext
 		// TODO Need to loop through all API clients to do this.
 		// TODO Use []*client.Client?
 		// TODO AWS SDK for Go v2 API clients.
-		meta.LogsConn().Handlers.AfterRetry.PushFront(func(r *request.Request) {
+		meta.LogsConn(ctx).Handlers.AfterRetry.PushFront(func(r *request.Request) {
 			// We have to use 'Contains' rather than 'errors.Is' because 'awserr.Error' doesn't implement 'Unwrap'.
 			if errs.Contains(r.Error, cassette.ErrInteractionNotFound.Error()) {
 				r.Retryable = aws.Bool(false)

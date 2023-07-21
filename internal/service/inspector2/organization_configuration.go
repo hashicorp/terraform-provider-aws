@@ -75,7 +75,7 @@ func resourceOrganizationConfigurationCreate(ctx context.Context, d *schema.Reso
 }
 
 func resourceOrganizationConfigurationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).Inspector2Client()
+	conn := meta.(*conns.AWSClient).Inspector2Client(ctx)
 
 	out, err := conn.DescribeOrganizationConfiguration(ctx, &inspector2.DescribeOrganizationConfigurationInput{})
 
@@ -99,7 +99,7 @@ func resourceOrganizationConfigurationRead(ctx context.Context, d *schema.Resour
 }
 
 func resourceOrganizationConfigurationUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).Inspector2Client()
+	conn := meta.(*conns.AWSClient).Inspector2Client(ctx)
 
 	update := false
 
@@ -131,7 +131,7 @@ func resourceOrganizationConfigurationUpdate(ctx context.Context, d *schema.Reso
 }
 
 func resourceOrganizationConfigurationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).Inspector2Client()
+	conn := meta.(*conns.AWSClient).Inspector2Client(ctx)
 
 	conns.GlobalMutexKV.Lock(orgConfigMutex)
 	defer conns.GlobalMutexKV.Unlock(orgConfigMutex)

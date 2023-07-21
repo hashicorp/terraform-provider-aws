@@ -154,7 +154,7 @@ func ResourceSubnet() *schema.Resource {
 
 func resourceSubnetCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	input := &ec2.CreateSubnetInput{
 		TagSpecifications: getTagSpecificationsIn(ctx, ec2.ResourceTypeSubnet),
@@ -223,7 +223,7 @@ func resourceSubnetCreate(ctx context.Context, d *schema.ResourceData, meta inte
 
 func resourceSubnetRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(ctx, SubnetPropagationTimeout, func() (interface{}, error) {
 		return FindSubnetByID(ctx, conn, d.Id())
@@ -278,14 +278,14 @@ func resourceSubnetRead(ctx context.Context, d *schema.ResourceData, meta interf
 		d.Set("private_dns_hostname_type_on_launch", nil)
 	}
 
-	SetTagsOut(ctx, subnet.Tags)
+	setTagsOut(ctx, subnet.Tags)
 
 	return diags
 }
 
 func resourceSubnetUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	// You cannot modify multiple subnet attributes in the same request,
 	// except CustomerOwnedIpv4Pool and MapCustomerOwnedIpOnLaunch.
@@ -358,7 +358,7 @@ func resourceSubnetUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 
 func resourceSubnetDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	log.Printf("[INFO] Deleting EC2 Subnet: %s", d.Id())
 

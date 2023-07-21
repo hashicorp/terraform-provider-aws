@@ -100,7 +100,7 @@ func DataSourceResources() *schema.Resource {
 
 func dataSourceResourcesRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ResourceGroupsTaggingAPIConn()
+	conn := meta.(*conns.AWSClient).ResourceGroupsTaggingAPIConn(ctx)
 
 	input := &resourcegroupstaggingapi.GetResourcesInput{}
 

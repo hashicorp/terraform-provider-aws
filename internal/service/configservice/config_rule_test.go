@@ -352,7 +352,7 @@ func testAccCheckConfigRuleExists(ctx context.Context, n string, obj *configserv
 			return fmt.Errorf("No config rule ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ConfigServiceConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ConfigServiceConn(ctx)
 
 		rule, err := tfconfig.FindConfigRule(ctx, conn, rs.Primary.ID)
 		if err != nil {
@@ -366,7 +366,7 @@ func testAccCheckConfigRuleExists(ctx context.Context, n string, obj *configserv
 
 func testAccCheckConfigRuleDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ConfigServiceConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ConfigServiceConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_config_config_rule" {

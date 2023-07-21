@@ -52,7 +52,7 @@ func ResourceSubnetGroup() *schema.Resource {
 
 func resourceSubnetGroupCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DAXConn()
+	conn := meta.(*conns.AWSClient).DAXConn(ctx)
 
 	input := &dax.CreateSubnetGroupInput{
 		SubnetGroupName: aws.String(d.Get("name").(string)),
@@ -73,7 +73,7 @@ func resourceSubnetGroupCreate(ctx context.Context, d *schema.ResourceData, meta
 
 func resourceSubnetGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DAXConn()
+	conn := meta.(*conns.AWSClient).DAXConn(ctx)
 
 	resp, err := conn.DescribeSubnetGroupsWithContext(ctx, &dax.DescribeSubnetGroupsInput{
 		SubnetGroupNames: []*string{aws.String(d.Id())},
@@ -101,7 +101,7 @@ func resourceSubnetGroupRead(ctx context.Context, d *schema.ResourceData, meta i
 
 func resourceSubnetGroupUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DAXConn()
+	conn := meta.(*conns.AWSClient).DAXConn(ctx)
 
 	input := &dax.UpdateSubnetGroupInput{
 		SubnetGroupName: aws.String(d.Id()),
@@ -125,7 +125,7 @@ func resourceSubnetGroupUpdate(ctx context.Context, d *schema.ResourceData, meta
 
 func resourceSubnetGroupDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DAXConn()
+	conn := meta.(*conns.AWSClient).DAXConn(ctx)
 
 	input := &dax.DeleteSubnetGroupInput{
 		SubnetGroupName: aws.String(d.Id()),

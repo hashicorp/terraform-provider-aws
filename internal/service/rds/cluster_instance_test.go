@@ -179,7 +179,7 @@ func TestAccRDSClusterInstance_isAlreadyBeingDeleted(t *testing.T) {
 			{
 				PreConfig: func() {
 					// Get Database Instance into deleting state
-					conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn()
+					conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn(ctx)
 					input := &rds.DeleteDBInstanceInput{
 						DBInstanceIdentifier: aws.String(rName),
 						SkipFinalSnapshot:    aws.Bool(true),
@@ -951,7 +951,7 @@ func TestAccRDSClusterInstance_PerformanceInsightsKMSKeyIDAuroraPostgresql_defau
 }
 
 func testAccPerformanceInsightsDefaultVersionPreCheck(ctx context.Context, t *testing.T, engine string) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn()
+	conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn(ctx)
 
 	input := &rds.DescribeDBEngineVersionsInput{
 		DefaultOnly: aws.Bool(true),
@@ -971,7 +971,7 @@ func testAccPerformanceInsightsDefaultVersionPreCheck(ctx context.Context, t *te
 }
 
 func testAccPerformanceInsightsPreCheck(ctx context.Context, t *testing.T, engine string, engineVersion string) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn()
+	conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn(ctx)
 
 	input := &rds.DescribeOrderableDBInstanceOptionsInput{
 		Engine:        aws.String(engine),
@@ -1017,7 +1017,7 @@ func testAccCheckClusterInstanceExists(ctx context.Context, n string, v *rds.DBI
 			return fmt.Errorf("No RDS Cluster Instance ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn(ctx)
 
 		output, err := tfrds.FindDBInstanceByID(ctx, conn, rs.Primary.ID)
 		if err != nil {
@@ -1032,7 +1032,7 @@ func testAccCheckClusterInstanceExists(ctx context.Context, n string, v *rds.DBI
 
 func testAccCheckClusterInstanceDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_rds_cluster_instance" {

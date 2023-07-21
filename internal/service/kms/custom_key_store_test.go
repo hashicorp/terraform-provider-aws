@@ -156,7 +156,7 @@ func testAccCustomKeyStore_disappears(t *testing.T) {
 
 func testAccCheckCustomKeyStoreDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).KMSConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).KMSConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_kms_custom_key_store" {
@@ -190,7 +190,7 @@ func testAccCheckCustomKeyStoreExists(ctx context.Context, name string, customke
 			return create.Error(names.KMS, create.ErrActionCheckingExistence, tfkms.ResNameCustomKeyStore, name, errors.New("not set"))
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).KMSConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).KMSConn(ctx)
 
 		in := &kms.DescribeCustomKeyStoresInput{
 			CustomKeyStoreId: aws.String(rs.Primary.ID),
@@ -208,7 +208,7 @@ func testAccCheckCustomKeyStoreExists(ctx context.Context, name string, customke
 }
 
 func testAccCustomKeyStoresPreCheck(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).KMSConn()
+	conn := acctest.Provider.Meta().(*conns.AWSClient).KMSConn(ctx)
 
 	input := &kms.DescribeCustomKeyStoresInput{}
 	_, err := conn.DescribeCustomKeyStoresWithContext(ctx, input)

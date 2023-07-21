@@ -92,7 +92,7 @@ func ResourceDeployment() *schema.Resource {
 
 func resourceDeploymentCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).AppConfigConn()
+	conn := meta.(*conns.AWSClient).AppConfigConn(ctx)
 
 	input := &appconfig.StartDeploymentInput{
 		ApplicationId:          aws.String(d.Get("application_id").(string)),
@@ -101,7 +101,7 @@ func resourceDeploymentCreate(ctx context.Context, d *schema.ResourceData, meta 
 		ConfigurationVersion:   aws.String(d.Get("configuration_version").(string)),
 		DeploymentStrategyId:   aws.String(d.Get("deployment_strategy_id").(string)),
 		Description:            aws.String(d.Get("description").(string)),
-		Tags:                   GetTagsIn(ctx),
+		Tags:                   getTagsIn(ctx),
 	}
 
 	output, err := conn.StartDeploymentWithContext(ctx, input)
@@ -125,7 +125,7 @@ func resourceDeploymentCreate(ctx context.Context, d *schema.ResourceData, meta 
 
 func resourceDeploymentRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).AppConfigConn()
+	conn := meta.(*conns.AWSClient).AppConfigConn(ctx)
 
 	appID, envID, deploymentNum, err := DeploymentParseID(d.Id())
 
@@ -199,7 +199,7 @@ func DeploymentParseID(id string) (string, string, int, error) {
 
 	num, err := strconv.Atoi(parts[2])
 	if err != nil {
-		return "", "", 0, fmt.Errorf("error parsing AppConfig Deployment resource ID deployment_number: %w", err)
+		return "", "", 0, fmt.Errorf("parsing AppConfig Deployment resource ID deployment_number: %w", err)
 	}
 
 	return parts[0], parts[1], num, nil

@@ -38,7 +38,7 @@ func ResourceVPNGatewayAttachment() *schema.Resource {
 
 func resourceVPNGatewayAttachmentCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	vpcID := d.Get("vpc_id").(string)
 	vpnGatewayID := d.Get("vpn_gateway_id").(string)
@@ -67,7 +67,7 @@ func resourceVPNGatewayAttachmentCreate(ctx context.Context, d *schema.ResourceD
 
 func resourceVPNGatewayAttachmentRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	vpcID := d.Get("vpc_id").(string)
 	vpnGatewayID := d.Get("vpn_gateway_id").(string)
@@ -89,7 +89,7 @@ func resourceVPNGatewayAttachmentRead(ctx context.Context, d *schema.ResourceDat
 
 func resourceVPNGatewayAttachmentDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	vpcID := d.Get("vpc_id").(string)
 	vpnGatewayID := d.Get("vpn_gateway_id").(string)

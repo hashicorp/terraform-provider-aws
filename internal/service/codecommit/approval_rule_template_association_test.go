@@ -103,7 +103,7 @@ func testAccCheckApprovalRuleTemplateAssociationExists(ctx context.Context, name
 			return fmt.Errorf("No ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CodeCommitConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CodeCommitConn(ctx)
 
 		approvalTemplateName, repositoryName, err := tfcodecommit.ApprovalRuleTemplateAssociationParseID(rs.Primary.ID)
 
@@ -117,7 +117,7 @@ func testAccCheckApprovalRuleTemplateAssociationExists(ctx context.Context, name
 
 func testAccCheckApprovalRuleTemplateAssociationDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CodeCommitConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CodeCommitConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_codecommit_approval_rule_template_association" {

@@ -52,7 +52,7 @@ func resourceDataProtectionPolicy() *schema.Resource {
 }
 
 func resourceDataProtectionPolicyPut(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).LogsClient()
+	conn := meta.(*conns.AWSClient).LogsClient(ctx)
 
 	logGroupName := d.Get("log_group_name").(string)
 
@@ -81,7 +81,7 @@ func resourceDataProtectionPolicyPut(ctx context.Context, d *schema.ResourceData
 }
 
 func resourceDataProtectionPolicyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).LogsClient()
+	conn := meta.(*conns.AWSClient).LogsClient(ctx)
 
 	output, err := FindDataProtectionPolicyByID(ctx, conn, d.Id())
 
@@ -115,7 +115,7 @@ func resourceDataProtectionPolicyRead(ctx context.Context, d *schema.ResourceDat
 }
 
 func resourceDataProtectionPolicyDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).LogsClient()
+	conn := meta.(*conns.AWSClient).LogsClient(ctx)
 
 	log.Printf("[DEBUG] Deleting CloudWatch Logs Data Protection Policy: %s", d.Id())
 	_, err := conn.DeleteDataProtectionPolicy(ctx, &cloudwatchlogs.DeleteDataProtectionPolicyInput{

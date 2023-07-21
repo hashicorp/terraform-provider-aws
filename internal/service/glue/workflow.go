@@ -42,7 +42,7 @@ func ResourceWorkflow() *schema.Resource {
 			"default_run_properties": {
 				Type:     schema.TypeMap,
 				Optional: true,
-				Elem:     schema.TypeString,
+				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 			"description": {
 				Type:     schema.TypeString,
@@ -66,12 +66,12 @@ func ResourceWorkflow() *schema.Resource {
 
 func resourceWorkflowCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).GlueConn()
+	conn := meta.(*conns.AWSClient).GlueConn(ctx)
 
 	name := d.Get("name").(string)
 	input := &glue.CreateWorkflowInput{
 		Name: aws.String(name),
-		Tags: GetTagsIn(ctx),
+		Tags: getTagsIn(ctx),
 	}
 
 	if kv, ok := d.GetOk("default_run_properties"); ok {
@@ -98,7 +98,7 @@ func resourceWorkflowCreate(ctx context.Context, d *schema.ResourceData, meta in
 
 func resourceWorkflowRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).GlueConn()
+	conn := meta.(*conns.AWSClient).GlueConn(ctx)
 
 	input := &glue.GetWorkflowInput{
 		Name: aws.String(d.Id()),
@@ -143,7 +143,7 @@ func resourceWorkflowRead(ctx context.Context, d *schema.ResourceData, meta inte
 
 func resourceWorkflowUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).GlueConn()
+	conn := meta.(*conns.AWSClient).GlueConn(ctx)
 
 	if d.HasChanges("default_run_properties", "description", "max_concurrent_runs") {
 		input := &glue.UpdateWorkflowInput{
@@ -174,7 +174,7 @@ func resourceWorkflowUpdate(ctx context.Context, d *schema.ResourceData, meta in
 
 func resourceWorkflowDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).GlueConn()
+	conn := meta.(*conns.AWSClient).GlueConn(ctx)
 
 	log.Printf("[DEBUG] Deleting Glue Workflow: %s", d.Id())
 	err := DeleteWorkflow(ctx, conn, d.Id())

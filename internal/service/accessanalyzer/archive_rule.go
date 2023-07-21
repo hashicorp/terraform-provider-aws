@@ -85,7 +85,7 @@ func resourceArchiveRule() *schema.Resource {
 }
 
 func resourceArchiveRuleCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).AccessAnalyzerClient()
+	conn := meta.(*conns.AWSClient).AccessAnalyzerClient(ctx)
 
 	analyzerName := d.Get("analyzer_name").(string)
 	ruleName := d.Get("rule_name").(string)
@@ -112,7 +112,7 @@ func resourceArchiveRuleCreate(ctx context.Context, d *schema.ResourceData, meta
 }
 
 func resourceArchiveRuleRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).AccessAnalyzerClient()
+	conn := meta.(*conns.AWSClient).AccessAnalyzerClient(ctx)
 
 	analyzerName, ruleName, err := archiveRuleParseResourceID(d.Id())
 
@@ -140,7 +140,7 @@ func resourceArchiveRuleRead(ctx context.Context, d *schema.ResourceData, meta i
 }
 
 func resourceArchiveRuleUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).AccessAnalyzerClient()
+	conn := meta.(*conns.AWSClient).AccessAnalyzerClient(ctx)
 
 	analyzerName, ruleName, err := archiveRuleParseResourceID(d.Id())
 
@@ -168,7 +168,7 @@ func resourceArchiveRuleUpdate(ctx context.Context, d *schema.ResourceData, meta
 }
 
 func resourceArchiveRuleDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).AccessAnalyzerClient()
+	conn := meta.(*conns.AWSClient).AccessAnalyzerClient(ctx)
 
 	analyzerName, ruleName, err := archiveRuleParseResourceID(d.Id())
 

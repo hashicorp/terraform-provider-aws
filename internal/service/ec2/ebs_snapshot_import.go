@@ -190,7 +190,7 @@ func ResourceEBSSnapshotImport() *schema.Resource {
 
 func resourceEBSSnapshotImportCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	input := &ec2.ImportSnapshotInput{
 		ClientToken:       aws.String(id.UniqueId()),
@@ -240,7 +240,7 @@ func resourceEBSSnapshotImportCreate(ctx context.Context, d *schema.ResourceData
 
 	d.SetId(aws.StringValue(output.SnapshotId))
 
-	if err := createTags(ctx, conn, d.Id(), GetTagsIn(ctx)); err != nil {
+	if err := createTags(ctx, conn, d.Id(), getTagsIn(ctx)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting EBS Snapshot Import (%s) tags: %s", d.Id(), err)
 	}
 
@@ -266,7 +266,7 @@ func resourceEBSSnapshotImportCreate(ctx context.Context, d *schema.ResourceData
 
 func resourceEBSSnapshotImportRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	snapshot, err := FindSnapshotByID(ctx, conn, d.Id())
 
@@ -296,7 +296,7 @@ func resourceEBSSnapshotImportRead(ctx context.Context, d *schema.ResourceData, 
 	d.Set("storage_tier", snapshot.StorageTier)
 	d.Set("volume_size", snapshot.VolumeSize)
 
-	SetTagsOut(ctx, snapshot.Tags)
+	setTagsOut(ctx, snapshot.Tags)
 
 	return diags
 }

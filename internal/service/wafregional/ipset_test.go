@@ -355,7 +355,7 @@ func TestDiffIPSetDescriptors(t *testing.T) {
 
 func testAccCheckIPSetDisappears(ctx context.Context, v *waf.IPSet) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).WAFRegionalConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).WAFRegionalConn(ctx)
 		region := acctest.Provider.Meta().(*conns.AWSClient).Region
 
 		wr := tfwafregional.NewRetryer(conn, region)
@@ -403,7 +403,7 @@ func testAccCheckIPSetDestroy(ctx context.Context) resource.TestCheckFunc {
 				continue
 			}
 
-			conn := acctest.Provider.Meta().(*conns.AWSClient).WAFRegionalConn()
+			conn := acctest.Provider.Meta().(*conns.AWSClient).WAFRegionalConn(ctx)
 			resp, err := conn.GetIPSetWithContext(ctx, &waf.GetIPSetInput{
 				IPSetId: aws.String(rs.Primary.ID),
 			})
@@ -436,7 +436,7 @@ func testAccCheckIPSetExists(ctx context.Context, n string, v *waf.IPSet) resour
 			return fmt.Errorf("No WAF IPSet ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).WAFRegionalConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).WAFRegionalConn(ctx)
 		resp, err := conn.GetIPSetWithContext(ctx, &waf.GetIPSetInput{
 			IPSetId: aws.String(rs.Primary.ID),
 		})

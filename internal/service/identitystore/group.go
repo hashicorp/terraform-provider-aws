@@ -80,7 +80,7 @@ const (
 )
 
 func resourceGroupCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).IdentityStoreClient()
+	conn := meta.(*conns.AWSClient).IdentityStoreClient(ctx)
 
 	identityStoreId := d.Get("identity_store_id").(string)
 
@@ -112,7 +112,7 @@ func resourceGroupCreate(ctx context.Context, d *schema.ResourceData, meta inter
 }
 
 func resourceGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).IdentityStoreClient()
+	conn := meta.(*conns.AWSClient).IdentityStoreClient(ctx)
 
 	identityStoreId, groupId, err := resourceGroupParseID(d.Id())
 
@@ -145,7 +145,7 @@ func resourceGroupRead(ctx context.Context, d *schema.ResourceData, meta interfa
 }
 
 func resourceGroupUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).IdentityStoreClient()
+	conn := meta.(*conns.AWSClient).IdentityStoreClient(ctx)
 
 	in := &identitystore.UpdateGroupInput{
 		GroupId:         aws.String(d.Get("group_id").(string)),
@@ -172,7 +172,7 @@ func resourceGroupUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 }
 
 func resourceGroupDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).IdentityStoreClient()
+	conn := meta.(*conns.AWSClient).IdentityStoreClient(ctx)
 
 	log.Printf("[INFO] Deleting IdentityStore Group %s", d.Id())
 	_, err := conn.DeleteGroup(ctx, &identitystore.DeleteGroupInput{

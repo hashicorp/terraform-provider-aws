@@ -57,7 +57,7 @@ func ResourceSecretPolicy() *schema.Resource {
 
 func resourceSecretPolicyCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SecretsManagerConn()
+	conn := meta.(*conns.AWSClient).SecretsManagerConn(ctx)
 
 	policy, err := structure.NormalizeJsonString(d.Get("policy").(string))
 	if err != nil {
@@ -102,7 +102,7 @@ func resourceSecretPolicyCreate(ctx context.Context, d *schema.ResourceData, met
 
 func resourceSecretPolicyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SecretsManagerConn()
+	conn := meta.(*conns.AWSClient).SecretsManagerConn(ctx)
 
 	input := &secretsmanager.GetResourcePolicyInput{
 		SecretId: aws.String(d.Id()),
@@ -145,7 +145,7 @@ func resourceSecretPolicyRead(ctx context.Context, d *schema.ResourceData, meta 
 
 func resourceSecretPolicyUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SecretsManagerConn()
+	conn := meta.(*conns.AWSClient).SecretsManagerConn(ctx)
 
 	if d.HasChanges("policy", "block_public_policy") {
 		policy, err := structure.NormalizeJsonString(d.Get("policy").(string))
@@ -183,7 +183,7 @@ func resourceSecretPolicyUpdate(ctx context.Context, d *schema.ResourceData, met
 
 func resourceSecretPolicyDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SecretsManagerConn()
+	conn := meta.(*conns.AWSClient).SecretsManagerConn(ctx)
 
 	input := &secretsmanager.DeleteResourcePolicyInput{
 		SecretId: aws.String(d.Id()),

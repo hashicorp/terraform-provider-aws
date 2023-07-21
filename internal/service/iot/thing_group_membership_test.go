@@ -167,7 +167,7 @@ func testAccCheckThingGroupMembershipExists(ctx context.Context, n string) resou
 			return err
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).IoTConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).IoTConn(ctx)
 
 		return tfiot.FindThingGroupMembership(ctx, conn, thingGroupName, thingName)
 	}
@@ -175,7 +175,7 @@ func testAccCheckThingGroupMembershipExists(ctx context.Context, n string) resou
 
 func testAccCheckThingGroupMembershipDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).IoTConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).IoTConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_iot_thing_group_membership" {

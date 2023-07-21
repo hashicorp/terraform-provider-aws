@@ -75,7 +75,7 @@ func (r *resourceAssessmentReport) Schema(ctx context.Context, req resource.Sche
 }
 
 func (r *resourceAssessmentReport) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-	conn := r.Meta().AuditManagerClient()
+	conn := r.Meta().AuditManagerClient(ctx)
 
 	var plan resourceAssessmentReportData
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
@@ -113,7 +113,7 @@ func (r *resourceAssessmentReport) Create(ctx context.Context, req resource.Crea
 }
 
 func (r *resourceAssessmentReport) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
-	conn := r.Meta().AuditManagerClient()
+	conn := r.Meta().AuditManagerClient(ctx)
 
 	var state resourceAssessmentReportData
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
@@ -147,7 +147,7 @@ func (r *resourceAssessmentReport) Update(ctx context.Context, req resource.Upda
 }
 
 func (r *resourceAssessmentReport) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
-	conn := r.Meta().AuditManagerClient()
+	conn := r.Meta().AuditManagerClient(ctx)
 
 	var state resourceAssessmentReportData
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)

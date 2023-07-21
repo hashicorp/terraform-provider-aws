@@ -88,7 +88,7 @@ func ResourceLayerVersionPermission() *schema.Resource {
 
 func resourceLayerVersionPermissionCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).LambdaConn()
+	conn := meta.(*conns.AWSClient).LambdaConn(ctx)
 
 	layerName := d.Get("layer_name").(string)
 	versionNumber := d.Get("version_number").(int)
@@ -117,7 +117,7 @@ func resourceLayerVersionPermissionCreate(ctx context.Context, d *schema.Resourc
 
 func resourceLayerVersionPermissionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).LambdaConn()
+	conn := meta.(*conns.AWSClient).LambdaConn(ctx)
 
 	layerName, versionNumber, err := ResourceLayerVersionPermissionParseId(d.Id())
 	if err != nil {
@@ -208,7 +208,7 @@ func resourceLayerVersionPermissionDelete(ctx context.Context, d *schema.Resourc
 		return diags
 	}
 
-	conn := meta.(*conns.AWSClient).LambdaConn()
+	conn := meta.(*conns.AWSClient).LambdaConn(ctx)
 
 	layerName, versionNumber, err := ResourceLayerVersionPermissionParseId(d.Id())
 	if err != nil {

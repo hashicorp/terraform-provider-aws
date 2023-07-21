@@ -448,7 +448,7 @@ func TestAccRoute53Zone_VPC_updates(t *testing.T) {
 
 func testAccCheckZoneDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).Route53Conn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).Route53Conn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_route53_zone" {
@@ -474,7 +474,7 @@ func testAccCheckZoneDestroy(ctx context.Context) resource.TestCheckFunc {
 
 func testAccCreateRandomRecordsInZoneID(ctx context.Context, zone *route53.GetHostedZoneOutput, recordsCount int) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).Route53Conn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).Route53Conn(ctx)
 
 		var changes []*route53.Change
 		if recordsCount > 100 {
@@ -522,7 +522,7 @@ func testAccCheckZoneExists(ctx context.Context, n string, v *route53.GetHostedZ
 			return fmt.Errorf("No Route53 Hosted Zone ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).Route53Conn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).Route53Conn(ctx)
 
 		output, err := tfroute53.FindHostedZoneByID(ctx, conn, rs.Primary.ID)
 

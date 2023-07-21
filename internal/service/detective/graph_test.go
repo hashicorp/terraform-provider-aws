@@ -124,7 +124,7 @@ func testAccGraph_disappears(t *testing.T) {
 
 func testAccCheckGraphDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DetectiveConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DetectiveConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_detective_graph" {
@@ -157,7 +157,7 @@ func testAccCheckGraphExists(ctx context.Context, resourceName string, graph *de
 			return fmt.Errorf("not found: %s", resourceName)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DetectiveConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DetectiveConn(ctx)
 		resp, err := tfdetective.FindGraphByARN(ctx, conn, rs.Primary.ID)
 
 		if err != nil {

@@ -137,7 +137,7 @@ func flattenUsageMetric(usageMetric *servicequotas.MetricInfo) []interface{} {
 
 func dataSourceServiceQuotaRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ServiceQuotasConn()
+	conn := meta.(*conns.AWSClient).ServiceQuotasConn(ctx)
 
 	quotaCode := d.Get("quota_code").(string)
 	quotaName := d.Get("quota_name").(string)

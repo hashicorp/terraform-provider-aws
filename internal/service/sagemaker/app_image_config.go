@@ -111,12 +111,12 @@ func ResourceAppImageConfig() *schema.Resource {
 
 func resourceAppImageConfigCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SageMakerConn()
+	conn := meta.(*conns.AWSClient).SageMakerConn(ctx)
 
 	name := d.Get("app_image_config_name").(string)
 	input := &sagemaker.CreateAppImageConfigInput{
 		AppImageConfigName: aws.String(name),
-		Tags:               GetTagsIn(ctx),
+		Tags:               getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("kernel_gateway_image_config"); ok && len(v.([]interface{})) > 0 {
@@ -135,7 +135,7 @@ func resourceAppImageConfigCreate(ctx context.Context, d *schema.ResourceData, m
 
 func resourceAppImageConfigRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SageMakerConn()
+	conn := meta.(*conns.AWSClient).SageMakerConn(ctx)
 
 	image, err := FindAppImageConfigByName(ctx, conn, d.Id())
 	if err != nil {
@@ -160,7 +160,7 @@ func resourceAppImageConfigRead(ctx context.Context, d *schema.ResourceData, met
 
 func resourceAppImageConfigUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SageMakerConn()
+	conn := meta.(*conns.AWSClient).SageMakerConn(ctx)
 
 	if d.HasChange("kernel_gateway_image_config") {
 		input := &sagemaker.UpdateAppImageConfigInput{
@@ -183,7 +183,7 @@ func resourceAppImageConfigUpdate(ctx context.Context, d *schema.ResourceData, m
 
 func resourceAppImageConfigDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SageMakerConn()
+	conn := meta.(*conns.AWSClient).SageMakerConn(ctx)
 
 	input := &sagemaker.DeleteAppImageConfigInput{
 		AppImageConfigName: aws.String(d.Id()),

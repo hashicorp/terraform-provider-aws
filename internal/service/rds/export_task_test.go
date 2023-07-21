@@ -98,7 +98,7 @@ func TestAccRDSExportTask_optional(t *testing.T) {
 
 func testAccCheckExportTaskDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).RDSClient()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).RDSClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_rds_export_task" {
@@ -133,7 +133,7 @@ func testAccCheckExportTaskExists(ctx context.Context, name string, exportTask *
 			return create.Error(names.RDS, create.ErrActionCheckingExistence, tfrds.ResNameExportTask, name, errors.New("not set"))
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).RDSClient()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).RDSClient(ctx)
 		resp, err := tfrds.FindExportTaskByID(ctx, conn, rs.Primary.ID)
 		if err != nil {
 			return create.Error(names.RDS, create.ErrActionCheckingExistence, tfrds.ResNameExportTask, rs.Primary.ID, err)

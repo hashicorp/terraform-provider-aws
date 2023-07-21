@@ -40,7 +40,7 @@ func FindAlertManagerDefinitionByID(ctx context.Context, conn *prometheusservice
 func nameAndWorkspaceIDFromRuleGroupNamespaceARN(arn string) (string, string, error) {
 	parts := strings.Split(arn, "/")
 	if len(parts) != 3 {
-		return "", "", fmt.Errorf("error reading Prometheus Rule Group Namespace expected the arn to be like: arn:PARTITION:aps:REGION:ACCOUNT:rulegroupsnamespace/IDstring/namespace_name but got: %s", arn)
+		return "", "", fmt.Errorf("reading Prometheus Rule Group Namespace expected the arn to be like: arn:PARTITION:aps:REGION:ACCOUNT:rulegroupsnamespace/IDstring/namespace_name but got: %s", arn)
 	}
 	return parts[2], parts[1], nil
 }

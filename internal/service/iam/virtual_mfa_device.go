@@ -73,12 +73,12 @@ func ResourceVirtualMFADevice() *schema.Resource {
 
 func resourceVirtualMFADeviceCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).IAMConn()
+	conn := meta.(*conns.AWSClient).IAMConn(ctx)
 
 	name := d.Get("virtual_mfa_device_name").(string)
 	input := &iam.CreateVirtualMFADeviceInput{
 		Path:                 aws.String(d.Get("path").(string)),
-		Tags:                 GetTagsIn(ctx),
+		Tags:                 getTagsIn(ctx),
 		VirtualMFADeviceName: aws.String(name),
 	}
 
@@ -102,7 +102,7 @@ func resourceVirtualMFADeviceCreate(ctx context.Context, d *schema.ResourceData,
 	d.Set("qr_code_png", string(vMFA.QRCodePNG))
 
 	// For partitions not supporting tag-on-create, attempt tag after create.
-	if tags := GetTagsIn(ctx); input.Tags == nil && len(tags) > 0 {
+	if tags := getTagsIn(ctx); input.Tags == nil && len(tags) > 0 {
 		err := virtualMFADeviceCreateTags(ctx, conn, d.Id(), tags)
 
 		// If default tags only, continue. Otherwise, error.
@@ -120,7 +120,7 @@ func resourceVirtualMFADeviceCreate(ctx context.Context, d *schema.ResourceData,
 
 func resourceVirtualMFADeviceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).IAMConn()
+	conn := meta.(*conns.AWSClient).IAMConn(ctx)
 
 	vMFA, err := FindVirtualMFADeviceBySerialNumber(ctx, conn, d.Id())
 
@@ -145,14 +145,14 @@ func resourceVirtualMFADeviceRead(ctx context.Context, d *schema.ResourceData, m
 		return sdkdiag.AppendErrorf(diags, "listing IAM Virtual MFA Device (%s) tags: %s", d.Id(), err)
 	}
 
-	SetTagsOut(ctx, output.Tags)
+	setTagsOut(ctx, output.Tags)
 
 	return diags
 }
 
 func resourceVirtualMFADeviceUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).IAMConn()
+	conn := meta.(*conns.AWSClient).IAMConn(ctx)
 
 	o, n := d.GetChange("tags_all")
 
@@ -172,7 +172,7 @@ func resourceVirtualMFADeviceUpdate(ctx context.Context, d *schema.ResourceData,
 
 func resourceVirtualMFADeviceDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).IAMConn()
+	conn := meta.(*conns.AWSClient).IAMConn(ctx)
 
 	log.Printf("[INFO] Deleting IAM Virtual MFA Device: %s", d.Id())
 	_, err := conn.DeleteVirtualMFADeviceWithContext(ctx, &iam.DeleteVirtualMFADeviceInput{

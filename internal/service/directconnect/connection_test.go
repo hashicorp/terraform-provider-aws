@@ -357,7 +357,7 @@ func TestAccDirectConnectConnection_vlanIDMigration510(t *testing.T) {
 
 func testAccCheckConnectionDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DirectConnectConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DirectConnectConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_dx_connection" {
@@ -383,7 +383,7 @@ func testAccCheckConnectionDestroy(ctx context.Context) resource.TestCheckFunc {
 
 func testAccCheckConnectionExists(ctx context.Context, name string, v *directconnect.Connection) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DirectConnectConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DirectConnectConn(ctx)
 
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -408,7 +408,7 @@ func testAccCheckConnectionExists(ctx context.Context, name string, v *directcon
 
 func testAccCheckConnectionNoDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DirectConnectConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DirectConnectConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_dx_connection" {

@@ -162,7 +162,7 @@ func testAccCheckDomainExists(ctx context.Context, n string) resource.TestCheckF
 			return fmt.Errorf("no CodeArtifact domain set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CodeArtifactConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CodeArtifactConn(ctx)
 
 		domainOwner, domainName, err := tfcodeartifact.DecodeDomainID(rs.Primary.ID)
 		if err != nil {
@@ -185,7 +185,7 @@ func testAccCheckDomainDestroy(ctx context.Context) resource.TestCheckFunc {
 				continue
 			}
 
-			conn := acctest.Provider.Meta().(*conns.AWSClient).CodeArtifactConn()
+			conn := acctest.Provider.Meta().(*conns.AWSClient).CodeArtifactConn(ctx)
 
 			domainOwner, domainName, err := tfcodeartifact.DecodeDomainID(rs.Primary.ID)
 			if err != nil {

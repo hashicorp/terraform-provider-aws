@@ -45,7 +45,7 @@ func ResourceBackendServerPolicy() *schema.Resource {
 
 func resourceBackendServerPolicySet(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ELBConn()
+	conn := meta.(*conns.AWSClient).ELBConn(ctx)
 
 	instancePort := d.Get("instance_port").(int)
 	lbName := d.Get("load_balancer_name").(string)
@@ -72,7 +72,7 @@ func resourceBackendServerPolicySet(ctx context.Context, d *schema.ResourceData,
 
 func resourceBackendServerPolicyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ELBConn()
+	conn := meta.(*conns.AWSClient).ELBConn(ctx)
 
 	lbName, instancePort, err := BackendServerPolicyParseResourceID(d.Id())
 
@@ -101,7 +101,7 @@ func resourceBackendServerPolicyRead(ctx context.Context, d *schema.ResourceData
 
 func resourceBackendServerPolicyDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ELBConn()
+	conn := meta.(*conns.AWSClient).ELBConn(ctx)
 
 	lbName, instancePort, err := BackendServerPolicyParseResourceID(d.Id())
 

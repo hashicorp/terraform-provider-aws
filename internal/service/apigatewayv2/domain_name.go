@@ -126,14 +126,14 @@ func ResourceDomainName() *schema.Resource {
 
 func resourceDomainNameCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).APIGatewayV2Conn()
+	conn := meta.(*conns.AWSClient).APIGatewayV2Conn(ctx)
 
 	domainName := d.Get("domain_name").(string)
 	input := &apigatewayv2.CreateDomainNameInput{
 		DomainName:               aws.String(domainName),
 		DomainNameConfigurations: expandDomainNameConfigurations(d.Get("domain_name_configuration").([]interface{})),
 		MutualTlsAuthentication:  expandMutualTLSAuthentication(d.Get("mutual_tls_authentication").([]interface{})),
-		Tags:                     GetTagsIn(ctx),
+		Tags:                     getTagsIn(ctx),
 	}
 
 	output, err := conn.CreateDomainNameWithContext(ctx, input)
@@ -153,7 +153,7 @@ func resourceDomainNameCreate(ctx context.Context, d *schema.ResourceData, meta 
 
 func resourceDomainNameRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).APIGatewayV2Conn()
+	conn := meta.(*conns.AWSClient).APIGatewayV2Conn(ctx)
 
 	output, err := FindDomainName(ctx, conn, d.Id())
 
@@ -183,14 +183,14 @@ func resourceDomainNameRead(ctx context.Context, d *schema.ResourceData, meta in
 		return sdkdiag.AppendErrorf(diags, "setting mutual_tls_authentication: %s", err)
 	}
 
-	SetTagsOut(ctx, output.Tags)
+	setTagsOut(ctx, output.Tags)
 
 	return diags
 }
 
 func resourceDomainNameUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).APIGatewayV2Conn()
+	conn := meta.(*conns.AWSClient).APIGatewayV2Conn(ctx)
 
 	if d.HasChanges("domain_name_configuration", "mutual_tls_authentication") {
 		input := &apigatewayv2.UpdateDomainNameInput{
@@ -235,7 +235,7 @@ func resourceDomainNameUpdate(ctx context.Context, d *schema.ResourceData, meta 
 
 func resourceDomainNameDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).APIGatewayV2Conn()
+	conn := meta.(*conns.AWSClient).APIGatewayV2Conn(ctx)
 
 	log.Printf("[DEBUG] Deleting API Gateway v2 Domain Name: %s", d.Id())
 	_, err := conn.DeleteDomainNameWithContext(ctx, &apigatewayv2.DeleteDomainNameInput{

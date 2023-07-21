@@ -5,6 +5,8 @@ package xray
 import (
 	"context"
 
+	aws_sdkv2 "github.com/aws/aws-sdk-go-v2/aws"
+	xray_sdkv2 "github.com/aws/aws-sdk-go-v2/service/xray"
 	"github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -50,6 +52,17 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 
 func (p *servicePackage) ServicePackageName() string {
 	return names.XRay
+}
+
+// NewClient returns a new AWS SDK for Go v2 client for this service package's AWS API.
+func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (*xray_sdkv2.Client, error) {
+	cfg := *(config["aws_sdkv2_config"].(*aws_sdkv2.Config))
+
+	return xray_sdkv2.NewFromConfig(cfg, func(o *xray_sdkv2.Options) {
+		if endpoint := config["endpoint"].(string); endpoint != "" {
+			o.EndpointResolver = xray_sdkv2.EndpointResolverFromURL(endpoint)
+		}
+	}), nil
 }
 
 var ServicePackage = &servicePackage{}

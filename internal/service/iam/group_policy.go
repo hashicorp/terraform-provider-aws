@@ -70,7 +70,7 @@ func ResourceGroupPolicy() *schema.Resource {
 
 func resourceGroupPolicyPut(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).IAMConn()
+	conn := meta.(*conns.AWSClient).IAMConn(ctx)
 
 	policyDoc, err := verify.LegacyPolicyNormalize(d.Get("policy").(string))
 	if err != nil {
@@ -102,7 +102,7 @@ func resourceGroupPolicyPut(ctx context.Context, d *schema.ResourceData, meta in
 
 func resourceGroupPolicyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).IAMConn()
+	conn := meta.(*conns.AWSClient).IAMConn(ctx)
 
 	group, name, err := GroupPolicyParseID(d.Id())
 	if err != nil {
@@ -175,7 +175,7 @@ func resourceGroupPolicyRead(ctx context.Context, d *schema.ResourceData, meta i
 
 func resourceGroupPolicyDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).IAMConn()
+	conn := meta.(*conns.AWSClient).IAMConn(ctx)
 
 	group, name, err := GroupPolicyParseID(d.Id())
 	if err != nil {

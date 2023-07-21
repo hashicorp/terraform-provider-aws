@@ -40,7 +40,7 @@ func DataSourceResource() *schema.Resource {
 
 func dataSourceResourceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).LakeFormationConn()
+	conn := meta.(*conns.AWSClient).LakeFormationConn(ctx)
 
 	input := &lakeformation.DescribeResourceInput{}
 

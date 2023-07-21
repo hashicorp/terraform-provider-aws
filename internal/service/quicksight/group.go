@@ -73,7 +73,7 @@ func ResourceGroup() *schema.Resource {
 
 func resourceGroupCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).QuickSightConn()
+	conn := meta.(*conns.AWSClient).QuickSightConn(ctx)
 
 	awsAccountID := meta.(*conns.AWSClient).AccountID
 	namespace := d.Get("namespace").(string)
@@ -104,7 +104,7 @@ func resourceGroupCreate(ctx context.Context, d *schema.ResourceData, meta inter
 
 func resourceGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).QuickSightConn()
+	conn := meta.(*conns.AWSClient).QuickSightConn(ctx)
 
 	awsAccountID, namespace, groupName, err := GroupParseID(d.Id())
 	if err != nil {
@@ -138,7 +138,7 @@ func resourceGroupRead(ctx context.Context, d *schema.ResourceData, meta interfa
 
 func resourceGroupUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).QuickSightConn()
+	conn := meta.(*conns.AWSClient).QuickSightConn(ctx)
 
 	awsAccountID, namespace, groupName, err := GroupParseID(d.Id())
 	if err != nil {
@@ -165,7 +165,7 @@ func resourceGroupUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 
 func resourceGroupDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).QuickSightConn()
+	conn := meta.(*conns.AWSClient).QuickSightConn(ctx)
 
 	awsAccountID, namespace, groupName, err := GroupParseID(d.Id())
 	if err != nil {

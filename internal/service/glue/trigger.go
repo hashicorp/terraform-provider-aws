@@ -206,14 +206,14 @@ func ResourceTrigger() *schema.Resource {
 
 func resourceTriggerCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).GlueConn()
+	conn := meta.(*conns.AWSClient).GlueConn(ctx)
 
 	name := d.Get("name").(string)
 	triggerType := d.Get("type").(string)
 	input := &glue.CreateTriggerInput{
 		Actions:         expandActions(d.Get("actions").([]interface{})),
 		Name:            aws.String(name),
-		Tags:            GetTagsIn(ctx),
+		Tags:            getTagsIn(ctx),
 		Type:            aws.String(triggerType),
 		StartOnCreation: aws.Bool(d.Get("start_on_creation").(bool)),
 	}
@@ -301,7 +301,7 @@ func resourceTriggerCreate(ctx context.Context, d *schema.ResourceData, meta int
 
 func resourceTriggerRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).GlueConn()
+	conn := meta.(*conns.AWSClient).GlueConn(ctx)
 
 	output, err := FindTriggerByName(ctx, conn, d.Id())
 	if err != nil {
@@ -364,7 +364,7 @@ func resourceTriggerRead(ctx context.Context, d *schema.ResourceData, meta inter
 
 func resourceTriggerUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).GlueConn()
+	conn := meta.(*conns.AWSClient).GlueConn(ctx)
 
 	if d.HasChanges("actions", "description", "predicate", "schedule", "event_batching_condition") {
 		triggerUpdate := &glue.TriggerUpdate{
@@ -435,7 +435,7 @@ func resourceTriggerUpdate(ctx context.Context, d *schema.ResourceData, meta int
 
 func resourceTriggerDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).GlueConn()
+	conn := meta.(*conns.AWSClient).GlueConn(ctx)
 
 	log.Printf("[DEBUG] Deleting Glue Trigger: %s", d.Id())
 	err := deleteTrigger(ctx, conn, d.Id())

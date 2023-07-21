@@ -100,7 +100,7 @@ func ResourceThesaurus() *schema.Resource {
 }
 
 func resourceThesaurusCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).KendraClient()
+	conn := meta.(*conns.AWSClient).KendraClient(ctx)
 
 	input := &kendra.CreateThesaurusInput{
 		ClientToken:  aws.String(id.UniqueId()),
@@ -108,7 +108,7 @@ func resourceThesaurusCreate(ctx context.Context, d *schema.ResourceData, meta i
 		Name:         aws.String(d.Get("name").(string)),
 		RoleArn:      aws.String(d.Get("role_arn").(string)),
 		SourceS3Path: expandSourceS3Path(d.Get("source_s3_path").([]interface{})),
-		Tags:         GetTagsIn(ctx),
+		Tags:         getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("description"); ok {
@@ -153,7 +153,7 @@ func resourceThesaurusCreate(ctx context.Context, d *schema.ResourceData, meta i
 }
 
 func resourceThesaurusRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).KendraClient()
+	conn := meta.(*conns.AWSClient).KendraClient(ctx)
 
 	id, indexId, err := ThesaurusParseResourceID(d.Id())
 	if err != nil {
@@ -196,7 +196,7 @@ func resourceThesaurusRead(ctx context.Context, d *schema.ResourceData, meta int
 }
 
 func resourceThesaurusUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).KendraClient()
+	conn := meta.(*conns.AWSClient).KendraClient(ctx)
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		id, indexId, err := ThesaurusParseResourceID(d.Id())
@@ -255,7 +255,7 @@ func resourceThesaurusUpdate(ctx context.Context, d *schema.ResourceData, meta i
 }
 
 func resourceThesaurusDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).KendraClient()
+	conn := meta.(*conns.AWSClient).KendraClient(ctx)
 
 	log.Printf("[INFO] Deleting Kendra Thesaurus %s", d.Id())
 

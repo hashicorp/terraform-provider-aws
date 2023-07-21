@@ -47,7 +47,7 @@ func ResourceAssessmentTarget() *schema.Resource {
 
 func resourceAssessmentTargetCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).InspectorConn()
+	conn := meta.(*conns.AWSClient).InspectorConn(ctx)
 
 	input := &inspector.CreateAssessmentTargetInput{
 		AssessmentTargetName: aws.String(d.Get("name").(string)),
@@ -69,7 +69,7 @@ func resourceAssessmentTargetCreate(ctx context.Context, d *schema.ResourceData,
 
 func resourceAssessmentTargetRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).InspectorConn()
+	conn := meta.(*conns.AWSClient).InspectorConn(ctx)
 
 	assessmentTarget, err := DescribeAssessmentTarget(ctx, conn, d.Id())
 
@@ -92,7 +92,7 @@ func resourceAssessmentTargetRead(ctx context.Context, d *schema.ResourceData, m
 
 func resourceAssessmentTargetUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).InspectorConn()
+	conn := meta.(*conns.AWSClient).InspectorConn(ctx)
 
 	input := inspector.UpdateAssessmentTargetInput{
 		AssessmentTargetArn:  aws.String(d.Id()),
@@ -113,7 +113,7 @@ func resourceAssessmentTargetUpdate(ctx context.Context, d *schema.ResourceData,
 
 func resourceAssessmentTargetDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).InspectorConn()
+	conn := meta.(*conns.AWSClient).InspectorConn(ctx)
 	input := &inspector.DeleteAssessmentTargetInput{
 		AssessmentTargetArn: aws.String(d.Id()),
 	}

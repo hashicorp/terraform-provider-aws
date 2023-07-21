@@ -101,7 +101,7 @@ func ResourceCustomRoutingEndpointGroup() *schema.Resource {
 
 func resourceCustomRoutingEndpointGroupCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).GlobalAcceleratorConn()
+	conn := meta.(*conns.AWSClient).GlobalAcceleratorConn(ctx)
 	region := meta.(*conns.AWSClient).Region
 
 	input := &globalaccelerator.CreateCustomRoutingEndpointGroupInput{
@@ -151,7 +151,7 @@ func resourceCustomRoutingEndpointGroupCreate(ctx context.Context, d *schema.Res
 
 func resourceCustomRoutingEndpointGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).GlobalAcceleratorConn()
+	conn := meta.(*conns.AWSClient).GlobalAcceleratorConn(ctx)
 
 	endpointGroup, err := FindCustomRoutingEndpointGroupByARN(ctx, conn, d.Id())
 
@@ -186,7 +186,7 @@ func resourceCustomRoutingEndpointGroupRead(ctx context.Context, d *schema.Resou
 
 func resourceCustomRoutingEndpointGroupDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).GlobalAcceleratorConn()
+	conn := meta.(*conns.AWSClient).GlobalAcceleratorConn(ctx)
 
 	log.Printf("[DEBUG] Deleting Global Accelerator Custom Routing Endpoint Group (%s)", d.Id())
 	_, err := conn.DeleteCustomRoutingEndpointGroupWithContext(ctx, &globalaccelerator.DeleteCustomRoutingEndpointGroupInput{

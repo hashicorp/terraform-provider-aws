@@ -117,7 +117,7 @@ func ResourceHostedPrivateVirtualInterface() *schema.Resource {
 
 func resourceHostedPrivateVirtualInterfaceCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DirectConnectConn()
+	conn := meta.(*conns.AWSClient).DirectConnectConn(ctx)
 
 	req := &directconnect.AllocatePrivateVirtualInterfaceInput{
 		ConnectionId: aws.String(d.Get("connection_id").(string)),
@@ -160,7 +160,7 @@ func resourceHostedPrivateVirtualInterfaceCreate(ctx context.Context, d *schema.
 
 func resourceHostedPrivateVirtualInterfaceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DirectConnectConn()
+	conn := meta.(*conns.AWSClient).DirectConnectConn(ctx)
 
 	vif, err := virtualInterfaceRead(ctx, d.Id(), conn)
 	if err != nil {
@@ -202,7 +202,7 @@ func resourceHostedPrivateVirtualInterfaceDelete(ctx context.Context, d *schema.
 }
 
 func resourceHostedPrivateVirtualInterfaceImport(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
-	conn := meta.(*conns.AWSClient).DirectConnectConn()
+	conn := meta.(*conns.AWSClient).DirectConnectConn(ctx)
 
 	vif, err := virtualInterfaceRead(ctx, d.Id(), conn)
 	if err != nil {

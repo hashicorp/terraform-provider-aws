@@ -77,7 +77,7 @@ func ResourceCustomerGateway() *schema.Resource {
 }
 
 func resourceCustomerGatewayCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	input := &ec2.CreateCustomerGatewayInput{
 		TagSpecifications: getTagSpecificationsIn(ctx, ec2.ResourceTypeCustomerGateway),
@@ -122,7 +122,7 @@ func resourceCustomerGatewayCreate(ctx context.Context, d *schema.ResourceData, 
 }
 
 func resourceCustomerGatewayRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	customerGateway, err := FindCustomerGatewayByID(ctx, conn, d.Id())
 
@@ -150,7 +150,7 @@ func resourceCustomerGatewayRead(ctx context.Context, d *schema.ResourceData, me
 	d.Set("ip_address", customerGateway.IpAddress)
 	d.Set("type", customerGateway.Type)
 
-	SetTagsOut(ctx, customerGateway.Tags)
+	setTagsOut(ctx, customerGateway.Tags)
 
 	return nil
 }
@@ -161,7 +161,7 @@ func resourceCustomerGatewayUpdate(ctx context.Context, d *schema.ResourceData, 
 }
 
 func resourceCustomerGatewayDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	log.Printf("[INFO] Deleting EC2 Customer Gateway: %s", d.Id())
 	_, err := conn.DeleteCustomerGatewayWithContext(ctx, &ec2.DeleteCustomerGatewayInput{

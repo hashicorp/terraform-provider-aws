@@ -671,7 +671,7 @@ func testAccCheckRoutingProfileExists(ctx context.Context, resourceName string, 
 			return err
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ConnectConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ConnectConn(ctx)
 
 		params := &connect.DescribeRoutingProfileInput{
 			InstanceId:       aws.String(instanceID),
@@ -696,7 +696,7 @@ func testAccCheckRoutingProfileDestroy(ctx context.Context) resource.TestCheckFu
 				continue
 			}
 
-			conn := acctest.Provider.Meta().(*conns.AWSClient).ConnectConn()
+			conn := acctest.Provider.Meta().(*conns.AWSClient).ConnectConn(ctx)
 
 			instanceID, routingProfileID, err := tfconnect.RoutingProfileParseID(rs.Primary.ID)
 

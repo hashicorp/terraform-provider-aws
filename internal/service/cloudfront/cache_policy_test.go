@@ -210,7 +210,7 @@ func TestAccCloudFrontCachePolicy_ZeroTTLs(t *testing.T) {
 
 func testAccCheckCachePolicyDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudFrontConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudFrontConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_cloudfront_cache_policy" {
@@ -245,7 +245,7 @@ func testAccCheckCachePolicyExists(ctx context.Context, n string) resource.TestC
 			return fmt.Errorf("No CloudFront Cache Policy ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudFrontConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudFrontConn(ctx)
 
 		_, err := tfcloudfront.FindCachePolicyByID(ctx, conn, rs.Primary.ID)
 

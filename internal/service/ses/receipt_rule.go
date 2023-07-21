@@ -271,7 +271,7 @@ func ResourceReceiptRule() *schema.Resource {
 
 func resourceReceiptRuleCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SESConn()
+	conn := meta.(*conns.AWSClient).SESConn(ctx)
 
 	name := d.Get("name").(string)
 	input := &ses.CreateReceiptRuleInput{
@@ -296,7 +296,7 @@ func resourceReceiptRuleCreate(ctx context.Context, d *schema.ResourceData, meta
 
 func resourceReceiptRuleRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SESConn()
+	conn := meta.(*conns.AWSClient).SESConn(ctx)
 
 	ruleSetName := d.Get("rule_set_name").(string)
 	rule, err := FindReceiptRuleByTwoPartKey(ctx, conn, d.Id(), ruleSetName)
@@ -477,7 +477,7 @@ func resourceReceiptRuleRead(ctx context.Context, d *schema.ResourceData, meta i
 
 func resourceReceiptRuleUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SESConn()
+	conn := meta.(*conns.AWSClient).SESConn(ctx)
 
 	input := &ses.UpdateReceiptRuleInput{
 		Rule:        buildReceiptRule(d),
@@ -509,7 +509,7 @@ func resourceReceiptRuleUpdate(ctx context.Context, d *schema.ResourceData, meta
 
 func resourceReceiptRuleDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SESConn()
+	conn := meta.(*conns.AWSClient).SESConn(ctx)
 
 	log.Printf("[DEBUG] Deleting SES Receipt Rule: %s", d.Id())
 	_, err := conn.DeleteReceiptRuleWithContext(ctx, &ses.DeleteReceiptRuleInput{

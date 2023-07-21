@@ -126,7 +126,7 @@ func TestAccSecretsManagerSecretPolicy_disappears(t *testing.T) {
 
 func testAccCheckSecretPolicyDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SecretsManagerConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SecretsManagerConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_secretsmanager_secret_policy" {
@@ -198,7 +198,7 @@ func testAccCheckSecretPolicyExists(ctx context.Context, resourceName string, po
 			return fmt.Errorf("Not found: %s", resourceName)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SecretsManagerConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SecretsManagerConn(ctx)
 		input := &secretsmanager.GetResourcePolicyInput{
 			SecretId: aws.String(rs.Primary.ID),
 		}

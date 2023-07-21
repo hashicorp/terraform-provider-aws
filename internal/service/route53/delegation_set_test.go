@@ -109,7 +109,7 @@ func TestAccRoute53DelegationSet_disappears(t *testing.T) {
 
 func testAccCheckDelegationSetDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).Route53Conn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).Route53Conn(ctx)
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_route53_delegation_set" {
 				continue
@@ -126,7 +126,7 @@ func testAccCheckDelegationSetDestroy(ctx context.Context) resource.TestCheckFun
 
 func testAccCheckDelegationSetExists(ctx context.Context, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).Route53Conn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).Route53Conn(ctx)
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
@@ -155,7 +155,7 @@ func testAccCheckDelegationSetExists(ctx context.Context, n string) resource.Tes
 
 func testAccCheckNameServersMatch(ctx context.Context, delegationSetName, zoneName string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).Route53Conn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).Route53Conn(ctx)
 
 		delegationSetLocal, ok := s.RootModule().Resources[delegationSetName]
 		if !ok {

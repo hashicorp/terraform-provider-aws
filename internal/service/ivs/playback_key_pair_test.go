@@ -189,7 +189,7 @@ func testAccPlaybackKeyPair_disappears(t *testing.T) {
 
 func testAccCheckPlaybackKeyPairDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).IVSConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).IVSConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_ivs_playback_key_pair" {
@@ -225,7 +225,7 @@ func testAccCheckPlaybackKeyPairExists(ctx context.Context, name string, playbac
 			return create.Error(names.IVS, create.ErrActionCheckingExistence, tfivs.ResNamePlaybackKeyPair, name, errors.New("not set"))
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).IVSConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).IVSConn(ctx)
 
 		resp, err := tfivs.FindPlaybackKeyPairByID(ctx, conn, rs.Primary.ID)
 		if err != nil {
@@ -239,7 +239,7 @@ func testAccCheckPlaybackKeyPairExists(ctx context.Context, name string, playbac
 }
 
 func testAccPlaybackKeyPairPreCheck(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).IVSConn()
+	conn := acctest.Provider.Meta().(*conns.AWSClient).IVSConn(ctx)
 
 	input := &ivs.ListPlaybackKeyPairsInput{}
 	_, err := conn.ListPlaybackKeyPairsWithContext(ctx, input)

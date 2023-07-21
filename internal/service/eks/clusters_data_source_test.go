@@ -23,7 +23,7 @@ func TestAccEKSClustersDataSource_basic(t *testing.T) {
 			{
 				Config: testAccClustersDataSourceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					acctest.CheckResourceAttrGreaterThanValue(dataSourceResourceName, "names.#", "0"),
+					acctest.CheckResourceAttrGreaterThanValue(dataSourceResourceName, "names.#", 0),
 				),
 			},
 		},

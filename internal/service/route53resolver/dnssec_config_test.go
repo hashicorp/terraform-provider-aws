@@ -72,7 +72,7 @@ func TestAccRoute53ResolverDNSSECConfig_disappear(t *testing.T) {
 
 func testAccCheckDNSSECConfigDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).Route53ResolverConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).Route53ResolverConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_route53_resolver_dnssec_config" {
@@ -107,7 +107,7 @@ func testAccCheckDNSSECConfigExists(ctx context.Context, n string) resource.Test
 			return fmt.Errorf("No Route53 Resolver DNSSEC Config ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).Route53ResolverConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).Route53ResolverConn(ctx)
 
 		_, err := tfroute53resolver.FindResolverDNSSECConfigByID(ctx, conn, rs.Primary.ID)
 

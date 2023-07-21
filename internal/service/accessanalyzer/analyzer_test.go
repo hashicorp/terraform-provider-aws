@@ -155,7 +155,7 @@ func testAccAnalyzer_Type_Organization(t *testing.T) {
 
 func testAccCheckAnalyzerDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AccessAnalyzerClient()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AccessAnalyzerClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_accessanalyzer_analyzer" {
@@ -190,7 +190,7 @@ func testAccCheckAnalyzerExists(ctx context.Context, n string, v *types.Analyzer
 			return fmt.Errorf("No IAM Access Analyzer Analyzer ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AccessAnalyzerClient()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AccessAnalyzerClient(ctx)
 
 		output, err := tfaccessanalyzer.FindAnalyzerByName(ctx, conn, rs.Primary.ID)
 

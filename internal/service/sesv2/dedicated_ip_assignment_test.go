@@ -92,7 +92,7 @@ func testAccSESV2DedicatedIPAssignment_disappears(t *testing.T) { // nosemgrep:c
 
 func testAccCheckDedicatedIPAssignmentDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SESV2Client()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SESV2Client(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_sesv2_dedicated_ip_assignment" {
@@ -129,7 +129,7 @@ func testAccCheckDedicatedIPAssignmentExists(ctx context.Context, name string) r
 			return create.Error(names.SESV2, create.ErrActionCheckingExistence, tfsesv2.ResNameDedicatedIPAssignment, name, errors.New("not set"))
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SESV2Client()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SESV2Client(ctx)
 
 		_, err := tfsesv2.FindDedicatedIPAssignmentByID(ctx, conn, rs.Primary.ID)
 		if err != nil {

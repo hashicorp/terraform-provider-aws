@@ -71,7 +71,7 @@ func ResourceMacSecKeyAssociation() *schema.Resource {
 
 func resourceMacSecKeyCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DirectConnectConn()
+	conn := meta.(*conns.AWSClient).DirectConnectConn(ctx)
 
 	input := &directconnect.AssociateMacSecKeyInput{
 		ConnectionId: aws.String(d.Get("connection_id").(string)),
@@ -105,7 +105,7 @@ func resourceMacSecKeyCreate(ctx context.Context, d *schema.ResourceData, meta i
 
 func resourceMacSecKeyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DirectConnectConn()
+	conn := meta.(*conns.AWSClient).DirectConnectConn(ctx)
 
 	secretArn, connId, err := MacSecKeyParseID(d.Id())
 	if err != nil {
@@ -136,7 +136,7 @@ func resourceMacSecKeyRead(ctx context.Context, d *schema.ResourceData, meta int
 
 func resourceMacSecKeyDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DirectConnectConn()
+	conn := meta.(*conns.AWSClient).DirectConnectConn(ctx)
 
 	input := &directconnect.DisassociateMacSecKeyInput{
 		ConnectionId: aws.String(d.Get("connection_id").(string)),

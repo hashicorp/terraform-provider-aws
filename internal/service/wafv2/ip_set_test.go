@@ -315,7 +315,7 @@ func testAccCheckIPSetDestroy(ctx context.Context) resource.TestCheckFunc {
 				continue
 			}
 
-			conn := acctest.Provider.Meta().(*conns.AWSClient).WAFV2Conn()
+			conn := acctest.Provider.Meta().(*conns.AWSClient).WAFV2Conn(ctx)
 
 			_, err := tfwafv2.FindIPSetByThreePartKey(ctx, conn, rs.Primary.ID, rs.Primary.Attributes["name"], rs.Primary.Attributes["scope"])
 
@@ -345,7 +345,7 @@ func testAccCheckIPSetExists(ctx context.Context, n string, v *wafv2.IPSet) reso
 			return fmt.Errorf("No WAFv2 IPSet ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).WAFV2Conn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).WAFV2Conn(ctx)
 
 		output, err := tfwafv2.FindIPSetByThreePartKey(ctx, conn, rs.Primary.ID, rs.Primary.Attributes["name"], rs.Primary.Attributes["scope"])
 

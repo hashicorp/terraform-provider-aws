@@ -67,7 +67,7 @@ func DataSourceAuthorizer() *schema.Resource {
 
 func dataSourceAuthorizerRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).APIGatewayConn()
+	conn := meta.(*conns.AWSClient).APIGatewayConn(ctx)
 
 	authorizerID := d.Get("authorizer_id").(string)
 	apiID := d.Get("rest_api_id").(string)

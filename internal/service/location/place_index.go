@@ -83,10 +83,10 @@ func ResourcePlaceIndex() *schema.Resource {
 
 func resourcePlaceIndexCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).LocationConn()
+	conn := meta.(*conns.AWSClient).LocationConn(ctx)
 
 	input := &locationservice.CreatePlaceIndexInput{
-		Tags: GetTagsIn(ctx),
+		Tags: getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("data_source"); ok {
@@ -122,7 +122,7 @@ func resourcePlaceIndexCreate(ctx context.Context, d *schema.ResourceData, meta 
 
 func resourcePlaceIndexRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).LocationConn()
+	conn := meta.(*conns.AWSClient).LocationConn(ctx)
 
 	input := &locationservice.DescribePlaceIndexInput{
 		IndexName: aws.String(d.Id()),
@@ -157,7 +157,7 @@ func resourcePlaceIndexRead(ctx context.Context, d *schema.ResourceData, meta in
 	d.Set("index_arn", output.IndexArn)
 	d.Set("index_name", output.IndexName)
 
-	SetTagsOut(ctx, output.Tags)
+	setTagsOut(ctx, output.Tags)
 
 	d.Set("update_time", aws.TimeValue(output.UpdateTime).Format(time.RFC3339))
 
@@ -166,7 +166,7 @@ func resourcePlaceIndexRead(ctx context.Context, d *schema.ResourceData, meta in
 
 func resourcePlaceIndexUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).LocationConn()
+	conn := meta.(*conns.AWSClient).LocationConn(ctx)
 
 	if d.HasChanges("data_source_configuration", "description") {
 		input := &locationservice.UpdatePlaceIndexInput{
@@ -195,7 +195,7 @@ func resourcePlaceIndexUpdate(ctx context.Context, d *schema.ResourceData, meta 
 
 func resourcePlaceIndexDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).LocationConn()
+	conn := meta.(*conns.AWSClient).LocationConn(ctx)
 
 	input := &locationservice.DeletePlaceIndexInput{
 		IndexName: aws.String(d.Id()),

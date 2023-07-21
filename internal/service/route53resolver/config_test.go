@@ -91,7 +91,7 @@ func testAccCheckConfigExists(ctx context.Context, n string, v *route53resolver.
 			return fmt.Errorf("No Route53 Resolver Config ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).Route53ResolverConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).Route53ResolverConn(ctx)
 
 		output, err := tfroute53resolver.FindResolverConfigByID(ctx, conn, rs.Primary.ID)
 

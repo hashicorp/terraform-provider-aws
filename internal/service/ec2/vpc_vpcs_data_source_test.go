@@ -22,7 +22,7 @@ func TestAccVPCsDataSource_basic(t *testing.T) {
 			{
 				Config: testAccVPCVPCsDataSourceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					acctest.CheckResourceAttrGreaterThanValue("data.aws_vpcs.test", "ids.#", "0"),
+					acctest.CheckResourceAttrGreaterThanValue("data.aws_vpcs.test", "ids.#", 0),
 				),
 			},
 		},
@@ -60,7 +60,7 @@ func TestAccVPCsDataSource_filters(t *testing.T) {
 			{
 				Config: testAccVPCVPCsDataSourceConfig_filters(rName),
 				Check: resource.ComposeTestCheckFunc(
-					acctest.CheckResourceAttrGreaterThanValue("data.aws_vpcs.test", "ids.#", "0"),
+					acctest.CheckResourceAttrGreaterThanValue("data.aws_vpcs.test", "ids.#", 0),
 				),
 			},
 		},

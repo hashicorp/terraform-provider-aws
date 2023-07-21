@@ -118,7 +118,7 @@ func ResourceServerlessCluster() *schema.Resource {
 }
 
 func resourceServerlessClusterCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).KafkaConn()
+	conn := meta.(*conns.AWSClient).KafkaConn(ctx)
 
 	name := d.Get("cluster_name").(string)
 	input := &kafka.CreateClusterV2Input{
@@ -127,7 +127,7 @@ func resourceServerlessClusterCreate(ctx context.Context, d *schema.ResourceData
 			ClientAuthentication: expandServerlessClientAuthentication(d.Get("client_authentication").([]interface{})[0].(map[string]interface{})),
 			VpcConfigs:           expandVpcConfigs(d.Get("vpc_config").([]interface{})),
 		},
-		Tags: GetTagsIn(ctx),
+		Tags: getTagsIn(ctx),
 	}
 
 	log.Printf("[DEBUG] Creating MSK Serverless Cluster: %s", input)
@@ -149,7 +149,7 @@ func resourceServerlessClusterCreate(ctx context.Context, d *schema.ResourceData
 }
 
 func resourceServerlessClusterRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).KafkaConn()
+	conn := meta.(*conns.AWSClient).KafkaConn(ctx)
 
 	cluster, err := FindServerlessClusterByARN(ctx, conn, d.Id())
 
@@ -176,7 +176,7 @@ func resourceServerlessClusterRead(ctx context.Context, d *schema.ResourceData, 
 		return diag.Errorf("setting vpc_config: %s", err)
 	}
 
-	SetTagsOut(ctx, cluster.Tags)
+	setTagsOut(ctx, cluster.Tags)
 
 	return nil
 }

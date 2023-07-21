@@ -589,7 +589,7 @@ func testAccCheckTriggerExists(ctx context.Context, resourceName string, trigger
 			return fmt.Errorf("No Glue Trigger ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).GlueConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).GlueConn(ctx)
 
 		output, err := tfglue.FindTriggerByName(ctx, conn, rs.Primary.ID)
 		if err != nil {
@@ -616,7 +616,7 @@ func testAccCheckTriggerDestroy(ctx context.Context) resource.TestCheckFunc {
 				continue
 			}
 
-			conn := acctest.Provider.Meta().(*conns.AWSClient).GlueConn()
+			conn := acctest.Provider.Meta().(*conns.AWSClient).GlueConn(ctx)
 
 			output, err := tfglue.FindTriggerByName(ctx, conn, rs.Primary.ID)
 

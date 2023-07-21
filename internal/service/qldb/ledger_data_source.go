@@ -48,7 +48,7 @@ func DataSourceLedger() *schema.Resource {
 }
 
 func dataSourceLedgerRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).QLDBConn()
+	conn := meta.(*conns.AWSClient).QLDBConn(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	name := d.Get("name").(string)
@@ -69,7 +69,7 @@ func dataSourceLedgerRead(ctx context.Context, d *schema.ResourceData, meta inte
 	d.Set("name", ledger.Name)
 	d.Set("permissions_mode", ledger.PermissionsMode)
 
-	tags, err := ListTags(ctx, conn, d.Get("arn").(string))
+	tags, err := listTags(ctx, conn, d.Get("arn").(string))
 
 	if err != nil {
 		return diag.Errorf("listing tags for QLDB Ledger (%s): %s", d.Id(), err)

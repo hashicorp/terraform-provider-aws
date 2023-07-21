@@ -81,7 +81,7 @@ const (
 )
 
 func dataSourceCertificateRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).DMSConn()
+	conn := meta.(*conns.AWSClient).DMSConn(ctx)
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -111,7 +111,7 @@ func dataSourceCertificateRead(ctx context.Context, d *schema.ResourceData, meta
 	to_date := out.ValidToDate.String()
 	d.Set("valid_to_date", to_date)
 
-	tags, err := ListTags(ctx, conn, aws.StringValue(out.CertificateArn))
+	tags, err := listTags(ctx, conn, aws.StringValue(out.CertificateArn))
 
 	if err != nil {
 		return create.DiagError(names.DMS, create.ErrActionReading, DSNameCertificate, d.Id(), err)

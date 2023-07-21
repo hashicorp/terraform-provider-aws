@@ -51,9 +51,9 @@ func TestAccCloudFrontOriginAccessIdentitiesDataSource_all(t *testing.T) {
 			{
 				Config: testAccOriginAccessIdentitiesDataSourceConfig_noComments(rName),
 				Check: resource.ComposeTestCheckFunc(
-					acctest.CheckResourceAttrGreaterThanValue(dataSourceName, "iam_arns.#", "1"),
-					acctest.CheckResourceAttrGreaterThanValue(dataSourceName, "ids.#", "1"),
-					acctest.CheckResourceAttrGreaterThanValue(dataSourceName, "s3_canonical_user_ids.#", "1"),
+					acctest.CheckResourceAttrGreaterThanValue(dataSourceName, "iam_arns.#", 1),
+					acctest.CheckResourceAttrGreaterThanValue(dataSourceName, "ids.#", 1),
+					acctest.CheckResourceAttrGreaterThanValue(dataSourceName, "s3_canonical_user_ids.#", 1),
 				),
 			},
 		},

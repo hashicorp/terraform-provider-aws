@@ -53,7 +53,7 @@ func ResourceControl() *schema.Resource {
 }
 
 func resourceControlCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ControlTowerConn()
+	conn := meta.(*conns.AWSClient).ControlTowerConn(ctx)
 
 	controlIdentifier := d.Get("control_identifier").(string)
 	targetIdentifier := d.Get("target_identifier").(string)
@@ -72,14 +72,14 @@ func resourceControlCreate(ctx context.Context, d *schema.ResourceData, meta int
 	d.SetId(id)
 
 	if _, err := waitOperationSucceeded(ctx, conn, aws.StringValue(output.OperationIdentifier), d.Timeout(schema.TimeoutCreate)); err != nil {
-		return diag.FromErr(fmt.Errorf("waiting for ControlTower Control (%s) create: %w", d.Id(), err))
+		return diag.Errorf("waiting for ControlTower Control (%s) create: %s", d.Id(), err)
 	}
 
 	return resourceControlRead(ctx, d, meta)
 }
 
 func resourceControlRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ControlTowerConn()
+	conn := meta.(*conns.AWSClient).ControlTowerConn(ctx)
 
 	targetIdentifier, controlIdentifier, err := ControlParseResourceID(d.Id())
 
@@ -106,7 +106,7 @@ func resourceControlRead(ctx context.Context, d *schema.ResourceData, meta inter
 }
 
 func resourceControlDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ControlTowerConn()
+	conn := meta.(*conns.AWSClient).ControlTowerConn(ctx)
 
 	targetIdentifier, controlIdentifier, err := ControlParseResourceID(d.Id())
 

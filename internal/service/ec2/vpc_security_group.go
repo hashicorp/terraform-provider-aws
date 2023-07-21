@@ -179,7 +179,7 @@ var (
 )
 
 func resourceSecurityGroupCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	name := create.Name(d.Get("name").(string), d.Get("name_prefix").(string))
 	inputC := &ec2.CreateSecurityGroupInput{
@@ -257,7 +257,7 @@ func resourceSecurityGroupCreate(ctx context.Context, d *schema.ResourceData, me
 }
 
 func resourceSecurityGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	sg, err := FindSecurityGroupByID(ctx, conn, d.Id())
 
@@ -305,13 +305,13 @@ func resourceSecurityGroupRead(ctx context.Context, d *schema.ResourceData, meta
 		return diag.Errorf("setting egress: %s", err)
 	}
 
-	SetTagsOut(ctx, sg.Tags)
+	setTagsOut(ctx, sg.Tags)
 
 	return nil
 }
 
 func resourceSecurityGroupUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	group, err := FindSecurityGroupByID(ctx, conn, d.Id())
 
@@ -335,7 +335,7 @@ func resourceSecurityGroupUpdate(ctx context.Context, d *schema.ResourceData, me
 }
 
 func resourceSecurityGroupDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	if err := deleteLingeringENIs(ctx, conn, "group-id", d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
 		return diag.Errorf("deleting ENIs using Security Group (%s): %s", d.Id(), err)

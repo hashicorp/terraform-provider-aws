@@ -44,7 +44,7 @@ func DataSourceSubnetGroup() *schema.Resource {
 
 func dataSourceSubnetGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).RedshiftConn()
+	conn := meta.(*conns.AWSClient).RedshiftConn(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	subnetgroup, err := FindSubnetGroupByName(ctx, conn, d.Get("name").(string))

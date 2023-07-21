@@ -233,7 +233,7 @@ func testAccAccount_govCloud(t *testing.T) {
 
 func testAccCheckAccountDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).OrganizationsConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).OrganizationsConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_organizations_account" {
@@ -268,7 +268,7 @@ func testAccCheckAccountExists(ctx context.Context, n string, v *organizations.A
 			return fmt.Errorf("No AWS Organizations Account ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).OrganizationsConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).OrganizationsConn(ctx)
 
 		output, err := tforganizations.FindAccountByID(ctx, conn, rs.Primary.ID)
 

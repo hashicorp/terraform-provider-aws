@@ -45,7 +45,7 @@ func ResourceInvitationAccepter() *schema.Resource {
 }
 
 func resourceInvitationAccepterCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).Macie2Conn()
+	conn := meta.(*conns.AWSClient).Macie2Conn(ctx)
 
 	adminAccountID := d.Get("administrator_account_id").(string)
 	var invitationID string
@@ -86,7 +86,7 @@ func resourceInvitationAccepterCreate(ctx context.Context, d *schema.ResourceDat
 		})
 	}
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error listing Macie InvitationAccepter (%s): %w", d.Id(), err))
+		return diag.Errorf("listing Macie InvitationAccepter (%s): %s", d.Id(), err)
 	}
 
 	acceptInvitationInput := &macie2.AcceptInvitationInput{
@@ -97,7 +97,7 @@ func resourceInvitationAccepterCreate(ctx context.Context, d *schema.ResourceDat
 	_, err = conn.AcceptInvitationWithContext(ctx, acceptInvitationInput)
 
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error accepting Macie InvitationAccepter (%s): %w", d.Id(), err))
+		return diag.Errorf("accepting Macie InvitationAccepter (%s): %s", d.Id(), err)
 	}
 
 	d.SetId(adminAccountID)
@@ -106,7 +106,7 @@ func resourceInvitationAccepterCreate(ctx context.Context, d *schema.ResourceDat
 }
 
 func resourceInvitationAccepterRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).Macie2Conn()
+	conn := meta.(*conns.AWSClient).Macie2Conn(ctx)
 
 	var err error
 
@@ -122,11 +122,11 @@ func resourceInvitationAccepterRead(ctx context.Context, d *schema.ResourceData,
 	}
 
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error reading Macie InvitationAccepter (%s): %w", d.Id(), err))
+		return diag.Errorf("reading Macie InvitationAccepter (%s): %s", d.Id(), err)
 	}
 
 	if output == nil || output.Administrator == nil {
-		return diag.FromErr(fmt.Errorf("error reading Macie InvitationAccepter (%s): %w", d.Id(), err))
+		return diag.Errorf("reading Macie InvitationAccepter (%s): %s", d.Id(), err)
 	}
 
 	d.Set("administrator_account_id", output.Administrator.AccountId)
@@ -135,7 +135,7 @@ func resourceInvitationAccepterRead(ctx context.Context, d *schema.ResourceData,
 }
 
 func resourceInvitationAccepterDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).Macie2Conn()
+	conn := meta.(*conns.AWSClient).Macie2Conn(ctx)
 
 	input := &macie2.DisassociateFromAdministratorAccountInput{}
 
@@ -145,7 +145,7 @@ func resourceInvitationAccepterDelete(ctx context.Context, d *schema.ResourceDat
 			tfawserr.ErrMessageContains(err, macie2.ErrCodeAccessDeniedException, "Macie is not enabled") {
 			return nil
 		}
-		return diag.FromErr(fmt.Errorf("error disassociating Macie InvitationAccepter (%s): %w", d.Id(), err))
+		return diag.Errorf("disassociating Macie InvitationAccepter (%s): %s", d.Id(), err)
 	}
 	return nil
 }

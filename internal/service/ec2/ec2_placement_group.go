@@ -82,7 +82,7 @@ func ResourcePlacementGroup() *schema.Resource {
 
 func resourcePlacementGroupCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	name := d.Get("name").(string)
 	input := &ec2.CreatePlacementGroupInput{
@@ -118,7 +118,7 @@ func resourcePlacementGroupCreate(ctx context.Context, d *schema.ResourceData, m
 
 func resourcePlacementGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	pg, err := FindPlacementGroupByName(ctx, conn, d.Id())
 
@@ -146,7 +146,7 @@ func resourcePlacementGroupRead(ctx context.Context, d *schema.ResourceData, met
 	d.Set("spread_level", pg.SpreadLevel)
 	d.Set("strategy", pg.Strategy)
 
-	SetTagsOut(ctx, pg.Tags)
+	setTagsOut(ctx, pg.Tags)
 
 	return diags
 }
@@ -161,7 +161,7 @@ func resourcePlacementGroupUpdate(ctx context.Context, d *schema.ResourceData, m
 
 func resourcePlacementGroupDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	log.Printf("[DEBUG] Deleting EC2 Placement Group: %s", d.Id())
 	_, err := conn.DeletePlacementGroupWithContext(ctx, &ec2.DeletePlacementGroupInput{

@@ -629,7 +629,7 @@ func ResourceInstance() *schema.Resource {
 
 func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).RDSConn()
+	conn := meta.(*conns.AWSClient).RDSConn(ctx)
 
 	// Some API calls (e.g. CreateDBInstanceReadReplica and
 	// RestoreDBInstanceFromDBSnapshot do not support all parameters to
@@ -662,7 +662,7 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 			DeletionProtection:         aws.Bool(d.Get("deletion_protection").(bool)),
 			PubliclyAccessible:         aws.Bool(d.Get("publicly_accessible").(bool)),
 			SourceDBInstanceIdentifier: aws.String(sourceDBInstanceID),
-			Tags:                       GetTagsIn(ctx),
+			Tags:                       getTagsIn(ctx),
 		}
 
 		if _, ok := d.GetOk("allocated_storage"); ok {
@@ -873,7 +873,7 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 			SourceEngine:            aws.String(tfMap["source_engine"].(string)),
 			SourceEngineVersion:     aws.String(tfMap["source_engine_version"].(string)),
 			StorageEncrypted:        aws.Bool(d.Get("storage_encrypted").(bool)),
-			Tags:                    GetTagsIn(ctx),
+			Tags:                    getTagsIn(ctx),
 		}
 
 		if v, ok := d.GetOk("availability_zone"); ok {
@@ -1011,7 +1011,7 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 			DBSnapshotIdentifier:    aws.String(v.(string)),
 			DeletionProtection:      aws.Bool(d.Get("deletion_protection").(bool)),
 			PubliclyAccessible:      aws.Bool(d.Get("publicly_accessible").(bool)),
-			Tags:                    GetTagsIn(ctx),
+			Tags:                    getTagsIn(ctx),
 		}
 
 		engine := strings.ToLower(d.Get("engine").(string))
@@ -1229,7 +1229,7 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 			DBInstanceClass:            aws.String(d.Get("instance_class").(string)),
 			DeletionProtection:         aws.Bool(d.Get("deletion_protection").(bool)),
 			PubliclyAccessible:         aws.Bool(d.Get("publicly_accessible").(bool)),
-			Tags:                       GetTagsIn(ctx),
+			Tags:                       getTagsIn(ctx),
 			TargetDBInstanceIdentifier: aws.String(identifier),
 		}
 
@@ -1397,7 +1397,7 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 			MasterUsername:          aws.String(d.Get("username").(string)),
 			PubliclyAccessible:      aws.Bool(d.Get("publicly_accessible").(bool)),
 			StorageEncrypted:        aws.Bool(d.Get("storage_encrypted").(bool)),
-			Tags:                    GetTagsIn(ctx),
+			Tags:                    getTagsIn(ctx),
 		}
 
 		if v, ok := d.GetOk("availability_zone"); ok {
@@ -1604,7 +1604,7 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 
 func resourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).RDSConn()
+	conn := meta.(*conns.AWSClient).RDSConn(ctx)
 
 	v, err := findDBInstanceByIDSDKv1(ctx, conn, d.Id())
 
@@ -1727,14 +1727,14 @@ func resourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta inte
 
 	dbSetResourceDataEngineVersionFromInstance(d, v)
 
-	SetTagsOut(ctx, v.TagList)
+	setTagsOut(ctx, v.TagList)
 
 	return diags
 }
 
 func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).RDSClient()
+	conn := meta.(*conns.AWSClient).RDSClient(ctx)
 	deadline := tfresource.NewDeadline(d.Timeout(schema.TimeoutUpdate))
 
 	// Separate request to promote a database.
@@ -1914,7 +1914,7 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta in
 			}
 
 			cleaupWaiters = append(cleaupWaiters, func(optFns ...tfresource.OptionsFunc) {
-				_, err = waitDBInstanceDeleted(ctx, meta.(*conns.AWSClient).RDSConn(), sourceARN.Identifier, deadline.Remaining(), optFns...)
+				_, err = waitDBInstanceDeleted(ctx, meta.(*conns.AWSClient).RDSConn(ctx), sourceARN.Identifier, deadline.Remaining(), optFns...)
 				if err != nil {
 					diags = sdkdiag.AppendErrorf(diags, "updating RDS DB Instance (%s): deleting Blue/Green Deployment source: waiting for completion: %s", d.Get("identifier").(string), err)
 				}
@@ -2206,7 +2206,7 @@ func dbInstanceModify(ctx context.Context, conn *rds_sdkv2.Client, resourceID st
 
 func resourceInstanceDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).RDSConn()
+	conn := meta.(*conns.AWSClient).RDSConn(ctx)
 
 	input := &rds.DeleteDBInstanceInput{
 		DBInstanceIdentifier:   aws.String(d.Get("identifier").(string)),

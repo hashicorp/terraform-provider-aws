@@ -80,7 +80,7 @@ func ResourceAccountAssignment() *schema.Resource {
 
 func resourceAccountAssignmentCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SSOAdminConn()
+	conn := meta.(*conns.AWSClient).SSOAdminConn(ctx)
 
 	instanceArn := d.Get("instance_arn").(string)
 	permissionSetArn := d.Get("permission_set_arn").(string)
@@ -132,7 +132,7 @@ func resourceAccountAssignmentCreate(ctx context.Context, d *schema.ResourceData
 
 func resourceAccountAssignmentRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SSOAdminConn()
+	conn := meta.(*conns.AWSClient).SSOAdminConn(ctx)
 
 	idParts, err := ParseAccountAssignmentID(d.Id())
 	if err != nil {
@@ -180,7 +180,7 @@ func resourceAccountAssignmentRead(ctx context.Context, d *schema.ResourceData, 
 
 func resourceAccountAssignmentDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SSOAdminConn()
+	conn := meta.(*conns.AWSClient).SSOAdminConn(ctx)
 
 	idParts, err := ParseAccountAssignmentID(d.Id())
 	if err != nil {

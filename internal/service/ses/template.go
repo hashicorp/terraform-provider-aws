@@ -58,7 +58,7 @@ func ResourceTemplate() *schema.Resource {
 }
 func resourceTemplateCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SESConn()
+	conn := meta.(*conns.AWSClient).SESConn(ctx)
 
 	templateName := d.Get("name").(string)
 
@@ -94,7 +94,7 @@ func resourceTemplateCreate(ctx context.Context, d *schema.ResourceData, meta in
 
 func resourceTemplateRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SESConn()
+	conn := meta.(*conns.AWSClient).SESConn(ctx)
 	input := ses.GetTemplateInput{
 		TemplateName: aws.String(d.Id()),
 	}
@@ -129,7 +129,7 @@ func resourceTemplateRead(ctx context.Context, d *schema.ResourceData, meta inte
 
 func resourceTemplateUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SESConn()
+	conn := meta.(*conns.AWSClient).SESConn(ctx)
 
 	templateName := d.Id()
 
@@ -153,10 +153,9 @@ func resourceTemplateUpdate(ctx context.Context, d *schema.ResourceData, meta in
 		Template: &template,
 	}
 
-	log.Printf("[DEBUG] Update SES template: %#v", input)
 	_, err := conn.UpdateTemplateWithContext(ctx, &input)
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "Updating SES template '%s' failed: %s", templateName, err.Error())
+		return sdkdiag.AppendErrorf(diags, "updating SES template (%s): %s", templateName, err)
 	}
 
 	return append(diags, resourceTemplateRead(ctx, d, meta)...)
@@ -164,7 +163,7 @@ func resourceTemplateUpdate(ctx context.Context, d *schema.ResourceData, meta in
 
 func resourceTemplateDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SESConn()
+	conn := meta.(*conns.AWSClient).SESConn(ctx)
 	input := ses.DeleteTemplateInput{
 		TemplateName: aws.String(d.Id()),
 	}

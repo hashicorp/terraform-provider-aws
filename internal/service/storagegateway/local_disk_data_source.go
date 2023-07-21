@@ -44,7 +44,7 @@ func DataSourceLocalDisk() *schema.Resource {
 
 func dataSourceLocalDiskRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).StorageGatewayConn()
+	conn := meta.(*conns.AWSClient).StorageGatewayConn(ctx)
 
 	input := &storagegateway.ListLocalDisksInput{
 		GatewayARN: aws.String(d.Get("gateway_arn").(string)),

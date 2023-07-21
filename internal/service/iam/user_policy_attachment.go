@@ -45,7 +45,7 @@ func ResourceUserPolicyAttachment() *schema.Resource {
 
 func resourceUserPolicyAttachmentCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).IAMConn()
+	conn := meta.(*conns.AWSClient).IAMConn(ctx)
 
 	user := d.Get("user").(string)
 	arn := d.Get("policy_arn").(string)
@@ -63,7 +63,7 @@ func resourceUserPolicyAttachmentCreate(ctx context.Context, d *schema.ResourceD
 
 func resourceUserPolicyAttachmentRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).IAMConn()
+	conn := meta.(*conns.AWSClient).IAMConn(ctx)
 	user := d.Get("user").(string)
 	arn := d.Get("policy_arn").(string)
 	// Human friendly ID for error messages since d.Id() is non-descriptive
@@ -122,7 +122,7 @@ func resourceUserPolicyAttachmentRead(ctx context.Context, d *schema.ResourceDat
 
 func resourceUserPolicyAttachmentDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).IAMConn()
+	conn := meta.(*conns.AWSClient).IAMConn(ctx)
 	user := d.Get("user").(string)
 	arn := d.Get("policy_arn").(string)
 

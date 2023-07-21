@@ -36,7 +36,7 @@ func ResourceVPCPeeringConnectionOptions() *schema.Resource {
 
 func resourceVPCPeeringConnectionOptionsCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	vpcPeeringConnectionID := d.Get("vpc_peering_connection_id").(string)
 	vpcPeeringConnection, err := FindVPCPeeringConnectionByID(ctx, conn, vpcPeeringConnectionID)
@@ -56,7 +56,7 @@ func resourceVPCPeeringConnectionOptionsCreate(ctx context.Context, d *schema.Re
 
 func resourceVPCPeeringConnectionOptionsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	vpcPeeringConnection, err := FindVPCPeeringConnectionByID(ctx, conn, d.Id())
 
@@ -93,7 +93,7 @@ func resourceVPCPeeringConnectionOptionsRead(ctx context.Context, d *schema.Reso
 
 func resourceVPCPeeringConnectionOptionsUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	vpcPeeringConnection, err := FindVPCPeeringConnectionByID(ctx, conn, d.Id())
 

@@ -142,7 +142,7 @@ const (
 )
 
 func resourceOrganizationCustomPolicyRuleCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ConfigServiceConn()
+	conn := meta.(*conns.AWSClient).ConfigServiceConn(ctx)
 	name := d.Get("name").(string)
 
 	in := &configservice.PutOrganizationConfigRuleInput{
@@ -210,7 +210,7 @@ func resourceOrganizationCustomPolicyRuleCreate(ctx context.Context, d *schema.R
 }
 
 func resourceOrganizationCustomPolicyRuleRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ConfigServiceConn()
+	conn := meta.(*conns.AWSClient).ConfigServiceConn(ctx)
 
 	rule, err := FindOrganizationConfigRule(ctx, conn, d.Id())
 	if !d.IsNewResource() && tfresource.NotFound(err) {
@@ -274,7 +274,7 @@ func resourceOrganizationCustomPolicyRuleRead(ctx context.Context, d *schema.Res
 }
 
 func resourceOrganizationCustomPolicyRuleUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ConfigServiceConn()
+	conn := meta.(*conns.AWSClient).ConfigServiceConn(ctx)
 
 	in := &configservice.PutOrganizationConfigRuleInput{
 		OrganizationConfigRuleName: aws.String(d.Id()),
@@ -336,7 +336,7 @@ func resourceOrganizationCustomPolicyRuleUpdate(ctx context.Context, d *schema.R
 }
 
 func resourceOrganizationCustomPolicyRuleDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ConfigServiceConn()
+	conn := meta.(*conns.AWSClient).ConfigServiceConn(ctx)
 
 	log.Printf("[INFO] Deleting ConfigService %s %s", ResNameOrganizationCustomPolicyRule, d.Id())
 

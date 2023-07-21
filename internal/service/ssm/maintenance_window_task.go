@@ -673,7 +673,7 @@ func flattenTaskInvocationCommonParameters(parameters map[string][]*string) []in
 
 func resourceMaintenanceWindowTaskCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SSMConn()
+	conn := meta.(*conns.AWSClient).SSMConn(ctx)
 
 	log.Printf("[INFO] Registering SSM Maintenance Window Task")
 
@@ -731,7 +731,7 @@ func resourceMaintenanceWindowTaskCreate(ctx context.Context, d *schema.Resource
 
 func resourceMaintenanceWindowTaskRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SSMConn()
+	conn := meta.(*conns.AWSClient).SSMConn(ctx)
 	windowID := d.Get("window_id").(string)
 
 	params := &ssm.GetMaintenanceWindowTaskInput{
@@ -785,7 +785,7 @@ func resourceMaintenanceWindowTaskRead(ctx context.Context, d *schema.ResourceDa
 
 func resourceMaintenanceWindowTaskUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SSMConn()
+	conn := meta.(*conns.AWSClient).SSMConn(ctx)
 	windowID := d.Get("window_id").(string)
 
 	params := &ssm.UpdateMaintenanceWindowTaskInput{
@@ -841,7 +841,7 @@ func resourceMaintenanceWindowTaskUpdate(ctx context.Context, d *schema.Resource
 
 func resourceMaintenanceWindowTaskDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SSMConn()
+	conn := meta.(*conns.AWSClient).SSMConn(ctx)
 
 	log.Printf("[INFO] Deregistering SSM Maintenance Window Task: %s", d.Id())
 

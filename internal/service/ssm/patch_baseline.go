@@ -232,14 +232,14 @@ const (
 
 func resourcePatchBaselineCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SSMConn()
+	conn := meta.(*conns.AWSClient).SSMConn(ctx)
 
 	name := d.Get("name").(string)
 	input := &ssm.CreatePatchBaselineInput{
 		ApprovedPatchesComplianceLevel: aws.String(d.Get("approved_patches_compliance_level").(string)),
 		Name:                           aws.String(name),
 		OperatingSystem:                aws.String(d.Get("operating_system").(string)),
-		Tags:                           GetTagsIn(ctx),
+		Tags:                           getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("description"); ok {
@@ -287,7 +287,7 @@ func resourcePatchBaselineCreate(ctx context.Context, d *schema.ResourceData, me
 
 func resourcePatchBaselineRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SSMConn()
+	conn := meta.(*conns.AWSClient).SSMConn(ctx)
 
 	params := &ssm.GetPatchBaselineInput{
 		BaselineId: aws.String(d.Id()),
@@ -337,7 +337,7 @@ func resourcePatchBaselineRead(ctx context.Context, d *schema.ResourceData, meta
 
 func resourcePatchBaselineUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SSMConn()
+	conn := meta.(*conns.AWSClient).SSMConn(ctx)
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		input := &ssm.UpdatePatchBaselineInput{
@@ -395,7 +395,7 @@ func resourcePatchBaselineUpdate(ctx context.Context, d *schema.ResourceData, me
 }
 
 func resourcePatchBaselineDelete(ctx context.Context, d *schema.ResourceData, meta any) (diags diag.Diagnostics) {
-	conn := meta.(*conns.AWSClient).SSMConn()
+	conn := meta.(*conns.AWSClient).SSMConn(ctx)
 
 	log.Printf("[INFO] Deleting SSM Patch Baseline: %s", d.Id())
 
@@ -406,7 +406,7 @@ func resourcePatchBaselineDelete(ctx context.Context, d *schema.ResourceData, me
 	_, err := conn.DeletePatchBaselineWithContext(ctx, params)
 	if tfawserr.ErrCodeEquals(err, ssm.ErrCodeResourceInUseException) {
 		// Reset the default patch baseline before retrying
-		diags = append(diags, defaultPatchBaselineRestoreOSDefault(ctx, meta.(ssmClient), types.OperatingSystem(d.Get("operating_system").(string)))...)
+		diags = append(diags, defaultPatchBaselineRestoreOSDefault(ctx, meta.(*conns.AWSClient).SSMClient(ctx), types.OperatingSystem(d.Get("operating_system").(string)))...)
 		if diags.HasError() {
 			return
 		}

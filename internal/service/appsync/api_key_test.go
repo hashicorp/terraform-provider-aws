@@ -123,7 +123,7 @@ func testAccAPIKey_expires(t *testing.T) {
 
 func testAccCheckAPIKeyDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AppSyncConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AppSyncConn(ctx)
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_appsync_api_key" {
 				continue
@@ -164,7 +164,7 @@ func testAccCheckAPIKeyExists(ctx context.Context, resourceName string, apiKey *
 			return err
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AppSyncConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AppSyncConn(ctx)
 		key, err := tfappsync.GetAPIKey(ctx, apiID, keyID, conn)
 		if err != nil {
 			return err

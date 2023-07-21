@@ -44,7 +44,7 @@ func ResourceNetworkACL() *schema.Resource {
 
 		Importer: &schema.ResourceImporter{
 			StateContext: func(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
-				conn := meta.(*conns.AWSClient).EC2Conn()
+				conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 				nacl, err := FindNetworkACLByID(ctx, conn, d.Id())
 
@@ -155,7 +155,7 @@ var networkACLRuleNestedBlock = &schema.Resource{
 
 func resourceNetworkACLCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	input := &ec2.CreateNetworkAclInput{
 		TagSpecifications: getTagSpecificationsIn(ctx, ec2.ResourceTypeNetworkAcl),
@@ -180,7 +180,7 @@ func resourceNetworkACLCreate(ctx context.Context, d *schema.ResourceData, meta 
 
 func resourceNetworkACLRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(ctx, propagationTimeout, func() (interface{}, error) {
 		return FindNetworkACLByID(ctx, conn, d.Id())
@@ -239,14 +239,14 @@ func resourceNetworkACLRead(ctx context.Context, d *schema.ResourceData, meta in
 		return sdkdiag.AppendErrorf(diags, "setting ingress: %s", err)
 	}
 
-	SetTagsOut(ctx, nacl.Tags)
+	setTagsOut(ctx, nacl.Tags)
 
 	return diags
 }
 
 func resourceNetworkACLUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	if err := modifyNetworkACLAttributesOnUpdate(ctx, conn, d, true); err != nil {
 		return sdkdiag.AppendErrorf(diags, "updating EC2 Network ACL (%s): %s", d.Id(), err)
@@ -257,7 +257,7 @@ func resourceNetworkACLUpdate(ctx context.Context, d *schema.ResourceData, meta 
 
 func resourceNetworkACLDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	// Delete all NACL/Subnet associations, even if they are managed via aws_network_acl_association resources.
 	nacl, err := FindNetworkACLByID(ctx, conn, d.Id())

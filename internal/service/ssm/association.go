@@ -159,7 +159,7 @@ func ResourceAssociation() *schema.Resource {
 
 func resourceAssociationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SSMConn()
+	conn := meta.(*conns.AWSClient).SSMConn(ctx)
 
 	log.Printf("[DEBUG] SSM association create: %s", d.Id())
 
@@ -239,7 +239,7 @@ func resourceAssociationCreate(ctx context.Context, d *schema.ResourceData, meta
 
 func resourceAssociationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SSMConn()
+	conn := meta.(*conns.AWSClient).SSMConn(ctx)
 
 	log.Printf("[DEBUG] Reading SSM Association: %s", d.Id())
 
@@ -290,7 +290,7 @@ func resourceAssociationRead(ctx context.Context, d *schema.ResourceData, meta i
 
 func resourceAssociationUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SSMConn()
+	conn := meta.(*conns.AWSClient).SSMConn(ctx)
 
 	log.Printf("[DEBUG] SSM Association update: %s", d.Id())
 
@@ -353,7 +353,7 @@ func resourceAssociationUpdate(ctx context.Context, d *schema.ResourceData, meta
 
 func resourceAssociationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SSMConn()
+	conn := meta.(*conns.AWSClient).SSMConn(ctx)
 
 	log.Printf("[DEBUG] Deleting SSM Association: %s", d.Id())
 

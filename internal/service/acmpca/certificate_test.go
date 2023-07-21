@@ -291,7 +291,7 @@ func TestAccACMPCACertificate_Validity_absolute(t *testing.T) {
 
 func testAccCheckCertificateDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ACMPCAConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ACMPCAConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_acmpca_certificate" {
@@ -331,7 +331,7 @@ func testAccCheckCertificateExists(ctx context.Context, resourceName string) res
 			return fmt.Errorf("Not found: %s", resourceName)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ACMPCAConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ACMPCAConn(ctx)
 		input := &acmpca.GetCertificateInput{
 			CertificateArn:          aws.String(rs.Primary.ID),
 			CertificateAuthorityArn: aws.String(rs.Primary.Attributes["certificate_authority_arn"]),

@@ -290,7 +290,7 @@ func testAccCheckRepositoryExists(ctx context.Context, n string) resource.TestCh
 			return fmt.Errorf("no CodeArtifact repository set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CodeArtifactConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CodeArtifactConn(ctx)
 		owner, domain, repo, err := tfcodeartifact.DecodeRepositoryID(rs.Primary.ID)
 		if err != nil {
 			return err
@@ -316,7 +316,7 @@ func testAccCheckRepositoryDestroy(ctx context.Context) resource.TestCheckFunc {
 			if err != nil {
 				return err
 			}
-			conn := acctest.Provider.Meta().(*conns.AWSClient).CodeArtifactConn()
+			conn := acctest.Provider.Meta().(*conns.AWSClient).CodeArtifactConn(ctx)
 			resp, err := conn.DescribeRepositoryWithContext(ctx, &codeartifact.DescribeRepositoryInput{
 				Repository:  aws.String(repo),
 				Domain:      aws.String(domain),

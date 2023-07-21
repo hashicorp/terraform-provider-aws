@@ -5,6 +5,9 @@ package quicksight
 import (
 	"context"
 
+	aws_sdkv1 "github.com/aws/aws-sdk-go/aws"
+	session_sdkv1 "github.com/aws/aws-sdk-go/aws/session"
+	quicksight_sdkv1 "github.com/aws/aws-sdk-go/service/quicksight"
 	"github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -65,6 +68,11 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 			Factory:  DataSourceGroup,
 			TypeName: "aws_quicksight_group",
 			Name:     "Group",
+		},
+		{
+			Factory:  DataSourceTheme,
+			TypeName: "aws_quicksight_theme",
+			Name:     "Theme",
 		},
 		{
 			Factory:  DataSourceUser,
@@ -140,6 +148,14 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
+			Factory:  ResourceTheme,
+			TypeName: "aws_quicksight_theme",
+			Name:     "Theme",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
+		},
+		{
 			Factory:  ResourceUser,
 			TypeName: "aws_quicksight_user",
 			Name:     "User",
@@ -149,6 +165,13 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 
 func (p *servicePackage) ServicePackageName() string {
 	return names.QuickSight
+}
+
+// NewConn returns a new AWS SDK for Go v1 client for this service package's AWS API.
+func (p *servicePackage) NewConn(ctx context.Context, config map[string]any) (*quicksight_sdkv1.QuickSight, error) {
+	sess := config["session"].(*session_sdkv1.Session)
+
+	return quicksight_sdkv1.New(sess.Copy(&aws_sdkv1.Config{Endpoint: aws_sdkv1.String(config["endpoint"].(string))})), nil
 }
 
 var ServicePackage = &servicePackage{}

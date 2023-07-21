@@ -83,7 +83,7 @@ func ResourceAccountPasswordPolicy() *schema.Resource {
 
 func resourceAccountPasswordPolicyUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).IAMConn()
+	conn := meta.(*conns.AWSClient).IAMConn(ctx)
 
 	input := &iam.UpdateAccountPasswordPolicyInput{}
 
@@ -130,7 +130,7 @@ func resourceAccountPasswordPolicyUpdate(ctx context.Context, d *schema.Resource
 
 func resourceAccountPasswordPolicyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).IAMConn()
+	conn := meta.(*conns.AWSClient).IAMConn(ctx)
 
 	policy, err := FindAccountPasswordPolicy(ctx, conn)
 
@@ -160,7 +160,7 @@ func resourceAccountPasswordPolicyRead(ctx context.Context, d *schema.ResourceDa
 
 func resourceAccountPasswordPolicyDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).IAMConn()
+	conn := meta.(*conns.AWSClient).IAMConn(ctx)
 
 	log.Printf("[DEBUG] Deleting IAM Account Password Policy: %s", d.Id())
 	_, err := conn.DeleteAccountPasswordPolicyWithContext(ctx, &iam.DeleteAccountPasswordPolicyInput{})

@@ -156,7 +156,7 @@ func (r *resourceTrust) Schema(ctx context.Context, req resource.SchemaRequest, 
 }
 
 func (r *resourceTrust) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-	conn := r.Meta().DSClient()
+	conn := r.Meta().DSClient(ctx)
 
 	var plan resourceTrustData
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
@@ -198,7 +198,7 @@ func (r *resourceTrust) Create(ctx context.Context, req resource.CreateRequest, 
 }
 
 func (r *resourceTrust) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
-	conn := r.Meta().DSClient()
+	conn := r.Meta().DSClient(ctx)
 
 	var data resourceTrustData
 	resp.Diagnostics.Append(req.State.Get(ctx, &data)...)
@@ -248,7 +248,7 @@ func (r *resourceTrust) Update(ctx context.Context, req resource.UpdateRequest, 
 		return
 	}
 
-	conn := r.Meta().DSClient()
+	conn := r.Meta().DSClient(ctx)
 
 	if !plan.SelectiveAuth.IsUnknown() && !state.SelectiveAuth.Equal(plan.SelectiveAuth) {
 		params := plan.updateInput(ctx)
@@ -311,7 +311,7 @@ func (r *resourceTrust) Delete(ctx context.Context, req resource.DeleteRequest, 
 
 	params := state.deleteInput(ctx)
 
-	conn := r.Meta().DSClient()
+	conn := r.Meta().DSClient(ctx)
 
 	_, err := conn.DeleteTrust(ctx, params)
 	if isTrustNotFoundErr(err) {
@@ -344,7 +344,7 @@ func (r *resourceTrust) ImportState(ctx context.Context, req resource.ImportStat
 	directoryID := parts[0]
 	domain := parts[1]
 
-	trust, err := findTrustByDomain(ctx, r.Meta().DSClient(), directoryID, domain)
+	trust, err := findTrustByDomain(ctx, r.Meta().DSClient(ctx), directoryID, domain)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Importing Resource",

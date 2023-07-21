@@ -46,7 +46,7 @@ func ResourceResource() *schema.Resource {
 
 func resourceResourceCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).LakeFormationConn()
+	conn := meta.(*conns.AWSClient).LakeFormationConn(ctx)
 	resourceArn := d.Get("arn").(string)
 
 	input := &lakeformation.RegisterResourceInput{
@@ -73,7 +73,7 @@ func resourceResourceCreate(ctx context.Context, d *schema.ResourceData, meta in
 
 func resourceResourceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).LakeFormationConn()
+	conn := meta.(*conns.AWSClient).LakeFormationConn(ctx)
 	resourceArn := d.Get("arn").(string)
 
 	input := &lakeformation.DescribeResourceInput{
@@ -107,7 +107,7 @@ func resourceResourceRead(ctx context.Context, d *schema.ResourceData, meta inte
 
 func resourceResourceDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).LakeFormationConn()
+	conn := meta.(*conns.AWSClient).LakeFormationConn(ctx)
 	resourceArn := d.Get("arn").(string)
 
 	input := &lakeformation.DeregisterResourceInput{

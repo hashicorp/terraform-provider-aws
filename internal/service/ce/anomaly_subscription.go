@@ -94,7 +94,7 @@ func ResourceAnomalySubscription() *schema.Resource {
 }
 
 func resourceAnomalySubscriptionCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).CEConn()
+	conn := meta.(*conns.AWSClient).CEConn(ctx)
 
 	input := &costexplorer.CreateAnomalySubscriptionInput{
 		AnomalySubscription: &costexplorer.AnomalySubscription{
@@ -103,7 +103,7 @@ func resourceAnomalySubscriptionCreate(ctx context.Context, d *schema.ResourceDa
 			MonitorArnList:   aws.StringSlice(expandAnomalySubscriptionMonitorARNList(d.Get("monitor_arn_list").([]interface{}))),
 			Subscribers:      expandAnomalySubscriptionSubscribers(d.Get("subscriber").(*schema.Set).List()),
 		},
-		ResourceTags: GetTagsIn(ctx),
+		ResourceTags: getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("account_id"); ok {
@@ -130,7 +130,7 @@ func resourceAnomalySubscriptionCreate(ctx context.Context, d *schema.ResourceDa
 }
 
 func resourceAnomalySubscriptionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).CEConn()
+	conn := meta.(*conns.AWSClient).CEConn(ctx)
 
 	subscription, err := FindAnomalySubscriptionByARN(ctx, conn, d.Id())
 
@@ -159,7 +159,7 @@ func resourceAnomalySubscriptionRead(ctx context.Context, d *schema.ResourceData
 }
 
 func resourceAnomalySubscriptionUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).CEConn()
+	conn := meta.(*conns.AWSClient).CEConn(ctx)
 
 	if d.HasChangesExcept("tags", "tags_All") {
 		input := &costexplorer.UpdateAnomalySubscriptionInput{
@@ -193,7 +193,7 @@ func resourceAnomalySubscriptionUpdate(ctx context.Context, d *schema.ResourceDa
 }
 
 func resourceAnomalySubscriptionDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).CEConn()
+	conn := meta.(*conns.AWSClient).CEConn(ctx)
 
 	_, err := conn.DeleteAnomalySubscriptionWithContext(ctx, &costexplorer.DeleteAnomalySubscriptionInput{SubscriptionArn: aws.String(d.Id())})
 

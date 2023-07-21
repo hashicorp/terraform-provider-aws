@@ -4,9 +4,10 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strings"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/lightsail"
+	"github.com/aws/aws-sdk-go-v2/service/lightsail"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -27,10 +28,10 @@ func testAccLoadBalancerAttachment_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, lightsail.EndpointsID)
+			acctest.PreCheckPartitionHasService(t, strings.ToLower(lightsail.ServiceID))
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, lightsail.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, strings.ToLower(lightsail.ServiceID)),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckLoadBalancerAttachmentDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -55,10 +56,10 @@ func testAccLoadBalancerAttachment_disappears(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, lightsail.EndpointsID)
+			acctest.PreCheckPartitionHasService(t, strings.ToLower(lightsail.ServiceID))
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, lightsail.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, strings.ToLower(lightsail.ServiceID)),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckLoadBalancerAttachmentDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -85,7 +86,7 @@ func testAccCheckLoadBalancerAttachmentExists(ctx context.Context, n string, liN
 			return errors.New("No LightsailLoadBalancerAttachment ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).LightsailConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).LightsailClient(ctx)
 
 		out, err := tflightsail.FindLoadBalancerAttachmentById(ctx, conn, rs.Primary.ID)
 
@@ -110,7 +111,7 @@ func testAccCheckLoadBalancerAttachmentDestroy(ctx context.Context) resource.Tes
 				continue
 			}
 
-			conn := acctest.Provider.Meta().(*conns.AWSClient).LightsailConn()
+			conn := acctest.Provider.Meta().(*conns.AWSClient).LightsailClient(ctx)
 
 			_, err := tflightsail.FindLoadBalancerAttachmentById(ctx, conn, rs.Primary.ID)
 

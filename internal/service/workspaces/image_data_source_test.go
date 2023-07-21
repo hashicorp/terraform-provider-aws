@@ -62,7 +62,7 @@ func testAccCheckImageExists(ctx context.Context, n string, image *workspaces.Wo
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).WorkSpacesConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).WorkSpacesConn(ctx)
 		resp, err := conn.DescribeWorkspaceImagesWithContext(ctx, &workspaces.DescribeWorkspaceImagesInput{
 			ImageIds: []*string{aws.String(rs.Primary.ID)},
 		})

@@ -30,7 +30,7 @@ func TestAccResourceGroupsResource_basic(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, resourcegroups.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckResourceDestroy,
+		CheckDestroy:             testAccCheckResourceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccResourceConfig_basic(rName),
@@ -45,28 +45,29 @@ func TestAccResourceGroupsResource_basic(t *testing.T) {
 	})
 }
 
-func testAccCheckResourceDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).ResourceGroupsConn()
-	ctx := context.Background()
+func testAccCheckResourceDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ResourceGroupsConn(ctx)
 
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_resourcegroups_resource" {
-			continue
-		}
-
-		_, err := tfresourcegroups.FindResourceByARN(ctx, conn, rs.Primary.Attributes["group_arn"], rs.Primary.Attributes["resource_arn"])
-
-		if err != nil {
-			if tfawserr.ErrCodeEquals(err, resourcegroups.ErrCodeNotFoundException) {
-				return nil
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_resourcegroups_resource" {
+				continue
 			}
-			return err
+
+			_, err := tfresourcegroups.FindResourceByARN(ctx, conn, rs.Primary.Attributes["group_arn"], rs.Primary.Attributes["resource_arn"])
+
+			if err != nil {
+				if tfawserr.ErrCodeEquals(err, resourcegroups.ErrCodeNotFoundException) {
+					return nil
+				}
+				return err
+			}
+
+			return create.Error(names.ResourceGroups, create.ErrActionCheckingDestroyed, tfresourcegroups.ResNameResource, rs.Primary.ID, errors.New("not destroyed"))
 		}
 
-		return create.Error(names.ResourceGroups, create.ErrActionCheckingDestroyed, tfresourcegroups.ResNameResource, rs.Primary.ID, errors.New("not destroyed"))
+		return nil
 	}
-
-	return nil
 }
 
 func testAccCheckResourceExists(ctx context.Context, name string, resource *resourcegroups.ListGroupResourcesItem) resource.TestCheckFunc {
@@ -80,7 +81,7 @@ func testAccCheckResourceExists(ctx context.Context, name string, resource *reso
 			return create.Error(names.ResourceGroups, create.ErrActionCheckingExistence, tfresourcegroups.ResNameResource, name, errors.New("not set"))
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ResourceGroupsConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ResourceGroupsConn(ctx)
 
 		resp, err := tfresourcegroups.FindResourceByARN(ctx, conn, rs.Primary.Attributes["group_arn"], rs.Primary.Attributes["resource_arn"])
 

@@ -476,7 +476,7 @@ func ResourceService() *schema.Resource {
 
 func resourceServiceCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ECSConn()
+	conn := meta.(*conns.AWSClient).ECSConn(ctx)
 
 	deploymentController := expandDeploymentController(d.Get("deployment_controller").([]interface{}))
 	deploymentMinimumHealthyPercent := d.Get("deployment_minimum_healthy_percent").(int)
@@ -492,7 +492,7 @@ func resourceServiceCreate(ctx context.Context, d *schema.ResourceData, meta int
 		NetworkConfiguration:     expandNetworkConfiguration(d.Get("network_configuration").([]interface{})),
 		SchedulingStrategy:       aws.String(schedulingStrategy),
 		ServiceName:              aws.String(name),
-		Tags:                     GetTagsIn(ctx),
+		Tags:                     getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("alarms"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
@@ -622,7 +622,7 @@ func resourceServiceCreate(ctx context.Context, d *schema.ResourceData, meta int
 	}
 
 	// For partitions not supporting tag-on-create, attempt tag after create.
-	if tags := GetTagsIn(ctx); input.Tags == nil && len(tags) > 0 {
+	if tags := getTagsIn(ctx); input.Tags == nil && len(tags) > 0 {
 		err := createTags(ctx, conn, d.Id(), tags)
 
 		// If default tags only, continue. Otherwise, error.
@@ -640,7 +640,7 @@ func resourceServiceCreate(ctx context.Context, d *schema.ResourceData, meta int
 
 func resourceServiceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ECSConn()
+	conn := meta.(*conns.AWSClient).ECSConn(ctx)
 
 	cluster := d.Get("cluster").(string)
 
@@ -762,21 +762,21 @@ func resourceServiceRead(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 
 	// if err := d.Set("service_connect_configuration", flattenServiceConnectConfiguration(service.ServiceConnectConfiguration)); err != nil {
-	// 	return fmt.Errorf("error setting service_connect_configuration for (%s): %w", d.Id(), err)
+	// 	return fmt.Errorf("setting service_connect_configuration for (%s): %w", d.Id(), err)
 	// }
 
 	if err := d.Set("service_registries", flattenServiceRegistries(service.ServiceRegistries)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting service_registries: %s", err)
 	}
 
-	SetTagsOut(ctx, service.Tags)
+	setTagsOut(ctx, service.Tags)
 
 	return diags
 }
 
 func resourceServiceUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ECSConn()
+	conn := meta.(*conns.AWSClient).ECSConn(ctx)
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		input := &ecs.UpdateServiceInput{
@@ -950,7 +950,7 @@ func resourceServiceUpdate(ctx context.Context, d *schema.ResourceData, meta int
 
 func resourceServiceDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ECSConn()
+	conn := meta.(*conns.AWSClient).ECSConn(ctx)
 
 	service, err := FindServiceNoTagsByID(ctx, conn, d.Id(), d.Get("cluster").(string))
 

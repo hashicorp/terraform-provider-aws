@@ -17,10 +17,7 @@ package {{ .ServicePackage }}_test
 // In other words, as generated, this is a rough outline of the work you will
 // need to do. If something doesn't make sense for your situation, get rid of
 // it.
-//
-// Remember to register this new data source in the provider
-// (internal/provider/provider.go) once you finish. Otherwise, Terraform won't
-// know about it.{{- end }}
+{{- end }}
 
 import (
 {{- if .IncludeComments }}

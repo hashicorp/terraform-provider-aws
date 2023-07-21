@@ -80,7 +80,7 @@ func testAccCheckPrimaryContactExists(ctx context.Context, n string) resource.Te
 			return fmt.Errorf("No Account Primary Contact ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AccountClient()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AccountClient(ctx)
 
 		_, err := tfaccount.FindContactInformation(ctx, conn, rs.Primary.Attributes["account_id"])
 

@@ -127,7 +127,7 @@ func testAccCheckTransitGatewayMulticastDomainAssociationExists(ctx context.Cont
 			return err
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
 
 		output, err := tfec2.FindTransitGatewayMulticastDomainAssociationByThreePartKey(ctx, conn, multicastDomainID, attachmentID, subnetID)
 
@@ -143,7 +143,7 @@ func testAccCheckTransitGatewayMulticastDomainAssociationExists(ctx context.Cont
 
 func testAccCheckTransitGatewayMulticastDomainAssociationDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_ec2_transit_gateway_multicast_domain_association" {

@@ -144,7 +144,7 @@ func ResourceDeploymentConfig() *schema.Resource {
 
 func resourceDeploymentConfigCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DeployConn()
+	conn := meta.(*conns.AWSClient).DeployConn(ctx)
 
 	input := &codedeploy.CreateDeploymentConfigInput{
 		DeploymentConfigName: aws.String(d.Get("deployment_config_name").(string)),
@@ -165,7 +165,7 @@ func resourceDeploymentConfigCreate(ctx context.Context, d *schema.ResourceData,
 
 func resourceDeploymentConfigRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DeployConn()
+	conn := meta.(*conns.AWSClient).DeployConn(ctx)
 
 	input := &codedeploy.GetDeploymentConfigInput{
 		DeploymentConfigName: aws.String(d.Id()),
@@ -204,7 +204,7 @@ func resourceDeploymentConfigRead(ctx context.Context, d *schema.ResourceData, m
 
 func resourceDeploymentConfigDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DeployConn()
+	conn := meta.(*conns.AWSClient).DeployConn(ctx)
 
 	input := &codedeploy.DeleteDeploymentConfigInput{
 		DeploymentConfigName: aws.String(d.Id()),

@@ -933,7 +933,7 @@ func ResourceApplication() *schema.Resource {
 
 func resourceApplicationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).KinesisAnalyticsV2Conn()
+	conn := meta.(*conns.AWSClient).KinesisAnalyticsV2Conn(ctx)
 
 	applicationName := d.Get("name").(string)
 	input := &kinesisanalyticsv2.CreateApplicationInput{
@@ -943,7 +943,7 @@ func resourceApplicationCreate(ctx context.Context, d *schema.ResourceData, meta
 		CloudWatchLoggingOptions: expandCloudWatchLoggingOptions(d.Get("cloudwatch_logging_options").([]interface{})),
 		RuntimeEnvironment:       aws.String(d.Get("runtime_environment").(string)),
 		ServiceExecutionRole:     aws.String(d.Get("service_execution_role").(string)),
-		Tags:                     GetTagsIn(ctx),
+		Tags:                     getTagsIn(ctx),
 	}
 
 	outputRaw, err := waitIAMPropagation(ctx, func() (interface{}, error) {
@@ -971,7 +971,7 @@ func resourceApplicationCreate(ctx context.Context, d *schema.ResourceData, meta
 
 func resourceApplicationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).KinesisAnalyticsV2Conn()
+	conn := meta.(*conns.AWSClient).KinesisAnalyticsV2Conn(ctx)
 
 	application, err := FindApplicationDetailByName(ctx, conn, d.Get("name").(string))
 
@@ -1009,7 +1009,7 @@ func resourceApplicationRead(ctx context.Context, d *schema.ResourceData, meta i
 
 func resourceApplicationUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).KinesisAnalyticsV2Conn()
+	conn := meta.(*conns.AWSClient).KinesisAnalyticsV2Conn(ctx)
 	applicationName := d.Get("name").(string)
 
 	if d.HasChanges("application_configuration", "cloudwatch_logging_options", "service_execution_role") {
@@ -1501,7 +1501,7 @@ func resourceApplicationUpdate(ctx context.Context, d *schema.ResourceData, meta
 
 func resourceApplicationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).KinesisAnalyticsV2Conn()
+	conn := meta.(*conns.AWSClient).KinesisAnalyticsV2Conn(ctx)
 
 	createTimestamp, err := time.Parse(time.RFC3339, d.Get("create_timestamp").(string))
 	if err != nil {

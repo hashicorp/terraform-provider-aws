@@ -127,7 +127,7 @@ func ResourceCatalogDatabase() *schema.Resource {
 
 func resourceCatalogDatabaseCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).GlueConn()
+	conn := meta.(*conns.AWSClient).GlueConn(ctx)
 	catalogID := createCatalogID(d, meta.(*conns.AWSClient).AccountID)
 	name := d.Get("name").(string)
 
@@ -158,7 +158,7 @@ func resourceCatalogDatabaseCreate(ctx context.Context, d *schema.ResourceData, 
 	input := &glue.CreateDatabaseInput{
 		CatalogId:     aws.String(catalogID),
 		DatabaseInput: dbInput,
-		Tags:          GetTagsIn(ctx),
+		Tags:          getTagsIn(ctx),
 	}
 
 	_, err := conn.CreateDatabaseWithContext(ctx, input)
@@ -173,7 +173,7 @@ func resourceCatalogDatabaseCreate(ctx context.Context, d *schema.ResourceData, 
 
 func resourceCatalogDatabaseUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).GlueConn()
+	conn := meta.(*conns.AWSClient).GlueConn(ctx)
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		catalogID, name, err := ReadCatalogID(d.Id())
@@ -218,7 +218,7 @@ func resourceCatalogDatabaseUpdate(ctx context.Context, d *schema.ResourceData, 
 
 func resourceCatalogDatabaseRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).GlueConn()
+	conn := meta.(*conns.AWSClient).GlueConn(ctx)
 
 	catalogID, name, err := ReadCatalogID(d.Id())
 	if err != nil {
@@ -268,7 +268,7 @@ func resourceCatalogDatabaseRead(ctx context.Context, d *schema.ResourceData, me
 
 func resourceCatalogDatabaseDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).GlueConn()
+	conn := meta.(*conns.AWSClient).GlueConn(ctx)
 
 	log.Printf("[DEBUG] Glue Catalog Database: %s", d.Id())
 	_, err := conn.DeleteDatabaseWithContext(ctx, &glue.DeleteDatabaseInput{

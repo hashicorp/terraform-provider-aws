@@ -223,7 +223,7 @@ func TestAccRAMResourceShare_disappears(t *testing.T) {
 
 func testAccCheckResourceShareExists(ctx context.Context, resourceName string, v *ram.ResourceShare) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).RAMConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).RAMConn(ctx)
 
 		rs, ok := s.RootModule().Resources[resourceName]
 		if !ok {
@@ -252,7 +252,7 @@ func testAccCheckResourceShareExists(ctx context.Context, resourceName string, v
 
 func testAccCheckResourceShareDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).RAMConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).RAMConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_ram_resource_share" {

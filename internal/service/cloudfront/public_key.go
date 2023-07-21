@@ -68,7 +68,7 @@ func ResourcePublicKey() *schema.Resource {
 
 func resourcePublicKeyCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CloudFrontConn()
+	conn := meta.(*conns.AWSClient).CloudFrontConn(ctx)
 
 	if v, ok := d.GetOk("name"); ok {
 		d.Set("name", v.(string))
@@ -95,7 +95,7 @@ func resourcePublicKeyCreate(ctx context.Context, d *schema.ResourceData, meta i
 
 func resourcePublicKeyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CloudFrontConn()
+	conn := meta.(*conns.AWSClient).CloudFrontConn(ctx)
 	request := &cloudfront.GetPublicKeyInput{
 		Id: aws.String(d.Id()),
 	}
@@ -133,7 +133,7 @@ func resourcePublicKeyRead(ctx context.Context, d *schema.ResourceData, meta int
 
 func resourcePublicKeyUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CloudFrontConn()
+	conn := meta.(*conns.AWSClient).CloudFrontConn(ctx)
 
 	request := &cloudfront.UpdatePublicKeyInput{
 		Id:              aws.String(d.Id()),
@@ -151,7 +151,7 @@ func resourcePublicKeyUpdate(ctx context.Context, d *schema.ResourceData, meta i
 
 func resourcePublicKeyDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CloudFrontConn()
+	conn := meta.(*conns.AWSClient).CloudFrontConn(ctx)
 
 	request := &cloudfront.DeletePublicKeyInput{
 		Id:      aws.String(d.Id()),

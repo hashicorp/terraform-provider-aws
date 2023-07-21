@@ -289,7 +289,7 @@ func TestAccIVSChatLoggingConfiguration_disappears(t *testing.T) {
 
 func testAccCheckLoggingConfigurationDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).IVSChatClient()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).IVSChatClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_ivschat_logging_configuration" {
@@ -325,7 +325,7 @@ func testAccCheckLoggingConfigurationExists(ctx context.Context, name string, lo
 			return create.Error(names.IVSChat, create.ErrActionCheckingExistence, tfivschat.ResNameLoggingConfiguration, name, errors.New("not set"))
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).IVSChatClient()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).IVSChatClient(ctx)
 
 		resp, err := conn.GetLoggingConfiguration(ctx, &ivschat.GetLoggingConfigurationInput{
 			Identifier: aws.String(rs.Primary.ID),
@@ -342,7 +342,7 @@ func testAccCheckLoggingConfigurationExists(ctx context.Context, name string, lo
 }
 
 func testAccPreCheck(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).IVSChatClient()
+	conn := acctest.Provider.Meta().(*conns.AWSClient).IVSChatClient(ctx)
 
 	input := &ivschat.ListLoggingConfigurationsInput{}
 	_, err := conn.ListLoggingConfigurations(ctx, input)

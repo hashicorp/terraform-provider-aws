@@ -368,7 +368,7 @@ func ResourceCrawler() *schema.Resource {
 
 func resourceCrawlerCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	glueConn := meta.(*conns.AWSClient).GlueConn()
+	glueConn := meta.(*conns.AWSClient).GlueConn(ctx)
 	name := d.Get("name").(string)
 
 	crawlerInput, err := createCrawlerInput(ctx, d, name)
@@ -416,7 +416,7 @@ func resourceCrawlerCreate(ctx context.Context, d *schema.ResourceData, meta int
 
 func resourceCrawlerRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).GlueConn()
+	conn := meta.(*conns.AWSClient).GlueConn(ctx)
 
 	crawler, err := FindCrawlerByName(ctx, conn, d.Id())
 	if !d.IsNewResource() && tfresource.NotFound(err) {
@@ -501,7 +501,7 @@ func resourceCrawlerRead(ctx context.Context, d *schema.ResourceData, meta inter
 
 func resourceCrawlerUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	glueConn := meta.(*conns.AWSClient).GlueConn()
+	glueConn := meta.(*conns.AWSClient).GlueConn(ctx)
 	name := d.Get("name").(string)
 
 	if d.HasChangesExcept("tags", "tags_all") {
@@ -552,7 +552,7 @@ func resourceCrawlerUpdate(ctx context.Context, d *schema.ResourceData, meta int
 
 func resourceCrawlerDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	glueConn := meta.(*conns.AWSClient).GlueConn()
+	glueConn := meta.(*conns.AWSClient).GlueConn(ctx)
 
 	log.Printf("[DEBUG] Deleting Glue Crawler: %s", d.Id())
 	_, err := glueConn.DeleteCrawlerWithContext(ctx, &glue.DeleteCrawlerInput{
@@ -575,7 +575,7 @@ func createCrawlerInput(ctx context.Context, d *schema.ResourceData, crawlerName
 		Name:         aws.String(crawlerName),
 		DatabaseName: aws.String(d.Get("database_name").(string)),
 		Role:         aws.String(d.Get("role").(string)),
-		Tags:         GetTagsIn(ctx),
+		Tags:         getTagsIn(ctx),
 		Targets:      expandCrawlerTargets(d),
 	}
 	if description, ok := d.GetOk("description"); ok {

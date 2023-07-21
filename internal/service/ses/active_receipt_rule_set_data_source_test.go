@@ -81,7 +81,7 @@ data "aws_ses_active_receipt_rule_set" "test" {}
 }
 
 func testAccPreCheckUnsetActiveRuleSet(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).SESConn()
+	conn := acctest.Provider.Meta().(*conns.AWSClient).SESConn(ctx)
 
 	output, err := conn.DescribeActiveReceiptRuleSetWithContext(ctx, &ses.DescribeActiveReceiptRuleSetInput{})
 	if acctest.PreCheckSkipError(err) {

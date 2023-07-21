@@ -200,7 +200,7 @@ func ResourceSigningJob() *schema.Resource {
 
 func resourceSigningJobCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SignerConn()
+	conn := meta.(*conns.AWSClient).SignerConn(ctx)
 	profileName := d.Get("profile_name")
 	source := d.Get("source").([]interface{})
 	destination := d.Get("destination").([]interface{})
@@ -237,7 +237,7 @@ func resourceSigningJobCreate(ctx context.Context, d *schema.ResourceData, meta 
 
 func resourceSigningJobRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SignerConn()
+	conn := meta.(*conns.AWSClient).SignerConn(ctx)
 	jobId := d.Id()
 
 	describeSigningJobOutput, err := conn.DescribeSigningJobWithContext(ctx, &signer.DescribeSigningJobInput{

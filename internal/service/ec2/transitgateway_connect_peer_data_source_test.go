@@ -27,6 +27,8 @@ func testAccTransitGatewayConnectPeerDataSource_Filter(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, "arn", resourceName, "arn"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "bgp_asn", resourceName, "bgp_asn"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "bgp_peer_address", resourceName, "bgp_peer_address"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "bgp_transit_gateway_addresses.#", resourceName, "bgp_transit_gateway_addresses.#"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "inside_cidr_blocks.#", resourceName, "inside_cidr_blocks.#"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "peer_address", resourceName, "peer_address"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "tags.%", resourceName, "tags.%"),
@@ -56,6 +58,8 @@ func testAccTransitGatewayConnectPeerDataSource_ID(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, "arn", resourceName, "arn"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "bgp_asn", resourceName, "bgp_asn"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "bgp_peer_address", resourceName, "bgp_peer_address"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "bgp_transit_gateway_addresses.#", resourceName, "bgp_transit_gateway_addresses.#"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "inside_cidr_blocks.#", resourceName, "inside_cidr_blocks.#"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "peer_address", resourceName, "peer_address"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "tags.%", resourceName, "tags.%"),

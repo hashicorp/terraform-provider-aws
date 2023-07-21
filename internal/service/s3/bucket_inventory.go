@@ -180,7 +180,7 @@ func ResourceBucketInventory() *schema.Resource {
 
 func resourceBucketInventoryPut(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).S3Conn()
+	conn := meta.(*conns.AWSClient).S3Conn(ctx)
 	bucket := d.Get("bucket").(string)
 	name := d.Get("name").(string)
 
@@ -258,7 +258,7 @@ func resourceBucketInventoryPut(ctx context.Context, d *schema.ResourceData, met
 
 func resourceBucketInventoryDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).S3Conn()
+	conn := meta.(*conns.AWSClient).S3Conn(ctx)
 
 	bucket, name, err := BucketInventoryParseID(d.Id())
 	if err != nil {
@@ -290,7 +290,7 @@ func resourceBucketInventoryDelete(ctx context.Context, d *schema.ResourceData, 
 
 func resourceBucketInventoryRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).S3Conn()
+	conn := meta.(*conns.AWSClient).S3Conn(ctx)
 
 	bucket, name, err := BucketInventoryParseID(d.Id())
 	if err != nil {

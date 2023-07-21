@@ -189,7 +189,7 @@ func testAccCheckQuickConnectExists(ctx context.Context, resourceName string, fu
 			return err
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ConnectConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ConnectConn(ctx)
 
 		params := &connect.DescribeQuickConnectInput{
 			QuickConnectId: aws.String(quickConnectID),
@@ -214,7 +214,7 @@ func testAccCheckQuickConnectDestroy(ctx context.Context) resource.TestCheckFunc
 				continue
 			}
 
-			conn := acctest.Provider.Meta().(*conns.AWSClient).ConnectConn()
+			conn := acctest.Provider.Meta().(*conns.AWSClient).ConnectConn(ctx)
 
 			instanceID, quickConnectID, err := tfconnect.QuickConnectParseID(rs.Primary.ID)
 

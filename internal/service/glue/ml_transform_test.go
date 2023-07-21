@@ -434,7 +434,7 @@ func testAccCheckMLTransformExists(ctx context.Context, resourceName string, mlT
 			return fmt.Errorf("No Glue Job ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).GlueConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).GlueConn(ctx)
 
 		output, err := conn.GetMLTransformWithContext(ctx, &glue.GetMLTransformInput{
 			TransformId: aws.String(rs.Primary.ID),
@@ -463,7 +463,7 @@ func testAccCheckMLTransformDestroy(ctx context.Context) resource.TestCheckFunc 
 				continue
 			}
 
-			conn := acctest.Provider.Meta().(*conns.AWSClient).GlueConn()
+			conn := acctest.Provider.Meta().(*conns.AWSClient).GlueConn(ctx)
 
 			output, err := conn.GetMLTransformWithContext(ctx, &glue.GetMLTransformInput{
 				TransformId: aws.String(rs.Primary.ID),

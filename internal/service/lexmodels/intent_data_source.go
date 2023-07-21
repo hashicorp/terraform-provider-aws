@@ -69,7 +69,7 @@ func DataSourceIntent() *schema.Resource {
 
 func dataSourceIntentRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).LexModelsConn()
+	conn := meta.(*conns.AWSClient).LexModelsConn(ctx)
 
 	intentName := d.Get("name").(string)
 	resp, err := conn.GetIntentWithContext(ctx, &lexmodelbuildingservice.GetIntentInput{

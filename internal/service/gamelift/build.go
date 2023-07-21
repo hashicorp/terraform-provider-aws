@@ -93,13 +93,13 @@ func ResourceBuild() *schema.Resource {
 
 func resourceBuildCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).GameLiftConn()
+	conn := meta.(*conns.AWSClient).GameLiftConn(ctx)
 
 	input := gamelift.CreateBuildInput{
 		Name:            aws.String(d.Get("name").(string)),
 		OperatingSystem: aws.String(d.Get("operating_system").(string)),
 		StorageLocation: expandStorageLocation(d.Get("storage_location").([]interface{})),
-		Tags:            GetTagsIn(ctx),
+		Tags:            getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("version"); ok {
@@ -138,7 +138,7 @@ func resourceBuildCreate(ctx context.Context, d *schema.ResourceData, meta inter
 
 func resourceBuildRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).GameLiftConn()
+	conn := meta.(*conns.AWSClient).GameLiftConn(ctx)
 
 	build, err := FindBuildByID(ctx, conn, d.Id())
 	if !d.IsNewResource() && tfresource.NotFound(err) {
@@ -163,7 +163,7 @@ func resourceBuildRead(ctx context.Context, d *schema.ResourceData, meta interfa
 
 func resourceBuildUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).GameLiftConn()
+	conn := meta.(*conns.AWSClient).GameLiftConn(ctx)
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		log.Printf("[INFO] Updating GameLift Build: %s", d.Id())
@@ -186,7 +186,7 @@ func resourceBuildUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 
 func resourceBuildDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).GameLiftConn()
+	conn := meta.(*conns.AWSClient).GameLiftConn(ctx)
 
 	log.Printf("[INFO] Deleting GameLift Build: %s", d.Id())
 	_, err := conn.DeleteBuildWithContext(ctx, &gamelift.DeleteBuildInput{

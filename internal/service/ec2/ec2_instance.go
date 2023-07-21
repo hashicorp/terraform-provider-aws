@@ -381,6 +381,72 @@ func ResourceInstance() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
+			"instance_lifecycle": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"instance_market_options": {
+				Type:     schema.TypeList,
+				Optional: true,
+				Computed: true,
+				ForceNew: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"market_type": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							Computed:     true,
+							ForceNew:     true,
+							ValidateFunc: validation.StringInSlice(ec2.MarketType_Values(), false),
+						},
+						"spot_options": {
+							Type:     schema.TypeList,
+							Optional: true,
+							Computed: true,
+							ForceNew: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"instance_interruption_behavior": {
+										Type:         schema.TypeString,
+										Optional:     true,
+										Computed:     true,
+										ForceNew:     true,
+										ValidateFunc: validation.StringInSlice(ec2.InstanceInterruptionBehavior_Values(), false),
+									},
+									"max_price": {
+										Type:     schema.TypeString,
+										Optional: true,
+										Computed: true,
+										ForceNew: true,
+										DiffSuppressFunc: func(k, oldValue, newValue string, d *schema.ResourceData) bool {
+											if (oldValue != "" && newValue == "") || (strings.TrimRight(oldValue, "0") == strings.TrimRight(newValue, "0")) {
+												return true
+											}
+											return false
+										},
+									},
+									"spot_instance_type": {
+										Type:         schema.TypeString,
+										Optional:     true,
+										Computed:     true,
+										ForceNew:     true,
+										ValidateFunc: validation.StringInSlice(ec2.SpotInstanceType_Values(), false),
+									},
+									"valid_until": {
+										Type:         schema.TypeString,
+										Optional:     true,
+										Computed:     true,
+										ForceNew:     true,
+										ValidateFunc: verify.ValidUTCTimestamp,
+									},
+								},
+							},
+						},
+					},
+				},
+			},
 			"instance_state": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -474,7 +540,7 @@ func ResourceInstance() *schema.Resource {
 						"http_endpoint": {
 							Type:         schema.TypeString,
 							Optional:     true,
-							Computed:     true,
+							Default:      ec2.InstanceMetadataEndpointStateEnabled,
 							ValidateFunc: validation.StringInSlice(ec2.InstanceMetadataEndpointState_Values(), false),
 						},
 						"http_put_response_hop_limit": {
@@ -694,6 +760,10 @@ func ResourceInstance() *schema.Resource {
 					return ok
 				},
 			},
+			"spot_instance_request_id": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"subnet_id": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -769,7 +839,7 @@ func ResourceInstance() *schema.Resource {
 				_, ok := diff.GetOk("launch_template")
 
 				if diff.Id() != "" && diff.HasChange("launch_template.0.version") && ok {
-					conn := meta.(*conns.AWSClient).EC2Conn()
+					conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 					stateVersion := diff.Get("launch_template.0.version")
 
@@ -848,7 +918,7 @@ func throughputDiffSuppressFunc(k, old, new string, d *schema.ResourceData) bool
 
 func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	instanceOpts, err := buildInstanceOpts(ctx, d, meta)
 	if err != nil {
@@ -870,6 +940,7 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 		IamInstanceProfile:                instanceOpts.IAMInstanceProfile,
 		ImageId:                           instanceOpts.ImageID,
 		InstanceInitiatedShutdownBehavior: instanceOpts.InstanceInitiatedShutdownBehavior,
+		InstanceMarketOptions:             instanceOpts.InstanceMarketOptions,
 		InstanceType:                      instanceOpts.InstanceType,
 		Ipv6AddressCount:                  instanceOpts.Ipv6AddressCount,
 		Ipv6Addresses:                     instanceOpts.Ipv6Addresses,
@@ -982,7 +1053,7 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 
 func resourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	instance, err := FindInstanceByID(ctx, conn, d.Id())
 
@@ -1132,7 +1203,7 @@ func resourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta inte
 			networkInterfaces = append(networkInterfaces, ni)
 		}
 		if err := d.Set("network_interface", networkInterfaces); err != nil {
-			return sdkdiag.AppendErrorf(diags, "Error setting network_interfaces: %v", err)
+			return sdkdiag.AppendErrorf(diags, "setting network_interfaces: %v", err)
 		}
 
 		// Set primary network interface details
@@ -1170,7 +1241,7 @@ func resourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 
 	if err := d.Set("secondary_private_ips", secondaryPrivateIPs); err != nil {
-		return sdkdiag.AppendErrorf(diags, "Error setting private_ips for AWS Instance (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "setting private_ips for AWS Instance (%s): %s", d.Id(), err)
 	}
 
 	if err := d.Set("ipv6_addresses", ipv6Addresses); err != nil {
@@ -1187,7 +1258,7 @@ func resourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta inte
 		d.Set("monitoring", monitoringState == ec2.MonitoringStateEnabled || monitoringState == ec2.MonitoringStatePending)
 	}
 
-	SetTagsOut(ctx, instance.Tags)
+	setTagsOut(ctx, instance.Tags)
 
 	if _, ok := d.GetOk("volume_tags"); ok && !blockDeviceTagsDefined(d) {
 		volumeTags, err := readVolumeTags(ctx, conn, d.Id())
@@ -1321,12 +1392,56 @@ func resourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta inte
 		d.Set("capacity_reservation_specification", nil)
 	}
 
+	if spotInstanceRequestID := aws.StringValue(instance.SpotInstanceRequestId); spotInstanceRequestID != "" && instance.InstanceLifecycle != nil {
+		d.Set("instance_lifecycle", instance.InstanceLifecycle)
+		d.Set("spot_instance_request_id", spotInstanceRequestID)
+
+		input := &ec2.DescribeSpotInstanceRequestsInput{
+			SpotInstanceRequestIds: aws.StringSlice([]string{spotInstanceRequestID}),
+		}
+
+		apiObject, err := FindSpotInstanceRequest(ctx, conn, input)
+
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "reading EC2 Spot Instance Request (%s): %s", spotInstanceRequestID, err)
+		}
+
+		tfMap := map[string]interface{}{}
+
+		if v := apiObject.InstanceInterruptionBehavior; v != nil {
+			tfMap["instance_interruption_behavior"] = aws.StringValue(v)
+		}
+
+		if v := apiObject.SpotPrice; v != nil {
+			tfMap["max_price"] = aws.StringValue(v)
+		}
+
+		if v := apiObject.Type; v != nil {
+			tfMap["spot_instance_type"] = aws.StringValue(v)
+		}
+
+		if v := apiObject.ValidUntil; v != nil {
+			tfMap["valid_until"] = aws.TimeValue(v).Format(time.RFC3339)
+		}
+
+		if err := d.Set("instance_market_options", []interface{}{map[string]interface{}{
+			"market_type":  ec2.MarketTypeSpot,
+			"spot_options": []interface{}{tfMap},
+		}}); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting instance_market_options: %s", err)
+		}
+	} else {
+		d.Set("instance_lifecycle", nil)
+		d.Set("instance_market_options", nil)
+		d.Set("spot_instance_request_id", nil)
+	}
+
 	return diags
 }
 
 func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	if d.HasChange("volume_tags") && !d.IsNewResource() {
 		volumeIds, err := getInstanceVolumeIDs(ctx, conn, d.Id())
@@ -1337,7 +1452,7 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta in
 		o, n := d.GetChange("volume_tags")
 
 		for _, volumeId := range volumeIds {
-			if err := UpdateTags(ctx, conn, volumeId, o, n); err != nil {
+			if err := updateTags(ctx, conn, volumeId, o, n); err != nil {
 				return sdkdiag.AppendErrorf(diags, "updating volume_tags (%s): %s", volumeId, err)
 			}
 		}
@@ -1664,7 +1779,7 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta in
 			})
 		}
 		if mErr != nil {
-			return sdkdiag.AppendErrorf(diags, "Error updating Instance monitoring: %s", mErr)
+			return sdkdiag.AppendErrorf(diags, "updating Instance monitoring: %s", mErr)
 		}
 	}
 
@@ -1807,7 +1922,7 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta in
 		if d.HasChange("root_block_device.0.tags") {
 			o, n := d.GetChange("root_block_device.0.tags")
 
-			if err := UpdateTags(ctx, conn, volumeID, o, n); err != nil {
+			if err := updateTags(ctx, conn, volumeID, o, n); err != nil {
 				return sdkdiag.AppendErrorf(diags, "updating tags for volume (%s): %s", volumeID, err)
 			}
 		}
@@ -1873,7 +1988,7 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta in
 
 func resourceInstanceDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	if err := disableInstanceAPITermination(ctx, conn, d.Id(), false); err != nil {
 		log.Printf("[WARN] attempting to terminate EC2 Instance (%s) despite error disabling API termination: %s", d.Id(), err)
@@ -1882,6 +1997,17 @@ func resourceInstanceDelete(ctx context.Context, d *schema.ResourceData, meta in
 	if v, ok := d.GetOk("disable_api_stop"); ok {
 		if err := disableInstanceAPIStop(ctx, conn, d.Id(), v.(bool)); err != nil {
 			log.Printf("[WARN] attempting to terminate EC2 Instance (%s) despite error disabling API stop: %s", d.Id(), err)
+		}
+	}
+
+	if v, ok := d.GetOk("instance_lifecycle"); ok && v == ec2.InstanceLifecycleSpot {
+		spotInstanceRequestID := d.Get("spot_instance_request_id").(string)
+		_, err := conn.CancelSpotInstanceRequestsWithContext(ctx, &ec2.CancelSpotInstanceRequestsInput{
+			SpotInstanceRequestIds: aws.StringSlice([]string{spotInstanceRequestID}),
+		})
+
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "cancelling EC2 Spot Fleet Request (%s): %s", spotInstanceRequestID, err)
 		}
 	}
 
@@ -2189,7 +2315,7 @@ func FetchRootDeviceName(ctx context.Context, conn *ec2.EC2, amiID string) (*str
 	}
 
 	if rootDeviceName == nil {
-		return nil, fmt.Errorf("Error finding Root Device Name for AMI (%s)", amiID)
+		return nil, fmt.Errorf("finding Root Device Name for AMI (%s)", amiID)
 	}
 
 	return rootDeviceName, nil
@@ -2305,7 +2431,7 @@ func readBlockDeviceMappingsFromConfig(ctx context.Context, d *schema.ResourceDa
 					} else {
 						// Enforce IOPs usage with a valid volume type
 						// Reference: https://github.com/hashicorp/terraform-provider-aws/issues/12667
-						return nil, fmt.Errorf("error creating resource: iops attribute not supported for ebs_block_device with volume_type %s", v)
+						return nil, fmt.Errorf("creating resource: iops attribute not supported for ebs_block_device with volume_type %s", v)
 					}
 				}
 				if throughput, ok := bd["throughput"].(int); ok && throughput > 0 {
@@ -2313,7 +2439,7 @@ func readBlockDeviceMappingsFromConfig(ctx context.Context, d *schema.ResourceDa
 					if ec2.VolumeTypeGp3 == strings.ToLower(v) {
 						ebs.Throughput = aws.Int64(int64(throughput))
 					} else {
-						return nil, fmt.Errorf("error creating resource: throughput attribute not supported for ebs_block_device with volume_type %s", v)
+						return nil, fmt.Errorf("creating resource: throughput attribute not supported for ebs_block_device with volume_type %s", v)
 					}
 				}
 			}
@@ -2380,7 +2506,7 @@ func readBlockDeviceMappingsFromConfig(ctx context.Context, d *schema.ResourceDa
 					} else {
 						// Enforce IOPs usage with a valid volume type
 						// Reference: https://github.com/hashicorp/terraform-provider-aws/issues/12667
-						return nil, fmt.Errorf("error creating resource: iops attribute not supported for root_block_device with volume_type %s", v)
+						return nil, fmt.Errorf("creating resource: iops attribute not supported for root_block_device with volume_type %s", v)
 					}
 				}
 				if throughput, ok := bd["throughput"].(int); ok && throughput > 0 {
@@ -2389,7 +2515,7 @@ func readBlockDeviceMappingsFromConfig(ctx context.Context, d *schema.ResourceDa
 						ebs.Throughput = aws.Int64(int64(throughput))
 					} else {
 						// Enforce throughput usage with a valid volume type
-						return nil, fmt.Errorf("error creating resource: throughput attribute not supported for root_block_device with volume_type %s", v)
+						return nil, fmt.Errorf("creating resource: throughput attribute not supported for root_block_device with volume_type %s", v)
 					}
 				}
 			}
@@ -2579,6 +2705,7 @@ type instanceOpts struct {
 	IAMInstanceProfile                *ec2.IamInstanceProfileSpecification
 	ImageID                           *string
 	InstanceInitiatedShutdownBehavior *string
+	InstanceMarketOptions             *ec2.InstanceMarketOptionsRequest
 	InstanceType                      *string
 	Ipv6AddressCount                  *int64
 	Ipv6Addresses                     []*ec2.InstanceIpv6Address
@@ -2599,7 +2726,7 @@ type instanceOpts struct {
 }
 
 func buildInstanceOpts(ctx context.Context, d *schema.ResourceData, meta interface{}) (*instanceOpts, error) {
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	opts := &instanceOpts{
 		DisableAPITermination: aws.Bool(d.Get("disable_api_termination").(bool)),
@@ -2824,6 +2951,10 @@ func buildInstanceOpts(ctx context.Context, d *schema.ResourceData, meta interfa
 
 	if v, ok := d.GetOk("private_dns_name_options"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 		opts.PrivateDNSNameOptions = expandPrivateDNSNameOptionsRequest(v.([]interface{})[0].(map[string]interface{}))
+	}
+
+	if v, ok := d.GetOk("instance_market_options"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		opts.InstanceMarketOptions = expandInstanceMarketOptionsRequest(v.([]interface{})[0].(map[string]interface{}))
 	}
 
 	return opts, nil
@@ -3308,6 +3439,44 @@ func flattenPrivateDNSNameOptionsResponse(apiObject *ec2.PrivateDnsNameOptionsRe
 	}
 
 	return tfMap
+}
+
+func expandInstanceMarketOptionsRequest(tfMap map[string]interface{}) *ec2.InstanceMarketOptionsRequest {
+	apiObject := &ec2.InstanceMarketOptionsRequest{}
+
+	if v, ok := tfMap["market_type"]; ok && v.(string) != "" {
+		apiObject.MarketType = aws.String(tfMap["market_type"].(string))
+	}
+
+	if v, ok := tfMap["spot_options"]; ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		apiObject.SpotOptions = expandSpotMarketOptions(v.([]interface{})[0].(map[string]interface{}))
+	}
+
+	return apiObject
+}
+
+func expandSpotMarketOptions(tfMap map[string]interface{}) *ec2.SpotMarketOptions {
+	apiObject := &ec2.SpotMarketOptions{}
+
+	if v, ok := tfMap["instance_interruption_behavior"].(string); ok && v != "" {
+		apiObject.InstanceInterruptionBehavior = aws.String(v)
+	}
+
+	if v, ok := tfMap["max_price"].(string); ok && v != "" {
+		apiObject.MaxPrice = aws.String(v)
+	}
+
+	if v, ok := tfMap["spot_instance_type"].(string); ok && v != "" {
+		apiObject.SpotInstanceType = aws.String(v)
+	}
+
+	if v, ok := tfMap["valid_until"].(string); ok && v != "" {
+		v, _ := time.Parse(time.RFC3339, v)
+
+		apiObject.ValidUntil = aws.Time(v)
+	}
+
+	return apiObject
 }
 
 func expandLaunchTemplateSpecification(tfMap map[string]interface{}) *ec2.LaunchTemplateSpecification {

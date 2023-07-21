@@ -276,7 +276,7 @@ func ResourceRecord() *schema.Resource {
 
 func resourceRecordCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).Route53Conn()
+	conn := meta.(*conns.AWSClient).Route53Conn(ctx)
 
 	zoneID := CleanZoneID(d.Get("zone_id").(string))
 	zoneRecord, err := FindHostedZoneByID(ctx, conn, zoneID)
@@ -341,7 +341,7 @@ func resourceRecordCreate(ctx context.Context, d *schema.ResourceData, meta inte
 
 func resourceRecordRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).Route53Conn()
+	conn := meta.(*conns.AWSClient).Route53Conn(ctx)
 
 	record, fqdn, err := FindResourceRecordSetByFourPartKey(ctx, conn, CleanZoneID(d.Get("zone_id").(string)), d.Get("name").(string), d.Get("type").(string), d.Get("set_identifier").(string))
 
@@ -434,7 +434,7 @@ func resourceRecordRead(ctx context.Context, d *schema.ResourceData, meta interf
 
 func resourceRecordUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).Route53Conn()
+	conn := meta.(*conns.AWSClient).Route53Conn(ctx)
 
 	// Route 53 supports CREATE, DELETE, and UPSERT actions. We use UPSERT, and
 	// AWS dynamically determines if a record should be created or updated.
@@ -625,7 +625,7 @@ func resourceRecordUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 
 func resourceRecordDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).Route53Conn()
+	conn := meta.(*conns.AWSClient).Route53Conn(ctx)
 
 	zoneID := CleanZoneID(d.Get("zone_id").(string))
 	var name string

@@ -49,7 +49,7 @@ func TestAccELBProxyProtocolPolicy_basic(t *testing.T) {
 
 func testAccCheckProxyProtocolPolicyDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ELBConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ELBConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_placement_group" {

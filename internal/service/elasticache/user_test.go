@@ -302,7 +302,7 @@ func TestAccElastiCacheUser_disappears(t *testing.T) {
 
 func testAccCheckUserDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ElastiCacheConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ElastiCacheConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_elasticache_user" {
@@ -337,7 +337,7 @@ func testAccCheckUserExists(ctx context.Context, n string, v *elasticache.User) 
 			return fmt.Errorf("No ElastiCache User ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ElastiCacheConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ElastiCacheConn(ctx)
 
 		output, err := tfelasticache.FindUserByID(ctx, conn, rs.Primary.ID)
 

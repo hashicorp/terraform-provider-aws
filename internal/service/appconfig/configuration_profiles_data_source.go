@@ -35,7 +35,7 @@ const (
 )
 
 func dataSourceConfigurationProfilesRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).AppConfigConn()
+	conn := meta.(*conns.AWSClient).AppConfigConn(ctx)
 	appId := d.Get("application_id").(string)
 
 	out, err := findConfigurationProfileSummariesByApplication(ctx, conn, appId)

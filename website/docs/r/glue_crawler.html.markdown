@@ -138,6 +138,7 @@ The following arguments are supported:
 * `classifiers` (Optional) List of custom classifiers. By default, all AWS classifiers are included in a crawl, but these custom classifiers always override the default classifiers for a given classification.
 * `configuration` (Optional) JSON string of configuration information. For more details see [Setting Crawler Configuration Options](https://docs.aws.amazon.com/glue/latest/dg/crawler-configuration.html).
 * `description` (Optional) Description of the crawler.
+* `delta_target` (Optional) List of nested Delta Lake target arguments. See [Delta Target](#delta-target) below.
 * `dynamodb_target` (Optional) List of nested DynamoDB target arguments. See [Dynamodb Target](#dynamodb-target) below.
 * `jdbc_target` (Optional) List of nested JBDC target arguments. See [JDBC Target](#jdbc-target) below.
 * `s3_target` (Optional) List nested Amazon S3 target arguments. See [S3 Target](#s3-target) below.
@@ -210,7 +211,7 @@ The following arguments are supported:
 
 ### Lineage Configuration
 
-* `crawler_lineage_settings` - (Optional) Specifies whether data lineage is enabled for the crawler. Valid values are: `ENABLE` and `DISABLE`. Default value is `Disable`.
+* `crawler_lineage_settings` - (Optional) Specifies whether data lineage is enabled for the crawler. Valid values are: `ENABLE` and `DISABLE`. Default value is `DISABLE`.
 
 ### Recrawl Policy
 

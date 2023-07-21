@@ -22,8 +22,8 @@ func TestAccLambdaFunctionsDataSource_basic(t *testing.T) {
 			{
 				Config: testAccFunctionsDataSourceConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					acctest.CheckResourceAttrGreaterThanValue(dataSourceName, "function_arns.#", "0"),
-					acctest.CheckResourceAttrGreaterThanValue(dataSourceName, "function_names.#", "0"),
+					acctest.CheckResourceAttrGreaterThanValue(dataSourceName, "function_arns.#", 0),
+					acctest.CheckResourceAttrGreaterThanValue(dataSourceName, "function_names.#", 0),
 				),
 			},
 		},

@@ -549,7 +549,7 @@ func testAccCheckTopicHasPolicy(ctx context.Context, n string, expectedPolicyTex
 			return fmt.Errorf("No SNS Topic ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SNSConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SNSConn(ctx)
 
 		attributes, err := tfsns.FindTopicAttributesByARN(ctx, conn, rs.Primary.ID)
 
@@ -589,7 +589,7 @@ func testAccCheckTopicHasDeliveryPolicy(ctx context.Context, n string, expectedP
 			return fmt.Errorf("No SNS Topic ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SNSConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SNSConn(ctx)
 
 		attributes, err := tfsns.FindTopicAttributesByARN(ctx, conn, rs.Primary.ID)
 
@@ -616,7 +616,7 @@ func testAccCheckTopicHasDeliveryPolicy(ctx context.Context, n string, expectedP
 
 func testAccCheckTopicDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SNSConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SNSConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_sns_topic" {
@@ -651,7 +651,7 @@ func testAccCheckTopicExists(ctx context.Context, n string, v *map[string]string
 			return fmt.Errorf("No SNS Topic ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SNSConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SNSConn(ctx)
 
 		output, err := tfsns.GetTopicAttributesByARN(ctx, conn, rs.Primary.ID)
 

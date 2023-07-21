@@ -127,7 +127,7 @@ func testAccCheckGroupExists(ctx context.Context, name string, group *synthetics
 			return fmt.Errorf("no Synthetics Group ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SyntheticsConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SyntheticsConn(ctx)
 		output, err := tfsynthetics.FindGroupByName(ctx, conn, rs.Primary.ID)
 
 		if err != nil {
@@ -142,7 +142,7 @@ func testAccCheckGroupExists(ctx context.Context, name string, group *synthetics
 
 func testAccCheckGroupDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SyntheticsConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SyntheticsConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_synthetics_group" {

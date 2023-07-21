@@ -137,7 +137,7 @@ func TestAccVPCTrafficMirrorFilterRule_disappears(t *testing.T) {
 }
 
 func testAccPreCheckTrafficMirrorFilterRule(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
+	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
 
 	_, err := conn.DescribeTrafficMirrorFiltersWithContext(ctx, &ec2.DescribeTrafficMirrorFiltersInput{})
 
@@ -152,7 +152,7 @@ func testAccPreCheckTrafficMirrorFilterRule(ctx context.Context, t *testing.T) {
 
 func testAccCheckTrafficMirrorFilterRuleDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_ec2_traffic_mirror_filter_rule" {
@@ -198,7 +198,7 @@ func testAccCheckTrafficMirrorFilterRuleExists(ctx context.Context, n string) re
 			return fmt.Errorf("No EC2 Traffic Mirror Filter Rule ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
 
 		_, err := tfec2.FindTrafficMirrorFilterRuleByTwoPartKey(ctx, conn, rs.Primary.Attributes["traffic_mirror_filter_id"], rs.Primary.ID)
 

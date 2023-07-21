@@ -100,7 +100,7 @@ func ResourceAuthorizer() *schema.Resource {
 
 func resourceAuthorizerCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).APIGatewayV2Conn()
+	conn := meta.(*conns.AWSClient).APIGatewayV2Conn(ctx)
 
 	apiId := d.Get("api_id").(string)
 	authorizerType := d.Get("authorizer_type").(string)
@@ -155,7 +155,7 @@ func resourceAuthorizerCreate(ctx context.Context, d *schema.ResourceData, meta 
 
 func resourceAuthorizerRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).APIGatewayV2Conn()
+	conn := meta.(*conns.AWSClient).APIGatewayV2Conn(ctx)
 
 	resp, err := conn.GetAuthorizerWithContext(ctx, &apigatewayv2.GetAuthorizerInput{
 		ApiId:        aws.String(d.Get("api_id").(string)),
@@ -189,7 +189,7 @@ func resourceAuthorizerRead(ctx context.Context, d *schema.ResourceData, meta in
 
 func resourceAuthorizerUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).APIGatewayV2Conn()
+	conn := meta.(*conns.AWSClient).APIGatewayV2Conn(ctx)
 
 	req := &apigatewayv2.UpdateAuthorizerInput{
 		ApiId:        aws.String(d.Get("api_id").(string)),
@@ -234,7 +234,7 @@ func resourceAuthorizerUpdate(ctx context.Context, d *schema.ResourceData, meta 
 
 func resourceAuthorizerDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).APIGatewayV2Conn()
+	conn := meta.(*conns.AWSClient).APIGatewayV2Conn(ctx)
 
 	log.Printf("[DEBUG] Deleting API Gateway v2 authorizer (%s)", d.Id())
 	_, err := conn.DeleteAuthorizerWithContext(ctx, &apigatewayv2.DeleteAuthorizerInput{

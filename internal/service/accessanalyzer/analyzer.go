@@ -76,13 +76,13 @@ func resourceAnalyzer() *schema.Resource {
 
 func resourceAnalyzerCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).AccessAnalyzerClient()
+	conn := meta.(*conns.AWSClient).AccessAnalyzerClient(ctx)
 
 	analyzerName := d.Get("analyzer_name").(string)
 	input := &accessanalyzer.CreateAnalyzerInput{
 		AnalyzerName: aws.String(analyzerName),
 		ClientToken:  aws.String(id.UniqueId()),
-		Tags:         GetTagsIn(ctx),
+		Tags:         getTagsIn(ctx),
 		Type:         types.Type(d.Get("type").(string)),
 	}
 
@@ -111,7 +111,7 @@ func resourceAnalyzerCreate(ctx context.Context, d *schema.ResourceData, meta in
 
 func resourceAnalyzerRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).AccessAnalyzerClient()
+	conn := meta.(*conns.AWSClient).AccessAnalyzerClient(ctx)
 
 	analyzer, err := findAnalyzerByName(ctx, conn, d.Id())
 
@@ -129,7 +129,7 @@ func resourceAnalyzerRead(ctx context.Context, d *schema.ResourceData, meta inte
 	d.Set("arn", analyzer.Arn)
 	d.Set("type", analyzer.Type)
 
-	SetTagsOut(ctx, analyzer.Tags)
+	setTagsOut(ctx, analyzer.Tags)
 
 	return diags
 }
@@ -144,7 +144,7 @@ func resourceAnalyzerUpdate(ctx context.Context, d *schema.ResourceData, meta in
 
 func resourceAnalyzerDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).AccessAnalyzerClient()
+	conn := meta.(*conns.AWSClient).AccessAnalyzerClient(ctx)
 
 	log.Printf("[DEBUG] Deleting IAM Access Analyzer Analyzer: %s", d.Id())
 	_, err := conn.DeleteAnalyzer(ctx, &accessanalyzer.DeleteAnalyzerInput{

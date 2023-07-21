@@ -103,7 +103,7 @@ func testAccSafetyRule_gatingRule(t *testing.T) {
 
 func testAccCheckSafetyRuleDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).Route53RecoveryControlConfigConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).Route53RecoveryControlConfigConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_route53recoverycontrolconfig_safety_rule" {
@@ -132,7 +132,7 @@ func testAccCheckSafetyRuleExists(ctx context.Context, name string) resource.Tes
 			return fmt.Errorf("Not found: %s", name)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).Route53RecoveryControlConfigConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).Route53RecoveryControlConfigConn(ctx)
 
 		input := &r53rcc.DescribeSafetyRuleInput{
 			SafetyRuleArn: aws.String(rs.Primary.ID),

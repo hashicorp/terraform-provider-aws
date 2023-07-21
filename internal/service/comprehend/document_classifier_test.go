@@ -1376,7 +1376,7 @@ func TestAccComprehendDocumentClassifier_DefaultTags_providerOnly(t *testing.T) 
 
 func testAccCheckDocumentClassifierDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ComprehendClient()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ComprehendClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_comprehend_document_classifier" {
@@ -1424,7 +1424,7 @@ func testAccCheckDocumentClassifierExists(ctx context.Context, name string, docu
 			return fmt.Errorf("No Comprehend Document Classifier is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ComprehendClient()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ComprehendClient(ctx)
 
 		resp, err := tfcomprehend.FindDocumentClassifierByID(ctx, conn, rs.Primary.ID)
 		if err != nil {
@@ -1472,7 +1472,7 @@ func testAccCheckDocumentClassifierPublishedVersions(ctx context.Context, name s
 			return fmt.Errorf("No Comprehend Document Classifier is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ComprehendClient()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ComprehendClient(ctx)
 
 		name, err := tfcomprehend.DocumentClassifierParseARN(rs.Primary.ID)
 		if err != nil {

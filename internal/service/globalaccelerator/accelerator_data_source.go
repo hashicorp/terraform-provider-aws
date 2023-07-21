@@ -101,7 +101,7 @@ func (d *dataSourceAccelerator) Read(ctx context.Context, request datasource.Rea
 		return
 	}
 
-	conn := d.Meta().GlobalAcceleratorConn()
+	conn := d.Meta().GlobalAcceleratorConn(ctx)
 	ignoreTagsConfig := d.Meta().IgnoreTagsConfig
 
 	var results []*globalaccelerator.Accelerator
@@ -171,7 +171,7 @@ func (d *dataSourceAccelerator) Read(ctx context.Context, request datasource.Rea
 
 	data.Attributes = d.flattenAcceleratorAttributesFramework(ctx, attributes)
 
-	tags, err := ListTags(ctx, conn, acceleratorARN)
+	tags, err := listTags(ctx, conn, acceleratorARN)
 
 	if err != nil {
 		response.Diagnostics.AddError("listing tags for Global Accelerator Accelerator", err.Error())

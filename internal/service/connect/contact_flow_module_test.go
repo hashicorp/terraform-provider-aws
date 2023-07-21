@@ -155,7 +155,7 @@ func testAccCheckContactFlowModuleExists(ctx context.Context, resourceName strin
 			return err
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ConnectConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ConnectConn(ctx)
 
 		params := &connect.DescribeContactFlowModuleInput{
 			ContactFlowModuleId: aws.String(contactFlowModuleID),
@@ -180,7 +180,7 @@ func testAccCheckContactFlowModuleDestroy(ctx context.Context) resource.TestChec
 				continue
 			}
 
-			conn := acctest.Provider.Meta().(*conns.AWSClient).ConnectConn()
+			conn := acctest.Provider.Meta().(*conns.AWSClient).ConnectConn(ctx)
 
 			instanceID, contactFlowModuleID, err := tfconnect.ContactFlowModuleParseID(rs.Primary.ID)
 

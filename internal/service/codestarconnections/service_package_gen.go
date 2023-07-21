@@ -5,6 +5,9 @@ package codestarconnections
 import (
 	"context"
 
+	aws_sdkv1 "github.com/aws/aws-sdk-go/aws"
+	session_sdkv1 "github.com/aws/aws-sdk-go/aws/session"
+	codestarconnections_sdkv1 "github.com/aws/aws-sdk-go/service/codestarconnections"
 	"github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -47,6 +50,13 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 
 func (p *servicePackage) ServicePackageName() string {
 	return names.CodeStarConnections
+}
+
+// NewConn returns a new AWS SDK for Go v1 client for this service package's AWS API.
+func (p *servicePackage) NewConn(ctx context.Context, config map[string]any) (*codestarconnections_sdkv1.CodeStarConnections, error) {
+	sess := config["session"].(*session_sdkv1.Session)
+
+	return codestarconnections_sdkv1.New(sess.Copy(&aws_sdkv1.Config{Endpoint: aws_sdkv1.String(config["endpoint"].(string))})), nil
 }
 
 var ServicePackage = &servicePackage{}

@@ -154,7 +154,7 @@ func (m *multiplexProgram) Schema(ctx context.Context, req resource.SchemaReques
 }
 
 func (m *multiplexProgram) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-	conn := m.Meta().MediaLiveClient()
+	conn := m.Meta().MediaLiveClient(ctx)
 
 	var plan resourceMultiplexProgramData
 	diags := req.Plan.Get(ctx, &plan)
@@ -212,7 +212,7 @@ func (m *multiplexProgram) Create(ctx context.Context, req resource.CreateReques
 }
 
 func (m *multiplexProgram) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
-	conn := m.Meta().MediaLiveClient()
+	conn := m.Meta().MediaLiveClient(ctx)
 
 	var state resourceMultiplexProgramData
 	diags := req.State.Get(ctx, &state)
@@ -262,7 +262,7 @@ func (m *multiplexProgram) Read(ctx context.Context, req resource.ReadRequest, r
 }
 
 func (m *multiplexProgram) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	conn := m.Meta().MediaLiveClient()
+	conn := m.Meta().MediaLiveClient(ctx)
 
 	var plan resourceMultiplexProgramData
 	diags := req.Plan.Get(ctx, &plan)
@@ -327,7 +327,7 @@ func (m *multiplexProgram) Update(ctx context.Context, req resource.UpdateReques
 }
 
 func (m *multiplexProgram) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
-	conn := m.Meta().MediaLiveClient()
+	conn := m.Meta().MediaLiveClient(ctx)
 
 	var state resourceMultiplexProgramData
 	diags := req.State.Get(ctx, &state)

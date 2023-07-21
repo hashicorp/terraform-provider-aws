@@ -87,7 +87,7 @@ func ResourceRule() *schema.Resource {
 
 func resourceRuleCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).WAFConn()
+	conn := meta.(*conns.AWSClient).WAFConn(ctx)
 
 	wr := NewRetryer(conn)
 	out, err := wr.RetryWithToken(ctx, func(token *string) (interface{}, error) {
@@ -95,7 +95,7 @@ func resourceRuleCreate(ctx context.Context, d *schema.ResourceData, meta interf
 			ChangeToken: token,
 			MetricName:  aws.String(d.Get("metric_name").(string)),
 			Name:        aws.String(d.Get("name").(string)),
-			Tags:        GetTagsIn(ctx),
+			Tags:        getTagsIn(ctx),
 		}
 
 		return conn.CreateRuleWithContext(ctx, input)
@@ -122,7 +122,7 @@ func resourceRuleCreate(ctx context.Context, d *schema.ResourceData, meta interf
 
 func resourceRuleRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).WAFConn()
+	conn := meta.(*conns.AWSClient).WAFConn(ctx)
 
 	params := &waf.GetRuleInput{
 		RuleId: aws.String(d.Id()),
@@ -176,7 +176,7 @@ func resourceRuleRead(ctx context.Context, d *schema.ResourceData, meta interfac
 
 func resourceRuleUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).WAFConn()
+	conn := meta.(*conns.AWSClient).WAFConn(ctx)
 
 	if d.HasChange("predicates") {
 		o, n := d.GetChange("predicates")
@@ -193,7 +193,7 @@ func resourceRuleUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 
 func resourceRuleDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).WAFConn()
+	conn := meta.(*conns.AWSClient).WAFConn(ctx)
 
 	oldPredicates := d.Get("predicates").(*schema.Set).List()
 	if len(oldPredicates) > 0 {

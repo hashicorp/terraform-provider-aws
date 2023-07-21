@@ -86,7 +86,7 @@ func TestAccQuickSightTemplateAlias_disappears(t *testing.T) {
 
 func testAccCheckTemplateAliasDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).QuickSightConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).QuickSightConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_quicksight_template_alias" {
@@ -119,7 +119,7 @@ func testAccCheckTemplateAliasExists(ctx context.Context, name string, templateA
 			return create.Error(names.QuickSight, create.ErrActionCheckingExistence, tfquicksight.ResNameTemplateAlias, name, errors.New("not set"))
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).QuickSightConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).QuickSightConn(ctx)
 		resp, err := tfquicksight.FindTemplateAliasByID(ctx, conn, rs.Primary.ID)
 		if err != nil {
 			return create.Error(names.QuickSight, create.ErrActionCheckingExistence, tfquicksight.ResNameTemplateAlias, rs.Primary.ID, err)

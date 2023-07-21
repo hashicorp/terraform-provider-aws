@@ -263,7 +263,7 @@ func TestAccElasticTranscoderPreset_Video_frameRate(t *testing.T) {
 
 func testAccCheckPresetExists(ctx context.Context, name string, preset *elastictranscoder.Preset) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ElasticTranscoderConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ElasticTranscoderConn(ctx)
 
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -289,7 +289,7 @@ func testAccCheckPresetExists(ctx context.Context, name string, preset *elastict
 
 func testAccCheckPresetDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ElasticTranscoderConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ElasticTranscoderConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_elastictranscoder_preset" {

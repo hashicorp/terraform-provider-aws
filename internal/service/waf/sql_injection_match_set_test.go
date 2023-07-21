@@ -187,7 +187,7 @@ func TestAccWAFSQLInjectionMatchSet_noTuples(t *testing.T) {
 
 func testAccCheckSQLInjectionMatchSetDisappears(ctx context.Context, v *waf.SqlInjectionMatchSet) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).WAFConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).WAFConn(ctx)
 
 		wr := tfwaf.NewRetryer(conn)
 		_, err := wr.RetryWithToken(ctx, func(token *string) (interface{}, error) {
@@ -237,7 +237,7 @@ func testAccCheckSQLInjectionMatchSetExists(ctx context.Context, n string, v *wa
 			return fmt.Errorf("No WAF SqlInjectionMatchSet ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).WAFConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).WAFConn(ctx)
 		resp, err := conn.GetSqlInjectionMatchSetWithContext(ctx, &waf.GetSqlInjectionMatchSetInput{
 			SqlInjectionMatchSetId: aws.String(rs.Primary.ID),
 		})
@@ -262,7 +262,7 @@ func testAccCheckSQLInjectionMatchSetDestroy(ctx context.Context) resource.TestC
 				continue
 			}
 
-			conn := acctest.Provider.Meta().(*conns.AWSClient).WAFConn()
+			conn := acctest.Provider.Meta().(*conns.AWSClient).WAFConn(ctx)
 			resp, err := conn.GetSqlInjectionMatchSetWithContext(ctx, &waf.GetSqlInjectionMatchSetInput{
 				SqlInjectionMatchSetId: aws.String(rs.Primary.ID),
 			})

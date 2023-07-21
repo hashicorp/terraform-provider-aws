@@ -87,7 +87,7 @@ func ResourcePermission() *schema.Resource {
 
 func resourcePermissionCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EventsConn()
+	conn := meta.(*conns.AWSClient).EventsConn(ctx)
 
 	eventBusName := d.Get("event_bus_name").(string)
 	statementID := d.Get("statement_id").(string)
@@ -115,7 +115,7 @@ func resourcePermissionCreate(ctx context.Context, d *schema.ResourceData, meta 
 // See also: https://docs.aws.amazon.com/eventbridge/latest/APIReference/API_DescribeEventBus.html
 func resourcePermissionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EventsConn()
+	conn := meta.(*conns.AWSClient).EventsConn(ctx)
 
 	eventBusName, statementID, err := PermissionParseResourceID(d.Id())
 	if err != nil {
@@ -205,7 +205,7 @@ func getPolicyStatement(output *eventbridge.DescribeEventBusOutput, statementID 
 
 	err := json.Unmarshal([]byte(*output.Policy), &policyDoc)
 	if err != nil {
-		return nil, fmt.Errorf("error reading EventBridge permission (%s): %w", statementID, err)
+		return nil, fmt.Errorf("reading EventBridge permission (%s): %w", statementID, err)
 	}
 
 	return FindPermissionPolicyStatementByID(&policyDoc, statementID)
@@ -213,7 +213,7 @@ func getPolicyStatement(output *eventbridge.DescribeEventBusOutput, statementID 
 
 func resourcePermissionUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EventsConn()
+	conn := meta.(*conns.AWSClient).EventsConn(ctx)
 
 	eventBusName, statementID, err := PermissionParseResourceID(d.Id())
 	if err != nil {
@@ -237,7 +237,7 @@ func resourcePermissionUpdate(ctx context.Context, d *schema.ResourceData, meta 
 
 func resourcePermissionDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EventsConn()
+	conn := meta.(*conns.AWSClient).EventsConn(ctx)
 
 	eventBusName, statementID, err := PermissionParseResourceID(d.Id())
 	if err != nil {

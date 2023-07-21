@@ -87,7 +87,7 @@ func testAccDomainServiceAccessPolicyExists(ctx context.Context, n string) resou
 			return fmt.Errorf("No CloudSearch Domain Service Access Policy ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudSearchConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudSearchConn(ctx)
 
 		_, err := tfcloudsearch.FindAccessPolicyByName(ctx, conn, rs.Primary.ID)
 
@@ -102,7 +102,7 @@ func testAccCheckDomainServiceAccessPolicyDestroy(ctx context.Context) resource.
 				continue
 			}
 
-			conn := acctest.Provider.Meta().(*conns.AWSClient).CloudSearchConn()
+			conn := acctest.Provider.Meta().(*conns.AWSClient).CloudSearchConn(ctx)
 
 			_, err := tfcloudsearch.FindAccessPolicyByName(ctx, conn, rs.Primary.ID)
 

@@ -480,14 +480,14 @@ func resourceGatewayRouteSpecSchema() *schema.Schema {
 
 func resourceGatewayRouteCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).AppMeshConn()
+	conn := meta.(*conns.AWSClient).AppMeshConn(ctx)
 
 	name := d.Get("name").(string)
 	input := &appmesh.CreateGatewayRouteInput{
 		GatewayRouteName:   aws.String(name),
 		MeshName:           aws.String(d.Get("mesh_name").(string)),
 		Spec:               expandGatewayRouteSpec(d.Get("spec").([]interface{})),
-		Tags:               GetTagsIn(ctx),
+		Tags:               getTagsIn(ctx),
 		VirtualGatewayName: aws.String(d.Get("virtual_gateway_name").(string)),
 	}
 
@@ -508,7 +508,7 @@ func resourceGatewayRouteCreate(ctx context.Context, d *schema.ResourceData, met
 
 func resourceGatewayRouteRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).AppMeshConn()
+	conn := meta.(*conns.AWSClient).AppMeshConn(ctx)
 
 	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(ctx, propagationTimeout, func() (interface{}, error) {
 		return FindGatewayRouteByFourPartKey(ctx, conn, d.Get("mesh_name").(string), d.Get("mesh_owner").(string), d.Get("virtual_gateway_name").(string), d.Get("name").(string))
@@ -544,7 +544,7 @@ func resourceGatewayRouteRead(ctx context.Context, d *schema.ResourceData, meta 
 
 func resourceGatewayRouteUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).AppMeshConn()
+	conn := meta.(*conns.AWSClient).AppMeshConn(ctx)
 
 	if d.HasChange("spec") {
 		input := &appmesh.UpdateGatewayRouteInput{
@@ -570,7 +570,7 @@ func resourceGatewayRouteUpdate(ctx context.Context, d *schema.ResourceData, met
 
 func resourceGatewayRouteDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).AppMeshConn()
+	conn := meta.(*conns.AWSClient).AppMeshConn(ctx)
 
 	log.Printf("[DEBUG] Deleting App Mesh Gateway Route: %s", d.Id())
 	input := &appmesh.DeleteGatewayRouteInput{
@@ -602,7 +602,7 @@ func resourceGatewayRouteImport(ctx context.Context, d *schema.ResourceData, met
 		return []*schema.ResourceData{}, fmt.Errorf("wrong format of import ID (%s), use: 'mesh-name/virtual-gateway-name/gateway-route-name'", d.Id())
 	}
 
-	conn := meta.(*conns.AWSClient).AppMeshConn()
+	conn := meta.(*conns.AWSClient).AppMeshConn(ctx)
 	meshName := parts[0]
 	virtualGatewayName := parts[1]
 	name := parts[2]

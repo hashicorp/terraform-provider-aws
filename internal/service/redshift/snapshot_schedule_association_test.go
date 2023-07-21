@@ -99,7 +99,7 @@ func testAccCheckSnapshotScheduleAssociationDestroy(ctx context.Context) resourc
 				continue
 			}
 
-			conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftConn()
+			conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftConn(ctx)
 
 			_, _, err := tfredshift.FindScheduleAssociationById(ctx, conn, rs.Primary.ID)
 
@@ -129,7 +129,7 @@ func testAccCheckSnapshotScheduleAssociationExists(ctx context.Context, n string
 			return fmt.Errorf("No Redshift Cluster Snapshot Schedule Association ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftConn(ctx)
 
 		_, _, err := tfredshift.FindScheduleAssociationById(ctx, conn, rs.Primary.ID)
 

@@ -247,7 +247,7 @@ func ResourceDocument() *schema.Resource {
 
 func resourceDocumentCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SSMConn()
+	conn := meta.(*conns.AWSClient).SSMConn(ctx)
 
 	name := d.Get("name").(string)
 	input := &ssm.CreateDocumentInput{
@@ -255,7 +255,7 @@ func resourceDocumentCreate(ctx context.Context, d *schema.ResourceData, meta in
 		DocumentFormat: aws.String(d.Get("document_format").(string)),
 		DocumentType:   aws.String(d.Get("document_type").(string)),
 		Name:           aws.String(name),
-		Tags:           GetTagsIn(ctx),
+		Tags:           getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("attachments_source"); ok && len(v.([]interface{})) > 0 {
@@ -309,7 +309,7 @@ func resourceDocumentCreate(ctx context.Context, d *schema.ResourceData, meta in
 
 func resourceDocumentRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SSMConn()
+	conn := meta.(*conns.AWSClient).SSMConn(ctx)
 
 	doc, err := FindDocumentByName(ctx, conn, d.Id())
 
@@ -389,14 +389,14 @@ func resourceDocumentRead(ctx context.Context, d *schema.ResourceData, meta inte
 		}
 	}
 
-	SetTagsOut(ctx, doc.Tags)
+	setTagsOut(ctx, doc.Tags)
 
 	return diags
 }
 
 func resourceDocumentUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SSMConn()
+	conn := meta.(*conns.AWSClient).SSMConn(ctx)
 
 	if d.HasChange("permissions") {
 		var oldAccountIDs, newAccountIDs flex.Set[string]
@@ -503,7 +503,7 @@ func resourceDocumentUpdate(ctx context.Context, d *schema.ResourceData, meta in
 
 func resourceDocumentDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SSMConn()
+	conn := meta.(*conns.AWSClient).SSMConn(ctx)
 
 	if v, ok := d.GetOk("permissions"); ok && len(v.(map[string]interface{})) > 0 {
 		tfMap := flex.ExpandStringValueMap(v.(map[string]interface{}))

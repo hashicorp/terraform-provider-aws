@@ -92,7 +92,7 @@ func testAccCheckADMChannelExists(ctx context.Context, n string, channel *pinpoi
 			return fmt.Errorf("No Pinpoint ADM channel with that Application ID exists")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).PinpointConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).PinpointConn(ctx)
 
 		// Check if the ADM Channel exists
 		params := &pinpoint.GetAdmChannelInput{
@@ -126,7 +126,7 @@ resource "aws_pinpoint_adm_channel" "channel" {
 
 func testAccCheckADMChannelDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).PinpointConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).PinpointConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_pinpoint_adm_channel" {

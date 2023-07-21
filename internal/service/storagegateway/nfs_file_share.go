@@ -216,7 +216,7 @@ func ResourceNFSFileShare() *schema.Resource {
 
 func resourceNFSFileShareCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).StorageGatewayConn()
+	conn := meta.(*conns.AWSClient).StorageGatewayConn(ctx)
 
 	fileShareDefaults, err := expandNFSFileShareDefaults(d.Get("nfs_file_share_defaults").([]interface{}))
 
@@ -238,7 +238,7 @@ func resourceNFSFileShareCreate(ctx context.Context, d *schema.ResourceData, met
 		RequesterPays:        aws.Bool(d.Get("requester_pays").(bool)),
 		Role:                 aws.String(d.Get("role_arn").(string)),
 		Squash:               aws.String(d.Get("squash").(string)),
-		Tags:                 GetTagsIn(ctx),
+		Tags:                 getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("audit_destination_arn"); ok {
@@ -287,7 +287,7 @@ func resourceNFSFileShareCreate(ctx context.Context, d *schema.ResourceData, met
 
 func resourceNFSFileShareRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).StorageGatewayConn()
+	conn := meta.(*conns.AWSClient).StorageGatewayConn(ctx)
 
 	fileshare, err := FindNFSFileShareByARN(ctx, conn, d.Id())
 
@@ -330,14 +330,14 @@ func resourceNFSFileShareRead(ctx context.Context, d *schema.ResourceData, meta 
 	d.Set("squash", fileshare.Squash)
 	d.Set("vpc_endpoint_dns_name", fileshare.VPCEndpointDNSName)
 
-	SetTagsOut(ctx, fileshare.Tags)
+	setTagsOut(ctx, fileshare.Tags)
 
 	return diags
 }
 
 func resourceNFSFileShareUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).StorageGatewayConn()
+	conn := meta.(*conns.AWSClient).StorageGatewayConn(ctx)
 
 	if d.HasChangesExcept("tags_all", "tags") {
 		fileShareDefaults, err := expandNFSFileShareDefaults(d.Get("nfs_file_share_defaults").([]interface{}))
@@ -396,7 +396,7 @@ func resourceNFSFileShareUpdate(ctx context.Context, d *schema.ResourceData, met
 
 func resourceNFSFileShareDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).StorageGatewayConn()
+	conn := meta.(*conns.AWSClient).StorageGatewayConn(ctx)
 
 	log.Printf("[DEBUG] Deleting Storage Gateway NFS File Share: %s", d.Id())
 	_, err := conn.DeleteFileShareWithContext(ctx, &storagegateway.DeleteFileShareInput{

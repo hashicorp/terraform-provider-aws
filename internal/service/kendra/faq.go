@@ -146,7 +146,7 @@ func ResourceFaq() *schema.Resource {
 }
 
 func resourceFaqCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).KendraClient()
+	conn := meta.(*conns.AWSClient).KendraClient(ctx)
 
 	name := d.Get("name").(string)
 	input := &kendra.CreateFaqInput{
@@ -155,7 +155,7 @@ func resourceFaqCreate(ctx context.Context, d *schema.ResourceData, meta interfa
 		Name:        aws.String(name),
 		RoleArn:     aws.String(d.Get("role_arn").(string)),
 		S3Path:      expandS3Path(d.Get("s3_path").([]interface{})),
-		Tags:        GetTagsIn(ctx),
+		Tags:        getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("description"); ok {
@@ -208,7 +208,7 @@ func resourceFaqCreate(ctx context.Context, d *schema.ResourceData, meta interfa
 }
 
 func resourceFaqRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).KendraClient()
+	conn := meta.(*conns.AWSClient).KendraClient(ctx)
 
 	id, indexId, err := FaqParseResourceID(d.Id())
 	if err != nil {
@@ -261,7 +261,7 @@ func resourceFaqUpdate(ctx context.Context, d *schema.ResourceData, meta interfa
 }
 
 func resourceFaqDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).KendraClient()
+	conn := meta.(*conns.AWSClient).KendraClient(ctx)
 
 	log.Printf("[INFO] Deleting Kendra Faq %s", d.Id())
 

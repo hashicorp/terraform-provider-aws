@@ -504,6 +504,31 @@ func TestAccEC2SpotInstanceRequest_interruptUpdate(t *testing.T) {
 	})
 }
 
+func TestAccEC2SpotInstanceRequest_withInstanceProfile(t *testing.T) {
+	ctx := acctest.Context(t)
+	var sir ec2.SpotInstanceRequest
+	resourceName := "aws_spot_instance_request.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckSpotInstanceRequestDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSpotInstanceRequestConfig_withInstanceProfile(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckSpotInstanceRequestExists(ctx, resourceName, &sir),
+					resource.TestCheckResourceAttrSet(resourceName, "iam_instance_profile"),
+					resource.TestCheckResourceAttr(resourceName, "spot_bid_status", "fulfilled"),
+					resource.TestCheckResourceAttr(resourceName, "spot_request_state", "active"),
+				),
+			},
+		},
+	})
+}
+
 func testAccSpotInstanceRequestValidUntil(t *testing.T) string {
 	return testAccSpotInstanceRequestTime(t, "12h")
 }
@@ -519,7 +544,7 @@ func testAccSpotInstanceRequestTime(t *testing.T, duration string) string {
 
 func testAccCheckSpotInstanceRequestDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_spot_instance_request" {
@@ -566,7 +591,7 @@ func testAccCheckSpotInstanceRequestExists(ctx context.Context, n string, v *ec2
 			return fmt.Errorf("No EC2 Spot Instance Request ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
 
 		output, err := tfec2.FindSpotInstanceRequestByID(ctx, conn, rs.Primary.ID)
 
@@ -621,7 +646,7 @@ func testAccCheckSpotInstanceRequestAttributesCheckSIRWithoutSpot(
 
 func testAccCheckSpotInstanceRequest_InstanceAttributes(ctx context.Context, v *ec2.SpotInstanceRequest, sgName string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
 
 		instance, err := tfec2.FindInstanceByID(ctx, conn, aws.StringValue(v.InstanceId))
 
@@ -1037,4 +1062,49 @@ resource "aws_ec2_tag" "test" {
   value       = %[1]q
 }
 `, rName, interruptionBehavior))
+}
+
+func testAccSpotInstanceRequestConfig_withInstanceProfile(rName string) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigLatestAmazonLinuxHVMEBSAMI(),
+		acctest.AvailableEC2InstanceTypeForRegion("t3.micro", "t2.micro"),
+		fmt.Sprintf(`
+resource "aws_iam_role" "test" {
+  name = %[1]q
+
+  assume_role_policy = <<EOF
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Effect": "Allow",
+            "Principal": {
+                "Service": "ec2.amazonaws.com"
+            },
+            "Action": "sts:AssumeRole"
+        }
+    ]
+}
+EOF
+}
+
+resource "aws_iam_instance_profile" "test" {
+  name = %[1]q
+  role = aws_iam_role.test.name
+}
+
+resource "aws_spot_instance_request" "test" {
+  ami                  = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+  instance_type        = data.aws_ec2_instance_type_offering.available.instance_type
+  iam_instance_profile = aws_iam_instance_profile.test.name
+  spot_price           = "0.05"
+  wait_for_fulfillment = true
+}
+
+resource "aws_ec2_tag" "test" {
+  resource_id = aws_spot_instance_request.test.spot_instance_id
+  key         = "Name"
+  value       = %[1]q
+}
+`, rName))
 }

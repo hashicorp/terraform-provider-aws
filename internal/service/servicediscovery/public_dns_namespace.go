@@ -58,13 +58,13 @@ func ResourcePublicDNSNamespace() *schema.Resource {
 }
 
 func resourcePublicDNSNamespaceCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ServiceDiscoveryConn()
+	conn := meta.(*conns.AWSClient).ServiceDiscoveryConn(ctx)
 
 	name := d.Get("name").(string)
 	input := &servicediscovery.CreatePublicDnsNamespaceInput{
 		CreatorRequestId: aws.String(id.UniqueId()),
 		Name:             aws.String(name),
-		Tags:             GetTagsIn(ctx),
+		Tags:             getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("description"); ok {
@@ -96,7 +96,7 @@ func resourcePublicDNSNamespaceCreate(ctx context.Context, d *schema.ResourceDat
 }
 
 func resourcePublicDNSNamespaceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ServiceDiscoveryConn()
+	conn := meta.(*conns.AWSClient).ServiceDiscoveryConn(ctx)
 
 	ns, err := FindNamespaceByID(ctx, conn, d.Id())
 
@@ -129,7 +129,7 @@ func resourcePublicDNSNamespaceUpdate(ctx context.Context, d *schema.ResourceDat
 }
 
 func resourcePublicDNSNamespaceDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ServiceDiscoveryConn()
+	conn := meta.(*conns.AWSClient).ServiceDiscoveryConn(ctx)
 
 	log.Printf("[INFO] Deleting Service Discovery Public DNS Namespace: %s", d.Id())
 	output, err := conn.DeleteNamespaceWithContext(ctx, &servicediscovery.DeleteNamespaceInput{

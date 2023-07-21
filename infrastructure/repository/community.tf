@@ -23,7 +23,7 @@ data "github_team" "aws" {
 resource "github_actions_secret" "maintainers" {
   repository      = "terraform-provider-aws"
   secret_name     = "MAINTAINERS"
-  plaintext_value = base64encode(jsonencode(concat(data.github_team.aws.members,["dependabot[bot]"])))
+  plaintext_value = base64encode(jsonencode(concat(data.github_team.aws.members, ["dependabot[bot]"])))
 }
 
 // Partners

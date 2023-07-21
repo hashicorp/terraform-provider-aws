@@ -100,7 +100,7 @@ func ResourceIPAMResourceDiscovery() *schema.Resource {
 
 func resourceIPAMResourceDiscoveryCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	input := &ec2.CreateIpamResourceDiscoveryInput{
 		ClientToken:       aws.String(id.UniqueId()),
@@ -129,7 +129,7 @@ func resourceIPAMResourceDiscoveryCreate(ctx context.Context, d *schema.Resource
 
 func resourceIPAMResourceDiscoveryRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	rd, err := FindIPAMResourceDiscoveryByID(ctx, conn, d.Id())
 
@@ -152,14 +152,14 @@ func resourceIPAMResourceDiscoveryRead(ctx context.Context, d *schema.ResourceDa
 	}
 	d.Set("owner_id", rd.OwnerId)
 
-	SetTagsOut(ctx, rd.Tags)
+	setTagsOut(ctx, rd.Tags)
 
 	return diags
 }
 
 func resourceIPAMResourceDiscoveryUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		input := &ec2.ModifyIpamResourceDiscoveryInput{
@@ -209,7 +209,7 @@ func resourceIPAMResourceDiscoveryUpdate(ctx context.Context, d *schema.Resource
 
 func resourceIPAMResourceDiscoveryDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	log.Printf("[DEBUG] Deleting IPAM Resource Discovery: %s", d.Id())
 	_, err := conn.DeleteIpamResourceDiscoveryWithContext(ctx, &ec2.DeleteIpamResourceDiscoveryInput{

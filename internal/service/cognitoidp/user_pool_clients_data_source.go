@@ -40,7 +40,7 @@ func DataSourceUserPoolClients() *schema.Resource {
 
 func dataSourceuserPoolClientsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CognitoIDPConn()
+	conn := meta.(*conns.AWSClient).CognitoIDPConn(ctx)
 
 	userPoolID := d.Get("user_pool_id").(string)
 	input := &cognitoidentityprovider.ListUserPoolClientsInput{
@@ -67,7 +67,7 @@ func dataSourceuserPoolClientsRead(ctx context.Context, d *schema.ResourceData, 
 	})
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "Error getting user pool clients: %s", err)
+		return sdkdiag.AppendErrorf(diags, "getting user pool clients: %s", err)
 	}
 
 	d.SetId(userPoolID)

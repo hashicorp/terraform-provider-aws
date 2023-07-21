@@ -21,7 +21,7 @@ func TestAccEC2AMIIDsDataSource_basic(t *testing.T) {
 			{
 				Config: testAccAMIIDsDataSourceConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
-					acctest.CheckResourceAttrGreaterThanValue(datasourceName, "ids.#", "0"),
+					acctest.CheckResourceAttrGreaterThanValue(datasourceName, "ids.#", 0),
 				),
 			},
 		},
@@ -69,7 +69,7 @@ func TestAccEC2AMIIDsDataSource_includeDeprecated(t *testing.T) {
 			{
 				Config: testAccAMIIDsDataSourceConfig_includeDeprecated(true),
 				Check: resource.ComposeTestCheckFunc(
-					acctest.CheckResourceAttrGreaterThanValue(datasourceName, "ids.#", "0"),
+					acctest.CheckResourceAttrGreaterThanValue(datasourceName, "ids.#", 0),
 				),
 			},
 		},

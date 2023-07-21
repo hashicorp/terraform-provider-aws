@@ -14,7 +14,7 @@ Provides an AppFlow flow resource.
 
 ```terraform
 resource "aws_s3_bucket" "example_source" {
-  bucket = "example_source"
+  bucket = "example-source"
 }
 
 data "aws_iam_policy_document" "example_source" {
@@ -51,31 +51,33 @@ resource "aws_s3_object" "example" {
 }
 
 resource "aws_s3_bucket" "example_destination" {
-  bucket = "example_destination"
+  bucket = "example-destination"
 }
 
 data "aws_iam_policy_document" "example_destination" {
-  sid    = "AllowAppFlowDestinationActions"
-  effect = "Allow"
+  statement {
+    sid    = "AllowAppFlowDestinationActions"
+    effect = "Allow"
 
-  principals {
-    type        = "Service"
-    identifiers = ["appflow.amazonaws.com"]
+    principals {
+      type        = "Service"
+      identifiers = ["appflow.amazonaws.com"]
+    }
+
+    actions = [
+      "s3:PutObject",
+      "s3:AbortMultipartUpload",
+      "s3:ListMultipartUploadParts",
+      "s3:ListBucketMultipartUploads",
+      "s3:GetBucketAcl",
+      "s3:PutObjectAcl",
+    ]
+
+    resources = [
+      "arn:aws:s3:::example_destination",
+      "arn:aws:s3:::example_destination/*",
+    ]
   }
-
-  actions = [
-    "s3:PutObject",
-    "s3:AbortMultipartUpload",
-    "s3:ListMultipartUploadParts",
-    "s3:ListBucketMultipartUploads",
-    "s3:GetBucketAcl",
-    "s3:PutObjectAcl",
-  ]
-
-  resources = [
-    "arn:aws:s3:::example_destination",
-    "arn:aws:s3:::example_destination/*",
-  ]
 }
 
 resource "aws_s3_bucket_policy" "example_destination" {

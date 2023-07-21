@@ -695,7 +695,7 @@ func testAccCheckClusterExists(ctx context.Context, resourceName string, cluster
 			return fmt.Errorf("No EKS Cluster ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EKSConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EKSConn(ctx)
 
 		output, err := tfeks.FindClusterByName(ctx, conn, rs.Primary.ID)
 
@@ -716,7 +716,7 @@ func testAccCheckClusterDestroy(ctx context.Context) resource.TestCheckFunc {
 				continue
 			}
 
-			conn := acctest.Provider.Meta().(*conns.AWSClient).EKSConn()
+			conn := acctest.Provider.Meta().(*conns.AWSClient).EKSConn(ctx)
 
 			_, err := tfeks.FindClusterByName(ctx, conn, rs.Primary.ID)
 
@@ -756,7 +756,7 @@ func testAccCheckClusterNotRecreated(i, j *eks.Cluster) resource.TestCheckFunc {
 }
 
 func testAccPreCheck(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).EKSConn()
+	conn := acctest.Provider.Meta().(*conns.AWSClient).EKSConn(ctx)
 
 	input := &eks.ListClustersInput{}
 

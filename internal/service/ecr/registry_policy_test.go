@@ -88,7 +88,7 @@ func testAccRegistryPolicy_disappears(t *testing.T) {
 
 func testAccCheckRegistryPolicyDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ECRConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ECRConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_ecr_registry_policy" {
@@ -119,7 +119,7 @@ func testAccCheckRegistryPolicyExists(ctx context.Context, name string, res *ecr
 			return fmt.Errorf("No ECR registry policy ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ECRConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ECRConn(ctx)
 
 		output, err := conn.GetRegistryPolicyWithContext(ctx, &ecr.GetRegistryPolicyInput{})
 		if err != nil {

@@ -188,7 +188,7 @@ func ResourceConfigRule() *schema.Resource {
 
 func resourceRulePutConfig(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ConfigServiceConn()
+	conn := meta.(*conns.AWSClient).ConfigServiceConn(ctx)
 
 	name := d.Get("name").(string)
 	ruleInput := configservice.ConfigRule{
@@ -209,7 +209,7 @@ func resourceRulePutConfig(ctx context.Context, d *schema.ResourceData, meta int
 
 	input := configservice.PutConfigRuleInput{
 		ConfigRule: &ruleInput,
-		Tags:       GetTagsIn(ctx),
+		Tags:       getTagsIn(ctx),
 	}
 	log.Printf("[DEBUG] Creating AWSConfig config rule: %s", input)
 	err := retry.RetryContext(ctx, propagationTimeout, func() *retry.RetryError {
@@ -229,7 +229,7 @@ func resourceRulePutConfig(ctx context.Context, d *schema.ResourceData, meta int
 		_, err = conn.PutConfigRuleWithContext(ctx, &input)
 	}
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "Error creating AWSConfig rule: %s", err)
+		return sdkdiag.AppendErrorf(diags, "creating AWSConfig rule: %s", err)
 	}
 
 	d.SetId(name)
@@ -239,7 +239,7 @@ func resourceRulePutConfig(ctx context.Context, d *schema.ResourceData, meta int
 
 func resourceConfigRuleRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ConfigServiceConn()
+	conn := meta.(*conns.AWSClient).ConfigServiceConn(ctx)
 
 	rule, err := FindConfigRule(ctx, conn, d.Id())
 
@@ -268,7 +268,7 @@ func resourceConfigRuleRead(ctx context.Context, d *schema.ResourceData, meta in
 
 func resourceConfigRuleDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ConfigServiceConn()
+	conn := meta.(*conns.AWSClient).ConfigServiceConn(ctx)
 
 	name := d.Get("name").(string)
 

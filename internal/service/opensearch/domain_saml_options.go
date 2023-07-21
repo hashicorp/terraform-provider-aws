@@ -114,7 +114,7 @@ func domainSamlOptionsDiffSupress(k, old, new string, d *schema.ResourceData) bo
 
 func resourceDomainSAMLOptionsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).OpenSearchConn()
+	conn := meta.(*conns.AWSClient).OpenSearchConn(ctx)
 
 	ds, err := FindDomainByName(ctx, conn, d.Get("domain_name").(string))
 
@@ -141,7 +141,7 @@ func resourceDomainSAMLOptionsRead(ctx context.Context, d *schema.ResourceData, 
 
 func resourceDomainSAMLOptionsPut(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).OpenSearchConn()
+	conn := meta.(*conns.AWSClient).OpenSearchConn(ctx)
 
 	domainName := d.Get("domain_name").(string)
 	config := opensearchservice.AdvancedSecurityOptionsInput_{}
@@ -169,7 +169,7 @@ func resourceDomainSAMLOptionsPut(ctx context.Context, d *schema.ResourceData, m
 
 func resourceDomainSAMLOptionsDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).OpenSearchConn()
+	conn := meta.(*conns.AWSClient).OpenSearchConn(ctx)
 
 	domainName := d.Get("domain_name").(string)
 	config := opensearchservice.AdvancedSecurityOptionsInput_{}

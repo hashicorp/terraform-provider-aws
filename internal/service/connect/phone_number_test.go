@@ -229,7 +229,7 @@ func testAccCheckPhoneNumberExists(ctx context.Context, resourceName string, fun
 			return fmt.Errorf("Connect Phone Number ID not set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ConnectConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ConnectConn(ctx)
 
 		params := &connect.DescribePhoneNumberInput{
 			PhoneNumberId: aws.String(rs.Primary.ID),
@@ -253,7 +253,7 @@ func testAccCheckPhoneNumberDestroy(ctx context.Context) resource.TestCheckFunc 
 				continue
 			}
 
-			conn := acctest.Provider.Meta().(*conns.AWSClient).ConnectConn()
+			conn := acctest.Provider.Meta().(*conns.AWSClient).ConnectConn(ctx)
 
 			params := &connect.DescribePhoneNumberInput{
 				PhoneNumberId: aws.String(rs.Primary.ID),

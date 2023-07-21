@@ -1738,7 +1738,7 @@ func TestAccWAFV2WebACL_RuleGroupReference_shieldMitigation(t *testing.T) {
 				// DDoS mitigation with Shield for CF distribution. Doing so adds an out-of-band rule
 				// similar to the one added below.
 				PreConfig: func() {
-					conn := acctest.Provider.Meta().(*conns.AWSClient).WAFV2Conn()
+					conn := acctest.Provider.Meta().(*conns.AWSClient).WAFV2Conn(ctx)
 
 					input := &wafv2.ListWebACLsInput{
 						Scope: aws.String("REGIONAL"),
@@ -2392,7 +2392,7 @@ func testAccCheckWebACLDestroy(ctx context.Context) resource.TestCheckFunc {
 				continue
 			}
 
-			conn := acctest.Provider.Meta().(*conns.AWSClient).WAFV2Conn()
+			conn := acctest.Provider.Meta().(*conns.AWSClient).WAFV2Conn(ctx)
 
 			_, err := tfwafv2.FindWebACLByThreePartKey(ctx, conn, rs.Primary.ID, rs.Primary.Attributes["name"], rs.Primary.Attributes["scope"])
 
@@ -2422,7 +2422,7 @@ func testAccCheckWebACLExists(ctx context.Context, n string, v *wafv2.WebACL) re
 			return fmt.Errorf("No WAFv2 WebACL ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).WAFV2Conn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).WAFV2Conn(ctx)
 
 		output, err := tfwafv2.FindWebACLByThreePartKey(ctx, conn, rs.Primary.ID, rs.Primary.Attributes["name"], rs.Primary.Attributes["scope"])
 

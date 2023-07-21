@@ -165,7 +165,7 @@ func (d *dataSource{{ .DataSource }}) Read(ctx context.Context, req datasource.R
 	{{- if .IncludeComments }}
 	// TIP: -- 1. Get a client connection to the relevant service
 	{{- end }}
-	conn := d.Meta().{{ .Service }}{{ if .AWSGoSDKV2 }}Client(){{ else }}Conn(){{ end }}
+	conn := d.Meta().{{ .Service }}{{ if .AWSGoSDKV2 }}Client(ctx){{ else }}Conn(ctx){{ end }}
 	{{ if .IncludeComments }}
 	// TIP: -- 2. Fetch the config
 	{{- end }}

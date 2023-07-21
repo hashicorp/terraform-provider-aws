@@ -83,11 +83,11 @@ const (
 )
 
 func resourceGeofenceCollectionCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).LocationConn()
+	conn := meta.(*conns.AWSClient).LocationConn(ctx)
 
 	in := &locationservice.CreateGeofenceCollectionInput{
 		CollectionName: aws.String(d.Get("collection_name").(string)),
-		Tags:           GetTagsIn(ctx),
+		Tags:           getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("description"); ok && v != "" {
@@ -113,7 +113,7 @@ func resourceGeofenceCollectionCreate(ctx context.Context, d *schema.ResourceDat
 }
 
 func resourceGeofenceCollectionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).LocationConn()
+	conn := meta.(*conns.AWSClient).LocationConn(ctx)
 
 	out, err := findGeofenceCollectionByName(ctx, conn, d.Id())
 
@@ -138,7 +138,7 @@ func resourceGeofenceCollectionRead(ctx context.Context, d *schema.ResourceData,
 }
 
 func resourceGeofenceCollectionUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).LocationConn()
+	conn := meta.(*conns.AWSClient).LocationConn(ctx)
 
 	update := false
 
@@ -165,7 +165,7 @@ func resourceGeofenceCollectionUpdate(ctx context.Context, d *schema.ResourceDat
 }
 
 func resourceGeofenceCollectionDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).LocationConn()
+	conn := meta.(*conns.AWSClient).LocationConn(ctx)
 
 	log.Printf("[INFO] Deleting Location GeofenceCollection %s", d.Id())
 

@@ -84,7 +84,7 @@ func ResourceDataCatalogEncryptionSettings() *schema.Resource {
 
 func resourceDataCatalogEncryptionSettingsPut(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).GlueConn()
+	conn := meta.(*conns.AWSClient).GlueConn(ctx)
 
 	catalogID := createCatalogID(d, meta.(*conns.AWSClient).AccountID)
 	input := &glue.PutDataCatalogEncryptionSettingsInput{
@@ -109,7 +109,7 @@ func resourceDataCatalogEncryptionSettingsPut(ctx context.Context, d *schema.Res
 
 func resourceDataCatalogEncryptionSettingsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).GlueConn()
+	conn := meta.(*conns.AWSClient).GlueConn(ctx)
 
 	output, err := conn.GetDataCatalogEncryptionSettingsWithContext(ctx, &glue.GetDataCatalogEncryptionSettingsInput{
 		CatalogId: aws.String(d.Id()),
@@ -133,7 +133,7 @@ func resourceDataCatalogEncryptionSettingsRead(ctx context.Context, d *schema.Re
 
 func resourceDataCatalogEncryptionSettingsDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).GlueConn()
+	conn := meta.(*conns.AWSClient).GlueConn(ctx)
 
 	input := &glue.PutDataCatalogEncryptionSettingsInput{
 		CatalogId:                     aws.String(d.Id()),

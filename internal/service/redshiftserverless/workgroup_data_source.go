@@ -115,7 +115,7 @@ func DataSourceWorkgroup() *schema.Resource {
 
 func dataSourceWorkgroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).RedshiftServerlessConn()
+	conn := meta.(*conns.AWSClient).RedshiftServerlessConn(ctx)
 
 	workgroupName := d.Get("workgroup_name").(string)
 

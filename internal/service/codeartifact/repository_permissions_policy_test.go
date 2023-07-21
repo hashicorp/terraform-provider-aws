@@ -174,7 +174,7 @@ func testAccCheckRepositoryPermissionsExists(ctx context.Context, n string) reso
 			return fmt.Errorf("no CodeArtifact domain set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CodeArtifactConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CodeArtifactConn(ctx)
 
 		domainOwner, domainName, repoName, err := tfcodeartifact.DecodeRepositoryID(rs.Primary.ID)
 		if err != nil {
@@ -198,7 +198,7 @@ func testAccCheckRepositoryPermissionsDestroy(ctx context.Context) resource.Test
 				continue
 			}
 
-			conn := acctest.Provider.Meta().(*conns.AWSClient).CodeArtifactConn()
+			conn := acctest.Provider.Meta().(*conns.AWSClient).CodeArtifactConn(ctx)
 
 			domainOwner, domainName, repoName, err := tfcodeartifact.DecodeRepositoryID(rs.Primary.ID)
 			if err != nil {

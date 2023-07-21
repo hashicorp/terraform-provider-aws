@@ -121,13 +121,13 @@ func ResourceClusterSnapshot() *schema.Resource {
 
 func resourceClusterSnapshotCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).RDSConn()
+	conn := meta.(*conns.AWSClient).RDSConn(ctx)
 
 	id := d.Get("db_cluster_snapshot_identifier").(string)
 	input := &rds.CreateDBClusterSnapshotInput{
 		DBClusterIdentifier:         aws.String(d.Get("db_cluster_identifier").(string)),
 		DBClusterSnapshotIdentifier: aws.String(id),
-		Tags:                        GetTagsIn(ctx),
+		Tags:                        getTagsIn(ctx),
 	}
 
 	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, clusterSnapshotCreateTimeout, func() (interface{}, error) {
@@ -149,7 +149,7 @@ func resourceClusterSnapshotCreate(ctx context.Context, d *schema.ResourceData, 
 
 func resourceClusterSnapshotRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).RDSConn()
+	conn := meta.(*conns.AWSClient).RDSConn(ctx)
 
 	snapshot, err := FindDBClusterSnapshotByID(ctx, conn, d.Id())
 
@@ -179,7 +179,7 @@ func resourceClusterSnapshotRead(ctx context.Context, d *schema.ResourceData, me
 	d.Set("storage_encrypted", snapshot.StorageEncrypted)
 	d.Set("vpc_id", snapshot.VpcId)
 
-	SetTagsOut(ctx, snapshot.TagList)
+	setTagsOut(ctx, snapshot.TagList)
 
 	return diags
 }
@@ -194,7 +194,7 @@ func resourceClusterSnapshotUpdate(ctx context.Context, d *schema.ResourceData, 
 
 func resourceClusterSnapshotDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).RDSConn()
+	conn := meta.(*conns.AWSClient).RDSConn(ctx)
 
 	log.Printf("[DEBUG] Deleting RDS DB Cluster Snapshot: %s", d.Id())
 	_, err := conn.DeleteDBClusterSnapshotWithContext(ctx, &rds.DeleteDBClusterSnapshotInput{

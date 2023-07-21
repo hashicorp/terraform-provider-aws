@@ -116,13 +116,13 @@ func ResourceGroup() *schema.Resource {
 }
 
 func resourceGroupCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ResourceGroupsConn()
+	conn := meta.(*conns.AWSClient).ResourceGroupsConn(ctx)
 
 	name := d.Get("name").(string)
 	input := &resourcegroups.CreateGroupInput{
 		Description: aws.String(d.Get("description").(string)),
 		Name:        aws.String(name),
-		Tags:        GetTagsIn(ctx),
+		Tags:        getTagsIn(ctx),
 	}
 
 	waitForConfigurationAttached := false
@@ -155,7 +155,7 @@ func resourceGroupCreate(ctx context.Context, d *schema.ResourceData, meta inter
 }
 
 func resourceGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ResourceGroupsConn()
+	conn := meta.(*conns.AWSClient).ResourceGroupsConn(ctx)
 
 	group, err := FindGroupByName(ctx, conn, d.Id())
 
@@ -213,7 +213,7 @@ func resourceGroupRead(ctx context.Context, d *schema.ResourceData, meta interfa
 }
 
 func resourceGroupUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ResourceGroupsConn()
+	conn := meta.(*conns.AWSClient).ResourceGroupsConn(ctx)
 
 	// Conversion between a resource-query and configuration group is not possible and vice-versa
 	if d.HasChange("configuration") && d.HasChange("resource_query") {
@@ -267,7 +267,7 @@ func resourceGroupUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 }
 
 func resourceGroupDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ResourceGroupsConn()
+	conn := meta.(*conns.AWSClient).ResourceGroupsConn(ctx)
 
 	log.Printf("[DEBUG] Deleting Resource Groups Group: %s", d.Id())
 	_, err := conn.DeleteGroupWithContext(ctx, &resourcegroups.DeleteGroupInput{

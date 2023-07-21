@@ -98,7 +98,7 @@ func testAccCheckStudioSessionMappingExists(ctx context.Context, resourceName st
 			return fmt.Errorf("Not found: %s", resourceName)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EMRConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EMRConn(ctx)
 
 		output, err := tfemr.FindStudioSessionMappingByID(ctx, conn, rs.Primary.ID)
 		if err != nil {
@@ -117,7 +117,7 @@ func testAccCheckStudioSessionMappingExists(ctx context.Context, resourceName st
 
 func testAccCheckStudioSessionMappingDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EMRConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EMRConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_emr_studio_session_mapping" {

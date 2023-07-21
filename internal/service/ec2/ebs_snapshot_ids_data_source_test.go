@@ -23,7 +23,7 @@ func TestAccEC2EBSSnapshotIDsDataSource_basic(t *testing.T) {
 			{
 				Config: testAccEBSSnapshotIdsDataSourceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					acctest.CheckResourceAttrGreaterThanValue(dataSourceName, "ids.#", "0"),
+					acctest.CheckResourceAttrGreaterThanValue(dataSourceName, "ids.#", 0),
 					resource.TestCheckTypeSetElemAttrPair(dataSourceName, "ids.*", "aws_ebs_snapshot.test", "id"),
 				),
 			},

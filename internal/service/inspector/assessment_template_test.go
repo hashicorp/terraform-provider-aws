@@ -186,7 +186,7 @@ func TestAccInspectorAssessmentTemplate_eventSubscription(t *testing.T) {
 
 func testAccCheckTemplateDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).InspectorConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).InspectorConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_inspector_assessment_template" {
@@ -218,7 +218,7 @@ func testAccCheckTemplateDestroy(ctx context.Context) resource.TestCheckFunc {
 
 func testAccCheckTemplateDisappears(ctx context.Context, v *inspector.AssessmentTemplate) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).InspectorConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).InspectorConn(ctx)
 
 		_, err := conn.DeleteAssessmentTemplateWithContext(ctx, &inspector.DeleteAssessmentTemplateInput{
 			AssessmentTemplateArn: v.Arn,
@@ -239,7 +239,7 @@ func testAccCheckTemplateExists(ctx context.Context, name string, v *inspector.A
 			return fmt.Errorf("No Inspector Classic Assessment template ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).InspectorConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).InspectorConn(ctx)
 
 		resp, err := conn.DescribeAssessmentTemplatesWithContext(ctx, &inspector.DescribeAssessmentTemplatesInput{
 			AssessmentTemplateArns: aws.StringSlice([]string{rs.Primary.ID}),

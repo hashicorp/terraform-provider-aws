@@ -88,7 +88,7 @@ func (d *dataSourceSecurityGroupRule) Read(ctx context.Context, request datasour
 		return
 	}
 
-	conn := d.Meta().EC2Conn()
+	conn := d.Meta().EC2Conn(ctx)
 	ignoreTagsConfig := d.Meta().IgnoreTagsConfig
 
 	input := &ec2.DescribeSecurityGroupRulesInput{

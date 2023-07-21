@@ -4,12 +4,11 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strings"
 	"testing"
-	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/endpoints"
-	"github.com/aws/aws-sdk-go/service/lightsail"
+	"github.com/aws/aws-sdk-go-v2/service/lightsail"
+	"github.com/aws/aws-sdk-go-v2/service/lightsail/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -23,21 +22,20 @@ import (
 
 func TestAccLightsailDomainEntry_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var domainEntry lightsail.DomainEntry
 	resourceName := "aws_lightsail_domain_entry.test"
 	domainName := acctest.RandomDomainName()
 	domainEntryName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckRegion(t, endpoints.UsEast1RegionID) },
-		ErrorCheck:               acctest.ErrorCheck(t, lightsail.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckRegion(t, string(types.RegionNameUsEast1)) },
+		ErrorCheck:               acctest.ErrorCheck(t, strings.ToLower(lightsail.ServiceID)),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDomainEntryDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDomainEntryConfig_basic(domainName, domainEntryName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDomainEntryExists(ctx, resourceName, &domainEntry),
+					testAccCheckDomainEntryExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "domain_name", domainName),
 					resource.TestCheckResourceAttr(resourceName, "name", domainEntryName),
 					resource.TestCheckResourceAttr(resourceName, "target", "127.0.0.1"),
@@ -64,21 +62,20 @@ func TestAccLightsailDomainEntry_basic(t *testing.T) {
 
 func TestAccLightsailDomainEntry_underscore(t *testing.T) {
 	ctx := acctest.Context(t)
-	var domainEntry lightsail.DomainEntry
 	resourceName := "aws_lightsail_domain_entry.test"
 	domainName := acctest.RandomDomainName()
 	domainEntryName := "_" + sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckRegion(t, endpoints.UsEast1RegionID) },
-		ErrorCheck:               acctest.ErrorCheck(t, lightsail.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckRegion(t, string(types.RegionNameUsEast1)) },
+		ErrorCheck:               acctest.ErrorCheck(t, strings.ToLower(lightsail.ServiceID)),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDomainEntryDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDomainEntryConfig_basic(domainName, domainEntryName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDomainEntryExists(ctx, resourceName, &domainEntry),
+					testAccCheckDomainEntryExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "domain_name", domainName),
 					resource.TestCheckResourceAttr(resourceName, "name", domainEntryName),
 					resource.TestCheckResourceAttr(resourceName, "target", "127.0.0.1"),
@@ -105,21 +102,20 @@ func TestAccLightsailDomainEntry_underscore(t *testing.T) {
 
 func TestAccLightsailDomainEntry_apex(t *testing.T) {
 	ctx := acctest.Context(t)
-	var domainEntry lightsail.DomainEntry
 	resourceName := "aws_lightsail_domain_entry.test"
 	domainName := acctest.RandomDomainName()
 	domainEntryName := ""
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckRegion(t, endpoints.UsEast1RegionID) },
-		ErrorCheck:               acctest.ErrorCheck(t, lightsail.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckRegion(t, string(types.RegionNameUsEast1)) },
+		ErrorCheck:               acctest.ErrorCheck(t, strings.ToLower(lightsail.ServiceID)),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDomainEntryDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDomainEntryConfig_basic(domainName, domainEntryName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDomainEntryExists(ctx, resourceName, &domainEntry),
+					testAccCheckDomainEntryExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "domain_name", domainName),
 					resource.TestCheckResourceAttr(resourceName, "name", domainEntryName),
 					resource.TestCheckResourceAttr(resourceName, "target", "127.0.0.1"),
@@ -146,43 +142,21 @@ func TestAccLightsailDomainEntry_apex(t *testing.T) {
 
 func TestAccLightsailDomainEntry_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	var domainEntry lightsail.DomainEntry
 	resourceName := "aws_lightsail_domain_entry.test"
 	domainName := acctest.RandomDomainName()
 	domainEntryName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
-	testDestroy := func(*terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).LightsailConn()
-		_, err := conn.DeleteDomainEntryWithContext(ctx, &lightsail.DeleteDomainEntryInput{
-			DomainName: aws.String(domainName),
-			DomainEntry: &lightsail.DomainEntry{
-				Name:   aws.String(fmt.Sprintf("%s.%s", domainEntryName, domainName)),
-				Type:   aws.String("A"),
-				Target: aws.String("127.0.0.1"),
-			},
-		})
-
-		if err != nil {
-			return fmt.Errorf("error deleting Lightsail Domain Entry in disappear test")
-		}
-
-		// sleep 7 seconds to give it time, so we don't have to poll
-		time.Sleep(7 * time.Second)
-
-		return nil
-	}
-
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckRegion(t, endpoints.UsEast1RegionID) },
-		ErrorCheck:               acctest.ErrorCheck(t, lightsail.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckRegion(t, string(types.RegionNameUsEast1)) },
+		ErrorCheck:               acctest.ErrorCheck(t, strings.ToLower(lightsail.ServiceID)),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDomainEntryDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDomainEntryConfig_basic(domainName, domainEntryName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDomainEntryExists(ctx, resourceName, &domainEntry),
-					testDestroy,
+					testAccCheckDomainEntryExists(ctx, resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tflightsail.ResourceDomainEntry(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -190,7 +164,7 @@ func TestAccLightsailDomainEntry_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckDomainEntryExists(ctx context.Context, n string, domainEntry *lightsail.DomainEntry) resource.TestCheckFunc {
+func testAccCheckDomainEntryExists(ctx context.Context, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 
@@ -202,7 +176,7 @@ func testAccCheckDomainEntryExists(ctx context.Context, n string, domainEntry *l
 			return errors.New("No Lightsail Domain Entry ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).LightsailConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).LightsailClient(ctx)
 
 		resp, err := tflightsail.FindDomainEntryById(ctx, conn, rs.Primary.ID)
 
@@ -213,8 +187,6 @@ func testAccCheckDomainEntryExists(ctx context.Context, n string, domainEntry *l
 		if resp == nil {
 			return fmt.Errorf("DomainEntry %q does not exist", rs.Primary.ID)
 		}
-
-		*domainEntry = *resp
 
 		return nil
 	}
@@ -227,7 +199,7 @@ func testAccCheckDomainEntryDestroy(ctx context.Context) resource.TestCheckFunc 
 				continue
 			}
 
-			conn := acctest.Provider.Meta().(*conns.AWSClient).LightsailConn()
+			conn := acctest.Provider.Meta().(*conns.AWSClient).LightsailClient(ctx)
 
 			_, err := tflightsail.FindDomainEntryById(ctx, conn, rs.Primary.ID)
 

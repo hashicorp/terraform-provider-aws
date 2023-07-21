@@ -164,7 +164,7 @@ func testAccMesh_tags(t *testing.T) {
 
 func testAccCheckMeshDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AppMeshConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AppMeshConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_appmesh_mesh" {
@@ -190,7 +190,7 @@ func testAccCheckMeshDestroy(ctx context.Context) resource.TestCheckFunc {
 
 func testAccCheckMeshExists(ctx context.Context, n string, v *appmesh.MeshData) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AppMeshConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AppMeshConn(ctx)
 
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {

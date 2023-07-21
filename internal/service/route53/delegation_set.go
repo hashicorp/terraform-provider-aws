@@ -50,7 +50,7 @@ func ResourceDelegationSet() *schema.Resource {
 
 func resourceDelegationSetCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	r53 := meta.(*conns.AWSClient).Route53Conn()
+	r53 := meta.(*conns.AWSClient).Route53Conn(ctx)
 
 	callerRef := id.UniqueId()
 	if v, ok := d.GetOk("reference_name"); ok {
@@ -75,7 +75,7 @@ func resourceDelegationSetCreate(ctx context.Context, d *schema.ResourceData, me
 
 func resourceDelegationSetRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	r53 := meta.(*conns.AWSClient).Route53Conn()
+	r53 := meta.(*conns.AWSClient).Route53Conn(ctx)
 
 	input := &route53.GetReusableDelegationSetInput{
 		Id: aws.String(CleanDelegationSetID(d.Id())),
@@ -104,7 +104,7 @@ func resourceDelegationSetRead(ctx context.Context, d *schema.ResourceData, meta
 
 func resourceDelegationSetDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	r53 := meta.(*conns.AWSClient).Route53Conn()
+	r53 := meta.(*conns.AWSClient).Route53Conn(ctx)
 
 	input := &route53.DeleteReusableDelegationSetInput{
 		Id: aws.String(CleanDelegationSetID(d.Id())),

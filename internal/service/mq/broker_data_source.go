@@ -246,7 +246,7 @@ func DataSourceBroker() *schema.Resource {
 }
 
 func dataSourceBrokerRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).MQConn()
+	conn := meta.(*conns.AWSClient).MQConn(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	input := &mq.ListBrokersInput{}

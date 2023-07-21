@@ -304,7 +304,7 @@ func testAccCheckBranchExists(ctx context.Context, resourceName string, v *ampli
 			return err
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AmplifyConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AmplifyConn(ctx)
 
 		branch, err := tfamplify.FindBranchByAppIDAndBranchName(ctx, conn, appID, branchName)
 
@@ -320,7 +320,7 @@ func testAccCheckBranchExists(ctx context.Context, resourceName string, v *ampli
 
 func testAccCheckBranchDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AmplifyConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AmplifyConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_amplify_branch" {

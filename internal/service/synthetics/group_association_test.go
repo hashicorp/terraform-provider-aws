@@ -88,7 +88,7 @@ func testAccCheckGroupAssociationExists(ctx context.Context, name string, v *syn
 			return err
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SyntheticsConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SyntheticsConn(ctx)
 		output, err := tfsynthetics.FindAssociatedGroup(ctx, conn, canaryArn, groupName)
 
 		if err != nil {
@@ -103,7 +103,7 @@ func testAccCheckGroupAssociationExists(ctx context.Context, name string, v *syn
 
 func testAccCheckGroupAssociationDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SyntheticsConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SyntheticsConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_synthetics_group_association" {

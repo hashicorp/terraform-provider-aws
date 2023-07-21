@@ -519,7 +519,7 @@ func TestAccRDSProxy_disappears(t *testing.T) {
 
 // testAccDBProxyPreCheck checks if a call to describe db proxies errors out meaning feature not supported
 func testAccDBProxyPreCheck(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn()
+	conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn(ctx)
 
 	input := &rds.DescribeDBProxiesInput{}
 	_, err := conn.DescribeDBProxiesWithContext(ctx, input)
@@ -535,7 +535,7 @@ func testAccDBProxyPreCheck(ctx context.Context, t *testing.T) {
 
 func testAccCheckProxyDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_db_proxy" {
@@ -570,7 +570,7 @@ func testAccCheckProxyExists(ctx context.Context, n string, v *rds.DBProxy) reso
 			return fmt.Errorf("No RDS DB Proxy ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn(ctx)
 
 		output, err := tfrds.FindDBProxyByName(ctx, conn, rs.Primary.ID)
 		if err != nil {

@@ -55,7 +55,7 @@ func ResourceGateway() *schema.Resource {
 
 func resourceGatewayCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DirectConnectConn()
+	conn := meta.(*conns.AWSClient).DirectConnectConn(ctx)
 
 	name := d.Get("name").(string)
 	input := &directconnect.CreateDirectConnectGatewayInput{
@@ -84,7 +84,7 @@ func resourceGatewayCreate(ctx context.Context, d *schema.ResourceData, meta int
 
 func resourceGatewayRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DirectConnectConn()
+	conn := meta.(*conns.AWSClient).DirectConnectConn(ctx)
 
 	output, err := FindGatewayByID(ctx, conn, d.Id())
 
@@ -107,7 +107,7 @@ func resourceGatewayRead(ctx context.Context, d *schema.ResourceData, meta inter
 
 func resourceGatewayUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DirectConnectConn()
+	conn := meta.(*conns.AWSClient).DirectConnectConn(ctx)
 
 	if d.HasChange("name") {
 		input := &directconnect.UpdateDirectConnectGatewayInput{
@@ -127,7 +127,7 @@ func resourceGatewayUpdate(ctx context.Context, d *schema.ResourceData, meta int
 
 func resourceGatewayDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DirectConnectConn()
+	conn := meta.(*conns.AWSClient).DirectConnectConn(ctx)
 
 	log.Printf("[DEBUG] Deleting Direct Connect Gateway: %s", d.Id())
 	_, err := conn.DeleteDirectConnectGatewayWithContext(ctx, &directconnect.DeleteDirectConnectGatewayInput{

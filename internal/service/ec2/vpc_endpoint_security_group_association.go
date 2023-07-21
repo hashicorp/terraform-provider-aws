@@ -45,7 +45,7 @@ func ResourceVPCEndpointSecurityGroupAssociation() *schema.Resource {
 
 func resourceVPCEndpointSecurityGroupAssociationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	vpcEndpointID := d.Get("vpc_endpoint_id").(string)
 	securityGroupID := d.Get("security_group_id").(string)
@@ -107,7 +107,7 @@ func resourceVPCEndpointSecurityGroupAssociationCreate(ctx context.Context, d *s
 
 func resourceVPCEndpointSecurityGroupAssociationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	vpcEndpointID := d.Get("vpc_endpoint_id").(string)
 	securityGroupID := d.Get("security_group_id").(string)
@@ -131,7 +131,7 @@ func resourceVPCEndpointSecurityGroupAssociationRead(ctx context.Context, d *sch
 
 func resourceVPCEndpointSecurityGroupAssociationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	vpcEndpointID := d.Get("vpc_endpoint_id").(string)
 	securityGroupID := d.Get("security_group_id").(string)

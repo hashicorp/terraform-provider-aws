@@ -196,14 +196,14 @@ func ResourceFeature() *schema.Resource {
 }
 
 func resourceFeatureCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).EvidentlyConn()
+	conn := meta.(*conns.AWSClient).EvidentlyConn(ctx)
 
 	name := d.Get("name").(string)
 	project := d.Get("project").(string)
 	input := &cloudwatchevidently.CreateFeatureInput{
 		Name:       aws.String(name),
 		Project:    aws.String(project),
-		Tags:       GetTagsIn(ctx),
+		Tags:       getTagsIn(ctx),
 		Variations: expandVariations(d.Get("variations").(*schema.Set).List()),
 	}
 
@@ -241,7 +241,7 @@ func resourceFeatureCreate(ctx context.Context, d *schema.ResourceData, meta int
 }
 
 func resourceFeatureRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).EvidentlyConn()
+	conn := meta.(*conns.AWSClient).EvidentlyConn(ctx)
 
 	featureName, projectNameOrARN, err := FeatureParseID(d.Id())
 
@@ -281,13 +281,13 @@ func resourceFeatureRead(ctx context.Context, d *schema.ResourceData, meta inter
 	d.Set("status", feature.Status)
 	d.Set("value_type", feature.ValueType)
 
-	SetTagsOut(ctx, feature.Tags)
+	setTagsOut(ctx, feature.Tags)
 
 	return nil
 }
 
 func resourceFeatureUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).EvidentlyConn()
+	conn := meta.(*conns.AWSClient).EvidentlyConn(ctx)
 
 	if d.HasChanges("default_variation", "description", "entity_overrides", "evaluation_strategy", "variations") {
 		name := d.Get("name").(string)
@@ -327,7 +327,7 @@ func resourceFeatureUpdate(ctx context.Context, d *schema.ResourceData, meta int
 }
 
 func resourceFeatureDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).EvidentlyConn()
+	conn := meta.(*conns.AWSClient).EvidentlyConn(ctx)
 
 	name := d.Get("name").(string)
 	project := d.Get("project").(string)

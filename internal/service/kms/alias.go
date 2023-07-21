@@ -67,7 +67,7 @@ func ResourceAlias() *schema.Resource {
 
 func resourceAliasCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).KMSConn()
+	conn := meta.(*conns.AWSClient).KMSConn(ctx)
 
 	namePrefix := d.Get("name_prefix").(string)
 	if namePrefix == "" {
@@ -98,7 +98,7 @@ func resourceAliasCreate(ctx context.Context, d *schema.ResourceData, meta inter
 
 func resourceAliasRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).KMSConn()
+	conn := meta.(*conns.AWSClient).KMSConn(ctx)
 
 	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(ctx, PropagationTimeout, func() (interface{}, error) {
 		return FindAliasByName(ctx, conn, d.Id())
@@ -133,7 +133,7 @@ func resourceAliasRead(ctx context.Context, d *schema.ResourceData, meta interfa
 
 func resourceAliasUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).KMSConn()
+	conn := meta.(*conns.AWSClient).KMSConn(ctx)
 
 	if d.HasChange("target_key_id") {
 		input := &kms.UpdateAliasInput{
@@ -154,7 +154,7 @@ func resourceAliasUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 
 func resourceAliasDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).KMSConn()
+	conn := meta.(*conns.AWSClient).KMSConn(ctx)
 
 	log.Printf("[DEBUG] Deleting KMS Alias: (%s)", d.Id())
 	_, err := conn.DeleteAliasWithContext(ctx, &kms.DeleteAliasInput{

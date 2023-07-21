@@ -254,12 +254,12 @@ func ResourceCloudTrail() *schema.Resource { // nosemgrep:ci.cloudtrail-in-func-
 
 func resourceCloudTrailCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics { // nosemgrep:ci.cloudtrail-in-func-name
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CloudTrailConn()
+	conn := meta.(*conns.AWSClient).CloudTrailConn(ctx)
 
 	input := cloudtrail.CreateTrailInput{
 		Name:         aws.String(d.Get("name").(string)),
 		S3BucketName: aws.String(d.Get("s3_bucket_name").(string)),
-		TagsList:     GetTagsIn(ctx),
+		TagsList:     getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("cloud_watch_logs_group_arn"); ok {
@@ -348,7 +348,7 @@ func resourceCloudTrailCreate(ctx context.Context, d *schema.ResourceData, meta 
 
 func resourceCloudTrailRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics { // nosemgrep:ci.cloudtrail-in-func-name
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CloudTrailConn()
+	conn := meta.(*conns.AWSClient).CloudTrailConn(ctx)
 
 	input := cloudtrail.DescribeTrailsInput{
 		TrailNameList: []*string{
@@ -447,7 +447,7 @@ func resourceCloudTrailRead(ctx context.Context, d *schema.ResourceData, meta in
 
 func resourceCloudTrailUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics { // nosemgrep:ci.cloudtrail-in-func-name
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CloudTrailConn()
+	conn := meta.(*conns.AWSClient).CloudTrailConn(ctx)
 
 	if d.HasChangesExcept("tags", "tags_all", "insight_selector", "advanced_event_selector", "event_selector", "enable_logging") {
 		input := cloudtrail.UpdateTrailInput{
@@ -542,7 +542,7 @@ func resourceCloudTrailUpdate(ctx context.Context, d *schema.ResourceData, meta 
 
 func resourceCloudTrailDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics { // nosemgrep:ci.cloudtrail-in-func-name
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CloudTrailConn()
+	conn := meta.(*conns.AWSClient).CloudTrailConn(ctx)
 
 	log.Printf("[DEBUG] Deleting CloudTrail: %q", d.Id())
 	_, err := conn.DeleteTrailWithContext(ctx, &cloudtrail.DeleteTrailInput{

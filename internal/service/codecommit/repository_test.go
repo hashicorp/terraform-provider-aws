@@ -198,7 +198,7 @@ func testAccCheckRepositoryExists(ctx context.Context, name string) resource.Tes
 			return fmt.Errorf("No ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CodeCommitConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CodeCommitConn(ctx)
 		out, err := conn.GetRepositoryWithContext(ctx, &codecommit.GetRepositoryInput{
 			RepositoryName: aws.String(rs.Primary.ID),
 		})
@@ -222,7 +222,7 @@ func testAccCheckRepositoryExists(ctx context.Context, name string) resource.Tes
 
 func testAccCheckRepositoryDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CodeCommitConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CodeCommitConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_codecommit_repository" {

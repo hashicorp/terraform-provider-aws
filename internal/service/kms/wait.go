@@ -204,7 +204,7 @@ func WaitKeyValidToPropagated(ctx context.Context, conn *kms.KMS, id string, val
 
 func WaitTagsPropagated(ctx context.Context, conn *kms.KMS, id string, tags tftags.KeyValueTags) error {
 	checkFunc := func() (bool, error) {
-		output, err := ListTags(ctx, conn, id)
+		output, err := listTags(ctx, conn, id)
 
 		if tfawserr.ErrCodeEquals(err, kms.ErrCodeNotFoundException) {
 			return false, nil

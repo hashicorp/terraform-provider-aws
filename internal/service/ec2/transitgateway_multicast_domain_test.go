@@ -159,7 +159,7 @@ func testAccCheckTransitGatewayMulticastDomainExists(ctx context.Context, n stri
 			return fmt.Errorf("No EC2 Transit Gateway Multicast Domain ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
 
 		output, err := tfec2.FindTransitGatewayMulticastDomainByID(ctx, conn, rs.Primary.ID)
 
@@ -175,7 +175,7 @@ func testAccCheckTransitGatewayMulticastDomainExists(ctx context.Context, n stri
 
 func testAccCheckTransitGatewayMulticastDomainDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_ec2_transit_gateway_multicast_domain" {

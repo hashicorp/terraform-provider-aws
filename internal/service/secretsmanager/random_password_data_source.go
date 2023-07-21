@@ -61,7 +61,7 @@ func DataSourceRandomPassword() *schema.Resource {
 
 func dataSourceRandomPasswordRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SecretsManagerConn()
+	conn := meta.(*conns.AWSClient).SecretsManagerConn(ctx)
 
 	var excludeCharacters string
 	if v, ok := d.GetOk("exclude_characters"); ok {

@@ -58,11 +58,11 @@ func ResourceContainer() *schema.Resource {
 
 func resourceContainerCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).MediaStoreConn()
+	conn := meta.(*conns.AWSClient).MediaStoreConn(ctx)
 
 	input := &mediastore.CreateContainerInput{
 		ContainerName: aws.String(d.Get("name").(string)),
-		Tags:          GetTagsIn(ctx),
+		Tags:          getTagsIn(ctx),
 	}
 
 	resp, err := conn.CreateContainerWithContext(ctx, input)
@@ -91,7 +91,7 @@ func resourceContainerCreate(ctx context.Context, d *schema.ResourceData, meta i
 
 func resourceContainerRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).MediaStoreConn()
+	conn := meta.(*conns.AWSClient).MediaStoreConn(ctx)
 
 	input := &mediastore.DescribeContainerInput{
 		ContainerName: aws.String(d.Id()),
@@ -124,7 +124,7 @@ func resourceContainerUpdate(ctx context.Context, d *schema.ResourceData, meta i
 
 func resourceContainerDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).MediaStoreConn()
+	conn := meta.(*conns.AWSClient).MediaStoreConn(ctx)
 
 	input := &mediastore.DeleteContainerInput{
 		ContainerName: aws.String(d.Id()),

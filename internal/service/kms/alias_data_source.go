@@ -38,7 +38,7 @@ func DataSourceAlias() *schema.Resource {
 
 func dataSourceAliasRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).KMSConn()
+	conn := meta.(*conns.AWSClient).KMSConn(ctx)
 
 	target := d.Get("name").(string)
 

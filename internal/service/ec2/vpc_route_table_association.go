@@ -57,7 +57,7 @@ func ResourceRouteTableAssociation() *schema.Resource {
 
 func resourceRouteTableAssociationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	routeTableID := d.Get("route_table_id").(string)
 	input := &ec2.AssociateRouteTableInput{
@@ -96,7 +96,7 @@ func resourceRouteTableAssociationCreate(ctx context.Context, d *schema.Resource
 
 func resourceRouteTableAssociationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(ctx, propagationTimeout, func() (interface{}, error) {
 		return FindRouteTableAssociationByID(ctx, conn, d.Id())
@@ -123,7 +123,7 @@ func resourceRouteTableAssociationRead(ctx context.Context, d *schema.ResourceDa
 
 func resourceRouteTableAssociationUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	input := &ec2.ReplaceRouteTableAssociationInput{
 		AssociationId: aws.String(d.Id()),
@@ -160,7 +160,7 @@ func resourceRouteTableAssociationUpdate(ctx context.Context, d *schema.Resource
 
 func resourceRouteTableAssociationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	if err := routeTableAssociationDelete(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
@@ -179,7 +179,7 @@ func resourceRouteTableAssociationImport(ctx context.Context, d *schema.Resource
 
 	log.Printf("[DEBUG] Importing route table association, target: %s, route table: %s", targetID, routeTableID)
 
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	routeTable, err := FindRouteTableByID(ctx, conn, routeTableID)
 

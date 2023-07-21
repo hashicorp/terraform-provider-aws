@@ -70,12 +70,12 @@ func TestValidationInt(t *testing.T) {
 		{
 			val:         "A",
 			f:           ValidateTypeStringNullableInt,
-			expectedErr: regexp.MustCompile(`[\w]+: cannot parse 'A' as int: .*`),
+			expectedErr: regexp.MustCompile(`^\w+: cannot parse 'A' as int: .*`),
 		},
 		{
 			val:         1,
 			f:           ValidateTypeStringNullableInt,
-			expectedErr: regexp.MustCompile(`expected type of [\w]+ to be string`),
+			expectedErr: regexp.MustCompile(`^expected type of \w+ to be string`),
 		},
 	})
 }
@@ -95,12 +95,12 @@ func TestValidationIntAtLeast(t *testing.T) {
 		{
 			val:         "1",
 			f:           ValidateTypeStringNullableIntAtLeast(2),
-			expectedErr: regexp.MustCompile(`expected [\w]+ to be at least \(2\), got 1`),
+			expectedErr: regexp.MustCompile(`expected \w+ to be at least \(2\), got 1`),
 		},
 		{
 			val:         1,
 			f:           ValidateTypeStringNullableIntAtLeast(2),
-			expectedErr: regexp.MustCompile(`expected type of [\w]+ to be string`),
+			expectedErr: regexp.MustCompile(`expected type of \w+ to be string`),
 		},
 	})
 }

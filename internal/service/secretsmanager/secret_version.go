@@ -71,7 +71,7 @@ func ResourceSecretVersion() *schema.Resource {
 
 func resourceSecretVersionCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SecretsManagerConn()
+	conn := meta.(*conns.AWSClient).SecretsManagerConn(ctx)
 	secretID := d.Get("secret_id").(string)
 
 	input := &secretsmanager.PutSecretValueInput{
@@ -114,7 +114,7 @@ func resourceSecretVersionCreate(ctx context.Context, d *schema.ResourceData, me
 
 func resourceSecretVersionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SecretsManagerConn()
+	conn := meta.(*conns.AWSClient).SecretsManagerConn(ctx)
 
 	secretID, versionID, err := DecodeSecretVersionID(d.Id())
 	if err != nil {
@@ -187,7 +187,7 @@ func resourceSecretVersionRead(ctx context.Context, d *schema.ResourceData, meta
 
 func resourceSecretVersionUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SecretsManagerConn()
+	conn := meta.(*conns.AWSClient).SecretsManagerConn(ctx)
 
 	secretID, versionID, err := DecodeSecretVersionID(d.Id())
 	if err != nil {
@@ -237,7 +237,7 @@ func resourceSecretVersionUpdate(ctx context.Context, d *schema.ResourceData, me
 
 func resourceSecretVersionDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SecretsManagerConn()
+	conn := meta.(*conns.AWSClient).SecretsManagerConn(ctx)
 
 	secretID, versionID, err := DecodeSecretVersionID(d.Id())
 	if err != nil {

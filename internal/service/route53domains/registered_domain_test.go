@@ -34,7 +34,7 @@ func TestAccRoute53Domains_serial(t *testing.T) {
 func testAccPreCheck(ctx context.Context, t *testing.T) {
 	acctest.PreCheckPartitionHasService(t, names.Route53DomainsEndpointID)
 
-	conn := acctest.Provider.Meta().(*conns.AWSClient).Route53DomainsClient()
+	conn := acctest.Provider.Meta().(*conns.AWSClient).Route53DomainsClient(ctx)
 
 	input := &route53domains.ListDomainsInput{}
 

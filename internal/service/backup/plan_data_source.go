@@ -41,7 +41,7 @@ func DataSourcePlan() *schema.Resource {
 
 func dataSourcePlanRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).BackupConn()
+	conn := meta.(*conns.AWSClient).BackupConn(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	id := d.Get("plan_id").(string)
@@ -50,7 +50,7 @@ func dataSourcePlanRead(ctx context.Context, d *schema.ResourceData, meta interf
 		BackupPlanId: aws.String(id),
 	})
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "Error getting Backup Plan: %s", err)
+		return sdkdiag.AppendErrorf(diags, "getting Backup Plan: %s", err)
 	}
 
 	d.SetId(aws.StringValue(resp.BackupPlanId))
@@ -58,7 +58,7 @@ func dataSourcePlanRead(ctx context.Context, d *schema.ResourceData, meta interf
 	d.Set("name", resp.BackupPlan.BackupPlanName)
 	d.Set("version", resp.VersionId)
 
-	tags, err := ListTags(ctx, conn, aws.StringValue(resp.BackupPlanArn))
+	tags, err := listTags(ctx, conn, aws.StringValue(resp.BackupPlanArn))
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "listing tags for Backup Plan (%s): %s", id, err)
 	}

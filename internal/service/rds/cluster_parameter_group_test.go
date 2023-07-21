@@ -511,7 +511,7 @@ func TestAccRDSClusterParameterGroup_dynamicDiffs(t *testing.T) {
 
 func testAccCheckClusterParameterGroupDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_rds_cluster_parameter_group" {
@@ -546,7 +546,7 @@ func testAccCheckClusterParameterNotUserDefined(ctx context.Context, n, paramNam
 			return fmt.Errorf("No DB Parameter Group ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn(ctx)
 
 		opts := rds.DescribeDBClusterParametersInput{
 			DBClusterParameterGroupName: aws.String(rs.Primary.ID),
@@ -593,7 +593,7 @@ func testAccCheckClusterParameterGroupExists(ctx context.Context, n string, v *r
 			return errors.New("No RDS DB Cluster Parameter Group ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn(ctx)
 
 		output, err := tfrds.FindDBClusterParameterGroupByName(ctx, conn, rs.Primary.ID)
 		if err != nil {

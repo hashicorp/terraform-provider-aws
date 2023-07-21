@@ -178,13 +178,13 @@ func ResourceWorkGroup() *schema.Resource {
 
 func resourceWorkGroupCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).AthenaConn()
+	conn := meta.(*conns.AWSClient).AthenaConn(ctx)
 
 	name := d.Get("name").(string)
 	input := &athena.CreateWorkGroupInput{
 		Configuration: expandWorkGroupConfiguration(d.Get("configuration").([]interface{})),
 		Name:          aws.String(name),
-		Tags:          GetTagsIn(ctx),
+		Tags:          getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("description"); ok {
@@ -215,7 +215,7 @@ func resourceWorkGroupCreate(ctx context.Context, d *schema.ResourceData, meta i
 
 func resourceWorkGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).AthenaConn()
+	conn := meta.(*conns.AWSClient).AthenaConn(ctx)
 
 	input := &athena.GetWorkGroupInput{
 		WorkGroup: aws.String(d.Id()),
@@ -262,7 +262,7 @@ func resourceWorkGroupRead(ctx context.Context, d *schema.ResourceData, meta int
 
 func resourceWorkGroupDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).AthenaConn()
+	conn := meta.(*conns.AWSClient).AthenaConn(ctx)
 
 	input := &athena.DeleteWorkGroupInput{
 		WorkGroup: aws.String(d.Id()),
@@ -282,7 +282,7 @@ func resourceWorkGroupDelete(ctx context.Context, d *schema.ResourceData, meta i
 
 func resourceWorkGroupUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).AthenaConn()
+	conn := meta.(*conns.AWSClient).AthenaConn(ctx)
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		input := &athena.UpdateWorkGroupInput{

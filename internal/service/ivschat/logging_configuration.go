@@ -145,11 +145,11 @@ const (
 )
 
 func resourceLoggingConfigurationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).IVSChatClient()
+	conn := meta.(*conns.AWSClient).IVSChatClient(ctx)
 
 	in := &ivschat.CreateLoggingConfigurationInput{
 		DestinationConfiguration: expandDestinationConfiguration(d.Get("destination_configuration").([]interface{})),
-		Tags:                     GetTagsIn(ctx),
+		Tags:                     getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("name"); ok {
@@ -175,7 +175,7 @@ func resourceLoggingConfigurationCreate(ctx context.Context, d *schema.ResourceD
 }
 
 func resourceLoggingConfigurationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).IVSChatClient()
+	conn := meta.(*conns.AWSClient).IVSChatClient(ctx)
 
 	out, err := findLoggingConfigurationByID(ctx, conn, d.Id())
 
@@ -202,7 +202,7 @@ func resourceLoggingConfigurationRead(ctx context.Context, d *schema.ResourceDat
 }
 
 func resourceLoggingConfigurationUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).IVSChatClient()
+	conn := meta.(*conns.AWSClient).IVSChatClient(ctx)
 
 	update := false
 
@@ -238,7 +238,7 @@ func resourceLoggingConfigurationUpdate(ctx context.Context, d *schema.ResourceD
 }
 
 func resourceLoggingConfigurationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).IVSChatClient()
+	conn := meta.(*conns.AWSClient).IVSChatClient(ctx)
 
 	log.Printf("[INFO] Deleting IVSChat LoggingConfiguration %s", d.Id())
 

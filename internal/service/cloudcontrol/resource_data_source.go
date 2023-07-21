@@ -43,7 +43,7 @@ func DataSourceResource() *schema.Resource {
 }
 
 func dataSourceResourceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).CloudControlClient()
+	conn := meta.(*conns.AWSClient).CloudControlClient(ctx)
 
 	identifier := d.Get("identifier").(string)
 	typeName := d.Get("type_name").(string)

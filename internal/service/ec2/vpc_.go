@@ -172,7 +172,7 @@ func ResourceVPC() *schema.Resource {
 
 func resourceVPCCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	input := &ec2.CreateVpcInput{
 		AmazonProvidedIpv6CidrBlock: aws.Bool(d.Get("assign_generated_ipv6_cidr_block").(bool)),
@@ -253,7 +253,7 @@ func resourceVPCCreate(ctx context.Context, d *schema.ResourceData, meta interfa
 
 func resourceVPCRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(ctx, propagationTimeout, func() (interface{}, error) {
 		return FindVPCByID(ctx, conn, d.Id())
@@ -285,19 +285,25 @@ func resourceVPCRead(ctx context.Context, d *schema.ResourceData, meta interface
 	d.Set("instance_tenancy", vpc.InstanceTenancy)
 	d.Set("owner_id", ownerID)
 
-	if v, err := FindVPCAttribute(ctx, conn, d.Id(), ec2.VpcAttributeNameEnableDnsHostnames); err != nil {
+	if v, err := tfresource.RetryWhenNewResourceNotFound(ctx, propagationTimeout, func() (interface{}, error) {
+		return FindVPCAttribute(ctx, conn, d.Id(), ec2.VpcAttributeNameEnableDnsHostnames)
+	}, d.IsNewResource()); err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading EC2 VPC (%s) Attribute (%s): %s", d.Id(), ec2.VpcAttributeNameEnableDnsHostnames, err)
 	} else {
 		d.Set("enable_dns_hostnames", v)
 	}
 
-	if v, err := FindVPCAttribute(ctx, conn, d.Id(), ec2.VpcAttributeNameEnableDnsSupport); err != nil {
+	if v, err := tfresource.RetryWhenNewResourceNotFound(ctx, propagationTimeout, func() (interface{}, error) {
+		return FindVPCAttribute(ctx, conn, d.Id(), ec2.VpcAttributeNameEnableDnsSupport)
+	}, d.IsNewResource()); err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading EC2 VPC (%s) Attribute (%s): %s", d.Id(), ec2.VpcAttributeNameEnableDnsSupport, err)
 	} else {
 		d.Set("enable_dns_support", v)
 	}
 
-	if v, err := FindVPCAttribute(ctx, conn, d.Id(), ec2.VpcAttributeNameEnableNetworkAddressUsageMetrics); err != nil {
+	if v, err := tfresource.RetryWhenNewResourceNotFound(ctx, propagationTimeout, func() (interface{}, error) {
+		return FindVPCAttribute(ctx, conn, d.Id(), ec2.VpcAttributeNameEnableNetworkAddressUsageMetrics)
+	}, d.IsNewResource()); err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading EC2 VPC (%s) Attribute (%s): %s", d.Id(), ec2.VpcAttributeNameEnableNetworkAddressUsageMetrics, err)
 	} else {
 		d.Set("enable_network_address_usage_metrics", v)
@@ -364,14 +370,14 @@ func resourceVPCRead(ctx context.Context, d *schema.ResourceData, meta interface
 		}
 	}
 
-	SetTagsOut(ctx, vpc.Tags)
+	setTagsOut(ctx, vpc.Tags)
 
 	return diags
 }
 
 func resourceVPCUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	if d.HasChange("enable_dns_hostnames") {
 		if err := modifyVPCDNSHostnames(ctx, conn, d.Id(), d.Get("enable_dns_hostnames").(bool)); err != nil {
@@ -434,7 +440,7 @@ func resourceVPCUpdate(ctx context.Context, d *schema.ResourceData, meta interfa
 
 func resourceVPCDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	input := &ec2.DeleteVpcInput{
 		VpcId: aws.String(d.Id()),
@@ -495,10 +501,10 @@ func resourceVPCImport(ctx context.Context, d *schema.ResourceData, meta interfa
 func resourceVPCCustomizeDiff(_ context.Context, diff *schema.ResourceDiff, v interface{}) error {
 	if diff.HasChange("assign_generated_ipv6_cidr_block") {
 		if err := diff.SetNewComputed("ipv6_association_id"); err != nil {
-			return fmt.Errorf("error setting ipv6_association_id to computed: %s", err)
+			return fmt.Errorf("setting ipv6_association_id to computed: %s", err)
 		}
 		if err := diff.SetNewComputed("ipv6_cidr_block"); err != nil {
-			return fmt.Errorf("error setting ipv6_cidr_block to computed: %s", err)
+			return fmt.Errorf("setting ipv6_cidr_block to computed: %s", err)
 		}
 	}
 

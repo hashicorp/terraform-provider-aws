@@ -3428,19 +3428,19 @@ func expandHLSCDNSettings(tfList []interface{}) *types.HlsCdnSettings {
 	m := tfList[0].(map[string]interface{})
 
 	var out types.HlsCdnSettings
-	if v, ok := m["hls_akamai_setting"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := m["hls_akamai_settings"].([]interface{}); ok && len(v) > 0 {
 		out.HlsAkamaiSettings = expandHSLAkamaiSettings(v)
 	}
-	if v, ok := m["hls_basic_put_setting"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := m["hls_basic_put_settings"].([]interface{}); ok && len(v) > 0 {
 		out.HlsBasicPutSettings = expandHSLBasicPutSettings(v)
 	}
-	if v, ok := m["hls_media_store_setting"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := m["hls_media_store_settings"].([]interface{}); ok && len(v) > 0 {
 		out.HlsMediaStoreSettings = expandHLSMediaStoreSettings(v)
 	}
-	if v, ok := m["hls_s3_setting"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := m["hls_s3_settings"].([]interface{}); ok && len(v) > 0 {
 		out.HlsS3Settings = expandHSLS3Settings(v)
 	}
-	if v, ok := m["hls_webdav_setting"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := m["hls_webdav_settings"].([]interface{}); ok && len(v) > 0 {
 		out.HlsWebdavSettings = expandHLSWebdavSettings(v)
 	}
 	return &out

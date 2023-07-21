@@ -124,9 +124,9 @@ resource "aws_iam_role_policy" "firehose_to_s3" {
 
 resource "aws_kinesis_firehose_delivery_stream" "s3_stream" {
   name        = "metric-stream-test-stream"
-  destination = "s3"
+  destination = "extended_s3"
 
-  s3_configuration {
+  extended_s3_configuration {
     role_arn   = aws_iam_role.firehose_to_s3.arn
     bucket_arn = aws_s3_bucket.bucket.arn
   }

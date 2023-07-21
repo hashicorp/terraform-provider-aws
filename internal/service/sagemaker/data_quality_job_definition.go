@@ -454,7 +454,7 @@ func ResourceDataQualityJobDefinition() *schema.Resource {
 
 func resourceDataQualityJobDefinitionCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SageMakerConn()
+	conn := meta.(*conns.AWSClient).SageMakerConn(ctx)
 
 	var name string
 	if v, ok := d.GetOk("name"); ok {
@@ -475,7 +475,7 @@ func resourceDataQualityJobDefinitionCreate(ctx context.Context, d *schema.Resou
 		JobDefinitionName:           aws.String(name),
 		JobResources:                expandMonitoringResources(d.Get("job_resources").([]interface{})),
 		RoleArn:                     aws.String(roleArn),
-		Tags:                        GetTagsIn(ctx),
+		Tags:                        getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("data_quality_baseline_config"); ok && len(v.([]interface{})) > 0 {
@@ -503,7 +503,7 @@ func resourceDataQualityJobDefinitionCreate(ctx context.Context, d *schema.Resou
 
 func resourceDataQualityJobDefinitionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SageMakerConn()
+	conn := meta.(*conns.AWSClient).SageMakerConn(ctx)
 
 	jobDefinition, err := FindDataQualityJobDefinitionByName(ctx, conn, d.Id())
 
@@ -562,7 +562,7 @@ func resourceDataQualityJobDefinitionUpdate(ctx context.Context, d *schema.Resou
 
 func resourceDataQualityJobDefinitionDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SageMakerConn()
+	conn := meta.(*conns.AWSClient).SageMakerConn(ctx)
 
 	log.Printf("[INFO] Deleting SageMaker Data Quality Job Definition: %s", d.Id())
 	_, err := conn.DeleteDataQualityJobDefinitionWithContext(ctx, &sagemaker.DeleteDataQualityJobDefinitionInput{

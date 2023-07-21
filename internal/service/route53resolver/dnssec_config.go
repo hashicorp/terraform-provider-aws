@@ -51,7 +51,7 @@ func ResourceDNSSECConfig() *schema.Resource {
 }
 
 func resourceDNSSECConfigCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).Route53ResolverConn()
+	conn := meta.(*conns.AWSClient).Route53ResolverConn(ctx)
 
 	input := &route53resolver.UpdateResolverDnssecConfigInput{
 		ResourceId: aws.String(d.Get("resource_id").(string)),
@@ -74,7 +74,7 @@ func resourceDNSSECConfigCreate(ctx context.Context, d *schema.ResourceData, met
 }
 
 func resourceDNSSECConfigRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).Route53ResolverConn()
+	conn := meta.(*conns.AWSClient).Route53ResolverConn(ctx)
 
 	dnssecConfig, err := FindResolverDNSSECConfigByID(ctx, conn, d.Id())
 
@@ -106,7 +106,7 @@ func resourceDNSSECConfigRead(ctx context.Context, d *schema.ResourceData, meta 
 }
 
 func resourceDNSSECConfigDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).Route53ResolverConn()
+	conn := meta.(*conns.AWSClient).Route53ResolverConn(ctx)
 
 	log.Printf("[DEBUG] Deleting Route53 Resolver DNSSEC Config: %s", d.Id())
 	_, err := conn.UpdateResolverDnssecConfigWithContext(ctx, &route53resolver.UpdateResolverDnssecConfigInput{

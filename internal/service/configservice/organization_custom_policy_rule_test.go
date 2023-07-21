@@ -143,7 +143,7 @@ func TestAccConfigServiceOrganizationCustomPolicyRule_PolicyText(t *testing.T) {
 
 func testAccCheckOrganizationCustomPolicyRuleDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ConfigServiceConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ConfigServiceConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_config_organization_custom_policy_rule" {
@@ -178,7 +178,7 @@ func testAccCheckOrganizationCustomPolicyRuleExists(ctx context.Context, name st
 			return create.Error(names.ConfigService, create.ErrActionCheckingExistence, tfconfigservice.ResNameOrganizationCustomPolicyRule, name, errors.New("not set"))
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ConfigServiceConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ConfigServiceConn(ctx)
 
 		resp, err := tfconfigservice.FindOrganizationConfigRule(ctx, conn, rs.Primary.ID)
 

@@ -194,7 +194,7 @@ data "aws_identitystore_group" "test" {
 }
 
 func testAccPreCheckSSOAdminInstances(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).SSOAdminConn()
+	conn := acctest.Provider.Meta().(*conns.AWSClient).SSOAdminConn(ctx)
 
 	var instances []*ssoadmin.InstanceMetadata
 	err := conn.ListInstancesPagesWithContext(ctx, &ssoadmin.ListInstancesInput{}, func(page *ssoadmin.ListInstancesOutput, lastPage bool) bool {

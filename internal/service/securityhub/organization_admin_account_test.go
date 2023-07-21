@@ -98,7 +98,7 @@ func testAccOrganizationAdminAccount_MultiRegion(t *testing.T) {
 
 func testAccCheckOrganizationAdminAccountDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SecurityHubConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SecurityHubConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_securityhub_organization_admin_account" {
@@ -135,7 +135,7 @@ func testAccCheckOrganizationAdminAccountExists(ctx context.Context, resourceNam
 			return fmt.Errorf("Not found: %s", resourceName)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SecurityHubConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SecurityHubConn(ctx)
 
 		adminAccount, err := tfsecurityhub.FindAdminAccount(ctx, conn, rs.Primary.ID)
 

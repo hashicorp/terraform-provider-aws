@@ -106,7 +106,7 @@ func DataSourceRoute() *schema.Resource {
 
 func dataSourceRouteRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	routeTableID := d.Get("route_table_id").(string)
 

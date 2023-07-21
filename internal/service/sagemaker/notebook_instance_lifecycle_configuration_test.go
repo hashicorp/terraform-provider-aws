@@ -97,7 +97,7 @@ func testAccCheckNotebookInstanceLifecycleConfigurationExists(ctx context.Contex
 			return fmt.Errorf("no ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SageMakerConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SageMakerConn(ctx)
 		output, err := conn.DescribeNotebookInstanceLifecycleConfigWithContext(ctx, &sagemaker.DescribeNotebookInstanceLifecycleConfigInput{
 			NotebookInstanceLifecycleConfigName: aws.String(rs.Primary.ID),
 		})
@@ -123,7 +123,7 @@ func testAccCheckNotebookInstanceLifecycleConfigurationDestroy(ctx context.Conte
 				continue
 			}
 
-			conn := acctest.Provider.Meta().(*conns.AWSClient).SageMakerConn()
+			conn := acctest.Provider.Meta().(*conns.AWSClient).SageMakerConn(ctx)
 			lifecycleConfig, err := conn.DescribeNotebookInstanceLifecycleConfigWithContext(ctx, &sagemaker.DescribeNotebookInstanceLifecycleConfigInput{
 				NotebookInstanceLifecycleConfigName: aws.String(rs.Primary.ID),
 			})

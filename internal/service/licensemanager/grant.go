@@ -95,7 +95,7 @@ func ResourceGrant() *schema.Resource {
 }
 
 func resourceGrantCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).LicenseManagerConn()
+	conn := meta.(*conns.AWSClient).LicenseManagerConn(ctx)
 
 	in := &licensemanager.CreateGrantInput{
 		AllowedOperations: aws.StringSlice(expandAllowedOperations(d.Get("allowed_operations").(*schema.Set).List())),
@@ -118,7 +118,7 @@ func resourceGrantCreate(ctx context.Context, d *schema.ResourceData, meta inter
 }
 
 func resourceGrantRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).LicenseManagerConn()
+	conn := meta.(*conns.AWSClient).LicenseManagerConn(ctx)
 
 	out, err := FindGrantByARN(ctx, conn, d.Id())
 
@@ -146,7 +146,7 @@ func resourceGrantRead(ctx context.Context, d *schema.ResourceData, meta interfa
 }
 
 func resourceGrantUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).LicenseManagerConn()
+	conn := meta.(*conns.AWSClient).LicenseManagerConn(ctx)
 
 	in := &licensemanager.CreateGrantVersionInput{
 		GrantArn:    aws.String(d.Id()),
@@ -171,7 +171,7 @@ func resourceGrantUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 }
 
 func resourceGrantDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).LicenseManagerConn()
+	conn := meta.(*conns.AWSClient).LicenseManagerConn(ctx)
 
 	out, err := FindGrantByARN(ctx, conn, d.Id())
 

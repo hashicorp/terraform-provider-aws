@@ -147,7 +147,7 @@ func testAccCheckUploadBufferExists(ctx context.Context, resourceName string) re
 			return fmt.Errorf("Not found: %s", resourceName)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).StorageGatewayConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).StorageGatewayConn(ctx)
 
 		gatewayARN, diskID, err := tfstoragegateway.DecodeUploadBufferID(rs.Primary.ID)
 		if err != nil {

@@ -114,7 +114,7 @@ func ResourcePlatformApplication() *schema.Resource {
 }
 
 func resourcePlatformApplicationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).SNSConn()
+	conn := meta.(*conns.AWSClient).SNSConn(ctx)
 
 	attributes, err := platformApplicationAttributeMap.ResourceDataToAPIAttributesCreate(d)
 
@@ -143,7 +143,7 @@ func resourcePlatformApplicationCreate(ctx context.Context, d *schema.ResourceDa
 }
 
 func resourcePlatformApplicationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).SNSConn()
+	conn := meta.(*conns.AWSClient).SNSConn(ctx)
 
 	// There is no SNS Describe/GetPlatformApplication to fetch attributes like name and platform
 	// We will use the ID, which should be a platform application ARN, to:
@@ -181,7 +181,7 @@ func resourcePlatformApplicationRead(ctx context.Context, d *schema.ResourceData
 }
 
 func resourcePlatformApplicationUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).SNSConn()
+	conn := meta.(*conns.AWSClient).SNSConn(ctx)
 
 	attributes, err := platformApplicationAttributeMap.ResourceDataToAPIAttributesUpdate(d)
 
@@ -234,7 +234,7 @@ func resourcePlatformApplicationUpdate(ctx context.Context, d *schema.ResourceDa
 }
 
 func resourcePlatformApplicationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).SNSConn()
+	conn := meta.(*conns.AWSClient).SNSConn(ctx)
 
 	log.Printf("[DEBUG] Deleting SNS Platform Application: %s", d.Id())
 	_, err := conn.DeletePlatformApplicationWithContext(ctx, &sns.DeletePlatformApplicationInput{

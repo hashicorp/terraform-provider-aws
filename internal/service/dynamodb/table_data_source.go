@@ -234,7 +234,7 @@ func DataSourceTable() *schema.Resource {
 
 func dataSourceTableRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DynamoDBConn()
+	conn := meta.(*conns.AWSClient).DynamoDBConn(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	name := d.Get(names.AttrName).(string)
@@ -341,7 +341,7 @@ func dataSourceTableRead(ctx context.Context, d *schema.ResourceData, meta inter
 		return sdkdiag.AppendErrorf(diags, "setting ttl: %s", err)
 	}
 
-	tags, err := ListTags(ctx, conn, d.Get(names.AttrARN).(string))
+	tags, err := listTags(ctx, conn, d.Get(names.AttrARN).(string))
 	// When a Table is `ARCHIVED`, ListTags returns `ResourceNotFoundException`
 	if err != nil && !(tfawserr.ErrMessageContains(err, "UnknownOperationException", "Tagging is not currently supported in DynamoDB Local.") || tfresource.NotFound(err)) {
 		return sdkdiag.AppendErrorf(diags, "listing tags for DynamoDB Table (%s): %s", d.Get(names.AttrARN).(string), err)

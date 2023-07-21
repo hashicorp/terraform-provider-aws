@@ -20,7 +20,7 @@ resource "aws_cur_report_definition" "example_cur_report_definition" {
   time_unit                  = "HOURLY"
   format                     = "textORcsv"
   compression                = "GZIP"
-  additional_schema_elements = ["RESOURCES"]
+  additional_schema_elements = ["RESOURCES", "SPLIT_COST_ALLOCATION_DATA"]
   s3_bucket                  = "example-bucket-name"
   s3_region                  = "us-east-1"
   additional_artifacts       = ["REDSHIFT", "QUICKSIGHT"]
@@ -35,7 +35,7 @@ The following arguments are supported:
 * `time_unit` - (Required) The frequency on which report data are measured and displayed.  Valid values are: `DAILY`, `HOURLY`, `MONTHLY`.
 * `format` - (Required) Format for report. Valid values are: `textORcsv`, `Parquet`. If `Parquet` is used, then Compression must also be `Parquet`.
 * `compression` - (Required) Compression format for report. Valid values are: `GZIP`, `ZIP`, `Parquet`. If `Parquet` is used, then format must also be `Parquet`.
-* `additional_schema_elements` - (Required) A list of schema elements. Valid values are: `RESOURCES`.
+* `additional_schema_elements` - (Required) A list of schema elements. Valid values are: `RESOURCES`, `SPLIT_COST_ALLOCATION_DATA`.
 * `s3_bucket` - (Required) Name of the existing S3 bucket to hold generated reports.
 * `s3_prefix` - (Optional) Report path prefix. Limited to 256 characters.
 * `s3_region` - (Required) Region of the existing S3 bucket to hold generated reports.

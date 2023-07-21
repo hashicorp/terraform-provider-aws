@@ -209,7 +209,7 @@ func testAccCheckSecurityProfileExists(ctx context.Context, resourceName string,
 			return err
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ConnectConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ConnectConn(ctx)
 
 		params := &connect.DescribeSecurityProfileInput{
 			InstanceId:        aws.String(instanceID),
@@ -234,7 +234,7 @@ func testAccCheckSecurityProfileDestroy(ctx context.Context) resource.TestCheckF
 				continue
 			}
 
-			conn := acctest.Provider.Meta().(*conns.AWSClient).ConnectConn()
+			conn := acctest.Provider.Meta().(*conns.AWSClient).ConnectConn(ctx)
 
 			instanceID, securityProfileID, err := tfconnect.SecurityProfileParseID(rs.Primary.ID)
 

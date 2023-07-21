@@ -85,7 +85,7 @@ func ResourceVolumeAttachment() *schema.Resource {
 
 func resourceVolumeAttachmentCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 	deviceName := d.Get("device_name").(string)
 	instanceID := d.Get("instance_id").(string)
 	volumeID := d.Get("volume_id").(string)
@@ -127,7 +127,7 @@ func resourceVolumeAttachmentCreate(ctx context.Context, d *schema.ResourceData,
 
 func resourceVolumeAttachmentRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 	deviceName := d.Get("device_name").(string)
 	instanceID := d.Get("instance_id").(string)
 	volumeID := d.Get("volume_id").(string)
@@ -149,7 +149,7 @@ func resourceVolumeAttachmentRead(ctx context.Context, d *schema.ResourceData, m
 
 func resourceVolumeAttachmentDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	if _, ok := d.GetOk("skip_destroy"); ok {
 		return diags

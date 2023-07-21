@@ -574,7 +574,7 @@ func TestAccLexModelsIntent_updateWithExternalChange(t *testing.T) {
 
 	testAccCheckAWSLexIntentUpdateDescription := func(provider *schema.Provider, _ *schema.Resource, resourceName string) resource.TestCheckFunc {
 		return func(s *terraform.State) error {
-			conn := provider.Meta().(*conns.AWSClient).LexModelsConn()
+			conn := provider.Meta().(*conns.AWSClient).LexModelsConn(ctx)
 
 			resourceState, ok := s.RootModule().Resources[resourceName]
 			if !ok {
@@ -703,7 +703,7 @@ func testAccCheckIntentExistsWithVersion(ctx context.Context, rName, intentVersi
 		}
 
 		var err error
-		conn := acctest.Provider.Meta().(*conns.AWSClient).LexModelsConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).LexModelsConn(ctx)
 
 		output, err = conn.GetIntentWithContext(ctx, &lexmodelbuildingservice.GetIntentInput{
 			Name:    aws.String(rs.Primary.ID),
@@ -726,7 +726,7 @@ func testAccCheckIntentExists(ctx context.Context, rName string, output *lexmode
 
 func testAccCheckIntentNotExists(ctx context.Context, intentName, intentVersion string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).LexModelsConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).LexModelsConn(ctx)
 
 		_, err := conn.GetIntentWithContext(ctx, &lexmodelbuildingservice.GetIntentInput{
 			Name:    aws.String(intentName),
@@ -745,7 +745,7 @@ func testAccCheckIntentNotExists(ctx context.Context, intentName, intentVersion 
 
 func testAccCheckIntentDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).LexModelsConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).LexModelsConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_lex_intent" {

@@ -134,7 +134,7 @@ const (
 )
 
 func resourceAccountSubscriptionCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).QuickSightConn()
+	conn := meta.(*conns.AWSClient).QuickSightConn(ctx)
 
 	awsAccountId := meta.(*conns.AWSClient).AccountID
 	if v, ok := d.GetOk("aws_account_id"); ok {
@@ -208,7 +208,7 @@ func resourceAccountSubscriptionCreate(ctx context.Context, d *schema.ResourceDa
 }
 
 func resourceAccountSubscriptionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).QuickSightConn()
+	conn := meta.(*conns.AWSClient).QuickSightConn(ctx)
 
 	out, err := FindAccountSubscriptionByID(ctx, conn, d.Id())
 
@@ -237,7 +237,7 @@ func resourceAccountSubscriptionRead(ctx context.Context, d *schema.ResourceData
 }
 
 func resourceAccountSubscriptionDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).QuickSightConn()
+	conn := meta.(*conns.AWSClient).QuickSightConn(ctx)
 
 	log.Printf("[INFO] Deleting QuickSight AccountSubscription %s", d.Id())
 

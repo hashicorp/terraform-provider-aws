@@ -46,7 +46,7 @@ func DataSourceInstances() *schema.Resource {
 
 func dataSourceInstancesRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SSMConn()
+	conn := meta.(*conns.AWSClient).SSMConn(ctx)
 
 	input := &ssm.DescribeInstanceInformationInput{}
 

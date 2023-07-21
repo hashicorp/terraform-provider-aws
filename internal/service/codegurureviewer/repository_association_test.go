@@ -202,7 +202,7 @@ func TestAccCodeGuruReviewerRepositoryAssociation_disappears(t *testing.T) {
 
 func testAccCheckRepositoryAssociationDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CodeGuruReviewerConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CodeGuruReviewerConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_codegurureviewer_repository_association" {
@@ -238,7 +238,7 @@ func testAccCheckRepositoryAssociationExists(ctx context.Context, name string, r
 			return create.Error(names.CodeGuruReviewer, create.ErrActionCheckingExistence, tfcodegurureviewer.ResNameRepositoryAssociation, name, errors.New("not set"))
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CodeGuruReviewerConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CodeGuruReviewerConn(ctx)
 		resp, err := conn.DescribeRepositoryAssociationWithContext(ctx, &codegurureviewer.DescribeRepositoryAssociationInput{
 			AssociationArn: aws.String(rs.Primary.ID),
 		})
@@ -254,7 +254,7 @@ func testAccCheckRepositoryAssociationExists(ctx context.Context, name string, r
 }
 
 func testAccPreCheck(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).CodeGuruReviewerConn()
+	conn := acctest.Provider.Meta().(*conns.AWSClient).CodeGuruReviewerConn(ctx)
 
 	input := &codegurureviewer.ListRepositoryAssociationsInput{}
 	_, err := conn.ListRepositoryAssociationsWithContext(ctx, input)

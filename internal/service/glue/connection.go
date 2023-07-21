@@ -110,7 +110,7 @@ func ResourceConnection() *schema.Resource {
 
 func resourceConnectionCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).GlueConn()
+	conn := meta.(*conns.AWSClient).GlueConn(ctx)
 
 	var catalogID string
 	if v, ok := d.GetOkExists("catalog_id"); ok {
@@ -123,7 +123,7 @@ func resourceConnectionCreate(ctx context.Context, d *schema.ResourceData, meta 
 	input := &glue.CreateConnectionInput{
 		CatalogId:       aws.String(catalogID),
 		ConnectionInput: expandConnectionInput(d),
-		Tags:            GetTagsIn(ctx),
+		Tags:            getTagsIn(ctx),
 	}
 
 	log.Printf("[DEBUG] Creating Glue Connection: %s", input)
@@ -139,7 +139,7 @@ func resourceConnectionCreate(ctx context.Context, d *schema.ResourceData, meta 
 
 func resourceConnectionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).GlueConn()
+	conn := meta.(*conns.AWSClient).GlueConn(ctx)
 
 	catalogID, connectionName, err := DecodeConnectionID(d.Id())
 	if err != nil {
@@ -185,7 +185,7 @@ func resourceConnectionRead(ctx context.Context, d *schema.ResourceData, meta in
 
 func resourceConnectionUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).GlueConn()
+	conn := meta.(*conns.AWSClient).GlueConn(ctx)
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		catalogID, connectionName, err := DecodeConnectionID(d.Id())
@@ -211,7 +211,7 @@ func resourceConnectionUpdate(ctx context.Context, d *schema.ResourceData, meta 
 
 func resourceConnectionDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).GlueConn()
+	conn := meta.(*conns.AWSClient).GlueConn(ctx)
 
 	catalogID, connectionName, err := DecodeConnectionID(d.Id())
 	if err != nil {

@@ -29,7 +29,7 @@ func TestAccLambdaInvocation_basic(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, lambda.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckInvocationDestroy,
+		CheckDestroy:             acctest.CheckDestroyNoop,
 		Steps: []resource.TestStep{
 			{
 				Config: acctest.ConfigCompose(
@@ -54,7 +54,7 @@ func TestAccLambdaInvocation_qualifier(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, lambda.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckInvocationDestroy,
+		CheckDestroy:             acctest.CheckDestroyNoop,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInvocationConfig_qualifier(rName, testData),
@@ -76,7 +76,7 @@ func TestAccLambdaInvocation_complex(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, lambda.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckInvocationDestroy,
+		CheckDestroy:             acctest.CheckDestroyNoop,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInvocationConfig_complex(rName, testData),
@@ -99,7 +99,7 @@ func TestAccLambdaInvocation_triggers(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, lambda.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckInvocationDestroy,
+		CheckDestroy:             acctest.CheckDestroyNoop,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInvocationConfig_triggers(rName, testData),
@@ -138,7 +138,7 @@ func TestAccLambdaInvocation_lifecycle_scopeCRUDCreate(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, lambda.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckInvocationDestroy,
+		CheckDestroy:             acctest.CheckDestroyNoop,
 		Steps: []resource.TestStep{
 			{
 				Config: acctest.ConfigCompose(
@@ -170,7 +170,7 @@ func TestAccLambdaInvocation_lifecycle_scopeCRUDUpdateInput(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, lambda.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckInvocationDestroy,
+		CheckDestroy:             acctest.CheckDestroyNoop,
 		Steps: []resource.TestStep{
 			{
 				Config: acctest.ConfigCompose(
@@ -209,7 +209,7 @@ func TestAccLambdaInvocation_lifecycle_scopeCreateOnlyUpdateInput(t *testing.T) 
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, lambda.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckInvocationDestroy,
+		CheckDestroy:             acctest.CheckDestroyNoop,
 		Steps: []resource.TestStep{
 			{
 				Config: acctest.ConfigCompose(
@@ -256,7 +256,7 @@ func TestAccLambdaInvocation_lifecycle_scopeCRUDDestroy(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, lambda.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckInvocationDestroy,
+		CheckDestroy:             acctest.CheckDestroyNoop,
 		Steps: []resource.TestStep{
 			{
 				Config: acctest.ConfigCompose(
@@ -298,7 +298,7 @@ func TestAccLambdaInvocation_lifecycle_scopeCreateOnlyToCRUD(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, lambda.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckInvocationDestroy,
+		CheckDestroy:             acctest.CheckDestroyNoop,
 		Steps: []resource.TestStep{
 			{
 				Config: acctest.ConfigCompose(
@@ -341,7 +341,7 @@ func TestAccLambdaInvocation_terraformKey(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, lambda.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckInvocationDestroy,
+		CheckDestroy:             acctest.CheckDestroyNoop,
 		Steps: []resource.TestStep{
 			{
 				Config: acctest.ConfigCompose(
@@ -356,11 +356,6 @@ func TestAccLambdaInvocation_terraformKey(t *testing.T) {
 	})
 }
 
-func testAccCheckInvocationDestroy(s *terraform.State) error {
-	// Nothing to check on destroy
-	return nil
-}
-
 // testAccCheckCRUDDestroyResult verifies that when CRUD lifecycle is active that a destroyed resource
 // triggers the lambda.
 //
@@ -373,7 +368,7 @@ func testAccCheckCRUDDestroyResult(ctx context.Context, name, ssmParameterName, 
 		if ok {
 			return fmt.Errorf("Still found resource in state: %s", name)
 		}
-		conn := acctest.ProviderMeta(t).SSMConn()
+		conn := acctest.ProviderMeta(t).SSMConn(ctx)
 		res, err := conn.GetParameterWithContext(ctx, &ssm.GetParameterInput{
 			Name:           aws.String(ssmParameterName),
 			WithDecryption: aws.Bool(true),

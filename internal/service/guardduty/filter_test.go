@@ -200,7 +200,7 @@ func testAccFilter_disappears(t *testing.T) {
 
 func testAccCheckFilterDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).GuardDutyConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).GuardDutyConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_guardduty_filter" {
@@ -248,7 +248,7 @@ func testAccCheckFilterExists(ctx context.Context, name string, filter *guarddut
 			return err
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).GuardDutyConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).GuardDutyConn(ctx)
 		input := guardduty.GetFilterInput{
 			DetectorId: aws.String(detectorID),
 			FilterName: aws.String(name),
@@ -418,7 +418,7 @@ resource "aws_guardduty_detector" "test" {
 
 func testAccCheckACMPCACertificateAuthorityDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ACMPCAConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ACMPCAConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_acmpca_certificate_authority" {

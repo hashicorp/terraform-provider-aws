@@ -1002,7 +1002,7 @@ func testAccCheckNodeGroupExists(ctx context.Context, resourceName string, nodeG
 			return err
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EKSConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EKSConn(ctx)
 
 		output, err := tfeks.FindNodegroupByClusterNameAndNodegroupName(ctx, conn, clusterName, nodeGroupName)
 
@@ -1018,7 +1018,7 @@ func testAccCheckNodeGroupExists(ctx context.Context, resourceName string, nodeG
 
 func testAccCheckNodeGroupDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EKSConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EKSConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_eks_node_group" {

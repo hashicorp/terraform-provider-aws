@@ -218,7 +218,7 @@ func ResourceDataSet() *schema.Resource {
 			},
 			"physical_table_map": {
 				Type:     schema.TypeSet,
-				Required: true,
+				Optional: true,
 				MaxItems: 32,
 				Elem:     physicalTableMapSchema(),
 			},
@@ -832,7 +832,7 @@ func physicalTableMapSchema() *schema.Resource {
 }
 
 func resourceDataSetCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).QuickSightConn()
+	conn := meta.(*conns.AWSClient).QuickSightConn(ctx)
 
 	awsAccountId := meta.(*conns.AWSClient).AccountID
 	if v, ok := d.GetOk("aws_account_id"); ok {
@@ -848,7 +848,7 @@ func resourceDataSetCreate(ctx context.Context, d *schema.ResourceData, meta int
 		ImportMode:       aws.String(d.Get("import_mode").(string)),
 		PhysicalTableMap: expandDataSetPhysicalTableMap(d.Get("physical_table_map").(*schema.Set)),
 		Name:             aws.String(d.Get("name").(string)),
-		Tags:             GetTagsIn(ctx),
+		Tags:             getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("column_groups"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
@@ -885,7 +885,7 @@ func resourceDataSetCreate(ctx context.Context, d *schema.ResourceData, meta int
 
 	_, err := conn.CreateDataSetWithContext(ctx, input)
 	if err != nil {
-		return diag.Errorf("error creating QuickSight Data Set: %s", err)
+		return diag.Errorf("creating QuickSight Data Set: %s", err)
 	}
 
 	if v, ok := d.GetOk("refresh_properties"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
@@ -897,7 +897,7 @@ func resourceDataSetCreate(ctx context.Context, d *schema.ResourceData, meta int
 
 		_, err := conn.PutDataSetRefreshPropertiesWithContext(ctx, input)
 		if err != nil {
-			return diag.Errorf("error putting QuickSight Data Set Refresh Properties: %s", err)
+			return diag.Errorf("putting QuickSight Data Set Refresh Properties: %s", err)
 		}
 	}
 
@@ -905,7 +905,7 @@ func resourceDataSetCreate(ctx context.Context, d *schema.ResourceData, meta int
 }
 
 func resourceDataSetRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).QuickSightConn()
+	conn := meta.(*conns.AWSClient).QuickSightConn(ctx)
 
 	awsAccountId, dataSetId, err := ParseDataSetID(d.Id())
 	if err != nil {
@@ -926,11 +926,11 @@ func resourceDataSetRead(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 
 	if err != nil {
-		return diag.Errorf("error describing QuickSight Data Set (%s): %s", d.Id(), err)
+		return diag.Errorf("describing QuickSight Data Set (%s): %s", d.Id(), err)
 	}
 
 	if output == nil || output.DataSet == nil {
-		return diag.Errorf("error describing QuickSight Data Set (%s): empty output", d.Id())
+		return diag.Errorf("describing QuickSight Data Set (%s): empty output", d.Id())
 	}
 
 	dataSet := output.DataSet
@@ -942,39 +942,39 @@ func resourceDataSetRead(ctx context.Context, d *schema.ResourceData, meta inter
 	d.Set("import_mode", dataSet.ImportMode)
 
 	if err := d.Set("column_groups", flattenColumnGroups(dataSet.ColumnGroups)); err != nil {
-		return diag.Errorf("error setting column_groups: %s", err)
+		return diag.Errorf("setting column_groups: %s", err)
 	}
 
 	if err := d.Set("column_level_permission_rules", flattenColumnLevelPermissionRules(dataSet.ColumnLevelPermissionRules)); err != nil {
-		return diag.Errorf("error setting column_level_permission_rules: %s", err)
+		return diag.Errorf("setting column_level_permission_rules: %s", err)
 	}
 
 	if err := d.Set("data_set_usage_configuration", flattenDataSetUsageConfiguration(dataSet.DataSetUsageConfiguration)); err != nil {
-		return diag.Errorf("error setting data_set_usage_configuration: %s", err)
+		return diag.Errorf("setting data_set_usage_configuration: %s", err)
 	}
 
 	if err := d.Set("field_folders", flattenFieldFolders(dataSet.FieldFolders)); err != nil {
-		return diag.Errorf("error setting field_folders: %s", err)
+		return diag.Errorf("setting field_folders: %s", err)
 	}
 
 	if err := d.Set("logical_table_map", flattenLogicalTableMap(dataSet.LogicalTableMap, logicalTableMapSchema())); err != nil {
-		return diag.Errorf("error setting logical_table_map: %s", err)
+		return diag.Errorf("setting logical_table_map: %s", err)
 	}
 
 	if err := d.Set("output_columns", flattenOutputColumns(dataSet.OutputColumns)); err != nil {
-		return diag.Errorf("error setting output_columns: %s", err)
+		return diag.Errorf("setting output_columns: %s", err)
 	}
 
 	if err := d.Set("physical_table_map", flattenPhysicalTableMap(dataSet.PhysicalTableMap, physicalTableMapSchema())); err != nil {
-		return diag.Errorf("error setting physical_table_map: %s", err)
+		return diag.Errorf("setting physical_table_map: %s", err)
 	}
 
 	if err := d.Set("row_level_permission_data_set", flattenRowLevelPermissionDataSet(dataSet.RowLevelPermissionDataSet)); err != nil {
-		return diag.Errorf("error setting row_level_permission_data_set: %s", err)
+		return diag.Errorf("setting row_level_permission_data_set: %s", err)
 	}
 
 	if err := d.Set("row_level_permission_tag_configuration", flattenRowLevelPermissionTagConfiguration(dataSet.RowLevelPermissionTagConfiguration)); err != nil {
-		return diag.Errorf("error setting row_level_permission_tag_configuration: %s", err)
+		return diag.Errorf("setting row_level_permission_tag_configuration: %s", err)
 	}
 
 	permsResp, err := conn.DescribeDataSetPermissionsWithContext(ctx, &quicksight.DescribeDataSetPermissionsInput{
@@ -983,11 +983,11 @@ func resourceDataSetRead(ctx context.Context, d *schema.ResourceData, meta inter
 	})
 
 	if err != nil {
-		return diag.Errorf("error describing QuickSight Data Source (%s) Permissions: %s", d.Id(), err)
+		return diag.Errorf("describing QuickSight Data Source (%s) Permissions: %s", d.Id(), err)
 	}
 
 	if err := d.Set("permissions", flattenPermissions(permsResp.Permissions)); err != nil {
-		return diag.Errorf("error setting permissions: %s", err)
+		return diag.Errorf("setting permissions: %s", err)
 	}
 
 	propsResp, err := conn.DescribeDataSetRefreshPropertiesWithContext(ctx, &quicksight.DescribeDataSetRefreshPropertiesInput{
@@ -996,12 +996,12 @@ func resourceDataSetRead(ctx context.Context, d *schema.ResourceData, meta inter
 	})
 
 	if err != nil && !(tfawserr.ErrCodeEquals(err, quicksight.ErrCodeResourceNotFoundException) || tfawserr.ErrMessageContains(err, quicksight.ErrCodeInvalidParameterValueException, "not a SPICE dataset")) {
-		return diag.Errorf("error describing refresh properties (%s): %s", d.Id(), err)
+		return diag.Errorf("describing refresh properties (%s): %s", d.Id(), err)
 	}
 
 	if err == nil {
 		if err := d.Set("refresh_properties", flattenRefreshProperties(propsResp.DataSetRefreshProperties)); err != nil {
-			return diag.Errorf("error setting refresh properties: %s", err)
+			return diag.Errorf("setting refresh properties: %s", err)
 		}
 	}
 
@@ -1009,7 +1009,7 @@ func resourceDataSetRead(ctx context.Context, d *schema.ResourceData, meta inter
 }
 
 func resourceDataSetUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).QuickSightConn()
+	conn := meta.(*conns.AWSClient).QuickSightConn(ctx)
 
 	if d.HasChangesExcept("permissions", "tags", "tags_all", "refresh_properties") {
 		awsAccountId, dataSetId, err := ParseDataSetID(d.Id())
@@ -1041,7 +1041,7 @@ func resourceDataSetUpdate(ctx context.Context, d *schema.ResourceData, meta int
 
 		_, err = conn.UpdateDataSetWithContext(ctx, params)
 		if err != nil {
-			return diag.Errorf("error updating QuickSight Data Set (%s): %s", d.Id(), err)
+			return diag.Errorf("updating QuickSight Data Set (%s): %s", d.Id(), err)
 		}
 	}
 
@@ -1073,7 +1073,7 @@ func resourceDataSetUpdate(ctx context.Context, d *schema.ResourceData, meta int
 		_, err = conn.UpdateDataSetPermissionsWithContext(ctx, params)
 
 		if err != nil {
-			return diag.Errorf("error updating QuickSight Data Set (%s) permissions: %s", dataSetId, err)
+			return diag.Errorf("updating QuickSight Data Set (%s) permissions: %s", dataSetId, err)
 		}
 	}
 
@@ -1092,7 +1092,7 @@ func resourceDataSetUpdate(ctx context.Context, d *schema.ResourceData, meta int
 				DataSetId:    aws.String(dataSetId),
 			})
 			if err != nil {
-				return diag.Errorf("error deleting QuickSight Data Set Refresh Properties (%s): %s", d.Id(), err)
+				return diag.Errorf("deleting QuickSight Data Set Refresh Properties (%s): %s", d.Id(), err)
 			}
 		} else {
 			_, err = conn.PutDataSetRefreshPropertiesWithContext(ctx, &quicksight.PutDataSetRefreshPropertiesInput{
@@ -1101,7 +1101,7 @@ func resourceDataSetUpdate(ctx context.Context, d *schema.ResourceData, meta int
 				DataSetRefreshProperties: expandDataSetRefreshProperties(d.Get("refresh_properties").([]interface{})),
 			})
 			if err != nil {
-				return diag.Errorf("error updating QuickSight Data Set Refresh Properties (%s): %s", d.Id(), err)
+				return diag.Errorf("updating QuickSight Data Set Refresh Properties (%s): %s", d.Id(), err)
 			}
 		}
 	}
@@ -1110,7 +1110,7 @@ func resourceDataSetUpdate(ctx context.Context, d *schema.ResourceData, meta int
 }
 
 func resourceDataSetDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).QuickSightConn()
+	conn := meta.(*conns.AWSClient).QuickSightConn(ctx)
 
 	log.Printf("[INFO] Deleting QuickSight Data Set %s", d.Id())
 	awsAccountId, dataSetId, err := ParseDataSetID(d.Id())
@@ -1130,7 +1130,7 @@ func resourceDataSetDelete(ctx context.Context, d *schema.ResourceData, meta int
 	}
 
 	if err != nil {
-		return diag.Errorf("error deleting QuickSight Data Set (%s): %s", d.Id(), err)
+		return diag.Errorf("deleting QuickSight Data Set (%s): %s", d.Id(), err)
 	}
 
 	return nil
@@ -1644,10 +1644,6 @@ func expandDataSetUntagColumnOperation(tfList []interface{}) *quicksight.UntagCo
 }
 
 func expandDataSetPhysicalTableMap(tfSet *schema.Set) map[string]*quicksight.PhysicalTable {
-	if tfSet.Len() == 0 {
-		return nil
-	}
-
 	physicalTableMap := make(map[string]*quicksight.PhysicalTable)
 	for _, v := range tfSet.List() {
 		vMap, ok := v.(map[string]interface{})
@@ -2426,10 +2422,6 @@ func flattenJoinKeyProperties(apiObject *quicksight.JoinKeyProperties) map[strin
 }
 
 func flattenPhysicalTableMap(apiObject map[string]*quicksight.PhysicalTable, resourceSchema *schema.Resource) *schema.Set {
-	if len(apiObject) == 0 {
-		return nil
-	}
-
 	var tfList []interface{}
 	for k, v := range apiObject {
 		if v == nil {

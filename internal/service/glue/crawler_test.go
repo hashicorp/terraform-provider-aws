@@ -1620,7 +1620,7 @@ func testAccCheckCrawlerExists(ctx context.Context, resourceName string, crawler
 			return fmt.Errorf("no ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).GlueConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).GlueConn(ctx)
 		output, err := tfglue.FindCrawlerByName(ctx, conn, rs.Primary.ID)
 
 		if err != nil {
@@ -1640,7 +1640,7 @@ func testAccCheckCrawlerDestroy(ctx context.Context) resource.TestCheckFunc {
 				continue
 			}
 
-			conn := acctest.Provider.Meta().(*conns.AWSClient).GlueConn()
+			conn := acctest.Provider.Meta().(*conns.AWSClient).GlueConn(ctx)
 			_, err := tfglue.FindCrawlerByName(ctx, conn, rs.Primary.ID)
 
 			if tfresource.NotFound(err) {

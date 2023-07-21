@@ -78,7 +78,7 @@ func (r *resourceFrameworkShare) Schema(ctx context.Context, req resource.Schema
 }
 
 func (r *resourceFrameworkShare) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-	conn := r.Meta().AuditManagerClient()
+	conn := r.Meta().AuditManagerClient(ctx)
 
 	var plan resourceFrameworkShareData
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
@@ -116,7 +116,7 @@ func (r *resourceFrameworkShare) Create(ctx context.Context, req resource.Create
 }
 
 func (r *resourceFrameworkShare) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
-	conn := r.Meta().AuditManagerClient()
+	conn := r.Meta().AuditManagerClient(ctx)
 
 	var state resourceFrameworkShareData
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
@@ -147,7 +147,7 @@ func (r *resourceFrameworkShare) Update(ctx context.Context, req resource.Update
 }
 
 func (r *resourceFrameworkShare) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
-	conn := r.Meta().AuditManagerClient()
+	conn := r.Meta().AuditManagerClient(ctx)
 
 	var state resourceFrameworkShareData
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)

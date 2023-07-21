@@ -41,14 +41,10 @@ func ResourceAttachmentAccepter() *schema.Resource {
 			// querying attachments requires knowing the type ahead of time
 			// therefore type is required in provider, though not on the API
 			"attachment_type": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-				ValidateFunc: validation.StringInSlice([]string{
-					networkmanager.AttachmentTypeVpc,
-					networkmanager.AttachmentTypeSiteToSiteVpn,
-					networkmanager.AttachmentTypeConnect,
-				}, false),
+				Type:         schema.TypeString,
+				Required:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.StringInSlice(networkmanager.AttachmentType_Values(), false),
 			},
 			"core_network_arn": {
 				Type:     schema.TypeString,
@@ -83,7 +79,7 @@ func ResourceAttachmentAccepter() *schema.Resource {
 }
 
 func resourceAttachmentAccepterCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).NetworkManagerConn()
+	conn := meta.(*conns.AWSClient).NetworkManagerConn(ctx)
 
 	var state string
 	attachmentID := d.Get("attachment_id").(string)
@@ -123,6 +119,17 @@ func resourceAttachmentAccepterCreate(ctx context.Context, d *schema.ResourceDat
 
 		d.SetId(attachmentID)
 
+	case networkmanager.AttachmentTypeTransitGatewayRouteTable:
+		tgwAttachment, err := FindTransitGatewayRouteTableAttachmentByID(ctx, conn, attachmentID)
+
+		if err != nil {
+			return diag.Errorf("reading Network Manager Transit Gateway Route Table Attachment (%s): %s", attachmentID, err)
+		}
+
+		state = aws.StringValue(tgwAttachment.Attachment.State)
+
+		d.SetId(attachmentID)
+
 	default:
 		return diag.Errorf("unsupported Network Manager Attachment type: %s", attachmentType)
 	}
@@ -153,6 +160,11 @@ func resourceAttachmentAccepterCreate(ctx context.Context, d *schema.ResourceDat
 			if _, err := waitConnectAttachmentAvailable(ctx, conn, attachmentID, d.Timeout(schema.TimeoutCreate)); err != nil {
 				return diag.Errorf("waiting for Network Manager Connect Attachment (%s) create: %s", attachmentID, err)
 			}
+
+		case networkmanager.AttachmentTypeTransitGatewayRouteTable:
+			if _, err := waitTransitGatewayRouteTableAttachmentAvailable(ctx, conn, attachmentID, d.Timeout(schema.TimeoutCreate)); err != nil {
+				return diag.Errorf("waiting for Network Manager Transit Gateway Route Table Attachment (%s) create: %s", attachmentID, err)
+			}
 		}
 	}
 
@@ -160,7 +172,7 @@ func resourceAttachmentAccepterCreate(ctx context.Context, d *schema.ResourceDat
 }
 
 func resourceAttachmentAccepterRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).NetworkManagerConn()
+	conn := meta.(*conns.AWSClient).NetworkManagerConn(ctx)
 
 	var a *networkmanager.Attachment
 
@@ -209,6 +221,21 @@ func resourceAttachmentAccepterRead(ctx context.Context, d *schema.ResourceData,
 		}
 
 		a = connectAttachment.Attachment
+
+	case networkmanager.AttachmentTypeTransitGatewayRouteTable:
+		tgwAttachment, err := FindTransitGatewayRouteTableAttachmentByID(ctx, conn, d.Id())
+
+		if !d.IsNewResource() && tfresource.NotFound(err) {
+			log.Printf("[WARN] Network Manager Transit Gateway Route Table Attachment %s not found, removing from state", d.Id())
+			d.SetId("")
+			return nil
+		}
+
+		if err != nil {
+			return diag.Errorf("reading Network Manager Transit Gateway Route Table Attachment (%s): %s", d.Id(), err)
+		}
+
+		a = tgwAttachment.Attachment
 	}
 
 	d.Set("attachment_policy_rule_number", a.AttachmentPolicyRuleNumber)

@@ -64,7 +64,7 @@ func ResourcePartner() *schema.Resource {
 
 func resourcePartnerCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).RedshiftConn()
+	conn := meta.(*conns.AWSClient).RedshiftConn(ctx)
 
 	account := d.Get("account_id").(string)
 	clusterId := d.Get("cluster_identifier").(string)
@@ -88,7 +88,7 @@ func resourcePartnerCreate(ctx context.Context, d *schema.ResourceData, meta int
 
 func resourcePartnerRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).RedshiftConn()
+	conn := meta.(*conns.AWSClient).RedshiftConn(ctx)
 
 	out, err := FindPartnerById(ctx, conn, d.Id())
 	if !d.IsNewResource() && tfresource.NotFound(err) {
@@ -113,7 +113,7 @@ func resourcePartnerRead(ctx context.Context, d *schema.ResourceData, meta inter
 
 func resourcePartnerDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).RedshiftConn()
+	conn := meta.(*conns.AWSClient).RedshiftConn(ctx)
 
 	account, clusterId, dbName, partnerName, err := DecodePartnerID(d.Id())
 	if err != nil {

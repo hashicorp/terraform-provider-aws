@@ -81,7 +81,7 @@ func (d *dataSourceFramework) Schema(ctx context.Context, req datasource.SchemaR
 }
 
 func (d *dataSourceFramework) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
-	conn := d.Meta().AuditManagerClient()
+	conn := d.Meta().AuditManagerClient(ctx)
 
 	var data dataSourceFrameworkData
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)

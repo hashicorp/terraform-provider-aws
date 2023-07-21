@@ -429,7 +429,7 @@ func TestAccS3ControlBucketLifecycleConfiguration_Rule_status(t *testing.T) {
 
 func testAccCheckBucketLifecycleConfigurationDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).S3ControlConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).S3ControlConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_s3control_bucket_lifecycle_configuration" {
@@ -470,7 +470,7 @@ func testAccCheckBucketLifecycleConfigurationExists(ctx context.Context, n strin
 			return fmt.Errorf("No S3 Control Bucket Lifecycle Configuration ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).S3ControlConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).S3ControlConn(ctx)
 
 		parsedArn, err := arn.Parse(rs.Primary.ID)
 

@@ -236,7 +236,7 @@ func TestAccSiteVPNCustomerGateway_certificate(t *testing.T) {
 
 func testAccCheckCustomerGatewayDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_customer_gateway" {
@@ -271,7 +271,7 @@ func testAccCheckCustomerGatewayExists(ctx context.Context, n string, v *ec2.Cus
 			return fmt.Errorf("No EC2 Customer Gateway ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
 
 		output, err := tfec2.FindCustomerGatewayByID(ctx, conn, rs.Primary.ID)
 

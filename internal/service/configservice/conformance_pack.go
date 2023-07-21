@@ -98,7 +98,7 @@ func ResourceConformancePack() *schema.Resource {
 
 func resourceConformancePackPut(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ConfigServiceConn()
+	conn := meta.(*conns.AWSClient).ConfigServiceConn(ctx)
 
 	name := d.Get("name").(string)
 
@@ -142,7 +142,7 @@ func resourceConformancePackPut(ctx context.Context, d *schema.ResourceData, met
 
 func resourceConformancePackRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ConfigServiceConn()
+	conn := meta.(*conns.AWSClient).ConfigServiceConn(ctx)
 
 	pack, err := DescribeConformancePack(ctx, conn, d.Id())
 
@@ -180,7 +180,7 @@ func resourceConformancePackRead(ctx context.Context, d *schema.ResourceData, me
 
 func resourceConformancePackDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ConfigServiceConn()
+	conn := meta.(*conns.AWSClient).ConfigServiceConn(ctx)
 
 	input := &configservice.DeleteConformancePackInput{
 		ConformancePackName: aws.String(d.Id()),

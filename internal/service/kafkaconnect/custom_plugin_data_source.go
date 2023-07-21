@@ -42,7 +42,7 @@ func DataSourceCustomPlugin() *schema.Resource {
 }
 
 func dataSourceCustomPluginRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).KafkaConnectConn()
+	conn := meta.(*conns.AWSClient).KafkaConnectConn(ctx)
 
 	name := d.Get("name")
 	var output []*kafkaconnect.CustomPluginSummary
@@ -62,7 +62,7 @@ func dataSourceCustomPluginRead(ctx context.Context, d *schema.ResourceData, met
 	})
 
 	if err != nil {
-		return diag.Errorf("error listing MSK Connect Custom Plugins: %s", err)
+		return diag.Errorf("listing MSK Connect Custom Plugins: %s", err)
 	}
 
 	if len(output) == 0 || output[0] == nil {

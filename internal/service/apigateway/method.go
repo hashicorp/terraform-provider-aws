@@ -102,7 +102,7 @@ func ResourceMethod() *schema.Resource {
 
 func resourceMethodCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).APIGatewayConn()
+	conn := meta.(*conns.AWSClient).APIGatewayConn(ctx)
 
 	input := &apigateway.PutMethodInput{
 		ApiKeyRequired:    aws.Bool(d.Get("api_key_required").(bool)),
@@ -149,7 +149,7 @@ func resourceMethodCreate(ctx context.Context, d *schema.ResourceData, meta inte
 
 func resourceMethodRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).APIGatewayConn()
+	conn := meta.(*conns.AWSClient).APIGatewayConn(ctx)
 
 	method, err := FindMethodByThreePartKey(ctx, conn, d.Get("http_method").(string), d.Get("resource_id").(string), d.Get("rest_api_id").(string))
 
@@ -177,7 +177,7 @@ func resourceMethodRead(ctx context.Context, d *schema.ResourceData, meta interf
 
 func resourceMethodUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).APIGatewayConn()
+	conn := meta.(*conns.AWSClient).APIGatewayConn(ctx)
 
 	operations := make([]*apigateway.PatchOperation, 0)
 
@@ -338,7 +338,7 @@ func resourceMethodUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 
 func resourceMethodDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).APIGatewayConn()
+	conn := meta.(*conns.AWSClient).APIGatewayConn(ctx)
 
 	log.Printf("[DEBUG] Deleting API Gateway Method: %s", d.Id())
 	_, err := conn.DeleteMethodWithContext(ctx, &apigateway.DeleteMethodInput{

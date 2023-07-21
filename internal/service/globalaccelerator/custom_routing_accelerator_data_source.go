@@ -88,7 +88,7 @@ func DataSourceCustomRoutingAccelerator() *schema.Resource {
 
 func dataSourceCustomRoutingAcceleratorRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).GlobalAcceleratorConn()
+	conn := meta.(*conns.AWSClient).GlobalAcceleratorConn(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	var results []*globalaccelerator.CustomRoutingAccelerator
@@ -147,7 +147,7 @@ func dataSourceCustomRoutingAcceleratorRead(ctx context.Context, d *schema.Resou
 		return sdkdiag.AppendErrorf(diags, "setting attributes: %s", err)
 	}
 
-	tags, err := ListTags(ctx, conn, d.Id())
+	tags, err := listTags(ctx, conn, d.Id())
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "listing tags for Global Accelerator Custom Routing Accelerator (%s): %s", d.Id(), err)

@@ -80,7 +80,7 @@ func ResourceRegexMatchSet() *schema.Resource {
 
 func resourceRegexMatchSetCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).WAFConn()
+	conn := meta.(*conns.AWSClient).WAFConn(ctx)
 
 	log.Printf("[INFO] Creating WAF Regex Match Set: %s", d.Get("name").(string))
 
@@ -104,7 +104,7 @@ func resourceRegexMatchSetCreate(ctx context.Context, d *schema.ResourceData, me
 
 func resourceRegexMatchSetRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).WAFConn()
+	conn := meta.(*conns.AWSClient).WAFConn(ctx)
 	log.Printf("[INFO] Reading WAF Regex Match Set: %s", d.Get("name").(string))
 	params := &waf.GetRegexMatchSetInput{
 		RegexMatchSetId: aws.String(d.Id()),
@@ -137,7 +137,7 @@ func resourceRegexMatchSetRead(ctx context.Context, d *schema.ResourceData, meta
 
 func resourceRegexMatchSetUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).WAFConn()
+	conn := meta.(*conns.AWSClient).WAFConn(ctx)
 
 	log.Printf("[INFO] Updating WAF Regex Match Set: %s", d.Get("name").(string))
 
@@ -155,7 +155,7 @@ func resourceRegexMatchSetUpdate(ctx context.Context, d *schema.ResourceData, me
 
 func resourceRegexMatchSetDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).WAFConn()
+	conn := meta.(*conns.AWSClient).WAFConn(ctx)
 
 	oldTuples := d.Get("regex_match_tuple").(*schema.Set).List()
 	if len(oldTuples) > 0 {

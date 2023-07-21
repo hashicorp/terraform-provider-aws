@@ -36,7 +36,7 @@ func DataSourceEBSVolumes() *schema.Resource {
 
 func dataSourceEBSVolumesRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	input := &ec2.DescribeVolumesInput{}
 

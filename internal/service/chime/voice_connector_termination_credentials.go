@@ -57,7 +57,7 @@ func ResourceVoiceConnectorTerminationCredentials() *schema.Resource {
 }
 
 func resourceVoiceConnectorTerminationCredentialsCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ChimeConn()
+	conn := meta.(*conns.AWSClient).ChimeConn(ctx)
 
 	vcId := d.Get("voice_connector_id").(string)
 
@@ -67,7 +67,7 @@ func resourceVoiceConnectorTerminationCredentialsCreate(ctx context.Context, d *
 	}
 
 	if _, err := conn.PutVoiceConnectorTerminationCredentialsWithContext(ctx, input); err != nil {
-		return diag.Errorf("error creating Chime Voice Connector (%s) termination credentials: %s", vcId, err)
+		return diag.Errorf("creating Chime Voice Connector (%s) termination credentials: %s", vcId, err)
 	}
 
 	d.SetId(vcId)
@@ -76,7 +76,7 @@ func resourceVoiceConnectorTerminationCredentialsCreate(ctx context.Context, d *
 }
 
 func resourceVoiceConnectorTerminationCredentialsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ChimeConn()
+	conn := meta.(*conns.AWSClient).ChimeConn(ctx)
 
 	input := &chime.ListVoiceConnectorTerminationCredentialsInput{
 		VoiceConnectorId: aws.String(d.Id()),
@@ -90,7 +90,7 @@ func resourceVoiceConnectorTerminationCredentialsRead(ctx context.Context, d *sc
 	}
 
 	if err != nil {
-		return diag.Errorf("error getting Chime Voice Connector (%s) termination credentials: %s", d.Id(), err)
+		return diag.Errorf("getting Chime Voice Connector (%s) termination credentials: %s", d.Id(), err)
 	}
 
 	d.Set("voice_connector_id", d.Id())
@@ -99,7 +99,7 @@ func resourceVoiceConnectorTerminationCredentialsRead(ctx context.Context, d *sc
 }
 
 func resourceVoiceConnectorTerminationCredentialsUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ChimeConn()
+	conn := meta.(*conns.AWSClient).ChimeConn(ctx)
 
 	if d.HasChanges("credentials") {
 		input := &chime.PutVoiceConnectorTerminationCredentialsInput{
@@ -110,7 +110,7 @@ func resourceVoiceConnectorTerminationCredentialsUpdate(ctx context.Context, d *
 		_, err := conn.PutVoiceConnectorTerminationCredentialsWithContext(ctx, input)
 
 		if err != nil {
-			return diag.Errorf("error updating Chime Voice Connector (%s) termination credentials: %s", d.Id(), err)
+			return diag.Errorf("updating Chime Voice Connector (%s) termination credentials: %s", d.Id(), err)
 		}
 	}
 
@@ -118,7 +118,7 @@ func resourceVoiceConnectorTerminationCredentialsUpdate(ctx context.Context, d *
 }
 
 func resourceVoiceConnectorTerminationCredentialsDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ChimeConn()
+	conn := meta.(*conns.AWSClient).ChimeConn(ctx)
 
 	input := &chime.DeleteVoiceConnectorTerminationCredentialsInput{
 		VoiceConnectorId: aws.String(d.Id()),
@@ -132,7 +132,7 @@ func resourceVoiceConnectorTerminationCredentialsDelete(ctx context.Context, d *
 	}
 
 	if err != nil {
-		return diag.Errorf("error deleting Chime Voice Connector (%s) termination credentials: %s", d.Id(), err)
+		return diag.Errorf("deleting Chime Voice Connector (%s) termination credentials: %s", d.Id(), err)
 	}
 
 	return nil

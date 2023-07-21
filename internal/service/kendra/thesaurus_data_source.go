@@ -105,7 +105,7 @@ func DataSourceThesaurus() *schema.Resource {
 }
 
 func dataSourceThesaurusRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).KendraClient()
+	conn := meta.(*conns.AWSClient).KendraClient(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	thesaurusID := d.Get("thesaurus_id").(string)
@@ -142,7 +142,7 @@ func dataSourceThesaurusRead(ctx context.Context, d *schema.ResourceData, meta i
 		return diag.Errorf("setting source_s3_path: %s", err)
 	}
 
-	tags, err := ListTags(ctx, conn, arn)
+	tags, err := listTags(ctx, conn, arn)
 
 	if err != nil {
 		return diag.Errorf("listing tags for Kendra Thesaurus (%s): %s", arn, err)

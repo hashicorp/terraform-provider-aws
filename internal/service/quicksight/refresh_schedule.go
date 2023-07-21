@@ -219,7 +219,7 @@ var (
 )
 
 func (r *resourceRefreshSchedule) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-	conn := r.Meta().QuickSightConn()
+	conn := r.Meta().QuickSightConn(ctx)
 
 	var plan resourceRefreshScheduleData
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
@@ -274,7 +274,7 @@ func (r *resourceRefreshSchedule) Create(ctx context.Context, req resource.Creat
 }
 
 func (r *resourceRefreshSchedule) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
-	conn := r.Meta().QuickSightConn()
+	conn := r.Meta().QuickSightConn(ctx)
 
 	var state resourceRefreshScheduleData
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
@@ -299,7 +299,7 @@ func (r *resourceRefreshSchedule) Read(ctx context.Context, req resource.ReadReq
 }
 
 func (r *resourceRefreshSchedule) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	conn := r.Meta().QuickSightConn()
+	conn := r.Meta().QuickSightConn(ctx)
 
 	var config, plan, state resourceRefreshScheduleData
 	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
@@ -370,7 +370,7 @@ func (r *resourceRefreshSchedule) Update(ctx context.Context, req resource.Updat
 }
 
 func (r *resourceRefreshSchedule) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
-	conn := r.Meta().QuickSightConn()
+	conn := r.Meta().QuickSightConn(ctx)
 
 	var state resourceRefreshScheduleData
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)

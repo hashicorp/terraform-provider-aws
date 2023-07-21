@@ -12,7 +12,7 @@ import (
 )
 
 func testAccPreCheck(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).ComprehendClient()
+	conn := acctest.Provider.Meta().(*conns.AWSClient).ComprehendClient(ctx)
 
 	input := &comprehend.ListEntityRecognizersInput{}
 

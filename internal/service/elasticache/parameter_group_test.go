@@ -420,7 +420,7 @@ func TestAccElastiCacheParameterGroup_tags(t *testing.T) {
 
 func testAccCheckParameterGroupDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ElastiCacheConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ElastiCacheConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_elasticache_parameter_group" {
@@ -475,7 +475,7 @@ func testAccCheckParameterGroupExists(ctx context.Context, n string, v *elastica
 			return fmt.Errorf("No Cache Parameter Group ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ElastiCacheConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ElastiCacheConn(ctx)
 
 		opts := elasticache.DescribeCacheParameterGroupsInput{
 			CacheParameterGroupName: aws.String(rs.Primary.ID),

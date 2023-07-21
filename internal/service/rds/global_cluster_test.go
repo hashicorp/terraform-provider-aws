@@ -619,7 +619,7 @@ func testAccCheckGlobalClusterExists(ctx context.Context, resourceName string, g
 			return fmt.Errorf("No RDS Global Cluster ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn(ctx)
 
 		cluster, err := tfrds.DescribeGlobalCluster(ctx, conn, rs.Primary.ID)
 		if err != nil {
@@ -642,7 +642,7 @@ func testAccCheckGlobalClusterExists(ctx context.Context, resourceName string, g
 
 func testAccCheckGlobalClusterDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_rds_global_cluster" {
@@ -672,7 +672,7 @@ func testAccCheckGlobalClusterDestroy(ctx context.Context) resource.TestCheckFun
 
 func testAccCheckGlobalClusterDisappears(ctx context.Context, globalCluster *rds.GlobalCluster) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn(ctx)
 
 		input := &rds.DeleteGlobalClusterInput{
 			GlobalClusterIdentifier: globalCluster.GlobalClusterIdentifier,
@@ -708,7 +708,7 @@ func testAccCheckGlobalClusterRecreated(i, j *rds.GlobalCluster) resource.TestCh
 }
 
 func testAccPreCheckGlobalCluster(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn()
+	conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn(ctx)
 
 	input := &rds.DescribeGlobalClustersInput{}
 

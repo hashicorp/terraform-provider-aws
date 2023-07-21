@@ -20,7 +20,7 @@ func TestAccVPCManagedPrefixListsDataSource_basic(t *testing.T) {
 			{
 				Config: testAccVPCManagedPrefixListsDataSourceConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
-					acctest.CheckResourceAttrGreaterThanValue("data.aws_ec2_managed_prefix_lists.test", "ids.#", "0"),
+					acctest.CheckResourceAttrGreaterThanValue("data.aws_ec2_managed_prefix_lists.test", "ids.#", 0),
 				),
 			},
 		},

@@ -100,14 +100,14 @@ func ResourceConfiguration() *schema.Resource {
 }
 
 func resourceConfigurationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).MQConn()
+	conn := meta.(*conns.AWSClient).MQConn(ctx)
 
 	name := d.Get("name").(string)
 	input := &mq.CreateConfigurationRequest{
 		EngineType:    aws.String(d.Get("engine_type").(string)),
 		EngineVersion: aws.String(d.Get("engine_version").(string)),
 		Name:          aws.String(name),
-		Tags:          GetTagsIn(ctx),
+		Tags:          getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("authentication_strategy"); ok {
@@ -143,7 +143,7 @@ func resourceConfigurationCreate(ctx context.Context, d *schema.ResourceData, me
 }
 
 func resourceConfigurationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).MQConn()
+	conn := meta.(*conns.AWSClient).MQConn(ctx)
 
 	configuration, err := FindConfigurationByID(ctx, conn, d.Id())
 
@@ -183,13 +183,13 @@ func resourceConfigurationRead(ctx context.Context, d *schema.ResourceData, meta
 
 	d.Set("data", string(data))
 
-	SetTagsOut(ctx, configuration.Tags)
+	setTagsOut(ctx, configuration.Tags)
 
 	return nil
 }
 
 func resourceConfigurationUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).MQConn()
+	conn := meta.(*conns.AWSClient).MQConn(ctx)
 
 	if d.HasChanges("data", "description") {
 		input := &mq.UpdateConfigurationRequest{

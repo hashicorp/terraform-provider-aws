@@ -211,7 +211,7 @@ func testAccCheckEventSubscriptionDestroy(ctx context.Context) resource.TestChec
 				continue
 			}
 
-			conn := acctest.Provider.Meta().(*conns.AWSClient).DMSConn()
+			conn := acctest.Provider.Meta().(*conns.AWSClient).DMSConn(ctx)
 
 			resp, err := conn.DescribeEventSubscriptionsWithContext(ctx, &dms.DescribeEventSubscriptionsInput{
 				SubscriptionName: aws.String(rs.Primary.ID),
@@ -245,7 +245,7 @@ func testAccCheckEventSubscriptionExists(ctx context.Context, n string, eventSub
 			return fmt.Errorf("No ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DMSConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DMSConn(ctx)
 		resp, err := conn.DescribeEventSubscriptionsWithContext(ctx, &dms.DescribeEventSubscriptionsInput{
 			SubscriptionName: aws.String(rs.Primary.ID),
 		})
@@ -386,7 +386,7 @@ resource "aws_dms_event_subscription" "test" {
 }
 
 func testAccPreCheckEKS(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).EKSConn()
+	conn := acctest.Provider.Meta().(*conns.AWSClient).EKSConn(ctx)
 
 	input := &eks.ListClustersInput{}
 

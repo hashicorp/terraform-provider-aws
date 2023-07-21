@@ -676,7 +676,7 @@ var (
 
 func resourceVPNConnectionCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	input := &ec2.CreateVpnConnectionInput{
 		CustomerGatewayId: aws.String(d.Get("customer_gateway_id").(string)),
@@ -712,7 +712,7 @@ func resourceVPNConnectionCreate(ctx context.Context, d *schema.ResourceData, me
 
 func resourceVPNConnectionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	vpnConnection, err := FindVPNConnectionByID(ctx, conn, d.Id())
 
@@ -770,7 +770,7 @@ func resourceVPNConnectionRead(ctx context.Context, d *schema.ResourceData, meta
 		return sdkdiag.AppendErrorf(diags, "setting vgw_telemetry: %s", err)
 	}
 
-	SetTagsOut(ctx, vpnConnection.Tags)
+	setTagsOut(ctx, vpnConnection.Tags)
 
 	if v := vpnConnection.Options; v != nil {
 		d.Set("enable_acceleration", v.EnableAcceleration)
@@ -849,7 +849,7 @@ func resourceVPNConnectionRead(ctx context.Context, d *schema.ResourceData, meta
 
 func resourceVPNConnectionUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	if d.HasChanges("customer_gateway_id", "transit_gateway_id", "vpn_gateway_id") {
 		input := &ec2.ModifyVpnConnectionInput{
@@ -937,7 +937,7 @@ func resourceVPNConnectionUpdate(ctx context.Context, d *schema.ResourceData, me
 
 func resourceVPNConnectionDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	log.Printf("[INFO] Deleting EC2 VPN Connection: %s", d.Id())
 	_, err := conn.DeleteVpnConnectionWithContext(ctx, &ec2.DeleteVpnConnectionInput{

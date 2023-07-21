@@ -89,6 +89,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/emrserverless"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/events"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/evidently"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/finspace"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/firehose"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/fis"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/fms"
@@ -295,6 +296,7 @@ func servicePackages(context.Context) []conns.ServicePackage {
 		emrserverless.ServicePackage,
 		events.ServicePackage,
 		evidently.ServicePackage,
+		finspace.ServicePackage,
 		firehose.ServicePackage,
 		fis.ServicePackage,
 		fms.ServicePackage,

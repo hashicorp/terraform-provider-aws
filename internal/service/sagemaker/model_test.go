@@ -428,7 +428,7 @@ func TestAccSageMakerModel_disappears(t *testing.T) {
 
 func testAccCheckModelDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SageMakerConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SageMakerConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_sagemaker_model" {
@@ -466,7 +466,7 @@ func testAccCheckModelExists(ctx context.Context, n string) resource.TestCheckFu
 			return fmt.Errorf("No sagmaker model ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SageMakerConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SageMakerConn(ctx)
 		DescribeModelOpts := &sagemaker.DescribeModelInput{
 			ModelName: aws.String(rs.Primary.ID),
 		}

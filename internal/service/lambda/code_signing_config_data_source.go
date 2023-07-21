@@ -69,7 +69,7 @@ func DataSourceCodeSigningConfig() *schema.Resource {
 
 func dataSourceCodeSigningConfigRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).LambdaConn()
+	conn := meta.(*conns.AWSClient).LambdaConn(ctx)
 
 	arn := d.Get("arn").(string)
 
