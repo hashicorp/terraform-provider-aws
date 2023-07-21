@@ -1,0 +1,84 @@
+name: 'Process issues Events'
+
+on:
+  issues:
+    types:
+      - assigned
+      - closed
+      - edited
+      - opened
+      - labeled
+
+jobs:
+  community_check:
+    name: 'Community Check'
+    needs: trigger_type
+    uses: ./.github/workflows/community-check.yml
+    secrets: inherit
+    env:
+      # This is a ternary that sets the variable to the assigned user's login on assigned events,
+      # and otherwise sets it to the username of the pull request's author. For more information:
+      # https://docs.github.com/en/actions/learn-github-actions/expressions#example
+      USERNAME: ${{ github.event.action == 'assigned' && github.event.assignee.login || github.event.issue.user.login }}
+    with:
+      username: ${{ env.USERNAME }}
+
+  automation_labeler:
+    name: 'Automation Labeler'
+    needs: community_check
+    runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ github.token }}
+      ISSUE_URL: ${{ github.event.issue.html_url }}
+    steps:
+      - name: 'Add needs-triage for non-maintainer'
+        if: github.event.action == 'opened' && needs.community_check.outputs.maintainer == 'false'
+        run: gh issue edit ${{ env.ISSUE_URL }} --add-label needs-triage
+
+      - name: 'Add prioritized when assigned to maintainers'
+        if: github.event.action == 'assigned' && needs.community_check.outputs.maintainer == 'true'
+        run: gh issue edit ${{ env.ISSUE_URL }} --add-label prioritized
+
+      - name: 'Add prioritized to regressions'
+        if: github.event.label.name == 'regression'
+        run: gh issue edit ${{ env.ISSUE_URL }} --add-label prioritized
+
+      - name: 'Remove unnecessary labels on closure'
+        if: github.event.action == 'closed'
+        run: gh issue edit ${{ env.ISSUE_URL }} --remove-label needs-triage,waiting-response
+
+  service_labeler:
+    name: 'Service Labeler'
+    if: contains(fromJSON('["opened", "edited"]'), github.event.action == 'opened')
+    runs-on: ubuntu-latest
+    steps:
+      - name: 'Apply Labels'
+        if: ${{ !github.event.act }}
+        uses: github/issue-labeler@e24a3eb6b2e28c8904d086302a2b760647f5f45c # v3.1
+        with:
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+          configuration-path: .github/labeler-issue-triage.yml
+          enable-versioned-regex: 0
+          include-title: 1
+
+  community_note:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Add community note to new Issues
+        if: github.event.action == 'opened'
+        uses: peter-evans/create-or-update-comment@c6c9a1a66007646a28c153e2a8580a5bad27bcfa
+        with:
+          issue-number: ${{ github.event.issue.number }}
+          body: |
+            # Community Note
+
+            **Voting for Prioritization**
+
+            * Please vote on this issue by adding a 👍 [reaction](https://blog.github.com/2016-03-10-add-reactions-to-pull-requests-issues-and-comments/) to the original post to help the community and maintainers prioritize this request.
+            * Please see our [prioritization guide](https://hashicorp.github.io/terraform-provider-aws/prioritization/) for information on how we prioritize.
+            * Please **do not** leave "+1" or other comments that do not add relevant new information or questions, they generate extra noise for issue followers and do not help prioritize the request.
+
+            **Volunteering to Work on This Issue**
+
+            * If you are interested in working on this issue, please leave a comment.
+            * If this would be your first contribution, please review the [contribution guide](https://hashicorp.github.io/terraform-provider-aws/).
