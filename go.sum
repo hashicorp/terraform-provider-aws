@@ -15,8 +15,8 @@ github.com/apparentlymart/go-textseg/v13 v13.0.0 h1:Y+KvPE1NYz0xl601PVImeQfFyEy6
 github.com/apparentlymart/go-textseg/v13 v13.0.0/go.mod h1:ZK2fH7c4NqDTLtiYLvIkEghdlcqw7yxLeM89kiTRPUo=
 github.com/armon/go-radix v0.0.0-20180808171621-7fddfc383310 h1:BUAU3CGlLvorLI26FmByPp2eC2qla6E1Tw+scpcg/to=
 github.com/armon/go-radix v0.0.0-20180808171621-7fddfc383310/go.mod h1:ufUuZ+zHj4x4TnLV4JWEpy2hxWSpsRywHrMgIH9cCH8=
-github.com/aws/aws-sdk-go v1.44.304 h1:crcJBVeewWcVAXDQChzJWZYGFq9i1TYLycAtQ6Xpi4c=
-github.com/aws/aws-sdk-go v1.44.304/go.mod h1:aVsgQcEevwlmQ7qHE9I3h+dtQgpqhFB+i8Phjh7fkwI=
+github.com/aws/aws-sdk-go v1.44.305 h1:fU/5lY3WyBjGU9fkmQYd8o4fZu+2RaOv/i+sPaJVvFg=
+github.com/aws/aws-sdk-go v1.44.305/go.mod h1:aVsgQcEevwlmQ7qHE9I3h+dtQgpqhFB+i8Phjh7fkwI=
 github.com/aws/aws-sdk-go-v2 v1.19.0 h1:klAT+y3pGFBU/qVf1uzwttpBbiuozJYWzNLHioyDJ+k=
 github.com/aws/aws-sdk-go-v2 v1.19.0/go.mod h1:uzbQtefpm44goOPmdKyAlXSNcwlRgF3ePWVW6EtJvvw=
 github.com/aws/aws-sdk-go-v2/aws/protocol/eventstream v1.4.10 h1:dK82zF6kkPeCo8J1e+tGx4JdvDIQzj7ygIoLg8WMuGs=
@@ -117,8 +117,8 @@ github.com/aws/aws-sdk-go-v2/service/s3control v1.31.9 h1:Sw3J4S2l/OMivnnrchiU+E
 github.com/aws/aws-sdk-go-v2/service/s3control v1.31.9/go.mod h1:ccjSIMDjJpoJVhF223gq4IeT3owN/MQ0X0o2KwCrwx8=
 github.com/aws/aws-sdk-go-v2/service/scheduler v1.1.14 h1:8GZ9kHmuj/gIL8diTsH8/p4QJ7BnS4LWQTFxMm0G/po=
 github.com/aws/aws-sdk-go-v2/service/scheduler v1.1.14/go.mod h1:tLA2mJS1Pp4wOYt8SqkxDXHo5VKmYX39k/wR1Jk6kek=
-github.com/aws/aws-sdk-go-v2/service/securitylake v1.4.4 h1:cKWN+c4kK8kZxluiI/aQLqRS8vsQ1DgpN/ZDunbjb6w=
-github.com/aws/aws-sdk-go-v2/service/securitylake v1.4.4/go.mod h1:tv13rwBfOq4ERRmXsiSoyU1HtAU5t7NgrCOOf0C1vnU=
+github.com/aws/aws-sdk-go-v2/service/securitylake v1.5.0 h1:tPD6EK+g1Ts5StSGu8lbyw5cM7fcQXL2ER4Falkp/ZI=
+github.com/aws/aws-sdk-go-v2/service/securitylake v1.5.0/go.mod h1:tv13rwBfOq4ERRmXsiSoyU1HtAU5t7NgrCOOf0C1vnU=
 github.com/aws/aws-sdk-go-v2/service/sesv2 v1.18.3 h1:qm22IUC9suDtRcpR0r4fDeZUYtbWElVc900KDYfKE0Y=
 github.com/aws/aws-sdk-go-v2/service/sesv2 v1.18.3/go.mod h1:PyBoMU8XbjdHMTfKN6hUetLQsYJw8G0ry5+o5M+HeeM=
 github.com/aws/aws-sdk-go-v2/service/ssm v1.36.8 h1:Z9bclrIuHR0/yd8yGikJAbYS4iIDySF+Fo7lwBuDWfo=
@@ -137,8 +137,8 @@ github.com/aws/aws-sdk-go-v2/service/swf v1.15.3 h1:Xnshvc6ATTW6zsgycJq3uFFxqSrq
 github.com/aws/aws-sdk-go-v2/service/swf v1.15.3/go.mod h1:vDpESmkirw0MvzARQzUiBo1avMIJN+7fBrk4NIqi1yQ=
 github.com/aws/aws-sdk-go-v2/service/timestreamwrite v1.17.3 h1:hDR4DAzyudQWloO/UNqrcJEsxhnQM/+L7T0t9KJ0JeI=
 github.com/aws/aws-sdk-go-v2/service/timestreamwrite v1.17.3/go.mod h1:wdeQs9MFk4kp0PdLv/nZbIjFhR+hRu0po4roshCsesk=
-github.com/aws/aws-sdk-go-v2/service/transcribe v1.26.9 h1:Io6FqaxoRARWTMYPpuhwkw1f9mHcYE37hZmYZsQqh0k=
-github.com/aws/aws-sdk-go-v2/service/transcribe v1.26.9/go.mod h1:lyTXyRwPEAu/ZnaeNoonSuQBg4/8ygxcyH961NSWZg4=
+github.com/aws/aws-sdk-go-v2/service/transcribe v1.27.0 h1:NxJwySyDwimbaf/f4mIVAhCB9BK6z5RveJNbdCpXMgM=
+github.com/aws/aws-sdk-go-v2/service/transcribe v1.27.0/go.mod h1:lyTXyRwPEAu/ZnaeNoonSuQBg4/8ygxcyH961NSWZg4=
 github.com/aws/aws-sdk-go-v2/service/verifiedpermissions v1.0.5 h1:7ggS4re2iZzWv6w9VeiIz55zFrsyKjKolKP1cdNegPc=
 github.com/aws/aws-sdk-go-v2/service/verifiedpermissions v1.0.5/go.mod h1:UXGF5ldBMGy9PbMFahT78gvaC3wmAk+fzRSsAjf/A8Y=
 github.com/aws/aws-sdk-go-v2/service/vpclattice v1.0.8 h1:Vzr/KYOxsul3eT5gup0xhphklwP1ze/OUI7QRvHsAMU=
