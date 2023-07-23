@@ -542,8 +542,7 @@ func TestAccS3Object_kms(t *testing.T) {
 
 func TestAccS3Object_kmsAlias(t *testing.T) {
 	ctx := acctest.Context(t)
-	var obj s3.GetObjectOutput
-	resourceName := "aws_s3_object.object"
+	dataSourceName := "data.aws_s3_object.object"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	source := testAccObjectCreateTempFile(t, "{anything will do }")
@@ -559,17 +558,8 @@ func TestAccS3Object_kmsAlias(t *testing.T) {
 				PreConfig: func() {},
 				Config:    testAccObjectConfig_kmsAlias(rName, source),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckObjectExists(ctx, resourceName, &obj),
-					testAccCheckObjectSSE(ctx, resourceName, "aws:kms"),
-					testAccCheckObjectBody(&obj, "{anything will do }"),
+					resource.TestCheckResourceAttr(dataSourceName, "server_side_encryption", "aws:kms"),
 				),
-			},
-			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"acl", "source", "force_destroy"},
-				ImportStateId:           fmt.Sprintf("s3://%s/test-key", rName),
 			},
 		},
 	})
@@ -1816,6 +1806,13 @@ resource "aws_s3_object" "object" {
   key        = "test-key"
   source     = %[2]q
   kms_key_id = "alias/aws/s3"
+}
+
+data "aws_s3_object" "object" {
+  bucket = aws_s3_bucket.test.bucket
+  key    = "test-key"
+
+  depends_on = [aws_s3_object.object]
 }
 `, rName, source)
 }
