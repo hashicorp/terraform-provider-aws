@@ -63,6 +63,15 @@ func ResourceServer() *schema.Resource {
 				Optional:     true,
 				ValidateFunc: verify.ValidARN,
 			},
+			"structured_log_destinations": {
+				Type: schema.TypeSet,
+				Elem: &schema.Schema{
+					Type:         schema.TypeString,
+					ValidateFunc: verify.ValidARN,
+				},
+				Description: "This is a set of arns of destinations that will receive structured logs from the transfer server",
+				Optional:    true,
+			},
 			"directory_id": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -296,6 +305,10 @@ func resourceServerCreate(ctx context.Context, d *schema.ResourceData, meta inte
 		input.Certificate = aws.String(v.(string))
 	}
 
+	if v, ok := d.GetOk("structured_log_destinations"); ok {
+		input.StructuredLogDestinations = flex.ExpandStringSet(v.(*schema.Set))
+	}
+
 	if v, ok := d.GetOk("directory_id"); ok {
 		if input.IdentityProviderDetails == nil {
 			input.IdentityProviderDetails = &transfer.IdentityProviderDetails{}
@@ -437,6 +450,7 @@ func resourceServerRead(ctx context.Context, d *schema.ResourceData, meta interf
 	}
 
 	d.Set("arn", output.Arn)
+	d.Set("structured_log_destinations", aws.StringValueSlice(output.StructuredLogDestinations))
 	d.Set("certificate", output.Certificate)
 	if output.IdentityProviderDetails != nil {
 		d.Set("directory_id", output.IdentityProviderDetails.DirectoryId)
@@ -529,6 +543,12 @@ func resourceServerUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 		if d.HasChange("certificate") {
 			input.Certificate = aws.String(d.Get("certificate").(string))
 		}
+
+		// per the docs it does not matter if this field has changed,
+		// if the update passes this as empty the structured logging will be turned off,
+		// so we need to always pass the new.
+		_, newStructuredLogDestinations := d.GetChange("structured_log_destinations")
+		input.StructuredLogDestinations = flex.ExpandStringSet(newStructuredLogDestinations.(*schema.Set))
 
 		if d.HasChange("endpoint_details") {
 			if v, ok := d.GetOk("endpoint_details"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
