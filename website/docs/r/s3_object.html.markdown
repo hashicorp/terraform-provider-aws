@@ -30,6 +30,7 @@ resource "aws_s3_object" "object" {
 ### Server Side Encryption
 
 #### KMS Key
+
 ```terraform
 resource "aws_kms_key" "examplekms" {
   description             = "KMS key 1"
