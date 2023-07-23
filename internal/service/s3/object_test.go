@@ -1809,9 +1809,8 @@ resource "aws_s3_object" "object" {
 }
 
 data "aws_s3_object" "object" {
-  bucket = aws_s3_bucket.test.bucket
-  key    = "test-key"
-
+  bucket     = aws_s3_bucket.test.bucket
+  key        = "test-key"
   depends_on = [aws_s3_object.object]
 }
 `, rName, source)
