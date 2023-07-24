@@ -120,8 +120,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import Timestream tables using the `table_name` and `database_name` separate by a colon (`:`). For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Timestream tables using the `table_name` and `database_name` separate by a colon (`:`). For example:
 
+```terraform
+import {
+  to = aws_timestreamwrite_table.example
+  id = "ExampleTable:ExampleDatabase"
+}
 ```
-$ terraform import aws_timestreamwrite_table.example ExampleTable:ExampleDatabase
+
+Using `terraform import`, import Timestream tables using the `table_name` and `database_name` separate by a colon (`:`). For example:
+
+```console
+% terraform import aws_timestreamwrite_table.example ExampleTable:ExampleDatabase
 ```

@@ -32,8 +32,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import SimpleDB Domains using the `name`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import SimpleDB Domains using the `name`. For example:
 
+```terraform
+import {
+  to = aws_simpledb_domain.users
+  id = "users"
+}
 ```
-$ terraform import aws_simpledb_domain.users users
+
+Using `terraform import`, import SimpleDB Domains using the `name`. For example:
+
+```console
+% terraform import aws_simpledb_domain.users users
 ```

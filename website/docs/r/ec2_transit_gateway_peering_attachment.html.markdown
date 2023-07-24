@@ -77,10 +77,19 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import `aws_ec2_transit_gateway_peering_attachment` using the EC2 Transit Gateway Attachment identifier. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_ec2_transit_gateway_peering_attachment` using the EC2 Transit Gateway Attachment identifier. For example:
 
-```sh
-terraform import aws_ec2_transit_gateway_peering_attachment.example tgw-attach-12345678
+```terraform
+import {
+  to = aws_ec2_transit_gateway_peering_attachment.example
+  id = "tgw-attach-12345678"
+}
+```
+
+Using `terraform import`, import `aws_ec2_transit_gateway_peering_attachment` using the EC2 Transit Gateway Attachment identifier. For example:
+
+```console
+% terraform import aws_ec2_transit_gateway_peering_attachment.example tgw-attach-12345678
 ```
 
 [1]: /docs/providers/aws/index.html

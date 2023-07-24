@@ -124,8 +124,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import Cognito Identity Pool Roles Attachment using the Identity Pool ID. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Cognito Identity Pool Roles Attachment using the Identity Pool ID. For example:
 
+```terraform
+import {
+  to = aws_cognito_identity_pool_roles_attachment.example
+  id = "us-west-2:b64805ad-cb56-40ba-9ffc-f5d8207e6d42"
+}
 ```
-$ terraform import aws_cognito_identity_pool_roles_attachment.example us-west-2:b64805ad-cb56-40ba-9ffc-f5d8207e6d42
+
+Using `terraform import`, import Cognito Identity Pool Roles Attachment using the Identity Pool ID. For example:
+
+```console
+% terraform import aws_cognito_identity_pool_roles_attachment.example us-west-2:b64805ad-cb56-40ba-9ffc-f5d8207e6d42
 ```

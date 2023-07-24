@@ -61,6 +61,7 @@ func TestAccEC2HostDataSource_filter(t *testing.T) {
 				Config: testAccHostDataSourceConfig_filter(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, "arn", resourceName, "arn"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "asset_id", resourceName, "asset_id"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "auto_placement", resourceName, "auto_placement"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "availability_zone", resourceName, "availability_zone"),
 					resource.TestCheckResourceAttrSet(dataSourceName, "cores"),

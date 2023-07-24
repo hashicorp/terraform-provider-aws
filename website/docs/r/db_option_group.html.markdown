@@ -100,8 +100,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import DB Option groups using the `name`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import DB Option groups using the `name`. For example:
 
+```terraform
+import {
+  to = aws_db_option_group.example
+  id = "mysql-option-group"
+}
 ```
-$ terraform import aws_db_option_group.example mysql-option-group
+
+Using `terraform import`, import DB Option groups using the `name`. For example:
+
+```console
+% terraform import aws_db_option_group.example mysql-option-group
 ```

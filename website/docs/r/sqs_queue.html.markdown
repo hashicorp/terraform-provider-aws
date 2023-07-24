@@ -116,8 +116,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import SQS Queues using the `queue url`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import SQS Queues using the queue `url`. For example:
 
+```terraform
+import {
+  to = aws_sqs_queue.public_queue
+  id = "https://queue.amazonaws.com/80398EXAMPLE/MyQueue"
+}
 ```
-$ terraform import aws_sqs_queue.public_queue https://queue.amazonaws.com/80398EXAMPLE/MyQueue
+
+Using `terraform import`, import SQS Queues using the queue `url`. For example:
+
+```console
+% terraform import aws_sqs_queue.public_queue https://queue.amazonaws.com/80398EXAMPLE/MyQueue
 ```

@@ -37,8 +37,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import WorkLink Website Certificate Authority using `FLEET-ARN,WEBSITE-CA-ID`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import WorkLink Website Certificate Authority using `FLEET-ARN,WEBSITE-CA-ID`. For example:
 
+```terraform
+import {
+  to = aws_worklink_website_certificate_authority_association.example
+  id = "arn:aws:worklink::123456789012:fleet/example,abcdefghijk"
+}
 ```
-$ terraform import aws_worklink_website_certificate_authority_association.example arn:aws:worklink::123456789012:fleet/example,abcdefghijk
+
+Using `terraform import`, import WorkLink Website Certificate Authority using `FLEET-ARN,WEBSITE-CA-ID`. For example:
+
+```console
+% terraform import aws_worklink_website_certificate_authority_association.example arn:aws:worklink::123456789012:fleet/example,abcdefghijk
 ```

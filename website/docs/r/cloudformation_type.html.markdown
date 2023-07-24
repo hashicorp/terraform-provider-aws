@@ -67,8 +67,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import `aws_cloudformation_type` using the type version Amazon Resource Name (ARN). For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_cloudformation_type` using the type version Amazon Resource Name (ARN). For example:
 
+```terraform
+import {
+  to = aws_cloudformation_type.example
+  id = "arn:aws:cloudformation:us-east-1:123456789012:type/resource/ExampleCompany-ExampleService-ExampleType/1"
+}
 ```
-terraform import aws_cloudformation_type.example arn:aws:cloudformation:us-east-1:123456789012:type/resource/ExampleCompany-ExampleService-ExampleType/1
+
+Using `terraform import`, import `aws_cloudformation_type` using the type version Amazon Resource Name (ARN). For example:
+
+```console
+% terraform import aws_cloudformation_type.example arn:aws:cloudformation:us-east-1:123456789012:type/resource/ExampleCompany-ExampleService-ExampleType/1
 ```

@@ -58,8 +58,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import `aws_lightsail_disk` using the id attribute. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_lightsail_disk` using the id attribute. For example:
 
-```shell
-$ terraform import aws_lightsail_disk_attachment.test test-disk,test-instance
+```terraform
+import {
+  to = aws_lightsail_disk_attachment.test
+  id = "test-disk,test-instance"
+}
+```
+
+Using `terraform import`, import `aws_lightsail_disk` using the id attribute. For example:
+
+```console
+% terraform import aws_lightsail_disk_attachment.test test-disk,test-instance
 ```

@@ -52,8 +52,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import `aws_networkmanager_link` using the link ARN. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_networkmanager_link` using the link ARN. For example:
 
+```terraform
+import {
+  to = aws_networkmanager_link.example
+  id = "arn:aws:networkmanager::123456789012:link/global-network-0d47f6t230mz46dy4/link-444555aaabbb11223"
+}
 ```
-$ terraform import aws_networkmanager_link.example arn:aws:networkmanager::123456789012:link/global-network-0d47f6t230mz46dy4/link-444555aaabbb11223
+
+Using `terraform import`, import `aws_networkmanager_link` using the link ARN. For example:
+
+```console
+% terraform import aws_networkmanager_link.example arn:aws:networkmanager::123456789012:link/global-network-0d47f6t230mz46dy4/link-444555aaabbb11223
 ```

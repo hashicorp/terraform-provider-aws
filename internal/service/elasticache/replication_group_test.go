@@ -2729,10 +2729,17 @@ resource "aws_elasticache_replication_group" "test" {
 func testAccReplicationGroupConfig_v7(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_elasticache_replication_group" "test" {
-  replication_group_id          = %[1]q
-  replication_group_description = "test description"
-  node_type                     = "cache.t3.small"
-  engine_version                = "7.0"
+  replication_group_id = %[1]q
+  description          = "test description"
+  node_type            = "cache.t3.small"
+  engine_version       = "7.0"
+  parameter_group_name = aws_elasticache_parameter_group.test.name
+  engine               = "redis"
+}
+
+resource "aws_elasticache_parameter_group" "test" {
+  name   = %[1]q
+  family = "redis7"
 }
 `, rName)
 }

@@ -65,8 +65,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import EventBridge permissions using the `event_bus_name/statement_id` (if you omit `event_bus_name`, the `default` event bus will be used). For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import EventBridge permissions using the `event_bus_name/statement_id` (if you omit `event_bus_name`, the `default` event bus will be used). For example:
 
-```shell
-$ terraform import aws_cloudwatch_event_permission.DevAccountAccess example-event-bus/DevAccountAccess
+```terraform
+import {
+  to = aws_cloudwatch_event_permission.DevAccountAccess
+  id = "example-event-bus/DevAccountAccess"
+}
+```
+
+Using `terraform import`, import EventBridge permissions using the `event_bus_name/statement_id` (if you omit `event_bus_name`, the `default` event bus will be used). For example:
+
+```console
+% terraform import aws_cloudwatch_event_permission.DevAccountAccess example-event-bus/DevAccountAccess
 ```

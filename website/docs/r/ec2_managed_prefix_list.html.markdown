@@ -75,8 +75,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import Prefix Lists using the `id`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Prefix Lists using the `id`. For example:
 
+```terraform
+import {
+  to = aws_ec2_managed_prefix_list.default
+  id = "pl-0570a1d2d725c16be"
+}
 ```
-$ terraform import aws_ec2_managed_prefix_list.default pl-0570a1d2d725c16be
+
+Using `terraform import`, import Prefix Lists using the `id`. For example:
+
+```console
+% terraform import aws_ec2_managed_prefix_list.default pl-0570a1d2d725c16be
 ```

@@ -199,8 +199,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import GameLift Game Server Group using the `name`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import GameLift Game Server Group using the `name`. For example:
 
+```terraform
+import {
+  to = aws_gamelift_game_server_group.example
+  id = "example"
+}
 ```
-$ terraform import aws_gamelift_game_server_group.example example
+
+Using `terraform import`, import GameLift Game Server Group using the `name`. For example:
+
+```console
+% terraform import aws_gamelift_game_server_group.example example
 ```

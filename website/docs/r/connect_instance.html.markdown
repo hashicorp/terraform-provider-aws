@@ -82,8 +82,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import Connect instances using the `id`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Connect instances using the `id`. For example:
 
+```terraform
+import {
+  to = aws_connect_instance.example
+  id = "f1288a1f-6193-445a-b47e-af739b2"
+}
 ```
-$ terraform import aws_connect_instance.example f1288a1f-6193-445a-b47e-af739b2
+
+Using `terraform import`, import Connect instances using the `id`. For example:
+
+```console
+% terraform import aws_connect_instance.example f1288a1f-6193-445a-b47e-af739b2
 ```

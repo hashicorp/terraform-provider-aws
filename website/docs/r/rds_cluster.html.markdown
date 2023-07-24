@@ -418,8 +418,17 @@ any cleanup task during the destroying process.
 
 ## Import
 
-Import RDS Clusters using the `cluster_identifier`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import RDS Clusters using the `cluster_identifier`. For example:
 
+```terraform
+import {
+  to = aws_rds_cluster.aurora_cluster
+  id = "aurora-prod-cluster"
+}
 ```
-$ terraform import aws_rds_cluster.aurora_cluster aurora-prod-cluster
+
+Using `terraform import`, import RDS Clusters using the `cluster_identifier`. For example:
+
+```console
+% terraform import aws_rds_cluster.aurora_cluster aurora-prod-cluster
 ```

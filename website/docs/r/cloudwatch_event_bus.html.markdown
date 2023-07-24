@@ -48,8 +48,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import EventBridge event buses using the `name` (which can also be a partner event source name). For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import EventBridge event buses using the `name` (which can also be a partner event source name). For example:
+
+```terraform
+import {
+  to = aws_cloudwatch_event_bus.messenger
+  id = "chat-messages"
+}
+```
+
+Using `terraform import`, import EventBridge event buses using the `name` (which can also be a partner event source name). For example:
 
 ```console
-$ terraform import aws_cloudwatch_event_bus.messenger chat-messages
+% terraform import aws_cloudwatch_event_bus.messenger chat-messages
 ```

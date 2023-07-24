@@ -379,10 +379,19 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Cloudtrail trails can be imported using the `name` or `arn`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Cloudtrail Trails using the `name` or `arn`. For example:
 
+```terraform
+import {
+  to = aws_cloudtrail.sample
+  id = "my-sample-trail"
+}
 ```
-$ terraform import aws_cloudtrail.sample my-sample-trail
+
+Using `terraform import`, import Cloudtrails using the `name`. For example:
+
+```console
+% terraform import aws_cloudtrail.sample my-sample-trail
 ```
 
 or

@@ -220,8 +220,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import SageMaker Domains using the `id`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import SageMaker Domains using the `id`. For example:
 
+```terraform
+import {
+  to = aws_sagemaker_domain.test_domain
+  id = "d-8jgsjtilstu8"
+}
 ```
-$ terraform import aws_sagemaker_domain.test_domain d-8jgsjtilstu8
+
+Using `terraform import`, import SageMaker Domains using the `id`. For example:
+
+```console
+% terraform import aws_sagemaker_domain.test_domain d-8jgsjtilstu8
 ```

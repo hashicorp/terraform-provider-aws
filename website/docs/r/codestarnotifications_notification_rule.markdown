@@ -80,8 +80,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import CodeStar notification rule using the ARN. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import CodeStar notification rule using the ARN. For example:
 
+```terraform
+import {
+  to = aws_codestarnotifications_notification_rule.foo
+  id = "arn:aws:codestar-notifications:us-west-1:0123456789:notificationrule/2cdc68a3-8f7c-4893-b6a5-45b362bd4f2b"
+}
 ```
-$ terraform import aws_codestarnotifications_notification_rule.foo arn:aws:codestar-notifications:us-west-1:0123456789:notificationrule/2cdc68a3-8f7c-4893-b6a5-45b362bd4f2b
+
+Using `terraform import`, import CodeStar notification rule using the ARN. For example:
+
+```console
+% terraform import aws_codestarnotifications_notification_rule.foo arn:aws:codestar-notifications:us-west-1:0123456789:notificationrule/2cdc68a3-8f7c-4893-b6a5-45b362bd4f2b
 ```

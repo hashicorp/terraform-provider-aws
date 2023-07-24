@@ -41,8 +41,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import SageMaker Studio Lifecycle Configs using the `studio_lifecycle_config_name`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import SageMaker Studio Lifecycle Configs using the `studio_lifecycle_config_name`. For example:
 
+```terraform
+import {
+  to = aws_sagemaker_studio_lifecycle_config.example
+  id = "example"
+}
 ```
-$ terraform import aws_sagemaker_studio_lifecycle_config.example example
+
+Using `terraform import`, import SageMaker Studio Lifecycle Configs using the `studio_lifecycle_config_name`. For example:
+
+```console
+% terraform import aws_sagemaker_studio_lifecycle_config.example example
 ```

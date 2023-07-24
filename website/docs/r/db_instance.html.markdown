@@ -207,6 +207,7 @@ Defaults to true.
   Must be greater than `0` if the database is used as a source for a [Read Replica][instance-replication],
   uses [low-downtime updates](#low-downtime-updates),
   or will use [RDS Blue/Green deployments][blue-green].
+* `backup_target` - (Optional, Forces new resource) Specifies where automated backups and manual snapshots are stored. Possible values are `region` (default) and `outposts`. See [Working with Amazon RDS on AWS Outposts](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/rds-on-outposts.html) for more information.
 * `backup_window` - (Optional) The daily time range (in UTC) during which automated backups are created if they are enabled.
   Example: "09:46-10:16". Must not overlap with `maintenance_window`.
 * `blue_green_update` - (Optional) Enables low-downtime updates using [RDS Blue/Green deployments][blue-green].
@@ -442,8 +443,17 @@ The `master_user_secret` configuration block supports the following attributes:
 
 ## Import
 
-Import DB Instances using the `identifier`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import DB Instances using the `identifier`. For example:
 
+```terraform
+import {
+  to = aws_db_instance.default
+  id = "mydb-rds-instance"
+}
 ```
-$ terraform import aws_db_instance.default mydb-rds-instance
+
+Using `terraform import`, import DB Instances using the `identifier`. For example:
+
+```console
+% terraform import aws_db_instance.default mydb-rds-instance
 ```

@@ -121,8 +121,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import SSM associations using the `association_id`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import SSM associations using the `association_id`. For example:
 
+```terraform
+import {
+  to = aws_ssm_association.test-association
+  id = "10abcdef-0abc-1234-5678-90abcdef123456"
+}
 ```
-$ terraform import aws_ssm_association.test-association 10abcdef-0abc-1234-5678-90abcdef123456
+
+Using `terraform import`, import SSM associations using the `association_id`. For example:
+
+```console
+% terraform import aws_ssm_association.test-association 10abcdef-0abc-1234-5678-90abcdef123456
 ```

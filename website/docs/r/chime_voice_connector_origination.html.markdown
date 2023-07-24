@@ -66,8 +66,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import Chime Voice Connector Origination using the `voice_connector_id`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Chime Voice Connector Origination using the `voice_connector_id`. For example:
 
+```terraform
+import {
+  to = aws_chime_voice_connector_origination.default
+  id = "abcdef1ghij2klmno3pqr4"
+}
 ```
-$ terraform import aws_chime_voice_connector_origination.default abcdef1ghij2klmno3pqr4
+
+Using `terraform import`, import Chime Voice Connector Origination using the `voice_connector_id`. For example:
+
+```console
+% terraform import aws_chime_voice_connector_origination.default abcdef1ghij2klmno3pqr4
 ```

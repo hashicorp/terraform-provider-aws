@@ -163,8 +163,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import LBs using their ARN. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import LBs using their ARN. For example:
 
+```terraform
+import {
+  to = aws_lb.bar
+  id = "arn:aws:elasticloadbalancing:us-west-2:123456789012:loadbalancer/app/my-load-balancer/50dc6c495c0c9188"
+}
 ```
-$ terraform import aws_lb.bar arn:aws:elasticloadbalancing:us-west-2:123456789012:loadbalancer/app/my-load-balancer/50dc6c495c0c9188
+
+Using `terraform import`, import LBs using their ARN. For example:
+
+```console
+% terraform import aws_lb.bar arn:aws:elasticloadbalancing:us-west-2:123456789012:loadbalancer/app/my-load-balancer/50dc6c495c0c9188
 ```

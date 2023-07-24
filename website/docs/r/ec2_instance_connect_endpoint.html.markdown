@@ -49,8 +49,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import EC2 Instance Connect Endpoints using the `id`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import EC2 Instance Connect Endpoints using the `id`. For example:
 
+```terraform
+import {
+  to = aws_ec2_instance_connect_endpoint.example
+  id = "eice-012345678"
+}
 ```
-$ terraform import aws_ec2_instance_connect_endpoint.example eice-012345678
+
+Using `terraform import`, import EC2 Instance Connect Endpoints using the `id`. For example:
+
+```console
+% terraform import aws_ec2_instance_connect_endpoint.example eice-012345678
 ```

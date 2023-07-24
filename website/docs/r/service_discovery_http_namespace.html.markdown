@@ -36,8 +36,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import Service Discovery HTTP Namespace using the namespace ID. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Service Discovery HTTP Namespace using the namespace ID. For example:
 
+```terraform
+import {
+  to = aws_service_discovery_http_namespace.example
+  id = "ns-1234567890"
+}
 ```
-$ terraform import aws_service_discovery_http_namespace.example ns-1234567890
+
+Using `terraform import`, import Service Discovery HTTP Namespace using the namespace ID. For example:
+
+```console
+% terraform import aws_service_discovery_http_namespace.example ns-1234567890
 ```

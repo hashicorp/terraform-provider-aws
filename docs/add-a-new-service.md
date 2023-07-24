@@ -19,7 +19,10 @@ Before new resources are submitted, please raise a separate pull request contain
 To add an AWS SDK for Go service client:
 
 1. Check the file `names/names_data.csv` for the service.
-  If it is already there, you are ready to implement the first [resource](./add-a-new-resource.md) or [data source](./add-a-new-datasource.md).
+
+1. If the service is there and there is no value in the `NotImplmented` column, you are ready to implement the first [resource](./add-a-new-resource.md) or [data source](./add-a-new-datasource.md).
+
+1. If the service is there and there is a value in the `NotImplemented` column, remove it and submit the client pull request as described below.
 
 1. Otherwise, determine the service identifier using the rule described in [the Naming Guide](naming.md#service-identifier).
 
@@ -28,7 +31,7 @@ To add an AWS SDK for Go service client:
   The Provider and generators depend on the file being correct.
   We strongly recommend using an editor with CSV support._**
 
-1. Run the following then submit the pull request:
+To generate the client, run the following then submit the pull request:
 
   ```sh
   make gen

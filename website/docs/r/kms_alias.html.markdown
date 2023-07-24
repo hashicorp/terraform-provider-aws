@@ -41,8 +41,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import KMS aliases using the `name`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import KMS aliases using the `name`. For example:
 
+```terraform
+import {
+  to = aws_kms_alias.a
+  id = "alias/my-key-alias"
+}
 ```
-$ terraform import aws_kms_alias.a alias/my-key-alias
+
+Using `terraform import`, import KMS aliases using the `name`. For example:
+
+```console
+% terraform import aws_kms_alias.a alias/my-key-alias
 ```

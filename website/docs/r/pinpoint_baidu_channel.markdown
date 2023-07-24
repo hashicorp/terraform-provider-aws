@@ -40,8 +40,17 @@ This resource exports no additional attributes.
 
 ## Import
 
-Import Pinpoint Baidu Channel using the `application-id`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Pinpoint Baidu Channel using the `application-id`. For example:
 
+```terraform
+import {
+  to = aws_pinpoint_baidu_channel.channel
+  id = "application-id"
+}
 ```
-$ terraform import aws_pinpoint_baidu_channel.channel application-id
+
+Using `terraform import`, import Pinpoint Baidu Channel using the `application-id`. For example:
+
+```console
+% terraform import aws_pinpoint_baidu_channel.channel application-id
 ```

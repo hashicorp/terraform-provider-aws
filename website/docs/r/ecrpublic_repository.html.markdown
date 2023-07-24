@@ -75,8 +75,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import ECR Public Repositories using the `repository_name`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import ECR Public Repositories using the `repository_name`. For example:
 
+```terraform
+import {
+  to = aws_ecrpublic_repository.example
+  id = "example"
+}
 ```
-$ terraform import aws_ecrpublic_repository.example example
+
+Using `terraform import`, import ECR Public Repositories using the `repository_name`. For example:
+
+```console
+% terraform import aws_ecrpublic_repository.example example
 ```

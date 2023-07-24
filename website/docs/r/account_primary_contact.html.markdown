@@ -51,8 +51,17 @@ This resource exports no additional attributes.
 
 ## Import
 
-Import the Primary Contact using the `account_id`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import the Primary Contact using the `account_id`. For example:
 
+```terraform
+import {
+  to = aws_account_primary_contact.test
+  id = "1234567890"
+}
 ```
-$ terraform import aws_account_primary_contact.test 1234567890
+
+Using `terraform import`, import the Primary Contact using the `account_id`. For example:
+
+```console
+% terraform import aws_account_primary_contact.test 1234567890
 ```
