@@ -127,40 +127,8 @@ func (visitor expandVisitor) visit(ctx context.Context, fieldName string, valFro
 		return fwdiag.DiagnosticsError(diags)
 
 	case basetypes.SetValuable:
-		v, diags := vFrom.ToSetValue(ctx)
-		if err := fwdiag.DiagnosticsError(diags); err != nil {
-			return err
-		}
-		switch v.ElementType(ctx).(type) {
-		case basetypes.StringTypable:
-			switch kTo {
-			case reflect.Slice:
-				switch tSliceElem := valTo.Type().Elem(); tSliceElem.Kind() {
-				case reflect.String:
-					//
-					// types.Set(OfString) -> []string.
-					//
-					valTo.Set(reflect.ValueOf(ExpandFrameworkStringValueSet(ctx, v)))
-					return nil
-
-				case reflect.Ptr:
-					switch tSliceElem.Elem().Kind() {
-					case reflect.String:
-						//
-						// types.Set(OfString) -> []*string.
-						//
-						valTo.Set(reflect.ValueOf(ExpandFrameworkStringSet(ctx, v)))
-						return nil
-					}
-				}
-			}
-
-		case basetypes.ObjectTypable:
-			//
-			// types.Set(OfObject) -> ???.
-			//
-			return nil
-		}
+		diags := visitor.set(ctx, vFrom, valTo)
+		return fwdiag.DiagnosticsError(diags)
 	}
 
 	return fmt.Errorf("incompatible (%s): %s", tFrom, kTo)
@@ -389,7 +357,7 @@ func (visitor expandVisitor) listOfObject(ctx context.Context, vFrom basetypes.L
 	return diags
 }
 
-// map copies a Plugin Framework Map(ish) value to a compatible AWS API field.
+// map_ copies a Plugin Framework Map(ish) value to a compatible AWS API field.
 func (visitor expandVisitor) map_(ctx context.Context, vFrom basetypes.MapValuable, vTo reflect.Value) diag.Diagnostics {
 	v, diags := vFrom.ToMapValue(ctx)
 	if diags.HasError() {
@@ -440,6 +408,54 @@ func (visitor expandVisitor) mapOfString(ctx context.Context, vFrom basetypes.Ma
 	return diags
 }
 
+// set copies a Plugin Framework Set(ish) value to a compatible AWS API field.
+func (visitor expandVisitor) set(ctx context.Context, vFrom basetypes.SetValuable, vTo reflect.Value) diag.Diagnostics {
+	v, diags := vFrom.ToSetValue(ctx)
+	if diags.HasError() {
+		return diags
+	}
+
+	switch v.ElementType(ctx).(type) {
+	case basetypes.StringTypable:
+		return visitor.setOfString(ctx, v, vTo)
+	}
+
+	diags.Append(visitor.newIncompatibleSetTypesError(ctx, v, vTo))
+
+	return diags
+}
+
+// setOfString copies a Plugin Framework SetOfString(ish) value to a compatible AWS API field.
+func (visitor expandVisitor) setOfString(ctx context.Context, vFrom basetypes.SetValue, vTo reflect.Value) diag.Diagnostics {
+	var diags diag.Diagnostics
+
+	switch vTo.Kind() {
+	case reflect.Slice:
+		switch tSliceElem := vTo.Type().Elem(); tSliceElem.Kind() {
+		case reflect.String:
+			//
+			// types.Set(OfString) -> []string.
+			//
+			vTo.Set(reflect.ValueOf(ExpandFrameworkStringValueSet(ctx, vFrom)))
+			return diags
+
+		case reflect.Ptr:
+			switch tSliceElem.Elem().Kind() {
+			case reflect.String:
+				//
+				// types.Set(OfString) -> []*string.
+				//
+				vTo.Set(reflect.ValueOf(ExpandFrameworkStringSet(ctx, vFrom)))
+				return diags
+			}
+		}
+	}
+
+	diags.Append(visitor.newIncompatibleSetTypesError(ctx, vFrom, vTo))
+
+	return diags
+}
+
 func (visitor expandVisitor) newIncompatibleTypesError(ctx context.Context, vFrom attr.Value, vTo reflect.Value) diag.ErrorDiagnostic {
 	return diag.NewErrorDiagnostic("Incompatible types", fmt.Sprintf("%s cannot be expanded to %s", vFrom.Type(ctx), vTo.Kind()))
 }
@@ -449,5 +465,9 @@ func (visitor expandVisitor) newIncompatibleListTypesError(ctx context.Context, 
 }
 
 func (visitor expandVisitor) newIncompatibleMapTypesError(ctx context.Context, vFrom basetypes.MapValue, vTo reflect.Value) diag.ErrorDiagnostic {
-	return diag.NewErrorDiagnostic("Incompatible types", fmt.Sprintf("map[%s] cannot be expanded to %s", vFrom.ElementType(ctx), vTo.Kind()))
+	return diag.NewErrorDiagnostic("Incompatible types", fmt.Sprintf("map[string, %s] cannot be expanded to %s", vFrom.ElementType(ctx), vTo.Kind()))
+}
+
+func (visitor expandVisitor) newIncompatibleSetTypesError(ctx context.Context, vFrom basetypes.SetValue, vTo reflect.Value) diag.ErrorDiagnostic {
+	return diag.NewErrorDiagnostic("Incompatible types", fmt.Sprintf("set[%s] cannot be expanded to %s", vFrom.ElementType(ctx), vTo.Kind()))
 }
