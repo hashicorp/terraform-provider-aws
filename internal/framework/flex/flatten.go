@@ -9,6 +9,7 @@ import (
 	"reflect"
 
 	"github.com/hashicorp/terraform-plugin-framework/attr"
+	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
@@ -45,18 +46,8 @@ func (visitor flattenVisitor) visit(ctx context.Context, fieldName string, valFr
 	switch kFrom {
 	// Simple types.
 	case reflect.Bool:
-		switch tTo := tTo.(type) {
-		case basetypes.BoolTypable:
-			//
-			// bool -> types.Bool.
-			//
-			v, diags := tTo.ValueFromBool(ctx, types.BoolValue(valFrom.Bool()))
-			if err := fwdiag.DiagnosticsError(diags); err != nil {
-				return err
-			}
-			valTo.Set(reflect.ValueOf(v))
-			return nil
-		}
+		diags := visitor.bool(ctx, valFrom, tTo, valTo)
+		return fwdiag.DiagnosticsError(diags)
 
 	case reflect.Float32, reflect.Float64:
 		switch tTo := tTo.(type) {
@@ -315,4 +306,32 @@ func (visitor flattenVisitor) visit(ctx context.Context, fieldName string, valFr
 	}
 
 	return fmt.Errorf("incompatible (%s): %s", kFrom, tTo)
+}
+
+// bool copies an AWS API bool value to a compatible Plugin Framework field.
+func (visitor flattenVisitor) bool(ctx context.Context, vFrom reflect.Value, tTo attr.Type, vTo reflect.Value) diag.Diagnostics {
+	var diags diag.Diagnostics
+
+	switch tTo := tTo.(type) {
+	case basetypes.BoolTypable:
+		v, d := tTo.ValueFromBool(ctx, types.BoolValue(vFrom.Bool()))
+		if d.HasError() {
+			diags.Append(d...)
+			return diags
+		}
+
+		//
+		// bool -> types.Bool.
+		//
+		vTo.Set(reflect.ValueOf(v))
+		return diags
+	}
+
+	diags.Append(visitor.newIncompatibleTypesError(ctx, vFrom, tTo))
+
+	return diags
+}
+
+func (visitor flattenVisitor) newIncompatibleTypesError(ctx context.Context, vFrom reflect.Value, tTo attr.Type) diag.ErrorDiagnostic {
+	return diag.NewErrorDiagnostic("Incompatible types", fmt.Sprintf("%s cannot be flattened to %s", vFrom.Kind(), tTo))
 }
