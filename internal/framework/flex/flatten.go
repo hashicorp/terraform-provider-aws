@@ -73,50 +73,8 @@ func (visitor flattenVisitor) visit(ctx context.Context, fieldName string, valFr
 
 		// Map of simple types or pointer to simple types.
 	case reflect.Map:
-		switch tMapKey := valFrom.Type().Key(); tMapKey.Kind() {
-		case reflect.String:
-			vFrom := valFrom.Interface()
-			switch tMapElem := valFrom.Type().Elem(); tMapElem.Kind() {
-			case reflect.String:
-				switch tTo := tTo.(type) {
-				case basetypes.MapTypable:
-					//
-					// map[string]string -> types.Map(OfString).
-					//
-					if vFrom != nil {
-						v, diags := tTo.ValueFromMap(ctx, FlattenFrameworkStringValueMap(ctx, vFrom.(map[string]string)))
-						if err := fwdiag.DiagnosticsError(diags); err != nil {
-							return err
-						}
-						valTo.Set(reflect.ValueOf(v))
-					} else {
-						valTo.Set(reflect.ValueOf(types.MapNull(types.StringType)))
-					}
-					return nil
-				}
-
-			case reflect.Ptr:
-				switch tMapElem.Elem().Kind() {
-				case reflect.String:
-					switch tTo := tTo.(type) {
-					case basetypes.MapTypable:
-						//
-						// map[string]*string -> types.Map(OfString).
-						//
-						if vFrom != nil {
-							v, diags := tTo.ValueFromMap(ctx, FlattenFrameworkStringMap(ctx, vFrom.(map[string]*string)))
-							if err := fwdiag.DiagnosticsError(diags); err != nil {
-								return err
-							}
-							valTo.Set(reflect.ValueOf(v))
-						} else {
-							valTo.Set(reflect.ValueOf(types.MapNull(types.StringType)))
-						}
-						return nil
-					}
-				}
-			}
-		}
+		diags := visitor.map_(ctx, valFrom, tTo, valTo)
+		return fwdiag.DiagnosticsError(diags)
 	}
 
 	return fmt.Errorf("incompatible (%s): %s", kFrom, tTo)
@@ -363,6 +321,65 @@ func (visitor flattenVisitor) slice(ctx context.Context, vFrom reflect.Value, tT
 
 				vTo.Set(reflect.ValueOf(v))
 				return diags
+			}
+		}
+	}
+
+	diags.Append(visitor.newIncompatibleTypesError(ctx, vFrom, tTo))
+
+	return diags
+}
+
+// map_ copies an AWS API map value to a compatible Plugin Framework field.
+func (visitor flattenVisitor) map_(ctx context.Context, vFrom reflect.Value, tTo attr.Type, vTo reflect.Value) diag.Diagnostics {
+	var diags diag.Diagnostics
+
+	switch tMapKey := vFrom.Type().Key(); tMapKey.Kind() {
+	case reflect.String:
+		switch tMapElem := vFrom.Type().Elem(); tMapElem.Kind() {
+		case reflect.String:
+			switch tTo := tTo.(type) {
+			case basetypes.MapTypable:
+				//
+				// map[string]string -> types.Map(OfString).
+				//
+				if vFrom.IsNil() {
+					vTo.Set(reflect.ValueOf(types.MapNull(types.StringType)))
+					return diags
+				}
+
+				v, d := tTo.ValueFromMap(ctx, FlattenFrameworkStringValueMap(ctx, vFrom.Interface().(map[string]string)))
+				diags.Append(d...)
+				if diags.HasError() {
+					return diags
+				}
+
+				vTo.Set(reflect.ValueOf(v))
+				return diags
+			}
+
+		case reflect.Ptr:
+			switch tMapElem.Elem().Kind() {
+			case reflect.String:
+				switch tTo := tTo.(type) {
+				case basetypes.MapTypable:
+					//
+					// map[string]*string -> types.Map(OfString).
+					//
+					if vFrom.IsNil() {
+						vTo.Set(reflect.ValueOf(types.MapNull(types.StringType)))
+						return diags
+					}
+
+					v, d := tTo.ValueFromMap(ctx, FlattenFrameworkStringMap(ctx, vFrom.Interface().(map[string]*string)))
+					diags.Append(d...)
+					if diags.HasError() {
+						return diags
+					}
+
+					vTo.Set(reflect.ValueOf(v))
+					return diags
+				}
 			}
 		}
 	}
