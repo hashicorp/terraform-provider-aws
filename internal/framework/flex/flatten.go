@@ -58,18 +58,8 @@ func (visitor flattenVisitor) visit(ctx context.Context, fieldName string, valFr
 		return fwdiag.DiagnosticsError(diags)
 
 	case reflect.String:
-		switch tTo := tTo.(type) {
-		case basetypes.StringTypable:
-			//
-			// string -> types.String.
-			//
-			v, diags := tTo.ValueFromString(ctx, types.StringValue(valFrom.String()))
-			if err := fwdiag.DiagnosticsError(diags); err != nil {
-				return err
-			}
-			valTo.Set(reflect.ValueOf(v))
-			return nil
-		}
+		diags := visitor.string(ctx, valFrom, tTo, valTo)
+		return fwdiag.DiagnosticsError(diags)
 
 	// Pointer to simple types.
 	case reflect.Ptr:
@@ -350,6 +340,30 @@ func (visitor flattenVisitor) int(ctx context.Context, vFrom reflect.Value, tTo 
 
 		//
 		// int32/int64 -> types.Int64.
+		//
+		vTo.Set(reflect.ValueOf(v))
+		return diags
+	}
+
+	diags.Append(visitor.newIncompatibleTypesError(ctx, vFrom, tTo))
+
+	return diags
+}
+
+// string copies an AWS API int value to a compatible Plugin Framework field.
+func (visitor flattenVisitor) string(ctx context.Context, vFrom reflect.Value, tTo attr.Type, vTo reflect.Value) diag.Diagnostics {
+	var diags diag.Diagnostics
+
+	switch tTo := tTo.(type) {
+	case basetypes.StringTypable:
+		v, d := tTo.ValueFromString(ctx, types.StringValue(vFrom.String()))
+		diags.Append(d...)
+		if diags.HasError() {
+			return diags
+		}
+
+		//
+		// string -> types.String.
 		//
 		vTo.Set(reflect.ValueOf(v))
 		return diags
