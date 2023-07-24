@@ -121,6 +121,11 @@ func resourceParameterGroupRead(ctx context.Context, d *schema.ResourceData, met
 	conn := meta.(*conns.AWSClient).ElastiCacheConn(ctx)
 
 	parameterGroup, err := FindParameterGroupByName(ctx, conn, d.Id())
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] ElastiCache Parameter Group (%s) not found, removing from state", d.Id())
+		d.SetId("")
+		return diags
+	}
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "unable to find ElastiCache Parameter Group (%s): %s", d.Id(), err)
 	}
