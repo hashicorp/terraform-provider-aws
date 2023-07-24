@@ -340,7 +340,7 @@ func (visitor expandVisitor) list(ctx context.Context, vFrom basetypes.ListValua
 		return diags
 	}
 
-	switch /*tElem := */ v.ElementType(ctx).(type) {
+	switch v.ElementType(ctx).(type) {
 	case basetypes.StringTypable:
 		return visitor.listOfString(ctx, v, vTo)
 
@@ -348,7 +348,7 @@ func (visitor expandVisitor) list(ctx context.Context, vFrom basetypes.ListValua
 		return visitor.listOfObject(ctx, v, vTo)
 	}
 
-	diags.Append(visitor.newIncompatibleTypesError(ctx, vFrom, vTo))
+	diags.Append(visitor.newIncompatibleListTypesError(ctx, v, vTo))
 
 	return diags
 }
@@ -379,7 +379,7 @@ func (visitor expandVisitor) listOfString(ctx context.Context, vFrom basetypes.L
 		}
 	}
 
-	diags.Append(visitor.newIncompatibleTypesError(ctx, vFrom, vTo))
+	diags.Append(visitor.newIncompatibleListTypesError(ctx, vFrom, vTo))
 
 	return diags
 }
@@ -413,11 +413,15 @@ func (visitor expandVisitor) listOfObject(ctx context.Context, vFrom basetypes.L
 		}
 	}
 
-	diags.Append(visitor.newIncompatibleTypesError(ctx, vFrom, vTo))
+	diags.Append(visitor.newIncompatibleListTypesError(ctx, vFrom, vTo))
 
 	return diags
 }
 
 func (visitor expandVisitor) newIncompatibleTypesError(ctx context.Context, vFrom attr.Value, vTo reflect.Value) diag.ErrorDiagnostic {
 	return diag.NewErrorDiagnostic("Incompatible types", fmt.Sprintf("%s cannot be expanded to %s", vFrom.Type(ctx), vTo.Kind()))
+}
+
+func (visitor expandVisitor) newIncompatibleListTypesError(ctx context.Context, vFrom basetypes.ListValue, vTo reflect.Value) diag.ErrorDiagnostic {
+	return diag.NewErrorDiagnostic("Incompatible types", fmt.Sprintf("list[%s] cannot be expanded to %s", vFrom.ElementType(ctx), vTo.Kind()))
 }
