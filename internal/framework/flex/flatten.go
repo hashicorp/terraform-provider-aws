@@ -66,79 +66,10 @@ func (visitor flattenVisitor) visit(ctx context.Context, fieldName string, valFr
 		diags := visitor.pointer(ctx, valFrom, tTo, valTo)
 		return fwdiag.DiagnosticsError(diags)
 
-	// Slice of simple types or pointer to simple types.
+	// Slice of primitive types or pointer to primitive types.
 	case reflect.Slice:
-		vFrom := valFrom.Interface()
-		switch tSliceElem := valFrom.Type().Elem(); tSliceElem.Kind() {
-		case reflect.String:
-			switch tTo := tTo.(type) {
-			case basetypes.ListTypable:
-				//
-				// []string -> types.List(OfString).
-				//
-				if vFrom != nil {
-					v, diags := tTo.ValueFromList(ctx, FlattenFrameworkStringValueList(ctx, vFrom.([]string)))
-					if err := fwdiag.DiagnosticsError(diags); err != nil {
-						return err
-					}
-					valTo.Set(reflect.ValueOf(v))
-				} else {
-					valTo.Set(reflect.ValueOf(types.ListNull(types.StringType)))
-				}
-				return nil
-
-			case basetypes.SetTypable:
-				//
-				// []string -> types.Set(OfString).
-				//
-				if vFrom != nil {
-					v, diags := tTo.ValueFromSet(ctx, FlattenFrameworkStringValueSet(ctx, vFrom.([]string)))
-					if err := fwdiag.DiagnosticsError(diags); err != nil {
-						return err
-					}
-					valTo.Set(reflect.ValueOf(v))
-				} else {
-					valTo.Set(reflect.ValueOf(types.SetNull(types.StringType)))
-				}
-				return nil
-			}
-
-		case reflect.Ptr:
-			switch tSliceElem.Elem().Kind() {
-			case reflect.String:
-				switch tTo := tTo.(type) {
-				case basetypes.ListTypable:
-					//
-					// []*string -> types.List(OfString).
-					//
-					if vFrom != nil {
-						v, diags := tTo.ValueFromList(ctx, FlattenFrameworkStringList(ctx, vFrom.([]*string)))
-						if err := fwdiag.DiagnosticsError(diags); err != nil {
-							return err
-						}
-						valTo.Set(reflect.ValueOf(v))
-					} else {
-						valTo.Set(reflect.ValueOf(types.ListNull(types.StringType)))
-					}
-					return nil
-
-				case basetypes.SetTypable:
-					//
-					// []*string -> types.Set(OfString).
-					//
-					if vFrom != nil {
-						v, diags := tTo.ValueFromSet(ctx, FlattenFrameworkStringSet(ctx, vFrom.([]*string)))
-						if err := fwdiag.DiagnosticsError(diags); err != nil {
-							return err
-						}
-						valTo.Set(reflect.ValueOf(v))
-					} else {
-						valTo.Set(reflect.ValueOf(types.SetNull(types.StringType)))
-					}
-					return nil
-				}
-			}
-		}
+		diags := visitor.slice(ctx, valFrom, tTo, valTo)
+		return fwdiag.DiagnosticsError(diags)
 
 		// Map of simple types or pointer to simple types.
 	case reflect.Map:
@@ -341,6 +272,98 @@ func (visitor flattenVisitor) pointer(ctx context.Context, vFrom reflect.Value, 
 			// *struct -> types.Set(OfObject).
 			//
 			return diags
+		}
+	}
+
+	diags.Append(visitor.newIncompatibleTypesError(ctx, vFrom, tTo))
+
+	return diags
+}
+
+// slice copies an AWS API slice value to a compatible Plugin Framework field.
+func (visitor flattenVisitor) slice(ctx context.Context, vFrom reflect.Value, tTo attr.Type, vTo reflect.Value) diag.Diagnostics {
+	var diags diag.Diagnostics
+
+	switch tSliceElem := vFrom.Type().Elem(); tSliceElem.Kind() {
+	case reflect.String:
+		switch tTo := tTo.(type) {
+		case basetypes.ListTypable:
+			//
+			// []string -> types.List(OfString).
+			//
+			if vFrom.IsNil() {
+				vTo.Set(reflect.ValueOf(types.ListNull(types.StringType)))
+				return diags
+			}
+
+			v, d := tTo.ValueFromList(ctx, FlattenFrameworkStringValueList(ctx, vFrom.Interface().([]string)))
+			diags.Append(d...)
+			if diags.HasError() {
+				return diags
+			}
+
+			vTo.Set(reflect.ValueOf(v))
+			return diags
+
+		case basetypes.SetTypable:
+			//
+			// []string -> types.Set(OfString).
+			//
+			if vFrom.IsNil() {
+				vTo.Set(reflect.ValueOf(types.SetNull(types.StringType)))
+				return diags
+			}
+
+			v, d := tTo.ValueFromSet(ctx, FlattenFrameworkStringValueSet(ctx, vFrom.Interface().([]string)))
+			diags.Append(d...)
+			if diags.HasError() {
+				return diags
+			}
+
+			vTo.Set(reflect.ValueOf(v))
+			return diags
+		}
+
+	case reflect.Ptr:
+		switch tSliceElem.Elem().Kind() {
+		case reflect.String:
+			switch tTo := tTo.(type) {
+			case basetypes.ListTypable:
+				//
+				// []*string -> types.List(OfString).
+				//
+				if vFrom.IsNil() {
+					vTo.Set(reflect.ValueOf(types.ListNull(types.StringType)))
+					return diags
+				}
+
+				v, d := tTo.ValueFromList(ctx, FlattenFrameworkStringList(ctx, vFrom.Interface().([]*string)))
+				diags.Append(d...)
+				if diags.HasError() {
+					return diags
+				}
+
+				vTo.Set(reflect.ValueOf(v))
+				return diags
+
+			case basetypes.SetTypable:
+				//
+				// []string -> types.Set(OfString).
+				//
+				if vFrom.IsNil() {
+					vTo.Set(reflect.ValueOf(types.SetNull(types.StringType)))
+					return diags
+				}
+
+				v, d := tTo.ValueFromSet(ctx, FlattenFrameworkStringSet(ctx, vFrom.Interface().([]*string)))
+				diags.Append(d...)
+				if diags.HasError() {
+					return diags
+				}
+
+				vTo.Set(reflect.ValueOf(v))
+				return diags
+			}
 		}
 	}
 
