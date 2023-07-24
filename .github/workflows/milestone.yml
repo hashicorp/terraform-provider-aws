@@ -84,7 +84,7 @@ jobs:
           gh issue edit $(echo ${{ steps.get-issues.outputs.issues }} | jq --raw-output '.') --remove-label prioritized
 
   archive_and_unlabel:
-    name: 'Archive Project Items & Remove Label on Milestone Closed'
+    name: 'Archive Project Items on Milestone Closed'
     runs-on: ubuntu-latest
     env:
       MILESTONE: ${{ github.event.milestone.number }}
