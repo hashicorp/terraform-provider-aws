@@ -32,10 +32,3 @@ jobs:
           PROJECT_ITEM_ID=$(gh project item-add ${{ env.PROJECT_NUMBER }} --owner "hashicorp" --url ${{ env.ITEM_URL }} | jq '.id')
           gh project item-edit --id "$PROJECT_ITEM_ID" --project-id ${{ env.PROJECT_ID }} --field-id ${{ env.STATUS_FIELD_ID }} --single-select-option-id ${{ vars.team_project_status_pending_merge }}
           gh project item-edit --id "$PROJECT_ITEM_ID" --project-id ${{ env.PROJECT_ID }} --field-id ${{ env.VIEW_FIELD_ID }} --single-select-option-id ${{ vars.team_project_view_working_board }}
-
-      - name: 'Pull Requests With Changes Requested by Maintainers'
-        if: github.event.review.state == 'CHANGES_REQUESTED' && needs.community_check.outputs.maintainer == 'true'
-        run: |
-          PROJECT_ITEM_ID=$(gh project item-add ${{ env.PROJECT_NUMBER }} --owner "hashicorp" --url ${{ env.ITEM_URL }} | jq '.id')
-          gh project item-edit --id "$PROJECT_ITEM_ID" --project-id ${{ env.PROJECT_ID }} --field-id ${{ env.STATUS_FIELD_ID }} --single-select-option-id ${{ vars.team_project_status_waiting }}
-          gh project item-edit --id "$PROJECT_ITEM_ID" --project-id ${{ env.PROJECT_ID }} --field-id ${{ env.VIEW_FIELD_ID }} --single-select-option-id ${{ vars.team_project_view_working_board }}
