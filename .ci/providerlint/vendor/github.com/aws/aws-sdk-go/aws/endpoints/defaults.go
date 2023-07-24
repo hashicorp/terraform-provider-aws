@@ -32598,11 +32598,18 @@ var awscnPartition = partition{
 			},
 		},
 		"savingsplans": service{
-			PartitionEndpoint: "aws-cn",
-			IsRegionalized:    boxedFalse,
+			IsRegionalized: boxedTrue,
 			Endpoints: serviceEndpoints{
 				endpointKey{
-					Region: "aws-cn",
+					Region: "cn-north-1",
+				}: endpoint{
+					Hostname: "savingsplans.cn-north-1.amazonaws.com.cn",
+					CredentialScope: credentialScope{
+						Region: "cn-north-1",
+					},
+				},
+				endpointKey{
+					Region: "cn-northwest-1",
 				}: endpoint{
 					Hostname: "savingsplans.cn-northwest-1.amazonaws.com.cn",
 					CredentialScope: credentialScope{
