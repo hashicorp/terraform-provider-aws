@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package acctest
 
 import (
@@ -23,9 +26,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-go/tfprotov5"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/provider"
@@ -270,7 +273,7 @@ func vcrProviderConfigureContextFunc(provider *schema.Provider, configureContext
 		// TODO Need to loop through all API clients to do this.
 		// TODO Use []*client.Client?
 		// TODO AWS SDK for Go v2 API clients.
-		meta.LogsConn().Handlers.AfterRetry.PushFront(func(r *request.Request) {
+		meta.LogsConn(ctx).Handlers.AfterRetry.PushFront(func(r *request.Request) {
 			// We have to use 'Contains' rather than 'errors.Is' because 'awserr.Error' doesn't implement 'Unwrap'.
 			if errs.Contains(r.Error, cassette.ErrInteractionNotFound.Error()) {
 				r.Retryable = aws.Bool(false)

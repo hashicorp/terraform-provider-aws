@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package apigatewayv2
 
 import (
@@ -17,9 +20,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_apigatewayv2_vpc_link")
+// @SDKResource("aws_apigatewayv2_vpc_link", name="VPC Link")
+// @Tags(identifierAttribute="arn")
 func ResourceVPCLink() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceVPCLinkCreate,
@@ -45,17 +50,15 @@ func ResourceVPCLink() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
-				Set:      schema.HashString,
 			},
 			"subnet_ids": {
 				Type:     schema.TypeSet,
 				Required: true,
 				ForceNew: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
-				Set:      schema.HashString,
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
 
 		CustomizeDiff: verify.SetTagsDiff,
@@ -64,19 +67,17 @@ func ResourceVPCLink() *schema.Resource {
 
 func resourceVPCLinkCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).APIGatewayV2Conn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
+	conn := meta.(*conns.AWSClient).APIGatewayV2Conn(ctx)
 
-	req := &apigatewayv2.CreateVpcLinkInput{
+	input := &apigatewayv2.CreateVpcLinkInput{
 		Name:             aws.String(d.Get("name").(string)),
 		SecurityGroupIds: flex.ExpandStringSet(d.Get("security_group_ids").(*schema.Set)),
 		SubnetIds:        flex.ExpandStringSet(d.Get("subnet_ids").(*schema.Set)),
-		Tags:             Tags(tags.IgnoreAWS()),
+		Tags:             getTagsIn(ctx),
 	}
 
-	log.Printf("[DEBUG] Creating API Gateway v2 VPC Link: %s", req)
-	resp, err := conn.CreateVpcLinkWithContext(ctx, req)
+	log.Printf("[DEBUG] Creating API Gateway v2 VPC Link: %s", input)
+	resp, err := conn.CreateVpcLinkWithContext(ctx, input)
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating API Gateway v2 VPC Link: %s", err)
 	}
@@ -92,9 +93,7 @@ func resourceVPCLinkCreate(ctx context.Context, d *schema.ResourceData, meta int
 
 func resourceVPCLinkRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).APIGatewayV2Conn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).APIGatewayV2Conn(ctx)
 
 	outputRaw, _, err := StatusVPCLink(ctx, conn, d.Id())()
 	if tfawserr.ErrCodeEquals(err, apigatewayv2.ErrCodeNotFoundException) && !d.IsNewResource() {
@@ -122,23 +121,14 @@ func resourceVPCLinkRead(ctx context.Context, d *schema.ResourceData, meta inter
 		return sdkdiag.AppendErrorf(diags, "setting subnet_ids: %s", err)
 	}
 
-	tags := KeyValueTags(ctx, output.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
-	}
+	setTagsOut(ctx, output.Tags)
 
 	return diags
 }
 
 func resourceVPCLinkUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).APIGatewayV2Conn()
+	conn := meta.(*conns.AWSClient).APIGatewayV2Conn(ctx)
 
 	if d.HasChange("name") {
 		req := &apigatewayv2.UpdateVpcLinkInput{
@@ -153,19 +143,12 @@ func resourceVPCLinkUpdate(ctx context.Context, d *schema.ResourceData, meta int
 		}
 	}
 
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-		if err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n); err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating API Gateway v2 VPC Link (%s) tags: %s", d.Id(), err)
-		}
-	}
-
 	return append(diags, resourceVPCLinkRead(ctx, d, meta)...)
 }
 
 func resourceVPCLinkDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).APIGatewayV2Conn()
+	conn := meta.(*conns.AWSClient).APIGatewayV2Conn(ctx)
 
 	log.Printf("[DEBUG] Deleting API Gateway v2 VPC Link: %s", d.Id())
 	_, err := conn.DeleteVpcLinkWithContext(ctx, &apigatewayv2.DeleteVpcLinkInput{

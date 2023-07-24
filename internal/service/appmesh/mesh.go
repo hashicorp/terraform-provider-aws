@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package appmesh
 
 import (
@@ -20,7 +23,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_appmesh_mesh")
+// @SDKResource("aws_appmesh_mesh", name="Service Mesh")
+// @Tags(identifierAttribute="arn")
 func ResourceMesh() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceMeshCreate,
@@ -100,15 +104,13 @@ func resourceMeshSpecSchema() *schema.Schema {
 
 func resourceMeshCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).AppMeshConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
+	conn := meta.(*conns.AWSClient).AppMeshConn(ctx)
 
 	name := d.Get("name").(string)
 	input := &appmesh.CreateMeshInput{
 		MeshName: aws.String(name),
 		Spec:     expandMeshSpec(d.Get("spec").([]interface{})),
-		Tags:     Tags(tags.IgnoreAWS()),
+		Tags:     getTagsIn(ctx),
 	}
 
 	_, err := conn.CreateMeshWithContext(ctx, input)
@@ -124,9 +126,7 @@ func resourceMeshCreate(ctx context.Context, d *schema.ResourceData, meta interf
 
 func resourceMeshRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).AppMeshConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).AppMeshConn(ctx)
 
 	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(ctx, propagationTimeout, func() (interface{}, error) {
 		return FindMeshByTwoPartKey(ctx, conn, d.Id(), d.Get("mesh_owner").(string))
@@ -154,29 +154,12 @@ func resourceMeshRead(ctx context.Context, d *schema.ResourceData, meta interfac
 		return sdkdiag.AppendErrorf(diags, "setting spec: %s", err)
 	}
 
-	tags, err := ListTags(ctx, conn, arn)
-
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "listing tags for App Mesh Service Mesh (%s): %s", arn, err)
-	}
-
-	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
-	}
-
 	return diags
 }
 
 func resourceMeshUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).AppMeshConn()
+	conn := meta.(*conns.AWSClient).AppMeshConn(ctx)
 
 	if d.HasChange("spec") {
 		input := &appmesh.UpdateMeshInput{
@@ -191,21 +174,12 @@ func resourceMeshUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 		}
 	}
 
-	if d.HasChange("tags_all") {
-		arn := d.Get("arn").(string)
-		o, n := d.GetChange("tags_all")
-
-		if err := UpdateTags(ctx, conn, arn, o, n); err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating App Mesh Service Mesh (%s) tags: %s", arn, err)
-		}
-	}
-
 	return append(diags, resourceMeshRead(ctx, d, meta)...)
 }
 
 func resourceMeshDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).AppMeshConn()
+	conn := meta.(*conns.AWSClient).AppMeshConn(ctx)
 
 	log.Printf("[DEBUG] Deleting App Mesh Service Mesh: %s", d.Id())
 	_, err := conn.DeleteMeshWithContext(ctx, &appmesh.DeleteMeshInput{

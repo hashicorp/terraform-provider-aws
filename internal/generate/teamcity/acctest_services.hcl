@@ -1,3 +1,6 @@
+# Copyright (c) HashiCorp, Inc.
+# SPDX-License-Identifier: MPL-2.0
+
 service "appautoscaling" {
   vpc_lock = true
 }
@@ -153,9 +156,6 @@ service "redshift" {
 
 service "route53" {
   vpc_lock = true
-
-  # Needed for Route 53 DNSSEC tests
-  region = "us-east-1"
 }
 
 service "route53resolver" {

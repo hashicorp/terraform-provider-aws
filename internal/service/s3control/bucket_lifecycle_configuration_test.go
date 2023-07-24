@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package s3control_test
 
 import (
@@ -8,9 +11,9 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/s3control"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfs3control "github.com/hashicorp/terraform-provider-aws/internal/service/s3control"
@@ -429,7 +432,7 @@ func TestAccS3ControlBucketLifecycleConfiguration_Rule_status(t *testing.T) {
 
 func testAccCheckBucketLifecycleConfigurationDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).S3ControlConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).S3ControlConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_s3control_bucket_lifecycle_configuration" {
@@ -470,7 +473,7 @@ func testAccCheckBucketLifecycleConfigurationExists(ctx context.Context, n strin
 			return fmt.Errorf("No S3 Control Bucket Lifecycle Configuration ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).S3ControlConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).S3ControlConn(ctx)
 
 		parsedArn, err := arn.Parse(rs.Primary.ID)
 

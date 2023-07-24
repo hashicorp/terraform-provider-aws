@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ec2_test
 
 import (
@@ -8,9 +11,9 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
@@ -370,28 +373,6 @@ func TestAccVPCSubnet_DefaultTagsProviderAndResource_overlappingTag(t *testing.T
 					resource.TestCheckResourceAttr(resourceName, "tags.overlapkey1", "resourcevalue2"),
 					resource.TestCheckResourceAttr(resourceName, "tags_all.overlapkey1", "resourcevalue2"),
 				),
-			},
-		},
-	})
-}
-
-func TestAccVPCSubnet_DefaultTagsProviderAndResource_duplicateTag(t *testing.T) {
-	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             nil,
-		Steps: []resource.TestStep{
-			{
-				Config: acctest.ConfigCompose(
-					acctest.ConfigDefaultTags_Tags1("overlapkey", "overlapvalue"),
-					testAccVPCSubnetConfig_tags1(rName, "overlapkey", "overlapvalue"),
-				),
-				PlanOnly:    true,
-				ExpectError: regexp.MustCompile(`"tags" are identical to those in the "default_tags" configuration block`),
 			},
 		},
 	})
@@ -818,6 +799,48 @@ func TestAccVPCSubnet_enableDNS64(t *testing.T) {
 	})
 }
 
+func TestAccVPCSubnet_enableLNIAtDeviceIndex(t *testing.T) {
+	ctx := acctest.Context(t)
+	var subnet ec2.Subnet
+	resourceName := "aws_subnet.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckOutpostsOutposts(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckSubnetDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVPCSubnetConfig_enableLniAtDeviceIndex(rName, 1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSubnetExists(ctx, resourceName, &subnet),
+					resource.TestCheckResourceAttr(resourceName, "enable_lni_at_device_index", "1"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccVPCSubnetConfig_enableLniAtDeviceIndex(rName, 1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSubnetExists(ctx, resourceName, &subnet),
+					resource.TestCheckResourceAttr(resourceName, "enable_lni_at_device_index", "1"),
+				),
+			},
+			{
+				Config: testAccVPCSubnetConfig_enableLniAtDeviceIndex(rName, 1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSubnetExists(ctx, resourceName, &subnet),
+					resource.TestCheckResourceAttr(resourceName, "enable_lni_at_device_index", "1"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccVPCSubnet_privateDNSNameOptionsOnLaunch(t *testing.T) {
 	ctx := acctest.Context(t)
 	var subnet ec2.Subnet
@@ -932,7 +955,7 @@ func testAccCheckSubnetNotRecreated(t *testing.T, before, after *ec2.Subnet) res
 
 func testAccCheckSubnetDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_subnet" {
@@ -967,7 +990,7 @@ func testAccCheckSubnetExists(ctx context.Context, n string, v *ec2.Subnet) reso
 			return fmt.Errorf("No EC2 Subnet ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
 
 		output, err := tfec2.FindSubnetByID(ctx, conn, rs.Primary.ID)
 
@@ -983,7 +1006,7 @@ func testAccCheckSubnetExists(ctx context.Context, n string, v *ec2.Subnet) reso
 
 func testAccCheckSubnetUpdateTags(ctx context.Context, subnet *ec2.Subnet, oldTags, newTags map[string]string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
 
 		return tfec2.UpdateTags(ctx, conn, aws.StringValue(subnet.SubnetId), oldTags, newTags)
 	}
@@ -1358,6 +1381,38 @@ resource "aws_subnet" "test" {
   }
 }
 `, rName, enableDns64)
+}
+
+func testAccVPCSubnetConfig_enableLniAtDeviceIndex(rName string, deviceIndex int) string {
+	return fmt.Sprintf(`
+
+
+data "aws_outposts_outposts" "test" {}
+
+data "aws_outposts_outpost" "test" {
+  id = tolist(data.aws_outposts_outposts.test.ids)[0]
+}
+
+resource "aws_vpc" "test" {
+  cidr_block = "10.10.0.0/16"
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_subnet" "test" {
+  availability_zone          = data.aws_outposts_outpost.test.availability_zone
+  cidr_block                 = cidrsubnet(aws_vpc.test.cidr_block, 8, 0)
+  enable_lni_at_device_index = %[2]d
+  outpost_arn                = data.aws_outposts_outpost.test.arn
+  vpc_id                     = aws_vpc.test.id
+
+  tags = {
+    Name = %[1]q
+  }
+}
+`, rName, deviceIndex)
 }
 
 func testAccVPCSubnetConfig_privateDNSNameOptionsOnLaunch(rName string, enableDnsAAAA, enableDnsA bool, hostnameType string) string {

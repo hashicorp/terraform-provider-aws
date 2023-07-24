@@ -1,9 +1,13 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package cloudformation
 
 import (
 	"context"
 	"log"
 	"regexp"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cloudformation"
@@ -18,9 +22,11 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_cloudformation_stack_set")
+// @SDKResource("aws_cloudformation_stack_set", name="Stack Set")
+// @Tags
 func ResourceStackSet() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceStackSetCreate,
@@ -33,7 +39,7 @@ func ResourceStackSet() *schema.Resource {
 		},
 
 		Timeouts: &schema.ResourceTimeout{
-			Update: schema.DefaultTimeout(StackSetUpdatedDefaultTimeout),
+			Update: schema.DefaultTimeout(30 * time.Minute),
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -94,6 +100,21 @@ func ResourceStackSet() *schema.Resource {
 				Optional:      true,
 				Computed:      true,
 				ConflictsWith: []string{"auto_deployment"},
+			},
+			"managed_execution": {
+				Type:     schema.TypeList,
+				Optional: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"active": {
+							Type:     schema.TypeBool,
+							Optional: true,
+							Default:  false,
+						},
+					},
+				},
+				DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
 			},
 			"name": {
 				Type:     schema.TypeString,
@@ -167,8 +188,8 @@ func ResourceStackSet() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			"template_body": {
 				Type:             schema.TypeString,
 				Optional:         true,
@@ -190,14 +211,13 @@ func ResourceStackSet() *schema.Resource {
 
 func resourceStackSetCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CloudFormationConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
+	conn := meta.(*conns.AWSClient).CloudFormationConn(ctx)
 
 	name := d.Get("name").(string)
 	input := &cloudformation.CreateStackSetInput{
 		ClientRequestToken: aws.String(id.UniqueId()),
 		StackSetName:       aws.String(name),
+		Tags:               getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("administration_role_arn"); ok {
@@ -220,6 +240,10 @@ func resourceStackSetCreate(ctx context.Context, d *schema.ResourceData, meta in
 		input.ExecutionRoleName = aws.String(v.(string))
 	}
 
+	if v, ok := d.GetOk("managed_execution"); ok {
+		input.ManagedExecution = expandManagedExecution(v.([]interface{}))
+	}
+
 	if v, ok := d.GetOk("parameters"); ok {
 		input.Parameters = expandParameters(v.(map[string]interface{}))
 	}
@@ -230,10 +254,6 @@ func resourceStackSetCreate(ctx context.Context, d *schema.ResourceData, meta in
 
 	if v, ok := d.GetOk("call_as"); ok {
 		input.CallAs = aws.String(v.(string))
-	}
-
-	if len(tags) > 0 {
-		input.Tags = Tags(tags.IgnoreAWS())
 	}
 
 	if v, ok := d.GetOk("template_body"); ok {
@@ -258,11 +278,9 @@ func resourceStackSetCreate(ctx context.Context, d *schema.ResourceData, meta in
 
 func resourceStackSetRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CloudFormationConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
-	callAs := d.Get("call_as").(string)
+	conn := meta.(*conns.AWSClient).CloudFormationConn(ctx)
 
+	callAs := d.Get("call_as").(string)
 	stackSet, err := FindStackSetByName(ctx, conn, d.Id(), callAs)
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
@@ -288,6 +306,11 @@ func resourceStackSetRead(ctx context.Context, d *schema.ResourceData, meta inte
 
 	d.Set("description", stackSet.Description)
 	d.Set("execution_role_name", stackSet.ExecutionRoleName)
+
+	if err := d.Set("managed_execution", flattenStackSetManagedExecution(stackSet.ManagedExecution)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting managed_execution: %s", err)
+	}
+
 	d.Set("name", stackSet.StackSetName)
 	d.Set("permission_model", stackSet.PermissionModel)
 
@@ -297,16 +320,7 @@ func resourceStackSetRead(ctx context.Context, d *schema.ResourceData, meta inte
 
 	d.Set("stack_set_id", stackSet.StackSetId)
 
-	tags := KeyValueTags(ctx, stackSet.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
-	}
+	setTagsOut(ctx, stackSet.Tags)
 
 	d.Set("template_body", stackSet.TemplateBody)
 
@@ -315,9 +329,7 @@ func resourceStackSetRead(ctx context.Context, d *schema.ResourceData, meta inte
 
 func resourceStackSetUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CloudFormationConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
+	conn := meta.(*conns.AWSClient).CloudFormationConn(ctx)
 
 	input := &cloudformation.UpdateStackSetInput{
 		OperationId:  aws.String(id.UniqueId()),
@@ -342,6 +354,10 @@ func resourceStackSetUpdate(ctx context.Context, d *schema.ResourceData, meta in
 		input.ExecutionRoleName = aws.String(v.(string))
 	}
 
+	if v, ok := d.GetOk("managed_execution"); ok {
+		input.ManagedExecution = expandManagedExecution(v.([]interface{}))
+	}
+
 	if v, ok := d.GetOk("operation_preferences"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 		input.OperationPreferences = expandOperationPreferences(v.([]interface{})[0].(map[string]interface{}))
 	}
@@ -359,8 +375,8 @@ func resourceStackSetUpdate(ctx context.Context, d *schema.ResourceData, meta in
 		input.CallAs = aws.String(v.(string))
 	}
 
-	if len(tags) > 0 {
-		input.Tags = Tags(tags.IgnoreAWS())
+	if tags := getTagsIn(ctx); len(tags) > 0 {
+		input.Tags = tags
 	}
 
 	if v, ok := d.GetOk("template_url"); ok {
@@ -395,7 +411,7 @@ func resourceStackSetUpdate(ctx context.Context, d *schema.ResourceData, meta in
 
 func resourceStackSetDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CloudFormationConn()
+	conn := meta.(*conns.AWSClient).CloudFormationConn(ctx)
 
 	input := &cloudformation.DeleteStackSetInput{
 		StackSetName: aws.String(d.Id()),
@@ -434,6 +450,20 @@ func expandAutoDeployment(l []interface{}) *cloudformation.AutoDeployment {
 	return autoDeployment
 }
 
+func expandManagedExecution(l []interface{}) *cloudformation.ManagedExecution {
+	if len(l) == 0 {
+		return nil
+	}
+
+	m := l[0].(map[string]interface{})
+
+	managedExecution := &cloudformation.ManagedExecution{
+		Active: aws.Bool(m["active"].(bool)),
+	}
+
+	return managedExecution
+}
+
 func flattenStackSetAutoDeploymentResponse(autoDeployment *cloudformation.AutoDeployment) []map[string]interface{} {
 	if autoDeployment == nil {
 		return []map[string]interface{}{}
@@ -442,6 +472,18 @@ func flattenStackSetAutoDeploymentResponse(autoDeployment *cloudformation.AutoDe
 	m := map[string]interface{}{
 		"enabled":                          aws.BoolValue(autoDeployment.Enabled),
 		"retain_stacks_on_account_removal": aws.BoolValue(autoDeployment.RetainStacksOnAccountRemoval),
+	}
+
+	return []map[string]interface{}{m}
+}
+
+func flattenStackSetManagedExecution(managedExecution *cloudformation.ManagedExecution) []map[string]interface{} {
+	if managedExecution == nil {
+		return []map[string]interface{}{}
+	}
+
+	m := map[string]interface{}{
+		"active": aws.BoolValue(managedExecution.Active),
 	}
 
 	return []map[string]interface{}{m}

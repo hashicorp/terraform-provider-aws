@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package apigateway
 
 import (
@@ -19,9 +22,11 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_api_gateway_api_key")
+// @SDKResource("aws_api_gateway_api_key", name="API Key")
+// @Tags(identifierAttribute="arn")
 func ResourceAPIKey() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceAPIKeyCreate,
@@ -67,14 +72,14 @@ func ResourceAPIKey() *schema.Resource {
 				Computed:     true,
 				ForceNew:     true,
 				Sensitive:    true,
-				ValidateFunc: validation.StringLenBetween(30, 128),
+				ValidateFunc: validation.StringLenBetween(20, 128),
 			},
 			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
 
 		CustomizeDiff: verify.SetTagsDiff,
@@ -83,16 +88,14 @@ func ResourceAPIKey() *schema.Resource {
 
 func resourceAPIKeyCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).APIGatewayConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
+	conn := meta.(*conns.AWSClient).APIGatewayConn(ctx)
 
 	name := d.Get("name").(string)
 	input := &apigateway.CreateApiKeyInput{
 		Description: aws.String(d.Get("description").(string)),
 		Enabled:     aws.Bool(d.Get("enabled").(bool)),
 		Name:        aws.String(name),
-		Tags:        Tags(tags.IgnoreAWS()),
+		Tags:        getTagsIn(ctx),
 		Value:       aws.String(d.Get("value").(string)),
 	}
 
@@ -109,9 +112,7 @@ func resourceAPIKeyCreate(ctx context.Context, d *schema.ResourceData, meta inte
 
 func resourceAPIKeyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).APIGatewayConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).APIGatewayConn(ctx)
 
 	apiKey, err := FindAPIKeyByID(ctx, conn, d.Id())
 
@@ -125,16 +126,7 @@ func resourceAPIKeyRead(ctx context.Context, d *schema.ResourceData, meta interf
 		return sdkdiag.AppendErrorf(diags, "reading API Gateway API Key (%s): %s", d.Id(), err)
 	}
 
-	tags := KeyValueTags(ctx, apiKey.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
-	}
+	setTagsOut(ctx, apiKey.Tags)
 
 	arn := arn.ARN{
 		Partition: meta.(*conns.AWSClient).Partition,
@@ -187,7 +179,7 @@ func resourceAPIKeyUpdateOperations(d *schema.ResourceData) []*apigateway.PatchO
 
 func resourceAPIKeyUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).APIGatewayConn()
+	conn := meta.(*conns.AWSClient).APIGatewayConn(ctx)
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		_, err := conn.UpdateApiKeyWithContext(ctx, &apigateway.UpdateApiKeyInput{
@@ -200,20 +192,12 @@ func resourceAPIKeyUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 		}
 	}
 
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		if err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n); err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating tags: %s", err)
-		}
-	}
-
 	return append(diags, resourceAPIKeyRead(ctx, d, meta)...)
 }
 
 func resourceAPIKeyDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).APIGatewayConn()
+	conn := meta.(*conns.AWSClient).APIGatewayConn(ctx)
 
 	log.Printf("[DEBUG] Deleting API Gateway API Key: %s", d.Id())
 	_, err := conn.DeleteApiKeyWithContext(ctx, &apigateway.DeleteApiKeyInput{

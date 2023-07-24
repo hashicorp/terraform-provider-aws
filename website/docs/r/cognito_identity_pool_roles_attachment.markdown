@@ -53,15 +53,17 @@ resource "aws_iam_role" "authenticated" {
 }
 
 data "aws_iam_policy_document" "authenticated_role_policy" {
-  effect = "Allow"
+  statement {
+    effect = "Allow"
 
-  actions = [
-    "mobileanalytics:PutEvents",
-    "cognito-sync:*",
-    "cognito-identity:*",
-  ]
+    actions = [
+      "mobileanalytics:PutEvents",
+      "cognito-sync:*",
+      "cognito-identity:*",
+    ]
 
-  resources = ["*"]
+    resources = ["*"]
+  }
 }
 
 resource "aws_iam_role_policy" "authenticated" {
@@ -114,16 +116,25 @@ The Cognito Identity Pool Roles Attachment argument layout is a structure compos
 * `role_arn` (Required) - The role ARN.
 * `value` (Required) - A brief string that the claim must match, for example, "paid" or "yes".
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The identity pool ID.
 
 ## Import
 
-Cognito Identity Pool Roles Attachment can be imported using the Identity Pool ID, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Cognito Identity Pool Roles Attachment using the Identity Pool ID. For example:
 
+```terraform
+import {
+  to = aws_cognito_identity_pool_roles_attachment.example
+  id = "us-west-2:b64805ad-cb56-40ba-9ffc-f5d8207e6d42"
+}
 ```
-$ terraform import aws_cognito_identity_pool_roles_attachment.example us-west-2:b64805ad-cb56-40ba-9ffc-f5d8207e6d42
+
+Using `terraform import`, import Cognito Identity Pool Roles Attachment using the Identity Pool ID. For example:
+
+```console
+% terraform import aws_cognito_identity_pool_roles_attachment.example us-west-2:b64805ad-cb56-40ba-9ffc-f5d8207e6d42
 ```

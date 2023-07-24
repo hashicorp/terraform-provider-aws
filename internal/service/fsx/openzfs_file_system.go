@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package fsx
 
 import (
@@ -21,10 +24,12 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 	"golang.org/x/exp/slices"
 )
 
-// @SDKResource("aws_fsx_openzfs_file_system")
+// @SDKResource("aws_fsx_openzfs_file_system", name="OpenZFS File System")
+// @Tags(identifierAttribute="arn")
 func ResourceOpenzfsFileSystem() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceOpenzfsFileSystemCreate,
@@ -247,8 +252,8 @@ func ResourceOpenzfsFileSystem() *schema.Resource {
 				MaxItems: 1,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			"throughput_capacity": {
 				Type:     schema.TypeInt,
 				Required: true,
@@ -322,9 +327,7 @@ func validateDiskConfigurationIOPS(_ context.Context, d *schema.ResourceDiff, me
 
 func resourceOpenzfsFileSystemCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).FSxConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
+	conn := meta.(*conns.AWSClient).FSxConn(ctx)
 
 	input := &fsx.CreateFileSystemInput{
 		ClientRequestToken: aws.String(id.UniqueId()),
@@ -336,6 +339,7 @@ func resourceOpenzfsFileSystemCreate(ctx context.Context, d *schema.ResourceData
 			DeploymentType:               aws.String(d.Get("deployment_type").(string)),
 			AutomaticBackupRetentionDays: aws.Int64(int64(d.Get("automatic_backup_retention_days").(int))),
 		},
+		Tags: getTagsIn(ctx),
 	}
 
 	backupInput := &fsx.CreateFileSystemFromBackupInput{
@@ -346,6 +350,7 @@ func resourceOpenzfsFileSystemCreate(ctx context.Context, d *schema.ResourceData
 			DeploymentType:               aws.String(d.Get("deployment_type").(string)),
 			AutomaticBackupRetentionDays: aws.Int64(int64(d.Get("automatic_backup_retention_days").(int))),
 		},
+		Tags: getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("disk_iops_configuration"); ok {
@@ -371,11 +376,6 @@ func resourceOpenzfsFileSystemCreate(ctx context.Context, d *schema.ResourceData
 	if v, ok := d.GetOk("security_group_ids"); ok {
 		input.SecurityGroupIds = flex.ExpandStringSet(v.(*schema.Set))
 		backupInput.SecurityGroupIds = flex.ExpandStringSet(v.(*schema.Set))
-	}
-
-	if len(tags) > 0 {
-		input.Tags = Tags(tags.IgnoreAWS())
-		backupInput.Tags = Tags(tags.IgnoreAWS())
 	}
 
 	if v, ok := d.GetOk("weekly_maintenance_start_time"); ok {
@@ -429,9 +429,7 @@ func resourceOpenzfsFileSystemCreate(ctx context.Context, d *schema.ResourceData
 
 func resourceOpenzfsFileSystemRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).FSxConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).FSxConn(ctx)
 
 	filesystem, err := FindFileSystemByID(ctx, conn, d.Id())
 	if !d.IsNewResource() && tfresource.NotFound(err) {
@@ -481,16 +479,7 @@ func resourceOpenzfsFileSystemRead(ctx context.Context, d *schema.ResourceData, 
 		return sdkdiag.AppendErrorf(diags, "setting subnet_ids: %s", err)
 	}
 
-	tags := KeyValueTags(ctx, filesystem.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
-	}
+	setTagsOut(ctx, filesystem.Tags)
 
 	if err := d.Set("disk_iops_configuration", flattenOpenzfsFileDiskIopsConfiguration(openzfsConfig.DiskIopsConfiguration)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting disk_iops_configuration: %s", err)
@@ -518,15 +507,7 @@ func resourceOpenzfsFileSystemRead(ctx context.Context, d *schema.ResourceData, 
 
 func resourceOpenzfsFileSystemUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).FSxConn()
-
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		if err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n); err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating FSx OpenZFS File System (%s) tags: %s", d.Get("arn").(string), err)
-		}
-	}
+	conn := meta.(*conns.AWSClient).FSxConn(ctx)
 
 	if d.HasChangesExcept("tags_all", "tags") {
 		input := &fsx.UpdateFileSystemInput{
@@ -607,7 +588,7 @@ func resourceOpenzfsFileSystemUpdate(ctx context.Context, d *schema.ResourceData
 
 func resourceOpenzfsFileSystemDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).FSxConn()
+	conn := meta.(*conns.AWSClient).FSxConn(ctx)
 
 	log.Printf("[DEBUG] Deleting FSx OpenZFS File System: %s", d.Id())
 	_, err := conn.DeleteFileSystemWithContext(ctx, &fsx.DeleteFileSystemInput{

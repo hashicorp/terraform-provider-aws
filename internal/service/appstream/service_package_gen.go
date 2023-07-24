@@ -5,6 +5,10 @@ package appstream
 import (
 	"context"
 
+	aws_sdkv1 "github.com/aws/aws-sdk-go/aws"
+	session_sdkv1 "github.com/aws/aws-sdk-go/aws/session"
+	appstream_sdkv1 "github.com/aws/aws-sdk-go/service/appstream"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -32,6 +36,10 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  ResourceFleet,
 			TypeName: "aws_appstream_fleet",
+			Name:     "Fleet",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
 		},
 		{
 			Factory:  ResourceFleetStackAssociation,
@@ -40,10 +48,18 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  ResourceImageBuilder,
 			TypeName: "aws_appstream_image_builder",
+			Name:     "Image Builder",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
 		},
 		{
 			Factory:  ResourceStack,
 			TypeName: "aws_appstream_stack",
+			Name:     "Stack",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
 		},
 		{
 			Factory:  ResourceUser,
@@ -60,4 +76,13 @@ func (p *servicePackage) ServicePackageName() string {
 	return names.AppStream
 }
 
-var ServicePackage = &servicePackage{}
+// NewConn returns a new AWS SDK for Go v1 client for this service package's AWS API.
+func (p *servicePackage) NewConn(ctx context.Context, config map[string]any) (*appstream_sdkv1.AppStream, error) {
+	sess := config["session"].(*session_sdkv1.Session)
+
+	return appstream_sdkv1.New(sess.Copy(&aws_sdkv1.Config{Endpoint: aws_sdkv1.String(config["endpoint"].(string))})), nil
+}
+
+func ServicePackage(ctx context.Context) conns.ServicePackage {
+	return &servicePackage{}
+}

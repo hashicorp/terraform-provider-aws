@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package rds_test
 
 import (
@@ -8,10 +11,10 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/rds"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfrds "github.com/hashicorp/terraform-provider-aws/internal/service/rds"
@@ -470,9 +473,48 @@ func TestAccRDSClusterParameterGroup_caseParameters(t *testing.T) {
 	})
 }
 
+func TestAccRDSClusterParameterGroup_dynamicDiffs(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v rds.DBClusterParameterGroup
+	resourceName := "aws_rds_cluster_parameter_group.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckClusterParameterGroupDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccClusterParameterGroupConfig_dynamicDiffs(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusterParameterGroupExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "family", "aurora-postgresql12"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
+						"name":  "track_activity_query_size", // system source
+						"value": "4096",
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
+						"name":  "shared_preload_libraries", // system source
+						"value": "pg_stat_statements",
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
+						"name":  "track_io_timing", // system source
+						"value": "1",
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
+						"name":  "track_activities", // user source
+						"value": "1",
+					}),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckClusterParameterGroupDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_rds_cluster_parameter_group" {
@@ -507,7 +549,7 @@ func testAccCheckClusterParameterNotUserDefined(ctx context.Context, n, paramNam
 			return fmt.Errorf("No DB Parameter Group ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn(ctx)
 
 		opts := rds.DescribeDBClusterParametersInput{
 			DBClusterParameterGroupName: aws.String(rs.Primary.ID),
@@ -554,10 +596,9 @@ func testAccCheckClusterParameterGroupExists(ctx context.Context, n string, v *r
 			return errors.New("No RDS DB Cluster Parameter Group ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn(ctx)
 
 		output, err := tfrds.FindDBClusterParameterGroupByName(ctx, conn, rs.Primary.ID)
-
 		if err != nil {
 			return err
 		}
@@ -786,4 +827,55 @@ resource "aws_rds_cluster_parameter_group" "test" {
   }
 }
 `, rName, tagKey1, tagValue1, tagKey2, tagValue2)
+}
+
+func testAccClusterParameterGroupConfig_dynamicDiffs(rName string) string {
+	return fmt.Sprintf(`
+locals {
+  cluster_parameters = {
+    "shared_preload_libraries" = { # system source
+      value        = "pg_stat_statements"
+      apply_method = "pending-reboot"
+    },
+    "track_activity_query_size" = { # system source
+      value        = "4096"
+      apply_method = "pending-reboot"
+    },
+    "pg_stat_statements.track" = {
+      value        = "ALL"
+      apply_method = "pending-reboot"
+    },
+    "pg_stat_statements.max" = {
+      value        = "10000"
+      apply_method = "pending-reboot"
+    },
+    "track_activities" = {
+      value        = "1"
+      apply_method = "pending-reboot"
+    },
+    "track_counts" = {
+      value        = "1"
+      apply_method = "pending-reboot"
+    },
+    "track_io_timing" = { # system source
+      value        = "1"
+      apply_method = "pending-reboot"
+    },
+  }
+}
+
+resource "aws_rds_cluster_parameter_group" "test" {
+  name   = %[1]q
+  family = "aurora-postgresql12"
+
+  dynamic "parameter" {
+    for_each = local.cluster_parameters
+    content {
+      name         = parameter.key
+      value        = parameter.value["value"]
+      apply_method = parameter.value["apply_method"]
+    }
+  }
+}
+`, rName)
 }

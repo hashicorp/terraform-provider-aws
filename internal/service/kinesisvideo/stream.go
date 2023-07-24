@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package kinesisvideo
 
 import (
@@ -17,9 +20,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_kinesis_video_stream")
+// @SDKResource("aws_kinesis_video_stream", name="Stream")
+// @Tags(identifierAttribute="id")
 func ResourceStream() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceStreamCreate,
@@ -88,41 +93,35 @@ func ResourceStream() *schema.Resource {
 				Computed: true,
 			},
 
-			"tags": tftags.TagsSchema(),
-
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
 	}
 }
 
 func resourceStreamCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).KinesisVideoConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
+	conn := meta.(*conns.AWSClient).KinesisVideoConn(ctx)
 
-	createOpts := &kinesisvideo.CreateStreamInput{
+	input := &kinesisvideo.CreateStreamInput{
 		StreamName:           aws.String(d.Get("name").(string)),
 		DataRetentionInHours: aws.Int64(int64(d.Get("data_retention_in_hours").(int))),
+		Tags:                 getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("device_name"); ok {
-		createOpts.DeviceName = aws.String(v.(string))
+		input.DeviceName = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("kms_key_id"); ok {
-		createOpts.KmsKeyId = aws.String(v.(string))
+		input.KmsKeyId = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("media_type"); ok {
-		createOpts.MediaType = aws.String(v.(string))
+		input.MediaType = aws.String(v.(string))
 	}
 
-	if len(tags) > 0 {
-		createOpts.Tags = Tags(tags.IgnoreAWS())
-	}
-
-	resp, err := conn.CreateStreamWithContext(ctx, createOpts)
+	resp, err := conn.CreateStreamWithContext(ctx, input)
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating Kinesis Video Stream: %s", err)
 	}
@@ -148,9 +147,7 @@ func resourceStreamCreate(ctx context.Context, d *schema.ResourceData, meta inte
 
 func resourceStreamRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).KinesisVideoConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).KinesisVideoConn(ctx)
 
 	descOpts := &kinesisvideo.DescribeStreamInput{
 		StreamARN: aws.String(d.Id()),
@@ -177,29 +174,12 @@ func resourceStreamRead(ctx context.Context, d *schema.ResourceData, meta interf
 	}
 	d.Set("version", resp.StreamInfo.Version)
 
-	tags, err := ListTags(ctx, conn, d.Id())
-
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "listing tags for Kinesis Video Stream (%s): %s", d.Id(), err)
-	}
-
-	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
-	}
-
 	return diags
 }
 
 func resourceStreamUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).KinesisVideoConn()
+	conn := meta.(*conns.AWSClient).KinesisVideoConn(ctx)
 
 	updateOpts := &kinesisvideo.UpdateStreamInput{
 		StreamARN:      aws.String(d.Id()),
@@ -216,14 +196,6 @@ func resourceStreamUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 
 	if _, err := conn.UpdateStreamWithContext(ctx, updateOpts); err != nil {
 		return sdkdiag.AppendErrorf(diags, "updating Kinesis Video Stream (%s): %s", d.Id(), err)
-	}
-
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		if err := UpdateTags(ctx, conn, d.Id(), o, n); err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating Kinesis Video Stream (%s) tags: %s", d.Id(), err)
-		}
 	}
 
 	stateConf := &retry.StateChangeConf{
@@ -244,7 +216,7 @@ func resourceStreamUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 
 func resourceStreamDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).KinesisVideoConn()
+	conn := meta.(*conns.AWSClient).KinesisVideoConn(ctx)
 
 	if _, err := conn.DeleteStreamWithContext(ctx, &kinesisvideo.DeleteStreamInput{
 		StreamARN:      aws.String(d.Id()),

@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package rds
 
 import (
@@ -60,7 +63,7 @@ func ResourceClusterActivityStream() *schema.Resource {
 }
 
 func resourceClusterActivityStreamCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).RDSConn()
+	conn := meta.(*conns.AWSClient).RDSConn(ctx)
 
 	arn := d.Get("resource_arn").(string)
 	input := &rds.StartActivityStreamInput{
@@ -72,7 +75,6 @@ func resourceClusterActivityStreamCreate(ctx context.Context, d *schema.Resource
 	}
 
 	_, err := conn.StartActivityStreamWithContext(ctx, input)
-
 	if err != nil {
 		return diag.Errorf("creating RDS Cluster Activity Stream (%s): %s", arn, err)
 	}
@@ -87,7 +89,7 @@ func resourceClusterActivityStreamCreate(ctx context.Context, d *schema.Resource
 }
 
 func resourceClusterActivityStreamRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).RDSConn()
+	conn := meta.(*conns.AWSClient).RDSConn(ctx)
 
 	output, err := FindDBClusterWithActivityStream(ctx, conn, d.Id())
 
@@ -110,14 +112,13 @@ func resourceClusterActivityStreamRead(ctx context.Context, d *schema.ResourceDa
 }
 
 func resourceClusterActivityStreamDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).RDSConn()
+	conn := meta.(*conns.AWSClient).RDSConn(ctx)
 
 	log.Printf("[DEBUG] Deleting RDS Cluster Activity Stream: %s", d.Id())
 	_, err := conn.StopActivityStreamWithContext(ctx, &rds.StopActivityStreamInput{
 		ApplyImmediately: aws.Bool(true),
 		ResourceArn:      aws.String(d.Id()),
 	})
-
 	if err != nil {
 		return diag.Errorf("stopping RDS Cluster Activity Stream (%s): %s", d.Id(), err)
 	}
@@ -131,7 +132,6 @@ func resourceClusterActivityStreamDelete(ctx context.Context, d *schema.Resource
 
 func FindDBClusterWithActivityStream(ctx context.Context, conn *rds.RDS, arn string) (*rds.DBCluster, error) {
 	output, err := FindDBClusterByID(ctx, conn, arn)
-
 	if err != nil {
 		return nil, err
 	}

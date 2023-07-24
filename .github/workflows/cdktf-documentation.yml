@@ -1,0 +1,22 @@
+name: CDKTF Documentation
+on:
+  schedule:
+    - cron: "0 0 * * WED"
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  cdktfDocs:
+    uses: hashicorp/terraform-cdk/.github/workflows/registry-docs-pr-based.yml@304e2507209c9657135dc7b4b7ee68030327468f
+    secrets:
+      GH_PR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    with:
+      providerFqn: "hashicorp/aws"
+      files: "*/ec2*.html.markdown,*/lambda*.html.markdown,*/eks*.html.markdown,*/vpc*.html.markdown,*/instance.html.markdown"
+      languages: "typescript,python"
+      parallelFileConversions: 1
+      maxRunners: 20
+      cdktfRegistryDocsVersion: "1.14.2"

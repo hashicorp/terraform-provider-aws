@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package sagemaker
 
 import (
@@ -18,9 +21,11 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_sagemaker_workteam")
+// @SDKResource("aws_sagemaker_workteam", name="Workteam")
+// @Tags(identifierAttribute="arn")
 func ResourceWorkteam() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceWorkteamCreate,
@@ -110,8 +115,8 @@ func ResourceWorkteam() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			"workforce_name": {
 				Type:     schema.TypeString,
 				Required: true,
@@ -134,9 +139,7 @@ func ResourceWorkteam() *schema.Resource {
 
 func resourceWorkteamCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SageMakerConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
+	conn := meta.(*conns.AWSClient).SageMakerConn(ctx)
 
 	name := d.Get("workteam_name").(string)
 	input := &sagemaker.CreateWorkteamInput{
@@ -144,14 +147,11 @@ func resourceWorkteamCreate(ctx context.Context, d *schema.ResourceData, meta in
 		WorkforceName:     aws.String(d.Get("workforce_name").(string)),
 		Description:       aws.String(d.Get("description").(string)),
 		MemberDefinitions: expandWorkteamMemberDefinition(d.Get("member_definition").([]interface{})),
+		Tags:              getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("notification_configuration"); ok {
 		input.NotificationConfiguration = expandWorkteamNotificationConfiguration(v.([]interface{}))
-	}
-
-	if len(tags) > 0 {
-		input.Tags = Tags(tags.IgnoreAWS())
 	}
 
 	log.Printf("[DEBUG] Updating SageMaker Workteam: %s", input)
@@ -170,9 +170,7 @@ func resourceWorkteamCreate(ctx context.Context, d *schema.ResourceData, meta in
 
 func resourceWorkteamRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SageMakerConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).SageMakerConn(ctx)
 
 	workteam, err := FindWorkteamByName(ctx, conn, d.Id())
 
@@ -200,29 +198,12 @@ func resourceWorkteamRead(ctx context.Context, d *schema.ResourceData, meta inte
 		return sdkdiag.AppendErrorf(diags, "setting notification_configuration: %s", err)
 	}
 
-	tags, err := ListTags(ctx, conn, arn)
-
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "listing tags for SageMaker Workteam (%s): %s", d.Id(), err)
-	}
-
-	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
-	}
-
 	return diags
 }
 
 func resourceWorkteamUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SageMakerConn()
+	conn := meta.(*conns.AWSClient).SageMakerConn(ctx)
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		input := &sagemaker.UpdateWorkteamInput{
@@ -246,20 +227,12 @@ func resourceWorkteamUpdate(ctx context.Context, d *schema.ResourceData, meta in
 		}
 	}
 
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		if err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n); err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating SageMaker Workteam (%s) tags: %s", d.Id(), err)
-		}
-	}
-
 	return append(diags, resourceWorkteamRead(ctx, d, meta)...)
 }
 
 func resourceWorkteamDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SageMakerConn()
+	conn := meta.(*conns.AWSClient).SageMakerConn(ctx)
 
 	log.Printf("[DEBUG] Deleting SageMaker Workteam: %s", d.Id())
 	_, err := conn.DeleteWorkteamWithContext(ctx, &sagemaker.DeleteWorkteamInput{

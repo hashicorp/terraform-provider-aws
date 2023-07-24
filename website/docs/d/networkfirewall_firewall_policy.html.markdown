@@ -42,14 +42,15 @@ AWS Network Firewall does not allow multiple firewall policies with the same nam
 ~> **Note:** If there are multiple firewall policies in an account with the same `name`, and `arn` is not specified, the default behavior will return the firewall policy with `name` that was created in the account.
 
 ## Argument Reference
+
 One or more of the following arguments are required:
 
 * `arn` - ARN of the firewall policy.
 * `name` - Descriptive name of the firewall policy.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This data source exports the following attributes in addition to the arguments above:
 
 * `description` - Description of the firewall policy.
 * `firewall_policy` - The [policy][2] for the specified firewall policy.

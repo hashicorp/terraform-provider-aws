@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package rds
 
 import (
@@ -39,7 +42,7 @@ const (
 )
 
 func dataSourceInstancesRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).RDSConn()
+	conn := meta.(*conns.AWSClient).RDSConn(ctx)
 
 	input := &rds.DescribeDBInstancesInput{}
 
@@ -66,7 +69,6 @@ func dataSourceInstancesRead(ctx context.Context, d *schema.ResourceData, meta i
 
 		return !lastPage
 	})
-
 	if err != nil {
 		return create.DiagError(names.RDS, create.ErrActionReading, DSNameInstances, "", err)
 	}

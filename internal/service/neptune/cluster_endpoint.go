@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package neptune
 
 import (
@@ -18,9 +21,11 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_neptune_cluster_endpoint")
+// @SDKResource("aws_neptune_cluster_endpoint", name="Cluster Endpoint")
+// @Tags(identifierAttribute="arn")
 func ResourceClusterEndpoint() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceClusterEndpointCreate,
@@ -68,8 +73,8 @@ func ResourceClusterEndpoint() *schema.Resource {
 				Elem:     &schema.Schema{Type: schema.TypeString},
 				Optional: true,
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
 
 		CustomizeDiff: verify.SetTagsDiff,
@@ -78,14 +83,13 @@ func ResourceClusterEndpoint() *schema.Resource {
 
 func resourceClusterEndpointCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).NeptuneConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
+	conn := meta.(*conns.AWSClient).NeptuneConn(ctx)
 
 	input := &neptune.CreateDBClusterEndpointInput{
 		DBClusterEndpointIdentifier: aws.String(d.Get("cluster_endpoint_identifier").(string)),
 		DBClusterIdentifier:         aws.String(d.Get("cluster_identifier").(string)),
 		EndpointType:                aws.String(d.Get("endpoint_type").(string)),
+		Tags:                        getTagsIn(ctx),
 	}
 
 	if attr := d.Get("static_members").(*schema.Set); attr.Len() > 0 {
@@ -97,8 +101,8 @@ func resourceClusterEndpointCreate(ctx context.Context, d *schema.ResourceData, 
 	}
 
 	// Tags are currently only supported in AWS Commercial.
-	if len(tags) > 0 && meta.(*conns.AWSClient).Partition == endpoints.AwsPartitionID {
-		input.Tags = Tags(tags.IgnoreAWS())
+	if meta.(*conns.AWSClient).Partition != endpoints.AwsPartitionID {
+		input.Tags = nil
 	}
 
 	out, err := conn.CreateDBClusterEndpointWithContext(ctx, input)
@@ -120,11 +124,10 @@ func resourceClusterEndpointCreate(ctx context.Context, d *schema.ResourceData, 
 
 func resourceClusterEndpointRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).NeptuneConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).NeptuneConn(ctx)
 
 	resp, err := FindEndpointByID(ctx, conn, d.Id())
+
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		d.SetId("")
 		log.Printf("[DEBUG] Neptune Cluster Endpoint (%s) not found", d.Id())
@@ -145,35 +148,12 @@ func resourceClusterEndpointRead(ctx context.Context, d *schema.ResourceData, me
 	arn := aws.StringValue(resp.DBClusterEndpointArn)
 	d.Set("arn", arn)
 
-	// Tags are currently only supported in AWS Commercial.
-	if meta.(*conns.AWSClient).Partition == endpoints.AwsPartitionID {
-		tags, err := ListTags(ctx, conn, arn)
-
-		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "listing tags for Neptune Cluster Endpoint (%s): %s", arn, err)
-		}
-
-		tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-		//lintignore:AWSR002
-		if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-			return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-		}
-
-		if err := d.Set("tags_all", tags.Map()); err != nil {
-			return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
-		}
-	} else {
-		d.Set("tags", nil)
-		d.Set("tags_all", nil)
-	}
-
 	return diags
 }
 
 func resourceClusterEndpointUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).NeptuneConn()
+	conn := meta.(*conns.AWSClient).NeptuneConn(ctx)
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		req := &neptune.ModifyDBClusterEndpointInput{
@@ -203,21 +183,12 @@ func resourceClusterEndpointUpdate(ctx context.Context, d *schema.ResourceData, 
 		}
 	}
 
-	// Tags are currently only supported in AWS Commercial.
-	if d.HasChange("tags_all") && meta.(*conns.AWSClient).Partition == endpoints.AwsPartitionID {
-		o, n := d.GetChange("tags_all")
-
-		if err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n); err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating Neptune Cluster Endpoint (%s) tags: %s", d.Get("arn").(string), err)
-		}
-	}
-
 	return append(diags, resourceClusterEndpointRead(ctx, d, meta)...)
 }
 
 func resourceClusterEndpointDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).NeptuneConn()
+	conn := meta.(*conns.AWSClient).NeptuneConn(ctx)
 
 	endpointId := d.Get("cluster_endpoint_identifier").(string)
 	input := &neptune.DeleteDBClusterEndpointInput{

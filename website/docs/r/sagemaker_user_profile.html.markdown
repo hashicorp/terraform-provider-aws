@@ -23,7 +23,7 @@ resource "aws_sagemaker_user_profile" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `user_profile_name` - (Required) The name for the User Profile.
 * `domain_id` - (Required) The ID of the associated Domain.
@@ -41,10 +41,12 @@ The following arguments are supported:
 * `jupyter_server_app_settings` - (Optional) The Jupyter server's app settings. See [Jupyter Server App Settings](#jupyter-server-app-settings) below.
 * `kernel_gateway_app_settings` - (Optional) The kernel gateway app settings. See [Kernel Gateway App Settings](#kernel-gateway-app-settings) below.
 * `r_session_app_settings` - (Optional) The RSession app settings. See [RSession App Settings](#rsession-app-settings) below.
+* `r_studio_server_pro_app_settings` - (Optional) A collection of settings that configure user interaction with the RStudioServerPro app. See [RStudio Server Pro App Settings](#rstudio-server-pro-app-settings) below.
 * `canvas_app_settings` - (Optional) The Canvas app settings. See [Canvas App Settings](#canvas-app-settings) below.
 
 #### Canvas App Settings
 
+* `model_register_settings` - (Optional) The model registry settings for the SageMaker Canvas application. See [Model Register Settings](#model-register-settings) below.
 * `time_series_forecasting_settings` - (Optional) Time series forecast settings for the Canvas app. see [Time Series Forecasting Settings](#time-series-forecasting-settings) below.
 
 #### Sharing Settings
@@ -74,6 +76,11 @@ The following arguments are supported:
 * `default_resource_spec` - (Optional) The default instance type and the Amazon Resource Name (ARN) of the SageMaker image created on the instance. see [Default Resource Spec](#default-resource-spec) below.
 * `custom_image` - (Optional) A list of custom SageMaker images that are configured to run as a KernelGateway app. see [Custom Image](#custom-image) below.
 
+#### RStudio Server Pro App Settings
+
+* `access_status` - (Optional) Indicates whether the current user has access to the RStudioServerPro app. Valid values are `ENABLED` and `DISABLED`.
+* `user_group` - (Optional) The level of permissions that the user has within the RStudioServerPro app. This value defaults to `R_STUDIO_USER`. The `R_STUDIO_ADMIN` value allows the user access to the RStudio Administrative Dashboard. Valid values are `R_STUDIO_USER` and `R_STUDIO_ADMIN`.
+
 ##### Code Repository
 
 * `repository_url` - (Optional) The URL of the Git repository.
@@ -96,9 +103,14 @@ The following arguments are supported:
 * `amazon_forecast_role_arn` - (Optional)  The IAM role that Canvas passes to Amazon Forecast for time series forecasting. By default, Canvas uses the execution role specified in the UserProfile that launches the Canvas app. If an execution role is not specified in the UserProfile, Canvas uses the execution role specified in the Domain that owns the UserProfile. To allow time series forecasting, this IAM role should have the [AmazonSageMakerCanvasForecastAccess](https://docs.aws.amazon.com/sagemaker/latest/dg/security-iam-awsmanpol-canvas.html#security-iam-awsmanpol-AmazonSageMakerCanvasForecastAccess) policy attached and forecast.amazonaws.com added in the trust relationship as a service principal.
 * `status` - (Optional) Describes whether time series forecasting is enabled or disabled in the Canvas app. Valid values are `ENABLED` and `DISABLED`.
 
-## Attributes Reference
+##### Model Register Settings
 
-In addition to all arguments above, the following attributes are exported:
+* `cross_account_model_register_role_arn` - (Optional) The Amazon Resource Name (ARN) of the SageMaker model registry account. Required only to register model versions created by a different SageMaker Canvas AWS account than the AWS account in which SageMaker model registry is set up.
+* `status` - (Optional) Describes whether the integration to the model registry is enabled or disabled in the Canvas application.. Valid values are `ENABLED` and `DISABLED`.
+
+## Attribute Reference
+
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The user profile Amazon Resource Name (ARN).
 * `arn` - The user profile Amazon Resource Name (ARN).
@@ -107,8 +119,17 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-SageMaker User Profiles can be imported using the `arn`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import SageMaker User Profiles using the `arn`. For example:
 
+```terraform
+import {
+  to = aws_sagemaker_user_profile.test_user_profile
+  id = "arn:aws:sagemaker:us-west-2:123456789012:user-profile/domain-id/profile-name"
+}
 ```
-$ terraform import aws_sagemaker_user_profile.test_user_profile arn:aws:sagemaker:us-west-2:123456789012:user-profile/domain-id/profile-name
+
+Using `terraform import`, import SageMaker User Profiles using the `arn`. For example:
+
+```console
+% terraform import aws_sagemaker_user_profile.test_user_profile arn:aws:sagemaker:us-west-2:123456789012:user-profile/domain-id/profile-name
 ```

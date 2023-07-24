@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package events
 
 import (
@@ -58,7 +61,7 @@ func ResourceBusPolicy() *schema.Resource {
 
 func resourceBusPolicyCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EventsConn()
+	conn := meta.(*conns.AWSClient).EventsConn(ctx)
 
 	eventBusName := d.Get("event_bus_name").(string)
 
@@ -87,7 +90,7 @@ func resourceBusPolicyCreate(ctx context.Context, d *schema.ResourceData, meta i
 // See also: https://docs.aws.amazon.com/eventbridge/latest/APIReference/API_DescribeEventBus.html
 func resourceBusPolicyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EventsConn()
+	conn := meta.(*conns.AWSClient).EventsConn(ctx)
 
 	eventBusName := d.Id()
 
@@ -158,7 +161,7 @@ func getEventBusPolicy(output *eventbridge.DescribeEventBusOutput) (*string, err
 
 func resourceBusPolicyUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EventsConn()
+	conn := meta.(*conns.AWSClient).EventsConn(ctx)
 
 	eventBusName := d.Id()
 
@@ -184,7 +187,7 @@ func resourceBusPolicyUpdate(ctx context.Context, d *schema.ResourceData, meta i
 
 func resourceBusPolicyDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EventsConn()
+	conn := meta.(*conns.AWSClient).EventsConn(ctx)
 
 	eventBusName := d.Id()
 	removeAllPermissions := true

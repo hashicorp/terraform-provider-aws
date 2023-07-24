@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package amplify_test
 
 import (
@@ -11,9 +14,9 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/endpoints"
 	"github.com/aws/aws-sdk-go/service/amplify"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfamplify "github.com/hashicorp/terraform-provider-aws/internal/service/amplify"
@@ -92,7 +95,7 @@ func testAccApp_disappears(t *testing.T) {
 	})
 }
 
-func testAccApp_Tags(t *testing.T) {
+func testAccApp_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 	var app amplify.App
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -602,7 +605,7 @@ func testAccCheckAppExists(ctx context.Context, n string, v *amplify.App) resour
 			return fmt.Errorf("No Amplify App ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AmplifyConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AmplifyConn(ctx)
 
 		output, err := tfamplify.FindAppByID(ctx, conn, rs.Primary.ID)
 
@@ -618,7 +621,7 @@ func testAccCheckAppExists(ctx context.Context, n string, v *amplify.App) resour
 
 func testAccCheckAppDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AmplifyConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AmplifyConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_amplify_app" {

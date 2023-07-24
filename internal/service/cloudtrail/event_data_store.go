@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package cloudtrail
 
 import (
@@ -16,9 +19,11 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_cloudtrail_event_data_store")
+// @SDKResource("aws_cloudtrail_event_data_store", name="Event Data Store")
+// @Tags(identifierAttribute="id")
 func ResourceEventDataStore() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceEventDataStoreCreate,
@@ -163,8 +168,8 @@ func ResourceEventDataStore() *schema.Resource {
 					validation.IntBetween(7, 2555),
 				),
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			"termination_protection_enabled": {
 				Type:     schema.TypeBool,
 				Optional: true,
@@ -175,9 +180,7 @@ func ResourceEventDataStore() *schema.Resource {
 }
 
 func resourceEventDataStoreCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).CloudTrailConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
+	conn := meta.(*conns.AWSClient).CloudTrailConn(ctx)
 
 	name := d.Get("name").(string)
 	input := &cloudtrail.CreateEventDataStoreInput{
@@ -186,6 +189,7 @@ func resourceEventDataStoreCreate(ctx context.Context, d *schema.ResourceData, m
 		MultiRegionEnabled:           aws.Bool(d.Get("multi_region_enabled").(bool)),
 		TerminationProtectionEnabled: aws.Bool(d.Get("termination_protection_enabled").(bool)),
 		RetentionPeriod:              aws.Int64(int64(d.Get("retention_period").(int))),
+		TagsList:                     getTagsIn(ctx),
 	}
 
 	if _, ok := d.GetOk("advanced_event_selector"); ok {
@@ -194,10 +198,6 @@ func resourceEventDataStoreCreate(ctx context.Context, d *schema.ResourceData, m
 
 	if v, ok := d.GetOk("kms_key_id"); ok {
 		input.KmsKeyId = aws.String(v.(string))
-	}
-
-	if len(tags) > 0 {
-		input.TagsList = Tags(tags.IgnoreAWS())
 	}
 
 	output, err := conn.CreateEventDataStoreWithContext(ctx, input)
@@ -216,9 +216,7 @@ func resourceEventDataStoreCreate(ctx context.Context, d *schema.ResourceData, m
 }
 
 func resourceEventDataStoreRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).CloudTrailConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).CloudTrailConn(ctx)
 
 	eventDataStore, err := FindEventDataStoreByARN(ctx, conn, d.Id())
 
@@ -243,28 +241,11 @@ func resourceEventDataStoreRead(ctx context.Context, d *schema.ResourceData, met
 	d.Set("retention_period", eventDataStore.RetentionPeriod)
 	d.Set("termination_protection_enabled", eventDataStore.TerminationProtectionEnabled)
 
-	tags, err := ListTags(ctx, conn, d.Id())
-
-	if err != nil {
-		return diag.Errorf("listing tags for CloudTrail Event Data Store (%s): %s", d.Id(), err)
-	}
-
-	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return diag.Errorf("setting tags: %s", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return diag.Errorf("setting tags_all: %s", err)
-	}
-
 	return nil
 }
 
 func resourceEventDataStoreUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).CloudTrailConn()
+	conn := meta.(*conns.AWSClient).CloudTrailConn(ctx)
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		input := &cloudtrail.UpdateEventDataStoreInput{
@@ -306,19 +287,11 @@ func resourceEventDataStoreUpdate(ctx context.Context, d *schema.ResourceData, m
 		}
 	}
 
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		if err := UpdateTags(ctx, conn, d.Id(), o, n); err != nil {
-			return diag.Errorf("updating CloudTrail Event Data Store (%s) tags: %s", d.Id(), err)
-		}
-	}
-
 	return resourceEventDataStoreRead(ctx, d, meta)
 }
 
 func resourceEventDataStoreDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).CloudTrailConn()
+	conn := meta.(*conns.AWSClient).CloudTrailConn(ctx)
 
 	log.Printf("[DEBUG] Deleting CloudTrail Event Data Store: %s", d.Id())
 	_, err := conn.DeleteEventDataStoreWithContext(ctx, &cloudtrail.DeleteEventDataStoreInput{

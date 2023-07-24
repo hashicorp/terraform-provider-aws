@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ec2
 
 import (
@@ -24,9 +27,11 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_vpn_connection")
+// @SDKResource("aws_vpn_connection", name="VPN Connection")
+// @Tags(identifierAttribute="id")
 func ResourceVPNConnection() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceVPNConnectionCreate,
@@ -124,8 +129,8 @@ func ResourceVPNConnection() *schema.Resource {
 				Computed: true,
 				ForceNew: true,
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			"transit_gateway_attachment_id": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -183,6 +188,10 @@ func ResourceVPNConnection() *schema.Resource {
 					}
 					return false
 				},
+			},
+			"tunnel1_enable_tunnel_lifecycle_control": {
+				Type:     schema.TypeBool,
+				Optional: true,
 			},
 			"tunnel1_ike_versions": {
 				Type:     schema.TypeSet,
@@ -396,6 +405,10 @@ func ResourceVPNConnection() *schema.Resource {
 					}
 					return false
 				},
+			},
+			"tunnel2_enable_tunnel_lifecycle_control": {
+				Type:     schema.TypeBool,
+				Optional: true,
 			},
 			"tunnel2_ike_versions": {
 				Type:     schema.TypeSet,
@@ -626,11 +639,12 @@ func ResourceVPNConnection() *schema.Resource {
 
 // https://docs.aws.amazon.com/vpn/latest/s2svpn/VPNTunnels.html.
 var (
-	defaultVPNTunnelOptionsDPDTimeoutAction           = vpnTunnelOptionsDPDTimeoutActionClear
-	defaultVPNTunnelOptionsDPDTimeoutSeconds          = 30
-	defaultVPNTunnelOptionsIKEVersions                = []string{vpnTunnelOptionsIKEVersion1, vpnTunnelOptionsIKEVersion2}
-	defaultVPNTunnelOptionsPhase1DHGroupNumbers       = []int{2, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24}
-	defaultVPNTunnelOptionsPhase1EncryptionAlgorithms = []string{
+	defaultVPNTunnelOptionsDPDTimeoutAction             = vpnTunnelOptionsDPDTimeoutActionClear
+	defaultVPNTunnelOptionsDPDTimeoutSeconds            = 30
+	defaultVPNTunnelOptionsEnableTunnelLifecycleControl = false
+	defaultVPNTunnelOptionsIKEVersions                  = []string{vpnTunnelOptionsIKEVersion1, vpnTunnelOptionsIKEVersion2}
+	defaultVPNTunnelOptionsPhase1DHGroupNumbers         = []int{2, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24}
+	defaultVPNTunnelOptionsPhase1EncryptionAlgorithms   = []string{
 		vpnTunnelOptionsPhase1EncryptionAlgorithmAES128,
 		vpnTunnelOptionsPhase1EncryptionAlgorithmAES256,
 		vpnTunnelOptionsPhase1EncryptionAlgorithmAES128_GCM_16,
@@ -665,14 +679,12 @@ var (
 
 func resourceVPNConnectionCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	input := &ec2.CreateVpnConnectionInput{
 		CustomerGatewayId: aws.String(d.Get("customer_gateway_id").(string)),
 		Options:           expandVPNConnectionOptionsSpecification(d),
-		TagSpecifications: tagSpecificationsFromKeyValueTags(tags, ec2.ResourceTypeVpnConnection),
+		TagSpecifications: getTagSpecificationsIn(ctx, ec2.ResourceTypeVpnConnection),
 		Type:              aws.String(d.Get("type").(string)),
 	}
 
@@ -703,9 +715,7 @@ func resourceVPNConnectionCreate(ctx context.Context, d *schema.ResourceData, me
 
 func resourceVPNConnectionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	vpnConnection, err := FindVPNConnectionByID(ctx, conn, d.Id())
 
@@ -763,16 +773,7 @@ func resourceVPNConnectionRead(ctx context.Context, d *schema.ResourceData, meta
 		return sdkdiag.AppendErrorf(diags, "setting vgw_telemetry: %s", err)
 	}
 
-	tags := KeyValueTags(ctx, vpnConnection.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
-	}
+	setTagsOut(ctx, vpnConnection.Tags)
 
 	if v := vpnConnection.Options; v != nil {
 		d.Set("enable_acceleration", v.EnableAcceleration)
@@ -851,7 +852,7 @@ func resourceVPNConnectionRead(ctx context.Context, d *schema.ResourceData, meta
 
 func resourceVPNConnectionUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	if d.HasChanges("customer_gateway_id", "transit_gateway_id", "vpn_gateway_id") {
 		input := &ec2.ModifyVpnConnectionInput{
@@ -934,20 +935,12 @@ func resourceVPNConnectionUpdate(ctx context.Context, d *schema.ResourceData, me
 		}
 	}
 
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		if err := UpdateTags(ctx, conn, d.Id(), o, n); err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating EC2 VPN Connection (%s) tags: %s", d.Id(), err)
-		}
-	}
-
 	return append(diags, resourceVPNConnectionRead(ctx, d, meta)...)
 }
 
 func resourceVPNConnectionDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	log.Printf("[INFO] Deleting EC2 VPN Connection: %s", d.Id())
 	_, err := conn.DeleteVpnConnectionWithContext(ctx, &ec2.DeleteVpnConnectionInput{
@@ -1027,6 +1020,10 @@ func expandVPNTunnelOptionsSpecification(d *schema.ResourceData, prefix string) 
 
 	if v, ok := d.GetOk(prefix + "dpd_timeout_seconds"); ok {
 		apiObject.DPDTimeoutSeconds = aws.Int64(int64(v.(int)))
+	}
+
+	if v, ok := d.GetOk(prefix + "enable_tunnel_lifecycle_control"); ok {
+		apiObject.EnableTunnelLifecycleControl = aws.Bool(v.(bool))
 	}
 
 	if v, ok := d.GetOk(prefix + "ike_versions"); ok {
@@ -1172,6 +1169,16 @@ func expandModifyVPNTunnelOptionsSpecification(d *schema.ResourceData, prefix st
 			apiObject.DPDTimeoutSeconds = aws.Int64(int64(v.(int)))
 		} else {
 			apiObject.DPDTimeoutSeconds = aws.Int64(int64(defaultVPNTunnelOptionsDPDTimeoutSeconds))
+		}
+
+		hasChange = true
+	}
+
+	if key := prefix + "enable_tunnel_lifecycle_control"; d.HasChange(key) {
+		if v, ok := d.GetOk(key); ok {
+			apiObject.EnableTunnelLifecycleControl = aws.Bool(v.(bool))
+		} else {
+			apiObject.EnableTunnelLifecycleControl = aws.Bool(defaultVPNTunnelOptionsEnableTunnelLifecycleControl)
 		}
 
 		hasChange = true
@@ -1366,6 +1373,7 @@ func flattenTunnelOption(d *schema.ResourceData, prefix string, apiObject *ec2.T
 
 	d.Set(prefix+"dpd_timeout_action", apiObject.DpdTimeoutAction)
 	d.Set(prefix+"dpd_timeout_seconds", apiObject.DpdTimeoutSeconds)
+	d.Set(prefix+"enable_tunnel_lifecycle_control", apiObject.EnableTunnelLifecycleControl)
 
 	for _, v := range apiObject.IkeVersions {
 		s = append(s, v.Value)
@@ -1418,7 +1426,6 @@ func flattenTunnelOption(d *schema.ResourceData, prefix string, apiObject *ec2.T
 	d.Set(prefix+"phase2_integrity_algorithms", aws.StringValueSlice(s))
 
 	d.Set(prefix+"phase2_lifetime_seconds", apiObject.Phase2LifetimeSeconds)
-
 	d.Set(prefix+"rekey_fuzz_percentage", apiObject.RekeyFuzzPercentage)
 	d.Set(prefix+"rekey_margin_time_seconds", apiObject.RekeyMarginTimeSeconds)
 	d.Set(prefix+"replay_window_size", apiObject.ReplayWindowSize)

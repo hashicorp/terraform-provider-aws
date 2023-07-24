@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package elasticsearch
 
 import (
@@ -23,9 +26,11 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_elasticsearch_domain")
+// @SDKResource("aws_elasticsearch_domain", name="Domain")
+// @Tags(identifierAttribute="id")
 func ResourceDomain() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceDomainCreate,
@@ -48,7 +53,7 @@ func ResourceDomain() *schema.Resource {
 				newVersion := d.Get("elasticsearch_version").(string)
 				domainName := d.Get("domain_name").(string)
 
-				conn := meta.(*conns.AWSClient).ElasticsearchConn()
+				conn := meta.(*conns.AWSClient).ElasticsearchConn(ctx)
 				resp, err := conn.GetCompatibleElasticsearchVersionsWithContext(ctx, &elasticsearch.GetCompatibleElasticsearchVersionsInput{
 					DomainName: aws.String(domainName),
 				})
@@ -494,8 +499,8 @@ func ResourceDomain() *schema.Resource {
 					},
 				},
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			"vpc_options": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -534,9 +539,7 @@ func ResourceDomain() *schema.Resource {
 
 func resourceDomainCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ElasticsearchConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
+	conn := meta.(*conns.AWSClient).ElasticsearchConn(ctx)
 
 	// The API doesn't check for duplicate names
 	// so w/out this check Create would act as upsert
@@ -551,7 +554,7 @@ func resourceDomainCreate(ctx context.Context, d *schema.ResourceData, meta inte
 	input := &elasticsearch.CreateElasticsearchDomainInput{
 		DomainName:           aws.String(name),
 		ElasticsearchVersion: aws.String(d.Get("elasticsearch_version").(string)),
-		TagList:              Tags(tags.IgnoreAWS()),
+		TagList:              getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("access_policies"); ok {
@@ -713,9 +716,7 @@ func resourceDomainCreate(ctx context.Context, d *schema.ResourceData, meta inte
 
 func resourceDomainRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ElasticsearchConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).ElasticsearchConn(ctx)
 
 	name := d.Get("domain_name").(string)
 	ds, err := FindDomainByName(ctx, conn, name)
@@ -837,29 +838,12 @@ func resourceDomainRead(ctx context.Context, d *schema.ResourceData, meta interf
 
 	d.Set("arn", ds.ARN)
 
-	tags, err := ListTags(ctx, conn, d.Id())
-
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "listing tags for Elasticsearch Domain (%s): %s", d.Id(), err)
-	}
-
-	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
-	}
-
 	return diags
 }
 
 func resourceDomainUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ElasticsearchConn()
+	conn := meta.(*conns.AWSClient).ElasticsearchConn(ctx)
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		name := d.Get("domain_name").(string)
@@ -996,20 +980,12 @@ func resourceDomainUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 		}
 	}
 
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		if err := UpdateTags(ctx, conn, d.Id(), o, n); err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating Elasticsearch Domain (%s) tags: %s", d.Id(), err)
-		}
-	}
-
 	return append(diags, resourceDomainRead(ctx, d, meta)...)
 }
 
 func resourceDomainDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ElasticsearchConn()
+	conn := meta.(*conns.AWSClient).ElasticsearchConn(ctx)
 
 	name := d.Get("domain_name").(string)
 
@@ -1034,7 +1010,7 @@ func resourceDomainDelete(ctx context.Context, d *schema.ResourceData, meta inte
 }
 
 func resourceDomainImport(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
-	conn := meta.(*conns.AWSClient).ElasticsearchConn()
+	conn := meta.(*conns.AWSClient).ElasticsearchConn(ctx)
 
 	d.Set("domain_name", d.Id())
 

@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package s3_test
 
 import (
@@ -13,10 +16,10 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfs3 "github.com/hashicorp/terraform-provider-aws/internal/service/s3"
@@ -578,7 +581,7 @@ func TestAccS3BucketMetric_withFilterSingleTag(t *testing.T) {
 
 func testAccCheckBucketMetricDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Conn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Conn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_s3_bucket_metric" {
@@ -629,7 +632,7 @@ func testAccCheckBucketMetricsExistsConfig(ctx context.Context, n string, res *s
 			return fmt.Errorf("No S3 bucket metrics configuration ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Conn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Conn(ctx)
 		bucket, name, err := tfs3.BucketMetricParseID(rs.Primary.ID)
 		if err != nil {
 			return err
@@ -651,57 +654,52 @@ func testAccCheckBucketMetricsExistsConfig(ctx context.Context, n string, res *s
 	}
 }
 
-func testAccBucketMetricsBucketConfig(name string) string {
+func testAccBucketMetricsBucketConfig(bucketName string) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "bucket" {
-  bucket = "%s"
+  bucket = %[1]q
 }
-
-resource "aws_s3_bucket_acl" "test" {
-  bucket = aws_s3_bucket.bucket.id
-  acl    = "public-read"
-}
-`, name)
+`, bucketName)
 }
 
 func testAccBucketMetricConfig_emptyFilter(bucketName, metricName string) string {
-	return fmt.Sprintf(`
-%s
-
+	return acctest.ConfigCompose(
+		testAccBucketMetricsBucketConfig(bucketName),
+		fmt.Sprintf(`
 resource "aws_s3_bucket_metric" "test" {
   bucket = aws_s3_bucket.bucket.id
-  name   = "%s"
+  name   = %[1]q
 
   filter {}
 }
-`, testAccBucketMetricsBucketConfig(bucketName), metricName)
+`, metricName))
 }
 
 func testAccBucketMetricConfig_filterPrefix(bucketName, metricName, prefix string) string {
-	return fmt.Sprintf(`
-%s
-
+	return acctest.ConfigCompose(
+		testAccBucketMetricsBucketConfig(bucketName),
+		fmt.Sprintf(`
 resource "aws_s3_bucket_metric" "test" {
   bucket = aws_s3_bucket.bucket.id
-  name   = "%s"
+  name   = %[1]q
 
   filter {
-    prefix = "%s"
+    prefix = %[2]q
   }
 }
-`, testAccBucketMetricsBucketConfig(bucketName), metricName, prefix)
+`, metricName, prefix))
 }
 
 func testAccBucketMetricConfig_filterPrefixAndMultipleTags(bucketName, metricName, prefix, tag1, tag2 string) string {
-	return fmt.Sprintf(`
-%s
-
+	return acctest.ConfigCompose(
+		testAccBucketMetricsBucketConfig(bucketName),
+		fmt.Sprintf(`
 resource "aws_s3_bucket_metric" "test" {
   bucket = aws_s3_bucket.bucket.id
-  name   = "%s"
+  name   = %[1]q
 
   filter {
-    prefix = "%s"
+    prefix = %[2]q
 
     tags = {
       "tag1" = "%s"
@@ -709,70 +707,70 @@ resource "aws_s3_bucket_metric" "test" {
     }
   }
 }
-`, testAccBucketMetricsBucketConfig(bucketName), metricName, prefix, tag1, tag2)
+`, metricName, prefix, tag1, tag2))
 }
 
 func testAccBucketMetricConfig_filterPrefixAndSingleTag(bucketName, metricName, prefix, tag string) string {
-	return fmt.Sprintf(`
-%s
-
+	return acctest.ConfigCompose(
+		testAccBucketMetricsBucketConfig(bucketName),
+		fmt.Sprintf(`
 resource "aws_s3_bucket_metric" "test" {
   bucket = aws_s3_bucket.bucket.id
-  name   = "%s"
+  name   = %[1]q
 
   filter {
-    prefix = "%s"
+    prefix = %[2]q
 
     tags = {
-      "tag1" = "%s"
+      "tag1" = %[3]q
     }
   }
 }
-`, testAccBucketMetricsBucketConfig(bucketName), metricName, prefix, tag)
+`, metricName, prefix, tag))
 }
 
 func testAccBucketMetricConfig_filterMultipleTags(bucketName, metricName, tag1, tag2 string) string {
-	return fmt.Sprintf(`
-%s
-
+	return acctest.ConfigCompose(
+		testAccBucketMetricsBucketConfig(bucketName),
+		fmt.Sprintf(`
 resource "aws_s3_bucket_metric" "test" {
   bucket = aws_s3_bucket.bucket.id
-  name   = "%s"
+  name   = %[1]q
 
   filter {
     tags = {
-      "tag1" = "%s"
-      "tag2" = "%s"
+      "tag1" = %[2]q
+      "tag2" = %[3]q
     }
   }
 }
-`, testAccBucketMetricsBucketConfig(bucketName), metricName, tag1, tag2)
+`, metricName, tag1, tag2))
 }
 
 func testAccBucketMetricConfig_filterSingleTag(bucketName, metricName, tag string) string {
-	return fmt.Sprintf(`
-%s
-
+	return acctest.ConfigCompose(
+		testAccBucketMetricsBucketConfig(bucketName),
+		fmt.Sprintf(`
 resource "aws_s3_bucket_metric" "test" {
   bucket = aws_s3_bucket.bucket.id
-  name   = "%s"
+  name   = %[1]q
 
   filter {
     tags = {
-      "tag1" = "%s"
+      "tag1" = %[2]q
     }
   }
 }
-`, testAccBucketMetricsBucketConfig(bucketName), metricName, tag)
+`, metricName, tag))
 }
 
 func testAccBucketMetricConfig_noFilter(bucketName, metricName string) string {
-	return fmt.Sprintf(`
-%s
-
+	return acctest.ConfigCompose(
+		testAccBucketMetricsBucketConfig(bucketName),
+		fmt.Sprintf(`
 resource "aws_s3_bucket_metric" "test" {
   bucket = aws_s3_bucket.bucket.id
-  name   = "%s"
+  name   = %[1]q
 }
-`, testAccBucketMetricsBucketConfig(bucketName), metricName)
+`, metricName))
 }

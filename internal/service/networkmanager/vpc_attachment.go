@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package networkmanager
 
 import (
@@ -18,9 +21,11 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_networkmanager_vpc_attachment")
+// @SDKResource("aws_networkmanager_vpc_attachment", name="VPC Attachment")
+// @Tags(identifierAttribute="arn")
 func ResourceVPCAttachment() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceVPCAttachmentCreate,
@@ -108,8 +113,8 @@ func ResourceVPCAttachment() *schema.Resource {
 					ValidateFunc: verify.ValidARN,
 				},
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			"vpc_arn": {
 				Type:         schema.TypeString,
 				Required:     true,
@@ -121,24 +126,19 @@ func ResourceVPCAttachment() *schema.Resource {
 }
 
 func resourceVPCAttachmentCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).NetworkManagerConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
+	conn := meta.(*conns.AWSClient).NetworkManagerConn(ctx)
 
 	coreNetworkID := d.Get("core_network_id").(string)
 	vpcARN := d.Get("vpc_arn").(string)
 	input := &networkmanager.CreateVpcAttachmentInput{
 		CoreNetworkId: aws.String(coreNetworkID),
 		SubnetArns:    flex.ExpandStringSet(d.Get("subnet_arns").(*schema.Set)),
+		Tags:          getTagsIn(ctx),
 		VpcArn:        aws.String(vpcARN),
 	}
 
 	if v, ok := d.GetOk("options"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 		input.Options = expandVpcOptions(v.([]interface{})[0].(map[string]interface{}))
-	}
-
-	if len(tags) > 0 {
-		input.Tags = Tags(tags.IgnoreAWS())
 	}
 
 	log.Printf("[DEBUG] Creating Network Manager VPC Attachment: %s", input)
@@ -158,9 +158,7 @@ func resourceVPCAttachmentCreate(ctx context.Context, d *schema.ResourceData, me
 }
 
 func resourceVPCAttachmentRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).NetworkManagerConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).NetworkManagerConn(ctx)
 
 	vpcAttachment, err := FindVPCAttachmentByID(ctx, conn, d.Id())
 
@@ -201,22 +199,13 @@ func resourceVPCAttachmentRead(ctx context.Context, d *schema.ResourceData, meta
 	d.Set("subnet_arns", aws.StringValueSlice(vpcAttachment.SubnetArns))
 	d.Set("vpc_arn", a.ResourceArn)
 
-	tags := KeyValueTags(ctx, a.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return diag.Errorf("Setting tags: %s", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return diag.Errorf("setting tags_all: %s", err)
-	}
+	setTagsOut(ctx, a.Tags)
 
 	return nil
 }
 
 func resourceVPCAttachmentUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).NetworkManagerConn()
+	conn := meta.(*conns.AWSClient).NetworkManagerConn(ctx)
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		input := &networkmanager.UpdateVpcAttachmentInput{
@@ -260,19 +249,11 @@ func resourceVPCAttachmentUpdate(ctx context.Context, d *schema.ResourceData, me
 		}
 	}
 
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		if err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n); err != nil {
-			return diag.Errorf("updating Network Manager VPC Attachment (%s) tags: %s", d.Id(), err)
-		}
-	}
-
 	return resourceVPCAttachmentRead(ctx, d, meta)
 }
 
 func resourceVPCAttachmentDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).NetworkManagerConn()
+	conn := meta.(*conns.AWSClient).NetworkManagerConn(ctx)
 
 	// If ResourceAttachmentAccepter is used, then VPC Attachment state
 	// is not updated from StatePendingAttachmentAcceptance and the delete fails if deleted immediately after create

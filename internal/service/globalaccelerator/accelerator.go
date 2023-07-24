@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package globalaccelerator
 
 import (
@@ -19,9 +22,11 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_globalaccelerator_accelerator")
+// @SDKResource("aws_globalaccelerator_accelerator", name="Accelerator")
+// @Tags(identifierAttribute="id")
 func ResourceAccelerator() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceAcceleratorCreate,
@@ -120,8 +125,8 @@ func ResourceAccelerator() *schema.Resource {
 					validation.StringDoesNotMatch(regexp.MustCompile(`-$`), "cannot end with a hyphen"),
 				),
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
 
 		CustomizeDiff: verify.SetTagsDiff,
@@ -129,16 +134,14 @@ func ResourceAccelerator() *schema.Resource {
 }
 
 func resourceAcceleratorCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).GlobalAcceleratorConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
+	conn := meta.(*conns.AWSClient).GlobalAcceleratorConn(ctx)
 
 	name := d.Get("name").(string)
 	input := &globalaccelerator.CreateAcceleratorInput{
 		Enabled:          aws.Bool(d.Get("enabled").(bool)),
 		IdempotencyToken: aws.String(id.UniqueId()),
 		Name:             aws.String(name),
-		Tags:             Tags(tags.IgnoreAWS()),
+		Tags:             getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("ip_address_type"); ok {
@@ -180,9 +183,7 @@ func resourceAcceleratorCreate(ctx context.Context, d *schema.ResourceData, meta
 }
 
 func resourceAcceleratorRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).GlobalAcceleratorConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).GlobalAcceleratorConn(ctx)
 
 	accelerator, err := FindAcceleratorByARN(ctx, conn, d.Id())
 
@@ -216,28 +217,11 @@ func resourceAcceleratorRead(ctx context.Context, d *schema.ResourceData, meta i
 		return diag.Errorf("setting attributes: %s", err)
 	}
 
-	tags, err := ListTags(ctx, conn, d.Id())
-
-	if err != nil {
-		return diag.Errorf("listing tags for Global Accelerator Accelerator (%s): %s", d.Id(), err)
-	}
-
-	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return diag.Errorf("setting tags: %s", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return diag.Errorf("setting tags_all: %s", err)
-	}
-
 	return nil
 }
 
 func resourceAcceleratorUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).GlobalAcceleratorConn()
+	conn := meta.(*conns.AWSClient).GlobalAcceleratorConn(ctx)
 
 	if d.HasChanges("name", "ip_address_type", "enabled") {
 		input := &globalaccelerator.UpdateAcceleratorInput{
@@ -298,19 +282,11 @@ func resourceAcceleratorUpdate(ctx context.Context, d *schema.ResourceData, meta
 		}
 	}
 
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		if err := UpdateTags(ctx, conn, d.Id(), o, n); err != nil {
-			return diag.Errorf("updating Global Accelerator Accelerator (%s) tags: %s", d.Id(), err)
-		}
-	}
-
 	return resourceAcceleratorRead(ctx, d, meta)
 }
 
 func resourceAcceleratorDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).GlobalAcceleratorConn()
+	conn := meta.(*conns.AWSClient).GlobalAcceleratorConn(ctx)
 
 	input := &globalaccelerator.UpdateAcceleratorInput{
 		AcceleratorArn: aws.String(d.Id()),

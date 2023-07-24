@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package elasticache
 
 import (
@@ -180,25 +183,6 @@ func FindGlobalReplicationGroupMemberByID(ctx context.Context, conn *elasticache
 
 	return nil, &retry.NotFoundError{
 		Message: fmt.Sprintf("Replication Group (%s) not found in Global Replication Group (%s)", id, globalReplicationGroupID),
-	}
-}
-
-func FindUserGroupByID(ctx context.Context, conn *elasticache.ElastiCache, groupID string) (*elasticache.UserGroup, error) {
-	input := &elasticache.DescribeUserGroupsInput{
-		UserGroupId: aws.String(groupID),
-	}
-	out, err := conn.DescribeUserGroupsWithContext(ctx, input)
-	if err != nil {
-		return nil, err
-	}
-
-	switch count := len(out.UserGroups); count {
-	case 0:
-		return nil, tfresource.NewEmptyResultError(input)
-	case 1:
-		return out.UserGroups[0], nil
-	default:
-		return nil, tfresource.NewTooManyResultsError(count, input)
 	}
 }
 

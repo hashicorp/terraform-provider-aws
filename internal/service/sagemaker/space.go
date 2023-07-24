@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package sagemaker
 
 import (
@@ -18,9 +21,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_sagemaker_space")
+// @SDKResource("aws_sagemaker_space", name="Space")
+// @Tags(identifierAttribute="arn")
 func ResourceSpace() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceSpaceCreate,
@@ -186,8 +191,8 @@ func ResourceSpace() *schema.Resource {
 					},
 				},
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			"home_efs_file_system_uid": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -200,23 +205,18 @@ func ResourceSpace() *schema.Resource {
 
 func resourceSpaceCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SageMakerConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
+	conn := meta.(*conns.AWSClient).SageMakerConn(ctx)
 
 	domainId := d.Get("domain_id").(string)
 	spaceName := d.Get("space_name").(string)
 	input := &sagemaker.CreateSpaceInput{
 		SpaceName: aws.String(spaceName),
 		DomainId:  aws.String(domainId),
+		Tags:      getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("space_settings"); ok && len(v.([]interface{})) > 0 {
 		input.SpaceSettings = expandSpaceSettings(v.([]interface{}))
-	}
-
-	if len(tags) > 0 {
-		input.Tags = Tags(tags.IgnoreAWS())
 	}
 
 	log.Printf("[DEBUG] SageMaker Space create config: %#v", *input)
@@ -236,9 +236,7 @@ func resourceSpaceCreate(ctx context.Context, d *schema.ResourceData, meta inter
 
 func resourceSpaceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SageMakerConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).SageMakerConn(ctx)
 
 	domainID, name, err := decodeSpaceName(d.Id())
 	if err != nil {
@@ -265,29 +263,12 @@ func resourceSpaceRead(ctx context.Context, d *schema.ResourceData, meta interfa
 		return sdkdiag.AppendErrorf(diags, "setting space_settings for SageMaker Space (%s): %s", d.Id(), err)
 	}
 
-	tags, err := ListTags(ctx, conn, arn)
-
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "listing tags for SageMaker Space (%s): %s", d.Id(), err)
-	}
-
-	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
-	}
-
 	return diags
 }
 
 func resourceSpaceUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SageMakerConn()
+	conn := meta.(*conns.AWSClient).SageMakerConn(ctx)
 
 	if d.HasChange("space_settings") {
 		domainID := d.Get("domain_id").(string)
@@ -310,20 +291,12 @@ func resourceSpaceUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 		}
 	}
 
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		if err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n); err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating SageMaker Space (%s) tags: %s", d.Id(), err)
-		}
-	}
-
 	return append(diags, resourceSpaceRead(ctx, d, meta)...)
 }
 
 func resourceSpaceDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SageMakerConn()
+	conn := meta.(*conns.AWSClient).SageMakerConn(ctx)
 
 	name := d.Get("space_name").(string)
 	domainID := d.Get("domain_id").(string)

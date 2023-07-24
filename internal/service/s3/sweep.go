@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 //go:build sweep
 // +build sweep
 
@@ -15,11 +18,9 @@ import (
 	"github.com/aws/aws-sdk-go/aws/request"
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/aws/aws-sdk-go/service/s3/s3manager"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
@@ -43,12 +44,12 @@ func init() {
 
 func sweepObjects(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
 		return fmt.Errorf("getting client: %s", err)
 	}
 
-	conn := client.(*conns.AWSClient).S3ConnURICleaningDisabled()
+	conn := client.S3ConnURICleaningDisabled(ctx)
 	input := &s3.ListBucketsInput{}
 
 	output, err := conn.ListBucketsWithContext(ctx, input)
@@ -94,7 +95,7 @@ func sweepObjects(region string) error {
 		})
 	}
 
-	if err := sweep.SweepOrchestratorWithContext(ctx, sweepables); err != nil {
+	if err := sweep.SweepOrchestrator(ctx, sweepables); err != nil {
 		errs = multierror.Append(errs, fmt.Errorf("sweeping DynamoDB Backups for %s: %w", region, err))
 	}
 
@@ -118,12 +119,12 @@ func (os objectSweeper) Delete(ctx context.Context, timeout time.Duration, optFn
 
 func sweepBuckets(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
 		return fmt.Errorf("getting client: %s", err)
 	}
 
-	conn := client.(*conns.AWSClient).S3Conn()
+	conn := client.S3Conn(ctx)
 	input := &s3.ListBucketsInput{}
 
 	output, err := conn.ListBucketsWithContext(ctx, input)
@@ -165,7 +166,7 @@ func sweepBuckets(region string) error {
 		sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 	}
 
-	if err := sweep.SweepOrchestratorWithContext(ctx, sweepResources); err != nil {
+	if err := sweep.SweepOrchestrator(ctx, sweepResources); err != nil {
 		errs = multierror.Append(errs, fmt.Errorf("sweeping S3 Buckets for %s: %w", region, err))
 	}
 
@@ -188,13 +189,9 @@ func bucketRegion(ctx context.Context, conn *s3.S3, bucket string) (string, erro
 }
 
 func objectLockEnabled(ctx context.Context, conn *s3.S3, bucket string) (bool, error) {
-	input := &s3.GetObjectLockConfigurationInput{
-		Bucket: aws.String(bucket),
-	}
+	output, err := FindObjectLockConfiguration(ctx, conn, bucket, "")
 
-	output, err := conn.GetObjectLockConfigurationWithContext(ctx, input)
-
-	if tfawserr.ErrCodeEquals(err, ErrCodeObjectLockConfigurationNotFound) {
+	if tfresource.NotFound(err) {
 		return false, nil
 	}
 
@@ -202,7 +199,7 @@ func objectLockEnabled(ctx context.Context, conn *s3.S3, bucket string) (bool, e
 		return false, err
 	}
 
-	return aws.StringValue(output.ObjectLockConfiguration.ObjectLockEnabled) == s3.ObjectLockEnabledEnabled, nil
+	return aws.StringValue(output.ObjectLockEnabled) == s3.ObjectLockEnabledEnabled, nil
 }
 
 type bucketFilter func(*s3.Bucket) (bool, error)

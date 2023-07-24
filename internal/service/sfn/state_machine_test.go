@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package sfn_test
 
 import (
@@ -7,10 +10,10 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/sfn"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfsfn "github.com/hashicorp/terraform-provider-aws/internal/service/sfn"
@@ -46,6 +49,7 @@ func TestAccSFNStateMachine_createUpdate(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "logging_configuration.0.include_execution_data", "false"),
 					resource.TestCheckResourceAttr(resourceName, "logging_configuration.0.level", "OFF"),
 					resource.TestCheckResourceAttr(resourceName, "logging_configuration.0.log_destination", ""),
+					resource.TestCheckResourceAttr(resourceName, "publish", "false"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "tracing_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tracing_configuration.0.enabled", "false"),
@@ -53,9 +57,10 @@ func TestAccSFNStateMachine_createUpdate(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"publish", "state_machine_version_arn"},
 			},
 			{
 				Config: testAccStateMachineConfig_basic(rName, 10),
@@ -71,6 +76,7 @@ func TestAccSFNStateMachine_createUpdate(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "logging_configuration.0.include_execution_data", "false"),
 					resource.TestCheckResourceAttr(resourceName, "logging_configuration.0.level", "OFF"),
 					resource.TestCheckResourceAttr(resourceName, "logging_configuration.0.log_destination", ""),
+					resource.TestCheckResourceAttr(resourceName, "publish", "false"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "tracing_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tracing_configuration.0.enabled", "false"),
@@ -143,6 +149,10 @@ func TestAccSFNStateMachine_standardUpdate(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "creation_date"),
 					resource.TestCheckResourceAttrSet(resourceName, "definition"),
 					resource.TestMatchResourceAttr(resourceName, "definition", regexp.MustCompile(`.*\"MaxAttempts\": 5.*`)),
+					resource.TestCheckResourceAttr(resourceName, "publish", "true"),
+					//resource.TestCheckResourceAttrSet(resourceName, "version_description"),
+					//resource.TestCheckResourceAttrSet(resourceName, "revision_id"),
+					//resource.TestCheckResourceAttrSet(resourceName, "state_machine_version_arn"),
 					resource.TestCheckResourceAttrSet(resourceName, "role_arn"),
 					resource.TestCheckResourceAttr(resourceName, "type", "STANDARD"),
 				),
@@ -155,6 +165,10 @@ func TestAccSFNStateMachine_standardUpdate(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttrSet(resourceName, "creation_date"),
 					resource.TestMatchResourceAttr(resourceName, "definition", regexp.MustCompile(`.*\"MaxAttempts\": 10.*`)),
+					resource.TestCheckResourceAttr(resourceName, "publish", "true"),
+					//resource.TestCheckResourceAttrSet(resourceName, "version_description"),
+					//resource.TestCheckResourceAttrSet(resourceName, "revision_id"),
+					//resource.TestCheckResourceAttrSet(resourceName, "state_machine_version_arn"),
 					resource.TestCheckResourceAttrSet(resourceName, "role_arn"),
 					resource.TestCheckResourceAttr(resourceName, "type", "STANDARD"),
 				),
@@ -184,9 +198,10 @@ func TestAccSFNStateMachine_nameGenerated(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"publish", "state_machine_version_arn"},
 			},
 		},
 	})
@@ -213,9 +228,39 @@ func TestAccSFNStateMachine_namePrefix(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"publish", "state_machine_version_arn"},
+			},
+		},
+	})
+}
+
+func TestAccSFNStateMachine_publish(t *testing.T) {
+	ctx := acctest.Context(t)
+	var sm sfn.DescribeStateMachineOutput
+	resourceName := "aws_sfn_state_machine.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, sfn.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckStateMachineDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccStateMachineConfig_publish(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckExists(ctx, resourceName, &sm),
+					resource.TestCheckResourceAttr(resourceName, "publish", "true"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"publish", "state_machine_version_arn"},
 			},
 		},
 	})
@@ -242,9 +287,10 @@ func TestAccSFNStateMachine_tags(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"publish", "state_machine_version_arn"},
 			},
 			{
 				Config: testAccStateMachineConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
@@ -288,9 +334,10 @@ func TestAccSFNStateMachine_tracing(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"publish", "state_machine_version_arn"},
 			},
 			{
 				Config: testAccStateMachineConfig_tracingEnable(rName),
@@ -382,7 +429,7 @@ func testAccCheckExists(ctx context.Context, n string, v *sfn.DescribeStateMachi
 			return fmt.Errorf("No Step Functions State Machine ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SFNConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SFNConn(ctx)
 
 		output, err := tfsfn.FindStateMachineByARN(ctx, conn, rs.Primary.ID)
 
@@ -398,7 +445,7 @@ func testAccCheckExists(ctx context.Context, n string, v *sfn.DescribeStateMachi
 
 func testAccCheckStateMachineDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SFNConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SFNConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_sfn_state_machine" {
@@ -620,6 +667,39 @@ EOF
 `, namePrefix))
 }
 
+func testAccStateMachineConfig_publish(rName string) string {
+	return acctest.ConfigCompose(testAccStateMachineConfig_base(rName), `
+resource "aws_sfn_state_machine" "test" {
+  role_arn = aws_iam_role.for_sfn.arn
+  publish  = true
+
+  definition = <<EOF
+{
+  "Comment": "A Hello World example of the Amazon States Language using an AWS Lambda Function",
+  "StartAt": "HelloWorld",
+  "States": {
+    "HelloWorld": {
+      "Type": "Task",
+      "Resource": "${aws_lambda_function.test.arn}",
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "States.ALL"
+          ],
+          "IntervalSeconds": 5,
+          "MaxAttempts": 5,
+          "BackoffRate": 8
+        }
+      ],
+      "End": true
+    }
+  }
+}
+EOF
+}
+`)
+}
+
 func testAccStateMachineConfig_tags1(rName, tag1Key, tag1Value string) string {
 	return acctest.ConfigCompose(testAccStateMachineConfig_base(rName), fmt.Sprintf(`
 resource "aws_sfn_state_machine" "test" {
@@ -701,6 +781,7 @@ resource "aws_sfn_state_machine" "test" {
   name     = %[1]q
   role_arn = aws_iam_role.for_sfn.arn
   type     = %[2]q
+  publish  = true
 
   definition = <<EOF
 {

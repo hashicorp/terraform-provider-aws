@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package cloudformation
 
 import (
@@ -23,7 +26,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_cloudformation_stack")
+// @SDKResource("aws_cloudformation_stack", name="Stack")
+// @Tags
 func ResourceStack() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceStackCreate,
@@ -102,8 +106,8 @@ func ResourceStack() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			"template_body": {
 				Type:         schema.TypeString,
 				Optional:     true,
@@ -131,15 +135,14 @@ func ResourceStack() *schema.Resource {
 
 func resourceStackCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CloudFormationConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
+	conn := meta.(*conns.AWSClient).CloudFormationConn(ctx)
 
 	requestToken := id.UniqueId()
 	name := d.Get("name").(string)
 	input := &cloudformation.CreateStackInput{
 		ClientRequestToken: aws.String(requestToken),
 		StackName:          aws.String(name),
+		Tags:               getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("template_body"); ok {
@@ -176,9 +179,6 @@ func resourceStackCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 	if v, ok := d.GetOk("policy_url"); ok {
 		input.StackPolicyURL = aws.String(v.(string))
-	}
-	if len(tags) > 0 {
-		input.Tags = Tags(tags.IgnoreAWS())
 	}
 	if v, ok := d.GetOk("timeout_in_minutes"); ok {
 		m := int64(v.(int))
@@ -217,9 +217,7 @@ func resourceStackCreate(ctx context.Context, d *schema.ResourceData, meta inter
 
 func resourceStackRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CloudFormationConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).CloudFormationConn(ctx)
 
 	input := &cloudformation.DescribeStacksInput{
 		StackName: aws.String(d.Id()),
@@ -300,16 +298,7 @@ func resourceStackRead(ctx context.Context, d *schema.ResourceData, meta interfa
 		return sdkdiag.AppendErrorf(diags, "reading CloudFormation Stack (%s): %s", d.Id(), err)
 	}
 
-	tags := KeyValueTags(ctx, stack.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
-	}
+	setTagsOut(ctx, stack.Tags)
 
 	err = d.Set("outputs", flattenOutputs(stack.Outputs))
 	if err != nil {
@@ -328,14 +317,13 @@ func resourceStackRead(ctx context.Context, d *schema.ResourceData, meta interfa
 
 func resourceStackUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CloudFormationConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
+	conn := meta.(*conns.AWSClient).CloudFormationConn(ctx)
 
 	requestToken := id.UniqueId()
 	input := &cloudformation.UpdateStackInput{
-		StackName:          aws.String(d.Id()),
 		ClientRequestToken: aws.String(requestToken),
+		StackName:          aws.String(d.Id()),
+		Tags:               []*cloudformation.Tag{},
 	}
 
 	// Either TemplateBody, TemplateURL or UsePreviousTemplate are required
@@ -364,8 +352,8 @@ func resourceStackUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 		input.Parameters = expandParameters(v.(map[string]interface{}))
 	}
 
-	if len(tags) > 0 {
-		input.Tags = Tags(tags.IgnoreAWS())
+	if tags := getTagsIn(ctx); len(tags) > 0 {
+		input.Tags = tags
 	}
 
 	if d.HasChange("policy_body") {
@@ -412,7 +400,7 @@ func resourceStackUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 
 func resourceStackDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CloudFormationConn()
+	conn := meta.(*conns.AWSClient).CloudFormationConn(ctx)
 
 	requestToken := id.UniqueId()
 	input := &cloudformation.DeleteStackInput{

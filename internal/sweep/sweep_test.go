@@ -3,9 +3,10 @@
 package sweep_test
 
 import (
+	"context"
 	"testing"
 
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	_ "github.com/hashicorp/terraform-provider-aws/internal/service/accessanalyzer"
 	_ "github.com/hashicorp/terraform-provider-aws/internal/service/acm"
 	_ "github.com/hashicorp/terraform-provider-aws/internal/service/acmpca"
@@ -80,6 +81,7 @@ import (
 	_ "github.com/hashicorp/terraform-provider-aws/internal/service/healthlake"
 	_ "github.com/hashicorp/terraform-provider-aws/internal/service/iam"
 	_ "github.com/hashicorp/terraform-provider-aws/internal/service/imagebuilder"
+	_ "github.com/hashicorp/terraform-provider-aws/internal/service/internetmonitor"
 	_ "github.com/hashicorp/terraform-provider-aws/internal/service/iot"
 	_ "github.com/hashicorp/terraform-provider-aws/internal/service/kafka"
 	_ "github.com/hashicorp/terraform-provider-aws/internal/service/kafkaconnect"
@@ -104,8 +106,10 @@ import (
 	_ "github.com/hashicorp/terraform-provider-aws/internal/service/networkmanager"
 	_ "github.com/hashicorp/terraform-provider-aws/internal/service/oam"
 	_ "github.com/hashicorp/terraform-provider-aws/internal/service/opensearch"
+	_ "github.com/hashicorp/terraform-provider-aws/internal/service/opensearchserverless"
 	_ "github.com/hashicorp/terraform-provider-aws/internal/service/opsworks"
 	_ "github.com/hashicorp/terraform-provider-aws/internal/service/pinpoint"
+	_ "github.com/hashicorp/terraform-provider-aws/internal/service/pipes"
 	_ "github.com/hashicorp/terraform-provider-aws/internal/service/qldb"
 	_ "github.com/hashicorp/terraform-provider-aws/internal/service/quicksight"
 	_ "github.com/hashicorp/terraform-provider-aws/internal/service/ram"
@@ -113,6 +117,7 @@ import (
 	_ "github.com/hashicorp/terraform-provider-aws/internal/service/redshift"
 	_ "github.com/hashicorp/terraform-provider-aws/internal/service/redshiftserverless"
 	_ "github.com/hashicorp/terraform-provider-aws/internal/service/resourceexplorer2"
+	_ "github.com/hashicorp/terraform-provider-aws/internal/service/resourcegroups"
 	_ "github.com/hashicorp/terraform-provider-aws/internal/service/route53"
 	_ "github.com/hashicorp/terraform-provider-aws/internal/service/route53recoverycontrolconfig"
 	_ "github.com/hashicorp/terraform-provider-aws/internal/service/route53resolver"
@@ -139,6 +144,7 @@ import (
 	_ "github.com/hashicorp/terraform-provider-aws/internal/service/timestreamwrite"
 	_ "github.com/hashicorp/terraform-provider-aws/internal/service/transcribe"
 	_ "github.com/hashicorp/terraform-provider-aws/internal/service/transfer"
+	_ "github.com/hashicorp/terraform-provider-aws/internal/service/vpclattice"
 	_ "github.com/hashicorp/terraform-provider-aws/internal/service/waf"
 	_ "github.com/hashicorp/terraform-provider-aws/internal/service/wafregional"
 	_ "github.com/hashicorp/terraform-provider-aws/internal/service/wafv2"
@@ -147,6 +153,6 @@ import (
 )
 
 func TestMain(m *testing.M) {
-	sweep.SweeperClients = make(map[string]interface{})
+	sweep.ServicePackages = servicePackages(context.Background())
 	resource.TestMain(m)
 }

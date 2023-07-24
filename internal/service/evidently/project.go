@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package evidently
 
 import (
@@ -16,9 +19,11 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_evidently_project")
+// @SDKResource("aws_evidently_project", name="Project")
+// @Tags(identifierAttribute="arn")
 func ResourceProject() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceProjectCreate,
@@ -144,8 +149,8 @@ func ResourceProject() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
 
 		CustomizeDiff: verify.SetTagsDiff,
@@ -153,13 +158,12 @@ func ResourceProject() *schema.Resource {
 }
 
 func resourceProjectCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).EvidentlyConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
+	conn := meta.(*conns.AWSClient).EvidentlyConn(ctx)
 
 	name := d.Get("name").(string)
 	input := &cloudwatchevidently.CreateProjectInput{
 		Name: aws.String(name),
+		Tags: getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("description"); ok {
@@ -170,11 +174,6 @@ func resourceProjectCreate(ctx context.Context, d *schema.ResourceData, meta int
 		input.DataDelivery = expandDataDelivery(v.([]interface{}))
 	}
 
-	if len(tags) > 0 {
-		input.Tags = Tags(tags.IgnoreAWS())
-	}
-
-	log.Printf("[DEBUG] Creating CloudWatch Evidently Project: %s", input)
 	output, err := conn.CreateProjectWithContext(ctx, input)
 
 	if err != nil {
@@ -191,9 +190,7 @@ func resourceProjectCreate(ctx context.Context, d *schema.ResourceData, meta int
 }
 
 func resourceProjectRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).EvidentlyConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).EvidentlyConn(ctx)
 
 	project, err := FindProjectByNameOrARN(ctx, conn, d.Id())
 
@@ -223,21 +220,13 @@ func resourceProjectRead(ctx context.Context, d *schema.ResourceData, meta inter
 	d.Set("name", project.Name)
 	d.Set("status", project.Status)
 
-	tags := KeyValueTags(ctx, project.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return diag.Errorf("setting tags: %s", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return diag.Errorf("setting tags_all: %s", err)
-	}
+	setTagsOut(ctx, project.Tags)
 
 	return nil
 }
 
 func resourceProjectUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).EvidentlyConn()
+	conn := meta.(*conns.AWSClient).EvidentlyConn(ctx)
 
 	// Project has 2 update APIs
 	// UpdateProjectWithContext: Updates the description of an existing project.
@@ -291,20 +280,11 @@ func resourceProjectUpdate(ctx context.Context, d *schema.ResourceData, meta int
 		}
 	}
 
-	// updates to tags
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		if err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n); err != nil {
-			return diag.Errorf("updating tags: %s", err)
-		}
-	}
-
 	return resourceProjectRead(ctx, d, meta)
 }
 
 func resourceProjectDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).EvidentlyConn()
+	conn := meta.(*conns.AWSClient).EvidentlyConn(ctx)
 
 	log.Printf("[DEBUG] Deleting CloudWatch Evidently Project: %s", d.Id())
 	_, err := conn.DeleteProjectWithContext(ctx, &cloudwatchevidently.DeleteProjectInput{

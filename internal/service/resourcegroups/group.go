@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package resourcegroups
 
 import (
@@ -17,9 +20,11 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_resourcegroups_group")
+// @SDKResource("aws_resourcegroups_group", name="Group")
+// @Tags(identifierAttribute="arn")
 func ResourceGroup() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceGroupCreate,
@@ -42,9 +47,8 @@ func ResourceGroup() *schema.Resource {
 				Computed: true,
 			},
 			"configuration": {
-				Type:          schema.TypeSet,
-				Optional:      true,
-				ConflictsWith: []string{"resource_query"},
+				Type:     schema.TypeSet,
+				Optional: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"parameters": {
@@ -83,11 +87,10 @@ func ResourceGroup() *schema.Resource {
 				ForceNew: true,
 			},
 			"resource_query": {
-				Type:          schema.TypeList,
-				Optional:      true,
-				MinItems:      1,
-				MaxItems:      1,
-				ConflictsWith: []string{"configuration"},
+				Type:     schema.TypeList,
+				Optional: true,
+				MinItems: 1,
+				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"query": {
@@ -105,8 +108,8 @@ func ResourceGroup() *schema.Resource {
 					},
 				},
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
 
 		CustomizeDiff: verify.SetTagsDiff,
@@ -114,15 +117,13 @@ func ResourceGroup() *schema.Resource {
 }
 
 func resourceGroupCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ResourceGroupsConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
+	conn := meta.(*conns.AWSClient).ResourceGroupsConn(ctx)
 
 	name := d.Get("name").(string)
 	input := &resourcegroups.CreateGroupInput{
 		Description: aws.String(d.Get("description").(string)),
 		Name:        aws.String(name),
-		Tags:        Tags(tags.IgnoreAWS()),
+		Tags:        getTagsIn(ctx),
 	}
 
 	waitForConfigurationAttached := false
@@ -155,9 +156,7 @@ func resourceGroupCreate(ctx context.Context, d *schema.ResourceData, meta inter
 }
 
 func resourceGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ResourceGroupsConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).ResourceGroupsConn(ctx)
 
 	group, err := FindGroupByName(ctx, conn, d.Id())
 
@@ -180,17 +179,29 @@ func resourceGroupRead(ctx context.Context, d *schema.ResourceData, meta interfa
 		GroupName: aws.String(d.Id()),
 	})
 
-	isConfigurationGroup := false
+	hasQuery := true
 	if err != nil {
 		if tfawserr.ErrCodeEquals(err, resourcegroups.ErrCodeBadRequestException) {
 			// Attempting to get the query on a configuration group returns BadRequestException.
-			isConfigurationGroup = true
+			hasQuery = false
 		} else {
 			return diag.Errorf("reading Resource Groups Group (%s) resource query: %s", d.Id(), err)
 		}
 	}
 
-	if !isConfigurationGroup {
+	groupCfg, err := findGroupConfigurationByGroupName(ctx, conn, d.Id())
+
+	hasConfiguration := true
+	if err != nil {
+		if tfawserr.ErrCodeEquals(err, resourcegroups.ErrCodeBadRequestException) {
+			// Attempting to get configuration on a query group returns BadRequestException.
+			hasConfiguration = false
+		} else {
+			return diag.Errorf("reading Resource Groups Group (%s) configuration: %s", d.Id(), err)
+		}
+	}
+
+	if hasQuery {
 		resultQuery := map[string]interface{}{}
 		resultQuery["query"] = aws.StringValue(q.GroupQuery.ResourceQuery.Query)
 		resultQuery["type"] = aws.StringValue(q.GroupQuery.ResourceQuery.Type)
@@ -198,41 +209,17 @@ func resourceGroupRead(ctx context.Context, d *schema.ResourceData, meta interfa
 			return diag.Errorf("setting resource_query: %s", err)
 		}
 	}
-
-	if isConfigurationGroup {
-		groupCfg, err := findGroupConfigurationByGroupName(ctx, conn, d.Id())
-
-		if err != nil {
-			return diag.Errorf("reading Resource Groups Group (%s) configuration: %s", d.Id(), err)
-		}
-
+	if hasConfiguration {
 		if err := d.Set("configuration", flattenResourceGroupConfigurationItems(groupCfg.Configuration)); err != nil {
 			return diag.Errorf("setting configuration: %s", err)
 		}
-	}
-
-	tags, err := ListTags(ctx, conn, arn)
-
-	if err != nil {
-		return diag.Errorf("listing tags for Resource Groups Group (%s): %s", arn, err)
-	}
-
-	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return diag.Errorf("setting tags: %s", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return diag.Errorf("setting tags_all: %s", err)
 	}
 
 	return nil
 }
 
 func resourceGroupUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ResourceGroupsConn()
+	conn := meta.(*conns.AWSClient).ResourceGroupsConn(ctx)
 
 	// Conversion between a resource-query and configuration group is not possible and vice-versa
 	if d.HasChange("configuration") && d.HasChange("resource_query") {
@@ -282,19 +269,11 @@ func resourceGroupUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 		}
 	}
 
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		if err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n); err != nil {
-			return diag.Errorf("updating tags: %s", err)
-		}
-	}
-
 	return resourceGroupRead(ctx, d, meta)
 }
 
 func resourceGroupDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ResourceGroupsConn()
+	conn := meta.(*conns.AWSClient).ResourceGroupsConn(ctx)
 
 	log.Printf("[DEBUG] Deleting Resource Groups Group: %s", d.Id())
 	_, err := conn.DeleteGroupWithContext(ctx, &resourcegroups.DeleteGroupInput{

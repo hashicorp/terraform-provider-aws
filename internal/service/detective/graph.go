@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package detective
 
 import (
@@ -14,9 +17,11 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_detective_graph")
+// @SDKResource("aws_detective_graph", name="Graph")
+// @Tags(identifierAttribute="id")
 func ResourceGraph() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceGraphCreate,
@@ -35,23 +40,18 @@ func ResourceGraph() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
 		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
 func resourceGraphCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).DetectiveConn()
+	conn := meta.(*conns.AWSClient).DetectiveConn(ctx)
 
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
-
-	input := &detective.CreateGraphInput{}
-
-	if len(tags) > 0 {
-		input.Tags = Tags(tags.IgnoreAWS())
+	input := &detective.CreateGraphInput{
+		Tags: getTagsIn(ctx),
 	}
 
 	var output *detective.CreateGraphOutput
@@ -74,7 +74,7 @@ func resourceGraphCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 
 	if err != nil {
-		return diag.Errorf("error creating detective Graph: %s", err)
+		return diag.Errorf("creating detective Graph: %s", err)
 	}
 
 	d.SetId(aws.StringValue(output.GraphArn))
@@ -83,10 +83,7 @@ func resourceGraphCreate(ctx context.Context, d *schema.ResourceData, meta inter
 }
 
 func resourceGraphRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).DetectiveConn()
-
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).DetectiveConn(ctx)
 
 	resp, err := FindGraphByARN(ctx, conn, d.Id())
 
@@ -95,46 +92,22 @@ func resourceGraphRead(ctx context.Context, d *schema.ResourceData, meta interfa
 		return nil
 	}
 	if err != nil {
-		return diag.Errorf("error reading detective Graph (%s): %s", d.Id(), err)
+		return diag.Errorf("reading detective Graph (%s): %s", d.Id(), err)
 	}
 
 	d.Set("created_time", aws.TimeValue(resp.CreatedTime).Format(time.RFC3339))
 	d.Set("graph_arn", resp.Arn)
 
-	tags, err := ListTags(ctx, conn, aws.StringValue(resp.Arn))
-
-	if err != nil {
-		return diag.Errorf("error listing tags for Detective Graph (%s): %s", d.Id(), err)
-	}
-
-	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	if err = d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return diag.Errorf("error setting `%s` for Detective Graph (%s): %s", "tags", d.Id(), err)
-	}
-
-	if err = d.Set("tags_all", tags.Map()); err != nil {
-		return diag.Errorf("error setting `%s` for Detective Graph (%s): %s", "tags_all", d.Id(), err)
-	}
-
 	return nil
 }
 
 func resourceGraphUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).DetectiveConn()
-
-	if d.HasChange("tags") {
-		o, n := d.GetChange("tags")
-		if err := UpdateTags(ctx, conn, d.Id(), o, n); err != nil {
-			return diag.Errorf("error updating detective Graph tags (%s): %s", d.Id(), err)
-		}
-	}
-
+	// Tags only.
 	return resourceGraphRead(ctx, d, meta)
 }
 
 func resourceGraphDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).DetectiveConn()
+	conn := meta.(*conns.AWSClient).DetectiveConn(ctx)
 
 	input := &detective.DeleteGraphInput{
 		GraphArn: aws.String(d.Id()),
@@ -145,7 +118,7 @@ func resourceGraphDelete(ctx context.Context, d *schema.ResourceData, meta inter
 		if tfawserr.ErrCodeEquals(err, detective.ErrCodeResourceNotFoundException) {
 			return nil
 		}
-		return diag.Errorf("error deleting detective Graph (%s): %s", d.Id(), err)
+		return diag.Errorf("deleting detective Graph (%s): %s", d.Id(), err)
 	}
 
 	return nil

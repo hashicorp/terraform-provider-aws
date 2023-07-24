@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package dms
 
 import (
@@ -22,9 +25,11 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_dms_endpoint")
+// @SDKResource("aws_dms_endpoint", name="Endpoint")
+// @Tags(identifierAttribute="endpoint_arn")
 func ResourceEndpoint() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceEndpointCreate,
@@ -565,12 +570,6 @@ func ResourceEndpoint() *schema.Resource {
 							Optional: true,
 							Default:  "",
 						},
-						"ignore_headers_row": {
-							Type:         schema.TypeInt,
-							Optional:     true,
-							ValidateFunc: validation.IntInSlice([]int{0, 1}),
-							Description:  "This setting has no effect, is deprecated, and will be removed in a future version",
-						},
 						"ignore_header_rows": {
 							Type:         schema.TypeInt,
 							Optional:     true,
@@ -674,8 +673,8 @@ func ResourceEndpoint() *schema.Resource {
 				Optional:     true,
 				ValidateFunc: validation.StringInSlice(dms.DmsSslModeValue_Values(), false),
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			"username": {
 				Type:          schema.TypeString,
 				Optional:      true,
@@ -695,16 +694,14 @@ func ResourceEndpoint() *schema.Resource {
 
 func resourceEndpointCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DMSConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
+	conn := meta.(*conns.AWSClient).DMSConn(ctx)
 
 	endpointID := d.Get("endpoint_id").(string)
 	input := &dms.CreateEndpointInput{
 		EndpointIdentifier: aws.String(endpointID),
 		EndpointType:       aws.String(d.Get("endpoint_type").(string)),
 		EngineName:         aws.String(d.Get("engine_name").(string)),
-		Tags:               Tags(tags.IgnoreAWS()),
+		Tags:               getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("certificate_arn"); ok {
@@ -906,7 +903,7 @@ func resourceEndpointCreate(ctx context.Context, d *schema.ResourceData, meta in
 			// Set connection info in top-level namespace as well
 			expandTopLevelConnectionInfo(d, input)
 		}
-	case engineNameDB2:
+	case engineNameDB2, engineNameDB2zOS:
 		if _, ok := d.GetOk("secrets_manager_arn"); ok {
 			input.IBMDb2Settings = &dms.IBMDb2Settings{
 				SecretsManagerAccessRoleArn: aws.String(d.Get("secrets_manager_access_role_arn").(string)),
@@ -948,9 +945,7 @@ func resourceEndpointCreate(ctx context.Context, d *schema.ResourceData, meta in
 
 func resourceEndpointRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DMSConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).DMSConn(ctx)
 
 	endpoint, err := FindEndpointByID(ctx, conn, d.Id())
 
@@ -970,29 +965,12 @@ func resourceEndpointRead(ctx context.Context, d *schema.ResourceData, meta inte
 		return sdkdiag.AppendErrorf(diags, "reading DMS Endpoint (%s): %s", d.Id(), err)
 	}
 
-	tags, err := ListTags(ctx, conn, d.Get("endpoint_arn").(string))
-
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "listing tags for DMS Endpoint (%s): %s", d.Get("endpoint_arn").(string), err)
-	}
-
-	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
-	}
-
 	return diags
 }
 
 func resourceEndpointUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DMSConn()
+	conn := meta.(*conns.AWSClient).DMSConn(ctx)
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		input := &dms.ModifyEndpointInput{
@@ -1271,7 +1249,7 @@ func resourceEndpointUpdate(ctx context.Context, d *schema.ResourceData, meta in
 					expandTopLevelConnectionInfoModify(d, input)
 				}
 			}
-		case engineNameDB2:
+		case engineNameDB2, engineNameDB2zOS:
 			if d.HasChanges(
 				"username", "password", "server_name", "port", "database_name", "secrets_manager_access_role_arn",
 				"secrets_manager_arn") {
@@ -1329,21 +1307,12 @@ func resourceEndpointUpdate(ctx context.Context, d *schema.ResourceData, meta in
 		}
 	}
 
-	if d.HasChange("tags_all") {
-		arn := d.Get("endpoint_arn").(string)
-		o, n := d.GetChange("tags_all")
-
-		if err := UpdateTags(ctx, conn, arn, o, n); err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating DMS Endpoint (%s) tags: %s", arn, err)
-		}
-	}
-
 	return append(diags, resourceEndpointRead(ctx, d, meta)...)
 }
 
 func resourceEndpointDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DMSConn()
+	conn := meta.(*conns.AWSClient).DMSConn(ctx)
 
 	log.Printf("[DEBUG] Deleting DMS Endpoint: (%s)", d.Id())
 	_, err := conn.DeleteEndpointWithContext(ctx, &dms.DeleteEndpointInput{
@@ -1580,7 +1549,7 @@ func resourceEndpointSetState(d *schema.ResourceData, endpoint *dms.Endpoint) er
 		} else {
 			flattenTopLevelConnectionInfo(d, endpoint)
 		}
-	case engineNameDB2:
+	case engineNameDB2, engineNameDB2zOS:
 		if endpoint.IBMDb2Settings != nil {
 			d.Set("username", endpoint.IBMDb2Settings.Username)
 			d.Set("server_name", endpoint.IBMDb2Settings.ServerName)
@@ -1593,7 +1562,7 @@ func resourceEndpointSetState(d *schema.ResourceData, endpoint *dms.Endpoint) er
 		}
 	case engineNameS3:
 		if err := d.Set("s3_settings", flattenS3Settings(endpoint.S3Settings)); err != nil {
-			return fmt.Errorf("Error setting s3_settings for DMS: %s", err)
+			return fmt.Errorf("setting s3_settings for DMS: %s", err)
 		}
 	default:
 		d.Set("database_name", endpoint.DatabaseName)

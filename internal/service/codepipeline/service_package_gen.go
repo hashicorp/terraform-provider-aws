@@ -5,6 +5,10 @@ package codepipeline
 import (
 	"context"
 
+	aws_sdkv1 "github.com/aws/aws-sdk-go/aws"
+	session_sdkv1 "github.com/aws/aws-sdk-go/aws/session"
+	codepipeline_sdkv1 "github.com/aws/aws-sdk-go/service/codepipeline"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -28,14 +32,26 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  ResourcePipeline,
 			TypeName: "aws_codepipeline",
+			Name:     "Pipeline",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
 		},
 		{
 			Factory:  ResourceCustomActionType,
 			TypeName: "aws_codepipeline_custom_action_type",
+			Name:     "Custom Action Type",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
 		},
 		{
 			Factory:  ResourceWebhook,
 			TypeName: "aws_codepipeline_webhook",
+			Name:     "Webhook",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "id",
+			},
 		},
 	}
 }
@@ -44,4 +60,13 @@ func (p *servicePackage) ServicePackageName() string {
 	return names.CodePipeline
 }
 
-var ServicePackage = &servicePackage{}
+// NewConn returns a new AWS SDK for Go v1 client for this service package's AWS API.
+func (p *servicePackage) NewConn(ctx context.Context, config map[string]any) (*codepipeline_sdkv1.CodePipeline, error) {
+	sess := config["session"].(*session_sdkv1.Session)
+
+	return codepipeline_sdkv1.New(sess.Copy(&aws_sdkv1.Config{Endpoint: aws_sdkv1.String(config["endpoint"].(string))})), nil
+}
+
+func ServicePackage(ctx context.Context) conns.ServicePackage {
+	return &servicePackage{}
+}

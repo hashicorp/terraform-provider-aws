@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package qldb
 
 import (
@@ -6,22 +9,26 @@ import (
 	"regexp"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/qldb"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/qldb"
+	"github.com/aws/aws-sdk-go-v2/service/qldb/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_qldb_ledger")
-func ResourceLedger() *schema.Resource {
+// @SDKResource("aws_qldb_ledger", name="Ledger")
+// @Tags(identifierAttribute="arn")
+func resourceLedger() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceLedgerCreate,
 		ReadWithoutTimeout:   resourceLedgerRead,
@@ -67,12 +74,12 @@ func ResourceLedger() *schema.Resource {
 				),
 			},
 			"permissions_mode": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: validation.StringInSlice(qldb.PermissionsMode_Values(), false),
+				Type:             schema.TypeString,
+				Required:         true,
+				ValidateDiagFunc: enum.Validate[types.PermissionsMode](),
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
 
 		CustomizeDiff: verify.SetTagsDiff,
@@ -80,32 +87,29 @@ func ResourceLedger() *schema.Resource {
 }
 
 func resourceLedgerCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).QLDBConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
+	conn := meta.(*conns.AWSClient).QLDBClient(ctx)
 
 	name := create.Name(d.Get("name").(string), "tf")
 	input := &qldb.CreateLedgerInput{
 		DeletionProtection: aws.Bool(d.Get("deletion_protection").(bool)),
 		Name:               aws.String(name),
-		PermissionsMode:    aws.String(d.Get("permissions_mode").(string)),
-		Tags:               Tags(tags.IgnoreAWS()),
+		PermissionsMode:    types.PermissionsMode(d.Get("permissions_mode").(string)),
+		Tags:               getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("kms_key"); ok {
 		input.KmsKey = aws.String(v.(string))
 	}
 
-	log.Printf("[DEBUG] Creating QLDB Ledger: %s", input)
-	output, err := conn.CreateLedgerWithContext(ctx, input)
+	output, err := conn.CreateLedger(ctx, input)
 
 	if err != nil {
 		return diag.Errorf("creating QLDB Ledger (%s): %s", name, err)
 	}
 
-	d.SetId(aws.StringValue(output.Name))
+	d.SetId(aws.ToString(output.Name))
 
-	if _, err := waitLedgerCreated(ctx, conn, d.Timeout(schema.TimeoutCreate), d.Id()); err != nil {
+	if _, err := waitLedgerCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
 		return diag.Errorf("waiting for QLDB Ledger (%s) create: %s", d.Id(), err)
 	}
 
@@ -113,11 +117,9 @@ func resourceLedgerCreate(ctx context.Context, d *schema.ResourceData, meta inte
 }
 
 func resourceLedgerRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).QLDBConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).QLDBClient(ctx)
 
-	ledger, err := FindLedgerByName(ctx, conn, d.Id())
+	ledger, err := findLedgerByName(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] QLDB Ledger %s not found, removing from state", d.Id())
@@ -139,37 +141,19 @@ func resourceLedgerRead(ctx context.Context, d *schema.ResourceData, meta interf
 	d.Set("name", ledger.Name)
 	d.Set("permissions_mode", ledger.PermissionsMode)
 
-	tags, err := ListTags(ctx, conn, d.Get("arn").(string))
-
-	if err != nil {
-		return diag.Errorf("listing tags for QLDB Ledger (%s): %s", d.Id(), err)
-	}
-
-	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return diag.Errorf("setting tags: %s", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return diag.Errorf("setting tags_all: %s", err)
-	}
-
 	return nil
 }
 
 func resourceLedgerUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).QLDBConn()
+	conn := meta.(*conns.AWSClient).QLDBClient(ctx)
 
 	if d.HasChange("permissions_mode") {
 		input := &qldb.UpdateLedgerPermissionsModeInput{
 			Name:            aws.String(d.Id()),
-			PermissionsMode: aws.String(d.Get("permissions_mode").(string)),
+			PermissionsMode: types.PermissionsMode(d.Get("permissions_mode").(string)),
 		}
 
-		log.Printf("[INFO] Updating QLDB Ledger permissions mode: %s", input)
-		if _, err := conn.UpdateLedgerPermissionsModeWithContext(ctx, input); err != nil {
+		if _, err := conn.UpdateLedgerPermissionsMode(ctx, input); err != nil {
 			return diag.Errorf("updating QLDB Ledger (%s) permissions mode: %s", d.Id(), err)
 		}
 	}
@@ -184,17 +168,8 @@ func resourceLedgerUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 			input.KmsKey = aws.String(d.Get("kms_key").(string))
 		}
 
-		log.Printf("[INFO] Updating QLDB Ledger: %s", input)
-		if _, err := conn.UpdateLedgerWithContext(ctx, input); err != nil {
+		if _, err := conn.UpdateLedger(ctx, input); err != nil {
 			return diag.Errorf("updating QLDB Ledger (%s): %s", d.Id(), err)
-		}
-	}
-
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		if err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n); err != nil {
-			return diag.Errorf("updating tags: %s", err)
 		}
 	}
 
@@ -202,19 +177,18 @@ func resourceLedgerUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 }
 
 func resourceLedgerDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).QLDBConn()
+	conn := meta.(*conns.AWSClient).QLDBClient(ctx)
 
 	input := &qldb.DeleteLedgerInput{
 		Name: aws.String(d.Id()),
 	}
 
 	log.Printf("[INFO] Deleting QLDB Ledger: %s", d.Id())
-	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, 5*time.Minute,
-		func() (interface{}, error) {
-			return conn.DeleteLedgerWithContext(ctx, input)
-		}, qldb.ErrCodeResourceInUseException)
+	_, err := tfresource.RetryWhenIsA[*types.ResourceInUseException](ctx, d.Timeout(schema.TimeoutDelete), func() (interface{}, error) {
+		return conn.DeleteLedger(ctx, input)
+	})
 
-	if tfawserr.ErrCodeEquals(err, qldb.ErrCodeResourceNotFoundException) {
+	if errs.IsA[*types.ResourceNotFoundException](err) {
 		return nil
 	}
 
@@ -222,21 +196,21 @@ func resourceLedgerDelete(ctx context.Context, d *schema.ResourceData, meta inte
 		return diag.Errorf("deleting QLDB Ledger (%s): %s", d.Id(), err)
 	}
 
-	if _, err := waitLedgerDeleted(ctx, conn, d.Timeout(schema.TimeoutDelete), d.Id()); err != nil {
+	if _, err := waitLedgerDeleted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
 		return diag.Errorf("waiting for QLDB Ledger (%s) delete: %s", d.Id(), err)
 	}
 
 	return nil
 }
 
-func FindLedgerByName(ctx context.Context, conn *qldb.QLDB, name string) (*qldb.DescribeLedgerOutput, error) {
+func findLedgerByName(ctx context.Context, conn *qldb.Client, name string) (*qldb.DescribeLedgerOutput, error) {
 	input := &qldb.DescribeLedgerInput{
 		Name: aws.String(name),
 	}
 
-	output, err := conn.DescribeLedgerWithContext(ctx, input)
+	output, err := conn.DescribeLedger(ctx, input)
 
-	if tfawserr.ErrCodeEquals(err, qldb.ErrCodeResourceNotFoundException) {
+	if errs.IsA[*types.ResourceNotFoundException](err) {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
@@ -251,9 +225,9 @@ func FindLedgerByName(ctx context.Context, conn *qldb.QLDB, name string) (*qldb.
 		return nil, tfresource.NewEmptyResultError(input)
 	}
 
-	if state := aws.StringValue(output.State); state == qldb.LedgerStateDeleted {
+	if state := output.State; state == types.LedgerStateDeleted {
 		return nil, &retry.NotFoundError{
-			Message:     state,
+			Message:     string(state),
 			LastRequest: input,
 		}
 	}
@@ -261,9 +235,9 @@ func FindLedgerByName(ctx context.Context, conn *qldb.QLDB, name string) (*qldb.
 	return output, nil
 }
 
-func statusLedgerState(ctx context.Context, conn *qldb.QLDB, name string) retry.StateRefreshFunc {
+func statusLedgerState(ctx context.Context, conn *qldb.Client, name string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := FindLedgerByName(ctx, conn, name)
+		output, err := findLedgerByName(ctx, conn, name)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil
@@ -273,14 +247,14 @@ func statusLedgerState(ctx context.Context, conn *qldb.QLDB, name string) retry.
 			return nil, "", err
 		}
 
-		return output, aws.StringValue(output.State), nil
+		return output, string(output.State), nil
 	}
 }
 
-func waitLedgerCreated(ctx context.Context, conn *qldb.QLDB, timeout time.Duration, name string) (*qldb.DescribeLedgerOutput, error) {
+func waitLedgerCreated(ctx context.Context, conn *qldb.Client, name string, timeout time.Duration) (*qldb.DescribeLedgerOutput, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending:    []string{qldb.LedgerStateCreating},
-		Target:     []string{qldb.LedgerStateActive},
+		Pending:    enum.Slice(types.LedgerStateCreating),
+		Target:     enum.Slice(types.LedgerStateActive),
 		Refresh:    statusLedgerState(ctx, conn, name),
 		Timeout:    timeout,
 		MinTimeout: 3 * time.Second,
@@ -295,9 +269,9 @@ func waitLedgerCreated(ctx context.Context, conn *qldb.QLDB, timeout time.Durati
 	return nil, err
 }
 
-func waitLedgerDeleted(ctx context.Context, conn *qldb.QLDB, timeout time.Duration, name string) (*qldb.DescribeLedgerOutput, error) {
+func waitLedgerDeleted(ctx context.Context, conn *qldb.Client, name string, timeout time.Duration) (*qldb.DescribeLedgerOutput, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending:    []string{qldb.LedgerStateActive, qldb.LedgerStateDeleting},
+		Pending:    enum.Slice(types.LedgerStateActive, types.LedgerStateDeleting),
 		Target:     []string{},
 		Refresh:    statusLedgerState(ctx, conn, name),
 		Timeout:    timeout,

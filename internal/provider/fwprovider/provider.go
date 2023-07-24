@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package fwprovider
 
 import (
@@ -84,10 +87,9 @@ func (p *fwprovider) Schema(ctx context.Context, req provider.SchemaRequest, res
 				Optional:    true,
 				Description: "The region where AWS operations will take place. Examples\nare us-east-1, us-west-2, etc.", // lintignore:AWSAT003
 			},
-			"s3_force_path_style": schema.BoolAttribute{
-				Optional:           true,
-				Description:        "Set this to true to enable the request to use path-style addressing,\ni.e., https://s3.amazonaws.com/BUCKET/KEY. By default, the S3 client will\nuse virtual hosted bucket addressing when possible\n(https://BUCKET.s3.amazonaws.com/KEY). Specific to the Amazon S3 service.",
-				DeprecationMessage: "Use s3_use_path_style instead.",
+			"retry_mode": schema.StringAttribute{
+				Optional:    true,
+				Description: "Specifies how retries are attempted. Valid values are `standard` and `adaptive`. Can also be configured using the `AWS_RETRY_MODE` environment variable.",
 			},
 			"s3_use_path_style": schema.BoolAttribute{
 				Optional:    true,
@@ -102,11 +104,6 @@ func (p *fwprovider) Schema(ctx context.Context, req provider.SchemaRequest, res
 				Optional:    true,
 				Description: "List of paths to shared config files. If not set, defaults to [~/.aws/config].",
 			},
-			"shared_credentials_file": schema.StringAttribute{
-				Optional:           true,
-				Description:        "The path to the shared credentials file. If not set, defaults to ~/.aws/credentials.",
-				DeprecationMessage: "Use shared_credentials_files instead.",
-			},
 			"shared_credentials_files": schema.ListAttribute{
 				ElementType: types.StringType,
 				Optional:    true,
@@ -115,11 +112,6 @@ func (p *fwprovider) Schema(ctx context.Context, req provider.SchemaRequest, res
 			"skip_credentials_validation": schema.BoolAttribute{
 				Optional:    true,
 				Description: "Skip the credentials validation via STS API. Used for AWS API implementations that do not have STS available/implemented.",
-			},
-			"skip_get_ec2_platforms": schema.BoolAttribute{
-				Optional:           true,
-				Description:        "Skip getting the supported EC2 platforms. Used by users that don't have ec2:DescribeAccountAttributes permissions.",
-				DeprecationMessage: `With the retirement of EC2-Classic the skip_get_ec2_platforms attribute has been deprecated and will be removed in a future version.`,
 			},
 			"skip_metadata_api_check": schema.StringAttribute{
 				Optional:    true,
@@ -161,11 +153,6 @@ func (p *fwprovider) Schema(ctx context.Context, req provider.SchemaRequest, res
 							CustomType:  fwtypes.DurationType,
 							Optional:    true,
 							Description: "The duration, between 15 minutes and 12 hours, of the role session. Valid time units are ns, us (or µs), ms, s, h, or m.",
-						},
-						"duration_seconds": schema.Int64Attribute{
-							Optional:           true,
-							Description:        "The duration, in seconds, of the role session.",
-							DeprecationMessage: "Use assume_role.duration instead",
 						},
 						"external_id": schema.StringAttribute{
 							Optional:    true,
@@ -318,7 +305,7 @@ func (p *fwprovider) DataSources(ctx context.Context) []func() datasource.DataSo
 
 			// bootstrapContext is run on all wrapped methods before any interceptors.
 			bootstrapContext := func(ctx context.Context, meta *conns.AWSClient) context.Context {
-				ctx = conns.NewContext(ctx, servicePackageName, v.Name)
+				ctx = conns.NewDataSourceContext(ctx, servicePackageName, v.Name)
 				if meta != nil {
 					ctx = tftags.NewContext(ctx, meta.DefaultTagsConfig, meta.IgnoreTagsConfig)
 				}
@@ -362,7 +349,7 @@ func (p *fwprovider) Resources(ctx context.Context) []func() resource.Resource {
 
 			// bootstrapContext is run on all wrapped methods before any interceptors.
 			bootstrapContext := func(ctx context.Context, meta *conns.AWSClient) context.Context {
-				ctx = conns.NewContext(ctx, servicePackageName, v.Name)
+				ctx = conns.NewResourceContext(ctx, servicePackageName, v.Name)
 				if meta != nil {
 					ctx = tftags.NewContext(ctx, meta.DefaultTagsConfig, meta.IgnoreTagsConfig)
 				}

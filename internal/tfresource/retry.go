@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package tfresource
 
 import (
@@ -18,7 +21,7 @@ import (
 // If the error is not retryable, returns a bool value of `false` and either no error (success state) or an error (not necessarily the error passed as the argument).
 type Retryable func(error) (bool, error)
 
-// RetryWhen retries the function `f` when the error it returns satisfies `predicate`.
+// RetryWhen retries the function `f` when the error it returns satisfies `retryable`.
 // `f` is retried until `timeout` expires.
 func RetryWhen(ctx context.Context, timeout time.Duration, f func() (interface{}, error), retryable Retryable) (interface{}, error) {
 	var output interface{}
@@ -67,6 +70,16 @@ func RetryWhenAWSErrCodeEquals(ctx context.Context, timeout time.Duration, f fun
 func RetryWhenAWSErrMessageContains(ctx context.Context, timeout time.Duration, f func() (interface{}, error), code, message string) (interface{}, error) { // nosemgrep:ci.aws-in-func-name
 	return RetryWhen(ctx, timeout, f, func(err error) (bool, error) {
 		if tfawserr.ErrMessageContains(err, code, message) {
+			return true, err
+		}
+
+		return false, err
+	})
+}
+
+func RetryWhenIsA[T error](ctx context.Context, timeout time.Duration, f func() (interface{}, error)) (interface{}, error) {
+	return RetryWhen(ctx, timeout, f, func(err error) (bool, error) {
+		if errs.IsA[T](err) {
 			return true, err
 		}
 

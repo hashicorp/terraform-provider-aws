@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package lambda_test
 
 import (
@@ -5,8 +8,8 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/lambda"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
@@ -36,6 +39,7 @@ func TestAccLambdaFunctionURLDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(dataSourceName, "function_arn", resourceName, "function_arn"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "function_name", resourceName, "function_name"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "function_url", resourceName, "function_url"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "invoke_mode", resourceName, "invoke_mode"),
 					resource.TestCheckResourceAttrSet(dataSourceName, "last_modified_time"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "qualifier", resourceName, "qualifier"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "url_id", resourceName, "url_id"),

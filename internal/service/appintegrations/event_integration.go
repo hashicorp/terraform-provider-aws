@@ -1,8 +1,10 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package appintegrations
 
 import (
 	"context"
-	"fmt"
 	"log"
 	"regexp"
 
@@ -16,9 +18,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_appintegrations_event_integration")
+// @SDKResource("aws_appintegrations_event_integration", name="Event Integration")
+// @Tags(identifierAttribute="arn")
 func ResourceEventIntegration() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceEventIntegrationCreate,
@@ -66,44 +70,38 @@ func ResourceEventIntegration() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: validation.StringMatch(regexp.MustCompile(`^[a-zA-Z0-9\/\._\-]{1,255}$`), "should be not be more than 255 alphanumeric, forward slashes, dots, underscores, or hyphen characters"),
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
 		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
 func resourceEventIntegrationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).AppIntegrationsConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
+	conn := meta.(*conns.AWSClient).AppIntegrationsConn(ctx)
 
 	name := d.Get("name").(string)
-
 	input := &appintegrationsservice.CreateEventIntegrationInput{
 		ClientToken:    aws.String(id.UniqueId()),
 		EventBridgeBus: aws.String(d.Get("eventbridge_bus").(string)),
 		EventFilter:    expandEventFilter(d.Get("event_filter").([]interface{})),
 		Name:           aws.String(name),
+		Tags:           getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("description"); ok {
 		input.Description = aws.String(v.(string))
 	}
 
-	if len(tags) > 0 {
-		input.Tags = Tags(tags.IgnoreAWS())
-	}
-
 	log.Printf("[DEBUG] Creating AppIntegrations Event Integration %s", input)
 	output, err := conn.CreateEventIntegrationWithContext(ctx, input)
 
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error creating AppIntegrations Event Integration (%s): %w", name, err))
+		return diag.Errorf("creating AppIntegrations Event Integration (%s): %s", name, err)
 	}
 
 	if output == nil {
-		return diag.FromErr(fmt.Errorf("error creating AppIntegrations Event Integration (%s): empty output", name))
+		return diag.Errorf("creating AppIntegrations Event Integration (%s): empty output", name)
 	}
 
 	// Name is unique
@@ -113,9 +111,7 @@ func resourceEventIntegrationCreate(ctx context.Context, d *schema.ResourceData,
 }
 
 func resourceEventIntegrationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).AppIntegrationsConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).AppIntegrationsConn(ctx)
 
 	name := d.Id()
 
@@ -130,11 +126,11 @@ func resourceEventIntegrationRead(ctx context.Context, d *schema.ResourceData, m
 	}
 
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error getting AppIntegrations Event Integration (%s): %w", d.Id(), err))
+		return diag.Errorf("getting AppIntegrations Event Integration (%s): %s", d.Id(), err)
 	}
 
 	if resp == nil {
-		return diag.FromErr(fmt.Errorf("error getting AppIntegrations Event Integration (%s): empty response", d.Id()))
+		return diag.Errorf("getting AppIntegrations Event Integration (%s): empty response", d.Id())
 	}
 
 	d.Set("arn", resp.EventIntegrationArn)
@@ -143,25 +139,16 @@ func resourceEventIntegrationRead(ctx context.Context, d *schema.ResourceData, m
 	d.Set("name", resp.Name)
 
 	if err := d.Set("event_filter", flattenEventFilter(resp.EventFilter)); err != nil {
-		return diag.FromErr(fmt.Errorf("error setting event_filter: %w", err))
+		return diag.Errorf("setting event_filter: %s", err)
 	}
 
-	tags := KeyValueTags(ctx, resp.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return diag.FromErr(fmt.Errorf("error setting tags: %w", err))
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return diag.FromErr(fmt.Errorf("error setting tags_all: %w", err))
-	}
+	setTagsOut(ctx, resp.Tags)
 
 	return nil
 }
 
 func resourceEventIntegrationUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).AppIntegrationsConn()
+	conn := meta.(*conns.AWSClient).AppIntegrationsConn(ctx)
 
 	name := d.Id()
 
@@ -172,14 +159,7 @@ func resourceEventIntegrationUpdate(ctx context.Context, d *schema.ResourceData,
 		})
 
 		if err != nil {
-			return diag.FromErr(fmt.Errorf("updating EventIntegration (%s): %w", d.Id(), err))
-		}
-	}
-
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-		if err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n); err != nil {
-			return diag.FromErr(fmt.Errorf("error updating tags: %w", err))
+			return diag.Errorf("updating EventIntegration (%s): %s", d.Id(), err)
 		}
 	}
 
@@ -187,7 +167,7 @@ func resourceEventIntegrationUpdate(ctx context.Context, d *schema.ResourceData,
 }
 
 func resourceEventIntegrationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).AppIntegrationsConn()
+	conn := meta.(*conns.AWSClient).AppIntegrationsConn(ctx)
 
 	name := d.Id()
 
@@ -196,7 +176,7 @@ func resourceEventIntegrationDelete(ctx context.Context, d *schema.ResourceData,
 	})
 
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error deleting EventIntegration (%s): %w", d.Id(), err))
+		return diag.Errorf("deleting EventIntegration (%s): %s", d.Id(), err)
 	}
 
 	return nil

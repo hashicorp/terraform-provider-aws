@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package directconnect_test
 
 import (
@@ -5,8 +8,8 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/directconnect"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
@@ -31,6 +34,7 @@ func TestAccDirectConnectConnectionDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(datasourceName, "location", resourceName, "location"),
 					resource.TestCheckResourceAttrPair(datasourceName, "name", resourceName, "name"),
 					resource.TestCheckResourceAttrPair(datasourceName, "owner_account_id", resourceName, "owner_account_id"),
+					resource.TestCheckResourceAttrPair(datasourceName, "partner_name", resourceName, "partner_name"),
 					resource.TestCheckResourceAttrPair(datasourceName, "provider_name", resourceName, "provider_name"),
 					resource.TestCheckResourceAttrPair(datasourceName, "vlan_id", resourceName, "vlan_id"),
 				),

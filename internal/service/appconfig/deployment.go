@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package appconfig
 
 import (
@@ -19,9 +22,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_appconfig_deployment")
+// @SDKResource("aws_appconfig_deployment", name="Deployment")
+// @Tags(identifierAttribute="arn")
 func ResourceDeployment() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceDeploymentCreate,
@@ -81,8 +86,8 @@ func ResourceDeployment() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
 		CustomizeDiff: verify.SetTagsDiff,
 	}
@@ -90,9 +95,7 @@ func ResourceDeployment() *schema.Resource {
 
 func resourceDeploymentCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).AppConfigConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
+	conn := meta.(*conns.AWSClient).AppConfigConn(ctx)
 
 	input := &appconfig.StartDeploymentInput{
 		ApplicationId:          aws.String(d.Get("application_id").(string)),
@@ -101,7 +104,7 @@ func resourceDeploymentCreate(ctx context.Context, d *schema.ResourceData, meta 
 		ConfigurationVersion:   aws.String(d.Get("configuration_version").(string)),
 		DeploymentStrategyId:   aws.String(d.Get("deployment_strategy_id").(string)),
 		Description:            aws.String(d.Get("description").(string)),
-		Tags:                   Tags(tags.IgnoreAWS()),
+		Tags:                   getTagsIn(ctx),
 	}
 
 	output, err := conn.StartDeploymentWithContext(ctx, input)
@@ -125,9 +128,7 @@ func resourceDeploymentCreate(ctx context.Context, d *schema.ResourceData, meta 
 
 func resourceDeploymentRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).AppConfigConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).AppConfigConn(ctx)
 
 	appID, envID, deploymentNum, err := DeploymentParseID(d.Id())
 
@@ -175,37 +176,13 @@ func resourceDeploymentRead(ctx context.Context, d *schema.ResourceData, meta in
 	d.Set("environment_id", output.EnvironmentId)
 	d.Set("state", output.State)
 
-	tags, err := ListTags(ctx, conn, arn)
-
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "listing tags for AppConfig Deployment (%s): %s", d.Id(), err)
-	}
-
-	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
-	}
-
 	return diags
 }
 
 func resourceDeploymentUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).AppConfigConn()
 
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		if err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n); err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating AppConfig Deployment (%s) tags: %s", d.Get("arn").(string), err)
-		}
-	}
+	// Tags only.
 
 	return append(diags, resourceDeploymentRead(ctx, d, meta)...)
 }
@@ -225,7 +202,7 @@ func DeploymentParseID(id string) (string, string, int, error) {
 
 	num, err := strconv.Atoi(parts[2])
 	if err != nil {
-		return "", "", 0, fmt.Errorf("error parsing AppConfig Deployment resource ID deployment_number: %w", err)
+		return "", "", 0, fmt.Errorf("parsing AppConfig Deployment resource ID deployment_number: %w", err)
 	}
 
 	return parts[0], parts[1], num, nil

@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package events
 
 import (
@@ -164,6 +167,25 @@ func ResourceTarget() *schema.Resource {
 								},
 							},
 						},
+						"ordered_placement_strategy": {
+							Type:     schema.TypeList,
+							Optional: true,
+							MaxItems: 5,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"field": {
+										Type:         schema.TypeString,
+										Optional:     true,
+										ValidateFunc: validation.StringLenBetween(0, 255),
+									},
+									"type": {
+										Type:         schema.TypeString,
+										Required:     true,
+										ValidateFunc: validation.StringInSlice(eventbridge.PlacementStrategyType_Values(), false),
+									},
+								},
+							},
+						},
 						"placement_constraint": {
 							Type:     schema.TypeSet,
 							Optional: true,
@@ -190,7 +212,6 @@ func ResourceTarget() *schema.Resource {
 						"propagate_tags": {
 							Type:         schema.TypeString,
 							Optional:     true,
-							Default:      eventbridge.PropagateTagsTaskDefinition,
 							ValidateFunc: validation.StringInSlice(eventbridge.PropagateTags_Values(), false),
 						},
 						"tags": tftags.TagsSchema(),
@@ -422,7 +443,7 @@ func ResourceTarget() *schema.Resource {
 }
 
 func resourceTargetCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).EventsConn()
+	conn := meta.(*conns.AWSClient).EventsConn(ctx)
 
 	rule := d.Get("rule").(string)
 
@@ -458,7 +479,7 @@ func resourceTargetCreate(ctx context.Context, d *schema.ResourceData, meta inte
 }
 
 func resourceTargetRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).EventsConn()
+	conn := meta.(*conns.AWSClient).EventsConn(ctx)
 
 	busName := d.Get("event_bus_name").(string)
 
@@ -547,7 +568,7 @@ func resourceTargetRead(ctx context.Context, d *schema.ResourceData, meta interf
 }
 
 func resourceTargetUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).EventsConn()
+	conn := meta.(*conns.AWSClient).EventsConn(ctx)
 
 	input := buildPutTargetInputStruct(ctx, d)
 
@@ -566,7 +587,7 @@ func resourceTargetUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 }
 
 func resourceTargetDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).EventsConn()
+	conn := meta.(*conns.AWSClient).EventsConn(ctx)
 
 	input := &eventbridge.RemoveTargetsInput{
 		Ids:  []*string{aws.String(d.Get("target_id").(string))},
@@ -749,37 +770,41 @@ func expandTargetRedshiftParameters(config []interface{}) *eventbridge.RedshiftD
 	return redshiftParameters
 }
 
-func expandTargetECSParameters(ctx context.Context, config []interface{}) *eventbridge.EcsParameters {
+func expandTargetECSParameters(ctx context.Context, tfList []interface{}) *eventbridge.EcsParameters {
 	ecsParameters := &eventbridge.EcsParameters{}
-	for _, c := range config {
-		param := c.(map[string]interface{})
-		tags := tftags.New(ctx, param["tags"].(map[string]interface{}))
+	for _, c := range tfList {
+		tfMap := c.(map[string]interface{})
+		tags := tftags.New(ctx, tfMap["tags"].(map[string]interface{}))
 
-		if v, ok := param["capacity_provider_strategy"].(*schema.Set); ok && v.Len() > 0 {
+		if v, ok := tfMap["capacity_provider_strategy"].(*schema.Set); ok && v.Len() > 0 {
 			ecsParameters.CapacityProviderStrategy = expandTargetCapacityProviderStrategy(v.List())
 		}
 
-		if val, ok := param["group"].(string); ok && val != "" {
-			ecsParameters.Group = aws.String(val)
+		if v, ok := tfMap["group"].(string); ok && v != "" {
+			ecsParameters.Group = aws.String(v)
 		}
 
-		if val, ok := param["launch_type"].(string); ok && val != "" {
-			ecsParameters.LaunchType = aws.String(val)
+		if v, ok := tfMap["launch_type"].(string); ok && v != "" {
+			ecsParameters.LaunchType = aws.String(v)
 		}
 
-		if val, ok := param["network_configuration"]; ok {
-			ecsParameters.NetworkConfiguration = expandTargetECSParametersNetworkConfiguration(val.([]interface{}))
+		if v, ok := tfMap["network_configuration"]; ok {
+			ecsParameters.NetworkConfiguration = expandTargetECSParametersNetworkConfiguration(v.([]interface{}))
 		}
 
-		if val, ok := param["platform_version"].(string); ok && val != "" {
-			ecsParameters.PlatformVersion = aws.String(val)
+		if v, ok := tfMap["platform_version"].(string); ok && v != "" {
+			ecsParameters.PlatformVersion = aws.String(v)
 		}
 
-		if v, ok := param["placement_constraint"].(*schema.Set); ok && v.Len() > 0 {
+		if v, ok := tfMap["placement_constraint"].(*schema.Set); ok && v.Len() > 0 {
 			ecsParameters.PlacementConstraints = expandTargetPlacementConstraints(v.List())
 		}
 
-		if v, ok := param["propagate_tags"].(string); ok {
+		if v, ok := tfMap["ordered_placement_strategy"]; ok {
+			ecsParameters.PlacementStrategy = expandTargetPlacementStrategies(v.([]interface{}))
+		}
+
+		if v, ok := tfMap["propagate_tags"].(string); ok && v != "" {
 			ecsParameters.PropagateTags = aws.String(v)
 		}
 
@@ -787,10 +812,10 @@ func expandTargetECSParameters(ctx context.Context, config []interface{}) *event
 			ecsParameters.Tags = Tags(tags.IgnoreAWS())
 		}
 
-		ecsParameters.EnableExecuteCommand = aws.Bool(param["enable_execute_command"].(bool))
-		ecsParameters.EnableECSManagedTags = aws.Bool(param["enable_ecs_managed_tags"].(bool))
-		ecsParameters.TaskCount = aws.Int64(int64(param["task_count"].(int)))
-		ecsParameters.TaskDefinitionArn = aws.String(param["task_definition_arn"].(string))
+		ecsParameters.EnableExecuteCommand = aws.Bool(tfMap["enable_execute_command"].(bool))
+		ecsParameters.EnableECSManagedTags = aws.Bool(tfMap["enable_ecs_managed_tags"].(bool))
+		ecsParameters.TaskCount = aws.Int64(int64(tfMap["task_count"].(int)))
+		ecsParameters.TaskDefinitionArn = aws.String(tfMap["task_definition_arn"].(string))
 	}
 
 	return ecsParameters
@@ -972,6 +997,10 @@ func flattenTargetECSParameters(ctx context.Context, ecsParameters *eventbridge.
 		config["placement_constraint"] = flattenTargetPlacementConstraints(ecsParameters.PlacementConstraints)
 	}
 
+	if ecsParameters.PlacementStrategy != nil {
+		config["ordered_placement_strategy"] = flattenTargetPlacementStrategies(ecsParameters.PlacementStrategy)
+	}
+
 	if ecsParameters.CapacityProviderStrategy != nil {
 		config["capacity_provider_strategy"] = flattenTargetCapacityProviderStrategy(ecsParameters.CapacityProviderStrategy)
 	}
@@ -1131,6 +1160,36 @@ func expandTargetPlacementConstraints(tfList []interface{}) []*eventbridge.Place
 	return result
 }
 
+func expandTargetPlacementStrategies(tfList []interface{}) []*eventbridge.PlacementStrategy {
+	if len(tfList) == 0 {
+		return nil
+	}
+
+	var result []*eventbridge.PlacementStrategy
+
+	for _, tfMapRaw := range tfList {
+		if tfMapRaw == nil {
+			continue
+		}
+
+		tfMap := tfMapRaw.(map[string]interface{})
+
+		apiObject := &eventbridge.PlacementStrategy{}
+
+		if v, ok := tfMap["field"].(string); ok && v != "" {
+			apiObject.Field = aws.String(v)
+		}
+
+		if v, ok := tfMap["type"].(string); ok && v != "" {
+			apiObject.Type = aws.String(v)
+		}
+
+		result = append(result, apiObject)
+	}
+
+	return result
+}
+
 func expandTargetCapacityProviderStrategy(tfList []interface{}) []*eventbridge.CapacityProviderStrategyItem {
 	if len(tfList) == 0 {
 		return nil
@@ -1175,6 +1234,23 @@ func flattenTargetPlacementConstraints(pcs []*eventbridge.PlacementConstraint) [
 		c["type"] = aws.StringValue(pc.Type)
 		if pc.Expression != nil {
 			c["expression"] = aws.StringValue(pc.Expression)
+		}
+
+		results = append(results, c)
+	}
+	return results
+}
+
+func flattenTargetPlacementStrategies(pcs []*eventbridge.PlacementStrategy) []map[string]interface{} {
+	if len(pcs) == 0 {
+		return nil
+	}
+	results := make([]map[string]interface{}, 0)
+	for _, pc := range pcs {
+		c := make(map[string]interface{})
+		c["type"] = aws.StringValue(pc.Type)
+		if pc.Field != nil {
+			c["field"] = aws.StringValue(pc.Field)
 		}
 
 		results = append(results, c)

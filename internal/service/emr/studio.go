@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package emr
 
 import (
@@ -17,9 +20,11 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_emr_studio")
+// @SDKResource("aws_emr_studio", name="Studio")
+// @Tags(identifierAttribute="id")
 func ResourceStudio() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceStudioCreate,
@@ -85,8 +90,8 @@ func ResourceStudio() *schema.Resource {
 				Required: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			"user_role": {
 				Type:         schema.TypeString,
 				Optional:     true,
@@ -113,9 +118,7 @@ func ResourceStudio() *schema.Resource {
 
 func resourceStudioCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EMRConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
+	conn := meta.(*conns.AWSClient).EMRConn(ctx)
 
 	input := &emr.CreateStudioInput{
 		AuthMode:                 aws.String(d.Get("auth_mode").(string)),
@@ -124,6 +127,7 @@ func resourceStudioCreate(ctx context.Context, d *schema.ResourceData, meta inte
 		Name:                     aws.String(d.Get("name").(string)),
 		ServiceRole:              aws.String(d.Get("service_role").(string)),
 		SubnetIds:                flex.ExpandStringSet(d.Get("subnet_ids").(*schema.Set)),
+		Tags:                     getTagsIn(ctx),
 		VpcId:                    aws.String(d.Get("vpc_id").(string)),
 		WorkspaceSecurityGroupId: aws.String(d.Get("workspace_security_group_id").(string)),
 	}
@@ -142,10 +146,6 @@ func resourceStudioCreate(ctx context.Context, d *schema.ResourceData, meta inte
 
 	if v, ok := d.GetOk("user_role"); ok {
 		input.UserRole = aws.String(v.(string))
-	}
-
-	if len(tags) > 0 {
-		input.Tags = Tags(tags.IgnoreAWS())
 	}
 
 	var result *emr.CreateStudioOutput
@@ -177,7 +177,7 @@ func resourceStudioCreate(ctx context.Context, d *schema.ResourceData, meta inte
 
 func resourceStudioUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EMRConn()
+	conn := meta.(*conns.AWSClient).EMRConn(ctx)
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		input := &emr.UpdateStudioInput{
@@ -199,13 +199,11 @@ func resourceStudioUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 		if d.HasChange("subnet_ids") {
 			input.SubnetIds = flex.ExpandStringSet(d.Get("subnet_ids").(*schema.Set))
 		}
-	}
 
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
+		_, err := conn.UpdateStudioWithContext(ctx, input)
 
-		if err := UpdateTags(ctx, conn, d.Id(), o, n); err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating EMR Studio (%s) tags: %s", d.Id(), err)
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating EMR Studio: %s", err)
 		}
 	}
 
@@ -214,9 +212,7 @@ func resourceStudioUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 
 func resourceStudioRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EMRConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).EMRConn(ctx)
 
 	studio, err := FindStudioByID(ctx, conn, d.Id())
 	if !d.IsNewResource() && tfresource.NotFound(err) {
@@ -244,23 +240,14 @@ func resourceStudioRead(ctx context.Context, d *schema.ResourceData, meta interf
 	d.Set("workspace_security_group_id", studio.WorkspaceSecurityGroupId)
 	d.Set("subnet_ids", flex.FlattenStringSet(studio.SubnetIds))
 
-	tags := KeyValueTags(ctx, studio.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
-	}
+	setTagsOut(ctx, studio.Tags)
 
 	return diags
 }
 
 func resourceStudioDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EMRConn()
+	conn := meta.(*conns.AWSClient).EMRConn(ctx)
 
 	request := &emr.DeleteStudioInput{
 		StudioId: aws.String(d.Id()),

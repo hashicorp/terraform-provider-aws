@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package rds_test
 
 import (
@@ -10,9 +13,9 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/rds"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfrds "github.com/hashicorp/terraform-provider-aws/internal/service/rds"
@@ -298,14 +301,14 @@ func TestAccRDSGlobalCluster_EngineVersion_updateMinor(t *testing.T) {
 		CheckDestroy:             testAccCheckGlobalClusterDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				//Config: testAccGlobalClusterConfig_primaryEngineVersion(rName, "aurora", "5.6.mysql_aurora.1.22.2"),
+				// Config: testAccGlobalClusterConfig_primaryEngineVersion(rName, "aurora", "5.6.mysql_aurora.1.22.2"),
 				Config: testAccGlobalClusterConfig_primaryEngineVersion(rName, "aurora-postgresql", "13.4"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGlobalClusterExists(ctx, resourceName, &globalCluster1),
 				),
 			},
 			{
-				//Config: testAccGlobalClusterConfig_primaryEngineVersion(rName, "aurora", "5.6.mysql_aurora.1.23.2"),
+				// Config: testAccGlobalClusterConfig_primaryEngineVersion(rName, "aurora", "5.6.mysql_aurora.1.23.2"),
 				Config: testAccGlobalClusterConfig_primaryEngineVersion(rName, "aurora-postgresql", "13.5"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGlobalClusterExists(ctx, resourceName, &globalCluster2),
@@ -619,10 +622,9 @@ func testAccCheckGlobalClusterExists(ctx context.Context, resourceName string, g
 			return fmt.Errorf("No RDS Global Cluster ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn(ctx)
 
 		cluster, err := tfrds.DescribeGlobalCluster(ctx, conn, rs.Primary.ID)
-
 		if err != nil {
 			return err
 		}
@@ -643,7 +645,7 @@ func testAccCheckGlobalClusterExists(ctx context.Context, resourceName string, g
 
 func testAccCheckGlobalClusterDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_rds_global_cluster" {
@@ -673,14 +675,13 @@ func testAccCheckGlobalClusterDestroy(ctx context.Context) resource.TestCheckFun
 
 func testAccCheckGlobalClusterDisappears(ctx context.Context, globalCluster *rds.GlobalCluster) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn(ctx)
 
 		input := &rds.DeleteGlobalClusterInput{
 			GlobalClusterIdentifier: globalCluster.GlobalClusterIdentifier,
 		}
 
 		_, err := conn.DeleteGlobalClusterWithContext(ctx, input)
-
 		if err != nil {
 			return err
 		}
@@ -710,7 +711,7 @@ func testAccCheckGlobalClusterRecreated(i, j *rds.GlobalCluster) resource.TestCh
 }
 
 func testAccPreCheckGlobalCluster(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn()
+	conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn(ctx)
 
 	input := &rds.DescribeGlobalClustersInput{}
 

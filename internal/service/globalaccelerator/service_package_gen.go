@@ -5,6 +5,7 @@ package globalaccelerator
 import (
 	"context"
 
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -37,10 +38,18 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  ResourceAccelerator,
 			TypeName: "aws_globalaccelerator_accelerator",
+			Name:     "Accelerator",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "id",
+			},
 		},
 		{
 			Factory:  ResourceCustomRoutingAccelerator,
 			TypeName: "aws_globalaccelerator_custom_routing_accelerator",
+			Name:     "Custom Routing Accelerator",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "id",
+			},
 		},
 		{
 			Factory:  ResourceCustomRoutingEndpointGroup,
@@ -65,4 +74,6 @@ func (p *servicePackage) ServicePackageName() string {
 	return names.GlobalAccelerator
 }
 
-var ServicePackage = &servicePackage{}
+func ServicePackage(ctx context.Context) conns.ServicePackage {
+	return &servicePackage{}
+}

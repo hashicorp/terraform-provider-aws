@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package fsx_test
 
 import (
@@ -10,9 +13,9 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/fsx"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
@@ -25,8 +28,8 @@ func TestAccFSxFileCache_serial(t *testing.T) {
 
 	testCases := map[string]map[string]func(t *testing.T){
 		"FSxFileCache": {
-			"basic":      TestAccFSxFileCache_basic,
-			"disappears": TestAccFSxFileCache_disappears,
+			"basic":      testAccFileCache_basic,
+			"disappears": testAccFileCache_disappears,
 			"kms_key_id": testAccFileCache_kmsKeyID,
 			"copy_tags_to_data_repository_associations": testAccFileCache_copyTagsToDataRepositoryAssociations,
 			"data_repository_association_multiple":      testAccFileCache_dataRepositoryAssociation_multiple,
@@ -40,7 +43,7 @@ func TestAccFSxFileCache_serial(t *testing.T) {
 	acctest.RunSerialTests2Levels(t, testCases, 0)
 }
 
-func TestAccFSxFileCache_basic(t *testing.T) {
+func testAccFileCache_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
@@ -85,7 +88,7 @@ func TestAccFSxFileCache_basic(t *testing.T) {
 	})
 }
 
-func TestAccFSxFileCache_disappears(t *testing.T) {
+func testAccFileCache_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
@@ -386,7 +389,7 @@ func testAccFileCache_tags(t *testing.T) {
 
 func testAccCheckFileCacheDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).FSxConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).FSxConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_fsx_file_cache" {
@@ -421,7 +424,7 @@ func testAccCheckFileCacheExists(ctx context.Context, name string, filecache *fs
 			return create.Error(names.FSx, create.ErrActionCheckingExistence, tffsx.ResNameFileCache, name, errors.New("not set"))
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).FSxConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).FSxConn(ctx)
 
 		resp, err := conn.DescribeFileCachesWithContext(ctx, &fsx.DescribeFileCachesInput{
 			FileCacheIds: []*string{aws.String(rs.Primary.ID)},

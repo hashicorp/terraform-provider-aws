@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package sesv2
 
 import (
@@ -24,7 +27,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_sesv2_configuration_set")
+// @SDKResource("aws_sesv2_configuration_set", name="Configuration Set")
+// @Tags(identifierAttribute="arn")
 func ResourceConfigurationSet() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceConfigurationSetCreate,
@@ -117,8 +121,8 @@ func ResourceConfigurationSet() *schema.Resource {
 					},
 				},
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			"tracking_options": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -180,10 +184,11 @@ const (
 )
 
 func resourceConfigurationSetCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).SESV2Client()
+	conn := meta.(*conns.AWSClient).SESV2Client(ctx)
 
 	in := &sesv2.CreateConfigurationSetInput{
 		ConfigurationSetName: aws.String(d.Get("configuration_set_name").(string)),
+		Tags:                 getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("delivery_options"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
@@ -210,13 +215,6 @@ func resourceConfigurationSetCreate(ctx context.Context, d *schema.ResourceData,
 		in.VdmOptions = expandVDMOptions(v.([]interface{})[0].(map[string]interface{}))
 	}
 
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
-
-	if len(tags) > 0 {
-		in.Tags = Tags(tags.IgnoreAWS())
-	}
-
 	out, err := conn.CreateConfigurationSet(ctx, in)
 	if err != nil {
 		return create.DiagError(names.SESV2, create.ErrActionCreating, ResNameConfigurationSet, d.Get("configuration_set_name").(string), err)
@@ -232,7 +230,7 @@ func resourceConfigurationSetCreate(ctx context.Context, d *schema.ResourceData,
 }
 
 func resourceConfigurationSetRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).SESV2Client()
+	conn := meta.(*conns.AWSClient).SESV2Client(ctx)
 
 	out, err := FindConfigurationSetByID(ctx, conn, d.Id())
 
@@ -246,15 +244,7 @@ func resourceConfigurationSetRead(ctx context.Context, d *schema.ResourceData, m
 		return create.DiagError(names.SESV2, create.ErrActionReading, ResNameConfigurationSet, d.Id(), err)
 	}
 
-	arn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition,
-		Service:   "ses",
-		Region:    meta.(*conns.AWSClient).Region,
-		AccountID: meta.(*conns.AWSClient).AccountID,
-		Resource:  fmt.Sprintf("configuration-set/%s", d.Id()),
-	}.String()
-
-	d.Set("arn", arn)
+	d.Set("arn", configurationSetNameToARN(meta, aws.ToString(out.ConfigurationSetName)))
 	d.Set("configuration_set_name", out.ConfigurationSetName)
 
 	if out.DeliveryOptions != nil {
@@ -305,28 +295,11 @@ func resourceConfigurationSetRead(ctx context.Context, d *schema.ResourceData, m
 		d.Set("vdm_options", nil)
 	}
 
-	tags, err := ListTags(ctx, conn, d.Get("arn").(string))
-	if err != nil {
-		return create.DiagError(names.SESV2, create.ErrActionReading, ResNameConfigurationSet, d.Id(), err)
-	}
-
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
-	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return create.DiagError(names.SESV2, create.ErrActionSetting, ResNameConfigurationSet, d.Id(), err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return create.DiagError(names.SESV2, create.ErrActionSetting, ResNameConfigurationSet, d.Id(), err)
-	}
-
 	return nil
 }
 
 func resourceConfigurationSetUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).SESV2Client()
+	conn := meta.(*conns.AWSClient).SESV2Client(ctx)
 
 	if d.HasChanges("delivery_options") {
 		in := &sesv2.PutConfigurationSetDeliveryOptionsInput{
@@ -448,19 +421,11 @@ func resourceConfigurationSetUpdate(ctx context.Context, d *schema.ResourceData,
 		}
 	}
 
-	if d.HasChanges("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		if err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n); err != nil {
-			return create.DiagError(names.SESV2, create.ErrActionUpdating, ResNameConfigurationSet, d.Id(), err)
-		}
-	}
-
 	return resourceConfigurationSetRead(ctx, d, meta)
 }
 
 func resourceConfigurationSetDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).SESV2Client()
+	conn := meta.(*conns.AWSClient).SESV2Client(ctx)
 
 	log.Printf("[INFO] Deleting SESV2 ConfigurationSet %s", d.Id())
 
@@ -758,4 +723,14 @@ func expandGuardianOptions(tfMap map[string]interface{}) *types.GuardianOptions 
 	}
 
 	return a
+}
+
+func configurationSetNameToARN(meta interface{}, configurationSetName string) string {
+	return arn.ARN{
+		Partition: meta.(*conns.AWSClient).Partition,
+		Service:   "ses",
+		Region:    meta.(*conns.AWSClient).Region,
+		AccountID: meta.(*conns.AWSClient).AccountID,
+		Resource:  fmt.Sprintf("configuration-set/%s", configurationSetName),
+	}.String()
 }

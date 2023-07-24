@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package rds
 
 import (
@@ -17,9 +20,11 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_db_snapshot_copy")
+// @SDKResource("aws_db_snapshot_copy", name="DB Snapshot")
+// @Tags(identifierAttribute="db_snapshot_arn")
 func ResourceSnapshotCopy() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceSnapshotCopyCreate,
@@ -115,8 +120,8 @@ func ResourceSnapshotCopy() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			"target_custom_availability_zone": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -143,14 +148,12 @@ func ResourceSnapshotCopy() *schema.Resource {
 
 func resourceSnapshotCopyCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).RDSConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
+	conn := meta.(*conns.AWSClient).RDSConn(ctx)
 
 	targetDBSnapshotID := d.Get("target_db_snapshot_identifier").(string)
 	input := &rds.CopyDBSnapshotInput{
 		SourceDBSnapshotIdentifier: aws.String(d.Get("source_db_snapshot_identifier").(string)),
-		Tags:                       Tags(tags.IgnoreAWS()),
+		Tags:                       getTagsIn(ctx),
 		TargetDBSnapshotIdentifier: aws.String(targetDBSnapshotID),
 	}
 
@@ -175,7 +178,6 @@ func resourceSnapshotCopyCreate(ctx context.Context, d *schema.ResourceData, met
 	}
 
 	output, err := conn.CopyDBSnapshotWithContext(ctx, input)
-
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating RDS DB Snapshot Copy (%s): %s", targetDBSnapshotID, err)
 	}
@@ -191,9 +193,7 @@ func resourceSnapshotCopyCreate(ctx context.Context, d *schema.ResourceData, met
 
 func resourceSnapshotCopyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).RDSConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).RDSConn(ctx)
 
 	snapshot, err := FindDBSnapshotByID(ctx, conn, d.Id())
 
@@ -226,44 +226,17 @@ func resourceSnapshotCopyRead(ctx context.Context, d *schema.ResourceData, meta 
 	d.Set("target_db_snapshot_identifier", snapshot.DBSnapshotIdentifier)
 	d.Set("vpc_id", snapshot.VpcId)
 
-	tags, err := ListTags(ctx, conn, arn)
-
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "listing tags for RDS DB Snapshot Copy (%s): %s", arn, err)
-	}
-
-	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
-	}
-
 	return diags
 }
 
 func resourceSnapshotCopyUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).RDSConn()
-
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		if err := UpdateTags(ctx, conn, d.Get("db_snapshot_arn").(string), o, n); err != nil {
-			sdkdiag.AppendErrorf(diags, "updating RDS DB Snapshot Copy (%s) tags: %s", d.Get("db_snapshot_arn").(string), err)
-		}
-	}
-
+	// Tags only.
 	return resourceSnapshotCopyRead(ctx, d, meta)
 }
 
 func resourceSnapshotCopyDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).RDSConn()
+	conn := meta.(*conns.AWSClient).RDSConn(ctx)
 
 	log.Printf("[DEBUG] Deleting RDS DB Snapshot Copy: %s", d.Id())
 	_, err := conn.DeleteDBSnapshotWithContext(ctx, &rds.DeleteDBSnapshotInput{

@@ -1,0 +1,73 @@
+name: "Project: Roadmap"
+on:
+  issues:
+    types:
+      - labeled
+      - milestoned
+  pull_request:
+    types:
+      - labeled
+env:
+  DESTINATION_COLUMN_ID: 'MDEzOlByb2plY3RDb2x1bW4xMTUxMzUyOQ=='
+  GH_TOKEN: ${{ secrets.ORGSCOPED_GITHUB_TOKEN }}
+
+jobs:
+  tag-created:
+    if: ${{ github.event.label.name == 'roadmap' || github.event.issue.milestone.title == 'Roadmap' }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: 'Add Roadmapped or Milestoned Issue to Working Board'
+        if: github.event_name == 'issues'
+        run: |
+          PROJCOLUMNS=$(gh api graphql -f query='
+              query {
+                repository(name: "${{ github.event.repository.name }}", owner: "${{ github.repository_owner }}") {
+                  issue(number: ${{ github.event.issue.number }}) {
+                  projectCards {
+                    nodes {
+                      column {
+                        name
+                        id
+                      }
+                    }
+                  }
+                }
+              }
+            }')
+          INPROJECT=$(echo $PROJCOLUMNS | jq '.data.repository.issue.projectCards.nodes[].column | select(.id=="${{ env.DESTINATION_COLUMN_ID }}")')
+          if [ -z "$INPROJECT" ];
+          then
+            gh api graphql -f query='mutation {
+              addProjectCard(input: {projectColumnId: "${{ env.DESTINATION_COLUMN_ID }}", contentId: "${{ github.event.issue.node_id }}"}) {
+                clientMutationId
+              }
+            }'
+          fi
+
+      - name: 'Add Roadmapped Pull Requests to Working Board'
+        if: github.event_name == 'pull_request'
+        run: |
+          PROJCOLUMNS=$(gh api graphql -f query='
+              query {
+                repository(name: "${{ github.event.repository.name }}", owner: "${{ github.repository_owner }}") {
+                  pullRequest(number: ${{ github.event.pull_request.number }}) {
+                  projectCards {
+                    nodes {
+                      column {
+                        name
+                        id
+                      }
+                    }
+                  }
+                }
+              }
+            }')
+          INPROJECT=$(echo $PROJCOLUMNS | jq '.data.repository.pullRequest.projectCards.nodes[].column | select(.id=="${{ env.DESTINATION_COLUMN_ID }}")')
+          if [ -z "$INPROJECT" ];
+          then
+            gh api graphql -f query='mutation {
+              addProjectCard(input: {projectColumnId: "${{ env.DESTINATION_COLUMN_ID }}", contentId: "${{ github.event.pull_request.node_id }}"}) {
+                clientMutationId
+              }
+            }'
+          fi

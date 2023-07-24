@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package provider
 
 import (
@@ -8,6 +11,7 @@ import (
 	"regexp"
 	"time"
 
+	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/feature/ec2/imds"
 	awsbase "github.com/hashicorp/aws-sdk-go-base/v2"
 	multierror "github.com/hashicorp/go-multierror"
@@ -16,9 +20,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/experimental/nullable"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/types/nullable"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -41,7 +45,6 @@ func New(ctx context.Context) (*schema.Provider, error) {
 				Elem:          &schema.Schema{Type: schema.TypeString},
 				Optional:      true,
 				ConflictsWith: []string{"forbidden_account_ids"},
-				Set:           schema.HashString,
 			},
 			"assume_role":                   assumeRoleSchema(),
 			"assume_role_with_web_identity": assumeRoleWithWebIdentitySchema(),
@@ -86,7 +89,6 @@ func New(ctx context.Context) (*schema.Provider, error) {
 				Elem:          &schema.Schema{Type: schema.TypeString},
 				Optional:      true,
 				ConflictsWith: []string{"allowed_account_ids"},
-				Set:           schema.HashString,
 			},
 			"http_proxy": {
 				Type:     schema.TypeString,
@@ -105,14 +107,12 @@ func New(ctx context.Context) (*schema.Provider, error) {
 							Type:        schema.TypeSet,
 							Optional:    true,
 							Elem:        &schema.Schema{Type: schema.TypeString},
-							Set:         schema.HashString,
 							Description: "Resource tag keys to ignore across all resources.",
 						},
 						"key_prefixes": {
 							Type:        schema.TypeSet,
 							Optional:    true,
 							Elem:        &schema.Schema{Type: schema.TypeString},
-							Set:         schema.HashString,
 							Description: "Resource tag key prefixes to ignore across all resources.",
 						},
 					},
@@ -143,14 +143,11 @@ func New(ctx context.Context) (*schema.Provider, error) {
 				Description: "The region where AWS operations will take place. Examples\n" +
 					"are us-east-1, us-west-2, etc.", // lintignore:AWSAT003,
 			},
-			"s3_force_path_style": {
-				Type:       schema.TypeBool,
-				Optional:   true,
-				Deprecated: "Use s3_use_path_style instead.",
-				Description: "Set this to true to enable the request to use path-style addressing,\n" +
-					"i.e., https://s3.amazonaws.com/BUCKET/KEY. By default, the S3 client will\n" +
-					"use virtual hosted bucket addressing when possible\n" +
-					"(https://BUCKET.s3.amazonaws.com/KEY). Specific to the Amazon S3 service.",
+			"retry_mode": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Description: "Specifies how retries are attempted. Valid values are `standard` and `adaptive`. " +
+					"Can also be configured using the `AWS_RETRY_MODE` environment variable.",
 			},
 			"s3_use_path_style": {
 				Type:     schema.TypeBool,
@@ -172,32 +169,17 @@ func New(ctx context.Context) (*schema.Provider, error) {
 				Description: "List of paths to shared config files. If not set, defaults to [~/.aws/config].",
 				Elem:        &schema.Schema{Type: schema.TypeString},
 			},
-			"shared_credentials_file": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				Deprecated:    "Use shared_credentials_files instead.",
-				ConflictsWith: []string{"shared_credentials_files"},
-				Description:   "The path to the shared credentials file. If not set, defaults to ~/.aws/credentials.",
-			},
 			"shared_credentials_files": {
-				Type:          schema.TypeList,
-				Optional:      true,
-				ConflictsWith: []string{"shared_credentials_file"},
-				Description:   "List of paths to shared credentials files. If not set, defaults to [~/.aws/credentials].",
-				Elem:          &schema.Schema{Type: schema.TypeString},
+				Type:        schema.TypeList,
+				Optional:    true,
+				Description: "List of paths to shared credentials files. If not set, defaults to [~/.aws/credentials].",
+				Elem:        &schema.Schema{Type: schema.TypeString},
 			},
 			"skip_credentials_validation": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Description: "Skip the credentials validation via STS API. " +
 					"Used for AWS API implementations that do not have STS available/implemented.",
-			},
-			"skip_get_ec2_platforms": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Description: "Skip getting the supported EC2 platforms. " +
-					"Used by users that don't have ec2:DescribeAccountAttributes permissions.",
-				Deprecated: `With the retirement of EC2-Classic the skip_get_ec2_platforms attribute has been deprecated and will be removed in a future version.`,
 			},
 			"skip_metadata_api_check": {
 				Type:         nullable.TypeNullableBool,
@@ -279,7 +261,7 @@ func New(ctx context.Context) (*schema.Provider, error) {
 
 			// bootstrapContext is run on all wrapped methods before any interceptors.
 			bootstrapContext := func(ctx context.Context, meta any) context.Context {
-				ctx = conns.NewContext(ctx, servicePackageName, v.Name)
+				ctx = conns.NewDataSourceContext(ctx, servicePackageName, v.Name)
 				if v, ok := meta.(*conns.AWSClient); ok {
 					ctx = tftags.NewContext(ctx, v.DefaultTagsConfig, v.IgnoreTagsConfig)
 				}
@@ -330,7 +312,7 @@ func New(ctx context.Context) (*schema.Provider, error) {
 
 			// bootstrapContext is run on all wrapped methods before any interceptors.
 			bootstrapContext := func(ctx context.Context, meta any) context.Context {
-				ctx = conns.NewContext(ctx, servicePackageName, v.Name)
+				ctx = conns.NewResourceContext(ctx, servicePackageName, v.Name)
 				if v, ok := meta.(*conns.AWSClient); ok {
 					ctx = tftags.NewContext(ctx, v.DefaultTagsConfig, v.IgnoreTagsConfig)
 				}
@@ -340,9 +322,11 @@ func New(ctx context.Context) (*schema.Provider, error) {
 			interceptors := interceptorItems{}
 
 			if v.Tags != nil {
+				schema := r.SchemaMap()
+
 				// The resource has opted in to transparent tagging.
 				// Ensure that the schema look OK.
-				if v, ok := r.Schema[names.AttrTags]; ok {
+				if v, ok := schema[names.AttrTags]; ok {
 					if v.Computed {
 						errs = multierror.Append(errs, fmt.Errorf("`%s` attribute cannot be Computed: %s", names.AttrTags, typeName))
 						continue
@@ -351,7 +335,7 @@ func New(ctx context.Context) (*schema.Provider, error) {
 					errs = multierror.Append(errs, fmt.Errorf("no `%s` attribute defined in schema: %s", names.AttrTags, typeName))
 					continue
 				}
-				if v, ok := r.Schema[names.AttrTagsAll]; ok {
+				if v, ok := schema[names.AttrTagsAll]; ok {
 					if !v.Computed {
 						errs = multierror.Append(errs, fmt.Errorf("`%s` attribute must be Computed: %s", names.AttrTags, typeName))
 						continue
@@ -362,9 +346,13 @@ func New(ctx context.Context) (*schema.Provider, error) {
 				}
 
 				interceptors = append(interceptors, interceptorItem{
-					when:        Before | After,
-					why:         Create | Read | Update,
-					interceptor: tagsInterceptor{tags: v.Tags},
+					when: Before | After | Finally,
+					why:  Create | Read | Update,
+					interceptor: tagsInterceptor{
+						tags:       v.Tags,
+						updateFunc: tagsUpdateFunc,
+						readFunc:   tagsReadFunc,
+					},
 				})
 			}
 
@@ -442,10 +430,9 @@ func configure(ctx context.Context, provider *schema.Provider, d *schema.Resourc
 		MaxRetries:                     25, // Set default here, not in schema (muxing with v6 provider).
 		Profile:                        d.Get("profile").(string),
 		Region:                         d.Get("region").(string),
-		S3UsePathStyle:                 d.Get("s3_use_path_style").(bool) || d.Get("s3_force_path_style").(bool),
+		S3UsePathStyle:                 d.Get("s3_use_path_style").(bool),
 		SecretKey:                      d.Get("secret_key").(string),
 		SkipCredsValidation:            d.Get("skip_credentials_validation").(bool),
-		SkipGetEC2Platforms:            d.Get("skip_get_ec2_platforms").(bool),
 		SkipRegionValidation:           d.Get("skip_region_validation").(bool),
 		SkipRequestingAccountId:        d.Get("skip_requesting_account_id").(bool),
 		STSRegion:                      d.Get("sts_region").(string),
@@ -453,6 +440,14 @@ func configure(ctx context.Context, provider *schema.Provider, d *schema.Resourc
 		Token:                          d.Get("token").(string),
 		UseDualStackEndpoint:           d.Get("use_dualstack_endpoint").(bool),
 		UseFIPSEndpoint:                d.Get("use_fips_endpoint").(bool),
+	}
+
+	if v, ok := d.Get("retry_mode").(string); ok && v != "" {
+		mode, err := aws.ParseRetryMode(v)
+		if err != nil {
+			return nil, diag.FromErr(err)
+		}
+		config.RetryMode = mode
 	}
 
 	if v, ok := d.GetOk("allowed_account_ids"); ok && v.(*schema.Set).Len() > 0 {
@@ -503,9 +498,7 @@ func configure(ctx context.Context, provider *schema.Provider, d *schema.Resourc
 		config.MaxRetries = v.(int)
 	}
 
-	if v, ok := d.GetOk("shared_credentials_file"); ok {
-		config.SharedCredentialsFiles = []string{v.(string)}
-	} else if v, ok := d.GetOk("shared_credentials_files"); ok && len(v.([]interface{})) > 0 {
+	if v, ok := d.GetOk("shared_credentials_files"); ok && len(v.([]interface{})) > 0 {
 		config.SharedCredentialsFiles = flex.ExpandStringValueList(v.([]interface{}))
 	}
 
@@ -544,19 +537,10 @@ func assumeRoleSchema() *schema.Schema {
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
 				"duration": {
-					Type:          schema.TypeString,
-					Optional:      true,
-					Description:   "The duration, between 15 minutes and 12 hours, of the role session. Valid time units are ns, us (or µs), ms, s, h, or m.",
-					ValidateFunc:  validAssumeRoleDuration,
-					ConflictsWith: []string{"assume_role.0.duration_seconds"},
-				},
-				"duration_seconds": {
-					Type:          schema.TypeInt,
-					Optional:      true,
-					Deprecated:    "Use assume_role.duration instead",
-					Description:   "The duration, in seconds, of the role session.",
-					ValidateFunc:  validation.IntBetween(900, 43200),
-					ConflictsWith: []string{"assume_role.0.duration"},
+					Type:         schema.TypeString,
+					Optional:     true,
+					Description:  "The duration, between 15 minutes and 12 hours, of the role session. Valid time units are ns, us (or µs), ms, s, h, or m.",
+					ValidateFunc: validAssumeRoleDuration,
 				},
 				"external_id": {
 					Type:        schema.TypeString,
@@ -704,8 +688,6 @@ func expandAssumeRole(_ context.Context, tfMap map[string]interface{}) *awsbase.
 	if v, ok := tfMap["duration"].(string); ok && v != "" {
 		duration, _ := time.ParseDuration(v)
 		assumeRole.Duration = duration
-	} else if v, ok := tfMap["duration_seconds"].(int); ok && v != 0 {
-		assumeRole.Duration = time.Duration(v) * time.Second
 	}
 
 	if v, ok := tfMap["external_id"].(string); ok && v != "" {
@@ -753,8 +735,6 @@ func expandAssumeRoleWithWebIdentity(_ context.Context, tfMap map[string]interfa
 	if v, ok := tfMap["duration"].(string); ok && v != "" {
 		duration, _ := time.ParseDuration(v)
 		assumeRole.Duration = duration
-	} else if v, ok := tfMap["duration_seconds"].(int); ok && v != 0 {
-		assumeRole.Duration = time.Duration(v) * time.Second
 	}
 
 	if v, ok := tfMap["policy"].(string); ok && v != "" {

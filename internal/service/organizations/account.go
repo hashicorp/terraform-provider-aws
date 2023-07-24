@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package organizations
 
 import (
@@ -19,9 +22,11 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_organizations_account")
+// @SDKResource("aws_organizations_account", name="Account")
+// @Tags(identifierAttribute="id")
 func ResourceAccount() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceAccountCreate,
@@ -96,8 +101,8 @@ func ResourceAccount() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
 
 		CustomizeDiff: verify.SetTagsDiff,
@@ -106,9 +111,7 @@ func ResourceAccount() *schema.Resource {
 
 func resourceAccountCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).OrganizationsConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
+	conn := meta.(*conns.AWSClient).OrganizationsConn(ctx)
 
 	var iamUserAccessToBilling *string
 
@@ -127,7 +130,7 @@ func resourceAccountCreate(ctx context.Context, d *schema.ResourceData, meta int
 		d.Get("email").(string),
 		iamUserAccessToBilling,
 		roleName,
-		Tags(tags.IgnoreAWS()),
+		getTagsIn(ctx),
 		d.Get("create_govcloud").(bool),
 	)
 
@@ -170,9 +173,7 @@ func resourceAccountCreate(ctx context.Context, d *schema.ResourceData, meta int
 
 func resourceAccountRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).OrganizationsConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).OrganizationsConn(ctx)
 
 	account, err := FindAccountByID(ctx, conn, d.Id())
 
@@ -200,29 +201,12 @@ func resourceAccountRead(ctx context.Context, d *schema.ResourceData, meta inter
 	d.Set("parent_id", parentAccountID)
 	d.Set("status", account.Status)
 
-	tags, err := ListTags(ctx, conn, d.Id())
-
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "listing tags for AWS Organizations Account (%s): %s", d.Id(), err)
-	}
-
-	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
-	}
-
 	return diags
 }
 
 func resourceAccountUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).OrganizationsConn()
+	conn := meta.(*conns.AWSClient).OrganizationsConn(ctx)
 
 	if d.HasChange("parent_id") {
 		o, n := d.GetChange("parent_id")
@@ -238,20 +222,12 @@ func resourceAccountUpdate(ctx context.Context, d *schema.ResourceData, meta int
 		}
 	}
 
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		if err := UpdateTags(ctx, conn, d.Id(), o, n); err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating AWS Organizations Account (%s) tags: %s", d.Id(), err)
-		}
-	}
-
 	return append(diags, resourceAccountRead(ctx, d, meta)...)
 }
 
 func resourceAccountDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).OrganizationsConn()
+	conn := meta.(*conns.AWSClient).OrganizationsConn(ctx)
 
 	close := d.Get("close_on_deletion").(bool)
 	var err error

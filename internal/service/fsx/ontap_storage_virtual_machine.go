@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package fsx
 
 import (
@@ -19,9 +22,11 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_fsx_ontap_storage_virtual_machine")
+// @SDKResource("aws_fsx_ontap_storage_virtual_machine", name="ONTAP Storage Virtual Machine")
+// @Tags(identifierAttribute="arn")
 func ResourceOntapStorageVirtualMachine() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceOntapStorageVirtualMachineCreate,
@@ -220,8 +225,8 @@ func ResourceOntapStorageVirtualMachine() *schema.Resource {
 				Sensitive:    true,
 				ValidateFunc: validation.StringLenBetween(8, 50),
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			"uuid": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -234,13 +239,12 @@ func ResourceOntapStorageVirtualMachine() *schema.Resource {
 
 func resourceOntapStorageVirtualMachineCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).FSxConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
+	conn := meta.(*conns.AWSClient).FSxConn(ctx)
 
 	input := &fsx.CreateStorageVirtualMachineInput{
 		FileSystemId: aws.String(d.Get("file_system_id").(string)),
 		Name:         aws.String(d.Get("name").(string)),
+		Tags:         getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("active_directory_configuration"); ok {
@@ -253,10 +257,6 @@ func resourceOntapStorageVirtualMachineCreate(ctx context.Context, d *schema.Res
 
 	if v, ok := d.GetOk("svm_admin_password"); ok {
 		input.SvmAdminPassword = aws.String(v.(string))
-	}
-
-	if len(tags) > 0 {
-		input.Tags = Tags(tags.IgnoreAWS())
 	}
 
 	result, err := conn.CreateStorageVirtualMachineWithContext(ctx, input)
@@ -276,9 +276,7 @@ func resourceOntapStorageVirtualMachineCreate(ctx context.Context, d *schema.Res
 
 func resourceOntapStorageVirtualMachineRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).FSxConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).FSxConn(ctx)
 
 	storageVirtualMachine, err := FindStorageVirtualMachineByID(ctx, conn, d.Id())
 
@@ -309,38 +307,12 @@ func resourceOntapStorageVirtualMachineRead(ctx context.Context, d *schema.Resou
 		return sdkdiag.AppendErrorf(diags, "setting endpoints: %s", err)
 	}
 
-	//SVM tags do not get returned with describe call so need to make a separate list tags call
-	tags, tagserr := ListTags(ctx, conn, *storageVirtualMachine.ResourceARN)
-
-	if tagserr != nil {
-		return sdkdiag.AppendErrorf(diags, "reading Tags for FSx ONTAP Storage Virtual Machine (%s): %s", d.Id(), err)
-	} else {
-		tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-	}
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
-	}
-
 	return diags
 }
 
 func resourceOntapStorageVirtualMachineUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).FSxConn()
-
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		if err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n); err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating FSx ONTAP Storage Virtual Machine (%s) tags: %s", d.Get("arn").(string), err)
-		}
-	}
+	conn := meta.(*conns.AWSClient).FSxConn(ctx)
 
 	if d.HasChangesExcept("tags_all", "tags") {
 		input := &fsx.UpdateStorageVirtualMachineInput{
@@ -372,7 +344,7 @@ func resourceOntapStorageVirtualMachineUpdate(ctx context.Context, d *schema.Res
 
 func resourceOntapStorageVirtualMachineDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).FSxConn()
+	conn := meta.(*conns.AWSClient).FSxConn(ctx)
 
 	log.Printf("[DEBUG] Deleting FSx ONTAP Storage Virtual Machine: %s", d.Id())
 	_, err := conn.DeleteStorageVirtualMachineWithContext(ctx, &fsx.DeleteStorageVirtualMachineInput{

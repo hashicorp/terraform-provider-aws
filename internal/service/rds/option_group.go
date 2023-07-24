@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package rds
 
 import (
@@ -21,9 +24,11 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_db_option_group")
+// @SDKResource("aws_db_option_group", name="DB Option Group")
+// @Tags(identifierAttribute="arn")
 func ResourceOptionGroup() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceOptionGroupCreate,
@@ -126,8 +131,8 @@ func ResourceOptionGroup() *schema.Resource {
 				Set: resourceOptionHash,
 			},
 
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
 
 		CustomizeDiff: verify.SetTagsDiff,
@@ -136,9 +141,7 @@ func ResourceOptionGroup() *schema.Resource {
 
 func resourceOptionGroupCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).RDSConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
+	conn := meta.(*conns.AWSClient).RDSConn(ctx)
 
 	var groupName string
 	if v, ok := d.GetOk("name"); ok {
@@ -154,7 +157,7 @@ func resourceOptionGroupCreate(ctx context.Context, d *schema.ResourceData, meta
 		MajorEngineVersion:     aws.String(d.Get("major_engine_version").(string)),
 		OptionGroupDescription: aws.String(d.Get("option_group_description").(string)),
 		OptionGroupName:        aws.String(groupName),
-		Tags:                   Tags(tags.IgnoreAWS()),
+		Tags:                   getTagsIn(ctx),
 	}
 
 	log.Printf("[DEBUG] Create DB Option Group: %#v", createOpts)
@@ -174,9 +177,7 @@ func resourceOptionGroupCreate(ctx context.Context, d *schema.ResourceData, meta
 
 func resourceOptionGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).RDSConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).RDSConn(ctx)
 
 	params := &rds.DescribeOptionGroupsInput{
 		OptionGroupName: aws.String(d.Id()),
@@ -219,23 +220,6 @@ func resourceOptionGroupRead(ctx context.Context, d *schema.ResourceData, meta i
 		return sdkdiag.AppendErrorf(diags, "setting option: %s", err)
 	}
 
-	tags, err := ListTags(ctx, conn, d.Get("arn").(string))
-
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "listing tags for RDS Option Group (%s): %s", d.Get("arn").(string), err)
-	}
-
-	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
-	}
-
 	return diags
 }
 
@@ -250,7 +234,7 @@ func optionInList(optionName string, list []*string) bool {
 
 func resourceOptionGroupUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).RDSConn()
+	conn := meta.(*conns.AWSClient).RDSConn(ctx)
 	if d.HasChange("option") {
 		o, n := d.GetChange("option")
 		if o == nil {
@@ -312,20 +296,12 @@ func resourceOptionGroupUpdate(ctx context.Context, d *schema.ResourceData, meta
 		}
 	}
 
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		if err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n); err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating RDS Option Group (%s) tags: %s", d.Get("arn").(string), err)
-		}
-	}
-
 	return append(diags, resourceOptionGroupRead(ctx, d, meta)...)
 }
 
 func resourceOptionGroupDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).RDSConn()
+	conn := meta.(*conns.AWSClient).RDSConn(ctx)
 
 	deleteOpts := &rds.DeleteOptionGroupInput{
 		OptionGroupName: aws.String(d.Id()),

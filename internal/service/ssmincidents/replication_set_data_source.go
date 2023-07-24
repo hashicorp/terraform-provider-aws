@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ssmincidents
 
 import (
@@ -71,10 +74,10 @@ const (
 	DSNameReplicationSet = "Replication Set Data Source"
 )
 
-func dataSourceReplicationSetRead(context context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	client := meta.(*conns.AWSClient).SSMIncidentsClient()
+func dataSourceReplicationSetRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	client := meta.(*conns.AWSClient).SSMIncidentsClient(ctx)
 
-	arn, err := getReplicationSetARN(context, client)
+	arn, err := getReplicationSetARN(ctx, client)
 
 	if err != nil {
 		return create.DiagError(names.SSMIncidents, create.ErrActionReading, ResNameReplicationSet, d.Id(), err)
@@ -82,7 +85,7 @@ func dataSourceReplicationSetRead(context context.Context, d *schema.ResourceDat
 
 	d.SetId(arn)
 
-	replicationSet, err := FindReplicationSetByID(context, client, d.Id())
+	replicationSet, err := FindReplicationSetByID(ctx, client, d.Id())
 
 	if err != nil {
 		return create.DiagError(names.SSMIncidents, create.ErrActionReading, ResNameReplicationSet, d.Id(), err)
@@ -98,7 +101,8 @@ func dataSourceReplicationSetRead(context context.Context, d *schema.ResourceDat
 		return create.DiagError(names.SSMIncidents, create.ErrActionSetting, ResNameReplicationSet, d.Id(), err)
 	}
 
-	tags, err := listResourceTags(context, client, d.Id())
+	tags, err := listTags(ctx, client, d.Id())
+
 	if err != nil {
 		return create.DiagError(names.SSMIncidents, create.ErrActionReading, DSNameReplicationSet, d.Id(), err)
 	}

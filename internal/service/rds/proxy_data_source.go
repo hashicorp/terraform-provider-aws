@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package rds
 
 import (
@@ -25,6 +28,10 @@ func DataSourceProxy() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"auth_scheme": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"client_password_auth_type": {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -95,11 +102,10 @@ func DataSourceProxy() *schema.Resource {
 
 func dataSourceProxyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).RDSConn()
+	conn := meta.(*conns.AWSClient).RDSConn(ctx)
 
 	name := d.Get("name").(string)
 	dbProxy, err := FindDBProxyByName(ctx, conn, name)
-
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading RDS DB Proxy (%s): %s", name, err)
 	}

@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package rds
 
 import (
@@ -98,10 +101,9 @@ func ResourceProxyDefaultTargetGroup() *schema.Resource {
 
 func resourceProxyDefaultTargetGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).RDSConn()
+	conn := meta.(*conns.AWSClient).RDSConn(ctx)
 
 	tg, err := resourceProxyDefaultTargetGroupGet(ctx, conn, d.Id())
-
 	if err != nil {
 		if tfawserr.ErrCodeEquals(err, rds.ErrCodeDBProxyNotFoundFault) {
 			log.Printf("[WARN] DB Proxy (%s) not found, removing from state", d.Id())
@@ -138,7 +140,7 @@ func resourceProxyDefaultTargetGroupUpdate(ctx context.Context, d *schema.Resour
 
 func resourceProxyDefaultTargetGroupCreateUpdate(ctx context.Context, d *schema.ResourceData, timeout string, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).RDSConn()
+	conn := meta.(*conns.AWSClient).RDSConn(ctx)
 
 	params := rds.ModifyDBProxyTargetGroupInput{
 		DBProxyName:     aws.String(d.Get("db_proxy_name").(string)),
@@ -215,7 +217,6 @@ func resourceProxyDefaultTargetGroupGet(ctx context.Context, conn *rds.RDS, prox
 		}
 		return !lastPage
 	})
-
 	if err != nil {
 		return nil, err
 	}
@@ -227,7 +228,6 @@ func resourceProxyDefaultTargetGroupGet(ctx context.Context, conn *rds.RDS, prox
 func resourceProxyDefaultTargetGroupRefreshFunc(ctx context.Context, conn *rds.RDS, proxyName string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		tg, err := resourceProxyDefaultTargetGroupGet(ctx, conn, proxyName)
-
 		if err != nil {
 			if tfawserr.ErrCodeEquals(err, rds.ErrCodeDBProxyNotFoundFault) {
 				return 42, "", nil

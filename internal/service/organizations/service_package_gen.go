@@ -5,6 +5,10 @@ package organizations
 import (
 	"context"
 
+	aws_sdkv1 "github.com/aws/aws-sdk-go/aws"
+	session_sdkv1 "github.com/aws/aws-sdk-go/aws/session"
+	organizations_sdkv1 "github.com/aws/aws-sdk-go/service/organizations"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -46,6 +50,18 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 			TypeName: "aws_organizations_organizational_units",
 		},
 		{
+			Factory:  DataSourcePolicies,
+			TypeName: "aws_organizations_policies",
+		},
+		{
+			Factory:  DataSourcePoliciesForTarget,
+			TypeName: "aws_organizations_policies_for_target",
+		},
+		{
+			Factory:  DataSourcePolicy,
+			TypeName: "aws_organizations_policy",
+		},
+		{
 			Factory:  DataSourceResourceTags,
 			TypeName: "aws_organizations_resource_tags",
 		},
@@ -57,6 +73,10 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  ResourceAccount,
 			TypeName: "aws_organizations_account",
+			Name:     "Account",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "id",
+			},
 		},
 		{
 			Factory:  ResourceDelegatedAdministrator,
@@ -69,14 +89,30 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  ResourceOrganizationalUnit,
 			TypeName: "aws_organizations_organizational_unit",
+			Name:     "Organizational Unit",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "id",
+			},
 		},
 		{
 			Factory:  ResourcePolicy,
 			TypeName: "aws_organizations_policy",
+			Name:     "Policy",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "id",
+			},
 		},
 		{
 			Factory:  ResourcePolicyAttachment,
 			TypeName: "aws_organizations_policy_attachment",
+		},
+		{
+			Factory:  ResourceResourcePolicy,
+			TypeName: "aws_organizations_resource_policy",
+			Name:     "Resource Policy",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "id",
+			},
 		},
 	}
 }
@@ -85,4 +121,13 @@ func (p *servicePackage) ServicePackageName() string {
 	return names.Organizations
 }
 
-var ServicePackage = &servicePackage{}
+// NewConn returns a new AWS SDK for Go v1 client for this service package's AWS API.
+func (p *servicePackage) NewConn(ctx context.Context, config map[string]any) (*organizations_sdkv1.Organizations, error) {
+	sess := config["session"].(*session_sdkv1.Session)
+
+	return organizations_sdkv1.New(sess.Copy(&aws_sdkv1.Config{Endpoint: aws_sdkv1.String(config["endpoint"].(string))})), nil
+}
+
+func ServicePackage(ctx context.Context) conns.ServicePackage {
+	return &servicePackage{}
+}

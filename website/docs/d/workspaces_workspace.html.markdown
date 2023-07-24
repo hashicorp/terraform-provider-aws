@@ -31,7 +31,7 @@ data "aws_workspaces_workspace" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This data source supports the following arguments:
 
 * `bundle_id` - (Optional) ID of the bundle for the WorkSpace.
 * `directory_id` - (Optional) ID of the directory for the WorkSpace. You have to specify `user_name` along with `directory_id`. You cannot combine this parameter with `workspace_id`.
@@ -51,9 +51,9 @@ The following arguments are supported:
 * `running_mode_auto_stop_timeout_in_minutes` – (Optional) Time after a user logs off when WorkSpaces are automatically stopped. Configured in 60-minute intervals.
 * `user_volume_size_gib` – (Optional) Size of the user storage.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This data source exports the following attributes in addition to the arguments above:
 
 * `id` - Workspaces ID.
 * `ip_address` - IP address of the WorkSpace.

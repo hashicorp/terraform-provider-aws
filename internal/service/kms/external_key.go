@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package kms
 
 import (
@@ -23,9 +26,11 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_kms_external_key")
+// @SDKResource("aws_kms_external_key", name="External Key")
+// @Tags(identifierAttribute="id")
 func ResourceExternalKey() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceExternalKeyCreate,
@@ -104,8 +109,8 @@ func ResourceExternalKey() *schema.Resource {
 					return json
 				},
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			"valid_to": {
 				Type:         schema.TypeString,
 				Optional:     true,
@@ -117,14 +122,13 @@ func ResourceExternalKey() *schema.Resource {
 
 func resourceExternalKeyCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).KMSConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
+	conn := meta.(*conns.AWSClient).KMSConn(ctx)
 
 	input := &kms.CreateKeyInput{
 		BypassPolicyLockoutSafetyCheck: aws.Bool(d.Get("bypass_policy_lockout_safety_check").(bool)),
 		KeyUsage:                       aws.String(kms.KeyUsageTypeEncryptDecrypt),
 		Origin:                         aws.String(kms.OriginTypeExternal),
+		Tags:                           getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("description"); ok {
@@ -144,16 +148,12 @@ func resourceExternalKeyCreate(ctx context.Context, d *schema.ResourceData, meta
 		input.Policy = aws.String(p)
 	}
 
-	if len(tags) > 0 {
-		input.Tags = Tags(tags.IgnoreAWS())
-	}
-
 	// AWS requires any principal in the policy to exist before the key is created.
 	// The KMS service's awareness of principals is limited by "eventual consistency".
 	// KMS will report this error until it can validate the policy itself.
 	// They acknowledge this here:
 	// http://docs.aws.amazon.com/kms/latest/APIReference/API_CreateKey.html
-	outputRaw, err := WaitIAMPropagation(ctx, func() (interface{}, error) {
+	output, err := WaitIAMPropagation(ctx, func() (*kms.CreateKeyOutput, error) {
 		return conn.CreateKeyWithContext(ctx, input)
 	})
 
@@ -161,7 +161,7 @@ func resourceExternalKeyCreate(ctx context.Context, d *schema.ResourceData, meta
 		return sdkdiag.AppendErrorf(diags, "creating KMS External Key: %s", err)
 	}
 
-	d.SetId(aws.StringValue(outputRaw.(*kms.CreateKeyOutput).KeyMetadata.KeyId))
+	d.SetId(aws.StringValue(output.KeyMetadata.KeyId))
 
 	if v, ok := d.GetOk("key_material_base64"); ok {
 		validTo := d.Get("valid_to").(string)
@@ -194,8 +194,8 @@ func resourceExternalKeyCreate(ctx context.Context, d *schema.ResourceData, meta
 		}
 	}
 
-	if len(tags) > 0 {
-		if err := WaitTagsPropagated(ctx, conn, d.Id(), tags); err != nil {
+	if tags := KeyValueTags(ctx, getTagsIn(ctx)); len(tags) > 0 {
+		if err := waitTagsPropagated(ctx, conn, d.Id(), tags); err != nil {
 			return sdkdiag.AppendErrorf(diags, "waiting for KMS External Key (%s) tag propagation: %s", d.Id(), err)
 		}
 	}
@@ -205,9 +205,7 @@ func resourceExternalKeyCreate(ctx context.Context, d *schema.ResourceData, meta
 
 func resourceExternalKeyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).KMSConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).KMSConn(ctx)
 
 	key, err := findKey(ctx, conn, d.Id(), d.IsNewResource())
 
@@ -255,23 +253,14 @@ func resourceExternalKeyRead(ctx context.Context, d *schema.ResourceData, meta i
 		d.Set("valid_to", nil)
 	}
 
-	tags := key.tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
-	}
+	setTagsOut(ctx, key.tags)
 
 	return diags
 }
 
 func resourceExternalKeyUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).KMSConn()
+	conn := meta.(*conns.AWSClient).KMSConn(ctx)
 
 	if hasChange, enabled, state := d.HasChange("enabled"), d.Get("enabled").(bool), d.Get("key_state").(string); hasChange && enabled && state != kms.KeyStatePendingImport {
 		// Enable before any attributes are modified.
@@ -315,24 +304,12 @@ func resourceExternalKeyUpdate(ctx context.Context, d *schema.ResourceData, meta
 		}
 	}
 
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		if err := UpdateTags(ctx, conn, d.Id(), o, n); err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating KMS External Key (%s) tags: %s", d.Id(), err)
-		}
-
-		if err := WaitTagsPropagated(ctx, conn, d.Id(), tftags.New(ctx, n)); err != nil {
-			return sdkdiag.AppendErrorf(diags, "waiting for KMS External Key (%s) tag propagation: %s", d.Id(), err)
-		}
-	}
-
 	return append(diags, resourceExternalKeyRead(ctx, d, meta)...)
 }
 
 func resourceExternalKeyDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).KMSConn()
+	conn := meta.(*conns.AWSClient).KMSConn(ctx)
 
 	input := &kms.ScheduleKeyDeletionInput{
 		KeyId: aws.String(d.Id()),

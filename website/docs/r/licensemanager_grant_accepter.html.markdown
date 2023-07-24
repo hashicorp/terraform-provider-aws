@@ -20,13 +20,13 @@ resource "aws_licensemanager_grant_accepter" "test" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `grant_arn` - (Required) The ARN of the grant to accept.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The grant ARN (Same as `arn`).
 * `arn` - The grant ARN.
@@ -41,8 +41,17 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-`aws_licensemanager_grant_accepter` can be imported using the grant arn.
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_licensemanager_grant_accepter` using the grant arn. For example:
 
-```shell
-$ terraform import aws_licensemanager_grant_accepter.test arn:aws:license-manager::123456789012:grant:g-1cf9fba4ba2f42dcab11c686c4b4d329
+```terraform
+import {
+  to = aws_licensemanager_grant_accepter.test
+  id = "arn:aws:license-manager::123456789012:grant:g-1cf9fba4ba2f42dcab11c686c4b4d329"
+}
+```
+
+Using `terraform import`, import `aws_licensemanager_grant_accepter` using the grant arn. For example:
+
+```console
+% terraform import aws_licensemanager_grant_accepter.test arn:aws:license-manager::123456789012:grant:g-1cf9fba4ba2f42dcab11c686c4b4d329
 ```

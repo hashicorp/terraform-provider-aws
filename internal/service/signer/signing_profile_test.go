@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package signer_test
 
 import (
@@ -9,9 +12,9 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/signer"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
@@ -177,7 +180,7 @@ func TestAccSignerSigningProfile_signatureValidityPeriod(t *testing.T) {
 }
 
 func testAccPreCheckSingerSigningProfile(ctx context.Context, t *testing.T, platformID string) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).SignerConn()
+	conn := acctest.Provider.Meta().(*conns.AWSClient).SignerConn(ctx)
 
 	input := &signer.ListSigningPlatformsInput{}
 
@@ -297,7 +300,7 @@ func testAccCheckSigningProfileExists(ctx context.Context, res string, sp *signe
 			return fmt.Errorf("Signing Profile with that ARN does not exist")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SignerConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SignerConn(ctx)
 
 		params := &signer.GetSigningProfileInput{
 			ProfileName: aws.String(rs.Primary.ID),
@@ -316,7 +319,7 @@ func testAccCheckSigningProfileExists(ctx context.Context, res string, sp *signe
 
 func testAccCheckSigningProfileDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SignerConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SignerConn(ctx)
 
 		time.Sleep(5 * time.Second)
 

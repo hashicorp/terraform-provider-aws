@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package tags
 
 import (
@@ -6,6 +9,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestKeyValueTagsDefaultConfigGetTags(t *testing.T) {
@@ -735,43 +739,49 @@ func TestKeyValueTagsIgnorePrefixes(t *testing.T) {
 	}
 }
 
-func TestKeyValueTagsIgnoreRDS(t *testing.T) {
+func TestKeyValueTagsIgnoreSystem(t *testing.T) {
 	t.Parallel()
 
 	ctx := context.Background()
 	testCases := []struct {
-		name string
-		tags KeyValueTags
-		want map[string]string
+		name        string
+		serviceName string
+		tags        KeyValueTags
+		want        map[string]string
 	}{
 		{
-			name: "empty",
-			tags: New(ctx, map[string]string{}),
-			want: map[string]string{},
+			name:        "empty",
+			serviceName: names.EC2,
+			tags:        New(ctx, map[string]string{}),
+			want:        map[string]string{},
 		},
 		{
-			name: "all",
+			name:        "all",
+			serviceName: names.ElasticBeanstalk,
 			tags: New(ctx, map[string]string{
 				"aws:cloudformation:key1": "value1",
-				"rds:key2":                "value2",
+				"elasticbeanstalk:key2":   "value2",
 			}),
 			want: map[string]string{},
 		},
 		{
-			name: "mixed",
+			name:        "mixed",
+			serviceName: names.S3,
 			tags: New(ctx, map[string]string{
 				"aws:cloudformation:key1": "value1",
 				"key2":                    "value2",
-				"rds:key3":                "value3",
+				"elasticbeanstalk:key3":   "value3",
 				"key4":                    "value4",
 			}),
 			want: map[string]string{
-				"key2": "value2",
-				"key4": "value4",
+				"key2":                  "value2",
+				"elasticbeanstalk:key3": "value3",
+				"key4":                  "value4",
 			},
 		},
 		{
-			name: "none",
+			name:        "none",
+			serviceName: names.RDS,
 			tags: New(ctx, map[string]string{
 				"key1": "value1",
 				"key2": "value2",
@@ -790,7 +800,7 @@ func TestKeyValueTagsIgnoreRDS(t *testing.T) {
 		t.Run(testCase.name, func(t *testing.T) {
 			t.Parallel()
 
-			got := testCase.tags.IgnoreRDS()
+			got := testCase.tags.IgnoreSystem(testCase.serviceName)
 
 			testKeyValueTagsVerifyMap(t, got.Map(), testCase.want)
 		})

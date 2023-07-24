@@ -61,8 +61,8 @@ export AWS_DEFAULT_REGION=us-gov-west-1
 Tests can then be run by specifying a regular expression defining the tests to
 run and the package in which the tests are defined:
 
-```sh
-$ make testacc TESTS=TestAccCloudWatchDashboard_updateName PKG=cloudwatch
+```console
+% make testacc TESTS=TestAccCloudWatchDashboard_updateName PKG=cloudwatch
 ==> Checking that code complies with gofmt requirements...
 TF_ACC=1 go test ./internal/service/cloudwatch/... -v -count 1 -parallel 20 -run=TestAccCloudWatchDashboard_updateName -timeout 180m
 === RUN   TestAccCloudWatchDashboard_updateName
@@ -78,8 +78,8 @@ write the regular expression. For example, to run all tests of the
 `aws_cloudwatch_dashboard` resource rather than just the updateName test, you
 can start testing like this:
 
-```sh
-$ make testacc TESTS=TestAccCloudWatchDashboard PKG=cloudwatch
+```console
+% make testacc TESTS=TestAccCloudWatchDashboard PKG=cloudwatch
 ==> Checking that code complies with gofmt requirements...
 TF_ACC=1 go test ./internal/service/cloudwatch/... -v -count 1 -parallel 20 -run=TestAccCloudWatchDashboard -timeout 180m
 === RUN   TestAccCloudWatchDashboard_basic
@@ -221,7 +221,7 @@ When executing the test, the following steps are taken for each `TestStep`:
 
     ```terraform
     resource "aws_cloudwatch_dashboard" "foobar" {
-      dashboard_name = "terraform-test-dashboard-%d"
+      dashboard_name = "terraform-test-dashboard-%[1]d"
       dashboard_body = <<EOF
       {
         "widgets": [{
@@ -252,7 +252,7 @@ When executing the test, the following steps are taken for each `TestStep`:
           return fmt.Errorf("Not found: %s", n)
         }
 
-        conn := acctest.Provider.Meta().(*conns.AWSClient).CloudWatchConn()
+        conn := acctest.Provider.Meta().(*conns.AWSClient).CloudWatchConn(ctx)
         params := cloudwatch.GetDashboardInput{
           DashboardName: aws.String(rs.Primary.ID),
         }
@@ -289,7 +289,7 @@ When executing the test, the following steps are taken for each `TestStep`:
     ```go
     func testAccCheckDashboardDestroy(ctx context.Context) resource.TestCheckFunc {
 	    return func(s *terraform.State) error {
-        conn := acctest.Provider.Meta().(*conns.AWSClient).CloudWatchConn()
+        conn := acctest.Provider.Meta().(*conns.AWSClient).CloudWatchConn(ctx)
 
         for _, rs := range s.RootModule().Resources {
           if rs.Type != "aws_cloudwatch_dashboard" {
@@ -361,6 +361,15 @@ For consistency, resources in the test configuration should be named `resource "
 We discourage re-using test configurations across test files (except for some common configuration helpers we provide) as it is much harder to discover potential testing regressions.
 
 Please also note that the newline on the first line of the configuration (before `resource`) and the newline after the last line of configuration (after `}`) are important to allow test configurations to be easily combined without generating Terraform configuration language syntax errors.
+
+#### Test Configuration Independence
+
+_Across the entire provider_, all test configurations should be as indepedent from each other as possible. For example, a common place this concept comes up is with the default VPC. Since we have tests that reconfigure the default VPC, if your configuration requires a VPC, it should not rely on the default VPC. Instead, include a VPC that will be created and destroyed as part of the test.
+
+Make sure that your test configuration:
+
+1. Includes everything required for Terraform to run the test
+1. Does not assume that any user-managed infrastructure will be in place, such as S3 buckets, IAM roles, KMS keys, VPCs, subnets, etc.
 
 #### Combining Test Configurations
 
@@ -619,7 +628,7 @@ func TestAccExampleThing_basic(t *testing.T) {
 }
 
 func testAccPreCheckExample(ctx context.Context, t *testing.T) {
-  conn := acctest.Provider.Meta().(*conns.AWSClient).ExampleConn()
+  conn := acctest.Provider.Meta().(*conns.AWSClient).ExampleConn(ctx)
 	input := &example.ListThingsInput{}
 	_, err := conn.ListThingsWithContext(ctx, input)
 	if testAccPreCheckSkipError(err) {
@@ -1001,7 +1010,7 @@ Writing acceptance testing for data sources is similar to resources, with the bi
 - Adding `DataSource` to the test and configuration naming, such as `TestAccExampleThingDataSource_Filter`
 - The basic test _may_ be named after the easiest lookup attribute instead, e.g., `TestAccExampleThingDataSource_Name`
 - No disappears testing
-- Almost all checks should be done with [`resource.TestCheckResourceAttrPair()`](https://pkg.go.dev/github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource?tab=doc#TestCheckResourceAttrPair) to compare the data source attributes to the resource attributes
+- Almost all checks should be done with [`resource.TestCheckResourceAttrPair()`](https://pkg.go.dev/github.com/hashicorp/terraform-plugin-testing/helper/resource?tab=doc#TestCheckResourceAttrPair) to compare the data source attributes to the resource attributes
 - The usage of an additional `dataSourceName` variable to store a data source reference, e.g., `data.aws_example_thing.test`
 
 Data sources testing should still use the `CheckDestroy` function of the resource, just to continue verifying that there are no dangling AWS resources after a test is run.
@@ -1114,13 +1123,13 @@ Then add the actual implementation. Preferably, if a paginated SDK call is avail
 ```go
 func sweepThings(region string) error {
   ctx := sweep.Context(region)
-  client, err := sweep.SharedRegionalSweepClient(region)
+  client, err := sweep.SharedRegionalSweepClient(ctx, region)
 
   if err != nil {
     return fmt.Errorf("getting client: %w", err)
   }
 
-  conn := client.(*conns.AWSClient).ExampleConn()
+  conn := client.ExampleConn(ctx)
   sweepResources := make([]sweep.Sweepable, 0)
   var errs *multierror.Error
 
@@ -1141,14 +1150,13 @@ func sweepThings(region string) error {
       // Perform resource specific pre-sweep setup.
       // For example, you may need to perform one or more of these types of pre-sweep tasks, specific to the resource:
       //
-      // err := sweep.ReadResource(ctx, r, d, client) // fill in data
+      // err := sdk.ReadResource(ctx, r, d, client) // fill in data
       // d.Set("skip_final_snapshot", true)           // set an argument in order to delete
 
       // This "if" is only needed if the pre-sweep setup can produce errors.
       // Otherwise, do not include it.
       if err != nil {
         err := fmt.Errorf("reading Example Thing (%s): %w", id, err)
-        log.Printf("[ERROR] %s", err)
         errs = multierror.Append(errs, err)
         continue
       }
@@ -1159,35 +1167,36 @@ func sweepThings(region string) error {
     return !lastPage
   })
 
-  if err != nil {
-    errs = multierror.Append(errs, fmt.Errorf("listing Example Thing for %s: %w", region, err))
-  }
-
-  if err := sweep.SweepOrchestrator(sweepResources); err != nil {
-    errs = multierror.Append(errs, fmt.Errorf("sweeping Example Thing for %s: %w", region, err))
-  }
-
   if sweep.SkipSweepError(err) {
     log.Printf("[WARN] Skipping Example Thing sweep for %s: %s", region, errs)
     return nil
+  }
+  if err != nil {
+    errs = multierror.Append(errs, fmt.Errorf("listing Example Things for %s: %w", region, err))
+  }
+
+  if err := sweep.SweepOrchestrator(sweepResources); err != nil {
+    errs = multierror.Append(errs, fmt.Errorf("sweeping Example Things for %s: %w", region, err))
   }
 
   return errs.ErrorOrNil()
 }
 ```
 
-Otherwise, if no paginated SDK call is available:
+If no paginated SDK call is available,
+consider generating one using the [`listpages` generator](https://github.com/hashicorp/terraform-provider-aws/blob/main/internal/generate/listpages/README.md),
+or implement the sweeper as follows:
 
 ```go
 func sweepThings(region string) error {
   ctx := sweep.Context(region)
-  client, err := sweep.SharedRegionalSweepClient(region)
+  client, err := sweep.SharedRegionalSweepClient(ctx, region)
 
   if err != nil {
     return fmt.Errorf("getting client: %w", err)
   }
 
-  conn := client.(*conns.AWSClient).ExampleConn()
+  conn := client.ExampleConn(ctx)
   sweepResources := make([]sweep.Sweepable, 0)
   var errs *multierror.Error
 
@@ -1195,6 +1204,14 @@ func sweepThings(region string) error {
 
   for {
     output, err := conn.ListThings(input)
+    if sweep.SkipSweepError(err) {
+      log.Printf("[WARN] Skipping Example Thing sweep for %s: %s", region, errs)
+      return nil
+    }
+    if err != nil {
+      errs = multierror.Append(errs, fmt.Errorf("listing Example Things for %s: %w", region, err))
+      return errs.ErrorOrNil()
+    }
 
     for _, thing := range output.Things {
       r := ResourceThing()
@@ -1206,14 +1223,13 @@ func sweepThings(region string) error {
       // Perform resource specific pre-sweep setup.
       // For example, you may need to perform one or more of these types of pre-sweep tasks, specific to the resource:
       //
-      // err := sweep.ReadResource(ctx, r, d, client) // fill in data
+      // err := sdk.ReadResource(ctx, r, d, client) // fill in data
       // d.Set("skip_final_snapshot", true)           // set an argument in order to delete
 
       // This "if" is only needed if the pre-sweep setup can produce errors.
       // Otherwise, do not include it.
       if err != nil {
         err := fmt.Errorf("reading Example Thing (%s): %w", id, err)
-        log.Printf("[ERROR] %s", err)
         errs = multierror.Append(errs, err)
         continue
       }
@@ -1230,11 +1246,6 @@ func sweepThings(region string) error {
 
   if err := sweep.SweepOrchestrator(sweepResources); err != nil {
     errs = multierror.Append(errs, fmt.Errorf("sweeping Example Thing for %s: %w", region, err))
-  }
-
-  if sweep.SkipSweepError(err) {
-    log.Printf("[WARN] Skipping Example Thing sweep for %s: %s", region, errs)
-    return nil
   }
 
   return errs.ErrorOrNil()

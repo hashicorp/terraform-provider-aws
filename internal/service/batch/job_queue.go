@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package batch
 
 import (
@@ -17,9 +20,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_batch_job_queue")
+// @SDKResource("aws_batch_job_queue", name="Job Queue")
+// @Tags(identifierAttribute="arn")
 func ResourceJobQueue() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceJobQueueCreate,
@@ -60,8 +65,8 @@ func ResourceJobQueue() *schema.Resource {
 				Required:     true,
 				ValidateFunc: validation.StringInSlice([]string{batch.JQStateDisabled, batch.JQStateEnabled}, true),
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -74,22 +79,18 @@ func ResourceJobQueue() *schema.Resource {
 
 func resourceJobQueueCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).BatchConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
+	conn := meta.(*conns.AWSClient).BatchConn(ctx)
+
 	input := batch.CreateJobQueueInput{
 		ComputeEnvironmentOrder: createComputeEnvironmentOrder(d.Get("compute_environments").([]interface{})),
 		JobQueueName:            aws.String(d.Get("name").(string)),
 		Priority:                aws.Int64(int64(d.Get("priority").(int))),
 		State:                   aws.String(d.Get("state").(string)),
+		Tags:                    getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("scheduling_policy_arn"); ok {
 		input.SchedulingPolicyArn = aws.String(v.(string))
-	}
-
-	if len(tags) > 0 {
-		input.Tags = Tags(tags.IgnoreAWS())
 	}
 
 	name := d.Get("name").(string)
@@ -109,7 +110,7 @@ func resourceJobQueueCreate(ctx context.Context, d *schema.ResourceData, meta in
 
 	_, err = stateConf.WaitForStateContext(ctx)
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "Error waiting for JobQueue state to be \"VALID\": %s", err)
+		return sdkdiag.AppendErrorf(diags, "waiting for JobQueue state to be \"VALID\": %s", err)
 	}
 
 	arn := aws.StringValue(out.JobQueueArn)
@@ -121,9 +122,7 @@ func resourceJobQueueCreate(ctx context.Context, d *schema.ResourceData, meta in
 
 func resourceJobQueueRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).BatchConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).BatchConn(ctx)
 
 	jq, err := GetJobQueue(ctx, conn, d.Id())
 	if err != nil {
@@ -156,23 +155,14 @@ func resourceJobQueueRead(ctx context.Context, d *schema.ResourceData, meta inte
 	d.Set("scheduling_policy_arn", jq.SchedulingPolicyArn)
 	d.Set("state", jq.State)
 
-	tags := KeyValueTags(ctx, jq.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
-	}
+	setTagsOut(ctx, jq.Tags)
 
 	return diags
 }
 
 func resourceJobQueueUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).BatchConn()
+	conn := meta.(*conns.AWSClient).BatchConn(ctx)
 
 	if d.HasChanges("compute_environments", "priority", "scheduling_policy_arn", "state") {
 		name := d.Get("name").(string)
@@ -217,20 +207,12 @@ func resourceJobQueueUpdate(ctx context.Context, d *schema.ResourceData, meta in
 		}
 	}
 
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		if err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n); err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating tags: %s", err)
-		}
-	}
-
 	return append(diags, resourceJobQueueRead(ctx, d, meta)...)
 }
 
 func resourceJobQueueDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).BatchConn()
+	conn := meta.(*conns.AWSClient).BatchConn(ctx)
 	name := d.Get("name").(string)
 
 	log.Printf("[DEBUG] Disabling Batch Job Queue: %s", name)

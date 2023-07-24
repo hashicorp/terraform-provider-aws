@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package evidently
 
 import (
@@ -20,9 +23,11 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_evidently_launch")
+// @SDKResource("aws_evidently_launch", name="Launch")
+// @Tags(identifierAttribute="arn")
 func ResourceLaunch() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceLaunchCreate,
@@ -280,8 +285,8 @@ func ResourceLaunch() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			"type": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -292,17 +297,15 @@ func ResourceLaunch() *schema.Resource {
 }
 
 func resourceLaunchCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).EvidentlyConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
+	conn := meta.(*conns.AWSClient).EvidentlyConn(ctx)
 
 	name := d.Get("name").(string)
 	project := d.Get("project").(string)
-
 	input := &cloudwatchevidently.CreateLaunchInput{
 		Name:    aws.String(name),
 		Project: aws.String(project),
 		Groups:  expandGroups(d.Get("groups").([]interface{})),
+		Tags:    getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("description"); ok {
@@ -321,11 +324,6 @@ func resourceLaunchCreate(ctx context.Context, d *schema.ResourceData, meta inte
 		input.ScheduledSplitsConfig = expandScheduledSplitsConfig(v.([]interface{}))
 	}
 
-	if len(tags) > 0 {
-		input.Tags = Tags(tags.IgnoreAWS())
-	}
-
-	log.Printf("[DEBUG] Creating CloudWatch Evidently Launch: %s", input)
 	output, err := conn.CreateLaunchWithContext(ctx, input)
 
 	if err != nil {
@@ -344,9 +342,7 @@ func resourceLaunchCreate(ctx context.Context, d *schema.ResourceData, meta inte
 }
 
 func resourceLaunchRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).EvidentlyConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).EvidentlyConn(ctx)
 
 	launchName, projectNameOrARN, err := LaunchParseID(d.Id())
 
@@ -393,21 +389,13 @@ func resourceLaunchRead(ctx context.Context, d *schema.ResourceData, meta interf
 	d.Set("status_reason", launch.StatusReason)
 	d.Set("type", launch.Type)
 
-	tags := KeyValueTags(ctx, launch.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return diag.Errorf("setting tags: %s", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return diag.Errorf("setting tags_all: %s", err)
-	}
+	setTagsOut(ctx, launch.Tags)
 
 	return nil
 }
 
 func resourceLaunchUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).EvidentlyConn()
+	conn := meta.(*conns.AWSClient).EvidentlyConn(ctx)
 
 	if d.HasChanges("description", "groups", "metric_monitors", "randomization_salt", "scheduled_splits_config") {
 		name := d.Get("name").(string)
@@ -434,19 +422,11 @@ func resourceLaunchUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 		}
 	}
 
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		if err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n); err != nil {
-			return diag.Errorf("updating tags: %s", err)
-		}
-	}
-
 	return resourceLaunchRead(ctx, d, meta)
 }
 
 func resourceLaunchDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).EvidentlyConn()
+	conn := meta.(*conns.AWSClient).EvidentlyConn(ctx)
 
 	name := d.Get("name").(string)
 	project := d.Get("project").(string)

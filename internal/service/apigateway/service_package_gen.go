@@ -5,6 +5,10 @@ package apigateway
 import (
 	"context"
 
+	aws_sdkv1 "github.com/aws/aws-sdk-go/aws"
+	session_sdkv1 "github.com/aws/aws-sdk-go/aws/session"
+	apigateway_sdkv1 "github.com/aws/aws-sdk-go/service/apigateway"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -24,6 +28,14 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 		{
 			Factory:  DataSourceAPIKey,
 			TypeName: "aws_api_gateway_api_key",
+		},
+		{
+			Factory:  DataSourceAuthorizer,
+			TypeName: "aws_api_gateway_authorizer",
+		},
+		{
+			Factory:  DataSourceAuthorizers,
+			TypeName: "aws_api_gateway_authorizers",
 		},
 		{
 			Factory:  DataSourceDomainName,
@@ -61,6 +73,10 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  ResourceAPIKey,
 			TypeName: "aws_api_gateway_api_key",
+			Name:     "API Key",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
 		},
 		{
 			Factory:  ResourceAuthorizer,
@@ -73,6 +89,10 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  ResourceClientCertificate,
 			TypeName: "aws_api_gateway_client_certificate",
+			Name:     "Client Certificate",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
 		},
 		{
 			Factory:  ResourceDeployment,
@@ -89,6 +109,10 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  ResourceDomainName,
 			TypeName: "aws_api_gateway_domain_name",
+			Name:     "Domain Name",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
 		},
 		{
 			Factory:  ResourceGatewayResponse,
@@ -129,6 +153,10 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  ResourceRestAPI,
 			TypeName: "aws_api_gateway_rest_api",
+			Name:     "REST API",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
 		},
 		{
 			Factory:  ResourceRestAPIPolicy,
@@ -137,10 +165,18 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  ResourceStage,
 			TypeName: "aws_api_gateway_stage",
+			Name:     "Stage",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
 		},
 		{
 			Factory:  ResourceUsagePlan,
 			TypeName: "aws_api_gateway_usage_plan",
+			Name:     "Usage Plan",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
 		},
 		{
 			Factory:  ResourceUsagePlanKey,
@@ -149,6 +185,10 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  ResourceVPCLink,
 			TypeName: "aws_api_gateway_vpc_link",
+			Name:     "VPC Link",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
 		},
 	}
 }
@@ -157,4 +197,13 @@ func (p *servicePackage) ServicePackageName() string {
 	return names.APIGateway
 }
 
-var ServicePackage = &servicePackage{}
+// NewConn returns a new AWS SDK for Go v1 client for this service package's AWS API.
+func (p *servicePackage) NewConn(ctx context.Context, config map[string]any) (*apigateway_sdkv1.APIGateway, error) {
+	sess := config["session"].(*session_sdkv1.Session)
+
+	return apigateway_sdkv1.New(sess.Copy(&aws_sdkv1.Config{Endpoint: aws_sdkv1.String(config["endpoint"].(string))})), nil
+}
+
+func ServicePackage(ctx context.Context) conns.ServicePackage {
+	return &servicePackage{}
+}

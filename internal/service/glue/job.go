@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package glue
 
 import (
@@ -18,9 +21,11 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_glue_job")
+// @SDKResource("aws_glue_job", name="Job")
+// @Tags(identifierAttribute="arn")
 func ResourceJob() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceJobCreate,
@@ -150,8 +155,8 @@ func ResourceJob() *schema.Resource {
 				Required:     true,
 				ValidateFunc: verify.ValidARN,
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			"timeout": {
 				Type:         schema.TypeInt,
 				Optional:     true,
@@ -174,16 +179,14 @@ func ResourceJob() *schema.Resource {
 
 func resourceJobCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).GlueConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
+	conn := meta.(*conns.AWSClient).GlueConn(ctx)
 
 	name := d.Get("name").(string)
 	input := &glue.CreateJobInput{
 		Command: expandJobCommand(d.Get("command").([]interface{})),
 		Name:    aws.String(name),
 		Role:    aws.String(d.Get("role_arn").(string)),
-		Tags:    Tags(tags.IgnoreAWS()),
+		Tags:    getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("connections"); ok {
@@ -258,9 +261,7 @@ func resourceJobCreate(ctx context.Context, d *schema.ResourceData, meta interfa
 
 func resourceJobRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).GlueConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).GlueConn(ctx)
 
 	job, err := FindJobByName(ctx, conn, d.Id())
 
@@ -308,29 +309,12 @@ func resourceJobRead(ctx context.Context, d *schema.ResourceData, meta interface
 	d.Set("timeout", job.Timeout)
 	d.Set("worker_type", job.WorkerType)
 
-	tags, err := ListTags(ctx, conn, jobARN)
-
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "listing tags for Glue Job (%s): %s", jobARN, err)
-	}
-
-	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
-	}
-
 	return diags
 }
 
 func resourceJobUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).GlueConn()
+	conn := meta.(*conns.AWSClient).GlueConn(ctx)
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		jobUpdate := &glue.JobUpdate{
@@ -409,19 +393,12 @@ func resourceJobUpdate(ctx context.Context, d *schema.ResourceData, meta interfa
 		}
 	}
 
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-		if err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n); err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating tags: %s", err)
-		}
-	}
-
 	return append(diags, resourceJobRead(ctx, d, meta)...)
 }
 
 func resourceJobDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).GlueConn()
+	conn := meta.(*conns.AWSClient).GlueConn(ctx)
 
 	log.Printf("[DEBUG] Deleting Glue Job: %s", d.Id())
 	_, err := conn.DeleteJobWithContext(ctx, &glue.DeleteJobInput{

@@ -218,7 +218,7 @@ resource "aws_iam_role_policy_attachment" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `description` - (Required) A description for the DLM lifecycle policy.
 * `execution_role_arn` - (Required) The ARN of an IAM role that is able to be assumed by the DLM service.
@@ -336,9 +336,9 @@ The following arguments are supported:
 * `interval` - (Required) The amount of time to retain each snapshot. The maximum is 100 years. This is equivalent to 1200 months, 5200 weeks, or 36500 days.
 * `interval_unit` - (Required) The unit of time for time-based retention. Valid values: `DAYS`, `WEEKS`, `MONTHS`, or `YEARS`.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - Amazon Resource Name (ARN) of the DLM Lifecycle Policy.
 * `id` - Identifier of the DLM Lifecycle Policy.
@@ -346,8 +346,17 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-DLM lifecycle policies can be imported by their policy ID:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import DLM lifecycle policies using their policy ID. For example:
 
+```terraform
+import {
+  to = aws_dlm_lifecycle_policy.example
+  id = "policy-abcdef12345678901"
+}
 ```
-$ terraform import aws_dlm_lifecycle_policy.example policy-abcdef12345678901
+
+Using `terraform import`, import DLM lifecycle policies using their policy ID. For example:
+
+```console
+% terraform import aws_dlm_lifecycle_policy.example policy-abcdef12345678901
 ```

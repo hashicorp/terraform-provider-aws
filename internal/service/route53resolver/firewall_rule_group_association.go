@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package route53resolver
 
 import (
@@ -18,9 +21,11 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_route53_resolver_firewall_rule_group_association")
+// @SDKResource("aws_route53_resolver_firewall_rule_group_association", name="Rule Group Association")
+// @Tags(identifierAttribute="arn")
 func ResourceFirewallRuleGroupAssociation() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceFirewallRuleGroupAssociationCreate,
@@ -57,8 +62,8 @@ func ResourceFirewallRuleGroupAssociation() *schema.Resource {
 				Type:     schema.TypeInt,
 				Required: true,
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			"vpc_id": {
 				Type:     schema.TypeString,
 				Required: true,
@@ -71,9 +76,7 @@ func ResourceFirewallRuleGroupAssociation() *schema.Resource {
 }
 
 func resourceFirewallRuleGroupAssociationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).Route53ResolverConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
+	conn := meta.(*conns.AWSClient).Route53ResolverConn(ctx)
 
 	name := d.Get("name").(string)
 	input := &route53resolver.AssociateFirewallRuleGroupInput{
@@ -81,15 +84,12 @@ func resourceFirewallRuleGroupAssociationCreate(ctx context.Context, d *schema.R
 		FirewallRuleGroupId: aws.String(d.Get("firewall_rule_group_id").(string)),
 		Name:                aws.String(name),
 		Priority:            aws.Int64(int64(d.Get("priority").(int))),
+		Tags:                getTagsIn(ctx),
 		VpcId:               aws.String(d.Get("vpc_id").(string)),
 	}
 
 	if v, ok := d.GetOk("mutation_protection"); ok {
 		input.MutationProtection = aws.String(v.(string))
-	}
-
-	if len(tags) > 0 {
-		input.Tags = Tags(tags.IgnoreAWS())
 	}
 
 	output, err := conn.AssociateFirewallRuleGroupWithContext(ctx, input)
@@ -108,9 +108,7 @@ func resourceFirewallRuleGroupAssociationCreate(ctx context.Context, d *schema.R
 }
 
 func resourceFirewallRuleGroupAssociationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).Route53ResolverConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).Route53ResolverConn(ctx)
 
 	ruleGroupAssociation, err := FindFirewallRuleGroupAssociationByID(ctx, conn, d.Id())
 
@@ -132,28 +130,11 @@ func resourceFirewallRuleGroupAssociationRead(ctx context.Context, d *schema.Res
 	d.Set("priority", ruleGroupAssociation.Priority)
 	d.Set("vpc_id", ruleGroupAssociation.VpcId)
 
-	tags, err := ListTags(ctx, conn, arn)
-
-	if err != nil {
-		return diag.Errorf("listing tags for Route53 Resolver Firewall Rule Group Association (%s): %s", arn, err)
-	}
-
-	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return diag.Errorf("setting tags: %s", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return diag.Errorf("setting tags_all: %s", err)
-	}
-
 	return nil
 }
 
 func resourceFirewallRuleGroupAssociationUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).Route53ResolverConn()
+	conn := meta.(*conns.AWSClient).Route53ResolverConn(ctx)
 
 	if d.HasChanges("name", "mutation_protection", "priority") {
 		input := &route53resolver.UpdateFirewallRuleGroupAssociationInput{
@@ -177,19 +158,11 @@ func resourceFirewallRuleGroupAssociationUpdate(ctx context.Context, d *schema.R
 		}
 	}
 
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		if err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n); err != nil {
-			return diag.Errorf("updating Route53 Resolver Firewall Rule Group Association (%s) tags: %s", d.Id(), err)
-		}
-	}
-
 	return resourceFirewallRuleGroupAssociationRead(ctx, d, meta)
 }
 
 func resourceFirewallRuleGroupAssociationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).Route53ResolverConn()
+	conn := meta.(*conns.AWSClient).Route53ResolverConn(ctx)
 
 	log.Printf("[DEBUG] Deleting Route53 Resolver Firewall Rule Group Association: %s", d.Id())
 	_, err := conn.DisassociateFirewallRuleGroupWithContext(ctx, &route53resolver.DisassociateFirewallRuleGroupInput{

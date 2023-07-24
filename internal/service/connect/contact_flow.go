@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package connect
 
 import (
@@ -17,12 +20,14 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 	"github.com/mitchellh/go-homedir"
 )
 
 const contactFlowMutexKey = `aws_connect_contact_flow`
 
-// @SDKResource("aws_connect_contact_flow")
+// @SDKResource("aws_connect_contact_flow", name="Contact Flow")
+// @Tags(identifierAttribute="arn")
 func ResourceContactFlow() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceContactFlowCreate,
@@ -75,8 +80,8 @@ func ResourceContactFlow() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			"type": {
 				Type:         schema.TypeString,
 				Optional:     true,
@@ -89,9 +94,7 @@ func ResourceContactFlow() *schema.Resource {
 }
 
 func resourceContactFlowCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ConnectConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
+	conn := meta.(*conns.AWSClient).ConnectConn(ctx)
 
 	instanceID := d.Get("instance_id").(string)
 	name := d.Get("name").(string)
@@ -99,6 +102,7 @@ func resourceContactFlowCreate(ctx context.Context, d *schema.ResourceData, meta
 	input := &connect.CreateContactFlowInput{
 		Name:       aws.String(name),
 		InstanceId: aws.String(instanceID),
+		Tags:       getTagsIn(ctx),
 		Type:       aws.String(d.Get("type").(string)),
 	}
 
@@ -115,25 +119,21 @@ func resourceContactFlowCreate(ctx context.Context, d *schema.ResourceData, meta
 		defer conns.GlobalMutexKV.Unlock(contactFlowMutexKey)
 		file, err := resourceContactFlowLoadFileContent(filename)
 		if err != nil {
-			return diag.FromErr(fmt.Errorf("unable to load %q: %w", filename, err))
+			return diag.Errorf("unable to load %q: %s", filename, err)
 		}
 		input.Content = aws.String(file)
 	} else if v, ok := d.GetOk("content"); ok {
 		input.Content = aws.String(v.(string))
 	}
 
-	if len(tags) > 0 {
-		input.Tags = Tags(tags.IgnoreAWS())
-	}
-
 	output, err := conn.CreateContactFlowWithContext(ctx, input)
 
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error creating Connect Contact Flow (%s): %w", name, err))
+		return diag.Errorf("creating Connect Contact Flow (%s): %s", name, err)
 	}
 
 	if output == nil {
-		return diag.FromErr(fmt.Errorf("error creating Connect Contact Flow (%s): empty output", name))
+		return diag.Errorf("creating Connect Contact Flow (%s): empty output", name)
 	}
 
 	d.SetId(fmt.Sprintf("%s:%s", instanceID, aws.StringValue(output.ContactFlowId)))
@@ -142,9 +142,7 @@ func resourceContactFlowCreate(ctx context.Context, d *schema.ResourceData, meta
 }
 
 func resourceContactFlowRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ConnectConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).ConnectConn(ctx)
 
 	instanceID, contactFlowID, err := ContactFlowParseID(d.Id())
 
@@ -164,11 +162,11 @@ func resourceContactFlowRead(ctx context.Context, d *schema.ResourceData, meta i
 	}
 
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error getting Connect Contact Flow (%s): %w", d.Id(), err))
+		return diag.Errorf("getting Connect Contact Flow (%s): %s", d.Id(), err)
 	}
 
 	if resp == nil || resp.ContactFlow == nil {
-		return diag.FromErr(fmt.Errorf("error getting Connect Contact Flow (%s): empty response", d.Id()))
+		return diag.Errorf("getting Connect Contact Flow (%s): empty response", d.Id())
 	}
 
 	d.Set("arn", resp.ContactFlow.Arn)
@@ -179,22 +177,13 @@ func resourceContactFlowRead(ctx context.Context, d *schema.ResourceData, meta i
 	d.Set("type", resp.ContactFlow.Type)
 	d.Set("content", resp.ContactFlow.Content)
 
-	tags := KeyValueTags(ctx, resp.ContactFlow.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return diag.FromErr(fmt.Errorf("error setting tags: %w", err))
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return diag.FromErr(fmt.Errorf("error setting tags_all: %w", err))
-	}
+	setTagsOut(ctx, resp.ContactFlow.Tags)
 
 	return nil
 }
 
 func resourceContactFlowUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ConnectConn()
+	conn := meta.(*conns.AWSClient).ConnectConn(ctx)
 
 	instanceID, contactFlowID, err := ContactFlowParseID(d.Id())
 
@@ -213,7 +202,7 @@ func resourceContactFlowUpdate(ctx context.Context, d *schema.ResourceData, meta
 		_, updateMetadataInputErr := conn.UpdateContactFlowNameWithContext(ctx, updateMetadataInput)
 
 		if updateMetadataInputErr != nil {
-			return diag.FromErr(fmt.Errorf("error updating Connect Contact Flow (%s): %w", d.Id(), updateMetadataInputErr))
+			return diag.Errorf("updating Connect Contact Flow (%s): %s", d.Id(), updateMetadataInputErr)
 		}
 	}
 
@@ -232,7 +221,7 @@ func resourceContactFlowUpdate(ctx context.Context, d *schema.ResourceData, meta
 			defer conns.GlobalMutexKV.Unlock(contactFlowMutexKey)
 			file, err := resourceContactFlowLoadFileContent(filename)
 			if err != nil {
-				return diag.FromErr(fmt.Errorf("unable to load %q: %w", filename, err))
+				return diag.Errorf("unable to load %q: %s", filename, err)
 			}
 			updateContentInput.Content = aws.String(file)
 		} else if v, ok := d.GetOk("content"); ok {
@@ -242,14 +231,7 @@ func resourceContactFlowUpdate(ctx context.Context, d *schema.ResourceData, meta
 		_, updateContentInputErr := conn.UpdateContactFlowContentWithContext(ctx, updateContentInput)
 
 		if updateContentInputErr != nil {
-			return diag.FromErr(fmt.Errorf("error updating Connect Contact Flow content (%s): %w", d.Id(), updateContentInputErr))
-		}
-	}
-
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-		if err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n); err != nil {
-			return diag.FromErr(fmt.Errorf("error updating tags: %w", err))
+			return diag.Errorf("updating Connect Contact Flow content (%s): %s", d.Id(), updateContentInputErr)
 		}
 	}
 
@@ -257,7 +239,7 @@ func resourceContactFlowUpdate(ctx context.Context, d *schema.ResourceData, meta
 }
 
 func resourceContactFlowDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ConnectConn()
+	conn := meta.(*conns.AWSClient).ConnectConn(ctx)
 
 	instanceID, contactFlowID, err := ContactFlowParseID(d.Id())
 
@@ -275,7 +257,7 @@ func resourceContactFlowDelete(ctx context.Context, d *schema.ResourceData, meta
 	_, deleteContactFlowErr := conn.DeleteContactFlowWithContext(ctx, input)
 
 	if deleteContactFlowErr != nil {
-		return diag.FromErr(fmt.Errorf("error deleting Connect Contact Flow (%s): %w", d.Id(), deleteContactFlowErr))
+		return diag.Errorf("deleting Connect Contact Flow (%s): %s", d.Id(), deleteContactFlowErr)
 	}
 
 	return nil

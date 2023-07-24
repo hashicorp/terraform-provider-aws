@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package directconnect
 
 import (
@@ -30,7 +33,7 @@ func virtualInterfaceRead(ctx context.Context, id string, conn *directconnect.Di
 
 func virtualInterfaceUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DirectConnectConn()
+	conn := meta.(*conns.AWSClient).DirectConnectConn(ctx)
 
 	if d.HasChange("mtu") {
 		req := &directconnect.UpdateVirtualInterfaceAttributesInput{
@@ -55,21 +58,12 @@ func virtualInterfaceUpdate(ctx context.Context, d *schema.ResourceData, meta in
 		}
 	}
 
-	arn := d.Get("arn").(string)
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		if err := UpdateTags(ctx, conn, arn, o, n); err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating Direct Connect virtual interface (%s) tags: %s", arn, err)
-		}
-	}
-
 	return diags
 }
 
 func virtualInterfaceDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DirectConnectConn()
+	conn := meta.(*conns.AWSClient).DirectConnectConn(ctx)
 
 	log.Printf("[DEBUG] Deleting Direct Connect virtual interface: %s", d.Id())
 	_, err := conn.DeleteVirtualInterfaceWithContext(ctx, &directconnect.DeleteVirtualInterfaceInput{

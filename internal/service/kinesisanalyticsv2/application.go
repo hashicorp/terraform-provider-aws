@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package kinesisanalyticsv2
 
 import (
@@ -22,9 +25,11 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_kinesisanalyticsv2_application")
+// @SDKResource("aws_kinesisanalyticsv2_application", name="Application")
+// @Tags(identifierAttribute="arn")
 func ResourceApplication() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceApplicationCreate,
@@ -918,9 +923,8 @@ func ResourceApplication() *schema.Resource {
 				Computed: true,
 			},
 
-			"tags": tftags.TagsSchema(),
-
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 
 			"version_id": {
 				Type:     schema.TypeInt,
@@ -932,9 +936,7 @@ func ResourceApplication() *schema.Resource {
 
 func resourceApplicationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).KinesisAnalyticsV2Conn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
+	conn := meta.(*conns.AWSClient).KinesisAnalyticsV2Conn(ctx)
 
 	applicationName := d.Get("name").(string)
 	input := &kinesisanalyticsv2.CreateApplicationInput{
@@ -944,13 +946,8 @@ func resourceApplicationCreate(ctx context.Context, d *schema.ResourceData, meta
 		CloudWatchLoggingOptions: expandCloudWatchLoggingOptions(d.Get("cloudwatch_logging_options").([]interface{})),
 		RuntimeEnvironment:       aws.String(d.Get("runtime_environment").(string)),
 		ServiceExecutionRole:     aws.String(d.Get("service_execution_role").(string)),
+		Tags:                     getTagsIn(ctx),
 	}
-
-	if len(tags) > 0 {
-		input.Tags = Tags(tags.IgnoreAWS())
-	}
-
-	log.Printf("[DEBUG] Creating Kinesis Analytics v2 Application: %s", input)
 
 	outputRaw, err := waitIAMPropagation(ctx, func() (interface{}, error) {
 		return conn.CreateApplicationWithContext(ctx, input)
@@ -977,9 +974,7 @@ func resourceApplicationCreate(ctx context.Context, d *schema.ResourceData, meta
 
 func resourceApplicationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).KinesisAnalyticsV2Conn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).KinesisAnalyticsV2Conn(ctx)
 
 	application, err := FindApplicationDetailByName(ctx, conn, d.Get("name").(string))
 
@@ -1012,29 +1007,12 @@ func resourceApplicationRead(ctx context.Context, d *schema.ResourceData, meta i
 		return sdkdiag.AppendErrorf(diags, "setting cloudwatch_logging_options: %s", err)
 	}
 
-	tags, err := ListTags(ctx, conn, arn)
-
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "listing tags for Kinesis Analytics v2 Application (%s): %s", arn, err)
-	}
-
-	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
-	}
-
 	return diags
 }
 
 func resourceApplicationUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).KinesisAnalyticsV2Conn()
+	conn := meta.(*conns.AWSClient).KinesisAnalyticsV2Conn(ctx)
 	applicationName := d.Get("name").(string)
 
 	if d.HasChanges("application_configuration", "cloudwatch_logging_options", "service_execution_role") {
@@ -1509,14 +1487,6 @@ func resourceApplicationUpdate(ctx context.Context, d *schema.ResourceData, meta
 		}
 	}
 
-	if d.HasChange("tags_all") {
-		arn := d.Get("arn").(string)
-		o, n := d.GetChange("tags_all")
-		if err := UpdateTags(ctx, conn, arn, o, n); err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating Kinesis Analytics v2 Application (%s) tags: %s", arn, err)
-		}
-	}
-
 	if d.HasChange("start_application") {
 		if _, ok := d.GetOk("start_application"); ok {
 			if err := startApplication(ctx, conn, expandStartApplicationInput(d), d.Timeout(schema.TimeoutUpdate)); err != nil {
@@ -1534,7 +1504,7 @@ func resourceApplicationUpdate(ctx context.Context, d *schema.ResourceData, meta
 
 func resourceApplicationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).KinesisAnalyticsV2Conn()
+	conn := meta.(*conns.AWSClient).KinesisAnalyticsV2Conn(ctx)
 
 	createTimestamp, err := time.Parse(time.RFC3339, d.Get("create_timestamp").(string))
 	if err != nil {

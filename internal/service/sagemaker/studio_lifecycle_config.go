@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package sagemaker
 
 import (
@@ -16,9 +19,11 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_sagemaker_studio_lifecycle_config")
+// @SDKResource("aws_sagemaker_studio_lifecycle_config", name="Studio Lifecycle Config")
+// @Tags(identifierAttribute="arn")
 func ResourceStudioLifecycleConfig() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceStudioLifecycleConfigCreate,
@@ -55,8 +60,8 @@ func ResourceStudioLifecycleConfig() *schema.Resource {
 					validation.StringMatch(regexp.MustCompile(`^[a-zA-Z0-9](-*[a-zA-Z0-9])*$`), "Valid characters are a-z, A-Z, 0-9, and - (hyphen)."),
 				),
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
 
 		CustomizeDiff: verify.SetTagsDiff,
@@ -65,19 +70,14 @@ func ResourceStudioLifecycleConfig() *schema.Resource {
 
 func resourceStudioLifecycleConfigCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SageMakerConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
+	conn := meta.(*conns.AWSClient).SageMakerConn(ctx)
 
 	name := d.Get("studio_lifecycle_config_name").(string)
 	input := &sagemaker.CreateStudioLifecycleConfigInput{
 		StudioLifecycleConfigName:    aws.String(name),
 		StudioLifecycleConfigAppType: aws.String(d.Get("studio_lifecycle_config_app_type").(string)),
 		StudioLifecycleConfigContent: aws.String(d.Get("studio_lifecycle_config_content").(string)),
-	}
-
-	if len(tags) > 0 {
-		input.Tags = Tags(tags.IgnoreAWS())
+		Tags:                         getTagsIn(ctx),
 	}
 
 	log.Printf("[DEBUG] Creating SageMaker Studio Lifecycle Config : %s", input)
@@ -94,9 +94,7 @@ func resourceStudioLifecycleConfigCreate(ctx context.Context, d *schema.Resource
 
 func resourceStudioLifecycleConfigRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SageMakerConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).SageMakerConn(ctx)
 
 	image, err := FindStudioLifecycleConfigByName(ctx, conn, d.Id())
 
@@ -116,44 +114,20 @@ func resourceStudioLifecycleConfigRead(ctx context.Context, d *schema.ResourceDa
 	d.Set("studio_lifecycle_config_content", image.StudioLifecycleConfigContent)
 	d.Set("arn", arn)
 
-	tags, err := ListTags(ctx, conn, arn)
-
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "listing tags for SageMaker Studio Lifecycle Config (%s): %s", d.Id(), err)
-	}
-
-	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
-	}
-
 	return diags
 }
 
 func resourceStudioLifecycleConfigUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SageMakerConn()
 
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		if err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n); err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating Studio Lifecycle Config (%s) tags: %s", d.Id(), err)
-		}
-	}
+	// Tags only.
 
 	return append(diags, resourceStudioLifecycleConfigRead(ctx, d, meta)...)
 }
 
 func resourceStudioLifecycleConfigDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SageMakerConn()
+	conn := meta.(*conns.AWSClient).SageMakerConn(ctx)
 
 	input := &sagemaker.DeleteStudioLifecycleConfigInput{
 		StudioLifecycleConfigName: aws.String(d.Id()),

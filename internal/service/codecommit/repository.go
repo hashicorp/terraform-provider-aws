@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package codecommit
 
 import (
@@ -19,7 +22,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_codecommit_repository")
+// @SDKResource("aws_codecommit_repository", name="Repository")
+// @Tags(identifierAttribute="arn")
 func ResourceRepository() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceRepositoryCreate,
@@ -68,8 +72,8 @@ func ResourceRepository() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
 
 		CustomizeDiff: verify.SetTagsDiff,
@@ -78,19 +82,17 @@ func ResourceRepository() *schema.Resource {
 
 func resourceRepositoryCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CodeCommitConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
+	conn := meta.(*conns.AWSClient).CodeCommitConn(ctx)
 
 	input := &codecommit.CreateRepositoryInput{
 		RepositoryName:        aws.String(d.Get("repository_name").(string)),
 		RepositoryDescription: aws.String(d.Get("description").(string)),
-		Tags:                  Tags(tags.IgnoreAWS()),
+		Tags:                  getTagsIn(ctx),
 	}
 
 	out, err := conn.CreateRepositoryWithContext(ctx, input)
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "Error creating CodeCommit Repository: %s", err)
+		return sdkdiag.AppendErrorf(diags, "creating CodeCommit Repository: %s", err)
 	}
 
 	d.SetId(d.Get("repository_name").(string))
@@ -108,38 +110,9 @@ func resourceRepositoryCreate(ctx context.Context, d *schema.ResourceData, meta 
 	return append(diags, resourceRepositoryRead(ctx, d, meta)...)
 }
 
-func resourceRepositoryUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CodeCommitConn()
-
-	if d.HasChange("default_branch") {
-		if err := resourceUpdateDefaultBranch(ctx, conn, d); err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating CodeCommit Repository (%s) default branch: %s", d.Id(), err)
-		}
-	}
-
-	if d.HasChange("description") {
-		if err := resourceUpdateDescription(ctx, conn, d); err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating CodeCommit Repository (%s) description: %s", d.Id(), err)
-		}
-	}
-
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		if err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n); err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating CodeCommit Repository (%s) tags: %s", d.Get("arn").(string), err)
-		}
-	}
-
-	return append(diags, resourceRepositoryRead(ctx, d, meta)...)
-}
-
 func resourceRepositoryRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CodeCommitConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).CodeCommitConn(ctx)
 
 	input := &codecommit.GetRepositoryInput{
 		RepositoryName: aws.String(d.Id()),
@@ -167,36 +140,38 @@ func resourceRepositoryRead(ctx context.Context, d *schema.ResourceData, meta in
 		d.Set("default_branch", out.RepositoryMetadata.DefaultBranch)
 	}
 
-	tags, err := ListTags(ctx, conn, d.Get("arn").(string))
-
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "listing tags for CodeCommit Repository (%s): %s", d.Get("arn").(string), err)
-	}
-
-	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
-	}
-
 	return diags
+}
+
+func resourceRepositoryUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).CodeCommitConn(ctx)
+
+	if d.HasChange("default_branch") {
+		if err := resourceUpdateDefaultBranch(ctx, conn, d); err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating CodeCommit Repository (%s) default branch: %s", d.Id(), err)
+		}
+	}
+
+	if d.HasChange("description") {
+		if err := resourceUpdateDescription(ctx, conn, d); err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating CodeCommit Repository (%s) description: %s", d.Id(), err)
+		}
+	}
+
+	return append(diags, resourceRepositoryRead(ctx, d, meta)...)
 }
 
 func resourceRepositoryDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CodeCommitConn()
+	conn := meta.(*conns.AWSClient).CodeCommitConn(ctx)
 
 	log.Printf("[DEBUG] CodeCommit Delete Repository: %s", d.Id())
 	_, err := conn.DeleteRepositoryWithContext(ctx, &codecommit.DeleteRepositoryInput{
 		RepositoryName: aws.String(d.Id()),
 	})
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "Error deleting CodeCommit Repository: %s", err.Error())
+		return sdkdiag.AppendErrorf(diags, "deleting CodeCommit Repository: %s", err.Error())
 	}
 
 	return diags
@@ -210,7 +185,7 @@ func resourceUpdateDescription(ctx context.Context, conn *codecommit.CodeCommit,
 
 	_, err := conn.UpdateRepositoryDescriptionWithContext(ctx, branchInput)
 	if err != nil {
-		return fmt.Errorf("Error Updating Repository Description for CodeCommit Repository: %s", err.Error())
+		return fmt.Errorf("Updating Repository Description for CodeCommit Repository: %s", err.Error())
 	}
 
 	return nil
@@ -223,7 +198,7 @@ func resourceUpdateDefaultBranch(ctx context.Context, conn *codecommit.CodeCommi
 
 	out, err := conn.ListBranchesWithContext(ctx, input)
 	if err != nil {
-		return fmt.Errorf("Error reading CodeCommit Repository branches: %s", err.Error())
+		return fmt.Errorf("reading CodeCommit Repository branches: %s", err.Error())
 	}
 
 	if len(out.Branches) == 0 {
@@ -238,7 +213,7 @@ func resourceUpdateDefaultBranch(ctx context.Context, conn *codecommit.CodeCommi
 
 	_, err = conn.UpdateDefaultBranchWithContext(ctx, branchInput)
 	if err != nil {
-		return fmt.Errorf("Error Updating Default Branch for CodeCommit Repository: %s", err.Error())
+		return fmt.Errorf("Updating Default Branch for CodeCommit Repository: %s", err.Error())
 	}
 
 	return nil

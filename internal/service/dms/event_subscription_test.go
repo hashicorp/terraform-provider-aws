@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package dms_test
 
 import (
@@ -9,9 +12,9 @@ import (
 	dms "github.com/aws/aws-sdk-go/service/databasemigrationservice"
 	"github.com/aws/aws-sdk-go/service/eks"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfdms "github.com/hashicorp/terraform-provider-aws/internal/service/dms"
@@ -211,7 +214,7 @@ func testAccCheckEventSubscriptionDestroy(ctx context.Context) resource.TestChec
 				continue
 			}
 
-			conn := acctest.Provider.Meta().(*conns.AWSClient).DMSConn()
+			conn := acctest.Provider.Meta().(*conns.AWSClient).DMSConn(ctx)
 
 			resp, err := conn.DescribeEventSubscriptionsWithContext(ctx, &dms.DescribeEventSubscriptionsInput{
 				SubscriptionName: aws.String(rs.Primary.ID),
@@ -245,7 +248,7 @@ func testAccCheckEventSubscriptionExists(ctx context.Context, n string, eventSub
 			return fmt.Errorf("No ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DMSConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DMSConn(ctx)
 		resp, err := conn.DescribeEventSubscriptionsWithContext(ctx, &dms.DescribeEventSubscriptionsInput{
 			SubscriptionName: aws.String(rs.Primary.ID),
 		})
@@ -386,7 +389,7 @@ resource "aws_dms_event_subscription" "test" {
 }
 
 func testAccPreCheckEKS(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).EKSConn()
+	conn := acctest.Provider.Meta().(*conns.AWSClient).EKSConn(ctx)
 
 	input := &eks.ListClustersInput{}
 

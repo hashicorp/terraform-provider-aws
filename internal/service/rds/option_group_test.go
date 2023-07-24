@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package rds_test
 
 import (
@@ -10,9 +13,9 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/rds"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
@@ -571,14 +574,13 @@ func testAccCheckOptionGroupExists(ctx context.Context, n string, v *rds.OptionG
 			return fmt.Errorf("No DB Option Group Name is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn(ctx)
 
 		opts := rds.DescribeOptionGroupsInput{
 			OptionGroupName: aws.String(rs.Primary.ID),
 		}
 
 		resp, err := conn.DescribeOptionGroupsWithContext(ctx, &opts)
-
 		if err != nil {
 			return err
 		}
@@ -596,7 +598,7 @@ func testAccCheckOptionGroupExists(ctx context.Context, n string, v *rds.OptionG
 
 func testAccCheckOptionGroupDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_db_option_group" {
@@ -674,7 +676,7 @@ resource "aws_db_instance" "test" {
   engine            = data.aws_rds_orderable_db_instance.test.engine
   engine_version    = data.aws_rds_orderable_db_instance.test.engine_version
   instance_class    = data.aws_rds_orderable_db_instance.test.instance_class
-  name              = "baz"
+  db_name           = "baz"
   password          = "barbarbarbar"
   username          = "foo"
 

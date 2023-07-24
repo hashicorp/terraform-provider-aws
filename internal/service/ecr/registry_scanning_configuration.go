@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ecr
 
 import (
@@ -78,7 +81,7 @@ func ResourceRegistryScanningConfiguration() *schema.Resource {
 
 func resourceRegistryScanningConfigurationPut(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ECRConn()
+	conn := meta.(*conns.AWSClient).ECRConn(ctx)
 
 	input := ecr.PutRegistryScanningConfigurationInput{
 		ScanType: aws.String(d.Get("scan_type").(string)),
@@ -98,7 +101,7 @@ func resourceRegistryScanningConfigurationPut(ctx context.Context, d *schema.Res
 
 func resourceRegistryScanningConfigurationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ECRConn()
+	conn := meta.(*conns.AWSClient).ECRConn(ctx)
 
 	out, err := conn.GetRegistryScanningConfigurationWithContext(ctx, &ecr.GetRegistryScanningConfigurationInput{})
 
@@ -115,7 +118,7 @@ func resourceRegistryScanningConfigurationRead(ctx context.Context, d *schema.Re
 
 func resourceRegistryScanningConfigurationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ECRConn()
+	conn := meta.(*conns.AWSClient).ECRConn(ctx)
 
 	log.Printf("[DEBUG] Deleting ECR Registry Scanning Configuration: (%s)", d.Id())
 	_, err := conn.PutRegistryScanningConfigurationWithContext(ctx, &ecr.PutRegistryScanningConfigurationInput{

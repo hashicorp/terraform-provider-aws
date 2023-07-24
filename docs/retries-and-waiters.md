@@ -26,7 +26,7 @@ The [`retry.StateChangeConf` type](https://pkg.go.dev/github.com/hashicorp/terra
 
 ### Retry Functions
 
-The [`retry.RetryContext()`](https://pkg.go.dev/github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource#RetryContext) function provides a simplified retry implementation around `retry.StateChangeConf`.
+The [`retry.RetryContext()`](https://pkg.go.dev/github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry#RetryContext) function provides a simplified retry implementation around `retry.StateChangeConf`.
 The most common use is for simple error-based retries.
 
 ## AWS Request Handling

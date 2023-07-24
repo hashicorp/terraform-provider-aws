@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package kms
 
 import (
@@ -17,9 +20,11 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_kms_replica_key")
+// @SDKResource("aws_kms_replica_key", name="Replica Key")
+// @Tags(identifierAttribute="id")
 func ResourceReplicaKey() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceReplicaKeyCreate,
@@ -88,17 +93,15 @@ func ResourceReplicaKey() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: verify.ValidARN,
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
 	}
 }
 
 func resourceReplicaKeyCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).KMSConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
+	conn := meta.(*conns.AWSClient).KMSConn(ctx)
 
 	// e.g. arn:aws:kms:us-east-2:111122223333:key/mrk-1234abcd12ab34cd56ef1234567890ab
 	primaryKeyARN, err := arn.Parse(d.Get("primary_key_arn").(string))
@@ -110,6 +113,7 @@ func resourceReplicaKeyCreate(ctx context.Context, d *schema.ResourceData, meta 
 	input := &kms.ReplicateKeyInput{
 		KeyId:         aws.String(strings.TrimPrefix(primaryKeyARN.Resource, "key/")),
 		ReplicaRegion: aws.String(meta.(*conns.AWSClient).Region),
+		Tags:          getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("bypass_policy_lockout_safety_check"); ok {
@@ -124,10 +128,6 @@ func resourceReplicaKeyCreate(ctx context.Context, d *schema.ResourceData, meta 
 		input.Policy = aws.String(v.(string))
 	}
 
-	if len(tags) > 0 {
-		input.Tags = Tags(tags.IgnoreAWS())
-	}
-
 	// Replication is initiated in the primary key's region.
 	session, err := conns.NewSessionForRegion(&conn.Config, primaryKeyARN.Region, meta.(*conns.AWSClient).TerraformVersion)
 
@@ -137,8 +137,7 @@ func resourceReplicaKeyCreate(ctx context.Context, d *schema.ResourceData, meta 
 
 	replicateConn := kms.New(session)
 
-	log.Printf("[DEBUG] Creating KMS Replica Key: %s", input)
-	outputRaw, err := WaitIAMPropagation(ctx, func() (interface{}, error) {
+	output, err := WaitIAMPropagation(ctx, func() (*kms.ReplicateKeyOutput, error) {
 		return replicateConn.ReplicateKeyWithContext(ctx, input)
 	})
 
@@ -146,7 +145,7 @@ func resourceReplicaKeyCreate(ctx context.Context, d *schema.ResourceData, meta 
 		return sdkdiag.AppendErrorf(diags, "creating KMS Replica Key: %s", err)
 	}
 
-	d.SetId(aws.StringValue(outputRaw.(*kms.ReplicateKeyOutput).ReplicaKeyMetadata.KeyId))
+	d.SetId(aws.StringValue(output.ReplicaKeyMetadata.KeyId))
 
 	if _, err := WaitReplicaKeyCreated(ctx, conn, d.Id()); err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for KMS Replica Key (%s) create: %s", d.Id(), err)
@@ -167,8 +166,8 @@ func resourceReplicaKeyCreate(ctx context.Context, d *schema.ResourceData, meta 
 		}
 	}
 
-	if len(tags) > 0 {
-		if err := WaitTagsPropagated(ctx, conn, d.Id(), tags); err != nil {
+	if tags := KeyValueTags(ctx, getTagsIn(ctx)); len(tags) > 0 {
+		if err := waitTagsPropagated(ctx, conn, d.Id(), tags); err != nil {
 			return sdkdiag.AppendErrorf(diags, "waiting for KMS Replica Key (%s) tag propagation: %s", d.Id(), err)
 		}
 	}
@@ -178,9 +177,7 @@ func resourceReplicaKeyCreate(ctx context.Context, d *schema.ResourceData, meta 
 
 func resourceReplicaKeyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).KMSConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).KMSConn(ctx)
 
 	key, err := findKey(ctx, conn, d.Id(), d.IsNewResource())
 
@@ -221,26 +218,16 @@ func resourceReplicaKeyRead(ctx context.Context, d *schema.ResourceData, meta in
 	}
 
 	d.Set("policy", policyToSet)
-
 	d.Set("primary_key_arn", key.metadata.MultiRegionConfiguration.PrimaryKey.Arn)
 
-	tags := key.tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
-	}
+	setTagsOut(ctx, key.tags)
 
 	return diags
 }
 
 func resourceReplicaKeyUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).KMSConn()
+	conn := meta.(*conns.AWSClient).KMSConn(ctx)
 
 	if hasChange, enabled := d.HasChange("enabled"), d.Get("enabled").(bool); hasChange && enabled {
 		// Enable before any attributes are modified.
@@ -268,24 +255,12 @@ func resourceReplicaKeyUpdate(ctx context.Context, d *schema.ResourceData, meta 
 		}
 	}
 
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		if err := UpdateTags(ctx, conn, d.Id(), o, n); err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating KMS Replica Key (%s) tags: %s", d.Id(), err)
-		}
-
-		if err := WaitTagsPropagated(ctx, conn, d.Id(), tftags.New(ctx, n)); err != nil {
-			return sdkdiag.AppendErrorf(diags, "waiting for KMS Replica Key (%s) tag propagation: %s", d.Id(), err)
-		}
-	}
-
 	return append(diags, resourceReplicaKeyRead(ctx, d, meta)...)
 }
 
 func resourceReplicaKeyDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).KMSConn()
+	conn := meta.(*conns.AWSClient).KMSConn(ctx)
 
 	input := &kms.ScheduleKeyDeletionInput{
 		KeyId: aws.String(d.Id()),

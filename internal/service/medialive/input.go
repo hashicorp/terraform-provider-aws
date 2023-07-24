@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package medialive
 
 import (
@@ -25,7 +28,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_medialive_input")
+// @SDKResource("aws_medialive_input", name="Input")
+// @Tags(identifierAttribute="arn")
 func ResourceInput() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceInputCreate,
@@ -167,8 +171,8 @@ func ResourceInput() *schema.Resource {
 					},
 				},
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
 
 		CustomizeDiff: verify.SetTagsDiff,
@@ -182,11 +186,12 @@ const (
 )
 
 func resourceInputCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).MediaLiveClient()
+	conn := meta.(*conns.AWSClient).MediaLiveClient(ctx)
 
 	in := &medialive.CreateInputInput{
 		RequestId: aws.String(id.UniqueId()),
 		Name:      aws.String(d.Get("name").(string)),
+		Tags:      getTagsIn(ctx),
 		Type:      types.InputType(d.Get("type").(string)),
 	}
 
@@ -216,13 +221,6 @@ func resourceInputCreate(ctx context.Context, d *schema.ResourceData, meta inter
 
 	if v, ok := d.GetOk("vpc"); ok && len(v.([]interface{})) > 0 {
 		in.Vpc = expandVPC(v.([]interface{}))
-	}
-
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
-
-	if len(tags) > 0 {
-		in.Tags = Tags(tags.IgnoreAWS())
 	}
 
 	// IAM propagation
@@ -257,7 +255,7 @@ func resourceInputCreate(ctx context.Context, d *schema.ResourceData, meta inter
 }
 
 func resourceInputRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).MediaLiveClient()
+	conn := meta.(*conns.AWSClient).MediaLiveClient(ctx)
 
 	out, err := FindInputByID(ctx, conn, d.Id())
 
@@ -284,28 +282,11 @@ func resourceInputRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	d.Set("sources", flattenSources(out.Sources))
 	d.Set("type", out.Type)
 
-	tags, err := ListTags(ctx, conn, aws.ToString(out.Arn))
-	if err != nil {
-		return create.DiagError(names.MediaLive, create.ErrActionReading, ResNameInput, d.Id(), err)
-	}
-
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
-	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return create.DiagError(names.MediaLive, create.ErrActionSetting, ResNameInput, d.Id(), err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return create.DiagError(names.MediaLive, create.ErrActionSetting, ResNameInput, d.Id(), err)
-	}
-
 	return nil
 }
 
 func resourceInputUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).MediaLiveClient()
+	conn := meta.(*conns.AWSClient).MediaLiveClient(ctx)
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		in := &medialive.UpdateInputInput{
@@ -360,19 +341,11 @@ func resourceInputUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 		}
 	}
 
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		if err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n); err != nil {
-			return create.DiagError(names.MediaLive, create.ErrActionUpdating, ResNameInput, d.Id(), err)
-		}
-	}
-
 	return resourceInputRead(ctx, d, meta)
 }
 
 func resourceInputDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).MediaLiveClient()
+	conn := meta.(*conns.AWSClient).MediaLiveClient(ctx)
 
 	log.Printf("[INFO] Deleting MediaLive Input %s", d.Id())
 

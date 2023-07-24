@@ -18,14 +18,16 @@ Attaches a Managed IAM Policy to an IAM role
 
 ```terraform
 data "aws_iam_policy_document" "assume_role" {
-  effect = "Allow"
+  statement {
+    effect = "Allow"
 
-  principals {
-    type        = "Service"
-    identifiers = ["ec2.amazonaws.com"]
+    principals {
+      type        = "Service"
+      identifiers = ["ec2.amazonaws.com"]
+    }
+
+    actions = ["sts:AssumeRole"]
   }
-
-  actions = ["sts:AssumeRole"]
 }
 
 resource "aws_iam_role" "role" {
@@ -55,19 +57,28 @@ resource "aws_iam_role_policy_attachment" "test-attach" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `role`  (Required) - The name of the IAM role to which the policy should be applied
 * `policy_arn` (Required) - The ARN of the policy you want to apply
 
-## Attributes Reference
+## Attribute Reference
 
-No additional attributes are exported.
+This resource exports no additional attributes.
 
 ## Import
 
-IAM role policy attachments can be imported using the role name and policy arn separated by `/`.
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import IAM role policy attachments using the role name and policy arn separated by `/`. For example:
 
+```terraform
+import {
+  to = aws_iam_role_policy_attachment.test-attach
+  id = "test-role/arn:aws:iam::xxxxxxxxxxxx:policy/test-policy"
+}
 ```
-$ terraform import aws_iam_role_policy_attachment.test-attach test-role/arn:aws:iam::xxxxxxxxxxxx:policy/test-policy
+
+Using `terraform import`, import IAM role policy attachments using the role name and policy arn separated by `/`. For example:
+
+```console
+% terraform import aws_iam_role_policy_attachment.test-attach test-role/arn:aws:iam::xxxxxxxxxxxx:policy/test-policy
 ```

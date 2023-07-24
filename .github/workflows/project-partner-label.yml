@@ -1,0 +1,39 @@
+name: "Project: Partner Label"
+on:
+  pull_request_target:
+    types:
+      - labeled
+env:
+  DESTINATION_COLUMN_ID: 'PC_lAPOAAuecM4AXZPtzgC5Sak'
+  GH_TOKEN: ${{ secrets.ORGSCOPED_GITHUB_TOKEN }}
+jobs:
+  tag-created:
+    if: ${{ github.event.label.name == 'partner' }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: AddIssueToPartnerBoard
+        run: |
+          PROJCOLUMNS=$(gh api graphql -f query='
+              query {
+                repository(name: "${{ github.event.repository.name }}", owner: "${{ github.repository_owner }}") {
+                  pullRequest(number: ${{ github.event.number }}) {
+                  projectCards {
+                    nodes {
+                      column {
+                        name
+                        id
+                      }
+                    }
+                  }
+                }
+              }
+            }')
+          INPROJECT=$(echo $PROJCOLUMNS | jq '.data.repository.pullRequest.projectCards.nodes[].column | select(.id=="${{ env.DESTINATION_COLUMN_ID }}")')
+          if [ -z "$INPROJECT" ];
+          then
+            gh api graphql -f query='mutation {
+              addProjectCard(input: {projectColumnId: "${{ env.DESTINATION_COLUMN_ID }}", contentId: "${{ github.event.pull_request.node_id }}"}) {
+                clientMutationId
+              }
+            }'
+          fi

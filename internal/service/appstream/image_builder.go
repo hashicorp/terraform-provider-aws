@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package appstream
 
 import (
@@ -16,9 +19,11 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_appstream_image_builder")
+// @SDKResource("aws_appstream_image_builder", name="Image Builder")
+// @Tags(identifierAttribute="arn")
 func ResourceImageBuilder() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceImageBuilderCreate,
@@ -142,8 +147,8 @@ func ResourceImageBuilder() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			"vpc_config": {
 				Type:     schema.TypeList,
 				MaxItems: 1,
@@ -174,14 +179,13 @@ func ResourceImageBuilder() *schema.Resource {
 }
 
 func resourceImageBuilderCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).AppStreamConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
+	conn := meta.(*conns.AWSClient).AppStreamConn(ctx)
 
 	name := d.Get("name").(string)
 	input := &appstream.CreateImageBuilderInput{
 		InstanceType: aws.String(d.Get("instance_type").(string)),
 		Name:         aws.String(name),
+		Tags:         getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("access_endpoint"); ok && v.(*schema.Set).Len() > 0 {
@@ -224,10 +228,6 @@ func resourceImageBuilderCreate(ctx context.Context, d *schema.ResourceData, met
 		input.VpcConfig = expandImageBuilderVPCConfig(v.([]interface{}))
 	}
 
-	if len(tags) > 0 {
-		input.Tags = Tags(tags.IgnoreAWS())
-	}
-
 	outputRaw, err := tfresource.RetryWhenAWSErrMessageContains(ctx, iamPropagationTimeout, func() (interface{}, error) {
 		return conn.CreateImageBuilderWithContext(ctx, input)
 	}, appstream.ErrCodeInvalidRoleException, "encountered an error because your IAM role")
@@ -246,9 +246,7 @@ func resourceImageBuilderCreate(ctx context.Context, d *schema.ResourceData, met
 }
 
 func resourceImageBuilderRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).AppStreamConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).AppStreamConn(ctx)
 
 	imageBuilder, err := FindImageBuilderByName(ctx, conn, d.Id())
 
@@ -292,41 +290,16 @@ func resourceImageBuilderRead(ctx context.Context, d *schema.ResourceData, meta 
 		d.Set("vpc_config", nil)
 	}
 
-	tags, err := ListTags(ctx, conn, arn)
-	if err != nil {
-		return diag.Errorf("listing tags for AppStream ImageBuilder (%s): %s", arn, err)
-	}
-
-	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return diag.Errorf("setting tags: %s", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return diag.Errorf("setting tags_all: %s", err)
-	}
-
 	return nil
 }
 
 func resourceImageBuilderUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).AppStreamConn()
-
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		if err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n); err != nil {
-			return diag.Errorf("updating tags for AppStream ImageBuilder (%s): %s", d.Id(), err)
-		}
-	}
-
+	// Tags only.
 	return resourceImageBuilderRead(ctx, d, meta)
 }
 
 func resourceImageBuilderDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).AppStreamConn()
+	conn := meta.(*conns.AWSClient).AppStreamConn(ctx)
 
 	log.Printf("[DEBUG] Deleting AppStream ImageBuilder: %s", d.Id())
 	_, err := conn.DeleteImageBuilderWithContext(ctx, &appstream.DeleteImageBuilderInput{

@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package codegurureviewer
 
 import (
@@ -17,17 +20,16 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_codegurureviewer_repository_association")
+// @SDKResource("aws_codegurureviewer_repository_association", name="Repository Association")
+// @Tags(identifierAttribute="id")
 func ResourceRepositoryAssociation() *schema.Resource {
 	return &schema.Resource{
-
 		CreateWithoutTimeout: resourceRepositoryAssociationCreate,
 		ReadWithoutTimeout:   resourceRepositoryAssociationRead,
 		UpdateWithoutTimeout: resourceRepositoryAssociationUpdate,
@@ -253,8 +255,8 @@ func ResourceRepositoryAssociation() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
 		CustomizeDiff: customdiff.Sequence(
 			verify.SetTagsDiff,
@@ -267,21 +269,16 @@ const (
 )
 
 func resourceRepositoryAssociationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).CodeGuruReviewerConn()
+	conn := meta.(*conns.AWSClient).CodeGuruReviewerConn(ctx)
 
-	in := &codegurureviewer.AssociateRepositoryInput{}
+	in := &codegurureviewer.AssociateRepositoryInput{
+		Tags: getTagsIn(ctx),
+	}
 
 	in.KMSKeyDetails = expandKMSKeyDetails(d.Get("kms_key_details").([]interface{}))
 
 	if v, ok := d.GetOk("repository"); ok {
 		in.Repository = expandRepository(v.([]interface{}))
-	}
-
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
-
-	if len(tags) > 0 {
-		in.Tags = Tags(tags.IgnoreAWS())
 	}
 
 	out, err := conn.AssociateRepositoryWithContext(ctx, in)
@@ -304,7 +301,7 @@ func resourceRepositoryAssociationCreate(ctx context.Context, d *schema.Resource
 }
 
 func resourceRepositoryAssociationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).CodeGuruReviewerConn()
+	conn := meta.(*conns.AWSClient).CodeGuruReviewerConn(ctx)
 
 	out, err := findRepositoryAssociationByID(ctx, conn, d.Id())
 
@@ -336,44 +333,19 @@ func resourceRepositoryAssociationRead(ctx context.Context, d *schema.ResourceDa
 	d.Set("state", out.State)
 	d.Set("state_reason", out.StateReason)
 
-	tags, err := ListTags(ctx, conn, d.Id())
-	if err != nil {
-		return create.DiagError(names.CodeGuruReviewer, create.ErrActionReading, ResNameRepositoryAssociation, d.Id(), err)
-	}
-
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
-	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return create.DiagError(names.CodeGuruReviewer, create.ErrActionSetting, ResNameRepositoryAssociation, d.Id(), err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return create.DiagError(names.CodeGuruReviewer, create.ErrActionSetting, ResNameRepositoryAssociation, d.Id(), err)
-	}
-
 	return nil
 }
 
 func resourceRepositoryAssociationUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CodeGuruReviewerConn()
 
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-		arn := d.Get("arn").(string)
-
-		if err := UpdateTags(ctx, conn, arn, o, n); err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating CodeGuru Repository RepositoryAssociation (%s) tags: %s", d.Get("id").(string), err)
-		}
-	}
+	// Tags only.
 
 	return append(diags, resourceRepositoryAssociationRead(ctx, d, meta)...)
 }
 
 func resourceRepositoryAssociationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).CodeGuruReviewerConn()
+	conn := meta.(*conns.AWSClient).CodeGuruReviewerConn(ctx)
 
 	log.Printf("[INFO] Deleting CodeGuruReviewer RepositoryAssociation %s", d.Id())
 

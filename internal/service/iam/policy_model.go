@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package iam
 
 import (
@@ -22,7 +25,7 @@ type IAMPolicyDoc struct {
 }
 
 type IAMPolicyStatement struct {
-	Sid           string
+	Sid           string                         `json:",omitempty"`
 	Effect        string                         `json:",omitempty"`
 	Actions       interface{}                    `json:"Action,omitempty"`
 	NotActions    interface{}                    `json:"NotAction,omitempty"`

@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ecs
 
 import (
@@ -22,14 +25,17 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_ecs_service")
+// @SDKResource("aws_ecs_service", name="Service")
+// @Tags(identifierAttribute="id")
 func ResourceService() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceServiceCreate,
@@ -442,8 +448,8 @@ func ResourceService() *schema.Resource {
 					},
 				},
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			"task_definition": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -473,12 +479,11 @@ func ResourceService() *schema.Resource {
 
 func resourceServiceCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ECSConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
+	conn := meta.(*conns.AWSClient).ECSConn(ctx)
 
 	deploymentController := expandDeploymentController(d.Get("deployment_controller").([]interface{}))
 	deploymentMinimumHealthyPercent := d.Get("deployment_minimum_healthy_percent").(int)
+	name := d.Get("name").(string)
 	schedulingStrategy := d.Get("scheduling_strategy").(string)
 	input := ecs.CreateServiceInput{
 		CapacityProviderStrategy: expandCapacityProviderStrategy(d.Get("capacity_provider_strategy").(*schema.Set)),
@@ -489,7 +494,8 @@ func resourceServiceCreate(ctx context.Context, d *schema.ResourceData, meta int
 		EnableExecuteCommand:     aws.Bool(d.Get("enable_execute_command").(bool)),
 		NetworkConfiguration:     expandNetworkConfiguration(d.Get("network_configuration").([]interface{})),
 		SchedulingStrategy:       aws.String(schedulingStrategy),
-		ServiceName:              aws.String(d.Get("name").(string)),
+		ServiceName:              aws.String(name),
+		Tags:                     getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("alarms"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
@@ -540,7 +546,7 @@ func resourceServiceCreate(ctx context.Context, d *schema.ResourceData, meta int
 		ps, err := expandPlacementStrategy(v.([]interface{}))
 
 		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "creating ECS Service (%s): %s", d.Get("name").(string), err)
+			return sdkdiag.AppendFromErr(diags, err)
 		}
 
 		input.PlacementStrategy = ps
@@ -550,7 +556,7 @@ func resourceServiceCreate(ctx context.Context, d *schema.ResourceData, meta int
 		pc, err := expandPlacementConstraints(v.List())
 
 		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "creating ECS Service (%s): %s", d.Get("name").(string), err)
+			return sdkdiag.AppendFromErr(diags, err)
 		}
 
 		input.PlacementConstraints = pc
@@ -595,50 +601,40 @@ func resourceServiceCreate(ctx context.Context, d *schema.ResourceData, meta int
 		input.TaskDefinition = aws.String(v.(string))
 	}
 
-	if len(tags) > 0 {
-		input.Tags = Tags(tags.IgnoreAWS()) // tags field doesn't exist in all partitions
-	}
-
 	output, err := serviceCreateWithRetry(ctx, conn, input)
 
-	// Some partitions (i.e., ISO) may not support tag-on-create
-	if input.Tags != nil && verify.ErrorISOUnsupported(conn.PartitionID, err) {
-		log.Printf("[WARN] failed creating ECS Service (%s) with tags: %s. Trying create without tags.", d.Get("name").(string), err)
+	// Some partitions (e.g. ISO) may not support tag-on-create.
+	if input.Tags != nil && errs.IsUnsupportedOperationInPartitionError(conn.PartitionID, err) {
 		input.Tags = nil
 
 		output, err = serviceCreateWithRetry(ctx, conn, input)
 	}
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating ECS Service (%s): %s", d.Get("name").(string), err)
+		return sdkdiag.AppendErrorf(diags, "creating ECS Service (%s): %s", name, err)
 	}
 
 	d.SetId(aws.StringValue(output.Service.ServiceArn))
 
-	cluster := d.Get("cluster").(string)
-
+	fn := waitServiceActive
 	if d.Get("wait_for_steady_state").(bool) {
-		if _, err := waitServiceStable(ctx, conn, d.Id(), cluster, d.Timeout(schema.TimeoutCreate)); err != nil {
-			return sdkdiag.AppendErrorf(diags, "waiting for ECS service (%s) to reach steady state after creation: %s", d.Id(), err)
-		}
-	} else {
-		if _, err := waitServiceActive(ctx, conn, d.Id(), cluster, d.Timeout(schema.TimeoutCreate)); err != nil {
-			return sdkdiag.AppendErrorf(diags, "waiting for ECS service (%s) to become active after creation: %s", d.Id(), err)
-		}
+		fn = waitServiceStable
+	}
+	if _, err := fn(ctx, conn, d.Id(), d.Get("cluster").(string), d.Timeout(schema.TimeoutCreate)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for ECS Service (%s) create: %s", d.Id(), err)
 	}
 
-	// Some partitions (i.e., ISO) may not support tag-on-create, attempt tag after create
-	if input.Tags == nil && len(tags) > 0 {
-		err := UpdateTags(ctx, conn, d.Id(), nil, tags)
+	// For partitions not supporting tag-on-create, attempt tag after create.
+	if tags := getTagsIn(ctx); input.Tags == nil && len(tags) > 0 {
+		err := createTags(ctx, conn, d.Id(), tags)
 
-		// If default tags only, log and continue. Otherwise, error.
-		if v, ok := d.GetOk("tags"); (!ok || len(v.(map[string]interface{})) == 0) && verify.ErrorISOUnsupported(conn.PartitionID, err) {
-			log.Printf("[WARN] failed adding tags after create for ECS Service (%s): %s", d.Id(), err)
+		// If default tags only, continue. Otherwise, error.
+		if v, ok := d.GetOk(names.AttrTags); (!ok || len(v.(map[string]interface{})) == 0) && errs.IsUnsupportedOperationInPartitionError(conn.PartitionID, err) {
 			return append(diags, resourceServiceRead(ctx, d, meta)...)
 		}
 
 		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "ECS tagging failed adding tags after create for Service (%s): %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "setting ECS Service (%s) tags: %s", d.Id(), err)
 		}
 	}
 
@@ -647,9 +643,7 @@ func resourceServiceCreate(ctx context.Context, d *schema.ResourceData, meta int
 
 func resourceServiceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ECSConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).ECSConn(ctx)
 
 	cluster := d.Get("cluster").(string)
 
@@ -709,7 +703,7 @@ func resourceServiceRead(ctx context.Context, d *schema.ResourceData, meta inter
 	if strings.HasPrefix(d.Get("cluster").(string), "arn:"+meta.(*conns.AWSClient).Partition+":ecs:") {
 		d.Set("cluster", service.ClusterArn)
 	} else {
-		clusterARN := getNameFromARN(aws.StringValue(service.ClusterArn))
+		clusterARN := GetClusterNameFromARN(aws.StringValue(service.ClusterArn))
 		d.Set("cluster", clusterARN)
 	}
 
@@ -718,7 +712,7 @@ func resourceServiceRead(ctx context.Context, d *schema.ResourceData, meta inter
 		if strings.HasPrefix(d.Get("iam_role").(string), "arn:"+meta.(*conns.AWSClient).Partition+":iam:") {
 			d.Set("iam_role", service.RoleArn)
 		} else {
-			roleARN := getNameFromARN(aws.StringValue(service.RoleArn))
+			roleARN := GetRoleNameFromARN(aws.StringValue(service.RoleArn))
 			d.Set("iam_role", roleARN)
 		}
 	}
@@ -737,7 +731,7 @@ func resourceServiceRead(ctx context.Context, d *schema.ResourceData, meta inter
 
 		if service.DeploymentConfiguration.DeploymentCircuitBreaker != nil {
 			if err := d.Set("deployment_circuit_breaker", []interface{}{flattenDeploymentCircuitBreaker(service.DeploymentConfiguration.DeploymentCircuitBreaker)}); err != nil {
-				return sdkdiag.AppendErrorf(diags, "setting deployment_circuit_break: %s", err)
+				return sdkdiag.AppendErrorf(diags, "setting deployment_circuit_breaker: %s", err)
 			}
 		} else {
 			d.Set("deployment_circuit_breaker", nil)
@@ -745,11 +739,13 @@ func resourceServiceRead(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 
 	if err := d.Set("deployment_controller", flattenDeploymentController(service.DeploymentController)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting deployment_controller for (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "setting deployment_controller: %s", err)
 	}
 
 	if service.LoadBalancers != nil {
-		d.Set("load_balancer", flattenLoadBalancers(service.LoadBalancers))
+		if err := d.Set("load_balancer", flattenLoadBalancers(service.LoadBalancers)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting load_balancer: %s", err)
+		}
 	}
 
 	if err := d.Set("capacity_provider_strategy", flattenCapacityProviderStrategy(service.CapacityProviderStrategy)); err != nil {
@@ -761,38 +757,29 @@ func resourceServiceRead(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 
 	if err := d.Set("placement_constraints", flattenServicePlacementConstraints(service.PlacementConstraints)); err != nil {
-		log.Printf("[ERR] Error setting placement_constraints for (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "setting placement_constraints: %s", err)
 	}
 
 	if err := d.Set("network_configuration", flattenNetworkConfiguration(service.NetworkConfiguration)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting network_configuration for (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "setting network_configuration: %s", err)
 	}
 
 	// if err := d.Set("service_connect_configuration", flattenServiceConnectConfiguration(service.ServiceConnectConfiguration)); err != nil {
-	// 	return fmt.Errorf("error setting service_connect_configuration for (%s): %w", d.Id(), err)
+	// 	return fmt.Errorf("setting service_connect_configuration for (%s): %w", d.Id(), err)
 	// }
 
 	if err := d.Set("service_registries", flattenServiceRegistries(service.ServiceRegistries)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting service_registries for (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "setting service_registries: %s", err)
 	}
 
-	tags := KeyValueTags(ctx, service.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
-	}
+	setTagsOut(ctx, service.Tags)
 
 	return diags
 }
 
 func resourceServiceUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ECSConn()
+	conn := meta.(*conns.AWSClient).ECSConn(ctx)
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		input := &ecs.UpdateServiceInput{
@@ -801,26 +788,18 @@ func resourceServiceUpdate(ctx context.Context, d *schema.ResourceData, meta int
 			Service:            aws.String(d.Id()),
 		}
 
-		schedulingStrategy := d.Get("scheduling_strategy").(string)
-
-		switch schedulingStrategy {
-		case ecs.SchedulingStrategyDaemon:
-			if d.HasChange("deployment_minimum_healthy_percent") {
-				input.DeploymentConfiguration = &ecs.DeploymentConfiguration{
-					MinimumHealthyPercent: aws.Int64(int64(d.Get("deployment_minimum_healthy_percent").(int))),
-				}
-			}
-		case ecs.SchedulingStrategyReplica:
-			if d.HasChange("desired_count") {
-				input.DesiredCount = aws.Int64(int64(d.Get("desired_count").(int)))
+		if d.HasChange("alarms") {
+			if input.DeploymentConfiguration == nil {
+				input.DeploymentConfiguration = &ecs.DeploymentConfiguration{}
 			}
 
-			if d.HasChanges("deployment_maximum_percent", "deployment_minimum_healthy_percent") {
-				input.DeploymentConfiguration = &ecs.DeploymentConfiguration{
-					MaximumPercent:        aws.Int64(int64(d.Get("deployment_maximum_percent").(int))),
-					MinimumHealthyPercent: aws.Int64(int64(d.Get("deployment_minimum_healthy_percent").(int))),
-				}
+			if v, ok := d.GetOk("alarms"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+				input.DeploymentConfiguration.Alarms = expandAlarms(v.([]interface{})[0].(map[string]interface{}))
 			}
+		}
+
+		if d.HasChange("capacity_provider_strategy") {
+			input.CapacityProviderStrategy = expandCapacityProviderStrategy(d.Get("capacity_provider_strategy").(*schema.Set))
 		}
 
 		if d.HasChange("deployment_circuit_breaker") {
@@ -836,6 +815,52 @@ func resourceServiceUpdate(ctx context.Context, d *schema.ResourceData, meta int
 			}
 		}
 
+		switch schedulingStrategy := d.Get("scheduling_strategy").(string); schedulingStrategy {
+		case ecs.SchedulingStrategyDaemon:
+			if d.HasChange("deployment_minimum_healthy_percent") {
+				if input.DeploymentConfiguration == nil {
+					input.DeploymentConfiguration = &ecs.DeploymentConfiguration{}
+				}
+
+				input.DeploymentConfiguration.MinimumHealthyPercent = aws.Int64(int64(d.Get("deployment_minimum_healthy_percent").(int)))
+			}
+		case ecs.SchedulingStrategyReplica:
+			if d.HasChanges("deployment_maximum_percent", "deployment_minimum_healthy_percent") {
+				if input.DeploymentConfiguration == nil {
+					input.DeploymentConfiguration = &ecs.DeploymentConfiguration{}
+				}
+
+				input.DeploymentConfiguration.MaximumPercent = aws.Int64(int64(d.Get("deployment_maximum_percent").(int)))
+				input.DeploymentConfiguration.MinimumHealthyPercent = aws.Int64(int64(d.Get("deployment_minimum_healthy_percent").(int)))
+			}
+
+			if d.HasChange("desired_count") {
+				input.DesiredCount = aws.Int64(int64(d.Get("desired_count").(int)))
+			}
+		}
+
+		if d.HasChange("enable_ecs_managed_tags") {
+			input.EnableECSManagedTags = aws.Bool(d.Get("enable_ecs_managed_tags").(bool))
+		}
+
+		if d.HasChange("enable_execute_command") {
+			input.EnableExecuteCommand = aws.Bool(d.Get("enable_execute_command").(bool))
+		}
+
+		if d.HasChange("health_check_grace_period_seconds") {
+			input.HealthCheckGracePeriodSeconds = aws.Int64(int64(d.Get("health_check_grace_period_seconds").(int)))
+		}
+
+		if d.HasChange("load_balancer") {
+			if v, ok := d.Get("load_balancer").(*schema.Set); ok && v != nil {
+				input.LoadBalancers = expandLoadBalancers(v.List())
+			}
+		}
+
+		if d.HasChange("network_configuration") {
+			input.NetworkConfiguration = expandNetworkConfiguration(d.Get("network_configuration").([]interface{}))
+		}
+
 		if d.HasChange("ordered_placement_strategy") {
 			// Reference: https://docs.aws.amazon.com/AmazonECS/latest/APIReference/API_UpdateService.html#ECS-UpdateService-request-placementStrategy
 			// To remove an existing placement strategy, specify an empty object.
@@ -845,7 +870,7 @@ func resourceServiceUpdate(ctx context.Context, d *schema.ResourceData, meta int
 				ps, err := expandPlacementStrategy(v.([]interface{}))
 
 				if err != nil {
-					return sdkdiag.AppendErrorf(diags, "updating ECS Service (%s): %s", d.Get("name").(string), err)
+					return sdkdiag.AppendFromErr(diags, err)
 				}
 
 				input.PlacementStrategy = ps
@@ -861,51 +886,15 @@ func resourceServiceUpdate(ctx context.Context, d *schema.ResourceData, meta int
 				pc, err := expandPlacementConstraints(v.List())
 
 				if err != nil {
-					return sdkdiag.AppendErrorf(diags, "updating ECS Service (%s): %s", d.Get("name").(string), err)
+					return sdkdiag.AppendFromErr(diags, err)
 				}
 
 				input.PlacementConstraints = pc
 			}
 		}
 
-		if d.HasChange("alarms") {
-			if v, ok := d.GetOk("alarms"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-				input.DeploymentConfiguration.Alarms = expandAlarms(v.([]interface{})[0].(map[string]interface{}))
-			}
-		}
-
 		if d.HasChange("platform_version") {
 			input.PlatformVersion = aws.String(d.Get("platform_version").(string))
-		}
-
-		if d.HasChange("health_check_grace_period_seconds") {
-			input.HealthCheckGracePeriodSeconds = aws.Int64(int64(d.Get("health_check_grace_period_seconds").(int)))
-		}
-
-		if d.HasChange("task_definition") {
-			input.TaskDefinition = aws.String(d.Get("task_definition").(string))
-		}
-
-		if d.HasChange("network_configuration") {
-			input.NetworkConfiguration = expandNetworkConfiguration(d.Get("network_configuration").([]interface{}))
-		}
-
-		if d.HasChange("capacity_provider_strategy") {
-			input.CapacityProviderStrategy = expandCapacityProviderStrategy(d.Get("capacity_provider_strategy").(*schema.Set))
-		}
-
-		if d.HasChange("enable_execute_command") {
-			input.EnableExecuteCommand = aws.Bool(d.Get("enable_execute_command").(bool))
-		}
-
-		if d.HasChange("enable_ecs_managed_tags") {
-			input.EnableECSManagedTags = aws.Bool(d.Get("enable_ecs_managed_tags").(bool))
-		}
-
-		if d.HasChange("load_balancer") {
-			if v, ok := d.Get("load_balancer").(*schema.Set); ok && v != nil {
-				input.LoadBalancers = expandLoadBalancers(v.List())
-			}
 		}
 
 		if d.HasChange("propagate_tags") {
@@ -918,6 +907,10 @@ func resourceServiceUpdate(ctx context.Context, d *schema.ResourceData, meta int
 
 		if d.HasChange("service_registries") {
 			input.ServiceRegistries = expandServiceRegistries(d.Get("service_registries").([]interface{}))
+		}
+
+		if d.HasChange("task_definition") {
+			input.TaskDefinition = aws.String(d.Get("task_definition").(string))
 		}
 
 		// Retry due to IAM eventual consistency
@@ -946,31 +939,12 @@ func resourceServiceUpdate(ctx context.Context, d *schema.ResourceData, meta int
 			return sdkdiag.AppendErrorf(diags, "updating ECS Service (%s): %s", d.Id(), err)
 		}
 
-		cluster := d.Get("cluster").(string)
+		fn := waitServiceActive
 		if d.Get("wait_for_steady_state").(bool) {
-			if _, err := waitServiceStable(ctx, conn, d.Id(), cluster, d.Timeout(schema.TimeoutUpdate)); err != nil {
-				return sdkdiag.AppendErrorf(diags, "waiting for ECS service (%s) to reach steady state after update: %s", d.Id(), err)
-			}
-		} else {
-			if _, err := waitServiceActive(ctx, conn, d.Id(), cluster, d.Timeout(schema.TimeoutUpdate)); err != nil {
-				return sdkdiag.AppendErrorf(diags, "waiting for ECS service (%s) to become active after update: %s", d.Id(), err)
-			}
+			fn = waitServiceStable
 		}
-	}
-
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		err := UpdateTags(ctx, conn, d.Id(), o, n)
-
-		// Some partitions (i.e., ISO) may not support tagging, giving error
-		if verify.ErrorISOUnsupported(conn.PartitionID, err) {
-			log.Printf("[WARN] failed updating tags for ECS Service (%s): %s", d.Id(), err)
-			return append(diags, resourceServiceRead(ctx, d, meta)...)
-		}
-
-		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating tags for ECS Service (%s): %s", d.Id(), err)
+		if _, err := fn(ctx, conn, d.Id(), d.Get("cluster").(string), d.Timeout(schema.TimeoutUpdate)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "waiting for ECS Service (%s) update: %s", d.Id(), err)
 		}
 	}
 
@@ -979,14 +953,16 @@ func resourceServiceUpdate(ctx context.Context, d *schema.ResourceData, meta int
 
 func resourceServiceDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ECSConn()
+	conn := meta.(*conns.AWSClient).ECSConn(ctx)
 
 	service, err := FindServiceNoTagsByID(ctx, conn, d.Id(), d.Get("cluster").(string))
+
 	if tfresource.NotFound(err) {
 		return diags
 	}
+
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "retrieving ECS Service (%s) for deletion: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading ECS Service (%s): %s", d.Id(), err)
 	}
 
 	if aws.StringValue(service.Status) == serviceStatusInactive {
@@ -995,14 +971,14 @@ func resourceServiceDelete(ctx context.Context, d *schema.ResourceData, meta int
 
 	// Drain the ECS service
 	if aws.StringValue(service.Status) != serviceStatusDraining && aws.StringValue(service.SchedulingStrategy) != ecs.SchedulingStrategyDaemon {
-		log.Printf("[DEBUG] Draining ECS Service (%s)", d.Id())
-		_, err = conn.UpdateServiceWithContext(ctx, &ecs.UpdateServiceInput{
+		_, err := conn.UpdateServiceWithContext(ctx, &ecs.UpdateServiceInput{
 			Service:      aws.String(d.Id()),
 			Cluster:      aws.String(d.Get("cluster").(string)),
 			DesiredCount: aws.Int64(0),
 		})
+
 		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "deleting ECS Service (%s): draining service: %s", d.Get("name").(string), err)
+			return sdkdiag.AppendErrorf(diags, "draining ECS Service (%s): %s", d.Id(), err)
 		}
 	}
 
@@ -1010,7 +986,7 @@ func resourceServiceDelete(ctx context.Context, d *schema.ResourceData, meta int
 		Service: aws.String(d.Id()),
 		Cluster: aws.String(d.Get("cluster").(string)),
 	}
-	// Wait until the ECS service is drained
+	log.Printf("[DEBUG] Deleting ECS Service: %s", d.Id())
 	err = retry.RetryContext(ctx, d.Timeout(schema.TimeoutDelete), func() *retry.RetryError {
 		_, err := conn.DeleteServiceWithContext(ctx, &input)
 
@@ -1038,7 +1014,7 @@ func resourceServiceDelete(ctx context.Context, d *schema.ResourceData, meta int
 	}
 
 	if err := waitServiceInactive(ctx, conn, d.Id(), d.Get("cluster").(string), d.Timeout(schema.TimeoutDelete)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "deleting ECS Service (%s): waiting for completion: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for ECS Service (%s) delete: %s", d.Id(), err)
 	}
 
 	return diags
@@ -1575,9 +1551,33 @@ func buildFamilyAndRevisionFromARN(arn string) string {
 	return strings.Split(arn, "/")[1]
 }
 
-// Expects the following ARNs:
-// arn:aws:iam::0123456789:role/EcsService
-// arn:aws:ecs:us-west-2:0123456789:cluster/radek-cluster
-func getNameFromARN(arn string) string {
-	return strings.Split(arn, "/")[1]
+// GetRoleNameFromARN parses a role name from a fully qualified ARN
+//
+// When providing a role name with a path, it must be prefixed with the full path
+// including a leading `/`.
+// See: https://docs.aws.amazon.com/AmazonECS/latest/APIReference/API_CreateService.html#ECS-CreateService-request-role
+//
+// Expects an IAM role ARN:
+//
+//	arn:aws:iam::0123456789:role/EcsService
+//	arn:aws:iam::0123456789:role/group/my-role
+func GetRoleNameFromARN(arn string) string {
+	if parts := strings.Split(arn, "/"); len(parts) == 2 {
+		return parts[1]
+	} else if len(parts) > 2 {
+		return fmt.Sprintf("/%s", strings.Join(parts[1:], "/"))
+	}
+	return ""
+}
+
+// GetClusterNameFromARN parses a cluster name from a fully qualified ARN
+//
+// Expects an ECS cluster ARN:
+//
+//	arn:aws:ecs:us-west-2:0123456789:cluster/my-cluster
+func GetClusterNameFromARN(arn string) string {
+	if parts := strings.Split(arn, "/"); len(parts) == 2 {
+		return parts[1]
+	}
+	return ""
 }

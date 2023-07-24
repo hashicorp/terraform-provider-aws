@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package dlm
 
 import (
@@ -18,9 +21,11 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_dlm_lifecycle_policy")
+// @SDKResource("aws_dlm_lifecycle_policy", name="Lifecycle Policy")
+// @Tags(identifierAttribute="arn")
 func ResourceLifecyclePolicy() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceLifecyclePolicyCreate,
@@ -487,8 +492,8 @@ func ResourceLifecyclePolicy() *schema.Resource {
 				Default:      dlm.SettablePolicyStateValuesEnabled,
 				ValidateFunc: validation.StringInSlice(dlm.SettablePolicyStateValues_Values(), false),
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
 
 		CustomizeDiff: verify.SetTagsDiff,
@@ -497,19 +502,14 @@ func ResourceLifecyclePolicy() *schema.Resource {
 
 func resourceLifecyclePolicyCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DLMConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
+	conn := meta.(*conns.AWSClient).DLMConn(ctx)
 
 	input := dlm.CreateLifecyclePolicyInput{
 		Description:      aws.String(d.Get("description").(string)),
 		ExecutionRoleArn: aws.String(d.Get("execution_role_arn").(string)),
 		PolicyDetails:    expandPolicyDetails(d.Get("policy_details").([]interface{})),
 		State:            aws.String(d.Get("state").(string)),
-	}
-
-	if len(tags) > 0 {
-		input.Tags = Tags(tags.IgnoreAWS())
+		Tags:             getTagsIn(ctx),
 	}
 
 	log.Printf("[INFO] Creating DLM lifecycle policy: %s", input)
@@ -528,9 +528,7 @@ func resourceLifecyclePolicyCreate(ctx context.Context, d *schema.ResourceData, 
 
 func resourceLifecyclePolicyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DLMConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).DLMConn(ctx)
 
 	log.Printf("[INFO] Reading DLM lifecycle policy: %s", d.Id())
 	out, err := conn.GetLifecyclePolicyWithContext(ctx, &dlm.GetLifecyclePolicyInput{
@@ -555,23 +553,14 @@ func resourceLifecyclePolicyRead(ctx context.Context, d *schema.ResourceData, me
 		return sdkdiag.AppendErrorf(diags, "setting policy details %s", err)
 	}
 
-	tags := KeyValueTags(ctx, out.Policy.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
-	}
+	setTagsOut(ctx, out.Policy.Tags)
 
 	return diags
 }
 
 func resourceLifecyclePolicyUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DLMConn()
+	conn := meta.(*conns.AWSClient).DLMConn(ctx)
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		input := dlm.UpdateLifecyclePolicyInput{
@@ -598,19 +587,12 @@ func resourceLifecyclePolicyUpdate(ctx context.Context, d *schema.ResourceData, 
 		}
 	}
 
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-		if err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n); err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating tags: %s", err)
-		}
-	}
-
 	return append(diags, resourceLifecyclePolicyRead(ctx, d, meta)...)
 }
 
 func resourceLifecyclePolicyDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DLMConn()
+	conn := meta.(*conns.AWSClient).DLMConn(ctx)
 
 	log.Printf("[INFO] Deleting DLM lifecycle policy: %s", d.Id())
 	_, err := conn.DeleteLifecyclePolicyWithContext(ctx, &dlm.DeleteLifecyclePolicyInput{

@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package connect
 
 import (
@@ -16,9 +19,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_connect_user")
+// @SDKResource("aws_connect_user", name="User")
+// @Tags(identifierAttribute="arn")
 func ResourceUser() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceUserCreate,
@@ -131,8 +136,8 @@ func ResourceUser() *schema.Resource {
 					Type: schema.TypeString,
 				},
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			"user_id": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -142,18 +147,16 @@ func ResourceUser() *schema.Resource {
 }
 
 func resourceUserCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ConnectConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
+	conn := meta.(*conns.AWSClient).ConnectConn(ctx)
 
 	instanceID := d.Get("instance_id").(string)
 	name := d.Get("name").(string)
-
 	input := &connect.CreateUserInput{
 		InstanceId:         aws.String(instanceID),
 		PhoneConfig:        expandPhoneConfig(d.Get("phone_config").([]interface{})),
 		RoutingProfileId:   aws.String(d.Get("routing_profile_id").(string)),
 		SecurityProfileIds: flex.ExpandStringSet(d.Get("security_profile_ids").(*schema.Set)),
+		Tags:               getTagsIn(ctx),
 		Username:           aws.String(name),
 	}
 
@@ -173,18 +176,14 @@ func resourceUserCreate(ctx context.Context, d *schema.ResourceData, meta interf
 		input.Password = aws.String(v.(string))
 	}
 
-	if len(tags) > 0 {
-		input.Tags = Tags(tags.IgnoreAWS())
-	}
-
 	output, err := conn.CreateUserWithContext(ctx, input)
 
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error creating Connect User (%s): %w", name, err))
+		return diag.Errorf("creating Connect User (%s): %s", name, err)
 	}
 
 	if output == nil {
-		return diag.FromErr(fmt.Errorf("error creating Connect User (%s): empty output", name))
+		return diag.Errorf("creating Connect User (%s): empty output", name)
 	}
 
 	d.SetId(fmt.Sprintf("%s:%s", instanceID, aws.StringValue(output.UserId)))
@@ -193,9 +192,7 @@ func resourceUserCreate(ctx context.Context, d *schema.ResourceData, meta interf
 }
 
 func resourceUserRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ConnectConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).ConnectConn(ctx)
 
 	instanceID, userID, err := UserParseID(d.Id())
 
@@ -215,11 +212,11 @@ func resourceUserRead(ctx context.Context, d *schema.ResourceData, meta interfac
 	}
 
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error getting Connect User (%s): %w", d.Id(), err))
+		return diag.Errorf("getting Connect User (%s): %s", d.Id(), err)
 	}
 
 	if resp == nil || resp.User == nil {
-		return diag.FromErr(fmt.Errorf("error getting Connect User (%s): empty response", d.Id()))
+		return diag.Errorf("getting Connect User (%s): empty response", d.Id())
 	}
 
 	user := resp.User
@@ -234,29 +231,20 @@ func resourceUserRead(ctx context.Context, d *schema.ResourceData, meta interfac
 	d.Set("user_id", user.Id)
 
 	if err := d.Set("identity_info", flattenIdentityInfo(user.IdentityInfo)); err != nil {
-		return diag.FromErr(fmt.Errorf("error setting identity_info: %w", err))
+		return diag.Errorf("setting identity_info: %s", err)
 	}
 
 	if err := d.Set("phone_config", flattenPhoneConfig(user.PhoneConfig)); err != nil {
-		return diag.FromErr(fmt.Errorf("error setting phone_config: %w", err))
+		return diag.Errorf("setting phone_config: %s", err)
 	}
 
-	tags := KeyValueTags(ctx, resp.User.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return diag.FromErr(fmt.Errorf("error setting tags: %w", err))
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return diag.FromErr(fmt.Errorf("error setting tags_all: %w", err))
-	}
+	setTagsOut(ctx, resp.User.Tags)
 
 	return nil
 }
 
 func resourceUserUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ConnectConn()
+	conn := meta.(*conns.AWSClient).ConnectConn(ctx)
 
 	instanceID, userID, err := UserParseID(d.Id())
 
@@ -285,7 +273,7 @@ func resourceUserUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 		_, err = conn.UpdateUserHierarchyWithContext(ctx, input)
 
 		if err != nil {
-			return diag.FromErr(fmt.Errorf("updating User hierarchy_group_id (%s): %w", d.Id(), err))
+			return diag.Errorf("updating User hierarchy_group_id (%s): %s", d.Id(), err)
 		}
 	}
 
@@ -300,7 +288,7 @@ func resourceUserUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 		_, err = conn.UpdateUserIdentityInfoWithContext(ctx, input)
 
 		if err != nil {
-			return diag.FromErr(fmt.Errorf("updating User identity_info (%s): %w", d.Id(), err))
+			return diag.Errorf("updating User identity_info (%s): %s", d.Id(), err)
 		}
 	}
 
@@ -315,7 +303,7 @@ func resourceUserUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 		_, err = conn.UpdateUserPhoneConfigWithContext(ctx, input)
 
 		if err != nil {
-			return diag.FromErr(fmt.Errorf("updating User phone_config (%s): %w", d.Id(), err))
+			return diag.Errorf("updating User phone_config (%s): %s", d.Id(), err)
 		}
 	}
 
@@ -330,7 +318,7 @@ func resourceUserUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 		_, err = conn.UpdateUserRoutingProfileWithContext(ctx, input)
 
 		if err != nil {
-			return diag.FromErr(fmt.Errorf("updating User routing_profile_id (%s): %w", d.Id(), err))
+			return diag.Errorf("updating User routing_profile_id (%s): %s", d.Id(), err)
 		}
 	}
 
@@ -345,15 +333,7 @@ func resourceUserUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 		_, err = conn.UpdateUserSecurityProfilesWithContext(ctx, input)
 
 		if err != nil {
-			return diag.FromErr(fmt.Errorf("updating User security_profile_ids (%s): %w", d.Id(), err))
-		}
-	}
-
-	// updates to tags
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-		if err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n); err != nil {
-			return diag.FromErr(fmt.Errorf("error updating tags: %w", err))
+			return diag.Errorf("updating User security_profile_ids (%s): %s", d.Id(), err)
 		}
 	}
 
@@ -361,7 +341,7 @@ func resourceUserUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 }
 
 func resourceUserDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ConnectConn()
+	conn := meta.(*conns.AWSClient).ConnectConn(ctx)
 
 	instanceID, userID, err := UserParseID(d.Id())
 
@@ -375,7 +355,7 @@ func resourceUserDelete(ctx context.Context, d *schema.ResourceData, meta interf
 	})
 
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error deleting User (%s): %w", d.Id(), err))
+		return diag.Errorf("deleting User (%s): %s", d.Id(), err)
 	}
 
 	return nil

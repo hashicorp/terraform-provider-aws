@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package storagegateway
 
 import (
@@ -17,9 +20,11 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_storagegateway_file_system_association")
+// @SDKResource("aws_storagegateway_file_system_association", name="File System Association")
+// @Tags(identifierAttribute="arn")
 func ResourceFileSystemAssociation() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceFileSystemAssociationCreate,
@@ -81,8 +86,8 @@ func ResourceFileSystemAssociation() *schema.Resource {
 					validation.StringLenBetween(1, 1024),
 				),
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			"username": {
 				Type:     schema.TypeString,
 				Required: true,
@@ -97,9 +102,7 @@ func ResourceFileSystemAssociation() *schema.Resource {
 
 func resourceFileSystemAssociationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).StorageGatewayConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
+	conn := meta.(*conns.AWSClient).StorageGatewayConn(ctx)
 
 	gatewayARN := d.Get("gateway_arn").(string)
 	input := &storagegateway.AssociateFileSystemInput{
@@ -107,7 +110,7 @@ func resourceFileSystemAssociationCreate(ctx context.Context, d *schema.Resource
 		GatewayARN:  aws.String(gatewayARN),
 		LocationARN: aws.String(d.Get("location_arn").(string)),
 		Password:    aws.String(d.Get("password").(string)),
-		Tags:        Tags(tags.IgnoreAWS()),
+		Tags:        getTagsIn(ctx),
 		UserName:    aws.String(d.Get("username").(string)),
 	}
 
@@ -136,9 +139,7 @@ func resourceFileSystemAssociationCreate(ctx context.Context, d *schema.Resource
 
 func resourceFileSystemAssociationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).StorageGatewayConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).StorageGatewayConn(ctx)
 
 	filesystem, err := FindFileSystemAssociationByARN(ctx, conn, d.Id())
 
@@ -161,30 +162,14 @@ func resourceFileSystemAssociationRead(ctx context.Context, d *schema.ResourceDa
 		return sdkdiag.AppendErrorf(diags, "setting cache_attributes: %s", err)
 	}
 
-	tags := KeyValueTags(ctx, filesystem.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
-	}
+	setTagsOut(ctx, filesystem.Tags)
 
 	return diags
 }
 
 func resourceFileSystemAssociationUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).StorageGatewayConn()
-
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-		if err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n); err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating tags: %s", err)
-		}
-	}
+	conn := meta.(*conns.AWSClient).StorageGatewayConn(ctx)
 
 	if d.HasChangesExcept("tags_all") {
 		input := &storagegateway.UpdateFileSystemAssociationInput{
@@ -214,7 +199,7 @@ func resourceFileSystemAssociationUpdate(ctx context.Context, d *schema.Resource
 
 func resourceFileSystemAssociationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).StorageGatewayConn()
+	conn := meta.(*conns.AWSClient).StorageGatewayConn(ctx)
 
 	input := &storagegateway.DisassociateFileSystemInput{
 		FileSystemAssociationARN: aws.String(d.Id()),

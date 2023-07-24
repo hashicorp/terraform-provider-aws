@@ -84,9 +84,9 @@ resource "aws_iam_role" "firehose_role" {
 
 resource "aws_kinesis_firehose_delivery_stream" "test_stream" {
   name        = "terraform-kinesis-firehose-msk-broker-logs-stream"
-  destination = "s3"
+  destination = "extended_s3"
 
-  s3_configuration {
+  extended_s3_configuration {
     role_arn   = aws_iam_role.firehose_role.arn
     bucket_arn = aws_s3_bucket.bucket.arn
   }
@@ -201,7 +201,7 @@ resource "aws_msk_cluster" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `broker_node_group_info` - (Required) Configuration block for the broker nodes of the Kafka cluster.
 * `cluster_name` - (Required) Name of the MSK cluster.
@@ -218,7 +218,6 @@ The following arguments are supported:
 ### broker_node_group_info Argument Reference
 
 * `client_subnets` - (Required) A list of subnets to connect to in client VPC ([documentation](https://docs.aws.amazon.com/msk/1.0/apireference/clusters.html#clusters-prop-brokernodegroupinfo-clientsubnets)).
-* `ebs_volume_size` - (Optional, **Deprecated** use `storage_info.ebs_storage_info.volume_size` instead) The size in GiB of the EBS volume for the data drive on each broker node.
 * `instance_type` - (Required) Specify the instance type to use for the kafka brokersE.g., kafka.m5.large. ([Pricing info](https://aws.amazon.com/msk/pricing/))
 * `security_groups` - (Required) A list of the security groups to associate with the elastic network interfaces to control who can communicate with the cluster.
 * `az_distribution` - (Optional) The distribution of broker nodes across availability zones ([documentation](https://docs.aws.amazon.com/msk/1.0/apireference/clusters.html#clusters-model-brokerazdistribution)). Currently the only valid value is `DEFAULT`.
@@ -314,9 +313,9 @@ The following arguments are supported:
 * `bucket` - (Optional) Name of the S3 bucket to deliver logs to.
 * `prefix` - (Optional) Prefix to append to the folder name.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - Amazon Resource Name (ARN) of the MSK cluster.
 * `bootstrap_brokers` - Comma separated list of one or more hostname:port pairs of kafka brokers suitable to bootstrap connectivity to the kafka cluster. Contains a value if `encryption_info.0.encryption_in_transit.0.client_broker` is set to `PLAINTEXT` or `TLS_PLAINTEXT`. The resource sorts values alphabetically. AWS may not always return all endpoints so this value is not guaranteed to be stable across applies.
@@ -339,13 +338,22 @@ In addition to all arguments above, the following attributes are exported:
 
 * `create` - (Default `120m`)
 * `update` - (Default `120m`)
-Note that the `update` timeout is used separately for `ebs_volume_size`, `instance_type`, `number_of_broker_nodes`, `configuration_info`, `kafka_version` and monitoring and logging update timeouts.
+Note that the `update` timeout is used separately for `storage_info`, `instance_type`, `number_of_broker_nodes`, `configuration_info`, `kafka_version` and monitoring and logging update timeouts.
 * `delete` - (Default `120m`)
 
 ## Import
 
-MSK clusters can be imported using the cluster `arn`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import MSK clusters using the cluster `arn`. For example:
 
+```terraform
+import {
+  to = aws_msk_cluster.example
+  id = "arn:aws:kafka:us-west-2:123456789012:cluster/example/279c0212-d057-4dba-9aa9-1c4e5a25bfc7-3"
+}
 ```
-$ terraform import aws_msk_cluster.example arn:aws:kafka:us-west-2:123456789012:cluster/example/279c0212-d057-4dba-9aa9-1c4e5a25bfc7-3
+
+Using `terraform import`, import MSK clusters using the cluster `arn`. For example:
+
+```console
+% terraform import aws_msk_cluster.example arn:aws:kafka:us-west-2:123456789012:cluster/example/279c0212-d057-4dba-9aa9-1c4e5a25bfc7-3
 ```

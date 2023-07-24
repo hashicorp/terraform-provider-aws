@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package sagemaker
 
 import (
@@ -20,9 +23,11 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_sagemaker_notebook_instance")
+// @SDKResource("aws_sagemaker_notebook_instance", name="Notebook Instance")
+// @Tags(identifierAttribute="arn")
 func ResourceNotebookInstance() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceNotebookInstanceCreate,
@@ -140,8 +145,8 @@ func ResourceNotebookInstance() *schema.Resource {
 				Optional: true,
 				ForceNew: true,
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			"url": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -157,9 +162,7 @@ func ResourceNotebookInstance() *schema.Resource {
 
 func resourceNotebookInstanceCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SageMakerConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
+	conn := meta.(*conns.AWSClient).SageMakerConn(ctx)
 
 	name := d.Get("name").(string)
 	input := &sagemaker.CreateNotebookInstanceInput{
@@ -168,6 +171,7 @@ func resourceNotebookInstanceCreate(ctx context.Context, d *schema.ResourceData,
 		NotebookInstanceName:                 aws.String(name),
 		RoleArn:                              aws.String(d.Get("role_arn").(string)),
 		SecurityGroupIds:                     flex.ExpandStringSet(d.Get("security_groups").(*schema.Set)),
+		Tags:                                 getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("accelerator_types"); ok && v.(*schema.Set).Len() > 0 {
@@ -210,10 +214,6 @@ func resourceNotebookInstanceCreate(ctx context.Context, d *schema.ResourceData,
 		input.VolumeSizeInGB = aws.Int64(int64(v.(int)))
 	}
 
-	if len(tags) > 0 {
-		input.Tags = Tags(tags.IgnoreAWS())
-	}
-
 	log.Printf("[DEBUG] Creating SageMaker Notebook Instance: %s", input)
 	_, err := conn.CreateNotebookInstanceWithContext(ctx, input)
 
@@ -232,9 +232,7 @@ func resourceNotebookInstanceCreate(ctx context.Context, d *schema.ResourceData,
 
 func resourceNotebookInstanceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SageMakerConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).SageMakerConn(ctx)
 
 	notebookInstance, err := FindNotebookInstanceByName(ctx, conn, d.Id())
 
@@ -270,37 +268,12 @@ func resourceNotebookInstanceRead(ctx context.Context, d *schema.ResourceData, m
 		return sdkdiag.AppendErrorf(diags, "setting instance_metadata_service_configuration: %s", err)
 	}
 
-	tags, err := ListTags(ctx, conn, aws.StringValue(notebookInstance.NotebookInstanceArn))
-
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "listing tags for SageMaker Notebook Instance (%s): %s", d.Id(), err)
-	}
-
-	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
-	}
-
 	return diags
 }
 
 func resourceNotebookInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SageMakerConn()
-
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		if err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n); err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating SageMaker Notebook Instance (%s) tags: %s", d.Id(), err)
-		}
-	}
+	conn := meta.(*conns.AWSClient).SageMakerConn(ctx)
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		input := &sagemaker.UpdateNotebookInstanceInput{
@@ -395,7 +368,7 @@ func resourceNotebookInstanceUpdate(ctx context.Context, d *schema.ResourceData,
 
 func resourceNotebookInstanceDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SageMakerConn()
+	conn := meta.(*conns.AWSClient).SageMakerConn(ctx)
 
 	notebook, err := FindNotebookInstanceByName(ctx, conn, d.Id())
 

@@ -1,8 +1,10 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package apprunner
 
 import (
 	"context"
-	"fmt"
 	"log"
 	"regexp"
 
@@ -18,9 +20,11 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_apprunner_service")
+// @SDKResource("aws_apprunner_service", name="Service")
+// @Tags(identifierAttribute="arn")
 func ResourceService() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceServiceCreate,
@@ -127,10 +131,10 @@ func ResourceService() *schema.Resource {
 							Type:         schema.TypeString,
 							Optional:     true,
 							Default:      "1024",
-							ValidateFunc: validation.StringMatch(regexp.MustCompile(`1024|2048|(1|2) vCPU`), ""),
+							ValidateFunc: validation.StringMatch(regexp.MustCompile(`256|512|1024|2048|4096|(0.25|0.5|1|2|4) vCPU`), ""),
 							DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
 								// App Runner API always returns the amount in multiples of 1024 units
-								return (old == "1024" && new == "1 vCPU") || (old == "2048" && new == "2 vCPU")
+								return (old == "256" && new == "0.25 vCPU") || (old == "512" && new == "0.5 vCPU") || (old == "1024" && new == "1 vCPU") || (old == "2048" && new == "2 vCPU") || (old == "4096" && new == "4 vCPU")
 							},
 						},
 						"instance_role_arn": {
@@ -142,10 +146,10 @@ func ResourceService() *schema.Resource {
 							Type:         schema.TypeString,
 							Optional:     true,
 							Default:      "2048",
-							ValidateFunc: validation.StringMatch(regexp.MustCompile(`2048|3072|4096|(2|3|4) GB`), ""),
+							ValidateFunc: validation.StringMatch(regexp.MustCompile(`512|1024|2048|3072|4096|6144|8192|10240|12288|(0.5|1|2|3|4|6|8|10|12) GB`), ""),
 							DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
 								// App Runner API always returns the amount in MB
-								return (old == "2048" && new == "2 GB") || (old == "3072" && new == "3 GB") || (old == "4096" && new == "4 GB")
+								return (old == "512" && new == "0.5 GB") || (old == "1024" && new == "1 GB") || (old == "2048" && new == "2 GB") || (old == "3072" && new == "3 GB") || (old == "4096" && new == "4 GB") || (old == "6144" && new == "6 GB") || (old == "8192" && new == "8 GB") || (old == "10240" && new == "10 GB") || (old == "12288" && new == "12 GB")
 							},
 						},
 					},
@@ -422,9 +426,8 @@ func ResourceService() *schema.Resource {
 				Computed: true,
 			},
 
-			"tags": tftags.TagsSchema(),
-
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
 
 		CustomizeDiff: verify.SetTagsDiff,
@@ -432,16 +435,13 @@ func ResourceService() *schema.Resource {
 }
 
 func resourceServiceCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).AppRunnerConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
+	conn := meta.(*conns.AWSClient).AppRunnerConn(ctx)
 
 	serviceName := d.Get("service_name").(string)
-
 	input := &apprunner.CreateServiceInput{
 		ServiceName:         aws.String(serviceName),
 		SourceConfiguration: expandServiceSourceConfiguration(d.Get("source_configuration").([]interface{})),
-		Tags:                Tags(tags.IgnoreAWS()),
+		Tags:                getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("auto_scaling_configuration_arn"); ok {
@@ -490,26 +490,24 @@ func resourceServiceCreate(ctx context.Context, d *schema.ResourceData, meta int
 	}
 
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error creating App Runner Service (%s): %w", serviceName, err))
+		return diag.Errorf("creating App Runner Service (%s): %s", serviceName, err)
 	}
 
 	if output == nil || output.Service == nil {
-		return diag.FromErr(fmt.Errorf("error creating App Runner Service (%s): empty output", serviceName))
+		return diag.Errorf("creating App Runner Service (%s): empty output", serviceName)
 	}
 
 	d.SetId(aws.StringValue(output.Service.ServiceArn))
 
 	if err := WaitServiceCreated(ctx, conn, d.Id()); err != nil {
-		return diag.FromErr(fmt.Errorf("error waiting for App Runner Service (%s) creation: %w", d.Id(), err))
+		return diag.Errorf("waiting for App Runner Service (%s) creation: %s", d.Id(), err)
 	}
 
 	return resourceServiceRead(ctx, d, meta)
 }
 
 func resourceServiceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).AppRunnerConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).AppRunnerConn(ctx)
 
 	input := &apprunner.DescribeServiceInput{
 		ServiceArn: aws.String(d.Id()),
@@ -524,16 +522,16 @@ func resourceServiceRead(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error reading App Runner Service (%s): %w", d.Id(), err))
+		return diag.Errorf("reading App Runner Service (%s): %s", d.Id(), err)
 	}
 
 	if output == nil || output.Service == nil {
-		return diag.FromErr(fmt.Errorf("error reading App Runner Service (%s): empty output", d.Id()))
+		return diag.Errorf("reading App Runner Service (%s): empty output", d.Id())
 	}
 
 	if aws.StringValue(output.Service.Status) == apprunner.ServiceStatusDeleted {
 		if d.IsNewResource() {
-			return diag.FromErr(fmt.Errorf("error reading App Runner Service (%s): %s after creation", d.Id(), aws.StringValue(output.Service.Status)))
+			return diag.Errorf("reading App Runner Service (%s): %s after creation", d.Id(), aws.StringValue(output.Service.Status))
 		}
 		log.Printf("[WARN] App Runner Service (%s) not found, removing from state", d.Id())
 		d.SetId("")
@@ -555,51 +553,34 @@ func resourceServiceRead(ctx context.Context, d *schema.ResourceData, meta inter
 	d.Set("service_url", service.ServiceUrl)
 	d.Set("status", service.Status)
 	if err := d.Set("encryption_configuration", flattenServiceEncryptionConfiguration(service.EncryptionConfiguration)); err != nil {
-		return diag.FromErr(fmt.Errorf("error setting encryption_configuration: %w", err))
+		return diag.Errorf("setting encryption_configuration: %s", err)
 	}
 
 	if err := d.Set("health_check_configuration", flattenServiceHealthCheckConfiguration(service.HealthCheckConfiguration)); err != nil {
-		return diag.FromErr(fmt.Errorf("error setting health_check_configuration: %w", err))
+		return diag.Errorf("setting health_check_configuration: %s", err)
 	}
 
 	if err := d.Set("instance_configuration", flattenServiceInstanceConfiguration(service.InstanceConfiguration)); err != nil {
-		return diag.FromErr(fmt.Errorf("error setting instance_configuration: %w", err))
+		return diag.Errorf("setting instance_configuration: %s", err)
 	}
 
 	if err := d.Set("network_configuration", flattenNetworkConfiguration(service.NetworkConfiguration)); err != nil {
-		return diag.FromErr(fmt.Errorf("error setting network_configuration: %w", err))
+		return diag.Errorf("setting network_configuration: %s", err)
 	}
 
 	if err := d.Set("observability_configuration", flattenServiceObservabilityConfiguration(service.ObservabilityConfiguration)); err != nil {
-		return diag.FromErr(fmt.Errorf("error setting observability_configuration: %w", err))
+		return diag.Errorf("setting observability_configuration: %s", err)
 	}
 
 	if err := d.Set("source_configuration", flattenServiceSourceConfiguration(service.SourceConfiguration)); err != nil {
-		return diag.FromErr(fmt.Errorf("error setting source_configuration: %w", err))
-	}
-
-	tags, err := ListTags(ctx, conn, arn)
-
-	if err != nil {
-		return diag.FromErr(fmt.Errorf("error listing tags for App Runner Service (%s): %s", arn, err))
-	}
-
-	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return diag.FromErr(fmt.Errorf("error setting tags: %w", err))
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return diag.FromErr(fmt.Errorf("error setting tags_all: %w", err))
+		return diag.Errorf("setting source_configuration: %s", err)
 	}
 
 	return nil
 }
 
 func resourceServiceUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).AppRunnerConn()
+	conn := meta.(*conns.AWSClient).AppRunnerConn(ctx)
 
 	if d.HasChanges(
 		"auto_scaling_configuration_arn",
@@ -635,19 +616,11 @@ func resourceServiceUpdate(ctx context.Context, d *schema.ResourceData, meta int
 		_, err := conn.UpdateServiceWithContext(ctx, input)
 
 		if err != nil {
-			return diag.FromErr(fmt.Errorf("error updating App Runner Service (%s): %w", d.Id(), err))
+			return diag.Errorf("updating App Runner Service (%s): %s", d.Id(), err)
 		}
 
 		if err := WaitServiceUpdated(ctx, conn, d.Id()); err != nil {
-			return diag.FromErr(fmt.Errorf("error waiting for App Runner Service (%s) to update: %w", d.Id(), err))
-		}
-	}
-
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		if err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n); err != nil {
-			return diag.FromErr(fmt.Errorf("error updating App Runner Service (%s) tags: %s", d.Get("arn").(string), err))
+			return diag.Errorf("waiting for App Runner Service (%s) to update: %s", d.Id(), err)
 		}
 	}
 
@@ -655,7 +628,7 @@ func resourceServiceUpdate(ctx context.Context, d *schema.ResourceData, meta int
 }
 
 func resourceServiceDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).AppRunnerConn()
+	conn := meta.(*conns.AWSClient).AppRunnerConn(ctx)
 
 	input := &apprunner.DeleteServiceInput{
 		ServiceArn: aws.String(d.Id()),
@@ -668,7 +641,7 @@ func resourceServiceDelete(ctx context.Context, d *schema.ResourceData, meta int
 	}
 
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error deleting App Runner Service (%s): %w", d.Id(), err))
+		return diag.Errorf("deleting App Runner Service (%s): %s", d.Id(), err)
 	}
 
 	if err := WaitServiceDeleted(ctx, conn, d.Id()); err != nil {
@@ -676,7 +649,7 @@ func resourceServiceDelete(ctx context.Context, d *schema.ResourceData, meta int
 			return nil
 		}
 
-		return diag.FromErr(fmt.Errorf("error waiting for App Runner Service (%s) deletion: %w", d.Id(), err))
+		return diag.Errorf("waiting for App Runner Service (%s) deletion: %s", d.Id(), err)
 	}
 
 	return nil

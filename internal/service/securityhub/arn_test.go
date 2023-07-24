@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package securityhub_test
 
 import (
@@ -19,12 +22,12 @@ func TestStandardsControlARNToStandardsSubscriptionARN(t *testing.T) {
 		{
 			TestName:      "empty ARN",
 			InputARN:      "",
-			ExpectedError: regexp.MustCompile(`error parsing ARN`),
+			ExpectedError: regexp.MustCompile(`parsing ARN`),
 		},
 		{
 			TestName:      "unparsable ARN",
 			InputARN:      "test",
-			ExpectedError: regexp.MustCompile(`error parsing ARN`),
+			ExpectedError: regexp.MustCompile(`parsing ARN`),
 		},
 		{
 			TestName:      "invalid ARN service",

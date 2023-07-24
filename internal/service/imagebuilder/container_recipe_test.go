@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package imagebuilder_test
 
 import (
@@ -9,9 +12,9 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/imagebuilder"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfimagebuilder "github.com/hashicorp/terraform-provider-aws/internal/service/imagebuilder"
@@ -661,9 +664,38 @@ func TestAccImageBuilderContainerRecipe_workingDirectory(t *testing.T) {
 	})
 }
 
+func TestAccImageBuilderContainerRecipe_platformOverride(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_imagebuilder_container_recipe.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, imagebuilder.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckContainerRecipeDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				// A public ecr image can only be used if platform override is set, so this test will only pass if it is set correctly
+				Config: testAccContainerRecipeConfig_platformOverride(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckContainerRecipeExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "platform", "Linux"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"platform_override"},
+			},
+		},
+	})
+}
+
 func testAccCheckContainerRecipeDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ImageBuilderConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ImageBuilderConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_imagebuilder_container_recipe" {
@@ -700,7 +732,7 @@ func testAccCheckContainerRecipeExists(ctx context.Context, resourceName string)
 			return fmt.Errorf("resource not found: %s", resourceName)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ImageBuilderConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ImageBuilderConn(ctx)
 
 		input := &imagebuilder.GetContainerRecipeInput{
 			ContainerRecipeArn: aws.String(rs.Primary.ID),
@@ -1514,6 +1546,35 @@ EOF
   }
 
   working_directory = "/tmp"
+}
+`, rName))
+}
+
+func testAccContainerRecipeConfig_platformOverride(rName string) string {
+	return acctest.ConfigCompose(
+		testAccContainerRecipeBaseConfig(rName),
+		fmt.Sprintf(`
+resource "aws_imagebuilder_container_recipe" "test" {
+  name              = %[1]q
+  container_type    = "DOCKER"
+  parent_image      = "public.ecr.aws/amazonlinux/amazonlinux:latest"
+  version           = "1.0.0"
+  platform_override = "Linux"
+
+  component {
+    component_arn = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.name}:aws:component/update-linux/x.x.x"
+  }
+
+  dockerfile_template_data = <<EOF
+FROM {{{ imagebuilder:parentImage }}}
+{{{ imagebuilder:environments }}}
+{{{ imagebuilder:components }}}
+EOF
+
+  target_repository {
+    repository_name = aws_ecr_repository.test.name
+    service         = "ECR"
+  }
 }
 `, rName))
 }

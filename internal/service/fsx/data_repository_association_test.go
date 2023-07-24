@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package fsx_test
 
 import (
@@ -10,9 +13,9 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/endpoints"
 	"github.com/aws/aws-sdk-go/service/fsx"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tffsx "github.com/hashicorp/terraform-provider-aws/internal/service/fsx"
@@ -530,7 +533,7 @@ func testAccCheckDataRepositoryAssociationExists(ctx context.Context, resourceNa
 			return fmt.Errorf("Not found: %s", resourceName)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).FSxConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).FSxConn(ctx)
 
 		association, err := tffsx.FindDataRepositoryAssociationByID(ctx, conn, rs.Primary.ID)
 		if err != nil {
@@ -549,7 +552,7 @@ func testAccCheckDataRepositoryAssociationExists(ctx context.Context, resourceNa
 
 func testAccCheckDataRepositoryAssociationDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).FSxConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).FSxConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_fsx_lustre_file_system" {
@@ -589,7 +592,7 @@ func testAccCheckDataRepositoryAssociationRecreated(i, j *fsx.DataRepositoryAsso
 	}
 }
 
-func testAccDataRepositoryAssociationBucketConfig(bucketName string) string {
+func testAccDataRepositoryAssociationConfig_s3Bucket(bucketName string) string {
 	return acctest.ConfigCompose(testAccLustreFileSystemBaseConfig(), fmt.Sprintf(`
 resource "aws_fsx_lustre_file_system" "test" {
   storage_capacity            = 1200
@@ -601,16 +604,11 @@ resource "aws_fsx_lustre_file_system" "test" {
 resource "aws_s3_bucket" "test" {
   bucket = %[1]q
 }
-
-resource "aws_s3_bucket_acl" "test" {
-  bucket = aws_s3_bucket.test.id
-  acl    = "private"
-}
 `, bucketName))
 }
 
 func testAccDataRepositoryAssociationConfig_fileSystemPath(bucketName, fileSystemPath string) string {
-	return acctest.ConfigCompose(testAccDataRepositoryAssociationBucketConfig(bucketName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccDataRepositoryAssociationConfig_s3Bucket(bucketName), fmt.Sprintf(`
 resource "aws_fsx_data_repository_association" "test" {
   file_system_id       = aws_fsx_lustre_file_system.test.id
   data_repository_path = "s3://%[1]s"
@@ -621,7 +619,7 @@ resource "aws_fsx_data_repository_association" "test" {
 
 func testAccDataRepositoryAssociationConfig_importedFileChunkSize(bucketName, fileSystemPath string, fileChunkSize int64) string {
 	bucketPath := fmt.Sprintf("s3://%s", bucketName)
-	return acctest.ConfigCompose(testAccDataRepositoryAssociationBucketConfig(bucketName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccDataRepositoryAssociationConfig_s3Bucket(bucketName), fmt.Sprintf(`
 resource "aws_fsx_data_repository_association" "test" {
   file_system_id           = aws_fsx_lustre_file_system.test.id
   data_repository_path     = %[1]q
@@ -633,7 +631,7 @@ resource "aws_fsx_data_repository_association" "test" {
 
 func testAccDataRepositoryAssociationConfig_deleteInFilesystem(bucketName, fileSystemPath, deleteDataInFilesystem string) string {
 	bucketPath := fmt.Sprintf("s3://%s", bucketName)
-	return acctest.ConfigCompose(testAccDataRepositoryAssociationBucketConfig(bucketName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccDataRepositoryAssociationConfig_s3Bucket(bucketName), fmt.Sprintf(`
 resource "aws_fsx_data_repository_association" "test" {
   file_system_id            = aws_fsx_lustre_file_system.test.id
   data_repository_path      = %[1]q
@@ -646,7 +644,7 @@ resource "aws_fsx_data_repository_association" "test" {
 func testAccDataRepositoryAssociationConfig_s3AutoExportPolicy(bucketName, fileSystemPath string, events []string) string {
 	bucketPath := fmt.Sprintf("s3://%s", bucketName)
 	eventsString := strings.Replace(fmt.Sprintf("%q", events), " ", ", ", -1)
-	return acctest.ConfigCompose(testAccDataRepositoryAssociationBucketConfig(bucketName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccDataRepositoryAssociationConfig_s3Bucket(bucketName), fmt.Sprintf(`
 resource "aws_fsx_data_repository_association" "test" {
   file_system_id       = aws_fsx_lustre_file_system.test.id
   data_repository_path = %[1]q
@@ -664,7 +662,7 @@ resource "aws_fsx_data_repository_association" "test" {
 func testAccDataRepositoryAssociationConfig_s3AutoImportPolicy(bucketName, fileSystemPath string, events []string) string {
 	bucketPath := fmt.Sprintf("s3://%s", bucketName)
 	eventsString := strings.Replace(fmt.Sprintf("%q", events), " ", ", ", -1)
-	return acctest.ConfigCompose(testAccDataRepositoryAssociationBucketConfig(bucketName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccDataRepositoryAssociationConfig_s3Bucket(bucketName), fmt.Sprintf(`
 resource "aws_fsx_data_repository_association" "test" {
   file_system_id       = aws_fsx_lustre_file_system.test.id
   data_repository_path = %[1]q
@@ -681,7 +679,7 @@ resource "aws_fsx_data_repository_association" "test" {
 
 func testAccDataRepositoryAssociationConfig_s3FullPolicy(bucketName, fileSystemPath string) string {
 	bucketPath := fmt.Sprintf("s3://%s", bucketName)
-	return acctest.ConfigCompose(testAccDataRepositoryAssociationBucketConfig(bucketName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccDataRepositoryAssociationConfig_s3Bucket(bucketName), fmt.Sprintf(`
 resource "aws_fsx_data_repository_association" "test" {
   file_system_id       = aws_fsx_lustre_file_system.test.id
   data_repository_path = %[1]q

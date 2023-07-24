@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package comprehend_test
 
 import (
@@ -9,10 +12,10 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/comprehend"
 	"github.com/aws/aws-sdk-go-v2/service/comprehend/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfcomprehend "github.com/hashicorp/terraform-provider-aws/internal/service/comprehend"
@@ -1376,7 +1379,7 @@ func TestAccComprehendDocumentClassifier_DefaultTags_providerOnly(t *testing.T) 
 
 func testAccCheckDocumentClassifierDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ComprehendClient()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ComprehendClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_comprehend_document_classifier" {
@@ -1424,7 +1427,7 @@ func testAccCheckDocumentClassifierExists(ctx context.Context, name string, docu
 			return fmt.Errorf("No Comprehend Document Classifier is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ComprehendClient()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ComprehendClient(ctx)
 
 		resp, err := tfcomprehend.FindDocumentClassifierByID(ctx, conn, rs.Primary.ID)
 		if err != nil {
@@ -1472,7 +1475,7 @@ func testAccCheckDocumentClassifierPublishedVersions(ctx context.Context, name s
 			return fmt.Errorf("No Comprehend Document Classifier is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ComprehendClient()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ComprehendClient(ctx)
 
 		name, err := tfcomprehend.DocumentClassifierParseARN(rs.Primary.ID)
 		if err != nil {

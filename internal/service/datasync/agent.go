@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package datasync
 
 import (
@@ -21,9 +24,11 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_datasync_agent")
+// @SDKResource("aws_datasync_agent", name="Agent")
+// @Tags(identifierAttribute="id")
 func ResourceAgent() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceAgentCreate,
@@ -60,6 +65,7 @@ func ResourceAgent() *schema.Resource {
 			"private_link_endpoint": {
 				Type:          schema.TypeString,
 				Optional:      true,
+				Computed:      true,
 				ForceNew:      true,
 				ConflictsWith: []string{"activation_key"},
 			},
@@ -79,8 +85,8 @@ func ResourceAgent() *schema.Resource {
 				ForceNew: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			"vpc_endpoint_id": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -94,9 +100,7 @@ func ResourceAgent() *schema.Resource {
 
 func resourceAgentCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DataSyncConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
+	conn := meta.(*conns.AWSClient).DataSyncConn(ctx)
 
 	activationKey := d.Get("activation_key").(string)
 	agentIpAddress := d.Get("ip_address").(string)
@@ -174,7 +178,7 @@ func resourceAgentCreate(ctx context.Context, d *schema.ResourceData, meta inter
 
 	input := &datasync.CreateAgentInput{
 		ActivationKey: aws.String(activationKey),
-		Tags:          Tags(tags.IgnoreAWS()),
+		Tags:          getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("name"); ok {
@@ -213,9 +217,7 @@ func resourceAgentCreate(ctx context.Context, d *schema.ResourceData, meta inter
 
 func resourceAgentRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DataSyncConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).DataSyncConn(ctx)
 
 	output, err := FindAgentByARN(ctx, conn, d.Id())
 
@@ -243,29 +245,12 @@ func resourceAgentRead(ctx context.Context, d *schema.ResourceData, meta interfa
 		d.Set("vpc_endpoint_id", "")
 	}
 
-	tags, err := ListTags(ctx, conn, d.Id())
-
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "listing tags for DataSync Agent (%s): %s", d.Id(), err)
-	}
-
-	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
-	}
-
 	return diags
 }
 
 func resourceAgentUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DataSyncConn()
+	conn := meta.(*conns.AWSClient).DataSyncConn(ctx)
 
 	if d.HasChange("name") {
 		input := &datasync.UpdateAgentInput{
@@ -280,20 +265,12 @@ func resourceAgentUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 		}
 	}
 
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		if err := UpdateTags(ctx, conn, d.Id(), o, n); err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating DataSync Agent (%s) tags: %s", d.Id(), err)
-		}
-	}
-
 	return append(diags, resourceAgentRead(ctx, d, meta)...)
 }
 
 func resourceAgentDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DataSyncConn()
+	conn := meta.(*conns.AWSClient).DataSyncConn(ctx)
 
 	log.Printf("[DEBUG] Deleting DataSync Agent: %s", d.Id())
 	_, err := conn.DeleteAgentWithContext(ctx, &datasync.DeleteAgentInput{

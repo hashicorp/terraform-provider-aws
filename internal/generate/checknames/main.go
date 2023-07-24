@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 //go:build generate
 // +build generate
 
@@ -14,6 +17,7 @@ import (
 	"regexp"
 	"strings"
 
+	multierror "github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -188,15 +192,23 @@ func main() {
 	}
 	fmt.Printf("  Performed %d checks on names_data.csv, 0 errors.\n", (allChecks * 36))
 
+	var fileErrs bool
+
 	// DocPrefix needs to be reworked for compatibility with tfproviderdocs, in the meantime skip
 	err = checkDocDir("../../../website/docs/r/", docPrefixes)
 	if err != nil {
-		log.Fatalf("while checking resource doc dir: %s", err)
+		fileErrs = true
+		log.Printf("while checking resource doc dir: %s", err)
 	}
 
 	err = checkDocDir("../../../website/docs/d/", docPrefixes)
 	if err != nil {
-		log.Fatalf("while checking data source doc dir: %s", err)
+		fileErrs = true
+		log.Printf("while checking data source doc dir: %s", err)
+	}
+
+	if fileErrs {
+		os.Exit(1)
 	}
 
 	fmt.Printf("  Checked %d documentation files to ensure filename prefix, resource name, label regex, and subcategory match, 0 errors.\n", allDocs)
@@ -220,6 +232,7 @@ func checkDocDir(dir string, prefixes []DocPrefix) error {
 		log.Fatalf("reading directory (%s): %s", dir, err)
 	}
 
+	var errs error
 	for _, fh := range fs {
 		if fh.IsDir() {
 			continue
@@ -232,11 +245,11 @@ func checkDocDir(dir string, prefixes []DocPrefix) error {
 		allDocs++
 
 		if err := checkDocFile(dir, fh.Name(), prefixes); err != nil {
-			return err
+			errs = multierror.Append(errs, err)
 		}
 	}
 
-	return nil
+	return errs
 }
 
 func checkDocFile(dir, name string, prefixes []DocPrefix) error {

@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package emrcontainers
 
 import (
@@ -17,9 +20,11 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_emrcontainers_virtual_cluster")
+// @SDKResource("aws_emrcontainers_virtual_cluster", name="Virtual Cluster")
+// @Tags(identifierAttribute="arn")
 func ResourceVirtualCluster() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceVirtualClusterCreate,
@@ -97,8 +102,8 @@ func ResourceVirtualCluster() *schema.Resource {
 					validation.StringMatch(regexp.MustCompile(`[.\-_/#A-Za-z0-9]+`), "must contain only alphanumeric, hyphen, underscore, dot and # characters"),
 				),
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
 
 		CustomizeDiff: verify.SetTagsDiff,
@@ -106,24 +111,18 @@ func ResourceVirtualCluster() *schema.Resource {
 }
 
 func resourceVirtualClusterCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).EMRContainersConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
+	conn := meta.(*conns.AWSClient).EMRContainersConn(ctx)
 
 	name := d.Get("name").(string)
 	input := &emrcontainers.CreateVirtualClusterInput{
 		Name: aws.String(name),
+		Tags: getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("container_provider"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 		input.ContainerProvider = expandContainerProvider(v.([]interface{})[0].(map[string]interface{}))
 	}
 
-	if len(tags) > 0 {
-		input.Tags = Tags(tags.IgnoreAWS())
-	}
-
-	log.Printf("[INFO] Creating EMR Containers Virtual Cluster: %s", input)
 	output, err := conn.CreateVirtualClusterWithContext(ctx, input)
 
 	if err != nil {
@@ -136,9 +135,7 @@ func resourceVirtualClusterCreate(ctx context.Context, d *schema.ResourceData, m
 }
 
 func resourceVirtualClusterRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).EMRContainersConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).EMRContainersConn(ctx)
 
 	vc, err := FindVirtualClusterByID(ctx, conn, d.Id())
 
@@ -162,36 +159,18 @@ func resourceVirtualClusterRead(ctx context.Context, d *schema.ResourceData, met
 	}
 	d.Set("name", vc.Name)
 
-	tags := KeyValueTags(ctx, vc.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return diag.Errorf("setting tags: %s", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return diag.Errorf("setting tags_all: %s", err)
-	}
+	setTagsOut(ctx, vc.Tags)
 
 	return nil
 }
 
 func resourceVirtualClusterUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).EMRContainersConn()
-
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		if err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n); err != nil {
-			return diag.Errorf("updating EMR Containers Virtual Cluster (%s) tags: %s", d.Id(), err)
-		}
-	}
-
+	// Tags only.
 	return resourceVirtualClusterRead(ctx, d, meta)
 }
 
 func resourceVirtualClusterDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).EMRContainersConn()
+	conn := meta.(*conns.AWSClient).EMRContainersConn(ctx)
 
 	log.Printf("[INFO] Deleting EMR Containers Virtual Cluster: %s", d.Id())
 	_, err := conn.DeleteVirtualClusterWithContext(ctx, &emrcontainers.DeleteVirtualClusterInput{

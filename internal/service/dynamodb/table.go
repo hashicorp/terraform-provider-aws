@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package dynamodb
 
 import (
@@ -34,7 +37,8 @@ const (
 	ResNameTable                  = "Table"
 )
 
-// @SDKResource("aws_dynamodb_table")
+// @SDKResource("aws_dynamodb_table", name="Table")
+// @Tags(identifierAttribute="arn")
 func ResourceTable() *schema.Resource {
 	//lintignore:R011
 	return &schema.Resource{
@@ -81,7 +85,7 @@ func ResourceTable() *schema.Resource {
 			func(_ context.Context, diff *schema.ResourceDiff, meta interface{}) error {
 				if diff.Id() != "" && diff.HasChange("stream_enabled") {
 					if err := diff.SetNewComputed("stream_arn"); err != nil {
-						return fmt.Errorf("error setting stream_arn to computed: %s", err)
+						return fmt.Errorf("setting stream_arn to computed: %s", err)
 					}
 				}
 				return nil
@@ -401,9 +405,7 @@ func ResourceTable() *schema.Resource {
 
 func resourceTableCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DynamoDBConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get(names.AttrTags).(map[string]interface{})))
+	conn := meta.(*conns.AWSClient).DynamoDBConn(ctx)
 
 	tableName := d.Get(names.AttrName).(string)
 	keySchemaMap := map[string]interface{}{
@@ -489,10 +491,7 @@ func resourceTableCreate(ctx context.Context, d *schema.ResourceData, meta inter
 			BillingMode: aws.String(d.Get("billing_mode").(string)),
 			KeySchema:   expandKeySchema(keySchemaMap),
 			TableName:   aws.String(tableName),
-		}
-
-		if len(tags) > 0 {
-			input.Tags = Tags(tags.IgnoreAWS())
+			Tags:        getTagsIn(ctx),
 		}
 
 		billingMode := d.Get("billing_mode").(string)
@@ -607,7 +606,7 @@ func resourceTableCreate(ctx context.Context, d *schema.ResourceData, meta inter
 			return create.DiagError(names.DynamoDB, create.ErrActionCreating, ResNameTable, d.Id(), fmt.Errorf("replicas: %w", err))
 		}
 
-		if err := updateReplicaTags(ctx, conn, aws.StringValue(output.TableArn), v.List(), tags, meta.(*conns.AWSClient).TerraformVersion); err != nil {
+		if err := updateReplicaTags(ctx, conn, aws.StringValue(output.TableArn), v.List(), KeyValueTags(ctx, getTagsIn(ctx)), meta.(*conns.AWSClient).TerraformVersion); err != nil {
 			return create.DiagError(names.DynamoDB, create.ErrActionCreating, ResNameTable, d.Id(), fmt.Errorf("replica tags: %w", err))
 		}
 	}
@@ -617,7 +616,7 @@ func resourceTableCreate(ctx context.Context, d *schema.ResourceData, meta inter
 
 func resourceTableRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DynamoDBConn()
+	conn := meta.(*conns.AWSClient).DynamoDBConn(ctx)
 
 	table, err := FindTableByName(ctx, conn, d.Id())
 
@@ -734,32 +733,12 @@ func resourceTableRead(ctx context.Context, d *schema.ResourceData, meta interfa
 		return create.DiagSettingError(names.DynamoDB, ResNameTable, d.Id(), "ttl", err)
 	}
 
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
-
-	tags, err := ListTags(ctx, conn, d.Get(names.AttrARN).(string))
-	// When a Table is `ARCHIVED`, ListTags returns `ResourceNotFoundException`
-	if err != nil && !(tfawserr.ErrMessageContains(err, "UnknownOperationException", "Tagging is not currently supported in DynamoDB Local.") || tfresource.NotFound(err)) {
-		return create.DiagError(names.DynamoDB, create.ErrActionReading, ResNameTable, d.Id(), fmt.Errorf("tags: %w", err))
-	}
-
-	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set(names.AttrTags, tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return create.DiagSettingError(names.DynamoDB, ResNameTable, d.Id(), names.AttrTags, err)
-	}
-
-	if err := d.Set(names.AttrTagsAll, tags.Map()); err != nil {
-		return create.DiagSettingError(names.DynamoDB, ResNameTable, d.Id(), names.AttrTagsAll, err)
-	}
-
 	return diags
 }
 
 func resourceTableUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DynamoDBConn()
+	conn := meta.(*conns.AWSClient).DynamoDBConn(ctx)
 	o, n := d.GetChange("billing_mode")
 	billingMode := n.(string)
 	oldBillingMode := o.(string)
@@ -1011,11 +990,6 @@ func resourceTableUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 
 	if d.HasChange(names.AttrTagsAll) {
 		replicaTagsChange = true
-
-		o, n := d.GetChange(names.AttrTagsAll)
-		if err := UpdateTags(ctx, conn, d.Get(names.AttrARN).(string), o, n); err != nil {
-			return create.DiagError(names.DynamoDB, create.ErrActionUpdating, ResNameTable, d.Id(), err)
-		}
 	}
 
 	if replicaTagsChange {
@@ -1037,7 +1011,7 @@ func resourceTableUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 
 func resourceTableDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DynamoDBConn()
+	conn := meta.(*conns.AWSClient).DynamoDBConn(ctx)
 
 	if replicas := d.Get("replica").(*schema.Set).List(); len(replicas) > 0 {
 		log.Printf("[DEBUG] Deleting DynamoDB Table replicas: %s", d.Id())
@@ -1247,12 +1221,12 @@ func updateReplicaTags(ctx context.Context, conn *dynamodb.DynamoDB, rn string, 
 				return fmt.Errorf("per region ARN for replica (%s): %w", region, err)
 			}
 
-			oldTags, err := ListTags(ctx, conn, repARN)
+			oldTags, err := listTags(ctx, conn, repARN)
 			if err != nil {
 				return fmt.Errorf("listing tags (%s): %w", repARN, err)
 			}
 
-			if err := UpdateTags(ctx, conn, repARN, oldTags, newTags); err != nil {
+			if err := updateTags(ctx, conn, repARN, oldTags, newTags); err != nil {
 				return fmt.Errorf("updating tags: %w", err)
 			}
 		}
@@ -1432,7 +1406,7 @@ func updateReplica(ctx context.Context, d *schema.ResourceData, conn *dynamodb.D
 	return nil
 }
 
-func UpdateDiffGSI(oldGsi, newGsi []interface{}, billingMode string) (ops []*dynamodb.GlobalSecondaryIndexUpdate, e error) {
+func UpdateDiffGSI(oldGsi, newGsi []interface{}, billingMode string) ([]*dynamodb.GlobalSecondaryIndexUpdate, error) {
 	// Transform slices into maps
 	oldGsis := make(map[string]interface{})
 	for _, gsidata := range oldGsi {
@@ -1443,11 +1417,13 @@ func UpdateDiffGSI(oldGsi, newGsi []interface{}, billingMode string) (ops []*dyn
 	for _, gsidata := range newGsi {
 		m := gsidata.(map[string]interface{})
 		// validate throughput input early, to avoid unnecessary processing
-		if e = validateGSIProvisionedThroughput(m, billingMode); e != nil {
-			return
+		if err := validateGSIProvisionedThroughput(m, billingMode); err != nil {
+			return nil, err
 		}
 		newGsis[m[names.AttrName].(string)] = m
 	}
+
+	var ops []*dynamodb.GlobalSecondaryIndexUpdate
 
 	for _, data := range newGsi {
 		newMap := data.(map[string]interface{})

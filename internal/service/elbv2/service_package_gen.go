@@ -5,6 +5,10 @@ package elbv2
 import (
 	"context"
 
+	aws_sdkv1 "github.com/aws/aws-sdk-go/aws"
+	session_sdkv1 "github.com/aws/aws-sdk-go/aws/session"
+	elbv2_sdkv1 "github.com/aws/aws-sdk-go/service/elbv2"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -61,10 +65,18 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  ResourceLoadBalancer,
 			TypeName: "aws_alb",
+			Name:     "Load Balancer",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "id",
+			},
 		},
 		{
 			Factory:  ResourceListener,
 			TypeName: "aws_alb_listener",
+			Name:     "Listener",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "id",
+			},
 		},
 		{
 			Factory:  ResourceListenerCertificate,
@@ -73,10 +85,18 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  ResourceListenerRule,
 			TypeName: "aws_alb_listener_rule",
+			Name:     "Listener Rule",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "id",
+			},
 		},
 		{
 			Factory:  ResourceTargetGroup,
 			TypeName: "aws_alb_target_group",
+			Name:     "Target Group",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "id",
+			},
 		},
 		{
 			Factory:  ResourceTargetGroupAttachment,
@@ -85,10 +105,18 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  ResourceLoadBalancer,
 			TypeName: "aws_lb",
+			Name:     "Load Balancer",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "id",
+			},
 		},
 		{
 			Factory:  ResourceListener,
 			TypeName: "aws_lb_listener",
+			Name:     "Listener",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "id",
+			},
 		},
 		{
 			Factory:  ResourceListenerCertificate,
@@ -97,10 +125,18 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  ResourceListenerRule,
 			TypeName: "aws_lb_listener_rule",
+			Name:     "Listener Rule",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "id",
+			},
 		},
 		{
 			Factory:  ResourceTargetGroup,
 			TypeName: "aws_lb_target_group",
+			Name:     "Target Group",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "id",
+			},
 		},
 		{
 			Factory:  ResourceTargetGroupAttachment,
@@ -113,4 +149,13 @@ func (p *servicePackage) ServicePackageName() string {
 	return names.ELBV2
 }
 
-var ServicePackage = &servicePackage{}
+// NewConn returns a new AWS SDK for Go v1 client for this service package's AWS API.
+func (p *servicePackage) NewConn(ctx context.Context, config map[string]any) (*elbv2_sdkv1.ELBV2, error) {
+	sess := config["session"].(*session_sdkv1.Session)
+
+	return elbv2_sdkv1.New(sess.Copy(&aws_sdkv1.Config{Endpoint: aws_sdkv1.String(config["endpoint"].(string))})), nil
+}
+
+func ServicePackage(ctx context.Context) conns.ServicePackage {
+	return &servicePackage{}
+}

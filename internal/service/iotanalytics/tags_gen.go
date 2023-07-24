@@ -11,12 +11,13 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/types"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// ListTags lists iotanalytics service tags.
+// listTags lists iotanalytics service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func ListTags(ctx context.Context, conn iotanalyticsiface.IoTAnalyticsAPI, identifier string) (tftags.KeyValueTags, error) {
+func listTags(ctx context.Context, conn iotanalyticsiface.IoTAnalyticsAPI, identifier string) (tftags.KeyValueTags, error) {
 	input := &iotanalytics.ListTagsForResourceInput{
 		ResourceArn: aws.String(identifier),
 	}
@@ -33,7 +34,7 @@ func ListTags(ctx context.Context, conn iotanalyticsiface.IoTAnalyticsAPI, ident
 // ListTags lists iotanalytics service tags and set them in Context.
 // It is called from outside this package.
 func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier string) error {
-	tags, err := ListTags(ctx, meta.(*conns.AWSClient).IoTAnalyticsConn(), identifier)
+	tags, err := listTags(ctx, meta.(*conns.AWSClient).IoTAnalyticsConn(ctx), identifier)
 
 	if err != nil {
 		return err
@@ -75,9 +76,9 @@ func KeyValueTags(ctx context.Context, tags []*iotanalytics.Tag) tftags.KeyValue
 	return tftags.New(ctx, m)
 }
 
-// GetTagsIn returns iotanalytics service tags from Context.
+// getTagsIn returns iotanalytics service tags from Context.
 // nil is returned if there are no input tags.
-func GetTagsIn(ctx context.Context) []*iotanalytics.Tag {
+func getTagsIn(ctx context.Context) []*iotanalytics.Tag {
 	if inContext, ok := tftags.FromContext(ctx); ok {
 		if tags := Tags(inContext.TagsIn.UnwrapOrDefault()); len(tags) > 0 {
 			return tags
@@ -87,25 +88,26 @@ func GetTagsIn(ctx context.Context) []*iotanalytics.Tag {
 	return nil
 }
 
-// SetTagsOut sets iotanalytics service tags in Context.
-func SetTagsOut(ctx context.Context, tags []*iotanalytics.Tag) {
+// setTagsOut sets iotanalytics service tags in Context.
+func setTagsOut(ctx context.Context, tags []*iotanalytics.Tag) {
 	if inContext, ok := tftags.FromContext(ctx); ok {
 		inContext.TagsOut = types.Some(KeyValueTags(ctx, tags))
 	}
 }
 
-// UpdateTags updates iotanalytics service tags.
+// updateTags updates iotanalytics service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-
-func UpdateTags(ctx context.Context, conn iotanalyticsiface.IoTAnalyticsAPI, identifier string, oldTagsMap, newTagsMap any) error {
+func updateTags(ctx context.Context, conn iotanalyticsiface.IoTAnalyticsAPI, identifier string, oldTagsMap, newTagsMap any) error {
 	oldTags := tftags.New(ctx, oldTagsMap)
 	newTags := tftags.New(ctx, newTagsMap)
 
-	if removedTags := oldTags.Removed(newTags); len(removedTags) > 0 {
+	removedTags := oldTags.Removed(newTags)
+	removedTags = removedTags.IgnoreSystem(names.IoTAnalytics)
+	if len(removedTags) > 0 {
 		input := &iotanalytics.UntagResourceInput{
 			ResourceArn: aws.String(identifier),
-			TagKeys:     aws.StringSlice(removedTags.IgnoreAWS().Keys()),
+			TagKeys:     aws.StringSlice(removedTags.Keys()),
 		}
 
 		_, err := conn.UntagResourceWithContext(ctx, input)
@@ -115,10 +117,12 @@ func UpdateTags(ctx context.Context, conn iotanalyticsiface.IoTAnalyticsAPI, ide
 		}
 	}
 
-	if updatedTags := oldTags.Updated(newTags); len(updatedTags) > 0 {
+	updatedTags := oldTags.Updated(newTags)
+	updatedTags = updatedTags.IgnoreSystem(names.IoTAnalytics)
+	if len(updatedTags) > 0 {
 		input := &iotanalytics.TagResourceInput{
 			ResourceArn: aws.String(identifier),
-			Tags:        Tags(updatedTags.IgnoreAWS()),
+			Tags:        Tags(updatedTags),
 		}
 
 		_, err := conn.TagResourceWithContext(ctx, input)
@@ -134,5 +138,5 @@ func UpdateTags(ctx context.Context, conn iotanalyticsiface.IoTAnalyticsAPI, ide
 // UpdateTags updates iotanalytics service tags.
 // It is called from outside this package.
 func (p *servicePackage) UpdateTags(ctx context.Context, meta any, identifier string, oldTags, newTags any) error {
-	return UpdateTags(ctx, meta.(*conns.AWSClient).IoTAnalyticsConn(), identifier, oldTags, newTags)
+	return updateTags(ctx, meta.(*conns.AWSClient).IoTAnalyticsConn(ctx), identifier, oldTags, newTags)
 }

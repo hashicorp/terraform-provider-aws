@@ -11,12 +11,13 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/types"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// ListTags lists comprehend service tags.
+// listTags lists comprehend service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func ListTags(ctx context.Context, conn *comprehend.Client, identifier string) (tftags.KeyValueTags, error) {
+func listTags(ctx context.Context, conn *comprehend.Client, identifier string) (tftags.KeyValueTags, error) {
 	input := &comprehend.ListTagsForResourceInput{
 		ResourceArn: aws.String(identifier),
 	}
@@ -33,7 +34,7 @@ func ListTags(ctx context.Context, conn *comprehend.Client, identifier string) (
 // ListTags lists comprehend service tags and set them in Context.
 // It is called from outside this package.
 func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier string) error {
-	tags, err := ListTags(ctx, meta.(*conns.AWSClient).ComprehendClient(), identifier)
+	tags, err := listTags(ctx, meta.(*conns.AWSClient).ComprehendClient(ctx), identifier)
 
 	if err != nil {
 		return err
@@ -75,9 +76,9 @@ func KeyValueTags(ctx context.Context, tags []awstypes.Tag) tftags.KeyValueTags 
 	return tftags.New(ctx, m)
 }
 
-// GetTagsIn returns comprehend service tags from Context.
+// getTagsIn returns comprehend service tags from Context.
 // nil is returned if there are no input tags.
-func GetTagsIn(ctx context.Context) []awstypes.Tag {
+func getTagsIn(ctx context.Context) []awstypes.Tag {
 	if inContext, ok := tftags.FromContext(ctx); ok {
 		if tags := Tags(inContext.TagsIn.UnwrapOrDefault()); len(tags) > 0 {
 			return tags
@@ -87,24 +88,26 @@ func GetTagsIn(ctx context.Context) []awstypes.Tag {
 	return nil
 }
 
-// SetTagsOut sets comprehend service tags in Context.
-func SetTagsOut(ctx context.Context, tags []awstypes.Tag) {
+// setTagsOut sets comprehend service tags in Context.
+func setTagsOut(ctx context.Context, tags []awstypes.Tag) {
 	if inContext, ok := tftags.FromContext(ctx); ok {
 		inContext.TagsOut = types.Some(KeyValueTags(ctx, tags))
 	}
 }
 
-// UpdateTags updates comprehend service tags.
+// updateTags updates comprehend service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func UpdateTags(ctx context.Context, conn *comprehend.Client, identifier string, oldTagsMap, newTagsMap any) error {
+func updateTags(ctx context.Context, conn *comprehend.Client, identifier string, oldTagsMap, newTagsMap any) error {
 	oldTags := tftags.New(ctx, oldTagsMap)
 	newTags := tftags.New(ctx, newTagsMap)
 
-	if removedTags := oldTags.Removed(newTags); len(removedTags) > 0 {
+	removedTags := oldTags.Removed(newTags)
+	removedTags = removedTags.IgnoreSystem(names.Comprehend)
+	if len(removedTags) > 0 {
 		input := &comprehend.UntagResourceInput{
 			ResourceArn: aws.String(identifier),
-			TagKeys:     removedTags.IgnoreAWS().Keys(),
+			TagKeys:     removedTags.Keys(),
 		}
 
 		_, err := conn.UntagResource(ctx, input)
@@ -114,10 +117,12 @@ func UpdateTags(ctx context.Context, conn *comprehend.Client, identifier string,
 		}
 	}
 
-	if updatedTags := oldTags.Updated(newTags); len(updatedTags) > 0 {
+	updatedTags := oldTags.Updated(newTags)
+	updatedTags = updatedTags.IgnoreSystem(names.Comprehend)
+	if len(updatedTags) > 0 {
 		input := &comprehend.TagResourceInput{
 			ResourceArn: aws.String(identifier),
-			Tags:        Tags(updatedTags.IgnoreAWS()),
+			Tags:        Tags(updatedTags),
 		}
 
 		_, err := conn.TagResource(ctx, input)
@@ -133,5 +138,5 @@ func UpdateTags(ctx context.Context, conn *comprehend.Client, identifier string,
 // UpdateTags updates comprehend service tags.
 // It is called from outside this package.
 func (p *servicePackage) UpdateTags(ctx context.Context, meta any, identifier string, oldTags, newTags any) error {
-	return UpdateTags(ctx, meta.(*conns.AWSClient).ComprehendClient(), identifier, oldTags, newTags)
+	return updateTags(ctx, meta.(*conns.AWSClient).ComprehendClient(ctx), identifier, oldTags, newTags)
 }

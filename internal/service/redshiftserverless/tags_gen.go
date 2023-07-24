@@ -11,12 +11,13 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/types"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// ListTags lists redshiftserverless service tags.
+// listTags lists redshiftserverless service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func ListTags(ctx context.Context, conn redshiftserverlessiface.RedshiftServerlessAPI, identifier string) (tftags.KeyValueTags, error) {
+func listTags(ctx context.Context, conn redshiftserverlessiface.RedshiftServerlessAPI, identifier string) (tftags.KeyValueTags, error) {
 	input := &redshiftserverless.ListTagsForResourceInput{
 		ResourceArn: aws.String(identifier),
 	}
@@ -33,7 +34,7 @@ func ListTags(ctx context.Context, conn redshiftserverlessiface.RedshiftServerle
 // ListTags lists redshiftserverless service tags and set them in Context.
 // It is called from outside this package.
 func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier string) error {
-	tags, err := ListTags(ctx, meta.(*conns.AWSClient).RedshiftServerlessConn(), identifier)
+	tags, err := listTags(ctx, meta.(*conns.AWSClient).RedshiftServerlessConn(ctx), identifier)
 
 	if err != nil {
 		return err
@@ -75,9 +76,9 @@ func KeyValueTags(ctx context.Context, tags []*redshiftserverless.Tag) tftags.Ke
 	return tftags.New(ctx, m)
 }
 
-// GetTagsIn returns redshiftserverless service tags from Context.
+// getTagsIn returns redshiftserverless service tags from Context.
 // nil is returned if there are no input tags.
-func GetTagsIn(ctx context.Context) []*redshiftserverless.Tag {
+func getTagsIn(ctx context.Context) []*redshiftserverless.Tag {
 	if inContext, ok := tftags.FromContext(ctx); ok {
 		if tags := Tags(inContext.TagsIn.UnwrapOrDefault()); len(tags) > 0 {
 			return tags
@@ -87,25 +88,26 @@ func GetTagsIn(ctx context.Context) []*redshiftserverless.Tag {
 	return nil
 }
 
-// SetTagsOut sets redshiftserverless service tags in Context.
-func SetTagsOut(ctx context.Context, tags []*redshiftserverless.Tag) {
+// setTagsOut sets redshiftserverless service tags in Context.
+func setTagsOut(ctx context.Context, tags []*redshiftserverless.Tag) {
 	if inContext, ok := tftags.FromContext(ctx); ok {
 		inContext.TagsOut = types.Some(KeyValueTags(ctx, tags))
 	}
 }
 
-// UpdateTags updates redshiftserverless service tags.
+// updateTags updates redshiftserverless service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-
-func UpdateTags(ctx context.Context, conn redshiftserverlessiface.RedshiftServerlessAPI, identifier string, oldTagsMap, newTagsMap any) error {
+func updateTags(ctx context.Context, conn redshiftserverlessiface.RedshiftServerlessAPI, identifier string, oldTagsMap, newTagsMap any) error {
 	oldTags := tftags.New(ctx, oldTagsMap)
 	newTags := tftags.New(ctx, newTagsMap)
 
-	if removedTags := oldTags.Removed(newTags); len(removedTags) > 0 {
+	removedTags := oldTags.Removed(newTags)
+	removedTags = removedTags.IgnoreSystem(names.RedshiftServerless)
+	if len(removedTags) > 0 {
 		input := &redshiftserverless.UntagResourceInput{
 			ResourceArn: aws.String(identifier),
-			TagKeys:     aws.StringSlice(removedTags.IgnoreAWS().Keys()),
+			TagKeys:     aws.StringSlice(removedTags.Keys()),
 		}
 
 		_, err := conn.UntagResourceWithContext(ctx, input)
@@ -115,10 +117,12 @@ func UpdateTags(ctx context.Context, conn redshiftserverlessiface.RedshiftServer
 		}
 	}
 
-	if updatedTags := oldTags.Updated(newTags); len(updatedTags) > 0 {
+	updatedTags := oldTags.Updated(newTags)
+	updatedTags = updatedTags.IgnoreSystem(names.RedshiftServerless)
+	if len(updatedTags) > 0 {
 		input := &redshiftserverless.TagResourceInput{
 			ResourceArn: aws.String(identifier),
-			Tags:        Tags(updatedTags.IgnoreAWS()),
+			Tags:        Tags(updatedTags),
 		}
 
 		_, err := conn.TagResourceWithContext(ctx, input)
@@ -134,5 +138,5 @@ func UpdateTags(ctx context.Context, conn redshiftserverlessiface.RedshiftServer
 // UpdateTags updates redshiftserverless service tags.
 // It is called from outside this package.
 func (p *servicePackage) UpdateTags(ctx context.Context, meta any, identifier string, oldTags, newTags any) error {
-	return UpdateTags(ctx, meta.(*conns.AWSClient).RedshiftServerlessConn(), identifier, oldTags, newTags)
+	return updateTags(ctx, meta.(*conns.AWSClient).RedshiftServerlessConn(ctx), identifier, oldTags, newTags)
 }

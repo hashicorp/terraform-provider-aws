@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package glue
 
 import (
@@ -15,9 +18,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_glue_schema")
+// @SDKResource("aws_glue_schema", name="Schema")
+// @Tags(identifierAttribute="arn")
 func ResourceSchema() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceSchemaCreate,
@@ -89,23 +94,21 @@ func ResourceSchema() *schema.Resource {
 					validation.StringMatch(regexp.MustCompile(`[a-zA-Z0-9-_$#]+$`), ""),
 				),
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
 	}
 }
 
 func resourceSchemaCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).GlueConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
+	conn := meta.(*conns.AWSClient).GlueConn(ctx)
 
 	input := &glue.CreateSchemaInput{
 		SchemaName:       aws.String(d.Get("schema_name").(string)),
 		SchemaDefinition: aws.String(d.Get("schema_definition").(string)),
 		DataFormat:       aws.String(d.Get("data_format").(string)),
-		Tags:             Tags(tags.IgnoreAWS()),
+		Tags:             getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("registry_arn"); ok {
@@ -137,9 +140,7 @@ func resourceSchemaCreate(ctx context.Context, d *schema.ResourceData, meta inte
 
 func resourceSchemaRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).GlueConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).GlueConn(ctx)
 
 	output, err := FindSchemaByID(ctx, conn, d.Id())
 	if err != nil {
@@ -169,23 +170,6 @@ func resourceSchemaRead(ctx context.Context, d *schema.ResourceData, meta interf
 	d.Set("registry_name", output.RegistryName)
 	d.Set("schema_checkpoint", output.SchemaCheckpoint)
 
-	tags, err := ListTags(ctx, conn, arn)
-
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "listing tags for Glue Schema (%s): %s", arn, err)
-	}
-
-	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
-	}
-
 	schemeDefOutput, err := FindSchemaVersionByID(ctx, conn, d.Id())
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading Glue Schema Definition (%s): %s", d.Id(), err)
@@ -198,7 +182,7 @@ func resourceSchemaRead(ctx context.Context, d *schema.ResourceData, meta interf
 
 func resourceSchemaUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).GlueConn()
+	conn := meta.(*conns.AWSClient).GlueConn(ctx)
 
 	input := &glue.UpdateSchemaInput{
 		SchemaId: createSchemaID(d.Id()),
@@ -231,13 +215,6 @@ func resourceSchemaUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 		}
 	}
 
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-		if err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n); err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating tags: %s", err)
-		}
-	}
-
 	if d.HasChange("schema_definition") {
 		defInput := &glue.RegisterSchemaVersionInput{
 			SchemaId:         createSchemaID(d.Id()),
@@ -260,7 +237,7 @@ func resourceSchemaUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 
 func resourceSchemaDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).GlueConn()
+	conn := meta.(*conns.AWSClient).GlueConn(ctx)
 
 	log.Printf("[DEBUG] Deleting Glue Schema: %s", d.Id())
 	input := &glue.DeleteSchemaInput{

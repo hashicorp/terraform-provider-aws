@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package rds
 
 import (
@@ -22,14 +25,21 @@ const (
 	ClusterStatusRebooting                  = "rebooting"
 	ClusterStatusRenaming                   = "renaming"
 	ClusterStatusResettingMasterCredentials = "resetting-master-credentials"
+	ClusterStatusScalingCompute             = "scaling-compute"
 	ClusterStatusUpgrading                  = "upgrading"
 )
 
 const (
-	storageTypeStandard = "standard"
-	storageTypeGP2      = "gp2"
-	storageTypeGP3      = "gp3"
-	storageTypeIO1      = "io1"
+	ClusterSnapshotStatusAvailable = "available"
+	ClusterSnapshotStatusCreating  = "creating"
+)
+
+const (
+	storageTypeStandard    = "standard"
+	storageTypeGP2         = "gp2"
+	storageTypeGP3         = "gp3"
+	storageTypeIO1         = "io1"
+	storageTypeAuroraIOPT1 = "aurora-iopt1"
 )
 
 func StorageType_Values() []string {
@@ -38,6 +48,7 @@ func StorageType_Values() []string {
 		storageTypeGP2,
 		storageTypeGP3,
 		storageTypeIO1,
+		storageTypeAuroraIOPT1,
 	}
 }
 
@@ -64,6 +75,7 @@ const (
 	InstanceStatusConfiguringLogExports                        = "configuring-log-exports"
 	InstanceStatusConvertingToVPC                              = "converting-to-vpc"
 	InstanceStatusCreating                                     = "creating"
+	InstanceStatusDeletePreCheck                               = "delete-precheck"
 	InstanceStatusDeleting                                     = "deleting"
 	InstanceStatusFailed                                       = "failed"
 	InstanceStatusInaccessibleEncryptionCredentials            = "inaccessible-encryption-credentials"
@@ -107,7 +119,6 @@ const (
 )
 
 const (
-	ClusterEngineAurora           = "aurora"
 	ClusterEngineAuroraMySQL      = "aurora-mysql"
 	ClusterEngineAuroraPostgreSQL = "aurora-postgresql"
 	ClusterEngineMySQL            = "mysql"
@@ -116,7 +127,6 @@ const (
 
 func ClusterEngine_Values() []string {
 	return []string{
-		ClusterEngineAurora,
 		ClusterEngineAuroraMySQL,
 		ClusterEngineAuroraPostgreSQL,
 		ClusterEngineMySQL,
@@ -216,6 +226,18 @@ func TimeoutAction_Values() []string {
 	return []string{
 		TimeoutActionForceApplyCapacityChange,
 		TimeoutActionRollbackCapacityChange,
+	}
+}
+
+const (
+	backupTargetOutposts = "outposts"
+	backupTargetRegion   = "region"
+)
+
+func backupTarget_Values() []string {
+	return []string{
+		backupTargetOutposts,
+		backupTargetRegion,
 	}
 }
 

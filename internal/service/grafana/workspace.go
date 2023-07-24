@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package grafana
 
 import (
@@ -21,9 +24,11 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_grafana_workspace")
+// @SDKResource("aws_grafana_workspace", name="Workspace")
+// @Tags(identifierAttribute="arn")
 func ResourceWorkspace() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceWorkspaceCreate,
@@ -36,8 +41,8 @@ func ResourceWorkspace() *schema.Resource {
 		},
 
 		Timeouts: &schema.ResourceTimeout{
-			Create: schema.DefaultTimeout(10 * time.Minute),
-			Update: schema.DefaultTimeout(10 * time.Minute),
+			Create: schema.DefaultTimeout(30 * time.Minute),
+			Update: schema.DefaultTimeout(30 * time.Minute),
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -88,6 +93,8 @@ func ResourceWorkspace() *schema.Resource {
 			},
 			"grafana_version": {
 				Type:     schema.TypeString,
+				ForceNew: true,
+				Optional: true,
 				Computed: true,
 			},
 			"name": {
@@ -151,8 +158,8 @@ func ResourceWorkspace() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			"vpc_configuration": {
 				Type:     schema.TypeList,
 				MaxItems: 1,
@@ -183,16 +190,14 @@ func ResourceWorkspace() *schema.Resource {
 
 func resourceWorkspaceCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).GrafanaConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
+	conn := meta.(*conns.AWSClient).GrafanaConn(ctx)
 
 	input := &managedgrafana.CreateWorkspaceInput{
 		AccountAccessType:       aws.String(d.Get("account_access_type").(string)),
 		AuthenticationProviders: flex.ExpandStringList(d.Get("authentication_providers").([]interface{})),
 		ClientToken:             aws.String(id.UniqueId()),
 		PermissionType:          aws.String(d.Get("permission_type").(string)),
-		Tags:                    Tags(tags.IgnoreAWS()),
+		Tags:                    getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("configuration"); ok {
@@ -209,6 +214,10 @@ func resourceWorkspaceCreate(ctx context.Context, d *schema.ResourceData, meta i
 
 	if v, ok := d.GetOk("name"); ok {
 		input.WorkspaceName = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("grafana_version"); ok {
+		input.GrafanaVersion = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("notification_destinations"); ok {
@@ -257,9 +266,7 @@ func resourceWorkspaceCreate(ctx context.Context, d *schema.ResourceData, meta i
 
 func resourceWorkspaceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).GrafanaConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).GrafanaConn(ctx)
 
 	workspace, err := FindWorkspaceByID(ctx, conn, d.Id())
 
@@ -305,16 +312,7 @@ func resourceWorkspaceRead(ctx context.Context, d *schema.ResourceData, meta int
 		return sdkdiag.AppendErrorf(diags, "setting network_access_control: %s", err)
 	}
 
-	tags := KeyValueTags(ctx, workspace.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
-	}
+	setTagsOut(ctx, workspace.Tags)
 
 	input := &managedgrafana.DescribeWorkspaceConfigurationInput{
 		WorkspaceId: aws.String(d.Id()),
@@ -333,7 +331,7 @@ func resourceWorkspaceRead(ctx context.Context, d *schema.ResourceData, meta int
 
 func resourceWorkspaceUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).GrafanaConn()
+	conn := meta.(*conns.AWSClient).GrafanaConn(ctx)
 
 	if d.HasChangesExcept("configuration", "tags", "tags_all") {
 		input := &managedgrafana.UpdateWorkspaceInput{
@@ -428,20 +426,12 @@ func resourceWorkspaceUpdate(ctx context.Context, d *schema.ResourceData, meta i
 		}
 	}
 
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		if err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n); err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating Grafana Workspace (%s) tags: %s", d.Id(), err)
-		}
-	}
-
 	return append(diags, resourceWorkspaceRead(ctx, d, meta)...)
 }
 
 func resourceWorkspaceDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).GrafanaConn()
+	conn := meta.(*conns.AWSClient).GrafanaConn(ctx)
 
 	log.Printf("[DEBUG] Deleting Grafana Workspace: %s", d.Id())
 	_, err := conn.DeleteWorkspaceWithContext(ctx, &managedgrafana.DeleteWorkspaceInput{

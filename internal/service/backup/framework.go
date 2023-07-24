@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package backup
 
 import (
@@ -18,9 +21,11 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_backup_framework")
+// @SDKResource("aws_backup_framework", name="Framework")
+// @Tags(identifierAttribute="arn")
 func ResourceFramework() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceFrameworkCreate,
@@ -125,8 +130,8 @@ func ResourceFramework() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
 		CustomizeDiff: verify.SetTagsDiff,
 	}
@@ -134,27 +139,20 @@ func ResourceFramework() *schema.Resource {
 
 func resourceFrameworkCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).BackupConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
+	conn := meta.(*conns.AWSClient).BackupConn(ctx)
 
 	name := d.Get("name").(string)
-
 	input := &backup.CreateFrameworkInput{
 		IdempotencyToken:  aws.String(id.UniqueId()),
 		FrameworkControls: expandFrameworkControls(ctx, d.Get("control").(*schema.Set).List()),
 		FrameworkName:     aws.String(name),
+		FrameworkTags:     getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("description"); ok {
 		input.FrameworkDescription = aws.String(v.(string))
 	}
 
-	if len(tags) > 0 {
-		input.FrameworkTags = Tags(tags.IgnoreAWS())
-	}
-
-	log.Printf("[DEBUG] Creating Backup Framework: %#v", input)
 	resp, err := conn.CreateFrameworkWithContext(ctx, input)
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating Backup Framework: %s", err)
@@ -173,9 +171,7 @@ func resourceFrameworkCreate(ctx context.Context, d *schema.ResourceData, meta i
 
 func resourceFrameworkRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).BackupConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).BackupConn(ctx)
 
 	resp, err := conn.DescribeFrameworkWithContext(ctx, &backup.DescribeFrameworkInput{
 		FrameworkName: aws.String(d.Id()),
@@ -204,27 +200,12 @@ func resourceFrameworkRead(ctx context.Context, d *schema.ResourceData, meta int
 		return sdkdiag.AppendErrorf(diags, "setting control: %s", err)
 	}
 
-	tags, err := ListTags(ctx, conn, d.Get("arn").(string))
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "listing tags for Backup Framework (%s): %s", d.Id(), err)
-	}
-	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
-	}
-
 	return diags
 }
 
 func resourceFrameworkUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).BackupConn()
+	conn := meta.(*conns.AWSClient).BackupConn(ctx)
 
 	if d.HasChanges("description", "control") {
 		input := &backup.UpdateFrameworkInput{
@@ -249,19 +230,12 @@ func resourceFrameworkUpdate(ctx context.Context, d *schema.ResourceData, meta i
 		}
 	}
 
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-		if err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n); err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating tags for Backup Framework (%s): %s", d.Id(), err)
-		}
-	}
-
 	return append(diags, resourceFrameworkRead(ctx, d, meta)...)
 }
 
 func resourceFrameworkDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).BackupConn()
+	conn := meta.(*conns.AWSClient).BackupConn(ctx)
 
 	input := &backup.DeleteFrameworkInput{
 		FrameworkName: aws.String(d.Id()),

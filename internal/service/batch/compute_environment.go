@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package batch
 
 import (
@@ -23,9 +26,11 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_batch_compute_environment")
+// @SDKResource("aws_batch_compute_environment", name="Compute Environment")
+// @Tags(identifierAttribute="arn")
 func ResourceComputeEnvironment() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceComputeEnvironmentCreate,
@@ -159,6 +164,11 @@ func ResourceComputeEnvironment() *schema.Resource {
 							Type:     schema.TypeInt,
 							Optional: true,
 						},
+						"placement_group": {
+							Type:     schema.TypeString,
+							Optional: true,
+							ForceNew: true,
+						},
 						"security_group_ids": {
 							Type:     schema.TypeSet,
 							Optional: true,
@@ -236,8 +246,8 @@ func ResourceComputeEnvironment() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			"type": {
 				Type:     schema.TypeString,
 				Required: true,
@@ -253,16 +263,14 @@ func ResourceComputeEnvironment() *schema.Resource {
 
 func resourceComputeEnvironmentCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).BatchConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
+	conn := meta.(*conns.AWSClient).BatchConn(ctx)
 
 	computeEnvironmentName := create.Name(d.Get("compute_environment_name").(string), d.Get("compute_environment_name_prefix").(string))
 	computeEnvironmentType := d.Get("type").(string)
-
 	input := &batch.CreateComputeEnvironmentInput{
 		ComputeEnvironmentName: aws.String(computeEnvironmentName),
 		ServiceRole:            aws.String(d.Get("service_role").(string)),
+		Tags:                   getTagsIn(ctx),
 		Type:                   aws.String(computeEnvironmentType),
 	}
 
@@ -278,11 +286,6 @@ func resourceComputeEnvironmentCreate(ctx context.Context, d *schema.ResourceDat
 		input.State = aws.String(v.(string))
 	}
 
-	if len(tags) > 0 {
-		input.Tags = Tags(tags.IgnoreAWS())
-	}
-
-	log.Printf("[DEBUG] Creating Batch Compute Environment: %s", input)
 	output, err := conn.CreateComputeEnvironmentWithContext(ctx, input)
 
 	if err != nil {
@@ -300,9 +303,7 @@ func resourceComputeEnvironmentCreate(ctx context.Context, d *schema.ResourceDat
 
 func resourceComputeEnvironmentRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).BatchConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).BatchConn(ctx)
 
 	computeEnvironment, err := FindComputeEnvironmentDetailByName(ctx, conn, d.Id())
 
@@ -344,23 +345,14 @@ func resourceComputeEnvironmentRead(ctx context.Context, d *schema.ResourceData,
 		d.Set("eks_configuration", nil)
 	}
 
-	tags := KeyValueTags(ctx, computeEnvironment.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
-	}
+	setTagsOut(ctx, computeEnvironment.Tags)
 
 	return diags
 }
 
 func resourceComputeEnvironmentUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).BatchConn()
+	conn := meta.(*conns.AWSClient).BatchConn(ctx)
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		input := &batch.UpdateComputeEnvironmentInput{
@@ -492,14 +484,6 @@ func resourceComputeEnvironmentUpdate(ctx context.Context, d *schema.ResourceDat
 		}
 	}
 
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		if err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n); err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating tags: %s", err)
-		}
-	}
-
 	return append(diags, resourceComputeEnvironmentRead(ctx, d, meta)...)
 }
 
@@ -554,7 +538,7 @@ func ExpandComputeEnvironmentLaunchTemplateUpdate(launchTemplate []interface{}) 
 
 func resourceComputeEnvironmentDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).BatchConn()
+	conn := meta.(*conns.AWSClient).BatchConn(ctx)
 
 	log.Printf("[DEBUG] Disabling Batch Compute Environment: %s", d.Id())
 	{
@@ -946,7 +930,7 @@ func expandComputeResource(ctx context.Context, tfMap map[string]interface{}) *b
 		apiObject.InstanceTypes = flex.ExpandStringSet(v)
 	}
 
-	if v, ok := tfMap["launch_template"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["launch_template"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 		apiObject.LaunchTemplate = expandLaunchTemplateSpecification(v[0].(map[string]interface{}))
 	}
 
@@ -958,6 +942,10 @@ func expandComputeResource(ctx context.Context, tfMap map[string]interface{}) *b
 		apiObject.MinvCpus = aws.Int64(int64(v))
 	} else if computeResourceType := strings.ToUpper(computeResourceType); computeResourceType == batch.CRTypeEc2 || computeResourceType == batch.CRTypeSpot {
 		apiObject.MinvCpus = aws.Int64(0)
+	}
+
+	if v, ok := tfMap["placement_group"].(string); ok && v != "" {
+		apiObject.PlacementGroup = aws.String(v)
 	}
 
 	if v, ok := tfMap["security_group_ids"].(*schema.Set); ok && v.Len() > 0 {
@@ -1116,6 +1104,10 @@ func flattenComputeResource(ctx context.Context, apiObject *batch.ComputeResourc
 
 	if v := apiObject.MinvCpus; v != nil {
 		tfMap["min_vcpus"] = aws.Int64Value(v)
+	}
+
+	if v := apiObject.PlacementGroup; v != nil {
+		tfMap["placement_group"] = aws.StringValue(v)
 	}
 
 	if v := apiObject.SecurityGroupIds; v != nil {

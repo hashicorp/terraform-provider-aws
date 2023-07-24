@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package kafkaconnect
 
 import (
@@ -383,7 +386,7 @@ func ResourceConnector() *schema.Resource {
 }
 
 func resourceConnectorCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).KafkaConnectConn()
+	conn := meta.(*conns.AWSClient).KafkaConnectConn(ctx)
 
 	name := d.Get("name").(string)
 	input := &kafkaconnect.CreateConnectorInput{
@@ -414,7 +417,7 @@ func resourceConnectorCreate(ctx context.Context, d *schema.ResourceData, meta i
 	output, err := conn.CreateConnectorWithContext(ctx, input)
 
 	if err != nil {
-		return diag.Errorf("error creating MSK Connect Connector (%s): %s", name, err)
+		return diag.Errorf("creating MSK Connect Connector (%s): %s", name, err)
 	}
 
 	d.SetId(aws.StringValue(output.ConnectorArn))
@@ -422,14 +425,14 @@ func resourceConnectorCreate(ctx context.Context, d *schema.ResourceData, meta i
 	_, err = waitConnectorCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate))
 
 	if err != nil {
-		return diag.Errorf("error waiting for MSK Connect Connector (%s) create: %s", d.Id(), err)
+		return diag.Errorf("waiting for MSK Connect Connector (%s) create: %s", d.Id(), err)
 	}
 
 	return resourceConnectorRead(ctx, d, meta)
 }
 
 func resourceConnectorRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).KafkaConnectConn()
+	conn := meta.(*conns.AWSClient).KafkaConnectConn(ctx)
 
 	connector, err := FindConnectorByARN(ctx, conn, d.Id())
 
@@ -440,13 +443,13 @@ func resourceConnectorRead(ctx context.Context, d *schema.ResourceData, meta int
 	}
 
 	if err != nil {
-		return diag.Errorf("error reading MSK Connect Connector (%s): %s", d.Id(), err)
+		return diag.Errorf("reading MSK Connect Connector (%s): %s", d.Id(), err)
 	}
 
 	d.Set("arn", connector.ConnectorArn)
 	if connector.Capacity != nil {
 		if err := d.Set("capacity", []interface{}{flattenCapacityDescription(connector.Capacity)}); err != nil {
-			return diag.Errorf("error setting capacity: %s", err)
+			return diag.Errorf("setting capacity: %s", err)
 		}
 	} else {
 		d.Set("capacity", nil)
@@ -455,21 +458,21 @@ func resourceConnectorRead(ctx context.Context, d *schema.ResourceData, meta int
 	d.Set("description", connector.ConnectorDescription)
 	if connector.KafkaCluster != nil {
 		if err := d.Set("kafka_cluster", []interface{}{flattenClusterDescription(connector.KafkaCluster)}); err != nil {
-			return diag.Errorf("error setting kafka_cluster: %s", err)
+			return diag.Errorf("setting kafka_cluster: %s", err)
 		}
 	} else {
 		d.Set("kafka_cluster", nil)
 	}
 	if connector.KafkaClusterClientAuthentication != nil {
 		if err := d.Set("kafka_cluster_client_authentication", []interface{}{flattenClusterClientAuthenticationDescription(connector.KafkaClusterClientAuthentication)}); err != nil {
-			return diag.Errorf("error setting kafka_cluster_client_authentication: %s", err)
+			return diag.Errorf("setting kafka_cluster_client_authentication: %s", err)
 		}
 	} else {
 		d.Set("kafka_cluster_client_authentication", nil)
 	}
 	if connector.KafkaClusterEncryptionInTransit != nil {
 		if err := d.Set("kafka_cluster_encryption_in_transit", []interface{}{flattenClusterEncryptionInTransitDescription(connector.KafkaClusterEncryptionInTransit)}); err != nil {
-			return diag.Errorf("error setting kafka_cluster_encryption_in_transit: %s", err)
+			return diag.Errorf("setting kafka_cluster_encryption_in_transit: %s", err)
 		}
 	} else {
 		d.Set("kafka_cluster_encryption_in_transit", nil)
@@ -477,20 +480,20 @@ func resourceConnectorRead(ctx context.Context, d *schema.ResourceData, meta int
 	d.Set("kafkaconnect_version", connector.KafkaConnectVersion)
 	if connector.LogDelivery != nil {
 		if err := d.Set("log_delivery", []interface{}{flattenLogDeliveryDescription(connector.LogDelivery)}); err != nil {
-			return diag.Errorf("error setting log_delivery: %s", err)
+			return diag.Errorf("setting log_delivery: %s", err)
 		}
 	} else {
 		d.Set("log_delivery", nil)
 	}
 	d.Set("name", connector.ConnectorName)
 	if err := d.Set("plugin", flattenPluginDescriptions(connector.Plugins)); err != nil {
-		return diag.Errorf("error setting plugin: %s", err)
+		return diag.Errorf("setting plugin: %s", err)
 	}
 	d.Set("service_execution_role_arn", connector.ServiceExecutionRoleArn)
 	d.Set("version", connector.CurrentVersion)
 	if connector.WorkerConfiguration != nil {
 		if err := d.Set("worker_configuration", []interface{}{flattenWorkerConfigurationDescription(connector.WorkerConfiguration)}); err != nil {
-			return diag.Errorf("error setting worker_configuration: %s", err)
+			return diag.Errorf("setting worker_configuration: %s", err)
 		}
 	} else {
 		d.Set("worker_configuration", nil)
@@ -500,7 +503,7 @@ func resourceConnectorRead(ctx context.Context, d *schema.ResourceData, meta int
 }
 
 func resourceConnectorUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).KafkaConnectConn()
+	conn := meta.(*conns.AWSClient).KafkaConnectConn(ctx)
 
 	input := &kafkaconnect.UpdateConnectorInput{
 		Capacity:       expandCapacityUpdate(d.Get("capacity").([]interface{})[0].(map[string]interface{})),
@@ -512,20 +515,20 @@ func resourceConnectorUpdate(ctx context.Context, d *schema.ResourceData, meta i
 	_, err := conn.UpdateConnectorWithContext(ctx, input)
 
 	if err != nil {
-		return diag.Errorf("error updating MSK Connect Connector (%s): %s", d.Id(), err)
+		return diag.Errorf("updating MSK Connect Connector (%s): %s", d.Id(), err)
 	}
 
 	_, err = waitConnectorUpdated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate))
 
 	if err != nil {
-		return diag.Errorf("error waiting for MSK Connect Connector (%s) update: %s", d.Id(), err)
+		return diag.Errorf("waiting for MSK Connect Connector (%s) update: %s", d.Id(), err)
 	}
 
 	return resourceConnectorRead(ctx, d, meta)
 }
 
 func resourceConnectorDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).KafkaConnectConn()
+	conn := meta.(*conns.AWSClient).KafkaConnectConn(ctx)
 
 	log.Printf("[DEBUG] Deleting MSK Connect Connector: %s", d.Id())
 	_, err := conn.DeleteConnectorWithContext(ctx, &kafkaconnect.DeleteConnectorInput{
@@ -537,13 +540,13 @@ func resourceConnectorDelete(ctx context.Context, d *schema.ResourceData, meta i
 	}
 
 	if err != nil {
-		return diag.Errorf("error deleting MSK Connect Connector (%s): %s", d.Id(), err)
+		return diag.Errorf("deleting MSK Connect Connector (%s): %s", d.Id(), err)
 	}
 
 	_, err = waitConnectorDeleted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete))
 
 	if err != nil {
-		return diag.Errorf("error waiting for MSK Connect Connector (%s) delete: %s", d.Id(), err)
+		return diag.Errorf("waiting for MSK Connect Connector (%s) delete: %s", d.Id(), err)
 	}
 
 	return nil

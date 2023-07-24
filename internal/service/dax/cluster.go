@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package dax
 
 import (
@@ -22,9 +25,11 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_dax_cluster")
+// @SDKResource("aws_dax_cluster", name="Cluster")
+// @Tags(identifierAttribute="arn")
 func ResourceCluster() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceClusterCreate,
@@ -153,8 +158,8 @@ func ResourceCluster() *schema.Resource {
 				Computed: true,
 				ForceNew: true,
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			"port": {
 				Type:     schema.TypeInt,
 				Computed: true,
@@ -199,9 +204,7 @@ func ResourceCluster() *schema.Resource {
 
 func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DAXConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
+	conn := meta.(*conns.AWSClient).DAXConn(ctx)
 
 	clusterName := d.Get("cluster_name").(string)
 	iamRoleArn := d.Get("iam_role_arn").(string)
@@ -209,56 +212,54 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 	numNodes := int64(d.Get("replication_factor").(int))
 	subnetGroupName := d.Get("subnet_group_name").(string)
 	securityIdSet := d.Get("security_group_ids").(*schema.Set)
-
 	securityIds := flex.ExpandStringSet(securityIdSet)
-
-	req := &dax.CreateClusterInput{
+	input := &dax.CreateClusterInput{
 		ClusterName:       aws.String(clusterName),
 		IamRoleArn:        aws.String(iamRoleArn),
 		NodeType:          aws.String(nodeType),
 		ReplicationFactor: aws.Int64(numNodes),
 		SecurityGroupIds:  securityIds,
 		SubnetGroupName:   aws.String(subnetGroupName),
-		Tags:              Tags(tags.IgnoreAWS()),
+		Tags:              getTagsIn(ctx),
 	}
 
 	// optionals can be defaulted by AWS
 	if v, ok := d.GetOk("description"); ok {
-		req.Description = aws.String(v.(string))
+		input.Description = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("cluster_endpoint_encryption_type"); ok {
-		req.ClusterEndpointEncryptionType = aws.String(v.(string))
+		input.ClusterEndpointEncryptionType = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("parameter_group_name"); ok {
-		req.ParameterGroupName = aws.String(v.(string))
+		input.ParameterGroupName = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("maintenance_window"); ok {
-		req.PreferredMaintenanceWindow = aws.String(v.(string))
+		input.PreferredMaintenanceWindow = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("notification_topic_arn"); ok {
-		req.NotificationTopicArn = aws.String(v.(string))
+		input.NotificationTopicArn = aws.String(v.(string))
 	}
 
 	preferredAZs := d.Get("availability_zones").(*schema.Set)
 	if preferredAZs.Len() > 0 {
-		req.AvailabilityZones = flex.ExpandStringSet(preferredAZs)
+		input.AvailabilityZones = flex.ExpandStringSet(preferredAZs)
 	}
 
 	if v, ok := d.GetOk("server_side_encryption"); ok && len(v.([]interface{})) > 0 {
 		options := v.([]interface{})
 		s := options[0].(map[string]interface{})
-		req.SSESpecification = expandEncryptAtRestOptions(s)
+		input.SSESpecification = expandEncryptAtRestOptions(s)
 	}
 
 	// IAM roles take some time to propagate
 	var resp *dax.CreateClusterOutput
 	err := retry.RetryContext(ctx, propagationTimeout, func() *retry.RetryError {
 		var err error
-		resp, err = conn.CreateClusterWithContext(ctx, req)
+		resp, err = conn.CreateClusterWithContext(ctx, input)
 		if err != nil {
 			if tfawserr.ErrMessageContains(err, dax.ErrCodeInvalidParameterValueException, "No permission to assume role") {
 				log.Print("[DEBUG] Retrying create of DAX cluster")
@@ -269,10 +270,10 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 		return nil
 	})
 	if tfresource.TimedOut(err) {
-		resp, err = conn.CreateClusterWithContext(ctx, req)
+		resp, err = conn.CreateClusterWithContext(ctx, input)
 	}
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "Error creating DAX cluster: %s", err)
+		return sdkdiag.AppendErrorf(diags, "creating DAX cluster: %s", err)
 	}
 
 	// Assign the cluster id as the resource ID
@@ -294,7 +295,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 	log.Printf("[DEBUG] Waiting for state to become available: %v", d.Id())
 	_, sterr := stateConf.WaitForStateContext(ctx)
 	if sterr != nil {
-		return sdkdiag.AppendErrorf(diags, "Error waiting for DAX cluster (%s) to be created: %s", d.Id(), sterr)
+		return sdkdiag.AppendErrorf(diags, "waiting for DAX cluster (%s) to be created: %s", d.Id(), sterr)
 	}
 
 	return append(diags, resourceClusterRead(ctx, d, meta)...)
@@ -302,9 +303,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 
 func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DAXConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).DAXConn(ctx)
 
 	req := &dax.DescribeClustersInput{
 		ClusterNames: []*string{aws.String(d.Id())},
@@ -365,37 +364,12 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta inter
 		return sdkdiag.AppendErrorf(diags, "setting server_side_encryption: %s", err)
 	}
 
-	tags, err := ListTags(ctx, conn, aws.StringValue(c.ClusterArn))
-
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "listing tags for DAX Cluster (%s): %s", aws.StringValue(c.ClusterArn), err)
-	}
-
-	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
-	}
-
 	return diags
 }
 
 func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DAXConn()
-
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		if err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n); err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating DAX Cluster (%s) tags: %s", d.Get("arn").(string), err)
-		}
-	}
+	conn := meta.(*conns.AWSClient).DAXConn(ctx)
 
 	req := &dax.UpdateClusterInput{
 		ClusterName: aws.String(d.Id()),
@@ -439,7 +413,7 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 		log.Printf("[DEBUG] Modifying DAX Cluster (%s), opts:\n%s", d.Id(), req)
 		_, err := conn.UpdateClusterWithContext(ctx, req)
 		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "Error updating DAX cluster (%s), error: %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "updating DAX cluster (%s), error: %s", d.Id(), err)
 		}
 		awaitUpdate = true
 	}
@@ -455,7 +429,7 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 				NewReplicationFactor: aws.Int64(int64(nraw.(int))),
 			})
 			if err != nil {
-				return sdkdiag.AppendErrorf(diags, "Error increasing nodes in DAX cluster %s, error: %s", d.Id(), err)
+				return sdkdiag.AppendErrorf(diags, "increasing nodes in DAX cluster %s, error: %s", d.Id(), err)
 			}
 			awaitUpdate = true
 		}
@@ -466,7 +440,7 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 				NewReplicationFactor: aws.Int64(int64(nraw.(int))),
 			})
 			if err != nil {
-				return sdkdiag.AppendErrorf(diags, "Error increasing nodes in DAX cluster %s, error: %s", d.Id(), err)
+				return sdkdiag.AppendErrorf(diags, "increasing nodes in DAX cluster %s, error: %s", d.Id(), err)
 			}
 			awaitUpdate = true
 		}
@@ -486,7 +460,7 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 
 		_, sterr := stateConf.WaitForStateContext(ctx)
 		if sterr != nil {
-			return sdkdiag.AppendErrorf(diags, "Error waiting for DAX (%s) to update: %s", d.Id(), sterr)
+			return sdkdiag.AppendErrorf(diags, "waiting for DAX (%s) to update: %s", d.Id(), sterr)
 		}
 	}
 
@@ -526,7 +500,7 @@ func (b byNodeId) Less(i, j int) bool {
 
 func resourceClusterDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DAXConn()
+	conn := meta.(*conns.AWSClient).DAXConn(ctx)
 
 	req := &dax.DeleteClusterInput{
 		ClusterName: aws.String(d.Id()),
@@ -545,7 +519,7 @@ func resourceClusterDelete(ctx context.Context, d *schema.ResourceData, meta int
 		_, err = conn.DeleteClusterWithContext(ctx, req)
 	}
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "Error deleting DAX cluster: %s", err)
+		return sdkdiag.AppendErrorf(diags, "deleting DAX cluster: %s", err)
 	}
 
 	log.Printf("[DEBUG] Waiting for deletion: %v", d.Id())
@@ -560,7 +534,7 @@ func resourceClusterDelete(ctx context.Context, d *schema.ResourceData, meta int
 
 	_, sterr := stateConf.WaitForStateContext(ctx)
 	if sterr != nil {
-		return sdkdiag.AppendErrorf(diags, "Error waiting for DAX (%s) to delete: %s", d.Id(), sterr)
+		return sdkdiag.AppendErrorf(diags, "waiting for DAX (%s) to delete: %s", d.Id(), sterr)
 	}
 
 	return diags

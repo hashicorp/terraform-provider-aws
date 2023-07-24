@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package acmpca
 
 import (
@@ -19,6 +22,7 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 const (
@@ -27,7 +31,8 @@ const (
 	certificateAuthorityPermanentDeletionTimeInDaysDefault = certificateAuthorityPermanentDeletionTimeInDaysMax
 )
 
-// @SDKResource("aws_acmpca_certificate_authority")
+// @SDKResource("aws_acmpca_certificate_authority", name="Certificate Authority")
+// @Tags(identifierAttribute="id")
 func ResourceCertificateAuthority() *schema.Resource {
 	//lintignore:R011
 	return &schema.Resource{
@@ -187,6 +192,13 @@ func ResourceCertificateAuthority() *schema.Resource {
 				Optional: true,
 				Default:  true,
 			},
+			"key_storage_security_standard": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Computed:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.StringInSlice(acmpca.KeyStorageSecurityStandard_Values(), false),
+			},
 			"not_after": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -318,14 +330,8 @@ func ResourceCertificateAuthority() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			// See https://github.com/hashicorp/terraform-provider-aws/issues/17832 for deprecation / removal status
-			"status": {
-				Type:       schema.TypeString,
-				Computed:   true,
-				Deprecated: "The reported value of the \"status\" attribute is often inaccurate. Use the resource's \"enabled\" attribute to explicitly set status.",
-			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			"type": {
 				Type:         schema.TypeString,
 				Optional:     true,
@@ -347,23 +353,22 @@ func ResourceCertificateAuthority() *schema.Resource {
 
 func resourceCertificateAuthorityCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ACMPCAConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
+	conn := meta.(*conns.AWSClient).ACMPCAConn(ctx)
 
 	input := &acmpca.CreateCertificateAuthorityInput{
 		CertificateAuthorityConfiguration: expandCertificateAuthorityConfiguration(d.Get("certificate_authority_configuration").([]interface{})),
 		CertificateAuthorityType:          aws.String(d.Get("type").(string)),
 		IdempotencyToken:                  aws.String(id.UniqueId()),
 		RevocationConfiguration:           expandRevocationConfiguration(d.Get("revocation_configuration").([]interface{})),
+		Tags:                              getTagsIn(ctx),
+	}
+
+	if v, ok := d.GetOk("key_storage_security_standard"); ok {
+		input.KeyStorageSecurityStandard = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("usage_mode"); ok {
 		input.UsageMode = aws.String(v.(string))
-	}
-
-	if len(tags) > 0 {
-		input.Tags = Tags(tags.IgnoreAWS())
 	}
 
 	// ValidationException: The ACM Private CA service account 'acm-pca-prod-pdx' requires getBucketAcl permissions for your S3 bucket 'tf-acc-test-5224996536060125340'. Check your S3 bucket permissions and try again.
@@ -386,9 +391,7 @@ func resourceCertificateAuthorityCreate(ctx context.Context, d *schema.ResourceD
 
 func resourceCertificateAuthorityRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ACMPCAConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).ACMPCAConn(ctx)
 
 	certificateAuthority, err := FindCertificateAuthorityByARN(ctx, conn, d.Id())
 
@@ -407,13 +410,13 @@ func resourceCertificateAuthorityRead(ctx context.Context, d *schema.ResourceDat
 		return sdkdiag.AppendErrorf(diags, "setting certificate_authority_configuration: %s", err)
 	}
 	d.Set("enabled", (aws.StringValue(certificateAuthority.Status) != acmpca.CertificateAuthorityStatusDisabled))
+	d.Set("key_storage_security_standard", certificateAuthority.KeyStorageSecurityStandard)
 	d.Set("not_after", aws.TimeValue(certificateAuthority.NotAfter).Format(time.RFC3339))
 	d.Set("not_before", aws.TimeValue(certificateAuthority.NotBefore).Format(time.RFC3339))
 	if err := d.Set("revocation_configuration", flattenRevocationConfiguration(certificateAuthority.RevocationConfiguration)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting revocation_configuration: %s", err)
 	}
 	d.Set("serial", certificateAuthority.Serial)
-	d.Set("status", certificateAuthority.Status)
 	d.Set("type", certificateAuthority.Type)
 	d.Set("usage_mode", certificateAuthority.UsageMode)
 
@@ -467,29 +470,12 @@ func resourceCertificateAuthorityRead(ctx context.Context, d *schema.ResourceDat
 		d.Set("certificate_signing_request", getCertificateAuthorityCsrOutput.Csr)
 	}
 
-	tags, err := ListTags(ctx, conn, d.Id())
-
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "listing tags for ACM PCA Certificate Authority (%s): %s", d.Id(), err)
-	}
-
-	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
-	}
-
 	return diags
 }
 
 func resourceCertificateAuthorityUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ACMPCAConn()
+	conn := meta.(*conns.AWSClient).ACMPCAConn(ctx)
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		input := &acmpca.UpdateCertificateAuthorityInput{
@@ -514,20 +500,12 @@ func resourceCertificateAuthorityUpdate(ctx context.Context, d *schema.ResourceD
 		}
 	}
 
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		if err := UpdateTags(ctx, conn, d.Id(), o, n); err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating ACM PCA Certificate Authority (%s) tags: %s", d.Id(), err)
-		}
-	}
-
 	return append(diags, resourceCertificateAuthorityRead(ctx, d, meta)...)
 }
 
 func resourceCertificateAuthorityDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ACMPCAConn()
+	conn := meta.(*conns.AWSClient).ACMPCAConn(ctx)
 
 	// The Certificate Authority must be in PENDING_CERTIFICATE or DISABLED state before deleting.
 	updateInput := &acmpca.UpdateCertificateAuthorityInput{

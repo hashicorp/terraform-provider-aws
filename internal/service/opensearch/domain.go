@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package opensearch
 
 import (
@@ -24,9 +27,11 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_opensearch_domain")
+// @SDKResource("aws_opensearch_domain", name="Domain")
+// @Tags(identifierAttribute="id")
 func ResourceDomain() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceDomainCreate,
@@ -48,7 +53,7 @@ func ResourceDomain() *schema.Resource {
 				newVersion := d.Get("engine_version").(string)
 				domainName := d.Get("domain_name").(string)
 
-				conn := meta.(*conns.AWSClient).OpenSearchConn()
+				conn := meta.(*conns.AWSClient).OpenSearchConn(ctx)
 				resp, err := conn.GetCompatibleVersionsWithContext(ctx, &opensearchservice.GetCompatibleVersionsInput{
 					DomainName: aws.String(domainName),
 				})
@@ -276,13 +281,9 @@ func ResourceDomain() *schema.Resource {
 							Optional: true,
 						},
 						"warm_type": {
-							Type:     schema.TypeString,
-							Optional: true,
-							ValidateFunc: validation.StringInSlice([]string{
-								opensearchservice.OpenSearchWarmPartitionInstanceTypeUltrawarm1MediumSearch,
-								opensearchservice.OpenSearchWarmPartitionInstanceTypeUltrawarm1LargeSearch,
-								"ultrawarm1.xlarge.search",
-							}, false),
+							Type:         schema.TypeString,
+							Optional:     true,
+							ValidateFunc: validation.StringInSlice(opensearchservice.OpenSearchWarmPartitionInstanceType_Values(), false),
 						},
 						"zone_awareness_config": {
 							Type:             schema.TypeList,
@@ -451,11 +452,12 @@ func ResourceDomain() *schema.Resource {
 			"engine_version": {
 				Type:     schema.TypeString,
 				Optional: true,
-				Default:  "OpenSearch_1.1",
+				Computed: true,
 			},
 			"kibana_endpoint": {
-				Type:     schema.TypeString,
-				Computed: true,
+				Type:       schema.TypeString,
+				Computed:   true,
+				Deprecated: "use 'dashboard_endpoint' attribute instead",
 			},
 			"log_publishing_options": {
 				Type:     schema.TypeSet,
@@ -494,6 +496,51 @@ func ResourceDomain() *schema.Resource {
 					},
 				},
 			},
+			"off_peak_window_options": {
+				Type:     schema.TypeList,
+				Optional: true,
+				Computed: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"enabled": {
+							Type:     schema.TypeBool,
+							Optional: true,
+							Computed: true,
+						},
+						"off_peak_window": {
+							Type:     schema.TypeList,
+							Optional: true,
+							Computed: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"window_start_time": {
+										Type:     schema.TypeList,
+										Optional: true,
+										Computed: true,
+										MaxItems: 1,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"hours": {
+													Type:     schema.TypeInt,
+													Optional: true,
+													Computed: true,
+												},
+												"minutes": {
+													Type:     schema.TypeInt,
+													Optional: true,
+													Computed: true,
+												},
+											},
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
 			"snapshot_options": {
 				Type:             schema.TypeList,
 				Optional:         true,
@@ -508,8 +555,8 @@ func ResourceDomain() *schema.Resource {
 					},
 				},
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			"vpc_options": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -554,9 +601,7 @@ func resourceDomainImport(ctx context.Context,
 
 func resourceDomainCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).OpenSearchConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
+	conn := meta.(*conns.AWSClient).OpenSearchConn(ctx)
 
 	// The API doesn't check for duplicate names
 	// so w/out this check Create would act as upsert
@@ -566,10 +611,13 @@ func resourceDomainCreate(ctx context.Context, d *schema.ResourceData, meta inte
 		return sdkdiag.AppendErrorf(diags, "OpenSearch Domain %q already exists", aws.StringValue(resp.DomainName))
 	}
 
-	inputCreateDomain := opensearchservice.CreateDomainInput{
-		DomainName:    aws.String(d.Get("domain_name").(string)),
-		EngineVersion: aws.String(d.Get("engine_version").(string)),
-		TagList:       Tags(tags.IgnoreAWS()),
+	input := &opensearchservice.CreateDomainInput{
+		DomainName: aws.String(d.Get("domain_name").(string)),
+		TagList:    getTagsIn(ctx),
+	}
+
+	if v, ok := d.GetOk("engine_version"); ok {
+		input.EngineVersion = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("access_policies"); ok {
@@ -579,19 +627,19 @@ func resourceDomainCreate(ctx context.Context, d *schema.ResourceData, meta inte
 			return sdkdiag.AppendErrorf(diags, "policy (%s) is invalid JSON: %s", policy, err)
 		}
 
-		inputCreateDomain.AccessPolicies = aws.String(policy)
+		input.AccessPolicies = aws.String(policy)
 	}
 
 	if v, ok := d.GetOk("advanced_options"); ok {
-		inputCreateDomain.AdvancedOptions = flex.ExpandStringMap(v.(map[string]interface{}))
+		input.AdvancedOptions = flex.ExpandStringMap(v.(map[string]interface{}))
 	}
 
 	if v, ok := d.GetOk("advanced_security_options"); ok {
-		inputCreateDomain.AdvancedSecurityOptions = expandAdvancedSecurityOptions(v.([]interface{}))
+		input.AdvancedSecurityOptions = expandAdvancedSecurityOptions(v.([]interface{}))
 	}
 
 	if v, ok := d.GetOk("auto_tune_options"); ok && len(v.([]interface{})) > 0 {
-		inputCreateDomain.AutoTuneOptions = expandAutoTuneOptionsInput(v.([]interface{})[0].(map[string]interface{}))
+		input.AutoTuneOptions = expandAutoTuneOptionsInput(v.([]interface{})[0].(map[string]interface{}))
 	}
 
 	if v, ok := d.GetOk("ebs_options"); ok {
@@ -603,7 +651,7 @@ func resourceDomainCreate(ctx context.Context, d *schema.ResourceData, meta inte
 			}
 
 			s := options[0].(map[string]interface{})
-			inputCreateDomain.EBSOptions = expandEBSOptions(s)
+			input.EBSOptions = expandEBSOptions(s)
 		}
 	}
 
@@ -614,7 +662,7 @@ func resourceDomainCreate(ctx context.Context, d *schema.ResourceData, meta inte
 		}
 
 		s := options[0].(map[string]interface{})
-		inputCreateDomain.EncryptionAtRestOptions = expandEncryptAtRestOptions(s)
+		input.EncryptionAtRestOptions = expandEncryptAtRestOptions(s)
 	}
 
 	if v, ok := d.GetOk("cluster_config"); ok {
@@ -625,7 +673,7 @@ func resourceDomainCreate(ctx context.Context, d *schema.ResourceData, meta inte
 				return sdkdiag.AppendErrorf(diags, "At least one field is expected inside cluster_config")
 			}
 			m := config[0].(map[string]interface{})
-			inputCreateDomain.ClusterConfig = expandClusterConfig(m)
+			input.ClusterConfig = expandClusterConfig(m)
 		}
 	}
 
@@ -633,7 +681,7 @@ func resourceDomainCreate(ctx context.Context, d *schema.ResourceData, meta inte
 		options := v.([]interface{})
 
 		s := options[0].(map[string]interface{})
-		inputCreateDomain.NodeToNodeEncryptionOptions = expandNodeToNodeEncryptionOptions(s)
+		input.NodeToNodeEncryptionOptions = expandNodeToNodeEncryptionOptions(s)
 	}
 
 	if v, ok := d.GetOk("snapshot_options"); ok {
@@ -650,7 +698,7 @@ func resourceDomainCreate(ctx context.Context, d *schema.ResourceData, meta inte
 				AutomatedSnapshotStartHour: aws.Int64(int64(o["automated_snapshot_start_hour"].(int))),
 			}
 
-			inputCreateDomain.SnapshotOptions = &snapshotOptions
+			input.SnapshotOptions = &snapshotOptions
 		}
 	}
 
@@ -661,26 +709,36 @@ func resourceDomainCreate(ctx context.Context, d *schema.ResourceData, meta inte
 		}
 
 		s := options[0].(map[string]interface{})
-		inputCreateDomain.VPCOptions = expandVPCOptions(s)
+		input.VPCOptions = expandVPCOptions(s)
 	}
 
 	if v, ok := d.GetOk("log_publishing_options"); ok {
-		inputCreateDomain.LogPublishingOptions = expandLogPublishingOptions(v.(*schema.Set))
+		input.LogPublishingOptions = expandLogPublishingOptions(v.(*schema.Set))
 	}
 
 	if v, ok := d.GetOk("domain_endpoint_options"); ok {
-		inputCreateDomain.DomainEndpointOptions = expandDomainEndpointOptions(v.([]interface{}))
+		input.DomainEndpointOptions = expandDomainEndpointOptions(v.([]interface{}))
 	}
 
 	if v, ok := d.GetOk("cognito_options"); ok {
-		inputCreateDomain.CognitoOptions = expandCognitoOptions(v.([]interface{}))
+		input.CognitoOptions = expandCognitoOptions(v.([]interface{}))
+	}
+
+	if v, ok := d.GetOk("off_peak_window_options"); ok && len(v.([]interface{})) > 0 {
+		input.OffPeakWindowOptions = expandOffPeakWindowOptions(v.([]interface{})[0].(map[string]interface{}))
+
+		// This option is only available when modifying a domain created prior to February 16, 2023, not when creating a new domain.
+		// An off-peak window is required for a domain and cannot be disabled.
+		if input.OffPeakWindowOptions != nil {
+			input.OffPeakWindowOptions.Enabled = aws.Bool(true)
+		}
 	}
 
 	// IAM Roles can take some time to propagate if set in AccessPolicies and created in the same terraform
 	var out *opensearchservice.CreateDomainOutput
 	err = retry.RetryContext(ctx, propagationTimeout, func() *retry.RetryError {
 		var err error
-		out, err = conn.CreateDomainWithContext(ctx, &inputCreateDomain)
+		out, err = conn.CreateDomainWithContext(ctx, input)
 		if err != nil {
 			if tfawserr.ErrMessageContains(err, "InvalidTypeException", "Error setting policy") {
 				return retry.RetryableError(err)
@@ -711,7 +769,7 @@ func resourceDomainCreate(ctx context.Context, d *schema.ResourceData, meta inte
 		return nil
 	})
 	if tfresource.TimedOut(err) {
-		out, err = conn.CreateDomainWithContext(ctx, &inputCreateDomain)
+		out, err = conn.CreateDomainWithContext(ctx, input)
 	}
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating OpenSearch Domain: %s", err)
@@ -729,13 +787,13 @@ func resourceDomainCreate(ctx context.Context, d *schema.ResourceData, meta inte
 	if v, ok := d.GetOk("auto_tune_options"); ok && len(v.([]interface{})) > 0 {
 		log.Printf("[DEBUG] Modifying config for OpenSearch Domain %q", d.Id())
 
-		inputUpdateDomainConfig := &opensearchservice.UpdateDomainConfigInput{
+		input := &opensearchservice.UpdateDomainConfigInput{
 			DomainName: aws.String(d.Get("domain_name").(string)),
 		}
 
-		inputUpdateDomainConfig.AutoTuneOptions = expandAutoTuneOptions(v.([]interface{})[0].(map[string]interface{}))
+		input.AutoTuneOptions = expandAutoTuneOptions(v.([]interface{})[0].(map[string]interface{}))
 
-		_, err = conn.UpdateDomainConfigWithContext(ctx, inputUpdateDomainConfig)
+		_, err = conn.UpdateDomainConfigWithContext(ctx, input)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "modifying config for OpenSearch Domain: %s", err)
@@ -749,9 +807,7 @@ func resourceDomainCreate(ctx context.Context, d *schema.ResourceData, meta inte
 
 func resourceDomainRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).OpenSearchConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).OpenSearchConn(ctx)
 
 	ds, err := FindDomainByName(ctx, conn, d.Get("domain_name").(string))
 
@@ -791,6 +847,7 @@ func resourceDomainRead(ctx context.Context, d *schema.ResourceData, meta interf
 	}
 
 	d.SetId(aws.StringValue(ds.ARN))
+	d.Set("arn", ds.ARN)
 	d.Set("domain_id", ds.DomainId)
 	d.Set("domain_name", ds.DomainName)
 	d.Set("engine_version", ds.EngineVersion)
@@ -869,23 +926,12 @@ func resourceDomainRead(ctx context.Context, d *schema.ResourceData, meta interf
 		return sdkdiag.AppendErrorf(diags, "setting domain_endpoint_options: %s", err)
 	}
 
-	d.Set("arn", ds.ARN)
-
-	tags, err := ListTags(ctx, conn, d.Id())
-
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "listing tags for OpenSearch Cluster (%s): %s", d.Id(), err)
-	}
-
-	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
+	if ds.OffPeakWindowOptions != nil {
+		if err := d.Set("off_peak_window_options", []interface{}{flattenOffPeakWindowOptions(ds.OffPeakWindowOptions)}); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting off_peak_window_options: %s", err)
+		}
+	} else {
+		d.Set("off_peak_window_options", nil)
 	}
 
 	return diags
@@ -893,7 +939,7 @@ func resourceDomainRead(ctx context.Context, d *schema.ResourceData, meta interf
 
 func resourceDomainUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).OpenSearchConn()
+	conn := meta.(*conns.AWSClient).OpenSearchConn(ctx)
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		input := opensearchservice.UpdateDomainConfigInput{
@@ -918,6 +964,10 @@ func resourceDomainUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 
 		if d.HasChange("auto_tune_options") {
 			input.AutoTuneOptions = expandAutoTuneOptions(d.Get("auto_tune_options").([]interface{})[0].(map[string]interface{}))
+		}
+
+		if d.HasChange("cognito_options") {
+			input.CognitoOptions = expandCognitoOptions(d.Get("cognito_options").([]interface{}))
 		}
 
 		if d.HasChange("domain_endpoint_options") {
@@ -971,6 +1021,10 @@ func resourceDomainUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 			}
 		}
 
+		if d.HasChange("log_publishing_options") {
+			input.LogPublishingOptions = expandLogPublishingOptions(d.Get("log_publishing_options").(*schema.Set))
+		}
+
 		if d.HasChange("node_to_node_encryption") {
 			input.NodeToNodeEncryptionOptions = nil
 			if v, ok := d.GetOk("node_to_node_encryption"); ok {
@@ -979,6 +1033,10 @@ func resourceDomainUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 				s := options[0].(map[string]interface{})
 				input.NodeToNodeEncryptionOptions = expandNodeToNodeEncryptionOptions(s)
 			}
+		}
+
+		if d.HasChange("off_peak_window_options") {
+			input.OffPeakWindowOptions = expandOffPeakWindowOptions(d.Get("off_peak_window_options").([]interface{})[0].(map[string]interface{}))
 		}
 
 		if d.HasChange("snapshot_options") {
@@ -999,15 +1057,6 @@ func resourceDomainUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 			options := d.Get("vpc_options").([]interface{})
 			s := options[0].(map[string]interface{})
 			input.VPCOptions = expandVPCOptions(s)
-		}
-
-		if d.HasChange("cognito_options") {
-			options := d.Get("cognito_options").([]interface{})
-			input.CognitoOptions = expandCognitoOptions(options)
-		}
-
-		if d.HasChange("log_publishing_options") {
-			input.LogPublishingOptions = expandLogPublishingOptions(d.Get("log_publishing_options").(*schema.Set))
 		}
 
 		_, err := conn.UpdateDomainConfigWithContext(ctx, &input)
@@ -1036,20 +1085,12 @@ func resourceDomainUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 		}
 	}
 
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		if err := UpdateTags(ctx, conn, d.Id(), o, n); err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating OpenSearch Domain (%s) tags: %s", d.Id(), err)
-		}
-	}
-
 	return append(diags, resourceDomainRead(ctx, d, meta)...)
 }
 
 func resourceDomainDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).OpenSearchConn()
+	conn := meta.(*conns.AWSClient).OpenSearchConn(ctx)
 	domainName := d.Get("domain_name").(string)
 
 	log.Printf("[DEBUG] Deleting OpenSearch Domain: %q", domainName)
@@ -1340,7 +1381,7 @@ func EBSVolumeTypePermitsIopsInput(volumeType string) bool {
 	return false
 }
 
-// EBSVolumeTypePermitsIopsInput returns true if the volume type supports the Throughput input
+// EBSVolumeTypePermitsThroughputInput returns true if the volume type supports the Throughput input
 //
 // This check prevents a ValidationException when updating EBS volume types from a value
 // that supports Throughput (ex. gp3) to one that doesn't (ex. gp2).

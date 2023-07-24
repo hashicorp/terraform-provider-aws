@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package dms_test
 
 import (
@@ -8,9 +11,9 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	dms "github.com/aws/aws-sdk-go/service/databasemigrationservice"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfdms "github.com/hashicorp/terraform-provider-aws/internal/service/dms"
@@ -145,7 +148,7 @@ func testAccCheckCertificateDestroy(ctx context.Context) resource.TestCheckFunc 
 				continue
 			}
 
-			conn := acctest.Provider.Meta().(*conns.AWSClient).DMSConn()
+			conn := acctest.Provider.Meta().(*conns.AWSClient).DMSConn(ctx)
 
 			output, err := conn.DescribeCertificatesWithContext(ctx, &dms.DescribeCertificatesInput{
 				Filters: []*dms.Filter{
@@ -184,7 +187,7 @@ func testAccCertificateExists(ctx context.Context, n string) resource.TestCheckF
 			return fmt.Errorf("No ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DMSConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DMSConn(ctx)
 
 		output, err := conn.DescribeCertificatesWithContext(ctx, &dms.DescribeCertificatesInput{
 			Filters: []*dms.Filter{

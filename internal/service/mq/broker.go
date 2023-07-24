@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package mq
 
 import (
@@ -23,15 +26,17 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
-	"github.com/hashicorp/terraform-provider-aws/internal/experimental/nullable"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/types/nullable"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 	"github.com/mitchellh/copystructure"
 )
 
-// @SDKResource("aws_mq_broker")
+// @SDKResource("aws_mq_broker", name="Broker")
+// @Tags(identifierAttribute="arn")
 func ResourceBroker() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceBrokerCreate,
@@ -286,8 +291,8 @@ func ResourceBroker() *schema.Resource {
 				Computed: true,
 				ForceNew: true,
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			"user": {
 				Type:     schema.TypeSet,
 				Required: true,
@@ -324,6 +329,11 @@ func ResourceBroker() *schema.Resource {
 							Sensitive:    true,
 							ValidateFunc: ValidBrokerPassword,
 						},
+						"replication_user": {
+							Type:     schema.TypeBool,
+							Optional: true,
+							Default:  false,
+						},
 						"username": {
 							Type:         schema.TypeString,
 							Required:     true,
@@ -352,9 +362,7 @@ func ResourceBroker() *schema.Resource {
 }
 
 func resourceBrokerCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).MQConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
+	conn := meta.(*conns.AWSClient).MQConn(ctx)
 
 	name := d.Get("broker_name").(string)
 	engineType := d.Get("engine_type").(string)
@@ -366,6 +374,7 @@ func resourceBrokerCreate(ctx context.Context, d *schema.ResourceData, meta inte
 		EngineVersion:           aws.String(d.Get("engine_version").(string)),
 		HostInstanceType:        aws.String(d.Get("host_instance_type").(string)),
 		PubliclyAccessible:      aws.Bool(d.Get("publicly_accessible").(bool)),
+		Tags:                    getTagsIn(ctx),
 		Users:                   expandUsers(d.Get("user").(*schema.Set).List()),
 	}
 
@@ -399,9 +408,6 @@ func resourceBrokerCreate(ctx context.Context, d *schema.ResourceData, meta inte
 	if v, ok := d.GetOk("subnet_ids"); ok {
 		input.SubnetIds = flex.ExpandStringSet(v.(*schema.Set))
 	}
-	if len(tags) > 0 {
-		input.Tags = Tags(tags.IgnoreAWS())
-	}
 
 	out, err := conn.CreateBrokerWithContext(ctx, input)
 
@@ -420,9 +426,7 @@ func resourceBrokerCreate(ctx context.Context, d *schema.ResourceData, meta inte
 }
 
 func resourceBrokerRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).MQConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).MQConn(ctx)
 
 	output, err := FindBrokerByID(ctx, conn, d.Id())
 
@@ -485,22 +489,13 @@ func resourceBrokerRead(ctx context.Context, d *schema.ResourceData, meta interf
 		return diag.Errorf("setting user: %s", err)
 	}
 
-	tags := KeyValueTags(ctx, output.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return diag.Errorf("setting tags: %s", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return diag.Errorf("setting tags_all: %s", err)
-	}
+	setTagsOut(ctx, output.Tags)
 
 	return nil
 }
 
 func resourceBrokerUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).MQConn()
+	conn := meta.(*conns.AWSClient).MQConn(ctx)
 
 	requiresReboot := false
 
@@ -600,19 +595,11 @@ func resourceBrokerUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 		}
 	}
 
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		if err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n); err != nil {
-			return diag.Errorf("updating MQ Broker (%s) tags: %s", d.Get("arn").(string), err)
-		}
-	}
-
 	return nil
 }
 
 func resourceBrokerDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).MQConn()
+	conn := meta.(*conns.AWSClient).MQConn(ctx)
 
 	log.Printf("[INFO] Deleting MQ Broker: %s", d.Id())
 	_, err := conn.DeleteBrokerWithContext(ctx, &mq.DeleteBrokerInput{
@@ -824,11 +811,12 @@ func DiffBrokerUsers(bId string, oldUsers, newUsers []interface{}) (
 
 			if !reflect.DeepEqual(existingUserMap, newUserMap) {
 				ur = append(ur, &mq.UpdateUserRequest{
-					BrokerId:      aws.String(bId),
-					ConsoleAccess: aws.Bool(newUserMap["console_access"].(bool)),
-					Groups:        flex.ExpandStringList(ng),
-					Password:      aws.String(newUserMap["password"].(string)),
-					Username:      aws.String(username),
+					BrokerId:        aws.String(bId),
+					ConsoleAccess:   aws.Bool(newUserMap["console_access"].(bool)),
+					Groups:          flex.ExpandStringList(ng),
+					ReplicationUser: aws.Bool(newUserMap["replication_user"].(bool)),
+					Password:        aws.String(newUserMap["password"].(string)),
+					Username:        aws.String(username),
 				})
 			}
 
@@ -836,10 +824,11 @@ func DiffBrokerUsers(bId string, oldUsers, newUsers []interface{}) (
 			delete(existingUsers, username)
 		} else {
 			cur := &mq.CreateUserRequest{
-				BrokerId:      aws.String(bId),
-				ConsoleAccess: aws.Bool(newUserMap["console_access"].(bool)),
-				Password:      aws.String(newUserMap["password"].(string)),
-				Username:      aws.String(username),
+				BrokerId:        aws.String(bId),
+				ConsoleAccess:   aws.Bool(newUserMap["console_access"].(bool)),
+				Password:        aws.String(newUserMap["password"].(string)),
+				ReplicationUser: aws.Bool(newUserMap["replication_user"].(bool)),
+				Username:        aws.String(username),
 			}
 			if len(ng) > 0 {
 				cur.Groups = flex.ExpandStringList(ng)
@@ -925,6 +914,9 @@ func expandUsers(cfg []interface{}) []*mq.User {
 		if v, ok := u["console_access"]; ok {
 			user.ConsoleAccess = aws.Bool(v.(bool))
 		}
+		if v, ok := u["replication_user"]; ok {
+			user.ReplicationUser = aws.Bool(v.(bool))
+		}
 		if v, ok := u["groups"]; ok {
 			user.Groups = flex.ExpandStringSet(v.(*schema.Set))
 		}
@@ -951,9 +943,10 @@ func expandUsersForBroker(ctx context.Context, conn *mq.MQ, brokerId string, inp
 		}
 
 		user := &mq.User{
-			ConsoleAccess: uOut.ConsoleAccess,
-			Groups:        uOut.Groups,
-			Username:      uOut.Username,
+			ConsoleAccess:   uOut.ConsoleAccess,
+			Groups:          uOut.Groups,
+			ReplicationUser: uOut.ReplicationUser,
+			Username:        uOut.Username,
 		}
 
 		rawUsers = append(rawUsers, user)
@@ -985,6 +978,9 @@ func flattenUsers(users []*mq.User, cfgUsers []interface{}) *schema.Set {
 		}
 		if u.ConsoleAccess != nil {
 			m["console_access"] = aws.BoolValue(u.ConsoleAccess)
+		}
+		if u.ReplicationUser != nil {
+			m["replication_user"] = aws.BoolValue(u.ReplicationUser)
 		}
 		if len(u.Groups) > 0 {
 			m["groups"] = flex.FlattenStringSet(u.Groups)

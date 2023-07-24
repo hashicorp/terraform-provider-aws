@@ -1,4 +1,4 @@
-SWEEP               ?= us-west-2,us-east-1,us-east-2
+SWEEP               ?= us-west-2,us-east-1,us-east-2,us-west-1
 TEST                ?= ./...
 SWEEP_DIR           ?= ./internal/sweep
 PKG_NAME            ?= internal
@@ -78,6 +78,25 @@ default: build
 build: fmtcheck
 	$(GO_VER) install
 
+cleango:
+	@echo "==> Cleaning Go..."
+	@echo "WARNING: This will kill gopls and clean Go caches"
+	@vscode=`ps -ef | grep Visual\ Studio\ Code | wc -l | xargs` ; \
+	if [ $$vscode -gt 1 ] ; then \
+		echo "ALERT: vscode is running. Close it and try again." ; \
+		exit 1 ; \
+	fi
+	@for proc in `pgrep gopls` ; do \
+		echo "Killing gopls process $$proc" ; \
+		kill -9 $$proc ; \
+	done ; \
+	go clean -modcache -testcache -cache ; \
+
+clean: cleango build tools
+
+copyright:
+	@copywrite headers
+
 depscheck:
 	@echo "==> Checking source code with go mod tidy..."
 	@$(GO_VER) mod tidy
@@ -129,19 +148,19 @@ gen:
 	rm -f internal/conns/*_gen.go
 	rm -f internal/provider/*_gen.go
 	rm -f internal/service/**/*_gen.go
-	rm -f internal/sweep/sweep_test.go
+	rm -f internal/sweep/sweep_test.go internal/sweep/service_packages_gen_test.go
 	rm -f names/caps.md
 	rm -f names/*_gen.go
-	rm -f website/allowed-subcategories.txt
 	rm -f website/docs/guides/custom-service-endpoints.html.md
 	rm -f .ci/.semgrep-caps-aws-ec2.yml
 	rm -f .ci/.semgrep-configs.yml
 	rm -f .ci/.semgrep-service-name*.yml
 	$(GO_VER) generate ./...
-	# Generate service package data last as it may depend on output of earlier generators.
-	rm -f internal/service/**/service_package_gen.go
+	# Generate service package lists last as they may depend on output of earlier generators.
 	rm -f internal/provider/service_packages_gen.go
-	$(GO_VER) generate ./internal/generate/servicepackages
+	$(GO_VER) generate ./internal/provider
+	rm -f internal/sweep/sweep_test.go internal/sweep/service_packages_gen_test.go
+	$(GO_VER) generate ./internal/sweep
 
 gencheck:
 	@echo "==> Checking generated source code..."
@@ -170,6 +189,8 @@ importlint:
 
 lint: golangci-lint providerlint importlint
 
+lint-fix: testacc-lint-fix website-lint-fix docs-lint-fix
+
 providerlint:
 	@echo "==> Checking source code with providerlint..."
 	@providerlint \
@@ -197,26 +218,68 @@ providerlint:
 		-XS002=false \
 		./internal/service/... ./internal/provider/...
 
-sanity:
-	@echo "==> Sanity Check (48 tests of Top 30 resources)"
-	@echo "==> NOTE: This is meant to find big problems with the provider as a whole."
-	@echo "==> This is not an exhaustive test."
+sane:
+	@echo "==> Sane Check (48 tests of Top 30 resources)"
+	@echo "==> Like 'sanity' except full output and stops soon after 1st error"
+	@echo "==> NOTE: NOT an exhaustive set of tests! Finds big problems only."
+	@TF_ACC=1 $(GO_VER) test \
+		./internal/service/iam/... \
+		-v -count $(TEST_COUNT) -parallel $(ACCTEST_PARALLELISM) -run='TestAccIAMRole_basic|TestAccIAMRole_namePrefix|TestAccIAMRole_disappears|TestAccIAMRole_InlinePolicy_basic|TestAccIAMPolicyDocumentDataSource_basic|TestAccIAMPolicyDocumentDataSource_sourceConflicting|TestAccIAMPolicyDocumentDataSource_sourceJSONValidJSON|TestAccIAMRolePolicyAttachment_basic|TestAccIAMRolePolicyAttachment_disappears|TestAccIAMRolePolicyAttachment_Disappears_role|TestAccIAMPolicy_basic|TestAccIAMPolicy_policy|TestAccIAMPolicy_tags|TestAccIAMRolePolicy_basic|TestAccIAMRolePolicy_unknownsInPolicy|TestAccIAMInstanceProfile_basic|TestAccIAMInstanceProfile_tags' -timeout $(ACCTEST_TIMEOUT)
 	@TF_ACC=1 $(GO_VER) test \
 		./internal/service/logs/... \
 		./internal/service/ec2/... \
 		./internal/service/ecs/... \
 		./internal/service/elbv2/... \
-		./internal/service/iam/... \
 		./internal/service/kms/... \
+		-v -count $(TEST_COUNT) -parallel $(ACCTEST_PARALLELISM) -run='TestAccVPCSecurityGroup_basic|TestAccVPCSecurityGroup_ipRangesWithSameRules|TestAccVPCSecurityGroup_vpcAllEgress|TestAccVPCSecurityGroupRule_race|TestAccVPCSecurityGroupRule_protocolChange|TestAccVPCDataSource_basic|TestAccVPCSubnet_basic|TestAccVPC_tenancy|TestAccVPCRouteTableAssociation_Subnet_basic|TestAccVPCRouteTable_basic|TestAccLogsGroup_basic|TestAccLogsGroup_multiple|TestAccKMSKey_basic|TestAccELBV2TargetGroup_basic|TestAccECSTaskDefinition_basic|TestAccECSService_basic' -timeout $(ACCTEST_TIMEOUT)
+	@TF_ACC=1 $(GO_VER) test \
 		./internal/service/lambda/... \
 		./internal/service/meta/... \
 		./internal/service/route53/... \
 		./internal/service/s3/... \
 		./internal/service/secretsmanager/... \
 		./internal/service/sts/... \
-		-v -count $(TEST_COUNT) -parallel $(ACCTEST_PARALLELISM) -run='TestAccIAMRole_basic|TestAccIAMRole_namePrefix|TestAccIAMRole_disappears|TestAccIAMRole_InlinePolicy_basic|TestAccIAMPolicyDocumentDataSource_basic|TestAccIAMPolicyDocumentDataSource_sourceConflicting|TestAccIAMPolicyDocumentDataSource_sourceJSONValidJSON|TestAccIAMRolePolicyAttachment_basic|TestAccIAMRolePolicyAttachment_disappears|TestAccIAMRolePolicyAttachment_Disappears_role|TestAccIAMPolicy_basic|TestAccIAMPolicy_policy|TestAccIAMPolicy_tags|TestAccIAMRolePolicy_basic|TestAccIAMRolePolicy_unknownsInPolicy|TestAccIAMInstanceProfile_basic|TestAccIAMInstanceProfile_tags|TestAccSTSCallerIdentityDataSource_basic|TestAccVPCSecurityGroup_basic|TestAccVPCSecurityGroup_ipRangesWithSameRules|TestAccVPCSecurityGroup_vpcAllEgress|TestAccVPCSecurityGroupRule_race|TestAccVPCSecurityGroupRule_protocolChange|TestAccVPCDataSource_basic|TestAccVPCSubnet_basic|TestAccVPC_tenancy|TestAccVPCRouteTableAssociation_Subnet_basic|TestAccVPCRouteTable_basic|TestAccLogsGroup_basic|TestAccLogsGroup_multiple|TestAccMetaRegionDataSource_basic|TestAccMetaRegionDataSource_endpoint|TestAccMetaPartitionDataSource_basic|TestAccS3Bucket_Basic_basic|TestAccS3Bucket_Security_corsUpdate|TestAccS3BucketPublicAccessBlock_basic|TestAccS3BucketPolicy_basic|TestAccS3BucketACL_updateACL|TestAccRoute53Record_basic|TestAccRoute53Record_Latency_basic|TestAccRoute53ZoneDataSource_name|TestAccLambdaFunction_basic|TestAccLambdaPermission_basic|TestAccKMSKey_basic|TestAccELBV2TargetGroup_basic|TestAccSecretsManagerSecret_basic|TestAccECSTaskDefinition_basic|TestAccECSService_basic' -timeout $(ACCTEST_TIMEOUT)
+		-v -count $(TEST_COUNT) -parallel $(ACCTEST_PARALLELISM) -run='TestAccSTSCallerIdentityDataSource_basic|TestAccMetaRegionDataSource_basic|TestAccMetaRegionDataSource_endpoint|TestAccMetaPartitionDataSource_basic|TestAccS3Bucket_Basic_basic|TestAccS3Bucket_Security_corsUpdate|TestAccS3BucketPublicAccessBlock_basic|TestAccS3BucketPolicy_basic|TestAccS3BucketACL_updateACL|TestAccRoute53Record_basic|TestAccRoute53Record_Latency_basic|TestAccRoute53ZoneDataSource_name|TestAccLambdaFunction_basic|TestAccLambdaPermission_basic|TestAccSecretsManagerSecret_basic' -timeout $(ACCTEST_TIMEOUT)
 
-semall:
+sanity:
+	@echo "==> Sanity Check (48 tests of Top 30 resources)"
+	@echo "==> Like 'sane' but less output and runs all tests despite most errors"
+	@echo "==> NOTE: NOT an exhaustive set of tests! Finds big problems only."
+	@iam=`TF_ACC=1 $(GO_VER) test \
+		./internal/service/iam/... \
+		-v -count $(TEST_COUNT) -parallel $(ACCTEST_PARALLELISM) -run='TestAccIAMRole_basic|TestAccIAMRole_namePrefix|TestAccIAMRole_disappears|TestAccIAMRole_InlinePolicy_basic|TestAccIAMPolicyDocumentDataSource_basic|TestAccIAMPolicyDocumentDataSource_sourceConflicting|TestAccIAMPolicyDocumentDataSource_sourceJSONValidJSON|TestAccIAMRolePolicyAttachment_basic|TestAccIAMRolePolicyAttachment_disappears|TestAccIAMRolePolicyAttachment_Disappears_role|TestAccIAMPolicy_basic|TestAccIAMPolicy_policy|TestAccIAMPolicy_tags|TestAccIAMRolePolicy_basic|TestAccIAMRolePolicy_unknownsInPolicy|TestAccIAMInstanceProfile_basic|TestAccIAMInstanceProfile_tags' -timeout $(ACCTEST_TIMEOUT) || true` ; \
+	fails1=`echo -n $$iam | grep -Fo FAIL: | wc -l | xargs` ; \
+	passes=$$(( 17-$$fails1 )) ; \
+	echo "17 of 48 complete: $$passes passed, $$fails1 failed" ; \
+	logs=`TF_ACC=1 $(GO_VER) test \
+		./internal/service/logs/... \
+		./internal/service/ec2/... \
+		./internal/service/ecs/... \
+		./internal/service/elbv2/... \
+		./internal/service/kms/... \
+		-v -count $(TEST_COUNT) -parallel $(ACCTEST_PARALLELISM) -run='TestAccVPCSecurityGroup_basic|TestAccVPCSecurityGroup_ipRangesWithSameRules|TestAccVPCSecurityGroup_vpcAllEgress|TestAccVPCSecurityGroupRule_race|TestAccVPCSecurityGroupRule_protocolChange|TestAccVPCDataSource_basic|TestAccVPCSubnet_basic|TestAccVPC_tenancy|TestAccVPCRouteTableAssociation_Subnet_basic|TestAccVPCRouteTable_basic|TestAccLogsGroup_basic|TestAccLogsGroup_multiple|TestAccKMSKey_basic|TestAccELBV2TargetGroup_basic|TestAccECSTaskDefinition_basic|TestAccECSService_basic' -timeout $(ACCTEST_TIMEOUT) || true` ; \
+	fails2=`echo -n $$logs | grep -Fo FAIL: | wc -l | xargs` ; \
+	tot_fails=$$(( $$fails1+$$fails2 )) ; \
+	passes=$$(( 33-$$tot_fails )) ; \
+	echo "33 of 48 complete: $$passes passed, $$tot_fails failed" ; \
+	lambda=`TF_ACC=1 $(GO_VER) test \
+		./internal/service/lambda/... \
+		./internal/service/meta/... \
+		./internal/service/route53/... \
+		./internal/service/s3/... \
+		./internal/service/secretsmanager/... \
+		./internal/service/sts/... \
+		-v -count $(TEST_COUNT) -parallel $(ACCTEST_PARALLELISM) -run='TestAccSTSCallerIdentityDataSource_basic|TestAccMetaRegionDataSource_basic|TestAccMetaRegionDataSource_endpoint|TestAccMetaPartitionDataSource_basic|TestAccS3Bucket_Basic_basic|TestAccS3Bucket_Security_corsUpdate|TestAccS3BucketPublicAccessBlock_basic|TestAccS3BucketPolicy_basic|TestAccS3BucketACL_updateACL|TestAccRoute53Record_basic|TestAccRoute53Record_Latency_basic|TestAccRoute53ZoneDataSource_name|TestAccLambdaFunction_basic|TestAccLambdaPermission_basic|TestAccSecretsManagerSecret_basic' -timeout $(ACCTEST_TIMEOUT) || true` ; \
+	fails3=`echo -n $$lambda | grep -Fo FAIL: | wc -l | xargs` ; \
+	tot_fails=$$(( $$fails1+$$fails2+$$fails3 )) ; \
+	passes=$$(( 48-$$tot_fails )) ; \
+	echo "48 of 48 complete: $$passes passed, $$tot_fails failed" ; \
+	if [ $$tot_fails -gt 0 ] ; then \
+		echo "Sanity tests failed"; \
+		exit 1; \
+	fi
+
+semall: semgrep-validate
 	@echo "==> Running Semgrep checks locally (must have semgrep installed)..."
 	@semgrep --error --metrics=off \
 		$(if $(filter-out $(origin PKG), undefined),--include $(PKG_NAME),) \
@@ -235,14 +298,20 @@ semall:
 		--config 'r/dgryski.semgrep-go.oddifsequence' \
 		--config 'r/dgryski.semgrep-go.oserrors'
 
-semgrep:
+semgrep-validate:
+	@semgrep --error --validate \
+		--config .ci/.semgrep.yml \
+		--config .ci/.semgrep-caps-aws-ec2.yml \
+		--config .ci/.semgrep-configs.yml \
+		--config .ci/.semgrep-service-name0.yml \
+		--config .ci/.semgrep-service-name1.yml \
+		--config .ci/.semgrep-service-name2.yml \
+		--config .ci/.semgrep-service-name3.yml \
+		--config .ci/semgrep/
+
+semgrep: semgrep-validate
 	@echo "==> Running Semgrep static analysis..."
 	@docker run --rm --volume "${PWD}:/src" returntocorp/semgrep semgrep --config .ci/.semgrep.yml
-
-servicepackages:
-	rm -f internal/service/**/service_package_gen.go
-	rm -f internal/provider/service_packages_gen.go
-	$(GO_VER) generate ./internal/generate/servicepackages
 
 skaff:
 	cd skaff && $(GO_VER) install github.com/hashicorp/terraform-provider-aws/skaff
@@ -301,13 +370,14 @@ tfsdk2fw:
 
 tools:
 	cd .ci/providerlint && $(GO_VER) install .
-	cd .ci/tools && $(GO_VER) install github.com/bflad/tfproviderdocs
+	cd .ci/tools && $(GO_VER) install github.com/YakDriver/tfproviderdocs
 	cd .ci/tools && $(GO_VER) install github.com/client9/misspell/cmd/misspell
 	cd .ci/tools && $(GO_VER) install github.com/golangci/golangci-lint/cmd/golangci-lint
 	cd .ci/tools && $(GO_VER) install github.com/katbyte/terrafmt
 	cd .ci/tools && $(GO_VER) install github.com/terraform-linters/tflint
 	cd .ci/tools && $(GO_VER) install github.com/pavius/impi/cmd/impi
 	cd .ci/tools && $(GO_VER) install github.com/hashicorp/go-changelog/cmd/changelog-build
+	cd .ci/tools && $(GO_VER) install github.com/hashicorp/copywrite
 	cd .ci/tools && $(GO_VER) install github.com/rhysd/actionlint/cmd/actionlint
 	cd .ci/tools && $(GO_VER) install mvdan.cc/gofumpt
 
@@ -361,11 +431,12 @@ yamllint:
 	golangci-lint \
 	importlint \
 	lint \
+	lint-fix \
 	providerlint \
+	sane \
 	sanity \
 	semall \
 	semgrep \
-	servicepackages \
 	skaff \
 	sweep \
 	t \

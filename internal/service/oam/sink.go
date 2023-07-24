@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package oam
 
 import (
@@ -20,7 +23,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_oam_sink")
+// @SDKResource("aws_oam_sink", name="Sink")
+// @Tags(identifierAttribute="id")
 func ResourceSink() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceSinkCreate,
@@ -52,8 +56,8 @@ func ResourceSink() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
 
 		CustomizeDiff: verify.SetTagsDiff,
@@ -65,17 +69,11 @@ const (
 )
 
 func resourceSinkCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ObservabilityAccessManagerClient()
+	conn := meta.(*conns.AWSClient).ObservabilityAccessManagerClient(ctx)
 
 	in := &oam.CreateSinkInput{
 		Name: aws.String(d.Get("name").(string)),
-	}
-
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
-
-	if len(tags) > 0 {
-		in.Tags = Tags(tags.IgnoreAWS())
+		Tags: getTagsIn(ctx),
 	}
 
 	out, err := conn.CreateSink(ctx, in)
@@ -93,7 +91,7 @@ func resourceSinkCreate(ctx context.Context, d *schema.ResourceData, meta interf
 }
 
 func resourceSinkRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ObservabilityAccessManagerClient()
+	conn := meta.(*conns.AWSClient).ObservabilityAccessManagerClient(ctx)
 
 	out, err := findSinkByID(ctx, conn, d.Id())
 
@@ -111,44 +109,16 @@ func resourceSinkRead(ctx context.Context, d *schema.ResourceData, meta interfac
 	d.Set("name", out.Name)
 	d.Set("sink_id", out.Id)
 
-	tags, err := ListTags(ctx, conn, d.Id())
-	if err != nil {
-		return create.DiagError(names.ObservabilityAccessManager, create.ErrActionReading, ResNameSink, d.Id(), err)
-	}
-
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
-	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return create.DiagError(names.ObservabilityAccessManager, create.ErrActionSetting, ResNameSink, d.Id(), err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return create.DiagError(names.ObservabilityAccessManager, create.ErrActionSetting, ResNameSink, d.Id(), err)
-	}
-
 	return nil
 }
 
 func resourceSinkUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ObservabilityAccessManagerClient()
-
-	if d.HasChange("tags_all") {
-		log.Printf("[DEBUG] Updating ObservabilityAccessManager Sink Tags (%s): %#v", d.Id(), d.Get("tags_all"))
-		oldTags, newTags := d.GetChange("tags_all")
-		if err := UpdateTags(ctx, conn, d.Get("arn").(string), oldTags, newTags); err != nil {
-			return create.DiagError(names.ObservabilityAccessManager, create.ErrActionUpdating, ResNameSink, d.Id(), err)
-		}
-
-		return resourceSinkRead(ctx, d, meta)
-	}
-
-	return nil
+	// Tags only.
+	return resourceSinkRead(ctx, d, meta)
 }
 
 func resourceSinkDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ObservabilityAccessManagerClient()
+	conn := meta.(*conns.AWSClient).ObservabilityAccessManagerClient(ctx)
 
 	log.Printf("[INFO] Deleting ObservabilityAccessManager Sink %s", d.Id())
 

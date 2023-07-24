@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package appsync_test
 
 import (
@@ -9,9 +12,9 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/appsync"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfappsync "github.com/hashicorp/terraform-provider-aws/internal/service/appsync"
@@ -361,7 +364,7 @@ func testAccResolver_caching(t *testing.T) {
 
 func testAccCheckResolverDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AppSyncConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AppSyncConn(ctx)
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_appsync_resolver" {
 				continue
@@ -409,7 +412,7 @@ func testAccCheckResolverExists(ctx context.Context, name string, resolver *apps
 			return err
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AppSyncConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AppSyncConn(ctx)
 
 		input := &appsync.GetResolverInput{
 			ApiId:     aws.String(apiID),
@@ -539,7 +542,7 @@ EOF
 }
 
 func testAccResolverConfig_dataSourceLambda(rName string) string {
-	return testAccDatasourceConfig_lambdaBase(rName) + fmt.Sprintf(`
+	return testAccDatasourceConfig_baseLambda(rName) + fmt.Sprintf(`
 resource "aws_appsync_graphql_api" "test" {
   authentication_type = "API_KEY"
   name                = %q
@@ -820,7 +823,7 @@ EOF
 }
 
 func testAccResolverConfig_sync(rName string) string {
-	return testAccDatasourceConfig_dynamoDBBase(rName) + fmt.Sprintf(`
+	return testAccDatasourceConfig_baseDynamoDB(rName) + fmt.Sprintf(`
 resource "aws_appsync_graphql_api" "test" {
   authentication_type = "API_KEY"
   name                = %[1]q

@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package networkmanager
 
 import (
@@ -19,9 +22,11 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_networkmanager_link")
+// @SDKResource("aws_networkmanager_link", name="Link")
+// @Tags(identifierAttribute="arn")
 func ResourceLink() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceLinkCreate,
@@ -34,7 +39,7 @@ func ResourceLink() *schema.Resource {
 				parsedARN, err := arn.Parse(d.Id())
 
 				if err != nil {
-					return nil, fmt.Errorf("error parsing ARN (%s): %w", d.Id(), err)
+					return nil, fmt.Errorf("parsing ARN (%s): %w", d.Id(), err)
 				}
 
 				// See https://docs.aws.amazon.com/service-authorization/latest/reference/list_networkmanager.html#networkmanager-resources-for-iam-policies.
@@ -101,8 +106,8 @@ func ResourceLink() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			"type": {
 				Type:         schema.TypeString,
 				Optional:     true,
@@ -113,14 +118,13 @@ func ResourceLink() *schema.Resource {
 }
 
 func resourceLinkCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).NetworkManagerConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
+	conn := meta.(*conns.AWSClient).NetworkManagerConn(ctx)
 
 	globalNetworkID := d.Get("global_network_id").(string)
 	input := &networkmanager.CreateLinkInput{
 		GlobalNetworkId: aws.String(globalNetworkID),
 		SiteId:          aws.String(d.Get("site_id").(string)),
+		Tags:            getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("bandwidth"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
@@ -139,30 +143,24 @@ func resourceLinkCreate(ctx context.Context, d *schema.ResourceData, meta interf
 		input.Type = aws.String(v.(string))
 	}
 
-	if len(tags) > 0 {
-		input.Tags = Tags(tags.IgnoreAWS())
-	}
-
 	log.Printf("[DEBUG] Creating Network Manager Link: %s", input)
 	output, err := conn.CreateLinkWithContext(ctx, input)
 
 	if err != nil {
-		return diag.Errorf("error creating Network Manager Link: %s", err)
+		return diag.Errorf("creating Network Manager Link: %s", err)
 	}
 
 	d.SetId(aws.StringValue(output.Link.LinkId))
 
 	if _, err := waitLinkCreated(ctx, conn, globalNetworkID, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
-		return diag.Errorf("error waiting for Network Manager Link (%s) create: %s", d.Id(), err)
+		return diag.Errorf("waiting for Network Manager Link (%s) create: %s", d.Id(), err)
 	}
 
 	return resourceLinkRead(ctx, d, meta)
 }
 
 func resourceLinkRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).NetworkManagerConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).NetworkManagerConn(ctx)
 
 	globalNetworkID := d.Get("global_network_id").(string)
 	link, err := FindLinkByTwoPartKey(ctx, conn, globalNetworkID, d.Id())
@@ -174,13 +172,13 @@ func resourceLinkRead(ctx context.Context, d *schema.ResourceData, meta interfac
 	}
 
 	if err != nil {
-		return diag.Errorf("error reading Network Manager Link (%s): %s", d.Id(), err)
+		return diag.Errorf("reading Network Manager Link (%s): %s", d.Id(), err)
 	}
 
 	d.Set("arn", link.LinkArn)
 	if link.Bandwidth != nil {
 		if err := d.Set("bandwidth", []interface{}{flattenBandwidth(link.Bandwidth)}); err != nil {
-			return diag.Errorf("error setting bandwidth: %s", err)
+			return diag.Errorf("setting bandwidth: %s", err)
 		}
 	} else {
 		d.Set("bandwidth", nil)
@@ -191,22 +189,13 @@ func resourceLinkRead(ctx context.Context, d *schema.ResourceData, meta interfac
 	d.Set("site_id", link.SiteId)
 	d.Set("type", link.Type)
 
-	tags := KeyValueTags(ctx, link.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return diag.Errorf("error setting tags: %s", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return diag.Errorf("error setting tags_all: %s", err)
-	}
+	setTagsOut(ctx, link.Tags)
 
 	return nil
 }
 
 func resourceLinkUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).NetworkManagerConn()
+	conn := meta.(*conns.AWSClient).NetworkManagerConn(ctx)
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		globalNetworkID := d.Get("global_network_id").(string)
@@ -226,19 +215,11 @@ func resourceLinkUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 		_, err := conn.UpdateLinkWithContext(ctx, input)
 
 		if err != nil {
-			return diag.Errorf("error updating Network Manager Link (%s): %s", d.Id(), err)
+			return diag.Errorf("updating Network Manager Link (%s): %s", d.Id(), err)
 		}
 
 		if _, err := waitLinkUpdated(ctx, conn, globalNetworkID, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
-			return diag.Errorf("error waiting for Network Manager Link (%s) update: %s", d.Id(), err)
-		}
-	}
-
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		if err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n); err != nil {
-			return diag.Errorf("error updating Network Manager Link (%s) tags: %s", d.Id(), err)
+			return diag.Errorf("waiting for Network Manager Link (%s) update: %s", d.Id(), err)
 		}
 	}
 
@@ -246,7 +227,7 @@ func resourceLinkUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 }
 
 func resourceLinkDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).NetworkManagerConn()
+	conn := meta.(*conns.AWSClient).NetworkManagerConn(ctx)
 
 	globalNetworkID := d.Get("global_network_id").(string)
 
@@ -261,11 +242,11 @@ func resourceLinkDelete(ctx context.Context, d *schema.ResourceData, meta interf
 	}
 
 	if err != nil {
-		return diag.Errorf("error deleting Network Manager Link (%s): %s", d.Id(), err)
+		return diag.Errorf("deleting Network Manager Link (%s): %s", d.Id(), err)
 	}
 
 	if _, err := waitLinkDeleted(ctx, conn, globalNetworkID, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
-		return diag.Errorf("error waiting for Network Manager Link (%s) delete: %s", d.Id(), err)
+		return diag.Errorf("waiting for Network Manager Link (%s) delete: %s", d.Id(), err)
 	}
 
 	return nil

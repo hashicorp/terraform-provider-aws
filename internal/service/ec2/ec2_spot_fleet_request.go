@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ec2
 
 import (
@@ -18,14 +21,16 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
-	"github.com/hashicorp/terraform-provider-aws/internal/experimental/nullable"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/types/nullable"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_spot_fleet_request")
+// @SDKResource("aws_spot_fleet_request", name="Spot Fleet Request")
+// @Tags(identifierAttribute="id")
 func ResourceSpotFleetRequest() *schema.Resource {
 	//lintignore:R011
 	return &schema.Resource{
@@ -61,6 +66,12 @@ func ResourceSpotFleetRequest() *schema.Resource {
 			"client_token": {
 				Type:     schema.TypeString,
 				Computed: true,
+			},
+			"context": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.StringIsNotWhiteSpace,
 			},
 			// Provided constants do not have the correct casing so going with hard-coded values.
 			"excess_capacity_termination_policy": {
@@ -804,8 +815,8 @@ func ResourceSpotFleetRequest() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			"target_capacity": {
 				Type:     schema.TypeInt,
 				Required: true,
@@ -860,13 +871,8 @@ func ResourceSpotFleetRequest() *schema.Resource {
 }
 
 func resourceSpotFleetRequestCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	var
-	// http://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_RequestSpotFleet.html
-	diags diag.Diagnostics
-
-	conn := meta.(*conns.AWSClient).EC2Conn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	_, launchSpecificationOk := d.GetOk("launch_specification")
 
@@ -876,10 +882,14 @@ func resourceSpotFleetRequestCreate(ctx context.Context, d *schema.ResourceData,
 		IamFleetRole:                     aws.String(d.Get("iam_fleet_role").(string)),
 		InstanceInterruptionBehavior:     aws.String(d.Get("instance_interruption_behaviour").(string)),
 		ReplaceUnhealthyInstances:        aws.Bool(d.Get("replace_unhealthy_instances").(bool)),
-		TagSpecifications:                tagSpecificationsFromKeyValueTags(tags, ec2.ResourceTypeSpotFleetRequest),
+		TagSpecifications:                getTagSpecificationsIn(ctx, ec2.ResourceTypeSpotFleetRequest),
 		TargetCapacity:                   aws.Int64(int64(d.Get("target_capacity").(int))),
 		TerminateInstancesWithExpiration: aws.Bool(d.Get("terminate_instances_with_expiration").(bool)),
 		Type:                             aws.String(d.Get("fleet_type").(string)),
+	}
+
+	if v, ok := d.GetOk("context"); ok {
+		spotFleetConfig.Context = aws.String(v.(string))
 	}
 
 	if launchSpecificationOk {
@@ -986,7 +996,7 @@ func resourceSpotFleetRequestCreate(ctx context.Context, d *schema.ResourceData,
 	}
 
 	log.Printf("[DEBUG] Creating EC2 Spot Fleet Request: %s", input)
-	outputRaw, err := tfresource.RetryWhenAWSErrMessageContains(ctx, propagationTimeout,
+	outputRaw, err := tfresource.RetryWhenAWSErrMessageContains(ctx, iamPropagationTimeout,
 		func() (interface{}, error) {
 			return conn.RequestSpotFleetWithContext(ctx, input)
 		},
@@ -1013,13 +1023,8 @@ func resourceSpotFleetRequestCreate(ctx context.Context, d *schema.ResourceData,
 }
 
 func resourceSpotFleetRequestRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	var
-	// http://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_DescribeSpotFleetRequests.html
-	diags diag.Diagnostics
-
-	conn := meta.(*conns.AWSClient).EC2Conn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	output, err := FindSpotFleetRequestByID(ctx, conn, d.Id())
 
@@ -1040,6 +1045,7 @@ func resourceSpotFleetRequestRead(ctx context.Context, d *schema.ResourceData, m
 	d.Set("allocation_strategy", config.AllocationStrategy)
 	d.Set("instance_pools_to_use_count", config.InstancePoolsToUseCount)
 	d.Set("client_token", config.ClientToken)
+	d.Set("context", config.Context)
 	d.Set("excess_capacity_termination_policy", config.ExcessCapacityTerminationPolicy)
 	d.Set("iam_fleet_role", config.IamFleetRole)
 	d.Set("spot_maintenance_strategies", flattenSpotMaintenanceStrategies(config.SpotMaintenanceStrategies))
@@ -1065,16 +1071,7 @@ func resourceSpotFleetRequestRead(ctx context.Context, d *schema.ResourceData, m
 	d.Set("fleet_type", config.Type)
 	d.Set("launch_specification", launchSpec)
 
-	tags := KeyValueTags(ctx, output.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
-	}
+	setTagsOut(ctx, output.Tags)
 
 	if err := d.Set("launch_template_config", flattenLaunchTemplateConfigs(config.LaunchTemplateConfigs)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting launch_template_config: %s", err)
@@ -1112,11 +1109,9 @@ func resourceSpotFleetRequestRead(ctx context.Context, d *schema.ResourceData, m
 }
 
 func resourceSpotFleetRequestUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	var
-	// http://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_ModifySpotFleetRequest.html
-	diags diag.Diagnostics
+	var diags diag.Diagnostics
 
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		input := &ec2.ModifySpotFleetRequestInput{
@@ -1147,20 +1142,12 @@ func resourceSpotFleetRequestUpdate(ctx context.Context, d *schema.ResourceData,
 		}
 	}
 
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		if err := UpdateTags(ctx, conn, d.Id(), o, n); err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating tags: %s", err)
-		}
-	}
-
 	return append(diags, resourceSpotFleetRequestRead(ctx, d, meta)...)
 }
 
 func resourceSpotFleetRequestDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	terminateInstances := d.Get("terminate_instances_with_expiration").(bool)
 	// If terminate_instances_on_delete is not null, its value is used.
@@ -1216,7 +1203,7 @@ func resourceSpotFleetRequestDelete(ctx context.Context, d *schema.ResourceData,
 }
 
 func buildSpotFleetLaunchSpecification(ctx context.Context, d map[string]interface{}, meta interface{}) (*ec2.SpotFleetLaunchSpecification, error) {
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	opts := &ec2.SpotFleetLaunchSpecification{
 		ImageId:      aws.String(d["ami"].(string)),

@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ec2
 
 import (
@@ -23,9 +26,11 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_network_interface")
+// @SDKResource("aws_network_interface", name="Network Interface")
+// @Tags(identifierAttribute="id")
 func ResourceNetworkInterface() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceNetworkInterfaceCreate,
@@ -196,8 +201,8 @@ func ResourceNetworkInterface() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
 
 		CustomizeDiff: customdiff.Sequence(
@@ -328,9 +333,7 @@ func ResourceNetworkInterface() *schema.Resource {
 
 func resourceNetworkInterfaceCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	ipv4PrefixesSpecified := false
 	ipv6PrefixesSpecified := false
@@ -412,8 +415,8 @@ func resourceNetworkInterfaceCreate(ctx context.Context, d *schema.ResourceData,
 
 	// If IPv4 or IPv6 prefixes are specified, tag after create.
 	// Otherwise "An error occurred (InternalError) when calling the CreateNetworkInterface operation".
-	if len(tags) > 0 && !(ipv4PrefixesSpecified || ipv6PrefixesSpecified) {
-		input.TagSpecifications = tagSpecificationsFromKeyValueTags(tags, ec2.ResourceTypeNetworkInterface)
+	if !(ipv4PrefixesSpecified || ipv6PrefixesSpecified) {
+		input.TagSpecifications = getTagSpecificationsIn(ctx, ec2.ResourceTypeNetworkInterface)
 	}
 
 	output, err := conn.CreateNetworkInterfaceWithContext(ctx, input)
@@ -449,9 +452,9 @@ func resourceNetworkInterfaceCreate(ctx context.Context, d *schema.ResourceData,
 		}
 	}
 
-	if len(tags) > 0 && (ipv4PrefixesSpecified || ipv6PrefixesSpecified) {
-		if err := UpdateTags(ctx, conn, d.Id(), nil, tags); err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating EC2 Network Interface (%s) tags: %s", d.Id(), err)
+	if ipv4PrefixesSpecified || ipv6PrefixesSpecified {
+		if err := createTags(ctx, conn, d.Id(), getTagsIn(ctx)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting EC2 Network Interface (%s) tags: %s", d.Id(), err)
 		}
 	}
 
@@ -484,11 +487,9 @@ func resourceNetworkInterfaceCreate(ctx context.Context, d *schema.ResourceData,
 
 func resourceNetworkInterfaceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
-	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(ctx, propagationTimeout, func() (interface{}, error) {
+	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(ctx, ec2PropagationTimeout, func() (interface{}, error) {
 		return FindNetworkInterfaceByID(ctx, conn, d.Id())
 	}, d.IsNewResource())
 
@@ -555,23 +556,14 @@ func resourceNetworkInterfaceRead(ctx context.Context, d *schema.ResourceData, m
 	d.Set("source_dest_check", eni.SourceDestCheck)
 	d.Set("subnet_id", eni.SubnetId)
 
-	tags := KeyValueTags(ctx, eni.TagSet).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
-	}
+	setTagsOut(ctx, eni.TagSet)
 
 	return diags
 }
 
 func resourceNetworkInterfaceUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 	privateIPsNetChange := 0
 
 	if d.HasChange("attachment") {
@@ -741,8 +733,8 @@ func resourceNetworkInterfaceUpdate(ctx context.Context, d *schema.ResourceData,
 		o, n := d.GetChange("ipv4_prefix_count")
 		ipv4Prefixes := d.Get("ipv4_prefixes").(*schema.Set).List()
 
-		if o != nil && n != nil && n != len(ipv4Prefixes) {
-			if diff := n.(int) - o.(int); diff > 0 {
+		if o, n := o.(int), n.(int); n != len(ipv4Prefixes) {
+			if diff := n - o; diff > 0 {
 				input := &ec2.AssignPrivateIpAddressesInput{
 					NetworkInterfaceId: aws.String(d.Id()),
 					Ipv4PrefixCount:    aws.Int64(int64(diff)),
@@ -975,8 +967,8 @@ func resourceNetworkInterfaceUpdate(ctx context.Context, d *schema.ResourceData,
 		o, n := d.GetChange("ipv6_prefix_count")
 		ipv6Prefixes := d.Get("ipv6_prefixes").(*schema.Set).List()
 
-		if o != nil && n != nil && n != len(ipv6Prefixes) {
-			if diff := n.(int) - o.(int); diff > 0 {
+		if o, n := o.(int), n.(int); n != len(ipv6Prefixes) {
+			if diff := n - o; diff > 0 {
 				input := &ec2.AssignIpv6AddressesInput{
 					NetworkInterfaceId: aws.String(d.Id()),
 					Ipv6PrefixCount:    aws.Int64(int64(diff)),
@@ -1041,20 +1033,12 @@ func resourceNetworkInterfaceUpdate(ctx context.Context, d *schema.ResourceData,
 		}
 	}
 
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		if err := UpdateTags(ctx, conn, d.Id(), o, n); err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating EC2 Network Interface (%s) tags: %s", d.Id(), err)
-		}
-	}
-
 	return append(diags, resourceNetworkInterfaceRead(ctx, d, meta)...)
 }
 
 func resourceNetworkInterfaceDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	if v, ok := d.GetOk("attachment"); ok && v.(*schema.Set).Len() > 0 {
 		attachment := v.(*schema.Set).List()[0].(map[string]interface{})

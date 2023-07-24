@@ -1,8 +1,10 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package macie2
 
 import (
 	"context"
-	"fmt"
 	"log"
 	"time"
 
@@ -19,9 +21,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_macie2_custom_data_identifier")
+// @SDKResource("aws_macie2_custom_data_identifier", name="Custom Data Identifier")
+// @Tags
 func ResourceCustomDataIdentifier() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceCustomDataIdentifierCreate,
@@ -88,8 +92,8 @@ func ResourceCustomDataIdentifier() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: validation.IntBetween(1, 300),
 			},
-			"tags":     tftags.TagsSchemaForceNew(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchemaForceNew(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			"created_at": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -103,13 +107,11 @@ func ResourceCustomDataIdentifier() *schema.Resource {
 }
 
 func resourceCustomDataIdentifierCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).Macie2Conn()
-
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
+	conn := meta.(*conns.AWSClient).Macie2Conn(ctx)
 
 	input := &macie2.CreateCustomDataIdentifierInput{
 		ClientToken: aws.String(id.UniqueId()),
+		Tags:        getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("regex"); ok {
@@ -127,9 +129,6 @@ func resourceCustomDataIdentifierCreate(ctx context.Context, d *schema.ResourceD
 	}
 	if v, ok := d.GetOk("maximum_match_distance"); ok {
 		input.MaximumMatchDistance = aws.Int64(int64(v.(int)))
-	}
-	if len(tags) > 0 {
-		input.Tags = Tags(tags.IgnoreAWS())
 	}
 
 	var err error
@@ -152,7 +151,7 @@ func resourceCustomDataIdentifierCreate(ctx context.Context, d *schema.ResourceD
 	}
 
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error creating Macie CustomDataIdentifier: %w", err))
+		return diag.Errorf("creating Macie CustomDataIdentifier: %s", err)
 	}
 
 	d.SetId(aws.StringValue(output.CustomDataIdentifierId))
@@ -161,10 +160,8 @@ func resourceCustomDataIdentifierCreate(ctx context.Context, d *schema.ResourceD
 }
 
 func resourceCustomDataIdentifierRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).Macie2Conn()
+	conn := meta.(*conns.AWSClient).Macie2Conn(ctx)
 
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 	input := &macie2.GetCustomDataIdentifierInput{
 		Id: aws.String(d.Id()),
 	}
@@ -179,29 +176,22 @@ func resourceCustomDataIdentifierRead(ctx context.Context, d *schema.ResourceDat
 	}
 
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error reading Macie CustomDataIdentifier (%s): %w", d.Id(), err))
+		return diag.Errorf("reading Macie CustomDataIdentifier (%s): %s", d.Id(), err)
 	}
 
 	d.Set("regex", resp.Regex)
 	if err = d.Set("keywords", flex.FlattenStringList(resp.Keywords)); err != nil {
-		return diag.FromErr(fmt.Errorf("error setting `%s` for Macie CustomDataIdentifier (%s): %w", "keywords", d.Id(), err))
+		return diag.Errorf("setting `%s` for Macie CustomDataIdentifier (%s): %s", "keywords", d.Id(), err)
 	}
 	if err = d.Set("ignore_words", flex.FlattenStringList(resp.IgnoreWords)); err != nil {
-		return diag.FromErr(fmt.Errorf("error setting `%s` for Macie CustomDataIdentifier (%s): %w", "ignore_words", d.Id(), err))
+		return diag.Errorf("setting `%s` for Macie CustomDataIdentifier (%s): %s", "ignore_words", d.Id(), err)
 	}
 	d.Set("name", resp.Name)
 	d.Set("name_prefix", create.NamePrefixFromName(aws.StringValue(resp.Name)))
 	d.Set("description", resp.Description)
 	d.Set("maximum_match_distance", resp.MaximumMatchDistance)
-	tags := KeyValueTags(ctx, resp.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
-	if err = d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return diag.FromErr(fmt.Errorf("error setting `%s` for Macie CustomDataIdentifier (%s): %w", "tags", d.Id(), err))
-	}
-
-	if err = d.Set("tags_all", tags.Map()); err != nil {
-		return diag.FromErr(fmt.Errorf("error setting `%s` for Macie CustomDataIdentifier (%s): %w", "tags_all", d.Id(), err))
-	}
+	setTagsOut(ctx, resp.Tags)
 
 	if aws.BoolValue(resp.Deleted) {
 		log.Printf("[WARN] Macie CustomDataIdentifier (%s) is soft deleted, removing from state", d.Id())
@@ -215,7 +205,7 @@ func resourceCustomDataIdentifierRead(ctx context.Context, d *schema.ResourceDat
 }
 
 func resourceCustomDataIdentifierDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).Macie2Conn()
+	conn := meta.(*conns.AWSClient).Macie2Conn(ctx)
 
 	input := &macie2.DeleteCustomDataIdentifierInput{
 		Id: aws.String(d.Id()),
@@ -227,7 +217,7 @@ func resourceCustomDataIdentifierDelete(ctx context.Context, d *schema.ResourceD
 			tfawserr.ErrMessageContains(err, macie2.ErrCodeAccessDeniedException, "Macie is not enabled") {
 			return nil
 		}
-		return diag.FromErr(fmt.Errorf("error deleting Macie CustomDataIdentifier (%s): %w", d.Id(), err))
+		return diag.Errorf("deleting Macie CustomDataIdentifier (%s): %s", d.Id(), err)
 	}
 	return nil
 }

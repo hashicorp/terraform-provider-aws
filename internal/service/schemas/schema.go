@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package schemas
 
 import (
@@ -17,9 +20,11 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_schemas_schema")
+// @SDKResource("aws_schemas_schema", name="Schema")
+// @Tags(identifierAttribute="arn")
 func ResourceSchema() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceSchemaCreate,
@@ -84,9 +89,8 @@ func ResourceSchema() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
 
 		CustomizeDiff: verify.SetTagsDiff,
@@ -95,9 +99,7 @@ func ResourceSchema() *schema.Resource {
 
 func resourceSchemaCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SchemasConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
+	conn := meta.(*conns.AWSClient).SchemasConn(ctx)
 
 	name := d.Get("name").(string)
 	registryName := d.Get("registry_name").(string)
@@ -105,15 +107,12 @@ func resourceSchemaCreate(ctx context.Context, d *schema.ResourceData, meta inte
 		Content:      aws.String(d.Get("content").(string)),
 		RegistryName: aws.String(registryName),
 		SchemaName:   aws.String(name),
+		Tags:         getTagsIn(ctx),
 		Type:         aws.String(d.Get("type").(string)),
 	}
 
 	if v, ok := d.GetOk("description"); ok {
 		input.Description = aws.String(v.(string))
-	}
-
-	if len(tags) > 0 {
-		input.Tags = Tags(tags.IgnoreAWS())
 	}
 
 	id := SchemaCreateResourceID(name, registryName)
@@ -132,9 +131,7 @@ func resourceSchemaCreate(ctx context.Context, d *schema.ResourceData, meta inte
 
 func resourceSchemaRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SchemasConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).SchemasConn(ctx)
 
 	name, registryName, err := SchemaParseResourceID(d.Id())
 
@@ -172,28 +169,12 @@ func resourceSchemaRead(ctx context.Context, d *schema.ResourceData, meta interf
 		d.Set("version_created_date", nil)
 	}
 
-	tags, err := ListTags(ctx, conn, d.Get("arn").(string))
-
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "listing tags for EventBridge Schemas Schema (%s): %s", d.Id(), err)
-	}
-
-	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
-	}
-
 	return diags
 }
 
 func resourceSchemaUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SchemasConn()
+	conn := meta.(*conns.AWSClient).SchemasConn(ctx)
 
 	if d.HasChanges("content", "description", "type") {
 		name, registryName, err := SchemaParseResourceID(d.Id())
@@ -224,19 +205,12 @@ func resourceSchemaUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 		}
 	}
 
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-		if err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n); err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating tags: %s", err)
-		}
-	}
-
 	return append(diags, resourceSchemaRead(ctx, d, meta)...)
 }
 
 func resourceSchemaDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SchemasConn()
+	conn := meta.(*conns.AWSClient).SchemasConn(ctx)
 
 	name, registryName, err := SchemaParseResourceID(d.Id())
 

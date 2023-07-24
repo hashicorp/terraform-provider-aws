@@ -1,8 +1,10 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package apprunner
 
 import (
 	"context"
-	"fmt"
 	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -14,9 +16,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_apprunner_observability_configuration")
+// @SDKResource("aws_apprunner_observability_configuration", name="Observability Configuration")
+// @Tags(identifierAttribute="arn")
 func ResourceObservabilityConfiguration() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceObservabilityConfigurationCreate,
@@ -64,8 +68,8 @@ func ResourceObservabilityConfiguration() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
 
 		CustomizeDiff: verify.SetTagsDiff,
@@ -73,47 +77,39 @@ func ResourceObservabilityConfiguration() *schema.Resource {
 }
 
 func resourceObservabilityConfigurationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).AppRunnerConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
+	conn := meta.(*conns.AWSClient).AppRunnerConn(ctx)
 
 	name := d.Get("observability_configuration_name").(string)
-
 	input := &apprunner.CreateObservabilityConfigurationInput{
 		ObservabilityConfigurationName: aws.String(name),
+		Tags:                           getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("trace_configuration"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 		input.TraceConfiguration = expandTraceConfiguration(v.([]interface{}))
 	}
 
-	if len(tags) > 0 {
-		input.Tags = Tags(tags.IgnoreAWS())
-	}
-
 	output, err := conn.CreateObservabilityConfigurationWithContext(ctx, input)
 
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error creating App Runner Observability Configuration (%s): %w", name, err))
+		return diag.Errorf("creating App Runner Observability Configuration (%s): %s", name, err)
 	}
 
 	if output == nil || output.ObservabilityConfiguration == nil {
-		return diag.FromErr(fmt.Errorf("error creating App Runner Observability Configuration (%s): empty output", name))
+		return diag.Errorf("creating App Runner Observability Configuration (%s): empty output", name)
 	}
 
 	d.SetId(aws.StringValue(output.ObservabilityConfiguration.ObservabilityConfigurationArn))
 
 	if err := WaitObservabilityConfigurationActive(ctx, conn, d.Id()); err != nil {
-		return diag.FromErr(fmt.Errorf("error waiting for App Runner Observability Configuration (%s) creation: %w", d.Id(), err))
+		return diag.Errorf("waiting for App Runner Observability Configuration (%s) creation: %s", d.Id(), err)
 	}
 
 	return resourceObservabilityConfigurationRead(ctx, d, meta)
 }
 
 func resourceObservabilityConfigurationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).AppRunnerConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).AppRunnerConn(ctx)
 
 	input := &apprunner.DescribeObservabilityConfigurationInput{
 		ObservabilityConfigurationArn: aws.String(d.Id()),
@@ -128,16 +124,16 @@ func resourceObservabilityConfigurationRead(ctx context.Context, d *schema.Resou
 	}
 
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error reading App Runner Observability Configuration (%s): %w", d.Id(), err))
+		return diag.Errorf("reading App Runner Observability Configuration (%s): %s", d.Id(), err)
 	}
 
 	if output == nil || output.ObservabilityConfiguration == nil {
-		return diag.FromErr(fmt.Errorf("error reading App Runner Observability Configuration (%s): empty output", d.Id()))
+		return diag.Errorf("reading App Runner Observability Configuration (%s): empty output", d.Id())
 	}
 
 	if aws.StringValue(output.ObservabilityConfiguration.Status) == ObservabilityConfigurationStatusInactive {
 		if d.IsNewResource() {
-			return diag.FromErr(fmt.Errorf("error reading App Runner Observability Configuration (%s): %s after creation", d.Id(), aws.StringValue(output.ObservabilityConfiguration.Status)))
+			return diag.Errorf("reading App Runner Observability Configuration (%s): %s after creation", d.Id(), aws.StringValue(output.ObservabilityConfiguration.Status))
 		}
 		log.Printf("[WARN] App Runner Observability Configuration (%s) not found, removing from state", d.Id())
 		d.SetId("")
@@ -154,45 +150,19 @@ func resourceObservabilityConfigurationRead(ctx context.Context, d *schema.Resou
 	d.Set("status", config.Status)
 
 	if err := d.Set("trace_configuration", flattenTraceConfiguration(config.TraceConfiguration)); err != nil {
-		return diag.Errorf("error setting trace_configuration: %s", err)
-	}
-
-	tags, err := ListTags(ctx, conn, arn)
-
-	if err != nil {
-		return diag.FromErr(fmt.Errorf("error listing tags for App Runner Observability Configuration (%s): %s", arn, err))
-	}
-
-	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return diag.FromErr(fmt.Errorf("error setting tags: %w", err))
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return diag.FromErr(fmt.Errorf("error setting tags_all: %w", err))
+		return diag.Errorf("setting trace_configuration: %s", err)
 	}
 
 	return nil
 }
 
 func resourceObservabilityConfigurationUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).AppRunnerConn()
-
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		if err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n); err != nil {
-			return diag.FromErr(fmt.Errorf("error updating App Runner Observability Configuration (%s) tags: %s", d.Get("arn").(string), err))
-		}
-	}
-
+	// Tags only.
 	return resourceObservabilityConfigurationRead(ctx, d, meta)
 }
 
 func resourceObservabilityConfigurationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).AppRunnerConn()
+	conn := meta.(*conns.AWSClient).AppRunnerConn(ctx)
 
 	input := &apprunner.DeleteObservabilityConfigurationInput{
 		ObservabilityConfigurationArn: aws.String(d.Id()),
@@ -205,14 +175,14 @@ func resourceObservabilityConfigurationDelete(ctx context.Context, d *schema.Res
 	}
 
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error deleting App Runner Observability Configuration (%s): %w", d.Id(), err))
+		return diag.Errorf("deleting App Runner Observability Configuration (%s): %s", d.Id(), err)
 	}
 
 	if err := WaitObservabilityConfigurationInactive(ctx, conn, d.Id()); err != nil {
 		if tfawserr.ErrCodeEquals(err, apprunner.ErrCodeResourceNotFoundException) {
 			return nil
 		}
-		return diag.FromErr(fmt.Errorf("error waiting for App Runner Observability Configuration (%s) deletion: %w", d.Id(), err))
+		return diag.Errorf("waiting for App Runner Observability Configuration (%s) deletion: %s", d.Id(), err)
 	}
 
 	return nil

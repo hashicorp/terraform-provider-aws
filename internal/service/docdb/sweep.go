@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 //go:build sweep
 // +build sweep
 
@@ -11,8 +14,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/docdb"
 	multierror "github.com/hashicorp/go-multierror"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
@@ -71,13 +73,13 @@ func init() {
 
 func sweepDBClusters(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
 
-	conn := client.(*conns.AWSClient).DocDBConn()
+	conn := client.DocDBConn(ctx)
 	input := &docdb.DescribeDBClustersInput{}
 
 	err = conn.DescribeDBClustersPagesWithContext(ctx, input, func(out *docdb.DescribeDBClustersOutput, lastPage bool) bool {
@@ -88,29 +90,29 @@ func sweepDBClusters(region string) error {
 				SkipFinalSnapshot:   aws.Bool(true),
 			}
 
-			log.Printf("[INFO] Deleting DocDB Cluster: %s", id)
+			log.Printf("[INFO] Deleting DocumentDB Cluster: %s", id)
 
 			_, err := conn.DeleteDBClusterWithContext(ctx, input)
 
 			if err != nil {
-				log.Printf("[ERROR] Failed to delete DocDB Cluster (%s): %s", id, err)
+				log.Printf("[ERROR] Failed to delete DocumentDB Cluster (%s): %s", id, err)
 				continue
 			}
 
 			if err := WaitForDBClusterDeletion(ctx, conn, id, DBClusterDeleteTimeout); err != nil {
-				log.Printf("[ERROR] Failure while waiting for DocDB Cluster (%s) to be deleted: %s", id, err)
+				log.Printf("[ERROR] Failure while waiting for DocumentDB Cluster (%s) to be deleted: %s", id, err)
 			}
 		}
 		return !lastPage
 	})
 
 	if sweep.SkipSweepError(err) {
-		log.Printf("[WARN] Skipping DocDB Cluster sweep for %s: %s", region, err)
+		log.Printf("[WARN] Skipping DocumentDB Cluster sweep for %s: %s", region, err)
 		return nil
 	}
 
 	if err != nil {
-		return fmt.Errorf("error retrieving DocDB Clusters: %w", err)
+		return fmt.Errorf("retrieving DocumentDB Clusters: %w", err)
 	}
 
 	return nil
@@ -118,13 +120,13 @@ func sweepDBClusters(region string) error {
 
 func sweepDBClusterSnapshots(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
 
-	conn := client.(*conns.AWSClient).DocDBConn()
+	conn := client.DocDBConn(ctx)
 	input := &docdb.DescribeDBClusterSnapshotsInput{}
 
 	err = conn.DescribeDBClusterSnapshotsPagesWithContext(ctx, input, func(out *docdb.DescribeDBClusterSnapshotsOutput, lastPage bool) bool {
@@ -134,29 +136,29 @@ func sweepDBClusterSnapshots(region string) error {
 				DBClusterSnapshotIdentifier: dBClusterSnapshot.DBClusterSnapshotIdentifier,
 			}
 
-			log.Printf("[INFO] Deleting DocDB Cluster Snapshot: %s", name)
+			log.Printf("[INFO] Deleting DocumentDB Cluster Snapshot: %s", name)
 
 			_, err := conn.DeleteDBClusterSnapshotWithContext(ctx, input)
 
 			if err != nil {
-				log.Printf("[ERROR] Failed to delete DocDB Cluster Snapshot (%s): %s", name, err)
+				log.Printf("[ERROR] Failed to delete DocumentDB Cluster Snapshot (%s): %s", name, err)
 				continue
 			}
 
 			if err := WaitForDBClusterSnapshotDeletion(ctx, conn, name, DBClusterSnapshotDeleteTimeout); err != nil {
-				log.Printf("[ERROR] Failure while waiting for DocDB Cluster Snapshot (%s) to be deleted: %s", name, err)
+				log.Printf("[ERROR] Failure while waiting for DocumentDB Cluster Snapshot (%s) to be deleted: %s", name, err)
 			}
 		}
 		return !lastPage
 	})
 
 	if sweep.SkipSweepError(err) {
-		log.Printf("[WARN] Skipping DocDB Cluster Snapshot sweep for %s: %s", region, err)
+		log.Printf("[WARN] Skipping DocumentDB Cluster Snapshot sweep for %s: %s", region, err)
 		return nil
 	}
 
 	if err != nil {
-		return fmt.Errorf("error retrieving DocDB Cluster Snapshots: %w", err)
+		return fmt.Errorf("retrieving DocumentDB Cluster Snapshots: %w", err)
 	}
 
 	return nil
@@ -164,13 +166,13 @@ func sweepDBClusterSnapshots(region string) error {
 
 func sweepDBClusterParameterGroups(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
 
-	conn := client.(*conns.AWSClient).DocDBConn()
+	conn := client.DocDBConn(ctx)
 	input := &docdb.DescribeDBClusterParameterGroupsInput{}
 
 	err = conn.DescribeDBClusterParameterGroupsPagesWithContext(ctx, input, func(out *docdb.DescribeDBClusterParameterGroupsOutput, lastPage bool) bool {
@@ -181,16 +183,16 @@ func sweepDBClusterParameterGroups(region string) error {
 			}
 
 			if strings.HasPrefix(name, "default.") {
-				log.Printf("[INFO] Skipping Document DB Parameter Group: %s", name)
+				log.Printf("[INFO] Skipping DocumentDB Parameter Group: %s", name)
 				continue
 			}
 
-			log.Printf("[INFO] Deleting DocDB Cluster Parameter Group: %s", name)
+			log.Printf("[INFO] Deleting DocumentDB Cluster Parameter Group: %s", name)
 
 			_, err := conn.DeleteDBClusterParameterGroupWithContext(ctx, input)
 
 			if err != nil {
-				log.Printf("[ERROR] Failed to delete DocDB Parameter Group (%s): %s", name, err)
+				log.Printf("[ERROR] Failed to delete DocumentDB Parameter Group (%s): %s", name, err)
 				continue
 			}
 		}
@@ -198,12 +200,12 @@ func sweepDBClusterParameterGroups(region string) error {
 	})
 
 	if sweep.SkipSweepError(err) {
-		log.Printf("[WARN] Skipping DocDB Cluster Parameter Group sweep for %s: %s", region, err)
+		log.Printf("[WARN] Skipping DocumentDB Cluster Parameter Group sweep for %s: %s", region, err)
 		return nil
 	}
 
 	if err != nil {
-		return fmt.Errorf("error retrieving DocDB Cluster Parameter Groups: %w", err)
+		return fmt.Errorf("retrieving DocumentDB Cluster Parameter Groups: %w", err)
 	}
 
 	return nil
@@ -211,13 +213,13 @@ func sweepDBClusterParameterGroups(region string) error {
 
 func sweepDBInstances(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
 
-	conn := client.(*conns.AWSClient).DocDBConn()
+	conn := client.DocDBConn(ctx)
 	sweepResources := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
 	input := &docdb.DescribeDBInstancesInput{}
@@ -239,15 +241,15 @@ func sweepDBInstances(region string) error {
 	})
 
 	if err != nil {
-		errs = multierror.Append(errs, fmt.Errorf("error listing DocDB Instances for %s: %w", region, err))
+		errs = multierror.Append(errs, fmt.Errorf("listing DocumentDB Instances for %s: %w", region, err))
 	}
 
-	if err = sweep.SweepOrchestratorWithContext(ctx, sweepResources); err != nil {
-		errs = multierror.Append(errs, fmt.Errorf("error sweeping DocDB Instances for %s: %w", region, err))
+	if err = sweep.SweepOrchestrator(ctx, sweepResources); err != nil {
+		errs = multierror.Append(errs, fmt.Errorf("sweeping DocumentDB Instances for %s: %w", region, err))
 	}
 
 	if sweep.SkipSweepError(errs.ErrorOrNil()) {
-		log.Printf("[WARN] Skipping DocDB Instance sweep for %s: %s", region, errs)
+		log.Printf("[WARN] Skipping DocumentDB Instance sweep for %s: %s", region, errs)
 		return nil
 	}
 
@@ -256,13 +258,13 @@ func sweepDBInstances(region string) error {
 
 func sweepGlobalClusters(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
 
-	conn := client.(*conns.AWSClient).DocDBConn()
+	conn := client.DocDBConn(ctx)
 	input := &docdb.DescribeGlobalClustersInput{}
 
 	err = conn.DescribeGlobalClustersPagesWithContext(ctx, input, func(out *docdb.DescribeGlobalClustersOutput, lastPage bool) bool {
@@ -272,29 +274,29 @@ func sweepGlobalClusters(region string) error {
 				GlobalClusterIdentifier: globalCluster.GlobalClusterIdentifier,
 			}
 
-			log.Printf("[INFO] Deleting DocDB Global Cluster: %s", id)
+			log.Printf("[INFO] Deleting DocumentDB Global Cluster: %s", id)
 
 			_, err := conn.DeleteGlobalClusterWithContext(ctx, input)
 
 			if err != nil {
-				log.Printf("[ERROR] Failed to delete DocDB Global Cluster (%s): %s", id, err)
+				log.Printf("[ERROR] Failed to delete DocumentDB Global Cluster (%s): %s", id, err)
 				continue
 			}
 
 			if err := WaitForGlobalClusterDeletion(ctx, conn, id, GlobalClusterDeleteTimeout); err != nil {
-				log.Printf("[ERROR] Failure while waiting for DocDB Global Cluster (%s) to be deleted: %s", id, err)
+				log.Printf("[ERROR] Failure while waiting for DocumentDB Global Cluster (%s) to be deleted: %s", id, err)
 			}
 		}
 		return !lastPage
 	})
 
 	if sweep.SkipSweepError(err) {
-		log.Printf("[WARN] Skipping DocDB Global Cluster sweep for %s: %s", region, err)
+		log.Printf("[WARN] Skipping DocumentDB Global Cluster sweep for %s: %s", region, err)
 		return nil
 	}
 
 	if err != nil {
-		return fmt.Errorf("error retrieving DocDB Global Clusters: %w", err)
+		return fmt.Errorf("retrieving DocumentDB Global Clusters: %w", err)
 	}
 
 	return nil
@@ -302,13 +304,13 @@ func sweepGlobalClusters(region string) error {
 
 func sweepDBSubnetGroups(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
 
-	conn := client.(*conns.AWSClient).DocDBConn()
+	conn := client.DocDBConn(ctx)
 	input := &docdb.DescribeDBSubnetGroupsInput{}
 
 	err = conn.DescribeDBSubnetGroupsPagesWithContext(ctx, input, func(out *docdb.DescribeDBSubnetGroupsOutput, lastPage bool) bool {
@@ -318,29 +320,29 @@ func sweepDBSubnetGroups(region string) error {
 				DBSubnetGroupName: dBSubnetGroup.DBSubnetGroupName,
 			}
 
-			log.Printf("[INFO] Deleting DocDB Subnet Group: %s", name)
+			log.Printf("[INFO] Deleting DocumentDB Subnet Group: %s", name)
 
 			_, err := conn.DeleteDBSubnetGroupWithContext(ctx, input)
 
 			if err != nil {
-				log.Printf("[ERROR] Failed to delete DocDB Subnet Group (%s): %s", name, err)
+				log.Printf("[ERROR] Failed to delete DocumentDB Subnet Group (%s): %s", name, err)
 				continue
 			}
 
 			if err := WaitForDBSubnetGroupDeletion(ctx, conn, name, DBSubnetGroupDeleteTimeout); err != nil {
-				log.Printf("[ERROR] Failure while waiting for DocDB Subnet Group (%s) to be deleted: %s", name, err)
+				log.Printf("[ERROR] Failure while waiting for DocumentDB Subnet Group (%s) to be deleted: %s", name, err)
 			}
 		}
 		return !lastPage
 	})
 
 	if sweep.SkipSweepError(err) {
-		log.Printf("[WARN] Skipping DocDB Subnet Group sweep for %s: %s", region, err)
+		log.Printf("[WARN] Skipping DocumentDB Subnet Group sweep for %s: %s", region, err)
 		return nil
 	}
 
 	if err != nil {
-		return fmt.Errorf("error retrieving DocDB Subnet Groups: %w", err)
+		return fmt.Errorf("retrieving DocumentDB Subnet Groups: %w", err)
 	}
 
 	return nil
@@ -348,13 +350,13 @@ func sweepDBSubnetGroups(region string) error {
 
 func sweepEventSubscriptions(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
 
-	conn := client.(*conns.AWSClient).DocDBConn()
+	conn := client.DocDBConn(ctx)
 	input := &docdb.DescribeEventSubscriptionsInput{}
 
 	err = conn.DescribeEventSubscriptionsPagesWithContext(ctx, input, func(out *docdb.DescribeEventSubscriptionsOutput, lastPage bool) bool {
@@ -364,29 +366,29 @@ func sweepEventSubscriptions(region string) error {
 				SubscriptionName: eventSubscription.CustSubscriptionId,
 			}
 
-			log.Printf("[INFO] Deleting DocDB Event Subscription: %s", id)
+			log.Printf("[INFO] Deleting DocumentDB Event Subscription: %s", id)
 
 			_, err := conn.DeleteEventSubscriptionWithContext(ctx, input)
 
 			if err != nil {
-				log.Printf("[ERROR] Failed to delete DocDB Event Subscription (%s): %s", id, err)
+				log.Printf("[ERROR] Failed to delete DocumentDB Event Subscription (%s): %s", id, err)
 				continue
 			}
 
 			if _, err := waitEventSubscriptionDeleted(ctx, conn, id, EventSubscriptionDeleteTimeout); err != nil {
-				log.Printf("[ERROR] Failure while waiting for DocDB Event Subscription (%s) to be deleted: %s", id, err)
+				log.Printf("[ERROR] Failure while waiting for DocumentDB Event Subscription (%s) to be deleted: %s", id, err)
 			}
 		}
 		return !lastPage
 	})
 
 	if sweep.SkipSweepError(err) {
-		log.Printf("[WARN] Skipping DocDB Event Subscription sweep for %s: %s", region, err)
+		log.Printf("[WARN] Skipping DocumentDB Event Subscription sweep for %s: %s", region, err)
 		return nil
 	}
 
 	if err != nil {
-		return fmt.Errorf("error retrieving DocDB Event Subscriptions: %w", err)
+		return fmt.Errorf("retrieving DocumentDB Event Subscriptions: %w", err)
 	}
 
 	return nil

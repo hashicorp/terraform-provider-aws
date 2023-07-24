@@ -5,6 +5,10 @@ package opsworks
 import (
 	"context"
 
+	aws_sdkv1 "github.com/aws/aws-sdk-go/aws"
+	session_sdkv1 "github.com/aws/aws-sdk-go/aws/session"
+	opsworks_sdkv1 "github.com/aws/aws-sdk-go/service/opsworks"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -32,18 +36,34 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  ResourceCustomLayer,
 			TypeName: "aws_opsworks_custom_layer",
+			Name:     "Custom Layer",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
 		},
 		{
 			Factory:  ResourceECSClusterLayer,
 			TypeName: "aws_opsworks_ecs_cluster_layer",
+			Name:     "ECS Cluster Layer",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
 		},
 		{
 			Factory:  ResourceGangliaLayer,
 			TypeName: "aws_opsworks_ganglia_layer",
+			Name:     "Ganglia Layer",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
 		},
 		{
 			Factory:  ResourceHAProxyLayer,
 			TypeName: "aws_opsworks_haproxy_layer",
+			Name:     "HAProxy Layer",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
 		},
 		{
 			Factory:  ResourceInstance,
@@ -52,18 +72,34 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  ResourceJavaAppLayer,
 			TypeName: "aws_opsworks_java_app_layer",
+			Name:     "Java App Layer",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
 		},
 		{
 			Factory:  ResourceMemcachedLayer,
 			TypeName: "aws_opsworks_memcached_layer",
+			Name:     "Memcached Layer",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
 		},
 		{
 			Factory:  ResourceMySQLLayer,
 			TypeName: "aws_opsworks_mysql_layer",
+			Name:     "MySQL Layer",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
 		},
 		{
 			Factory:  ResourceNodejsAppLayer,
 			TypeName: "aws_opsworks_nodejs_app_layer",
+			Name:     "NodeJS App Layer",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
 		},
 		{
 			Factory:  ResourcePermission,
@@ -72,10 +108,18 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  ResourcePHPAppLayer,
 			TypeName: "aws_opsworks_php_app_layer",
+			Name:     "PHP App Layer",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
 		},
 		{
 			Factory:  ResourceRailsAppLayer,
 			TypeName: "aws_opsworks_rails_app_layer",
+			Name:     "Rails App Layer",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
 		},
 		{
 			Factory:  ResourceRDSDBInstance,
@@ -84,10 +128,16 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  ResourceStack,
 			TypeName: "aws_opsworks_stack",
+			Name:     "Stack",
+			Tags:     &types.ServicePackageResourceTags{},
 		},
 		{
 			Factory:  ResourceStaticWebLayer,
 			TypeName: "aws_opsworks_static_web_layer",
+			Name:     "Static Web Layer",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
 		},
 		{
 			Factory:  ResourceUserProfile,
@@ -100,4 +150,13 @@ func (p *servicePackage) ServicePackageName() string {
 	return names.OpsWorks
 }
 
-var ServicePackage = &servicePackage{}
+// NewConn returns a new AWS SDK for Go v1 client for this service package's AWS API.
+func (p *servicePackage) NewConn(ctx context.Context, config map[string]any) (*opsworks_sdkv1.OpsWorks, error) {
+	sess := config["session"].(*session_sdkv1.Session)
+
+	return opsworks_sdkv1.New(sess.Copy(&aws_sdkv1.Config{Endpoint: aws_sdkv1.String(config["endpoint"].(string))})), nil
+}
+
+func ServicePackage(ctx context.Context) conns.ServicePackage {
+	return &servicePackage{}
+}

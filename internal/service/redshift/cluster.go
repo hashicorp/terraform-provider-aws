@@ -1,8 +1,10 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package redshift
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"log"
 	"regexp"
@@ -23,9 +25,11 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_redshift_cluster")
+// @SDKResource("aws_redshift_cluster", name="Cluster")
+// @Tags(identifierAttribute="arn")
 func ResourceCluster() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceClusterCreate,
@@ -58,6 +62,10 @@ func ResourceCluster() *schema.Resource {
 				Optional:     true,
 				Computed:     true,
 				ValidateFunc: validation.StringInSlice(redshift.AquaConfigurationStatus_Values(), false),
+				Deprecated:   "This parameter is no longer supported by the AWS API. It will be removed in the next major version of the provider.",
+				DiffSuppressFunc: func(k, oldValue, newValue string, d *schema.ResourceData) bool {
+					return true
+				},
 			},
 			"arn": {
 				Type:     schema.TypeString,
@@ -88,6 +96,10 @@ func ResourceCluster() *schema.Resource {
 					validation.StringDoesNotMatch(regexp.MustCompile(`--`), "cannot contain two consecutive hyphens"),
 					validation.StringDoesNotMatch(regexp.MustCompile(`-$`), "cannot end with a hyphen"),
 				),
+			},
+			"cluster_namespace_arn": {
+				Type:     schema.TypeString,
+				Computed: true,
 			},
 			"cluster_nodes": {
 				Type:     schema.TypeList,
@@ -123,13 +135,6 @@ func ResourceCluster() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
-			},
-			"cluster_security_groups": {
-				Type:       schema.TypeSet,
-				Optional:   true,
-				Computed:   true,
-				Elem:       &schema.Schema{Type: schema.TypeString},
-				Deprecated: `With the retirement of EC2-Classic the cluster_security_groups attribute has been deprecated and will be removed in a future version.`,
 			},
 			"cluster_subnet_group_name": {
 				Type:     schema.TypeString,
@@ -352,8 +357,8 @@ func ResourceCluster() *schema.Resource {
 				Optional: true,
 				ForceNew: true,
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			"vpc_security_group_ids": {
 				Type:     schema.TypeSet,
 				Optional: true,
@@ -364,12 +369,6 @@ func ResourceCluster() *schema.Resource {
 
 		CustomizeDiff: customdiff.All(
 			verify.SetTagsDiff,
-			func(_ context.Context, diff *schema.ResourceDiff, v interface{}) error {
-				if diff.Get("availability_zone_relocation_enabled").(bool) && diff.Get("publicly_accessible").(bool) {
-					return errors.New("`availability_zone_relocation_enabled` cannot be true when `publicly_accessible` is true")
-				}
-				return nil
-			},
 			func(_ context.Context, diff *schema.ResourceDiff, v interface{}) error {
 				if diff.Id() == "" {
 					return nil
@@ -389,13 +388,7 @@ func ResourceCluster() *schema.Resource {
 
 func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).RedshiftConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
-
-	if v, ok := d.GetOk("cluster_security_groups"); ok && v.(*schema.Set).Len() > 0 {
-		return sdkdiag.AppendErrorf(diags, `with the retirement of EC2-Classic no new Redshift Clusters can be created referencing Redshift Security Groups`)
-	}
+	conn := meta.(*conns.AWSClient).RedshiftConn(ctx)
 
 	clusterID := d.Get("cluster_identifier").(string)
 	backupInput := &redshift.RestoreFromClusterSnapshotInput{
@@ -418,7 +411,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 		NodeType:                         aws.String(d.Get("node_type").(string)),
 		Port:                             aws.Int64(int64(d.Get("port").(int))),
 		PubliclyAccessible:               aws.Bool(d.Get("publicly_accessible").(bool)),
-		Tags:                             Tags(tags.IgnoreAWS()),
+		Tags:                             getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("aqua_configuration_status"); ok {
@@ -573,9 +566,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 
 func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).RedshiftConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).RedshiftConn(ctx)
 
 	rsc, err := FindClusterByID(ctx, conn, d.Id())
 
@@ -617,6 +608,7 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 	d.Set("availability_zone_relocation_enabled", azr)
 	d.Set("cluster_identifier", rsc.ClusterIdentifier)
+	d.Set("cluster_namespace_arn", rsc.ClusterNamespaceArn)
 	if err := d.Set("cluster_nodes", flattenClusterNodes(rsc.ClusterNodes)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting cluster_nodes: %s", err)
 	}
@@ -666,13 +658,6 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta inter
 
 	var apiList []*string
 
-	for _, clusterSecurityGroup := range rsc.ClusterSecurityGroups {
-		apiList = append(apiList, clusterSecurityGroup.ClusterSecurityGroupName)
-	}
-	d.Set("cluster_security_groups", aws.StringValueSlice(apiList))
-
-	apiList = nil
-
 	for _, iamRole := range rsc.IamRoles {
 		apiList = append(apiList, iamRole.IamRoleArn)
 	}
@@ -685,23 +670,14 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 	d.Set("vpc_security_group_ids", aws.StringValueSlice(apiList))
 
-	tags := KeyValueTags(ctx, rsc.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
-	}
+	setTagsOut(ctx, rsc.Tags)
 
 	return diags
 }
 
 func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).RedshiftConn()
+	conn := meta.(*conns.AWSClient).RedshiftConn(ctx)
 
 	if d.HasChangesExcept("aqua_configuration_status", "availability_zone", "iam_roles", "logging", "snapshot_copy", "tags", "tags_all") {
 		input := &redshift.ModifyClusterInput{
@@ -722,10 +698,6 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 
 		if d.HasChange("cluster_parameter_group_name") {
 			input.ClusterParameterGroupName = aws.String(d.Get("cluster_parameter_group_name").(string))
-		}
-
-		if d.HasChange("cluster_security_groups") {
-			input.ClusterSecurityGroups = flex.ExpandStringSet(d.Get("cluster_security_groups").(*schema.Set))
 		}
 
 		if d.HasChange("maintenance_track_name") {
@@ -915,20 +887,12 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 		}
 	}
 
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		if err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n); err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating Redshift Cluster (%s) tags: %s", d.Get("arn").(string), err)
-		}
-	}
-
 	return append(diags, resourceClusterRead(ctx, d, meta)...)
 }
 
 func resourceClusterDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).RedshiftConn()
+	conn := meta.(*conns.AWSClient).RedshiftConn(ctx)
 
 	skipFinalSnapshot := d.Get("skip_final_snapshot").(bool)
 	input := &redshift.DeleteClusterInput{

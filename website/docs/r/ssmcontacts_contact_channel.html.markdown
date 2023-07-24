@@ -1,0 +1,91 @@
+---
+subcategory: "SSM Contacts"
+layout: "aws"
+page_title: "AWS: aws_ssmcontacts_contact_channel"
+description: |-
+  Terraform resource for managing an AWS SSM Contacts Contact Channel.
+---
+
+# Resource: aws_ssmcontacts_contact_channel
+
+Terraform resource for managing an AWS SSM Contacts Contact Channel.
+
+## Example Usage
+
+### Basic Usage
+
+```terraform
+resource "aws_ssmcontacts_contact_channel" "example" {
+  contact_id = "arn:aws:ssm-contacts:us-west-2:123456789012:contact/contactalias"
+
+  delivery_address {
+    simple_address = "email@example.com"
+  }
+
+  name = "Example contact channel"
+  type = "EMAIL"
+}
+```
+
+### Usage with SSM Contact
+
+```terraform
+resource "aws_ssmcontacts_contact" "example_contact" {
+  alias = "example_contact"
+  type  = "PERSONAL"
+}
+
+resource "aws_ssmcontacts_contact_channel" "example" {
+  contact_id = aws_ssmcontacts_contact.example_contact.arn
+
+  delivery_address {
+    simple_address = "email@example.com"
+  }
+
+  name = "Example contact channel"
+  type = "EMAIL"
+}
+```
+
+## Argument Reference
+
+~> **NOTE:** The contact channel needs to be activated in the AWS Systems Manager console, otherwise it can't be used to engage the contact. See the [Contacts section of the Incident Manager User Guide](https://docs.aws.amazon.com/incident-manager/latest/userguide/contacts.html) for more information.
+
+The following arguments are required:
+
+- `contact_id` - (Required) Amazon Resource Name (ARN) of the AWS SSM Contact that the contact channel belongs to.
+
+- `delivery_address` - (Required) Block that contains contact engagement details. See details below.
+
+- `name` - (Required) Name of the contact channel.
+
+- `type` - (Required) Type of the contact channel. One of `SMS`, `VOICE` or `EMAIL`.
+
+### delivery_address
+
+- `simple_address` - (Required) Details to engage this contact channel. The expected format depends on the contact channel type and is described in the [`ContactChannelAddress` section of the SSM Contacts API Reference](https://docs.aws.amazon.com/incident-manager/latest/APIReference/API_SSMContacts_ContactChannelAddress.html).
+
+## Attribute Reference
+
+This resource exports the following attributes in addition to the arguments above:
+
+- `activation_status` - Whether the contact channel is activated. The contact channel must be activated to use it to engage the contact. One of `ACTIVATED` or `NOT_ACTIVATED`.
+
+- `arn` - Amazon Resource Name (ARN) of the contact channel.
+
+## Import
+
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import SSM Contact Channel using the `ARN`. For example:
+
+```terraform
+import {
+  to = aws_ssmcontacts_contact_channel.example
+  id = "arn:aws:ssm-contacts:us-west-2:123456789012:contact-channel/example"
+}
+```
+
+Using `terraform import`, import SSM Contact Channel using the `ARN`. For example:
+
+```console
+% terraform import aws_ssmcontacts_contact_channel.example arn:aws:ssm-contacts:us-west-2:123456789012:contact-channel/example
+```

@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package networkfirewall_test
 
 import (
@@ -7,9 +10,9 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/networkfirewall"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfnetworkfirewall "github.com/hashicorp/terraform-provider-aws/internal/service/networkfirewall"
@@ -209,7 +212,7 @@ func TestAccNetworkFirewallFirewall_encryptionConfiguration(t *testing.T) {
 		CheckDestroy:             testAccCheckFirewallDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccFirewallConfig_encryptionConfiguration(rName),
+				Config: testAccFirewallConfig_encryptionConfiguration(rName, "description 1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFirewallExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "encryption_configuration.#", "1"),
@@ -229,7 +232,15 @@ func TestAccNetworkFirewallFirewall_encryptionConfiguration(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccFirewallConfig_encryptionConfiguration(rName),
+				Config: testAccFirewallConfig_encryptionConfiguration(rName, "description 1"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckFirewallExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "encryption_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "encryption_configuration.0.type", "CUSTOMER_KMS"),
+				),
+			},
+			{
+				Config: testAccFirewallConfig_encryptionConfiguration(rName, "description 2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFirewallExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "encryption_configuration.#", "1"),
@@ -420,7 +431,7 @@ func testAccCheckFirewallDestroy(ctx context.Context) resource.TestCheckFunc {
 				continue
 			}
 
-			conn := acctest.Provider.Meta().(*conns.AWSClient).NetworkFirewallConn()
+			conn := acctest.Provider.Meta().(*conns.AWSClient).NetworkFirewallConn(ctx)
 
 			_, err := tfnetworkfirewall.FindFirewallByARN(ctx, conn, rs.Primary.ID)
 
@@ -450,7 +461,7 @@ func testAccCheckFirewallExists(ctx context.Context, n string) resource.TestChec
 			return fmt.Errorf("No NetworkFirewall Firewall ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).NetworkFirewallConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).NetworkFirewallConn(ctx)
 
 		_, err := tfnetworkfirewall.FindFirewallByARN(ctx, conn, rs.Primary.ID)
 
@@ -459,7 +470,7 @@ func testAccCheckFirewallExists(ctx context.Context, n string) resource.TestChec
 }
 
 func testAccPreCheck(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).NetworkFirewallConn()
+	conn := acctest.Provider.Meta().(*conns.AWSClient).NetworkFirewallConn(ctx)
 
 	input := &networkfirewall.ListFirewallsInput{}
 
@@ -624,7 +635,7 @@ resource "aws_networkfirewall_firewall" "test" {
 `, rName))
 }
 
-func testAccFirewallConfig_encryptionConfiguration(rName string) string {
+func testAccFirewallConfig_encryptionConfiguration(rName, description string) string {
 	return acctest.ConfigCompose(testAccFirewallConfig_base(rName), fmt.Sprintf(`
 resource "aws_kms_key" "test" {}
 
@@ -632,6 +643,7 @@ resource "aws_networkfirewall_firewall" "test" {
   name                = %[1]q
   firewall_policy_arn = aws_networkfirewall_firewall_policy.test.arn
   vpc_id              = aws_vpc.test.id
+  description         = %[2]q
 
   encryption_configuration {
     key_id = aws_kms_key.test.arn
@@ -642,7 +654,7 @@ resource "aws_networkfirewall_firewall" "test" {
     subnet_id = aws_subnet.test[0].id
   }
 }
-`, rName))
+`, rName, description))
 }
 
 func testAccFirewallConfig_dualstackSubnet(rName string) string {

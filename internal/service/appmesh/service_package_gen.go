@@ -5,6 +5,10 @@ package appmesh
 import (
 	"context"
 
+	aws_sdkv1 "github.com/aws/aws-sdk-go/aws"
+	session_sdkv1 "github.com/aws/aws-sdk-go/aws/session"
+	appmesh_sdkv1 "github.com/aws/aws-sdk-go/service/appmesh"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -57,30 +61,58 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  ResourceGatewayRoute,
 			TypeName: "aws_appmesh_gateway_route",
+			Name:     "Gateway Route",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
 		},
 		{
 			Factory:  ResourceMesh,
 			TypeName: "aws_appmesh_mesh",
+			Name:     "Service Mesh",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
 		},
 		{
 			Factory:  ResourceRoute,
 			TypeName: "aws_appmesh_route",
+			Name:     "Route",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
 		},
 		{
 			Factory:  ResourceVirtualGateway,
 			TypeName: "aws_appmesh_virtual_gateway",
+			Name:     "Virtual Gateway",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
 		},
 		{
 			Factory:  ResourceVirtualNode,
 			TypeName: "aws_appmesh_virtual_node",
+			Name:     "Virtual Node",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
 		},
 		{
 			Factory:  ResourceVirtualRouter,
 			TypeName: "aws_appmesh_virtual_router",
+			Name:     "Virtual Router",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
 		},
 		{
 			Factory:  ResourceVirtualService,
 			TypeName: "aws_appmesh_virtual_service",
+			Name:     "Virtual Service",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
 		},
 	}
 }
@@ -89,4 +121,13 @@ func (p *servicePackage) ServicePackageName() string {
 	return names.AppMesh
 }
 
-var ServicePackage = &servicePackage{}
+// NewConn returns a new AWS SDK for Go v1 client for this service package's AWS API.
+func (p *servicePackage) NewConn(ctx context.Context, config map[string]any) (*appmesh_sdkv1.AppMesh, error) {
+	sess := config["session"].(*session_sdkv1.Session)
+
+	return appmesh_sdkv1.New(sess.Copy(&aws_sdkv1.Config{Endpoint: aws_sdkv1.String(config["endpoint"].(string))})), nil
+}
+
+func ServicePackage(ctx context.Context) conns.ServicePackage {
+	return &servicePackage{}
+}

@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package s3_test
 
 // WARNING: This code is DEPRECATED and will be removed in a future release!!
@@ -19,10 +22,10 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfs3 "github.com/hashicorp/terraform-provider-aws/internal/service/s3"
@@ -592,31 +595,31 @@ func TestAccS3BucketObject_acl(t *testing.T) {
 		CheckDestroy:             testAccCheckBucketObjectDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBucketObjectConfig_acl(rName, "some_bucket_content", "private"),
+				Config: testAccBucketObjectConfig_acl(rName, "some_bucket_content", s3.BucketCannedACLPrivate, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketObjectExists(ctx, resourceName, &obj1),
 					testAccCheckBucketObjectBody(&obj1, "some_bucket_content"),
-					resource.TestCheckResourceAttr(resourceName, "acl", "private"),
+					resource.TestCheckResourceAttr(resourceName, "acl", s3.BucketCannedACLPrivate),
 					testAccCheckBucketObjectACL(ctx, resourceName, []string{"FULL_CONTROL"}),
 				),
 			},
 			{
-				Config: testAccBucketObjectConfig_acl(rName, "some_bucket_content", "public-read"),
+				Config: testAccBucketObjectConfig_acl(rName, "some_bucket_content", s3.BucketCannedACLPublicRead, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketObjectExists(ctx, resourceName, &obj2),
 					testAccCheckBucketObjectVersionIdEquals(&obj2, &obj1),
 					testAccCheckBucketObjectBody(&obj2, "some_bucket_content"),
-					resource.TestCheckResourceAttr(resourceName, "acl", "public-read"),
+					resource.TestCheckResourceAttr(resourceName, "acl", s3.BucketCannedACLPublicRead),
 					testAccCheckBucketObjectACL(ctx, resourceName, []string{"FULL_CONTROL", "READ"}),
 				),
 			},
 			{
-				Config: testAccBucketObjectConfig_acl(rName, "changed_some_bucket_content", "private"),
+				Config: testAccBucketObjectConfig_acl(rName, "changed_some_bucket_content", s3.BucketCannedACLPrivate, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketObjectExists(ctx, resourceName, &obj3),
 					testAccCheckBucketObjectVersionIdDiffers(&obj3, &obj2),
 					testAccCheckBucketObjectBody(&obj3, "changed_some_bucket_content"),
-					resource.TestCheckResourceAttr(resourceName, "acl", "private"),
+					resource.TestCheckResourceAttr(resourceName, "acl", s3.BucketCannedACLPrivate),
 					testAccCheckBucketObjectACL(ctx, resourceName, []string{"FULL_CONTROL"}),
 				),
 			},
@@ -1378,7 +1381,7 @@ func testAccCheckBucketObjectVersionIdEquals(first, second *s3.GetObjectOutput) 
 
 func testAccCheckBucketObjectDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Conn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Conn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_s3_bucket_object" {
@@ -1413,7 +1416,7 @@ func testAccCheckBucketObjectExists(ctx context.Context, n string, obj *s3.GetOb
 			return fmt.Errorf("No S3 Object ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Conn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Conn(ctx)
 
 		input := &s3.GetObjectInput{
 			Bucket:  aws.String(rs.Primary.Attributes["bucket"]),
@@ -1472,7 +1475,7 @@ func testAccCheckBucketObjectBody(obj *s3.GetObjectOutput, want string) resource
 func testAccCheckBucketObjectACL(ctx context.Context, n string, expectedPerms []string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs := s.RootModule().Resources[n]
-		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Conn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Conn(ctx)
 
 		out, err := conn.GetObjectAclWithContext(ctx, &s3.GetObjectAclInput{
 			Bucket: aws.String(rs.Primary.Attributes["bucket"]),
@@ -1500,7 +1503,7 @@ func testAccCheckBucketObjectACL(ctx context.Context, n string, expectedPerms []
 func testAccCheckBucketObjectStorageClass(ctx context.Context, n, expectedClass string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs := s.RootModule().Resources[n]
-		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Conn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Conn(ctx)
 
 		out, err := tfs3.FindObjectByThreePartKey(ctx, conn, rs.Primary.Attributes["bucket"], rs.Primary.Attributes["key"], "")
 
@@ -1527,7 +1530,7 @@ func testAccCheckBucketObjectStorageClass(ctx context.Context, n, expectedClass 
 func testAccCheckBucketObjectSSE(ctx context.Context, n, expectedSSE string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs := s.RootModule().Resources[n]
-		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Conn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Conn(ctx)
 
 		out, err := tfs3.FindObjectByThreePartKey(ctx, conn, rs.Primary.Attributes["bucket"], rs.Primary.Attributes["key"], "")
 
@@ -1568,7 +1571,7 @@ func testAccBucketObjectCreateTempFile(t *testing.T, data string) string {
 func testAccCheckBucketObjectUpdateTags(ctx context.Context, n string, oldTags, newTags map[string]string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs := s.RootModule().Resources[n]
-		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Conn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Conn(ctx)
 
 		return tfs3.ObjectUpdateTags(ctx, conn, rs.Primary.Attributes["bucket"], rs.Primary.Attributes["key"], oldTags, newTags)
 	}
@@ -1577,7 +1580,7 @@ func testAccCheckBucketObjectUpdateTags(ctx context.Context, n string, oldTags, 
 func testAccCheckBucketObjectCheckTags(ctx context.Context, n string, expectedTags map[string]string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs := s.RootModule().Resources[n]
-		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Conn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Conn(ctx)
 
 		got, err := tfs3.ObjectListTags(ctx, conn, rs.Primary.Attributes["bucket"], rs.Primary.Attributes["key"])
 		if err != nil {
@@ -1793,10 +1796,26 @@ resource "aws_s3_bucket_object" "object" {
 `, rName, source)
 }
 
-func testAccBucketObjectConfig_acl(rName string, content, acl string) string {
+func testAccBucketObjectConfig_acl(rName, content, acl string, blockPublicAccess bool) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
   bucket = %[1]q
+}
+
+resource "aws_s3_bucket_public_access_block" "test" {
+  bucket = aws_s3_bucket.test.id
+
+  block_public_acls       = %[4]t
+  block_public_policy     = %[4]t
+  ignore_public_acls      = %[4]t
+  restrict_public_buckets = %[4]t
+}
+
+resource "aws_s3_bucket_ownership_controls" "test" {
+  bucket = aws_s3_bucket.test.id
+  rule {
+    object_ownership = "BucketOwnerPreferred"
+  }
 }
 
 resource "aws_s3_bucket_versioning" "test" {
@@ -1807,15 +1826,18 @@ resource "aws_s3_bucket_versioning" "test" {
 }
 
 resource "aws_s3_bucket_object" "object" {
-  # Must have bucket versioning enabled first
-  depends_on = [aws_s3_bucket_versioning.test]
+  depends_on = [
+    aws_s3_bucket_public_access_block.test,
+    aws_s3_bucket_ownership_controls.test,
+    aws_s3_bucket_versioning.test,
+  ]
 
   bucket  = aws_s3_bucket.test.bucket
   key     = "test-key"
   content = %[2]q
   acl     = %[3]q
 }
-`, rName, content, acl)
+`, rName, content, acl, blockPublicAccess)
 }
 
 func testAccBucketObjectConfig_storageClass(rName string, storage_class string) string {

@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package batch_test
 
 import (
@@ -10,9 +13,9 @@ import (
 	"github.com/aws/aws-sdk-go/service/batch"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfbatch "github.com/hashicorp/terraform-provider-aws/internal/service/batch"
@@ -271,7 +274,7 @@ func testAccCheckJobQueueExists(ctx context.Context, n string, jq *batch.JobQueu
 			return fmt.Errorf("No Batch Job Queue ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).BatchConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).BatchConn(ctx)
 		name := rs.Primary.Attributes["name"]
 		queue, err := tfbatch.GetJobQueue(ctx, conn, name)
 		if err != nil {
@@ -292,7 +295,7 @@ func testAccCheckJobQueueDestroy(ctx context.Context) resource.TestCheckFunc {
 			if rs.Type != "aws_batch_job_queue" {
 				continue
 			}
-			conn := acctest.Provider.Meta().(*conns.AWSClient).BatchConn()
+			conn := acctest.Provider.Meta().(*conns.AWSClient).BatchConn(ctx)
 			jq, err := tfbatch.GetJobQueue(ctx, conn, rs.Primary.Attributes["name"])
 			if err == nil {
 				if jq != nil {
@@ -307,7 +310,7 @@ func testAccCheckJobQueueDestroy(ctx context.Context) resource.TestCheckFunc {
 
 func testAccCheckJobQueueDisappears(ctx context.Context, jobQueue *batch.JobQueueDetail) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).BatchConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).BatchConn(ctx)
 		name := aws.StringValue(jobQueue.JobQueueName)
 
 		err := tfbatch.DisableJobQueue(ctx, name, conn)
@@ -325,7 +328,7 @@ func testAccCheckJobQueueDisappears(ctx context.Context, jobQueue *batch.JobQueu
 // For example, Terraform may set a single Compute Environment with Order 0, but the console updates it to 1.
 func testAccCheckJobQueueComputeEnvironmentOrderUpdate(ctx context.Context, jobQueue *batch.JobQueueDetail) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).BatchConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).BatchConn(ctx)
 
 		input := &batch.UpdateJobQueueInput{
 			ComputeEnvironmentOrder: jobQueue.ComputeEnvironmentOrder,
@@ -565,7 +568,7 @@ resource "aws_batch_job_queue" "test" {
 
 func testAccCheckLaunchTemplateDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_launch_template" {

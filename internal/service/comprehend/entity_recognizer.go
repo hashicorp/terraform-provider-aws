@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package comprehend
 
 import (
@@ -30,13 +33,15 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 const (
 	entityRecognizerTagKey = "tf-aws_comprehend_entity_recognizer"
 )
 
-// @SDKResource("aws_comprehend_entity_recognizer")
+// @SDKResource("aws_comprehend_entity_recognizer", name="Entity Recognizer")
+// @Tags(identifierAttribute="id")
 func ResourceEntityRecognizer() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceEntityRecognizerCreate,
@@ -205,8 +210,8 @@ func ResourceEntityRecognizer() *schema.Resource {
 				Required:     true,
 				ValidateFunc: validModelName,
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			"version_name": {
 				Type:          schema.TypeString,
 				Optional:      true,
@@ -302,7 +307,7 @@ func ResourceEntityRecognizer() *schema.Resource {
 
 func resourceEntityRecognizerCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	awsClient := meta.(*conns.AWSClient)
-	conn := awsClient.ComprehendClient()
+	conn := awsClient.ComprehendClient(ctx)
 
 	var versionName *string
 	raw := d.GetRawConfig().GetAttr("version_name")
@@ -321,7 +326,7 @@ func resourceEntityRecognizerCreate(ctx context.Context, d *schema.ResourceData,
 }
 
 func resourceEntityRecognizerRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ComprehendClient()
+	conn := meta.(*conns.AWSClient).ComprehendClient(ctx)
 
 	out, err := FindEntityRecognizerByID(ctx, conn, d.Id())
 
@@ -358,29 +363,12 @@ func resourceEntityRecognizerRead(ctx context.Context, d *schema.ResourceData, m
 		return diag.Errorf("setting vpc_config: %s", err)
 	}
 
-	tags, err := ListTags(ctx, conn, d.Id())
-	if err != nil {
-		return diag.Errorf("listing tags for Comprehend Entity Recognizer (%s): %s", d.Id(), err)
-	}
-
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
-	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return diag.Errorf("setting tags: %s", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return diag.Errorf("setting tags_all: %s", err)
-	}
-
 	return nil
 }
 
 func resourceEntityRecognizerUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	awsClient := meta.(*conns.AWSClient)
-	conn := awsClient.ComprehendClient()
+	conn := awsClient.ComprehendClient(ctx)
 
 	var diags diag.Diagnostics
 
@@ -396,21 +384,13 @@ func resourceEntityRecognizerUpdate(ctx context.Context, d *schema.ResourceData,
 		if diags.HasError() {
 			return diags
 		}
-	} else if d.HasChange("tags_all") {
-		// For a tags-only change. If tag changes are combined with version publishing, the tags are set
-		// by the CreateEntityRecognizer call
-		o, n := d.GetChange("tags_all")
-
-		if err := UpdateTags(ctx, conn, d.Id(), o, n); err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating tags for Comprehend Entity Recognizer (%s): %s", d.Id(), err)
-		}
 	}
 
 	return append(diags, resourceEntityRecognizerRead(ctx, d, meta)...)
 }
 
 func resourceEntityRecognizerDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ComprehendClient()
+	conn := meta.(*conns.AWSClient).ComprehendClient(ctx)
 
 	log.Printf("[INFO] Stopping Comprehend Entity Recognizer (%s)", d.Id())
 
@@ -465,7 +445,7 @@ func resourceEntityRecognizerDelete(ctx context.Context, d *schema.ResourceData,
 				return fmt.Errorf("waiting for version (%s) to be deleted: %s", aws.ToString(v.VersionName), err)
 			}
 
-			ec2Conn := meta.(*conns.AWSClient).EC2Conn()
+			ec2Conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 			networkInterfaces, err := tfec2.FindNetworkInterfaces(ctx, ec2Conn, &ec2.DescribeNetworkInterfacesInput{
 				Filters: []*ec2.Filter{
 					tfec2.NewFilter(fmt.Sprintf("tag:%s", entityRecognizerTagKey), []string{aws.ToString(v.EntityRecognizerArn)}),
@@ -517,6 +497,7 @@ func entityRecognizerPublishVersion(ctx context.Context, conn *comprehend.Client
 		VersionName:        versionName,
 		VpcConfig:          expandVPCConfig(d.Get("vpc_config").([]interface{})),
 		ClientRequestToken: aws.String(id.UniqueId()),
+		Tags:               getTagsIn(ctx),
 	}
 
 	if v, ok := d.Get("model_kms_key_id").(string); ok && v != "" {
@@ -525,13 +506,6 @@ func entityRecognizerPublishVersion(ctx context.Context, conn *comprehend.Client
 
 	if v, ok := d.Get("volume_kms_key_id").(string); ok && v != "" {
 		in.VolumeKmsKeyId = aws.String(v)
-	}
-
-	defaultTagsConfig := awsClient.DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
-
-	if len(tags) > 0 {
-		in.Tags = Tags(tags.IgnoreAWS())
 	}
 
 	// Because the IAM credentials aren't evaluated until training time, we need to ensure we wait for the IAM propagation delay
@@ -596,7 +570,7 @@ func entityRecognizerPublishVersion(ctx context.Context, conn *comprehend.Client
 
 	if in.VpcConfig != nil {
 		g.Go(func() error {
-			ec2Conn := awsClient.EC2Conn()
+			ec2Conn := awsClient.EC2Conn(ctx)
 			enis, err := findNetworkInterfaces(waitCtx, ec2Conn, in.VpcConfig.SecurityGroupIds, in.VpcConfig.Subnets)
 			if err != nil {
 				diags = sdkdiag.AppendWarningf(diags, "waiting for Amazon Comprehend Entity Recognizer (%s) %s: %s", d.Id(), tobe, err)

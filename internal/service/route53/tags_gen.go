@@ -11,12 +11,13 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/types"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// ListTags lists route53 service tags.
+// listTags lists route53 service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func ListTags(ctx context.Context, conn route53iface.Route53API, identifier, resourceType string) (tftags.KeyValueTags, error) {
+func listTags(ctx context.Context, conn route53iface.Route53API, identifier, resourceType string) (tftags.KeyValueTags, error) {
 	input := &route53.ListTagsForResourceInput{
 		ResourceId:   aws.String(identifier),
 		ResourceType: aws.String(resourceType),
@@ -34,7 +35,7 @@ func ListTags(ctx context.Context, conn route53iface.Route53API, identifier, res
 // ListTags lists route53 service tags and set them in Context.
 // It is called from outside this package.
 func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier, resourceType string) error {
-	tags, err := ListTags(ctx, meta.(*conns.AWSClient).Route53Conn(), identifier, resourceType)
+	tags, err := listTags(ctx, meta.(*conns.AWSClient).Route53Conn(ctx), identifier, resourceType)
 
 	if err != nil {
 		return err
@@ -76,9 +77,9 @@ func KeyValueTags(ctx context.Context, tags []*route53.Tag) tftags.KeyValueTags 
 	return tftags.New(ctx, m)
 }
 
-// GetTagsIn returns route53 service tags from Context.
+// getTagsIn returns route53 service tags from Context.
 // nil is returned if there are no input tags.
-func GetTagsIn(ctx context.Context) []*route53.Tag {
+func getTagsIn(ctx context.Context) []*route53.Tag {
 	if inContext, ok := tftags.FromContext(ctx); ok {
 		if tags := Tags(inContext.TagsIn.UnwrapOrDefault()); len(tags) > 0 {
 			return tags
@@ -88,24 +89,34 @@ func GetTagsIn(ctx context.Context) []*route53.Tag {
 	return nil
 }
 
-// SetTagsOut sets route53 service tags in Context.
-func SetTagsOut(ctx context.Context, tags []*route53.Tag) {
+// setTagsOut sets route53 service tags in Context.
+func setTagsOut(ctx context.Context, tags []*route53.Tag) {
 	if inContext, ok := tftags.FromContext(ctx); ok {
 		inContext.TagsOut = types.Some(KeyValueTags(ctx, tags))
 	}
 }
 
-// UpdateTags updates route53 service tags.
+// createTags creates route53 service tags for new resources.
+func createTags(ctx context.Context, conn route53iface.Route53API, identifier, resourceType string, tags []*route53.Tag) error {
+	if len(tags) == 0 {
+		return nil
+	}
+
+	return updateTags(ctx, conn, identifier, resourceType, nil, KeyValueTags(ctx, tags))
+}
+
+// updateTags updates route53 service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-
-func UpdateTags(ctx context.Context, conn route53iface.Route53API, identifier, resourceType string, oldTagsMap, newTagsMap any) error {
+func updateTags(ctx context.Context, conn route53iface.Route53API, identifier, resourceType string, oldTagsMap, newTagsMap any) error {
 	oldTags := tftags.New(ctx, oldTagsMap)
 	newTags := tftags.New(ctx, newTagsMap)
 	removedTags := oldTags.Removed(newTags)
+	removedTags = removedTags.IgnoreSystem(names.Route53)
 	updatedTags := oldTags.Updated(newTags)
+	updatedTags = updatedTags.IgnoreSystem(names.Route53)
 
-	// Ensure we do not send empty requests
+	// Ensure we do not send empty requests.
 	if len(removedTags) == 0 && len(updatedTags) == 0 {
 		return nil
 	}
@@ -116,7 +127,7 @@ func UpdateTags(ctx context.Context, conn route53iface.Route53API, identifier, r
 	}
 
 	if len(updatedTags) > 0 {
-		input.AddTags = Tags(updatedTags.IgnoreAWS())
+		input.AddTags = Tags(updatedTags)
 	}
 
 	if len(removedTags) > 0 {
@@ -135,5 +146,5 @@ func UpdateTags(ctx context.Context, conn route53iface.Route53API, identifier, r
 // UpdateTags updates route53 service tags.
 // It is called from outside this package.
 func (p *servicePackage) UpdateTags(ctx context.Context, meta any, identifier, resourceType string, oldTags, newTags any) error {
-	return UpdateTags(ctx, meta.(*conns.AWSClient).Route53Conn(), identifier, resourceType, oldTags, newTags)
+	return updateTags(ctx, meta.(*conns.AWSClient).Route53Conn(ctx), identifier, resourceType, oldTags, newTags)
 }

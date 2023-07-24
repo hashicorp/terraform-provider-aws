@@ -1,12 +1,5 @@
-// A list of maintainers to be used as an "allow list" for various GitHub Actions.
-// This allows us to make various "exceptions" for maintainers, such as automatically
-// removing the `needs-triage` label from new Issues and Pull Requests
-//
-resource "github_actions_secret" "maintainer_list" {
-  repository      = "terraform-provider-aws"
-  secret_name     = "MAINTAINER_LIST"
-  plaintext_value = "['breathingdust', 'dependabot[bot]', 'ewbankkit', 'gdavison', 'jar-b', 'johnsonaj', 'justinretzolk', 'marcosentino', 'nam054', 'YakDriver']"
-}
+# Copyright (c) HashiCorp, Inc.
+# SPDX-License-Identifier: MPL-2.0
 
 variable "community_list_repo" {
   type        = string
@@ -33,7 +26,7 @@ data "github_team" "aws" {
 resource "github_actions_secret" "maintainers" {
   repository      = "terraform-provider-aws"
   secret_name     = "MAINTAINERS"
-  plaintext_value = base64encode(jsonencode(data.github_team.aws.members))
+  plaintext_value = base64encode(jsonencode(concat(data.github_team.aws.members, ["dependabot[bot]"])))
 }
 
 // Partners
