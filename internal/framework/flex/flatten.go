@@ -63,58 +63,8 @@ func (visitor flattenVisitor) visit(ctx context.Context, fieldName string, valFr
 
 	// Pointer to primitive types.
 	case reflect.Ptr:
-		switch valElem := valFrom.Elem(); valFrom.Type().Elem().Kind() {
-		case reflect.Bool:
-			if valFrom.IsNil() {
-				valTo.Set(reflect.ValueOf(types.BoolNull()))
-				return nil
-			}
-
-			diags := visitor.bool(ctx, valElem, tTo, valTo)
-			return fwdiag.DiagnosticsError(diags)
-
-		case reflect.Float32, reflect.Float64:
-			if valFrom.IsNil() {
-				valTo.Set(reflect.ValueOf(types.Float64Null()))
-				return nil
-			}
-
-			diags := visitor.float(ctx, valElem, tTo, valTo)
-			return fwdiag.DiagnosticsError(diags)
-
-		case reflect.Int32, reflect.Int64:
-			if valFrom.IsNil() {
-				valTo.Set(reflect.ValueOf(types.Int64Null()))
-				return nil
-			}
-
-			diags := visitor.int(ctx, valElem, tTo, valTo)
-			return fwdiag.DiagnosticsError(diags)
-
-		case reflect.String:
-			if valFrom.IsNil() {
-				valTo.Set(reflect.ValueOf(types.StringNull()))
-				return nil
-			}
-
-			diags := visitor.string(ctx, valElem, tTo, valTo)
-			return fwdiag.DiagnosticsError(diags)
-
-		case reflect.Struct:
-			switch tTo.(type) {
-			case basetypes.ListTypable:
-				//
-				// *struct -> types.List(OfObject).
-				//
-				return nil
-
-			case basetypes.SetTypable:
-				//
-				// *struct -> types.Set(OfObject).
-				//
-				return nil
-			}
-		}
+		diags := visitor.pointer(ctx, valFrom, tTo, valTo)
+		return fwdiag.DiagnosticsError(diags)
 
 	// Slice of simple types or pointer to simple types.
 	case reflect.Slice:
@@ -330,6 +280,68 @@ func (visitor flattenVisitor) string(ctx context.Context, vFrom reflect.Value, t
 		//
 		vTo.Set(reflect.ValueOf(v))
 		return diags
+	}
+
+	diags.Append(visitor.newIncompatibleTypesError(ctx, vFrom, tTo))
+
+	return diags
+}
+
+// pointer copies an AWS API pointer value to a compatible Plugin Framework field.
+func (visitor flattenVisitor) pointer(ctx context.Context, vFrom reflect.Value, tTo attr.Type, vTo reflect.Value) diag.Diagnostics {
+	var diags diag.Diagnostics
+
+	switch vElem := vFrom.Elem(); vFrom.Type().Elem().Kind() {
+	case reflect.Bool:
+		if vFrom.IsNil() {
+			vTo.Set(reflect.ValueOf(types.BoolNull()))
+			return diags
+		}
+
+		diags.Append(visitor.bool(ctx, vElem, tTo, vTo)...)
+		return diags
+
+	case reflect.Float32, reflect.Float64:
+		if vFrom.IsNil() {
+			vTo.Set(reflect.ValueOf(types.Float64Null()))
+			return diags
+		}
+
+		diags.Append(visitor.float(ctx, vElem, tTo, vTo)...)
+		return diags
+
+	case reflect.Int32, reflect.Int64:
+		if vFrom.IsNil() {
+			vTo.Set(reflect.ValueOf(types.Int64Null()))
+			return diags
+		}
+
+		diags.Append(visitor.int(ctx, vElem, tTo, vTo)...)
+		return diags
+
+	case reflect.String:
+		if vFrom.IsNil() {
+			vTo.Set(reflect.ValueOf(types.StringNull()))
+			return diags
+		}
+
+		diags.Append(visitor.string(ctx, vElem, tTo, vTo)...)
+		return diags
+
+	case reflect.Struct:
+		switch tTo.(type) {
+		case basetypes.ListTypable:
+			//
+			// *struct -> types.List(OfObject).
+			//
+			return diags
+
+		case basetypes.SetTypable:
+			//
+			// *struct -> types.Set(OfObject).
+			//
+			return diags
+		}
 	}
 
 	diags.Append(visitor.newIncompatibleTypesError(ctx, vFrom, tTo))
