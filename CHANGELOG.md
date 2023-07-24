@@ -4,13 +4,19 @@ FEATURES:
 
 * resource/aws_kms_grant: Allow usage of service principal as grantee and revoker. ([#32595](https://github.com/hashicorp/terraform-provider-aws/issues/32595))
 
+ENHANCEMENTS:
+
+* data-source/aws_nat_gateway: Add `secondary_allocation_ids`, `secondary_private_ip_addresses` and `secondary_private_ip_address_count` attributes ([#31778](https://github.com/hashicorp/terraform-provider-aws/issues/31778))
+* resource/aws_nat_gateway: Add `secondary_allocation_ids`, `secondary_private_ip_addresses` and `secondary_private_ip_address_count` arguments ([#31778](https://github.com/hashicorp/terraform-provider-aws/issues/31778))
+* resource/aws_nat_gateway: Add configurable timeouts ([#31778](https://github.com/hashicorp/terraform-provider-aws/issues/31778))
+
 BUG FIXES:
 
-* aws_quicksight_analysis: grid layout `optimized_view_port_width` argument changed to optional ([#32644](https://github.com/hashicorp/terraform-provider-aws/issues/32644))
-* aws_quicksight_dashboard: grid layout `optimized_view_port_width` argument changed to optional ([#32644](https://github.com/hashicorp/terraform-provider-aws/issues/32644))
-* aws_quicksight_template: grid layout `optimized_view_port_width` argument changed to optional ([#32644](https://github.com/hashicorp/terraform-provider-aws/issues/32644))
 * resource/aws_finspace_kx_cluster: `database.cache_configurations.db_paths` argument is now optional ([#32579](https://github.com/hashicorp/terraform-provider-aws/issues/32579))
 * resource/aws_finspace_kx_cluster: `database.cache_configurations` argument is now optional ([#32579](https://github.com/hashicorp/terraform-provider-aws/issues/32579))
+* resource/aws_quicksight_analysis: Grid layout `optimized_view_port_width` argument changed to Optional ([#32644](https://github.com/hashicorp/terraform-provider-aws/issues/32644))
+* resource/aws_quicksight_dashboard: Grid layout `optimized_view_port_width` argument changed to Optional ([#32644](https://github.com/hashicorp/terraform-provider-aws/issues/32644))
+* resource/aws_quicksight_template: Grid layout `optimized_view_port_width` argument changed to Optional ([#32644](https://github.com/hashicorp/terraform-provider-aws/issues/32644))
 
 ## 5.9.0 (July 20, 2023)
 
