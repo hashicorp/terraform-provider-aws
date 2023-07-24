@@ -53,6 +53,40 @@ func TestAccVPCLatticeServiceNetworkVPCAssociation_basic(t *testing.T) {
 	})
 }
 
+func TestAccVPCLatticeServiceNetworkVPCAssociation_arn(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	var servicenetworkvpcasc vpclattice.GetServiceNetworkVpcAssociationOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_vpclattice_service_network_vpc_association.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.VPCLatticeEndpointID)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.VPCLatticeEndpointID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckServiceNetworkVPCAssociationDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccServiceNetworkVPCAssociationConfig_basic(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServiceNetworkVPCAssociationExists(ctx, resourceName, &servicenetworkvpcasc),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "vpc-lattice", regexp.MustCompile("servicenetworkvpcassociation/.+$")),
+					resource.TestCheckResourceAttrSet(resourceName, "service_network_identifier"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccVPCLatticeServiceNetworkVPCAssociation_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 
@@ -234,6 +268,23 @@ resource "aws_vpclattice_service_network" "test" {
 resource "aws_vpclattice_service_network_vpc_association" "test" {
   vpc_identifier             = aws_vpc.test.id
   service_network_identifier = aws_vpclattice_service_network.test.id
+}
+`, rName)
+}
+
+func testAccServiceNetworkVPCAssociationConfig_arn(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_vpc" "test" {
+  cidr_block = "10.0.0.0/16"
+}
+
+resource "aws_vpclattice_service_network" "test" {
+  name = %[1]q
+}
+
+resource "aws_vpclattice_service_network_vpc_association" "test" {
+  vpc_identifier             = aws_vpc.test.id
+  service_network_identifier = aws_vpclattice_service_network.test.arn
 }
 `, rName)
 }

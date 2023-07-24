@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"log"
+	"strings"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -61,6 +62,13 @@ func ResourceServiceNetworkVPCAssociation() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					// Users can provide both IDs or ARNs, while the API returns the ID
+					old_id := old[strings.LastIndex(old, "/")+1:]
+					new_id := new[strings.LastIndex(new, "/")+1:]
+
+					return old_id == new_id
+				},
 			},
 			"status": {
 				Type:     schema.TypeString,
