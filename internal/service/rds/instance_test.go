@@ -52,6 +52,7 @@ func TestAccRDSInstance_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "auto_minor_version_upgrade", "true"),
 					resource.TestCheckResourceAttrSet(resourceName, "availability_zone"),
 					resource.TestCheckResourceAttr(resourceName, "backup_retention_period", "0"),
+					resource.TestCheckResourceAttr(resourceName, "backup_target", "region"),
 					resource.TestCheckResourceAttrSet(resourceName, "backup_window"),
 					resource.TestCheckResourceAttrSet(resourceName, "ca_cert_identifier"),
 					resource.TestCheckResourceAttr(resourceName, "copy_tags_to_snapshot", "false"),
@@ -129,6 +130,7 @@ func TestAccRDSInstance_manage_password(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "auto_minor_version_upgrade", "true"),
 					resource.TestCheckResourceAttrSet(resourceName, "availability_zone"),
 					resource.TestCheckResourceAttr(resourceName, "backup_retention_period", "0"),
+					resource.TestCheckResourceAttr(resourceName, "backup_target", "region"),
 					resource.TestCheckResourceAttrSet(resourceName, "backup_window"),
 					resource.TestCheckResourceAttrSet(resourceName, "ca_cert_identifier"),
 					resource.TestCheckResourceAttr(resourceName, "copy_tags_to_snapshot", "false"),
@@ -4423,7 +4425,7 @@ func TestAccRDSInstance_NoNationalCharacterSet_oracle(t *testing.T) {
 	})
 }
 
-func TestAccRDSInstance_coIPEnabled(t *testing.T) {
+func TestAccRDSInstance_CoIPEnabled(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v rds.DBInstance
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -4592,6 +4594,34 @@ func TestAccRDSInstance_CoIPEnabled_snapshotIdentifier(t *testing.T) {
 					testAccCheckDBSnapshotExists(ctx, snapshotResourceName, &dbSnapshot),
 					testAccCheckInstanceExists(ctx, resourceName, &dbInstance),
 					resource.TestCheckResourceAttr(resourceName, "customer_owned_ip_enabled", "true"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccRDSInstance_BackupTarget(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var v rds.DBInstance
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_db_instance.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckOutpostsOutposts(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstanceConfig_Outpost_BackupTarget(rName, "outposts", 0),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckInstanceExists(ctx, resourceName, &v),
+					testAccCheckInstanceAttributes(&v),
+					resource.TestCheckResourceAttr(resourceName, "backup_target", "outposts"),
 				),
 			},
 		},
@@ -10042,9 +10072,9 @@ resource "aws_db_instance" "test" {
 `, rName))
 }
 
-func testAccInstanceConfig_Outpost_coIPEnabled(rName string, coipEnabled bool, backupRetentionPeriod int) string {
+func testAccInstanceConfig_baseOutpost(rName string) string {
 	return acctest.ConfigCompose(
-		testAccInstanceConfig_orderableClassMySQL(),
+		testAccInstanceConfig_orderableClass("mysql", "general-public-license", "standard", outpostPreferredInstanceClasses),
 		fmt.Sprintf(`
 data "aws_outposts_outposts" "test" {}
 
@@ -10088,7 +10118,13 @@ resource "aws_ec2_local_gateway_route_table_vpc_association" "test" {
     Name = %[1]q
   }
 }
+`, rName))
+}
 
+func testAccInstanceConfig_Outpost_coIPEnabled(rName string, coipEnabled bool, backupRetentionPeriod int) string {
+	return acctest.ConfigCompose(
+		testAccInstanceConfig_baseOutpost(rName),
+		fmt.Sprintf(`
 resource "aws_db_instance" "test" {
   identifier                = %[1]q
   allocated_storage         = 20
@@ -10144,6 +10180,29 @@ resource "aws_db_instance" "restore" {
   skip_final_snapshot       = true
 }
 `, rName, targetCoipEnabled))
+}
+
+func testAccInstanceConfig_Outpost_BackupTarget(rName string, backupTarget string, backupRetentionPeriod int) string {
+	return acctest.ConfigCompose(
+		testAccInstanceConfig_baseOutpost(rName),
+		fmt.Sprintf(`
+resource "aws_db_instance" "test" {
+  identifier              = %[1]q
+  allocated_storage       = 20
+  backup_retention_period = %[3]d
+  engine                  = data.aws_rds_orderable_db_instance.test.engine
+  engine_version          = data.aws_rds_orderable_db_instance.test.engine_version
+  instance_class          = data.aws_rds_orderable_db_instance.test.instance_class
+  db_name                 = "test"
+  parameter_group_name    = "default.${data.aws_rds_engine_version.default.parameter_group_family}"
+  skip_final_snapshot     = true
+  password                = "avoid-plaintext-passwords"
+  username                = "tfacctest"
+  db_subnet_group_name    = aws_db_subnet_group.test.name
+  storage_encrypted       = true
+  backup_target           = %[2]q
+}
+`, rName, backupTarget, backupRetentionPeriod))
 }
 
 func testAccInstanceConfig_license(rName, license string) string {

@@ -1,12 +1,14 @@
+name: Pull Request Target (All types)
+
 on:
   - pull_request_target
-
-name: Pull Request Target (All types)
 
 jobs:
   community_check:
     uses: ./.github/workflows/community-check.yml
     secrets: inherit
+    with:
+      username: ${{ github.event.pull_request.user.login }}
 
   Labeler:
     runs-on: ubuntu-latest

@@ -192,9 +192,9 @@ The following arguments are optional:
 * `use_csv_no_sup_value` - (Optional) Whether to use `csv_no_sup_value` for columns not included in the supplemental log.
 * `use_task_start_time_for_full_load_timestamp` - (Optional) When set to true, uses the task start time as the timestamp column value instead of the time data is written to target. For full load, when set to true, each row of the timestamp column contains the task start time. For CDC loads, each row of the timestamp column contains the transaction commit time. When set to false, the full load timestamp in the timestamp column increments with the time data arrives at the target. Default is `false`.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `endpoint_arn` - ARN for the endpoint.
 * `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
@@ -208,8 +208,17 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Endpoints can be imported using the `endpoint_id`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import endpoints using the `endpoint_id`. For example:
 
+```terraform
+import {
+  to = aws_dms_endpoint.test
+  id = "test-dms-endpoint-tf"
+}
 ```
-$ terraform import aws_dms_endpoint.test test-dms-endpoint-tf
+
+Using `terraform import`, import endpoints using the `endpoint_id`. For example:
+
+```console
+% terraform import aws_dms_endpoint.test test-dms-endpoint-tf
 ```

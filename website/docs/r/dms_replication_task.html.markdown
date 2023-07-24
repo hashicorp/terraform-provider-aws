@@ -35,7 +35,7 @@ resource "aws_dms_replication_task" "test" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `cdc_start_position` - (Optional, Conflicts with `cdc_start_time`) Indicates when you want a change data capture (CDC) operation to start. The value can be in date, checkpoint, or LSN/SCN format depending on the source engine. For more information, see [Determining a CDC native start point](https://docs.aws.amazon.com/dms/latest/userguide/CHAP_Task.CDC.html#CHAP_Task.CDC.StartPoint.Native).
 * `cdc_start_time` - (Optional, Conflicts with `cdc_start_position`) The Unix timestamp integer for the start of the Change Data Capture (CDC) operation.
@@ -55,9 +55,9 @@ The following arguments are supported:
 * `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `target_endpoint_arn` - (Required) The Amazon Resource Name (ARN) string that uniquely identifies the target endpoint.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `replication_task_arn` - The Amazon Resource Name (ARN) for the replication task.
 * `status` - Replication Task status.
@@ -65,8 +65,17 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Replication tasks can be imported using the `replication_task_id`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import replication tasks using the `replication_task_id`. For example:
 
+```terraform
+import {
+  to = aws_dms_replication_task.test
+  id = "test-dms-replication-task-tf"
+}
 ```
-$ terraform import aws_dms_replication_task.test test-dms-replication-task-tf
+
+Using `terraform import`, import replication tasks using the `replication_task_id`. For example:
+
+```console
+% terraform import aws_dms_replication_task.test test-dms-replication-task-tf
 ```

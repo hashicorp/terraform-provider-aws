@@ -12,9 +12,11 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/kms"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
+	"github.com/hashicorp/terraform-provider-aws/internal/sweep/sdk"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
@@ -52,7 +54,11 @@ func sweepKeys(region string) error {
 			}
 
 			if err != nil {
-				sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error reading KMS Key (%s): %w", keyID, err))
+				if tfawserr.ErrMessageContains(err, "AccessDeniedException", "is not authorized to perform") {
+					log.Printf("[DEBUG] Skipping KMS Key (%s): %s", keyID, err)
+					continue
+				}
+				sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("reading KMS Key (%s): %w", keyID, err))
 				continue
 			}
 
@@ -71,7 +77,7 @@ func sweepKeys(region string) error {
 			d.Set("key_id", keyID)
 			d.Set("deletion_window_in_days", "7")
 
-			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
+			sweepResources = append(sweepResources, sdk.NewSweepResource(r, d, client))
 		}
 
 		return !lastPage
@@ -86,7 +92,7 @@ func sweepKeys(region string) error {
 		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error listing KMS Keys (%s): %w", region, err))
 	}
 
-	err = sweep.SweepOrchestratorWithContext(ctx, sweepResources)
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
 
 	if err != nil {
 		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error sweeping KMS Keys (%s): %w", region, err))

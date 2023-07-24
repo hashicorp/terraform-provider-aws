@@ -40,7 +40,7 @@ resource "aws_nat_gateway" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `allocation_id` - (Optional) The Allocation ID of the Elastic IP address for the gateway. Required for `connectivity_type` of `public`.
 * `connectivity_type` - (Optional) Connectivity type for the gateway. Valid values are `private` and `public`. Defaults to `public`.
@@ -48,9 +48,9 @@ The following arguments are supported:
 * `subnet_id` - (Required) The Subnet ID of the subnet in which to place the gateway.
 * `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `association_id` - The association ID of the Elastic IP address that's associated with the NAT gateway. Only available when `connectivity_type` is `public`.
 * `id` - The ID of the NAT Gateway.
@@ -60,8 +60,17 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-NAT Gateways can be imported using the `id`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import NAT Gateways using the `id`. For example:
 
+```terraform
+import {
+  to = aws_nat_gateway.private_gw
+  id = "nat-05dba92075d71c408"
+}
 ```
-$ terraform import aws_nat_gateway.private_gw nat-05dba92075d71c408
+
+Using `terraform import`, import NAT Gateways using the `id`. For example:
+
+```console
+% terraform import aws_nat_gateway.private_gw nat-05dba92075d71c408
 ```

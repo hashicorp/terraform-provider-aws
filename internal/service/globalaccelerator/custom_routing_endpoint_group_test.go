@@ -41,7 +41,7 @@ func TestAccGlobalAcceleratorCustomRoutingEndpointGroup_basic(t *testing.T) {
 					resource.TestCheckTypeSetElemAttr(resourceName, "destination_configuration.0.protocols.*", "TCP"),
 					resource.TestCheckResourceAttr(resourceName, "destination_configuration.0.to_port", "8443"),
 					resource.TestCheckResourceAttr(resourceName, "endpoint_configuration.#", "0"),
-					resource.TestCheckResourceAttrSet(resourceName, "endpoint_group_region"),
+					resource.TestCheckResourceAttr(resourceName, "endpoint_group_region", acctest.Region()),
 				),
 			},
 			{
@@ -102,6 +102,41 @@ func TestAccGlobalAcceleratorCustomRoutingEndpointGroup_endpointConfiguration(t 
 					resource.TestCheckResourceAttr(resourceName, "endpoint_configuration.#", "1"),
 					resource.TestCheckResourceAttrSet(resourceName, "endpoint_configuration.0.endpoint_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "endpoint_group_region"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccGlobalAcceleratorCustomRoutingEndpointGroup_endpointGroupRegion(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v globalaccelerator.CustomRoutingEndpointGroup
+	resourceName := "aws_globalaccelerator_custom_routing_endpoint_group.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, globalaccelerator.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckCustomRoutingEndpointGroupDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCustomRoutingEndpointGroupConfig_endpointGroupRegion(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckCustomRoutingEndpointGroupExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttrSet(resourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "destination_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "destination_configuration.0.from_port", "443"),
+					resource.TestCheckResourceAttr(resourceName, "destination_configuration.0.protocols.#", "1"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "destination_configuration.0.protocols.*", "TCP"),
+					resource.TestCheckResourceAttr(resourceName, "destination_configuration.0.to_port", "8443"),
+					resource.TestCheckResourceAttr(resourceName, "endpoint_configuration.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "endpoint_group_region", acctest.AlternateRegion()),
 				),
 			},
 			{
@@ -247,4 +282,33 @@ resource "aws_internet_gateway" "test" {
   }
 }
 `, rName))
+}
+
+func testAccCustomRoutingEndpointGroupConfig_endpointGroupRegion(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_globalaccelerator_custom_routing_accelerator" "test" {
+  name = %[1]q
+}
+
+resource "aws_globalaccelerator_custom_routing_listener" "test" {
+  accelerator_arn = aws_globalaccelerator_custom_routing_accelerator.test.id
+
+  port_range {
+    from_port = 443
+    to_port   = 443
+  }
+}
+
+resource "aws_globalaccelerator_custom_routing_endpoint_group" "test" {
+  listener_arn = aws_globalaccelerator_custom_routing_listener.test.id
+
+  destination_configuration {
+    from_port = 443
+    to_port   = 8443
+    protocols = ["TCP"]
+  }
+
+  endpoint_group_region = %[2]q
+}
+`, rName, acctest.AlternateRegion())
 }

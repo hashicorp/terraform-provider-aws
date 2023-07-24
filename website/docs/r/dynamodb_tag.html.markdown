@@ -51,22 +51,31 @@ resource "aws_dynamodb_tag" "test" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `resource_arn` - (Required) Amazon Resource Name (ARN) of the DynamoDB resource to tag.
 * `key` - (Required) Tag name.
 * `value` - (Required) Tag value.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - DynamoDB resource identifier and key, separated by a comma (`,`)
 
 ## Import
 
-`aws_dynamodb_tag` can be imported by using the DynamoDB resource identifier and key, separated by a comma (`,`), e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_dynamodb_tag` using the DynamoDB resource identifier and key, separated by a comma (`,`). For example:
 
+```terraform
+import {
+  to = aws_dynamodb_tag.example
+  id = "arn:aws:dynamodb:us-east-1:123456789012:table/example,Name"
+}
 ```
-$ terraform import aws_dynamodb_tag.example arn:aws:dynamodb:us-east-1:123456789012:table/example,Name
+
+Using `terraform import`, import `aws_dynamodb_tag` using the DynamoDB resource identifier and key, separated by a comma (`,`). For example:
+
+```console
+% terraform import aws_dynamodb_tag.example arn:aws:dynamodb:us-east-1:123456789012:table/example,Name
 ```

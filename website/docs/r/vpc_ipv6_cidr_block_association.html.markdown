@@ -27,7 +27,7 @@ resource "aws_vpc_ipv6_cidr_block_association" "test" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `ipv6_cidr_block` - (Optional) The IPv6 CIDR block for the VPC. CIDR can be explicitly set or it can be derived from IPAM using `ipv6_netmask_length`. This parameter is required if `ipv6_netmask_length` is not set and he IPAM pool does not have `allocation_default_netmask` set.
 * `ipv6_ipam_pool_id` - (Required) The ID of an IPv6 IPAM pool you want to use for allocating this VPC's CIDR. IPAM is a VPC feature that you can use to automate your IP address management workflows including assigning, tracking, troubleshooting, and auditing IP addresses across AWS Regions and accounts.
@@ -41,16 +41,25 @@ The following arguments are supported:
 - `create` - (Default `10m`)
 - `delete` - (Default `10m`)
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The ID of the VPC CIDR association
 
 ## Import
 
-`aws_vpc_ipv6_cidr_block_association` can be imported by using the VPC CIDR Association ID, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_vpc_ipv6_cidr_block_association` using the VPC CIDR Association ID. For example:
 
+```terraform
+import {
+  to = aws_vpc_ipv6_cidr_block_association.example
+  id = "vpc-cidr-assoc-xxxxxxxx"
+}
 ```
-$ terraform import aws_vpc_ipv6_cidr_block_association.example vpc-cidr-assoc-xxxxxxxx
+
+Using `terraform import`, import `aws_vpc_ipv6_cidr_block_association` using the VPC CIDR Association ID. For example:
+
+```console
+% terraform import aws_vpc_ipv6_cidr_block_association.example vpc-cidr-assoc-xxxxxxxx
 ```

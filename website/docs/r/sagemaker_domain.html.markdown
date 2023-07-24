@@ -206,9 +206,9 @@ The following arguments are optional:
 
 * `home_efs_file_system` - (Optional) The retention policy for data stored on an Amazon Elastic File System (EFS) volume. Valid values are `Retain` or `Delete`.  Default value is `Retain`.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The ID of the Domain.
 * `arn` - The Amazon Resource Name (ARN) assigned by AWS to this Domain.
@@ -220,8 +220,17 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-SageMaker Domains can be imported using the `id`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import SageMaker Domains using the `id`. For example:
 
+```terraform
+import {
+  to = aws_sagemaker_domain.test_domain
+  id = "d-8jgsjtilstu8"
+}
 ```
-$ terraform import aws_sagemaker_domain.test_domain d-8jgsjtilstu8
+
+Using `terraform import`, import SageMaker Domains using the `id`. For example:
+
+```console
+% terraform import aws_sagemaker_domain.test_domain d-8jgsjtilstu8
 ```

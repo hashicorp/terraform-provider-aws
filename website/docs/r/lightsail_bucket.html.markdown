@@ -21,15 +21,15 @@ resource "aws_lightsail_bucket" "test" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `name` - (Required) The name for the bucket.
 * `bundle_id` - (Required) - The ID of the bundle to use for the bucket. A bucket bundle specifies the monthly cost, storage space, and data transfer quota for a bucket. Use the [get-bucket-bundles](https://docs.aws.amazon.com/cli/latest/reference/lightsail/get-bucket-bundles.html) cli command to get a list of bundle IDs that you can specify.
 * `tags` - (Optional) A map of tags to assign to the resource. To create a key-only tag, use an empty string as the value. If configured with a provider `default_tags` configuration block present, tags with matching keys will overwrite those defined at the provider-level.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The name used for this bucket (matches `name`).
 * `arn` - The ARN of the lightsail bucket.
@@ -41,8 +41,17 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-`aws_lightsail_bucket` can be imported by using the `name` attribute, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_lightsail_bucket` using the `name` attribute. For example:
 
+```terraform
+import {
+  to = aws_lightsail_bucket.test
+  id = "example-bucket"
+}
 ```
-$ terraform import aws_lightsail_bucket.test example-bucket
+
+Using `terraform import`, import `aws_lightsail_bucket` using the `name` attribute. For example:
+
+```console
+% terraform import aws_lightsail_bucket.test example-bucket
 ```

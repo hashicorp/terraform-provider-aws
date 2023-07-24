@@ -87,7 +87,7 @@ resource "aws_transfer_server" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `certificate` - (Optional) The Amazon Resource Name (ARN) of the AWS Certificate Manager (ACM) certificate. This is required when `protocols` is set to `FTPS`
 * `domain` - (Optional) The domain of the storage system that is used for file transfers. Valid values are: `S3` and `EFS`. The default value is `S3`.
@@ -138,9 +138,9 @@ The following arguments are supported:
 * `execution_role` - (Required) Includes the necessary permissions for S3, EFS, and Lambda operations that Transfer can assume, so that all workflow steps can operate on the required resources.
 * `workflow_id` - (Required)  A unique identifier for the workflow.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - Amazon Resource Name (ARN) of Transfer Server
 * `id`  - The Server ID of the Transfer Server (e.g., `s-12345678`)
@@ -150,10 +150,19 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Transfer Servers can be imported using the `server id`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Transfer Servers using the server `id`. For example:
 
+```terraform
+import {
+  to = aws_transfer_server.example
+  id = "s-12345678"
+}
 ```
-$ terraform import aws_transfer_server.example s-12345678
+
+Using `terraform import`, import Transfer Servers using the server `id`. For example:
+
+```console
+% terraform import aws_transfer_server.example s-12345678
 ```
 
 Certain resource arguments, such as `host_key`, cannot be read via the API and imported into Terraform. Terraform will display a difference for these arguments the first run after import if declared in the Terraform configuration for an imported resource.
