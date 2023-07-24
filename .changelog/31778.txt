@@ -5,3 +5,7 @@ resource/aws_nat_gateway: Add `secondary_allocation_ids`, `secondary_private_ip_
 ```release-note:enhancement
 resource/aws_nat_gateway: Add configurable timeouts
 ```
+
+```release-note:enhancement
+data-source/aws_nat_gateway: Add `secondary_allocation_ids`, `secondary_private_ip_addresses` and `secondary_private_ip_address_count` attributes
+```
