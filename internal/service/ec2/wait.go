@@ -2137,8 +2137,8 @@ func WaitNATGatewayAddressAssociated(ctx context.Context, conn *ec2.EC2, natGate
 
 func WaitNATGatewayAddressDisassociated(ctx context.Context, conn *ec2.EC2, natGatewayID, allocationID string, timeout time.Duration) (*ec2.NatGatewayAddress, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending: []string{ec2.NatGatewayAddressStatusDisassociating},
-		Target:  []string{ec2.NatGatewayAddressStatusSucceeded},
+		Pending: []string{ec2.NatGatewayAddressStatusSucceeded, ec2.NatGatewayAddressStatusDisassociating},
+		Target:  []string{},
 		Refresh: StatusNATGatewayAddressByNATGatewayIDAndAllocationID(ctx, conn, natGatewayID, allocationID),
 		Timeout: timeout,
 	}
