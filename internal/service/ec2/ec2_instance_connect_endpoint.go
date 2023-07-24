@@ -171,9 +171,9 @@ func (r *resourceInstanceConnectEndpoint) Create(ctx context.Context, request re
 	}
 
 	// Set values for unknowns.
-	if err := flex.Flatten(ctx, instanceConnectEndpoint, &data); err != nil {
-		response.Diagnostics.AddError("flattening data", err.Error())
+	response.Diagnostics.Append(flex.Flatten(ctx, instanceConnectEndpoint, &data)...)
 
+	if response.Diagnostics.HasError() {
 		return
 	}
 
@@ -207,9 +207,9 @@ func (r *resourceInstanceConnectEndpoint) Read(ctx context.Context, request reso
 		return
 	}
 
-	if err := flex.Flatten(ctx, instanceConnectEndpoint, &data); err != nil {
-		response.Diagnostics.AddError("flattening data", err.Error())
+	response.Diagnostics.Append(flex.Flatten(ctx, instanceConnectEndpoint, &data)...)
 
+	if response.Diagnostics.HasError() {
 		return
 	}
 

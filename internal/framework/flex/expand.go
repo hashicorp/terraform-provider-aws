@@ -12,12 +12,10 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 )
 
 // TODO
-// TODO Return Diagnostics, not error.
 // TODO Add a post-func to tidy up.
 // TODO
 
@@ -27,33 +25,40 @@ import (
 // The resource's data structure is walked and exported fields that
 // have a corresponding field in the API data structure (and a suitable
 // target data type) are copied.
-func Expand(ctx context.Context, tfObject, apiObject any) error {
-	if err := walkStructFields(ctx, tfObject, apiObject, expandVisitor{}); err != nil {
-		return fmt.Errorf("Expand[%T, %T]: %w", tfObject, apiObject, err)
+func Expand(ctx context.Context, tfObject, apiObject any) diag.Diagnostics {
+	var diags diag.Diagnostics
+
+	diags.Append(walkStructFields(ctx, tfObject, apiObject, expandVisitor{})...)
+	if diags.HasError() {
+		diags.AddError("AutoFlEx", fmt.Sprintf("Expand[%T, %T]", tfObject, apiObject))
+		return diags
 	}
 
-	return nil
+	return diags
 }
 
 // walkStructFields traverses `from` calling `visitor` for each exported field.
-func walkStructFields(ctx context.Context, from any, to any, visitor fieldVisitor) error {
-	valFrom, valTo := reflect.ValueOf(from), reflect.ValueOf(to)
+func walkStructFields(ctx context.Context, from any, to any, visitor fieldVisitor) diag.Diagnostics {
+	var diags diag.Diagnostics
 
+	valFrom, valTo := reflect.ValueOf(from), reflect.ValueOf(to)
 	if kind := valFrom.Kind(); kind == reflect.Ptr {
 		valFrom = valFrom.Elem()
 	}
 	if kind := valTo.Kind(); kind != reflect.Ptr {
-		return fmt.Errorf("target (%T): %s, want pointer", to, kind)
+		diags.AddError("AutoFlEx", fmt.Sprintf("target (%T): %s, want pointer", to, kind))
+		return diags
 	}
 	valTo = valTo.Elem()
 
 	typFrom, typTo := valFrom.Type(), valTo.Type()
-
 	if typFrom.Kind() != reflect.Struct {
-		return fmt.Errorf("source: %s, want struct", typFrom)
+		diags.AddError("AutoFlEx", fmt.Sprintf("source: %s, want struct", typFrom))
+		return diags
 	}
 	if typTo.Kind() != reflect.Struct {
-		return fmt.Errorf("target: %s, want struct", typTo)
+		diags.AddError("AutoFlEx", fmt.Sprintf("target: %s, want struct", typTo))
+		return diags
 	}
 
 	for i := 0; i < typFrom.NumField(); i++ {
@@ -72,71 +77,79 @@ func walkStructFields(ctx context.Context, from any, to any, visitor fieldVisito
 		if !toFieldVal.CanSet() {
 			continue // Corresponding field value can't be changed.
 		}
-		if err := visitor.visit(ctx, fieldName, valFrom.Field(i), toFieldVal); err != nil {
-			return fmt.Errorf("visit (%s): %w", fieldName, err)
+		diags.Append(visitor.visit(ctx, fieldName, valFrom.Field(i), toFieldVal)...)
+		if diags.HasError() {
+			diags.AddError("AutoFlEx", fmt.Sprintf("visit (%s)", fieldName))
+			return diags
 		}
 	}
 
-	return nil
+	return diags
 }
 
 type fieldVisitor interface {
-	visit(context.Context, string, reflect.Value, reflect.Value) error
+	visit(context.Context, string, reflect.Value, reflect.Value) diag.Diagnostics
 }
 
 type expandVisitor struct{}
 
 // visit copies a single Plugin Framework structure field value to its AWS API equivalent.
-func (visitor expandVisitor) visit(ctx context.Context, fieldName string, valFrom, valTo reflect.Value) error {
+func (visitor expandVisitor) visit(ctx context.Context, fieldName string, valFrom, vTo reflect.Value) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	vFrom, ok := valFrom.Interface().(attr.Value)
 	if !ok {
-		return fmt.Errorf("does not implement attr.Value: %s", valFrom.Kind())
+		diags.AddError("AutoFlEx", fmt.Sprintf("does not implement attr.Value: %s", valFrom.Kind()))
+		return diags
 	}
 
 	// No need to set the target value if there's no source value.
 	if vFrom.IsNull() || vFrom.IsUnknown() {
-		return nil
+		return diags
 	}
 
-	tFrom, kTo := vFrom.Type(ctx), valTo.Kind()
 	switch vFrom := vFrom.(type) {
 	// Primitive types.
 	case basetypes.BoolValuable:
-		diags := visitor.bool(ctx, vFrom, valTo)
-		return fwdiag.DiagnosticsError(diags)
+		diags.Append(visitor.bool(ctx, vFrom, vTo)...)
+		return diags
 
 	case basetypes.Float64Valuable:
-		diags := visitor.float64(ctx, vFrom, valTo)
-		return fwdiag.DiagnosticsError(diags)
+		diags.Append(visitor.float64(ctx, vFrom, vTo)...)
+		return diags
 
 	case basetypes.Int64Valuable:
-		diags := visitor.int64(ctx, vFrom, valTo)
-		return fwdiag.DiagnosticsError(diags)
+		diags.Append(visitor.int64(ctx, vFrom, vTo)...)
+		return diags
 
 	case basetypes.StringValuable:
-		diags := visitor.string(ctx, vFrom, valTo)
-		return fwdiag.DiagnosticsError(diags)
+		diags.Append(visitor.string(ctx, vFrom, vTo)...)
+		return diags
 
 		// Aggregate types.
 	case basetypes.ListValuable:
-		diags := visitor.list(ctx, vFrom, valTo)
-		return fwdiag.DiagnosticsError(diags)
+		diags.Append(visitor.list(ctx, vFrom, vTo)...)
+		return diags
 
 	case basetypes.MapValuable:
-		diags := visitor.map_(ctx, vFrom, valTo)
-		return fwdiag.DiagnosticsError(diags)
+		diags.Append(visitor.map_(ctx, vFrom, vTo)...)
+		return diags
 
 	case basetypes.SetValuable:
-		diags := visitor.set(ctx, vFrom, valTo)
-		return fwdiag.DiagnosticsError(diags)
+		diags.Append(visitor.set(ctx, vFrom, vTo)...)
+		return diags
 	}
 
-	return fmt.Errorf("incompatible (%s): %s", tFrom, kTo)
+	diags.Append(visitor.newIncompatibleTypesError(ctx, vFrom, vTo))
+	return diags
 }
 
 // bool copies a Plugin Framework Bool(ish) value to a compatible AWS API field.
 func (visitor expandVisitor) bool(ctx context.Context, vFrom basetypes.BoolValuable, vTo reflect.Value) diag.Diagnostics {
-	v, diags := vFrom.ToBoolValue(ctx)
+	var diags diag.Diagnostics
+
+	v, d := vFrom.ToBoolValue(ctx)
+	diags.Append(d...)
 	if diags.HasError() {
 		return diags
 	}
@@ -161,13 +174,15 @@ func (visitor expandVisitor) bool(ctx context.Context, vFrom basetypes.BoolValua
 	}
 
 	diags.Append(visitor.newIncompatibleTypesError(ctx, vFrom, vTo))
-
 	return diags
 }
 
 // float64 copies a Plugin Framework Float64(ish) value to a compatible AWS API field.
 func (visitor expandVisitor) float64(ctx context.Context, vFrom basetypes.Float64Valuable, vTo reflect.Value) diag.Diagnostics {
-	v, diags := vFrom.ToFloat64Value(ctx)
+	var diags diag.Diagnostics
+
+	v, d := vFrom.ToFloat64Value(ctx)
+	diags.Append(d...)
 	if diags.HasError() {
 		return diags
 	}
@@ -199,13 +214,15 @@ func (visitor expandVisitor) float64(ctx context.Context, vFrom basetypes.Float6
 	}
 
 	diags.Append(visitor.newIncompatibleTypesError(ctx, vFrom, vTo))
-
 	return diags
 }
 
 // int64 copies a Plugin Framework Int64(ish) value to a compatible AWS API field.
 func (visitor expandVisitor) int64(ctx context.Context, vFrom basetypes.Int64Valuable, vTo reflect.Value) diag.Diagnostics {
-	v, diags := vFrom.ToInt64Value(ctx)
+	var diags diag.Diagnostics
+
+	v, d := vFrom.ToInt64Value(ctx)
+	diags.Append(d...)
 	if diags.HasError() {
 		return diags
 	}
@@ -237,13 +254,15 @@ func (visitor expandVisitor) int64(ctx context.Context, vFrom basetypes.Int64Val
 	}
 
 	diags.Append(visitor.newIncompatibleTypesError(ctx, vFrom, vTo))
-
 	return diags
 }
 
 // string copies a Plugin Framework String(ish) value to a compatible AWS API field.
 func (visitor expandVisitor) string(ctx context.Context, vFrom basetypes.StringValuable, vTo reflect.Value) diag.Diagnostics {
-	v, diags := vFrom.ToStringValue(ctx)
+	var diags diag.Diagnostics
+
+	v, d := vFrom.ToStringValue(ctx)
+	diags.Append(d...)
 	if diags.HasError() {
 		return diags
 	}
@@ -268,27 +287,30 @@ func (visitor expandVisitor) string(ctx context.Context, vFrom basetypes.StringV
 	}
 
 	diags.Append(visitor.newIncompatibleTypesError(ctx, vFrom, vTo))
-
 	return diags
 }
 
 // list copies a Plugin Framework List(ish) value to a compatible AWS API field.
 func (visitor expandVisitor) list(ctx context.Context, vFrom basetypes.ListValuable, vTo reflect.Value) diag.Diagnostics {
-	v, diags := vFrom.ToListValue(ctx)
+	var diags diag.Diagnostics
+
+	v, d := vFrom.ToListValue(ctx)
+	diags.Append(d...)
 	if diags.HasError() {
 		return diags
 	}
 
 	switch v.ElementType(ctx).(type) {
 	case basetypes.StringTypable:
-		return visitor.listOfString(ctx, v, vTo)
+		diags.Append(visitor.listOfString(ctx, v, vTo)...)
+		return diags
 
 	case basetypes.ObjectTypable:
-		return visitor.listOfObject(ctx, v, vTo)
+		diags.Append(visitor.listOfObject(ctx, v, vTo)...)
+		return diags
 	}
 
 	diags.Append(visitor.newIncompatibleListTypesError(ctx, v, vTo))
-
 	return diags
 }
 
@@ -319,7 +341,6 @@ func (visitor expandVisitor) listOfString(ctx context.Context, vFrom basetypes.L
 	}
 
 	diags.Append(visitor.newIncompatibleListTypesError(ctx, vFrom, vTo))
-
 	return diags
 }
 
@@ -343,8 +364,8 @@ func (visitor expandVisitor) listOfObject(ctx context.Context, vFrom basetypes.L
 					}
 
 					to := reflect.New(vTo.Type())
-					if err := walkStructFields(ctx, from, to, visitor); err != nil {
-						diags.Append(diag.NewErrorDiagnostic("", err.Error()))
+					diags.Append(walkStructFields(ctx, from, to, visitor)...)
+					if diags.HasError() {
 						return diags
 					}
 				}
@@ -353,24 +374,26 @@ func (visitor expandVisitor) listOfObject(ctx context.Context, vFrom basetypes.L
 	}
 
 	diags.Append(visitor.newIncompatibleListTypesError(ctx, vFrom, vTo))
-
 	return diags
 }
 
 // map_ copies a Plugin Framework Map(ish) value to a compatible AWS API field.
 func (visitor expandVisitor) map_(ctx context.Context, vFrom basetypes.MapValuable, vTo reflect.Value) diag.Diagnostics {
-	v, diags := vFrom.ToMapValue(ctx)
+	var diags diag.Diagnostics
+
+	v, d := vFrom.ToMapValue(ctx)
+	diags.Append(d...)
 	if diags.HasError() {
 		return diags
 	}
 
 	switch v.ElementType(ctx).(type) {
 	case basetypes.StringTypable:
-		return visitor.mapOfString(ctx, v, vTo)
+		diags.Append(visitor.mapOfString(ctx, v, vTo)...)
+		return diags
 	}
 
 	diags.Append(visitor.newIncompatibleMapTypesError(ctx, v, vTo))
-
 	return diags
 }
 
@@ -397,31 +420,33 @@ func (visitor expandVisitor) mapOfString(ctx context.Context, vFrom basetypes.Ma
 					// types.Map(OfString) -> map[string]*string.
 					//
 					vTo.Set(reflect.ValueOf(ExpandFrameworkStringMap(ctx, vFrom)))
-					return nil
+					return diags
 				}
 			}
 		}
 	}
 
 	diags.Append(visitor.newIncompatibleMapTypesError(ctx, vFrom, vTo))
-
 	return diags
 }
 
 // set copies a Plugin Framework Set(ish) value to a compatible AWS API field.
 func (visitor expandVisitor) set(ctx context.Context, vFrom basetypes.SetValuable, vTo reflect.Value) diag.Diagnostics {
-	v, diags := vFrom.ToSetValue(ctx)
+	var diags diag.Diagnostics
+
+	v, d := vFrom.ToSetValue(ctx)
+	diags.Append(d...)
 	if diags.HasError() {
 		return diags
 	}
 
 	switch v.ElementType(ctx).(type) {
 	case basetypes.StringTypable:
-		return visitor.setOfString(ctx, v, vTo)
+		diags.Append(visitor.setOfString(ctx, v, vTo)...)
+		return diags
 	}
 
 	diags.Append(visitor.newIncompatibleSetTypesError(ctx, v, vTo))
-
 	return diags
 }
 
@@ -452,7 +477,6 @@ func (visitor expandVisitor) setOfString(ctx context.Context, vFrom basetypes.Se
 	}
 
 	diags.Append(visitor.newIncompatibleSetTypesError(ctx, vFrom, vTo))
-
 	return diags
 }
 

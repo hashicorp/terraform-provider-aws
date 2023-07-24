@@ -12,11 +12,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 )
 
 // TODO
-// TODO Return Diagnostics, not error.
 // TODO Add a post-func to tidy up.
 // TODO
 
@@ -26,58 +24,66 @@ import (
 // The API data structure's fields are walked and exported fields that
 // have a corresponding field in the resource's data structure (and a
 // suitable target data type) are copied.
-func Flatten(ctx context.Context, apiObject, tfObject any) error {
-	if err := walkStructFields(ctx, apiObject, tfObject, flattenVisitor{}); err != nil {
-		return fmt.Errorf("Flatten[%T, %T]: %w", apiObject, tfObject, err)
+func Flatten(ctx context.Context, apiObject, tfObject any) diag.Diagnostics {
+	var diags diag.Diagnostics
+
+	diags.Append(walkStructFields(ctx, apiObject, tfObject, flattenVisitor{})...)
+	if diags.HasError() {
+		diags.AddError("AutoFlEx", fmt.Sprintf("Flatten[%T, %T]", apiObject, tfObject))
+		return diags
 	}
 
-	return nil
+	return diags
 }
 
 type flattenVisitor struct{}
 
-func (visitor flattenVisitor) visit(ctx context.Context, fieldName string, valFrom, valTo reflect.Value) error {
-	vTo, ok := valTo.Interface().(attr.Value)
+func (visitor flattenVisitor) visit(ctx context.Context, fieldName string, vFrom, vTo reflect.Value) diag.Diagnostics {
+	var diags diag.Diagnostics
+
+	valTo, ok := vTo.Interface().(attr.Value)
 	if !ok {
-		return fmt.Errorf("does not implement attr.Value: %s", valTo.Kind())
+		diags.AddError("AutoFlEx", fmt.Sprintf("does not implement attr.Value: %s", vTo.Kind()))
+		return diags
 	}
 
-	kFrom, tTo := valFrom.Kind(), vTo.Type(ctx)
-	switch kFrom {
+	tTo := valTo.Type(ctx)
+	switch vFrom.Kind() {
 	// Primitive types.
 	case reflect.Bool:
-		diags := visitor.bool(ctx, valFrom, tTo, valTo)
-		return fwdiag.DiagnosticsError(diags)
+		diags.Append(visitor.bool(ctx, vFrom, tTo, vTo)...)
+		return diags
 
 	case reflect.Float32, reflect.Float64:
-		diags := visitor.float(ctx, valFrom, tTo, valTo)
-		return fwdiag.DiagnosticsError(diags)
+		diags.Append(visitor.float(ctx, vFrom, tTo, vTo)...)
+		return diags
 
 	case reflect.Int32, reflect.Int64:
-		diags := visitor.int(ctx, valFrom, tTo, valTo)
-		return fwdiag.DiagnosticsError(diags)
+		diags.Append(visitor.int(ctx, vFrom, tTo, vTo)...)
+		return diags
 
 	case reflect.String:
-		diags := visitor.string(ctx, valFrom, tTo, valTo)
-		return fwdiag.DiagnosticsError(diags)
+		diags.Append(visitor.string(ctx, vFrom, tTo, vTo)...)
+		return diags
 
 	// Pointer to primitive types.
 	case reflect.Ptr:
-		diags := visitor.pointer(ctx, valFrom, tTo, valTo)
-		return fwdiag.DiagnosticsError(diags)
+		diags.Append(visitor.pointer(ctx, vFrom, tTo, vTo)...)
+		return diags
 
 	// Slice of primitive types or pointer to primitive types.
 	case reflect.Slice:
-		diags := visitor.slice(ctx, valFrom, tTo, valTo)
-		return fwdiag.DiagnosticsError(diags)
+		diags.Append(visitor.slice(ctx, vFrom, tTo, vTo)...)
+		return diags
 
 		// Map of simple types or pointer to simple types.
 	case reflect.Map:
-		diags := visitor.map_(ctx, valFrom, tTo, valTo)
-		return fwdiag.DiagnosticsError(diags)
+		diags.Append(visitor.map_(ctx, vFrom, tTo, vTo)...)
+		return diags
 	}
 
-	return fmt.Errorf("incompatible (%s): %s", kFrom, tTo)
+	diags.Append(visitor.newIncompatibleTypesError(ctx, vFrom, tTo))
+	return diags
 }
 
 // bool copies an AWS API bool value to a compatible Plugin Framework field.
@@ -100,7 +106,6 @@ func (visitor flattenVisitor) bool(ctx context.Context, vFrom reflect.Value, tTo
 	}
 
 	diags.Append(visitor.newIncompatibleTypesError(ctx, vFrom, tTo))
-
 	return diags
 }
 
@@ -124,7 +129,6 @@ func (visitor flattenVisitor) float(ctx context.Context, vFrom reflect.Value, tT
 	}
 
 	diags.Append(visitor.newIncompatibleTypesError(ctx, vFrom, tTo))
-
 	return diags
 }
 
@@ -148,7 +152,6 @@ func (visitor flattenVisitor) int(ctx context.Context, vFrom reflect.Value, tTo 
 	}
 
 	diags.Append(visitor.newIncompatibleTypesError(ctx, vFrom, tTo))
-
 	return diags
 }
 
@@ -172,7 +175,6 @@ func (visitor flattenVisitor) string(ctx context.Context, vFrom reflect.Value, t
 	}
 
 	diags.Append(visitor.newIncompatibleTypesError(ctx, vFrom, tTo))
-
 	return diags
 }
 
@@ -234,7 +236,6 @@ func (visitor flattenVisitor) pointer(ctx context.Context, vFrom reflect.Value, 
 	}
 
 	diags.Append(visitor.newIncompatibleTypesError(ctx, vFrom, tTo))
-
 	return diags
 }
 
@@ -326,7 +327,6 @@ func (visitor flattenVisitor) slice(ctx context.Context, vFrom reflect.Value, tT
 	}
 
 	diags.Append(visitor.newIncompatibleTypesError(ctx, vFrom, tTo))
-
 	return diags
 }
 
@@ -385,7 +385,6 @@ func (visitor flattenVisitor) map_(ctx context.Context, vFrom reflect.Value, tTo
 	}
 
 	diags.Append(visitor.newIncompatibleTypesError(ctx, vFrom, tTo))
-
 	return diags
 }
 
