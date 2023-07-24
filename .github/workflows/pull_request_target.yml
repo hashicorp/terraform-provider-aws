@@ -102,7 +102,7 @@ jobs:
       VIEW_FIELD_ID: "PVTSSF_lADOAAuecM4AF-7hzgMRB34"
       ITEM_URL: ${{ github.event.pull_request.html_url }}
     steps:
-      - name: 'Add Ready Maintainer Pull Requests'
+      - name: 'Ready Maintainer Pull Requests'
         # This isn't pretty, but it ensures that we don't accidentally set the status on accident
         if: contains(fromJSON('["opened", "ready_for_review"]'), github.event.action) && needs.community_check.outputs.maintainer == 'true' && !github.event.pull_request.draft
         run: |
@@ -111,31 +111,37 @@ jobs:
           gh project item-edit --id "$PROJECT_ITEM_ID" --project-id ${{ env.PROJECT_ID }} --field-id ${{ env.STATUS_FIELD_ID }} --single-select-option-id ${{ vars.team_project_status_maintainer_pr }}
           gh project item-edit --id "$PROJECT_ITEM_ID" --project-id ${{ env.PROJECT_ID }} --field-id ${{ env.VIEW_FIELD_ID }} --single-select-option-id ${{ vars.team_project_view_working_board }}
 
-      - name: 'Add When Assigned to Maintainers'
+      - name: 'Assigned to Maintainers'
         if: github.event.action == 'assigned' && needs.community_check.outputs.maintainer == 'true'
         run: |
           PROJECT_ITEM_ID=$(gh project item-add ${{ env.PROJECT_NUMBER }} --owner "hashicorp" --url ${{ env.ITEM_URL }} | jq '.id')
           gh project item-edit --id "$PROJECT_ITEM_ID" --project-id ${{ env.PROJECT_ID }} --field-id ${{ env.STATUS_FIELD_ID }} --single-select-option-id ${{ vars.team_project_status_in_progress }}
           gh project item-edit --id "$PROJECT_ITEM_ID" --project-id ${{ env.PROJECT_ID }} --field-id ${{ env.VIEW_FIELD_ID }} --single-select-option-id ${{ vars.team_project_view_working_board }}
 
-      - name: 'Add Ready Partner Pull Requests'
+      - name: 'Ready Partner Pull Requests'
         # since we're not setting a status here, we don't need the ugly extra bit from above
         if: contains(github.event.pull_request.labels.*.name, 'partner') && !github.event.pull_request.draft
         run: |
-          gh project item-add ${{ env.PROJECT_NUMBER }} --owner "hashicorp" --url ${{ env.ITEM_URL }}
+          PROJECT_ITEM_ID=$(gh project item-add ${{ env.PROJECT_NUMBER }} --owner "hashicorp" --url ${{ env.ITEM_URL }})
           gh project item-edit --id "$PROJECT_ITEM_ID" --project-id ${{ env.PROJECT_ID }} --field-id ${{ env.VIEW_FIELD_ID }} --single-select-option-id ${{ vars.team_project_view_partner_contribution }}
 
-      - name: 'Add Ready External Maintainer Pull Requests'
+      - name: 'Ready External Maintainer Pull Requests'
         if: contains(github.event.pull_request.labels.*.name, 'external-maintainer') && !github.event.pull_request.draft
         run: |
-          gh project item-add ${{ env.PROJECT_NUMBER }} --owner "hashicorp" --url ${{ env.ITEM_URL }}
+          PROJECT_ITEM_ID=$(gh project item-add ${{ env.PROJECT_NUMBER }} --owner "hashicorp" --url ${{ env.ITEM_URL }})
           gh project item-edit --id "$PROJECT_ITEM_ID" --project-id ${{ env.PROJECT_ID }} --field-id ${{ env.VIEW_FIELD_ID }} --single-select-option-id ${{ vars.team_project_view_external_maintainer }}
 
-      - name: 'Add When Labeled Prioritized or Regression'
+      - name: 'Labeled Prioritized or Regression'
         if: contains(fromJSON('["prioritized", "regression"]'), github.event.label.name)
         run: |
-          gh project item-add ${{ env.PROJECT_NUMBER }} --owner "hashicorp" --url ${{ env.ITEM_URL }}
+          PROJECT_ITEM_ID=$(gh project item-add ${{ env.PROJECT_NUMBER }} --owner "hashicorp" --url ${{ env.ITEM_URL }})
           gh project item-edit --id "$PROJECT_ITEM_ID" --project-id ${{ env.PROJECT_ID }} --field-id ${{ env.VIEW_FIELD_ID }} --single-select-option-id ${{ vars.team_project_view_working_board }}
+
+      - name: 'Labeled Engineering Initiative'
+        if: github.event.label.name == 'engineering-initiative'
+        run: |
+          PROJECT_ITEM_ID=$(gh project item-add ${{ env.PROJECT_NUMBER }} --owner "hashicorp" --url ${{ env.ITEM_URL }})
+          gh project item-edit --id "$PROJECT_ITEM_ID" --project-id ${{ env.PROJECT_ID }} --field-id ${{ env.VIEW_FIELD_ID }} --single-select-option-id ${{ vars.team_project_view_engineering_initiative }}
 
   add_to_milestone:
     name: 'Add to Milestone'
