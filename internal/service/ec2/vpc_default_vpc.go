@@ -169,24 +169,23 @@ func resourceDefaultVPCCreate(ctx context.Context, d *schema.ResourceData, meta 
 	vpc, err := FindVPCV2(ctx, conn, input)
 
 	if err == nil {
-		log.Printf("[INFO] Found existing EC2 Default VPC")
 		d.SetId(aws.ToString(vpc.VpcId))
 		d.Set("existing_default_vpc", true)
 
 		vpcInfo.vpc = vpc
 
-		if v, err := FindVPCAttributeV2(ctx, conn, d.Id(), string(awstypes.VpcAttributeNameEnableDnsHostnames)); err != nil {
+		if v, err := FindVPCAttributeV2(ctx, conn, d.Id(), awstypes.VpcAttributeNameEnableDnsHostnames); err != nil {
 			return sdkdiag.AppendErrorf(diags, "reading EC2 VPC (%s) Attribute (%s): %s", d.Id(), awstypes.VpcAttributeNameEnableDnsHostnames, err)
 		} else {
 			vpcInfo.enableDnsHostnames = v
 		}
 
-		if v, err := FindVPCAttributeV2(ctx, conn, d.Id(), string(awstypes.VpcAttributeNameEnableDnsSupport)); err != nil {
+		if v, err := FindVPCAttributeV2(ctx, conn, d.Id(), awstypes.VpcAttributeNameEnableDnsSupport); err != nil {
 			return sdkdiag.AppendErrorf(diags, "reading EC2 VPC (%s) Attribute (%s): %s", d.Id(), awstypes.VpcAttributeNameEnableDnsSupport, err)
 		} else {
 			vpcInfo.enableDnsSupport = v
 		}
-		if v, err := FindVPCAttributeV2(ctx, conn, d.Id(), string(awstypes.VpcAttributeNameEnableNetworkAddressUsageMetrics)); err != nil {
+		if v, err := FindVPCAttributeV2(ctx, conn, d.Id(), awstypes.VpcAttributeNameEnableNetworkAddressUsageMetrics); err != nil {
 			return sdkdiag.AppendErrorf(diags, "reading EC2 VPC (%s) Attribute (%s): %s", d.Id(), awstypes.VpcAttributeNameEnableNetworkAddressUsageMetrics, err)
 		} else {
 			vpcInfo.enableNetworkAddressUsageMetrics = v
@@ -194,7 +193,6 @@ func resourceDefaultVPCCreate(ctx context.Context, d *schema.ResourceData, meta 
 	} else if tfresource.NotFound(err) {
 		input := &ec2.CreateDefaultVpcInput{}
 
-		log.Printf("[DEBUG] Creating EC2 Default VPC: %v", input)
 		output, err := conn.CreateDefaultVpc(ctx, input)
 
 		if err != nil {

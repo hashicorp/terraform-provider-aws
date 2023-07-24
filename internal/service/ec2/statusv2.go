@@ -8,6 +8,7 @@ import (
 	"strconv"
 
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
@@ -44,7 +45,7 @@ func StatusVPCIPv6CIDRBlockAssociationStateV2(ctx context.Context, conn *ec2.Cli
 	}
 }
 
-func StatusVPCAttributeValueV2(ctx context.Context, conn *ec2.Client, id string, attribute string) retry.StateRefreshFunc {
+func StatusVPCAttributeValueV2(ctx context.Context, conn *ec2.Client, id string, attribute awstypes.VpcAttributeName) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		attributeValue, err := FindVPCAttributeV2(ctx, conn, id, attribute)
 

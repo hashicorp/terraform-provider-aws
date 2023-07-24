@@ -15,9 +15,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func FindVPCAttributeV2(ctx context.Context, conn *ec2.Client, vpcID string, attribute string) (bool, error) {
+func FindVPCAttributeV2(ctx context.Context, conn *ec2.Client, vpcID string, attribute awstypes.VpcAttributeName) (bool, error) {
 	input := &ec2.DescribeVpcAttributeInput{
-		Attribute: awstypes.VpcAttributeName(attribute),
+		Attribute: attribute,
 		VpcId:     aws.String(vpcID),
 	}
 
@@ -40,11 +40,11 @@ func FindVPCAttributeV2(ctx context.Context, conn *ec2.Client, vpcID string, att
 
 	var v *awstypes.AttributeBooleanValue
 	switch attribute {
-	case string(awstypes.VpcAttributeNameEnableDnsHostnames):
+	case awstypes.VpcAttributeNameEnableDnsHostnames:
 		v = output.EnableDnsHostnames
-	case string(awstypes.VpcAttributeNameEnableDnsSupport):
+	case awstypes.VpcAttributeNameEnableDnsSupport:
 		v = output.EnableDnsSupport
-	case string(awstypes.VpcAttributeNameEnableNetworkAddressUsageMetrics):
+	case awstypes.VpcAttributeNameEnableNetworkAddressUsageMetrics:
 		v = output.EnableNetworkAddressUsageMetrics
 	default:
 		return false, fmt.Errorf("unsupported VPC attribute: %s", attribute)
@@ -64,22 +64,13 @@ func FindVPCV2(ctx context.Context, conn *ec2.Client, input *ec2.DescribeVpcsInp
 		return nil, err
 	}
 
-	if len(output) == 0 {
-		return nil, tfresource.NewEmptyResultError(input)
-	}
-
-	if count := len(output); count > 1 {
-		return nil, tfresource.NewTooManyResultsError(count, input)
-	}
-
-	return &output[0], nil
+	return tfresource.AssertSingleValueResult(output)
 }
 
 func FindVPCsV2(ctx context.Context, conn *ec2.Client, input *ec2.DescribeVpcsInput) ([]awstypes.Vpc, error) {
 	var output []awstypes.Vpc
 
 	pages := ec2.NewDescribeVpcsPaginator(conn, input)
-
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
 
@@ -91,7 +82,7 @@ func FindVPCsV2(ctx context.Context, conn *ec2.Client, input *ec2.DescribeVpcsIn
 		}
 
 		if err != nil {
-			return nil, fmt.Errorf("reading VPCs: %s", err)
+			return nil, err
 		}
 
 		output = append(output, page.Vpcs...)
@@ -105,13 +96,7 @@ func FindVPCByIDV2(ctx context.Context, conn *ec2.Client, id string) (*awstypes.
 		VpcIds: []string{id},
 	}
 
-	output, err := FindVPCV2(ctx, conn, input)
-
-	if err != nil {
-		return nil, err
-	}
-
-	return output, nil
+	return FindVPCV2(ctx, conn, input)
 }
 
 func FindVPCIPv6CIDRBlockAssociationByIDV2(ctx context.Context, conn *ec2.Client, id string) (*awstypes.VpcIpv6CidrBlockAssociation, *awstypes.Vpc, error) {
@@ -129,8 +114,8 @@ func FindVPCIPv6CIDRBlockAssociationByIDV2(ctx context.Context, conn *ec2.Client
 
 	for _, association := range vpc.Ipv6CidrBlockAssociationSet {
 		if aws.ToString(association.AssociationId) == id {
-			if state := string(association.Ipv6CidrBlockState.State); state == string(awstypes.VpcCidrBlockStateCodeDisassociated) {
-				return nil, nil, &retry.NotFoundError{Message: state}
+			if state := association.Ipv6CidrBlockState.State; state == awstypes.VpcCidrBlockStateCodeDisassociated {
+				return nil, nil, &retry.NotFoundError{Message: string(state)}
 			}
 
 			return &association, vpc, nil
@@ -158,15 +143,7 @@ func FindNetworkACLV2(ctx context.Context, conn *ec2.Client, input *ec2.Describe
 		return nil, err
 	}
 
-	if len(output) == 0 {
-		return nil, tfresource.NewEmptyResultError(input)
-	}
-
-	if count := len(output); count > 1 {
-		return nil, tfresource.NewTooManyResultsError(count, input)
-	}
-
-	return &output[0], nil
+	return tfresource.AssertSingleValueResult(output)
 }
 
 func FindNetworkACLsV2(ctx context.Context, conn *ec2.Client, input *ec2.DescribeNetworkAclsInput) ([]awstypes.NetworkAcl, error) {
@@ -177,15 +154,18 @@ func FindNetworkACLsV2(ctx context.Context, conn *ec2.Client, input *ec2.Describ
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
 
+		if tfawserr.ErrCodeEquals(err, errCodeInvalidNetworkACLIDNotFound) {
+			return nil, &retry.NotFoundError{
+				LastError:   err,
+				LastRequest: input,
+			}
+		}
+
 		if err != nil {
-			return nil, fmt.Errorf("reading Network ACLs: %s", err)
+			return nil, err
 		}
 
 		output = append(output, page.NetworkAcls...)
-	}
-
-	if len(output) == 0 {
-		return nil, tfresource.NewEmptyResultError(input)
 	}
 
 	return output, nil
@@ -220,15 +200,7 @@ func FindRouteTableV2(ctx context.Context, conn *ec2.Client, input *ec2.Describe
 		return nil, err
 	}
 
-	if len(output) == 0 {
-		return nil, tfresource.NewEmptyResultError(input)
-	}
-
-	if count := len(output); count > 1 {
-		return nil, tfresource.NewTooManyResultsError(count, input)
-	}
-
-	return &output[0], nil
+	return tfresource.AssertSingleValueResult(output)
 }
 
 func FindRouteTablesV2(ctx context.Context, conn *ec2.Client, input *ec2.DescribeRouteTablesInput) ([]awstypes.RouteTable, error) {
@@ -239,21 +211,23 @@ func FindRouteTablesV2(ctx context.Context, conn *ec2.Client, input *ec2.Describ
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
 
+		if tfawserr.ErrCodeEquals(err, errCodeInvalidRouteTableIDNotFound) {
+			return nil, &retry.NotFoundError{
+				LastError:   err,
+				LastRequest: input,
+			}
+		}
+
 		if err != nil {
-			return nil, fmt.Errorf("reading Route Tables: %s", err)
+			return nil, err
 		}
 
 		output = append(output, page.RouteTables...)
 	}
 
-	if len(output) == 0 {
-		return nil, tfresource.NewEmptyResultError(input)
-	}
-
 	return output, nil
 }
 
-// FindSecurityGroupV2 looks up a security group using an ec2.DescribeSecurityGroupsInput. Returns a retry.NotFoundError if not found.
 func FindSecurityGroupV2(ctx context.Context, conn *ec2.Client, input *ec2.DescribeSecurityGroupsInput) (*awstypes.SecurityGroup, error) {
 	output, err := FindSecurityGroupsV2(ctx, conn, input)
 
@@ -261,15 +235,7 @@ func FindSecurityGroupV2(ctx context.Context, conn *ec2.Client, input *ec2.Descr
 		return nil, err
 	}
 
-	if len(output) == 0 {
-		return nil, tfresource.NewEmptyResultError(input)
-	}
-
-	if count := len(output); count > 1 {
-		return nil, tfresource.NewTooManyResultsError(count, input)
-	}
-
-	return &output[0], nil
+	return tfresource.AssertSingleValueResult(output)
 }
 
 func FindSecurityGroupsV2(ctx context.Context, conn *ec2.Client, input *ec2.DescribeSecurityGroupsInput) ([]awstypes.SecurityGroup, error) {
@@ -280,15 +246,18 @@ func FindSecurityGroupsV2(ctx context.Context, conn *ec2.Client, input *ec2.Desc
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
 
+		if tfawserr.ErrCodeEquals(err, errCodeInvalidGroupNotFound, errCodeInvalidSecurityGroupIDNotFound) {
+			return nil, &retry.NotFoundError{
+				LastError:   err,
+				LastRequest: input,
+			}
+		}
+
 		if err != nil {
-			return nil, fmt.Errorf("reading Security Groups: %s", err)
+			return nil, err
 		}
 
 		output = append(output, page.SecurityGroups...)
-	}
-
-	if len(output) == 0 {
-		return nil, tfresource.NewEmptyResultError(input)
 	}
 
 	return output, nil
@@ -302,15 +271,18 @@ func FindIPAMPoolAllocationsV2(ctx context.Context, conn *ec2.Client, input *ec2
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
 
+		if tfawserr.ErrCodeEquals(err, errCodeInvalidIPAMPoolAllocationIdNotFound, errCodeInvalidIPAMPoolIdNotFound) {
+			return nil, &retry.NotFoundError{
+				LastError:   err,
+				LastRequest: input,
+			}
+		}
+
 		if err != nil {
-			return nil, fmt.Errorf("reading IPAM Pool Allocations: %s", err)
+			return nil, err
 		}
 
 		output = append(output, page.IpamPoolAllocations...)
-	}
-
-	if len(output) == 0 {
-		return nil, tfresource.NewEmptyResultError(input)
 	}
 
 	return output, nil

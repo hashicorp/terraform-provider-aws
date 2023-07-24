@@ -299,7 +299,7 @@ func resourceVPCRead(ctx context.Context, d *schema.ResourceData, meta interface
 	d.Set("owner_id", ownerID)
 
 	if v, err := tfresource.RetryWhenNewResourceNotFound(ctx, ec2PropagationTimeout, func() (interface{}, error) {
-		return FindVPCAttributeV2(ctx, conn, d.Id(), string(types.VpcAttributeNameEnableDnsHostnames))
+		return FindVPCAttributeV2(ctx, conn, d.Id(), types.VpcAttributeNameEnableDnsHostnames)
 	}, d.IsNewResource()); err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading EC2 VPC (%s) Attribute (%s): %s", d.Id(), types.VpcAttributeNameEnableDnsHostnames, err)
 	} else {
@@ -307,7 +307,7 @@ func resourceVPCRead(ctx context.Context, d *schema.ResourceData, meta interface
 	}
 
 	if v, err := tfresource.RetryWhenNewResourceNotFound(ctx, ec2PropagationTimeout, func() (interface{}, error) {
-		return FindVPCAttributeV2(ctx, conn, d.Id(), string(types.VpcAttributeNameEnableDnsSupport))
+		return FindVPCAttributeV2(ctx, conn, d.Id(), types.VpcAttributeNameEnableDnsSupport)
 	}, d.IsNewResource()); err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading EC2 VPC (%s) Attribute (%s): %s", d.Id(), types.VpcAttributeNameEnableDnsSupport, err)
 	} else {
@@ -315,7 +315,7 @@ func resourceVPCRead(ctx context.Context, d *schema.ResourceData, meta interface
 	}
 
 	if v, err := tfresource.RetryWhenNewResourceNotFound(ctx, ec2PropagationTimeout, func() (interface{}, error) {
-		return FindVPCAttributeV2(ctx, conn, d.Id(), string(types.VpcAttributeNameEnableNetworkAddressUsageMetrics))
+		return FindVPCAttributeV2(ctx, conn, d.Id(), types.VpcAttributeNameEnableNetworkAddressUsageMetrics)
 	}, d.IsNewResource()); err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading EC2 VPC (%s) Attribute (%s): %s", d.Id(), types.VpcAttributeNameEnableNetworkAddressUsageMetrics, err)
 	} else {
@@ -609,7 +609,7 @@ func modifyVPCDNSHostnames(ctx context.Context, conn *ec2.Client, vpcID string, 
 		return fmt.Errorf("modifying EnableDnsHostnames: %w", err)
 	}
 
-	if _, err := WaitVPCAttributeUpdatedV2(ctx, conn, vpcID, string(types.VpcAttributeNameEnableDnsHostnames), v); err != nil {
+	if _, err := WaitVPCAttributeUpdatedV2(ctx, conn, vpcID, types.VpcAttributeNameEnableDnsHostnames, v); err != nil {
 		return fmt.Errorf("modifying EnableDnsHostnames: waiting for completion: %w", err)
 	}
 
@@ -628,7 +628,7 @@ func modifyVPCDNSSupport(ctx context.Context, conn *ec2.Client, vpcID string, v 
 		return fmt.Errorf("modifying EnableDnsSupport: %w", err)
 	}
 
-	if _, err := WaitVPCAttributeUpdatedV2(ctx, conn, vpcID, string(types.VpcAttributeNameEnableDnsSupport), v); err != nil {
+	if _, err := WaitVPCAttributeUpdatedV2(ctx, conn, vpcID, types.VpcAttributeNameEnableDnsSupport, v); err != nil {
 		return fmt.Errorf("modifying EnableDnsSupport: waiting for completion: %w", err)
 	}
 
@@ -647,7 +647,7 @@ func modifyVPCNetworkAddressUsageMetrics(ctx context.Context, conn *ec2.Client, 
 		return fmt.Errorf("modifying EnableNetworkAddressUsageMetrics: %w", err)
 	}
 
-	if _, err := WaitVPCAttributeUpdatedV2(ctx, conn, vpcID, string(types.VpcAttributeNameEnableNetworkAddressUsageMetrics), v); err != nil {
+	if _, err := WaitVPCAttributeUpdatedV2(ctx, conn, vpcID, types.VpcAttributeNameEnableNetworkAddressUsageMetrics, v); err != nil {
 		return fmt.Errorf("modifying EnableNetworkAddressUsageMetrics: waiting for completion: %w", err)
 	}
 
