@@ -305,10 +305,6 @@ func resourceServerCreate(ctx context.Context, d *schema.ResourceData, meta inte
 		input.Certificate = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("structured_log_destinations"); ok {
-		input.StructuredLogDestinations = flex.ExpandStringSet(v.(*schema.Set))
-	}
-
 	if v, ok := d.GetOk("directory_id"); ok {
 		if input.IdentityProviderDetails == nil {
 			input.IdentityProviderDetails = &transfer.IdentityProviderDetails{}
@@ -384,6 +380,10 @@ func resourceServerCreate(ctx context.Context, d *schema.ResourceData, meta inte
 		input.SecurityPolicyName = aws.String(v.(string))
 	}
 
+	if v, ok := d.GetOk("structured_log_destinations"); ok {
+		input.StructuredLogDestinations = flex.ExpandStringSet(v.(*schema.Set))
+	}
+
 	if v, ok := d.GetOk("url"); ok {
 		if input.IdentityProviderDetails == nil {
 			input.IdentityProviderDetails = &transfer.IdentityProviderDetails{}
@@ -450,7 +450,6 @@ func resourceServerRead(ctx context.Context, d *schema.ResourceData, meta interf
 	}
 
 	d.Set("arn", output.Arn)
-	d.Set("structured_log_destinations", aws.StringValueSlice(output.StructuredLogDestinations))
 	d.Set("certificate", output.Certificate)
 	if output.IdentityProviderDetails != nil {
 		d.Set("directory_id", output.IdentityProviderDetails.DirectoryId)
@@ -503,6 +502,7 @@ func resourceServerRead(ctx context.Context, d *schema.ResourceData, meta interf
 	}
 	d.Set("protocols", aws.StringValueSlice(output.Protocols))
 	d.Set("security_policy_name", output.SecurityPolicyName)
+	d.Set("structured_log_destinations", aws.StringValueSlice(output.StructuredLogDestinations))
 	if output.IdentityProviderDetails != nil {
 		d.Set("url", output.IdentityProviderDetails.Url)
 	} else {
@@ -543,12 +543,6 @@ func resourceServerUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 		if d.HasChange("certificate") {
 			input.Certificate = aws.String(d.Get("certificate").(string))
 		}
-
-		// per the docs it does not matter if this field has changed,
-		// if the update passes this as empty the structured logging will be turned off,
-		// so we need to always pass the new.
-		_, newStructuredLogDestinations := d.GetChange("structured_log_destinations")
-		input.StructuredLogDestinations = flex.ExpandStringSet(newStructuredLogDestinations.(*schema.Set))
 
 		if d.HasChange("endpoint_details") {
 			if v, ok := d.GetOk("endpoint_details"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
@@ -685,6 +679,11 @@ func resourceServerUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 		if d.HasChange("security_policy_name") {
 			input.SecurityPolicyName = aws.String(d.Get("security_policy_name").(string))
 		}
+
+		// per the docs it does not matter if this field has changed,
+		// if the update passes this as empty the structured logging will be turned off,
+		// so we need to always pass the new.
+		input.StructuredLogDestinations = flex.ExpandStringSet(d.Get("structured_log_destinations").(*schema.Set))
 
 		if d.HasChange("workflow_details") {
 			input.WorkflowDetails = expandWorkflowDetails(d.Get("workflow_details").([]interface{}))

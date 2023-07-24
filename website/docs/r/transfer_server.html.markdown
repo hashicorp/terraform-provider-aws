@@ -86,6 +86,7 @@ resource "aws_transfer_server" "example" {
 ```
 
 ### Using Structured Logging Destinations
+
 ```terraform
 resource "aws_cloudwatch_log_group" "transfer" {
   name_prefix = "transfer_test_"
