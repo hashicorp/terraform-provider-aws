@@ -123,37 +123,8 @@ func (visitor expandVisitor) visit(ctx context.Context, fieldName string, valFro
 		return fwdiag.DiagnosticsError(diags)
 
 	case basetypes.MapValuable:
-		v, diags := vFrom.ToMapValue(ctx)
-		if err := fwdiag.DiagnosticsError(diags); err != nil {
-			return err
-		}
-		switch v.ElementType(ctx).(type) {
-		case basetypes.StringTypable:
-			switch kTo {
-			case reflect.Map:
-				switch tMapKey := valTo.Type().Key(); tMapKey.Kind() {
-				case reflect.String:
-					switch tMapElem := valTo.Type().Elem(); tMapElem.Kind() {
-					case reflect.String:
-						//
-						// types.Map(OfString) -> map[string]string.
-						//
-						valTo.Set(reflect.ValueOf(ExpandFrameworkStringValueMap(ctx, v)))
-						return nil
-
-					case reflect.Ptr:
-						switch tMapElem.Elem().Kind() {
-						case reflect.String:
-							//
-							// types.Map(OfString) -> map[string]*string.
-							//
-							valTo.Set(reflect.ValueOf(ExpandFrameworkStringMap(ctx, v)))
-							return nil
-						}
-					}
-				}
-			}
-		}
+		diags := visitor.map_(ctx, vFrom, valTo)
+		return fwdiag.DiagnosticsError(diags)
 
 	case basetypes.SetValuable:
 		v, diags := vFrom.ToSetValue(ctx)
@@ -418,10 +389,65 @@ func (visitor expandVisitor) listOfObject(ctx context.Context, vFrom basetypes.L
 	return diags
 }
 
+// map copies a Plugin Framework Map(ish) value to a compatible AWS API field.
+func (visitor expandVisitor) map_(ctx context.Context, vFrom basetypes.MapValuable, vTo reflect.Value) diag.Diagnostics {
+	v, diags := vFrom.ToMapValue(ctx)
+	if diags.HasError() {
+		return diags
+	}
+
+	switch v.ElementType(ctx).(type) {
+	case basetypes.StringTypable:
+		return visitor.mapOfString(ctx, v, vTo)
+	}
+
+	diags.Append(visitor.newIncompatibleMapTypesError(ctx, v, vTo))
+
+	return diags
+}
+
+// mapOfString copies a Plugin Framework MapOfString(ish) value to a compatible AWS API field.
+func (visitor expandVisitor) mapOfString(ctx context.Context, vFrom basetypes.MapValue, vTo reflect.Value) diag.Diagnostics {
+	var diags diag.Diagnostics
+
+	switch vTo.Kind() {
+	case reflect.Map:
+		switch tMapKey := vTo.Type().Key(); tMapKey.Kind() {
+		case reflect.String:
+			switch tMapElem := vTo.Type().Elem(); tMapElem.Kind() {
+			case reflect.String:
+				//
+				// types.Map(OfString) -> map[string]string.
+				//
+				vTo.Set(reflect.ValueOf(ExpandFrameworkStringValueMap(ctx, vFrom)))
+				return diags
+
+			case reflect.Ptr:
+				switch tMapElem.Elem().Kind() {
+				case reflect.String:
+					//
+					// types.Map(OfString) -> map[string]*string.
+					//
+					vTo.Set(reflect.ValueOf(ExpandFrameworkStringMap(ctx, vFrom)))
+					return nil
+				}
+			}
+		}
+	}
+
+	diags.Append(visitor.newIncompatibleMapTypesError(ctx, vFrom, vTo))
+
+	return diags
+}
+
 func (visitor expandVisitor) newIncompatibleTypesError(ctx context.Context, vFrom attr.Value, vTo reflect.Value) diag.ErrorDiagnostic {
 	return diag.NewErrorDiagnostic("Incompatible types", fmt.Sprintf("%s cannot be expanded to %s", vFrom.Type(ctx), vTo.Kind()))
 }
 
 func (visitor expandVisitor) newIncompatibleListTypesError(ctx context.Context, vFrom basetypes.ListValue, vTo reflect.Value) diag.ErrorDiagnostic {
 	return diag.NewErrorDiagnostic("Incompatible types", fmt.Sprintf("list[%s] cannot be expanded to %s", vFrom.ElementType(ctx), vTo.Kind()))
+}
+
+func (visitor expandVisitor) newIncompatibleMapTypesError(ctx context.Context, vFrom basetypes.MapValue, vTo reflect.Value) diag.ErrorDiagnostic {
+	return diag.NewErrorDiagnostic("Incompatible types", fmt.Sprintf("map[%s] cannot be expanded to %s", vFrom.ElementType(ctx), vTo.Kind()))
 }
