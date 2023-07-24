@@ -54,18 +54,8 @@ func (visitor flattenVisitor) visit(ctx context.Context, fieldName string, valFr
 		return fwdiag.DiagnosticsError(diags)
 
 	case reflect.Int32, reflect.Int64:
-		switch tTo := tTo.(type) {
-		case basetypes.Int64Typable:
-			//
-			// int32/int64 -> types.Int64.
-			//
-			v, diags := tTo.ValueFromInt64(ctx, types.Int64Value(valFrom.Int()))
-			if err := fwdiag.DiagnosticsError(diags); err != nil {
-				return err
-			}
-			valTo.Set(reflect.ValueOf(v))
-			return nil
-		}
+		diags := visitor.int(ctx, valFrom, tTo, valTo)
+		return fwdiag.DiagnosticsError(diags)
 
 	case reflect.String:
 		switch tTo := tTo.(type) {
@@ -336,6 +326,30 @@ func (visitor flattenVisitor) float(ctx context.Context, vFrom reflect.Value, tT
 
 		//
 		// float32/float64 -> types.Float64.
+		//
+		vTo.Set(reflect.ValueOf(v))
+		return diags
+	}
+
+	diags.Append(visitor.newIncompatibleTypesError(ctx, vFrom, tTo))
+
+	return diags
+}
+
+// int copies an AWS API int value to a compatible Plugin Framework field.
+func (visitor flattenVisitor) int(ctx context.Context, vFrom reflect.Value, tTo attr.Type, vTo reflect.Value) diag.Diagnostics {
+	var diags diag.Diagnostics
+
+	switch tTo := tTo.(type) {
+	case basetypes.Int64Typable:
+		v, d := tTo.ValueFromInt64(ctx, types.Int64Value(vFrom.Int()))
+		diags.Append(d...)
+		if diags.HasError() {
+			return diags
+		}
+
+		//
+		// int32/int64 -> types.Int64.
 		//
 		vTo.Set(reflect.ValueOf(v))
 		return diags
