@@ -50,18 +50,8 @@ func (visitor flattenVisitor) visit(ctx context.Context, fieldName string, valFr
 		return fwdiag.DiagnosticsError(diags)
 
 	case reflect.Float32, reflect.Float64:
-		switch tTo := tTo.(type) {
-		case basetypes.Float64Typable:
-			//
-			// float32/float64 -> types.Float64.
-			//
-			v, diags := tTo.ValueFromFloat64(ctx, types.Float64Value(valFrom.Float()))
-			if err := fwdiag.DiagnosticsError(diags); err != nil {
-				return err
-			}
-			valTo.Set(reflect.ValueOf(v))
-			return nil
-		}
+		diags := visitor.float(ctx, valFrom, tTo, valTo)
+		return fwdiag.DiagnosticsError(diags)
 
 	case reflect.Int32, reflect.Int64:
 		switch tTo := tTo.(type) {
@@ -315,13 +305,37 @@ func (visitor flattenVisitor) bool(ctx context.Context, vFrom reflect.Value, tTo
 	switch tTo := tTo.(type) {
 	case basetypes.BoolTypable:
 		v, d := tTo.ValueFromBool(ctx, types.BoolValue(vFrom.Bool()))
-		if d.HasError() {
-			diags.Append(d...)
+		diags.Append(d...)
+		if diags.HasError() {
 			return diags
 		}
 
 		//
 		// bool -> types.Bool.
+		//
+		vTo.Set(reflect.ValueOf(v))
+		return diags
+	}
+
+	diags.Append(visitor.newIncompatibleTypesError(ctx, vFrom, tTo))
+
+	return diags
+}
+
+// float copies an AWS API float value to a compatible Plugin Framework field.
+func (visitor flattenVisitor) float(ctx context.Context, vFrom reflect.Value, tTo attr.Type, vTo reflect.Value) diag.Diagnostics {
+	var diags diag.Diagnostics
+
+	switch tTo := tTo.(type) {
+	case basetypes.Float64Typable:
+		v, d := tTo.ValueFromFloat64(ctx, types.Float64Value(vFrom.Float()))
+		diags.Append(d...)
+		if diags.HasError() {
+			return diags
+		}
+
+		//
+		// float32/float64 -> types.Float64.
 		//
 		vTo.Set(reflect.ValueOf(v))
 		return diags

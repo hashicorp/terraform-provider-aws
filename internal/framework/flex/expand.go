@@ -337,8 +337,8 @@ func (visitor expandVisitor) listOfObject(ctx context.Context, vFrom basetypes.L
 					// types.List(OfObject) -> *struct.
 					//
 					from, d := p.ValueAsPtr(ctx)
-					if d.HasError() {
-						diags.Append(d...)
+					diags.Append(d...)
+					if diags.HasError() {
 						return diags
 					}
 
