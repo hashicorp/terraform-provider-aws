@@ -759,29 +759,7 @@ func testAccServer_structuredLogDestinations(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServerExists(ctx, resourceName, &s),
 					// resource.TestCheckTypeSetElemAttr(resourceName, "structured_logging_destinations.*", *s.StructuredLogDestinations[0]),
-					resource.ComposeTestCheckFunc(func(s *terraform.State) error {
-						cwResource, ok := s.RootModule().Resources[cloudwatchLogGroupName]
-						if !ok {
-							return fmt.Errorf("resource not found: %s", cloudwatchLogGroupName)
-						}
-						cwARN, ok := cwResource.Primary.Attributes["arn"]
-						if !ok {
-							return errors.New("cloudwatch group arn missing")
-						}
-						expectedSLD := fmt.Sprintf("%s:*", cwARN)
-						transferServerResource, ok := s.RootModule().Resources[resourceName]
-						if !ok {
-							return fmt.Errorf("resource not found: %s", resourceName)
-						}
-						slds, ok := transferServerResource.Primary.Attributes["structured_log_destinations"]
-						if !ok {
-							return errors.New("transfer server structured logging destinations missing")
-						}
-						if expectedSLD != slds {
-							return fmt.Errorf("'%s' != '%s'", expectedSLD, slds)
-						}
-						return nil
-					}),
+					resource.ComposeTestCheckFunc(testAccServerCheck_structuredLogDestinations(resourceName, cloudwatchLogGroupName)),
 				),
 			},
 			{
@@ -796,29 +774,7 @@ func testAccServer_structuredLogDestinations(t *testing.T) {
 					testAccCheckServerExists(ctx, resourceName, &s),
 					// resource.TestCheckTypeSetElemAttr(resourceName, "structured_logging_destinations.*", *s.StructuredLogDestinations[0]),
 					// resource.TestCheckTypeSetElemAttr(resourceName, "structured_logging_destinations.*", fmt.Sprintf("\"${%s.arn}:*\"", cloudwatchLogGroupName)),
-					resource.ComposeTestCheckFunc(func(s *terraform.State) error {
-						cwResource, ok := s.RootModule().Resources[cloudwatchLogGroupName]
-						if !ok {
-							return fmt.Errorf("resource not found: %s", cloudwatchLogGroupName)
-						}
-						cwARN, ok := cwResource.Primary.Attributes["arn"]
-						if !ok {
-							return errors.New("cloudwatch group arn missing")
-						}
-						expectedSLD := fmt.Sprintf("%s:*", cwARN)
-						transferServerResource, ok := s.RootModule().Resources[resourceName]
-						if !ok {
-							return fmt.Errorf("resource not found: %s", resourceName)
-						}
-						slds, ok := transferServerResource.Primary.Attributes["structured_logging_destinations"]
-						if !ok {
-							return errors.New("transfer server structured logging destinations missing")
-						}
-						if expectedSLD != slds {
-							return fmt.Errorf("'%s' != '%s'", expectedSLD, slds)
-						}
-						return nil
-					}),
+					resource.ComposeTestCheckFunc(testAccServerCheck_structuredLogDestinations(resourceName, cloudwatchLogGroupName)),
 				),
 			},
 		},
@@ -1946,6 +1902,32 @@ func testAccServerConfig_structuredLogDestinationsUpdate() string {
 		  }
 		`),
 	)
+}
+
+func testAccServerCheck_structuredLogDestinations(resourceName, cloudwatchLogGroupName string) func(s *terraform.State) error {
+	return func(s *terraform.State) error {
+		cwResource, ok := s.RootModule().Resources[cloudwatchLogGroupName]
+		if !ok {
+			return fmt.Errorf("resource not found: %s", cloudwatchLogGroupName)
+		}
+		cwARN, ok := cwResource.Primary.Attributes["arn"]
+		if !ok {
+			return errors.New("cloudwatch group arn missing")
+		}
+		expectedSLD := fmt.Sprintf("%s:*", cwARN)
+		transferServerResource, ok := s.RootModule().Resources[resourceName]
+		if !ok {
+			return fmt.Errorf("resource not found: %s", resourceName)
+		}
+		slds, ok := transferServerResource.Primary.Attributes["structured_log_destinations.0"]
+		if !ok {
+			return errors.New("transfer server structured logging destinations missing")
+		}
+		if expectedSLD != slds {
+			return fmt.Errorf("'%s' != '%s'", expectedSLD, slds)
+		}
+		return nil
+	}
 }
 
 func testAccServerConfig_protocols(rName string) string {
