@@ -15,7 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func FindVPCAttributeV2(ctx context.Context, conn *ec2.Client, vpcID string, attribute awstypes.VpcAttributeName) (bool, error) {
+func findVPCAttributeV2(ctx context.Context, conn *ec2.Client, vpcID string, attribute awstypes.VpcAttributeName) (bool, error) {
 	input := &ec2.DescribeVpcAttributeInput{
 		Attribute: attribute,
 		VpcId:     aws.String(vpcID),
@@ -57,8 +57,8 @@ func FindVPCAttributeV2(ctx context.Context, conn *ec2.Client, vpcID string, att
 	return aws.ToBool(v.Value), nil
 }
 
-func FindVPCV2(ctx context.Context, conn *ec2.Client, input *ec2.DescribeVpcsInput) (*awstypes.Vpc, error) {
-	output, err := FindVPCsV2(ctx, conn, input)
+func findVPCV2(ctx context.Context, conn *ec2.Client, input *ec2.DescribeVpcsInput) (*awstypes.Vpc, error) {
+	output, err := findVPCsV2(ctx, conn, input)
 
 	if err != nil {
 		return nil, err
@@ -67,7 +67,7 @@ func FindVPCV2(ctx context.Context, conn *ec2.Client, input *ec2.DescribeVpcsInp
 	return tfresource.AssertSingleValueResult(output)
 }
 
-func FindVPCsV2(ctx context.Context, conn *ec2.Client, input *ec2.DescribeVpcsInput) ([]awstypes.Vpc, error) {
+func findVPCsV2(ctx context.Context, conn *ec2.Client, input *ec2.DescribeVpcsInput) ([]awstypes.Vpc, error) {
 	var output []awstypes.Vpc
 
 	pages := ec2.NewDescribeVpcsPaginator(conn, input)
@@ -91,22 +91,22 @@ func FindVPCsV2(ctx context.Context, conn *ec2.Client, input *ec2.DescribeVpcsIn
 	return output, nil
 }
 
-func FindVPCByIDV2(ctx context.Context, conn *ec2.Client, id string) (*awstypes.Vpc, error) {
+func findVPCByIDV2(ctx context.Context, conn *ec2.Client, id string) (*awstypes.Vpc, error) {
 	input := &ec2.DescribeVpcsInput{
 		VpcIds: []string{id},
 	}
 
-	return FindVPCV2(ctx, conn, input)
+	return findVPCV2(ctx, conn, input)
 }
 
-func FindVPCIPv6CIDRBlockAssociationByIDV2(ctx context.Context, conn *ec2.Client, id string) (*awstypes.VpcIpv6CidrBlockAssociation, *awstypes.Vpc, error) {
+func findVPCIPv6CIDRBlockAssociationByIDV2(ctx context.Context, conn *ec2.Client, id string) (*awstypes.VpcIpv6CidrBlockAssociation, *awstypes.Vpc, error) {
 	input := &ec2.DescribeVpcsInput{
-		Filters: BuildAttributeFilterListV2(map[string]string{
+		Filters: buildAttributeFilterListV2(map[string]string{
 			"ipv6-cidr-block-association.association-id": id,
 		}),
 	}
 
-	vpc, err := FindVPCV2(ctx, conn, input)
+	vpc, err := findVPCV2(ctx, conn, input)
 
 	if err != nil {
 		return nil, nil, err
@@ -125,19 +125,19 @@ func FindVPCIPv6CIDRBlockAssociationByIDV2(ctx context.Context, conn *ec2.Client
 	return nil, nil, &retry.NotFoundError{}
 }
 
-func FindVPCDefaultNetworkACLV2(ctx context.Context, conn *ec2.Client, id string) (*awstypes.NetworkAcl, error) {
+func findVPCDefaultNetworkACLV2(ctx context.Context, conn *ec2.Client, id string) (*awstypes.NetworkAcl, error) {
 	input := &ec2.DescribeNetworkAclsInput{
-		Filters: BuildAttributeFilterListV2(map[string]string{
+		Filters: buildAttributeFilterListV2(map[string]string{
 			"default": "true",
 			"vpc-id":  id,
 		}),
 	}
 
-	return FindNetworkACLV2(ctx, conn, input)
+	return findNetworkACLV2(ctx, conn, input)
 }
 
-func FindNetworkACLV2(ctx context.Context, conn *ec2.Client, input *ec2.DescribeNetworkAclsInput) (*awstypes.NetworkAcl, error) {
-	output, err := FindNetworkACLsV2(ctx, conn, input)
+func findNetworkACLV2(ctx context.Context, conn *ec2.Client, input *ec2.DescribeNetworkAclsInput) (*awstypes.NetworkAcl, error) {
+	output, err := findNetworkACLsV2(ctx, conn, input)
 
 	if err != nil {
 		return nil, err
@@ -146,7 +146,7 @@ func FindNetworkACLV2(ctx context.Context, conn *ec2.Client, input *ec2.Describe
 	return tfresource.AssertSingleValueResult(output)
 }
 
-func FindNetworkACLsV2(ctx context.Context, conn *ec2.Client, input *ec2.DescribeNetworkAclsInput) ([]awstypes.NetworkAcl, error) {
+func findNetworkACLsV2(ctx context.Context, conn *ec2.Client, input *ec2.DescribeNetworkAclsInput) ([]awstypes.NetworkAcl, error) {
 	var output []awstypes.NetworkAcl
 
 	pages := ec2.NewDescribeNetworkAclsPaginator(conn, input)
@@ -173,28 +173,28 @@ func FindNetworkACLsV2(ctx context.Context, conn *ec2.Client, input *ec2.Describ
 
 func FindVPCDefaultSecurityGroupV2(ctx context.Context, conn *ec2.Client, id string) (*awstypes.SecurityGroup, error) {
 	input := &ec2.DescribeSecurityGroupsInput{
-		Filters: BuildAttributeFilterListV2(map[string]string{
+		Filters: buildAttributeFilterListV2(map[string]string{
 			"group-name": DefaultSecurityGroupName,
 			"vpc-id":     id,
 		}),
 	}
 
-	return FindSecurityGroupV2(ctx, conn, input)
+	return findSecurityGroupV2(ctx, conn, input)
 }
 
-func FindVPCMainRouteTableV2(ctx context.Context, conn *ec2.Client, id string) (*awstypes.RouteTable, error) {
+func findVPCMainRouteTableV2(ctx context.Context, conn *ec2.Client, id string) (*awstypes.RouteTable, error) {
 	input := &ec2.DescribeRouteTablesInput{
-		Filters: BuildAttributeFilterListV2(map[string]string{
+		Filters: buildAttributeFilterListV2(map[string]string{
 			"association.main": "true",
 			"vpc-id":           id,
 		}),
 	}
 
-	return FindRouteTableV2(ctx, conn, input)
+	return findRouteTableV2(ctx, conn, input)
 }
 
-func FindRouteTableV2(ctx context.Context, conn *ec2.Client, input *ec2.DescribeRouteTablesInput) (*awstypes.RouteTable, error) {
-	output, err := FindRouteTablesV2(ctx, conn, input)
+func findRouteTableV2(ctx context.Context, conn *ec2.Client, input *ec2.DescribeRouteTablesInput) (*awstypes.RouteTable, error) {
+	output, err := findRouteTablesV2(ctx, conn, input)
 
 	if err != nil {
 		return nil, err
@@ -203,7 +203,7 @@ func FindRouteTableV2(ctx context.Context, conn *ec2.Client, input *ec2.Describe
 	return tfresource.AssertSingleValueResult(output)
 }
 
-func FindRouteTablesV2(ctx context.Context, conn *ec2.Client, input *ec2.DescribeRouteTablesInput) ([]awstypes.RouteTable, error) {
+func findRouteTablesV2(ctx context.Context, conn *ec2.Client, input *ec2.DescribeRouteTablesInput) ([]awstypes.RouteTable, error) {
 	var output []awstypes.RouteTable
 
 	pages := ec2.NewDescribeRouteTablesPaginator(conn, input)
@@ -228,8 +228,8 @@ func FindRouteTablesV2(ctx context.Context, conn *ec2.Client, input *ec2.Describ
 	return output, nil
 }
 
-func FindSecurityGroupV2(ctx context.Context, conn *ec2.Client, input *ec2.DescribeSecurityGroupsInput) (*awstypes.SecurityGroup, error) {
-	output, err := FindSecurityGroupsV2(ctx, conn, input)
+func findSecurityGroupV2(ctx context.Context, conn *ec2.Client, input *ec2.DescribeSecurityGroupsInput) (*awstypes.SecurityGroup, error) {
+	output, err := findSecurityGroupsV2(ctx, conn, input)
 
 	if err != nil {
 		return nil, err
@@ -238,7 +238,7 @@ func FindSecurityGroupV2(ctx context.Context, conn *ec2.Client, input *ec2.Descr
 	return tfresource.AssertSingleValueResult(output)
 }
 
-func FindSecurityGroupsV2(ctx context.Context, conn *ec2.Client, input *ec2.DescribeSecurityGroupsInput) ([]awstypes.SecurityGroup, error) {
+func findSecurityGroupsV2(ctx context.Context, conn *ec2.Client, input *ec2.DescribeSecurityGroupsInput) ([]awstypes.SecurityGroup, error) {
 	var output []awstypes.SecurityGroup
 
 	pages := ec2.NewDescribeSecurityGroupsPaginator(conn, input)
@@ -263,7 +263,7 @@ func FindSecurityGroupsV2(ctx context.Context, conn *ec2.Client, input *ec2.Desc
 	return output, nil
 }
 
-func FindIPAMPoolAllocationsV2(ctx context.Context, conn *ec2.Client, input *ec2.GetIpamPoolAllocationsInput) ([]awstypes.IpamPoolAllocation, error) {
+func findIPAMPoolAllocationsV2(ctx context.Context, conn *ec2.Client, input *ec2.GetIpamPoolAllocationsInput) ([]awstypes.IpamPoolAllocation, error) {
 	var output []awstypes.IpamPoolAllocation
 
 	pages := ec2.NewGetIpamPoolAllocationsPaginator(conn, input)

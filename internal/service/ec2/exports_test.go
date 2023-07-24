@@ -5,6 +5,8 @@ package ec2
 
 // Exports for use in tests only.
 var (
+	FindVPCByIDV2 = findVPCByIDV2
+
 	ResourceInstanceConnectEndpoint  = newResourceInstanceConnectEndpoint
 	ResourceSecurityGroupEgressRule  = newResourceSecurityGroupEgressRule
 	ResourceSecurityGroupIngressRule = newResourceSecurityGroupIngressRule

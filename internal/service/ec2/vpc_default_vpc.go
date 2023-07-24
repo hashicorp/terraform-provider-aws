@@ -158,7 +158,7 @@ func resourceDefaultVPCCreate(ctx context.Context, d *schema.ResourceData, meta 
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	input := &ec2.DescribeVpcsInput{
-		Filters: BuildAttributeFilterListV2(
+		Filters: buildAttributeFilterListV2(
 			map[string]string{
 				"isDefault": "true",
 			},
@@ -166,7 +166,7 @@ func resourceDefaultVPCCreate(ctx context.Context, d *schema.ResourceData, meta 
 	}
 
 	vpcInfo := &vpcInfo{}
-	vpc, err := FindVPCV2(ctx, conn, input)
+	vpc, err := findVPCV2(ctx, conn, input)
 
 	if err == nil {
 		d.SetId(aws.ToString(vpc.VpcId))
@@ -174,18 +174,18 @@ func resourceDefaultVPCCreate(ctx context.Context, d *schema.ResourceData, meta 
 
 		vpcInfo.vpc = vpc
 
-		if v, err := FindVPCAttributeV2(ctx, conn, d.Id(), awstypes.VpcAttributeNameEnableDnsHostnames); err != nil {
+		if v, err := findVPCAttributeV2(ctx, conn, d.Id(), awstypes.VpcAttributeNameEnableDnsHostnames); err != nil {
 			return sdkdiag.AppendErrorf(diags, "reading EC2 VPC (%s) Attribute (%s): %s", d.Id(), awstypes.VpcAttributeNameEnableDnsHostnames, err)
 		} else {
 			vpcInfo.enableDnsHostnames = v
 		}
 
-		if v, err := FindVPCAttributeV2(ctx, conn, d.Id(), awstypes.VpcAttributeNameEnableDnsSupport); err != nil {
+		if v, err := findVPCAttributeV2(ctx, conn, d.Id(), awstypes.VpcAttributeNameEnableDnsSupport); err != nil {
 			return sdkdiag.AppendErrorf(diags, "reading EC2 VPC (%s) Attribute (%s): %s", d.Id(), awstypes.VpcAttributeNameEnableDnsSupport, err)
 		} else {
 			vpcInfo.enableDnsSupport = v
 		}
-		if v, err := FindVPCAttributeV2(ctx, conn, d.Id(), awstypes.VpcAttributeNameEnableNetworkAddressUsageMetrics); err != nil {
+		if v, err := findVPCAttributeV2(ctx, conn, d.Id(), awstypes.VpcAttributeNameEnableNetworkAddressUsageMetrics); err != nil {
 			return sdkdiag.AppendErrorf(diags, "reading EC2 VPC (%s) Attribute (%s): %s", d.Id(), awstypes.VpcAttributeNameEnableNetworkAddressUsageMetrics, err)
 		} else {
 			vpcInfo.enableNetworkAddressUsageMetrics = v
@@ -204,7 +204,7 @@ func resourceDefaultVPCCreate(ctx context.Context, d *schema.ResourceData, meta 
 		d.SetId(aws.ToString(vpc.VpcId))
 		d.Set("existing_default_vpc", false)
 
-		vpc, err = WaitVPCCreatedV2(ctx, conn, d.Id())
+		vpc, err = waitVPCCreatedV2(ctx, conn, d.Id())
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "waiting for EC2 Default VPC (%s) create: %s", d.Id(), err)

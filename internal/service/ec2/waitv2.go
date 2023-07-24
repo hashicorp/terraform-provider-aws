@@ -18,11 +18,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func WaitVPCCreatedV2(ctx context.Context, conn *ec2.Client, id string) (*types.Vpc, error) {
+func waitVPCCreatedV2(ctx context.Context, conn *ec2.Client, id string) (*types.Vpc, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(types.VpcStatePending),
 		Target:  enum.Slice(types.VpcStateAvailable),
-		Refresh: StatusVPCStateV2(ctx, conn, id),
+		Refresh: statusVPCStateV2(ctx, conn, id),
 		Timeout: vpcCreatedTimeout,
 	}
 
@@ -35,11 +35,11 @@ func WaitVPCCreatedV2(ctx context.Context, conn *ec2.Client, id string) (*types.
 	return nil, err
 }
 
-func WaitVPCIPv6CIDRBlockAssociationCreatedV2(ctx context.Context, conn *ec2.Client, id string, timeout time.Duration) (*types.VpcCidrBlockState, error) {
+func waitVPCIPv6CIDRBlockAssociationCreatedV2(ctx context.Context, conn *ec2.Client, id string, timeout time.Duration) (*types.VpcCidrBlockState, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending:    enum.Slice(types.VpcCidrBlockStateCodeAssociating, types.VpcCidrBlockStateCodeDisassociated, types.VpcCidrBlockStateCodeFailing),
 		Target:     enum.Slice(types.VpcCidrBlockStateCodeAssociated),
-		Refresh:    StatusVPCIPv6CIDRBlockAssociationStateV2(ctx, conn, id),
+		Refresh:    statusVPCIPv6CIDRBlockAssociationStateV2(ctx, conn, id),
 		Timeout:    timeout,
 		Delay:      10 * time.Second,
 		MinTimeout: 5 * time.Second,
@@ -58,10 +58,10 @@ func WaitVPCIPv6CIDRBlockAssociationCreatedV2(ctx context.Context, conn *ec2.Cli
 	return nil, err
 }
 
-func WaitVPCAttributeUpdatedV2(ctx context.Context, conn *ec2.Client, vpcID string, attribute awstypes.VpcAttributeName, expectedValue bool) (*types.Vpc, error) {
+func waitVPCAttributeUpdatedV2(ctx context.Context, conn *ec2.Client, vpcID string, attribute awstypes.VpcAttributeName, expectedValue bool) (*types.Vpc, error) {
 	stateConf := &retry.StateChangeConf{
 		Target:     []string{strconv.FormatBool(expectedValue)},
-		Refresh:    StatusVPCAttributeValueV2(ctx, conn, vpcID, attribute),
+		Refresh:    statusVPCAttributeValueV2(ctx, conn, vpcID, attribute),
 		Timeout:    ec2PropagationTimeout,
 		Delay:      10 * time.Second,
 		MinTimeout: 3 * time.Second,
@@ -76,11 +76,11 @@ func WaitVPCAttributeUpdatedV2(ctx context.Context, conn *ec2.Client, vpcID stri
 	return nil, err
 }
 
-func WaitVPCIPv6CIDRBlockAssociationDeletedV2(ctx context.Context, conn *ec2.Client, id string, timeout time.Duration) (*types.VpcCidrBlockState, error) {
+func waitVPCIPv6CIDRBlockAssociationDeletedV2(ctx context.Context, conn *ec2.Client, id string, timeout time.Duration) (*types.VpcCidrBlockState, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending:    enum.Slice(types.VpcCidrBlockStateCodeAssociated, types.VpcCidrBlockStateCodeDisassociating, types.VpcCidrBlockStateCodeFailing),
 		Target:     []string{},
-		Refresh:    StatusVPCIPv6CIDRBlockAssociationStateV2(ctx, conn, id),
+		Refresh:    statusVPCIPv6CIDRBlockAssociationStateV2(ctx, conn, id),
 		Timeout:    timeout,
 		Delay:      10 * time.Second,
 		MinTimeout: 5 * time.Second,

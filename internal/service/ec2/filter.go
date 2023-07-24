@@ -62,7 +62,7 @@ func NewFilter(name string, values []string) *ec2.Filter {
 	}
 }
 
-func BuildAttributeFilterListV2(m map[string]string) []awstypes.Filter {
+func buildAttributeFilterListV2(m map[string]string) []awstypes.Filter {
 	var filters []awstypes.Filter
 
 	// sort the filters by name to make the output deterministic
@@ -79,13 +79,13 @@ func BuildAttributeFilterListV2(m map[string]string) []awstypes.Filter {
 			continue
 		}
 
-		filters = append(filters, NewFilterV2(name, []string{value}))
+		filters = append(filters, newFilterV2(name, []string{value}))
 	}
 
 	return filters
 }
 
-func NewFilterV2(name string, values []string) awstypes.Filter {
+func newFilterV2(name string, values []string) awstypes.Filter {
 	return awstypes.Filter{
 		Name:   aws.String(name),
 		Values: values,
