@@ -1830,78 +1830,122 @@ func testAccServerConfig_structuredLogDestinations(rName string) string {
 		fmt.Sprintf(`
 		resource "aws_cloudwatch_log_group" "test" {
 			name_prefix = "transfer_test_"
-		  }
+		}
 		  
-		  data "aws_iam_policy_document" "test" {
+		data "aws_iam_policy_document" "test" {
 			statement {
-			  effect = "Allow"
-		  
-			  principals {
+				effect = "Allow"
+			
+				principals {
 				type        = "Service"
 				identifiers = ["transfer.amazonaws.com"]
-			  }
-		  
-			  actions = ["sts:AssumeRole"]
+				}
+			
+				actions = ["sts:AssumeRole"]
 			}
-		  }
-		  
-		  resource "aws_iam_role" "test" {
-			name_prefix         = "iam_for_transfer_"
-			assume_role_policy  = data.aws_iam_policy_document.test.json
-			managed_policy_arns = ["arn:aws:iam::aws:policy/service-role/AWSTransferLoggingAccess"]
-		  }
-		  
-		  resource "aws_transfer_server" "test" {
+		}
+		
+		resource "aws_iam_policy" "test" {
+			name_prefix = "transfer_logging_policy_"
+			policy = jsonencode({
+				"Version" : "2012-10-17",
+				"Statement" : [
+					{
+						"Effect" : "Allow",
+						"Action" : [
+						"logs:CreateLogStream",
+						"logs:DescribeLogStreams",
+						"logs:CreateLogGroup",
+						"logs:PutLogEvents"
+						],
+						"Resource" : "*"
+					}
+				]
+			})
+		}
+		
+		resource "aws_iam_role" "test" {
+			name_prefix        = "iam_for_transfer_"
+			assume_role_policy = data.aws_iam_policy_document.test.json
+		}
+		
+		resource "aws_iam_role_policy_attachment" "test" {
+			role       = aws_iam_role.test.name
+			policy_arn = aws_iam_policy.test.arn
+		}
+		
+		resource "aws_transfer_server" "test" {
 			endpoint_type = "PUBLIC"
 			logging_role  = aws_iam_role.test.arn
 			protocols     = ["SFTP"]
 			structured_log_destinations = [
-			  "${aws_cloudwatch_log_group.test.arn}:*"
+				"${aws_cloudwatch_log_group.test.arn}:*"
 			]
 			tags = {
-			  Name = %[1]q
+				Name = %[1]q
 			}
-		  }
+		}
 		`, rName),
 	)
 }
 
 func testAccServerConfig_structuredLogDestinationsUpdate() string {
-	return acctest.ConfigCompose(
-		fmt.Sprintf(`
-		resource "aws_cloudwatch_log_group" "test" {
-			name_prefix = "transfer_test_"
-		  }
-		  
-		  data "aws_iam_policy_document" "test" {
-			statement {
-			  effect = "Allow"
-		  
-			  principals {
-				type        = "Service"
-				identifiers = ["transfer.amazonaws.com"]
-			  }
-		  
-			  actions = ["sts:AssumeRole"]
+	return `
+	resource "aws_cloudwatch_log_group" "test" {
+		name_prefix = "transfer_test_"
+	}
+	  
+	data "aws_iam_policy_document" "test" {
+		statement {
+			effect = "Allow"
+		
+			principals {
+			type        = "Service"
+			identifiers = ["transfer.amazonaws.com"]
 			}
-		  }
-		  
-		  resource "aws_iam_role" "test" {
-			name_prefix         = "iam_for_transfer_"
-			assume_role_policy  = data.aws_iam_policy_document.test.json
-			managed_policy_arns = ["arn:aws:iam::aws:policy/service-role/AWSTransferLoggingAccess"]
-		  }
-		  
-		  resource "aws_transfer_server" "test" {
-			endpoint_type = "PUBLIC"
-			logging_role  = aws_iam_role.test.arn
-			protocols     = ["SFTP"]
-			structured_log_destinations = [
-			  "${aws_cloudwatch_log_group.test.arn}:*"
+		
+			actions = ["sts:AssumeRole"]
+		}
+	}
+	
+	resource "aws_iam_policy" "test" {
+		name_prefix = "transfer_logging_policy_"
+		policy = jsonencode({
+			"Version" : "2012-10-17",
+			"Statement" : [
+				{
+					"Effect" : "Allow",
+					"Action" : [
+					"logs:CreateLogStream",
+					"logs:DescribeLogStreams",
+					"logs:CreateLogGroup",
+					"logs:PutLogEvents"
+					],
+					"Resource" : "*"
+				}
 			]
-		  }
-		`),
-	)
+		})
+	}
+	
+	resource "aws_iam_role" "test" {
+		name_prefix        = "iam_for_transfer_"
+		assume_role_policy = data.aws_iam_policy_document.test.json
+	}
+	
+	resource "aws_iam_role_policy_attachment" "test" {
+		role       = aws_iam_role.test.name
+		policy_arn = aws_iam_policy.test.arn
+	}
+	
+	resource "aws_transfer_server" "test" {
+		endpoint_type = "PUBLIC"
+		logging_role  = aws_iam_role.test.arn
+		protocols     = ["SFTP"]
+		structured_log_destinations = [
+			"${aws_cloudwatch_log_group.test.arn}:*"
+		]
+	}
+	`
 }
 
 func testAccServerCheck_structuredLogDestinations(resourceName, cloudwatchLogGroupName string) func(s *terraform.State) error {
