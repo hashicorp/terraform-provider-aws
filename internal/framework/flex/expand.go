@@ -100,7 +100,7 @@ func (visitor expandVisitor) visit(ctx context.Context, fieldName string, valFro
 
 	tFrom, kTo := vFrom.Type(ctx), valTo.Kind()
 	switch vFrom := vFrom.(type) {
-	// Simple types.
+	// Primitive types.
 	case basetypes.BoolValuable:
 		diags := visitor.bool(ctx, vFrom, valTo)
 		return fwdiag.DiagnosticsError(diags)

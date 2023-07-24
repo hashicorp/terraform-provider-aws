@@ -44,7 +44,7 @@ func (visitor flattenVisitor) visit(ctx context.Context, fieldName string, valFr
 
 	kFrom, tTo := valFrom.Kind(), vTo.Type(ctx)
 	switch kFrom {
-	// Simple types.
+	// Primitive types.
 	case reflect.Bool:
 		diags := visitor.bool(ctx, valFrom, tTo, valTo)
 		return fwdiag.DiagnosticsError(diags)
@@ -61,81 +61,44 @@ func (visitor flattenVisitor) visit(ctx context.Context, fieldName string, valFr
 		diags := visitor.string(ctx, valFrom, tTo, valTo)
 		return fwdiag.DiagnosticsError(diags)
 
-	// Pointer to simple types.
+	// Pointer to primitive types.
 	case reflect.Ptr:
-		valElem := valFrom.Elem()
-		switch valFrom.Type().Elem().Kind() {
+		switch valElem := valFrom.Elem(); valFrom.Type().Elem().Kind() {
 		case reflect.Bool:
-			switch tTo := tTo.(type) {
-			case basetypes.BoolTypable:
-				//
-				// *bool -> types.Bool.
-				//
-				if valElem.IsValid() {
-					v, diags := tTo.ValueFromBool(ctx, types.BoolValue(valElem.Bool()))
-					if err := fwdiag.DiagnosticsError(diags); err != nil {
-						return err
-					}
-					valTo.Set(reflect.ValueOf(v))
-				} else {
-					valTo.Set(reflect.ValueOf(types.BoolNull()))
-				}
+			if valFrom.IsNil() {
+				valTo.Set(reflect.ValueOf(types.BoolNull()))
 				return nil
 			}
+
+			diags := visitor.bool(ctx, valElem, tTo, valTo)
+			return fwdiag.DiagnosticsError(diags)
 
 		case reflect.Float32, reflect.Float64:
-			switch tTo := tTo.(type) {
-			case basetypes.Float64Typable:
-				if valElem.IsValid() {
-					//
-					// *float32/*float64 -> types.Float64.
-					//
-					v, diags := tTo.ValueFromFloat64(ctx, types.Float64Value(valElem.Float()))
-					if err := fwdiag.DiagnosticsError(diags); err != nil {
-						return err
-					}
-					valTo.Set(reflect.ValueOf(v))
-				} else {
-					valTo.Set(reflect.ValueOf(types.Float64Null()))
-				}
+			if valFrom.IsNil() {
+				valTo.Set(reflect.ValueOf(types.Float64Null()))
 				return nil
 			}
+
+			diags := visitor.float(ctx, valElem, tTo, valTo)
+			return fwdiag.DiagnosticsError(diags)
 
 		case reflect.Int32, reflect.Int64:
-			switch tTo := tTo.(type) {
-			case basetypes.Int64Typable:
-				//
-				// *int32/*int64 -> types.Int64.
-				//
-				if valElem.IsValid() {
-					v, diags := tTo.ValueFromInt64(ctx, types.Int64Value(valElem.Int()))
-					if err := fwdiag.DiagnosticsError(diags); err != nil {
-						return err
-					}
-					valTo.Set(reflect.ValueOf(v))
-				} else {
-					valTo.Set(reflect.ValueOf(types.Int64Null()))
-				}
+			if valFrom.IsNil() {
+				valTo.Set(reflect.ValueOf(types.Int64Null()))
 				return nil
 			}
 
+			diags := visitor.int(ctx, valElem, tTo, valTo)
+			return fwdiag.DiagnosticsError(diags)
+
 		case reflect.String:
-			switch tTo := tTo.(type) {
-			case basetypes.StringTypable:
-				//
-				// *string -> types.String.
-				//
-				if valElem.IsValid() {
-					v, diags := tTo.ValueFromString(ctx, types.StringValue(valElem.String()))
-					if err := fwdiag.DiagnosticsError(diags); err != nil {
-						return err
-					}
-					valTo.Set(reflect.ValueOf(v))
-				} else {
-					valTo.Set(reflect.ValueOf(types.StringNull()))
-				}
+			if valFrom.IsNil() {
+				valTo.Set(reflect.ValueOf(types.StringNull()))
 				return nil
 			}
+
+			diags := visitor.string(ctx, valElem, tTo, valTo)
+			return fwdiag.DiagnosticsError(diags)
 
 		case reflect.Struct:
 			switch tTo.(type) {
@@ -350,7 +313,7 @@ func (visitor flattenVisitor) int(ctx context.Context, vFrom reflect.Value, tTo 
 	return diags
 }
 
-// string copies an AWS API int value to a compatible Plugin Framework field.
+// string copies an AWS API string value to a compatible Plugin Framework field.
 func (visitor flattenVisitor) string(ctx context.Context, vFrom reflect.Value, tTo attr.Type, vTo reflect.Value) diag.Diagnostics {
 	var diags diag.Diagnostics
 
