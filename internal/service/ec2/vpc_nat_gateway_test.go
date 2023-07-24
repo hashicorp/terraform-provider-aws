@@ -295,19 +295,40 @@ func TestAccVPCNATGateway_secondaryPrivateIPAddresses(t *testing.T) {
 		CheckDestroy:             testAccCheckNATGatewayDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVPCNATGatewayConfig_secondaryPrivateIPAddresses(rName),
+				Config: testAccVPCNATGatewayConfig_secondaryPrivateIPAddresses(rName, true),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckNATGatewayExists(ctx, resourceName, &natGateway),
 					resource.TestCheckResourceAttr(resourceName, "secondary_allocation_ids.#", "1"),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "secondary_allocation_ids.*", eipResourceName, "id"),
 					resource.TestCheckResourceAttr(resourceName, "secondary_private_ip_address_count", "1"),
 					resource.TestCheckResourceAttr(resourceName, "secondary_private_ip_addresses.#", "1"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "secondary_private_ip_addresses.*", "10.0.1.5"),
 				),
 			},
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+			},
+			{
+				Config: testAccVPCNATGatewayConfig_secondaryPrivateIPAddresses(rName, false),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckNATGatewayExists(ctx, resourceName, &natGateway),
+					resource.TestCheckResourceAttr(resourceName, "secondary_allocation_ids.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "secondary_private_ip_address_count", "0"),
+					resource.TestCheckResourceAttr(resourceName, "secondary_private_ip_addresses.#", "0"),
+				),
+			},
+			{
+				Config: testAccVPCNATGatewayConfig_secondaryPrivateIPAddresses(rName, true),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckNATGatewayExists(ctx, resourceName, &natGateway),
+					resource.TestCheckResourceAttr(resourceName, "secondary_allocation_ids.#", "1"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "secondary_allocation_ids.*", eipResourceName, "id"),
+					resource.TestCheckResourceAttr(resourceName, "secondary_private_ip_address_count", "1"),
+					resource.TestCheckResourceAttr(resourceName, "secondary_private_ip_addresses.#", "1"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "secondary_private_ip_addresses.*", "10.0.1.5"),
+				),
 			},
 		},
 	})
@@ -585,7 +606,7 @@ resource "aws_nat_gateway" "test" {
 `, rName, secondaryPrivateIpAddressCount))
 }
 
-func testAccVPCNATGatewayConfig_secondaryPrivateIPAddresses(rName string) string {
+func testAccVPCNATGatewayConfig_secondaryPrivateIPAddresses(rName string, hasSecondary bool) string {
 	return acctest.ConfigCompose(testAccNATGatewayConfig_base(rName), fmt.Sprintf(`
 resource "aws_eip" "secondary" {
   domain = "vpc"
@@ -598,8 +619,8 @@ resource "aws_eip" "secondary" {
 resource "aws_nat_gateway" "test" {
   allocation_id                  = aws_eip.test.id
   subnet_id                      = aws_subnet.private.id
-  secondary_allocation_ids       = [aws_eip.secondary.id]
-  secondary_private_ip_addresses = ["10.0.1.5"]
+  secondary_allocation_ids       = %[2]t ? [aws_eip.secondary.id] : null
+  secondary_private_ip_addresses = %[2]t ? ["10.0.1.5"] : null
 
   tags = {
     Name = %[1]q
@@ -607,7 +628,7 @@ resource "aws_nat_gateway" "test" {
 
   depends_on = [aws_internet_gateway.test]
 }
-`, rName))
+`, rName, hasSecondary))
 }
 
 func testAccVPCNATGatewayConfig_secondaryPrivateIPAddresses_private(rName string, n int) string {

@@ -268,6 +268,15 @@ func resourceNATGatewayUpdate(ctx context.Context, d *schema.ResourceData, meta 
 					NatGatewayId:  aws.String(d.Id()),
 				}
 
+				if d.HasChanges("secondary_private_ip_addresses") {
+					oRaw, nRaw := d.GetChange("secondary_private_ip_addresses")
+					o, n := oRaw.(*schema.Set), nRaw.(*schema.Set)
+
+					if add := n.Difference(o); add.Len() > 0 {
+						input.PrivateIpAddresses = flex.ExpandStringSet(add)
+					}
+				}
+
 				_, err := conn.AssociateNatGatewayAddressWithContext(ctx, input)
 
 				if err != nil {
