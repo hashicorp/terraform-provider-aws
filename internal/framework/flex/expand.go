@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 )
 
 // TODO
@@ -120,66 +121,6 @@ func (visitor expandVisitor) visit(ctx context.Context, fieldName string, valFro
 	case basetypes.ListValuable:
 		diags := visitor.list(ctx, vFrom, valTo)
 		return fwdiag.DiagnosticsError(diags)
-		/*
-			v, diags := vFrom.ToListValue(ctx)
-			if err := fwdiag.DiagnosticsError(diags); err != nil {
-				return err
-			}
-			switch tElem := v.ElementType(ctx).(type) {
-			case basetypes.StringTypable:
-				switch kTo {
-				case reflect.Slice:
-					switch tSliceElem := valTo.Type().Elem(); tSliceElem.Kind() {
-					case reflect.String:
-						//
-						// types.List(OfString) -> []string.
-						//
-						valTo.Set(reflect.ValueOf(ExpandFrameworkStringValueList(ctx, v)))
-						return nil
-
-					case reflect.Ptr:
-						switch tSliceElem.Elem().Kind() {
-						case reflect.String:
-							//
-							// types.List(OfString) -> []*string.
-							//
-							valTo.Set(reflect.ValueOf(ExpandFrameworkStringList(ctx, v)))
-							return nil
-						}
-					}
-				}
-
-			case basetypes.ObjectTypable:
-				// TODO...
-				switch kTo {
-				case reflect.Ptr:
-					switch valTo.Type().Elem().Kind() {
-					case reflect.Struct:
-						if p, ok := tElem.ValueType(ctx).(types.ValueAsPtr); ok {
-							if elements := v.Elements(); len(elements) == 1 {
-								//
-								// types.List(OfObject) -> *struct.
-								//
-								from, diags := p.ValueAsPtr(ctx)
-								if err := fwdiag.DiagnosticsError(diags); err != nil {
-									return err
-								}
-								to := reflect.New(valTo.Type())
-								if err := walkStructFields(ctx, from, to, visitor); err != nil {
-									return err
-								}
-								valTo.Set(reflect.ValueOf(to))
-								return nil
-							}
-						}
-					}
-				}
-				//
-				// types.List(OfObject) -> ???.
-				//
-				return nil
-			}
-		*/
 
 	case basetypes.MapValuable:
 		v, diags := vFrom.ToMapValue(ctx)
@@ -268,6 +209,7 @@ func (visitor expandVisitor) bool(ctx context.Context, vFrom basetypes.BoolValua
 		//
 		vTo.SetBool(vFrom)
 		return diags
+
 	case reflect.Ptr:
 		switch vTo.Type().Elem().Kind() {
 		case reflect.Bool:
@@ -298,6 +240,7 @@ func (visitor expandVisitor) float64(ctx context.Context, vFrom basetypes.Float6
 		//
 		vTo.SetFloat(vFrom)
 		return diags
+
 	case reflect.Ptr:
 		switch vTo.Type().Elem().Kind() {
 		case reflect.Float32:
@@ -306,6 +249,7 @@ func (visitor expandVisitor) float64(ctx context.Context, vFrom basetypes.Float6
 			//
 			vTo.Set(reflect.ValueOf(aws.Float32(float32(vFrom))))
 			return diags
+
 		case reflect.Float64:
 			//
 			// types.Float32/types.Float64 -> *float64.
@@ -334,6 +278,7 @@ func (visitor expandVisitor) int64(ctx context.Context, vFrom basetypes.Int64Val
 		//
 		vTo.SetInt(vFrom)
 		return diags
+
 	case reflect.Ptr:
 		switch vTo.Type().Elem().Kind() {
 		case reflect.Int32:
@@ -342,6 +287,7 @@ func (visitor expandVisitor) int64(ctx context.Context, vFrom basetypes.Int64Val
 			//
 			vTo.Set(reflect.ValueOf(aws.Int32(int32(vFrom))))
 			return diags
+
 		case reflect.Int64:
 			//
 			// types.Int32/types.Int64 -> *int64.
@@ -370,6 +316,7 @@ func (visitor expandVisitor) string(ctx context.Context, vFrom basetypes.StringV
 		//
 		vTo.SetString(vFrom)
 		return diags
+
 	case reflect.Ptr:
 		switch vTo.Type().Elem().Kind() {
 		case reflect.String:
@@ -396,6 +343,9 @@ func (visitor expandVisitor) list(ctx context.Context, vFrom basetypes.ListValua
 	switch /*tElem := */ v.ElementType(ctx).(type) {
 	case basetypes.StringTypable:
 		return visitor.listOfString(ctx, v, vTo)
+
+	case basetypes.ObjectTypable:
+		return visitor.listOfObject(ctx, v, vTo)
 	}
 
 	diags.Append(visitor.newIncompatibleTypesError(ctx, vFrom, vTo))
@@ -403,7 +353,7 @@ func (visitor expandVisitor) list(ctx context.Context, vFrom basetypes.ListValua
 	return diags
 }
 
-// listOfString copies a Plugin Framework List(ish)OfString(ish) value to a compatible AWS API field.
+// listOfString copies a Plugin Framework ListOfString(ish) value to a compatible AWS API field.
 func (visitor expandVisitor) listOfString(ctx context.Context, vFrom basetypes.ListValue, vTo reflect.Value) diag.Diagnostics {
 	var diags diag.Diagnostics
 
@@ -425,6 +375,40 @@ func (visitor expandVisitor) listOfString(ctx context.Context, vFrom basetypes.L
 				//
 				vTo.Set(reflect.ValueOf(ExpandFrameworkStringList(ctx, vFrom)))
 				return diags
+			}
+		}
+	}
+
+	diags.Append(visitor.newIncompatibleTypesError(ctx, vFrom, vTo))
+
+	return diags
+}
+
+// listOfSObject copies a Plugin Framework ListOfObject(ish) value to a compatible AWS API field.
+func (visitor expandVisitor) listOfObject(ctx context.Context, vFrom basetypes.ListValue, vTo reflect.Value) diag.Diagnostics {
+	var diags diag.Diagnostics
+
+	switch vTo.Kind() {
+	case reflect.Ptr:
+		switch vTo.Type().Elem().Kind() {
+		case reflect.Struct:
+			if p, ok := vFrom.ElementType(ctx).ValueType(ctx).(types.ValueAsPtr); ok {
+				if elements := vFrom.Elements(); len(elements) == 1 {
+					//
+					// types.List(OfObject) -> *struct.
+					//
+					from, d := p.ValueAsPtr(ctx)
+					if d.HasError() {
+						diags.Append(d...)
+						return diags
+					}
+
+					to := reflect.New(vTo.Type())
+					if err := walkStructFields(ctx, from, to, visitor); err != nil {
+						diags.Append(diag.NewErrorDiagnostic("", err.Error()))
+						return diags
+					}
+				}
 			}
 		}
 	}
