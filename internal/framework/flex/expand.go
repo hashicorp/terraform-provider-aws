@@ -15,10 +15,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 )
 
-// TODO
-// TODO Add a post-func to tidy up.
-// TODO
-
 // Expand "expands" a resource's "business logic" data structure,
 // implemented using Terraform Plugin Framework data types, into
 // an AWS SDK for Go v2 API data structure.
@@ -306,7 +302,7 @@ func (visitor expandVisitor) list(ctx context.Context, vFrom basetypes.ListValua
 		return diags
 
 	case basetypes.ObjectTypable:
-		diags.Append(visitor.listOfObject(ctx, v, vTo)...)
+		diags.Append(visitor.listOfObject(ctx, vFrom, vTo)...)
 		return diags
 	}
 
@@ -344,36 +340,37 @@ func (visitor expandVisitor) listOfString(ctx context.Context, vFrom basetypes.L
 	return diags
 }
 
-// listOfSObject copies a Plugin Framework ListOfObject(ish) value to a compatible AWS API field.
-func (visitor expandVisitor) listOfObject(ctx context.Context, vFrom basetypes.ListValue, vTo reflect.Value) diag.Diagnostics {
+// listOfObject copies a Plugin Framework ListOfObject(ish) value to a compatible AWS API field.
+func (visitor expandVisitor) listOfObject(ctx context.Context, vFrom attr.Value, vTo reflect.Value) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	switch vTo.Kind() {
 	case reflect.Ptr:
-		switch vTo.Type().Elem().Kind() {
+		switch tElem := vTo.Type().Elem(); tElem.Kind() {
 		case reflect.Struct:
-			if p, ok := vFrom.ElementType(ctx).ValueType(ctx).(types.ValueAsPtr); ok {
-				if elements := vFrom.Elements(); len(elements) == 1 {
-					//
-					// types.List(OfObject) -> *struct.
-					//
-					from, d := p.ValueAsPtr(ctx)
-					diags.Append(d...)
-					if diags.HasError() {
-						return diags
-					}
-
-					to := reflect.New(vTo.Type())
-					diags.Append(walkStructFields(ctx, from, to, visitor)...)
-					if diags.HasError() {
-						return diags
-					}
+			if p, ok := vFrom.(types.ValueAsPtr); ok {
+				//
+				// types.List(OfObject) -> *struct.
+				//
+				from, d := p.ValueAsPtr(ctx)
+				diags.Append(d...)
+				if diags.HasError() {
+					return diags
 				}
+
+				to := reflect.New(tElem).Interface()
+				diags.Append(walkStructFields(ctx, from, to, visitor)...)
+				if diags.HasError() {
+					return diags
+				}
+
+				vTo.Set(reflect.ValueOf(to))
+				return diags
 			}
 		}
 	}
 
-	diags.Append(visitor.newIncompatibleListTypesError(ctx, vFrom, vTo))
+	diags.AddError("Incompatible types", fmt.Sprintf("listOfObject[%s] cannot be expanded to %s", vFrom.Type(ctx).(attr.TypeWithElementType).ElementType(), vTo.Kind()))
 	return diags
 }
 

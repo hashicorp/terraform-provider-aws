@@ -14,10 +14,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 )
 
-// TODO
-// TODO Add a post-func to tidy up.
-// TODO
-
 // Flatten "flattens" an AWS SDK for Go v2 API data structure into
 // a resource's "business logic" data structure, implemented using
 // Terraform Plugin Framework data types.
