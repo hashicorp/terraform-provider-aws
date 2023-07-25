@@ -34,15 +34,15 @@ data "aws_connect_quick_connect" "example" {
 
 ~> **NOTE:** `instance_id` and one of either `name` or `quick_connect_id` is required.
 
-The following arguments are supported:
+This argument supports the following arguments:
 
 * `quick_connect_id` - (Optional) Returns information on a specific Quick Connect by Quick Connect id
 * `instance_id` - (Required) Reference to the hosting Amazon Connect Instance
 * `name` - (Optional) Returns information on a specific Quick Connect by name
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all of the arguments above, the following attributes are exported:
+This data source exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the Quick Connect.
 * `description` - Description of the Quick Connect.

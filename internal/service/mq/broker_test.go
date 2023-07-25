@@ -1551,7 +1551,7 @@ resource "aws_mq_broker" "test" {
 `, rName, version, cfgName, cfgBody)
 }
 
-func testAccBrokerConfig_allFieldsCustomVPC(rName, version, cfgName, cfgBody, tz string) string {
+func testAccBrokerConfig_baseCustomVPC(rName string) string {
 	return acctest.ConfigCompose(acctest.ConfigVPCWithSubnets(rName, 2), fmt.Sprintf(`
 resource "aws_internet_gateway" "test" {
   vpc_id = aws_vpc.test.id
@@ -1591,7 +1591,11 @@ resource "aws_security_group" "test" {
     Name = %[1]q
   }
 }
+`, rName))
+}
 
+func testAccBrokerConfig_allFieldsCustomVPC(rName, version, cfgName, cfgBody, tz string) string {
+	return acctest.ConfigCompose(testAccBrokerConfig_baseCustomVPC(rName), fmt.Sprintf(`
 resource "aws_mq_configuration" "test" {
   name           = %[3]q
   engine_type    = "ActiveMQ"

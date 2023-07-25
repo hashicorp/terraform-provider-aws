@@ -40,7 +40,7 @@ data "aws_iam_session_context" "example" {
 
 ~> If `arn` is a non-role ARN, Terraform gives no error and `issuer_arn` will be equal to the `arn` value. For STS assumed-role ARNs, Terraform gives an error if the identified IAM role does not exist.
 
-## Attributes Reference
+## Attribute Reference
 
 ~> With the exception of `issuer_arn`, the attributes will not be populated unless the `arn` corresponds to an STS assumed role.
 

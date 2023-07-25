@@ -1,0 +1,227 @@
+name: Process pull_request_target Events
+
+on:
+  pull_request_target:
+    types:
+      - assigned
+      - closed
+      - edited
+      - labeled
+      - opened
+      - ready_for_review
+
+jobs:
+  community_check:
+    name: 'Community Check'
+    uses: ./.github/workflows/community-check.yml
+    secrets: inherit
+    with:
+      # This is a ternary that sets the variable to the assigned user's login on assigned events,
+      # and otherwise sets it to the username of the pull request's author. For more information:
+      # https://docs.github.com/en/actions/learn-github-actions/expressions#example
+      username: ${{ github.event.action == 'assigned' && github.event.assignee.login || github.event.pull_request.user.login }}
+
+  labeler:
+    name: 'Automation Labeler'
+    needs: community_check
+    runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ github.token }}
+      PR_URL: ${{ github.event.pull_request.html_url }}
+    steps:
+      - name: 'Add needs-triage for non-maintainers'
+        if: github.event.action == 'opened' && needs.community_check.outputs.maintainer == 'false'
+        run: gh pr edit ${{ env.PR_URL }} --add-label needs-triage
+
+      - name: 'Add prioritized to pull requests authored by or assigned to maintainers'
+        # This conditional is basically an exact copy of an example provided by GitHub:
+        # https://docs.github.com/en/actions/learn-github-actions/expressions#example-matching-an-array-of-strings
+        if: contains(fromJSON('["opened", "assigned"]'), github.event.action) && needs.community_check.outputs.maintainer == 'true'
+        run: gh pr edit ${{ env.PR_URL }} --add-label prioritized
+
+      - name: 'Add partner to partner pull requests'
+        if: github.event.action == 'opened' && needs.community_check.outputs.partner == 'true'
+        run: gh pr edit ${{ env.PR_URL }} --add-label partner
+
+      - name: 'Add external-maintainer to external maintainer pull requests'
+        if: github.event.action == 'opened' && needs.community_check.outputs.core_contributor == 'true'
+        run: gh pr edit ${{ env.PR_URL }} --add-label external-maintainer
+
+      - name: 'Add prioritized to regressions'
+        if: github.event.label.name == 'regression'
+        run: gh pr edit ${{ env.PR_URL }} --add-label prioritized
+
+      - name: 'Remove unnecessary labels on closure'
+        if: github.event.action == 'closed'
+        run: gh pr edit ${{ env.PR_URL }} --remove-label needs-triage,waiting-response
+
+  service_labeler:
+    name: 'Service Labeler'
+    if: contains(fromJSON('["opened", "edited"]'), github.event.action)
+    runs-on: ubuntu-latest
+    steps:
+      - name: 'Checkout Repo'
+        uses: actions/checkout@c85c95e3d7251135ab7dc9ce3241c5835cc595a9
+
+      - name: 'Apply Labels'
+        uses: actions/labeler@ba790c862c380240c6d5e7427be5ace9a05c754b # v4.0.3
+        with:
+          configuration-path: .github/labeler-pr-triage.yml
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+
+  size_labeler:
+    name: 'Size Labeler'
+    if: contains(fromJSON('["opened", "edited"]'), github.event.action)
+    runs-on: ubuntu-latest
+    steps:
+      - name: 'Apply Size Labels'
+        uses: codelytv/pr-size-labeler@54ef36785e9f4cb5ecf1949cfc9b00dbb621d761 # v1.8.1
+        with:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          xs_label: 'size/XS'
+          xs_max_size: '30'
+          s_label: 'size/S'
+          s_max_size: '60'
+          m_label: 'size/M'
+          m_max_size: '150'
+          l_label: 'size/L'
+          l_max_size: '300'
+          xl_label: 'size/XL'
+          message_if_xl: ''
+
+  add_to_project:
+    name: 'Add to Project'
+    runs-on: ubuntu-latest
+    needs: community_check
+    env:
+      GH_TOKEN: ${{ secrets.PROJECT_SCOPED_TOKEN }}
+      # Some gh project calls take the project's ID, some take the project's number
+      PROJECT_ID: "PVT_kwDOAAuecM4AF-7h"
+      PROJECT_NUMBER: "196"
+      STATUS_FIELD_ID: "PVTSSF_lADOAAuecM4AF-7hzgDcsQA"
+      VIEW_FIELD_ID: "PVTSSF_lADOAAuecM4AF-7hzgMRB34"
+      ITEM_URL: ${{ github.event.pull_request.html_url }}
+    steps:
+      - name: 'Ready Maintainer Pull Requests'
+        # This isn't pretty, but it ensures that we don't accidentally set the status on accident
+        if: contains(fromJSON('["opened", "ready_for_review"]'), github.event.action) && needs.community_check.outputs.maintainer == 'true' && !github.event.pull_request.draft
+        run: |
+          # In order to update the item's Status field, we need to capture the project item id from the output
+          PROJECT_ITEM_ID=$(gh project item-add ${{ env.PROJECT_NUMBER }} --owner "hashicorp" --url ${{ env.ITEM_URL }} --format json | jq '.id')
+          gh project item-edit --id "$PROJECT_ITEM_ID" --project-id ${{ env.PROJECT_ID }} --field-id ${{ env.STATUS_FIELD_ID }} --single-select-option-id ${{ vars.team_project_status_maintainer_pr }}
+          gh project item-edit --id "$PROJECT_ITEM_ID" --project-id ${{ env.PROJECT_ID }} --field-id ${{ env.VIEW_FIELD_ID }} --single-select-option-id ${{ vars.team_project_view_working_board }}
+
+      - name: 'Assigned to Maintainers'
+        if: github.event.action == 'assigned' && needs.community_check.outputs.maintainer == 'true'
+        run: |
+          PROJECT_ITEM_ID=$(gh project item-add ${{ env.PROJECT_NUMBER }} --owner "hashicorp" --url ${{ env.ITEM_URL }} --format json | jq '.id')
+          gh project item-edit --id "$PROJECT_ITEM_ID" --project-id ${{ env.PROJECT_ID }} --field-id ${{ env.STATUS_FIELD_ID }} --single-select-option-id ${{ vars.team_project_status_in_progress }}
+          gh project item-edit --id "$PROJECT_ITEM_ID" --project-id ${{ env.PROJECT_ID }} --field-id ${{ env.VIEW_FIELD_ID }} --single-select-option-id ${{ vars.team_project_view_working_board }}
+
+      - name: 'Ready Partner Pull Requests'
+        if: contains(github.event.pull_request.labels.*.name, 'partner') && !github.event.pull_request.draft
+        run: |
+          PROJECT_ITEM_ID=$(gh project item-add ${{ env.PROJECT_NUMBER }} --owner "hashicorp" --url ${{ env.ITEM_URL }} --format json | jq '.id')
+          gh project item-edit --id "$PROJECT_ITEM_ID" --project-id ${{ env.PROJECT_ID }} --field-id ${{ env.VIEW_FIELD_ID }} --single-select-option-id ${{ vars.team_project_view_partner_contribution }}
+
+      - name: 'Ready External Maintainer Pull Requests'
+        if: contains(github.event.pull_request.labels.*.name, 'external-maintainer') && !github.event.pull_request.draft
+        run: |
+          PROJECT_ITEM_ID=$(gh project item-add ${{ env.PROJECT_NUMBER }} --owner "hashicorp" --url ${{ env.ITEM_URL }} --format json | jq '.id')
+          gh project item-edit --id "$PROJECT_ITEM_ID" --project-id ${{ env.PROJECT_ID }} --field-id ${{ env.VIEW_FIELD_ID }} --single-select-option-id ${{ vars.team_project_view_external_maintainer }}
+
+      - name: 'Labeled Prioritized or Regression'
+        if: contains(fromJSON('["prioritized", "regression"]'), github.event.label.name)
+        run: |
+          PROJECT_ITEM_ID=$(gh project item-add ${{ env.PROJECT_NUMBER }} --owner "hashicorp" --url ${{ env.ITEM_URL }} --format json | jq '.id')
+          gh project item-edit --id "$PROJECT_ITEM_ID" --project-id ${{ env.PROJECT_ID }} --field-id ${{ env.VIEW_FIELD_ID }} --single-select-option-id ${{ vars.team_project_view_working_board }}
+
+      - name: 'Labeled Engineering Initiative'
+        if: github.event.label.name == 'engineering-initiative'
+        run: |
+          PROJECT_ITEM_ID=$(gh project item-add ${{ env.PROJECT_NUMBER }} --owner "hashicorp" --url ${{ env.ITEM_URL }} --format json | jq '.id')
+          gh project item-edit --id "$PROJECT_ITEM_ID" --project-id ${{ env.PROJECT_ID }} --field-id ${{ env.VIEW_FIELD_ID }} --single-select-option-id ${{ vars.team_project_view_engineering_initiative }}
+
+  add_to_milestone:
+    name: 'Add to Milestone'
+    if: github.event.action == 'closed' && github.event.pull_request.merged
+    runs-on: ubuntu-latest
+    steps:
+      - name: 'Checkout'
+        uses: actions/checkout@c85c95e3d7251135ab7dc9ce3241c5835cc595a9
+        with:
+          ref: ${{ github.event.pull_request.base.ref }}
+
+      - name: 'Get Current Milestone'
+        id: get-current-milestone
+        run: |
+            echo "current_milestone=v$(head -1 CHANGELOG.md | cut -d " " -f 2)" >> "$GITHUB_OUTPUT"
+
+      - name: 'Get Milestone ID'
+        id: get-milestone-id
+        run: |
+          echo "milestone_id=$(curl -H "Authorization: Bearer ${{secrets.GITHUB_TOKEN}}" https://api.github.com/repos/${{ github.repository_owner }}/${{ github.event.repository.name }}/milestones | jq 'map(select(.title == "${{ steps.get-current-milestone.outputs.current_milestone }}"))[0].number')" >> "$GITHUB_OUTPUT"
+
+      - name: 'Add Pull Request and Linked Issues to Milestone'
+        uses: breathingdust/current-milestone-action@e74e4e4baaa22653aeef90db0c7894db093af076
+        with:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          pull_number: ${{ github.event.pull_request.number }}
+          milestone_number: ${{ steps.get-milestone-id.outputs.milestone_id }}
+
+  community_note:
+    name: 'Community Note'
+    if: github.event.action == 'opened'
+    runs-on: ubuntu-latest
+    steps:
+      - name: 'Add community note to new Pull Requests'
+        uses: peter-evans/create-or-update-comment@c6c9a1a66007646a28c153e2a8580a5bad27bcfa
+        with:
+          issue-number: ${{ github.event.pull_request.number }}
+          body: |
+            # Community Note
+
+            **Voting for Prioritization**
+
+            * Please vote on this pull request by adding a 👍 [reaction](https://blog.github.com/2016-03-10-add-reactions-to-pull-requests-issues-and-comments/) to the original post to help the community and maintainers prioritize this pull request.
+            * Please see our [prioritization guide](https://hashicorp.github.io/terraform-provider-aws/prioritization/) for information on how we prioritize.
+            * Please **do not** leave "+1" or other comments that do not add relevant new information or questions, they generate extra noise for issue followers and do not help prioritize the request.
+
+            **For Submitters**
+
+            * Review the [contribution guide](https://hashicorp.github.io/terraform-provider-aws/) relating to the type of change you are making to ensure all of the necessary steps have been taken.
+            * For new resources and data sources, use [skaff](https://hashicorp.github.io/terraform-provider-aws/skaff/) to generate scaffolding with comments detailing common expectations.
+            * Whether or not the branch has been rebased will **not** impact prioritization, but doing so is always a welcome surprise.
+
+  first_contribution_note:
+    name: 'New Contributor Note'
+    if: github.event.action == 'opened'
+    runs-on: ubuntu-latest
+    steps:
+      - name: 'Add comment to add helpful context for new contributors'
+        uses: actions/first-interaction@v1.1.1
+        with:
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+          pr-message: |-
+            Welcome @${{github.actor}} :wave:
+
+            It looks like this is your first Pull Request submission to the [Terraform AWS Provider](https://github.com/hashicorp/terraform-provider-aws)! If you haven’t already done so please make sure you have checked out our [CONTRIBUTOR](https://hashicorp.github.io/terraform-provider-aws/) guide and [FAQ](https://hashicorp.github.io/terraform-provider-aws/faq/) to make sure your contribution is adhering to best practice and has all the necessary elements in place for a successful approval.
+
+            Also take a look at our [FAQ](https://hashicorp.github.io/terraform-provider-aws/faq/) which details how we prioritize Pull Requests for inclusion.
+
+            Thanks again, and welcome to the community! :smiley:
+
+  permissions_check:
+    name: 'Verify Maintainers Editable'
+    needs: community_check
+    if: github.event.action == 'opened' && needs.community_check.outputs.maintainer == 'false' && !github.event.pull_request.maintainer_can_modify
+    runs-on: ubuntu-latest
+    steps:
+      - name: 'Comment if maintainers cannot edit'
+        uses: peter-evans/create-or-update-comment@c6c9a1a66007646a28c153e2a8580a5bad27bcfa
+        with:
+          issue-number: ${{ github.event.pull_request.number }}
+          body: |
+            Hey @${{ github.actor }} :wave: Thank you very much for your contribution! At times, our maintainers need to make direct edits to pull requests in order to help get it ready to be merged. Your current settings do not allow maintainers to make such edits. To help facilitate this, update your pull request to allow such edits as described in GitHub's [Allowing changes to a pull request branch created from a fork][1] documentation. (If you're using a fork owned by an organization, your organization may not allow you to change this setting. If that is the case, let us know.)
+
+            [1]: https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/working-with-forks/allowing-changes-to-a-pull-request-branch-created-from-a-fork

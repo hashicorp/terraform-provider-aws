@@ -26,20 +26,29 @@ resource "aws_pinpoint_app" "app" {}
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `application_id` - (Required) The application ID.
 * `api_key` - (Required) Platform credential API key from Google.
 * `enabled` - (Optional) Whether the channel is enabled or disabled. Defaults to `true`.
 
-## Attributes Reference
+## Attribute Reference
 
-No additional attributes are exported.
+This resource exports no additional attributes.
 
 ## Import
 
-Pinpoint GCM Channel can be imported using the `application-id`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Pinpoint GCM Channel using the `application-id`. For example:
 
+```terraform
+import {
+  to = aws_pinpoint_gcm_channel.gcm
+  id = "application-id"
+}
 ```
-$ terraform import aws_pinpoint_gcm_channel.gcm application-id
+
+Using `terraform import`, import Pinpoint GCM Channel using the `application-id`. For example:
+
+```console
+% terraform import aws_pinpoint_gcm_channel.gcm application-id
 ```

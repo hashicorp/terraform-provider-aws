@@ -509,9 +509,9 @@ The `condition_on_value` configuration blocks supports the following arguments:
 * `string_list_value` - (Optional) A list of strings.
 * `string` - (Optional) A string, such as "department".
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the Data Source.
 * `created_at` - The Unix timestamp of when the Data Source was created.
@@ -532,8 +532,17 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Kendra Data Source can be imported using the unique identifiers of the data_source and index separated by a slash (`/`) e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Kendra Data Source using the unique identifiers of the data_source and index separated by a slash (`/`). For example:
 
+```terraform
+import {
+  to = aws_kendra_data_source.example
+  id = "1045d08d-66ef-4882-b3ed-dfb7df183e90/b34dfdf7-1f2b-4704-9581-79e00296845f"
+}
 ```
-$ terraform import aws_kendra_data_source.example 1045d08d-66ef-4882-b3ed-dfb7df183e90/b34dfdf7-1f2b-4704-9581-79e00296845f
+
+Using `terraform import`, import Kendra Data Source using the unique identifiers of the data_source and index separated by a slash (`/`). For example:
+
+```console
+% terraform import aws_kendra_data_source.example 1045d08d-66ef-4882-b3ed-dfb7df183e90/b34dfdf7-1f2b-4704-9581-79e00296845f
 ```
