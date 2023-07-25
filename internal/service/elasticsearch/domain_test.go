@@ -12,9 +12,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
-	"github.com/aws/aws-sdk-go/service/elasticsearchservice"
 	elasticsearch "github.com/aws/aws-sdk-go/service/elasticsearchservice"
-	"github.com/aws/aws-sdk-go/service/opensearchservice"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -33,10 +31,10 @@ func TestEBSVolumeTypePermitsIopsInput(t *testing.T) {
 		want       bool
 	}{
 		{"empty", "", false},
-		{"gp2", elasticsearchservice.VolumeTypeGp2, false},
-		{"gp3", elasticsearchservice.VolumeTypeGp3, true},
-		{"io1", elasticsearchservice.VolumeTypeIo1, true},
-		{"standard", elasticsearchservice.VolumeTypeStandard, false},
+		{"gp2", elasticsearch.VolumeTypeGp2, false},
+		{"gp3", elasticsearch.VolumeTypeGp3, true},
+		{"io1", elasticsearch.VolumeTypeIo1, true},
+		{"standard", elasticsearch.VolumeTypeStandard, false},
 	}
 	for _, testCase := range testCases {
 		testCase := testCase
@@ -59,10 +57,10 @@ func TestEBSVolumeTypePermitsThroughputInput(t *testing.T) {
 		want       bool
 	}{
 		{"empty", "", false},
-		{"gp2", elasticsearchservice.VolumeTypeGp2, false},
-		{"gp3", elasticsearchservice.VolumeTypeGp3, true},
-		{"io1", elasticsearchservice.VolumeTypeIo1, false},
-		{"standard", elasticsearchservice.VolumeTypeStandard, false},
+		{"gp2", elasticsearch.VolumeTypeGp2, false},
+		{"gp3", elasticsearch.VolumeTypeGp3, true},
+		{"io1", elasticsearch.VolumeTypeIo1, false},
+		{"standard", elasticsearch.VolumeTypeStandard, false},
 	}
 	for _, testCase := range testCases {
 		testCase := testCase
@@ -1499,7 +1497,7 @@ func TestAccElasticsearchDomain_VolumeType_gp3ToGP2(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckIAMServiceLinkedRole(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, opensearchservice.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, elasticsearch.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDomainDestroy(ctx),
 		Steps: []resource.TestStep{
