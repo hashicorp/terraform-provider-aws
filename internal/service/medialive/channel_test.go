@@ -1851,7 +1851,7 @@ resource "aws_medialive_channel" "test" {
     }
 
     audio_descriptions {
-      name = "test-audio-name"
+      name                = "test-audio-name"
       audio_selector_name = "test-audio-selector"
     }
 
@@ -1861,11 +1861,11 @@ resource "aws_medialive_channel" "test" {
     }
 
     caption_descriptions {
-      name = "test-caption-name"
+      name                  = "test-caption-name"
       caption_selector_name = aws_medialive_input.test.name
 
       destination_settings {
-        dvb_sub_destination_settings{
+        dvb_sub_destination_settings {
           font_resolution = %[2]d
         }
       }
@@ -1881,9 +1881,9 @@ resource "aws_medialive_channel" "test" {
       }
 
       outputs {
-        output_name             = "test-output-name"
-        video_description_name  = "test-video-name"
-        audio_description_names = ["test-audio-name"]
+        output_name               = "test-output-name"
+        video_description_name    = "test-video-name"
+        audio_description_names   = ["test-audio-name"]
         caption_description_names = ["test-caption-name"]
         output_settings {
           archive_output_settings {
