@@ -2223,14 +2223,15 @@ resource "aws_elasticsearch_domain" "test" {
 func testAccDomainConfig_clusterEBSVolumeGP3DefaultIopsThroughput(rName string, volumeSize int) string {
 	return fmt.Sprintf(`
 resource "aws_elasticsearch_domain" "test" {
-  domain_name = %[1]q
+  domain_name           = %[1]q
   elasticsearch_version = "7.10"
+
   ebs_options {
     ebs_enabled = true
     volume_size = %[2]d
     volume_type = "gp3"
-
   }
+
   cluster_config {
     instance_type = "t3.small.elasticsearch"
   }
@@ -2241,13 +2242,15 @@ resource "aws_elasticsearch_domain" "test" {
 func testAccDomainConfig_clusterEBSVolumeGP2(rName string, volumeSize int) string {
 	return fmt.Sprintf(`
 resource "aws_elasticsearch_domain" "test" {
-  domain_name = %[1]q
+  domain_name           = %[1]q
   elasticsearch_version = "7.10"
+
   ebs_options {
     ebs_enabled = true
     volume_size = %[2]d
     volume_type = "gp2"
   }
+
   cluster_config {
     instance_type = "t3.small.elasticsearch"
   }
