@@ -71,7 +71,7 @@ func TestAccVPCLatticeServiceNetworkVPCAssociation_arn(t *testing.T) {
 		CheckDestroy:             testAccCheckServiceNetworkVPCAssociationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccServiceNetworkVPCAssociationConfig_basic(rName),
+				Config: testAccServiceNetworkVPCAssociationConfig_arn(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceNetworkVPCAssociationExists(ctx, resourceName, &servicenetworkvpcasc),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "vpc-lattice", regexp.MustCompile("servicenetworkvpcassociation/.+$")),
