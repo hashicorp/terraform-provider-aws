@@ -126,7 +126,7 @@ func (visitor expandVisitor) visit(ctx context.Context, fieldName string, valFro
 		diags.Append(visitor.string(ctx, vFrom, vTo)...)
 		return diags
 
-		// Aggregate types.
+	// Aggregate types.
 	case basetypes.ListValuable:
 		diags.Append(visitor.list(ctx, vFrom, vTo)...)
 		return diags

@@ -104,10 +104,6 @@ func (v ObjectValueOf[T]) Equal(o attr.Value) bool {
 	return v.ObjectValue.Equal(other.ObjectValue)
 }
 
-type ValueAsPtr interface {
-	ValueAsPtr(context.Context) (any, diag.Diagnostics)
-}
-
 func (v ObjectValueOf[T]) Type(ctx context.Context) attr.Type {
 	return NewObjectTypeOf[T](ctx)
 }
