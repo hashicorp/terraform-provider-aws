@@ -59,6 +59,8 @@ github.com/aws/aws-sdk-go-v2/service/docdbelastic v1.1.13 h1:mWxg2G4k946JcCxmArv
 github.com/aws/aws-sdk-go-v2/service/docdbelastic v1.1.13/go.mod h1:z1GUIssmpbun+BSKm/P2e6nLvb1ktjmCHxSWz/h+L08=
 github.com/aws/aws-sdk-go-v2/service/ec2 v1.105.1 h1:wqbUi9viWc1M5ycr75LnFUIOvWgE3EDFvExtGPF6DHI=
 github.com/aws/aws-sdk-go-v2/service/ec2 v1.105.1/go.mod h1:/0btVmMZJ0sn9JQ2N96XszlQNeRCJhhXOS/sPZgDeew=
+github.com/aws/aws-sdk-go-v2/service/emrserverless v1.9.0 h1:V9ILqhtRdRhQ6o/wvEM6AlbADfI/9HsyiVvlt2Y7ZVg=
+github.com/aws/aws-sdk-go-v2/service/emrserverless v1.9.0/go.mod h1:qaOZV2504UJNXqWUXQASONHDmU7QZf8y8/n5d7Y4abk=
 github.com/aws/aws-sdk-go-v2/service/finspace v1.10.3 h1:+P6NkW7sBycavrx5GeQ6Nv6MCNaGG3U40T6xtGsnU34=
 github.com/aws/aws-sdk-go-v2/service/finspace v1.10.3/go.mod h1:WrKUw3XuTqYKWMIZenAgK9X2pSgGDK5UjXES+2ZKCAo=
 github.com/aws/aws-sdk-go-v2/service/fis v1.14.13 h1:8LtPeIL1B4vLgEMbHyL4PF4uHNjCFNZEo7GBv/pTF90=
