@@ -1821,13 +1821,13 @@ func testAccCheckComputeEnvironmentExists(ctx context.Context, n string, v *batc
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).BatchConn(ctx)
 
-		computeEnvironment, err := tfbatch.FindComputeEnvironmentDetailByName(ctx, conn, rs.Primary.ID)
+		output, err := tfbatch.FindComputeEnvironmentDetailByName(ctx, conn, rs.Primary.ID)
 
 		if err != nil {
 			return err
 		}
 
-		*v = *computeEnvironment
+		*v = *output
 
 		return nil
 	}
