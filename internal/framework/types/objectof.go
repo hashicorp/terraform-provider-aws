@@ -41,15 +41,17 @@ func (t ObjectTypeOf[T]) String() string {
 }
 
 func (t ObjectTypeOf[T]) ValueFromObject(ctx context.Context, in basetypes.ObjectValue) (basetypes.ObjectValuable, diag.Diagnostics) {
+	var diags diag.Diagnostics
+
 	if in.IsNull() {
-		return NewObjectValueOfNull[T](ctx), nil
+		return NewObjectValueOfNull[T](ctx), diags
 	}
 	if in.IsUnknown() {
-		return NewObjectValueOfUnknown[T](ctx), nil
+		return NewObjectValueOfUnknown[T](ctx), diags
 	}
 
-	objectValue, diags := basetypes.NewObjectValue(AttributeTypesMust[T](ctx), in.Attributes())
-
+	objectValue, d := basetypes.NewObjectValue(AttributeTypesMust[T](ctx), in.Attributes())
+	diags.Append(d...)
 	if diags.HasError() {
 		return NewObjectValueOfUnknown[T](ctx), diags
 	}
@@ -58,7 +60,7 @@ func (t ObjectTypeOf[T]) ValueFromObject(ctx context.Context, in basetypes.Objec
 		ObjectValue: objectValue,
 	}
 
-	return value, nil
+	return value, diags
 }
 
 func (t ObjectTypeOf[T]) ValueFromTerraform(ctx context.Context, in tftypes.Value) (attr.Value, error) {
@@ -109,8 +111,10 @@ func (v ObjectValueOf[T]) Type(ctx context.Context) attr.Type {
 }
 
 func (v ObjectValueOf[T]) ValueAsPtr(ctx context.Context) (any, diag.Diagnostics) {
+	var diags diag.Diagnostics
+
 	target := new(T)
-	diags := v.ObjectValue.As(ctx, target, basetypes.ObjectAsOptions{})
+	diags.Append(v.ObjectValue.As(ctx, target, basetypes.ObjectAsOptions{})...)
 
 	return target, diags
 }

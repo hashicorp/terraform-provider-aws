@@ -41,15 +41,17 @@ func (t ListNestedObjectTypeOf[T]) String() string {
 }
 
 func (t ListNestedObjectTypeOf[T]) ValueFromList(ctx context.Context, in basetypes.ListValue) (basetypes.ListValuable, diag.Diagnostics) {
+	var diags diag.Diagnostics
+
 	if in.IsNull() {
-		return NewListNestedObjectValueOfNull[T](ctx), nil
+		return NewListNestedObjectValueOfNull[T](ctx), diags
 	}
 	if in.IsUnknown() {
-		return NewListNestedObjectValueOfUnknown[T](ctx), nil
+		return NewListNestedObjectValueOfUnknown[T](ctx), diags
 	}
 
-	listValue, diags := basetypes.NewListValue(NewObjectTypeOf[T](ctx), in.Elements())
-
+	listValue, d := basetypes.NewListValue(NewObjectTypeOf[T](ctx), in.Elements())
+	diags.Append(d...)
 	if diags.HasError() {
 		return NewListNestedObjectValueOfUnknown[T](ctx), diags
 	}
@@ -58,7 +60,7 @@ func (t ListNestedObjectTypeOf[T]) ValueFromList(ctx context.Context, in basetyp
 		ListValue: listValue,
 	}
 
-	return value, nil
+	return value, diags
 }
 
 func (t ListNestedObjectTypeOf[T]) ValueFromTerraform(ctx context.Context, in tftypes.Value) (attr.Value, error) {
@@ -106,6 +108,21 @@ func (v ListNestedObjectValueOf[T]) Equal(o attr.Value) bool {
 
 func (v ListNestedObjectValueOf[T]) Type(ctx context.Context) attr.Type {
 	return NewListNestedObjectTypeOf[T](ctx)
+}
+
+func (v ListNestedObjectValueOf[T]) ValueAsPtr(ctx context.Context) (any, diag.Diagnostics) {
+	var diags diag.Diagnostics
+
+	elements := v.ListValue.Elements()
+	switch n := len(elements); n {
+	case 0:
+		return nil, diags
+	case 1:
+		return elements[0].(ValueAsPtr).ValueAsPtr(ctx)
+	default:
+		diags.Append(diag.NewErrorDiagnostic("Invalid list", fmt.Sprintf("too many elements: wanted 1, got %d", n)))
+		return nil, diags
+	}
 }
 
 func NewListNestedObjectValueOfNull[T any](ctx context.Context) ListNestedObjectValueOf[T] {
