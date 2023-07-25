@@ -54,10 +54,6 @@ func ResourceJob() *schema.Resource {
 							Optional: true,
 							Default:  "glueetl",
 						},
-						"script_location": {
-							Type:     schema.TypeString,
-							Required: true,
-						},
 						"python_version": {
 							Type:         schema.TypeString,
 							Optional:     true,
@@ -69,6 +65,10 @@ func ResourceJob() *schema.Resource {
 							Optional:     true,
 							Computed:     true,
 							ValidateFunc: validation.StringInSlice([]string{"Ray2.4"}, true),
+						},
+						"script_location": {
+							Type:     schema.TypeString,
+							Required: true,
 						},
 					},
 				},
@@ -86,11 +86,6 @@ func ResourceJob() *schema.Resource {
 			"description": {
 				Type:     schema.TypeString,
 				Optional: true,
-			},
-			"glue_version": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
 			},
 			"execution_class": {
 				Type:         schema.TypeString,
@@ -112,6 +107,11 @@ func ResourceJob() *schema.Resource {
 						},
 					},
 				},
+			},
+			"glue_version": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
 			},
 			"max_capacity": {
 				Type:          schema.TypeFloat,
@@ -253,7 +253,6 @@ func resourceJobCreate(ctx context.Context, d *schema.ResourceData, meta interfa
 		input.WorkerType = aws.String(v.(string))
 	}
 
-	log.Printf("[DEBUG] Creating Glue Job: %s", input)
 	output, err := conn.CreateJobWithContext(ctx, input)
 
 	if err != nil {
@@ -391,7 +390,6 @@ func resourceJobUpdate(ctx context.Context, d *schema.ResourceData, meta interfa
 			JobUpdate: jobUpdate,
 		}
 
-		log.Printf("[DEBUG] Updating Glue Job: %s", input)
 		_, err := conn.UpdateJobWithContext(ctx, input)
 
 		if err != nil {
