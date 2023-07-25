@@ -8,8 +8,8 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/aws/aws-sdk-go-v2/service/signer"
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/signer"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -31,7 +31,7 @@ func TestAccSignerSigningJob_basic(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheckSingerSigningProfile(ctx, t, "AWSLambda-SHA384-ECDSA")
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, signer.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, signer.ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             nil,
 		Steps: []resource.TestStep{
@@ -114,13 +114,13 @@ func testAccCheckSigningJobExists(ctx context.Context, res string, job *signer.D
 			return fmt.Errorf("Signing job with that ID does not exist")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SignerConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SignerClient(ctx)
 
 		params := &signer.DescribeSigningJobInput{
 			JobId: aws.String(rs.Primary.ID),
 		}
 
-		getJob, err := conn.DescribeSigningJobWithContext(ctx, params)
+		getJob, err := conn.DescribeSigningJob(ctx, params)
 		if err != nil {
 			return err
 		}

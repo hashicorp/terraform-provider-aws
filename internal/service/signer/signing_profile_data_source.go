@@ -6,8 +6,8 @@ package signer
 import (
 	"context"
 
+	"github.com/aws/aws-sdk-go-v2/service/signer"
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/signer"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -92,11 +92,11 @@ func DataSourceSigningProfile() *schema.Resource {
 
 func dataSourceSigningProfileRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SignerConn(ctx)
+	conn := meta.(*conns.AWSClient).SignerClient(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	profileName := d.Get("name").(string)
-	signingProfileOutput, err := conn.GetSigningProfileWithContext(ctx, &signer.GetSigningProfileInput{
+	signingProfileOutput, err := conn.GetSigningProfile(ctx, &signer.GetSigningProfileInput{
 		ProfileName: aws.String(profileName),
 	})
 

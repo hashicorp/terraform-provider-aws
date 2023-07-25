@@ -44,6 +44,7 @@ import (
 	scheduler_sdkv2 "github.com/aws/aws-sdk-go-v2/service/scheduler"
 	securitylake_sdkv2 "github.com/aws/aws-sdk-go-v2/service/securitylake"
 	sesv2_sdkv2 "github.com/aws/aws-sdk-go-v2/service/sesv2"
+	signer_sdkv2 "github.com/aws/aws-sdk-go-v2/service/signer"
 	ssm_sdkv2 "github.com/aws/aws-sdk-go-v2/service/ssm"
 	ssmcontacts_sdkv2 "github.com/aws/aws-sdk-go-v2/service/ssmcontacts"
 	ssmincidents_sdkv2 "github.com/aws/aws-sdk-go-v2/service/ssmincidents"
@@ -1000,6 +1001,10 @@ func (c *AWSClient) ShieldConn(ctx context.Context) *shield_sdkv1.Shield {
 
 func (c *AWSClient) SignerConn(ctx context.Context) *signer_sdkv1.Signer {
 	return errs.Must(conn[*signer_sdkv1.Signer](ctx, c, names.Signer))
+}
+
+func (c *AWSClient) SignerClient(ctx context.Context) *signer_sdkv2.Client {
+	return errs.Must(client[*signer_sdkv2.Client](ctx, c, names.Signer))
 }
 
 func (c *AWSClient) SimpleDBConn(ctx context.Context) *simpledb_sdkv1.SimpleDB {
