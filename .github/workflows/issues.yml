@@ -73,26 +73,26 @@ jobs:
       - name: 'Maintainer Issues'
         if: github.event.action == 'opened' && needs.community_check.outputs.maintainer == 'true'
         run: |
-          PROJECT_ITEM_ID=$(gh project item-add ${{ env.PROJECT_NUMBER }} --owner "hashicorp" --url ${{ env.ITEM_URL }} | jq '.id')
+          PROJECT_ITEM_ID=$(gh project item-add ${{ env.PROJECT_NUMBER }} --owner "hashicorp" --url ${{ env.ITEM_URL }} --format json | jq '.id')
           gh project item-edit --id "$PROJECT_ITEM_ID" --project-id ${{ env.PROJECT_ID }} --field-id ${{ env.VIEW_FIELD_ID }} --single-select-option-id ${{ vars.team_project_view_working_board }}
 
       - name: 'Assigned to Maintainer'
         if: github.event.action == 'assigned' && needs.community_check.outputs.maintainer == 'true'
         run: |
-          PROJECT_ITEM_ID=$(gh project item-add ${{ env.PROJECT_NUMBER }} --owner "hashicorp" --url ${{ env.ITEM_URL }} | jq '.id')
+          PROJECT_ITEM_ID=$(gh project item-add ${{ env.PROJECT_NUMBER }} --owner "hashicorp" --url ${{ env.ITEM_URL }} --format json | jq '.id')
           gh project item-edit --id "$PROJECT_ITEM_ID" --project-id ${{ env.PROJECT_ID }} --field-id ${{ env.STATUS_FIELD_ID }} --single-select-option-id ${{ vars.team_project_status_in_progress }}
           gh project item-edit --id "$PROJECT_ITEM_ID" --project-id ${{ env.PROJECT_ID }} --field-id ${{ env.VIEW_FIELD_ID }} --single-select-option-id ${{ vars.team_project_view_working_board }}
 
       - name: 'Labeled Prioritized or Regression'
         if: contains(fromJSON('["prioritized", "regression"]'), github.event.label.name)
         run: |
-          PROJECT_ITEM_ID=$(gh project item-add ${{ env.PROJECT_NUMBER }} --owner "hashicorp" --url ${{ env.ITEM_URL }} | jq '.id')
+          PROJECT_ITEM_ID=$(gh project item-add ${{ env.PROJECT_NUMBER }} --owner "hashicorp" --url ${{ env.ITEM_URL }} --format json | jq '.id')
           gh project item-edit --id "$PROJECT_ITEM_ID" --project-id ${{ env.PROJECT_ID }} --field-id ${{ env.VIEW_FIELD_ID }} --single-select-option-id ${{ vars.team_project_view_working_board }}
 
       - name: 'Labeled Engineering Initiative'
         if: github.event.label.name == 'engineering-initiative'
         run: |
-          PROJECT_ITEM_ID=$(gh project item-add ${{ env.PROJECT_NUMBER }} --owner "hashicorp" --url ${{ env.ITEM_URL }} | jq '.id')
+          PROJECT_ITEM_ID=$(gh project item-add ${{ env.PROJECT_NUMBER }} --owner "hashicorp" --url ${{ env.ITEM_URL }} --format json | jq '.id')
           gh project item-edit --id "$PROJECT_ITEM_ID" --project-id ${{ env.PROJECT_ID }} --field-id ${{ env.VIEW_FIELD_ID }} --single-select-option-id ${{ vars.team_project_view_engineering_initiative }}
 
   community_note:
