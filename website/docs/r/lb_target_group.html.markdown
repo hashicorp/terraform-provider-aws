@@ -68,7 +68,7 @@ resource "aws_lb_target_group" "alb-example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `connection_termination` - (Optional) Whether to terminate connections at the end of the deregistration timeout on Network Load Balancers. See [doc](https://docs.aws.amazon.com/elasticloadbalancing/latest/network/load-balancer-target-groups.html#deregistration-delay) for more information. Default is `false`.
 * `deregistration_delay` - (Optional) Amount time for Elastic Load Balancing to wait before changing the state of a deregistering target from draining to unused. The range is 0-3600 seconds. The default value is 300 seconds.
@@ -129,9 +129,9 @@ The following arguments are supported:
 * `on_deregistration` - (Optional) Indicates how the GWLB handles existing flows when a target is deregistered. Possible values are `rebalance` and `no_rebalance`. Must match the attribute value set for `on_unhealthy`. Default: `no_rebalance`.
 * `on_unhealthy` - Indicates how the GWLB handles existing flows when a target is unhealthy. Possible values are `rebalance` and `no_rebalance`. Must match the attribute value set for `on_deregistration`. Default: `no_rebalance`.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn_suffix` - ARN suffix for use with CloudWatch Metrics.
 * `arn` - ARN of the Target Group (matches `id`).
@@ -141,8 +141,17 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Target Groups can be imported using their ARN, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Target Groups using their ARN. For example:
 
+```terraform
+import {
+  to = aws_lb_target_group.app_front_end
+  id = "arn:aws:elasticloadbalancing:us-west-2:187416307283:targetgroup/app-front-end/20cfe21448b66314"
+}
 ```
-$ terraform import aws_lb_target_group.app_front_end arn:aws:elasticloadbalancing:us-west-2:187416307283:targetgroup/app-front-end/20cfe21448b66314
+
+Using `terraform import`, import Target Groups using their ARN. For example:
+
+```console
+% terraform import aws_lb_target_group.app_front_end arn:aws:elasticloadbalancing:us-west-2:187416307283:targetgroup/app-front-end/20cfe21448b66314
 ```

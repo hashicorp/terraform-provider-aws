@@ -336,9 +336,9 @@ For network connectivity to AWS resources in a VPC, specify a list of security g
 * `security_group_ids` - (Required) List of security group IDs associated with the Lambda function.
 * `subnet_ids` - (Required) List of subnet IDs associated with the Lambda function.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - Amazon Resource Name (ARN) identifying your Lambda Function.
 * `invoke_arn` - ARN to be used for invoking Lambda Function from API Gateway - to be used in [`aws_api_gateway_integration`](/docs/providers/aws/r/api_gateway_integration.html)'s `uri`.
@@ -375,8 +375,17 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Lambda Functions can be imported using the `function_name`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Lambda Functions using the `function_name`. For example:
 
+```terraform
+import {
+  to = aws_lambda_function.test_lambda
+  id = "my_test_lambda_function"
+}
 ```
-$ terraform import aws_lambda_function.test_lambda my_test_lambda_function
+
+Using `terraform import`, import Lambda Functions using the `function_name`. For example:
+
+```console
+% terraform import aws_lambda_function.test_lambda my_test_lambda_function
 ```

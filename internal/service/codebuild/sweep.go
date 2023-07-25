@@ -72,7 +72,7 @@ func sweepReportGroups(region string) error {
 		return fmt.Errorf("error retrieving CodeBuild ReportGroups: %w", err)
 	}
 
-	if err := sweep.SweepOrchestratorWithContext(ctx, sweepResources); err != nil {
+	if err := sweep.SweepOrchestrator(ctx, sweepResources); err != nil {
 		return fmt.Errorf("error sweeping CodeBuild ReportGroups: %w", err)
 	}
 
@@ -115,7 +115,7 @@ func sweepProjects(region string) error {
 		return fmt.Errorf("error retrieving CodeBuild Projects: %w", err)
 	}
 
-	if err := sweep.SweepOrchestratorWithContext(ctx, sweepResources); err != nil {
+	if err := sweep.SweepOrchestrator(ctx, sweepResources); err != nil {
 		return fmt.Errorf("error sweeping CodeBuild Projects: %w", err)
 	}
 
@@ -153,7 +153,7 @@ func sweepSourceCredentials(region string) error {
 		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error retrieving CodeBuild Source Credentials: %w", err))
 	}
 
-	if err := sweep.SweepOrchestratorWithContext(ctx, sweepResources); err != nil {
+	if err := sweep.SweepOrchestrator(ctx, sweepResources); err != nil {
 		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error sweeping CodeBuild Source Credentials: %w", err))
 	}
 

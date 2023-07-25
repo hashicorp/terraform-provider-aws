@@ -77,7 +77,7 @@ func FindStackByID(ctx context.Context, conn *cloudformation.CloudFormation, id 
 	return stack, nil
 }
 
-func FindStackInstanceAccountIdByOrgIDs(ctx context.Context, conn *cloudformation.CloudFormation, stackSetName, region, callAs string, orgIDs []string) (string, error) {
+func FindStackInstanceSummariesByOrgIDs(ctx context.Context, conn *cloudformation.CloudFormation, stackSetName, region, callAs string, orgIDs []string) ([]*cloudformation.StackInstanceSummary, error) {
 	input := &cloudformation.ListStackInstancesInput{
 		StackInstanceRegion: aws.String(region),
 		StackSetName:        aws.String(stackSetName),
@@ -87,7 +87,7 @@ func FindStackInstanceAccountIdByOrgIDs(ctx context.Context, conn *cloudformatio
 		input.CallAs = aws.String(callAs)
 	}
 
-	var result string
+	var result []*cloudformation.StackInstanceSummary
 
 	err := conn.ListStackInstancesPagesWithContext(ctx, input, func(page *cloudformation.ListStackInstancesOutput, lastPage bool) bool {
 		if page == nil {
@@ -101,8 +101,7 @@ func FindStackInstanceAccountIdByOrgIDs(ctx context.Context, conn *cloudformatio
 
 			for _, orgID := range orgIDs {
 				if aws.StringValue(s.OrganizationalUnitId) == orgID {
-					result = aws.StringValue(s.Account)
-					return false
+					result = append(result, s)
 				}
 			}
 		}
@@ -111,14 +110,14 @@ func FindStackInstanceAccountIdByOrgIDs(ctx context.Context, conn *cloudformatio
 	})
 
 	if tfawserr.ErrCodeEquals(err, cloudformation.ErrCodeStackSetNotFoundException) {
-		return "", &retry.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
 	}
 
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 
 	return result, nil

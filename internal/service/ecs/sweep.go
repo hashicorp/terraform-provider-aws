@@ -91,7 +91,7 @@ func sweepCapacityProviders(region string) error {
 		return fmt.Errorf("error listing ECS Capacity Providers (%s): %w", region, err)
 	}
 
-	err = sweep.SweepOrchestratorWithContext(ctx, sweepResources)
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
 
 	if err != nil {
 		return fmt.Errorf("error sweeping ECS Capacity Providers (%s): %w", region, err)
@@ -135,7 +135,7 @@ func sweepClusters(region string) error {
 		return fmt.Errorf("error listing ECS Clusters (%s): %w", region, err)
 	}
 
-	err = sweep.SweepOrchestratorWithContext(ctx, sweepResources)
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
 
 	if err != nil {
 		return fmt.Errorf("error sweeping ECS Clusters (%s): %w", region, err)
@@ -204,7 +204,7 @@ func sweepServices(region string) error {
 		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error listing ECS Clusters (%s): %w", region, err))
 	}
 
-	err = sweep.SweepOrchestratorWithContext(ctx, sweepResources)
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
 
 	if err != nil {
 		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error sweeping ECS Services (%s): %w", region, err))
@@ -249,7 +249,7 @@ func sweepTaskDefinitions(region string) error {
 		return fmt.Errorf("error listing ECS Task Definitions (%s): %w", region, err)
 	}
 
-	err = sweep.SweepOrchestratorWithContext(ctx, sweepResources)
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
 
 	if err != nil {
 		return fmt.Errorf("error sweeping ECS Task Definitions (%s): %w", region, err)

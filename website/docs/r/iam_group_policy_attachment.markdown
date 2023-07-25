@@ -33,19 +33,28 @@ resource "aws_iam_group_policy_attachment" "test-attach" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `group`  (Required) - The group the policy should be applied to
 * `policy_arn`  (Required) - The ARN of the policy you want to apply
 
-## Attributes Reference
+## Attribute Reference
 
-No additional attributes are exported.
+This resource exports no additional attributes.
 
 ## Import
 
-IAM group policy attachments can be imported using the group name and policy arn separated by `/`.
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import IAM group policy attachments using the group name and policy arn separated by `/`. For example:
 
+```terraform
+import {
+  to = aws_iam_group_policy_attachment.test-attach
+  id = "test-group/arn:aws:iam::xxxxxxxxxxxx:policy/test-policy"
+}
 ```
-$ terraform import aws_iam_group_policy_attachment.test-attach test-group/arn:aws:iam::xxxxxxxxxxxx:policy/test-policy
+
+Using `terraform import`, import IAM group policy attachments using the group name and policy arn separated by `/`. For example:
+
+```console
+% terraform import aws_iam_group_policy_attachment.test-attach test-group/arn:aws:iam::xxxxxxxxxxxx:policy/test-policy
 ```

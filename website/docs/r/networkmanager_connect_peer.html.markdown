@@ -98,9 +98,9 @@ The following arguments are optional:
 - `core_network_address` (Optional) A Connect peer core network address.
 - `tags` - (Optional) Key-value tags for the attachment. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 - `arn` - The ARN of the attachment.
 - `configuration` - The configuration of the Connect peer.
@@ -112,8 +112,17 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-`aws_networkmanager_connect_peer` can be imported using the connect peer ID, e.g.
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_networkmanager_connect_peer` using the connect peer ID. For example:
 
+```terraform
+import {
+  to = aws_networkmanager_connect_peer.example
+  id = "connect-peer-061f3e96275db1acc"
+}
 ```
-$ terraform import aws_networkmanager_connect_peer.example connect-peer-061f3e96275db1acc
+
+Using `terraform import`, import `aws_networkmanager_connect_peer` using the connect peer ID. For example:
+
+```console
+% terraform import aws_networkmanager_connect_peer.example connect-peer-061f3e96275db1acc
 ```

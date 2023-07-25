@@ -83,9 +83,9 @@ The transit_gateway_configuration block supports the following arguments:
 * `routable_cidr_space` - (Required) Routing CIDR on behalf of KX environment. It could be any “/26 range in the 100.64.0.0 CIDR space. After providing, it will be added to the customer’s transit gateway routing table so that the traffics could be routed to KX network.
 * `transit_gateway_id` - (Required) Identifier of the transit gateway created by the customer to connect outbound traffics from KX network to your internal network.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - Amazon Resource Name (ARN) identifier of the KX environment.
 * `availability_zones` - AWS Availability Zone IDs that this environment is available in. Important when selecting VPC subnets to use in cluster creation.
@@ -106,8 +106,17 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-An AWS FinSpace Kx Environment can be imported using the `id`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import an AWS FinSpace Kx Environment using the `id`. For example:
 
+```terraform
+import {
+  to = aws_finspace_kx_environment.example
+  id = "n3ceo7wqxoxcti5tujqwzs"
+}
 ```
-$ terraform import aws_finspace_kx_environment.example n3ceo7wqxoxcti5tujqwzs
+
+Using `terraform import`, import an AWS FinSpace Kx Environment using the `id`. For example:
+
+```console
+% terraform import aws_finspace_kx_environment.example n3ceo7wqxoxcti5tujqwzs
 ```

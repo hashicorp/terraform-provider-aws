@@ -11,7 +11,7 @@ Use the Amazon Web Services (AWS) provider to interact with the
 many resources supported by AWS. You must configure the provider
 with the proper credentials before you can use it.
 
-Use the navigation to the left to read about the available resources.
+Use the navigation to the left to read about the available resources. There are currently 1235 resources and 510 data sources available in the provider.
 
 To learn the basics of Terraform using this provider, follow the
 hands-on [get started tutorials](https://learn.hashicorp.com/tutorials/terraform/infrastructure-as-code?in=terraform/aws-get-started&utm_source=WEBSITE&utm_medium=WEB_IO&utm_offer=ARTICLE_PAGE&utm_content=DOCS). Interact with AWS services,
@@ -27,7 +27,7 @@ terraform {
   required_providers {
     aws = {
       source  = "hashicorp/aws"
-      version = "~> 4.0"
+      version = "~> 5.0"
     }
   }
 }
@@ -48,7 +48,7 @@ Terraform 0.12 and earlier:
 ```terraform
 # Configure the AWS Provider
 provider "aws" {
-  version = "~> 4.0"
+  version = "~> 5.0"
   region  = "us-east-1"
 }
 
@@ -118,11 +118,11 @@ For example:
 provider "aws" {}
 ```
 
-```sh
-$ export AWS_ACCESS_KEY_ID="anaccesskey"
-$ export AWS_SECRET_ACCESS_KEY="asecretkey"
-$ export AWS_REGION="us-west-2"
-$ terraform plan
+```console
+% export AWS_ACCESS_KEY_ID="anaccesskey"
+% export AWS_SECRET_ACCESS_KEY="asecretkey"
+% export AWS_REGION="us-west-2"
+% terraform plan
 ```
 
 Other environment variables related to authorization are:
@@ -254,7 +254,7 @@ See the [assume role documentation](https://docs.aws.amazon.com/cli/latest/userg
 |Setting|Provider|[Environment Variable][envvars]|[Shared Config][config]|
 |-------|--------|--------|-----------------------|
 |Role ARN|`role_arn`|`AWS_ROLE_ARN`|`role_arn`|
-|Duration|`duration` or `duration_seconds`|N/A|`duration_seconds`|
+|Duration|`duration`|N/A|`duration_seconds`|
 |External ID|`external_id`|N/A|`external_id`|
 |Policy|`policy`|N/A|N/A|
 |Policy ARNs|`policy_arns`|N/A|N/A|
@@ -287,8 +287,8 @@ See the assume role documentation [section on web identities](https://docs.aws.a
 
 By default, the underlying AWS client used by the Terraform AWS Provider creates requests with User-Agent headers including information about Terraform and AWS SDK for Go versions. To provide additional information in the User-Agent headers, the `TF_APPEND_USER_AGENT` environment variable can be set and its value will be directly added to HTTP requests. E.g.,
 
-```sh
-$ export TF_APPEND_USER_AGENT="JenkinsAgent/i-12345678 BuildID/1234 (Optional Extra Information)"
+```console
+% export TF_APPEND_USER_AGENT="JenkinsAgent/i-12345678 BuildID/1234 (Optional Extra Information)"
 ```
 
 ## Argument Reference
@@ -458,11 +458,7 @@ In addition to [generic `provider` arguments](https://www.terraform.io/docs/conf
 
 The `assume_role` configuration block supports the following arguments:
 
-* `duration` - (Optional, Conflicts with `duration_seconds`) Duration of the assume role session.
-  You can provide a value from 15 minutes up to the maximum session duration setting for the role.
-  Represented by a string such as `1h`, `2h45m`, or `30m15s`.
-* `duration_seconds` - (Optional, **Deprecated** use `duration` instead) Number of seconds to restrict the assume role session duration.
-  You can provide a value from 900 seconds (15 minutes) up to the maximum session duration setting for the role.
+* `duration` - (Optional) Duration of the assume role session. You can provide a value from 15 minutes up to the maximum session duration setting for the role. Represented by a string such as `1h`, `2h45m`, or `30m15s`.
 * `external_id` - (Optional) External identifier to use when assuming the role.
 * `policy` - (Optional) IAM Policy JSON describing further restricting permissions for the IAM Role being assumed.
 * `policy_arns` - (Optional) Set of Amazon Resource Names (ARNs) of IAM Policies describing further restricting permissions for the IAM Role being assumed.

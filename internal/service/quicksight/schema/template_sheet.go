@@ -378,7 +378,7 @@ func gridLayoutConfigurationSchema() *schema.Schema {
 									Schema: map[string]*schema.Schema{
 										"optimized_view_port_width": {
 											Type:     schema.TypeString,
-											Required: true,
+											Optional: true,
 										},
 										"resize_option": stringSchema(true, validation.StringInSlice(quicksight.ResizeOption_Values(), false)),
 									},

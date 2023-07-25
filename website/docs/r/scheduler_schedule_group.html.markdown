@@ -30,9 +30,9 @@ The following arguments are optional:
 * `name_prefix` - (Optional, Forces new resource) Creates a unique name beginning with the specified prefix. Conflicts with `name`.
 * `tags` - (Optional) Key-value mapping of resource tags. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - Name of the schedule group.
 * `arn` - ARN of the schedule group.
@@ -50,8 +50,17 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Schedule groups can be imported using the `name`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import schedule groups using the `name`. For example:
 
+```terraform
+import {
+  to = aws_scheduler_schedule_group.example
+  id = "my-schedule-group"
+}
 ```
-$ terraform import aws_scheduler_schedule_group.example my-schedule-group
+
+Using `terraform import`, import schedule groups using the `name`. For example:
+
+```console
+% terraform import aws_scheduler_schedule_group.example my-schedule-group
 ```
