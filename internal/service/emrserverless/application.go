@@ -699,9 +699,7 @@ func expandInitialCapacity(tfMap *schema.Set) map[string]types.InitialCapacityCo
 
 		if v, ok := config["initial_capacity_type"].(string); ok && v != "" {
 			if conf, ok := config["initial_capacity_config"].([]interface{}); ok && len(conf) > 0 {
-				if conf := expandInitialCapacityConfig(conf[0].(map[string]interface{})); conf != nil {
-					configs[v] = *conf
-				}
+				configs[v] = expandInitialCapacityConfig(conf[0].(map[string]interface{}))
 			}
 		}
 	}
@@ -726,12 +724,8 @@ func flattenInitialCapacity(apiObject map[string]types.InitialCapacityConfig) []
 	return tfList
 }
 
-func expandInitialCapacityConfig(tfMap map[string]interface{}) *types.InitialCapacityConfig {
-	if tfMap == nil {
-		return nil
-	}
-
-	apiObject := &types.InitialCapacityConfig{}
+func expandInitialCapacityConfig(tfMap map[string]interface{}) types.InitialCapacityConfig {
+	apiObject := types.InitialCapacityConfig{}
 
 	if v, ok := tfMap["worker_count"].(int); ok {
 		apiObject.WorkerCount = int64(v)
