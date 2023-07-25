@@ -93,7 +93,6 @@ func ResourceWorkspace() *schema.Resource {
 			},
 			"grafana_version": {
 				Type:     schema.TypeString,
-				ForceNew: true,
 				Optional: true,
 				Computed: true,
 			},
@@ -333,7 +332,7 @@ func resourceWorkspaceUpdate(ctx context.Context, d *schema.ResourceData, meta i
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).GrafanaConn(ctx)
 
-	if d.HasChangesExcept("configuration", "tags", "tags_all") {
+	if d.HasChangesExcept("configuration", "grafana_version", "tags", "tags_all") {
 		input := &managedgrafana.UpdateWorkspaceInput{
 			WorkspaceId: aws.String(d.Id()),
 		}
@@ -409,10 +408,17 @@ func resourceWorkspaceUpdate(ctx context.Context, d *schema.ResourceData, meta i
 		}
 	}
 
-	if d.HasChange("configuration") {
+	if d.HasChanges("configuration", "grafana_version") {
 		input := &managedgrafana.UpdateWorkspaceConfigurationInput{
-			WorkspaceId:   aws.String(d.Id()),
-			Configuration: aws.String(d.Get("configuration").(string)),
+			WorkspaceId: aws.String(d.Id()),
+		}
+
+		if d.HasChange("configuration") {
+			input.Configuration = aws.String(d.Get("configuration").(string))
+		}
+
+		if d.HasChange("grafana_version") {
+			input.GrafanaVersion = aws.String(d.Get("grafana_version").(string))
 		}
 
 		_, err := conn.UpdateWorkspaceConfigurationWithContext(ctx, input)
