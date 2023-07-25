@@ -72,6 +72,7 @@ func testAccServer_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "protocols.#", "1"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "protocols.*", "SFTP"),
 					resource.TestCheckResourceAttr(resourceName, "security_policy_name", "TransferSecurityPolicy-2018-11"),
+					resource.TestCheckResourceAttr(resourceName, "structured_log_destinations.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "url", ""),
 					resource.TestCheckResourceAttr(resourceName, "workflow_details.#", "0"),
@@ -769,7 +770,7 @@ func testAccServer_structuredLogDestinations(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"force_destroy"},
 			},
 			{
-				Config: testAccServerConfig_structuredLogDestinationsUpdate(),
+				Config: testAccServerConfig_structuredLogDestinationsUpdate(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServerExists(ctx, resourceName, &s),
 					// resource.TestCheckTypeSetElemAttr(resourceName, "structured_logging_destinations.*", *s.StructuredLogDestinations[0]),
@@ -1256,6 +1257,32 @@ func testAccCheckServerDestroy(ctx context.Context) resource.TestCheckFunc {
 			return fmt.Errorf("Transfer Server %s still exists", rs.Primary.ID)
 		}
 
+		return nil
+	}
+}
+
+func testAccServerCheck_structuredLogDestinations(resourceName, cloudwatchLogGroupName string) func(s *terraform.State) error {
+	return func(s *terraform.State) error {
+		cwResource, ok := s.RootModule().Resources[cloudwatchLogGroupName]
+		if !ok {
+			return fmt.Errorf("resource not found: %s", cloudwatchLogGroupName)
+		}
+		cwARN, ok := cwResource.Primary.Attributes["arn"]
+		if !ok {
+			return errors.New("cloudwatch group arn missing")
+		}
+		expectedSLD := fmt.Sprintf("%s:*", cwARN)
+		transferServerResource, ok := s.RootModule().Resources[resourceName]
+		if !ok {
+			return fmt.Errorf("resource not found: %s", resourceName)
+		}
+		slds, ok := transferServerResource.Primary.Attributes["structured_log_destinations.0"]
+		if !ok {
+			return errors.New("transfer server structured logging destinations missing")
+		}
+		if expectedSLD != slds {
+			return fmt.Errorf("'%s' != '%s'", expectedSLD, slds)
+		}
 		return nil
 	}
 }
@@ -1825,11 +1852,10 @@ resource "aws_transfer_server" "test" {
 `, rName, hostKey)
 }
 
-func testAccServerConfig_structuredLogDestinations(rName string) string {
-	return acctest.ConfigCompose(
-		fmt.Sprintf(`
+func testAccServerConfig_structuredLogDestinationsBase(rName string) string {
+	return fmt.Sprintf(`
 resource "aws_cloudwatch_log_group" "test" {
-  name_prefix = "transfer_test_"
+  name = %[1]q
 }
 
 data "aws_iam_policy_document" "test" {
@@ -1844,7 +1870,8 @@ data "aws_iam_policy_document" "test" {
 }
 
 resource "aws_iam_policy" "test" {
-  name_prefix = "transfer_logging_policy_"
+  name = %[1]q
+
   policy = jsonencode({
     "Version" : "2012-10-17",
     "Statement" : [
@@ -1863,7 +1890,7 @@ resource "aws_iam_policy" "test" {
 }
 
 resource "aws_iam_role" "test" {
-  name_prefix        = "iam_for_transfer_"
+  name               = %[1]q
   assume_role_policy = data.aws_iam_policy_document.test.json
 }
 
@@ -1871,7 +1898,11 @@ resource "aws_iam_role_policy_attachment" "test" {
   role       = aws_iam_role.test.name
   policy_arn = aws_iam_policy.test.arn
 }
+`, rName)
+}
 
+func testAccServerConfig_structuredLogDestinations(rName string) string {
+	return acctest.ConfigCompose(testAccServerConfig_structuredLogDestinationsBase(rName), fmt.Sprintf(`
 resource "aws_transfer_server" "test" {
   endpoint_type = "PUBLIC"
   logging_role  = aws_iam_role.test.arn
@@ -1879,62 +1910,16 @@ resource "aws_transfer_server" "test" {
   structured_log_destinations = [
     "${aws_cloudwatch_log_group.test.arn}:*"
   ]
+
   tags = {
     Name = %[1]q
   }
 }
-`, rName),
-	)
+`, rName))
 }
 
-func testAccServerConfig_structuredLogDestinationsUpdate() string {
-	return `
-resource "aws_cloudwatch_log_group" "test" {
-  name_prefix = "transfer_test_"
-}
-
-data "aws_iam_policy_document" "test" {
-  statement {
-    effect = "Allow"
-
-    principals {
-      type        = "Service"
-      identifiers = ["transfer.amazonaws.com"]
-    }
-
-    actions = ["sts:AssumeRole"]
-  }
-}
-
-resource "aws_iam_policy" "test" {
-  name_prefix = "transfer_logging_policy_"
-  policy = jsonencode({
-    "Version" : "2012-10-17",
-    "Statement" : [
-      {
-        "Effect" : "Allow",
-        "Action" : [
-          "logs:CreateLogStream",
-          "logs:DescribeLogStreams",
-          "logs:CreateLogGroup",
-          "logs:PutLogEvents"
-        ],
-        "Resource" : "*"
-      }
-    ]
-  })
-}
-
-resource "aws_iam_role" "test" {
-  name_prefix        = "iam_for_transfer_"
-  assume_role_policy = data.aws_iam_policy_document.test.json
-}
-
-resource "aws_iam_role_policy_attachment" "test" {
-  role       = aws_iam_role.test.name
-  policy_arn = aws_iam_policy.test.arn
-}
-
+func testAccServerConfig_structuredLogDestinationsUpdate(rName string) string {
+	return acctest.ConfigCompose(testAccServerConfig_structuredLogDestinationsBase(rName), fmt.Sprintf(`
 resource "aws_transfer_server" "test" {
   endpoint_type = "PUBLIC"
   logging_role  = aws_iam_role.test.arn
@@ -1942,34 +1927,15 @@ resource "aws_transfer_server" "test" {
   structured_log_destinations = [
     "${aws_cloudwatch_log_group.test.arn}:*"
   ]
-}
-`
-}
 
-func testAccServerCheck_structuredLogDestinations(resourceName, cloudwatchLogGroupName string) func(s *terraform.State) error {
-	return func(s *terraform.State) error {
-		cwResource, ok := s.RootModule().Resources[cloudwatchLogGroupName]
-		if !ok {
-			return fmt.Errorf("resource not found: %s", cloudwatchLogGroupName)
-		}
-		cwARN, ok := cwResource.Primary.Attributes["arn"]
-		if !ok {
-			return errors.New("cloudwatch group arn missing")
-		}
-		expectedSLD := fmt.Sprintf("%s:*", cwARN)
-		transferServerResource, ok := s.RootModule().Resources[resourceName]
-		if !ok {
-			return fmt.Errorf("resource not found: %s", resourceName)
-		}
-		slds, ok := transferServerResource.Primary.Attributes["structured_log_destinations.0"]
-		if !ok {
-			return errors.New("transfer server structured logging destinations missing")
-		}
-		if expectedSLD != slds {
-			return fmt.Errorf("'%s' != '%s'", expectedSLD, slds)
-		}
-		return nil
-	}
+  pre_authentication_login_banner  = "This system is for the use of authorized users only - pre"
+  post_authentication_login_banner = "This system is for the use of authorized users only - post"
+
+  tags = {
+    Name = %[1]q
+  }
+}
+`, rName))
 }
 
 func testAccServerConfig_protocols(rName string) string {
