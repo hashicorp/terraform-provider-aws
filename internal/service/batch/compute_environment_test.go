@@ -21,7 +21,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func TestExpandComputeEnvironmentLaunchEC2ConfigurationUpdate(t *testing.T) {
+func TestExpandEC2ConfigurationUpdate(t *testing.T) {
 	t.Parallel()
 
 	//lintignore:AWSAT002
@@ -78,7 +78,7 @@ func TestExpandComputeEnvironmentLaunchEC2ConfigurationUpdate(t *testing.T) {
 	}
 
 	for _, testCase := range testCases {
-		expanded := tfbatch.ExpandComputeEnvironmentEC2ConfigurationUpdate(testCase.flattened, "default")
+		expanded := tfbatch.ExpandEC2ConfigurationUpdate(testCase.flattened, "default")
 		if !reflect.DeepEqual(expanded, testCase.expected) {
 			t.Fatalf("Got\n\n%#v\n\nExpected:\n\n%#v\n",
 				expanded,
@@ -87,7 +87,7 @@ func TestExpandComputeEnvironmentLaunchEC2ConfigurationUpdate(t *testing.T) {
 	}
 }
 
-func TestExpandComputeEnvironmentLaunchTemplateUpdate(t *testing.T) {
+func TestExpandLaunchTemplateSpecificationUpdate(t *testing.T) {
 	t.Parallel()
 
 	testCases := []struct {
@@ -149,7 +149,7 @@ func TestExpandComputeEnvironmentLaunchTemplateUpdate(t *testing.T) {
 	}
 
 	for _, testCase := range testCases {
-		expanded := tfbatch.ExpandComputeEnvironmentLaunchTemplateUpdate(testCase.flattened)
+		expanded := tfbatch.ExpandLaunchTemplateSpecificationUpdate(testCase.flattened)
 		if !reflect.DeepEqual(expanded, testCase.expected) {
 			t.Fatalf("Got\n\n%#v\n\nExpected:\n\n%#v\n",
 				expanded,

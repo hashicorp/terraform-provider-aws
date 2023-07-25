@@ -97,6 +97,7 @@ func ResourceComputeEnvironment() *schema.Resource {
 							Type:     schema.TypeList,
 							Optional: true,
 							Computed: true,
+							ForceNew: true,
 							MaxItems: 2,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
@@ -135,6 +136,7 @@ func ResourceComputeEnvironment() *schema.Resource {
 						"launch_template": {
 							Type:     schema.TypeList,
 							Optional: true,
+							ForceNew: true,
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
@@ -322,13 +324,6 @@ func resourceComputeEnvironmentRead(ctx context.Context, d *schema.ResourceData,
 	d.Set("arn", computeEnvironment.ComputeEnvironmentArn)
 	d.Set("compute_environment_name", computeEnvironment.ComputeEnvironmentName)
 	d.Set("compute_environment_name_prefix", create.NamePrefixFromName(aws.StringValue(computeEnvironment.ComputeEnvironmentName)))
-	d.Set("ecs_cluster_arn", computeEnvironment.EcsClusterArn)
-	d.Set("service_role", computeEnvironment.ServiceRole)
-	d.Set("state", computeEnvironment.State)
-	d.Set("status", computeEnvironment.Status)
-	d.Set("status_reason", computeEnvironment.StatusReason)
-	d.Set("type", computeEnvironmentType)
-
 	if computeEnvironment.ComputeResources != nil {
 		if err := d.Set("compute_resources", []interface{}{flattenComputeResource(ctx, computeEnvironment.ComputeResources)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting compute_resources: %s", err)
@@ -336,7 +331,7 @@ func resourceComputeEnvironmentRead(ctx context.Context, d *schema.ResourceData,
 	} else {
 		d.Set("compute_resources", nil)
 	}
-
+	d.Set("ecs_cluster_arn", computeEnvironment.EcsClusterArn)
 	if computeEnvironment.EksConfiguration != nil {
 		if err := d.Set("eks_configuration", []interface{}{flattenEKSConfiguration(computeEnvironment.EksConfiguration)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting eks_configuration: %s", err)
@@ -344,6 +339,11 @@ func resourceComputeEnvironmentRead(ctx context.Context, d *schema.ResourceData,
 	} else {
 		d.Set("eks_configuration", nil)
 	}
+	d.Set("service_role", computeEnvironment.ServiceRole)
+	d.Set("state", computeEnvironment.State)
+	d.Set("status", computeEnvironment.Status)
+	d.Set("status_reason", computeEnvironment.StatusReason)
+	d.Set("type", computeEnvironmentType)
 
 	setTagsOut(ctx, computeEnvironment.Tags)
 
@@ -426,7 +426,7 @@ func resourceComputeEnvironmentUpdate(ctx context.Context, d *schema.ResourceDat
 						defaultImageType = "EKS_AL2"
 					}
 					ec2Configuration := d.Get("compute_resources.0.ec2_configuration").([]interface{})
-					computeResourceUpdate.Ec2Configuration = ExpandComputeEnvironmentEC2ConfigurationUpdate(ec2Configuration, defaultImageType)
+					computeResourceUpdate.Ec2Configuration = expandEC2ConfigurationUpdate(ec2Configuration, defaultImageType)
 				}
 
 				if d.HasChange("compute_resources.0.ec2_key_pair") {
@@ -459,7 +459,7 @@ func resourceComputeEnvironmentUpdate(ctx context.Context, d *schema.ResourceDat
 
 				if d.HasChange("compute_resources.0.launch_template") {
 					launchTemplate := d.Get("compute_resources.0.launch_template").([]interface{})
-					computeResourceUpdate.LaunchTemplate = ExpandComputeEnvironmentLaunchTemplateUpdate(launchTemplate)
+					computeResourceUpdate.LaunchTemplate = expandLaunchTemplateSpecificationUpdate(launchTemplate)
 				}
 
 				if d.HasChange("compute_resources.0.tags") {
@@ -485,55 +485,6 @@ func resourceComputeEnvironmentUpdate(ctx context.Context, d *schema.ResourceDat
 	}
 
 	return append(diags, resourceComputeEnvironmentRead(ctx, d, meta)...)
-}
-
-func ExpandComputeEnvironmentEC2ConfigurationUpdate(ec2Configuration []interface{}, defaultImageType string) []*batch.Ec2Configuration {
-	if len(ec2Configuration) == 0 {
-		return []*batch.Ec2Configuration{
-			{
-				ImageType: aws.String(defaultImageType),
-			},
-		}
-	}
-
-	results := make([]*batch.Ec2Configuration, 0)
-	for _, ec2 := range ec2Configuration {
-		result := &batch.Ec2Configuration{}
-		m := ec2.(map[string]interface{})
-		if v, ok := m["image_id_override"]; ok {
-			result.ImageIdOverride = aws.String(v.(string))
-		}
-		if v, ok := m["image_type"]; ok {
-			result.ImageType = aws.String(v.(string))
-		}
-		results = append(results, result)
-	}
-
-	return results
-}
-
-func ExpandComputeEnvironmentLaunchTemplateUpdate(launchTemplate []interface{}) *batch.LaunchTemplateSpecification {
-	if len(launchTemplate) == 0 {
-		// delete any existing launch template configuration
-		return &batch.LaunchTemplateSpecification{
-			LaunchTemplateId: aws.String(""),
-		}
-	}
-
-	lts := &batch.LaunchTemplateSpecification{}
-	m := launchTemplate[0].(map[string]interface{})
-	if id, ok := m["launch_template_id"]; ok {
-		lts.LaunchTemplateId = aws.String(id.(string))
-	}
-	if name, ok := m["launch_template_name"]; ok {
-		lts.LaunchTemplateName = aws.String(name.(string))
-	}
-	if version, ok := m["version"]; ok {
-		lts.Version = aws.String(version.(string))
-	} else {
-		lts.Version = aws.String("")
-	}
-	return lts
 }
 
 func resourceComputeEnvironmentDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
@@ -1053,6 +1004,55 @@ func expandLaunchTemplateSpecification(tfMap map[string]interface{}) *batch.Laun
 	}
 
 	return apiObject
+}
+
+func expandEC2ConfigurationUpdate(ec2Configuration []interface{}, defaultImageType string) []*batch.Ec2Configuration {
+	if len(ec2Configuration) == 0 {
+		return []*batch.Ec2Configuration{
+			{
+				ImageType: aws.String(defaultImageType),
+			},
+		}
+	}
+
+	results := make([]*batch.Ec2Configuration, 0)
+	for _, ec2 := range ec2Configuration {
+		result := &batch.Ec2Configuration{}
+		m := ec2.(map[string]interface{})
+		if v, ok := m["image_id_override"]; ok {
+			result.ImageIdOverride = aws.String(v.(string))
+		}
+		if v, ok := m["image_type"]; ok {
+			result.ImageType = aws.String(v.(string))
+		}
+		results = append(results, result)
+	}
+
+	return results
+}
+
+func expandLaunchTemplateSpecificationUpdate(launchTemplate []interface{}) *batch.LaunchTemplateSpecification {
+	if len(launchTemplate) == 0 {
+		// delete any existing launch template configuration
+		return &batch.LaunchTemplateSpecification{
+			LaunchTemplateId: aws.String(""),
+		}
+	}
+
+	lts := &batch.LaunchTemplateSpecification{}
+	m := launchTemplate[0].(map[string]interface{})
+	if id, ok := m["launch_template_id"]; ok {
+		lts.LaunchTemplateId = aws.String(id.(string))
+	}
+	if name, ok := m["launch_template_name"]; ok {
+		lts.LaunchTemplateName = aws.String(name.(string))
+	}
+	if version, ok := m["version"]; ok {
+		lts.Version = aws.String(version.(string))
+	} else {
+		lts.Version = aws.String("")
+	}
+	return lts
 }
 
 func flattenComputeResource(ctx context.Context, apiObject *batch.ComputeResource) map[string]interface{} {
