@@ -93,7 +93,6 @@ func expandEBSOptions(m map[string]interface{}) *elasticsearch.EBSOptions {
 			if v, ok := m["throughput"]; ok && v.(int) > 0 && EBSVolumeTypePermitsThroughputInput(volumeType) {
 				options.Throughput = aws.Int64(int64(v.(int)))
 			}
-
 		}
 	}
 
