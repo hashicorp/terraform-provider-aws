@@ -307,7 +307,7 @@ func resourceComputeEnvironmentRead(ctx context.Context, d *schema.ResourceData,
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).BatchConn(ctx)
 
-	computeEnvironment, err := FindComputeEnvironmentDetailByName(ctx, conn, d.Id())
+	computeEnvironment, err := findComputeEnvironmentDetailByName(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Batch Compute Environment (%s) not found, removing from state", d.Id())
@@ -640,7 +640,7 @@ func resourceComputeEnvironmentCustomizeDiff(_ context.Context, diff *schema.Res
 	return nil
 }
 
-func FindComputeEnvironmentDetailByName(ctx context.Context, conn *batch.Batch, name string) (*batch.ComputeEnvironmentDetail, error) {
+func findComputeEnvironmentDetailByName(ctx context.Context, conn *batch.Batch, name string) (*batch.ComputeEnvironmentDetail, error) {
 	input := &batch.DescribeComputeEnvironmentsInput{
 		ComputeEnvironments: aws.StringSlice([]string{name}),
 	}
@@ -668,20 +668,16 @@ func findComputeEnvironmentDetail(ctx context.Context, conn *batch.Batch, input 
 		return nil, err
 	}
 
-	if output == nil || len(output.ComputeEnvironments) == 0 || output.ComputeEnvironments[0] == nil {
+	if output == nil {
 		return nil, tfresource.NewEmptyResultError(input)
 	}
 
-	if count := len(output.ComputeEnvironments); count > 1 {
-		return nil, tfresource.NewTooManyResultsError(count, input)
-	}
-
-	return output.ComputeEnvironments[0], nil
+	return tfresource.AssertSinglePtrResult(output.ComputeEnvironments)
 }
 
 func statusComputeEnvironment(ctx context.Context, conn *batch.Batch, name string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		computeEnvironmentDetail, err := FindComputeEnvironmentDetailByName(ctx, conn, name)
+		computeEnvironmentDetail, err := findComputeEnvironmentDetailByName(ctx, conn, name)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil
