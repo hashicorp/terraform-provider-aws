@@ -12,7 +12,6 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/elasticsearchservice"
 	elasticsearch "github.com/aws/aws-sdk-go/service/elasticsearchservice"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	awspolicy "github.com/hashicorp/awspolicyequivalence"
@@ -1256,7 +1255,7 @@ func advancedOptionsIgnoreDefault(o map[string]interface{}, n map[string]interfa
 // This check prevents a ValidationException when updating EBS volume types from a value
 // that supports IOPS (ex. gp3) to one that doesn't (ex. gp2).
 func EBSVolumeTypePermitsIopsInput(volumeType string) bool {
-	permittedTypes := []string{elasticsearchservice.VolumeTypeGp3, elasticsearchservice.VolumeTypeIo1}
+	permittedTypes := []string{elasticsearch.VolumeTypeGp3, elasticsearch.VolumeTypeIo1}
 	for _, t := range permittedTypes {
 		if volumeType == t {
 			return true
@@ -1270,7 +1269,7 @@ func EBSVolumeTypePermitsIopsInput(volumeType string) bool {
 // This check prevents a ValidationException when updating EBS volume types from a value
 // that supports Throughput (ex. gp3) to one that doesn't (ex. gp2).
 func EBSVolumeTypePermitsThroughputInput(volumeType string) bool {
-	permittedTypes := []string{elasticsearchservice.VolumeTypeGp3}
+	permittedTypes := []string{elasticsearch.VolumeTypeGp3}
 	for _, t := range permittedTypes {
 		if volumeType == t {
 			return true
