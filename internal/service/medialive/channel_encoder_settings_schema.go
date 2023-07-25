@@ -1925,8 +1925,9 @@ func channelEncoderSettingsSchema() *schema.Schema {
 				// TODO avail_configuration
 				// TODO blackout_slate
 				"caption_descriptions": {
-					Type:     schema.TypeSet,
+					Type:     schema.TypeList,
 					Optional: true,
+					Computed: true,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
 							"caption_selector_name": {
@@ -2047,7 +2048,7 @@ func channelEncoderSettingsSchema() *schema.Schema {
 										},
 										"dvb_sub_destination_settings": {
 											Type:     schema.TypeList,
-											Required: true,
+											Optional: true,
 											MaxItems: 1,
 											Elem: &schema.Resource{
 												Schema: map[string]*schema.Schema{
@@ -2089,6 +2090,7 @@ func channelEncoderSettingsSchema() *schema.Schema {
 													"font_size": {
 														Type:     schema.TypeString,
 														Optional: true,
+														Computed: true,
 													},
 													"outline_color": {
 														Type:             schema.TypeString,
@@ -2120,7 +2122,7 @@ func channelEncoderSettingsSchema() *schema.Schema {
 													},
 													"teletext_grid_control": {
 														Type:             schema.TypeString,
-														Required:         true,
+														Optional:         true,
 														ValidateDiagFunc: enum.Validate[types.DvbSubDestinationTeletextGridControl](),
 													},
 													"x_position": {
