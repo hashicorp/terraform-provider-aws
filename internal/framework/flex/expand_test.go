@@ -114,7 +114,7 @@ type YTestExpand struct {
 }
 
 type AATestExpand struct {
-	Data fwtypes.ListValueOf[BTestExpand]
+	Data fwtypes.ListNestedObjectValueOf[BTestExpand]
 }
 
 type BBTestExpand struct {
@@ -320,7 +320,7 @@ func TestGenericExpand(t *testing.T) {
 		/*
 			{
 				TestName: "single list Source and single *struct Target",
-				Source:   &AATestExpand{Data: fwtypes.NewListValueOfPtr(ctx, &BTestExpand{Name: types.StringValue("a")})},
+				Source:   &AATestExpand{Data: fwtypes.NewListNestedObjectValueOfPtr(ctx, &BTestExpand{Name: types.StringValue("a")})},
 				Target:   &BBTestExpand{},
 				// WantTarget: &BBTestExpand{Data: &CTestExpand{Name: "a"}},
 				WantTarget: &BBTestExpand{},
