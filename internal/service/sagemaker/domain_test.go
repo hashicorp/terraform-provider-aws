@@ -329,8 +329,8 @@ func testAccDomain_workspaceSettings(t *testing.T) {
 					testAccCheckDomainExists(ctx, resourceName, &domain),
 					resource.TestCheckResourceAttr(resourceName, "default_user_settings.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.canvas_app_settings.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.canvas_app_settings.0.workspace.#", "1"),
-					resource.TestCheckResourceAttrSet(resourceName, "default_user_settings.0.canvas_app_settings.0.workspace.0.s3_artifact_path"),
+					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.canvas_app_settings.0.workspace_settings.#", "1"),
+					resource.TestCheckResourceAttrSet(resourceName, "default_user_settings.0.canvas_app_settings.0.workspace_settings.0.s3_artifact_path"),
 				),
 			},
 			{
