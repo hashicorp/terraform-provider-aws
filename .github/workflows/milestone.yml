@@ -20,77 +20,20 @@ jobs:
 
             For further feature requests or bug reports with this functionality, please create a [new GitHub issue](https://github.com/${{ github.repository }}/issues/new/choose) following the template. Thank you!
 
-  remove_prioritized:
-    name: 'Remove prioritized Label on Milestone Close'
-    runs-on: ubuntu-latest
-    env:
-      GH_TOKEN: ${{ github.token }}
-    steps:
-      - name: 'Get Associated Pull Requests'
-        id: get-prs
-        run: |
-          echo "pull_requests="$(gh api graphql --paginate -F milestone=${{ github.event.milestone.number }} -f query='
-            query($milestone: Int!, $endCursor: String) {
-              organization(login: "hashicorp") {
-                repository(name: "terraform-provider-aws") {
-                  milestone(number: $milestone) {
-                    pullRequests(first: 10, after: $endCursor, filterBy: {labels: "prioritized"}) {
-                      nodes {
-                        url
-                      }
-                      pageInfo {
-                        endCursor
-                        hasNextPage
-                      }
-                    }
-                  }
-                }
-              }
-            }
-            ' | jq --compact-output --slurp '[.[].data.organization.repository.milestone.issues.nodes[].url]') >> $GITHUB_OUTPUT
-
-      - name: 'Remove Label from Pull Requests'
-        run: |
-          for i in $(echo ${{ steps.get-prs.outputs.pull_requests }} | jq '.[]'); do
-            gh pr edit $i --remove-label prioritized
-          done
-
-      - name: 'Get Associated Issues'
-        id: get-issues
-        # Note: gh allows editing multiple issues at once, so the desired output is a bit different than with pull requests
-        run: |
-          echo "issues="$(gh api graphql --paginate -F milestone=${{ github.event.milestone.number }} -f query='
-            query($milestone: Int!, $endCursor: String) {
-              organization(login: "hashicorp") {
-                repository(name: "terraform-provider-aws") {
-                  milestone(number: $milestone) {
-                    issues(first: 10, after: $endCursor, filterBy: {labels: "prioritized"}) {
-                      nodes {
-                        url
-                      }
-                      pageInfo {
-                        endCursor
-                        hasNextPage
-                      }
-                    }
-                  }
-                }
-              }
-            }
-            ' | jq --compact-output --slurp '[.[].data.organization.repository.milestone.issues.nodes[].url] | join(" ")') >> $GITHUB_OUTPUT
-
-      - name: 'Remove Label from Issues'
-        run: |
-          gh issue edit $(echo ${{ steps.get-issues.outputs.issues }} | jq --raw-output '.') --remove-label prioritized
-
   archive_and_unlabel:
-    name: 'Archive Project Items on Milestone Closed'
+    name: 'Archive Project Items & Remove Label on Milestone Closed'
     runs-on: ubuntu-latest
     env:
       MILESTONE: ${{ github.event.milestone.number }}
     steps:
       - name: 'Checkout Repo'
         uses: actions/checkout@c85c95e3d7251135ab7dc9ce3241c5835cc595a9 # v3.5.3
+
+      - name: 'Remove Prioritized Label'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: ./.ci/scripts/unlabel-on-milestone-closed.sh
 
       - name: 'Archive Project Items'
         env:
