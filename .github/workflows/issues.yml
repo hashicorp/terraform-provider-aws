@@ -57,6 +57,44 @@ jobs:
           enable-versioned-regex: 0
           include-title: 1
 
+  add_to_project:
+    name: 'Add to Project'
+    runs-on: ubuntu-latest
+    needs: community_check
+    env:
+      GH_TOKEN: ${{ secrets.PROJECT_SCOPED_TOKEN }}
+      # Some gh project calls take the project's ID, some take the project's number
+      PROJECT_ID: "PVT_kwDOAAuecM4AF-7h"
+      PROJECT_NUMBER: "196"
+      STATUS_FIELD_ID: "PVTSSF_lADOAAuecM4AF-7hzgDcsQA"
+      VIEW_FIELD_ID: "PVTSSF_lADOAAuecM4AF-7hzgMRB34"
+      ITEM_URL: ${{ github.event.issue.html_url }}
+    steps:
+      - name: 'Maintainer Issues'
+        if: github.event.action == 'opened' && needs.community_check.outputs.maintainer == 'true'
+        run: |
+          PROJECT_ITEM_ID=$(gh project item-add ${{ env.PROJECT_NUMBER }} --owner "hashicorp" --url ${{ env.ITEM_URL }})
+          gh project item-edit --id "$PROJECT_ITEM_ID" --project-id ${{ env.PROJECT_ID }} --field-id ${{ env.VIEW_FIELD_ID }} --single-select-option-id ${{ vars.team_project_view_working_board }}
+
+      - name: 'Assigned to Maintainer'
+        if: github.event.action == 'assigned' && needs.community_check.outputs.maintainer == 'true'
+        run: |
+          PROJECT_ITEM_ID=$(gh project item-add ${{ env.PROJECT_NUMBER }} --owner "hashicorp" --url ${{ env.ITEM_URL }} | jq '.id')
+          gh project item-edit --id "$PROJECT_ITEM_ID" --project-id ${{ env.PROJECT_ID }} --field-id ${{ env.STATUS_FIELD_ID }} --single-select-option-id ${{ vars.team_project_status_in_progress }}
+          gh project item-edit --id "$PROJECT_ITEM_ID" --project-id ${{ env.PROJECT_ID }} --field-id ${{ env.VIEW_FIELD_ID }} --single-select-option-id ${{ vars.team_project_view_working_board }}
+
+      - name: 'Labeled Prioritized or Regression'
+        if: contains(fromJSON('["prioritized", "regression"]'), github.event.label.name)
+        run: |
+          PROJECT_ITEM_ID=$(gh project item-add ${{ env.PROJECT_NUMBER }} --owner "hashicorp" --url ${{ env.ITEM_URL }})
+          gh project item-edit --id "$PROJECT_ITEM_ID" --project-id ${{ env.PROJECT_ID }} --field-id ${{ env.VIEW_FIELD_ID }} --single-select-option-id ${{ vars.team_project_view_working_board }}
+
+      - name: 'Labeled Engineering Initiative'
+        if: github.event.label.name == 'engineering-initiative'
+        run: |
+          PROJECT_ITEM_ID=$(gh project item-add ${{ env.PROJECT_NUMBER }} --owner "hashicorp" --url ${{ env.ITEM_URL }})
+          gh project item-edit --id "$PROJECT_ITEM_ID" --project-id ${{ env.PROJECT_ID }} --field-id ${{ env.VIEW_FIELD_ID }} --single-select-option-id ${{ vars.team_project_view_engineering_initiative }}
+
   community_note:
     name: 'Add Community Note'
     runs-on: ubuntu-latest

@@ -82,3 +82,18 @@ jobs:
       - name: 'Remove Label from Issues'
         run: |
           gh issue edit $(echo ${{ steps.get-issues.outputs.issues }} | jq --raw-output '.') --remove-label prioritized
+
+  archive_and_unlabel:
+    name: 'Archive Project Items on Milestone Closed'
+    runs-on: ubuntu-latest
+    env:
+      MILESTONE: ${{ github.event.milestone.number }}
+    steps:
+      - name: 'Checkout Repo'
+        uses: actions/checkout@c85c95e3d7251135ab7dc9ce3241c5835cc595a9 # v3.5.3
+
+      - name: 'Archive Project Items'
+        env:
+          GH_TOKEN: ${{ secrets.PROJECT_SCOPED_TOKEN }}
+        shell: bash
+        run: ./.ci/scripts/archive-on-milestone-closed.sh
