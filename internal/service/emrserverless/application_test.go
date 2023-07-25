@@ -495,6 +495,10 @@ resource "aws_security_group" "test" {
     protocol    = "-1"
     cidr_blocks = ["0.0.0.0/0"]
   }
+
+  tags = {
+    Name = %[1]q
+  }
 }
 
 resource "aws_emrserverless_application" "test" {
@@ -579,6 +583,10 @@ resource "aws_ecr_repository" "test" {
 
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
+
+  tags = {
+    Name = %[1]q
+  }
 }
 
 resource "aws_default_route_table" "test" {
@@ -592,12 +600,20 @@ resource "aws_default_route_table" "test" {
 
 resource "aws_internet_gateway" "test" {
   vpc_id = aws_vpc.test.id
+
+  tags = {
+    Name = %[1]q
+  }
 }
 
 resource "aws_subnet" "test" {
   cidr_block              = cidrsubnet(aws_vpc.test.cidr_block, 8, 0)
   map_public_ip_on_launch = true
   vpc_id                  = aws_vpc.test.id
+
+  tags = {
+    Name = %[1]q
+  }
 }
 
 resource "aws_default_security_group" "test" {
