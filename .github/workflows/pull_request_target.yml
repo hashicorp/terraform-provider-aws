@@ -171,6 +171,7 @@ jobs:
 
   community_note:
     name: 'Community Note'
+    if: github.event.action == 'opened'
     runs-on: ubuntu-latest
     steps:
       - name: 'Add community note to new Pull Requests'
@@ -194,6 +195,7 @@ jobs:
 
   first_contribution_note:
     name: 'New Contributor Note'
+    if: github.event.action == 'opened'
     runs-on: ubuntu-latest
     steps:
       - name: 'Add comment to add helpful context for new contributors'
@@ -211,7 +213,7 @@ jobs:
 
   permissions_check:
     name: 'Verify Maintainers Editable'
-    if: ${{ !github.event.pull_request.maintainer_can_modify }}
+    if: github.event.action == 'opened' && !github.event.pull_request.maintainer_can_modify
     runs-on: ubuntu-latest
     steps:
       - name: 'Comment if maintainers cannot edit'
