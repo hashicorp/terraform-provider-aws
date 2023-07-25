@@ -7,15 +7,23 @@ FEATURES:
 ENHANCEMENTS:
 
 * data-source/aws_nat_gateway: Add `secondary_allocation_ids`, `secondary_private_ip_addresses` and `secondary_private_ip_address_count` attributes ([#31778](https://github.com/hashicorp/terraform-provider-aws/issues/31778))
+* data-source/aws_transfer_server: Add `structured_log_destinations` attribute ([#32654](https://github.com/hashicorp/terraform-provider-aws/issues/32654))
 * resource/aws_nat_gateway: Add `secondary_allocation_ids`, `secondary_private_ip_addresses` and `secondary_private_ip_address_count` arguments ([#31778](https://github.com/hashicorp/terraform-provider-aws/issues/31778))
 * resource/aws_nat_gateway: Add configurable timeouts ([#31778](https://github.com/hashicorp/terraform-provider-aws/issues/31778))
+* resource/aws_transfer_server: Add `structured_log_destinations` argument ([#32654](https://github.com/hashicorp/terraform-provider-aws/issues/32654))
 
 BUG FIXES:
 
+* resource/aws_elasticache_parameter_group: Remove from state on resource Read if deleted outside of Terraform ([#32669](https://github.com/hashicorp/terraform-provider-aws/issues/32669))
+* resource/aws_elasticsearch_domain: Omit `ebs_options.throughput` and `ebs_options.iops` for unsupported volume types ([#32659](https://github.com/hashicorp/terraform-provider-aws/issues/32659))
 * resource/aws_finspace_kx_cluster: `database.cache_configurations.db_paths` argument is now optional ([#32579](https://github.com/hashicorp/terraform-provider-aws/issues/32579))
 * resource/aws_finspace_kx_cluster: `database.cache_configurations` argument is now optional ([#32579](https://github.com/hashicorp/terraform-provider-aws/issues/32579))
+* resource/aws_lightsail_domain_entry: Add support for `AAAA` `type` value ([#32664](https://github.com/hashicorp/terraform-provider-aws/issues/32664))
+* resource/aws_quicksight_analysis: Fix exception thrown when setting the value for `definition.sheets.visuals.pie_chart_visual.chart_configuration.data_labels.measure_label_visibility` ([#32668](https://github.com/hashicorp/terraform-provider-aws/issues/32668))
 * resource/aws_quicksight_analysis: Grid layout `optimized_view_port_width` argument changed to Optional ([#32644](https://github.com/hashicorp/terraform-provider-aws/issues/32644))
+* resource/aws_quicksight_dashboard: Fix exception thrown when setting the value for `definition.sheets.visuals.pie_chart_visual.chart_configuration.data_labels.measure_label_visibility` ([#32668](https://github.com/hashicorp/terraform-provider-aws/issues/32668))
 * resource/aws_quicksight_dashboard: Grid layout `optimized_view_port_width` argument changed to Optional ([#32644](https://github.com/hashicorp/terraform-provider-aws/issues/32644))
+* resource/aws_quicksight_template: Fix exception thrown when setting the value for `definition.sheets.visuals.pie_chart_visual.chart_configuration.data_labels.measure_label_visibility` ([#32668](https://github.com/hashicorp/terraform-provider-aws/issues/32668))
 * resource/aws_quicksight_template: Grid layout `optimized_view_port_width` argument changed to Optional ([#32644](https://github.com/hashicorp/terraform-provider-aws/issues/32644))
 
 ## 5.9.0 (July 20, 2023)
