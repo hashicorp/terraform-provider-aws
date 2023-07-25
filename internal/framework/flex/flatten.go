@@ -68,7 +68,7 @@ func (visitor flattenVisitor) visit(ctx context.Context, fieldName string, vFrom
 
 	// Pointer to primitive types.
 	case reflect.Ptr:
-		diags.Append(visitor.pointer(ctx, vFrom, tTo, vTo)...)
+		diags.Append(visitor.ptr(ctx, vFrom, tTo, vTo)...)
 		return diags
 
 	// Slice of primitive types or pointer to primitive types.
@@ -76,7 +76,7 @@ func (visitor flattenVisitor) visit(ctx context.Context, fieldName string, vFrom
 		diags.Append(visitor.slice(ctx, vFrom, tTo, vTo)...)
 		return diags
 
-		// Map of simple types or pointer to simple types.
+	// Map of simple types or pointer to simple types.
 	case reflect.Map:
 		diags.Append(visitor.map_(ctx, vFrom, tTo, vTo)...)
 		return diags
@@ -178,8 +178,8 @@ func (visitor flattenVisitor) string(ctx context.Context, vFrom reflect.Value, t
 	return diags
 }
 
-// pointer copies an AWS API pointer value to a compatible Plugin Framework field.
-func (visitor flattenVisitor) pointer(ctx context.Context, vFrom reflect.Value, tTo attr.Type, vTo reflect.Value) diag.Diagnostics {
+// ptr copies an AWS API pointer value to a compatible Plugin Framework field.
+func (visitor flattenVisitor) ptr(ctx context.Context, vFrom reflect.Value, tTo attr.Type, vTo reflect.Value) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	switch vElem := vFrom.Elem(); vFrom.Type().Elem().Kind() {
