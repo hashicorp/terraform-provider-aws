@@ -129,6 +129,71 @@ func ResourceKxEnvironment() *schema.Resource {
 							Required:     true,
 							ValidateFunc: validation.IsCIDR,
 						},
+						"attachment_network_acl_configuration": {
+							Type:     schema.TypeList,
+							Optional: true,
+							MaxItems: 100,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"rule_number": {
+										Type:         schema.TypeInt,
+										Required:     true,
+										ValidateFunc: validation.IntBetween(1, 32766),
+									},
+									"protocol": {
+										Type:         schema.TypeString,
+										Required:     true,
+										ValidateFunc: validation.StringLenBetween(1, 5),
+									},
+									"rule_action": {
+										Type:             schema.TypeString,
+										Required:         true,
+										ValidateDiagFunc: enum.Validate[types.RuleAction](),
+									},
+									"port_range": {
+										Type:     schema.TypeList,
+										Optional: true,
+										MaxItems: 1,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"from": {
+													Type:         schema.TypeInt,
+													Required:     true,
+													ValidateFunc: validation.IntBetween(1, 100),
+												},
+												"to": {
+													Type:         schema.TypeInt,
+													Required:     true,
+													ValidateFunc: validation.IntBetween(1, 100),
+												},
+											},
+										},
+									},
+									"icmp_type_code": {
+										Type:     schema.TypeList,
+										Optional: true,
+										MaxItems: 1,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"type": {
+													Type:     schema.TypeInt,
+													Required: true,
+												},
+												"code": {
+													Type:     schema.TypeInt,
+													Required: true,
+												},
+											},
+										},
+									},
+									"cidr_block": {
+										Type:         schema.TypeString,
+										Required:     true,
+										ValidateFunc: validation.IsCIDR,
+									},
+								},
+							},
+						},
 					},
 				},
 			},
@@ -497,6 +562,109 @@ func expandTransitGatewayConfiguration(tfList []interface{}) *types.TransitGatew
 		a.RoutableCIDRSpace = aws.String(v)
 	}
 
+	if v, ok := tfMap["attachment_network_acl_configuration"]; ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		a.AttachmentNetworkAclConfiguration = expandAttachmentNetworkAclConfigurations(v.([]interface{}))
+	}
+
+	return a
+}
+
+func expandAttachmentNetworkAclConfigurations(tfList []interface{}) []types.NetworkACLEntry {
+	if len(tfList) == 0 {
+		return nil
+	}
+
+	var s []types.NetworkACLEntry
+
+	for _, r := range tfList {
+		m, ok := r.(map[string]interface{})
+
+		if !ok {
+			continue
+		}
+
+		a := expandAttachmentNetworkAclConfiguration(m)
+
+		if a == nil {
+			continue
+		}
+
+		s = append(s, *a)
+	}
+	return s
+}
+
+func expandAttachmentNetworkAclConfiguration(tfMap map[string]interface{}) *types.NetworkACLEntry {
+	if tfMap == nil {
+		return nil
+	}
+
+	a := &types.NetworkACLEntry{}
+
+	if v, ok := tfMap["rule_number"].(int); ok && v >= 1 && v <= 32766 {
+		a.RuleNumber = int32(v)
+	}
+
+	if v, ok := tfMap["protocol"].(string); ok && v != "" {
+		a.Protocol = &v
+	}
+
+	if v, ok := tfMap["rule_action"].(string); ok && v != "" {
+		a.RuleAction = types.RuleAction(v)
+	}
+
+	if v, ok := tfMap["cidr_block"].(string); ok && v != "" {
+		a.CidrBlock = &v
+	}
+
+	if v, ok := tfMap["port_range"]; ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		a.PortRange = expandPortRange(v.([]interface{}))
+	}
+
+	if v, ok := tfMap["icmp_type_code"]; ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		a.IcmpTypeCode = expandIcmpTypeCode(v.([]interface{}))
+	}
+
+	return a
+}
+
+func expandPortRange(tfList []interface{}) *types.PortRange {
+	if len(tfList) == 0 || tfList[0] == nil {
+		return nil
+	}
+
+	tfMap := tfList[0].(map[string]interface{})
+
+	a := &types.PortRange{}
+
+	if v, ok := tfMap["from"].(int); ok && v >= 0 && v <= 100 {
+		a.From = int32(v)
+	}
+
+	if v, ok := tfMap["to"].(int); ok && v >= 0 && v <= 100 {
+		a.To = int32(v)
+	}
+
+	return a
+}
+
+func expandIcmpTypeCode(tfList []interface{}) *types.IcmpTypeCode {
+	if len(tfList) == 0 || tfList[0] == nil {
+		return nil
+	}
+
+	tfMap := tfList[0].(map[string]interface{})
+
+	a := &types.IcmpTypeCode{}
+
+	if v, ok := tfMap["type"].(int); ok {
+		a.Type = int32(v)
+	}
+
+	if v, ok := tfMap["code"].(int); ok {
+		a.Code = int32(v)
+	}
+
 	return a
 }
 
@@ -558,6 +726,90 @@ func flattenTransitGatewayConfiguration(apiObject *types.TransitGatewayConfigura
 	if v := apiObject.RoutableCIDRSpace; v != nil {
 		m["routable_cidr_space"] = aws.ToString(v)
 	}
+
+	if v := apiObject.AttachmentNetworkAclConfiguration; v != nil {
+		m["attachment_network_acl_configuration"] = flattenAttachmentNetworkAclConfigurations(v)
+	}
+
+	return []interface{}{m}
+}
+
+func flattenAttachmentNetworkAclConfigurations(apiObjects []types.NetworkACLEntry) []interface{} {
+	if len(apiObjects) == 0 {
+		return nil
+	}
+
+	var l []interface{}
+
+	for _, apiObject := range apiObjects {
+		l = append(l, flattenAttachmentNetworkAclConfiguration(&apiObject))
+	}
+
+	return l
+}
+
+func flattenAttachmentNetworkAclConfiguration(apiObject *types.NetworkACLEntry) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	m := map[string]interface{}{}
+
+	if v := apiObject.RuleNumber; v >= 1 && v <= 32766 {
+		m["rule_number"] = v
+	}
+
+	if v := apiObject.Protocol; aws.ToString(v) != "" {
+		m["protocol"] = aws.ToString(v)
+	}
+
+	if v := apiObject.RuleAction; v != "" {
+		m["rule_action"] = v
+	}
+
+	if v := apiObject.CidrBlock; aws.ToString(v) != "" {
+		m["cidr_block"] = aws.ToString(v)
+	}
+
+	if v := apiObject.PortRange; v != nil {
+		m["port_range"] = flattenPortRange(v)
+	}
+
+	if v := apiObject.IcmpTypeCode; v != nil {
+		m["icmp_type_code"] = flattenIcmpTypeCode(v)
+	}
+
+	return m
+}
+
+func flattenPortRange(apiObject *types.PortRange) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	m := map[string]interface{}{}
+
+	if v := apiObject.From; v >= 0 && v <= 100 {
+		m["from"] = v
+	}
+
+	if v := apiObject.To; v >= 0 && v <= 100 {
+		m["to"] = v
+	}
+
+	return []interface{}{m}
+}
+
+func flattenIcmpTypeCode(apiObject *types.IcmpTypeCode) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	m := map[string]interface{}{}
+
+	m["type"] = apiObject.Type
+
+	m["code"] = apiObject.Code
 
 	return []interface{}{m}
 }

@@ -7,6 +7,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -16,7 +17,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	tffinspace "github.com/hashicorp/terraform-provider-aws/internal/service/finspace"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -240,6 +240,43 @@ func TestAccFinSpaceKxEnvironment_transitGateway(t *testing.T) {
 	})
 }
 
+func TestAccFinSpaceKxEnvironment_attachmentNetworkAclConfiguration(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	ctx := acctest.Context(t)
+	var kxenvironment finspace.GetKxEnvironmentOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_finspace_kx_environment.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, finspace.ServiceID)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, finspace.ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckKxEnvironmentDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccKxEnvironmentConfig_attachmentNetworkAclConfig(rName, "100.64.0.0/26"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckKxEnvironmentExists(ctx, resourceName, &kxenvironment),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "transit_gateway_configuration.*", map[string]string{
+						"routable_cidr_space": "100.64.0.0/26",
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "transit_gateway_configuration.attachment_network_acl_configuration.*", map[string]string{
+						"protocol":    "6",
+						"rule_action": "allow",
+						"cidr_block":  "0.0.0.0/0",
+					}),
+				),
+			},
+		},
+	})
+}
+
 func TestAccFinSpaceKxEnvironment_tags(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
@@ -394,6 +431,48 @@ resource "aws_finspace_kx_environment" "test" {
 }
 `, rName, cidr))
 }
+
+func testAccKxEnvironmentConfig_attachmentNetworkAclConfig(rName, cidr string) string {
+	return acctest.ConfigCompose(
+		testAccKxEnvironmentConfigBase(),
+		fmt.Sprintf(`
+resource "aws_ec2_transit_gateway" "test" {
+  description = "test"
+}
+
+resource "aws_finspace_kx_environment" "test" {
+  name       = %[1]q
+  kms_key_id = aws_kms_key.test.arn
+
+  transit_gateway_configuration {
+    transit_gateway_id  = aws_ec2_transit_gateway.test.id
+    routable_cidr_space = %[2]q
+    attachment_network_acl_configuration {
+      rule_number = 1
+      protocol    = "6"
+      rule_action = "allow"
+      cidr_block  = "0.0.0.0/0"
+      port_range {
+        from = 53
+        to   = 53
+   	  }
+    }
+  }
+}
+`, rName, cidr))
+}
+
+/*
+   cidr_block  = "0.0.0.0/0"
+   port_range {
+     from = 53
+     to   = 53
+   }
+   icmp_type_code {
+     type = -1
+     code = -1
+   }
+*/
 
 func testAccKxEnvironmentConfig_dnsConfig(rName, serverName, serverIP string) string {
 	return acctest.ConfigCompose(
