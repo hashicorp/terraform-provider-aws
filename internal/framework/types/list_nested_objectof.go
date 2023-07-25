@@ -116,11 +116,11 @@ func NewListNestedObjectValueOfUnknown[T any](ctx context.Context) ListNestedObj
 	return ListNestedObjectValueOf[T]{ListValue: basetypes.NewListUnknown(NewObjectTypeOf[T](ctx))}
 }
 
-func NewListNestedObjectValueOfPtr[T any](ctx context.Context, t *T) ListNestedObjectValueOf[T] {
-	return NewListNestedObjectValueOfPtrSlice(ctx, []*T{t})
+func NewListNestedObjectValueOf[T any](ctx context.Context, t *T) ListNestedObjectValueOf[T] {
+	return NewListNestedObjectValueOfSlice(ctx, []*T{t})
 }
 
-func NewListNestedObjectValueOfPtrSlice[T any](ctx context.Context, ts []*T) ListNestedObjectValueOf[T] {
+func NewListNestedObjectValueOfSlice[T any](ctx context.Context, ts []*T) ListNestedObjectValueOf[T] {
 	return newListNestedObjectValueOf[T](ctx, ts)
 }
 
