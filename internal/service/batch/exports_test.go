@@ -5,6 +5,6 @@ package batch
 
 // Exports for use in tests only.
 var (
-	ExpandEC2ConfigurationUpdate            = expandEC2ConfigurationUpdate
+	ExpandEC2ConfigurationsUpdate           = expandEC2ConfigurationsUpdate
 	ExpandLaunchTemplateSpecificationUpdate = expandLaunchTemplateSpecificationUpdate
 )

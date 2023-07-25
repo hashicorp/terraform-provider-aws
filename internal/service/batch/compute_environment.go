@@ -426,7 +426,7 @@ func resourceComputeEnvironmentUpdate(ctx context.Context, d *schema.ResourceDat
 						defaultImageType = "EKS_AL2"
 					}
 					ec2Configuration := d.Get("compute_resources.0.ec2_configuration").([]interface{})
-					computeResourceUpdate.Ec2Configuration = expandEC2ConfigurationUpdate(ec2Configuration, defaultImageType)
+					computeResourceUpdate.Ec2Configuration = expandEC2ConfigurationsUpdate(ec2Configuration, defaultImageType)
 				}
 
 				if d.HasChange("compute_resources.0.ec2_key_pair") {
@@ -1006,8 +1006,8 @@ func expandLaunchTemplateSpecification(tfMap map[string]interface{}) *batch.Laun
 	return apiObject
 }
 
-func expandEC2ConfigurationUpdate(ec2Configuration []interface{}, defaultImageType string) []*batch.Ec2Configuration {
-	if len(ec2Configuration) == 0 {
+func expandEC2ConfigurationsUpdate(tfList []interface{}, defaultImageType string) []*batch.Ec2Configuration {
+	if len(tfList) == 0 {
 		return []*batch.Ec2Configuration{
 			{
 				ImageType: aws.String(defaultImageType),
@@ -1015,44 +1015,53 @@ func expandEC2ConfigurationUpdate(ec2Configuration []interface{}, defaultImageTy
 		}
 	}
 
-	results := make([]*batch.Ec2Configuration, 0)
-	for _, ec2 := range ec2Configuration {
-		result := &batch.Ec2Configuration{}
-		m := ec2.(map[string]interface{})
-		if v, ok := m["image_id_override"]; ok {
-			result.ImageIdOverride = aws.String(v.(string))
+	var apiObjects []*batch.Ec2Configuration
+
+	for _, tfMapRaw := range tfList {
+		tfMap, ok := tfMapRaw.(map[string]interface{})
+
+		if !ok {
+			continue
 		}
-		if v, ok := m["image_type"]; ok {
-			result.ImageType = aws.String(v.(string))
+
+		apiObject := expandEC2Configuration(tfMap)
+
+		if apiObject == nil {
+			continue
 		}
-		results = append(results, result)
+
+		apiObjects = append(apiObjects, apiObject)
 	}
 
-	return results
+	return apiObjects
 }
 
-func expandLaunchTemplateSpecificationUpdate(launchTemplate []interface{}) *batch.LaunchTemplateSpecification {
-	if len(launchTemplate) == 0 {
+func expandLaunchTemplateSpecificationUpdate(tfList []interface{}) *batch.LaunchTemplateSpecification {
+	if len(tfList) == 0 || tfList[0] == nil {
 		// delete any existing launch template configuration
 		return &batch.LaunchTemplateSpecification{
 			LaunchTemplateId: aws.String(""),
 		}
 	}
 
-	lts := &batch.LaunchTemplateSpecification{}
-	m := launchTemplate[0].(map[string]interface{})
-	if id, ok := m["launch_template_id"]; ok {
-		lts.LaunchTemplateId = aws.String(id.(string))
+	tfMap := tfList[0].(map[string]interface{})
+	apiObject := &batch.LaunchTemplateSpecification{}
+
+	if v, ok := tfMap["launch_template_id"].(string); ok && v != "" {
+		apiObject.LaunchTemplateId = aws.String(v)
 	}
-	if name, ok := m["launch_template_name"]; ok {
-		lts.LaunchTemplateName = aws.String(name.(string))
+
+	if v, ok := tfMap["launch_template_name"].(string); ok && v != "" {
+		apiObject.LaunchTemplateName = aws.String(v)
 	}
-	if version, ok := m["version"]; ok {
-		lts.Version = aws.String(version.(string))
+
+	if v, ok := tfMap["version"].(string); ok {
+		apiObject.Version = aws.String(v)
 	} else {
-		lts.Version = aws.String("")
+		apiObject.Version = aws.String("")
 	}
-	return lts
+
+	return apiObject
 }
 
 func flattenComputeResource(ctx context.Context, apiObject *batch.ComputeResource) map[string]interface{} {

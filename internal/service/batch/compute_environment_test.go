@@ -6,12 +6,12 @@ package batch_test
 import (
 	"context"
 	"fmt"
-	"reflect"
 	"regexp"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/batch"
+	"github.com/google/go-cmp/cmp"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -21,7 +21,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func TestExpandEC2ConfigurationUpdate(t *testing.T) {
+func TestExpandEC2ConfigurationsUpdate(t *testing.T) {
 	t.Parallel()
 
 	//lintignore:AWSAT002
@@ -78,11 +78,9 @@ func TestExpandEC2ConfigurationUpdate(t *testing.T) {
 	}
 
 	for _, testCase := range testCases {
-		expanded := tfbatch.ExpandEC2ConfigurationUpdate(testCase.flattened, "default")
-		if !reflect.DeepEqual(expanded, testCase.expected) {
-			t.Fatalf("Got\n\n%#v\n\nExpected:\n\n%#v\n",
-				expanded,
-				testCase.expected)
+		expanded := tfbatch.ExpandEC2ConfigurationsUpdate(testCase.flattened, "default")
+		if diff := cmp.Diff(expanded, testCase.expected); diff != "" {
+			t.Errorf("unexpected diff (+wanted, -got): %s", diff)
 		}
 	}
 }
@@ -150,10 +148,8 @@ func TestExpandLaunchTemplateSpecificationUpdate(t *testing.T) {
 
 	for _, testCase := range testCases {
 		expanded := tfbatch.ExpandLaunchTemplateSpecificationUpdate(testCase.flattened)
-		if !reflect.DeepEqual(expanded, testCase.expected) {
-			t.Fatalf("Got\n\n%#v\n\nExpected:\n\n%#v\n",
-				expanded,
-				testCase.expected)
+		if diff := cmp.Diff(expanded, testCase.expected); diff != "" {
+			t.Errorf("unexpected diff (+wanted, -got): %s", diff)
 		}
 	}
 }
