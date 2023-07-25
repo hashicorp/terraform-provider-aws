@@ -407,11 +407,8 @@ func resourceWorkspaceUpdate(ctx context.Context, d *schema.ResourceData, meta i
 
 	if d.HasChanges("configuration", "grafana_version") {
 		input := &managedgrafana.UpdateWorkspaceConfigurationInput{
-			WorkspaceId: aws.String(d.Id()),
-		}
-
-		if d.HasChange("configuration") {
-			input.Configuration = aws.String(d.Get("configuration").(string))
+			Configuration: aws.String(d.Get("configuration").(string)),
+			WorkspaceId:   aws.String(d.Id()),
 		}
 
 		if d.HasChange("grafana_version") {
