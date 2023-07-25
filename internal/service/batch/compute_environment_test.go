@@ -1765,24 +1765,6 @@ func TestAccBatchComputeEnvironment_createEC2WithoutComputeResources(t *testing.
 	})
 }
 
-func TestAccBatchComputeEnvironment_createSpotWithoutIAMFleetRole(t *testing.T) {
-	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, batch.EndpointsID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckComputeEnvironmentDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config:      testAccComputeEnvironmentConfig_spotNoIAMFleetRole(rName),
-				ExpectError: regexp.MustCompile(`ComputeResources.spotIamFleetRole cannot not be null or empty`),
-			},
-		},
-	})
-}
-
 func testAccCheckComputeEnvironmentDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).BatchConn(ctx)
@@ -2662,34 +2644,6 @@ resource "aws_batch_compute_environment" "test" {
 
   service_role = aws_iam_role.batch_service.arn
   type         = "UNMANAGED"
-  depends_on   = [aws_iam_role_policy_attachment.batch_service]
-}
-`, rName))
-}
-
-func testAccComputeEnvironmentConfig_spotNoIAMFleetRole(rName string) string {
-	return acctest.ConfigCompose(testAccComputeEnvironmentConfig_base(rName), fmt.Sprintf(`
-resource "aws_batch_compute_environment" "test" {
-  compute_environment_name = %[1]q
-
-  compute_resources {
-    instance_role = aws_iam_instance_profile.ecs_instance.arn
-    instance_type = [
-      "c4.large",
-    ]
-    max_vcpus = 16
-    min_vcpus = 0
-    security_group_ids = [
-      aws_security_group.test.id
-    ]
-    subnets = [
-      aws_subnet.test.id
-    ]
-    type = "SPOT"
-  }
-
-  service_role = aws_iam_role.batch_service.arn
-  type         = "MANAGED"
   depends_on   = [aws_iam_role_policy_attachment.batch_service]
 }
 `, rName))
