@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package sfn
 
 import (
@@ -29,11 +32,19 @@ func DataSourceStateMachine() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"description": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"name": {
 				Type:     schema.TypeString,
 				Required: true,
 			},
 			"role_arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"revision_id": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -85,9 +96,11 @@ func dataSourceStateMachineRead(ctx context.Context, d *schema.ResourceData, met
 	d.SetId(arn)
 	d.Set("arn", output.StateMachineArn)
 	d.Set("creation_date", output.CreationDate.Format(time.RFC3339))
+	d.Set("description", output.Description)
 	d.Set("definition", output.Definition)
 	d.Set("name", output.Name)
 	d.Set("role_arn", output.RoleArn)
+	d.Set("revision_id", output.RevisionId)
 	d.Set("status", output.Status)
 
 	return nil

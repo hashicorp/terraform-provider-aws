@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package apigateway
 
 import (
@@ -92,7 +95,7 @@ func ResourceStage() *schema.Resource {
 						},
 						"stage_variable_overrides": {
 							Type:     schema.TypeMap,
-							Elem:     schema.TypeString,
+							Elem:     &schema.Schema{Type: schema.TypeString},
 							Optional: true,
 						},
 						"use_stage_cache": {

@@ -27,7 +27,7 @@ jobs:
           use-quiet-mode: "yes"
           use-verbose-mode: "yes"
           config-file: ".ci/.markdownlinkcheck.json"
-          folder-path: "website/docs"
+          folder-path: "website/docs/r, website/docs/d"
           file-prefix: "[a-h]"
           file-extension: ".markdown"
           base-branch: "main"
@@ -43,7 +43,7 @@ jobs:
           use-quiet-mode: "yes"
           use-verbose-mode: "yes"
           config-file: ".ci/.markdownlinkcheck.json"
-          folder-path: "website/docs"
+          folder-path: "website/docs/r, website/docs/d"
           file-prefix: "[i-z]"
           file-extension: ".markdown"
           base-branch: "main"
@@ -140,10 +140,6 @@ jobs:
           # being carried over from test cases.
           shared_rules=(
               "--enable-rule=terraform_comment_syntax"
-              "--disable-rule=aws_appsync_function_invalid_request_mapping_template"
-              "--disable-rule=aws_appsync_function_invalid_response_mapping_template"
-              "--disable-rule=aws_appsync_resolver_invalid_request_template"
-              "--disable-rule=aws_appsync_resolver_invalid_response_template"
               "--disable-rule=aws_cloudwatch_event_target_invalid_arn"
               "--disable-rule=aws_db_instance_default_parameter_group"
               "--disable-rule=aws_elasticache_cluster_default_parameter_group"

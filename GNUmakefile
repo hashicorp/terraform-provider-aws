@@ -1,4 +1,4 @@
-SWEEP               ?= us-west-2,us-east-1,us-east-2
+SWEEP               ?= us-west-2,us-east-1,us-east-2,us-west-1
 TEST                ?= ./...
 SWEEP_DIR           ?= ./internal/sweep
 PKG_NAME            ?= internal
@@ -94,6 +94,9 @@ cleango:
 
 clean: cleango build tools
 
+copyright:
+	@copywrite headers
+
 depscheck:
 	@echo "==> Checking source code with go mod tidy..."
 	@$(GO_VER) mod tidy
@@ -145,7 +148,7 @@ gen:
 	rm -f internal/conns/*_gen.go
 	rm -f internal/provider/*_gen.go
 	rm -f internal/service/**/*_gen.go
-	rm -f internal/sweep/sweep_test.go
+	rm -f internal/sweep/sweep_test.go internal/sweep/service_packages_gen_test.go
 	rm -f names/caps.md
 	rm -f names/*_gen.go
 	rm -f website/docs/guides/custom-service-endpoints.html.md
@@ -153,10 +156,11 @@ gen:
 	rm -f .ci/.semgrep-configs.yml
 	rm -f .ci/.semgrep-service-name*.yml
 	$(GO_VER) generate ./...
-	# Generate service package data last as it may depend on output of earlier generators.
-	rm -f internal/service/**/service_package_gen.go
+	# Generate service package lists last as they may depend on output of earlier generators.
 	rm -f internal/provider/service_packages_gen.go
-	$(GO_VER) generate ./internal/generate/servicepackages
+	$(GO_VER) generate ./internal/provider
+	rm -f internal/sweep/sweep_test.go internal/sweep/service_packages_gen_test.go
+	$(GO_VER) generate ./internal/sweep
 
 gencheck:
 	@echo "==> Checking generated source code..."
@@ -184,6 +188,8 @@ importlint:
 	@impi --local . --scheme stdThirdPartyLocal ./internal/...
 
 lint: golangci-lint providerlint importlint
+
+lint-fix: testacc-lint-fix website-lint-fix docs-lint-fix
 
 providerlint:
 	@echo "==> Checking source code with providerlint..."
@@ -307,11 +313,6 @@ semgrep: semgrep-validate
 	@echo "==> Running Semgrep static analysis..."
 	@docker run --rm --volume "${PWD}:/src" returntocorp/semgrep semgrep --config .ci/.semgrep.yml
 
-servicepackages:
-	rm -f internal/service/**/service_package_gen.go
-	rm -f internal/provider/service_packages_gen.go
-	$(GO_VER) generate ./internal/generate/servicepackages
-
 skaff:
 	cd skaff && $(GO_VER) install github.com/hashicorp/terraform-provider-aws/skaff
 
@@ -369,13 +370,14 @@ tfsdk2fw:
 
 tools:
 	cd .ci/providerlint && $(GO_VER) install .
-	cd .ci/tools && $(GO_VER) install github.com/bflad/tfproviderdocs
+	cd .ci/tools && $(GO_VER) install github.com/YakDriver/tfproviderdocs
 	cd .ci/tools && $(GO_VER) install github.com/client9/misspell/cmd/misspell
 	cd .ci/tools && $(GO_VER) install github.com/golangci/golangci-lint/cmd/golangci-lint
 	cd .ci/tools && $(GO_VER) install github.com/katbyte/terrafmt
 	cd .ci/tools && $(GO_VER) install github.com/terraform-linters/tflint
 	cd .ci/tools && $(GO_VER) install github.com/pavius/impi/cmd/impi
 	cd .ci/tools && $(GO_VER) install github.com/hashicorp/go-changelog/cmd/changelog-build
+	cd .ci/tools && $(GO_VER) install github.com/hashicorp/copywrite
 	cd .ci/tools && $(GO_VER) install github.com/rhysd/actionlint/cmd/actionlint
 	cd .ci/tools && $(GO_VER) install mvdan.cc/gofumpt
 
@@ -429,12 +431,12 @@ yamllint:
 	golangci-lint \
 	importlint \
 	lint \
+	lint-fix \
 	providerlint \
 	sane \
 	sanity \
 	semall \
 	semgrep \
-	servicepackages \
 	skaff \
 	sweep \
 	t \

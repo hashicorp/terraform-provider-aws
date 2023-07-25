@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package elasticache
 
 import (
@@ -187,7 +190,8 @@ func FindParameterGroupByName(ctx context.Context, conn *elasticache.ElastiCache
 	input := elasticache.DescribeCacheParameterGroupsInput{
 		CacheParameterGroupName: aws.String(name),
 	}
-	out, err := conn.DescribeCacheParameterGroupsWithContext(ctx, &input)
+
+	output, err := conn.DescribeCacheParameterGroupsWithContext(ctx, &input)
 
 	if tfawserr.ErrCodeEquals(err, elasticache.ErrCodeCacheParameterGroupNotFoundFault) {
 		return nil, &retry.NotFoundError{
@@ -195,18 +199,16 @@ func FindParameterGroupByName(ctx context.Context, conn *elasticache.ElastiCache
 			LastRequest: input,
 		}
 	}
+
 	if err != nil {
 		return nil, err
 	}
 
-	switch count := len(out.CacheParameterGroups); count {
-	case 0:
+	if output == nil {
 		return nil, tfresource.NewEmptyResultError(input)
-	case 1:
-		return out.CacheParameterGroups[0], nil
-	default:
-		return nil, tfresource.NewTooManyResultsError(count, input)
 	}
+
+	return tfresource.AssertSinglePtrResult(output.CacheParameterGroups)
 }
 
 type redisParameterGroupFilter func(group *elasticache.CacheParameterGroup) bool

@@ -62,7 +62,7 @@ resource "aws_neptune_event_subscription" "default" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `enabled` - (Optional) A boolean flag to enable/disable the subscription. Defaults to true.
 * `event_categories` - (Optional) A list of event categories for a `source_type` that you want to subscribe to. Run `aws neptune describe-event-categories` to find all the event categories.
@@ -73,9 +73,9 @@ The following arguments are supported:
 * `source_type` - (Optional) The type of source that will be generating the events. Valid options are `db-instance`, `db-security-group`, `db-parameter-group`, `db-snapshot`, `db-cluster` or `db-cluster-snapshot`. If not set, all sources will be subscribed to.
 * `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The name of the Neptune event notification subscription.
 * `arn` - The Amazon Resource Name of the Neptune event notification subscription.
@@ -92,8 +92,17 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-`aws_neptune_event_subscription` can be imported by using the event subscription name, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_neptune_event_subscription` using the event subscription name. For example:
 
+```terraform
+import {
+  to = aws_neptune_event_subscription.example
+  id = "my-event-subscription"
+}
 ```
-$ terraform import aws_neptune_event_subscription.example my-event-subscription
+
+Using `terraform import`, import `aws_neptune_event_subscription` using the event subscription name. For example:
+
+```console
+% terraform import aws_neptune_event_subscription.example my-event-subscription
 ```

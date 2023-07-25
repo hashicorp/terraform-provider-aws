@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package emrserverless
 
 import (
@@ -201,7 +204,6 @@ func ResourceApplication() *schema.Resource {
 			"release_label": {
 				Type:     schema.TypeString,
 				Required: true,
-				ForceNew: true,
 			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
@@ -332,6 +334,10 @@ func resourceApplicationUpdate(ctx context.Context, d *schema.ResourceData, meta
 		input := &emrserverless.UpdateApplicationInput{
 			ApplicationId: aws.String(d.Id()),
 			ClientToken:   aws.String(id.UniqueId()),
+		}
+
+		if v, ok := d.GetOk("release_label"); ok {
+			input.ReleaseLabel = aws.String(v.(string))
 		}
 
 		if v, ok := d.GetOk("architecture"); ok {

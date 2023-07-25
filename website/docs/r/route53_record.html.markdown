@@ -119,7 +119,7 @@ resource "aws_route53_record" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `zone_id` - (Required) The ID of the hosted zone to contain this record.
 * `name` - (Required) The name of the record.
@@ -181,23 +181,45 @@ Weighted routing policies support the following:
 
 * `weight` - (Required) A numeric value indicating the relative weight of the record. See http://docs.aws.amazon.com/Route53/latest/DeveloperGuide/routing-policy.html#routing-policy-weighted.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `name` - The name of the record.
 * `fqdn` - [FQDN](https://en.wikipedia.org/wiki/Fully_qualified_domain_name) built using the zone domain and `name`.
 
 ## Import
 
-Route53 Records can be imported using ID of the record, which is the zone identifier, record name, and record type, separated by underscores (`_`)E.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Route53 Records using the ID of the record, record name, record type, and set identifier. For example:
 
-```
-$ terraform import aws_route53_record.myrecord Z4KAPRWWNC7JR_dev.example.com_NS
+Using the ID of the record, which is the zone identifier, record name, and record type, separated by underscores (`_`):
+
+```terraform
+import {
+  to = aws_route53_record.myrecord
+  id = "Z4KAPRWWNC7JR_dev.example.com_NS"
+}
 ```
 
-If the record also contains a set identifier, it should be appended:
+If the record also contains a set identifier, append it:
 
+```terraform
+import {
+  to = aws_route53_record.myrecord
+  id = "Z4KAPRWWNC7JR_dev.example.com_NS_dev"
+}
 ```
-$ terraform import aws_route53_record.myrecord Z4KAPRWWNC7JR_dev.example.com_NS_dev
+
+**Using `terraform import` to import** Route53 Records using the ID of the record, record name, record type, and set identifier. For example:
+
+Using the ID of the record, which is the zone identifier, record name, and record type, separated by underscores (`_`):
+
+```console
+% terraform import aws_route53_record.myrecord Z4KAPRWWNC7JR_dev.example.com_NS
+```
+
+If the record also contains a set identifier, append it:
+
+```console
+% terraform import aws_route53_record.myrecord Z4KAPRWWNC7JR_dev.example.com_NS_dev
 ```

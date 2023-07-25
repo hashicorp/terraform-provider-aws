@@ -112,7 +112,7 @@ resource "aws_route53_record" "ptfe_service" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `service_name` - (Required) The service name. For AWS services the service name is usually in the form `com.amazonaws.<region>.<service>` (the SageMaker Notebook service is an exception to this rule, the service name is in the form `aws.sagemaker.<region>.notebook`).
 * `vpc_id` - (Required) The ID of the VPC in which the endpoint will be used.
@@ -142,9 +142,9 @@ If no security groups are specified, the VPC's [default security group](https://
 - `update` - (Default `10m`)
 - `delete` - (Default `10m`)
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The ID of the VPC endpoint.
 * `arn` - The Amazon Resource Name (ARN) of the VPC endpoint.
@@ -164,8 +164,17 @@ DNS blocks (for `dns_entry`) support the following attributes:
 
 ## Import
 
-VPC Endpoints can be imported using the `vpc endpoint id`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import VPC Endpoints using the VPC endpoint `id`. For example:
 
+```terraform
+import {
+  to = aws_vpc_endpoint.endpoint1
+  id = "vpce-3ecf2a57"
+}
 ```
-$ terraform import aws_vpc_endpoint.endpoint1 vpce-3ecf2a57
+
+Using `terraform import`, import VPC Endpoints using the VPC endpoint `id`. For example:
+
+```console
+% terraform import aws_vpc_endpoint.endpoint1 vpce-3ecf2a57
 ```

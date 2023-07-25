@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 //go:build sweep
 // +build sweep
 
@@ -13,7 +16,6 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
@@ -71,11 +73,11 @@ func init() {
 
 func sweepAgents(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).DataSyncConn(ctx)
+	conn := client.DataSyncConn(ctx)
 
 	input := &datasync.ListAgentsInput{}
 	for {
@@ -126,11 +128,11 @@ func sweepAgents(region string) error {
 
 func sweepLocationEFSs(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).DataSyncConn(ctx)
+	conn := client.DataSyncConn(ctx)
 
 	input := &datasync.ListLocationsInput{}
 	for {
@@ -184,11 +186,11 @@ func sweepLocationEFSs(region string) error {
 
 func sweepLocationFSxWindows(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
-	conn := client.(*conns.AWSClient).DataSyncConn(ctx)
+	conn := client.DataSyncConn(ctx)
 
 	input := &datasync.ListLocationsInput{}
 	for {
@@ -242,11 +244,11 @@ func sweepLocationFSxWindows(region string) error {
 
 func sweepLocationFSxLustres(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
-	conn := client.(*conns.AWSClient).DataSyncConn(ctx)
+	conn := client.DataSyncConn(ctx)
 
 	sweepResources := make([]sweep.Sweepable, 0)
 	var sweeperErrs *multierror.Error
@@ -290,7 +292,7 @@ func sweepLocationFSxLustres(region string) error {
 		input.NextToken = output.NextToken
 	}
 
-	if err := sweep.SweepOrchestratorWithContext(ctx, sweepResources); err != nil {
+	if err := sweep.SweepOrchestrator(ctx, sweepResources); err != nil {
 		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error sweeping DataSync Location FSX Lustre File Systems: %w", err))
 	}
 
@@ -299,11 +301,11 @@ func sweepLocationFSxLustres(region string) error {
 
 func sweepLocationNFSs(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).DataSyncConn(ctx)
+	conn := client.DataSyncConn(ctx)
 
 	sweepResources := make([]sweep.Sweepable, 0)
 	var sweeperErrs *multierror.Error
@@ -348,7 +350,7 @@ func sweepLocationNFSs(region string) error {
 		input.NextToken = output.NextToken
 	}
 
-	if err := sweep.SweepOrchestratorWithContext(ctx, sweepResources); err != nil {
+	if err := sweep.SweepOrchestrator(ctx, sweepResources); err != nil {
 		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error sweeping DataSync Location Nfs: %w", err))
 	}
 
@@ -357,11 +359,11 @@ func sweepLocationNFSs(region string) error {
 
 func sweepLocationS3s(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).DataSyncConn(ctx)
+	conn := client.DataSyncConn(ctx)
 
 	input := &datasync.ListLocationsInput{}
 	for {
@@ -415,11 +417,11 @@ func sweepLocationS3s(region string) error {
 
 func sweepLocationSMBs(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
-	conn := client.(*conns.AWSClient).DataSyncConn(ctx)
+	conn := client.DataSyncConn(ctx)
 
 	sweepResources := make([]sweep.Sweepable, 0)
 	var sweeperErrs *multierror.Error
@@ -464,7 +466,7 @@ func sweepLocationSMBs(region string) error {
 		input.NextToken = output.NextToken
 	}
 
-	if err := sweep.SweepOrchestratorWithContext(ctx, sweepResources); err != nil {
+	if err := sweep.SweepOrchestrator(ctx, sweepResources); err != nil {
 		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error sweeping DataSync Location SMB: %w", err))
 	}
 
@@ -473,11 +475,11 @@ func sweepLocationSMBs(region string) error {
 
 func sweepLocationHDFSs(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
-	conn := client.(*conns.AWSClient).DataSyncConn(ctx)
+	conn := client.DataSyncConn(ctx)
 
 	sweepResources := make([]sweep.Sweepable, 0)
 	var sweeperErrs *multierror.Error
@@ -522,7 +524,7 @@ func sweepLocationHDFSs(region string) error {
 		input.NextToken = output.NextToken
 	}
 
-	if err := sweep.SweepOrchestratorWithContext(ctx, sweepResources); err != nil {
+	if err := sweep.SweepOrchestrator(ctx, sweepResources); err != nil {
 		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error sweeping DataSync Location HDFS: %w", err))
 	}
 
@@ -531,11 +533,11 @@ func sweepLocationHDFSs(region string) error {
 
 func sweepLocationObjectStorages(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).DataSyncConn(ctx)
+	conn := client.DataSyncConn(ctx)
 
 	input := &datasync.ListLocationsInput{}
 	for {
@@ -589,11 +591,11 @@ func sweepLocationObjectStorages(region string) error {
 
 func sweepTasks(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
-	conn := client.(*conns.AWSClient).DataSyncConn(ctx)
+	conn := client.DataSyncConn(ctx)
 
 	input := &datasync.ListTasksInput{}
 	for {

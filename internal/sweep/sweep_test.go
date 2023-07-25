@@ -3,6 +3,7 @@
 package sweep_test
 
 import (
+	"context"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -116,6 +117,7 @@ import (
 	_ "github.com/hashicorp/terraform-provider-aws/internal/service/redshift"
 	_ "github.com/hashicorp/terraform-provider-aws/internal/service/redshiftserverless"
 	_ "github.com/hashicorp/terraform-provider-aws/internal/service/resourceexplorer2"
+	_ "github.com/hashicorp/terraform-provider-aws/internal/service/resourcegroups"
 	_ "github.com/hashicorp/terraform-provider-aws/internal/service/route53"
 	_ "github.com/hashicorp/terraform-provider-aws/internal/service/route53recoverycontrolconfig"
 	_ "github.com/hashicorp/terraform-provider-aws/internal/service/route53resolver"
@@ -151,6 +153,6 @@ import (
 )
 
 func TestMain(m *testing.M) {
-	sweep.SweeperClients = make(map[string]interface{})
+	sweep.ServicePackages = servicePackages(context.Background())
 	resource.TestMain(m)
 }

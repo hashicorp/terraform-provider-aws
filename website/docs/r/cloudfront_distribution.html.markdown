@@ -430,9 +430,9 @@ The arguments of `geo_restriction` are:
 * `minimum_protocol_version` - Minimum version of the SSL protocol that you want CloudFront to use for HTTPS connections. Can only be set if `cloudfront_default_certificate = false`. See all possible values in [this](https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/secure-connections-supported-viewer-protocols-ciphers.html) table under "Security policy." Some examples include: `TLSv1.2_2019` and `TLSv1.2_2021`. Default: `TLSv1`. **NOTE**: If you are using a custom certificate (specified with `acm_certificate_arn` or `iam_certificate_id`), and have specified `sni-only` in `ssl_support_method`, `TLSv1` or later must be specified. If you have specified `vip` in `ssl_support_method`, only `SSLv3` or `TLSv1` can be specified. If you have specified `cloudfront_default_certificate`, `TLSv1` must be specified.
 * `ssl_support_method` - How you want CloudFront to serve HTTPS requests. One of `vip` or `sni-only`. Required if you specify `acm_certificate_arn` or `iam_certificate_id`. **NOTE:** `vip` causes CloudFront to use a dedicated IP address and may incur extra charges.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - Identifier for the distribution. For example: `EDFDVBD632BHDS5`.
 * `arn` - ARN for the distribution. For example: `arn:aws:cloudfront::123456789012:distribution/EDFDVBD632BHDS5`, where `123456789012` is your AWS account ID.
@@ -466,8 +466,17 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-CloudFront Distributions can be imported using the `id`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import CloudFront Distributions using the `id`. For example:
 
+```terraform
+import {
+  to = aws_cloudfront_distribution.distribution
+  id = "E74FTE3EXAMPLE"
+}
 ```
-$ terraform import aws_cloudfront_distribution.distribution E74FTE3EXAMPLE
+
+Using `terraform import`, import CloudFront Distributions using the `id`. For example:
+
+```console
+% terraform import aws_cloudfront_distribution.distribution E74FTE3EXAMPLE
 ```

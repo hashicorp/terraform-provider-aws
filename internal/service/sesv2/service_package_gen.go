@@ -7,6 +7,7 @@ import (
 
 	aws_sdkv2 "github.com/aws/aws-sdk-go-v2/aws"
 	sesv2_sdkv2 "github.com/aws/aws-sdk-go-v2/service/sesv2"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -30,6 +31,17 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 		{
 			Factory:  DataSourceDedicatedIPPool,
 			TypeName: "aws_sesv2_dedicated_ip_pool",
+		},
+		{
+			Factory:  DataSourceEmailIdentity,
+			TypeName: "aws_sesv2_email_identity",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
+		},
+		{
+			Factory:  DataSourceEmailIdentityMailFromAttributes,
+			TypeName: "aws_sesv2_email_identity_mail_from_attributes",
 		},
 	}
 }
@@ -102,4 +114,6 @@ func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (
 	}), nil
 }
 
-var ServicePackage = &servicePackage{}
+func ServicePackage(ctx context.Context) conns.ServicePackage {
+	return &servicePackage{}
+}

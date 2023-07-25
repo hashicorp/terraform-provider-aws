@@ -643,6 +643,8 @@ service/translate:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_translate_'
 service/verifiedaccess:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_verifiedaccess'
+service/verifiedpermissions:
+  - '((\*|-)\s*`?|(data|resource)\s+"?)aws_verifiedpermissions_'
 service/voiceid:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_voiceid_'
 service/vpc:

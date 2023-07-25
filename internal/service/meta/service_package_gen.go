@@ -5,6 +5,7 @@ package meta
 import (
 	"context"
 
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/types"
 )
 
@@ -55,4 +56,6 @@ func (p *servicePackage) ServicePackageName() string {
 	return "meta"
 }
 
-var ServicePackage = &servicePackage{}
+func ServicePackage(ctx context.Context) conns.ServicePackage {
+	return &servicePackage{}
+}

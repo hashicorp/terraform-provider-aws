@@ -81,7 +81,7 @@ resource "aws_glue_job" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `command` – (Required) The command of the job. Defined below.
 * `connections` – (Optional) The list of connections used for this job.
@@ -116,9 +116,9 @@ The following arguments are supported:
 
 * `notify_delay_after` - (Optional) After a job run starts, the number of minutes to wait before sending a job run delay notification.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - Amazon Resource Name (ARN) of Glue Job
 * `id` - Job name
@@ -126,8 +126,17 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Glue Jobs can be imported using `name`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Glue Jobs using `name`. For example:
 
+```terraform
+import {
+  to = aws_glue_job.MyJob
+  id = "MyJob"
+}
 ```
-$ terraform import aws_glue_job.MyJob MyJob
+
+Using `terraform import`, import Glue Jobs using `name`. For example:
+
+```console
+% terraform import aws_glue_job.MyJob MyJob
 ```

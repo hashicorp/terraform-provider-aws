@@ -406,9 +406,9 @@ This block is only valid when the `type` is `CODECOMMIT`, `GITHUB` or `GITHUB_EN
 * `subnets` - (Required) Subnet IDs within which to run builds.
 * `vpc_id` - (Required) ID of the VPC within which to run builds.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the CodeBuild project.
 * `badge_url` - URL of the build badge when `badge_enabled` is enabled.
@@ -418,8 +418,17 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-CodeBuild Project can be imported using the `name`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import CodeBuild Project using the `name`. For example:
 
+```terraform
+import {
+  to = aws_codebuild_project.name
+  id = "project-name"
+}
 ```
-$ terraform import aws_codebuild_project.name project-name
+
+Using `terraform import`, import CodeBuild Project using the `name`. For example:
+
+```console
+% terraform import aws_codebuild_project.name project-name
 ```

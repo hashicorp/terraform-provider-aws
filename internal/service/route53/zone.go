@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package route53
 
 import (
@@ -680,8 +683,6 @@ func hostedZoneVPCHash(v interface{}) int {
 }
 
 func waitForChangeSynchronization(ctx context.Context, conn *route53.Route53, changeID string) error {
-	rand.Seed(time.Now().UTC().UnixNano())
-
 	conf := retry.StateChangeConf{
 		Pending:      []string{route53.ChangeStatusPending},
 		Target:       []string{route53.ChangeStatusInsync},

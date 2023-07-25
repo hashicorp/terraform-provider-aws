@@ -22,18 +22,27 @@ resource "aws_iam_account_alias" "alias" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `account_alias` - (Required) The account alias
 
-## Attributes Reference
+## Attribute Reference
 
-No additional attributes are exported.
+This resource exports no additional attributes.
 
 ## Import
 
-The current Account Alias can be imported using the `account_alias`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import the current Account Alias using the `account_alias`. For example:
 
+```terraform
+import {
+  to = aws_iam_account_alias.alias
+  id = "my-account-alias"
+}
 ```
-$ terraform import aws_iam_account_alias.alias my-account-alias
+
+Using `terraform import`, import the current Account Alias using the `account_alias`. For example:
+
+```console
+% terraform import aws_iam_account_alias.alias my-account-alias
 ```
