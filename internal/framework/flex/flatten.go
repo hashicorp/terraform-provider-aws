@@ -82,7 +82,7 @@ func (visitor flattenVisitor) visit(ctx context.Context, fieldName string, vFrom
 		return diags
 	}
 
-	diags.Append(visitor.newIncompatibleTypesError(ctx, vFrom, tTo))
+	diags.Append(visitor.newIncompatibleTypesError(vFrom, tTo))
 	return diags
 }
 
@@ -105,7 +105,7 @@ func (visitor flattenVisitor) bool(ctx context.Context, vFrom reflect.Value, tTo
 		return diags
 	}
 
-	diags.Append(visitor.newIncompatibleTypesError(ctx, vFrom, tTo))
+	diags.Append(visitor.newIncompatibleTypesError(vFrom, tTo))
 	return diags
 }
 
@@ -128,7 +128,7 @@ func (visitor flattenVisitor) float(ctx context.Context, vFrom reflect.Value, tT
 		return diags
 	}
 
-	diags.Append(visitor.newIncompatibleTypesError(ctx, vFrom, tTo))
+	diags.Append(visitor.newIncompatibleTypesError(vFrom, tTo))
 	return diags
 }
 
@@ -151,7 +151,7 @@ func (visitor flattenVisitor) int(ctx context.Context, vFrom reflect.Value, tTo 
 		return diags
 	}
 
-	diags.Append(visitor.newIncompatibleTypesError(ctx, vFrom, tTo))
+	diags.Append(visitor.newIncompatibleTypesError(vFrom, tTo))
 	return diags
 }
 
@@ -174,7 +174,7 @@ func (visitor flattenVisitor) string(ctx context.Context, vFrom reflect.Value, t
 		return diags
 	}
 
-	diags.Append(visitor.newIncompatibleTypesError(ctx, vFrom, tTo))
+	diags.Append(visitor.newIncompatibleTypesError(vFrom, tTo))
 	return diags
 }
 
@@ -235,7 +235,7 @@ func (visitor flattenVisitor) pointer(ctx context.Context, vFrom reflect.Value, 
 		}
 	}
 
-	diags.Append(visitor.newIncompatibleTypesError(ctx, vFrom, tTo))
+	diags.Append(visitor.newIncompatibleTypesError(vFrom, tTo))
 	return diags
 }
 
@@ -326,7 +326,7 @@ func (visitor flattenVisitor) slice(ctx context.Context, vFrom reflect.Value, tT
 		}
 	}
 
-	diags.Append(visitor.newIncompatibleTypesError(ctx, vFrom, tTo))
+	diags.Append(visitor.newIncompatibleTypesError(vFrom, tTo))
 	return diags
 }
 
@@ -384,10 +384,10 @@ func (visitor flattenVisitor) map_(ctx context.Context, vFrom reflect.Value, tTo
 		}
 	}
 
-	diags.Append(visitor.newIncompatibleTypesError(ctx, vFrom, tTo))
+	diags.Append(visitor.newIncompatibleTypesError(vFrom, tTo))
 	return diags
 }
 
-func (visitor flattenVisitor) newIncompatibleTypesError(ctx context.Context, vFrom reflect.Value, tTo attr.Type) diag.ErrorDiagnostic {
+func (visitor flattenVisitor) newIncompatibleTypesError(vFrom reflect.Value, tTo attr.Type) diag.ErrorDiagnostic {
 	return diag.NewErrorDiagnostic("Incompatible types", fmt.Sprintf("%s cannot be flattened to %s", vFrom.Kind(), tTo))
 }
