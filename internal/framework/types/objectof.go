@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 )
 
+// ObjectTypeOf is the attribute type of an ObjectValueOf.
 type ObjectTypeOf[T any] struct {
 	basetypes.ObjectType
 }
@@ -86,6 +87,7 @@ func (t ObjectTypeOf[T]) ValueType(ctx context.Context) attr.Value {
 	return ObjectValueOf[T]{}
 }
 
+// ObjectValueOf represents a Terraform Plugin Framework Object value whose corresponding Go type is the structure T.
 type ObjectValueOf[T any] struct {
 	basetypes.ObjectValue
 }
