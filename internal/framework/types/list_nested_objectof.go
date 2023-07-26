@@ -94,7 +94,10 @@ type ListNestedObjectValueOf[T any] struct {
 	basetypes.ListValue
 }
 
-var _ basetypes.ListValuable = ListNestedObjectValueOf[struct{}]{}
+var (
+	_ basetypes.ListValuable = ListNestedObjectValueOf[struct{}]{}
+	_ ValueWithToPtr         = ListNestedObjectValueOf[struct{}]{}
+)
 
 func (v ListNestedObjectValueOf[T]) Equal(o attr.Value) bool {
 	other, ok := o.(ListNestedObjectValueOf[T])
@@ -110,7 +113,7 @@ func (v ListNestedObjectValueOf[T]) Type(ctx context.Context) attr.Type {
 	return NewListNestedObjectTypeOf[T](ctx)
 }
 
-func (v ListNestedObjectValueOf[T]) ValueAsPtr(ctx context.Context) (any, diag.Diagnostics) {
+func (v ListNestedObjectValueOf[T]) ToPtr(ctx context.Context) (any, diag.Diagnostics) {
 	var diags diag.Diagnostics
 
 	elements := v.ListValue.Elements()
@@ -118,9 +121,11 @@ func (v ListNestedObjectValueOf[T]) ValueAsPtr(ctx context.Context) (any, diag.D
 	case 0:
 		return nil, diags
 	case 1:
-		return elements[0].(ValueAsPtr).ValueAsPtr(ctx)
+		v, d := elements[0].(ValueWithToPtr).ToPtr(ctx)
+		diags.Append(d...)
+		return v, diags
 	default:
-		diags.Append(diag.NewErrorDiagnostic("Invalid list", fmt.Sprintf("too many elements: wanted 1, got %d", n)))
+		diags.Append(diag.NewErrorDiagnostic("Invalid list", fmt.Sprintf("too many elements: want 1, got %d", n)))
 		return nil, diags
 	}
 }

@@ -94,7 +94,10 @@ type ObjectValueOf[T any] struct {
 	basetypes.ObjectValue
 }
 
-var _ basetypes.ObjectValuable = ObjectValueOf[struct{}]{}
+var (
+	_ basetypes.ObjectValuable = ObjectValueOf[struct{}]{}
+	_ ValueWithToPtr           = ObjectValueOf[struct{}]{}
+)
 
 func (v ObjectValueOf[T]) Equal(o attr.Value) bool {
 	other, ok := o.(ObjectValueOf[T])
@@ -110,7 +113,7 @@ func (v ObjectValueOf[T]) Type(ctx context.Context) attr.Type {
 	return NewObjectTypeOf[T](ctx)
 }
 
-func (v ObjectValueOf[T]) ValueAsPtr(ctx context.Context) (any, diag.Diagnostics) {
+func (v ObjectValueOf[T]) ToPtr(ctx context.Context) (any, diag.Diagnostics) {
 	var diags diag.Diagnostics
 
 	target := new(T)

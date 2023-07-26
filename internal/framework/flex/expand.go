@@ -348,16 +348,19 @@ func (visitor expandVisitor) listOfObject(ctx context.Context, vFrom attr.Value,
 	case reflect.Ptr:
 		switch tElem := vTo.Type().Elem(); tElem.Kind() {
 		case reflect.Struct:
-			if p, ok := vFrom.(types.ValueAsPtr); ok {
+			if p, ok := vFrom.(types.ValueWithToPtr); ok {
 				//
 				// types.List(OfObject) -> *struct.
 				//
-				from, d := p.ValueAsPtr(ctx)
+
+				// Get the nested Object as a pointer.
+				from, d := p.ToPtr(ctx)
 				diags.Append(d...)
 				if diags.HasError() {
 					return diags
 				}
 
+				// Create a new target structure and walk its fields.
 				to := reflect.New(tElem).Interface()
 				diags.Append(walkStructFields(ctx, from, to, visitor)...)
 				if diags.HasError() {
