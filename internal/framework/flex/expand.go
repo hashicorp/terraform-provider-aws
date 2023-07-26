@@ -344,17 +344,17 @@ func (visitor expandVisitor) listOfString(ctx context.Context, vFrom basetypes.L
 func (visitor expandVisitor) listOfObject(ctx context.Context, vFrom attr.Value, vTo reflect.Value) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	switch vTo.Kind() {
-	case reflect.Ptr:
-		switch tElem := vTo.Type().Elem(); tElem.Kind() {
-		case reflect.Struct:
-			if p, ok := vFrom.(types.NestedObjectValue); ok {
+	if vNestedObject, ok := vFrom.(types.NestedObjectValue); ok {
+		switch vTo.Kind() {
+		case reflect.Ptr:
+			switch tElem := vTo.Type().Elem(); tElem.Kind() {
+			case reflect.Struct:
 				//
 				// types.List(OfObject) -> *struct.
 				//
 
 				// Get the nested Object as a pointer.
-				from, d := p.ToPtr(ctx)
+				from, d := vNestedObject.ToPtr(ctx)
 				diags.Append(d...)
 				if diags.HasError() {
 					return diags

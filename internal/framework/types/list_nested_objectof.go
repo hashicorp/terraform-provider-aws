@@ -19,7 +19,10 @@ type ListNestedObjectTypeOf[T any] struct {
 	basetypes.ListType
 }
 
-var _ basetypes.ListTypable = ListNestedObjectTypeOf[struct{}]{}
+var (
+	_ basetypes.ListTypable = ListNestedObjectTypeOf[struct{}]{}
+	_ NestedObjectType      = ListNestedObjectTypeOf[struct{}]{}
+)
 
 func NewListNestedObjectTypeOf[T any](ctx context.Context) ListNestedObjectTypeOf[T] {
 	return ListNestedObjectTypeOf[T]{basetypes.ListType{ElemType: NewObjectTypeOf[T](ctx)}}
@@ -89,6 +92,29 @@ func (t ListNestedObjectTypeOf[T]) ValueType(ctx context.Context) attr.Value {
 	return ListNestedObjectValueOf[T]{}
 }
 
+func (t ListNestedObjectTypeOf[T]) NullValue(ctx context.Context) (attr.Value, diag.Diagnostics) {
+	var diags diag.Diagnostics
+
+	return NewListNestedObjectValueOfNull[T](ctx), diags
+}
+
+func (t ListNestedObjectTypeOf[T]) ValueFromPtr(ctx context.Context, ptr any) (attr.Value, diag.Diagnostics) {
+	var diags diag.Diagnostics
+
+	if v, ok := ptr.(*T); ok {
+		return NewListNestedObjectValueOf(ctx, v), diags
+	}
+
+	diags.Append(diag.NewErrorDiagnostic("Invalid pointer value", fmt.Sprintf("incorrect type: want %T, got %T", (*T)(nil), ptr)))
+	return nil, diags
+}
+
+func (t ListNestedObjectTypeOf[T]) NewPtr(ctx context.Context) (any, diag.Diagnostics) {
+	var diags diag.Diagnostics
+
+	return new(T), diags
+}
+
 // ListNestedObjectValueOf represents a Terraform Plugin Framework List value whose elements are of type ObjectTypeOf.
 type ListNestedObjectValueOf[T any] struct {
 	basetypes.ListValue
@@ -129,17 +155,6 @@ func (v ListNestedObjectValueOf[T]) ToPtr(ctx context.Context) (any, diag.Diagno
 		return nil, diags
 	}
 }
-
-/*
-func (v ObjectValueOf[T]) ToPtr(ctx context.Context) (any, diag.Diagnostics) {
-	var diags diag.Diagnostics
-
-	target := new(T)
-	diags.Append(v.ObjectValue.As(ctx, target, basetypes.ObjectAsOptions{})...)
-
-	return target, diags
-}
-*/
 
 func NewListNestedObjectValueOfNull[T any](ctx context.Context) ListNestedObjectValueOf[T] {
 	return ListNestedObjectValueOf[T]{ListValue: basetypes.NewListNull(NewObjectTypeOf[T](ctx))}

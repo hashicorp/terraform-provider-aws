@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
+	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 )
 
 // Flatten "flattens" an AWS SDK for Go v2 API data structure into
@@ -45,7 +46,6 @@ func (visitor flattenVisitor) visit(ctx context.Context, fieldName string, vFrom
 
 	tTo := valTo.Type(ctx)
 	switch vFrom.Kind() {
-	// Primitive types.
 	case reflect.Bool:
 		diags.Append(visitor.bool(ctx, vFrom, tTo, vTo)...)
 		return diags
@@ -62,17 +62,14 @@ func (visitor flattenVisitor) visit(ctx context.Context, fieldName string, vFrom
 		diags.Append(visitor.string(ctx, vFrom, tTo, vTo)...)
 		return diags
 
-	// Pointer to primitive types.
 	case reflect.Ptr:
 		diags.Append(visitor.ptr(ctx, vFrom, tTo, vTo)...)
 		return diags
 
-	// Slice of primitive types or pointer to primitive types.
 	case reflect.Slice:
 		diags.Append(visitor.slice(ctx, vFrom, tTo, vTo)...)
 		return diags
 
-	// Map of simple types or pointer to simple types.
 	case reflect.Map:
 		diags.Append(visitor.map_(ctx, vFrom, tTo, vTo)...)
 		return diags
@@ -216,17 +213,56 @@ func (visitor flattenVisitor) ptr(ctx context.Context, vFrom reflect.Value, tTo 
 		return diags
 
 	case reflect.Struct:
-		switch tTo.(type) {
+		diags.Append(visitor.ptrToStruct(ctx, vFrom, tTo, vTo)...)
+		return diags
+	}
+
+	diags.Append(visitor.newIncompatibleTypesError(vFrom, tTo))
+	return diags
+}
+
+// ptrToStruct copies an AWS API *struct value to a compatible Plugin Framework field.
+func (visitor flattenVisitor) ptrToStruct(ctx context.Context, vFrom reflect.Value, tTo attr.Type, vTo reflect.Value) diag.Diagnostics {
+	var diags diag.Diagnostics
+
+	if tNestedObject, ok := tTo.(fwtypes.NestedObjectType); ok {
+		if vFrom.IsNil() {
+			val, d := tNestedObject.NullValue(ctx)
+			diags.Append(d...)
+			if diags.HasError() {
+				return diags
+			}
+
+			vTo.Set(reflect.ValueOf(val))
+			return diags
+		}
+
+		switch vElem := vFrom.Elem(); tTo.(type) {
 		case basetypes.ListTypable:
 			//
 			// *struct -> types.List(OfObject).
 			//
-			return diags
 
-		case basetypes.SetTypable:
-			//
-			// *struct -> types.Set(OfObject).
-			//
+			// Create a new target structure and walk its fields.
+			to, d := tNestedObject.NewPtr(ctx)
+			diags.Append(d...)
+			if diags.HasError() {
+				return diags
+			}
+
+			diags.Append(walkStructFields(ctx, vElem.Interface(), to, visitor)...)
+			if diags.HasError() {
+				return diags
+			}
+
+			// Set the target structure as a nested Object.
+			val, d := tNestedObject.ValueFromPtr(ctx, to)
+			diags.Append(d...)
+			if diags.HasError() {
+				return diags
+			}
+
+			vTo.Set(reflect.ValueOf(val))
 			return diags
 		}
 	}
