@@ -4,7 +4,7 @@ go 1.20
 
 require (
 	github.com/ProtonMail/go-crypto v0.0.0-20230217124315-7d5c6f04bbb8
-	github.com/aws/aws-sdk-go v1.44.305
+	github.com/aws/aws-sdk-go v1.44.308
 	github.com/aws/aws-sdk-go-v2 v1.19.0
 	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.13.5
 	github.com/aws/aws-sdk-go-v2/service/accessanalyzer v1.19.15
@@ -19,7 +19,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/computeoptimizer v1.24.3
 	github.com/aws/aws-sdk-go-v2/service/directoryservice v1.17.4
 	github.com/aws/aws-sdk-go-v2/service/docdbelastic v1.1.13
-	github.com/aws/aws-sdk-go-v2/service/ec2 v1.105.1
+	github.com/aws/aws-sdk-go-v2/service/ec2 v1.107.0
 	github.com/aws/aws-sdk-go-v2/service/emrserverless v1.9.0
 	github.com/aws/aws-sdk-go-v2/service/finspace v1.10.3
 	github.com/aws/aws-sdk-go-v2/service/fis v1.14.13
@@ -31,7 +31,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/ivschat v1.4.8
 	github.com/aws/aws-sdk-go-v2/service/kendra v1.41.1
 	github.com/aws/aws-sdk-go-v2/service/keyspaces v1.3.3
-	github.com/aws/aws-sdk-go-v2/service/lambda v1.37.1
+	github.com/aws/aws-sdk-go-v2/service/lambda v1.38.0
 	github.com/aws/aws-sdk-go-v2/service/lightsail v1.27.2
 	github.com/aws/aws-sdk-go-v2/service/medialive v1.32.1
 	github.com/aws/aws-sdk-go-v2/service/oam v1.1.14
@@ -40,7 +40,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/pricing v1.20.1
 	github.com/aws/aws-sdk-go-v2/service/qldb v1.15.14
 	github.com/aws/aws-sdk-go-v2/service/rbin v1.8.15
-	github.com/aws/aws-sdk-go-v2/service/rds v1.46.2
+	github.com/aws/aws-sdk-go-v2/service/rds v1.48.0
 	github.com/aws/aws-sdk-go-v2/service/resourceexplorer2 v1.2.16
 	github.com/aws/aws-sdk-go-v2/service/rolesanywhere v1.2.3
 	github.com/aws/aws-sdk-go-v2/service/route53domains v1.15.1
@@ -56,7 +56,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/transcribe v1.27.0
 	github.com/aws/aws-sdk-go-v2/service/verifiedpermissions v1.0.5
 	github.com/aws/aws-sdk-go-v2/service/vpclattice v1.0.8
-	github.com/aws/aws-sdk-go-v2/service/workspaces v1.28.16
+	github.com/aws/aws-sdk-go-v2/service/workspaces v1.28.17
 	github.com/aws/aws-sdk-go-v2/service/xray v1.16.14
 	github.com/beevik/etree v1.2.0
 	github.com/google/go-cmp v0.5.9
