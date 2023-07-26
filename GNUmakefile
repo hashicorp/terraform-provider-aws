@@ -109,7 +109,7 @@ docs-lint:
 		echo "Unexpected misspelling found in docs files."; \
 		echo "To automatically fix the misspelling, run 'make docs-lint-fix' and commit the changes."; \
 		exit 1)
-	@docker run  --rm -v $(PWD):/markdown 06kellyjac/markdownlint-cli docs/ || (echo; \
+	@docker run --rm -v $(PWD):/markdown 06kellyjac/markdownlint-cli docs/ || (echo; \
 		echo "Unexpected issues found in docs Markdown files."; \
 		echo "To apply any automatic fixes, run 'make docs-lint-fix' and commit the changes."; \
 		exit 1)
