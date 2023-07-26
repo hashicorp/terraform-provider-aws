@@ -348,7 +348,7 @@ func (visitor expandVisitor) listOfObject(ctx context.Context, vFrom attr.Value,
 	case reflect.Ptr:
 		switch tElem := vTo.Type().Elem(); tElem.Kind() {
 		case reflect.Struct:
-			if p, ok := vFrom.(types.ValueWithToPtr); ok {
+			if p, ok := vFrom.(types.NestedObjectValue); ok {
 				//
 				// types.List(OfObject) -> *struct.
 				//

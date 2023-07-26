@@ -19,10 +19,7 @@ type ObjectTypeOf[T any] struct {
 	basetypes.ObjectType
 }
 
-var (
-	_ basetypes.ObjectTypable = ObjectTypeOf[struct{}]{}
-	_ TypeWithNewPtr          = ObjectTypeOf[struct{}]{}
-)
+var _ basetypes.ObjectTypable = ObjectTypeOf[struct{}]{}
 
 func NewObjectTypeOf[T any](ctx context.Context) ObjectTypeOf[T] {
 	return ObjectTypeOf[T]{basetypes.ObjectType{AttrTypes: AttributeTypesMust[T](ctx)}}
@@ -66,10 +63,6 @@ func (t ObjectTypeOf[T]) ValueFromObject(ctx context.Context, in basetypes.Objec
 	return value, diags
 }
 
-func (t ObjectTypeOf[T]) NewPtr(ctx context.Context) any {
-	return new(T)
-}
-
 func (t ObjectTypeOf[T]) ValueFromTerraform(ctx context.Context, in tftypes.Value) (attr.Value, error) {
 	attrValue, err := t.ObjectType.ValueFromTerraform(ctx, in)
 
@@ -101,10 +94,7 @@ type ObjectValueOf[T any] struct {
 	basetypes.ObjectValue
 }
 
-var (
-	_ basetypes.ObjectValuable = ObjectValueOf[struct{}]{}
-	_ ValueWithToPtr           = ObjectValueOf[struct{}]{}
-)
+var _ basetypes.ObjectValuable = ObjectValueOf[struct{}]{}
 
 func (v ObjectValueOf[T]) Equal(o attr.Value) bool {
 	other, ok := o.(ObjectValueOf[T])
@@ -118,15 +108,6 @@ func (v ObjectValueOf[T]) Equal(o attr.Value) bool {
 
 func (v ObjectValueOf[T]) Type(ctx context.Context) attr.Type {
 	return NewObjectTypeOf[T](ctx)
-}
-
-func (v ObjectValueOf[T]) ToPtr(ctx context.Context) (any, diag.Diagnostics) {
-	var diags diag.Diagnostics
-
-	target := new(T)
-	diags.Append(v.ObjectValue.As(ctx, target, basetypes.ObjectAsOptions{})...)
-
-	return target, diags
 }
 
 func NewObjectValueOfNull[T any](ctx context.Context) ObjectValueOf[T] {

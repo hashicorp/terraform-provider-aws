@@ -96,7 +96,7 @@ type ListNestedObjectValueOf[T any] struct {
 
 var (
 	_ basetypes.ListValuable = ListNestedObjectValueOf[struct{}]{}
-	_ ValueWithToPtr         = ListNestedObjectValueOf[struct{}]{}
+	_ NestedObjectValue      = ListNestedObjectValueOf[struct{}]{}
 )
 
 func (v ListNestedObjectValueOf[T]) Equal(o attr.Value) bool {
@@ -121,14 +121,25 @@ func (v ListNestedObjectValueOf[T]) ToPtr(ctx context.Context) (any, diag.Diagno
 	case 0:
 		return nil, diags
 	case 1:
-		v, d := elements[0].(ValueWithToPtr).ToPtr(ctx)
-		diags.Append(d...)
-		return v, diags
+		ptr := new(T)
+		diags.Append(elements[0].(ObjectValueOf[T]).ObjectValue.As(ctx, ptr, basetypes.ObjectAsOptions{})...)
+		return ptr, diags
 	default:
 		diags.Append(diag.NewErrorDiagnostic("Invalid list", fmt.Sprintf("too many elements: want 1, got %d", n)))
 		return nil, diags
 	}
 }
+
+/*
+func (v ObjectValueOf[T]) ToPtr(ctx context.Context) (any, diag.Diagnostics) {
+	var diags diag.Diagnostics
+
+	target := new(T)
+	diags.Append(v.ObjectValue.As(ctx, target, basetypes.ObjectAsOptions{})...)
+
+	return target, diags
+}
+*/
 
 func NewListNestedObjectValueOfNull[T any](ctx context.Context) ListNestedObjectValueOf[T] {
 	return ListNestedObjectValueOf[T]{ListValue: basetypes.NewListNull(NewObjectTypeOf[T](ctx))}

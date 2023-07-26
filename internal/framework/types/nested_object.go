@@ -10,9 +10,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 )
 
-// ValueWithToPtr extends the Value interface to include the ability to
-// return the value as a pointer (usually a Go struct pointer).
-type ValueWithToPtr interface {
+// NestedObjectValue extends the Value interface for values that represent nested Objects.
+type NestedObjectValue interface {
 	attr.Value
 
 	// ToPtr returns the value as a pointer (usually a Go struct pointer).
