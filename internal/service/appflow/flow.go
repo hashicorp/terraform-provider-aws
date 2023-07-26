@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package appflow
 
 import (
@@ -1216,13 +1219,13 @@ func ResourceFlow() *schema.Resource {
 }
 
 func resourceFlowCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).AppFlowConn()
+	conn := meta.(*conns.AWSClient).AppFlowConn(ctx)
 
 	in := &appflow.CreateFlowInput{
 		FlowName:                  aws.String(d.Get(names.AttrName).(string)),
 		DestinationFlowConfigList: expandDestinationFlowConfigs(d.Get("destination_flow_config").(*schema.Set).List()),
 		SourceFlowConfig:          expandSourceFlowConfig(d.Get("source_flow_config").([]interface{})[0].(map[string]interface{})),
-		Tags:                      GetTagsIn(ctx),
+		Tags:                      getTagsIn(ctx),
 		Tasks:                     expandTasks(d.Get("task").(*schema.Set).List()),
 		TriggerConfig:             expandTriggerConfig(d.Get("trigger_config").([]interface{})[0].(map[string]interface{})),
 	}
@@ -1251,7 +1254,7 @@ func resourceFlowCreate(ctx context.Context, d *schema.ResourceData, meta interf
 }
 
 func resourceFlowRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).AppFlowConn()
+	conn := meta.(*conns.AWSClient).AppFlowConn(ctx)
 
 	out, err := FindFlowByARN(ctx, conn, d.Id())
 
@@ -1309,7 +1312,7 @@ func resourceFlowRead(ctx context.Context, d *schema.ResourceData, meta interfac
 }
 
 func resourceFlowUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).AppFlowConn()
+	conn := meta.(*conns.AWSClient).AppFlowConn(ctx)
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		in := &appflow.UpdateFlowInput{
@@ -1336,7 +1339,7 @@ func resourceFlowUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 }
 
 func resourceFlowDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).AppFlowConn()
+	conn := meta.(*conns.AWSClient).AppFlowConn(ctx)
 
 	out, _ := FindFlowByARN(ctx, conn, d.Id())
 
@@ -3396,7 +3399,7 @@ func flattenTasks(tasks []*appflow.Task) []interface{} {
 }
 
 func flattenTask(task *appflow.Task) map[string]interface{} {
-	if task == nil {
+	if task == nil || (task == (&appflow.Task{})) {
 		return nil
 	}
 

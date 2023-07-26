@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package vpclattice
 
 import (
@@ -66,12 +69,12 @@ const (
 )
 
 func resourceServiceNetworkCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).VPCLatticeClient()
+	conn := meta.(*conns.AWSClient).VPCLatticeClient(ctx)
 
 	in := &vpclattice.CreateServiceNetworkInput{
 		ClientToken: aws.String(id.UniqueId()),
 		Name:        aws.String(d.Get("name").(string)),
-		Tags:        GetTagsIn(ctx),
+		Tags:        getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("auth_type"); ok {
@@ -93,7 +96,7 @@ func resourceServiceNetworkCreate(ctx context.Context, d *schema.ResourceData, m
 }
 
 func resourceServiceNetworkRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).VPCLatticeClient()
+	conn := meta.(*conns.AWSClient).VPCLatticeClient(ctx)
 
 	out, err := findServiceNetworkByID(ctx, conn, d.Id())
 
@@ -115,7 +118,7 @@ func resourceServiceNetworkRead(ctx context.Context, d *schema.ResourceData, met
 }
 
 func resourceServiceNetworkUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).VPCLatticeClient()
+	conn := meta.(*conns.AWSClient).VPCLatticeClient(ctx)
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		in := &vpclattice.UpdateServiceNetworkInput{
@@ -137,7 +140,7 @@ func resourceServiceNetworkUpdate(ctx context.Context, d *schema.ResourceData, m
 }
 
 func resourceServiceNetworkDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).VPCLatticeClient()
+	conn := meta.(*conns.AWSClient).VPCLatticeClient(ctx)
 
 	log.Printf("[INFO] Deleting VPC Lattice Service Network: %s", d.Id())
 	_, err := conn.DeleteServiceNetwork(ctx, &vpclattice.DeleteServiceNetworkInput{

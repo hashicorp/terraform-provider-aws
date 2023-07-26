@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package codebuild
 
 import (
@@ -694,7 +697,7 @@ func ResourceProject() *schema.Resource {
 
 func resourceProjectCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CodeBuildConn()
+	conn := meta.(*conns.AWSClient).CodeBuildConn(ctx)
 
 	projectEnv := expandProjectEnvironment(d)
 	projectSource := expandProjectSource(d)
@@ -725,7 +728,7 @@ func resourceProjectCreate(ctx context.Context, d *schema.ResourceData, meta int
 		LogsConfig:          projectLogsConfig,
 		BuildBatchConfig:    projectBatchConfig,
 		FileSystemLocations: projectFileSystemLocations,
-		Tags:                GetTagsIn(ctx),
+		Tags:                getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("cache"); ok {
@@ -1286,7 +1289,7 @@ func expandProjectSourceData(data map[string]interface{}) codebuild.ProjectSourc
 
 func resourceProjectRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CodeBuildConn()
+	conn := meta.(*conns.AWSClient).CodeBuildConn(ctx)
 
 	project, err := FindProjectByARN(ctx, conn, d.Id())
 
@@ -1364,14 +1367,14 @@ func resourceProjectRead(ctx context.Context, d *schema.ResourceData, meta inter
 		d.Set("badge_url", "")
 	}
 
-	SetTagsOut(ctx, project.Tags)
+	setTagsOut(ctx, project.Tags)
 
 	return diags
 }
 
 func resourceProjectUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CodeBuildConn()
+	conn := meta.(*conns.AWSClient).CodeBuildConn(ctx)
 
 	if d.HasChanges("project_visibility", "resource_access_role") {
 		visInput := &codebuild.UpdateProjectVisibilityInput{
@@ -1505,7 +1508,7 @@ func resourceProjectUpdate(ctx context.Context, d *schema.ResourceData, meta int
 
 		// The documentation clearly says "The replacement set of tags for this build project."
 		// But its a slice of pointers so if not set for every update, they get removed.
-		input.Tags = GetTagsIn(ctx)
+		input.Tags = getTagsIn(ctx)
 
 		// Handle IAM eventual consistency
 		err := retry.RetryContext(ctx, propagationTimeout, func() *retry.RetryError {
@@ -1536,7 +1539,7 @@ func resourceProjectUpdate(ctx context.Context, d *schema.ResourceData, meta int
 
 func resourceProjectDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CodeBuildConn()
+	conn := meta.(*conns.AWSClient).CodeBuildConn(ctx)
 
 	_, err := conn.DeleteProjectWithContext(ctx, &codebuild.DeleteProjectInput{
 		Name: aws.String(d.Id()),

@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package chimesdkvoice
 
 import (
@@ -54,7 +57,7 @@ func ResourceGlobalSettings() *schema.Resource {
 
 func resourceGlobalSettingsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ChimeSDKVoiceConn()
+	conn := meta.(*conns.AWSClient).ChimeSDKVoiceConn(ctx)
 
 	// Include retry handling to allow for propagation of the Global Settings
 	// logging bucket configuration
@@ -91,7 +94,7 @@ func resourceGlobalSettingsRead(ctx context.Context, d *schema.ResourceData, met
 
 func resourceGlobalSettingsUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ChimeSDKVoiceConn()
+	conn := meta.(*conns.AWSClient).ChimeSDKVoiceConn(ctx)
 
 	if d.HasChange("voice_connector") {
 		input := &chimesdkvoice.UpdateGlobalSettingsInput{
@@ -110,7 +113,7 @@ func resourceGlobalSettingsUpdate(ctx context.Context, d *schema.ResourceData, m
 
 func resourceGlobalSettingsDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ChimeSDKVoiceConn()
+	conn := meta.(*conns.AWSClient).ChimeSDKVoiceConn(ctx)
 
 	_, err := conn.UpdateGlobalSettingsWithContext(ctx, &chimesdkvoice.UpdateGlobalSettingsInput{
 		VoiceConnector: &chimesdkvoice.VoiceConnectorSettings{},

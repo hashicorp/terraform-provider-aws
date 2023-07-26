@@ -58,7 +58,7 @@ resource "aws_networkfirewall_firewall_policy" "test" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `description` - (Optional) A friendly description of the firewall policy.
 
@@ -155,9 +155,9 @@ The `dimension` block supports the following argument:
 
 * `value` - (Required) The string value to use in the custom metric dimension.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The Amazon Resource Name (ARN) that identifies the firewall policy.
 
@@ -169,8 +169,17 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Network Firewall Policies can be imported using their `ARN`.
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Network Firewall Policies using their `arn`. For example:
 
+```terraform
+import {
+  to = aws_networkfirewall_firewall_policy.example
+  id = "arn:aws:network-firewall:us-west-1:123456789012:firewall-policy/example"
+}
 ```
-$ terraform import aws_networkfirewall_firewall_policy.example arn:aws:network-firewall:us-west-1:123456789012:firewall-policy/example
+
+Using `terraform import`, import Network Firewall Policies using their `arn`. For example:
+
+```console
+% terraform import aws_networkfirewall_firewall_policy.example arn:aws:network-firewall:us-west-1:123456789012:firewall-policy/example
 ```

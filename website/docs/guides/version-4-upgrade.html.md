@@ -253,7 +253,7 @@ resource "aws_s3_bucket" "example" {
 
 Terraform CLI with v4.9.0 of the AWS Provider will report back:
 
-```shell
+```console
 aws_s3_bucket.example: Refreshing state... [id=yournamehere]
 ...
 No changes. Your infrastructure matches the configuration.
@@ -1379,7 +1379,7 @@ resource "aws_s3_bucket_accelerate_configuration" "example" {
 
 Run `terraform import` on each new resource, _e.g._,
 
-```shell
+```console
 $ terraform import aws_s3_bucket_accelerate_configuration.example yournamehere
 aws_s3_bucket_accelerate_configuration.example: Importing from ID "yournamehere"...
 aws_s3_bucket_accelerate_configuration.example: Import prepared!
@@ -1437,7 +1437,7 @@ resource "aws_s3_bucket_acl" "example" {
 
 Run `terraform import` on each new resource, _e.g._,
 
-```shell
+```console
 $ terraform import aws_s3_bucket_acl.example yournamehere,private
 aws_s3_bucket_acl.example: Importing from ID "yournamehere,private"...
 aws_s3_bucket_acl.example: Import prepared!
@@ -1508,7 +1508,7 @@ resource "aws_s3_bucket_cors_configuration" "example" {
 
 Run `terraform import` on each new resource, _e.g._,
 
-```shell
+```console
 $ terraform import aws_s3_bucket_cors_configuration.example yournamehere
 aws_s3_bucket_cors_configuration.example: Importing from ID "yournamehere"...
 aws_s3_bucket_cors_configuration.example: Import prepared!
@@ -1605,7 +1605,7 @@ resource "aws_s3_bucket_acl" "example" {
 
 Run `terraform import` on each new resource, _e.g._,
 
-```shell
+```console
 $ terraform import aws_s3_bucket_acl.example yournamehere
 aws_s3_bucket_acl.example: Importing from ID "yournamehere"...
 aws_s3_bucket_acl.example: Import prepared!
@@ -1708,7 +1708,7 @@ resource "aws_s3_bucket_lifecycle_configuration" "example" {
 
 Run `terraform import` on each new resource, _e.g._,
 
-```shell
+```console
 $ terraform import aws_s3_bucket_lifecycle_configuration.example yournamehere
 aws_s3_bucket_lifecycle_configuration.example: Importing from ID "yournamehere"...
 aws_s3_bucket_lifecycle_configuration.example: Import prepared!
@@ -1791,7 +1791,7 @@ resource "aws_s3_bucket_lifecycle_configuration" "example" {
 
 Run `terraform import` on each new resource, _e.g._,
 
-```shell
+```console
 $ terraform import aws_s3_bucket_lifecycle_configuration.example yournamehere
 aws_s3_bucket_lifecycle_configuration.example: Importing from ID "yournamehere"...
 aws_s3_bucket_lifecycle_configuration.example: Import prepared!
@@ -1878,7 +1878,7 @@ resource "aws_s3_bucket_lifecycle_configuration" "example" {
 
 Run `terraform import` on each new resource, _e.g._,
 
-```shell
+```console
 $ terraform import aws_s3_bucket_lifecycle_configuration.example yournamehere
 aws_s3_bucket_lifecycle_configuration.example: Importing from ID "yournamehere"...
 aws_s3_bucket_lifecycle_configuration.example: Import prepared!
@@ -2010,7 +2010,7 @@ resource "aws_s3_bucket_lifecycle_configuration" "example" {
 
 Run `terraform import` on each new resource, _e.g._,
 
-```shell
+```console
 $ terraform import aws_s3_bucket_lifecycle_configuration.example yournamehere
 aws_s3_bucket_lifecycle_configuration.example: Importing from ID "yournamehere"...
 aws_s3_bucket_lifecycle_configuration.example: Import prepared!
@@ -2083,7 +2083,7 @@ resource "aws_s3_bucket_logging" "example" {
 
 Run `terraform import` on each new resource, _e.g._,
 
-```shell
+```console
 $ terraform import aws_s3_bucket_logging.example yournamehere
 aws_s3_bucket_logging.example: Importing from ID "yournamehere"...
 aws_s3_bucket_logging.example: Import prepared!
@@ -2157,7 +2157,7 @@ resource "aws_s3_bucket_object_lock_configuration" "example" {
 
 Run `terraform import` on each new resource, _e.g._,
 
-```shell
+```console
 $ terraform import aws_s3_bucket_object_lock_configuration.example yournamehere
 aws_s3_bucket_object_lock_configuration.example: Importing from ID "yournamehere"...
 aws_s3_bucket_object_lock_configuration.example: Import prepared!
@@ -2247,7 +2247,7 @@ EOF
 
 Run `terraform import` on each new resource, _e.g._,
 
-```shell
+```console
 $ terraform import aws_s3_bucket_policy.example yournamehere
 aws_s3_bucket_policy.example: Importing from ID "yournamehere"...
 aws_s3_bucket_policy.example: Import prepared!
@@ -2359,7 +2359,7 @@ resource "aws_s3_bucket_replication_configuration" "example" {
 
 Run `terraform import` on each new resource, _e.g._,
 
-```shell
+```console
 $ terraform import aws_s3_bucket_replication_configuration.example yournamehere
 aws_s3_bucket_replication_configuration.example: Importing from ID "yournamehere"...
 aws_s3_bucket_replication_configuration.example: Import prepared!
@@ -2417,7 +2417,7 @@ resource "aws_s3_bucket_request_payment_configuration" "example" {
 
 Run `terraform import` on each new resource, _e.g._,
 
-```shell
+```console
 $ terraform import aws_s3_bucket_request_payment_configuration.example yournamehere
 aws_s3_bucket_request_payment_configuration.example: Importing from ID "yournamehere"...
 aws_s3_bucket_request_payment_configuration.example: Import prepared!
@@ -2488,7 +2488,7 @@ resource "aws_s3_bucket_server_side_encryption_configuration" "example" {
 
 Run `terraform import` on each new resource, _e.g._,
 
-```shell
+```console
 $ terraform import aws_s3_bucket_server_side_encryption_configuration.example yournamehere
 aws_s3_bucket_server_side_encryption_configuration.example: Importing from ID "yournamehere"...
 aws_s3_bucket_server_side_encryption_configuration.example: Import prepared!
@@ -2554,7 +2554,7 @@ resource "aws_s3_bucket_versioning" "example" {
 
 Run `terraform import` on each new resource, _e.g._,
 
-```shell
+```console
 $ terraform import aws_s3_bucket_versioning.example yournamehere
 aws_s3_bucket_versioning.example: Importing from ID "yournamehere"...
 aws_s3_bucket_versioning.example: Import prepared!
@@ -2662,7 +2662,7 @@ resource and remove `versioning` and its nested arguments in the `aws_s3_bucket`
 
 Run `terraform import` on each new resource, _e.g._,
 
-```shell
+```console
 $ terraform import aws_s3_bucket_versioning.example yournamehere
 aws_s3_bucket_versioning.example: Importing from ID "yournamehere"...
 aws_s3_bucket_versioning.example: Import prepared!
@@ -2758,7 +2758,7 @@ resource "aws_s3_bucket_website_configuration" "example" {
 
 Run `terraform import` on each new resource, _e.g._,
 
-```shell
+```console
 $ terraform import aws_s3_bucket_website_configuration.example yournamehere
 aws_s3_bucket_website_configuration.example: Importing from ID "yournamehere"...
 aws_s3_bucket_website_configuration.example: Import prepared!
@@ -3552,5 +3552,5 @@ be compatible with EC2-Classic as AWS completes their EC2-Classic networking ret
 
 These resources should be considered deprecated and will be removed in version 5.0.0.
 
-* [Account Associations](/docs/providers/aws/r/macie_member_account_association.html)
-* [S3 Bucket Associations](/docs/providers/aws/r/macie_s3_bucket_association.html)
+* Macie Member Account Association
+* Macie S3 Bucket Association

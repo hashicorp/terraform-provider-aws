@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package wafv2
 
 import (
@@ -10,15 +13,17 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+var listOfEmptyObjectSchema *schema.Schema = &schema.Schema{
+	Type:     schema.TypeList,
+	Optional: true,
+	MaxItems: 1,
+	Elem: &schema.Resource{
+		Schema: map[string]*schema.Schema{},
+	},
+}
+
 func emptySchema() *schema.Schema {
-	return &schema.Schema{
-		Type:     schema.TypeList,
-		Optional: true,
-		MaxItems: 1,
-		Elem: &schema.Resource{
-			Schema: map[string]*schema.Schema{},
-		},
-	}
+	return listOfEmptyObjectSchema
 }
 
 func ruleLabelsSchema() *schema.Schema {
@@ -505,6 +510,43 @@ func visibilityConfigSchema() *schema.Schema {
 				"sampled_requests_enabled": {
 					Type:     schema.TypeBool,
 					Required: true,
+				},
+			},
+		},
+	}
+}
+
+func associationConfigSchema() *schema.Schema {
+	return &schema.Schema{
+		Type:     schema.TypeList,
+		Optional: true,
+		MaxItems: 1,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"request_body": requestBodySchema(),
+			},
+		},
+	}
+}
+
+func requestBodySchema() *schema.Schema {
+	return &schema.Schema{
+		Type:     schema.TypeList,
+		Optional: true,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"cloudfront": {
+					Type:     schema.TypeList,
+					Optional: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"default_size_inspection_limit": {
+								Type:         schema.TypeString,
+								Required:     true,
+								ValidateFunc: validation.StringInSlice(wafv2.SizeInspectionLimit_Values(), false),
+							},
+						},
+					},
 				},
 			},
 		},

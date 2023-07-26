@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package appconfig
 
 import (
@@ -74,7 +77,7 @@ func ResourceHostedConfigurationVersion() *schema.Resource {
 
 func resourceHostedConfigurationVersionCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).AppConfigConn()
+	conn := meta.(*conns.AWSClient).AppConfigConn(ctx)
 
 	appID := d.Get("application_id").(string)
 	profileID := d.Get("configuration_profile_id").(string)
@@ -103,7 +106,7 @@ func resourceHostedConfigurationVersionCreate(ctx context.Context, d *schema.Res
 
 func resourceHostedConfigurationVersionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).AppConfigConn()
+	conn := meta.(*conns.AWSClient).AppConfigConn(ctx)
 
 	appID, confProfID, versionNumber, err := HostedConfigurationVersionParseID(d.Id())
 
@@ -155,7 +158,7 @@ func resourceHostedConfigurationVersionRead(ctx context.Context, d *schema.Resou
 
 func resourceHostedConfigurationVersionDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).AppConfigConn()
+	conn := meta.(*conns.AWSClient).AppConfigConn(ctx)
 
 	appID, confProfID, versionNumber, err := HostedConfigurationVersionParseID(d.Id())
 

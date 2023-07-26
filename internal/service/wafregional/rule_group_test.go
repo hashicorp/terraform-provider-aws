@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package wafregional_test
 
 import (
@@ -280,7 +283,7 @@ func TestAccWAFRegionalRuleGroup_noActivatedRules(t *testing.T) {
 
 func testAccCheckRuleGroupDisappears(ctx context.Context, group *waf.RuleGroup) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).WAFRegionalConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).WAFRegionalConn(ctx)
 		region := acctest.Provider.Meta().(*conns.AWSClient).Region
 
 		rResp, err := conn.ListActivatedRulesInRuleGroupWithContext(ctx, &waf.ListActivatedRulesInRuleGroupInput{
@@ -332,7 +335,7 @@ func testAccCheckRuleGroupDestroy(ctx context.Context) resource.TestCheckFunc {
 				continue
 			}
 
-			conn := acctest.Provider.Meta().(*conns.AWSClient).WAFRegionalConn()
+			conn := acctest.Provider.Meta().(*conns.AWSClient).WAFRegionalConn(ctx)
 			resp, err := conn.GetRuleGroupWithContext(ctx, &waf.GetRuleGroupInput{
 				RuleGroupId: aws.String(rs.Primary.ID),
 			})
@@ -365,7 +368,7 @@ func testAccCheckRuleGroupExists(ctx context.Context, n string, group *waf.RuleG
 			return fmt.Errorf("No WAF Regional Rule Group ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).WAFRegionalConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).WAFRegionalConn(ctx)
 		resp, err := conn.GetRuleGroupWithContext(ctx, &waf.GetRuleGroupInput{
 			RuleGroupId: aws.String(rs.Primary.ID),
 		})
@@ -525,7 +528,7 @@ resource "aws_wafregional_rule_group" "test" {
 // which isn't static because ruleId is generated as part of the test
 func computeActivatedRuleWithRuleId(rule *waf.Rule, actionType string, priority int, idx *int) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		ruleResource := tfwafregional.ResourceRuleGroup().Schema["activated_rule"].Elem.(*schema.Resource)
+		ruleResource := tfwafregional.ResourceRuleGroup().SchemaMap()["activated_rule"].Elem.(*schema.Resource)
 
 		m := map[string]interface{}{
 			"action": []interface{}{

@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package networkmanager
 
 import (
@@ -52,7 +55,7 @@ func ResourceTransitGatewayRegistration() *schema.Resource {
 }
 
 func resourceTransitGatewayRegistrationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).NetworkManagerConn()
+	conn := meta.(*conns.AWSClient).NetworkManagerConn(ctx)
 
 	globalNetworkID := d.Get("global_network_id").(string)
 	transitGatewayARN := d.Get("transit_gateway_arn").(string)
@@ -79,7 +82,7 @@ func resourceTransitGatewayRegistrationCreate(ctx context.Context, d *schema.Res
 }
 
 func resourceTransitGatewayRegistrationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).NetworkManagerConn()
+	conn := meta.(*conns.AWSClient).NetworkManagerConn(ctx)
 
 	globalNetworkID, transitGatewayARN, err := TransitGatewayRegistrationParseResourceID(d.Id())
 
@@ -106,7 +109,7 @@ func resourceTransitGatewayRegistrationRead(ctx context.Context, d *schema.Resou
 }
 
 func resourceTransitGatewayRegistrationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).NetworkManagerConn()
+	conn := meta.(*conns.AWSClient).NetworkManagerConn(ctx)
 
 	globalNetworkID, transitGatewayARN, err := TransitGatewayRegistrationParseResourceID(d.Id())
 

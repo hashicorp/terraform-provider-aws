@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package location_test
 
 import (
@@ -183,7 +186,7 @@ func TestAccLocationGeofenceCollection_tags(t *testing.T) {
 
 func testAccCheckGeofenceCollectionDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).LocationConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).LocationConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_location_geofence_collection" {
@@ -220,7 +223,7 @@ func testAccCheckGeofenceCollectionExists(ctx context.Context, name string) reso
 			return create.Error(names.Location, create.ErrActionCheckingExistence, tflocation.ResNameGeofenceCollection, name, errors.New("not set"))
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).LocationConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).LocationConn(ctx)
 		_, err := conn.DescribeGeofenceCollectionWithContext(ctx, &locationservice.DescribeGeofenceCollectionInput{
 			CollectionName: aws.String(rs.Primary.ID),
 		})

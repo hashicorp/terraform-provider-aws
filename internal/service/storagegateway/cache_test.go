@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package storagegateway_test
 
 import (
@@ -142,7 +145,7 @@ func testAccCheckCacheExists(ctx context.Context, resourceName string) resource.
 			return fmt.Errorf("Not found: %s", resourceName)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).StorageGatewayConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).StorageGatewayConn(ctx)
 
 		gatewayARN, diskID, err := tfstoragegateway.DecodeCacheID(rs.Primary.ID)
 		if err != nil {

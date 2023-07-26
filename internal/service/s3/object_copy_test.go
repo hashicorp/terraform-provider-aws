@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package s3_test
 
 import (
@@ -91,7 +94,7 @@ func TestAccS3ObjectCopy_BucketKeyEnabled_object(t *testing.T) {
 
 func testAccCheckObjectCopyDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Conn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Conn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_s3_object_copy" {
@@ -126,7 +129,7 @@ func testAccCheckObjectCopyExists(ctx context.Context, n string) resource.TestCh
 			return fmt.Errorf("No S3 Object ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Conn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Conn(ctx)
 		_, err := conn.GetObjectWithContext(ctx, &s3.GetObjectInput{
 			Bucket:  aws.String(rs.Primary.Attributes["bucket"]),
 			Key:     aws.String(rs.Primary.Attributes["key"]),

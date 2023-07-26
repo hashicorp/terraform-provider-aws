@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ecr_test
 
 import (
@@ -294,7 +297,7 @@ func TestAccECRRepository_Encryption_aes256(t *testing.T) {
 
 func testAccCheckRepositoryDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ECRConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ECRConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_ecr_repository" {
@@ -329,7 +332,7 @@ func testAccCheckRepositoryExists(ctx context.Context, n string, v *ecr.Reposito
 			return fmt.Errorf("No ECR Repository ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ECRConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ECRConn(ctx)
 
 		output, err := tfecr.FindRepositoryByName(ctx, conn, rs.Primary.ID)
 

@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package securityhub
 
 import (
@@ -41,7 +44,7 @@ func ResourceInviteAccepter() *schema.Resource {
 
 func resourceInviteAccepterCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SecurityHubConn()
+	conn := meta.(*conns.AWSClient).SecurityHubConn(ctx)
 	log.Print("[DEBUG] Accepting Security Hub invitation")
 
 	invitationId, err := resourceInviteAccepterGetInvitationID(ctx, conn, d.Get("master_id").(string))
@@ -85,7 +88,7 @@ func resourceInviteAccepterGetInvitationID(ctx context.Context, conn *securityhu
 
 func resourceInviteAccepterRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SecurityHubConn()
+	conn := meta.(*conns.AWSClient).SecurityHubConn(ctx)
 	log.Print("[DEBUG] Reading Security Hub master account")
 
 	resp, err := conn.GetMasterAccountWithContext(ctx, &securityhub.GetMasterAccountInput{})
@@ -114,7 +117,7 @@ func resourceInviteAccepterRead(ctx context.Context, d *schema.ResourceData, met
 
 func resourceInviteAccepterDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SecurityHubConn()
+	conn := meta.(*conns.AWSClient).SecurityHubConn(ctx)
 	log.Print("[DEBUG] Disassociating from Security Hub master account")
 
 	_, err := conn.DisassociateFromMasterAccountWithContext(ctx, &securityhub.DisassociateFromMasterAccountInput{})

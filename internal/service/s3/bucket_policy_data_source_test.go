@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package s3_test
 
 import (
@@ -87,7 +90,7 @@ func testAccCheckBucketPolicyExists(ctx context.Context, n string, ci *s3.GetBuc
 			return fmt.Errorf("no S3 Bucket Policy ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Conn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Conn(ctx)
 
 		output, err := tfs3.FindBucketPolicy(ctx, conn, rs.Primary.ID)
 		if err != nil {

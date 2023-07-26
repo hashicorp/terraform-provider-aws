@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package dataexchange
 
 import (
@@ -60,12 +63,12 @@ func ResourceRevision() *schema.Resource {
 
 func resourceRevisionCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DataExchangeConn()
+	conn := meta.(*conns.AWSClient).DataExchangeConn(ctx)
 
 	input := &dataexchange.CreateRevisionInput{
 		DataSetId: aws.String(d.Get("data_set_id").(string)),
 		Comment:   aws.String(d.Get("comment").(string)),
-		Tags:      GetTagsIn(ctx),
+		Tags:      getTagsIn(ctx),
 	}
 
 	out, err := conn.CreateRevisionWithContext(ctx, input)
@@ -80,7 +83,7 @@ func resourceRevisionCreate(ctx context.Context, d *schema.ResourceData, meta in
 
 func resourceRevisionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DataExchangeConn()
+	conn := meta.(*conns.AWSClient).DataExchangeConn(ctx)
 
 	dataSetId, revisionId, err := RevisionParseResourceID(d.Id())
 	if err != nil {
@@ -104,14 +107,14 @@ func resourceRevisionRead(ctx context.Context, d *schema.ResourceData, meta inte
 	d.Set("arn", revision.Arn)
 	d.Set("revision_id", revision.Id)
 
-	SetTagsOut(ctx, revision.Tags)
+	setTagsOut(ctx, revision.Tags)
 
 	return diags
 }
 
 func resourceRevisionUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DataExchangeConn()
+	conn := meta.(*conns.AWSClient).DataExchangeConn(ctx)
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		input := &dataexchange.UpdateRevisionInput{
@@ -135,7 +138,7 @@ func resourceRevisionUpdate(ctx context.Context, d *schema.ResourceData, meta in
 
 func resourceRevisionDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DataExchangeConn()
+	conn := meta.(*conns.AWSClient).DataExchangeConn(ctx)
 
 	input := &dataexchange.DeleteRevisionInput{
 		RevisionId: aws.String(d.Get("revision_id").(string)),

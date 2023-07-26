@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package redshift
 
 import (
@@ -93,6 +96,10 @@ func ResourceCluster() *schema.Resource {
 					validation.StringDoesNotMatch(regexp.MustCompile(`--`), "cannot contain two consecutive hyphens"),
 					validation.StringDoesNotMatch(regexp.MustCompile(`-$`), "cannot end with a hyphen"),
 				),
+			},
+			"cluster_namespace_arn": {
+				Type:     schema.TypeString,
+				Computed: true,
 			},
 			"cluster_nodes": {
 				Type:     schema.TypeList,
@@ -381,7 +388,7 @@ func ResourceCluster() *schema.Resource {
 
 func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).RedshiftConn()
+	conn := meta.(*conns.AWSClient).RedshiftConn(ctx)
 
 	clusterID := d.Get("cluster_identifier").(string)
 	backupInput := &redshift.RestoreFromClusterSnapshotInput{
@@ -404,7 +411,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 		NodeType:                         aws.String(d.Get("node_type").(string)),
 		Port:                             aws.Int64(int64(d.Get("port").(int))),
 		PubliclyAccessible:               aws.Bool(d.Get("publicly_accessible").(bool)),
-		Tags:                             GetTagsIn(ctx),
+		Tags:                             getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("aqua_configuration_status"); ok {
@@ -559,7 +566,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 
 func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).RedshiftConn()
+	conn := meta.(*conns.AWSClient).RedshiftConn(ctx)
 
 	rsc, err := FindClusterByID(ctx, conn, d.Id())
 
@@ -601,6 +608,7 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 	d.Set("availability_zone_relocation_enabled", azr)
 	d.Set("cluster_identifier", rsc.ClusterIdentifier)
+	d.Set("cluster_namespace_arn", rsc.ClusterNamespaceArn)
 	if err := d.Set("cluster_nodes", flattenClusterNodes(rsc.ClusterNodes)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting cluster_nodes: %s", err)
 	}
@@ -662,14 +670,14 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 	d.Set("vpc_security_group_ids", aws.StringValueSlice(apiList))
 
-	SetTagsOut(ctx, rsc.Tags)
+	setTagsOut(ctx, rsc.Tags)
 
 	return diags
 }
 
 func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).RedshiftConn()
+	conn := meta.(*conns.AWSClient).RedshiftConn(ctx)
 
 	if d.HasChangesExcept("aqua_configuration_status", "availability_zone", "iam_roles", "logging", "snapshot_copy", "tags", "tags_all") {
 		input := &redshift.ModifyClusterInput{
@@ -884,7 +892,7 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 
 func resourceClusterDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).RedshiftConn()
+	conn := meta.(*conns.AWSClient).RedshiftConn(ctx)
 
 	skipFinalSnapshot := d.Get("skip_final_snapshot").(bool)
 	input := &redshift.DeleteClusterInput{

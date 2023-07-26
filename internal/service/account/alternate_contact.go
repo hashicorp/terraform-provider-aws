@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package account
 
 import (
@@ -79,7 +82,7 @@ func resourceAlternateContact() *schema.Resource {
 }
 
 func resourceAlternateContactCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).AccountClient()
+	conn := meta.(*conns.AWSClient).AccountClient(ctx)
 
 	accountID := d.Get("account_id").(string)
 	contactType := d.Get("alternate_contact_type").(string)
@@ -119,7 +122,7 @@ func resourceAlternateContactCreate(ctx context.Context, d *schema.ResourceData,
 }
 
 func resourceAlternateContactRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).AccountClient()
+	conn := meta.(*conns.AWSClient).AccountClient(ctx)
 
 	accountID, contactType, err := alternateContactParseResourceID(d.Id())
 
@@ -150,7 +153,7 @@ func resourceAlternateContactRead(ctx context.Context, d *schema.ResourceData, m
 }
 
 func resourceAlternateContactUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).AccountClient()
+	conn := meta.(*conns.AWSClient).AccountClient(ctx)
 
 	accountID, contactType, err := alternateContactParseResourceID(d.Id())
 
@@ -201,7 +204,7 @@ func resourceAlternateContactUpdate(ctx context.Context, d *schema.ResourceData,
 }
 
 func resourceAlternateContactDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).AccountClient()
+	conn := meta.(*conns.AWSClient).AccountClient(ctx)
 
 	accountID, contactType, err := alternateContactParseResourceID(d.Id())
 

@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package s3
 
 import (
@@ -74,7 +77,7 @@ func ResourceBucketServerSideEncryptionConfiguration() *schema.Resource {
 }
 
 func resourceBucketServerSideEncryptionConfigurationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).S3Conn()
+	conn := meta.(*conns.AWSClient).S3Conn(ctx)
 
 	bucket := d.Get("bucket").(string)
 	expectedBucketOwner := d.Get("expected_bucket_owner").(string)
@@ -108,7 +111,7 @@ func resourceBucketServerSideEncryptionConfigurationCreate(ctx context.Context, 
 }
 
 func resourceBucketServerSideEncryptionConfigurationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).S3Conn()
+	conn := meta.(*conns.AWSClient).S3Conn(ctx)
 
 	bucket, expectedBucketOwner, err := ParseResourceID(d.Id())
 	if err != nil {
@@ -163,7 +166,7 @@ func resourceBucketServerSideEncryptionConfigurationRead(ctx context.Context, d 
 }
 
 func resourceBucketServerSideEncryptionConfigurationUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).S3Conn()
+	conn := meta.(*conns.AWSClient).S3Conn(ctx)
 
 	bucket, expectedBucketOwner, err := ParseResourceID(d.Id())
 	if err != nil {
@@ -197,7 +200,7 @@ func resourceBucketServerSideEncryptionConfigurationUpdate(ctx context.Context, 
 }
 
 func resourceBucketServerSideEncryptionConfigurationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).S3Conn()
+	conn := meta.(*conns.AWSClient).S3Conn(ctx)
 
 	bucket, expectedBucketOwner, err := ParseResourceID(d.Id())
 	if err != nil {

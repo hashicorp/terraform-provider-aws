@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package codecommit
 
 import (
@@ -76,7 +79,7 @@ func ResourceTrigger() *schema.Resource {
 
 func resourceTriggerCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CodeCommitConn()
+	conn := meta.(*conns.AWSClient).CodeCommitConn(ctx)
 
 	// Expand the "trigger" set to aws-sdk-go compat []*codecommit.RepositoryTrigger
 	triggers := expandTriggers(d.Get("trigger").(*schema.Set).List())
@@ -101,7 +104,7 @@ func resourceTriggerCreate(ctx context.Context, d *schema.ResourceData, meta int
 
 func resourceTriggerRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CodeCommitConn()
+	conn := meta.(*conns.AWSClient).CodeCommitConn(ctx)
 
 	input := &codecommit.GetRepositoryTriggersInput{
 		RepositoryName: aws.String(d.Id()),
@@ -119,7 +122,7 @@ func resourceTriggerRead(ctx context.Context, d *schema.ResourceData, meta inter
 
 func resourceTriggerDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CodeCommitConn()
+	conn := meta.(*conns.AWSClient).CodeCommitConn(ctx)
 
 	log.Printf("[DEBUG] Deleting Trigger: %q", d.Id())
 

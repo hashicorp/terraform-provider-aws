@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package finspace
 
 import (
@@ -200,7 +203,7 @@ func ResourceKxCluster() *schema.Resource {
 					Schema: map[string]*schema.Schema{
 						"cache_configurations": {
 							Type:     schema.TypeList,
-							Required: true,
+							Optional: true,
 							ForceNew: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
@@ -217,7 +220,7 @@ func ResourceKxCluster() *schema.Resource {
 										Elem: &schema.Schema{
 											Type: schema.TypeString,
 										},
-										Required: true,
+										Optional: true,
 										ForceNew: true,
 									},
 								},
@@ -371,7 +374,7 @@ const (
 
 func resourceKxClusterCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).FinSpaceClient()
+	conn := meta.(*conns.AWSClient).FinSpaceClient(ctx)
 
 	environmentId := d.Get("environment_id").(string)
 	clusterName := d.Get("name").(string)
@@ -393,7 +396,7 @@ func resourceKxClusterCreate(ctx context.Context, d *schema.ResourceData, meta i
 		AzMode:                types.KxAzMode(d.Get("az_mode").(string)),
 		CapacityConfiguration: expandCapacityConfiguration(d.Get("capacity_configuration").([]interface{})),
 		ClientToken:           aws.String(id.UniqueId()),
-		Tags:                  GetTagsIn(ctx),
+		Tags:                  getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("description"); ok {
@@ -458,7 +461,7 @@ func resourceKxClusterCreate(ctx context.Context, d *schema.ResourceData, meta i
 
 func resourceKxClusterRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).FinSpaceClient()
+	conn := meta.(*conns.AWSClient).FinSpaceClient(ctx)
 
 	out, err := findKxClusterByID(ctx, conn, d.Id())
 	if !d.IsNewResource() && tfresource.NotFound(err) {
@@ -544,7 +547,7 @@ func resourceKxClusterUpdate(ctx context.Context, d *schema.ResourceData, meta i
 
 func resourceKxClusterDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).FinSpaceClient()
+	conn := meta.(*conns.AWSClient).FinSpaceClient(ctx)
 
 	log.Printf("[INFO] Deleting FinSpace KxCluster %s", d.Id())
 	_, err := conn.DeleteKxCluster(ctx, &finspace.DeleteKxClusterInput{

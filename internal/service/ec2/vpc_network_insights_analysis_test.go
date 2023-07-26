@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ec2_test
 
 import (
@@ -202,7 +205,7 @@ func testAccCheckNetworkInsightsAnalysisExists(ctx context.Context, n string) re
 			return fmt.Errorf("No EC2 Network Insights Analysis ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
 
 		_, err := tfec2.FindNetworkInsightsAnalysisByID(ctx, conn, rs.Primary.ID)
 
@@ -212,7 +215,7 @@ func testAccCheckNetworkInsightsAnalysisExists(ctx context.Context, n string) re
 
 func testAccCheckNetworkInsightsAnalysisDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_ec2_network_insights_analysis" {

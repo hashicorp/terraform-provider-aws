@@ -76,9 +76,9 @@ The following arguments are optional:
 
 ~> **NOTE:** `aws:ssm:integration` data_type parameters must be of the type `SecureString` and the name must start with the prefix `/d9d01087-4a3f-49e0-b0b4-d568d7826553/ssm/integrations/webhook/`. See [here](https://docs.aws.amazon.com/systems-manager/latest/userguide/creating-integrations.html) for information on the usage of `aws:ssm:integration` parameters.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the parameter.
 * `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
@@ -86,8 +86,17 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-SSM Parameters can be imported using the `parameter store name`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import SSM Parameters using the parameter store `name`. For example:
 
+```terraform
+import {
+  to = aws_ssm_parameter.my_param
+  id = "/my_path/my_paramname"
+}
 ```
-$ terraform import aws_ssm_parameter.my_param /my_path/my_paramname
+
+Using `terraform import`, import SSM Parameters using the parameter store `name`. For example:
+
+```console
+% terraform import aws_ssm_parameter.my_param /my_path/my_paramname
 ```

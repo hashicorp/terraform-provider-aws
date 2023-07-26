@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package networkmanager_test
 
 import (
@@ -166,7 +169,7 @@ func TestAccNetworkManagerLink_allAttributes(t *testing.T) {
 
 func testAccCheckLinkDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).NetworkManagerConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).NetworkManagerConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_networkmanager_link" {
@@ -201,7 +204,7 @@ func testAccCheckLinkExists(ctx context.Context, n string) resource.TestCheckFun
 			return fmt.Errorf("No Network Manager Link ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).NetworkManagerConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).NetworkManagerConn(ctx)
 
 		_, err := tfnetworkmanager.FindLinkByTwoPartKey(ctx, conn, rs.Primary.Attributes["global_network_id"], rs.Primary.ID)
 

@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package chime
 
 import (
@@ -71,7 +74,7 @@ func ResourceVoiceConnectorTermination() *schema.Resource {
 }
 
 func resourceVoiceConnectorTerminationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ChimeConn()
+	conn := meta.(*conns.AWSClient).ChimeConn(ctx)
 
 	vcId := d.Get("voice_connector_id").(string)
 
@@ -108,7 +111,7 @@ func resourceVoiceConnectorTerminationCreate(ctx context.Context, d *schema.Reso
 }
 
 func resourceVoiceConnectorTerminationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ChimeConn()
+	conn := meta.(*conns.AWSClient).ChimeConn(ctx)
 
 	input := &chime.GetVoiceConnectorTerminationInput{
 		VoiceConnectorId: aws.String(d.Id()),
@@ -147,7 +150,7 @@ func resourceVoiceConnectorTerminationRead(ctx context.Context, d *schema.Resour
 }
 
 func resourceVoiceConnectorTerminationUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ChimeConn()
+	conn := meta.(*conns.AWSClient).ChimeConn(ctx)
 
 	if d.HasChanges("calling_regions", "cidr_allow_list", "disabled", "cps_limit", "default_phone_number") {
 		termination := &chime.Termination{
@@ -180,7 +183,7 @@ func resourceVoiceConnectorTerminationUpdate(ctx context.Context, d *schema.Reso
 }
 
 func resourceVoiceConnectorTerminationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ChimeConn()
+	conn := meta.(*conns.AWSClient).ChimeConn(ctx)
 
 	input := &chime.DeleteVoiceConnectorTerminationInput{
 		VoiceConnectorId: aws.String(d.Id()),

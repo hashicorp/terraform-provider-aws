@@ -1043,6 +1043,9 @@ service/translate:
 service/verifiedaccess:
   - 'internal/service/ec2/**/verifiedaccess_*'
   - 'website/**/verifiedaccess*'
+service/verifiedpermissions:
+  - 'internal/service/verifiedpermissions/**/*'
+  - 'website/**/verifiedpermissions_*'
 service/voiceid:
   - 'internal/service/voiceid/**/*'
   - 'website/**/voiceid_*'

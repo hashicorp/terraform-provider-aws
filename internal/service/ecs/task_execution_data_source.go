@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ecs
 
 import (
@@ -272,7 +275,7 @@ const (
 
 func dataSourceTaskExecutionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ECSConn()
+	conn := meta.(*conns.AWSClient).ECSConn(ctx)
 
 	cluster := d.Get("cluster").(string)
 	taskDefinition := d.Get("task_definition").(string)

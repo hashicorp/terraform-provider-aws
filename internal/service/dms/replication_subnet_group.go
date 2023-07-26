@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package dms
 
 import (
@@ -81,13 +84,13 @@ const (
 
 func resourceReplicationSubnetGroupCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DMSConn()
+	conn := meta.(*conns.AWSClient).DMSConn(ctx)
 
 	request := &dms.CreateReplicationSubnetGroupInput{
 		ReplicationSubnetGroupIdentifier:  aws.String(d.Get("replication_subnet_group_id").(string)),
 		ReplicationSubnetGroupDescription: aws.String(d.Get("replication_subnet_group_description").(string)),
 		SubnetIds:                         flex.ExpandStringSet(d.Get("subnet_ids").(*schema.Set)),
-		Tags:                              GetTagsIn(ctx),
+		Tags:                              getTagsIn(ctx),
 	}
 
 	log.Println("[DEBUG] DMS create replication subnet group:", request)
@@ -124,7 +127,7 @@ func resourceReplicationSubnetGroupCreate(ctx context.Context, d *schema.Resourc
 
 func resourceReplicationSubnetGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DMSConn()
+	conn := meta.(*conns.AWSClient).DMSConn(ctx)
 
 	response, err := conn.DescribeReplicationSubnetGroupsWithContext(ctx, &dms.DescribeReplicationSubnetGroupsInput{
 		Filters: []*dms.Filter{
@@ -180,7 +183,7 @@ func resourceReplicationSubnetGroupRead(ctx context.Context, d *schema.ResourceD
 
 func resourceReplicationSubnetGroupUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DMSConn()
+	conn := meta.(*conns.AWSClient).DMSConn(ctx)
 
 	// Updates to subnet groups are only valid when sending SubnetIds even if there are no
 	// changes to SubnetIds.
@@ -205,7 +208,7 @@ func resourceReplicationSubnetGroupUpdate(ctx context.Context, d *schema.Resourc
 
 func resourceReplicationSubnetGroupDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DMSConn()
+	conn := meta.(*conns.AWSClient).DMSConn(ctx)
 
 	request := &dms.DeleteReplicationSubnetGroupInput{
 		ReplicationSubnetGroupIdentifier: aws.String(d.Get("replication_subnet_group_id").(string)),

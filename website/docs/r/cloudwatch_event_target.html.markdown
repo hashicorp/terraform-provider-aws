@@ -572,14 +572,23 @@ For more information, see [Task Networking](https://docs.aws.amazon.com/AmazonEC
 
 * `message_group_id` - (Optional) The FIFO message group ID to use as the target.
 
-## Attributes Reference
+## Attribute Reference
 
-No additional attributes are exported.
+This resource exports no additional attributes.
 
 ## Import
 
-EventBridge Targets can be imported using `event_bus_name/rule-name/target-id` (if you omit `event_bus_name`, the `default` event bus will be used).
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import EventBridge Targets using `event_bus_name/rule-name/target-id` (if you omit `event_bus_name`, the `default` event bus will be used). For example:
 
- ```
-$ terraform import aws_cloudwatch_event_target.test-event-target rule-name/target-id
+ ```terraform
+import {
+  to = aws_cloudwatch_event_target.test-event-target
+  id = "rule-name/target-id"
+}
+```
+
+Using `terraform import`, import EventBridge Targets using `event_bus_name/rule-name/target-id` (if you omit `event_bus_name`, the `default` event bus will be used). For example:
+
+ ```console
+% terraform import aws_cloudwatch_event_target.test-event-target rule-name/target-id
 ```

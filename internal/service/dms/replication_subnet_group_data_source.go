@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package dms
 
 import (
@@ -57,7 +60,7 @@ const (
 )
 
 func dataSourceReplicationSubnetGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).DMSConn()
+	conn := meta.(*conns.AWSClient).DMSConn(ctx)
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -89,7 +92,7 @@ func dataSourceReplicationSubnetGroupRead(ctx context.Context, d *schema.Resourc
 	}
 	d.Set("subnet_ids", subnetIDs)
 
-	tags, err := ListTags(ctx, conn, arn)
+	tags, err := listTags(ctx, conn, arn)
 	if err != nil {
 		return create.DiagError(names.DMS, create.ErrActionReading, DSNameReplicationSubnetGroup, d.Id(), err)
 	}

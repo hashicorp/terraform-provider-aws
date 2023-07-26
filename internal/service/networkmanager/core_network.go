@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package networkmanager
 
 import (
@@ -152,13 +155,13 @@ func ResourceCoreNetwork() *schema.Resource {
 }
 
 func resourceCoreNetworkCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).NetworkManagerConn()
+	conn := meta.(*conns.AWSClient).NetworkManagerConn(ctx)
 
 	globalNetworkID := d.Get("global_network_id").(string)
 	input := &networkmanager.CreateCoreNetworkInput{
 		ClientToken:     aws.String(id.UniqueId()),
 		GlobalNetworkId: aws.String(globalNetworkID),
-		Tags:            GetTagsIn(ctx),
+		Tags:            getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("description"); ok {
@@ -200,7 +203,7 @@ func resourceCoreNetworkCreate(ctx context.Context, d *schema.ResourceData, meta
 }
 
 func resourceCoreNetworkRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).NetworkManagerConn()
+	conn := meta.(*conns.AWSClient).NetworkManagerConn(ctx)
 
 	coreNetwork, err := FindCoreNetworkByID(ctx, conn, d.Id())
 
@@ -230,13 +233,13 @@ func resourceCoreNetworkRead(ctx context.Context, d *schema.ResourceData, meta i
 	}
 	d.Set("state", coreNetwork.State)
 
-	SetTagsOut(ctx, coreNetwork.Tags)
+	setTagsOut(ctx, coreNetwork.Tags)
 
 	return nil
 }
 
 func resourceCoreNetworkUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).NetworkManagerConn()
+	conn := meta.(*conns.AWSClient).NetworkManagerConn(ctx)
 
 	if d.HasChange("description") {
 		_, err := conn.UpdateCoreNetworkWithContext(ctx, &networkmanager.UpdateCoreNetworkInput{
@@ -285,7 +288,7 @@ func resourceCoreNetworkUpdate(ctx context.Context, d *schema.ResourceData, meta
 }
 
 func resourceCoreNetworkDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).NetworkManagerConn()
+	conn := meta.(*conns.AWSClient).NetworkManagerConn(ctx)
 
 	log.Printf("[DEBUG] Deleting Network Manager Core Network: %s", d.Id())
 	_, err := conn.DeleteCoreNetworkWithContext(ctx, &networkmanager.DeleteCoreNetworkInput{

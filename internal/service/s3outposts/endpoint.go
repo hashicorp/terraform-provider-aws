@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package s3outposts
 
 import (
@@ -92,7 +95,7 @@ func ResourceEndpoint() *schema.Resource {
 
 func resourceEndpointCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).S3OutpostsConn()
+	conn := meta.(*conns.AWSClient).S3OutpostsConn(ctx)
 
 	input := &s3outposts.CreateEndpointInput{
 		OutpostId:       aws.String(d.Get("outpost_id").(string)),
@@ -125,7 +128,7 @@ func resourceEndpointCreate(ctx context.Context, d *schema.ResourceData, meta in
 
 func resourceEndpointRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).S3OutpostsConn()
+	conn := meta.(*conns.AWSClient).S3OutpostsConn(ctx)
 
 	endpoint, err := FindEndpointByARN(ctx, conn, d.Id())
 
@@ -156,7 +159,7 @@ func resourceEndpointRead(ctx context.Context, d *schema.ResourceData, meta inte
 
 func resourceEndpointDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).S3OutpostsConn()
+	conn := meta.(*conns.AWSClient).S3OutpostsConn(ctx)
 
 	parsedArn, err := arn.Parse(d.Id())
 

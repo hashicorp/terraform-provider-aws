@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package vpclattice_test
 
 import (
@@ -203,7 +206,7 @@ func TestAccVPCLatticeServiceNetworkVPCAssociation_tags(t *testing.T) {
 
 func testAccCheckServiceNetworkVPCAssociationDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).VPCLatticeClient()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).VPCLatticeClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_vpclattice_service_network_vpc_association" {
@@ -238,7 +241,7 @@ func testAccCheckServiceNetworkVPCAssociationExists(ctx context.Context, name st
 			return create.Error(names.VPCLattice, create.ErrActionCheckingExistence, tfvpclattice.ResNameService, name, errors.New("not set"))
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).VPCLatticeClient()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).VPCLatticeClient(ctx)
 		resp, err := tfvpclattice.FindServiceNetworkVPCAssociationByID(ctx, conn, rs.Primary.ID)
 
 		if err != nil {

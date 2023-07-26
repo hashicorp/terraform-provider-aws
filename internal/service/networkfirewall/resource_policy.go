@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package networkfirewall
 
 import (
@@ -51,7 +54,7 @@ func ResourceResourcePolicy() *schema.Resource {
 }
 
 func resourceResourcePolicyPut(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).NetworkFirewallConn()
+	conn := meta.(*conns.AWSClient).NetworkFirewallConn(ctx)
 	resourceArn := d.Get("resource_arn").(string)
 
 	policy, err := structure.NormalizeJsonString(d.Get("policy").(string))
@@ -78,7 +81,7 @@ func resourceResourcePolicyPut(ctx context.Context, d *schema.ResourceData, meta
 }
 
 func resourceResourcePolicyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).NetworkFirewallConn()
+	conn := meta.(*conns.AWSClient).NetworkFirewallConn(ctx)
 	resourceArn := d.Id()
 
 	log.Printf("[DEBUG] Reading NetworkFirewall Resource Policy for resource: %s", resourceArn)
@@ -114,7 +117,7 @@ func resourceResourcePolicyDelete(ctx context.Context, d *schema.ResourceData, m
 	const (
 		timeout = 2 * time.Minute
 	)
-	conn := meta.(*conns.AWSClient).NetworkFirewallConn()
+	conn := meta.(*conns.AWSClient).NetworkFirewallConn(ctx)
 
 	log.Printf("[DEBUG] Deleting NetworkFirewall Resource Policy: %s", d.Id())
 	_, err := tfresource.RetryWhenAWSErrMessageContains(ctx, timeout, func() (interface{}, error) {

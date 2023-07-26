@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package wafregional
 
 import (
@@ -45,7 +48,7 @@ func ResourceWebACLAssociation() *schema.Resource {
 
 func resourceWebACLAssociationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).WAFRegionalConn()
+	conn := meta.(*conns.AWSClient).WAFRegionalConn(ctx)
 
 	log.Printf(
 		"[INFO] Creating WAF Regional Web ACL association: %s => %s",
@@ -60,7 +63,7 @@ func resourceWebACLAssociationCreate(ctx context.Context, d *schema.ResourceData
 	// create association and wait on retryable error
 	// no response body
 	var err error
-	err = retry.RetryContext(ctx, 2*time.Minute, func() *retry.RetryError {
+	err = retry.RetryContext(ctx, 5*time.Minute, func() *retry.RetryError {
 		_, err = conn.AssociateWebACLWithContext(ctx, params)
 		if err != nil {
 			if tfawserr.ErrCodeEquals(err, wafregional.ErrCodeWAFUnavailableEntityException) {
@@ -85,7 +88,7 @@ func resourceWebACLAssociationCreate(ctx context.Context, d *schema.ResourceData
 
 func resourceWebACLAssociationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).WAFRegionalConn()
+	conn := meta.(*conns.AWSClient).WAFRegionalConn(ctx)
 
 	resourceArn := WebACLAssociationParseID(d.Id())
 
@@ -119,7 +122,7 @@ func resourceWebACLAssociationRead(ctx context.Context, d *schema.ResourceData, 
 
 func resourceWebACLAssociationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).WAFRegionalConn()
+	conn := meta.(*conns.AWSClient).WAFRegionalConn(ctx)
 
 	resourceArn := WebACLAssociationParseID(d.Id())
 

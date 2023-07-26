@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package elasticache_test
 
 import (
@@ -1421,7 +1424,7 @@ func testAccCheckClusterRecreated(i, j *elasticache.CacheCluster) resource.TestC
 
 func testAccCheckClusterDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ElastiCacheConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ElastiCacheConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_elasticache_cluster" {
@@ -1455,7 +1458,7 @@ func testAccCheckClusterExists(ctx context.Context, n string, v *elasticache.Cac
 			return fmt.Errorf("No ElastiCache Cluster ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ElastiCacheConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ElastiCacheConn(ctx)
 
 		output, err := tfelasticache.FindCacheClusterByID(ctx, conn, rs.Primary.ID)
 

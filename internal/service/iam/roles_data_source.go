@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package iam
 
 import (
@@ -44,7 +47,7 @@ func DataSourceRoles() *schema.Resource {
 
 func dataSourceRolesRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).IAMConn()
+	conn := meta.(*conns.AWSClient).IAMConn(ctx)
 
 	input := &iam.ListRolesInput{}
 

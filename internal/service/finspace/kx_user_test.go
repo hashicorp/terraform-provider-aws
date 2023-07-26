@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package finspace_test
 
 import (
@@ -174,7 +177,7 @@ func TestAccFinSpaceKxUser_tags(t *testing.T) {
 
 func testAccCheckKxUserDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).FinSpaceClient()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).FinSpaceClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_finspace_kx_user" {
@@ -212,7 +215,7 @@ func testAccCheckKxUserExists(ctx context.Context, name string, kxuser *finspace
 			return create.Error(names.FinSpace, create.ErrActionCheckingExistence, tffinspace.ResNameKxUser, name, errors.New("not set"))
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).FinSpaceClient()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).FinSpaceClient(ctx)
 		resp, err := conn.GetKxUser(ctx, &finspace.GetKxUserInput{
 			UserName:      aws.String(rs.Primary.Attributes["name"]),
 			EnvironmentId: aws.String(rs.Primary.Attributes["environment_id"]),

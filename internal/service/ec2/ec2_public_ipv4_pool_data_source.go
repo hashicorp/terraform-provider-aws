@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ec2
 
 import (
@@ -69,7 +72,7 @@ func DataSourcePublicIPv4Pool() *schema.Resource {
 
 func dataSourcePublicIPv4PoolRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	poolID := d.Get("pool_id").(string)

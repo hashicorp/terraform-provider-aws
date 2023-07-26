@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package appstream_test
 
 import (
@@ -145,7 +148,7 @@ func testAccCheckUserExists(ctx context.Context, resourceName string, appStreamU
 			return fmt.Errorf("not found: %s", resourceName)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AppStreamConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AppStreamConn(ctx)
 
 		userName, authType, err := tfappstream.DecodeUserID(rs.Primary.ID)
 		if err != nil {
@@ -168,7 +171,7 @@ func testAccCheckUserExists(ctx context.Context, resourceName string, appStreamU
 
 func testAccCheckUserDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AppStreamConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AppStreamConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_appstream_user" {

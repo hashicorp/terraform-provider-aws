@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package redshift_test
 
 import (
@@ -225,7 +228,7 @@ func testAccCheckEventSubscriptionExists(ctx context.Context, n string, v *redsh
 			return fmt.Errorf("No Redshift Event Subscription is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftConn(ctx)
 
 		out, err := tfredshift.FindEventSubscriptionByName(ctx, conn, rs.Primary.ID)
 
@@ -241,7 +244,7 @@ func testAccCheckEventSubscriptionExists(ctx context.Context, n string, v *redsh
 
 func testAccCheckEventSubscriptionDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_redshift_event_subscription" {

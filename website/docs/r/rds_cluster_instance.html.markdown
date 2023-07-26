@@ -51,7 +51,7 @@ resource "aws_rds_cluster" "default" {
 For more detailed documentation about each argument, refer to
 the [AWS official documentation](https://docs.aws.amazon.com/cli/latest/reference/rds/create-db-instance.html).
 
-The following arguments are supported:
+This argument supports the following arguments:
 
 * `apply_immediately` - (Optional) Specifies whether any database modifications are applied immediately, or during the next maintenance window. Default is`false`.
 * `auto_minor_version_upgrade` - (Optional) Indicates that minor engine upgrades will be applied automatically to the DB instance during the maintenance window. Default `true`.
@@ -77,9 +77,9 @@ The following arguments are supported:
 * `publicly_accessible` - (Optional) Bool to control if instance is publicly accessible. Default `false`. See the documentation on [Creating DB Instances][6] for more details on controlling this property.
 * `tags` - (Optional) Map of tags to assign to the instance. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - Amazon Resource Name (ARN) of cluster instance
 * `cluster_identifier` - RDS Cluster Identifier
@@ -116,8 +116,17 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-RDS Cluster Instances can be imported using the `identifier`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import RDS Cluster Instances using the `identifier`. For example:
 
+```terraform
+import {
+  to = aws_rds_cluster_instance.prod_instance_1
+  id = "aurora-cluster-instance-1"
+}
 ```
-$ terraform import aws_rds_cluster_instance.prod_instance_1 aurora-cluster-instance-1
+
+Using `terraform import`, import RDS Cluster Instances using the `identifier`. For example:
+
+```console
+% terraform import aws_rds_cluster_instance.prod_instance_1 aurora-cluster-instance-1
 ```

@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package glue_test
 
 import (
@@ -1126,7 +1129,7 @@ resource "aws_glue_catalog_table" "test" {
 
 func testAccCheckTableDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).GlueConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).GlueConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_glue_catalog_table" {
@@ -1168,7 +1171,7 @@ func testAccCheckCatalogTableExists(ctx context.Context, name string) resource.T
 			return err
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).GlueConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).GlueConn(ctx)
 		out, err := tfglue.FindTableByName(ctx, conn, catalogId, dbName, resourceName)
 		if err != nil {
 			return err

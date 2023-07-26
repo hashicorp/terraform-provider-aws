@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package configservice
 
 import (
@@ -124,11 +127,11 @@ func ResourceConfigurationAggregator() *schema.Resource {
 
 func resourceConfigurationAggregatorPut(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ConfigServiceConn()
+	conn := meta.(*conns.AWSClient).ConfigServiceConn(ctx)
 
 	input := &configservice.PutConfigurationAggregatorInput{
 		ConfigurationAggregatorName: aws.String(d.Get("name").(string)),
-		Tags:                        GetTagsIn(ctx),
+		Tags:                        getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("account_aggregation_source"); ok && len(v.([]interface{})) > 0 {
@@ -152,7 +155,7 @@ func resourceConfigurationAggregatorPut(ctx context.Context, d *schema.ResourceD
 
 func resourceConfigurationAggregatorRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ConfigServiceConn()
+	conn := meta.(*conns.AWSClient).ConfigServiceConn(ctx)
 
 	req := &configservice.DescribeConfigurationAggregatorsInput{
 		ConfigurationAggregatorNames: []*string{aws.String(d.Id())},
@@ -197,7 +200,7 @@ func resourceConfigurationAggregatorRead(ctx context.Context, d *schema.Resource
 
 func resourceConfigurationAggregatorDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ConfigServiceConn()
+	conn := meta.(*conns.AWSClient).ConfigServiceConn(ctx)
 
 	req := &configservice.DeleteConfigurationAggregatorInput{
 		ConfigurationAggregatorName: aws.String(d.Id()),

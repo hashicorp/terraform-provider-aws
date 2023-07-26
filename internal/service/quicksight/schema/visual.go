@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package schema
 
 import (
@@ -1280,7 +1283,7 @@ func expandComparisonConfiguration(tfList []interface{}) *quicksight.ComparisonC
 
 	config := &quicksight.ComparisonConfiguration{}
 
-	if v, ok := tfMap["config"].(string); ok && v != "" {
+	if v, ok := tfMap["comparison_method"].(string); ok && v != "" {
 		config.ComparisonMethod = aws.String(v)
 	}
 	if v, ok := tfMap["comparison_format"].([]interface{}); ok && len(v) > 0 {
@@ -1473,7 +1476,7 @@ func flattenDataLabelOptions(apiObject *quicksight.DataLabelOptions) []interface
 		tfMap["label_font_configuration"] = flattenFontConfiguration(apiObject.LabelFontConfiguration)
 	}
 	if apiObject.MeasureLabelVisibility != nil {
-		tfMap["measure_visibility"] = aws.StringValue(apiObject.MeasureLabelVisibility)
+		tfMap["measure_label_visibility"] = aws.StringValue(apiObject.MeasureLabelVisibility)
 	}
 	if apiObject.Overlap != nil {
 		tfMap["overlap"] = aws.StringValue(apiObject.Overlap)

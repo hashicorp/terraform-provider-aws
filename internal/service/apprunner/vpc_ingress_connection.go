@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package apprunner
 
 import (
@@ -76,12 +79,12 @@ func ResourceVPCIngressConnection() *schema.Resource {
 }
 
 func resourceVPCIngressConnectionCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).AppRunnerConn()
+	conn := meta.(*conns.AWSClient).AppRunnerConn(ctx)
 
 	name := d.Get("name").(string)
 	input := &apprunner.CreateVpcIngressConnectionInput{
 		ServiceArn:               aws.String(d.Get("service_arn").(string)),
-		Tags:                     GetTagsIn(ctx),
+		Tags:                     getTagsIn(ctx),
 		VpcIngressConnectionName: aws.String(name),
 	}
 
@@ -109,7 +112,7 @@ func resourceVPCIngressConnectionCreate(ctx context.Context, d *schema.ResourceD
 }
 
 func resourceVPCIngressConnectionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).AppRunnerConn()
+	conn := meta.(*conns.AWSClient).AppRunnerConn(ctx)
 
 	input := &apprunner.DescribeVpcIngressConnectionInput{
 		VpcIngressConnectionArn: aws.String(d.Id()),
@@ -162,7 +165,7 @@ func resourceVPCIngressConnectionUpdate(ctx context.Context, d *schema.ResourceD
 }
 
 func resourceVPCIngressConnectionDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).AppRunnerConn()
+	conn := meta.(*conns.AWSClient).AppRunnerConn(ctx)
 
 	input := &apprunner.DeleteVpcIngressConnectionInput{
 		VpcIngressConnectionArn: aws.String(d.Id()),

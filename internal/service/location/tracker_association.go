@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package location
 
 import (
@@ -60,7 +63,7 @@ const (
 )
 
 func resourceTrackerAssociationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).LocationConn()
+	conn := meta.(*conns.AWSClient).LocationConn(ctx)
 
 	consumerArn := d.Get("consumer_arn").(string)
 	trackerName := d.Get("tracker_name").(string)
@@ -85,7 +88,7 @@ func resourceTrackerAssociationCreate(ctx context.Context, d *schema.ResourceDat
 }
 
 func resourceTrackerAssociationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).LocationConn()
+	conn := meta.(*conns.AWSClient).LocationConn(ctx)
 
 	trackerAssociationId, err := TrackerAssociationParseID(d.Id())
 	if err != nil {
@@ -111,7 +114,7 @@ func resourceTrackerAssociationRead(ctx context.Context, d *schema.ResourceData,
 }
 
 func resourceTrackerAssociationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).LocationConn()
+	conn := meta.(*conns.AWSClient).LocationConn(ctx)
 
 	log.Printf("[INFO] Deleting Location TrackerAssociation %s", d.Id())
 

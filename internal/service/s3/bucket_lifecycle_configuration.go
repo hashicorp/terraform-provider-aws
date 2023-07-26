@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package s3
 
 import (
@@ -16,9 +19,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/experimental/nullable"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/types/nullable"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
@@ -253,7 +256,7 @@ func ResourceBucketLifecycleConfiguration() *schema.Resource {
 }
 
 func resourceBucketLifecycleConfigurationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).S3Conn()
+	conn := meta.(*conns.AWSClient).S3Conn(ctx)
 
 	bucket := d.Get("bucket").(string)
 	expectedBucketOwner := d.Get("expected_bucket_owner").(string)
@@ -292,7 +295,7 @@ func resourceBucketLifecycleConfigurationCreate(ctx context.Context, d *schema.R
 }
 
 func resourceBucketLifecycleConfigurationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).S3Conn()
+	conn := meta.(*conns.AWSClient).S3Conn(ctx)
 
 	bucket, expectedBucketOwner, err := ParseResourceID(d.Id())
 	if err != nil {
@@ -356,7 +359,7 @@ func resourceBucketLifecycleConfigurationRead(ctx context.Context, d *schema.Res
 }
 
 func resourceBucketLifecycleConfigurationUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).S3Conn()
+	conn := meta.(*conns.AWSClient).S3Conn(ctx)
 
 	bucket, expectedBucketOwner, err := ParseResourceID(d.Id())
 	if err != nil {
@@ -395,7 +398,7 @@ func resourceBucketLifecycleConfigurationUpdate(ctx context.Context, d *schema.R
 }
 
 func resourceBucketLifecycleConfigurationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).S3Conn()
+	conn := meta.(*conns.AWSClient).S3Conn(ctx)
 
 	bucket, expectedBucketOwner, err := ParseResourceID(d.Id())
 	if err != nil {

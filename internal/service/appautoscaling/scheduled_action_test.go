@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package appautoscaling_test
 
 import (
@@ -566,7 +569,7 @@ func TestAccAppAutoScalingScheduledAction_maxCapacity(t *testing.T) {
 
 func testAccCheckScheduledActionDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AppAutoScalingConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AppAutoScalingConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_appautoscaling_scheduled_action" {
@@ -601,7 +604,7 @@ func testAccCheckScheduledActionExists(ctx context.Context, name string, obj *ap
 			return fmt.Errorf("Application Autoscaling scheduled action (%s) ID not set", name)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AppAutoScalingConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AppAutoScalingConn(ctx)
 
 		sa, err := tfappautoscaling.FindScheduledAction(ctx, conn, rs.Primary.Attributes["name"], rs.Primary.Attributes["service_namespace"], rs.Primary.Attributes["resource_id"])
 		if err != nil {

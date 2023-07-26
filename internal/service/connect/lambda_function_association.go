@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package connect
 
 import (
@@ -40,7 +43,7 @@ func ResourceLambdaFunctionAssociation() *schema.Resource {
 }
 
 func resourceLambdaFunctionAssociationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ConnectConn()
+	conn := meta.(*conns.AWSClient).ConnectConn(ctx)
 
 	instanceId := d.Get("instance_id").(string)
 	functionArn := d.Get("function_arn").(string)
@@ -61,7 +64,7 @@ func resourceLambdaFunctionAssociationCreate(ctx context.Context, d *schema.Reso
 }
 
 func resourceLambdaFunctionAssociationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ConnectConn()
+	conn := meta.(*conns.AWSClient).ConnectConn(ctx)
 
 	instanceID, functionArn, err := LambdaFunctionAssociationParseResourceID(d.Id())
 
@@ -88,7 +91,7 @@ func resourceLambdaFunctionAssociationRead(ctx context.Context, d *schema.Resour
 }
 
 func resourceLambdaFunctionAssociationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ConnectConn()
+	conn := meta.(*conns.AWSClient).ConnectConn(ctx)
 
 	instanceID, functionArn, err := LambdaFunctionAssociationParseResourceID(d.Id())
 	if err != nil {

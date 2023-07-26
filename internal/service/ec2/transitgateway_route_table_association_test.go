@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ec2_test
 
 import (
@@ -128,7 +131,7 @@ func testAccCheckTransitGatewayRouteTableAssociationExists(ctx context.Context, 
 			return err
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
 
 		output, err := tfec2.FindTransitGatewayRouteTableAssociationByTwoPartKey(ctx, conn, transitGatewayRouteTableID, transitGatewayAttachmentID)
 
@@ -144,7 +147,7 @@ func testAccCheckTransitGatewayRouteTableAssociationExists(ctx context.Context, 
 
 func testAccCheckTransitGatewayRouteTableAssociationDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_ec2_transit_gateway_route_table_association" {

@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package directconnect_test
 
 import (
@@ -60,7 +63,7 @@ func testAccCheckConnectionConfirmationExists(ctx context.Context, name string, 
 		}
 
 		provider := providerFunc()
-		conn := provider.Meta().(*conns.AWSClient).DirectConnectConn()
+		conn := provider.Meta().(*conns.AWSClient).DirectConnectConn(ctx)
 
 		connection, err := tfdirectconnect.FindConnectionByID(ctx, conn, rs.Primary.ID)
 

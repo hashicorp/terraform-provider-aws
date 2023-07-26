@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ec2_test
 
 import (
@@ -112,7 +115,7 @@ func testAccCheckSubnetCIDRReservationExists(ctx context.Context, n string, v *e
 			return fmt.Errorf("No EC2 Subnet CIDR Reservation ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
 
 		output, err := tfec2.FindSubnetCIDRReservationBySubnetIDAndReservationID(ctx, conn, rs.Primary.Attributes["subnet_id"], rs.Primary.ID)
 
@@ -128,7 +131,7 @@ func testAccCheckSubnetCIDRReservationExists(ctx context.Context, n string, v *e
 
 func testAccCheckSubnetCIDRReservationDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_ec2_subnet_cidr_reservation" {

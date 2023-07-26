@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ec2
 
 import (
@@ -32,7 +35,7 @@ func ResourceSerialConsoleAccess() *schema.Resource {
 }
 
 func resourceSerialConsoleAccessCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	enabled := d.Get("enabled").(bool)
 	if err := setSerialConsoleAccess(ctx, conn, enabled); err != nil {
@@ -45,7 +48,7 @@ func resourceSerialConsoleAccessCreate(ctx context.Context, d *schema.ResourceDa
 }
 
 func resourceSerialConsoleAccessRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	output, err := conn.GetSerialConsoleAccessStatusWithContext(ctx, &ec2.GetSerialConsoleAccessStatusInput{})
 
@@ -59,7 +62,7 @@ func resourceSerialConsoleAccessRead(ctx context.Context, d *schema.ResourceData
 }
 
 func resourceSerialConsoleAccessUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	enabled := d.Get("enabled").(bool)
 	if err := setSerialConsoleAccess(ctx, conn, enabled); err != nil {
@@ -70,7 +73,7 @@ func resourceSerialConsoleAccessUpdate(ctx context.Context, d *schema.ResourceDa
 }
 
 func resourceSerialConsoleAccessDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	// Removing the resource disables serial console access.
 	if err := setSerialConsoleAccess(ctx, conn, false); err != nil {

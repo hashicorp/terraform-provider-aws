@@ -33,9 +33,9 @@ The following arguments are optional:
 * `display_name` - (Optional) A string containing the name of the group. This value is commonly displayed when the group is referenced.
 * `description` - (Optional) A string containing the description of the group.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `group_id` - The identifier of the newly created group in the identity store.
 * `external_ids` - A list of external IDs that contains the identifiers issued to this resource by an external identity provider. See [External IDs](#external-ids) below.
@@ -55,8 +55,17 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-An Identity Store Group can be imported using the combination `identity_store_id/group_id`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import an Identity Store Group using the combination `identity_store_id/group_id`. For example:
 
+```terraform
+import {
+  to = aws_identitystore_group.example
+  id = "d-9c6705e95c/b8a1c340-8031-7071-a2fb-7dc540320c30"
+}
 ```
-$ terraform import aws_identitystore_group.example d-9c6705e95c/b8a1c340-8031-7071-a2fb-7dc540320c30
+
+Using `terraform import`, import an Identity Store Group using the combination `identity_store_id/group_id`. For example:
+
+```console
+% terraform import aws_identitystore_group.example d-9c6705e95c/b8a1c340-8031-7071-a2fb-7dc540320c30
 ```

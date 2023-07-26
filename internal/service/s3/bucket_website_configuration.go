@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package s3
 
 import (
@@ -174,7 +177,7 @@ func ResourceBucketWebsiteConfiguration() *schema.Resource {
 }
 
 func resourceBucketWebsiteConfigurationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).S3Conn()
+	conn := meta.(*conns.AWSClient).S3Conn(ctx)
 
 	bucket := d.Get("bucket").(string)
 	expectedBucketOwner := d.Get("expected_bucket_owner").(string)
@@ -228,7 +231,7 @@ func resourceBucketWebsiteConfigurationCreate(ctx context.Context, d *schema.Res
 }
 
 func resourceBucketWebsiteConfigurationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).S3Conn()
+	conn := meta.(*conns.AWSClient).S3Conn(ctx)
 
 	bucket, expectedBucketOwner, err := ParseResourceID(d.Id())
 	if err != nil {
@@ -304,7 +307,7 @@ func resourceBucketWebsiteConfigurationRead(ctx context.Context, d *schema.Resou
 }
 
 func resourceBucketWebsiteConfigurationUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).S3Conn()
+	conn := meta.(*conns.AWSClient).S3Conn(ctx)
 
 	bucket, expectedBucketOwner, err := ParseResourceID(d.Id())
 	if err != nil {
@@ -369,7 +372,7 @@ func resourceBucketWebsiteConfigurationUpdate(ctx context.Context, d *schema.Res
 }
 
 func resourceBucketWebsiteConfigurationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).S3Conn()
+	conn := meta.(*conns.AWSClient).S3Conn(ctx)
 
 	bucket, expectedBucketOwner, err := ParseResourceID(d.Id())
 	if err != nil {
@@ -398,7 +401,7 @@ func resourceBucketWebsiteConfigurationDelete(ctx context.Context, d *schema.Res
 }
 
 func resourceBucketWebsiteConfigurationWebsiteEndpoint(ctx context.Context, client *conns.AWSClient, bucket, expectedBucketOwner string) (*S3Website, error) {
-	conn := client.S3Conn()
+	conn := client.S3Conn(ctx)
 
 	input := &s3.GetBucketLocationInput{
 		Bucket: aws.String(bucket),

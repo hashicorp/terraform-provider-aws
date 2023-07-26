@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package networkfirewall
 
 import (
@@ -163,13 +166,13 @@ func ResourceFirewallPolicy() *schema.Resource {
 }
 
 func resourceFirewallPolicyCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).NetworkFirewallConn()
+	conn := meta.(*conns.AWSClient).NetworkFirewallConn(ctx)
 
 	name := d.Get("name").(string)
 	input := &networkfirewall.CreateFirewallPolicyInput{
 		FirewallPolicy:     expandFirewallPolicy(d.Get("firewall_policy").([]interface{})),
 		FirewallPolicyName: aws.String(d.Get("name").(string)),
-		Tags:               GetTagsIn(ctx),
+		Tags:               getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("description"); ok {
@@ -191,7 +194,7 @@ func resourceFirewallPolicyCreate(ctx context.Context, d *schema.ResourceData, m
 }
 
 func resourceFirewallPolicyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).NetworkFirewallConn()
+	conn := meta.(*conns.AWSClient).NetworkFirewallConn(ctx)
 
 	output, err := FindFirewallPolicyByARN(ctx, conn, d.Id())
 
@@ -215,13 +218,13 @@ func resourceFirewallPolicyRead(ctx context.Context, d *schema.ResourceData, met
 	d.Set("name", response.FirewallPolicyName)
 	d.Set("update_token", output.UpdateToken)
 
-	SetTagsOut(ctx, response.Tags)
+	setTagsOut(ctx, response.Tags)
 
 	return nil
 }
 
 func resourceFirewallPolicyUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).NetworkFirewallConn()
+	conn := meta.(*conns.AWSClient).NetworkFirewallConn(ctx)
 
 	if d.HasChanges("description", "encryption_configuration", "firewall_policy") {
 		input := &networkfirewall.UpdateFirewallPolicyInput{
@@ -250,7 +253,7 @@ func resourceFirewallPolicyDelete(ctx context.Context, d *schema.ResourceData, m
 	const (
 		timeout = 10 * time.Minute
 	)
-	conn := meta.(*conns.AWSClient).NetworkFirewallConn()
+	conn := meta.(*conns.AWSClient).NetworkFirewallConn(ctx)
 
 	log.Printf("[DEBUG] Deleting NetworkFirewall Firewall Policy: %s", d.Id())
 	_, err := tfresource.RetryWhenAWSErrMessageContains(ctx, timeout, func() (interface{}, error) {

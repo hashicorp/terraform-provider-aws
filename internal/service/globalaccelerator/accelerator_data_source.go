@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package globalaccelerator
 
 import (
@@ -10,8 +13,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
+	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
@@ -101,7 +104,7 @@ func (d *dataSourceAccelerator) Read(ctx context.Context, request datasource.Rea
 		return
 	}
 
-	conn := d.Meta().GlobalAcceleratorConn()
+	conn := d.Meta().GlobalAcceleratorConn(ctx)
 	ignoreTagsConfig := d.Meta().IgnoreTagsConfig
 
 	var results []*globalaccelerator.Accelerator
@@ -171,7 +174,7 @@ func (d *dataSourceAccelerator) Read(ctx context.Context, request datasource.Rea
 
 	data.Attributes = d.flattenAcceleratorAttributesFramework(ctx, attributes)
 
-	tags, err := ListTags(ctx, conn, acceleratorARN)
+	tags, err := listTags(ctx, conn, acceleratorARN)
 
 	if err != nil {
 		response.Diagnostics.AddError("listing tags for Global Accelerator Accelerator", err.Error())

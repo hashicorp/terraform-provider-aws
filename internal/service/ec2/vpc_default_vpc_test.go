@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ec2_test
 
 import (
@@ -410,7 +413,7 @@ func testAccDefaultVPC_NotFound_assignGeneratedIPv6CIDRBlockAdoption(t *testing.
 // It verifies that the default VPC still exists.
 func testAccCheckDefaultVPCDestroyExists(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_default_vpc" {
@@ -433,7 +436,7 @@ func testAccCheckDefaultVPCDestroyExists(ctx context.Context) resource.TestCheck
 // A new default VPC is then created.
 func testAccCheckDefaultVPCDestroyNotFound(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_default_vpc" {
@@ -472,7 +475,7 @@ func testAccCheckDefaultVPCEmpty(ctx context.Context, v *ec2.Vpc) resource.TestC
 
 // testAccEmptyDefaultVPC empties a default VPC so that it can be deleted.
 func testAccEmptyDefaultVPC(ctx context.Context, vpcID string) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
+	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
 
 	// Delete the default IGW.
 	igw, err := tfec2.FindInternetGateway(ctx, conn, &ec2.DescribeInternetGatewaysInput{

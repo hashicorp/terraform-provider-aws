@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package finspace
 
 import (
@@ -78,13 +81,13 @@ const (
 
 func resourceKxUserCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	client := meta.(*conns.AWSClient).FinSpaceClient()
+	client := meta.(*conns.AWSClient).FinSpaceClient(ctx)
 
 	in := &finspace.CreateKxUserInput{
 		UserName:      aws.String(d.Get("name").(string)),
 		EnvironmentId: aws.String(d.Get("environment_id").(string)),
 		IamRole:       aws.String(d.Get("iam_role").(string)),
-		Tags:          GetTagsIn(ctx),
+		Tags:          getTagsIn(ctx),
 	}
 
 	out, err := client.CreateKxUser(ctx, in)
@@ -111,7 +114,7 @@ func resourceKxUserCreate(ctx context.Context, d *schema.ResourceData, meta inte
 
 func resourceKxUserRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).FinSpaceClient()
+	conn := meta.(*conns.AWSClient).FinSpaceClient(ctx)
 
 	out, err := findKxUserByID(ctx, conn, d.Id())
 	if !d.IsNewResource() && tfresource.NotFound(err) {
@@ -134,7 +137,7 @@ func resourceKxUserRead(ctx context.Context, d *schema.ResourceData, meta interf
 
 func resourceKxUserUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).FinSpaceClient()
+	conn := meta.(*conns.AWSClient).FinSpaceClient(ctx)
 
 	if d.HasChange("iam_role") {
 		in := &finspace.UpdateKxUserInput{
@@ -154,7 +157,7 @@ func resourceKxUserUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 
 func resourceKxUserDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).FinSpaceClient()
+	conn := meta.(*conns.AWSClient).FinSpaceClient(ctx)
 
 	log.Printf("[INFO] Deleting FinSpace KxUser %s", d.Id())
 

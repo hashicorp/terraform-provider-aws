@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package cloudformation
 
 import (
@@ -132,7 +135,7 @@ func ResourceType() *schema.Resource {
 }
 
 func resourceTypeCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).CloudFormationConn()
+	conn := meta.(*conns.AWSClient).CloudFormationConn(ctx)
 
 	typeName := d.Get("type_name").(string)
 	input := &cloudformation.RegisterTypeInput{
@@ -176,7 +179,7 @@ func resourceTypeCreate(ctx context.Context, d *schema.ResourceData, meta interf
 }
 
 func resourceTypeRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).CloudFormationConn()
+	conn := meta.(*conns.AWSClient).CloudFormationConn(ctx)
 
 	output, err := FindTypeByARN(ctx, conn, d.Id())
 
@@ -223,7 +226,7 @@ func resourceTypeRead(ctx context.Context, d *schema.ResourceData, meta interfac
 }
 
 func resourceTypeDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).CloudFormationConn()
+	conn := meta.(*conns.AWSClient).CloudFormationConn(ctx)
 
 	input := &cloudformation.DeregisterTypeInput{
 		Arn: aws.String(d.Id()),

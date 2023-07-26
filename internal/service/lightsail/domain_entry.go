@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package lightsail
 
 import (
@@ -5,15 +8,16 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/lightsail"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/lightsail"
+	"github.com/aws/aws-sdk-go-v2/service/lightsail/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -61,6 +65,7 @@ func ResourceDomainEntry() *schema.Resource {
 				Required: true,
 				ValidateFunc: validation.StringInSlice([]string{
 					"A",
+					"AAAA",
 					"CNAME",
 					"MX",
 					"NS",
@@ -75,12 +80,12 @@ func ResourceDomainEntry() *schema.Resource {
 }
 
 func resourceDomainEntryCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).LightsailConn()
+	conn := meta.(*conns.AWSClient).LightsailClient(ctx)
 	name := d.Get("name").(string)
 	req := &lightsail.CreateDomainEntryInput{
 		DomainName: aws.String(d.Get("domain_name").(string)),
 
-		DomainEntry: &lightsail.DomainEntry{
+		DomainEntry: &types.DomainEntry{
 			IsAlias: aws.Bool(d.Get("is_alias").(bool)),
 			Name:    aws.String(expandDomainEntryName(name, d.Get("domain_name").(string))),
 			Target:  aws.String(d.Get("target").(string)),
@@ -88,13 +93,13 @@ func resourceDomainEntryCreate(ctx context.Context, d *schema.ResourceData, meta
 		},
 	}
 
-	resp, err := conn.CreateDomainEntryWithContext(ctx, req)
+	resp, err := conn.CreateDomainEntry(ctx, req)
 
 	if err != nil {
-		return create.DiagError(names.Lightsail, lightsail.OperationTypeCreateDomain, ResNameDomainEntry, name, err)
+		return create.DiagError(names.Lightsail, string(types.OperationTypeCreateDomain), ResNameDomainEntry, name, err)
 	}
 
-	diag := expandOperations(ctx, conn, []*lightsail.Operation{resp.Operation}, lightsail.OperationTypeCreateDomain, ResNameDomainEntry, name)
+	diag := expandOperations(ctx, conn, []types.Operation{*resp.Operation}, types.OperationTypeCreateDomain, ResNameDomainEntry, name)
 
 	if diag != nil {
 		return diag
@@ -120,7 +125,7 @@ func resourceDomainEntryCreate(ctx context.Context, d *schema.ResourceData, meta
 }
 
 func resourceDomainEntryRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).LightsailConn()
+	conn := meta.(*conns.AWSClient).LightsailClient(ctx)
 
 	entry, err := FindDomainEntryById(ctx, conn, d.Id())
 
@@ -140,7 +145,7 @@ func resourceDomainEntryRead(ctx context.Context, d *schema.ResourceData, meta i
 		return create.DiagError(names.Lightsail, create.ErrActionExpandingResourceId, ResNameDomainEntry, d.Id(), err)
 	}
 
-	name := flattenDomainEntryName(aws.StringValue(entry.Name), domainName)
+	name := flattenDomainEntryName(aws.ToString(entry.Name), domainName)
 
 	partCount := flex.ResourceIdPartCount(d.Id())
 
@@ -149,8 +154,8 @@ func resourceDomainEntryRead(ctx context.Context, d *schema.ResourceData, meta i
 		idParts := []string{
 			name,
 			domainName,
-			aws.StringValue(entry.Type),
-			aws.StringValue(entry.Target),
+			aws.ToString(entry.Type),
+			aws.ToString(entry.Target),
 		}
 
 		id, err := flex.FlattenResourceId(idParts, DomainEntryIdPartsCount, true)
@@ -171,7 +176,7 @@ func resourceDomainEntryRead(ctx context.Context, d *schema.ResourceData, meta i
 }
 
 func resourceDomainEntryDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).LightsailConn()
+	conn := meta.(*conns.AWSClient).LightsailClient(ctx)
 
 	domainName, err := expandDomainNameFromId(d.Id())
 
@@ -185,12 +190,12 @@ func resourceDomainEntryDelete(ctx context.Context, d *schema.ResourceData, meta
 		return create.DiagError(names.Lightsail, create.ErrActionExpandingResourceId, ResNameDomainEntry, d.Id(), err)
 	}
 
-	resp, err := conn.DeleteDomainEntryWithContext(ctx, &lightsail.DeleteDomainEntryInput{
+	resp, err := conn.DeleteDomainEntry(ctx, &lightsail.DeleteDomainEntryInput{
 		DomainName:  aws.String(domainName),
 		DomainEntry: domainEntry,
 	})
 
-	if err != nil && tfawserr.ErrCodeEquals(err, lightsail.ErrCodeNotFoundException) {
+	if err != nil && errs.IsA[*types.NotFoundException](err) {
 		return nil
 	}
 
@@ -198,7 +203,7 @@ func resourceDomainEntryDelete(ctx context.Context, d *schema.ResourceData, meta
 		return create.DiagError(names.Lightsail, create.ErrActionDeleting, ResNameDomainEntry, d.Id(), err)
 	}
 
-	diag := expandOperations(ctx, conn, []*lightsail.Operation{resp.Operation}, lightsail.OperationTypeDeleteDomain, ResNameDomainEntry, d.Id())
+	diag := expandOperations(ctx, conn, []types.Operation{*resp.Operation}, types.OperationTypeDeleteDomain, ResNameDomainEntry, d.Id())
 
 	if diag != nil {
 		return diag
@@ -207,7 +212,7 @@ func resourceDomainEntryDelete(ctx context.Context, d *schema.ResourceData, meta
 	return nil
 }
 
-func expandDomainEntry(id string) (*lightsail.DomainEntry, error) {
+func expandDomainEntry(id string) (*types.DomainEntry, error) {
 	partCount := flex.ResourceIdPartCount(id)
 
 	var name string
@@ -242,7 +247,7 @@ func expandDomainEntry(id string) (*lightsail.DomainEntry, error) {
 		recordType = idParts[2]
 		recordTarget = idParts[3]
 	}
-	entry := &lightsail.DomainEntry{
+	entry := &types.DomainEntry{
 		Name:   aws.String(expandDomainEntryName(name, domainName)),
 		Type:   aws.String(recordType),
 		Target: aws.String(recordTarget),
@@ -304,7 +309,7 @@ func flattenDomainEntryName(name, domainName string) string {
 	return rn
 }
 
-func FindDomainEntryById(ctx context.Context, conn *lightsail.Lightsail, id string) (*lightsail.DomainEntry, error) {
+func FindDomainEntryById(ctx context.Context, conn *lightsail.Client, id string) (*types.DomainEntry, error) {
 	partCount := flex.ResourceIdPartCount(id)
 
 	in := &lightsail.GetDomainInput{}
@@ -352,9 +357,9 @@ func FindDomainEntryById(ctx context.Context, conn *lightsail.Lightsail, id stri
 
 	in.DomainName = aws.String(domainName)
 
-	out, err := conn.GetDomainWithContext(ctx, in)
+	out, err := conn.GetDomain(ctx, in)
 
-	if tfawserr.ErrCodeEquals(err, lightsail.ErrCodeNotFoundException) {
+	if IsANotFoundError(err) {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: in,
@@ -365,11 +370,11 @@ func FindDomainEntryById(ctx context.Context, conn *lightsail.Lightsail, id stri
 		return nil, err
 	}
 
-	var entry *lightsail.DomainEntry
+	var entry types.DomainEntry
 	entryExists := false
 
 	for _, n := range out.Domain.DomainEntries {
-		if entryName == aws.StringValue(n.Name) && recordType == aws.StringValue(n.Type) && recordTarget == aws.StringValue(n.Target) {
+		if entryName == aws.ToString(n.Name) && recordType == aws.ToString(n.Type) && recordTarget == aws.ToString(n.Target) {
 			entry = n
 			entryExists = true
 			break
@@ -380,5 +385,5 @@ func FindDomainEntryById(ctx context.Context, conn *lightsail.Lightsail, id stri
 		return nil, tfresource.NewEmptyResultError(in)
 	}
 
-	return entry, nil
+	return &entry, nil
 }

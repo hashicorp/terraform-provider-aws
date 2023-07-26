@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package cloudwatch_test
 
 import (
@@ -651,7 +654,7 @@ func testAccCheckMetricAlarmExists(ctx context.Context, n string, v *cloudwatch.
 			return fmt.Errorf("No CloudWatch Metric Alarm ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudWatchConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudWatchConn(ctx)
 
 		output, err := tfcloudwatch.FindMetricAlarmByName(ctx, conn, rs.Primary.ID)
 
@@ -667,7 +670,7 @@ func testAccCheckMetricAlarmExists(ctx context.Context, n string, v *cloudwatch.
 
 func testAccCheckMetricAlarmDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudWatchConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudWatchConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_cloudwatch_metric_alarm" {

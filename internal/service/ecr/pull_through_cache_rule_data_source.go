@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ecr
 
 import (
@@ -40,7 +43,7 @@ func DataSourcePullThroughCacheRule() *schema.Resource {
 }
 
 func dataSourcePullThroughCacheRuleRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ECRConn()
+	conn := meta.(*conns.AWSClient).ECRConn(ctx)
 
 	repositoryPrefix := d.Get("ecr_repository_prefix").(string)
 

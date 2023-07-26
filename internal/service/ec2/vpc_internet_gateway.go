@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ec2
 
 import (
@@ -63,7 +66,7 @@ func ResourceInternetGateway() *schema.Resource {
 
 func resourceInternetGatewayCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	input := &ec2.CreateInternetGatewayInput{
 		TagSpecifications: getTagSpecificationsIn(ctx, ec2.ResourceTypeInternetGateway),
@@ -89,9 +92,9 @@ func resourceInternetGatewayCreate(ctx context.Context, d *schema.ResourceData, 
 
 func resourceInternetGatewayRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
-	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(ctx, propagationTimeout, func() (interface{}, error) {
+	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(ctx, ec2PropagationTimeout, func() (interface{}, error) {
 		return FindInternetGatewayByID(ctx, conn, d.Id())
 	}, d.IsNewResource())
 
@@ -124,14 +127,14 @@ func resourceInternetGatewayRead(ctx context.Context, d *schema.ResourceData, me
 		d.Set("vpc_id", ig.Attachments[0].VpcId)
 	}
 
-	SetTagsOut(ctx, ig.Tags)
+	setTagsOut(ctx, ig.Tags)
 
 	return diags
 }
 
 func resourceInternetGatewayUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	if d.HasChange("vpc_id") {
 		o, n := d.GetChange("vpc_id")
@@ -154,7 +157,7 @@ func resourceInternetGatewayUpdate(ctx context.Context, d *schema.ResourceData, 
 
 func resourceInternetGatewayDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	// Detach if it is attached.
 	if v, ok := d.GetOk("vpc_id"); ok {

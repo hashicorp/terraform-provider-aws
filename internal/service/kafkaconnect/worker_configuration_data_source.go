@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package kafkaconnect
 
 import (
@@ -42,7 +45,7 @@ func DataSourceWorkerConfiguration() *schema.Resource {
 }
 
 func dataSourceWorkerConfigurationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).KafkaConnectConn()
+	conn := meta.(*conns.AWSClient).KafkaConnectConn(ctx)
 
 	name := d.Get("name")
 	var output []*kafkaconnect.WorkerConfigurationSummary

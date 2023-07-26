@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package detective
 
 import (
@@ -34,7 +37,7 @@ func ResourceInvitationAccepter() *schema.Resource {
 }
 
 func resourceInvitationAccepterCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).DetectiveConn()
+	conn := meta.(*conns.AWSClient).DetectiveConn(ctx)
 
 	graphArn := d.Get("graph_arn").(string)
 
@@ -54,7 +57,7 @@ func resourceInvitationAccepterCreate(ctx context.Context, d *schema.ResourceDat
 }
 
 func resourceInvitationAccepterRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).DetectiveConn()
+	conn := meta.(*conns.AWSClient).DetectiveConn(ctx)
 
 	graphArn, err := FindInvitationByGraphARN(ctx, conn, d.Id())
 
@@ -73,7 +76,7 @@ func resourceInvitationAccepterRead(ctx context.Context, d *schema.ResourceData,
 }
 
 func resourceInvitationAccepterDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).DetectiveConn()
+	conn := meta.(*conns.AWSClient).DetectiveConn(ctx)
 
 	input := &detective.DisassociateMembershipInput{
 		GraphArn: aws.String(d.Id()),

@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package waf
 
 import (
@@ -90,7 +93,7 @@ func ResourceRuleGroup() *schema.Resource {
 
 func resourceRuleGroupCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).WAFConn()
+	conn := meta.(*conns.AWSClient).WAFConn(ctx)
 
 	wr := NewRetryer(conn)
 	out, err := wr.RetryWithToken(ctx, func(token *string) (interface{}, error) {
@@ -98,7 +101,7 @@ func resourceRuleGroupCreate(ctx context.Context, d *schema.ResourceData, meta i
 			ChangeToken: token,
 			MetricName:  aws.String(d.Get("metric_name").(string)),
 			Name:        aws.String(d.Get("name").(string)),
-			Tags:        GetTagsIn(ctx),
+			Tags:        getTagsIn(ctx),
 		}
 
 		return conn.CreateRuleGroupWithContext(ctx, input)
@@ -124,7 +127,7 @@ func resourceRuleGroupCreate(ctx context.Context, d *schema.ResourceData, meta i
 
 func resourceRuleGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).WAFConn()
+	conn := meta.(*conns.AWSClient).WAFConn(ctx)
 
 	params := &waf.GetRuleGroupInput{
 		RuleGroupId: aws.String(d.Id()),
@@ -164,7 +167,7 @@ func resourceRuleGroupRead(ctx context.Context, d *schema.ResourceData, meta int
 
 func resourceRuleGroupUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).WAFConn()
+	conn := meta.(*conns.AWSClient).WAFConn(ctx)
 
 	if d.HasChange("activated_rule") {
 		o, n := d.GetChange("activated_rule")
@@ -181,7 +184,7 @@ func resourceRuleGroupUpdate(ctx context.Context, d *schema.ResourceData, meta i
 
 func resourceRuleGroupDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).WAFConn()
+	conn := meta.(*conns.AWSClient).WAFConn(ctx)
 
 	oldRules := d.Get("activated_rule").(*schema.Set).List()
 	if err := deleteRuleGroup(ctx, d.Id(), oldRules, conn); err != nil {
