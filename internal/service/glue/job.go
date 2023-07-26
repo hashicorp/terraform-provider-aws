@@ -54,15 +54,21 @@ func ResourceJob() *schema.Resource {
 							Optional: true,
 							Default:  "glueetl",
 						},
-						"script_location": {
-							Type:     schema.TypeString,
-							Required: true,
-						},
 						"python_version": {
 							Type:         schema.TypeString,
 							Optional:     true,
 							Computed:     true,
 							ValidateFunc: validation.StringInSlice([]string{"2", "3", "3.9"}, true),
+						},
+						"runtime": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							Computed:     true,
+							ValidateFunc: validation.StringInSlice([]string{"Ray2.4"}, true),
+						},
+						"script_location": {
+							Type:     schema.TypeString,
+							Required: true,
 						},
 					},
 				},
@@ -80,11 +86,6 @@ func ResourceJob() *schema.Resource {
 			"description": {
 				Type:     schema.TypeString,
 				Optional: true,
-			},
-			"glue_version": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
 			},
 			"execution_class": {
 				Type:         schema.TypeString,
@@ -106,6 +107,11 @@ func ResourceJob() *schema.Resource {
 						},
 					},
 				},
+			},
+			"glue_version": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
 			},
 			"max_capacity": {
 				Type:          schema.TypeFloat,
@@ -247,7 +253,6 @@ func resourceJobCreate(ctx context.Context, d *schema.ResourceData, meta interfa
 		input.WorkerType = aws.String(v.(string))
 	}
 
-	log.Printf("[DEBUG] Creating Glue Job: %s", input)
 	output, err := conn.CreateJobWithContext(ctx, input)
 
 	if err != nil {
@@ -385,7 +390,6 @@ func resourceJobUpdate(ctx context.Context, d *schema.ResourceData, meta interfa
 			JobUpdate: jobUpdate,
 		}
 
-		log.Printf("[DEBUG] Updating Glue Job: %s", input)
 		_, err := conn.UpdateJobWithContext(ctx, input)
 
 		if err != nil {
@@ -438,6 +442,10 @@ func expandJobCommand(l []interface{}) *glue.JobCommand {
 		jobCommand.PythonVersion = aws.String(v)
 	}
 
+	if v, ok := m["runtime"].(string); ok && v != "" {
+		jobCommand.Runtime = aws.String(v)
+	}
+
 	return jobCommand
 }
 
@@ -480,6 +488,7 @@ func flattenJobCommand(jobCommand *glue.JobCommand) []map[string]interface{} {
 		"name":            aws.StringValue(jobCommand.Name),
 		"script_location": aws.StringValue(jobCommand.ScriptLocation),
 		"python_version":  aws.StringValue(jobCommand.PythonVersion),
+		"runtime":         aws.StringValue(jobCommand.Runtime),
 	}
 
 	return []map[string]interface{}{m}

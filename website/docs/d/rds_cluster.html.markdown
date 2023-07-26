@@ -20,11 +20,11 @@ data "aws_rds_cluster" "clusterName" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This data source supports the following arguments:
 
 * `cluster_identifier` - (Required) Cluster identifier of the RDS cluster.
 
-## Attributes Reference
+## Attribute Reference
 
 See the [RDS Cluster Resource](/docs/providers/aws/r/rds_cluster.html) for details on the
 returned attributes - they are identical for all attributes, except the `tags_all`. If you need to get the tags for this resource, use the attribute `tags` as described below.

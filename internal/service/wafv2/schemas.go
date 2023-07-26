@@ -516,6 +516,43 @@ func visibilityConfigSchema() *schema.Schema {
 	}
 }
 
+func associationConfigSchema() *schema.Schema {
+	return &schema.Schema{
+		Type:     schema.TypeList,
+		Optional: true,
+		MaxItems: 1,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"request_body": requestBodySchema(),
+			},
+		},
+	}
+}
+
+func requestBodySchema() *schema.Schema {
+	return &schema.Schema{
+		Type:     schema.TypeList,
+		Optional: true,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"cloudfront": {
+					Type:     schema.TypeList,
+					Optional: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"default_size_inspection_limit": {
+								Type:         schema.TypeString,
+								Required:     true,
+								ValidateFunc: validation.StringInSlice(wafv2.SizeInspectionLimit_Values(), false),
+							},
+						},
+					},
+				},
+			},
+		},
+	}
+}
+
 func allowConfigSchema() *schema.Schema {
 	return &schema.Schema{
 		Type:     schema.TypeList,

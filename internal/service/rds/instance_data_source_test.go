@@ -44,6 +44,7 @@ func TestAccRDSInstanceDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(dataSourceName, "hosted_zone_id", resourceName, "hosted_zone_id"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "iops", resourceName, "iops"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "master_username", resourceName, "username"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "max_allocated_storage", resourceName, "max_allocated_storage"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "multi_az", resourceName, "multi_az"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "network_type", resourceName, "network_type"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "port", resourceName, "port"),
@@ -120,6 +121,7 @@ resource "aws_db_instance" "test" {
   password                = "avoid-plaintext-passwords"
   skip_final_snapshot     = true
   username                = "tfacctest"
+  max_allocated_storage   = 100
 
   enabled_cloudwatch_logs_exports = [
     "audit",
