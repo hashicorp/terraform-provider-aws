@@ -484,10 +484,6 @@ func expandFirewallPolicy(l []interface{}) *networkfirewall.FirewallPolicy {
 		StatelessFragmentDefaultActions: flex.ExpandStringSet(lRaw["stateless_fragment_default_actions"].(*schema.Set)),
 	}
 
-	// if v, ok := lRaw["policy_variables"].([]interface{}); ok && len(v) > 0 {
-	// 	policy.PolicyVariables = expandPolicyVariables(v)
-	// }
-
 	if v, ok := lRaw["policy_variables"]; ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 		policy.PolicyVariables = expandPolicyVariables(v.([]interface{})[0].(map[string]interface{}))
 	}
