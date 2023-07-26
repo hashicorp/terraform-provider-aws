@@ -19,7 +19,10 @@ type ObjectTypeOf[T any] struct {
 	basetypes.ObjectType
 }
 
-var _ basetypes.ObjectTypable = ObjectTypeOf[struct{}]{}
+var (
+	_ basetypes.ObjectTypable = ObjectTypeOf[struct{}]{}
+	_ TypeWithValueFromPtr    = ObjectTypeOf[struct{}]{}
+)
 
 func NewObjectTypeOf[T any](ctx context.Context) ObjectTypeOf[T] {
 	return ObjectTypeOf[T]{basetypes.ObjectType{AttrTypes: AttributeTypesMust[T](ctx)}}
@@ -61,6 +64,21 @@ func (t ObjectTypeOf[T]) ValueFromObject(ctx context.Context, in basetypes.Objec
 	}
 
 	return value, diags
+}
+
+func (t ObjectTypeOf[T]) ValueFromPtr(ctx context.Context, in any) (attr.Value, diag.Diagnostics) {
+	var diags diag.Diagnostics
+
+	if in == nil {
+		return NewObjectValueOfNull[T](ctx), diags
+	}
+
+	if t, ok := in.(*T); ok {
+		return NewObjectValueOf(ctx, t), diags
+	}
+
+	diags.Append(diag.NewErrorDiagnostic("Invalid value", fmt.Sprintf("incorrect type: want %T, got %T", (*T)(nil), in)))
+	return nil, diags
 }
 
 func (t ObjectTypeOf[T]) ValueFromTerraform(ctx context.Context, in tftypes.Value) (attr.Value, error) {
