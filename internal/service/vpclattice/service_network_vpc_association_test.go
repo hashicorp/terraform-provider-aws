@@ -255,52 +255,41 @@ func testAccCheckServiceNetworkVPCAssociationExists(ctx context.Context, name st
 	}
 }
 
-func testAccServiceNetworkVPCAssociationConfig_basic(rName string) string {
-	return fmt.Sprintf(`
-resource "aws_vpc" "test" {
-  cidr_block = "10.0.0.0/16"
-}
-
+func testAccServiceNetworkVPCAssociationConfig_base(rName string) string {
+	return acctest.ConfigCompose(acctest.ConfigVPCWithSubnets(rName, 0), fmt.Sprintf(`
 resource "aws_vpclattice_service_network" "test" {
   name = %[1]q
 }
+`, rName))
+}
 
+func testAccServiceNetworkVPCAssociationConfig_basic(rName string) string {
+	return acctest.ConfigCompose(testAccServiceNetworkVPCAssociationConfig_base(rName), `
 resource "aws_vpclattice_service_network_vpc_association" "test" {
   vpc_identifier             = aws_vpc.test.id
   service_network_identifier = aws_vpclattice_service_network.test.id
 }
-`, rName)
+`)
 }
 
 func testAccServiceNetworkVPCAssociationConfig_arn(rName string) string {
-	return fmt.Sprintf(`
-resource "aws_vpc" "test" {
-  cidr_block = "10.0.0.0/16"
-}
-
-resource "aws_vpclattice_service_network" "test" {
-  name = %[1]q
-}
-
+	return acctest.ConfigCompose(testAccServiceNetworkVPCAssociationConfig_base(rName), `
 resource "aws_vpclattice_service_network_vpc_association" "test" {
   vpc_identifier             = aws_vpc.test.id
   service_network_identifier = aws_vpclattice_service_network.test.arn
 }
-`, rName)
+`)
 }
 
 func testAccServiceNetworkVPCAssociationConfig_full(rName string) string {
-	return fmt.Sprintf(`
-resource "aws_vpc" "test" {
-  cidr_block = "10.0.0.0/16"
-}
-
+	return acctest.ConfigCompose(testAccServiceNetworkVPCAssociationConfig_base(rName), fmt.Sprintf(`
 resource "aws_security_group" "test" {
+  name   = %[1]q
   vpc_id = aws_vpc.test.id
-}
 
-resource "aws_vpclattice_service_network" "test" {
-  name = %[1]q
+  tags = {
+    Name = %[1]q
+  }
 }
 
 resource "aws_vpclattice_service_network_vpc_association" "test" {
@@ -308,48 +297,32 @@ resource "aws_vpclattice_service_network_vpc_association" "test" {
   security_group_ids         = [aws_security_group.test.id]
   service_network_identifier = aws_vpclattice_service_network.test.id
 }
-`, rName)
+`, rName))
 }
 
 func testAccServiceNetworkVPCAssociationConfig_tags1(rName, tagKey1, tagValue1 string) string {
-	return fmt.Sprintf(`
-resource "aws_vpc" "test" {
-  cidr_block = "10.0.0.0/16"
-}
-
-resource "aws_vpclattice_service_network" "test" {
-  name = %[1]q
-}
-
+	return acctest.ConfigCompose(testAccServiceNetworkVPCAssociationConfig_base(rName), fmt.Sprintf(`
 resource "aws_vpclattice_service_network_vpc_association" "test" {
   vpc_identifier             = aws_vpc.test.id
   service_network_identifier = aws_vpclattice_service_network.test.id
 
   tags = {
-    %[2]q = %[3]q
+    %[1]q = %[2]q
   }
 }
-`, rName, tagKey1, tagValue1)
+`, tagKey1, tagValue1))
 }
 
 func testAccServiceNetworkVPCAssociationConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
-	return fmt.Sprintf(`
-resource "aws_vpc" "test" {
-  cidr_block = "10.0.0.0/16"
-}
-
-resource "aws_vpclattice_service_network" "test" {
-  name = %[1]q
-}
-
+	return acctest.ConfigCompose(testAccServiceNetworkVPCAssociationConfig_base(rName), fmt.Sprintf(`
 resource "aws_vpclattice_service_network_vpc_association" "test" {
   vpc_identifier             = aws_vpc.test.id
   service_network_identifier = aws_vpclattice_service_network.test.id
 
   tags = {
-    %[2]q = %[3]q
-    %[4]q = %[5]q
+    %[1]q = %[2]q
+    %[3]q = %[4]q
   }
 }
-`, rName, tagKey1, tagValue1, tagKey2, tagValue2)
+`, tagKey1, tagValue1, tagKey2, tagValue2))
 }
