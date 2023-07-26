@@ -17,6 +17,7 @@ import (
 	directoryservice_sdkv2 "github.com/aws/aws-sdk-go-v2/service/directoryservice"
 	docdbelastic_sdkv2 "github.com/aws/aws-sdk-go-v2/service/docdbelastic"
 	ec2_sdkv2 "github.com/aws/aws-sdk-go-v2/service/ec2"
+	emrserverless_sdkv2 "github.com/aws/aws-sdk-go-v2/service/emrserverless"
 	finspace_sdkv2 "github.com/aws/aws-sdk-go-v2/service/finspace"
 	fis_sdkv2 "github.com/aws/aws-sdk-go-v2/service/fis"
 	glacier_sdkv2 "github.com/aws/aws-sdk-go-v2/service/glacier"
@@ -128,7 +129,6 @@ import (
 	elbv2_sdkv1 "github.com/aws/aws-sdk-go/service/elbv2"
 	emr_sdkv1 "github.com/aws/aws-sdk-go/service/emr"
 	emrcontainers_sdkv1 "github.com/aws/aws-sdk-go/service/emrcontainers"
-	emrserverless_sdkv1 "github.com/aws/aws-sdk-go/service/emrserverless"
 	eventbridge_sdkv1 "github.com/aws/aws-sdk-go/service/eventbridge"
 	firehose_sdkv1 "github.com/aws/aws-sdk-go/service/firehose"
 	fms_sdkv1 "github.com/aws/aws-sdk-go/service/fms"
@@ -534,8 +534,8 @@ func (c *AWSClient) EMRContainersConn(ctx context.Context) *emrcontainers_sdkv1.
 	return errs.Must(conn[*emrcontainers_sdkv1.EMRContainers](ctx, c, names.EMRContainers))
 }
 
-func (c *AWSClient) EMRServerlessConn(ctx context.Context) *emrserverless_sdkv1.EMRServerless {
-	return errs.Must(conn[*emrserverless_sdkv1.EMRServerless](ctx, c, names.EMRServerless))
+func (c *AWSClient) EMRServerlessClient(ctx context.Context) *emrserverless_sdkv2.Client {
+	return errs.Must(client[*emrserverless_sdkv2.Client](ctx, c, names.EMRServerless))
 }
 
 func (c *AWSClient) ElastiCacheConn(ctx context.Context) *elasticache_sdkv1.ElastiCache {

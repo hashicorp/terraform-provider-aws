@@ -27,7 +27,6 @@ func testAccWorkspaceDataSource_basic(t *testing.T) {
 			{
 				Config: testAccWorkspaceDataSourceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckWorkspaceExists(ctx, dataSourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "account_access_type", dataSourceName, "account_access_type"),
 					resource.TestCheckResourceAttrPair(resourceName, "arn", dataSourceName, "arn"),
 					resource.TestCheckResourceAttrPair(resourceName, "authentication_providers.#", dataSourceName, "authentication_providers.#"),

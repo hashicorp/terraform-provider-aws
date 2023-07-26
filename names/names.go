@@ -34,6 +34,7 @@ const (
 	ComprehendEndpointID                 = "comprehend"
 	ComputeOptimizerEndpointID           = "computeoptimizer"
 	DSEndpointID                         = "ds"
+	EMRServerlessEndpointID              = "emrserverless"
 	GlacierEndpointID                    = "glacier"
 	IdentityStoreEndpointID              = "identitystore"
 	Inspector2EndpointID                 = "inspector2"

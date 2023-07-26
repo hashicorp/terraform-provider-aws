@@ -169,6 +169,11 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			Tags:     &types.ServicePackageResourceTags{},
 		},
 		{
+			Factory:  ResourceSecurityTokenServicePreferences,
+			TypeName: "aws_iam_security_token_service_preferences",
+			Name:     "Security Token Service Preferences",
+		},
+		{
 			Factory:  ResourceServerCertificate,
 			TypeName: "aws_iam_server_certificate",
 			Name:     "Server Certificate",

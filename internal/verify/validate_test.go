@@ -737,3 +737,41 @@ func TestFloatGreaterThan(t *testing.T) {
 		}
 	}
 }
+
+func TestValidServicePrincipal(t *testing.T) {
+	t.Parallel()
+
+	v := ""
+	_, errors := ValidServicePrincipal(v, "test.google.com")
+	if len(errors) != 0 {
+		t.Fatalf("%q should not be validated as an Service Principal name: %q", v, errors)
+	}
+
+	validNames := []string{
+		"a4b.amazonaws.com",
+		"appstream.application-autoscaling.amazonaws.com",
+		"alexa-appkit.amazon.com",
+		"member.org.stacksets.cloudformation.amazonaws.com",
+		"vpc-flow-logs.amazonaws.com",
+		"logs.eu-central-1.amazonaws.com",
+	}
+	for _, v := range validNames {
+		_, errors := ValidServicePrincipal(v, "arn")
+		if len(errors) != 0 {
+			t.Fatalf("%q should be a valid Service Principal: %q", v, errors)
+		}
+	}
+
+	invalidNames := []string{
+		"test.google.com",
+		"transfer.amz.com",
+		"test",
+		"testwithwildcard*",
+	}
+	for _, v := range invalidNames {
+		_, errors := ValidServicePrincipal(v, "arn")
+		if len(errors) == 0 {
+			t.Fatalf("%q should be an invalid Service Principal", v)
+		}
+	}
+}
