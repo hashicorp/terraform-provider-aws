@@ -20,6 +20,33 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+func TestIDFromIDOrARN(t *testing.T) {
+	t.Parallel()
+
+	testCases := []struct {
+		idOrARN string
+		want    string
+	}{
+		{
+			idOrARN: "",
+			want:    "",
+		},
+		{
+			idOrARN: "sn-1234567890abcdefg",
+			want:    "sn-1234567890abcdefg",
+		},
+		{
+			idOrARN: "arn:aws:vpc-lattice:us-east-1:123456789012:servicenetwork/sn-1234567890abcdefg",
+			want:    "sn-1234567890abcdefg",
+		},
+	}
+	for _, testCase := range testCases {
+		if got, want := tfvpclattice.IDFromIDOrARN(testCase.idOrARN), testCase.want; got != want {
+			t.Errorf("IDFromIDOrARN(%q) = %v, want %v", testCase.idOrARN, got, want)
+		}
+	}
+}
+
 func TestAccVPCLatticeServiceNetwork_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
