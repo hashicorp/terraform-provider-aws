@@ -186,3 +186,9 @@ func idFromIDOrARN(idOrARN string) string {
 	// "arn:aws:vpc-lattice:us-east-1:123456789012:servicenetwork/sn-1234567890abcdefg".
 	return idOrARN[strings.LastIndex(idOrARN, "/")+1:]
 }
+
+// suppressEquivalentIDOrARN provides custom difference suppression
+// for strings that represent equal resource IDs or ARNs.
+func suppressEquivalentIDOrARN(_, old, new string, _ *schema.ResourceData) bool {
+	return idFromIDOrARN(old) == idFromIDOrARN(new)
+}

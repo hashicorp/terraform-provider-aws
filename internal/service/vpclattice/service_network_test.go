@@ -47,6 +47,47 @@ func TestIDFromIDOrARN(t *testing.T) {
 	}
 }
 
+func TestSuppressEquivalentIDOrARN(t *testing.T) {
+	t.Parallel()
+
+	testCases := []struct {
+		old  string
+		new  string
+		want bool
+	}{
+		{
+			old:  "sn-1234567890abcdefg",
+			new:  "sn-1234567890abcdefg",
+			want: true,
+		},
+		{
+			old:  "sn-1234567890abcdefg",
+			new:  "sn-1234567890abcdefh",
+			want: false,
+		},
+		{
+			old:  "arn:aws:vpc-lattice:us-east-1:123456789012:servicenetwork/sn-1234567890abcdefg",
+			new:  "sn-1234567890abcdefg",
+			want: true,
+		},
+		{
+			old:  "sn-1234567890abcdefg",
+			new:  "arn:aws:vpc-lattice:us-east-1:123456789012:servicenetwork/sn-1234567890abcdefg",
+			want: true,
+		},
+		{
+			old:  "arn:aws:vpc-lattice:us-east-1:123456789012:servicenetwork/sn-1234567890abcdefg",
+			new:  "sn-1234567890abcdefh",
+			want: false,
+		},
+	}
+	for _, testCase := range testCases {
+		if got, want := tfvpclattice.SuppressEquivalentIDOrARN("test_property", testCase.old, testCase.new, nil), testCase.want; got != want {
+			t.Errorf("SuppressEquivalentIDOrARN(%q, %q) = %v, want %v", testCase.old, testCase.new, got, want)
+		}
+	}
+}
+
 func TestAccVPCLatticeServiceNetwork_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
