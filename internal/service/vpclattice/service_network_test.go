@@ -36,7 +36,7 @@ func TestIDFromIDOrARN(t *testing.T) {
 			want:    "sn-1234567890abcdefg",
 		},
 		{
-			idOrARN: "arn:aws:vpc-lattice:us-east-1:123456789012:servicenetwork/sn-1234567890abcdefg",
+			idOrARN: "arn:aws:vpc-lattice:us-east-1:123456789012:servicenetwork/sn-1234567890abcdefg", //lintignore:AWSAT003,AWSAT005
 			want:    "sn-1234567890abcdefg",
 		},
 	}
@@ -66,17 +66,17 @@ func TestSuppressEquivalentIDOrARN(t *testing.T) {
 			want: false,
 		},
 		{
-			old:  "arn:aws:vpc-lattice:us-east-1:123456789012:servicenetwork/sn-1234567890abcdefg",
+			old:  "arn:aws:vpc-lattice:us-east-1:123456789012:servicenetwork/sn-1234567890abcdefg", //lintignore:AWSAT003,AWSAT005
 			new:  "sn-1234567890abcdefg",
 			want: true,
 		},
 		{
 			old:  "sn-1234567890abcdefg",
-			new:  "arn:aws:vpc-lattice:us-east-1:123456789012:servicenetwork/sn-1234567890abcdefg",
+			new:  "arn:aws:vpc-lattice:us-east-1:123456789012:servicenetwork/sn-1234567890abcdefg", //lintignore:AWSAT003,AWSAT005
 			want: true,
 		},
 		{
-			old:  "arn:aws:vpc-lattice:us-east-1:123456789012:servicenetwork/sn-1234567890abcdefg",
+			old:  "arn:aws:vpc-lattice:us-east-1:123456789012:servicenetwork/sn-1234567890abcdefg", //lintignore:AWSAT003,AWSAT005
 			new:  "sn-1234567890abcdefh",
 			want: false,
 		},
