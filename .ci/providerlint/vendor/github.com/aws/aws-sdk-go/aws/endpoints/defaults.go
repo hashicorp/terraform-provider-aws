@@ -2661,6 +2661,9 @@ var awsPartition = partition{
 					Region: "ap-south-1",
 				}: endpoint{},
 				endpointKey{
+					Region: "ap-south-2",
+				}: endpoint{},
+				endpointKey{
 					Region: "ap-southeast-1",
 				}: endpoint{},
 				endpointKey{
@@ -2676,10 +2679,16 @@ var awsPartition = partition{
 					Region: "eu-central-1",
 				}: endpoint{},
 				endpointKey{
+					Region: "eu-central-2",
+				}: endpoint{},
+				endpointKey{
 					Region: "eu-north-1",
 				}: endpoint{},
 				endpointKey{
 					Region: "eu-south-1",
+				}: endpoint{},
+				endpointKey{
+					Region: "eu-south-2",
 				}: endpoint{},
 				endpointKey{
 					Region: "eu-west-1",
@@ -2689,6 +2698,9 @@ var awsPartition = partition{
 				}: endpoint{},
 				endpointKey{
 					Region: "eu-west-3",
+				}: endpoint{},
+				endpointKey{
+					Region: "me-central-1",
 				}: endpoint{},
 				endpointKey{
 					Region: "me-south-1",
@@ -32598,11 +32610,18 @@ var awscnPartition = partition{
 			},
 		},
 		"savingsplans": service{
-			PartitionEndpoint: "aws-cn",
-			IsRegionalized:    boxedFalse,
+			IsRegionalized: boxedTrue,
 			Endpoints: serviceEndpoints{
 				endpointKey{
-					Region: "aws-cn",
+					Region: "cn-north-1",
+				}: endpoint{
+					Hostname: "savingsplans.cn-north-1.amazonaws.com.cn",
+					CredentialScope: credentialScope{
+						Region: "cn-north-1",
+					},
+				},
+				endpointKey{
+					Region: "cn-northwest-1",
 				}: endpoint{
 					Hostname: "savingsplans.cn-northwest-1.amazonaws.com.cn",
 					CredentialScope: credentialScope{
