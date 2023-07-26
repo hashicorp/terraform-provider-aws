@@ -28,6 +28,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/inspector2 v1.15.1
 	github.com/aws/aws-sdk-go-v2/service/internetmonitor v1.3.1
 	github.com/aws/aws-sdk-go-v2/service/ivschat v1.4.8
+	github.com/aws/aws-sdk-go-v2/service/kafka v1.20.6
 	github.com/aws/aws-sdk-go-v2/service/kendra v1.41.1
 	github.com/aws/aws-sdk-go-v2/service/keyspaces v1.3.3
 	github.com/aws/aws-sdk-go-v2/service/lambda v1.37.1

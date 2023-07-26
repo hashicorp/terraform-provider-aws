@@ -229,7 +229,7 @@ macie,macie,macie,macie,,macie,,,Macie,Macie,,1,,,aws_macie_,,macie_,Macie Class
 ,,,,,,,,,,,,,,,,,Mainframe Modernization,AWS,x,,,,,No SDK support
 managedblockchain,managedblockchain,managedblockchain,managedblockchain,,managedblockchain,,,ManagedBlockchain,ManagedBlockchain,,1,,,aws_managedblockchain_,,managedblockchain_,Managed Blockchain,Amazon,,x,,,,
 grafana,grafana,managedgrafana,grafana,,grafana,,managedgrafana;amg,Grafana,ManagedGrafana,,1,,,aws_grafana_,,grafana_,Managed Grafana,Amazon,,,,,,
-kafka,kafka,kafka,kafka,,kafka,,msk,Kafka,Kafka,,1,,aws_msk_,aws_kafka_,,msk_,Managed Streaming for Kafka,Amazon,,,,,,
+kafka,kafka,kafka,kafka,,kafka,,msk,Kafka,Kafka,,1,2,aws_msk_,aws_kafka_,,msk_,Managed Streaming for Kafka,Amazon,,,,,,
 kafkaconnect,kafkaconnect,kafkaconnect,kafkaconnect,,kafkaconnect,,,KafkaConnect,KafkaConnect,,1,,aws_mskconnect_,aws_kafkaconnect_,,mskconnect_,Managed Streaming for Kafka Connect,Amazon,,,,,,
 ,,,,,,,,,,,,,,,,,Management Console,AWS,x,,,,,No SDK support
 marketplace-catalog,marketplacecatalog,marketplacecatalog,marketplacecatalog,,marketplacecatalog,,,MarketplaceCatalog,MarketplaceCatalog,,1,,,aws_marketplacecatalog_,,marketplace_catalog_,Marketplace Catalog,AWS,,x,,,,
