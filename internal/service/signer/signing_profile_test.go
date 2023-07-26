@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfsigner "github.com/hashicorp/terraform-provider-aws/internal/service/signer"
 )
 
 func TestAccSignerSigningProfile_basic(t *testing.T) {
@@ -302,11 +303,7 @@ func testAccCheckSigningProfileExists(ctx context.Context, res string, sp *signe
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).SignerClient(ctx)
 
-		params := &signer.GetSigningProfileInput{
-			ProfileName: aws.String(rs.Primary.ID),
-		}
-
-		getSp, err := conn.GetSigningProfile(ctx, params)
+		getSp, err := tfsigner.FindSigningProfileByName(ctx, conn, rs.Primary.ID)
 		if err != nil {
 			return err
 		}
@@ -328,9 +325,7 @@ func testAccCheckSigningProfileDestroy(ctx context.Context) resource.TestCheckFu
 				continue
 			}
 
-			out, err := conn.GetSigningProfile(ctx, &signer.GetSigningProfileInput{
-				ProfileName: aws.String(rs.Primary.ID),
-			})
+			out, err := tfsigner.FindSigningProfileByName(ctx, conn, rs.Primary.ID)
 
 			if out.Status != types.SigningProfileStatusCanceled && err == nil {
 				return fmt.Errorf("Signing Profile not cancelled%s", *out.ProfileName)

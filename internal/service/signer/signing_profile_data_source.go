@@ -6,8 +6,8 @@ package signer
 import (
 	"context"
 
+	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/signer"
-	"github.com/aws/aws-sdk-go/aws"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -145,7 +145,7 @@ func dataSourceSigningProfileRead(ctx context.Context, d *schema.ResourceData, m
 		return sdkdiag.AppendErrorf(diags, "setting signer signing profile revocation record: %s", err)
 	}
 
-	d.SetId(aws.StringValue(signingProfileOutput.ProfileName))
+	d.SetId(aws.ToString(signingProfileOutput.ProfileName))
 
 	return diags
 }

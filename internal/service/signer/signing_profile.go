@@ -15,6 +15,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/signer"
 	"github.com/aws/aws-sdk-go-v2/service/signer/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -22,6 +23,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -188,17 +190,12 @@ func resourceSigningProfileRead(ctx context.Context, d *schema.ResourceData, met
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SignerClient(ctx)
 
-	signingProfileOutput, err := conn.GetSigningProfile(ctx, &signer.GetSigningProfileInput{
-		ProfileName: aws.String(d.Id()),
-	})
+	signingProfileOutput, err := findSigningProfileByName(ctx, conn, d.Id())
 
-	if !d.IsNewResource() {
-		var nfe *types.NotFoundException
-		if errors.As(err, &nfe) {
-			log.Printf("[WARN] Signer Signing Profile (%s) not found, removing from state", d.Id())
-			d.SetId("")
-			return diags
-		}
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] Signer Signing Profile (%s) not found, removing from state", d.Id())
+		d.SetId("")
+		return diags
 	}
 
 	if err != nil {
@@ -274,7 +271,7 @@ func resourceSigningProfileDelete(ctx context.Context, d *schema.ResourceData, m
 	})
 
 	if err != nil {
-		var nfe *types.NotFoundException
+		var nfe *types.ResourceNotFoundException
 		if errors.As(err, &nfe) {
 			return diags
 		}
@@ -341,4 +338,30 @@ func PlatformID_Values() []string {
 		"AWSIoTDeviceManagement-SHA256-ECDSA",
 		"AmazonFreeRTOS-TI-CC3220SF",
 		"AmazonFreeRTOS-Default"}
+}
+
+func findSigningProfileByName(ctx context.Context, conn *signer.Client, name string) (*signer.GetSigningProfileOutput, error) {
+	in := &signer.GetSigningProfileInput{
+		ProfileName: aws.String(name),
+	}
+
+	out, err := conn.GetSigningProfile(ctx, in)
+
+	if err != nil {
+		return nil, err
+	}
+
+	var nfe *types.ResourceNotFoundException
+	if errors.As(err, &nfe) {
+		return nil, &retry.NotFoundError{
+			LastRequest: in,
+			LastError:   err,
+		}
+	}
+
+	if out == nil {
+		return nil, tfresource.NewEmptyResultError(in)
+	}
+
+	return out, nil
 }

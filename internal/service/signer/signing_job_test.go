@@ -9,12 +9,12 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/service/signer"
-	"github.com/aws/aws-sdk-go/aws"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfsigner "github.com/hashicorp/terraform-provider-aws/internal/service/signer"
 )
 
 func TestAccSignerSigningJob_basic(t *testing.T) {
@@ -116,11 +116,7 @@ func testAccCheckSigningJobExists(ctx context.Context, res string, job *signer.D
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).SignerClient(ctx)
 
-		params := &signer.DescribeSigningJobInput{
-			JobId: aws.String(rs.Primary.ID),
-		}
-
-		getJob, err := conn.DescribeSigningJob(ctx, params)
+		getJob, err := tfsigner.FindSigningJobByID(ctx, conn, rs.Primary.ID)
 		if err != nil {
 			return err
 		}
