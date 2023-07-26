@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -25,7 +26,7 @@ import (
 
 // @SDKResource("aws_vpclattice_service_network_vpc_association", name="Service Network VPC Association")
 // @Tags(identifierAttribute="arn")
-func ResourceServiceNetworkVPCAssociation() *schema.Resource {
+func resourceServiceNetworkVPCAssociation() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceServiceNetworkVPCAssociationCreate,
 		ReadWithoutTimeout:   resourceServiceNetworkVPCAssociationRead,
@@ -171,12 +172,11 @@ func resourceServiceNetworkVPCAssociationDelete(ctx context.Context, d *schema.R
 		ServiceNetworkVpcAssociationIdentifier: aws.String(d.Id()),
 	})
 
-	if err != nil {
-		var nfe *types.ResourceNotFoundException
-		if errors.As(err, &nfe) {
-			return nil
-		}
+	if errs.IsA[*types.ResourceNotFoundException](err) {
+		return nil
+	}
 
+	if err != nil {
 		return create.DiagError(names.VPCLattice, create.ErrActionDeleting, ResNameServiceNetworkVPCAssociation, d.Id(), err)
 	}
 
@@ -192,15 +192,15 @@ func findServiceNetworkVPCAssociationByID(ctx context.Context, conn *vpclattice.
 		ServiceNetworkVpcAssociationIdentifier: aws.String(id),
 	}
 	out, err := conn.GetServiceNetworkVpcAssociation(ctx, in)
-	if err != nil {
-		var nfe *types.ResourceNotFoundException
-		if errors.As(err, &nfe) {
-			return nil, &retry.NotFoundError{
-				LastError:   err,
-				LastRequest: in,
-			}
-		}
 
+	if errs.IsA[*types.ResourceNotFoundException](err) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: in,
+		}
+	}
+
+	if err != nil {
 		return nil, err
 	}
 
