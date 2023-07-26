@@ -113,7 +113,7 @@ func ResourceLocationFSxOntapFileSystem() *schema.Resource {
 											Schema: map[string]*schema.Schema{
 												"version": {
 													Type:         schema.TypeString,
-													Default:      datasync.NfsVersionAutomatic,
+													Default:      datasync.SmbVersionAutomatic,
 													Optional:     true,
 													ForceNew:     true,
 													ValidateFunc: validation.StringInSlice(FSxOntapSmbVersion_Values(), false),
