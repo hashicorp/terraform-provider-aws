@@ -231,7 +231,8 @@ func resourceSigningJobCreate(ctx context.Context, d *schema.ResourceData, meta 
 		JobId: aws.String(jobId),
 	}
 	waiter := signer.NewSuccessfulSigningJobWaiter(conn)
-	err = waiter.Wait(ctx, waitInput, 5*time.Minute)
+	waitTime := 5 * time.Minute
+	err = waiter.Wait(ctx, waitInput, waitTime)
 
 	if err != nil {
 		var rnr *types.ResourceNotFoundException
