@@ -2053,9 +2053,10 @@ TASK_DEFINITION
     name = %[1]q
 
     efs_volume_configuration {
-      file_system_id          = aws_efs_file_system.test.id
-      root_directory          = "/"
-      transit_encryption      = "DISABLED"
+      file_system_id     = aws_efs_file_system.test.id
+      root_directory     = "/"
+      transit_encryption = "DISABLED"
+
       authorization_config {
         iam = "DISABLED"
       }
