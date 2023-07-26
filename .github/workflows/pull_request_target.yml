@@ -64,7 +64,7 @@ jobs:
         uses: actions/checkout@c85c95e3d7251135ab7dc9ce3241c5835cc595a9
 
       - name: 'Apply Labels'
-        uses: actions/labeler@ba790c862c380240c6d5e7427be5ace9a05c754b # v4.0.3
+        uses: actions/labeler@ac9175f8a1f3625fd0d4fb234536d26811351594 # v4.3.0
         with:
           configuration-path: .github/labeler-pr-triage.yml
           repo-token: ${{ secrets.GITHUB_TOKEN }}
