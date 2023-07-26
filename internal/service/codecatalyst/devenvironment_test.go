@@ -89,7 +89,7 @@ func TestAccCodeCatalystDevenvironment_disappears(t *testing.T) {
 	resourceName := "aws_codecatalyst_devenvironment.test"
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.VPCLatticeEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.CodeCatalyst),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDevenvironmentDestroy(ctx),
 		Steps: []resource.TestStep{
