@@ -1,4 +1,5 @@
-## 5.10.0 (Unreleased)
+## 5.11.0 (Unreleased)
+## 5.10.0 (July 27, 2023)
 
 FEATURES:
 
