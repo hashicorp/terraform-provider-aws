@@ -147,13 +147,47 @@ func (v ListNestedObjectValueOf[T]) ToObjectPtr(ctx context.Context) (any, diag.
 	case 0:
 		return nil, diags
 	case 1:
-		ptr := new(T)
-		diags.Append(elements[0].(ObjectValueOf[T]).ObjectValue.As(ctx, ptr, basetypes.ObjectAsOptions{})...)
+		ptr, d := nestedObjectValueObjectPtr[T](ctx, elements[0])
+		diags.Append(d...)
+		if diags.HasError() {
+			return nil, diags
+		}
 		return ptr, diags
 	default:
 		diags.Append(diag.NewErrorDiagnostic("Invalid list", fmt.Sprintf("too many elements: want 1, got %d", n)))
 		return nil, diags
 	}
+}
+
+func (v ListNestedObjectValueOf[T]) ToObjectSlice(ctx context.Context) (any, diag.Diagnostics) {
+	var diags diag.Diagnostics
+
+	elements := v.ListValue.Elements()
+	n := len(elements)
+	slice := make([]*T, n)
+	for i := 0; i < n; i++ {
+		ptr, d := nestedObjectValueObjectPtr[T](ctx, elements[i])
+		diags.Append(d...)
+		if diags.HasError() {
+			return nil, diags
+		}
+
+		slice[i] = ptr
+	}
+
+	return slice, diags
+}
+
+func nestedObjectValueObjectPtr[T any](ctx context.Context, val attr.Value) (*T, diag.Diagnostics) {
+	var diags diag.Diagnostics
+
+	ptr := new(T)
+	diags.Append(val.(ObjectValueOf[T]).ObjectValue.As(ctx, ptr, basetypes.ObjectAsOptions{})...)
+	if diags.HasError() {
+		return nil, diags
+	}
+
+	return ptr, diags
 }
 
 func NewListNestedObjectValueOfNull[T any](ctx context.Context) ListNestedObjectValueOf[T] {

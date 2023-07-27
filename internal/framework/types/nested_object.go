@@ -14,13 +14,13 @@ import (
 type NestedObjectType interface {
 	attr.Type
 
-	// NewObjectPtr returns a new, empty value as an object pointer (a Go struct pointer).
+	// NewObjectPtr returns a new, empty value as an object pointer (Go *struct).
 	NewObjectPtr(context.Context) (any, diag.Diagnostics)
 
 	// NullValue returns a Null Value.
 	NullValue(context.Context) (attr.Value, diag.Diagnostics)
 
-	// ValueFromObjectPtr returns a Value given an object pointer (a Go struct pointer).
+	// ValueFromObjectPtr returns a Value given an object pointer (Go *struct).
 	ValueFromObjectPtr(context.Context, any) (attr.Value, diag.Diagnostics)
 }
 
@@ -28,6 +28,9 @@ type NestedObjectType interface {
 type NestedObjectValue interface {
 	attr.Value
 
-	// ToObjectPtr returns the value as an object pointer (a Go struct pointer).
+	// ToObjectPtr returns the value as an object pointer (Go *struct).
 	ToObjectPtr(context.Context) (any, diag.Diagnostics)
+
+	// ToObjectSlice returns the value as an object slice (Go []*struct).
+	ToObjectSlice(context.Context) (any, diag.Diagnostics)
 }
