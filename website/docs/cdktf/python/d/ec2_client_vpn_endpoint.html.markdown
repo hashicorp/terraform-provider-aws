@@ -101,5 +101,4 @@ In addition to all arguments above, the following attributes are exported:
 
 - `read` - (Default `20m`)
 
-
 <!-- cache-key: cdktf-0.17.1 input-86166d26a95ae3c88a4d4e7f8804306d48860395f262b9f351921ba97ba82ccc -->

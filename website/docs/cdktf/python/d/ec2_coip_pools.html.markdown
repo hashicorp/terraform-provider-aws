@@ -63,6 +63,4 @@ which take the following arguments:
 
 - `read` - (Default `20m`)
 
-
 <!-- cache-key: cdktf-0.17.1 input-c1c9a426e16105b7a02e1c1b1adc831132ac241239b921ea8b6a60157547ed64 -->
-
