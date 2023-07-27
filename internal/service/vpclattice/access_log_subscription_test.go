@@ -8,6 +8,7 @@ import (
 	"errors"
 	"fmt"
 	"regexp"
+	"strings"
 	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/service/vpclattice"
@@ -21,6 +22,52 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
+
+func TestSuppressEquivalentCloudWatchLogsLogGroupARN(t *testing.T) {
+	t.Parallel()
+
+	testCases := []struct {
+		old  string
+		new  string
+		want bool
+	}{
+		{
+			old:  "arn:aws:s3:::tf-acc-test-3740243764086645346", //lintignore:AWSAT003,AWSAT005
+			new:  "arn:aws:s3:::tf-acc-test-3740243764086645346", //lintignore:AWSAT003,AWSAT005
+			want: true,
+		},
+		{
+			old:  "arn:aws:s3:::tf-acc-test-3740243764086645346",                                                    //lintignore:AWSAT003,AWSAT005
+			new:  "arn:aws:logs:us-west-2:123456789012:log-group:/aws/vpclattice/tf-acc-test-3740243764086645346:*", //lintignore:AWSAT003,AWSAT005
+			want: false,
+		},
+		{
+			old:  "arn:aws:logs:us-west-2:123456789012:log-group:/aws/vpclattice/tf-acc-test-3740243764086645346:*", //lintignore:AWSAT003,AWSAT005
+			new:  "arn:aws:logs:us-west-2:123456789012:log-group:/aws/vpclattice/tf-acc-test-3740243764086645346:*", //lintignore:AWSAT003,AWSAT005
+			want: true,
+		},
+		{
+			old:  "arn:aws:logs:us-west-2:123456789012:log-group:/aws/vpclattice/tf-acc-test-3740243764086645346",   //lintignore:AWSAT003,AWSAT005
+			new:  "arn:aws:logs:us-west-2:123456789012:log-group:/aws/vpclattice/tf-acc-test-3740243764086645346:*", //lintignore:AWSAT003,AWSAT005
+			want: true,
+		},
+		{
+			old:  "arn:aws:logs:us-west-2:123456789012:log-group:/aws/vpclattice/tf-acc-test-3740243764086645346:*", //lintignore:AWSAT003,AWSAT005
+			new:  "arn:aws:logs:us-west-2:123456789012:log-group:/aws/vpclattice/tf-acc-test-3740243764086645347:*", //lintignore:AWSAT003,AWSAT005
+			want: false,
+		},
+		{
+			old:  "arn:aws:logs:us-west-2:123456789012:log-group:/aws/vpclattice/tf-acc-test-3740243764086645346:*", //lintignore:AWSAT003,AWSAT005
+			new:  "arn:aws:logs:us-west-2:123456789012:log-group:/aws/vpclattice/tf-acc-test-3740243764086645347",   //lintignore:AWSAT003,AWSAT005
+			want: false,
+		},
+	}
+	for _, testCase := range testCases {
+		if got, want := tfvpclattice.SuppressEquivalentCloudWatchLogsLogGroupARN("test_property", testCase.old, testCase.new, nil), testCase.want; got != want {
+			t.Errorf("SuppressEquivalentCloudWatchLogsLogGroupARN(%q, %q) = %v, want %v", testCase.old, testCase.new, got, want)
+		}
+	}
+}
 
 func TestAccVPCLatticeAccessLogSubscription_basic(t *testing.T) {
 	ctx := acctest.Context(t)
@@ -178,7 +225,6 @@ func TestAccVPCLatticeAccessLogSubscription_cloudwatchNoWildcard(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_vpclattice_access_log_subscription.test"
 	serviceResourceName := "aws_vpclattice_service.test"
-	// logGroupResourceName := "aws_cloudwatch_log_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
@@ -194,7 +240,13 @@ func TestAccVPCLatticeAccessLogSubscription_cloudwatchNoWildcard(t *testing.T) {
 				Config: testAccAccessLogSubscriptionConfig_cloudwatchNoWildcard(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAccessLogSubscriptionExists(ctx, resourceName, &accesslogsubscription),
-					// resource.TestCheckResourceAttrPair(resourceName, "destination_arn", logGroupResourceName, "arn"),
+					resource.TestCheckResourceAttrWith(resourceName, "destination_arn", func(value string) error {
+						if !strings.HasSuffix(value, ":*") {
+							return fmt.Errorf("%s is not a wildcard ARN", value)
+						}
+
+						return nil
+					}),
 					resource.TestCheckResourceAttrPair(resourceName, "resource_arn", serviceResourceName, "arn"),
 					resource.TestCheckResourceAttrPair(resourceName, "resource_identifier", serviceResourceName, "id"),
 				),
@@ -208,7 +260,6 @@ func TestAccVPCLatticeAccessLogSubscription_cloudwatchWildcard(t *testing.T) {
 	var accesslogsubscription vpclattice.GetAccessLogSubscriptionOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_vpclattice_access_log_subscription.test"
-	// logGroupResourceName := "aws_cloudwatch_log_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
@@ -224,7 +275,13 @@ func TestAccVPCLatticeAccessLogSubscription_cloudwatchWildcard(t *testing.T) {
 				Config: testAccAccessLogSubscriptionConfig_cloudwatchWildcard(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAccessLogSubscriptionExists(ctx, resourceName, &accesslogsubscription),
-					// resource.TestCheckResourceAttrPair(resourceName, "destination_arn", logGroupResourceName, "arn"),
+					resource.TestCheckResourceAttrWith(resourceName, "destination_arn", func(value string) error {
+						if !strings.HasSuffix(value, ":*") {
+							return fmt.Errorf("%s is not a wildcard ARN", value)
+						}
+
+						return nil
+					}),
 				),
 			},
 		},

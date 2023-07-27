@@ -6,6 +6,7 @@ package vpclattice
 import (
 	"context"
 	"log"
+	"strings"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/vpclattice"
@@ -42,10 +43,11 @@ func resourceAccessLogSubscription() *schema.Resource {
 				Computed: true,
 			},
 			"destination_arn": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: verify.ValidARN,
+				Type:             schema.TypeString,
+				Required:         true,
+				ForceNew:         true,
+				ValidateFunc:     verify.ValidARN,
+				DiffSuppressFunc: suppressEquivalentCloudWatchLogsLogGroupARN,
 			},
 			"resource_arn": {
 				Type:     schema.TypeString,
@@ -159,4 +161,10 @@ func findAccessLogSubscriptionByID(ctx context.Context, conn *vpclattice.Client,
 	}
 
 	return out, nil
+}
+
+// suppressEquivalentCloudWatchLogsLogGroupARN provides custom difference suppression
+// for strings that represent equal CloudWatch Logs log group ARNs.
+func suppressEquivalentCloudWatchLogsLogGroupARN(_, old, new string, _ *schema.ResourceData) bool {
+	return strings.TrimSuffix(old, ":*") == strings.TrimSuffix(new, ":*")
 }

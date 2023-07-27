@@ -10,8 +10,9 @@ var (
 	FindServiceNetworkVPCAssociationByID     = findServiceNetworkVPCAssociationByID
 	FindTargetByThreePartKey                 = findTargetByThreePartKey
 
-	IDFromIDOrARN             = idFromIDOrARN
-	SuppressEquivalentIDOrARN = suppressEquivalentIDOrARN
+	IDFromIDOrARN                               = idFromIDOrARN
+	SuppressEquivalentCloudWatchLogsLogGroupARN = suppressEquivalentCloudWatchLogsLogGroupARN
+	SuppressEquivalentIDOrARN                   = suppressEquivalentIDOrARN
 
 	ResourceAccessLogSubscription            = resourceAccessLogSubscription
 	ResourceServiceNetworkServiceAssociation = resourceServiceNetworkServiceAssociation
