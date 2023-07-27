@@ -345,9 +345,9 @@ func (visitor expandVisitor) listOfObject(ctx context.Context, vFrom attr.Value,
 	var diags diag.Diagnostics
 
 	if vNestedObject, ok := vFrom.(types.NestedObjectValue); ok {
-		switch vTo.Kind() {
+		switch tTo := vTo.Type(); vTo.Kind() {
 		case reflect.Ptr:
-			switch tElem := vTo.Type().Elem(); tElem.Kind() {
+			switch tElem := tTo.Elem(); tElem.Kind() {
 			case reflect.Struct:
 				//
 				// types.List(OfObject) -> *struct.
@@ -361,13 +361,47 @@ func (visitor expandVisitor) listOfObject(ctx context.Context, vFrom attr.Value,
 				}
 
 				// Create a new target structure and walk its fields.
-				to := reflect.New(tElem).Interface()
-				diags.Append(walkStructFields(ctx, from, to, visitor)...)
+				to := reflect.New(tElem)
+				diags.Append(walkStructFields(ctx, from, to.Interface(), visitor)...)
 				if diags.HasError() {
 					return diags
 				}
 
-				vTo.Set(reflect.ValueOf(to))
+				vTo.Set(to)
+				return diags
+			}
+
+		case reflect.Slice:
+			switch tElem := tTo.Elem(); tElem.Kind() {
+			case reflect.Struct:
+				//
+				// types.List(OfObject) -> []struct.
+				//
+
+				// Get the nested Objects as a slice.
+				from, d := vNestedObject.ToObjectSlice(ctx)
+				diags.Append(d...)
+				if diags.HasError() {
+					return diags
+				}
+
+				// Create a new target slice and expand each element.
+				f := reflect.ValueOf(from)
+				n := f.Len()
+				t := reflect.MakeSlice(tTo, n, n)
+				for i := 0; i < n; i++ {
+					// Create a new target structure and walk its fields.
+					target := reflect.New(tElem)
+					diags.Append(walkStructFields(ctx, f.Index(i).Interface(), target.Interface(), visitor)...)
+					if diags.HasError() {
+						return diags
+					}
+
+					// Set value in the target slice.
+					t.Index(i).Set(target.Elem())
+				}
+
+				vTo.Set(t)
 				return diags
 			}
 		}

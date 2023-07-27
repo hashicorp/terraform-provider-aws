@@ -333,6 +333,18 @@ func TestGenericExpand(t *testing.T) {
 			Target:     &CCTestExpand{},
 			WantTarget: &CCTestExpand{Data: []CTestExpand{}},
 		},
+		{
+			TestName: "non-empty list Source and non-empty []struct Target",
+			Source: &AATestExpand{Data: fwtypes.NewListNestedObjectValueOfValueSlice(ctx, []BTestExpand{
+				BTestExpand{Name: types.StringValue("a")},
+				BTestExpand{Name: types.StringValue("b")},
+			})},
+			Target: &CCTestExpand{},
+			WantTarget: &CCTestExpand{Data: []CTestExpand{
+				CTestExpand{Name: "a"},
+				CTestExpand{Name: "b"},
+			}},
+		},
 	}
 
 	for _, testCase := range testCases {
