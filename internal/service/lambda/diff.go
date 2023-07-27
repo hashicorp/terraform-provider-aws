@@ -17,6 +17,11 @@ func customizeDiffValidateInput(_ context.Context, diff *schema.ResourceDiff, v 
 	if diff.Get("lifecycle_scope") == lifecycleScopeCreateOnly {
 		return nil
 	}
+
+	if !diff.GetRawPlan().GetAttr("input").IsWhollyKnown() {
+		return nil
+	}
+
 	// input is validated to be valid JSON in the schema already.
 	inputNoSpaces := strings.TrimSpace(diff.Get("input").(string))
 	if strings.HasPrefix(inputNoSpaces, "{") && strings.HasSuffix(inputNoSpaces, "}") {

@@ -46,7 +46,7 @@ jobs:
 
   service_labeler:
     name: 'Service Labeler'
-    if: contains(fromJSON('["opened", "edited"]'), github.event.action == 'opened')
+    if: contains(fromJSON('["opened", "edited"]'), github.event.action)
     runs-on: ubuntu-latest
     steps:
       - name: 'Apply Labels'

@@ -143,31 +143,24 @@ jobs:
           gh project item-edit --id "$PROJECT_ITEM_ID" --project-id ${{ env.PROJECT_ID }} --field-id ${{ env.VIEW_FIELD_ID }} --single-select-option-id ${{ vars.team_project_view_engineering_initiative }}
 
   add_to_milestone:
-    name: 'Add to Milestone'
+    name: 'Add Merged Pull Requests and Related Issues to Milestone'
     if: github.event.action == 'closed' && github.event.pull_request.merged
     runs-on: ubuntu-latest
     steps:
       - name: 'Checkout'
         uses: actions/checkout@c85c95e3d7251135ab7dc9ce3241c5835cc595a9
-        with:
-          ref: ${{ github.event.pull_request.base.ref }}
 
-      - name: 'Get Current Milestone'
+      - name: 'Get Current Milestone Name'
         id: get-current-milestone
-        run: |
-            echo "current_milestone=v$(head -1 CHANGELOG.md | cut -d " " -f 2)" >> "$GITHUB_OUTPUT"
+        run: echo "current_milestone=v$(head -1 CHANGELOG.md | cut -d " " -f 2)" >> "$GITHUB_OUTPUT"
 
-      - name: 'Get Milestone ID'
-        id: get-milestone-id
-        run: |
-          echo "milestone_id=$(curl -H "Authorization: Bearer ${{secrets.GITHUB_TOKEN}}" https://api.github.com/repos/${{ github.repository_owner }}/${{ github.event.repository.name }}/milestones | jq 'map(select(.title == "${{ steps.get-current-milestone.outputs.current_milestone }}"))[0].number')" >> "$GITHUB_OUTPUT"
-
-      - name: 'Add Pull Request and Linked Issues to Milestone'
-        uses: breathingdust/current-milestone-action@e74e4e4baaa22653aeef90db0c7894db093af076
-        with:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          pull_number: ${{ github.event.pull_request.number }}
-          milestone_number: ${{ steps.get-milestone-id.outputs.milestone_id }}
+      - name: 'Add Items to Milestone'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          MILESTONE: ${{ steps.get-current-milestone.outputs.current_milestone }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+        shell: bash
+        run: ./.ci/scripts/add-to-milestone.sh
 
   community_note:
     name: 'Community Note'
