@@ -244,7 +244,7 @@ func (visitor flattenVisitor) ptrToStruct(ctx context.Context, vFrom reflect.Val
 			//
 
 			// Create a new target structure and walk its fields.
-			to, d := tNestedObject.NewPtr(ctx)
+			to, d := tNestedObject.NewObjectPtr(ctx)
 			diags.Append(d...)
 			if diags.HasError() {
 				return diags
@@ -256,7 +256,7 @@ func (visitor flattenVisitor) ptrToStruct(ctx context.Context, vFrom reflect.Val
 			}
 
 			// Set the target structure as a nested Object.
-			val, d := tNestedObject.ValueFromPtr(ctx, to)
+			val, d := tNestedObject.ValueFromObjectPtr(ctx, to)
 			diags.Append(d...)
 			if diags.HasError() {
 				return diags

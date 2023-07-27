@@ -92,13 +92,19 @@ func (t ListNestedObjectTypeOf[T]) ValueType(ctx context.Context) attr.Value {
 	return ListNestedObjectValueOf[T]{}
 }
 
+func (t ListNestedObjectTypeOf[T]) NewObjectPtr(ctx context.Context) (any, diag.Diagnostics) {
+	var diags diag.Diagnostics
+
+	return new(T), diags
+}
+
 func (t ListNestedObjectTypeOf[T]) NullValue(ctx context.Context) (attr.Value, diag.Diagnostics) {
 	var diags diag.Diagnostics
 
 	return NewListNestedObjectValueOfNull[T](ctx), diags
 }
 
-func (t ListNestedObjectTypeOf[T]) ValueFromPtr(ctx context.Context, ptr any) (attr.Value, diag.Diagnostics) {
+func (t ListNestedObjectTypeOf[T]) ValueFromObjectPtr(ctx context.Context, ptr any) (attr.Value, diag.Diagnostics) {
 	var diags diag.Diagnostics
 
 	if v, ok := ptr.(*T); ok {
@@ -107,12 +113,6 @@ func (t ListNestedObjectTypeOf[T]) ValueFromPtr(ctx context.Context, ptr any) (a
 
 	diags.Append(diag.NewErrorDiagnostic("Invalid pointer value", fmt.Sprintf("incorrect type: want %T, got %T", (*T)(nil), ptr)))
 	return nil, diags
-}
-
-func (t ListNestedObjectTypeOf[T]) NewPtr(ctx context.Context) (any, diag.Diagnostics) {
-	var diags diag.Diagnostics
-
-	return new(T), diags
 }
 
 // ListNestedObjectValueOf represents a Terraform Plugin Framework List value whose elements are of type ObjectTypeOf.
@@ -139,7 +139,7 @@ func (v ListNestedObjectValueOf[T]) Type(ctx context.Context) attr.Type {
 	return NewListNestedObjectTypeOf[T](ctx)
 }
 
-func (v ListNestedObjectValueOf[T]) ToPtr(ctx context.Context) (any, diag.Diagnostics) {
+func (v ListNestedObjectValueOf[T]) ToObjectPtr(ctx context.Context) (any, diag.Diagnostics) {
 	var diags diag.Diagnostics
 
 	elements := v.ListValue.Elements()

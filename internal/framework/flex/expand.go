@@ -354,7 +354,7 @@ func (visitor expandVisitor) listOfObject(ctx context.Context, vFrom attr.Value,
 				//
 
 				// Get the nested Object as a pointer.
-				from, d := vNestedObject.ToPtr(ctx)
+				from, d := vNestedObject.ToObjectPtr(ctx)
 				diags.Append(d...)
 				if diags.HasError() {
 					return diags
