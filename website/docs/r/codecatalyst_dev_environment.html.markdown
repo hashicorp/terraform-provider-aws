@@ -5,7 +5,7 @@ page_title: "AWS: aws_codecatalyst_dev_environment"
 description: |-
   Terraform resource for managing an AWS CodeCatalyst Devenvironment.
 ---
-# Resource: aws_codecatalyst_devenvironment
+# Resource: aws_codecatalyst_dev_environment
 
 Terraform resource for managing an AWS CodeCatalyst Dev Environment.
 
