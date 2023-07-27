@@ -5,15 +5,6 @@ page_title: "AWS: aws_codecatalyst_devenvironment"
 description: |-
   Terraform resource for managing an AWS CodeCatalyst Devenvironment.
 ---
-<!---
-TIP: A few guiding principles for writing documentation:
-1. Use simple language while avoiding jargon and figures of speech.
-2. Focus on brevity and clarity to keep a reader's attention.
-3. Use active voice and present tense whenever you can.
-4. Document your feature as it exists now; do not mention the future or past if you can help it.
-5. Use accessible and inclusive language.
---->`
-
 # Resource: aws_codecatalyst_devenvironment
 
 Terraform resource for managing an AWS CodeCatalyst Dev Environment.
@@ -75,9 +66,9 @@ persistent storage (` persistent_storage`) supports the following:
 
 * `size` - (Required) The size of the persistent storage in gigabytes (specifically GiB). Valid values for storage are based on memory sizes in 16GB increments. Valid values are 16, 32, and 64.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - Unique identifier for the Dev Environment
 
@@ -85,14 +76,6 @@ In addition to all arguments above, the following attributes are exported:
 
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-* `create` - (Default `60m`)
-* `update` - (Default `180m`)
-* `delete` - (Default `90m`)
-
-## Import
-
-CodeCatalyst Devenvironment can be imported using the `example_id_arg`, e.g.,
-
-```
-$ terraform import aws_codecatalyst_devenvironment.example rft-8012925589
-```
+- `create` - (Default `30m`)
+- `update` - (Default `10m`)
+- `delete` - (Default `10m`)
