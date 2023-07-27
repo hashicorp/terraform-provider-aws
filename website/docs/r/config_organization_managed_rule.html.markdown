@@ -32,7 +32,7 @@ resource "aws_config_organization_managed_rule" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `name` - (Required) The name of the rule
 * `rule_identifier` - (Required) Identifier of an available AWS Config Managed Rule to call. For available values, see the [List of AWS Config Managed Rules](https://docs.aws.amazon.com/config/latest/developerguide/managed-rules-by-aws-config.html) documentation
@@ -45,9 +45,9 @@ The following arguments are supported:
 * `tag_key_scope` - (Optional, Required if `tag_value_scope` is configured) Tag key of AWS resources to evaluate
 * `tag_value_scope` - (Optional) Tag value of AWS resources to evaluate
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - Amazon Resource Name (ARN) of the rule
 
@@ -61,8 +61,17 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Config Organization Managed Rules can be imported using the name, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Config Organization Managed Rules using the name. For example:
 
+```terraform
+import {
+  to = aws_config_organization_managed_rule.example
+  id = "example"
+}
 ```
-$ terraform import aws_config_organization_managed_rule.example example
+
+Using `terraform import`, import Config Organization Managed Rules using the name. For example:
+
+```console
+% terraform import aws_config_organization_managed_rule.example example
 ```

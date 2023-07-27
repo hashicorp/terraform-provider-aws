@@ -70,6 +70,8 @@ Create scaffolding for a data source
 
 ```console
 $ skaff datasource --help
+Create scaffolding for a data source
+
 Usage:
   skaff datasource [flags]
 
@@ -77,6 +79,7 @@ Flags:
   -c, --clear-comments     do not include instructional comments in source
   -f, --force              force creation, overwriting existing files
   -h, --help               help for datasource
+  -t, --include-tags       Indicate that this resource has tags and the code for tagging should be generated
   -n, --name string        name of the entity
   -p, --plugin-framework   generate for Terraform Plugin-Framework
   -s, --snakename string   if skaff doesn't get it right, explicitly give name in snake case (e.g., db_vpc_instance)
@@ -89,6 +92,8 @@ Create scaffolding for a resource
 
 ```console
 $ skaff resource --help
+Create scaffolding for a resource
+
 Usage:
   skaff resource [flags]
 
@@ -96,6 +101,7 @@ Flags:
   -c, --clear-comments     do not include instructional comments in source
   -f, --force              force creation, overwriting existing files
   -h, --help               help for resource
+  -t, --include-tags       Indicate that this resource has tags and the code for tagging should be generated
   -n, --name string        name of the entity
   -p, --plugin-framework   generate for Terraform Plugin-Framework
   -s, --snakename string   if skaff doesn't get it right, explicitly give name in snake case (e.g., db_vpc_instance)

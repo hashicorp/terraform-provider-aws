@@ -9,10 +9,10 @@ package ssoadmin
 import (
 	"fmt"
 	"log"
+	"regexp"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ssoadmin"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -46,19 +46,18 @@ func sweepAccountAssignments(region string) error {
 	sweepResources := make([]sweep.Sweepable, 0)
 	var sweeperErrs *multierror.Error
 
+	accessDenied := regexp.MustCompile(`AccessDeniedException: .+ is not authorized to perform:`)
+
 	// Need to Read the SSO Instance first; assumes the first instance returned
 	// is where the permission sets exist as AWS SSO currently supports only 1 instance
 	ds := DataSourceInstances()
 	dsData := ds.Data(nil)
 
-	err = sdk.ReadResource(ctx, ds, dsData, client)
-
-	if tfawserr.ErrCodeContains(err, "AccessDenied") {
-		log.Printf("[WARN] Skipping SSO Account Assignment sweep for %s: %s", region, err)
-		return nil
-	}
-
-	if err != nil {
+	if err := sdk.ReadResource(ctx, ds, dsData, client); err != nil {
+		if accessDenied.MatchString(err.Error()) {
+			log.Printf("[WARN] Skipping SSO Account Assignment sweep for %s: %s", region, err)
+			return nil
+		}
 		return err
 	}
 
@@ -133,7 +132,7 @@ func sweepAccountAssignments(region string) error {
 		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error retrieving SSO Permission Sets for Account Assignment sweep: %w", err))
 	}
 
-	if err := sweep.SweepOrchestratorWithContext(ctx, sweepResources); err != nil {
+	if err := sweep.SweepOrchestrator(ctx, sweepResources); err != nil {
 		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error sweeping SSO Account Assignments: %w", err))
 	}
 
@@ -151,19 +150,18 @@ func sweepPermissionSets(region string) error {
 	sweepResources := make([]sweep.Sweepable, 0)
 	var sweeperErrs *multierror.Error
 
+	accessDenied := regexp.MustCompile(`AccessDeniedException: .+ is not authorized to perform:`)
+
 	// Need to Read the SSO Instance first; assumes the first instance returned
 	// is where the permission sets exist as AWS SSO currently supports only 1 instance
 	ds := DataSourceInstances()
 	dsData := ds.Data(nil)
 
-	err = sdk.ReadResource(ctx, ds, dsData, client)
-
-	if tfawserr.ErrCodeContains(err, "AccessDenied") {
-		log.Printf("[WARN] Skipping SSO Permission Set sweep for %s: %s", region, err)
-		return nil
-	}
-
-	if err != nil {
+	if err := sdk.ReadResource(ctx, ds, dsData, client); err != nil {
+		if accessDenied.MatchString(err.Error()) {
+			log.Printf("[WARN] Skipping SSO Permission Set sweep for %s: %s", region, err)
+			return nil
+		}
 		return err
 	}
 
@@ -205,7 +203,7 @@ func sweepPermissionSets(region string) error {
 		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error retrieving SSO Permission Sets: %w", err))
 	}
 
-	if err := sweep.SweepOrchestratorWithContext(ctx, sweepResources); err != nil {
+	if err := sweep.SweepOrchestrator(ctx, sweepResources); err != nil {
 		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error sweeping SSO Permission Sets: %w", err))
 	}
 

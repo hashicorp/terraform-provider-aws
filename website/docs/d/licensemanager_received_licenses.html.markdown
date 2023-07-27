@@ -47,6 +47,8 @@ data "aws_licensemanager_received_licenses" "selected" {
 
 * `values` - (Required) Set of values that are accepted for the given field.
 
-## Attributes Reference
+## Attribute Reference
+
+This data source exports the following attributes in addition to the arguments above:
 
 * `arns` - List of all the license ARNs found.

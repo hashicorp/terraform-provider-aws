@@ -35,21 +35,30 @@ resource "aws_securityhub_organization_configuration" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `auto_enable` - (Required) Whether to automatically enable Security Hub for new accounts in the organization.
 * `auto_enable_standards` - (Optional) Whether to automatically enable Security Hub default standards for new member accounts in the organization. By default, this parameter is equal to `DEFAULT`, and new member accounts are automatically enabled with default Security Hub standards. To opt out of enabling default standards for new member accounts, set this parameter equal to `NONE`.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - AWS Account ID.
 
 ## Import
 
-An existing Security Hub enabled account can be imported using the AWS account ID, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import an existing Security Hub enabled account using the AWS account ID. For example:
 
+```terraform
+import {
+  to = aws_securityhub_organization_configuration.example
+  id = "123456789012"
+}
 ```
-$ terraform import aws_securityhub_organization_configuration.example 123456789012
+
+Using `terraform import`, import an existing Security Hub enabled account using the AWS account ID. For example:
+
+```console
+% terraform import aws_securityhub_organization_configuration.example 123456789012
 ```

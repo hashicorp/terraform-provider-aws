@@ -230,6 +230,18 @@ func TimeoutAction_Values() []string {
 }
 
 const (
+	backupTargetOutposts = "outposts"
+	backupTargetRegion   = "region"
+)
+
+func backupTarget_Values() []string {
+	return []string{
+		backupTargetOutposts,
+		backupTargetRegion,
+	}
+}
+
+const (
 	propagationTimeout = 2 * time.Minute
 )
 

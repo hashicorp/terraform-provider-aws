@@ -208,9 +208,9 @@ resource "aws_batch_compute_environment" "sample" {
 * `eks_cluster_arn` - (Required) The Amazon Resource Name (ARN) of the Amazon EKS cluster.
 * `kubernetes_namespace` - (Required) The namespace of the Amazon EKS cluster. AWS Batch manages pods in this namespace.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - The Amazon Resource Name (ARN) of the compute environment.
 * `ecs_cluster_arn` - The Amazon Resource Name (ARN) of the underlying Amazon ECS cluster used by the compute environment.
@@ -220,10 +220,19 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-AWS Batch compute can be imported using the `compute_environment_name`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import AWS Batch compute using the `compute_environment_name`. For example:
 
+```terraform
+import {
+  to = aws_batch_compute_environment.sample
+  id = "sample"
+}
 ```
-$ terraform import aws_batch_compute_environment.sample sample
+
+Using `terraform import`, import AWS Batch compute using the `compute_environment_name`. For example:
+
+```console
+% terraform import aws_batch_compute_environment.sample sample
 ```
 
 [1]: http://docs.aws.amazon.com/batch/latest/userguide/what-is-batch.html

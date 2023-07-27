@@ -45,24 +45,33 @@ resource "aws_iam_access_key" "lb" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `policy` - (Required) The policy document. This is a JSON formatted string. For more information about building AWS IAM policy documents with Terraform, see the [AWS IAM Policy Document Guide](https://learn.hashicorp.com/terraform/aws/iam-policy).
 * `name` - (Optional) The name of the policy. If omitted, Terraform will assign a random, unique name.
 * `name_prefix` - (Optional, Forces new resource) Creates a unique name beginning with the specified prefix. Conflicts with `name`.
 * `user` - (Required) IAM user to which to attach this policy.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The user policy ID, in the form of `user_name:user_policy_name`.
 * `name` - The name of the policy (always set).
 
 ## Import
 
-IAM User Policies can be imported using the `user_name:user_policy_name`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import IAM User Policies using the `user_name:user_policy_name`. For example:
 
+```terraform
+import {
+  to = aws_iam_user_policy.mypolicy
+  id = "user_of_mypolicy_name:mypolicy_name"
+}
 ```
-$ terraform import aws_iam_user_policy.mypolicy user_of_mypolicy_name:mypolicy_name
+
+Using `terraform import`, import IAM User Policies using the `user_name:user_policy_name`. For example:
+
+```console
+% terraform import aws_iam_user_policy.mypolicy user_of_mypolicy_name:mypolicy_name
 ```

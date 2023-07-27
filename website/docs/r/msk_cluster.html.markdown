@@ -201,7 +201,7 @@ resource "aws_msk_cluster" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `broker_node_group_info` - (Required) Configuration block for the broker nodes of the Kafka cluster.
 * `cluster_name` - (Required) Name of the MSK cluster.
@@ -313,9 +313,9 @@ The following arguments are supported:
 * `bucket` - (Optional) Name of the S3 bucket to deliver logs to.
 * `prefix` - (Optional) Prefix to append to the folder name.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - Amazon Resource Name (ARN) of the MSK cluster.
 * `bootstrap_brokers` - Comma separated list of one or more hostname:port pairs of kafka brokers suitable to bootstrap connectivity to the kafka cluster. Contains a value if `encryption_info.0.encryption_in_transit.0.client_broker` is set to `PLAINTEXT` or `TLS_PLAINTEXT`. The resource sorts values alphabetically. AWS may not always return all endpoints so this value is not guaranteed to be stable across applies.
@@ -343,8 +343,17 @@ Note that the `update` timeout is used separately for `storage_info`, `instance_
 
 ## Import
 
-MSK clusters can be imported using the cluster `arn`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import MSK clusters using the cluster `arn`. For example:
 
+```terraform
+import {
+  to = aws_msk_cluster.example
+  id = "arn:aws:kafka:us-west-2:123456789012:cluster/example/279c0212-d057-4dba-9aa9-1c4e5a25bfc7-3"
+}
 ```
-$ terraform import aws_msk_cluster.example arn:aws:kafka:us-west-2:123456789012:cluster/example/279c0212-d057-4dba-9aa9-1c4e5a25bfc7-3
+
+Using `terraform import`, import MSK clusters using the cluster `arn`. For example:
+
+```console
+% terraform import aws_msk_cluster.example arn:aws:kafka:us-west-2:123456789012:cluster/example/279c0212-d057-4dba-9aa9-1c4e5a25bfc7-3
 ```
