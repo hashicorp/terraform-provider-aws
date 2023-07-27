@@ -147,7 +147,7 @@ func (v SetNestedObjectValueOf[T]) ToObjectPtr(ctx context.Context) (any, diag.D
 	case 0:
 		return nil, diags
 	case 1:
-		ptr, d := nestedObjectValueObjectPtr[T](ctx, elements[0])
+		ptr, d := nestedObjectValueObjectPtrFromElement[T](ctx, elements[0])
 		diags.Append(d...)
 		if diags.HasError() {
 			return nil, diags
@@ -160,8 +160,7 @@ func (v SetNestedObjectValueOf[T]) ToObjectPtr(ctx context.Context) (any, diag.D
 }
 
 func (v SetNestedObjectValueOf[T]) ToObjectSlice(ctx context.Context) (any, diag.Diagnostics) {
-	// TODO Synch with ListNestedObjectValueOf.
-	return nil, nil
+	return nestedObjectValueObjectSlice[T](ctx, v.SetValue)
 }
 
 func NewSetNestedObjectValueOfNull[T any](ctx context.Context) SetNestedObjectValueOf[T] {

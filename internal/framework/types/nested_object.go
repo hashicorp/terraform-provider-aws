@@ -34,3 +34,10 @@ type NestedObjectValue interface {
 	// ToObjectSlice returns the value as an object slice (Go []*struct).
 	ToObjectSlice(context.Context) (any, diag.Diagnostics)
 }
+
+// valueWithElements extends the Value interface for values that have an Elements method.
+type valueWithElements interface {
+	attr.Value
+
+	Elements() []attr.Value
+}
