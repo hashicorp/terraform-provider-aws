@@ -15,7 +15,6 @@ jobs:
       GH_PR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     with:
       providerFqn: "hashicorp/aws"
-      files: "*/ec2*.html.markdown,*/lambda*.html.markdown,*/eks*.html.markdown,*/vpc*.html.markdown,*/instance.html.markdown"
       languages: "typescript,python"
       parallelFileConversions: 1
       maxRunners: 20
