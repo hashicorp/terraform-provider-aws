@@ -7,7 +7,6 @@ import (
 	"context"
 	"errors"
 	"log"
-	"strings"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/vpclattice"
@@ -72,18 +71,9 @@ const (
 func resourceAccessLogSubscriptionCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).VPCLatticeClient(ctx)
 
-	destinationArn := d.Get("destination_arn").(string)
-	if strings.Contains(destinationArn, ":logs:") {
-		groupName := strings.SplitAfter(destinationArn, ":log-group:")[1]
-		if !strings.HasSuffix(groupName, ":*") {
-			err := errors.New("destination_arn must be suffixed with wildcard `:*` if the destination is CloudWatch Logs")
-			return create.DiagError(names.VPCLattice, create.ErrActionCreating, ResNameAccessLogSubscription, destinationArn, err)
-		}
-	}
-
 	in := &vpclattice.CreateAccessLogSubscriptionInput{
 		ClientToken:        aws.String(id.UniqueId()),
-		DestinationArn:     aws.String(destinationArn),
+		DestinationArn:     aws.String(d.Get("destination_arn").(string)),
 		ResourceIdentifier: aws.String(d.Get("resource_identifier").(string)),
 		Tags:               getTagsIn(ctx),
 	}
@@ -91,7 +81,7 @@ func resourceAccessLogSubscriptionCreate(ctx context.Context, d *schema.Resource
 	out, err := conn.CreateAccessLogSubscription(ctx, in)
 
 	if err != nil {
-		return create.DiagError(names.VPCLattice, create.ErrActionCreating, ResNameAccessLogSubscription, destinationArn, err)
+		return create.DiagError(names.VPCLattice, create.ErrActionCreating, ResNameAccessLogSubscription, d.Get("destination_arn").(string), err)
 	}
 
 	d.SetId(aws.ToString(out.Id))

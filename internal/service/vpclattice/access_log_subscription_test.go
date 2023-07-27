@@ -43,11 +43,12 @@ func TestAccVPCLatticeAccessLogSubscription_basic(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAccessLogSubscriptionConfig_basicS3(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAccessLogSubscriptionExists(ctx, resourceName, &accesslogsubscription),
-					resource.TestCheckResourceAttrPair(resourceName, "resource_identifier", serviceNetworkResourceName, "id"),
-					resource.TestCheckResourceAttrPair(resourceName, "destination_arn", s3BucketResourceName, "arn"),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", names.VPCLatticeEndpointID, regexp.MustCompile(`accesslogsubscription/.+$`)),
+					resource.TestCheckResourceAttrPair(resourceName, "destination_arn", s3BucketResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "resource_arn", serviceNetworkResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "resource_identifier", serviceNetworkResourceName, "id"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
 			},
@@ -83,6 +84,40 @@ func TestAccVPCLatticeAccessLogSubscription_disappears(t *testing.T) {
 					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfvpclattice.ResourceAccessLogSubscription(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
+func TestAccVPCLatticeAccessLogSubscription_arn(t *testing.T) {
+	ctx := acctest.Context(t)
+	var accesslogsubscription vpclattice.GetAccessLogSubscriptionOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_vpclattice_access_log_subscription.test"
+	serviceNetworkResourceName := "aws_vpclattice_service_network.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.VPCLatticeEndpointID)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.VPCLatticeEndpointID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckAccessLogSubscriptionDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAccessLogSubscriptionConfig_arn(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAccessLogSubscriptionExists(ctx, resourceName, &accesslogsubscription),
+					resource.TestCheckResourceAttrPair(resourceName, "resource_arn", serviceNetworkResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "resource_identifier", serviceNetworkResourceName, "id"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -138,11 +173,13 @@ func TestAccVPCLatticeAccessLogSubscription_tags(t *testing.T) {
 	})
 }
 
-func TestAccVPCLatticeAccessLogSubscription_cloudwatch_wildcard(t *testing.T) {
+func TestAccVPCLatticeAccessLogSubscription_cloudwatchNoWildcard(t *testing.T) {
 	ctx := acctest.Context(t)
 	var accesslogsubscription vpclattice.GetAccessLogSubscriptionOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_vpclattice_access_log_subscription.test"
+	serviceResourceName := "aws_vpclattice_service.test"
+	// logGroupResourceName := "aws_cloudwatch_log_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
@@ -155,18 +192,24 @@ func TestAccVPCLatticeAccessLogSubscription_cloudwatch_wildcard(t *testing.T) {
 		CheckDestroy:             testAccCheckAccessLogSubscriptionDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAccessLogSubscriptionConfig_cloudwatch_wildcard(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Config: testAccAccessLogSubscriptionConfig_cloudwatchNoWildcard(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAccessLogSubscriptionExists(ctx, resourceName, &accesslogsubscription),
+					// resource.TestCheckResourceAttrPair(resourceName, "destination_arn", logGroupResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "resource_arn", serviceResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "resource_identifier", serviceResourceName, "id"),
 				),
 			},
 		},
 	})
 }
 
-func TestAccVPCLatticeAccessLogSubscription_cloudwatch_fail_without_wildcard(t *testing.T) {
+func TestAccVPCLatticeAccessLogSubscription_cloudwatchWildcard(t *testing.T) {
 	ctx := acctest.Context(t)
+	var accesslogsubscription vpclattice.GetAccessLogSubscriptionOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_vpclattice_access_log_subscription.test"
+	// logGroupResourceName := "aws_cloudwatch_log_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
@@ -179,8 +222,11 @@ func TestAccVPCLatticeAccessLogSubscription_cloudwatch_fail_without_wildcard(t *
 		CheckDestroy:             testAccCheckAccessLogSubscriptionDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccAccessLogSubscriptionConfig_cloudwatch_no_wildcard(rName),
-				ExpectError: regexp.MustCompile("destination_arn must be suffixed with wildcard"),
+				Config: testAccAccessLogSubscriptionConfig_cloudwatchWildcard(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAccessLogSubscriptionExists(ctx, resourceName, &accesslogsubscription),
+					// resource.TestCheckResourceAttrPair(resourceName, "destination_arn", logGroupResourceName, "arn"),
+				),
 			},
 		},
 	})
@@ -239,7 +285,7 @@ func testAccCheckAccessLogSubscriptionExists(ctx context.Context, name string, a
 	}
 }
 
-func testAccAccessLogSubscriptionConfig_basicS3(rName string) string {
+func testAccAccessLogSubscriptionConfig_baseS3(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_vpclattice_service_network" "test" {
   name = %[1]q
@@ -249,91 +295,80 @@ resource "aws_s3_bucket" "test" {
   bucket        = %[1]q
   force_destroy = true
 }
+`, rName)
+}
 
+func testAccAccessLogSubscriptionConfig_baseCloudWatch(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_vpclattice_service" "test" {
+  name = %[1]q
+}
+
+resource "aws_cloudwatch_log_group" "test" {
+  name = "/aws/vpclattice/%[1]s"
+}
+`, rName)
+}
+
+func testAccAccessLogSubscriptionConfig_basicS3(rName string) string {
+	return acctest.ConfigCompose(testAccAccessLogSubscriptionConfig_baseS3(rName), `
 resource "aws_vpclattice_access_log_subscription" "test" {
   resource_identifier = aws_vpclattice_service_network.test.id
   destination_arn     = aws_s3_bucket.test.arn
 }
-`, rName)
+`)
+}
+
+func testAccAccessLogSubscriptionConfig_arn(rName string) string {
+	return acctest.ConfigCompose(testAccAccessLogSubscriptionConfig_baseS3(rName), `
+resource "aws_vpclattice_access_log_subscription" "test" {
+  resource_identifier = aws_vpclattice_service_network.test.arn
+  destination_arn     = aws_s3_bucket.test.arn
+}
+`)
 }
 
 func testAccAccessLogSubscriptionConfig_tags1(rName, tagKey1, tagValue1 string) string {
-	return fmt.Sprintf(`
-resource "aws_vpclattice_service_network" "test" {
-  name = %[1]q
-}
-
-resource "aws_s3_bucket" "test" {
-  bucket        = %[1]q
-  force_destroy = true
-}
-
+	return acctest.ConfigCompose(testAccAccessLogSubscriptionConfig_baseS3(rName), fmt.Sprintf(`
 resource "aws_vpclattice_access_log_subscription" "test" {
   resource_identifier = aws_vpclattice_service_network.test.id
   destination_arn     = aws_s3_bucket.test.arn
 
   tags = {
-    %[2]q = %[3]q
+    %[1]q = %[2]q
   }
 }
-`, rName, tagKey1, tagValue1)
+`, tagKey1, tagValue1))
 }
 
 func testAccAccessLogSubscriptionConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
-	return fmt.Sprintf(`
-resource "aws_vpclattice_service_network" "test" {
-  name = %[1]q
-}
-
-resource "aws_s3_bucket" "test" {
-  bucket        = %[1]q
-  force_destroy = true
-}
-
+	return acctest.ConfigCompose(testAccAccessLogSubscriptionConfig_baseS3(rName), fmt.Sprintf(`
 resource "aws_vpclattice_access_log_subscription" "test" {
   resource_identifier = aws_vpclattice_service_network.test.id
   destination_arn     = aws_s3_bucket.test.arn
 
   tags = {
-    %[2]q = %[3]q
-    %[4]q = %[5]q
+    %[1]q = %[2]q
+    %[3]q = %[4]q
   }
 }
-`, rName, tagKey1, tagValue1, tagKey2, tagValue2)
+`, tagKey1, tagValue1, tagKey2, tagValue2))
 }
 
-func testAccAccessLogSubscriptionConfig_cloudwatch_no_wildcard(rName string) string {
-	return fmt.Sprintf(`
-resource "aws_vpclattice_service_network" "test" {
-  name = %[1]q
-  auth_type = "NONE"
-}
-
-resource "aws_cloudwatch_log_group" "test" {
-  name = "/aws/vpclattice/%[1]s"
-}
-
+func testAccAccessLogSubscriptionConfig_cloudwatchNoWildcard(rName string) string {
+	return acctest.ConfigCompose(testAccAccessLogSubscriptionConfig_baseCloudWatch(rName), `
 resource "aws_vpclattice_access_log_subscription" "test" {
-  resource_identifier = aws_vpclattice_service_network.test.id
+  resource_identifier = aws_vpclattice_service.test.id
   destination_arn     = aws_cloudwatch_log_group.test.arn
 }
-`, rName)
+`)
 }
 
-func testAccAccessLogSubscriptionConfig_cloudwatch_wildcard(rName string) string {
-	return fmt.Sprintf(`
-resource "aws_vpclattice_service_network" "test" {
-  name = %[1]q
-  auth_type = "NONE"
-}
-
-resource "aws_cloudwatch_log_group" "test" {
-  name = "/aws/vpclattice/%[1]s"
-}
-
+func testAccAccessLogSubscriptionConfig_cloudwatchWildcard(rName string) string {
+	return acctest.ConfigCompose(testAccAccessLogSubscriptionConfig_baseCloudWatch(rName), `
 resource "aws_vpclattice_access_log_subscription" "test" {
-  resource_identifier = aws_vpclattice_service_network.test.id
+  resource_identifier = aws_vpclattice_service.test.id
   destination_arn     = "${aws_cloudwatch_log_group.test.arn}:*"
 }
-`, rName)
+`)
 }
