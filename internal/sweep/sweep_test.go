@@ -134,6 +134,7 @@ import (
 	_ "github.com/hashicorp/terraform-provider-aws/internal/service/ses"
 	_ "github.com/hashicorp/terraform-provider-aws/internal/service/sesv2"
 	_ "github.com/hashicorp/terraform-provider-aws/internal/service/sfn"
+	_ "github.com/hashicorp/terraform-provider-aws/internal/service/signer"
 	_ "github.com/hashicorp/terraform-provider-aws/internal/service/simpledb"
 	_ "github.com/hashicorp/terraform-provider-aws/internal/service/sns"
 	_ "github.com/hashicorp/terraform-provider-aws/internal/service/sqs"

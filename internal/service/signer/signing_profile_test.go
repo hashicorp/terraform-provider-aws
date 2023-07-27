@@ -10,13 +10,15 @@ import (
 	"testing"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/signer"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/signer"
+	"github.com/aws/aws-sdk-go-v2/service/signer/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfsigner "github.com/hashicorp/terraform-provider-aws/internal/service/signer"
 )
 
 func TestAccSignerSigningProfile_basic(t *testing.T) {
@@ -32,7 +34,7 @@ func TestAccSignerSigningProfile_basic(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheckSingerSigningProfile(ctx, t, "AWSLambda-SHA384-ECDSA")
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, signer.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, signer.ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckSigningProfileDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -67,7 +69,7 @@ func TestAccSignerSigningProfile_generateNameWithNamePrefix(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheckSingerSigningProfile(ctx, t, "AWSLambda-SHA384-ECDSA")
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, signer.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, signer.ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckSigningProfileDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -93,7 +95,7 @@ func TestAccSignerSigningProfile_generateName(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheckSingerSigningProfile(ctx, t, "AWSLambda-SHA384-ECDSA")
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, signer.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, signer.ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckSigningProfileDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -120,7 +122,7 @@ func TestAccSignerSigningProfile_tags(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheckSingerSigningProfile(ctx, t, "AWSLambda-SHA384-ECDSA")
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, signer.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, signer.ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckSigningProfileDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -155,7 +157,7 @@ func TestAccSignerSigningProfile_signatureValidityPeriod(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheckSingerSigningProfile(ctx, t, "AWSLambda-SHA384-ECDSA")
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, signer.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, signer.ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckSigningProfileDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -180,31 +182,30 @@ func TestAccSignerSigningProfile_signatureValidityPeriod(t *testing.T) {
 }
 
 func testAccPreCheckSingerSigningProfile(ctx context.Context, t *testing.T, platformID string) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).SignerConn(ctx)
+	conn := acctest.Provider.Meta().(*conns.AWSClient).SignerClient(ctx)
 
 	input := &signer.ListSigningPlatformsInput{}
 
-	output, err := conn.ListSigningPlatformsWithContext(ctx, input)
+	pages := signer.NewListSigningPlatformsPaginator(conn, input)
 
-	if acctest.PreCheckSkipError(err) {
-		t.Skipf("skipping acceptance testing: %s", err)
-	}
-
-	if err != nil {
-		t.Fatalf("unexpected PreCheck error: %s", err)
-	}
-
-	if output == nil {
-		t.Skip("skipping acceptance testing: empty response")
-	}
-
-	for _, platform := range output.Platforms {
-		if platform == nil {
-			continue
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+		if err != nil {
+			t.Fatalf("unexpected PreCheck error: %s", err)
 		}
 
-		if aws.StringValue(platform.PlatformId) == platformID {
-			return
+		if page == nil {
+			t.Skip("skipping acceptance testing: empty response")
+		}
+
+		for _, platform := range page.Platforms {
+			if platform == (types.SigningPlatform{}) {
+				continue
+			}
+
+			if aws.ToString(platform.PlatformId) == platformID {
+				return
+			}
 		}
 	}
 
@@ -300,13 +301,9 @@ func testAccCheckSigningProfileExists(ctx context.Context, res string, sp *signe
 			return fmt.Errorf("Signing Profile with that ARN does not exist")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SignerConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SignerClient(ctx)
 
-		params := &signer.GetSigningProfileInput{
-			ProfileName: aws.String(rs.Primary.ID),
-		}
-
-		getSp, err := conn.GetSigningProfileWithContext(ctx, params)
+		getSp, err := tfsigner.FindSigningProfileByName(ctx, conn, rs.Primary.ID)
 		if err != nil {
 			return err
 		}
@@ -319,7 +316,7 @@ func testAccCheckSigningProfileExists(ctx context.Context, res string, sp *signe
 
 func testAccCheckSigningProfileDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SignerConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SignerClient(ctx)
 
 		time.Sleep(5 * time.Second)
 
@@ -328,11 +325,9 @@ func testAccCheckSigningProfileDestroy(ctx context.Context) resource.TestCheckFu
 				continue
 			}
 
-			out, err := conn.GetSigningProfileWithContext(ctx, &signer.GetSigningProfileInput{
-				ProfileName: aws.String(rs.Primary.ID),
-			})
+			out, err := tfsigner.FindSigningProfileByName(ctx, conn, rs.Primary.ID)
 
-			if *out.Status != signer.SigningProfileStatusCanceled && err == nil {
+			if out.Status != types.SigningProfileStatusCanceled && err == nil {
 				return fmt.Errorf("Signing Profile not cancelled%s", *out.ProfileName)
 			}
 		}

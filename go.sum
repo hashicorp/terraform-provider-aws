@@ -123,6 +123,8 @@ github.com/aws/aws-sdk-go-v2/service/securitylake v1.5.0 h1:tPD6EK+g1Ts5StSGu8lb
 github.com/aws/aws-sdk-go-v2/service/securitylake v1.5.0/go.mod h1:tv13rwBfOq4ERRmXsiSoyU1HtAU5t7NgrCOOf0C1vnU=
 github.com/aws/aws-sdk-go-v2/service/sesv2 v1.18.3 h1:qm22IUC9suDtRcpR0r4fDeZUYtbWElVc900KDYfKE0Y=
 github.com/aws/aws-sdk-go-v2/service/sesv2 v1.18.3/go.mod h1:PyBoMU8XbjdHMTfKN6hUetLQsYJw8G0ry5+o5M+HeeM=
+github.com/aws/aws-sdk-go-v2/service/signer v1.15.3 h1:WsAXiDKEtAXKyPEJTwD3DLRm6MfnqSDDbQONH5MBmc0=
+github.com/aws/aws-sdk-go-v2/service/signer v1.15.3/go.mod h1:wmkC/NiGOo8Bau5qDvLUdg1xPL0coSJ1/IeivA2Et4Y=
 github.com/aws/aws-sdk-go-v2/service/ssm v1.36.8 h1:Z9bclrIuHR0/yd8yGikJAbYS4iIDySF+Fo7lwBuDWfo=
 github.com/aws/aws-sdk-go-v2/service/ssm v1.36.8/go.mod h1:Uwh2QwiXNf2+WCU3z5K13HE6f2bLCu9WpioFRkWjUVk=
 github.com/aws/aws-sdk-go-v2/service/ssmcontacts v1.15.8 h1:cKniATWmOaU1EH9Uc38gpU905/kGlGSC6SopHcP15u4=
