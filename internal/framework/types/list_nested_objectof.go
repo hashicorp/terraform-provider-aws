@@ -140,9 +140,17 @@ func (v ListNestedObjectValueOf[T]) Type(ctx context.Context) attr.Type {
 }
 
 func (v ListNestedObjectValueOf[T]) ToObjectPtr(ctx context.Context) (any, diag.Diagnostics) {
+	return nestedObjectValueObjectPtr[T](ctx, v.ListValue)
+}
+
+func (v ListNestedObjectValueOf[T]) ToObjectSlice(ctx context.Context) (any, diag.Diagnostics) {
+	return nestedObjectValueObjectSlice[T](ctx, v.ListValue)
+}
+
+func nestedObjectValueObjectPtr[T any](ctx context.Context, val valueWithElements) (*T, diag.Diagnostics) {
 	var diags diag.Diagnostics
 
-	elements := v.ListValue.Elements()
+	elements := val.Elements()
 	switch n := len(elements); n {
 	case 0:
 		return nil, diags
@@ -154,13 +162,9 @@ func (v ListNestedObjectValueOf[T]) ToObjectPtr(ctx context.Context) (any, diag.
 		}
 		return ptr, diags
 	default:
-		diags.Append(diag.NewErrorDiagnostic("Invalid list", fmt.Sprintf("too many elements: want 1, got %d", n)))
+		diags.Append(diag.NewErrorDiagnostic("Invalid list/set", fmt.Sprintf("too many elements: want 1, got %d", n)))
 		return nil, diags
 	}
-}
-
-func (v ListNestedObjectValueOf[T]) ToObjectSlice(ctx context.Context) (any, diag.Diagnostics) {
-	return nestedObjectValueObjectSlice[T](ctx, v.ListValue)
 }
 
 func nestedObjectValueObjectSlice[T any](ctx context.Context, val valueWithElements) ([]*T, diag.Diagnostics) {

@@ -140,23 +140,7 @@ func (v SetNestedObjectValueOf[T]) Type(ctx context.Context) attr.Type {
 }
 
 func (v SetNestedObjectValueOf[T]) ToObjectPtr(ctx context.Context) (any, diag.Diagnostics) {
-	var diags diag.Diagnostics
-
-	elements := v.SetValue.Elements()
-	switch n := len(elements); n {
-	case 0:
-		return nil, diags
-	case 1:
-		ptr, d := nestedObjectValueObjectPtrFromElement[T](ctx, elements[0])
-		diags.Append(d...)
-		if diags.HasError() {
-			return nil, diags
-		}
-		return ptr, diags
-	default:
-		diags.Append(diag.NewErrorDiagnostic("Invalid set", fmt.Sprintf("too many elements: want 1, got %d", n)))
-		return nil, diags
-	}
+	return nestedObjectValueObjectPtr[T](ctx, v.SetValue)
 }
 
 func (v SetNestedObjectValueOf[T]) ToObjectSlice(ctx context.Context) (any, diag.Diagnostics) {
