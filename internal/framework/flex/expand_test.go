@@ -121,6 +121,10 @@ type BBTestExpand struct {
 	Data *CTestExpand
 }
 
+type CCTestExpand struct {
+	Data []CTestExpand
+}
+
 func TestGenericExpand(t *testing.T) {
 	t.Parallel()
 
@@ -322,6 +326,12 @@ func TestGenericExpand(t *testing.T) {
 			Source:     &AATestExpand{Data: fwtypes.NewListNestedObjectValueOf(ctx, &BTestExpand{Name: types.StringValue("a")})},
 			Target:     &BBTestExpand{},
 			WantTarget: &BBTestExpand{Data: &CTestExpand{Name: "a"}},
+		},
+		{
+			TestName:   "empty list Source and empty []struct Target",
+			Source:     &AATestExpand{Data: fwtypes.NewListNestedObjectValueOfValueSlice(ctx, []BTestExpand{})},
+			Target:     &CCTestExpand{},
+			WantTarget: &CCTestExpand{Data: []CTestExpand{}},
 		},
 	}
 
