@@ -345,7 +345,7 @@ func TestGenericFlatten(t *testing.T) {
 			TestName:   "single *struct Source and single list Target",
 			Source:     &AATestFlatten{Data: &BTestFlatten{Name: "a"}},
 			Target:     &BBTestFlatten{},
-			WantTarget: &BBTestFlatten{Data: fwtypes.NewListNestedObjectValueOf(ctx, &DTestFlatten{Name: types.StringValue("a")})},
+			WantTarget: &BBTestFlatten{Data: fwtypes.NewListNestedObjectValueOfPtr(ctx, &DTestFlatten{Name: types.StringValue("a")})},
 		},
 	}
 

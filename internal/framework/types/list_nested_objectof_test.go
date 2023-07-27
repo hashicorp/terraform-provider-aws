@@ -90,11 +90,11 @@ func TestListNestedObjectTypeOfValueFromTerraform(t *testing.T) {
 		},
 		"valid value": {
 			tfVal:   objectAListValue,
-			wantVal: fwtypes.NewListNestedObjectValueOf[ObjectA](ctx, &objectA),
+			wantVal: fwtypes.NewListNestedObjectValueOfPtr[ObjectA](ctx, &objectA),
 		},
 		"invalid Terraform value": {
 			tfVal:   objectBListValue,
-			wantVal: fwtypes.NewListNestedObjectValueOf[ObjectA](ctx, &objectA),
+			wantVal: fwtypes.NewListNestedObjectValueOfPtr[ObjectA](ctx, &objectA),
 			wantErr: true,
 		},
 	}
@@ -144,14 +144,14 @@ func TestListNestedObjectValueOfEqual(t *testing.T) {
 			other: types.StringValue("test"),
 		},
 		"equal value": {
-			other: fwtypes.NewListNestedObjectValueOf(ctx, &objectA),
+			other: fwtypes.NewListNestedObjectValueOfPtr(ctx, &objectA),
 			want:  true,
 		},
 		"struct not equal value": {
-			other: fwtypes.NewListNestedObjectValueOf(ctx, &objectA2),
+			other: fwtypes.NewListNestedObjectValueOfPtr(ctx, &objectA2),
 		},
 		"other struct value": {
-			other: fwtypes.NewListNestedObjectValueOf(ctx, &objectB),
+			other: fwtypes.NewListNestedObjectValueOfPtr(ctx, &objectB),
 		},
 		"null value": {
 			other: fwtypes.NewListNestedObjectValueOfNull[ObjectA](ctx),
@@ -166,7 +166,7 @@ func TestListNestedObjectValueOfEqual(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 
-			got := fwtypes.NewListNestedObjectValueOf(ctx, &objectA).Equal(testCase.other)
+			got := fwtypes.NewListNestedObjectValueOfPtr(ctx, &objectA).Equal(testCase.other)
 
 			if got != testCase.want {
 				t.Errorf("got = %v, want = %v", got, testCase.want)

@@ -108,7 +108,7 @@ func (t SetNestedObjectTypeOf[T]) ValueFromObjectPtr(ctx context.Context, ptr an
 	var diags diag.Diagnostics
 
 	if v, ok := ptr.(*T); ok {
-		return NewSetNestedObjectValueOf(ctx, v), diags
+		return NewSetNestedObjectValueOfPtr(ctx, v), diags
 	}
 
 	diags.Append(diag.NewErrorDiagnostic("Invalid pointer value", fmt.Sprintf("incorrect type: want %T, got %T", (*T)(nil), ptr)))
@@ -164,7 +164,7 @@ func NewSetNestedObjectValueOfUnknown[T any](ctx context.Context) SetNestedObjec
 	return SetNestedObjectValueOf[T]{SetValue: basetypes.NewSetUnknown(NewObjectTypeOf[T](ctx))}
 }
 
-func NewSetNestedObjectValueOf[T any](ctx context.Context, t *T) SetNestedObjectValueOf[T] {
+func NewSetNestedObjectValueOfPtr[T any](ctx context.Context, t *T) SetNestedObjectValueOf[T] {
 	return NewSetNestedObjectValueOfSlice(ctx, []*T{t})
 }
 

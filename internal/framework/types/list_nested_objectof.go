@@ -108,7 +108,7 @@ func (t ListNestedObjectTypeOf[T]) ValueFromObjectPtr(ctx context.Context, ptr a
 	var diags diag.Diagnostics
 
 	if v, ok := ptr.(*T); ok {
-		return NewListNestedObjectValueOf(ctx, v), diags
+		return NewListNestedObjectValueOfPtr(ctx, v), diags
 	}
 
 	diags.Append(diag.NewErrorDiagnostic("Invalid pointer value", fmt.Sprintf("incorrect type: want %T, got %T", (*T)(nil), ptr)))
@@ -164,7 +164,7 @@ func NewListNestedObjectValueOfUnknown[T any](ctx context.Context) ListNestedObj
 	return ListNestedObjectValueOf[T]{ListValue: basetypes.NewListUnknown(NewObjectTypeOf[T](ctx))}
 }
 
-func NewListNestedObjectValueOf[T any](ctx context.Context, t *T) ListNestedObjectValueOf[T] {
+func NewListNestedObjectValueOfPtr[T any](ctx context.Context, t *T) ListNestedObjectValueOf[T] {
 	return NewListNestedObjectValueOfSlice(ctx, []*T{t})
 }
 
