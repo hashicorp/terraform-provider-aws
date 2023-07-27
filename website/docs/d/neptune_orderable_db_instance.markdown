@@ -21,7 +21,7 @@ data "aws_neptune_orderable_db_instance" "test" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This data source supports the following arguments:
 
 * `engine` - (Optional) DB engine. (Default: `neptune`)
 * `engine_version` - (Optional) Version of the DB engine. For example, `1.0.1.0`, `1.0.1.2`, `1.0.2.2`, and `1.0.3.0`.
@@ -32,7 +32,7 @@ The following arguments are supported:
 
 ## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This data source exports the following attributes in addition to the arguments above:
 
 * `availability_zones` - Availability zones where the instance is available.
 * `max_iops_per_db_instance` - Maximum total provisioned IOPS for a DB instance.

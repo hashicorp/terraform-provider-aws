@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 // CloudFront DistributionConfig structure helpers.
 //
 // These functions assist in pulling in data from Terraform resource

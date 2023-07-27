@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package sdkdiag
 
 import (
@@ -28,16 +31,27 @@ func severityFilter(s diag.Severity) tfslices.FilterFunc[diag.Diagnostic] {
 }
 
 // DiagnosticsError returns an error containing all Diagnostic with SeverityError
-func DiagnosticsError(diags diag.Diagnostics) (errs error) {
+func DiagnosticsError(diags diag.Diagnostics) error {
 	if !diags.HasError() {
-		return
+		return nil
 	}
 
-	for _, d := range Errors(diags) {
-		errs = multierror.Append(errs, errors.New(DiagnosticString(d)))
+	errDiags := Errors(diags)
+
+	if len(errDiags) == 1 {
+		return diagnosticError(errDiags[0])
 	}
 
-	return
+	var errs error
+	for _, d := range errDiags {
+		errs = multierror.Append(errs, diagnosticError(d))
+	}
+
+	return errs
+}
+
+func diagnosticError(diag diag.Diagnostic) error {
+	return errors.New(DiagnosticString(diag))
 }
 
 // DiagnosticString formats a Diagnostic

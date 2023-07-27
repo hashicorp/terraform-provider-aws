@@ -44,7 +44,7 @@ resource "aws_iam_role_policy_attachment" "example-AWSGlueServiceRole" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `arguments` - (Optional) A map of arguments used to configure the endpoint.
 * `extra_jars_s3_path` - (Optional) Path to one or more Java Jars in an S3 bucket that should be loaded in this endpoint.
@@ -62,9 +62,9 @@ The following arguments are supported:
 * `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `worker_type` - (Optional) The type of predefined worker that is allocated to this endpoint. Accepts a value of Standard, G.1X, or G.2X.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - The ARN of the endpoint.
 * `name` - The name of the new endpoint.
@@ -80,8 +80,17 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-A Glue Development Endpoint can be imported using the `name`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import a Glue Development Endpoint using the `name`. For example:
 
+```terraform
+import {
+  to = aws_glue_dev_endpoint.example
+  id = "foo"
+}
 ```
-$ terraform import aws_glue_dev_endpoint.example foo
+
+Using `terraform import`, import a Glue Development Endpoint using the `name`. For example:
+
+```console
+% terraform import aws_glue_dev_endpoint.example foo
 ```

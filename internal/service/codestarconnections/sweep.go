@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 //go:build sweep
 // +build sweep
 
@@ -63,7 +66,7 @@ func sweepConnections(region string) error {
 		return fmt.Errorf("error listing CodeStar Connections Connections (%s): %w", region, err)
 	}
 
-	err = sweep.SweepOrchestratorWithContext(ctx, sweepResources)
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
 
 	if err != nil {
 		return fmt.Errorf("error sweeping CodeStar Connections Connections (%s): %w", region, err)
@@ -107,7 +110,7 @@ func sweepHosts(region string) error {
 		return fmt.Errorf("error listing CodeStar Connections Hosts (%s): %w", region, err)
 	}
 
-	err = sweep.SweepOrchestratorWithContext(ctx, sweepResources)
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
 
 	if err != nil {
 		return fmt.Errorf("error sweeping CodeStar Connections Hosts (%s): %w", region, err)

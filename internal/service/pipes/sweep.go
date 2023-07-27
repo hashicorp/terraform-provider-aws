@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 //go:build sweep
 // +build sweep
 
@@ -9,9 +12,9 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/pipes"
-	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
+	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv2"
 )
 
 func init() {
@@ -29,37 +32,32 @@ func sweepPipes(region string) error {
 	}
 	conn := client.PipesClient(ctx)
 	sweepResources := make([]sweep.Sweepable, 0)
-	var errs *multierror.Error
 
-	paginator := pipes.NewListPipesPaginator(conn, &pipes.ListPipesInput{})
+	pages := pipes.NewListPipesPaginator(conn, &pipes.ListPipesInput{})
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
 
-	for paginator.HasMorePages() {
-		page, err := paginator.NextPage(ctx)
-
-		if err != nil {
-			errs = multierror.Append(errs, fmt.Errorf("listing Pipes for %s: %w", region, err))
-			break
+		if awsv2.SkipSweepError(err) {
+			log.Printf("[WARN] Skipping Pipe sweep for %s: %s", region, err)
+			return nil
 		}
 
-		for _, it := range page.Pipes {
-			name := aws.ToString(it.Name)
+		if err != nil {
+			return fmt.Errorf("error listing Pipes (%s): %w", region, err)
+		}
 
-			r := ResourcePipe()
+		for _, v := range page.Pipes {
+			r := resourcePipe()
 			d := r.Data(nil)
-			d.SetId(name)
+			d.SetId(aws.ToString(v.Name))
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
 	}
 
-	if err := sweep.SweepOrchestratorWithContext(ctx, sweepResources); err != nil {
-		errs = multierror.Append(errs, fmt.Errorf("sweeping Pipe for %s: %w", region, err))
+	if err := sweep.SweepOrchestrator(ctx, sweepResources); err != nil {
+		return fmt.Errorf("error sweeping Pipes (%s): %w", region, err)
 	}
 
-	if sweep.SkipSweepError(err) {
-		log.Printf("[WARN] Skipping Pipe sweep for %s: %s", region, errs)
-		return nil
-	}
-
-	return errs.ErrorOrNil()
+	return nil
 }

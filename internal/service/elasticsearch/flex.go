@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package elasticsearch
 
 import (
@@ -76,17 +79,19 @@ func expandEBSOptions(m map[string]interface{}) *elasticsearch.EBSOptions {
 		options.EBSEnabled = aws.Bool(ebsEnabled.(bool))
 
 		if ebsEnabled.(bool) {
-			if v, ok := m["iops"]; ok && v.(int) > 0 {
-				options.Iops = aws.Int64(int64(v.(int)))
-			}
-			if v, ok := m["throughput"]; ok && v.(int) > 0 {
-				options.Throughput = aws.Int64(int64(v.(int)))
-			}
 			if v, ok := m["volume_size"]; ok && v.(int) > 0 {
 				options.VolumeSize = aws.Int64(int64(v.(int)))
 			}
+			var volumeType string
 			if v, ok := m["volume_type"]; ok && v.(string) != "" {
-				options.VolumeType = aws.String(v.(string))
+				volumeType = v.(string)
+				options.VolumeType = aws.String(volumeType)
+			}
+			if v, ok := m["iops"]; ok && v.(int) > 0 && EBSVolumeTypePermitsIopsInput(volumeType) {
+				options.Iops = aws.Int64(int64(v.(int)))
+			}
+			if v, ok := m["throughput"]; ok && v.(int) > 0 && EBSVolumeTypePermitsThroughputInput(volumeType) {
+				options.Throughput = aws.Int64(int64(v.(int)))
 			}
 		}
 	}

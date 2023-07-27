@@ -27,24 +27,33 @@ resource "aws_iam_user_ssh_key" "user" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `username` - (Required) The name of the IAM user to associate the SSH public key with.
 * `encoding` - (Required) Specifies the public key encoding format to use in the response. To retrieve the public key in ssh-rsa format, use `SSH`. To retrieve the public key in PEM format, use `PEM`.
 * `public_key` - (Required) The SSH public key. The public key must be encoded in ssh-rsa format or PEM format.
 * `status` - (Optional) The status to assign to the SSH public key. Active means the key can be used for authentication with an AWS CodeCommit repository. Inactive means the key cannot be used. Default is `active`.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `ssh_public_key_id` - The unique identifier for the SSH public key.
 * `fingerprint` - The MD5 message digest of the SSH public key.
 
 ## Import
 
-SSH public keys can be imported using the `username`, `ssh_public_key_id`, and `encoding` e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import SSH public keys using the `username`, `ssh_public_key_id`, and `encoding`. For example:
 
+```terraform
+import {
+  to = aws_iam_user_ssh_key.user
+  id = "user:APKAJNCNNJICVN7CFKCA:SSH"
+}
 ```
-$ terraform import aws_iam_user_ssh_key.user user:APKAJNCNNJICVN7CFKCA:SSH
+
+Using `terraform import`, import SSH public keys using the `username`, `ssh_public_key_id`, and `encoding`. For example:
+
+```console
+% terraform import aws_iam_user_ssh_key.user user:APKAJNCNNJICVN7CFKCA:SSH
 ```

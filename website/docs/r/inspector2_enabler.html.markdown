@@ -44,9 +44,9 @@ The following arguments are required:
   Valid values are `EC2`, `ECR`, and `LAMBDA`.
   At least one item is required.
 
-## Attributes Reference
+## Attribute Reference
 
-No additional attributes are exported.
+This resource exports no additional attributes.
 
 ## Timeouts
 

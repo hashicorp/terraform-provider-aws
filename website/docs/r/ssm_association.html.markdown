@@ -81,7 +81,7 @@ resource "aws_ssm_association" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `name` - (Required) The name of the SSM document to apply.
 * `apply_only_at_cron_interval` - (Optional) By default, when you create a new or update associations, the system runs it immediately and then according to the schedule you specified. Enable this option if you do not want an association to run immediately after you create or update it. This parameter is not supported for rate expressions. Default: `false`.
@@ -109,9 +109,9 @@ Targets specify what instance IDs or tags to apply the document to and has these
 * `key` - (Required) Either `InstanceIds` or `tag:Tag Name` to specify an EC2 tag.
 * `values` - (Required) A list of instance IDs or tag values. AWS currently limits this list size to one value.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - The ARN of the SSM association
 * `association_id` - The ID of the SSM association.
@@ -121,8 +121,17 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-SSM associations can be imported using the `association_id`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import SSM associations using the `association_id`. For example:
 
+```terraform
+import {
+  to = aws_ssm_association.test-association
+  id = "10abcdef-0abc-1234-5678-90abcdef123456"
+}
 ```
-$ terraform import aws_ssm_association.test-association 10abcdef-0abc-1234-5678-90abcdef123456
+
+Using `terraform import`, import SSM associations using the `association_id`. For example:
+
+```console
+% terraform import aws_ssm_association.test-association 10abcdef-0abc-1234-5678-90abcdef123456
 ```

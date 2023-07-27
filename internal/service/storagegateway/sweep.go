@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 //go:build sweep
 // +build sweep
 
@@ -68,7 +71,7 @@ func sweepGateways(region string) error {
 		return fmt.Errorf("error listing Storage Gateway Gateways (%s): %w", region, err)
 	}
 
-	err = sweep.SweepOrchestratorWithContext(ctx, sweepResources)
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
 
 	if err != nil {
 		return fmt.Errorf("error sweeping Storage Gateway Gateways (%s): %w", region, err)
@@ -112,7 +115,7 @@ func sweepTapePools(region string) error {
 		return fmt.Errorf("error listing Storage Gateway Tape Pools (%s): %w", region, err)
 	}
 
-	err = sweep.SweepOrchestratorWithContext(ctx, sweepResources)
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
 
 	if err != nil {
 		return fmt.Errorf("error sweeping Storage Gateway Gateways (%s): %w", region, err)
@@ -156,7 +159,7 @@ func sweepFileSystemAssociations(region string) error {
 		return fmt.Errorf("error listing Storage Gateway File System Associations (%s): %w", region, err)
 	}
 
-	err = sweep.SweepOrchestratorWithContext(ctx, sweepResources)
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
 
 	if err != nil {
 		return fmt.Errorf("error sweeping Storage Gateway File System Associations (%s): %w", region, err)

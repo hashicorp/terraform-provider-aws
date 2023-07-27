@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package apigatewayv2
 
 import (
@@ -127,9 +130,10 @@ func resourceAuthorizerCreate(ctx context.Context, d *schema.ResourceData, meta 
 	}
 	if v, ok := d.GetOkExists("authorizer_result_ttl_in_seconds"); ok {
 		req.AuthorizerResultTtlInSeconds = aws.Int64(int64(v.(int)))
-	} else if protocolType == apigatewayv2.ProtocolTypeHttp && authorizerType == apigatewayv2.AuthorizerTypeRequest {
+	} else if protocolType == apigatewayv2.ProtocolTypeHttp && authorizerType == apigatewayv2.AuthorizerTypeRequest && len(req.IdentitySource) > 0 {
 		// Default in the AWS Console is 300 seconds.
 		// Explicitly set on creation so that we can correctly detect changes to the 0 value.
+		// This value should only be set when IdentitySources have been defined
 		req.AuthorizerResultTtlInSeconds = aws.Int64(300)
 	}
 	if v, ok := d.GetOk("authorizer_uri"); ok {

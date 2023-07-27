@@ -24,9 +24,9 @@ data "aws_imagebuilder_image" "example" {
 
 * `arn` - (Required) ARN of the image. The suffix can either be specified with wildcards (`x.x.x`) to fetch the latest build version or a full build version (e.g., `2020.11.26/1`) to fetch an exact version.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This data source exports the following attributes in addition to the arguments above:
 
 * `build_version_arn` - Build version ARN of the image. This will always have the `#.#.#/#` suffix.
 * `container_recipe_arn` - ARN of the container recipe.
