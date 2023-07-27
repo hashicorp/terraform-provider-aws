@@ -23,22 +23,22 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccCodeCatalystDevenvironment_basic(t *testing.T) {
+func TestAccCodeCatalystDevEnvironment_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var devEnvironment codecatalyst.GetDevEnvironmentOutput
+	var DevEnvironment codecatalyst.GetDevEnvironmentOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_codecatalyst_devenvironment.test"
+	resourceName := "aws_codecatalyst_dev_environment.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.CodeCatalyst),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDevenvironmentDestroy(ctx),
+		CheckDestroy:             testAccCheckDevEnvironmentDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDevenvironmentConfig_basic(rName),
+				Config: testAccDevEnvironmentConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDevenvironmentExists(ctx, resourceName, &devEnvironment),
+					testAccCheckDevEnvironmentExists(ctx, resourceName, &DevEnvironment),
 					resource.TestCheckResourceAttr(resourceName, "alias", rName),
 					resource.TestCheckResourceAttr(resourceName, "space_name", "terraform"),
 					resource.TestCheckResourceAttr(resourceName, "project_name", "terraform"),
@@ -51,22 +51,22 @@ func TestAccCodeCatalystDevenvironment_basic(t *testing.T) {
 	})
 }
 
-func TestAccCodeCatalystDevenvironment_withRepositories(t *testing.T) {
+func TestAccCodeCatalystDevEnvironment_withRepositories(t *testing.T) {
 	ctx := acctest.Context(t)
-	var devEnvironment codecatalyst.GetDevEnvironmentOutput
+	var DevEnvironment codecatalyst.GetDevEnvironmentOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_codecatalyst_devenvironment.test"
+	resourceName := "aws_codecatalyst_dev_environment.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.CodeCatalyst),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDevenvironmentDestroy(ctx),
+		CheckDestroy:             testAccCheckDevEnvironmentDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDevenvironmentConfig_withRepositories(rName),
+				Config: testAccDevEnvironmentConfig_withRepositories(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDevenvironmentExists(ctx, resourceName, &devEnvironment),
+					testAccCheckDevEnvironmentExists(ctx, resourceName, &DevEnvironment),
 					resource.TestCheckResourceAttr(resourceName, "alias", rName),
 					resource.TestCheckResourceAttr(resourceName, "space_name", "terraform"),
 					resource.TestCheckResourceAttr(resourceName, "project_name", "terraform"),
@@ -82,22 +82,22 @@ func TestAccCodeCatalystDevenvironment_withRepositories(t *testing.T) {
 		},
 	})
 }
-func TestAccCodeCatalystDevenvironment_disappears(t *testing.T) {
+func TestAccCodeCatalystDevEnvironment_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	var devEnvironment codecatalyst.GetDevEnvironmentOutput
-	resourceName := "aws_codecatalyst_devenvironment.test"
+	var DevEnvironment codecatalyst.GetDevEnvironmentOutput
+	resourceName := "aws_codecatalyst_dev_environment.test"
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.CodeCatalyst),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDevenvironmentDestroy(ctx),
+		CheckDestroy:             testAccCheckDevEnvironmentDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDevenvironmentConfig_basic(rName),
+				Config: testAccDevEnvironmentConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDevenvironmentExists(ctx, resourceName, &devEnvironment),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfcodecatalyst.ResourceDevenvironment(), resourceName),
+					testAccCheckDevEnvironmentExists(ctx, resourceName, &DevEnvironment),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfcodecatalyst.ResourceDevEnvironment(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -105,12 +105,12 @@ func TestAccCodeCatalystDevenvironment_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckDevenvironmentDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckDevEnvironmentDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).CodeCatalystClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
-			if rs.Type != "aws_codecatalyst_devenvironment" {
+			if rs.Type != "aws_codecatalyst_dev_environment" {
 				continue
 			}
 			spaceName := rs.Primary.Attributes["space_name"]
@@ -128,22 +128,22 @@ func testAccCheckDevenvironmentDestroy(ctx context.Context) resource.TestCheckFu
 				return err
 			}
 
-			return create.Error(names.CodeCatalyst, create.ErrActionCheckingDestroyed, tfcodecatalyst.ResNameDevenvironment, rs.Primary.ID, errors.New("not destroyed"))
+			return create.Error(names.CodeCatalyst, create.ErrActionCheckingDestroyed, tfcodecatalyst.ResNameDevEnvironment, rs.Primary.ID, errors.New("not destroyed"))
 		}
 
 		return nil
 	}
 }
 
-func testAccCheckDevenvironmentExists(ctx context.Context, name string, devenvironment *codecatalyst.GetDevEnvironmentOutput) resource.TestCheckFunc {
+func testAccCheckDevEnvironmentExists(ctx context.Context, name string, DevEnvironment *codecatalyst.GetDevEnvironmentOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
-			return create.Error(names.CodeCatalyst, create.ErrActionCheckingExistence, tfcodecatalyst.ResNameDevenvironment, name, errors.New("not found"))
+			return create.Error(names.CodeCatalyst, create.ErrActionCheckingExistence, tfcodecatalyst.ResNameDevEnvironment, name, errors.New("not found"))
 		}
 
 		if rs.Primary.ID == "" {
-			return create.Error(names.CodeCatalyst, create.ErrActionCheckingExistence, tfcodecatalyst.ResNameDevenvironment, name, errors.New("not set"))
+			return create.Error(names.CodeCatalyst, create.ErrActionCheckingExistence, tfcodecatalyst.ResNameDevEnvironment, name, errors.New("not set"))
 		}
 		spaceName := rs.Primary.Attributes["space_name"]
 		projectName := rs.Primary.Attributes["project_name"]
@@ -156,10 +156,10 @@ func testAccCheckDevenvironmentExists(ctx context.Context, name string, devenvir
 		})
 
 		if err != nil {
-			return create.Error(names.CodeCatalyst, create.ErrActionCheckingExistence, tfcodecatalyst.ResNameDevenvironment, rs.Primary.ID, err)
+			return create.Error(names.CodeCatalyst, create.ErrActionCheckingExistence, tfcodecatalyst.ResNameDevEnvironment, rs.Primary.ID, err)
 		}
 
-		*devenvironment = *resp
+		*DevEnvironment = *resp
 
 		return nil
 	}
@@ -186,9 +186,9 @@ func testAccPreCheck(ctx context.Context, t *testing.T) {
 	}
 }
 
-func testAccDevenvironmentConfig_basic(rName string) string {
+func testAccDevEnvironmentConfig_basic(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_codecatalyst_devenvironment" "test" {
+resource "aws_codecatalyst_dev_environment" "test" {
   alias         = %[1]q
   space_name    = "terraform"
   project_name  = "terraform"
@@ -205,9 +205,9 @@ resource "aws_codecatalyst_devenvironment" "test" {
 `, rName)
 }
 
-func testAccDevenvironmentConfig_withRepositories(rName string) string {
+func testAccDevEnvironmentConfig_withRepositories(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_codecatalyst_devenvironment" "test" {
+resource "aws_codecatalyst_dev_environment" "test" {
   alias         = %[1]q
   space_name    = "terraform"
   project_name  = "terraform"

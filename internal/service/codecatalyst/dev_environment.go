@@ -24,13 +24,13 @@ import (
 )
 
 // Function annotations are used for resource registration to the Provider. DO NOT EDIT.
-// @SDKResource("aws_codecatalyst_devenvironment", name="Devenvironment")
-func ResourceDevenvironment() *schema.Resource {
+// @SDKResource("aws_codecatalyst_dev_environment", name="DevEnvironment")
+func ResourceDevEnvironment() *schema.Resource {
 	return &schema.Resource{
-		CreateWithoutTimeout: resourceDevenvironmentCreate,
-		ReadWithoutTimeout:   resourceDevenvironmentRead,
-		UpdateWithoutTimeout: resourceDevenvironmentUpdate,
-		DeleteWithoutTimeout: resourceDevenvironmentDelete,
+		CreateWithoutTimeout: resourceDevEnvironmentCreate,
+		ReadWithoutTimeout:   resourceDevEnvironmentRead,
+		UpdateWithoutTimeout: resourceDevEnvironmentUpdate,
+		DeleteWithoutTimeout: resourceDevEnvironmentDelete,
 
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
@@ -117,10 +117,10 @@ func ResourceDevenvironment() *schema.Resource {
 }
 
 const (
-	ResNameDevenvironment = "Devenvironment"
+	ResNameDevEnvironment = "DevEnvironment"
 )
 
-func resourceDevenvironmentCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDevEnvironmentCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).CodeCatalystClient(ctx)
@@ -152,23 +152,23 @@ func resourceDevenvironmentCreate(ctx context.Context, d *schema.ResourceData, m
 	out, err := conn.CreateDevEnvironment(ctx, in)
 
 	if err != nil {
-		return append(diags, create.DiagError(names.CodeCatalyst, create.ErrActionCreating, ResNameDevenvironment, d.Id(), err)...)
+		return append(diags, create.DiagError(names.CodeCatalyst, create.ErrActionCreating, ResNameDevEnvironment, d.Id(), err)...)
 	}
 
 	if out == nil {
-		return append(diags, create.DiagError(names.CodeCatalyst, create.ErrActionCreating, ResNameDevenvironment, d.Id(), errors.New("empty output"))...)
+		return append(diags, create.DiagError(names.CodeCatalyst, create.ErrActionCreating, ResNameDevEnvironment, d.Id(), errors.New("empty output"))...)
 	}
 
 	d.SetId(aws.ToString(out.Id))
 
-	if _, err := waitDevenvironmentCreated(ctx, conn, d.Id(), out.SpaceName, out.ProjectName, d.Timeout(schema.TimeoutCreate)); err != nil {
-		return append(diags, create.DiagError(names.CodeCatalyst, create.ErrActionWaitingForCreation, ResNameDevenvironment, d.Id(), err)...)
+	if _, err := waitDevEnvironmentCreated(ctx, conn, d.Id(), out.SpaceName, out.ProjectName, d.Timeout(schema.TimeoutCreate)); err != nil {
+		return append(diags, create.DiagError(names.CodeCatalyst, create.ErrActionWaitingForCreation, ResNameDevEnvironment, d.Id(), err)...)
 	}
 
-	return append(diags, resourceDevenvironmentRead(ctx, d, meta)...)
+	return append(diags, resourceDevEnvironmentRead(ctx, d, meta)...)
 }
 
-func resourceDevenvironmentRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDevEnvironmentRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).CodeCatalystClient(ctx)
@@ -176,16 +176,16 @@ func resourceDevenvironmentRead(ctx context.Context, d *schema.ResourceData, met
 	spaceName := aws.String(d.Get("space_name").(string))
 	projectName := aws.String(d.Get("project_name").(string))
 
-	out, err := findDevenvironmentByID(ctx, conn, d.Id(), spaceName, projectName)
+	out, err := findDevEnvironmentByID(ctx, conn, d.Id(), spaceName, projectName)
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
-		log.Printf("[WARN] Codecatalyst Devenvironment (%s) not found, removing from state", d.Id())
+		log.Printf("[WARN] Codecatalyst DevEnvironment (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
 	}
 
 	if err != nil {
-		return append(diags, create.DiagError(names.CodeCatalyst, create.ErrActionReading, ResNameDevenvironment, d.Id(), err)...)
+		return append(diags, create.DiagError(names.CodeCatalyst, create.ErrActionReading, ResNameDevEnvironment, d.Id(), err)...)
 	}
 
 	d.Set("alias", out.Alias)
@@ -196,17 +196,17 @@ func resourceDevenvironmentRead(ctx context.Context, d *schema.ResourceData, met
 	d.Set("persistent_storage", flattenPersistentStorage(out.PersistentStorage))
 
 	if err := d.Set("ides", flattenIdes(out.Ides)); err != nil {
-		return append(diags, create.DiagError(names.CodeCatalyst, create.ErrActionSetting, ResNameDevenvironment, d.Id(), err)...)
+		return append(diags, create.DiagError(names.CodeCatalyst, create.ErrActionSetting, ResNameDevEnvironment, d.Id(), err)...)
 	}
 
 	if err := d.Set("repositories", flattenRepositories(out.Repositories)); err != nil {
-		return append(diags, create.DiagError(names.CodeCatalyst, create.ErrActionSetting, ResNameDevenvironment, d.Id(), err)...)
+		return append(diags, create.DiagError(names.CodeCatalyst, create.ErrActionSetting, ResNameDevEnvironment, d.Id(), err)...)
 	}
 
 	return diags
 }
 
-func resourceDevenvironmentUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDevEnvironmentUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).CodeCatalystClient(ctx)
@@ -230,25 +230,25 @@ func resourceDevenvironmentUpdate(ctx context.Context, d *schema.ResourceData, m
 		return diags
 	}
 
-	log.Printf("[DEBUG] Updating Codecatalyst Devenvironment (%s): %#v", d.Id(), in)
+	log.Printf("[DEBUG] Updating Codecatalyst DevEnvironment (%s): %#v", d.Id(), in)
 	out, err := conn.UpdateDevEnvironment(ctx, in)
 	if err != nil {
-		return append(diags, create.DiagError(names.CodeCatalyst, create.ErrActionUpdating, ResNameDevenvironment, d.Id(), err)...)
+		return append(diags, create.DiagError(names.CodeCatalyst, create.ErrActionUpdating, ResNameDevEnvironment, d.Id(), err)...)
 	}
 
-	if _, err := waitDevenvironmentUpdated(ctx, conn, aws.ToString(out.Id), out.SpaceName, out.ProjectName, d.Timeout(schema.TimeoutUpdate)); err != nil {
-		return append(diags, create.DiagError(names.CodeCatalyst, create.ErrActionWaitingForUpdate, ResNameDevenvironment, d.Id(), err)...)
+	if _, err := waitDevEnvironmentUpdated(ctx, conn, aws.ToString(out.Id), out.SpaceName, out.ProjectName, d.Timeout(schema.TimeoutUpdate)); err != nil {
+		return append(diags, create.DiagError(names.CodeCatalyst, create.ErrActionWaitingForUpdate, ResNameDevEnvironment, d.Id(), err)...)
 	}
 
-	return append(diags, resourceDevenvironmentRead(ctx, d, meta)...)
+	return append(diags, resourceDevEnvironmentRead(ctx, d, meta)...)
 }
 
-func resourceDevenvironmentDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDevEnvironmentDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).CodeCatalystClient(ctx)
 
-	log.Printf("[INFO] Deleting Codecatalyst Devenvironment %s", d.Id())
+	log.Printf("[INFO] Deleting Codecatalyst DevEnvironment %s", d.Id())
 
 	_, err := conn.DeleteDevEnvironment(ctx, &codecatalyst.DeleteDevEnvironmentInput{
 		Id:          aws.String(d.Id()),
@@ -260,17 +260,17 @@ func resourceDevenvironmentDelete(ctx context.Context, d *schema.ResourceData, m
 		return diags
 	}
 	if err != nil {
-		return append(diags, create.DiagError(names.CodeCatalyst, create.ErrActionDeleting, ResNameDevenvironment, d.Id(), err)...)
+		return append(diags, create.DiagError(names.CodeCatalyst, create.ErrActionDeleting, ResNameDevEnvironment, d.Id(), err)...)
 	}
 
 	return diags
 }
 
-func waitDevenvironmentCreated(ctx context.Context, conn *codecatalyst.Client, id string, spaceName *string, projectName *string, timeout time.Duration) (*codecatalyst.GetDevEnvironmentOutput, error) {
+func waitDevEnvironmentCreated(ctx context.Context, conn *codecatalyst.Client, id string, spaceName *string, projectName *string, timeout time.Duration) (*codecatalyst.GetDevEnvironmentOutput, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending:                   enum.Slice(types.DevEnvironmentStatusPending, types.DevEnvironmentStatusStarting),
 		Target:                    enum.Slice(types.DevEnvironmentStatusRunning, types.DevEnvironmentStatusStopped, types.DevEnvironmentStatusStopping),
-		Refresh:                   statusDevenvironment(ctx, conn, id, spaceName, projectName),
+		Refresh:                   statusDevEnvironment(ctx, conn, id, spaceName, projectName),
 		Timeout:                   timeout,
 		NotFoundChecks:            20,
 		ContinuousTargetOccurence: 2,
@@ -284,11 +284,11 @@ func waitDevenvironmentCreated(ctx context.Context, conn *codecatalyst.Client, i
 	return nil, err
 }
 
-func waitDevenvironmentUpdated(ctx context.Context, conn *codecatalyst.Client, id string, spaceName *string, projectName *string, timeout time.Duration) (*codecatalyst.GetDevEnvironmentOutput, error) {
+func waitDevEnvironmentUpdated(ctx context.Context, conn *codecatalyst.Client, id string, spaceName *string, projectName *string, timeout time.Duration) (*codecatalyst.GetDevEnvironmentOutput, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending:                   enum.Slice(types.DevEnvironmentStatusStopping, types.DevEnvironmentStatusPending, types.DevEnvironmentStatusStopped),
 		Target:                    enum.Slice(types.DevEnvironmentStatusRunning),
-		Refresh:                   statusDevenvironment(ctx, conn, id, spaceName, projectName),
+		Refresh:                   statusDevEnvironment(ctx, conn, id, spaceName, projectName),
 		Timeout:                   timeout,
 		NotFoundChecks:            20,
 		ContinuousTargetOccurence: 2,
@@ -302,9 +302,9 @@ func waitDevenvironmentUpdated(ctx context.Context, conn *codecatalyst.Client, i
 	return nil, err
 }
 
-func statusDevenvironment(ctx context.Context, conn *codecatalyst.Client, id string, spaceName *string, projectName *string) retry.StateRefreshFunc {
+func statusDevEnvironment(ctx context.Context, conn *codecatalyst.Client, id string, spaceName *string, projectName *string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		out, err := findDevenvironmentByID(ctx, conn, id, spaceName, projectName)
+		out, err := findDevEnvironmentByID(ctx, conn, id, spaceName, projectName)
 		if tfresource.NotFound(err) {
 			return nil, "", nil
 		}
@@ -317,7 +317,7 @@ func statusDevenvironment(ctx context.Context, conn *codecatalyst.Client, id str
 	}
 }
 
-func findDevenvironmentByID(ctx context.Context, conn *codecatalyst.Client, id string, spaceName *string, projectName *string) (*codecatalyst.GetDevEnvironmentOutput, error) {
+func findDevEnvironmentByID(ctx context.Context, conn *codecatalyst.Client, id string, spaceName *string, projectName *string) (*codecatalyst.GetDevEnvironmentOutput, error) {
 	in := &codecatalyst.GetDevEnvironmentInput{
 		Id:          aws.String(id),
 		ProjectName: projectName,

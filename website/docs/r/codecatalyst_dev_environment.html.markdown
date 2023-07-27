@@ -1,7 +1,7 @@
 ---
 subcategory: "CodeCatalyst"
 layout: "aws"
-page_title: "AWS: aws_codecatalyst_devenvironment"
+page_title: "AWS: aws_codecatalyst_dev_environment"
 description: |-
   Terraform resource for managing an AWS CodeCatalyst Devenvironment.
 ---
@@ -12,7 +12,7 @@ Terraform resource for managing an AWS CodeCatalyst Dev Environment.
 ## Example Usage
 
 ```terraform
-resource "aws_codecatalyst_devenvironment" "test" {
+resource "aws_codecatalyst_dev_environment" "test" {
   alias         = "devenv"
   space_name    = "myspace"
   project_name  = "myproject"
