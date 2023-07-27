@@ -40,7 +40,9 @@ class MyConvertedCode extends TerraformStack {
 * `clusterName` - (Required) Name of the cluster.
 * `nodeGroupName` - (Required) Name of the node group.
 
-## Attributes Reference
+## Attribute Reference
+
+This data source exports the following attributes in addition to the arguments above:
 
 * `id` - EKS Cluster name and EKS Node Group name separated by a colon (`:`).
 * `amiType` - Type of Amazon Machine Image (AMI) associated with the EKS Node Group.
@@ -75,4 +77,4 @@ class MyConvertedCode extends TerraformStack {
 * `tags` - Key-value map of resource tags.
 * `version` – Kubernetes version.
 
-<!-- cache-key: cdktf-0.17.1 input-0a202698d7f266048c9ff9545b0ace5d8176fe2668f8602f9df8f45a949890b2 -->
+<!-- cache-key: cdktf-0.17.1 input-455f97b7456c88e1697131f0d9d93c38151b37400a9cfe93bcaa3f2bceee01a2 -->

@@ -82,7 +82,7 @@ which take the following arguments:
 * `values` - (Required) Set of values that are accepted for the given field.
   A VPC Peering Connection will be selected if any one of the given values matches.
 
-## Attributes Reference
+## Attribute Reference
 
 All of the argument attributes except `filter` are also exported as result attributes.
 
@@ -96,12 +96,12 @@ All of the argument attributes except `filter` are also exported as result attri
 * `requester` - Configuration block that describes [VPC Peering Connection]
 (https://docs.aws.amazon.com/vpc/latest/peering/what-is-vpc-peering.html) options set for the requester VPC.
 
-#### Accepter and Requester Attributes Reference
+#### Accepter and Requester Attribute Reference
 
 * `allow_remote_vpc_dns_resolution` - Indicates whether a local VPC can resolve public DNS hostnames to
 private IP addresses when queried from instances in a peer VPC.
 
-#### CIDR block set Attributes Reference
+#### CIDR block set Attribute Reference
 
 * `cidr_block` - CIDR block associated to the VPC of the specific VPC Peering Connection.
 
@@ -111,4 +111,4 @@ private IP addresses when queried from instances in a peer VPC.
 
 - `read` - (Default `20m`)
 
-<!-- cache-key: cdktf-0.17.1 input-485337bc225389fb0a53c0927791a6da97e09cc517f99f5de9ec12d2772b4c92 -->
+<!-- cache-key: cdktf-0.17.1 input-b38a9587aaca2300c795e51ead64f4c57e57a85ac3044ada5792edf97aa88b1a -->

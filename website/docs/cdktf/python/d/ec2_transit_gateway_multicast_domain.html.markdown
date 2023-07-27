@@ -58,7 +58,7 @@ class MyConvertedCode(TerraformStack):
 
 ## Argument Reference
 
-The following arguments are supported:
+This data source supports the following arguments:
 
 * `filter` - (Optional) One or more configuration blocks containing name-values filters. Detailed below.
 * `transit_gateway_multicast_domain_id` - (Optional) Identifier of the EC2 Transit Gateway Multicast Domain.
@@ -74,7 +74,7 @@ The following arguments are required:
 
 ## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This data source exports the following attributes in addition to the arguments above:
 
 * `id` - EC2 Transit Gateway Multicast Domain identifier.
 * `arn` - EC2 Transit Gateway Multicast Domain ARN.
@@ -100,4 +100,4 @@ In addition to all arguments above, the following attributes are exported:
 
 - `read` - (Default `20m`)
 
-<!-- cache-key: cdktf-0.17.1 input-7fcf121a6afa9b103a4a9aa8daf6635896a64eb12f56c34cc8bd881e1042d110 -->
+<!-- cache-key: cdktf-0.17.1 input-854de9a7e77b920dc2a59508efed1e997a904be759a67e383d582356d4c4d937 -->

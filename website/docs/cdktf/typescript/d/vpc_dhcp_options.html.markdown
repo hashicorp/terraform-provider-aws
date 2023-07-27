@@ -79,7 +79,9 @@ For more information about filtering, see the [EC2 API documentation](https://do
 * `name` - (Required) Name of the field to filter.
 * `values` - (Required) Set of values for filtering.
 
-## Attributes Reference
+## Attribute Reference
+
+This data source exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the DHCP Options Set.
 * `dhcpOptionsId` - EC2 DHCP Options ID
@@ -98,4 +100,4 @@ For more information about filtering, see the [EC2 API documentation](https://do
 
 - `read` - (Default `20M`)
 
-<!-- cache-key: cdktf-0.17.1 input-df1a402b26f3c0ae751db212018f3453881ca61da367f748c8e21d99124e7fbc -->
+<!-- cache-key: cdktf-0.17.1 input-791925442f0012e5d97b1162afa65bd01197d035ae1eee08f5a4eb0bdfc0c813 -->
