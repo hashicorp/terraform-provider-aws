@@ -1,4 +1,10 @@
 ## 5.11.0 (Unreleased)
+
+ENHANCEMENTS:
+
+* resource/aws_lambda_function: Add support for `python3.11` `runtime` value ([#32729](https://github.com/hashicorp/terraform-provider-aws/issues/32729))
+* resource/aws_lambda_layer_version: Add support for `python3.11` `compatible_runtimes` value ([#32729](https://github.com/hashicorp/terraform-provider-aws/issues/32729))
+
 ## 5.10.0 (July 27, 2023)
 
 FEATURES:
