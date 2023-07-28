@@ -46,7 +46,7 @@ func FindStackByID(ctx context.Context, conn *cloudformation.CloudFormation, id 
 
 	output, err := conn.DescribeStacksWithContext(ctx, input)
 
-	if tfawserr.ErrMessageContains(err, ErrCodeValidationError, "does not exist") {
+	if tfawserr.ErrMessageContains(err, errCodeValidationError, "does not exist") {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,

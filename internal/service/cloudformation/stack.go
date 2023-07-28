@@ -149,21 +149,14 @@ func resourceStackCreate(ctx context.Context, d *schema.ResourceData, meta inter
 		Tags:               getTagsIn(ctx),
 	}
 
-	if v, ok := d.GetOk("template_body"); ok {
-		template, err := verify.NormalizeJSONOrYAMLString(v)
-		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "template body contains an invalid JSON or YAML: %s", err)
-		}
-		input.TemplateBody = aws.String(template)
-	}
-	if v, ok := d.GetOk("template_url"); ok {
-		input.TemplateURL = aws.String(v.(string))
-	}
 	if v, ok := d.GetOk("capabilities"); ok {
 		input.Capabilities = flex.ExpandStringSet(v.(*schema.Set))
 	}
 	if v, ok := d.GetOk("disable_rollback"); ok {
 		input.DisableRollback = aws.Bool(v.(bool))
+	}
+	if v, ok := d.GetOk("iam_role_arn"); ok {
+		input.RoleARN = aws.String(v.(string))
 	}
 	if v, ok := d.GetOk("notification_arns"); ok {
 		input.NotificationARNs = flex.ExpandStringSet(v.(*schema.Set))
@@ -184,27 +177,23 @@ func resourceStackCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	if v, ok := d.GetOk("policy_url"); ok {
 		input.StackPolicyURL = aws.String(v.(string))
 	}
+	if v, ok := d.GetOk("template_body"); ok {
+		template, err := verify.NormalizeJSONOrYAMLString(v)
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "template body contains an invalid JSON or YAML: %s", err)
+		}
+		input.TemplateBody = aws.String(template)
+	}
+	if v, ok := d.GetOk("template_url"); ok {
+		input.TemplateURL = aws.String(v.(string))
+	}
 	if v, ok := d.GetOk("timeout_in_minutes"); ok {
-		m := int64(v.(int))
-		input.TimeoutInMinutes = aws.Int64(m)
-	}
-	if v, ok := d.GetOk("iam_role_arn"); ok {
-		input.RoleARN = aws.String(v.(string))
+		input.TimeoutInMinutes = aws.Int64(int64(v.(int)))
 	}
 
-	log.Printf("[DEBUG] Creating CloudFormation Stack: %s", input)
-	outputRaw, err := tfresource.RetryWhen(ctx, propagationTimeout,
-		func() (interface{}, error) {
-			return conn.CreateStackWithContext(ctx, input)
-		},
-		func(err error) (bool, error) {
-			if tfawserr.ErrMessageContains(err, "ValidationError", "is invalid or cannot be assumed") {
-				return true, err
-			}
-
-			return false, err
-		},
-	)
+	outputRaw, err := tfresource.RetryWhenAWSErrMessageContains(ctx, propagationTimeout, func() (interface{}, error) {
+		return conn.CreateStackWithContext(ctx, input)
+	}, errCodeValidationError, "is invalid or cannot be assumed")
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating CloudFormation Stack (%s): %s", name, err)
@@ -323,80 +312,82 @@ func resourceStackUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CloudFormationConn(ctx)
 
-	requestToken := id.UniqueId()
-	input := &cloudformation.UpdateStackInput{
-		ClientRequestToken: aws.String(requestToken),
-		StackName:          aws.String(d.Id()),
-		Tags:               []*cloudformation.Tag{},
-	}
-
-	// Either TemplateBody, TemplateURL or UsePreviousTemplate are required
-	if v, ok := d.GetOk("template_url"); ok {
-		input.TemplateURL = aws.String(v.(string))
-	}
-	if v, ok := d.GetOk("template_body"); ok && input.TemplateURL == nil {
-		template, err := verify.NormalizeJSONOrYAMLString(v)
-		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "template body contains an invalid JSON or YAML: %s", err)
+	if d.HasChangesExcept("tags", "tags_all") {
+		requestToken := id.UniqueId()
+		input := &cloudformation.UpdateStackInput{
+			ClientRequestToken: aws.String(requestToken),
+			StackName:          aws.String(d.Id()),
+			Tags:               []*cloudformation.Tag{},
 		}
-		input.TemplateBody = aws.String(template)
-	}
 
-	// Capabilities must be present whether they are changed or not
-	if v, ok := d.GetOk("capabilities"); ok {
-		input.Capabilities = flex.ExpandStringSet(v.(*schema.Set))
-	}
-
-	if d.HasChange("notification_arns") {
-		input.NotificationARNs = flex.ExpandStringSet(d.Get("notification_arns").(*schema.Set))
-	}
-
-	// Parameters must be present whether they are changed or not
-	if v, ok := d.GetOk("parameters"); ok {
-		input.Parameters = expandParameters(v.(map[string]interface{}))
-	}
-
-	if tags := getTagsIn(ctx); len(tags) > 0 {
-		input.Tags = tags
-	}
-
-	if d.HasChange("policy_body") {
-		policy, err := structure.NormalizeJsonString(d.Get("policy_body"))
-		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "policy body contains an invalid JSON: %s", err)
+		// Either TemplateBody, TemplateURL or UsePreviousTemplate are required
+		if v, ok := d.GetOk("template_url"); ok {
+			input.TemplateURL = aws.String(v.(string))
 		}
-		input.StackPolicyBody = aws.String(policy)
-	}
-	if d.HasChange("policy_url") {
-		input.StackPolicyURL = aws.String(d.Get("policy_url").(string))
-	}
-
-	if d.HasChange("iam_role_arn") {
-		input.RoleARN = aws.String(d.Get("iam_role_arn").(string))
-	}
-
-	log.Printf("[DEBUG] Updating CloudFormation Stack: %s", input)
-	_, err := tfresource.RetryWhen(ctx, propagationTimeout,
-		func() (interface{}, error) {
-			return conn.UpdateStackWithContext(ctx, input)
-		},
-		func(err error) (bool, error) {
-			if tfawserr.ErrMessageContains(err, "ValidationError", "is invalid or cannot be assumed") {
-				return true, err
+		if v, ok := d.GetOk("template_body"); ok && input.TemplateURL == nil {
+			template, err := verify.NormalizeJSONOrYAMLString(v)
+			if err != nil {
+				return sdkdiag.AppendErrorf(diags, "template body contains an invalid JSON or YAML: %s", err)
 			}
+			input.TemplateBody = aws.String(template)
+		}
 
-			return false, err
-		},
-	)
+		// Capabilities must be present whether they are changed or not
+		if v, ok := d.GetOk("capabilities"); ok {
+			input.Capabilities = flex.ExpandStringSet(v.(*schema.Set))
+		}
 
-	if err != nil && !tfawserr.ErrMessageContains(err, "ValidationError", "No updates are to be performed") {
-		return sdkdiag.AppendErrorf(diags, "updating CloudFormation Stack (%s): %s", d.Id(), err)
-	}
+		if d.HasChange("notification_arns") {
+			input.NotificationARNs = flex.ExpandStringSet(d.Get("notification_arns").(*schema.Set))
+		}
 
-	_, err = WaitStackUpdated(ctx, conn, d.Id(), requestToken, d.Timeout(schema.TimeoutUpdate))
+		// Parameters must be present whether they are changed or not
+		if v, ok := d.GetOk("parameters"); ok {
+			input.Parameters = expandParameters(v.(map[string]interface{}))
+		}
 
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "waiting for CloudFormation Stack (%s) update: %s", d.Id(), err)
+		if tags := getTagsIn(ctx); len(tags) > 0 {
+			input.Tags = tags
+		}
+
+		if d.HasChange("policy_body") {
+			policy, err := structure.NormalizeJsonString(d.Get("policy_body"))
+			if err != nil {
+				return sdkdiag.AppendErrorf(diags, "policy body contains an invalid JSON: %s", err)
+			}
+			input.StackPolicyBody = aws.String(policy)
+		}
+		if d.HasChange("policy_url") {
+			input.StackPolicyURL = aws.String(d.Get("policy_url").(string))
+		}
+
+		if d.HasChange("iam_role_arn") {
+			input.RoleARN = aws.String(d.Get("iam_role_arn").(string))
+		}
+
+		log.Printf("[DEBUG] Updating CloudFormation Stack: %s", input)
+		_, err := tfresource.RetryWhen(ctx, propagationTimeout,
+			func() (interface{}, error) {
+				return conn.UpdateStackWithContext(ctx, input)
+			},
+			func(err error) (bool, error) {
+				if tfawserr.ErrMessageContains(err, "ValidationError", "is invalid or cannot be assumed") {
+					return true, err
+				}
+
+				return false, err
+			},
+		)
+
+		if err != nil && !tfawserr.ErrMessageContains(err, "ValidationError", "No updates are to be performed") {
+			return sdkdiag.AppendErrorf(diags, "updating CloudFormation Stack (%s): %s", d.Id(), err)
+		}
+
+		_, err = WaitStackUpdated(ctx, conn, d.Id(), requestToken, d.Timeout(schema.TimeoutUpdate))
+
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "waiting for CloudFormation Stack (%s) update: %s", d.Id(), err)
+		}
 	}
 
 	return append(diags, resourceStackRead(ctx, d, meta)...)
