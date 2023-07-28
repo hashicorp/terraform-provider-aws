@@ -61,10 +61,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: 'Checkout Repo'
-        uses: actions/checkout@c85c95e3d7251135ab7dc9ce3241c5835cc595a9
+        uses: actions/checkout@c85c95e3d7251135ab7dc9ce3241c5835cc595a9 # v3.5.3
 
       - name: 'Apply Labels'
-        uses: actions/labeler@ac9175f8a1f3625fd0d4fb234536d26811351594 # v4.3.0
+        uses: actions/labeler@0967ca812e7fdc8f5f71402a1b486d5bd061fe20 # v4.2.0
         with:
           configuration-path: .github/labeler-pr-triage.yml
           repo-token: ${{ secrets.GITHUB_TOKEN }}
@@ -148,7 +148,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: 'Checkout'
-        uses: actions/checkout@c85c95e3d7251135ab7dc9ce3241c5835cc595a9
+        uses: actions/checkout@c85c95e3d7251135ab7dc9ce3241c5835cc595a9 # v3.5.3
 
       - name: 'Get Current Milestone Name'
         id: get-current-milestone
@@ -168,7 +168,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: 'Add community note to new Pull Requests'
-        uses: peter-evans/create-or-update-comment@c6c9a1a66007646a28c153e2a8580a5bad27bcfa
+        uses: peter-evans/create-or-update-comment@c6c9a1a66007646a28c153e2a8580a5bad27bcfa # v3.0.2
         with:
           issue-number: ${{ github.event.pull_request.number }}
           body: |
@@ -192,7 +192,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: 'Add comment to add helpful context for new contributors'
-        uses: actions/first-interaction@v1.1.1
+        uses: actions/first-interaction@1d8459ca65b335265f1285568221e229d45a995e # v1.1.1
         with:
           repo-token: ${{ secrets.GITHUB_TOKEN }}
           pr-message: |-
@@ -211,7 +211,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: 'Comment if maintainers cannot edit'
-        uses: peter-evans/create-or-update-comment@c6c9a1a66007646a28c153e2a8580a5bad27bcfa
+        uses: peter-evans/create-or-update-comment@c6c9a1a66007646a28c153e2a8580a5bad27bcfa # v3.0.2
         with:
           issue-number: ${{ github.event.pull_request.number }}
           body: |
