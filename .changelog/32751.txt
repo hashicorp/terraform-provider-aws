@@ -1,0 +1,11 @@
+```release-note:enhancement
+data-source/aws_cloudwatch_composite_alarm: Add `actions_suppressor_alarm` attribute
+```
+
+```release-note:enhancement
+data-source/aws_cloudwatch_composite_alarm: Add `actions_suppressor_extension_period` attribute
+```
+
+```release-note:enhancement
+data-source/aws_cloudwatch_composite_alarm: Add `actions_suppressor_wait_period` attribute
+```
