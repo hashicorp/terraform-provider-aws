@@ -1,3 +1,3 @@
 ```release-note:bug
-resource/aws_emr_studio_session_mapping: Fixed a bug when creating resource via `identity_name`.
+resource/aws_emr_studio_session_mapping: Fix `InvalidRequestException: IdentityId is invalid` errors reading resources created with `identity_name`
 ```
