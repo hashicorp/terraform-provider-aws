@@ -10,7 +10,7 @@ description: |-
 
 Terraform resource for managing an AWS OpenSearch Serverless Collection.
 
-~> **NOTE:** An `aws_opensearchserverless_collection` cannot be created without having an applicable [encryption security policy](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/opensearchserverless_security_policy). Use the [`depends_on`](https://developer.hashicorp.com/terraform/language/meta-arguments/depends_on) to define this dependency.
+~> **NOTE:** An `aws_opensearchserverless_collection` cannot be created without having an applicable [encryption security policy](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/opensearchserverless_security_policy). Use the [`depends_on`](https://developer.hashicorp.com/terraform/language/meta-arguments/depends_on) meta-argument to define this dependency.
 
 ~> **NOTE:** An `aws_opensearchserverless_collection` is not accessible without configuring an applicable [network security policy](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/opensearchserverless_security_policy). Data cannot be accessed without configuring an applicable [data access policy](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/opensearchserverless_access_policy).
 
