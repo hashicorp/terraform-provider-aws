@@ -5,7 +5,10 @@ package cloudformation
 
 import (
 	"context"
+	"fmt"
 	"log"
+	"strings"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cloudformation"
@@ -40,9 +43,9 @@ func ResourceStack() *schema.Resource {
 		},
 
 		Timeouts: &schema.ResourceTimeout{
-			Create: schema.DefaultTimeout(StackCreatedDefaultTimeout),
-			Update: schema.DefaultTimeout(StackUpdatedDefaultTimeout),
-			Delete: schema.DefaultTimeout(StackDeletedDefaultTimeout),
+			Create: schema.DefaultTimeout(30 * time.Minute),
+			Update: schema.DefaultTimeout(30 * time.Minute),
+			Delete: schema.DefaultTimeout(30 * time.Minute),
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -211,7 +214,7 @@ func resourceStackRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CloudFormationConn(ctx)
 
-	stack, err := FindStackByID(ctx, conn, d.Id())
+	stack, err := FindStackByName(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] CloudFormation Stack %s not found, removing from state", d.Id())
@@ -376,9 +379,9 @@ func resourceStackCustomizeDiff(_ context.Context, diff *schema.ResourceDiff, me
 	return nil
 }
 
-func FindStackByID(ctx context.Context, conn *cloudformation.CloudFormation, id string) (*cloudformation.Stack, error) {
+func FindStackByName(ctx context.Context, conn *cloudformation.CloudFormation, name string) (*cloudformation.Stack, error) {
 	input := &cloudformation.DescribeStacksInput{
-		StackName: aws.String(id),
+		StackName: aws.String(name),
 	}
 
 	output, err := findStack(ctx, conn, input)
@@ -436,4 +439,253 @@ func findStacks(ctx context.Context, conn *cloudformation.CloudFormation, input 
 	}
 
 	return output, nil
+}
+
+func statusStack(ctx context.Context, conn *cloudformation.CloudFormation, name string) retry.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		// Don't call FindStackByName as it maps useful status codes to NotFoundError.
+		output, err := findStack(ctx, conn, &cloudformation.DescribeStacksInput{
+			StackName: aws.String(name),
+		})
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, aws.StringValue(output.StackStatus), nil
+	}
+}
+
+func WaitStackCreated(ctx context.Context, conn *cloudformation.CloudFormation, name, requestToken string, timeout time.Duration) (*cloudformation.Stack, error) {
+	const (
+		minTimeout = 1 * time.Second
+	)
+	stateConf := retry.StateChangeConf{
+		Pending: []string{
+			cloudformation.StackStatusCreateInProgress,
+			cloudformation.StackStatusDeleteInProgress,
+			cloudformation.StackStatusRollbackInProgress,
+		},
+		Target: []string{
+			cloudformation.StackStatusCreateComplete,
+			cloudformation.StackStatusCreateFailed,
+			cloudformation.StackStatusDeleteComplete,
+			cloudformation.StackStatusDeleteFailed,
+			cloudformation.StackStatusRollbackComplete,
+			cloudformation.StackStatusRollbackFailed,
+		},
+		Timeout:    timeout,
+		MinTimeout: minTimeout,
+		Delay:      10 * time.Second,
+		Refresh:    statusStack(ctx, conn, name),
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	// if output, ok := outputRaw.(*cloudformation.Stack); ok {
+	// 	return output, err
+	// }
+
+	// 	return nil, err
+
+	stack, ok := outputRaw.(*cloudformation.Stack)
+	if !ok {
+		return nil, err
+	}
+
+	lastStatus := aws.StringValue(stack.StackStatus)
+	switch lastStatus {
+	// This will be the case if either disable_rollback is false or on_failure is ROLLBACK
+	case cloudformation.StackStatusRollbackComplete, cloudformation.StackStatusRollbackFailed:
+		reasons, err := getRollbackReasons(ctx, conn, name, requestToken)
+		if err != nil {
+			return stack, fmt.Errorf("failed to create CloudFormation stack, rollback requested (%s). Got an error reading failure information: %w", lastStatus, err)
+		}
+		return stack, fmt.Errorf("failed to create CloudFormation stack, rollback requested (%s): %q", lastStatus, reasons)
+
+	// This will be the case if on_failure is DELETE
+	case cloudformation.StackStatusDeleteComplete, cloudformation.StackStatusDeleteFailed:
+		reasons, err := getDeletionReasons(ctx, conn, name, requestToken)
+		if err != nil {
+			return stack, fmt.Errorf("failed to create CloudFormation stack, delete requested (%s). Got an error reading failure information: %w", lastStatus, err)
+		}
+
+		return stack, fmt.Errorf("failed to create CloudFormation stack, delete requested (%s): %q", lastStatus, reasons)
+
+	// This will be the case if either disable_rollback is true or on_failure is DO_NOTHING
+	case cloudformation.StackStatusCreateFailed:
+		reasons, err := getFailures(ctx, conn, name, requestToken)
+		if err != nil {
+			return stack, fmt.Errorf("failed to create CloudFormation stack (%s). Got an error reading failure information: %w", lastStatus, err)
+		}
+		return stack, fmt.Errorf("failed to create CloudFormation stack (%s): %q", lastStatus, reasons)
+	}
+
+	return stack, nil
+}
+
+func WaitStackUpdated(ctx context.Context, conn *cloudformation.CloudFormation, name, requestToken string, timeout time.Duration) (*cloudformation.Stack, error) {
+	const (
+		minTimeout = 5 * time.Second
+	)
+	stateConf := retry.StateChangeConf{
+		Pending: []string{
+			cloudformation.StackStatusUpdateCompleteCleanupInProgress,
+			cloudformation.StackStatusUpdateInProgress,
+			cloudformation.StackStatusUpdateRollbackInProgress,
+			cloudformation.StackStatusUpdateRollbackCompleteCleanupInProgress,
+		},
+		Target: []string{
+			cloudformation.StackStatusCreateComplete,
+			cloudformation.StackStatusUpdateComplete,
+			cloudformation.StackStatusUpdateRollbackComplete,
+			cloudformation.StackStatusUpdateRollbackFailed,
+		},
+		Timeout:    timeout,
+		MinTimeout: minTimeout,
+		Delay:      10 * time.Second,
+		Refresh:    statusStack(ctx, conn, name),
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	stack, ok := outputRaw.(*cloudformation.Stack)
+	if !ok {
+		return nil, err
+	}
+
+	lastStatus := aws.StringValue(stack.StackStatus)
+	if lastStatus == cloudformation.StackStatusUpdateRollbackComplete || lastStatus == cloudformation.StackStatusUpdateRollbackFailed {
+		reasons, err := getRollbackReasons(ctx, conn, name, requestToken)
+		if err != nil {
+			return stack, fmt.Errorf("failed to update CloudFormation stack (%s). Got an error reading failure information: %w", lastStatus, err)
+		}
+
+		return stack, fmt.Errorf("failed to update CloudFormation stack (%s): %q", lastStatus, reasons)
+	}
+
+	return stack, nil
+}
+
+func WaitStackDeleted(ctx context.Context, conn *cloudformation.CloudFormation, name, requestToken string, timeout time.Duration) (*cloudformation.Stack, error) {
+	const (
+		minTimeout = 5 * time.Second
+	)
+	stateConf := retry.StateChangeConf{
+		Pending: []string{
+			cloudformation.StackStatusDeleteInProgress,
+			cloudformation.StackStatusRollbackInProgress,
+		},
+		Target: []string{
+			cloudformation.StackStatusDeleteComplete,
+			cloudformation.StackStatusDeleteFailed,
+		},
+		Timeout:    timeout,
+		MinTimeout: minTimeout,
+		Delay:      10 * time.Second,
+		Refresh:    statusStack(ctx, conn, name),
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	stack, ok := outputRaw.(*cloudformation.Stack)
+	if !ok {
+		return nil, err
+	}
+
+	lastStatus := aws.StringValue(stack.StackStatus)
+	if lastStatus == cloudformation.StackStatusDeleteFailed {
+		reasons, err := getFailures(ctx, conn, name, requestToken)
+		if err != nil {
+			return stack, fmt.Errorf("failed to delete CloudFormation stack (%s). Got an error reading failure information: %w", lastStatus, err)
+		}
+
+		return stack, fmt.Errorf("failed to delete CloudFormation stack (%s): %q", lastStatus, reasons)
+	}
+
+	return stack, nil
+}
+
+func listStackEventsForOperation(ctx context.Context, conn *cloudformation.CloudFormation, name, requestToken string, fn func(*cloudformation.StackEvent)) error {
+	tokenSeen := false
+	err := conn.DescribeStackEventsPagesWithContext(ctx, &cloudformation.DescribeStackEventsInput{
+		StackName: aws.String(name),
+	}, func(page *cloudformation.DescribeStackEventsOutput, lastPage bool) bool {
+		for _, e := range page.StackEvents {
+			currentToken := aws.StringValue(e.ClientRequestToken)
+			if !tokenSeen {
+				if currentToken != requestToken {
+					continue
+				}
+				tokenSeen = true
+			} else {
+				if currentToken != requestToken {
+					return false
+				}
+			}
+
+			fn(e)
+		}
+		return !lastPage
+	})
+	return err
+}
+
+func getDeletionReasons(ctx context.Context, conn *cloudformation.CloudFormation, stackID, requestToken string) ([]string, error) {
+	var failures []string
+
+	err := listStackEventsForOperation(ctx, conn, stackID, requestToken, func(e *cloudformation.StackEvent) {
+		if isFailedEvent(e) || isStackDeletionEvent(e) {
+			failures = append(failures, aws.StringValue(e.ResourceStatusReason))
+		}
+	})
+	return failures, err
+}
+
+func getRollbackReasons(ctx context.Context, conn *cloudformation.CloudFormation, stackID, requestToken string) ([]string, error) {
+	var failures []string
+	err := listStackEventsForOperation(ctx, conn, stackID, requestToken, func(e *cloudformation.StackEvent) {
+		if isFailedEvent(e) || isRollbackEvent(e) {
+			failures = append(failures, aws.StringValue(e.ResourceStatusReason))
+		}
+	})
+	return failures, err
+}
+
+func getFailures(ctx context.Context, conn *cloudformation.CloudFormation, stackID, requestToken string) ([]string, error) {
+	var failures []string
+
+	err := listStackEventsForOperation(ctx, conn, stackID, requestToken, func(e *cloudformation.StackEvent) {
+		if isFailedEvent(e) {
+			failures = append(failures, aws.StringValue(e.ResourceStatusReason))
+		}
+	})
+	return failures, err
+}
+
+func isFailedEvent(event *cloudformation.StackEvent) bool {
+	return strings.HasSuffix(aws.StringValue(event.ResourceStatus), "_FAILED") && event.ResourceStatusReason != nil
+}
+
+func isRollbackEvent(event *cloudformation.StackEvent) bool {
+	return strings.HasPrefix(aws.StringValue(event.ResourceStatus), "ROLLBACK_") && event.ResourceStatusReason != nil
+}
+
+func isStackDeletionEvent(event *cloudformation.StackEvent) bool {
+	return aws.StringValue(event.ResourceStatus) == cloudformation.ResourceStatusDeleteInProgress &&
+		aws.StringValue(event.ResourceType) == "AWS::CloudFormation::Stack" &&
+		event.ResourceStatusReason != nil
 }
