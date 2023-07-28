@@ -1030,7 +1030,7 @@ func TestAccEMRCluster_Bootstrap_ordering(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClusterConfig_bootstrap(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &cluster),
 					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.0.name", "runif"),
@@ -1041,9 +1041,9 @@ func TestAccEMRCluster_Bootstrap_ordering(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.1.name", "test"),
 					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.1.path", fmt.Sprintf("s3://%s/testscript.sh", rName)),
 					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.1.args.#", "11"),
-					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.1.args.0", ""),
+					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.1.args.0", "0"),
 					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.1.args.1", "1"),
-					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.1.args.2", "2"),
+					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.1.args.2", "\"\""),
 					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.1.args.3", "3"),
 					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.1.args.4", "4"),
 					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.1.args.5", "5"),
@@ -1051,7 +1051,7 @@ func TestAccEMRCluster_Bootstrap_ordering(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.1.args.7", "7"),
 					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.1.args.8", "8"),
 					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.1.args.9", "9"),
-					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.1.args.9", "10"),
+					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.1.args.10", "10"),
 				),
 			},
 			{
@@ -1066,7 +1066,7 @@ func TestAccEMRCluster_Bootstrap_ordering(t *testing.T) {
 			},
 			{
 				Config: testAccClusterConfig_bootstrapAdd(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &cluster),
 					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.#", "3"),
 					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.0.name", "runif"),
@@ -1077,9 +1077,9 @@ func TestAccEMRCluster_Bootstrap_ordering(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.1.name", "test"),
 					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.1.path", fmt.Sprintf("s3://%s/testscript.sh", rName)),
 					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.1.args.#", "11"),
-					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.1.args.0", ""),
+					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.1.args.0", "0"),
 					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.1.args.1", "1"),
-					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.1.args.2", "2"),
+					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.1.args.2", "\"\""),
 					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.1.args.3", "3"),
 					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.1.args.4", "4"),
 					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.1.args.5", "5"),
@@ -1087,7 +1087,7 @@ func TestAccEMRCluster_Bootstrap_ordering(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.1.args.7", "7"),
 					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.1.args.8", "8"),
 					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.1.args.9", "9"),
-					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.1.args.9", "10"),
+					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.1.args.10", "10"),
 					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.2.name", "runif-2"),
 					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.2.path", "s3://elasticmapreduce/bootstrap-actions/run-if"),
 					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.2.args.#", "2"),
@@ -1107,7 +1107,7 @@ func TestAccEMRCluster_Bootstrap_ordering(t *testing.T) {
 			},
 			{
 				Config: testAccClusterConfig_bootstrapReorder(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &cluster),
 					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.#", "3"),
 					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.0.name", "runif"),
@@ -1118,9 +1118,9 @@ func TestAccEMRCluster_Bootstrap_ordering(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.2.name", "test"),
 					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.2.path", fmt.Sprintf("s3://%s/testscript.sh", rName)),
 					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.2.args.#", "11"),
-					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.2.args.0", ""),
+					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.2.args.0", "0"),
 					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.2.args.1", "1"),
-					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.2.args.2", "2"),
+					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.2.args.2", "\"\""),
 					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.2.args.3", "3"),
 					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.2.args.4", "4"),
 					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.2.args.5", "5"),
@@ -1128,7 +1128,7 @@ func TestAccEMRCluster_Bootstrap_ordering(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.2.args.7", "7"),
 					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.2.args.8", "8"),
 					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.2.args.9", "9"),
-					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.2.args.9", "10"),
+					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.2.args.10", "10"),
 					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.1.name", "runif-2"),
 					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.1.path", "s3://elasticmapreduce/bootstrap-actions/run-if"),
 					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.1.args.#", "2"),
@@ -3113,9 +3113,9 @@ resource "aws_emr_cluster" "test" {
     name = "test"
 
     args = [
-      "",
+      "0",
       "1",
-      "2",
+      "\"\"",
       "3",
       "4",
       "5",
@@ -3179,9 +3179,9 @@ resource "aws_emr_cluster" "test" {
     name = "test"
 
     args = [
-      "",
+      "0",
       "1",
-      "2",
+      "\"\"",
       "3",
       "4",
       "5",
@@ -3257,9 +3257,9 @@ resource "aws_emr_cluster" "test" {
     name = "test"
 
     args = [
-      "",
+      "0",
       "1",
-      "2",
+      "\"\"",
       "3",
       "4",
       "5",
