@@ -9,7 +9,6 @@ import (
 	"regexp"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cloudformation"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -17,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfcloudformation "github.com/hashicorp/terraform-provider-aws/internal/service/cloudformation"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func TestAccCloudFormationStack_basic(t *testing.T) {
@@ -499,7 +499,7 @@ func TestAccCloudFormationStack_outputsUpdated(t *testing.T) {
 	})
 }
 
-func testAccCheckStackExists(ctx context.Context, n string, stack *cloudformation.Stack) resource.TestCheckFunc {
+func testAccCheckStackExists(ctx context.Context, n string, v *cloudformation.Stack) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -507,18 +507,14 @@ func testAccCheckStackExists(ctx context.Context, n string, stack *cloudformatio
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudFormationConn(ctx)
-		params := &cloudformation.DescribeStacksInput{
-			StackName: aws.String(rs.Primary.ID),
-		}
-		resp, err := conn.DescribeStacksWithContext(ctx, params)
+
+		output, err := tfcloudformation.FindStackByName(ctx, conn, rs.Primary.ID)
+
 		if err != nil {
 			return err
 		}
-		if len(resp.Stacks) == 0 || resp.Stacks[0] == nil {
-			return fmt.Errorf("CloudFormation stack not found")
-		}
 
-		*stack = *resp.Stacks[0]
+		*v = *output
 
 		return nil
 	}
@@ -533,21 +529,17 @@ func testAccCheckStackDestroy(ctx context.Context) resource.TestCheckFunc {
 				continue
 			}
 
-			params := cloudformation.DescribeStacksInput{
-				StackName: aws.String(rs.Primary.ID),
-			}
+			_, err := tfcloudformation.FindStackByName(ctx, conn, rs.Primary.ID)
 
-			resp, err := conn.DescribeStacksWithContext(ctx, &params)
+			if tfresource.NotFound(err) {
+				continue
+			}
 
 			if err != nil {
 				return err
 			}
 
-			for _, s := range resp.Stacks {
-				if aws.StringValue(s.StackId) == rs.Primary.ID && aws.StringValue(s.StackStatus) != cloudformation.StackStatusDeleteComplete {
-					return fmt.Errorf("CloudFormation stack still exists: %q", rs.Primary.ID)
-				}
-			}
+			return fmt.Errorf("CloudFormation Stack %s still exists", rs.Primary.ID)
 		}
 
 		return nil
