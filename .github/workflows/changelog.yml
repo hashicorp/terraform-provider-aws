@@ -21,7 +21,7 @@ jobs:
     outputs:
       changed: ${{ steps.filter.outputs.changed }}
     steps:
-      - uses: dorny/paths-filter@4512585405083f25c027a35db413c2b3b9006d50
+      - uses: dorny/paths-filter@4512585405083f25c027a35db413c2b3b9006d50 # v2.11.1
         if: needs.community_check.outputs.maintainer == 'false'
         id: filter
         with:
@@ -37,7 +37,7 @@ jobs:
     steps:
       - name: Find Existing PR Comment
         id: prc
-        uses: peter-evans/find-comment@a54c31d7fa095754bfef525c0c8e5e5674c4b4b1
+        uses: peter-evans/find-comment@a54c31d7fa095754bfef525c0c8e5e5674c4b4b1 # v2.4.0
         with:
           issue-number: ${{ github.event.pull_request.number }}
           comment-author: "github-actions[bot]"
@@ -45,7 +45,7 @@ jobs:
       - run: echo ${{ steps.prc.outputs.comment-id }}
       - name: PR Comment
         if: steps.prc.outputs.comment-id == ''
-        uses: peter-evans/create-or-update-comment@c6c9a1a66007646a28c153e2a8580a5bad27bcfa
+        uses: peter-evans/create-or-update-comment@c6c9a1a66007646a28c153e2a8580a5bad27bcfa # v3.0.2
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
