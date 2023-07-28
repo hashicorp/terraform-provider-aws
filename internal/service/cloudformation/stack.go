@@ -5,7 +5,6 @@ package cloudformation
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"log"
 	"strings"
@@ -374,9 +373,9 @@ func resourceStackDelete(ctx context.Context, d *schema.ResourceData, meta inter
 }
 
 func resourceStackCustomizeDiff(_ context.Context, diff *schema.ResourceDiff, meta interface{}) error {
-	if diff.HasChanges("parameters", "template_body", "template_url") {
-		return diff.SetNewComputed("outputs")
-	}
+	// if diff.HasChanges("parameters", "template_body", "template_url") {
+	// 	return diff.SetNewComputed("outputs")
+	// }
 
 	return nil
 }
@@ -487,38 +486,42 @@ func WaitStackCreated(ctx context.Context, conn *cloudformation.CloudFormation, 
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
-
-	if output, ok := outputRaw.(*cloudformation.Stack); ok {
-		switch aws.StringValue(output.StackStatus) {
-		// This will be the case if either disable_rollback is false or on_failure is ROLLBACK
-		case cloudformation.StackStatusRollbackComplete, cloudformation.StackStatusRollbackFailed:
-			if reasons := getRollbackReasons(ctx, conn, name, requestToken); len(reasons) > 0 {
-				tfresource.SetLastError(err, fmt.Errorf("%q", reasons))
-			} else {
-				tfresource.SetLastError(err, errors.New(aws.StringValue(output.StackStatusReason)))
-			}
-
-		// This will be the case if on_failure is DELETE
-		case cloudformation.StackStatusDeleteComplete, cloudformation.StackStatusDeleteFailed:
-			if reasons := getDeletionReasons(ctx, conn, name, requestToken); len(reasons) > 0 {
-				tfresource.SetLastError(err, fmt.Errorf("%q", reasons))
-			} else {
-				tfresource.SetLastError(err, errors.New(aws.StringValue(output.StackStatusReason)))
-			}
-
-		// This will be the case if either disable_rollback is true or on_failure is DO_NOTHING
-		case cloudformation.StackStatusCreateFailed:
-			if reasons := getFailureReasons(ctx, conn, name, requestToken); len(reasons) > 0 {
-				tfresource.SetLastError(err, fmt.Errorf("%q", reasons))
-			} else {
-				tfresource.SetLastError(err, errors.New(aws.StringValue(output.StackStatusReason)))
-			}
-		}
-
-		return output, err
+	if err != nil {
+		return nil, err
 	}
 
-	return nil, err
+	output, ok := outputRaw.(*cloudformation.Stack)
+	if !ok {
+		return nil, err
+	}
+
+	switch lastStatus := aws.StringValue(output.StackStatus); lastStatus {
+	// This will be the case if either disable_rollback is false or on_failure is ROLLBACK
+	case cloudformation.StackStatusRollbackComplete, cloudformation.StackStatusRollbackFailed:
+		if reasons := getRollbackReasons(ctx, conn, name, requestToken); len(reasons) > 0 {
+			return output, fmt.Errorf("failed to create CloudFormation stack, rollback requested (%s): %q", lastStatus, reasons)
+		} else {
+			return output, fmt.Errorf("failed to create CloudFormation stack (%s): %s", lastStatus, aws.StringValue(output.StackStatusReason))
+		}
+
+	// This will be the case if on_failure is DELETE
+	case cloudformation.StackStatusDeleteComplete, cloudformation.StackStatusDeleteFailed:
+		if reasons := getDeletionReasons(ctx, conn, name, requestToken); len(reasons) > 0 {
+			return output, fmt.Errorf("failed to create CloudFormation stack, delete requested (%s): %q", lastStatus, reasons)
+		} else {
+			return output, fmt.Errorf("failed to create CloudFormation stack (%s): %s", lastStatus, aws.StringValue(output.StackStatusReason))
+		}
+
+	// This will be the case if either disable_rollback is true or on_failure is DO_NOTHING
+	case cloudformation.StackStatusCreateFailed:
+		if reasons := getFailureReasons(ctx, conn, name, requestToken); len(reasons) > 0 {
+			return output, fmt.Errorf("failed to create CloudFormation stack (%s): %q", lastStatus, reasons)
+		} else {
+			return output, fmt.Errorf("failed to create CloudFormation stack (%s): %s", lastStatus, aws.StringValue(output.StackStatusReason))
+		}
+	}
+
+	return output, err
 }
 
 func WaitStackUpdated(ctx context.Context, conn *cloudformation.CloudFormation, name, requestToken string, timeout time.Duration) (*cloudformation.Stack, error) {
@@ -545,21 +548,25 @@ func WaitStackUpdated(ctx context.Context, conn *cloudformation.CloudFormation, 
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
-
-	if output, ok := outputRaw.(*cloudformation.Stack); ok {
-		switch aws.StringValue(output.StackStatus) {
-		case cloudformation.StackStatusUpdateRollbackComplete, cloudformation.StackStatusUpdateRollbackFailed:
-			if reasons := getRollbackReasons(ctx, conn, name, requestToken); len(reasons) > 0 {
-				tfresource.SetLastError(err, fmt.Errorf("%q", reasons))
-			} else {
-				tfresource.SetLastError(err, errors.New(aws.StringValue(output.StackStatusReason)))
-			}
-		}
-
-		return output, err
+	if err != nil {
+		return nil, err
 	}
 
-	return nil, err
+	output, ok := outputRaw.(*cloudformation.Stack)
+	if !ok {
+		return nil, err
+	}
+
+	switch lastStatus := aws.StringValue(output.StackStatus); lastStatus {
+	case cloudformation.StackStatusUpdateRollbackComplete, cloudformation.StackStatusUpdateRollbackFailed:
+		if reasons := getRollbackReasons(ctx, conn, name, requestToken); len(reasons) > 0 {
+			return output, fmt.Errorf("failed to update CloudFormation stack (%s): %q", lastStatus, reasons)
+		} else {
+			return output, fmt.Errorf("failed to update CloudFormation stack (%s): %s", lastStatus, aws.StringValue(output.StackStatusReason))
+		}
+	}
+
+	return output, err
 }
 
 func WaitStackDeleted(ctx context.Context, conn *cloudformation.CloudFormation, name, requestToken string, timeout time.Duration) (*cloudformation.Stack, error) {
@@ -582,21 +589,25 @@ func WaitStackDeleted(ctx context.Context, conn *cloudformation.CloudFormation, 
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
-
-	if output, ok := outputRaw.(*cloudformation.Stack); ok {
-		switch aws.StringValue(output.StackStatus) {
-		case cloudformation.StackStatusDeleteFailed:
-			if reasons := getFailureReasons(ctx, conn, name, requestToken); len(reasons) > 0 {
-				tfresource.SetLastError(err, fmt.Errorf("%q", reasons))
-			} else {
-				tfresource.SetLastError(err, errors.New(aws.StringValue(output.StackStatusReason)))
-			}
-		}
-
-		return output, err
+	if err != nil {
+		return nil, err
 	}
 
-	return nil, err
+	output, ok := outputRaw.(*cloudformation.Stack)
+	if !ok {
+		return nil, err
+	}
+
+	switch lastStatus := aws.StringValue(output.StackStatus); lastStatus {
+	case cloudformation.StackStatusDeleteFailed:
+		if reasons := getFailureReasons(ctx, conn, name, requestToken); len(reasons) > 0 {
+			return output, fmt.Errorf("failed to delete CloudFormation stack (%s): %q", lastStatus, reasons)
+		} else {
+			return output, fmt.Errorf("failed to delete CloudFormation stack (%s): %s", lastStatus, aws.StringValue(output.StackStatusReason))
+		}
+	}
+
+	return output, err
 }
 
 func findStackEventsForOperation(ctx context.Context, conn *cloudformation.CloudFormation, name, requestToken string, f slices.FilterFunc[*cloudformation.StackEvent]) ([]*cloudformation.StackEvent, error) {
