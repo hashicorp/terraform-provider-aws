@@ -253,3 +253,18 @@ func suppressXMLEquivalentConfig(k, old, new string, d *schema.ResourceData) boo
 
 	return os == ns
 }
+
+func suppressCuttlefishEquivalentConfig(k, old, new string, d *schema.ResourceData) bool {
+	os, err := CanonicalCuttlefish(old)
+	if err != nil {
+		log.Printf("[ERR] Error getting canonicalCuttlefish from state (%s): %s", k, err)
+		return false
+	}
+	ns, err := CanonicalCuttlefish(new)
+	if err != nil {
+		log.Printf("[ERR] Error getting canonicalCuttlefish from config (%s): %s", k, err)
+		return false
+	}
+
+	return os == ns
+}
