@@ -23,18 +23,42 @@ data "aws_db_instances" "example" {
 }
 ```
 
+### Using tags
+
+```terraform
+data "aws_db_instances" "example" {
+  tag {
+    key   = "Company"
+    value = "Hashicorp"
+  }
+  
+  tag {
+    key   = "Provider"
+    value = "AWS"
+  }
+}
+```
+
 ## Argument Reference
 
 The following arguments are optional:
 
-* `filter` - (Optional) Configuration block(s) for filtering. Detailed below.
+* `filter` - (Optional) Configuration block(s) used to filter instances with AWS supported attributes, such as `engine`, `db-cluster-id` or `db-instance-id` for example. Detailed below.
+* `tag` - (Optional) Configuration block(s) used to filter instances with tags. Detailed below.
 
 ### filter Configuration block
 
 The `filter` configuration block supports the following arguments:
 
-* `name` - (Required) Name of the filter field. Valid values can be found in the [RDS DescribeDBClusters API Reference](https://docs.aws.amazon.com/AmazonRDS/latest/APIReference/API_DescribeDBClusters.html).
+* `name` - (Required) Name of the filter field. Valid values can be found in the [RDS DescribeDBClusters API Reference](https://docs.aws.amazon.com/AmazonRDS/latest/APIReference/API_DescribeDBClusters.html) or [RDS DescribeDBInstances API Reference](https://docs.aws.amazon.com/AmazonRDS/latest/APIReference/API_DescribeDBInstances.html).
 * `values` - (Required) Set of values that are accepted for the given filter field. Results will be selected if any given value matches.
+
+### tag Configuration block
+
+The `tag` configuration block supports the following arguments:
+
+* `key` - (Required) Key for the tag.
+* `value` - (Required) Value for the tag.
 
 ## Attribute Reference
 
