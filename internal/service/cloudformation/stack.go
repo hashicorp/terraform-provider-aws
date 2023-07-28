@@ -12,6 +12,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/cloudformation"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
@@ -129,7 +130,10 @@ func ResourceStack() *schema.Resource {
 			},
 		},
 
-		CustomizeDiff: verify.SetTagsDiff,
+		CustomizeDiff: customdiff.Sequence(
+			resourceStackCustomizeDiff,
+			verify.SetTagsDiff,
+		),
 	}
 }
 
@@ -421,4 +425,12 @@ func resourceStackDelete(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 
 	return diags
+}
+
+func resourceStackCustomizeDiff(_ context.Context, diff *schema.ResourceDiff, meta interface{}) error {
+	if diff.HasChanges("parameters", "template_body", "template_url") {
+		return diff.SetNewComputed("outputs")
+	}
+
+	return nil
 }
