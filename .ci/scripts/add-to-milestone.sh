@@ -77,4 +77,6 @@ ISSUES_URLS=($(jq \
 gh pr edit "$PULL_URL" --milestone "$MILESTONE_NAME"
 
 # Add issues to milestone
-gh issue edit "${ISSUES_URLS[@]}" --milestone "$MILESTONE_NAME"
+if [[ "${#ISSUES_URLS[@]}" -ne 0 ]]; then
+  gh issue edit "${ISSUES_URLS[@]}" --milestone "$MILESTONE_NAME"
+fi
