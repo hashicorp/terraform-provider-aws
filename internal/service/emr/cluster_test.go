@@ -1040,7 +1040,18 @@ func TestAccEMRCluster_Bootstrap_ordering(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.0.args.1", "echo running on master node"),
 					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.1.name", "test"),
 					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.1.path", fmt.Sprintf("s3://%s/testscript.sh", rName)),
-					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.1.args.#", "10"),
+					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.1.args.#", "11"),
+					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.1.args.0", ""),
+					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.1.args.1", "1"),
+					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.1.args.2", "2"),
+					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.1.args.3", "3"),
+					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.1.args.4", "4"),
+					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.1.args.5", "5"),
+					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.1.args.6", "6"),
+					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.1.args.7", "7"),
+					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.1.args.8", "8"),
+					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.1.args.9", "9"),
+					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.1.args.9", "10"),
 				),
 			},
 			{
@@ -1065,7 +1076,18 @@ func TestAccEMRCluster_Bootstrap_ordering(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.0.args.1", "echo running on master node"),
 					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.1.name", "test"),
 					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.1.path", fmt.Sprintf("s3://%s/testscript.sh", rName)),
-					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.1.args.#", "10"),
+					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.1.args.#", "11"),
+					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.1.args.0", ""),
+					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.1.args.1", "1"),
+					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.1.args.2", "2"),
+					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.1.args.3", "3"),
+					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.1.args.4", "4"),
+					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.1.args.5", "5"),
+					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.1.args.6", "6"),
+					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.1.args.7", "7"),
+					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.1.args.8", "8"),
+					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.1.args.9", "9"),
+					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.1.args.9", "10"),
 					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.2.name", "runif-2"),
 					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.2.path", "s3://elasticmapreduce/bootstrap-actions/run-if"),
 					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.2.args.#", "2"),
@@ -1095,7 +1117,18 @@ func TestAccEMRCluster_Bootstrap_ordering(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.0.args.1", "echo running on master node"),
 					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.2.name", "test"),
 					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.2.path", fmt.Sprintf("s3://%s/testscript.sh", rName)),
-					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.2.args.#", "10"),
+					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.2.args.#", "11"),
+					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.2.args.0", ""),
+					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.2.args.1", "1"),
+					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.2.args.2", "2"),
+					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.2.args.3", "3"),
+					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.2.args.4", "4"),
+					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.2.args.5", "5"),
+					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.2.args.6", "6"),
+					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.2.args.7", "7"),
+					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.2.args.8", "8"),
+					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.2.args.9", "9"),
+					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.2.args.9", "10"),
 					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.1.name", "runif-2"),
 					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.1.path", "s3://elasticmapreduce/bootstrap-actions/run-if"),
 					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.1.args.#", "2"),
@@ -3059,7 +3092,9 @@ resource "aws_emr_cluster" "test" {
     path = "s3://${aws_s3_object.testobject.bucket}/${aws_s3_object.testobject.key}"
     name = "test"
 
-    args = ["1",
+    args = [
+      "",
+      "1",
       "2",
       "3",
       "4",
@@ -3123,7 +3158,9 @@ resource "aws_emr_cluster" "test" {
     path = "s3://${aws_s3_object.testobject.bucket}/${aws_s3_object.testobject.key}"
     name = "test"
 
-    args = ["1",
+    args = [
+      "",
+      "1",
       "2",
       "3",
       "4",
@@ -3199,7 +3236,9 @@ resource "aws_emr_cluster" "test" {
     path = "s3://${aws_s3_object.testobject.bucket}/${aws_s3_object.testobject.key}"
     name = "test"
 
-    args = ["1",
+    args = [
+      "",
+      "1",
       "2",
       "3",
       "4",
