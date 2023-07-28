@@ -105,7 +105,7 @@ func sweepACLs(region string) error {
 		return fmt.Errorf("error listing MemoryDB ACLs (%s): %w", region, err)
 	}
 
-	err = sweep.SweepOrchestratorWithContext(ctx, sweepResources)
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
 
 	if err != nil {
 		return fmt.Errorf("error sweeping MemoryDB ACLs (%s): %w", region, err)
@@ -149,7 +149,7 @@ func sweepClusters(region string) error {
 		return fmt.Errorf("error listing MemoryDB Clusters (%s): %w", region, err)
 	}
 
-	err = sweep.SweepOrchestratorWithContext(ctx, sweepResources)
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
 
 	if err != nil {
 		return fmt.Errorf("error sweeping MemoryDB Clusters (%s): %w", region, err)
@@ -199,7 +199,7 @@ func sweepParameterGroups(region string) error {
 		return fmt.Errorf("error listing MemoryDB Parameter Groups (%s): %w", region, err)
 	}
 
-	err = sweep.SweepOrchestratorWithContext(ctx, sweepResources)
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
 
 	if err != nil {
 		return fmt.Errorf("error sweeping MemoryDB Parameter Groups (%s): %w", region, err)
@@ -243,7 +243,7 @@ func sweepSnapshots(region string) error {
 		return fmt.Errorf("error listing MemoryDB Snapshots (%s): %w", region, err)
 	}
 
-	err = sweep.SweepOrchestratorWithContext(ctx, sweepResources)
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
 
 	if err != nil {
 		return fmt.Errorf("error sweeping MemoryDB Snapshots (%s): %w", region, err)
@@ -293,7 +293,7 @@ func sweepSubnetGroups(region string) error {
 		return fmt.Errorf("error listing MemoryDB Subnet Groups (%s): %w", region, err)
 	}
 
-	err = sweep.SweepOrchestratorWithContext(ctx, sweepResources)
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
 
 	if err != nil {
 		return fmt.Errorf("error sweeping MemoryDB Subnet Groups (%s): %w", region, err)
@@ -343,7 +343,7 @@ func sweepUsers(region string) error {
 		return fmt.Errorf("error listing MemoryDB Users (%s): %w", region, err)
 	}
 
-	err = sweep.SweepOrchestratorWithContext(ctx, sweepResources)
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
 
 	if err != nil {
 		return fmt.Errorf("error sweeping MemoryDB Users (%s): %w", region, err)

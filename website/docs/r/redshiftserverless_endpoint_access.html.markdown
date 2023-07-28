@@ -21,16 +21,16 @@ resource "aws_redshiftserverless_endpoint_access" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `endpoint_name` - (Required) The name of the endpoint.
 * `subnet_ids` - (Required) An array of VPC subnet IDs to associate with the endpoint.
 * `vpc_security_group_ids` - (Optional) An array of security group IDs to associate with the workgroup.
 * `workgroup_name` - (Required) The name of the workgroup.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - Amazon Resource Name (ARN) of the Redshift Serverless Endpoint Access.
 * `id` - The Redshift Endpoint Access Name.
@@ -53,8 +53,17 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Redshift Serverless Endpoint Access can be imported using the `endpoint_name`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Redshift Serverless Endpoint Access using the `endpoint_name`. For example:
 
+```terraform
+import {
+  to = aws_redshiftserverless_endpoint_access.example
+  id = "example"
+}
 ```
-$ terraform import aws_redshiftserverless_endpoint_access.example example
+
+Using `terraform import`, import Redshift Serverless Endpoint Access using the `endpoint_name`. For example:
+
+```console
+% terraform import aws_redshiftserverless_endpoint_access.example example
 ```

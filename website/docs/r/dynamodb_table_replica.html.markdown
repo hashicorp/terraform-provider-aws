@@ -71,9 +71,9 @@ Optional arguments:
 * `table_class_override` - (Optional, Forces new resource) Storage class of the table replica. Valid values are `STANDARD` and `STANDARD_INFREQUENT_ACCESS`. If not used, the table replica will use the same class as the global table.
 * `tags` - (Optional) Map of tags to populate on the created table. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the table replica.
 * `id` - Name of the table and region of the main global table joined with a semicolon (_e.g._, `TableName:us-east-1`).
@@ -89,10 +89,21 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-DynamoDB table replicas can be imported using the `table-name:main-region`, _e.g._,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import DynamoDB table replicas using the `table-name:main-region`. For example:
 
 ~> **Note:** When importing, use the region where the initial or _main_ global table resides, _not_ the region of the replica.
 
+```terraform
+import {
+  to = aws_dynamodb_table_replica.example
+  id = "TestTable:us-west-2"
+}
 ```
-$ terraform import aws_dynamodb_table_replica.example TestTable:us-west-2
+
+Using `terraform import`, import DynamoDB table replicas using the `table-name:main-region`. For example:
+
+~> **Note:** When importing, use the region where the initial or _main_ global table resides, _not_ the region of the replica.
+
+```console
+% terraform import aws_dynamodb_table_replica.example TestTable:us-west-2
 ```

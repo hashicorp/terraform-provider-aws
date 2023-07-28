@@ -26,6 +26,6 @@ The following arguments are required:
 
 * `endpoint_id` - (Required) Database endpoint identifier. Identifiers must contain from 1 to 255 alphanumeric characters or hyphens, begin with a letter, contain only ASCII letters, digits, and hyphens, not end with a hyphen, and not contain two consecutive hyphens.
 
-## Attributes Reference
+## Attribute Reference
 
 See the [`aws_dms_endpoint` resource](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/dms_endpoint) for details on the returned attributes - they are identical.

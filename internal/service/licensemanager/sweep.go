@@ -58,7 +58,7 @@ func sweepLicenseConfigurations(region string) error {
 		return fmt.Errorf("error listing License Manager License Configurations (%s): %w", region, err)
 	}
 
-	err = sweep.SweepOrchestratorWithContext(ctx, sweepResources)
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
 
 	if err != nil {
 		return fmt.Errorf("error sweeping License Manager License Configurations (%s): %w", region, err)

@@ -44,6 +44,12 @@ func ResourceHost() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"asset_id": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ForceNew:     true,
+				RequiredWith: []string{"outpost_arn"},
+			},
 			"auto_placement": {
 				Type:         schema.TypeString,
 				Optional:     true,
@@ -99,6 +105,10 @@ func resourceHostCreate(ctx context.Context, d *schema.ResourceData, meta interf
 		TagSpecifications: getTagSpecificationsIn(ctx, ec2.ResourceTypeDedicatedHost),
 	}
 
+	if v, ok := d.GetOk("asset_id"); ok {
+		input.AssetIds = aws.StringSlice([]string{v.(string)})
+	}
+
 	if v, ok := d.GetOk("instance_family"); ok {
 		input.InstanceFamily = aws.String(v.(string))
 	}
@@ -150,6 +160,7 @@ func resourceHostRead(ctx context.Context, d *schema.ResourceData, meta interfac
 		Resource:  fmt.Sprintf("dedicated-host/%s", d.Id()),
 	}.String()
 	d.Set("arn", arn)
+	d.Set("asset_id", host.AssetId)
 	d.Set("auto_placement", host.AutoPlacement)
 	d.Set("availability_zone", host.AvailabilityZone)
 	d.Set("host_recovery", host.HostRecovery)

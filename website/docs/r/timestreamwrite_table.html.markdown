@@ -58,7 +58,7 @@ resource "aws_timestreamwrite_table" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `database_name` – (Required) The name of the Timestream database.
 * `magnetic_store_write_properties` - (Optional) Contains properties to set on the table when enabling magnetic store writes. See [Magnetic Store Write Properties](#magnetic-store-write-properties) below for more details.
@@ -110,9 +110,9 @@ The `composite_partition_key` block supports the following arguments:
 * `name` - (Optional) The name of the attribute used for a dimension key.
 * `type` - (Required) The type of the partition key. Valid values: `DIMENSION`, `MEASURE`.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The `table_name` and `database_name` separated by a colon (`:`).
 * `arn` - The ARN that uniquely identifies this table.
@@ -120,8 +120,17 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Timestream tables can be imported using the `table_name` and `database_name` separate by a colon (`:`), e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Timestream tables using the `table_name` and `database_name` separate by a colon (`:`). For example:
 
+```terraform
+import {
+  to = aws_timestreamwrite_table.example
+  id = "ExampleTable:ExampleDatabase"
+}
 ```
-$ terraform import aws_timestreamwrite_table.example ExampleTable:ExampleDatabase
+
+Using `terraform import`, import Timestream tables using the `table_name` and `database_name` separate by a colon (`:`). For example:
+
+```console
+% terraform import aws_timestreamwrite_table.example ExampleTable:ExampleDatabase
 ```

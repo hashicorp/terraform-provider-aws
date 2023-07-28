@@ -27,6 +27,9 @@ var accountIDRegexp = regexp.MustCompile(`^(aws|aws-managed|third-party|\d{12}|c
 var partitionRegexp = regexp.MustCompile(`^aws(-[a-z]+)*$`)
 var regionRegexp = regexp.MustCompile(`^[a-z]{2}(-[a-z]+)+-\d$`)
 
+// validates all listed in https://gist.github.com/shortjared/4c1e3fe52bdfa47522cfe5b41e5d6f22
+var servicePrincipalRegexp = regexp.MustCompile(`^([a-z0-9-]+\.){1,4}(amazonaws|amazon)\.com$`)
+
 func Valid4ByteASN(v interface{}, k string) (ws []string, errors []error) {
 	value := v.(string)
 
@@ -478,4 +481,22 @@ func ValidAnyDiag(validators ...schema.SchemaValidateDiagFunc) schema.SchemaVali
 		}
 		return results
 	}
+}
+
+func ValidServicePrincipal(v interface{}, k string) (ws []string, errors []error) {
+	value := v.(string)
+
+	if value == "" {
+		return ws, errors
+	}
+
+	if !IsServicePrincipal(value) {
+		errors = append(errors, fmt.Errorf("%q (%s) is an invalid Service Principal: invalid prefix value (expecting to match regular expression: %s)", k, value, servicePrincipalRegexp))
+	}
+
+	return ws, errors
+}
+
+func IsServicePrincipal(value string) (valid bool) {
+	return servicePrincipalRegexp.MatchString(value)
 }

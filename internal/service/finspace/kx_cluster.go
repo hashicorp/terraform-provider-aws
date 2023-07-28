@@ -203,7 +203,7 @@ func ResourceKxCluster() *schema.Resource {
 					Schema: map[string]*schema.Schema{
 						"cache_configurations": {
 							Type:     schema.TypeList,
-							Required: true,
+							Optional: true,
 							ForceNew: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
@@ -220,7 +220,7 @@ func ResourceKxCluster() *schema.Resource {
 										Elem: &schema.Schema{
 											Type: schema.TypeString,
 										},
-										Required: true,
+										Optional: true,
 										ForceNew: true,
 									},
 								},

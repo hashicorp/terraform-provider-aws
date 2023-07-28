@@ -170,6 +170,29 @@ func TestAccEC2Host_tags(t *testing.T) {
 	})
 }
 
+func TestAccEC2Host_outpostAssetId(t *testing.T) {
+	ctx := acctest.Context(t)
+	var host ec2.Host
+	resourceName := "aws_ec2_host.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckOutpostsOutposts(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckHostDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccHostConfig_outpostAssetId(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckHostExists(ctx, resourceName, &host),
+					resource.TestCheckResourceAttrSet(resourceName, "asset_id"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccEC2Host_outpost(t *testing.T) {
 	ctx := acctest.Context(t)
 	var host ec2.Host
@@ -314,6 +337,31 @@ resource "aws_ec2_host" "test" {
   }
 }
 `, tagKey1, tagValue1, tagKey2, tagValue2))
+}
+
+func testAccHostConfig_outpostAssetId(rName string) string {
+	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
+data "aws_outposts_outposts" "test" {}
+
+data "aws_outposts_outpost" "test" {
+  id = tolist(data.aws_outposts_outposts.test.ids)[0]
+}
+
+data "aws_outposts_assets" "test" {
+  arn = data.aws_outposts_outpost.test.arn
+}
+
+resource "aws_ec2_host" "test" {
+  asset_id          = tolist(data.aws_outposts_assets.test.asset_ids)[3]
+  instance_family   = "m5d"
+  availability_zone = data.aws_availability_zones.available.names[0]
+  outpost_arn       = data.aws_outposts_outpost.test.arn
+
+  tags = {
+    Name = %[1]q
+  }
+}
+`, rName))
 }
 
 func testAccHostConfig_outpost(rName string) string {
