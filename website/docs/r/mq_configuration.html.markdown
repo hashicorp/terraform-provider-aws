@@ -38,7 +38,7 @@ DATA
 
 The following arguments are required:
 
-* `data` - (Required) Broker configuration in XML format. See [official docs](https://docs.aws.amazon.com/amazon-mq/latest/developer-guide/amazon-mq-broker-configuration-parameters.html) for supported parameters and format of the XML.
+* `data` - (Required) Broker configuration in XML format for `engine_type` `ActiveMQ` and in Cuttlefish format for `engine_type` `RabbitMQ`. See [official docs](https://docs.aws.amazon.com/amazon-mq/latest/developer-guide/amazon-mq-broker-configuration-parameters.html) for supported parameters and format.
 * `engine_type` - (Required) Type of broker engine. Valid values are `ActiveMQ` and `RabbitMQ`.
 * `engine_version` - (Required) Version of the broker engine.
 * `name` - (Required) Name of the configuration.
