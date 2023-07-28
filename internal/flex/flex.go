@@ -30,18 +30,6 @@ func ExpandStringList(configured []interface{}) []*string {
 	return vs
 }
 
-// ExpandStringListKeepEmpty the result of flatmap.Expand for an array of strings
-// and returns a []*string. Empty strings are kept.
-func ExpandStringListKeepEmpty(configured []interface{}) []*string {
-	vs := make([]*string, 0, len(configured))
-	for _, v := range configured {
-		if v, ok := v.(string); ok {
-			vs = append(vs, aws.String(v))
-		}
-	}
-	return vs
-}
-
 // Takes the result of flatmap.Expand for an array of strings
 // and returns a []*time.Time
 func ExpandStringTimeList(configured []interface{}, format string) []*time.Time {
