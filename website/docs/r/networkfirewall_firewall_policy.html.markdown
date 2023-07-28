@@ -32,6 +32,36 @@ resource "aws_networkfirewall_firewall_policy" "example" {
 }
 ```
 
+## Policy with a HOME_NET Override
+
+```terraform
+resource "aws_networkfirewall_firewall_policy" "example" {
+  name = "example"
+
+  firewall_policy {
+    policy_variables {
+      rule_variables {
+        key = "HOME_NET"
+        ip_set {
+          definition = ["10.0.0.0/16", "10.1.0.0/24"]
+        }
+      }
+    }
+    stateless_default_actions          = ["aws:pass"]
+    stateless_fragment_default_actions = ["aws:drop"]
+    stateless_rule_group_reference {
+      priority     = 1
+      resource_arn = aws_networkfirewall_rule_group.example.arn
+    }
+  }
+
+  tags = {
+    Tag1 = "Value1"
+    Tag2 = "Value2"
+  }
+}
+```
+
 ## Policy with a Custom Action for Stateless Inspection
 
 ```terraform
@@ -81,6 +111,8 @@ This resource supports the following arguments:
 
 The `firewall_policy` block supports the following arguments:
 
+* `policy_variables` - (Optional). Contains variables that you can use to override default Suricata settings in your firewall policy. See [Rule Variables](#rule-variables) for details.
+
 * `stateful_default_actions` - (Optional) Set of actions to take on a packet if it does not match any stateful rules in the policy. This can only be specified if the policy has a `stateful_engine_options` block with a `rule_order` value of `STRICT_ORDER`. You can specify one of either or neither values of `aws:drop_strict` or `aws:drop_established`, as well as any combination of `aws:alert_strict` and `aws:alert_established`.
 
 * `stateful_engine_options` - (Optional) A configuration block that defines options on how the policy handles stateful rules. See [Stateful Engine Options](#stateful-engine-options) below for details.
@@ -96,6 +128,20 @@ In addition, you can specify custom actions that are compatible with your standa
 In addition, you can specify custom actions that are compatible with your standard action choice. If you want non-matching packets to be forwarded for stateful inspection, specify `aws:forward_to_sfe`.
 
 * `stateless_rule_group_reference` - (Optional) Set of configuration blocks containing references to the stateless rule groups that are used in the policy. See [Stateless Rule Group Reference](#stateless-rule-group-reference) below for details.
+
+### Rule Variables
+
+The `rule_variables` block supports the following arguments:
+
+* `key` - (Required) An alphanumeric string to identify the `ip_set`. Valid values: `HOME_NET`
+
+* `ip_set` - (Required) A configuration block that defines a set of IP addresses. See [IP Set](#ip-set) below for details.
+
+### IP Set
+
+The `ip_set` block supports the following argument:
+
+* `definition` - (Required) Set of IPv4 or IPv6 addresses in CIDR notation to use for the Suricata `HOME_NET` variable.
 
 ### Stateful Engine Options
 

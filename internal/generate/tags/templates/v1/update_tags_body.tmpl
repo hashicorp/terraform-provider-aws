@@ -29,6 +29,8 @@ func {{ .UpdateTagsFunc }}(ctx context.Context, conn {{ .ClientType }}, identifi
 		{{- if not ( .TagTypeIDElem ) }}
 		{{- if .TagInIDNeedSlice }}
 		{{ .TagInIDElem }}:   aws.StringSlice([]string{identifier}),
+		{{- else if .TagInIDNeedValueSlice }}
+		{{ .TagInIDElem }}:   []string{identifier},
 		{{- else }}
 		{{ .TagInIDElem }}:   aws.String(identifier),
 		{{- end }}
@@ -74,6 +76,8 @@ func {{ .UpdateTagsFunc }}(ctx context.Context, conn {{ .ClientType }}, identifi
 			{{- if not ( .TagTypeIDElem ) }}
 			{{- if .TagInIDNeedSlice }}
 			{{ .TagInIDElem }}:   aws.StringSlice([]string{identifier}),
+			{{- else if .TagInIDNeedValueSlice }}
+			{{ .TagInIDElem }}:   []string{identifier},
 			{{- else }}
 			{{ .TagInIDElem }}:   aws.String(identifier),
 			{{- end }}
@@ -114,6 +118,8 @@ func {{ .UpdateTagsFunc }}(ctx context.Context, conn {{ .ClientType }}, identifi
 			{{- if not ( .TagTypeIDElem ) }}
 			{{- if .TagInIDNeedSlice }}
 			{{ .TagInIDElem }}: aws.StringSlice([]string{identifier}),
+			{{- else if .TagInIDNeedValueSlice }}
+			{{ .TagInIDElem }}: []string{identifier},
 			{{- else }}
 			{{ .TagInIDElem }}: aws.String(identifier),
 			{{- end }}
