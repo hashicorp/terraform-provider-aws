@@ -11,6 +11,7 @@ updates:
       aws-sdk-go:
         patterns:
           - "github.com/aws/aws-sdk-go"
+          - "github.com/aws/aws-sdk-go-v2"
           - "github.com/aws/aws-sdk-go-v2/*"
       aws-sdk-go-base:
         patterns:
