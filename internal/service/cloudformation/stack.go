@@ -5,7 +5,6 @@ package cloudformation
 
 import (
 	"context"
-	"errors"
 	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -14,11 +13,11 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -212,63 +211,38 @@ func resourceStackRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CloudFormationConn(ctx)
 
-	input := &cloudformation.DescribeStacksInput{
-		StackName: aws.String(d.Id()),
-	}
-	resp, err := conn.DescribeStacksWithContext(ctx, input)
-	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, "ValidationError") {
-		create.LogNotFoundRemoveState(names.CloudFormation, create.ErrActionReading, ResNameStack, d.Id())
+	stack, err := FindStackByID(ctx, conn, d.Id())
+
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] CloudFormation Stack %s not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
 	}
 
 	if err != nil {
-		return create.DiagError(names.CloudFormation, create.ErrActionReading, ResNameStack, d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading CloudFormation Stack (%s): %s", d.Id(), err)
 	}
 
-	stacks := resp.Stacks
-	if !d.IsNewResource() && len(stacks) < 1 {
-		create.LogNotFoundRemoveState(names.CloudFormation, create.ErrActionReading, ResNameStack, d.Id())
-		d.SetId("")
-		return diags
-	}
-
-	if d.IsNewResource() && len(stacks) < 1 {
-		return create.DiagError(names.CloudFormation, create.ErrActionReading, ResNameStack, d.Id(), errors.New("not found after creation"))
-	}
-
-	stack := stacks[0]
-	if !d.IsNewResource() && aws.StringValue(stack.StackStatus) == cloudformation.StackStatusDeleteComplete {
-		log.Printf("[WARN] CloudFormation stack (%s) not found, removing from state", d.Id())
-		d.SetId("")
-		return diags
-	}
-
-	if d.IsNewResource() && aws.StringValue(stack.StackStatus) == cloudformation.StackStatusDeleteComplete {
-		return create.DiagError(names.CloudFormation, create.ErrActionReading, ResNameStack, d.Id(), errors.New("status delete complete after creation"))
-	}
-
-	tInput := cloudformation.GetTemplateInput{
+	input := &cloudformation.GetTemplateInput{
 		StackName:     aws.String(d.Id()),
-		TemplateStage: aws.String("Original"),
-	}
-	out, err := conn.GetTemplateWithContext(ctx, &tInput)
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading CloudFormation Stack (%s): reading template: %s", d.Id(), err)
+		TemplateStage: aws.String(cloudformation.TemplateStageOriginal),
 	}
 
-	template, err := verify.NormalizeJSONOrYAMLString(*out.TemplateBody)
+	output, err := conn.GetTemplateWithContext(ctx, input)
+
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "template body contains an invalid JSON or YAML: %s", err)
+		return sdkdiag.AppendErrorf(diags, "reading CloudFormation Stack (%s) template: %s", d.Id(), err)
+	}
+
+	template, err := verify.NormalizeJSONOrYAMLString(aws.StringValue(output.TemplateBody))
+	if err != nil {
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 	d.Set("template_body", template)
 
-	log.Printf("[DEBUG] Received CloudFormation stack: %s", stack)
-
-	d.Set("name", stack.StackName)
-	d.Set("iam_role_arn", stack.RoleARN)
-	d.Set("timeout_in_minutes", stack.TimeoutInMinutes)
-
+	if len(stack.Capabilities) > 0 {
+		d.Set("capabilities", aws.StringValueSlice(stack.Capabilities))
+	}
 	if stack.DisableRollback != nil {
 		d.Set("disable_rollback", stack.DisableRollback)
 
@@ -278,32 +252,20 @@ func resourceStackRead(ctx context.Context, d *schema.ResourceData, meta interfa
 			d.Set("disable_rollback", false)
 		}
 	}
+	d.Set("iam_role_arn", stack.RoleARN)
+	d.Set("name", stack.StackName)
 	if len(stack.NotificationARNs) > 0 {
-		err = d.Set("notification_arns", flex.FlattenStringSet(stack.NotificationARNs))
-		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "reading CloudFormation Stack (%s): %s", d.Id(), err)
-		}
+		d.Set("notification_arns", aws.StringValueSlice(stack.NotificationARNs))
 	}
-
-	originalParams := d.Get("parameters").(map[string]interface{})
-	err = d.Set("parameters", flattenParameters(stack.Parameters, originalParams))
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading CloudFormation Stack (%s): %s", d.Id(), err)
+	if err := d.Set("outputs", flattenOutputs(stack.Outputs)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting outputs: %s", err)
 	}
+	if err := d.Set("parameters", flattenParameters(stack.Parameters, d.Get("parameters").(map[string]interface{}))); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting parameters: %s", err)
+	}
+	d.Set("timeout_in_minutes", stack.TimeoutInMinutes)
 
 	setTagsOut(ctx, stack.Tags)
-
-	err = d.Set("outputs", flattenOutputs(stack.Outputs))
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading CloudFormation Stack (%s): %s", d.Id(), err)
-	}
-
-	if len(stack.Capabilities) > 0 {
-		err = d.Set("capabilities", flex.FlattenStringSet(stack.Capabilities))
-		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "reading CloudFormation Stack (%s): %s", d.Id(), err)
-		}
-	}
 
 	return diags
 }
@@ -424,4 +386,66 @@ func resourceStackCustomizeDiff(_ context.Context, diff *schema.ResourceDiff, me
 	}
 
 	return nil
+}
+
+func FindStackByID(ctx context.Context, conn *cloudformation.CloudFormation, id string) (*cloudformation.Stack, error) {
+	input := &cloudformation.DescribeStacksInput{
+		StackName: aws.String(id),
+	}
+
+	output, err := findStack(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if status := aws.StringValue(output.StackStatus); status == cloudformation.StackStatusDeleteComplete {
+		return nil, &retry.NotFoundError{
+			LastRequest: input,
+			Message:     status,
+		}
+	}
+
+	return output, nil
+}
+
+func findStack(ctx context.Context, conn *cloudformation.CloudFormation, input *cloudformation.DescribeStacksInput) (*cloudformation.Stack, error) {
+	output, err := findStacks(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSinglePtrResult(output)
+}
+
+func findStacks(ctx context.Context, conn *cloudformation.CloudFormation, input *cloudformation.DescribeStacksInput) ([]*cloudformation.Stack, error) {
+	var output []*cloudformation.Stack
+
+	err := conn.DescribeStacksPagesWithContext(ctx, input, func(page *cloudformation.DescribeStacksOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, v := range page.Stacks {
+			if v != nil {
+				output = append(output, v)
+			}
+		}
+
+		return !lastPage
+	})
+
+	if tfawserr.ErrMessageContains(err, errCodeValidationError, "does not exist") {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	return output, nil
 }
