@@ -43,6 +43,27 @@ func ResourceCompositeAlarm() *schema.Resource {
 				Default:  true,
 				ForceNew: true,
 			},
+			"actions_suppressor": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"alarm": {
+							Type:         schema.TypeString,
+							Required:     true,
+							ValidateFunc: validation.StringLenBetween(1, 1600),
+						},
+						"extension_period": {
+							Type:     schema.TypeInt,
+							Required: true,
+						},
+						"wait_period": {
+							Type:     schema.TypeInt,
+							Required: true,
+						},
+					},
+				},
+			},
 			"alarm_actions": {
 				Type:     schema.TypeSet,
 				Optional: true,
@@ -161,6 +182,9 @@ func resourceCompositeAlarmRead(ctx context.Context, d *schema.ResourceData, met
 	}
 
 	d.Set("actions_enabled", alarm.ActionsEnabled)
+	d.Set("actions_suppressor", alarm.ActionsSuppressor)
+	d.Set("actions_suppressor_extension_period", alarm.ActionsSuppressorExtensionPeriod)
+	d.Set("actions_suppressor_wait_period", alarm.ActionsSuppressorWaitPeriod)
 	d.Set("alarm_actions", aws.StringValueSlice(alarm.AlarmActions))
 	d.Set("alarm_description", alarm.AlarmDescription)
 	d.Set("alarm_name", alarm.AlarmName)
@@ -245,6 +269,18 @@ func expandPutCompositeAlarmInput(ctx context.Context, d *schema.ResourceData) *
 
 	if v, ok := d.GetOk("alarm_actions"); ok {
 		apiObject.AlarmActions = flex.ExpandStringSet(v.(*schema.Set))
+	}
+
+	if v, ok := d.GetOk("actions_suppressor"); ok {
+		apiObject.ActionsSuppressor = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("actions_suppressor_extension_period"); ok {
+		apiObject.ActionsSuppressorExtensionPeriod = aws.Int64(int64(v.(int)))
+	}
+
+	if v, ok := d.GetOk("actions_suppressor_wait_period"); ok {
+		apiObject.ActionsSuppressorWaitPeriod = aws.Int64(int64(v.(int)))
 	}
 
 	if v, ok := d.GetOk("alarm_description"); ok {
