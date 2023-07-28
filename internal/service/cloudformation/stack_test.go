@@ -463,6 +463,42 @@ func TestAccCloudFormationStack_onFailure(t *testing.T) {
 	})
 }
 
+func TestAccCloudFormationStack_outputsUpdated(t *testing.T) {
+	ctx := acctest.Context(t)
+	var stack cloudformation.Stack
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_cloudformation_stack.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, cloudformation.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckStackDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccStackConfig_parametersAndOutputs(rName, "in1"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckStackExists(ctx, resourceName, &stack),
+					resource.TestCheckResourceAttr(resourceName, "parameters.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "parameters.DataIn", "in1"),
+					resource.TestCheckResourceAttr(resourceName, "outputs.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "outputs.DataOut", "pre-in1-post"),
+				),
+			},
+			{
+				Config: testAccStackConfig_parametersAndOutputs(rName, "in2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckStackExists(ctx, resourceName, &stack),
+					resource.TestCheckResourceAttr(resourceName, "parameters.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "parameters.DataIn", "in2"),
+					resource.TestCheckResourceAttr(resourceName, "outputs.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "outputs.DataOut", "pre-in2-post"),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckStackExists(ctx context.Context, n string, stack *cloudformation.Stack) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -1053,4 +1089,51 @@ resource "aws_cloudformation_stack" "test" {
   })
 }
 `, rName)
+}
+
+func testAccStackConfig_parametersAndOutputs(rName, dataIn string) string {
+	return fmt.Sprintf(`
+resource "aws_cloudformation_stack" "test" {
+  name = %[1]q
+
+  template_body = <<STACK
+  {
+    "AWSTemplateFormatVersion": "2010-09-09",
+    "Description": "AWS CloudFormation template that a transformed copy of its input parameter",
+    "Parameters": {
+      "DataIn": {
+        "Type": "String",
+        "Description": "Input data"
+      }
+    },
+    "Resources": {
+      "NullResource": {
+        "Type": "AWS::CloudFormation::WaitConditionHandle"
+      }
+    },
+    "Outputs": {
+      "DataOut": {
+        "Description": "Output data",
+        "Value": {
+          "Fn::Join": [
+            "",
+            [
+              "pre-",
+              {
+                "Ref": "DataIn"
+              },
+              "-post"
+            ]
+          ]
+        }
+      }
+    }
+}
+STACK
+
+  parameters = {
+    DataIn = %[2]q
+  }
+}
+`, rName, dataIn)
 }
