@@ -874,7 +874,7 @@ STACK
 `, rName, cidr)
 }
 
-func testAccStackConfig_templateURLParams(rName, bucketKey, vpcCidr string) string {
+func testAccStackConfig_baseTemplateURL(rName string) string {
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
 
@@ -884,12 +884,33 @@ resource "aws_s3_bucket" "b" {
   bucket = %[1]q
 }
 
-resource "aws_s3_bucket_acl" "b" {
+resource "aws_s3_bucket_public_access_block" "b" {
   bucket = aws_s3_bucket.b.id
+
+  block_public_acls       = false
+  block_public_policy     = false
+  ignore_public_acls      = false
+  restrict_public_buckets = false
+}
+
+resource "aws_s3_bucket_ownership_controls" "b" {
+  bucket = aws_s3_bucket.b.id
+  rule {
+    object_ownership = "BucketOwnerPreferred"
+  }
+}
+
+resource "aws_s3_bucket_acl" "b" {
+  bucket = aws_s3_bucket_policy.b.bucket
   acl    = "public-read"
 }
 
-resource "aws_s3_bucket_policy" "test" {
+resource "aws_s3_bucket_policy" "b" {
+  depends_on = [
+    aws_s3_bucket_public_access_block.b,
+    aws_s3_bucket_ownership_controls.b,
+  ]
+
   bucket = aws_s3_bucket.b.id
   policy = <<POLICY
 {
@@ -909,8 +930,8 @@ resource "aws_s3_bucket_policy" "test" {
 POLICY
 }
 
-resource "aws_s3_bucket_website_configuration" "test" {
-  bucket = aws_s3_bucket.b.id
+resource "aws_s3_bucket_website_configuration" "b" {
+  bucket = aws_s3_bucket_acl.b.bucket
   index_document {
     suffix = "index.html"
   }
@@ -918,9 +939,13 @@ resource "aws_s3_bucket_website_configuration" "test" {
     key = "error.html"
   }
 }
+`, rName)
+}
 
+func testAccStackConfig_templateURLParams(rName, bucketKey, vpcCidr string) string {
+	return acctest.ConfigCompose(testAccStackConfig_baseTemplateURL(rName), fmt.Sprintf(`
 resource "aws_s3_object" "object" {
-  bucket = aws_s3_bucket.b.id
+  bucket = aws_s3_bucket_acl.b.bucket
   key    = %[2]q
   source = "test-fixtures/cloudformation-template.json"
 }
@@ -936,56 +961,13 @@ resource "aws_cloudformation_stack" "test" {
   on_failure         = "DELETE"
   timeout_in_minutes = 1
 }
-`, rName, bucketKey, vpcCidr)
+`, rName, bucketKey, vpcCidr))
 }
 
 func testAccStackConfig_templateURLParamsYAML(rName, bucketKey, vpcCidr string) string {
-	return fmt.Sprintf(`
-data "aws_partition" "current" {}
-
-data "aws_region" "current" {}
-
-resource "aws_s3_bucket" "b" {
-  bucket = %[1]q
-}
-
-resource "aws_s3_bucket_acl" "b" {
-  bucket = aws_s3_bucket.b.id
-  acl    = "public-read"
-}
-
-resource "aws_s3_bucket_policy" "test" {
-  bucket = aws_s3_bucket.b.id
-  policy = <<POLICY
-{
-  "Version":"2008-10-17",
-  "Statement": [
-    {
-      "Sid":"AllowPublicRead",
-      "Effect":"Allow",
-      "Principal": {
-        "AWS": "*"
-      },
-      "Action": "s3:GetObject",
-      "Resource": "arn:${data.aws_partition.current.partition}:s3:::%[1]s/*"
-    }
-  ]
-}
-POLICY
-}
-
-resource "aws_s3_bucket_website_configuration" "test" {
-  bucket = aws_s3_bucket.b.id
-  index_document {
-    suffix = "index.html"
-  }
-  error_document {
-    key = "error.html"
-  }
-}
-
+	return acctest.ConfigCompose(testAccStackConfig_baseTemplateURL(rName), fmt.Sprintf(`
 resource "aws_s3_object" "object" {
-  bucket = aws_s3_bucket.b.id
+  bucket = aws_s3_bucket_acl.b.bucket
   key    = %[2]q
   source = "test-fixtures/cloudformation-template.yaml"
 }
@@ -1001,7 +983,7 @@ resource "aws_cloudformation_stack" "test" {
   on_failure         = "DELETE"
   timeout_in_minutes = 1
 }
-`, rName, bucketKey, vpcCidr)
+`, rName, bucketKey, vpcCidr))
 }
 
 func testAccStackConfig_transform(rName string) string {
