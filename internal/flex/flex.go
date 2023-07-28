@@ -18,14 +18,25 @@ const (
 	ResourceIdSeparator = ","
 )
 
-// Takes the result of flatmap.Expand for an array of strings
-// and returns a []*string
+// ExpandStringList the result of flatmap.Expand for an array of strings
+// and returns a []*string. Empty strings are skipped.
 func ExpandStringList(configured []interface{}) []*string {
 	vs := make([]*string, 0, len(configured))
 	for _, v := range configured {
-		val, ok := v.(string)
-		if ok && val != "" {
-			vs = append(vs, aws.String(v.(string)))
+		if v, ok := v.(string); ok && v != "" {
+			vs = append(vs, aws.String(v))
+		}
+	}
+	return vs
+}
+
+// ExpandStringListKeepEmpty the result of flatmap.Expand for an array of strings
+// and returns a []*string. Empty strings are kept.
+func ExpandStringListKeepEmpty(configured []interface{}) []*string {
+	vs := make([]*string, 0, len(configured))
+	for _, v := range configured {
+		if v, ok := v.(string); ok {
+			vs = append(vs, aws.String(v))
 		}
 	}
 	return vs
