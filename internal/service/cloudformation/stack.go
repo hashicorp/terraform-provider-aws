@@ -359,22 +359,23 @@ func resourceStackDelete(ctx context.Context, d *schema.ResourceData, meta inter
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CloudFormationConn(ctx)
 
+	log.Printf("[INFO] Deleting CloudFormation Stack: %s", d.Id())
 	requestToken := id.UniqueId()
-	input := &cloudformation.DeleteStackInput{
-		StackName:          aws.String(d.Id()),
+	_, err := conn.DeleteStackWithContext(ctx, &cloudformation.DeleteStackInput{
 		ClientRequestToken: aws.String(requestToken),
-	}
-	_, err := conn.DeleteStackWithContext(ctx, input)
-	if tfawserr.ErrCodeEquals(err, "ValidationError") {
+		StackName:          aws.String(d.Id()),
+	})
+
+	if tfawserr.ErrCodeEquals(err, errCodeValidationError) {
 		return diags
 	}
+
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "deleting CloudFormation Stack (%s): %s", d.Id(), err)
 	}
 
-	_, err = WaitStackDeleted(ctx, conn, d.Id(), requestToken, d.Timeout(schema.TimeoutDelete))
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "deleting CloudFormation Stack (%s): waiting for completion: %s", d.Id(), err)
+	if _, err := WaitStackDeleted(ctx, conn, d.Id(), requestToken, d.Timeout(schema.TimeoutDelete)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for CloudFormation Stack (%s) delete: %s", d.Id(), err)
 	}
 
 	return diags
