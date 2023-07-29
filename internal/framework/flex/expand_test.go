@@ -344,13 +344,13 @@ func TestGenericExpand(t *testing.T) {
 		{
 			TestName: "non-empty list Source and non-empty []struct Target",
 			Source: &AATestExpand{Data: fwtypes.NewListNestedObjectValueOfValueSlice(ctx, []BTestExpand{
-				BTestExpand{Name: types.StringValue("a")},
-				BTestExpand{Name: types.StringValue("b")},
+				{Name: types.StringValue("a")},
+				{Name: types.StringValue("b")},
 			})},
 			Target: &CCTestExpand{},
 			WantTarget: &CCTestExpand{Data: []CTestExpand{
-				CTestExpand{Name: "a"},
-				CTestExpand{Name: "b"},
+				{Name: "a"},
+				{Name: "b"},
 			}},
 		},
 		{
@@ -362,13 +362,13 @@ func TestGenericExpand(t *testing.T) {
 		{
 			TestName: "non-empty list Source and non-empty []*struct Target",
 			Source: &AATestExpand{Data: fwtypes.NewListNestedObjectValueOfValueSlice(ctx, []BTestExpand{
-				BTestExpand{Name: types.StringValue("a")},
-				BTestExpand{Name: types.StringValue("b")},
+				{Name: types.StringValue("a")},
+				{Name: types.StringValue("b")},
 			})},
 			Target: &DDTestExpand{},
 			WantTarget: &DDTestExpand{Data: []*CTestExpand{
-				&CTestExpand{Name: "a"},
-				&CTestExpand{Name: "b"},
+				{Name: "a"},
+				{Name: "b"},
 			}},
 		},
 		{
@@ -380,25 +380,25 @@ func TestGenericExpand(t *testing.T) {
 		{
 			TestName: "non-empty set Source and non-empty []struct Target",
 			Source: &EETestExpand{Data: fwtypes.NewSetNestedObjectValueOfValueSlice(ctx, []BTestExpand{
-				BTestExpand{Name: types.StringValue("a")},
-				BTestExpand{Name: types.StringValue("b")},
+				{Name: types.StringValue("a")},
+				{Name: types.StringValue("b")},
 			})},
 			Target: &CCTestExpand{},
 			WantTarget: &CCTestExpand{Data: []CTestExpand{
-				CTestExpand{Name: "a"},
-				CTestExpand{Name: "b"},
+				{Name: "a"},
+				{Name: "b"},
 			}},
 		},
 		{
 			TestName: "non-empty set Source and non-empty []*struct Target",
 			Source: &EETestExpand{Data: fwtypes.NewSetNestedObjectValueOfValueSlice(ctx, []BTestExpand{
-				BTestExpand{Name: types.StringValue("a")},
-				BTestExpand{Name: types.StringValue("b")},
+				{Name: types.StringValue("a")},
+				{Name: types.StringValue("b")},
 			})},
 			Target: &DDTestExpand{},
 			WantTarget: &DDTestExpand{Data: []*CTestExpand{
-				&CTestExpand{Name: "a"},
-				&CTestExpand{Name: "b"},
+				{Name: "a"},
+				{Name: "b"},
 			}},
 		},
 	}
