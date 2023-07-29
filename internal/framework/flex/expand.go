@@ -302,8 +302,10 @@ func (visitor expandVisitor) list(ctx context.Context, vFrom basetypes.ListValua
 		return diags
 
 	case basetypes.ObjectTypable:
-		diags.Append(visitor.listOfObject(ctx, vFrom, vTo)...)
-		return diags
+		if vFrom, ok := vFrom.(types.NestedObjectValue); ok {
+			diags.Append(visitor.nestedObject(ctx, vFrom, vTo)...)
+			return diags
+		}
 	}
 
 	diags.Append(visitor.newIncompatibleListTypesError(ctx, v, vTo))
@@ -337,48 +339,6 @@ func (visitor expandVisitor) listOfString(ctx context.Context, vFrom basetypes.L
 	}
 
 	diags.Append(visitor.newIncompatibleListTypesError(ctx, vFrom, vTo))
-	return diags
-}
-
-// listOfObject copies a Plugin Framework ListOfObject(ish) value to a compatible AWS API field.
-func (visitor expandVisitor) listOfObject(ctx context.Context, vFrom attr.Value, vTo reflect.Value) diag.Diagnostics {
-	var diags diag.Diagnostics
-
-	if vNestedObject, ok := vFrom.(types.NestedObjectValue); ok {
-		switch tTo := vTo.Type(); vTo.Kind() {
-		case reflect.Ptr:
-			switch tElem := tTo.Elem(); tElem.Kind() {
-			case reflect.Struct:
-				//
-				// types.List(OfObject) -> *struct.
-				//
-				diags.Append(visitor.nestedObjectToStruct(ctx, vNestedObject, tElem, vTo)...)
-				return diags
-			}
-
-		case reflect.Slice:
-			switch tElem := tTo.Elem(); tElem.Kind() {
-			case reflect.Struct:
-				//
-				// types.List(OfObject) -> []struct.
-				//
-				diags.Append(visitor.nestedObjectToSlice(ctx, vNestedObject, tTo, tElem, vTo)...)
-				return diags
-
-			case reflect.Ptr:
-				switch tElem := tElem.Elem(); tElem.Kind() {
-				case reflect.Struct:
-					//
-					// types.List(OfObject) -> []*struct.
-					//
-					diags.Append(visitor.nestedObjectToSlice(ctx, vNestedObject, tTo, tElem, vTo)...)
-					return diags
-				}
-			}
-		}
-	}
-
-	diags.AddError("Incompatible types", fmt.Sprintf("listOfObject[%s] cannot be expanded to %s", vFrom.Type(ctx).(attr.TypeWithElementType).ElementType(), vTo.Kind()))
 	return diags
 }
 
@@ -482,6 +442,46 @@ func (visitor expandVisitor) setOfString(ctx context.Context, vFrom basetypes.Se
 	}
 
 	diags.Append(visitor.newIncompatibleSetTypesError(ctx, vFrom, vTo))
+	return diags
+}
+
+// nestedObject copies a Plugin Framework NestedObjectValue value to a compatible AWS API field.
+func (visitor expandVisitor) nestedObject(ctx context.Context, vFrom types.NestedObjectValue, vTo reflect.Value) diag.Diagnostics {
+	var diags diag.Diagnostics
+
+	switch tTo := vTo.Type(); vTo.Kind() {
+	case reflect.Ptr:
+		switch tElem := tTo.Elem(); tElem.Kind() {
+		case reflect.Struct:
+			//
+			// types.List(OfObject) -> *struct.
+			//
+			diags.Append(visitor.nestedObjectToStruct(ctx, vFrom, tElem, vTo)...)
+			return diags
+		}
+
+	case reflect.Slice:
+		switch tElem := tTo.Elem(); tElem.Kind() {
+		case reflect.Struct:
+			//
+			// types.List(OfObject) -> []struct.
+			//
+			diags.Append(visitor.nestedObjectToSlice(ctx, vFrom, tTo, tElem, vTo)...)
+			return diags
+
+		case reflect.Ptr:
+			switch tElem := tElem.Elem(); tElem.Kind() {
+			case reflect.Struct:
+				//
+				// types.List(OfObject) -> []*struct.
+				//
+				diags.Append(visitor.nestedObjectToSlice(ctx, vFrom, tTo, tElem, vTo)...)
+				return diags
+			}
+		}
+	}
+
+	diags.AddError("Incompatible types", fmt.Sprintf("nestedObject[%s] cannot be expanded to %s", vFrom.Type(ctx).(attr.TypeWithElementType).ElementType(), vTo.Kind()))
 	return diags
 }
 
