@@ -129,6 +129,10 @@ type DDTestExpand struct {
 	Data []*CTestExpand
 }
 
+type EETestExpand struct {
+	Data fwtypes.SetNestedObjectValueOf[BTestExpand]
+}
+
 func TestGenericExpand(t *testing.T) {
 	t.Parallel()
 
@@ -358,6 +362,36 @@ func TestGenericExpand(t *testing.T) {
 		{
 			TestName: "non-empty list Source and non-empty []*struct Target",
 			Source: &AATestExpand{Data: fwtypes.NewListNestedObjectValueOfValueSlice(ctx, []BTestExpand{
+				BTestExpand{Name: types.StringValue("a")},
+				BTestExpand{Name: types.StringValue("b")},
+			})},
+			Target: &DDTestExpand{},
+			WantTarget: &DDTestExpand{Data: []*CTestExpand{
+				&CTestExpand{Name: "a"},
+				&CTestExpand{Name: "b"},
+			}},
+		},
+		{
+			TestName:   "empty set Source and empty []struct Target",
+			Source:     &EETestExpand{Data: fwtypes.NewSetNestedObjectValueOfValueSlice(ctx, []BTestExpand{})},
+			Target:     &CCTestExpand{},
+			WantTarget: &CCTestExpand{Data: []CTestExpand{}},
+		},
+		{
+			TestName: "non-empty set Source and non-empty []struct Target",
+			Source: &EETestExpand{Data: fwtypes.NewSetNestedObjectValueOfValueSlice(ctx, []BTestExpand{
+				BTestExpand{Name: types.StringValue("a")},
+				BTestExpand{Name: types.StringValue("b")},
+			})},
+			Target: &CCTestExpand{},
+			WantTarget: &CCTestExpand{Data: []CTestExpand{
+				CTestExpand{Name: "a"},
+				CTestExpand{Name: "b"},
+			}},
+		},
+		{
+			TestName: "non-empty set Source and non-empty []*struct Target",
+			Source: &EETestExpand{Data: fwtypes.NewSetNestedObjectValueOfValueSlice(ctx, []BTestExpand{
 				BTestExpand{Name: types.StringValue("a")},
 				BTestExpand{Name: types.StringValue("b")},
 			})},

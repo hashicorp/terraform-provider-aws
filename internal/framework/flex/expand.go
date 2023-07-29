@@ -409,6 +409,12 @@ func (visitor expandVisitor) set(ctx context.Context, vFrom basetypes.SetValuabl
 	case basetypes.StringTypable:
 		diags.Append(visitor.setOfString(ctx, v, vTo)...)
 		return diags
+
+	case basetypes.ObjectTypable:
+		if vFrom, ok := vFrom.(types.NestedObjectValue); ok {
+			diags.Append(visitor.nestedObject(ctx, vFrom, vTo)...)
+			return diags
+		}
 	}
 
 	diags.Append(visitor.newIncompatibleSetTypesError(ctx, v, vTo))
