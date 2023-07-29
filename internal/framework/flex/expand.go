@@ -352,22 +352,7 @@ func (visitor expandVisitor) listOfObject(ctx context.Context, vFrom attr.Value,
 				//
 				// types.List(OfObject) -> *struct.
 				//
-
-				// Get the nested Object as a pointer.
-				from, d := vNestedObject.ToObjectPtr(ctx)
-				diags.Append(d...)
-				if diags.HasError() {
-					return diags
-				}
-
-				// Create a new target structure and walk its fields.
-				to := reflect.New(tElem)
-				diags.Append(walkStructFields(ctx, from, to.Interface(), visitor)...)
-				if diags.HasError() {
-					return diags
-				}
-
-				vTo.Set(to)
+				diags.Append(visitor.nestedObjectToStruct(ctx, vNestedObject, tElem, vTo)...)
 				return diags
 			}
 
@@ -408,6 +393,33 @@ func (visitor expandVisitor) listOfObject(ctx context.Context, vFrom attr.Value,
 	}
 
 	diags.AddError("Incompatible types", fmt.Sprintf("listOfObject[%s] cannot be expanded to %s", vFrom.Type(ctx).(attr.TypeWithElementType).ElementType(), vTo.Kind()))
+	return diags
+}
+
+// nestedObjectToStruct copies a Plugin Framework NestedObjectValue to a compatible AWS API (*)struct field.
+func (visitor expandVisitor) nestedObjectToStruct(ctx context.Context, vFrom types.NestedObjectValue, tTo reflect.Type, vTo reflect.Value) diag.Diagnostics {
+	var diags diag.Diagnostics
+
+	// Get the nested Object as a pointer.
+	from, d := vFrom.ToObjectPtr(ctx)
+	diags.Append(d...)
+	if diags.HasError() {
+		return diags
+	}
+
+	// Create a new target structure and walk its fields.
+	to := reflect.New(tTo)
+	diags.Append(walkStructFields(ctx, from, to.Interface(), visitor)...)
+	if diags.HasError() {
+		return diags
+	}
+
+	if vTo.Type().Kind() == reflect.Struct {
+		vTo.Set(to.Elem())
+	} else {
+		vTo.Set(to)
+	}
+
 	return diags
 }
 
