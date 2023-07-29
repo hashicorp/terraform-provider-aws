@@ -362,8 +362,18 @@ func (visitor expandVisitor) listOfObject(ctx context.Context, vFrom attr.Value,
 				//
 				// types.List(OfObject) -> []struct.
 				//
-				diags.Append(visitor.nestedObjectToSlice(ctx, vNestedObject, tTo, vTo)...)
+				diags.Append(visitor.nestedObjectToSlice(ctx, vNestedObject, tTo, tElem, vTo)...)
 				return diags
+
+			case reflect.Ptr:
+				switch tElem := tElem.Elem(); tElem.Kind() {
+				case reflect.Struct:
+					//
+					// types.List(OfObject) -> []*struct.
+					//
+					diags.Append(visitor.nestedObjectToSlice(ctx, vNestedObject, tTo, tElem, vTo)...)
+					return diags
+				}
 			}
 		}
 	}
@@ -476,7 +486,7 @@ func (visitor expandVisitor) setOfString(ctx context.Context, vFrom basetypes.Se
 }
 
 // nestedObjectToStruct copies a Plugin Framework NestedObjectValue to a compatible AWS API (*)struct field.
-func (visitor expandVisitor) nestedObjectToStruct(ctx context.Context, vFrom types.NestedObjectValue, tTo reflect.Type, vTo reflect.Value) diag.Diagnostics {
+func (visitor expandVisitor) nestedObjectToStruct(ctx context.Context, vFrom types.NestedObjectValue, tStruct reflect.Type, vTo reflect.Value) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	// Get the nested Object as a pointer.
@@ -487,12 +497,13 @@ func (visitor expandVisitor) nestedObjectToStruct(ctx context.Context, vFrom typ
 	}
 
 	// Create a new target structure and walk its fields.
-	to := reflect.New(tTo)
+	to := reflect.New(tStruct)
 	diags.Append(walkStructFields(ctx, from, to.Interface(), visitor)...)
 	if diags.HasError() {
 		return diags
 	}
 
+	// Set value (or pointer).
 	if vTo.Type().Kind() == reflect.Struct {
 		vTo.Set(to.Elem())
 	} else {
@@ -503,7 +514,7 @@ func (visitor expandVisitor) nestedObjectToStruct(ctx context.Context, vFrom typ
 }
 
 // nestedObjectToSlice copies a Plugin Framework NestedObjectValue to a compatible AWS API [](*)struct field.
-func (visitor expandVisitor) nestedObjectToSlice(ctx context.Context, vFrom types.NestedObjectValue, tTo reflect.Type, vTo reflect.Value) diag.Diagnostics {
+func (visitor expandVisitor) nestedObjectToSlice(ctx context.Context, vFrom types.NestedObjectValue, tSlice, tElem reflect.Type, vTo reflect.Value) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	// Get the nested Objects as a slice.
@@ -516,8 +527,8 @@ func (visitor expandVisitor) nestedObjectToSlice(ctx context.Context, vFrom type
 	// Create a new target slice and expand each element.
 	f := reflect.ValueOf(from)
 	n := f.Len()
-	t := reflect.MakeSlice(tTo, n, n)
-	for i, tElem := 0, tTo.Elem(); i < n; i++ {
+	t := reflect.MakeSlice(tSlice, n, n)
+	for i := 0; i < n; i++ {
 		// Create a new target structure and walk its fields.
 		target := reflect.New(tElem)
 		diags.Append(walkStructFields(ctx, f.Index(i).Interface(), target.Interface(), visitor)...)
@@ -525,9 +536,12 @@ func (visitor expandVisitor) nestedObjectToSlice(ctx context.Context, vFrom type
 			return diags
 		}
 
-		// Set value in the target slice.
-		// TODO handle *struct here.
-		t.Index(i).Set(target.Elem())
+		// Set value (or pointer) in the target slice.
+		if vTo.Type().Elem().Kind() == reflect.Struct {
+			t.Index(i).Set(target.Elem())
+		} else {
+			t.Index(i).Set(target)
+		}
 	}
 
 	vTo.Set(t)
