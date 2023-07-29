@@ -307,9 +307,9 @@ This resource supports the following arguments:
 
 #### Retain Rule arguments
 
-* `count` - (Optional) How many snapshots to keep. Must be an integer between `1` and `1000`.
-* `interval` - (Optional) The amount of time to retain each snapshot. The maximum is 100 years. This is equivalent to 1200 months, 5200 weeks, or 36500 days.
-* `interval_unit` - (Optional) The unit of time for time-based retention. Valid values are `DAYS`, `WEEKS`, `MONTHS`, `YEARS`.
+* `count` - (Optional) How many snapshots to keep. Must be an integer between `1` and `1000`. Count or interval cannot both be provided.
+* `interval` - (Optional) The amount of time to retain each snapshot. The maximum is 100 years. This is equivalent to 1200 months, 5200 weeks, or 36500 days. Count and interval cannot both be provided.  
+* `interval_unit` - (Optional) The unit of time for time-based retention. Valid values are `DAYS`, `WEEKS`, `MONTHS`, `YEARS`. Required if providing a value for interval. 
 
 #### Share Rule arguments
 
