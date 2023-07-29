@@ -1,3 +1,0 @@
-```release-note:bug
-resource/aws_cloudformation_stack: Correctly set `outputs` as Computed when `parameters`, `template_body` or `template_body` changes
-```
