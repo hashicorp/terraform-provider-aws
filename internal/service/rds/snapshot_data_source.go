@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
@@ -145,25 +146,31 @@ func dataSourceSnapshotRead(ctx context.Context, d *schema.ResourceData, meta in
 		input.SnapshotType = aws.String(v.(string))
 	}
 
-	output, err := conn.DescribeDBSnapshotsWithContext(ctx, input)
+	snapshots, err := findDBSnapshots(ctx, conn, input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading RDS DB Snapshots: %s", err)
 	}
 
-	if len(output.DBSnapshots) < 1 {
+	if len(snapshots) < 1 {
 		return sdkdiag.AppendErrorf(diags, "Your query returned no results. Please change your search criteria and try again.")
 	}
 
+	if tagsToMatch := tftags.New(ctx, d.Get("tags").(map[string]interface{})).IgnoreAWS().IgnoreConfig(ignoreTagsConfig); len(tagsToMatch) > 0 {
+		snapshots = slices.Filter(snapshots, func(v *rds.DBSnapshot) bool {
+			return KeyValueTags(ctx, v.TagList).ContainsAll(tagsToMatch)
+		})
+	}
+
 	var snapshot *rds.DBSnapshot
-	if len(output.DBSnapshots) > 1 {
+	if len(snapshots) > 1 {
 		if d.Get("most_recent").(bool) {
-			snapshot = mostRecentDBSnapshot(output.DBSnapshots)
+			snapshot = mostRecentDBSnapshot(snapshots)
 		} else {
 			return sdkdiag.AppendErrorf(diags, "Your query returned more than one result. Please try a more specific search criteria.")
 		}
 	} else {
-		snapshot = output.DBSnapshots[0]
+		snapshot = snapshots[0]
 	}
 
 	d.SetId(aws.StringValue(snapshot.DBSnapshotIdentifier))
