@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package cloudwatch_test
 
 import (
@@ -388,7 +391,7 @@ func TestAccCloudWatchCompositeAlarm_allActions(t *testing.T) {
 
 func testAccCheckCompositeAlarmDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudWatchConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudWatchConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_cloudwatch_composite_alarm" {
@@ -423,7 +426,7 @@ func testAccCheckCompositeAlarmExists(ctx context.Context, n string) resource.Te
 			return fmt.Errorf("No CloudWatch Composite Alarm ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudWatchConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudWatchConn(ctx)
 
 		_, err := tfcloudwatch.FindCompositeAlarmByName(ctx, conn, rs.Primary.ID)
 

@@ -1,8 +1,10 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package networkfirewall
 
 import (
 	"context"
-	"fmt"
 	"log"
 	"time"
 
@@ -52,7 +54,7 @@ func ResourceResourcePolicy() *schema.Resource {
 }
 
 func resourceResourcePolicyPut(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).NetworkFirewallConn()
+	conn := meta.(*conns.AWSClient).NetworkFirewallConn(ctx)
 	resourceArn := d.Get("resource_arn").(string)
 
 	policy, err := structure.NormalizeJsonString(d.Get("policy").(string))
@@ -70,7 +72,7 @@ func resourceResourcePolicyPut(ctx context.Context, d *schema.ResourceData, meta
 
 	_, err = conn.PutResourcePolicyWithContext(ctx, input)
 	if err != nil {
-		return diag.Errorf("error putting NetworkFirewall Resource Policy (for resource: %s): %s", resourceArn, err)
+		return diag.Errorf("putting NetworkFirewall Resource Policy (for resource: %s): %s", resourceArn, err)
 	}
 
 	d.SetId(resourceArn)
@@ -79,7 +81,7 @@ func resourceResourcePolicyPut(ctx context.Context, d *schema.ResourceData, meta
 }
 
 func resourceResourcePolicyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).NetworkFirewallConn()
+	conn := meta.(*conns.AWSClient).NetworkFirewallConn(ctx)
 	resourceArn := d.Id()
 
 	log.Printf("[DEBUG] Reading NetworkFirewall Resource Policy for resource: %s", resourceArn)
@@ -91,11 +93,11 @@ func resourceResourcePolicyRead(ctx context.Context, d *schema.ResourceData, met
 		return nil
 	}
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error reading NetworkFirewall Resource Policy (for resource: %s): %w", resourceArn, err))
+		return diag.Errorf("reading NetworkFirewall Resource Policy (for resource: %s): %s", resourceArn, err)
 	}
 
 	if policy == nil {
-		return diag.FromErr(fmt.Errorf("error reading NetworkFirewall Resource Policy (for resource: %s): empty output", resourceArn))
+		return diag.Errorf("reading NetworkFirewall Resource Policy (for resource: %s): empty output", resourceArn)
 	}
 
 	d.Set("resource_arn", resourceArn)
@@ -115,7 +117,7 @@ func resourceResourcePolicyDelete(ctx context.Context, d *schema.ResourceData, m
 	const (
 		timeout = 2 * time.Minute
 	)
-	conn := meta.(*conns.AWSClient).NetworkFirewallConn()
+	conn := meta.(*conns.AWSClient).NetworkFirewallConn(ctx)
 
 	log.Printf("[DEBUG] Deleting NetworkFirewall Resource Policy: %s", d.Id())
 	_, err := tfresource.RetryWhenAWSErrMessageContains(ctx, timeout, func() (interface{}, error) {

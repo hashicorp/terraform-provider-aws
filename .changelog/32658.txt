@@ -1,0 +1,7 @@
+```release-note:bug
+resource/aws_vpclattice_service_network_vpc_association: Avoid recreating resource when passing an ARN as `service_network_identifier`
+```
+
+```release-note:bug
+resource/aws_vpclattice_service_network_service_association: Avoid recreating resource when passing an ARN as `service_identifier` or `service_network_identifier`
+```

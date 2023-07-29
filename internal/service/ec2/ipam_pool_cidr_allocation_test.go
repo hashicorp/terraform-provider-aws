@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ec2_test
 
 import (
@@ -237,7 +240,7 @@ func testAccCheckIPAMPoolCIDRAllocationExists(ctx context.Context, n string, v *
 			return err
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
 
 		output, err := tfec2.FindIPAMPoolAllocationByTwoPartKey(ctx, conn, allocationID, poolID)
 
@@ -268,7 +271,7 @@ func testAccCheckIPAMPoolCIDRAllocationExistsWithProvider(ctx context.Context, n
 			return err
 		}
 
-		conn := providerF().Meta().(*conns.AWSClient).EC2Conn()
+		conn := providerF().Meta().(*conns.AWSClient).EC2Conn(ctx)
 
 		output, err := tfec2.FindIPAMPoolAllocationByTwoPartKey(ctx, conn, allocationID, poolID)
 
@@ -284,7 +287,7 @@ func testAccCheckIPAMPoolCIDRAllocationExistsWithProvider(ctx context.Context, n
 
 func testAccCheckIPAMPoolAllocationDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_vpc_ipam_pool_cidr_allocation" {

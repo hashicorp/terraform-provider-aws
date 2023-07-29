@@ -1,8 +1,10 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package networkfirewall
 
 import (
 	"context"
-	"fmt"
 	"log"
 	"regexp"
 
@@ -182,7 +184,7 @@ func DataSourceFirewall() *schema.Resource {
 }
 
 func dataSourceFirewallResourceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).NetworkFirewallConn()
+	conn := meta.(*conns.AWSClient).NetworkFirewallConn(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	input := &networkfirewall.DescribeFirewallInput{}
@@ -196,7 +198,7 @@ func dataSourceFirewallResourceRead(ctx context.Context, d *schema.ResourceData,
 	}
 
 	if input.FirewallArn == nil && input.FirewallName == nil {
-		return diag.FromErr(fmt.Errorf("must specify either arn, name, or both"))
+		return diag.Errorf("must specify either arn, name, or both")
 	}
 
 	output, err := conn.DescribeFirewallWithContext(ctx, input)

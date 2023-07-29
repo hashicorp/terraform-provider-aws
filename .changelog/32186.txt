@@ -1,0 +1,7 @@
+```release-note:bug
+resource/aws_vpclattice_access_log_subscription: Avoid recreating resource when passing an ARN as `resource_identifier`
+```
+
+```release-note:bug
+resource/aws_vpclattice_access_log_subscription: Avoid recreating resource when passing a non-wildcard CloudWatch Logs log group ARN as `destination_arn`
+```

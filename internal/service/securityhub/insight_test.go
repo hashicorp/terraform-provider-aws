@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package securityhub_test
 
 import (
@@ -449,7 +452,7 @@ func testAccInsight_WorkflowStatus(t *testing.T) {
 
 func testAccCheckInsightDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SecurityHubConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SecurityHubConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_securityhub_insight" {
@@ -484,7 +487,7 @@ func testAccCheckInsightExists(ctx context.Context, n string) resource.TestCheck
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SecurityHubConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SecurityHubConn(ctx)
 
 		insight, err := tfsecurityhub.FindInsight(ctx, conn, rs.Primary.ID)
 

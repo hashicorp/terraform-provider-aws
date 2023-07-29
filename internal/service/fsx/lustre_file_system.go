@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package fsx
 
 import (
@@ -292,7 +295,7 @@ func resourceLustreFileSystemSchemaCustomizeDiff(_ context.Context, d *schema.Re
 
 func resourceLustreFileSystemCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).FSxConn()
+	conn := meta.(*conns.AWSClient).FSxConn(ctx)
 
 	input := &fsx.CreateFileSystemInput{
 		ClientRequestToken: aws.String(id.UniqueId()),
@@ -303,7 +306,7 @@ func resourceLustreFileSystemCreate(ctx context.Context, d *schema.ResourceData,
 		LustreConfiguration: &fsx.CreateFileSystemLustreConfiguration{
 			DeploymentType: aws.String(d.Get("deployment_type").(string)),
 		},
-		Tags: GetTagsIn(ctx),
+		Tags: getTagsIn(ctx),
 	}
 
 	backupInput := &fsx.CreateFileSystemFromBackupInput{
@@ -313,7 +316,7 @@ func resourceLustreFileSystemCreate(ctx context.Context, d *schema.ResourceData,
 		LustreConfiguration: &fsx.CreateFileSystemLustreConfiguration{
 			DeploymentType: aws.String(d.Get("deployment_type").(string)),
 		},
-		Tags: GetTagsIn(ctx),
+		Tags: getTagsIn(ctx),
 	}
 
 	//Applicable only for TypePersistent1 and TypePersistent2
@@ -428,7 +431,7 @@ func resourceLustreFileSystemCreate(ctx context.Context, d *schema.ResourceData,
 
 func resourceLustreFileSystemUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).FSxConn()
+	conn := meta.(*conns.AWSClient).FSxConn(ctx)
 
 	if d.HasChangesExcept("tags_all", "tags") {
 		var waitAdminAction = false
@@ -493,7 +496,7 @@ func resourceLustreFileSystemUpdate(ctx context.Context, d *schema.ResourceData,
 
 func resourceLustreFileSystemRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).FSxConn()
+	conn := meta.(*conns.AWSClient).FSxConn(ctx)
 
 	filesystem, err := FindFileSystemByID(ctx, conn, d.Id())
 	if !d.IsNewResource() && tfresource.NotFound(err) {
@@ -553,7 +556,7 @@ func resourceLustreFileSystemRead(ctx context.Context, d *schema.ResourceData, m
 		return sdkdiag.AppendErrorf(diags, "setting root_squash_configuration: %s", err)
 	}
 
-	SetTagsOut(ctx, filesystem.Tags)
+	setTagsOut(ctx, filesystem.Tags)
 
 	d.Set("vpc_id", filesystem.VpcId)
 	d.Set("weekly_maintenance_start_time", lustreConfig.WeeklyMaintenanceStartTime)
@@ -568,7 +571,7 @@ func resourceLustreFileSystemRead(ctx context.Context, d *schema.ResourceData, m
 
 func resourceLustreFileSystemDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).FSxConn()
+	conn := meta.(*conns.AWSClient).FSxConn(ctx)
 
 	request := &fsx.DeleteFileSystemInput{
 		FileSystemId: aws.String(d.Id()),

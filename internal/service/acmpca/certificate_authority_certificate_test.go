@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package acmpca_test
 
 import (
@@ -119,7 +122,7 @@ func testAccCheckCertificateAuthorityCertificateExists(ctx context.Context, reso
 			return fmt.Errorf("not found: %s", resourceName)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ACMPCAConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ACMPCAConn(ctx)
 
 		output, err := tfacmpca.FindCertificateAuthorityCertificateByARN(ctx, conn, rs.Primary.ID)
 		if err != nil {

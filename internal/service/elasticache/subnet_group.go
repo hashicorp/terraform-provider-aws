@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package elasticache
 
 import (
@@ -82,14 +85,14 @@ func resourceSubnetGroupDiff(ctx context.Context, diff *schema.ResourceDiff, met
 
 func resourceSubnetGroupCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ElastiCacheConn()
+	conn := meta.(*conns.AWSClient).ElastiCacheConn(ctx)
 
 	name := d.Get("name").(string)
 	input := &elasticache.CreateCacheSubnetGroupInput{
 		CacheSubnetGroupDescription: aws.String(d.Get("description").(string)),
 		CacheSubnetGroupName:        aws.String(name),
 		SubnetIds:                   flex.ExpandStringSet(d.Get("subnet_ids").(*schema.Set)),
-		Tags:                        GetTagsIn(ctx),
+		Tags:                        getTagsIn(ctx),
 	}
 
 	output, err := conn.CreateCacheSubnetGroupWithContext(ctx, input)
@@ -112,7 +115,7 @@ func resourceSubnetGroupCreate(ctx context.Context, d *schema.ResourceData, meta
 	d.SetId(strings.ToLower(name))
 
 	// For partitions not supporting tag-on-create, attempt tag after create.
-	if tags := GetTagsIn(ctx); input.Tags == nil && len(tags) > 0 {
+	if tags := getTagsIn(ctx); input.Tags == nil && len(tags) > 0 {
 		err := createTags(ctx, conn, aws.StringValue(output.CacheSubnetGroup.ARN), tags)
 
 		// If default tags only, continue. Otherwise, error.
@@ -130,7 +133,7 @@ func resourceSubnetGroupCreate(ctx context.Context, d *schema.ResourceData, meta
 
 func resourceSubnetGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ElastiCacheConn()
+	conn := meta.(*conns.AWSClient).ElastiCacheConn(ctx)
 
 	group, err := FindCacheSubnetGroupByName(ctx, conn, d.Id())
 
@@ -159,7 +162,7 @@ func resourceSubnetGroupRead(ctx context.Context, d *schema.ResourceData, meta i
 
 func resourceSubnetGroupUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ElastiCacheConn()
+	conn := meta.(*conns.AWSClient).ElastiCacheConn(ctx)
 
 	if d.HasChanges("subnet_ids", "description") {
 		input := &elasticache.ModifyCacheSubnetGroupInput{
@@ -180,7 +183,7 @@ func resourceSubnetGroupUpdate(ctx context.Context, d *schema.ResourceData, meta
 
 func resourceSubnetGroupDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ElastiCacheConn()
+	conn := meta.(*conns.AWSClient).ElastiCacheConn(ctx)
 
 	log.Printf("[DEBUG] Deleting ElastiCache Subnet Group: %s", d.Id())
 	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, 5*time.Minute, func() (interface{}, error) {

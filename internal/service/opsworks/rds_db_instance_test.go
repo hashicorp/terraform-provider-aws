@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package opsworks_test
 
 import (
@@ -98,7 +101,7 @@ func testAccCheckRDSDBInstanceExists(ctx context.Context, n string, v *opsworks.
 			return fmt.Errorf("No OpsWorks RDS DB Instance ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).OpsWorksConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).OpsWorksConn(ctx)
 
 		output, err := tfopsworks.FindRDSDBInstanceByTwoPartKey(ctx, conn, rs.Primary.Attributes["rds_db_instance_arn"], rs.Primary.Attributes["stack_id"])
 
@@ -114,7 +117,7 @@ func testAccCheckRDSDBInstanceExists(ctx context.Context, n string, v *opsworks.
 
 func testAccCheckRDSDBInstanceDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).OpsWorksConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).OpsWorksConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_opsworks_rds_db_instance" {

@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package inspector
 
 import (
@@ -36,7 +39,7 @@ func ResourceResourceGroup() *schema.Resource {
 
 func resourceResourceGroupCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).InspectorConn()
+	conn := meta.(*conns.AWSClient).InspectorConn(ctx)
 
 	req := &inspector.CreateResourceGroupInput{
 		ResourceGroupTags: expandResourceGroupTags(d.Get("tags").(map[string]interface{})),
@@ -55,7 +58,7 @@ func resourceResourceGroupCreate(ctx context.Context, d *schema.ResourceData, me
 
 func resourceResourceGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).InspectorConn()
+	conn := meta.(*conns.AWSClient).InspectorConn(ctx)
 
 	resp, err := conn.DescribeResourceGroupsWithContext(ctx, &inspector.DescribeResourceGroupsInput{
 		ResourceGroupArns: aws.StringSlice([]string{d.Id()}),

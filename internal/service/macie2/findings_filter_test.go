@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package macie2_test
 
 import (
@@ -406,7 +409,7 @@ func testAccCheckFindingsFilterExists(ctx context.Context, resourceName string, 
 			return fmt.Errorf("not found: %s", resourceName)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).Macie2Conn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).Macie2Conn(ctx)
 		input := &macie2.GetFindingsFilterInput{Id: aws.String(rs.Primary.ID)}
 
 		resp, err := conn.GetFindingsFilterWithContext(ctx, input)
@@ -427,7 +430,7 @@ func testAccCheckFindingsFilterExists(ctx context.Context, resourceName string, 
 
 func testAccCheckFindingsFilterDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).Macie2Conn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).Macie2Conn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_macie2_findings_filter" {

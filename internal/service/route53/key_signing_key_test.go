@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package route53_test
 
 import (
@@ -130,7 +133,7 @@ func TestAccRoute53KeySigningKey_status(t *testing.T) {
 
 func testAccCheckKeySigningKeyDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).Route53Conn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).Route53Conn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_route53_key_signing_key" {
@@ -172,7 +175,7 @@ func testAccKeySigningKeyExists(ctx context.Context, resourceName string) resour
 			return fmt.Errorf("resource %s has not set its id", resourceName)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).Route53Conn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).Route53Conn(ctx)
 
 		keySigningKey, err := tfroute53.FindKeySigningKeyByResourceID(ctx, conn, rs.Primary.ID)
 

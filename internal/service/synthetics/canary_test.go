@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package synthetics_test
 
 import (
@@ -560,7 +563,7 @@ func TestAccSyntheticsCanary_disappears(t *testing.T) {
 
 func testAccCheckCanaryDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SyntheticsConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SyntheticsConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_synthetics_canary" {
@@ -595,7 +598,7 @@ func testAccCheckCanaryExists(ctx context.Context, n string, canary *synthetics.
 			return fmt.Errorf("No Synthetics Canary ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SyntheticsConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SyntheticsConn(ctx)
 
 		output, err := tfsynthetics.FindCanaryByName(ctx, conn, rs.Primary.ID)
 

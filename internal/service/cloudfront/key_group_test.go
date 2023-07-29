@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package cloudfront_test
 
 import (
@@ -151,7 +154,7 @@ func testAccCheckKeyGroupExistence(ctx context.Context, r string) resource.TestC
 			return fmt.Errorf("no Id is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudFrontConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudFrontConn(ctx)
 
 		input := &cloudfront.GetKeyGroupInput{
 			Id: aws.String(rs.Primary.ID),
@@ -167,7 +170,7 @@ func testAccCheckKeyGroupExistence(ctx context.Context, r string) resource.TestC
 
 func testAccCheckKeyGroupDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudFrontConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudFrontConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_cloudfront_key_group" {

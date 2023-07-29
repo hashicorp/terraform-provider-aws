@@ -20,13 +20,13 @@ data aws_workspaces_image example {
 
 ## Argument Reference
 
-The following arguments are supported:
+This data source supports the following arguments:
 
 * `image_id` – (Required) ID of the image.
 
-## Attributes Reference
+## Attribute Reference
 
-The following attributes are exported:
+This data source exports the following attributes in addition to the arguments above:
 
 * `name` – The name of the image.
 * `description` – The description of the image.

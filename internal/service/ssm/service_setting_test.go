@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ssm_test
 
 import (
@@ -53,7 +56,7 @@ func TestAccSSMServiceSetting_basic(t *testing.T) {
 
 func testAccCheckServiceSettingDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SSMConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SSMConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_ssm_service_setting" {
@@ -92,7 +95,7 @@ func testAccServiceSettingExists(ctx context.Context, n string, v *ssm.ServiceSe
 			return fmt.Errorf("No SSM Service Setting ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SSMConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SSMConn(ctx)
 
 		output, err := tfssm.FindServiceSettingByID(ctx, conn, rs.Primary.Attributes["setting_id"])
 

@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package dax_test
 
 import (
@@ -54,7 +57,7 @@ func TestAccDAXSubnetGroup_basic(t *testing.T) {
 
 func testAccCheckSubnetGroupDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DAXConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DAXConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_dax_subnet_group" {
@@ -82,7 +85,7 @@ func testAccCheckSubnetGroupExists(ctx context.Context, name string) resource.Te
 			return fmt.Errorf("Not found: %s", name)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DAXConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DAXConn(ctx)
 
 		_, err := conn.DescribeSubnetGroupsWithContext(ctx, &dax.DescribeSubnetGroupsInput{
 			SubnetGroupNames: []*string{aws.String(rs.Primary.ID)},

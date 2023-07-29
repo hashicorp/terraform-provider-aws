@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package synthetics
 
 import (
@@ -52,7 +55,7 @@ func ResourceGroupAssociation() *schema.Resource {
 
 func resourceGroupAssociationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SyntheticsConn()
+	conn := meta.(*conns.AWSClient).SyntheticsConn(ctx)
 
 	canaryArn := d.Get("canary_arn").(string)
 	groupName := d.Get("group_name").(string)
@@ -79,7 +82,7 @@ func resourceGroupAssociationCreate(ctx context.Context, d *schema.ResourceData,
 
 func resourceGroupAssociationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SyntheticsConn()
+	conn := meta.(*conns.AWSClient).SyntheticsConn(ctx)
 
 	canaryArn, groupName, err := GroupAssociationParseResourceID(d.Id())
 
@@ -109,7 +112,7 @@ func resourceGroupAssociationRead(ctx context.Context, d *schema.ResourceData, m
 
 func resourceGroupAssociationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SyntheticsConn()
+	conn := meta.(*conns.AWSClient).SyntheticsConn(ctx)
 
 	log.Printf("[DEBUG] Deleting Synthetics Group Association %s", d.Id())
 

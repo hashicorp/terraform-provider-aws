@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package autoscaling_test
 
 import (
@@ -194,7 +197,7 @@ func testAccCheckScalingScheduleExists(ctx context.Context, n string, v *autosca
 			return fmt.Errorf("No Auto Scaling Scheduled Action ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AutoScalingConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AutoScalingConn(ctx)
 
 		output, err := tfautoscaling.FindScheduledUpdateGroupAction(ctx, conn, rs.Primary.Attributes["autoscaling_group_name"], rs.Primary.ID)
 
@@ -210,7 +213,7 @@ func testAccCheckScalingScheduleExists(ctx context.Context, n string, v *autosca
 
 func testAccCheckScheduleDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AutoScalingConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AutoScalingConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_autoscaling_schedule" {

@@ -17,10 +17,7 @@ package {{ .ServicePackage }}_test
 // In other words, as generated, this is a rough outline of the work you will
 // need to do. If something doesn't make sense for your situation, get rid of
 // it.
-//
-// Remember to register this new data source in the provider
-// (internal/provider/provider.go) once you finish. Otherwise, Terraform won't
-// know about it.{{- end }}
+{{- end }}
 
 import (
 {{- if .IncludeComments }}
@@ -102,6 +99,8 @@ import (
 // intricate, they should be unit tested.
 {{- end }}
 func Test{{ .DataSource }}ExampleUnitTest(t *testing.T) {
+	t.Parallel()
+
 	testCases := []struct {
 		TestName string
 		Input    string
@@ -129,7 +128,9 @@ func Test{{ .DataSource }}ExampleUnitTest(t *testing.T) {
 	}
 
 	for _, testCase := range testCases {
+		testCase := testCase
 		t.Run(testCase.TestName, func(t *testing.T) {
+			t.Parallel()
 			got, err := tf{{ .ServicePackage }}.FunctionFromDataSource(testCase.Input)
 
 			if err != nil && !testCase.Error {

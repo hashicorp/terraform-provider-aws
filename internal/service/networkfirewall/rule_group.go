@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package networkfirewall
 
 import (
@@ -456,13 +459,13 @@ func ResourceRuleGroup() *schema.Resource {
 }
 
 func resourceRuleGroupCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).NetworkFirewallConn()
+	conn := meta.(*conns.AWSClient).NetworkFirewallConn(ctx)
 
 	name := d.Get("name").(string)
 	input := &networkfirewall.CreateRuleGroupInput{
 		Capacity:      aws.Int64(int64(d.Get("capacity").(int))),
 		RuleGroupName: aws.String(name),
-		Tags:          GetTagsIn(ctx),
+		Tags:          getTagsIn(ctx),
 		Type:          aws.String(d.Get("type").(string)),
 	}
 
@@ -494,7 +497,7 @@ func resourceRuleGroupCreate(ctx context.Context, d *schema.ResourceData, meta i
 }
 
 func resourceRuleGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).NetworkFirewallConn()
+	conn := meta.(*conns.AWSClient).NetworkFirewallConn(ctx)
 
 	output, err := FindRuleGroupByARN(ctx, conn, d.Id())
 
@@ -524,13 +527,13 @@ func resourceRuleGroupRead(ctx context.Context, d *schema.ResourceData, meta int
 	d.Set("type", response.Type)
 	d.Set("update_token", output.UpdateToken)
 
-	SetTagsOut(ctx, response.Tags)
+	setTagsOut(ctx, response.Tags)
 
 	return nil
 }
 
 func resourceRuleGroupUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).NetworkFirewallConn()
+	conn := meta.(*conns.AWSClient).NetworkFirewallConn(ctx)
 
 	if d.HasChanges("description", "encryption_configuration", "rule_group", "rules", "type") {
 		input := &networkfirewall.UpdateRuleGroupInput{
@@ -581,7 +584,7 @@ func resourceRuleGroupDelete(ctx context.Context, d *schema.ResourceData, meta i
 	const (
 		timeout = 10 * time.Minute
 	)
-	conn := meta.(*conns.AWSClient).NetworkFirewallConn()
+	conn := meta.(*conns.AWSClient).NetworkFirewallConn(ctx)
 
 	log.Printf("[DEBUG] Deleting NetworkFirewall Rule Group: %s", d.Id())
 	_, err := tfresource.RetryWhenAWSErrMessageContains(ctx, timeout, func() (interface{}, error) {

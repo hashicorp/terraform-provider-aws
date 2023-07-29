@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package cognitoidp_test
 
 import (
@@ -1380,6 +1383,37 @@ func TestAccCognitoIDPUserPool_schemaAttributesModified(t *testing.T) {
 	})
 }
 
+// Ref: https://github.com/hashicorp/terraform-provider-aws/issues/21654
+func TestAccCognitoIDPUserPool_schemaAttributesStringAttributeConstraints(t *testing.T) {
+	ctx := acctest.Context(t)
+	var pool cognitoidentityprovider.DescribeUserPoolOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_cognito_user_pool.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckIdentityProvider(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, cognitoidentityprovider.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckUserPoolDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				// Omit optional "string_attribute_constraints" schema argument to verify a persistent
+				// diff is not present when AWS returns default values in the nested object.
+				Config: testAccUserPoolConfig_schemaAttributesStringAttributeConstraints(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckUserPoolExists(ctx, resourceName, &pool),
+				),
+			},
+			{
+				// Attempting to explicitly set constraints to non-default values after creation
+				// should trigger an error
+				Config:      testAccUserPoolConfig_schemaAttributes(rName),
+				ExpectError: regexp.MustCompile("cannot modify or remove schema items"),
+			},
+		},
+	})
+}
+
 func TestAccCognitoIDPUserPool_withVerificationMessageTemplate(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -1588,7 +1622,7 @@ func TestAccCognitoIDPUserPool_withUserAttributeUpdateSettings(t *testing.T) {
 
 func testAccCheckUserPoolDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CognitoIDPConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CognitoIDPConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_cognito_user_pool" {
@@ -1624,7 +1658,7 @@ func testAccCheckUserPoolExists(ctx context.Context, name string, pool *cognitoi
 			return errors.New("No Cognito User Pool ID set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CognitoIDPConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CognitoIDPConn(ctx)
 
 		params := &cognitoidentityprovider.DescribeUserPoolInput{
 			UserPoolId: aws.String(rs.Primary.ID),
@@ -1644,7 +1678,7 @@ func testAccCheckUserPoolExists(ctx context.Context, name string, pool *cognitoi
 }
 
 func testAccPreCheckIdentityProvider(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).CognitoIDPConn()
+	conn := acctest.Provider.Meta().(*conns.AWSClient).CognitoIDPConn(ctx)
 
 	input := &cognitoidentityprovider.ListUserPoolsInput{
 		MaxResults: aws.Int64(1),
@@ -2453,6 +2487,30 @@ resource "aws_cognito_user_pool" "test" {
   }
 }
 `, name, boolname)
+}
+
+func testAccUserPoolConfig_schemaAttributesStringAttributeConstraints(name string) string {
+	return fmt.Sprintf(`
+resource "aws_cognito_user_pool" "test" {
+  name = "%[1]s"
+
+  schema {
+    attribute_data_type      = "String"
+    developer_only_attribute = false
+    mutable                  = false
+    name                     = "email"
+    required                 = true
+  }
+
+  schema {
+    attribute_data_type      = "Boolean"
+    developer_only_attribute = true
+    mutable                  = false
+    name                     = "mybool"
+    required                 = false
+  }
+}
+`, name)
 }
 
 func testAccUserPoolConfig_verificationMessageTemplate(name string) string {

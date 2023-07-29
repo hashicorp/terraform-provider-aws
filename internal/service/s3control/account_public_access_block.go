@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package s3control
 
 import (
@@ -62,7 +65,7 @@ func resourceAccountPublicAccessBlock() *schema.Resource {
 }
 
 func resourceAccountPublicAccessBlockCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).S3ControlConn()
+	conn := meta.(*conns.AWSClient).S3ControlConn(ctx)
 
 	accountID := meta.(*conns.AWSClient).AccountID
 	if v, ok := d.GetOk("account_id"); ok {
@@ -99,7 +102,7 @@ func resourceAccountPublicAccessBlockCreate(ctx context.Context, d *schema.Resou
 }
 
 func resourceAccountPublicAccessBlockRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).S3ControlConn()
+	conn := meta.(*conns.AWSClient).S3ControlConn(ctx)
 
 	output, err := FindPublicAccessBlockByAccountID(ctx, conn, d.Id())
 
@@ -123,7 +126,7 @@ func resourceAccountPublicAccessBlockRead(ctx context.Context, d *schema.Resourc
 }
 
 func resourceAccountPublicAccessBlockUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).S3ControlConn()
+	conn := meta.(*conns.AWSClient).S3ControlConn(ctx)
 
 	publicAccessBlockConfiguration := &s3control.PublicAccessBlockConfiguration{
 		BlockPublicAcls:       aws.Bool(d.Get("block_public_acls").(bool)),
@@ -150,7 +153,7 @@ func resourceAccountPublicAccessBlockUpdate(ctx context.Context, d *schema.Resou
 }
 
 func resourceAccountPublicAccessBlockDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).S3ControlConn()
+	conn := meta.(*conns.AWSClient).S3ControlConn(ctx)
 
 	log.Printf("[DEBUG] Deleting S3 Account Public Access Block: %s", d.Id())
 	_, err := conn.DeletePublicAccessBlockWithContext(ctx, &s3control.DeletePublicAccessBlockInput{

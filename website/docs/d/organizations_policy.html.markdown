@@ -17,7 +17,7 @@ Terraform data source for managing an AWS Organizations Policy.
 ```terraform
 data "aws_organizations_organization" "current" {}
 
-data "aws_organizations_oorganizational_policies" "current" {
+data "aws_organizations_policies_for_target" "current" {
   target_id = data.aws_organizations_organization.current.roots[0].id
   filter    = "SERVICE_CONTROL_POLICY"
 }
@@ -32,9 +32,9 @@ The following arguments are required:
 
 * `policy_id` - (Required) The unique identifier (ID) of the policy that you want more details on. Policy id starts with a "p-" followed by 8-28 lowercase or uppercase letters, digits, and underscores.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This data source exports the following attributes in addition to the arguments above:
 
 * `arn` - The Amazon Resource Name of the policy.
 * `aws_managed` - Indicates if a policy is an AWS managed policy.

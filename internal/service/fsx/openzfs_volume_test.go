@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package fsx_test
 
 import (
@@ -40,7 +43,7 @@ func TestAccFSxOpenzfsVolume_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "nfs_exports.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "nfs_exports.0.client_configurations.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "nfs_exports.0.client_configurations.0.clients", "*"),
-					acctest.CheckResourceAttrGreaterThanValue(resourceName, "nfs_exports.0.client_configurations.0.options.#", "0"),
+					acctest.CheckResourceAttrGreaterThanValue(resourceName, "nfs_exports.0.client_configurations.0.options.#", 0),
 					resource.TestCheckResourceAttrSet(resourceName, "parent_volume_id"),
 					resource.TestCheckResourceAttr(resourceName, "read_only", "false"),
 					resource.TestCheckResourceAttr(resourceName, "record_size_kib", "128"),
@@ -482,7 +485,7 @@ func testAccCheckOpenzfsVolumeExists(ctx context.Context, resourceName string, v
 			return fmt.Errorf("Not found: %s", resourceName)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).FSxConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).FSxConn(ctx)
 
 		volume1, err := tffsx.FindVolumeByID(ctx, conn, rs.Primary.ID)
 		if err != nil {
@@ -501,7 +504,7 @@ func testAccCheckOpenzfsVolumeExists(ctx context.Context, resourceName string, v
 
 func testAccCheckOpenzfsVolumeDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).FSxConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).FSxConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_fsx_openzfs_volume" {

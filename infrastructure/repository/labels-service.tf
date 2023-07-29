@@ -309,6 +309,7 @@ variable "service_labels" {
     "transitgateway",
     "translate",
     "verifiedaccess",
+    "verifiedpermissions",
     "voiceid",
     "vpc",
     "vpclattice",

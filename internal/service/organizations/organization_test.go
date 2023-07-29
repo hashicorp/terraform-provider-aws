@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package organizations_test
 
 import (
@@ -292,7 +295,7 @@ func testAccOrganization_FeatureSetUpdate(t *testing.T) {
 
 func testAccCheckOrganizationDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).OrganizationsConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).OrganizationsConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_organizations_organization" {
@@ -331,7 +334,7 @@ func testAccCheckOrganizationExists(ctx context.Context, n string, org *organiza
 			return fmt.Errorf("Organization ID not set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).OrganizationsConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).OrganizationsConn(ctx)
 		params := &organizations.DescribeOrganizationInput{}
 
 		resp, err := conn.DescribeOrganizationWithContext(ctx, params)

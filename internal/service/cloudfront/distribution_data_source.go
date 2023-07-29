@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package cloudfront
 
 import (
@@ -58,7 +61,10 @@ func DataSourceDistribution() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
+			"web_acl_id": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"tags": tftags.TagsSchema(),
 		},
 	}
@@ -66,7 +72,7 @@ func DataSourceDistribution() *schema.Resource {
 
 func dataSourceDistributionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CloudFrontConn()
+	conn := meta.(*conns.AWSClient).CloudFrontConn(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	output, err := FindDistributionByID(ctx, conn, d.Get("id").(string))
@@ -86,12 +92,13 @@ func dataSourceDistributionRead(ctx context.Context, d *schema.ResourceData, met
 		d.Set("hosted_zone_id", meta.(*conns.AWSClient).CloudFrontDistributionHostedZoneID())
 		if distributionConfig := distribution.DistributionConfig; distributionConfig != nil {
 			d.Set("enabled", distributionConfig.Enabled)
+			d.Set("web_acl_id", distributionConfig.WebACLId)
 			if aliases := distributionConfig.Aliases; aliases != nil {
 				d.Set("aliases", aliases.Items)
 			}
 		}
 	}
-	tags, err := ListTags(ctx, conn, d.Get("arn").(string))
+	tags, err := listTags(ctx, conn, d.Get("arn").(string))
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "listing tags for CloudFront Distribution (%s): %s", d.Id(), err)
 	}

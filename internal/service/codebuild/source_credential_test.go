@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package codebuild_test
 
 import (
@@ -122,7 +125,7 @@ func TestAccCodeBuildSourceCredential_disappears(t *testing.T) {
 
 func testAccCheckSourceCredentialDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CodeBuildConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CodeBuildConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_codebuild_source_credential" {
@@ -152,7 +155,7 @@ func testAccCheckSourceCredentialExists(ctx context.Context, name string, source
 			return fmt.Errorf("Not found: %s", name)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CodeBuildConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CodeBuildConn(ctx)
 
 		output, err := tfcodebuild.FindSourceCredentialByARN(ctx, conn, rs.Primary.ID)
 		if err != nil {

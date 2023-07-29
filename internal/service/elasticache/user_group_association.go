@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package elasticache
 
 import (
@@ -46,7 +49,7 @@ func ResourceUserGroupAssociation() *schema.Resource {
 
 func resourceUserGroupAssociationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ElastiCacheConn()
+	conn := meta.(*conns.AWSClient).ElastiCacheConn(ctx)
 
 	userGroupID := d.Get("user_group_id").(string)
 	userID := d.Get("user_id").(string)
@@ -75,7 +78,7 @@ func resourceUserGroupAssociationCreate(ctx context.Context, d *schema.ResourceD
 
 func resourceUserGroupAssociationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ElastiCacheConn()
+	conn := meta.(*conns.AWSClient).ElastiCacheConn(ctx)
 
 	userGroupID, userID, err := UserGroupAssociationParseResourceID(d.Id())
 
@@ -103,7 +106,7 @@ func resourceUserGroupAssociationRead(ctx context.Context, d *schema.ResourceDat
 
 func resourceUserGroupAssociationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ElastiCacheConn()
+	conn := meta.(*conns.AWSClient).ElastiCacheConn(ctx)
 
 	userGroupID, userID, err := UserGroupAssociationParseResourceID(d.Id())
 

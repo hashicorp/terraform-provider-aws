@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package batch_test
 
 import (
@@ -466,7 +469,7 @@ func testAccCheckJobDefinitionExists(ctx context.Context, n string, jd *batch.Jo
 			return fmt.Errorf("No Batch Job Queue ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).BatchConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).BatchConn(ctx)
 
 		jobDefinition, err := tfbatch.FindJobDefinitionByARN(ctx, conn, rs.Primary.ID)
 
@@ -519,7 +522,7 @@ func testAccCheckJobDefinitionRecreated(t *testing.T, before, after *batch.JobDe
 
 func testAccCheckJobDefinitionDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).BatchConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).BatchConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_batch_job_definition" {

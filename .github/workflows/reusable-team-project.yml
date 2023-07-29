@@ -1,0 +1,54 @@
+name: "Team GitHub Project Automation"
+on:
+  workflow_call:
+    inputs:
+      status:
+        description: "(Optional) The ID of the value of the Status field to set."
+        required: false
+        type: string
+env:
+  ITEM_NODE_ID: ${{ github.event.issue.node_id || github.event.pull_request.node_id }}
+  GH_TOKEN: ${{ secrets.PROJECT_SCOPED_TOKEN }}
+jobs:
+  add-to-project:
+    name: "Add Item to Project and Optionally Set Status"
+    runs-on: ubuntu-latest
+    steps:
+      - name: "Add Item to Project"
+        run: |
+          project_item_id="$(gh api graphql -f query='
+            mutation (
+              $node_id: ID!
+              $project_id: ID!
+            ){
+              addProjectV2ItemById(input: {projectId: $project_id, contentId: $node_id}) {
+                item {
+                  id
+                }
+              }
+            }' -f node_id=$ITEM_NODE_ID -f project_id='PVT_kwDOAAuecM4AF-7h' --jq '.data.addProjectV2ItemById.item.id')"
+
+          echo 'PROJECT_ITEM_ID='$project_item_id >> $GITHUB_ENV
+      - name: "Set Status Field Value"
+        if: inputs.status != ''
+        run: |
+          gh api graphql -f query='
+            mutation(
+              $field_id: ID!
+              $project_id: ID!
+              $project_item: ID!
+              $status_value: String!
+            ){
+              updateProjectV2ItemFieldValue(input: {
+                  projectId: $project_id
+                  itemId: $project_item
+                  fieldId: $field_id
+                  value: {
+                    singleSelectOptionId: $status_value
+                  }
+              }){
+                projectV2Item {
+                  id
+                }
+              }
+            }' -f field_id='PVTSSF_lADOAAuecM4AF-7hzgDcsQA' -f project_id='PVT_kwDOAAuecM4AF-7h' -f project_item=$PROJECT_ITEM_ID -f status_value=${{ inputs.status }} --silent

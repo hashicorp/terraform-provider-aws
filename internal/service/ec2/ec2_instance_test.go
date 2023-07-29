@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ec2_test
 
 import (
@@ -430,7 +433,7 @@ func TestAccEC2Instance_EBSBlockDevice_invalidIopsForVolumeType(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccInstanceConfig_ebsBlockDeviceInvalidIOPS,
-				ExpectError: regexp.MustCompile(`error creating resource: iops attribute not supported for ebs_block_device with volume_type gp2`),
+				ExpectError: regexp.MustCompile(`creating resource: iops attribute not supported for ebs_block_device with volume_type gp2`),
 			},
 		},
 	})
@@ -446,7 +449,7 @@ func TestAccEC2Instance_EBSBlockDevice_invalidThroughputForVolumeType(t *testing
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccInstanceConfig_ebsBlockDeviceInvalidThroughput,
-				ExpectError: regexp.MustCompile(`error creating resource: throughput attribute not supported for ebs_block_device with volume_type gp2`),
+				ExpectError: regexp.MustCompile(`creating resource: throughput attribute not supported for ebs_block_device with volume_type gp2`),
 			},
 		},
 	})
@@ -713,7 +716,7 @@ func TestAccEC2Instance_gp2WithIopsValue(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccInstanceConfig_gp2IOPSValue(rName),
-				ExpectError: regexp.MustCompile(`error creating resource: iops attribute not supported for root_block_device with volume_type gp2`),
+				ExpectError: regexp.MustCompile(`creating resource: iops attribute not supported for root_block_device with volume_type gp2`),
 			},
 		},
 	})
@@ -4999,7 +5002,18 @@ func TestAccEC2Instance_metadataOptions(t *testing.T) {
 		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInstanceConfig_metadataOptions(rName),
+				Config: testAccInstanceConfig_metadataOptionsDefaults(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckInstanceExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "metadata_options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "metadata_options.0.http_endpoint", "enabled"),
+					resource.TestCheckResourceAttr(resourceName, "metadata_options.0.http_tokens", "optional"),
+					resource.TestCheckResourceAttr(resourceName, "metadata_options.0.http_put_response_hop_limit", "1"),
+					resource.TestCheckResourceAttr(resourceName, "metadata_options.0.instance_metadata_tags", "disabled"),
+				),
+			},
+			{
+				Config: testAccInstanceConfig_metadataOptionsDisabled(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "metadata_options.#", "1"),
@@ -5320,7 +5334,7 @@ func testAccCheckInstanceDestroy(ctx context.Context) resource.TestCheckFunc {
 
 func testAccCheckInstanceDestroyWithProvider(ctx context.Context) acctest.TestCheckWithProviderFunc {
 	return func(s *terraform.State, provider *schema.Provider) error {
-		conn := provider.Meta().(*conns.AWSClient).EC2Conn()
+		conn := provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_instance" {
@@ -5359,7 +5373,7 @@ func testAccCheckInstanceExistsWithProvider(ctx context.Context, n string, v *ec
 			return fmt.Errorf("No EC2 Instance ID is set")
 		}
 
-		conn := providerF().Meta().(*conns.AWSClient).EC2Conn()
+		conn := providerF().Meta().(*conns.AWSClient).EC2Conn(ctx)
 
 		output, err := tfec2.FindInstanceByID(ctx, conn, rs.Primary.ID)
 
@@ -5375,7 +5389,7 @@ func testAccCheckInstanceExistsWithProvider(ctx context.Context, n string, v *ec
 
 func testAccCheckStopInstance(ctx context.Context, v *ec2.Instance) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
 
 		return tfec2.StopInstance(ctx, conn, aws.StringValue(v.InstanceId), 10*time.Minute)
 	}
@@ -5383,7 +5397,7 @@ func testAccCheckStopInstance(ctx context.Context, v *ec2.Instance) resource.Tes
 
 func testAccCheckDetachVolumes(ctx context.Context, instance *ec2.Instance) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
 
 		for _, v := range instance.BlockDeviceMappings {
 			if v.Ebs != nil && v.Ebs.VolumeId != nil {
@@ -5415,7 +5429,7 @@ func testAccCheckDetachVolumes(ctx context.Context, instance *ec2.Instance) reso
 func TestInstanceHostIDSchema(t *testing.T) {
 	t.Parallel()
 
-	actualSchema := tfec2.ResourceInstance().Schema["host_id"]
+	actualSchema := tfec2.ResourceInstance().SchemaMap()["host_id"]
 	expectedSchema := &schema.Schema{
 		Type:     schema.TypeString,
 		Optional: true,
@@ -5433,7 +5447,7 @@ func TestInstanceHostIDSchema(t *testing.T) {
 func TestInstanceCPUCoreCountSchema(t *testing.T) {
 	t.Parallel()
 
-	actualSchema := tfec2.ResourceInstance().Schema["cpu_core_count"]
+	actualSchema := tfec2.ResourceInstance().SchemaMap()["cpu_core_count"]
 	expectedSchema := &schema.Schema{
 		Type:          schema.TypeInt,
 		Optional:      true,
@@ -5453,7 +5467,7 @@ func TestInstanceCPUCoreCountSchema(t *testing.T) {
 func TestInstanceCPUThreadsPerCoreSchema(t *testing.T) {
 	t.Parallel()
 
-	actualSchema := tfec2.ResourceInstance().Schema["cpu_threads_per_core"]
+	actualSchema := tfec2.ResourceInstance().SchemaMap()["cpu_threads_per_core"]
 	expectedSchema := &schema.Schema{
 		Type:          schema.TypeInt,
 		Optional:      true,
@@ -5472,7 +5486,7 @@ func TestInstanceCPUThreadsPerCoreSchema(t *testing.T) {
 
 func driftTags(ctx context.Context, instance *ec2.Instance) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
 		_, err := conn.CreateTagsWithContext(ctx, &ec2.CreateTagsInput{
 			Resources: []*string{instance.InstanceId},
 			Tags: []*ec2.Tag{
@@ -5499,7 +5513,7 @@ func testAccPreCheckHasDefaultVPCDefaultSubnets(ctx context.Context, t *testing.
 
 // defaultVPC returns the ID of the default VPC for the current AWS Region, or "" if none exists.
 func defaultVPC(ctx context.Context, t *testing.T) string {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
+	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
 
 	output, err := conn.DescribeAccountAttributesWithContext(ctx, &ec2.DescribeAccountAttributesInput{
 		AttributeNames: aws.StringSlice([]string{ec2.AccountAttributeNameDefaultVpc}),
@@ -5528,7 +5542,7 @@ func hasDefaultVPC(ctx context.Context, t *testing.T) bool {
 
 // defaultSubnetCount returns the number of default subnets in the current region's default VPC.
 func defaultSubnetCount(ctx context.Context, t *testing.T) int {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
+	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
 
 	input := &ec2.DescribeSubnetsInput{
 		Filters: tfec2.BuildAttributeFilterList(
@@ -5549,6 +5563,46 @@ func defaultSubnetCount(ctx context.Context, t *testing.T) int {
 	}
 
 	return len(subnets)
+}
+
+func TestAccEC2Instance_basicWithSpot(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v ec2.Instance
+	resourceName := "aws_instance.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		// No subnet_id specified requires default VPC with default subnets.
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstanceConfig_basicWithSpot(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttrSet(resourceName, "spot_instance_request_id"),
+					resource.TestCheckResourceAttr(resourceName, "instance_lifecycle", "spot"),
+					resource.TestCheckResourceAttr(resourceName, "instance_market_options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "instance_market_options.0.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "instance_market_options.0.market_type", "spot"),
+					resource.TestCheckResourceAttr(resourceName, "instance_market_options.0.spot_options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "instance_market_options.0.spot_options.0.%", "4"),
+					resource.TestCheckResourceAttr(resourceName, "instance_market_options.0.spot_options.0.instance_interruption_behavior", "terminate"),
+					resource.TestCheckResourceAttrSet(resourceName, "instance_market_options.0.spot_options.0.max_price"),
+					resource.TestCheckResourceAttr(resourceName, "instance_market_options.0.spot_options.0.spot_instance_type", "one-time"),
+					resource.TestCheckResourceAttr(resourceName, "instance_market_options.0.spot_options.0.valid_until", ""),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"user_data_replace_on_change"},
+			},
+		},
+	})
 }
 
 // testAccLatestAmazonLinuxPVEBSAMIConfig returns the configuration for a data source that
@@ -8429,7 +8483,27 @@ resource "aws_instance" "test" {
 `, rName, hibernation))
 }
 
-func testAccInstanceConfig_metadataOptions(rName string) string {
+func testAccInstanceConfig_metadataOptionsDefaults(rName string) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigLatestAmazonLinuxHVMEBSAMI(),
+		testAccInstanceVPCConfig(rName, false, 0),
+		acctest.AvailableEC2InstanceTypeForRegion("t3.micro", "t2.micro"),
+		fmt.Sprintf(`
+resource "aws_instance" "test" {
+  ami           = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+  instance_type = data.aws_ec2_instance_type_offering.available.instance_type
+  subnet_id     = aws_subnet.test.id
+
+  tags = {
+    Name = %[1]q
+  }
+
+  metadata_options {}
+}
+`, rName))
+}
+
+func testAccInstanceConfig_metadataOptionsDisabled(rName string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigLatestAmazonLinuxHVMEBSAMI(),
 		testAccInstanceVPCConfig(rName, false, 0),
@@ -8842,6 +8916,27 @@ resource "aws_instance" "test" {
   launch_template {
     name = aws_launch_template.test.name
   }
+
+  tags = {
+    Name = %[1]q
+  }
+}
+`, rName))
+}
+
+func testAccInstanceConfig_basicWithSpot(rName string) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigLatestAmazonLinux2HVMEBSARM64AMI(),
+		acctest.AvailableEC2InstanceTypeForRegion("t4g.nano"),
+		fmt.Sprintf(`
+resource "aws_instance" "test" {
+  ami = data.aws_ami.amzn2-ami-minimal-hvm-ebs-arm64.id
+
+  instance_market_options {
+    market_type = "spot"
+  }
+
+  instance_type = data.aws_ec2_instance_type_offering.available.instance_type
 
   tags = {
     Name = %[1]q
