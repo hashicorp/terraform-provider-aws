@@ -226,6 +226,9 @@ func (visitor flattenVisitor) ptrToStruct(ctx context.Context, vFrom reflect.Val
 	var diags diag.Diagnostics
 
 	if tTo, ok := tTo.(fwtypes.NestedObjectType); ok {
+		//
+		// *struct -> types.List(OfObject).
+		//
 		diags.Append(visitor.ptrToStructNestedObject(ctx, vFrom, tTo, vTo)...)
 		return diags
 	}
@@ -321,6 +324,13 @@ func (visitor flattenVisitor) slice(ctx context.Context, vFrom reflect.Value, tT
 		}
 
 	case reflect.Struct:
+		if tTo, ok := tTo.(fwtypes.NestedObjectType); ok {
+			//
+			// []struct -> types.List(OfObject).
+			//
+			diags.Append(visitor.sliceOfStructNestedObject(ctx, vFrom, tTo, vTo)...)
+			return diags
+		}
 	}
 
 	diags.Append(visitor.newIncompatibleTypesError(vFrom, tTo))
@@ -418,6 +428,56 @@ func (visitor flattenVisitor) ptrToStructNestedObject(ctx context.Context, vFrom
 
 	// Set the target structure as a nested Object.
 	val, d := tTo.ValueFromObjectPtr(ctx, to)
+	diags.Append(d...)
+	if diags.HasError() {
+		return diags
+	}
+
+	vTo.Set(reflect.ValueOf(val))
+	return diags
+}
+
+// sliceOfStructNestedObject copies an AWS API []struct value to a compatible Plugin Framework NestedObjectValue field.
+func (visitor flattenVisitor) sliceOfStructNestedObject(ctx context.Context, vFrom reflect.Value, tTo fwtypes.NestedObjectType, vTo reflect.Value) diag.Diagnostics {
+	var diags diag.Diagnostics
+
+	if vFrom.IsNil() {
+		val, d := tTo.NullValue(ctx)
+		diags.Append(d...)
+		if diags.HasError() {
+			return diags
+		}
+
+		vTo.Set(reflect.ValueOf(val))
+		return diags
+	}
+
+	// Create a new target slice and flatten each element.
+	n := vFrom.Len()
+	to, d := tTo.NewObjectSlice(ctx, n, n)
+	diags.Append(d...)
+	if diags.HasError() {
+		return diags
+	}
+
+	t := reflect.ValueOf(to)
+	for i := 0; i < n; i++ {
+		target, d := tTo.NewObjectPtr(ctx)
+		diags.Append(d...)
+		if diags.HasError() {
+			return diags
+		}
+
+		diags.Append(walkStructFields(ctx, vFrom.Index(i).Interface(), target, visitor)...)
+		if diags.HasError() {
+			return diags
+		}
+
+		t.Index(i).Set(reflect.ValueOf(target))
+	}
+
+	// Set the target structure as a nested Object.
+	val, d := tTo.ValueFromObjectSlice(ctx, to)
 	diags.Append(d...)
 	if diags.HasError() {
 		return diags
