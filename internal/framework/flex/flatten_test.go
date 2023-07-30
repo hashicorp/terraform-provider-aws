@@ -15,6 +15,8 @@ import (
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 )
 
+// TODO Simplify by having more fields in structs.
+
 type ATestFlatten struct{}
 
 type BTestFlatten struct {

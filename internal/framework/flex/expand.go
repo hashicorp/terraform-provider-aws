@@ -15,6 +15,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 )
 
+// TODO Replace some error Diagnostics with logging.
+
 // Expand "expands" a resource's "business logic" data structure,
 // implemented using Terraform Plugin Framework data types, into
 // an AWS SDK for Go v2 API data structure.
