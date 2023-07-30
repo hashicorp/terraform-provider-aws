@@ -36,8 +36,24 @@ func DataSourceCatalogDatabase() *schema.Resource {
 				Required: true,
 			},
 			"create_table_default_permission": {
-				Type:     schema.TypeString,
+				Type:     schema.TypeList,
+				Optional: true,
 				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"data_lake_principal_identifier": {
+							Type:     schema.TypeString,
+							Optional: true,
+							Computed: true,
+						},
+						"permissions": {
+							Type:     schema.TypeSet,
+							Elem:     &schema.Schema{Type: schema.TypeString},
+							Optional: true,
+							Computed: true,
+						},
+					},
+				},
 			},
 			"description": {
 				Type:     schema.TypeString,
@@ -112,6 +128,10 @@ func dataSourceCatalogDatabaseRead(ctx context.Context, d *schema.ResourceData, 
 	d.Set("description", db.Description)
 	d.Set("location_uri", db.LocationUri)
 	d.Set("create_table_default_permission", db.CreateTableDefaultPermissions)
+
+	if err := d.Set("create_table_default_permission", flattenCreateTableDefaultPermissions(db.CreateTableDefaultPermissions)); err != nil {
+		return diag.Errorf("setting create_table_default_permission: %s", err)
+	}
 
 	if err := d.Set("parameters", aws.StringValueMap(db.Parameters)); err != nil {
 		return diag.Errorf("setting parameters: %s", err)

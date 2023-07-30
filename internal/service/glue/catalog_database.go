@@ -328,6 +328,40 @@ func expandDatabaseTargetDatabase(tfMap map[string]interface{}) *glue.DatabaseId
 	return apiObject
 }
 
+func flattenCreateTableDefaultPermissions(permissions []*glue.PrincipalPermissions) []interface{} {
+	if len(permissions) == 0 {
+		return []interface{}{}
+	}
+
+	out := make([]interface{}, len(permissions), len(permissions))
+
+	for i, permission := range permissions {
+		m := make(map[string]interface{})
+
+		if permission.Principal != nil {
+			m["data_lake_principal_identifier"] = aws.StringValue(permission.Principal.DataLakePrincipalIdentifier)
+		}
+
+		if len(permission.Permissions) > 0 {
+			m["permissions"] = flattenStringSet(permission.Permissions)
+		}
+
+		out[i] = m
+	}
+
+	return out
+}
+
+func flattenStringSet(items []*string) *schema.Set {
+	s := &schema.Set{F: schema.HashString}
+
+	for _, item := range items {
+		s.Add(*item)
+	}
+
+	return s
+}
+
 func flattenDatabaseTargetDatabase(apiObject *glue.DatabaseIdentifier) map[string]interface{} {
 	if apiObject == nil {
 		return nil
