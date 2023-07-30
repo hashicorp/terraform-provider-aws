@@ -26,6 +26,10 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePackageSDKDataSource {
 	return []*types.ServicePackageSDKDataSource{
 		{
+			Factory:  DataSourceCatalogDatabase,
+			TypeName: "aws_glue_catalog_database",
+		},
+		{
 			Factory:  DataSourceCatalogTable,
 			TypeName: "aws_glue_catalog_table",
 		},
