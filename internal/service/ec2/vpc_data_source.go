@@ -20,7 +20,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-// @SDKDataSource("aws_vpc")
+// @SDKDataSource("aws_vpc", name="VPC")
+// @Tags
 func DataSourceVPC() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceVPCRead,
