@@ -408,10 +408,6 @@ func (visitor flattenVisitor) ptrToStructNestedObject(ctx context.Context, vFrom
 		return diags
 	}
 
-	//
-	// *struct -> types.List(OfObject).
-	//
-
 	// Create a new target structure and walk its fields.
 	to, d := tTo.NewObjectPtr(ctx)
 	diags.Append(d...)
