@@ -128,13 +128,13 @@ func (t ListNestedObjectTypeOf[T]) ValueFromObjectSlice(ctx context.Context, sli
 	return nil, diags
 }
 
-func nestedObjectTypeNewObjectPtr[T any](context.Context) (*T, diag.Diagnostics) {
+func nestedObjectTypeNewObjectPtr[T any](_ context.Context) (*T, diag.Diagnostics) {
 	var diags diag.Diagnostics
 
 	return new(T), diags
 }
 
-func nestedObjectTypeNewObjectSlice[T any](ctx context.Context, len, cap int) ([]*T, diag.Diagnostics) {
+func nestedObjectTypeNewObjectSlice[T any](_ context.Context, len, cap int) ([]*T, diag.Diagnostics) { //nolint:unparam
 	var diags diag.Diagnostics
 
 	return make([]*T, len, cap), diags
