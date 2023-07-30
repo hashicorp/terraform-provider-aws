@@ -213,24 +213,13 @@ func (visitor flattenVisitor) ptr(ctx context.Context, vFrom reflect.Value, tTo 
 		return diags
 
 	case reflect.Struct:
-		diags.Append(visitor.ptrToStruct(ctx, vFrom, tTo, vTo)...)
-		return diags
-	}
-
-	diags.Append(visitor.newIncompatibleTypesError(vFrom, tTo))
-	return diags
-}
-
-// ptrToStruct copies an AWS API *struct value to a compatible Plugin Framework field.
-func (visitor flattenVisitor) ptrToStruct(ctx context.Context, vFrom reflect.Value, tTo attr.Type, vTo reflect.Value) diag.Diagnostics {
-	var diags diag.Diagnostics
-
-	if tTo, ok := tTo.(fwtypes.NestedObjectType); ok {
-		//
-		// *struct -> types.List(OfObject).
-		//
-		diags.Append(visitor.ptrToStructNestedObject(ctx, vFrom, tTo, vTo)...)
-		return diags
+		if tTo, ok := tTo.(fwtypes.NestedObjectType); ok {
+			//
+			// *struct -> types.List(OfObject).
+			//
+			diags.Append(visitor.ptrToStructNestedObject(ctx, vFrom, tTo, vTo)...)
+			return diags
+		}
 	}
 
 	diags.Append(visitor.newIncompatibleTypesError(vFrom, tTo))
@@ -319,6 +308,15 @@ func (visitor flattenVisitor) slice(ctx context.Context, vFrom reflect.Value, tT
 				}
 
 				vTo.Set(reflect.ValueOf(v))
+				return diags
+			}
+
+		case reflect.Struct:
+			if tTo, ok := tTo.(fwtypes.NestedObjectType); ok {
+				//
+				// []*struct -> types.List(OfObject).
+				//
+				diags.Append(visitor.sliceOfStructNestedObject(ctx, vFrom, tTo, vTo)...)
 				return diags
 			}
 		}

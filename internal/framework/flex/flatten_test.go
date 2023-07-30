@@ -125,6 +125,10 @@ type CCTestFlatten struct {
 	Data []BTestFlatten
 }
 
+type DDTestFlatten struct {
+	Data []*BTestFlatten
+}
+
 func TestGenericFlatten(t *testing.T) {
 	t.Parallel()
 
@@ -354,6 +358,12 @@ func TestGenericFlatten(t *testing.T) {
 		{
 			TestName:   "empty []struct and empty list Target",
 			Source:     &CCTestFlatten{Data: []BTestFlatten{}},
+			Target:     &BBTestFlatten{},
+			WantTarget: &BBTestFlatten{Data: fwtypes.NewListNestedObjectValueOfValueSlice(ctx, []DTestFlatten{})},
+		},
+		{
+			TestName:   "empty []*struct and empty list Target",
+			Source:     &DDTestFlatten{Data: []*BTestFlatten{}},
 			Target:     &BBTestFlatten{},
 			WantTarget: &BBTestFlatten{Data: fwtypes.NewListNestedObjectValueOfValueSlice(ctx, []DTestFlatten{})},
 		},
