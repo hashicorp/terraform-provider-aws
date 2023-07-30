@@ -25,6 +25,9 @@ type NestedObjectType interface {
 
 	// ValueFromObjectPtr returns a Value given an object pointer (Go *struct).
 	ValueFromObjectPtr(context.Context, any) (attr.Value, diag.Diagnostics)
+
+	// ValueFromObjectSlice returns a Value given an object pointer (Go []*struct).
+	ValueFromObjectSlice(context.Context, any) (attr.Value, diag.Diagnostics)
 }
 
 // NestedObjectValue extends the Value interface for values that represent nested Objects.

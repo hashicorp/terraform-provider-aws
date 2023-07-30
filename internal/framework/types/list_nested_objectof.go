@@ -117,6 +117,17 @@ func (t ListNestedObjectTypeOf[T]) ValueFromObjectPtr(ctx context.Context, ptr a
 	return nil, diags
 }
 
+func (t ListNestedObjectTypeOf[T]) ValueFromObjectSlice(ctx context.Context, slice any) (attr.Value, diag.Diagnostics) {
+	var diags diag.Diagnostics
+
+	if v, ok := slice.([]*T); ok {
+		return NewListNestedObjectValueOfSlice(ctx, v), diags
+	}
+
+	diags.Append(diag.NewErrorDiagnostic("Invalid slice value", fmt.Sprintf("incorrect type: want %T, got %T", (*[]T)(nil), slice)))
+	return nil, diags
+}
+
 func nestedObjectTypeNewObjectPtr[T any](ctx context.Context) (*T, diag.Diagnostics) {
 	var diags diag.Diagnostics
 

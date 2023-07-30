@@ -117,6 +117,17 @@ func (t SetNestedObjectTypeOf[T]) ValueFromObjectPtr(ctx context.Context, ptr an
 	return nil, diags
 }
 
+func (t SetNestedObjectTypeOf[T]) ValueFromObjectSlice(ctx context.Context, slice any) (attr.Value, diag.Diagnostics) {
+	var diags diag.Diagnostics
+
+	if v, ok := slice.([]*T); ok {
+		return NewSetNestedObjectValueOfSlice(ctx, v), diags
+	}
+
+	diags.Append(diag.NewErrorDiagnostic("Invalid slice value", fmt.Sprintf("incorrect type: want %T, got %T", (*[]T)(nil), slice)))
+	return nil, diags
+}
+
 // SetNestedObjectValueOf represents a Terraform Plugin Framework Set value whose elements are of type ObjectTypeOf.
 type SetNestedObjectValueOf[T any] struct {
 	basetypes.SetValue
