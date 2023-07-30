@@ -128,7 +128,7 @@ func (t ListNestedObjectTypeOf[T]) ValueFromObjectSlice(ctx context.Context, sli
 	return nil, diags
 }
 
-func nestedObjectTypeNewObjectPtr[T any](ctx context.Context) (*T, diag.Diagnostics) {
+func nestedObjectTypeNewObjectPtr[T any](context.Context) (*T, diag.Diagnostics) {
 	var diags diag.Diagnostics
 
 	return new(T), diags
