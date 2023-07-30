@@ -100,10 +100,6 @@ func (t SetNestedObjectTypeOf[T]) NewObjectSlice(ctx context.Context, len, cap i
 	return nestedObjectTypeNewObjectSlice[T](ctx, len, cap)
 }
 
-func (t SetNestedObjectTypeOf[T]) NewObjectValueSlice(ctx context.Context, len, cap int) (any, diag.Diagnostics) {
-	return nestedObjectTypeNewObjectValueSlice[T](ctx, len, cap)
-}
-
 func (t SetNestedObjectTypeOf[T]) NullValue(ctx context.Context) (attr.Value, diag.Diagnostics) {
 	var diags diag.Diagnostics
 

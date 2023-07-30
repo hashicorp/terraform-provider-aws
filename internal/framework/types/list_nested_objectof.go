@@ -100,10 +100,6 @@ func (t ListNestedObjectTypeOf[T]) NewObjectSlice(ctx context.Context, len, cap 
 	return nestedObjectTypeNewObjectSlice[T](ctx, len, cap)
 }
 
-func (t ListNestedObjectTypeOf[T]) NewObjectValueSlice(ctx context.Context, len, cap int) (any, diag.Diagnostics) {
-	return nestedObjectTypeNewObjectValueSlice[T](ctx, len, cap)
-}
-
 func (t ListNestedObjectTypeOf[T]) NullValue(ctx context.Context) (attr.Value, diag.Diagnostics) {
 	var diags diag.Diagnostics
 
@@ -131,12 +127,6 @@ func nestedObjectTypeNewObjectSlice[T any](ctx context.Context, len, cap int) ([
 	var diags diag.Diagnostics
 
 	return make([]*T, len, cap), diags
-}
-
-func nestedObjectTypeNewObjectValueSlice[T any](ctx context.Context, len, cap int) ([]T, diag.Diagnostics) {
-	var diags diag.Diagnostics
-
-	return make([]T, len, cap), diags
 }
 
 // ListNestedObjectValueOf represents a Terraform Plugin Framework List value whose elements are of type ObjectTypeOf.
