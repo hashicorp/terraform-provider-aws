@@ -93,9 +93,15 @@ func (t ListNestedObjectTypeOf[T]) ValueType(ctx context.Context) attr.Value {
 }
 
 func (t ListNestedObjectTypeOf[T]) NewObjectPtr(ctx context.Context) (any, diag.Diagnostics) {
-	var diags diag.Diagnostics
+	return nestedObjectTypeNewObjectPtr[T](ctx)
+}
 
-	return new(T), diags
+func (t ListNestedObjectTypeOf[T]) NewObjectSlice(ctx context.Context, len, cap int) (any, diag.Diagnostics) {
+	return nestedObjectTypeNewObjectSlice[T](ctx, len, cap)
+}
+
+func (t ListNestedObjectTypeOf[T]) NewObjectValueSlice(ctx context.Context, len, cap int) (any, diag.Diagnostics) {
+	return nestedObjectTypeNewObjectValueSlice[T](ctx, len, cap)
 }
 
 func (t ListNestedObjectTypeOf[T]) NullValue(ctx context.Context) (attr.Value, diag.Diagnostics) {
@@ -113,6 +119,24 @@ func (t ListNestedObjectTypeOf[T]) ValueFromObjectPtr(ctx context.Context, ptr a
 
 	diags.Append(diag.NewErrorDiagnostic("Invalid pointer value", fmt.Sprintf("incorrect type: want %T, got %T", (*T)(nil), ptr)))
 	return nil, diags
+}
+
+func nestedObjectTypeNewObjectPtr[T any](ctx context.Context) (*T, diag.Diagnostics) {
+	var diags diag.Diagnostics
+
+	return new(T), diags
+}
+
+func nestedObjectTypeNewObjectSlice[T any](ctx context.Context, len, cap int) ([]*T, diag.Diagnostics) {
+	var diags diag.Diagnostics
+
+	return make([]*T, len, cap), diags
+}
+
+func nestedObjectTypeNewObjectValueSlice[T any](ctx context.Context, len, cap int) ([]T, diag.Diagnostics) {
+	var diags diag.Diagnostics
+
+	return make([]T, len, cap), diags
 }
 
 // ListNestedObjectValueOf represents a Terraform Plugin Framework List value whose elements are of type ObjectTypeOf.

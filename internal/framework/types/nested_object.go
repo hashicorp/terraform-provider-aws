@@ -17,6 +17,12 @@ type NestedObjectType interface {
 	// NewObjectPtr returns a new, empty value as an object pointer (Go *struct).
 	NewObjectPtr(context.Context) (any, diag.Diagnostics)
 
+	// NewObjectSlice returns a new value as an object slice (Go []*struct).
+	NewObjectSlice(context.Context, int, int) (any, diag.Diagnostics)
+
+	// NewObjectValueSlice returns a new value as an object value slice (Go []struct).
+	NewObjectValueSlice(context.Context, int, int) (any, diag.Diagnostics)
+
 	// NullValue returns a Null Value.
 	NullValue(context.Context) (attr.Value, diag.Diagnostics)
 
