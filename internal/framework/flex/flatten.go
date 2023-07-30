@@ -225,46 +225,9 @@ func (visitor flattenVisitor) ptr(ctx context.Context, vFrom reflect.Value, tTo 
 func (visitor flattenVisitor) ptrToStruct(ctx context.Context, vFrom reflect.Value, tTo attr.Type, vTo reflect.Value) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	if tNestedObject, ok := tTo.(fwtypes.NestedObjectType); ok {
-		if vFrom.IsNil() {
-			val, d := tNestedObject.NullValue(ctx)
-			diags.Append(d...)
-			if diags.HasError() {
-				return diags
-			}
-
-			vTo.Set(reflect.ValueOf(val))
-			return diags
-		}
-
-		switch vElem := vFrom.Elem(); tTo.(type) {
-		case basetypes.ListTypable:
-			//
-			// *struct -> types.List(OfObject).
-			//
-
-			// Create a new target structure and walk its fields.
-			to, d := tNestedObject.NewObjectPtr(ctx)
-			diags.Append(d...)
-			if diags.HasError() {
-				return diags
-			}
-
-			diags.Append(walkStructFields(ctx, vElem.Interface(), to, visitor)...)
-			if diags.HasError() {
-				return diags
-			}
-
-			// Set the target structure as a nested Object.
-			val, d := tNestedObject.ValueFromObjectPtr(ctx, to)
-			diags.Append(d...)
-			if diags.HasError() {
-				return diags
-			}
-
-			vTo.Set(reflect.ValueOf(val))
-			return diags
-		}
+	if tTo, ok := tTo.(fwtypes.NestedObjectType); ok {
+		diags.Append(visitor.ptrToStructNestedObject(ctx, vFrom, tTo, vTo)...)
+		return diags
 	}
 
 	diags.Append(visitor.newIncompatibleTypesError(vFrom, tTo))
@@ -356,6 +319,8 @@ func (visitor flattenVisitor) slice(ctx context.Context, vFrom reflect.Value, tT
 				return diags
 			}
 		}
+
+	case reflect.Struct:
 	}
 
 	diags.Append(visitor.newIncompatibleTypesError(vFrom, tTo))
@@ -417,6 +382,48 @@ func (visitor flattenVisitor) map_(ctx context.Context, vFrom reflect.Value, tTo
 	}
 
 	diags.Append(visitor.newIncompatibleTypesError(vFrom, tTo))
+	return diags
+}
+
+// ptrToStructNestedObject copies an AWS API *struct value to a compatible Plugin Framework NestedObjectValue field.
+func (visitor flattenVisitor) ptrToStructNestedObject(ctx context.Context, vFrom reflect.Value, tTo fwtypes.NestedObjectType, vTo reflect.Value) diag.Diagnostics {
+	var diags diag.Diagnostics
+
+	if vFrom.IsNil() {
+		val, d := tTo.NullValue(ctx)
+		diags.Append(d...)
+		if diags.HasError() {
+			return diags
+		}
+
+		vTo.Set(reflect.ValueOf(val))
+		return diags
+	}
+
+	//
+	// *struct -> types.List(OfObject).
+	//
+
+	// Create a new target structure and walk its fields.
+	to, d := tTo.NewObjectPtr(ctx)
+	diags.Append(d...)
+	if diags.HasError() {
+		return diags
+	}
+
+	diags.Append(walkStructFields(ctx, vFrom.Elem().Interface(), to, visitor)...)
+	if diags.HasError() {
+		return diags
+	}
+
+	// Set the target structure as a nested Object.
+	val, d := tTo.ValueFromObjectPtr(ctx, to)
+	diags.Append(d...)
+	if diags.HasError() {
+		return diags
+	}
+
+	vTo.Set(reflect.ValueOf(val))
 	return diags
 }
 
