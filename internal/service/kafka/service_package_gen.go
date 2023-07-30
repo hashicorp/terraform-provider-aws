@@ -22,15 +22,7 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.Serv
 }
 
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.ServicePackageFrameworkResource {
-	return []*types.ServicePackageFrameworkResource{
-		{
-			Factory: newResourceVpcConnection,
-			Name:    "Vpc Connection",
-			Tags: &types.ServicePackageResourceTags{
-				IdentifierAttribute: "arn",
-			},
-		},
-	}
+	return []*types.ServicePackageFrameworkResource{}
 }
 
 func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePackageSDKDataSource {
@@ -78,6 +70,14 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			Name:     "Serverless Cluster",
 			Tags: &types.ServicePackageResourceTags{
 				IdentifierAttribute: "id",
+			},
+		},
+		{
+			Factory:  ResourceVpcConnection,
+			TypeName: "aws_msk_vpc_connection",
+			Name:     "Vpc Connection",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
 			},
 		},
 	}

@@ -12,7 +12,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/names"
 
 	tfkafka "github.com/hashicorp/terraform-provider-aws/internal/service/kafka"
 )
@@ -25,7 +24,7 @@ func TestAccKafkaVpcConnection_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.Kafka),
+		ErrorCheck:               acctest.ErrorCheck(t, kafka.ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckVpcConnectionDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -185,11 +184,12 @@ resource "aws_security_group" "test" {
   }
 }
 
-resource "aws_kafka_vpc_connection" "test" {
+resource "aws_msk_vpc_connection" "test" {
 	authentication = "IAM"
 	target_cluster_arn = "arn:aws:kafka:eu-west-2:926562225508:cluster/demo-cluster-1/a7640874-7bdf-4a38-be10-24465449a333-2"
 	vpc_id = aws_vpc.test.id
 	client_subnets = aws_subnet.test[*].id
+	security_groups = [aws_security_group.test.id]
 }
 
 `, rName))

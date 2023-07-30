@@ -3,303 +3,195 @@ package kafka
 import (
 	"context"
 	"errors"
-	"fmt"
+	"log"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/kafka"
-	awstypes "github.com/aws/aws-sdk-go-v2/service/kafka/types"
-	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
-	"github.com/hashicorp/terraform-plugin-framework/path"
-	"github.com/hashicorp/terraform-plugin-framework/resource"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/setplanmodifier"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
-	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/aws/aws-sdk-go-v2/service/kafka/types"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	// "github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
+	// "github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
-	"github.com/hashicorp/terraform-provider-aws/internal/framework"
-	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // Function annotations are used for resource registration to the Provider. DO NOT EDIT.
-// @FrameworkResource(name="Vpc Connection")
+// @SDKResource("aws_msk_vpc_connection", name="Vpc Connection")
+// Tagging annotations are used for "transparent tagging".
+// Change the "identifierAttribute" value to the name of the attribute used in ListTags and UpdateTags calls (e.g. "arn").
 // @Tags(identifierAttribute="arn")
-func newResourceVpcConnection(_ context.Context) (resource.ResourceWithConfigure, error) {
-	r := &resourceVpcConnection{}
+func ResourceVpcConnection() *schema.Resource {
+	return &schema.Resource{
 
-	r.SetDefaultCreateTimeout(30 * time.Minute)
-	r.SetDefaultUpdateTimeout(30 * time.Minute)
-	r.SetDefaultDeleteTimeout(30 * time.Minute)
+		CreateWithoutTimeout: resourceVpcConnectionCreate,
+		ReadWithoutTimeout:   resourceVpcConnectionRead,
+		UpdateWithoutTimeout: resourceVpcConnectionUpdate,
+		DeleteWithoutTimeout: resourceVpcConnectionDelete,
 
-	return r, nil
+		Importer: &schema.ResourceImporter{
+			StateContext: schema.ImportStatePassthroughContext,
+		},
+
+		Schema: map[string]*schema.Schema{
+			"arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+				ForceNew: true,
+			},
+			"authentication": {
+				Type:     schema.TypeString,
+				Required: true,
+				ForceNew: true,
+			},
+
+			"client_subnets": {
+				Type:     schema.TypeSet,
+				Required: true,
+				ForceNew: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+			},
+
+			"security_groups": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				ForceNew: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+			},
+			"vpc_id": {
+				Type:     schema.TypeString,
+				Required: true,
+				ForceNew: true,
+			},
+			"target_cluster_arn": {
+				Type:     schema.TypeString,
+				Required: true,
+				ForceNew: true,
+			},
+			names.AttrTags:    tftags.TagsSchema(), // TIP: Many, but not all, resources have `tags` and `tags_all` attributes.
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
+		},
+
+		CustomizeDiff: verify.SetTagsDiff,
+	}
 }
 
 const (
 	ResNameVpcConnection = "Vpc Connection"
 )
 
-type resourceVpcConnection struct {
-	framework.ResourceWithConfigure
-	framework.WithTimeouts
-}
+func resourceVpcConnectionCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 
-func (r *resourceVpcConnection) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = "aws_msk_vpc_connection"
-}
-
-func (r *resourceVpcConnection) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
-	resp.Schema = schema.Schema{
-		Attributes: map[string]schema.Attribute{
-			"arn": framework.ARNAttributeComputedOnly(),
-
-			"authentication": schema.StringAttribute{
-				Required: true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
-				},
-			},
-			"client_subnets": schema.SetAttribute{
-				Required:    true,
-				ElementType: types.StringType,
-				PlanModifiers: []planmodifier.Set{
-					setplanmodifier.RequiresReplace(),
-				},
-			},
-			"id": framework.IDAttribute(),
-			"security_groups": schema.SetAttribute{
-				Optional:    true,
-				ElementType: types.StringType,
-				PlanModifiers: []planmodifier.Set{
-					setplanmodifier.UseStateForUnknown(),
-				},
-			},
-			"vpc_id": schema.StringAttribute{
-				Required: true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
-				},
-			},
-			"target_cluster_arn": schema.StringAttribute{
-				Required: true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
-				},
-			},
-
-			names.AttrTags:    tftags.TagsAttribute(),
-			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
-		},
-	}
-}
-
-func (r *resourceVpcConnection) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-	conn := r.Meta().KafkaClient(ctx)
-
-	var data resourceVpcConnectionData
-	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
-	data.ID = types.StringValue(createVpcConnectionID(data.TargetClusterArn.ValueString(), data.VpcId.ValueString()))
+	conn := meta.(*conns.AWSClient).KafkaClient(ctx)
 
 	in := &kafka.CreateVpcConnectionInput{
-		Authentication:   aws.String(data.Authentication.ValueString()),
-		ClientSubnets:    flex.ExpandFrameworkStringValueSet(ctx, data.ClientSubnets),
-		SecurityGroups:   flex.ExpandFrameworkStringValueSet(ctx, data.SecurityGroups),
-		TargetClusterArn: aws.String(data.TargetClusterArn.ValueString()),
-		VpcId:            aws.String(data.VpcId.ValueString()),
+		Authentication:   aws.String(d.Get("authentication").(string)),
+		ClientSubnets:    flex.ExpandStringValueSet(d.Get("client_subnets").(*schema.Set)),
+		TargetClusterArn: aws.String(d.Get("target_cluster_arn").(string)),
+		VpcId:            aws.String(d.Get("vpc_id").(string)),
+		// Tags: getTagsIn(ctx),
+	}
+
+	if v, ok := d.GetOk("security_groups"); ok {
+		in.SecurityGroups = flex.ExpandStringValueSet(v.(*schema.Set))
 	}
 
 	out, err := conn.CreateVpcConnection(ctx, in)
 	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.Kafka, create.ErrActionCreating, ResNameVpcConnection, data.ID.String(), err),
-			err.Error(),
-		)
-		return
+
+		return append(diags, create.DiagError(names.Kafka, create.ErrActionCreating, ResNameVpcConnection, d.Get("arn").(string), err)...)
 	}
+
 	if out == nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.Kafka, create.ErrActionCreating, ResNameVpcConnection, data.ID.String(), nil),
-			errors.New("empty output").Error(),
-		)
-		return
+		return append(diags, create.DiagError(names.Kafka, create.ErrActionCreating, ResNameVpcConnection, d.Get("arn").(string), errors.New("empty output"))...)
 	}
 
-	data.ARN = flex.StringToFramework(ctx, out.VpcConnectionArn)
-	data.State = flex.StringValueToFramework(ctx, out.State)
+	d.SetId(aws.ToString(out.VpcConnectionArn))
 
-	createTimeout := r.CreateTimeout(ctx, data.Timeouts)
-	_, err = waitVpcConnectionCreated(ctx, conn, data.ARN.ValueString(), createTimeout)
+	if _, err := waitVpcConnectionCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
+		return append(diags, create.DiagError(names.Kafka, create.ErrActionWaitingForCreation, ResNameVpcConnection, d.Id(), err)...)
+	}
+
+	return append(diags, resourceVpcConnectionRead(ctx, d, meta)...)
+}
+
+func resourceVpcConnectionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
+	conn := meta.(*conns.AWSClient).KafkaClient(ctx)
+
+	out, err := FindVpcConnectionByARN(ctx, conn, d.Id())
+
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] Kafka VpcConnection (%s) not found, removing from state", d.Id())
+		d.SetId("")
+		return diags
+	}
+
 	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.Kafka, create.ErrActionWaitingForCreation, ResNameVpcConnection, data.ARN.String(), err),
-			err.Error(),
-		)
-		return
+		return append(diags, create.DiagError(names.Kafka, create.ErrActionReading, ResNameVpcConnection, d.Id(), err)...)
 	}
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, data)...)
+	d.Set("authentication", out.Authentication)
+	d.Set("arn", out.VpcConnectionArn)
+	d.Set("vpc_id", out.VpcId)
+
+	if err := d.Set("client_subnets", flex.FlattenStringValueSet(out.Subnets)); err != nil {
+		return append(diags, create.DiagError(names.Kafka, create.ErrActionSetting, ResNameVpcConnection, d.Id(), err)...)
+	}
+
+	if err := d.Set("security_groups", flex.FlattenStringValueSet(out.SecurityGroups)); err != nil {
+		return append(diags, create.DiagError(names.Kafka, create.ErrActionSetting, ResNameVpcConnection, d.Id(), err)...)
+	}
+
+	return diags
 }
 
-func (r *resourceVpcConnection) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
-	conn := r.Meta().KafkaClient(ctx)
+func resourceVpcConnectionUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	// Tags only.
+	return resourceVpcConnectionRead(ctx, d, meta)
+}
 
-	var state resourceVpcConnectionData
-	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
+func resourceVpcConnectionDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 
-	out, err := FindVpcConnectionByARN(ctx, conn, state.ARN.ValueString())
-	if tfresource.NotFound(err) {
-		resp.State.RemoveResource(ctx)
-		return
+	conn := meta.(*conns.AWSClient).KafkaClient(ctx)
+
+	log.Printf("[INFO] Deleting Kafka VpcConnection %s", d.Id())
+
+	_, err := conn.DeleteVpcConnection(ctx, &kafka.DeleteVpcConnectionInput{
+		Arn: aws.String(d.Id()),
+	})
+
+	if errs.IsA[*types.NotFoundException](err) {
+		return diags
 	}
 	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.Kafka, create.ErrActionSetting, ResNameVpcConnection, state.ID.String(), err),
-			err.Error(),
-		)
-		return
+		return append(diags, create.DiagError(names.Kafka, create.ErrActionDeleting, ResNameVpcConnection, d.Id(), err)...)
 	}
 
-	state.ARN = flex.StringToFramework(ctx, out.VpcConnectionArn)
-	state.Authentication = flex.StringToFramework(ctx, out.Authentication)
-	state.SecurityGroups = flex.FlattenFrameworkStringValueSet(ctx, out.SecurityGroups)
-	state.ClientSubnets = flex.FlattenFrameworkStringValueSet(ctx, out.Subnets)
-	state.VpcId = flex.StringToFramework(ctx, out.VpcId)
+	if _, err := waitVpcConnectionDeleted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
+		return append(diags, create.DiagError(names.Kafka, create.ErrActionWaitingForDeletion, ResNameVpcConnection, d.Id(), err)...)
+	}
 
-
-	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
+	return diags
 }
 
-func (r *resourceVpcConnection) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	// conn := r.Meta().KafkaClient(ctx)
-
-	var plan, state resourceVpcConnectionData
-	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
-	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
-	// if !plan.ARN.Equal(state.ARN) ||
-	// 	!plan.SecurityGroups.Equal(state.SecurityGroups) ||
-	// 	!plan.ClientSubnets.Equal(state.ClientSubnets) ||
-	// 	!plan.Authentication.Equal(state.Authentication){
-
-	// 	in := &kafka.CreateVpcConnectionInput{
-	// 		SecurityGroups:   aws.String(plan.SecurityGroups.ValueString()),
-	// 		VpcConnectionName: aws.String(plan.Name.ValueString()),
-	// 		VpcConnectionType: aws.String(plan.Type.ValueString()),
-	// 	}
-
-	// 	if !plan.Description.IsNull() {
-	// 		// TIP: Optional fields should be set based on whether or not they are
-	// 		// used.
-	// 		in.Description = aws.String(plan.Description.ValueString())
-	// 	}
-	// 	if !plan.ComplexArgument.IsNull() {
-	// 		// TIP: Use an expander to assign a complex argument. The elements must be
-	// 		// deserialized into the appropriate struct before being passed to the expander.
-	// 		var tfList []complexArgumentData
-	// 		resp.Diagnostics.Append(plan.ComplexArgument.ElementsAs(ctx, &tfList, false)...)
-	// 		if resp.Diagnostics.HasError() {
-	// 			return
-	// 		}
-
-	// 		in.ComplexArgument = expandComplexArgument(tfList)
-	// 	}
-
-	// 	// TIP: -- 4. Call the AWS modify/update function
-	// 	out, err := conn(ctx, in)
-	// 	if err != nil {
-	// 		resp.Diagnostics.AddError(
-	// 			create.ProblemStandardMessage(names.Kafka, create.ErrActionUpdating, ResNameVpcConnection, plan.ID.String(), err),
-	// 			err.Error(),
-	// 		)
-	// 		return
-	// 	}
-	// 	if out == nil || out.VpcConnection == nil {
-	// 		resp.Diagnostics.AddError(
-	// 			create.ProblemStandardMessage(names.Kafka, create.ErrActionUpdating, ResNameVpcConnection, plan.ID.String(), nil),
-	// 			errors.New("empty output").Error(),
-	// 		)
-	// 		return
-	// 	}
-
-	// 	plan.ARN = flex.StringToFramework(ctx, out.VpcConnection.Arn)
-	// 	plan.ID = flex.StringToFramework(ctx, out.VpcConnection.Arn)
-	// }
-
-	// updateTimeout := r.UpdateTimeout(ctx, plan.Timeouts)
-	// _, err := waitVpcConnectionUpdated(ctx, conn, plan.ID.ValueString(), updateTimeout)
-	// if err != nil {
-	// 	resp.Diagnostics.AddError(
-	// 		create.ProblemStandardMessage(names.Kafka, create.ErrActionWaitingForUpdate, ResNameVpcConnection, plan.ID.String(), err),
-	// 		err.Error(),
-	// 	)
-	// 	return
-	// }
-
-	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
-}
-
-func (r *resourceVpcConnection) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
-	conn := r.Meta().KafkaClient(ctx)
-
-	var state resourceVpcConnectionData
-	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
-	in := &kafka.DeleteVpcConnectionInput{
-		Arn: aws.String(state.ARN.ValueString()),
-	}
-
-	_, err := conn.DeleteVpcConnection(ctx, in)
-	if err != nil {
-		var nfe *awstypes.NotFoundException
-		if errors.As(err, &nfe) {
-			return
-		}
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.Kafka, create.ErrActionDeleting, ResNameVpcConnection, state.ID.String(), err),
-			err.Error(),
-		)
-		return
-	}
-
-	deleteTimeout := r.DeleteTimeout(ctx, state.Timeouts)
-	_, err = waitVpcConnectionDeleted(ctx, conn, state.ID.ValueString(), deleteTimeout)
-	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.Kafka, create.ErrActionWaitingForDeletion, ResNameVpcConnection, state.ID.String(), err),
-			err.Error(),
-		)
-		return
-	}
-}
-
-func (r *resourceVpcConnection) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
-}
-
-
-func waitVpcConnectionCreated(ctx context.Context, conn *kafka.Client, arn string, timeout time.Duration) (*kafka.DescribeVpcConnectionOutput, error) {
+func waitVpcConnectionCreated(ctx context.Context, conn *kafka.Client, id string, timeout time.Duration) (*kafka.DescribeVpcConnectionOutput, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending:                   enum.Slice(awstypes.VpcConnectionStateCreating),
-		Target:                    enum.Slice(awstypes.VpcConnectionStateAvailable),
-		Refresh:                   statusVpcConnection(ctx, conn, arn),
+		Pending:                   enum.Slice(types.VpcConnectionStateCreating),
+		Target:                    enum.Slice(types.VpcConnectionStateAvailable),
+		Refresh:                   statusVpcConnection(ctx, conn, id),
 		Timeout:                   timeout,
 		NotFoundChecks:            20,
 		ContinuousTargetOccurence: 2,
@@ -313,27 +205,9 @@ func waitVpcConnectionCreated(ctx context.Context, conn *kafka.Client, arn strin
 	return nil, err
 }
 
-// func waitVpcConnectionUpdated(ctx context.Context, conn *kafka.Client, id string, timeout time.Duration) (*kafka.DescribeVpcConnectionOutput, error) {
-// 	stateConf := &retry.StateChangeConf{
-// 		Pending:    enum.Slice(awstypes.VpcConnectionStateCreating),
-// 		Target:     enum.Slice(awstypes.VpcConnectionStateAvailable),
-// 		Refresh:                   statusVpcConnection(ctx, conn, id),
-// 		Timeout:                   timeout,
-// 		NotFoundChecks:            20,
-// 		ContinuousTargetOccurence: 2,
-// 	}
-
-// 	outputRaw, err := stateConf.WaitForStateContext(ctx)
-// 	if out, ok := outputRaw.(*kafka.DescribeVpcConnectionOutput); ok {
-// 		return out, err
-// 	}
-
-// 	return nil, err
-// }
-
 func waitVpcConnectionDeleted(ctx context.Context, conn *kafka.Client, arn string, timeout time.Duration) (*kafka.DescribeVpcConnectionOutput, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending: enum.Slice(awstypes.VpcConnectionStateAvailable, awstypes.VpcConnectionStateInactive, awstypes.VpcConnectionStateDeactivating, awstypes.VpcConnectionStateDeleting),
+		Pending: enum.Slice(types.VpcConnectionStateAvailable, types.VpcConnectionStateInactive, types.VpcConnectionStateDeactivating, types.VpcConnectionStateDeleting),
 		Target:  []string{},
 		Refresh: statusVpcConnection(ctx, conn, arn),
 		Timeout: timeout,
@@ -369,7 +243,7 @@ func FindVpcConnectionByARN(ctx context.Context, conn *kafka.Client, arn string)
 
 	out, err := conn.DescribeVpcConnection(ctx, in)
 	if err != nil {
-		var nfe *awstypes.NotFoundException
+		var nfe *types.NotFoundException
 		if errors.As(err, &nfe) {
 			return nil, &retry.NotFoundError{
 				LastError:   err,
@@ -385,22 +259,4 @@ func FindVpcConnectionByARN(ctx context.Context, conn *kafka.Client, arn string)
 	}
 
 	return out, nil
-}
-
-func createVpcConnectionID(TargetClusterArn, VpcId string) string {
-	return fmt.Sprintf("%s,%s", TargetClusterArn, VpcId)
-}
-
-type resourceVpcConnectionData struct {
-	ARN              types.String   `tfsdk:"arn"`
-	ID               types.String   `tfsdk:"id"`
-	Authentication   types.String   `tfsdk:"authentication"`
-	ClientSubnets    types.Set      `tfsdk:"client_subnets"`
-	SecurityGroups   types.Set      `tfsdk:"security_groups"`
-	TargetClusterArn types.String   `tfsdk:"target_cluster_arn"`
-	Tags             types.Map      `tfsdk:"tags"`
-	State            types.String   `tfsdk:"state"`
-	TagsAll          types.Map      `tfsdk:"tags_all"`
-	Timeouts         timeouts.Value `tfsdk:"timeouts"`
-	VpcId            types.String   `tfsdk:"vpc_id"`
 }
