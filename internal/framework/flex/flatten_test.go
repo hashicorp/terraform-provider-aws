@@ -370,13 +370,13 @@ func TestGenericFlatten(t *testing.T) {
 		{
 			TestName: "non-empty []struct and non-empty list Target",
 			Source: &CCTestFlatten{Data: []BTestFlatten{
-				BTestFlatten{Name: "a"},
-				BTestFlatten{Name: "b"},
+				{Name: "a"},
+				{Name: "b"},
 			}},
 			Target: &BBTestFlatten{},
 			WantTarget: &BBTestFlatten{Data: fwtypes.NewListNestedObjectValueOfValueSlice(ctx, []DTestFlatten{
-				DTestFlatten{Name: types.StringValue("a")},
-				DTestFlatten{Name: types.StringValue("b")},
+				{Name: types.StringValue("a")},
+				{Name: types.StringValue("b")},
 			})},
 		},
 		{
@@ -388,25 +388,25 @@ func TestGenericFlatten(t *testing.T) {
 		{
 			TestName: "non-empty []*struct and non-empty list Target",
 			Source: &DDTestFlatten{Data: []*BTestFlatten{
-				&BTestFlatten{Name: "a"},
-				&BTestFlatten{Name: "b"},
+				{Name: "a"},
+				{Name: "b"},
 			}},
 			Target: &BBTestFlatten{},
 			WantTarget: &BBTestFlatten{Data: fwtypes.NewListNestedObjectValueOfValueSlice(ctx, []DTestFlatten{
-				DTestFlatten{Name: types.StringValue("a")},
-				DTestFlatten{Name: types.StringValue("b")},
+				{Name: types.StringValue("a")},
+				{Name: types.StringValue("b")},
 			})},
 		},
 		{
 			TestName: "non-empty []*struct and non-empty set Target",
 			Source: &DDTestFlatten{Data: []*BTestFlatten{
-				&BTestFlatten{Name: "a"},
-				&BTestFlatten{Name: "b"},
+				{Name: "a"},
+				{Name: "b"},
 			}},
 			Target: &EETestFlatten{},
 			WantTarget: &EETestFlatten{Data: fwtypes.NewSetNestedObjectValueOfValueSlice(ctx, []DTestFlatten{
-				DTestFlatten{Name: types.StringValue("a")},
-				DTestFlatten{Name: types.StringValue("b")},
+				{Name: types.StringValue("a")},
+				{Name: types.StringValue("b")},
 			})},
 		},
 	}
