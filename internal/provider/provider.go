@@ -373,7 +373,7 @@ func New(ctx context.Context) (*schema.Provider, error) {
 				interceptors = append(interceptors, interceptorItem{
 					when: Before | After | Finally,
 					why:  Create | Read | Update,
-					interceptor: tagsInterceptor{
+					interceptor: tagsResourceInterceptor{
 						tags:       v.Tags,
 						updateFunc: tagsUpdateFunc,
 						readFunc:   tagsReadFunc,

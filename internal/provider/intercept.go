@@ -195,14 +195,14 @@ func (r *wrappedResource) StateUpgrade(f schema.StateUpgradeFunc) schema.StateUp
 
 type tagsCRUDFunc func(context.Context, schemaResourceData, conns.ServicePackage, *types.ServicePackageResourceTags, string, string, any, diag.Diagnostics) (context.Context, diag.Diagnostics)
 
-// tagsInterceptor implements transparent tagging for resources.
-type tagsInterceptor struct {
+// tagsResourceInterceptor implements transparent tagging for resources.
+type tagsResourceInterceptor struct {
 	tags       *types.ServicePackageResourceTags
 	updateFunc tagsCRUDFunc
 	readFunc   tagsCRUDFunc
 }
 
-func (r tagsInterceptor) run(ctx context.Context, d schemaResourceData, meta any, when when, why why, diags diag.Diagnostics) (context.Context, diag.Diagnostics) {
+func (r tagsResourceInterceptor) run(ctx context.Context, d schemaResourceData, meta any, when when, why why, diags diag.Diagnostics) (context.Context, diag.Diagnostics) {
 	if r.tags == nil {
 		return ctx, diags
 	}
@@ -372,7 +372,7 @@ func (r tagsInterceptor) run(ctx context.Context, d schemaResourceData, meta any
 	return ctx, diags
 }
 
-// tagsInterceptor implements transparent tagging for data sources.
+// tagsResourceInterceptor implements transparent tagging for data sources.
 type tagsDataSourceInterceptor struct {
 	tags *types.ServicePackageResourceTags
 }
