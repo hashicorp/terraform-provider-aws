@@ -52,7 +52,7 @@ func (t *mockService) UpdateTags(context.Context, any, string, string, any) erro
 	return nil
 }
 
-func TesttagsResourceInterceptor(t *testing.T) {
+func TestTagsResourceInterceptor(t *testing.T) {
 	t.Parallel()
 
 	var interceptors interceptorItems
