@@ -24,8 +24,9 @@ import (
 )
 
 const (
-	InstanceAutomatedBackupsReplicationCreateTimeout = 75 * time.Minute
-	InstanceAutomatedBackupsReplicationDeleteTimeout = 75 * time.Minute
+	InstanceAutomatedBackupStatusPending     = "Pending"
+	InstanceAutomatedBackupStatusReplicating = "Replicating"
+	InstanceAutomatedBackupStatusRetained    = "Retained"
 )
 
 // @SDKResource("aws_db_instance_automated_backups_replication")
@@ -36,8 +37,8 @@ func ResourceInstanceAutomatedBackupsReplication() *schema.Resource {
 		DeleteWithoutTimeout: resourceInstanceAutomatedBackupsReplicationDelete,
 
 		Timeouts: &schema.ResourceTimeout{
-			Create: schema.DefaultTimeout(InstanceAutomatedBackupsReplicationCreateTimeout),
-			Delete: schema.DefaultTimeout(InstanceAutomatedBackupsReplicationDeleteTimeout),
+			Create: schema.DefaultTimeout(75 * time.Minute),
+			Delete: schema.DefaultTimeout(75 * time.Minute),
 		},
 
 		Importer: &schema.ResourceImporter{
@@ -154,6 +155,10 @@ func resourceInstanceAutomatedBackupsReplicationDelete(ctx context.Context, d *s
 	})
 
 	if tfawserr.ErrCodeEquals(err, rds.ErrCodeDBInstanceNotFoundFault) {
+		return diags
+	}
+
+	if tfawserr.ErrMessageContains(err, rds.ErrCodeInvalidDBInstanceStateFault, "not replicating to the current region") {
 		return diags
 	}
 

@@ -52,6 +52,36 @@ func TestAccRDSInstanceAutomatedBackupsReplication_basic(t *testing.T) {
 	})
 }
 
+func TestAccRDSInstanceAutomatedBackupsReplication_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_db_instance_automated_backups_replication.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckMultipleRegion(t, 2)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+		CheckDestroy:             testAccCheckInstanceAutomatedBackupsReplicationDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstanceAutomatedBackupsReplicationConfig_basic(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceAutomatedBackupsReplicationExist(ctx, resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfrds.ResourceInstanceAutomatedBackupsReplication(), resourceName),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
 func TestAccRDSInstanceAutomatedBackupsReplication_retentionPeriod(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
@@ -213,15 +243,30 @@ resource "aws_db_subnet_group" "test" {
   provider = "awsalternate"
 }
 
+data "aws_rds_engine_version" "default" {
+  engine = "postgres"
+
+  provider = "awsalternate"
+}
+
+data "aws_rds_orderable_db_instance" "test" {
+  engine         = data.aws_rds_engine_version.default.engine
+  engine_version = data.aws_rds_engine_version.default.version
+  license_model  = "postgresql-license"
+  storage_type   = "standard"
+
+  preferred_instance_classes = [%[3]s]
+
+  provider = "awsalternate"
+}
+
 resource "aws_db_instance" "test" {
   allocated_storage       = 10
   identifier              = %[1]q
-  engine                  = "postgres"
-  engine_version          = "13.4"
-  instance_class          = "db.t3.micro"
-  db_name                 = "mydb"
-  username                = "masterusername"
-  password                = "mustbeeightcharacters"
+  engine                  = data.aws_rds_engine_version.default.engine
+  instance_class          = data.aws_rds_orderable_db_instance.test.instance_class
+  password                = "avoid-plaintext-passwords"
+  username                = "tfacctest"
   backup_retention_period = 7
   skip_final_snapshot     = true
   storage_encrypted       = %[2]t
@@ -229,7 +274,7 @@ resource "aws_db_instance" "test" {
 
   provider = "awsalternate"
 }
-`, rName, storageEncrypted))
+`, rName, storageEncrypted, postgresPreferredInstanceClasses))
 }
 
 func testAccInstanceAutomatedBackupsReplicationConfig_basic(rName string) string {
