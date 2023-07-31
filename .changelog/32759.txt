@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/aws_instance: add support for `http_protocol_ipv6` to `metadata_options`.
+```
