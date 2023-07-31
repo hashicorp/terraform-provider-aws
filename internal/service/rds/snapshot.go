@@ -304,7 +304,7 @@ func findDBSnapshot(ctx context.Context, conn *rds.RDS, input *rds.DescribeDBSna
 	return tfresource.AssertSinglePtrResult(output)
 }
 
-func findDBSnapshots(ctx context.Context, conn *rds.RDS, input *rds.DescribeDBSnapshotsInput, f slices.Predicate[*rds.DBSnapshot]) ([]*rds.DBSnapshot, error) {
+func findDBSnapshots(ctx context.Context, conn *rds.RDS, input *rds.DescribeDBSnapshotsInput, filter slices.Predicate[*rds.DBSnapshot]) ([]*rds.DBSnapshot, error) {
 	var output []*rds.DBSnapshot
 
 	err := conn.DescribeDBSnapshotsPagesWithContext(ctx, input, func(page *rds.DescribeDBSnapshotsOutput, lastPage bool) bool {
@@ -313,7 +313,7 @@ func findDBSnapshots(ctx context.Context, conn *rds.RDS, input *rds.DescribeDBSn
 		}
 
 		for _, v := range page.DBSnapshots {
-			if v != nil && f(v) {
+			if v != nil && filter(v) {
 				output = append(output, v)
 			}
 		}
