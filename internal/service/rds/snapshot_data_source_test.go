@@ -81,7 +81,7 @@ data "aws_db_snapshot" "by_id" {
 data "aws_db_snapshot" "by_tags" {
   most_recent = "true"
 
-  tags = { 
+  tags = {
     Name = %[1]q
   }
 
