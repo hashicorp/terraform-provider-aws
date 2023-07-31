@@ -160,7 +160,7 @@ resource "aws_security_group" "test" {
 }
 resource "aws_msk_vpc_connection" "test" {
   authentication     = "SASL_IAM"
-  target_cluster_arn = "arn:aws:kafka:eu-west-2:926562225508:cluster/demo-cluster-1/a7640874-7bdf-4a38-be10-24465449a333-2"
+  target_cluster_arn = aws_msk_cluster.test.arn
   vpc_id             = aws_vpc.test.id
   client_subnets     = aws_subnet.test[*].id
   security_groups    = [aws_security_group.test.id]
