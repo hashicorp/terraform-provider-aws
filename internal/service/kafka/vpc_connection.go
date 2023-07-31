@@ -12,30 +12,22 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	// "github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
-	// "github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
-	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // Function annotations are used for resource registration to the Provider. DO NOT EDIT.
 // @SDKResource("aws_msk_vpc_connection", name="Vpc Connection")
-// Tagging annotations are used for "transparent tagging".
-// Change the "identifierAttribute" value to the name of the attribute used in ListTags and UpdateTags calls (e.g. "arn").
-// @Tags(identifierAttribute="arn")
 func ResourceVpcConnection() *schema.Resource {
 	return &schema.Resource{
 
 		CreateWithoutTimeout: resourceVpcConnectionCreate,
 		ReadWithoutTimeout:   resourceVpcConnectionRead,
-		UpdateWithoutTimeout: resourceVpcConnectionUpdate,
 		DeleteWithoutTimeout: resourceVpcConnectionDelete,
 
 		Importer: &schema.ResourceImporter{
@@ -77,11 +69,7 @@ func ResourceVpcConnection() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
-			names.AttrTags:    tftags.TagsSchema(), // TIP: Many, but not all, resources have `tags` and `tags_all` attributes.
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
@@ -99,7 +87,6 @@ func resourceVpcConnectionCreate(ctx context.Context, d *schema.ResourceData, me
 		ClientSubnets:    flex.ExpandStringValueSet(d.Get("client_subnets").(*schema.Set)),
 		TargetClusterArn: aws.String(d.Get("target_cluster_arn").(string)),
 		VpcId:            aws.String(d.Get("vpc_id").(string)),
-		// Tags: getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("security_groups"); ok {
@@ -108,7 +95,6 @@ func resourceVpcConnectionCreate(ctx context.Context, d *schema.ResourceData, me
 
 	out, err := conn.CreateVpcConnection(ctx, in)
 	if err != nil {
-
 		return append(diags, create.DiagError(names.Kafka, create.ErrActionCreating, ResNameVpcConnection, d.Get("arn").(string), err)...)
 	}
 
@@ -145,6 +131,7 @@ func resourceVpcConnectionRead(ctx context.Context, d *schema.ResourceData, meta
 	d.Set("authentication", out.Authentication)
 	d.Set("arn", out.VpcConnectionArn)
 	d.Set("vpc_id", out.VpcId)
+	d.Set("target_cluster_arn", out.TargetClusterArn)
 
 	if err := d.Set("client_subnets", flex.FlattenStringValueSet(out.Subnets)); err != nil {
 		return append(diags, create.DiagError(names.Kafka, create.ErrActionSetting, ResNameVpcConnection, d.Id(), err)...)
@@ -155,11 +142,6 @@ func resourceVpcConnectionRead(ctx context.Context, d *schema.ResourceData, meta
 	}
 
 	return diags
-}
-
-func resourceVpcConnectionUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	// Tags only.
-	return resourceVpcConnectionRead(ctx, d, meta)
 }
 
 func resourceVpcConnectionDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {

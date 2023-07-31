@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 
 	tfkafka "github.com/hashicorp/terraform-provider-aws/internal/service/kafka"
 )
@@ -24,7 +25,7 @@ func TestAccKafkaVpcConnection_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, kafka.ServiceID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.Kafka),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckVpcConnectionDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -32,12 +33,7 @@ func TestAccKafkaVpcConnection_basic(t *testing.T) {
 				Config: testAccVpcConnectionConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVpcConnectionExists(ctx, resourceName, &vpcconnection),
-					// acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "kafka", regexp.MustCompile(`configuration/.+`)),
-					// resource.TestCheckResourceAttr(resourceName, "description", ""),
-					// resource.TestCheckResourceAttr(resourceName, "kafka_versions.#", "0"),
-					// resource.TestCheckResourceAttr(resourceName, "latest_revision", "1"),
-					// resource.TestCheckResourceAttr(resourceName, "name", rName),
-					// resource.TestMatchResourceAttr(resourceName, "server_properties", regexp.MustCompile(`auto.create.topics.enable = true`)),
+					resource.TestCheckResourceAttr(resourceName, "authentication", "SASL_IAM"),
 				),
 			},
 			{
@@ -49,43 +45,29 @@ func TestAccKafkaVpcConnection_basic(t *testing.T) {
 	})
 }
 
-// func TestAccKafkaVpcConnection_disappears(t *testing.T) {
-// 	ctx := acctest.Context(t)
-// 	if testing.Short() {
-// 		t.Skip("skipping long-running test in short mode")
-// 	}
+func TestAccKafkaVpcConnection_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
+	var vpcconnection kafka.DescribeVpcConnectionOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_msk_vpc_connection.test"
 
-// 	var vpcconnection kafka.DescribeVpcConnectionResponse
-// 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-// 	resourceName := "aws_kafka_vpc_connection.test"
-
-// 	resource.ParallelTest(t, resource.TestCase{
-// 		PreCheck: func() {
-// 			acctest.PreCheck(ctx, t)
-// 			acctest.PreCheckPartitionHasService(t, names.KafkaEndpointID)
-// 			testAccPreCheck(t)
-// 		},
-// 		ErrorCheck:               acctest.ErrorCheck(t, names.KafkaEndpointID),
-// 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-// 		CheckDestroy:             testAccCheckVpcConnectionDestroy(ctx),
-// 		Steps: []resource.TestStep{
-// 			{
-// 				Config: testAccVpcConnectionConfig_basic(rName, testAccVpcConnectionVersionNewer),
-// 				Check: resource.ComposeTestCheckFunc(
-// 					testAccCheckVpcConnectionExists(ctx, resourceName, &vpcconnection),
-// 					// TIP: The Plugin-Framework disappears helper is similar to the Plugin-SDK version,
-// 					// but expects a new resource factory function as the third argument. To expose this
-// 					// private function to the testing package, you may need to add a line like the following
-// 					// to exports_test.go:
-// 					//
-// 					//   var ResourceVpcConnection = newResourceVpcConnection
-// 					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfkafka.ResourceVpcConnection, resourceName),
-// 				),
-// 				ExpectNonEmptyPlan: true,
-// 			},
-// 		},
-// 	})
-// }
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.Kafka),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckConfigurationDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVpcConnectionConfig_basic(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVpcConnectionExists(ctx, resourceName, &vpcconnection),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfkafka.ResourceVpcConnection(), resourceName),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
 
 func testAccCheckVpcConnectionDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
@@ -137,56 +119,45 @@ func testAccCheckVpcConnectionExists(ctx context.Context, name string, vpcconnec
 	}
 }
 
-// func (ctx context.Context, name string, vpcconnection *kafka.CreateVpcConnectionOutput) resource.TestCheckFunc {
-// 	return func(s *terraform.State) error {
-// 		rs, ok := s.RootModule().Resources[name]
-// 		if !ok {
-// 			return create.Error(names.Kafka, create.ErrActionCheckingExistence, tfkafka.ResNameVpcConnection, name, errors.New("not found"))
-// 		}
-
-// 		if rs.Primary.ID == "" {
-// 			return create.Error(names.Kafka, create.ErrActionCheckingExistence, tfkafka.ResNameVpcConnection, name, errors.New("not set"))
-// 		}
-
-// 		conn := acctest.Provider.Meta().(*conns.AWSClient).KafkaClient(ctx)
-// 		resp, err := conn.DescribeVpcConnection(ctx, &kafka.DescribeVpcConnectionInput{
-// 			Arn: aws.String(rs.Primary.ID),
-// 		})
-
-// 		if err != nil {
-// 			return create.Error(names.Kafka, create.ErrActionCheckingExistence, tfkafka.ResNameVpcConnection, rs.Primary.ID, err)
-// 		}
-
-// 		*vpcconnection = *resp
-
-// 		return nil
-// 	}
-// }
-
-// func testAccCheckVpcConnectionNotRecreated(before, after *kafka.DescribeVpcConnectionResponse) resource.TestCheckFunc {
-// 	return func(s *terraform.State) error {
-// 		if before, after := aws.ToString(before.VpcConnectionId), aws.ToString(after.VpcConnectionId); before != after {
-// 			return create.Error(names.Kafka, create.ErrActionCheckingNotRecreated, tfkafka.ResNameVpcConnection, aws.ToString(before.VpcConnectionId), errors.New("recreated"))
-// 		}
-
-// 		return nil
-// 	}
-// }
-
-func testAccVpcConnectionConfig_basic(rName string) string {
-	return acctest.ConfigCompose(acctest.ConfigVPCWithSubnets(rName, 3), fmt.Sprintf(`
-resource "aws_security_group" "test" {
-  name   = %[1]q
-  vpc_id = aws_vpc.test.id
+func testAccVpcConnectionConfig_base(rName string) string {
+	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
+resource "aws_vpc" "test" {
+  cidr_block = "10.0.0.0/16"
+  enable_dns_hostnames = true
 
   tags = {
     Name = %[1]q
   }
 }
 
+resource "aws_subnet" "test" {
+  count = 3
+
+  vpc_id                  = aws_vpc.test.id
+  availability_zone       = data.aws_availability_zones.available.names[count.index]
+  cidr_block              = cidrsubnet(aws_vpc.test.cidr_block, 8, count.index)
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+`, rName))
+}
+
+func testAccVpcConnectionConfig_basic(rName string) string {
+	return acctest.ConfigCompose(testAccVpcConnectionConfig_base(rName), fmt.Sprintf(`
+	resource "aws_security_group" "test" {
+		name   = %[1]q
+		vpc_id = aws_vpc.test.id
+	  
+		tags = {
+		  Name = %[1]q
+		}
+	  }
 resource "aws_msk_vpc_connection" "test" {
-	authentication = "IAM"
-	target_cluster_arn = "arn:aws:kafka:eu-west-2:926562225508:cluster/demo-cluster-1/a7640874-7bdf-4a38-be10-24465449a333-2"
+	authentication = "SASL_IAM"
+	target_cluster_arn = "msk.cluster.arn"
 	vpc_id = aws_vpc.test.id
 	client_subnets = aws_subnet.test[*].id
 	security_groups = [aws_security_group.test.id]
@@ -194,5 +165,3 @@ resource "aws_msk_vpc_connection" "test" {
 
 `, rName))
 }
-
-// IAM, TLS and SASL/SCRAM

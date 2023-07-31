@@ -76,9 +76,6 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			Factory:  ResourceVpcConnection,
 			TypeName: "aws_msk_vpc_connection",
 			Name:     "Vpc Connection",
-			Tags: &types.ServicePackageResourceTags{
-				IdentifierAttribute: "arn",
-			},
 		},
 	}
 }
