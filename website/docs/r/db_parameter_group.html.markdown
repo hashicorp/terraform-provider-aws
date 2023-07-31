@@ -104,8 +104,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import DB Parameter groups using the `name`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import DB Parameter groups using the `name`. For example:
 
+```terraform
+import {
+  to = aws_db_parameter_group.rds_pg
+  id = "rds-pg"
+}
 ```
-$ terraform import aws_db_parameter_group.rds_pg rds-pg
+
+Using `terraform import`, import DB Parameter groups using the `name`. For example:
+
+```console
+% terraform import aws_db_parameter_group.rds_pg rds-pg
 ```

@@ -132,7 +132,7 @@ If no security groups are specified, the VPC's [default security group](https://
 ### dns_options
 
 * `dns_record_ip_type` - (Optional) The DNS records created for the endpoint. Valid values are `ipv4`, `dualstack`, `service-defined`, and `ipv6`.
-* `private_dns_only_for_inbound_resolver_endpoint` - (Optional) Indicates whether to enable private DNS only for inbound endpoints. This option is available only for services that support both gateway and interface endpoints. It routes traffic that originates from the VPC to the gateway endpoint and traffic that originates from on-premises to the interface endpoint. Can only be specified if `private_dns_enabled` is `true`.
+* `private_dns_only_for_inbound_resolver_endpoint` - (Optional) Indicates whether to enable private DNS only for inbound endpoints. This option is available only for services that support both gateway and interface endpoints. It routes traffic that originates from the VPC to the gateway endpoint and traffic that originates from on-premises to the interface endpoint. Default is `false`. Can only be specified if private_dns_enabled is `true`.
 
 ## Timeouts
 
@@ -164,8 +164,17 @@ DNS blocks (for `dns_entry`) support the following attributes:
 
 ## Import
 
-Import VPC Endpoints using the `vpc endpoint id`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import VPC Endpoints using the VPC endpoint `id`. For example:
 
+```terraform
+import {
+  to = aws_vpc_endpoint.endpoint1
+  id = "vpce-3ecf2a57"
+}
 ```
-$ terraform import aws_vpc_endpoint.endpoint1 vpce-3ecf2a57
+
+Using `terraform import`, import VPC Endpoints using the VPC endpoint `id`. For example:
+
+```console
+% terraform import aws_vpc_endpoint.endpoint1 vpce-3ecf2a57
 ```

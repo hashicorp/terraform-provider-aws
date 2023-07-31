@@ -50,10 +50,19 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import Key Pairs using the `key_name`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Key Pairs using the `key_name`. For example:
 
+```terraform
+import {
+  to = aws_key_pair.deployer
+  id = "deployer-key"
+}
 ```
-$ terraform import aws_key_pair.deployer deployer-key
+
+Using `terraform import`, import Key Pairs using the `key_name`. For example:
+
+```console
+% terraform import aws_key_pair.deployer deployer-key
 ```
 
 ~> **NOTE:** The AWS API does not include the public key in the response, so `terraform apply` will attempt to replace the key pair. There is currently no supported workaround for this limitation.

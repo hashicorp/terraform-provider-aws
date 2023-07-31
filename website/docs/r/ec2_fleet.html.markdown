@@ -225,8 +225,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import `aws_ec2_fleet` using the Fleet identifier. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_ec2_fleet` using the Fleet identifier. For example:
 
+```terraform
+import {
+  to = aws_ec2_fleet.example
+  id = "fleet-b9b55d27-c5fc-41ac-a6f3-48fcc91f080c"
+}
 ```
-$ terraform import aws_ec2_fleet.example fleet-b9b55d27-c5fc-41ac-a6f3-48fcc91f080c
+
+Using `terraform import`, import `aws_ec2_fleet` using the Fleet identifier. For example:
+
+```console
+% terraform import aws_ec2_fleet.example fleet-b9b55d27-c5fc-41ac-a6f3-48fcc91f080c
 ```

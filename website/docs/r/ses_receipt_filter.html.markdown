@@ -37,8 +37,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import SES Receipt Filter using their `name`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import SES Receipt Filter using their `name`. For example:
 
+```terraform
+import {
+  to = aws_ses_receipt_filter.test
+  id = "some-filter"
+}
 ```
-$ terraform import aws_ses_receipt_filter.test some-filter
+
+Using `terraform import`, import SES Receipt Filter using their `name`. For example:
+
+```console
+% terraform import aws_ses_receipt_filter.test some-filter
 ```

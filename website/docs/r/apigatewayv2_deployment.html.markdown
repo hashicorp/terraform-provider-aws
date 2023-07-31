@@ -69,10 +69,19 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import `aws_apigatewayv2_deployment` using the API identifier and deployment identifier. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_apigatewayv2_deployment` using the API identifier and deployment identifier. For example:
 
+```terraform
+import {
+  to = aws_apigatewayv2_deployment.example
+  id = "aabbccddee/1122334"
+}
 ```
-$ terraform import aws_apigatewayv2_deployment.example aabbccddee/1122334
+
+Using `terraform import`, import `aws_apigatewayv2_deployment` using the API identifier and deployment identifier. For example:
+
+```console
+% terraform import aws_apigatewayv2_deployment.example aabbccddee/1122334
 ```
 
 The `triggers` argument cannot be imported.

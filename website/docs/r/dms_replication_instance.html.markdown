@@ -145,8 +145,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import Replication instances using the `replication_instance_id`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import replication instances using the `replication_instance_id`. For example:
 
+```terraform
+import {
+  to = aws_dms_replication_instance.test
+  id = "test-dms-replication-instance-tf"
+}
 ```
-$ terraform import aws_dms_replication_instance.test test-dms-replication-instance-tf
+
+Using `terraform import`, import replication instances using the `replication_instance_id`. For example:
+
+```console
+% terraform import aws_dms_replication_instance.test test-dms-replication-instance-tf
 ```

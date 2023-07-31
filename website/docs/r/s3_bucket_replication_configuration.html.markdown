@@ -429,8 +429,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import S3 bucket replication configuration using the `bucket`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import S3 bucket replication configuration using the `bucket`. For example:
 
-```sh
-$ terraform import aws_s3_bucket_replication_configuration.replication bucket-name
+```terraform
+import {
+  to = aws_s3_bucket_replication_configuration.replication
+  id = "bucket-name"
+}
+```
+
+Using `terraform import`, import S3 bucket replication configuration using the `bucket`. For example:
+
+```console
+% terraform import aws_s3_bucket_replication_configuration.replication bucket-name
 ```

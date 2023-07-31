@@ -77,8 +77,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import EFS Replication Configurations using the file system ID of either the source or destination file system. When importing, the `availability_zone_name` and `kms_key_id` attributes must **not** be set in the configuration. The AWS API does not return these values when querying the replication configuration and their presence will therefore show as a diff in a subsequent plan. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import EFS Replication Configurations using the file system ID of either the source or destination file system. When importing, the `availability_zone_name` and `kms_key_id` attributes must **not** be set in the configuration. The AWS API does not return these values when querying the replication configuration and their presence will therefore show as a diff in a subsequent plan. For example:
 
+```terraform
+import {
+  to = aws_efs_replication_configuration.example
+  id = "fs-id"
+}
 ```
-$ terraform import aws_efs_replication_configuration.example fs-id
+
+Using `terraform import`, import EFS Replication Configurations using the file system ID of either the source or destination file system. When importing, the `availability_zone_name` and `kms_key_id` attributes must **not** be set in the configuration. The AWS API does not return these values when querying the replication configuration and their presence will therefore show as a diff in a subsequent plan. For example:
+
+```console
+% terraform import aws_efs_replication_configuration.example fs-id
 ```

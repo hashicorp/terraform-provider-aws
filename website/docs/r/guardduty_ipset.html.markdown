@@ -63,8 +63,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import GuardDuty IPSet using the primary GuardDuty detector ID and IPSet ID. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import GuardDuty IPSet using the primary GuardDuty detector ID and IPSet ID. For example:
 
+```terraform
+import {
+  to = aws_guardduty_ipset.MyIPSet
+  id = "00b00fd5aecc0ab60a708659477e9617:123456789012"
+}
 ```
-$ terraform import aws_guardduty_ipset.MyIPSet 00b00fd5aecc0ab60a708659477e9617:123456789012
+
+Using `terraform import`, import GuardDuty IPSet using the primary GuardDuty detector ID and IPSet ID. For example:
+
+```console
+% terraform import aws_guardduty_ipset.MyIPSet 00b00fd5aecc0ab60a708659477e9617:123456789012
 ```

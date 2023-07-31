@@ -62,8 +62,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import EBS Volumes using the `id`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import EBS Volumes using the `id`. For example:
 
+```terraform
+import {
+  to = aws_ebs_volume.id
+  id = "vol-049df61146c4d7901"
+}
 ```
-$ terraform import aws_ebs_volume.id vol-049df61146c4d7901
+
+Using `terraform import`, import EBS Volumes using the `id`. For example:
+
+```console
+% terraform import aws_ebs_volume.id vol-049df61146c4d7901
 ```

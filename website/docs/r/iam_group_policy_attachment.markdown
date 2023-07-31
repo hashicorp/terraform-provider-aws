@@ -44,8 +44,17 @@ This resource exports no additional attributes.
 
 ## Import
 
-Import IAM group policy attachments using the group name and policy arn separated by `/`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import IAM group policy attachments using the group name and policy arn separated by `/`. For example:
 
+```terraform
+import {
+  to = aws_iam_group_policy_attachment.test-attach
+  id = "test-group/arn:aws:iam::xxxxxxxxxxxx:policy/test-policy"
+}
 ```
-$ terraform import aws_iam_group_policy_attachment.test-attach test-group/arn:aws:iam::xxxxxxxxxxxx:policy/test-policy
+
+Using `terraform import`, import IAM group policy attachments using the group name and policy arn separated by `/`. For example:
+
+```console
+% terraform import aws_iam_group_policy_attachment.test-attach test-group/arn:aws:iam::xxxxxxxxxxxx:policy/test-policy
 ```

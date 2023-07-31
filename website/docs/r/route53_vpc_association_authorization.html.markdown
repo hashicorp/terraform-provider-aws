@@ -78,8 +78,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import Route 53 VPC Association Authorizations using the Hosted Zone ID and VPC ID, separated by a colon (`:`). For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Route 53 VPC Association Authorizations using the Hosted Zone ID and VPC ID, separated by a colon (`:`). For example:
 
+```terraform
+import {
+  to = aws_route53_vpc_association_authorization.example
+  id = "Z123456ABCDEFG:vpc-12345678"
+}
 ```
-$ terraform import aws_route53_vpc_association_authorization.example Z123456ABCDEFG:vpc-12345678
+
+Using `terraform import`, import Route 53 VPC Association Authorizations using the Hosted Zone ID and VPC ID, separated by a colon (`:`). For example:
+
+```console
+% terraform import aws_route53_vpc_association_authorization.example Z123456ABCDEFG:vpc-12345678
 ```

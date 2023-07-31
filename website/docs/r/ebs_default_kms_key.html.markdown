@@ -37,8 +37,17 @@ This resource exports no additional attributes.
 
 ## Import
 
-Import the EBS default KMS CMK using the KMS key ARN. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import the EBS default KMS CMK using the KMS key ARN. For example:
+
+```terraform
+import {
+  to = aws_ebs_default_kms_key.example
+  id = "arn:aws:kms:us-east-1:123456789012:key/abcd-1234"
+}
+```
+
+Using `terraform import`, import the EBS default KMS CMK using the KMS key ARN. For example:
 
 ```console
-$ terraform import aws_ebs_default_kms_key.example arn:aws:kms:us-east-1:123456789012:key/abcd-1234
+% terraform import aws_ebs_default_kms_key.example arn:aws:kms:us-east-1:123456789012:key/abcd-1234
 ```

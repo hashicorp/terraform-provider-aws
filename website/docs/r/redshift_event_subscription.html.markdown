@@ -70,8 +70,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import Redshift Event Subscriptions using the `name`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Redshift Event Subscriptions using the `name`. For example:
 
+```terraform
+import {
+  to = aws_redshift_event_subscription.default
+  id = "redshift-event-sub"
+}
 ```
-$ terraform import aws_redshift_event_subscription.default redshift-event-sub
+
+Using `terraform import`, import Redshift Event Subscriptions using the `name`. For example:
+
+```console
+% terraform import aws_redshift_event_subscription.default redshift-event-sub
 ```

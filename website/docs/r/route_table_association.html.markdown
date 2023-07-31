@@ -53,18 +53,38 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import EC2 Route Table Associations using the associated resource ID and Route Table ID separated by a forward slash (`/`). For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import EC2 Route Table Associations using the associated resource ID and Route Table ID separated by a forward slash (`/`). For example:
 
 ~> **NOTE:** Attempting to associate a route table with a subnet or gateway, where either is already associated, will result in an error (e.g., `Resource.AlreadyAssociated: the specified association for route table rtb-4176657279 conflicts with an existing association`) unless you first import the original association.
 
-For example with EC2 Subnets:
+With EC2 Subnets:
 
-```
-$ terraform import aws_route_table_association.assoc subnet-6777656e646f6c796e/rtb-656c65616e6f72
+```terraform
+import {
+  to = aws_route_table_association.assoc
+  id = "subnet-6777656e646f6c796e/rtb-656c65616e6f72"
+}
 ```
 
-For example with EC2 Internet Gateways:
+With EC2 Internet Gateways:
 
+```terraform
+import {
+  to = aws_route_table_association.assoc
+  id = "igw-01b3a60780f8d034a/rtb-656c65616e6f72"
+}
 ```
-$ terraform import aws_route_table_association.assoc igw-01b3a60780f8d034a/rtb-656c65616e6f72
+
+**Using `terraform import` to import** EC2 Route Table Associations using the associated resource ID and Route Table ID separated by a forward slash (`/`). For example:
+
+With EC2 Subnets:
+
+```console
+% terraform import aws_route_table_association.assoc subnet-6777656e646f6c796e/rtb-656c65616e6f72
+```
+
+With EC2 Internet Gateways:
+
+```console
+% terraform import aws_route_table_association.assoc igw-01b3a60780f8d034a/rtb-656c65616e6f72
 ```

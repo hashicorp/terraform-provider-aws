@@ -73,8 +73,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import Global Accelerator accelerators using the `arn`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Global Accelerator accelerators using the `arn`. For example:
 
+```terraform
+import {
+  to = aws_globalaccelerator_accelerator.example
+  id = "arn:aws:globalaccelerator::111111111111:accelerator/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+}
 ```
-$ terraform import aws_globalaccelerator_accelerator.example arn:aws:globalaccelerator::111111111111:accelerator/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+
+Using `terraform import`, import Global Accelerator accelerators using the `arn`. For example:
+
+```console
+% terraform import aws_globalaccelerator_accelerator.example arn:aws:globalaccelerator::111111111111:accelerator/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
 ```

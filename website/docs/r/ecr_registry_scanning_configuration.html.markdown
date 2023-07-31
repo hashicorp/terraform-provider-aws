@@ -72,8 +72,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import ECR Scanning Configurations using the `registry_id`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import ECR Scanning Configurations using the `registry_id`. For example:
 
+```terraform
+import {
+  to = aws_ecr_registry_scanning_configuration.example
+  id = "012345678901"
+}
 ```
-$ terraform import aws_ecr_registry_scanning_configuration.example 012345678901
+
+Using `terraform import`, import ECR Scanning Configurations using the `registry_id`. For example:
+
+```console
+% terraform import aws_ecr_registry_scanning_configuration.example 012345678901
 ```

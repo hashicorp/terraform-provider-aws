@@ -167,8 +167,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import SageMaker Flow Definitions using the `flow_definition_name`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import SageMaker Flow Definitions using the `flow_definition_name`. For example:
 
+```terraform
+import {
+  to = aws_sagemaker_flow_definition.example
+  id = "example"
+}
 ```
-$ terraform import aws_sagemaker_flow_definition.example example
+
+Using `terraform import`, import SageMaker Flow Definitions using the `flow_definition_name`. For example:
+
+```console
+% terraform import aws_sagemaker_flow_definition.example example
 ```

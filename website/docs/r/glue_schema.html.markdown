@@ -48,8 +48,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import Glue Registries using `arn`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Glue Registries using `arn`. For example:
 
+```terraform
+import {
+  to = aws_glue_schema.example
+  id = "arn:aws:glue:us-west-2:123456789012:schema/example/example"
+}
 ```
-$ terraform import aws_glue_schema.example arn:aws:glue:us-west-2:123456789012:schema/example/example
+
+Using `terraform import`, import Glue Registries using `arn`. For example:
+
+```console
+% terraform import aws_glue_schema.example arn:aws:glue:us-west-2:123456789012:schema/example/example
 ```

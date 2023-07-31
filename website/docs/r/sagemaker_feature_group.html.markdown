@@ -88,8 +88,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import Feature Groups using the `name`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Feature Groups using the `name`. For example:
 
+```terraform
+import {
+  to = aws_sagemaker_feature_group.test_feature_group
+  id = "feature_group-foo"
+}
 ```
-$ terraform import aws_sagemaker_feature_group.test_feature_group feature_group-foo
+
+Using `terraform import`, import Feature Groups using the `name`. For example:
+
+```console
+% terraform import aws_sagemaker_feature_group.test_feature_group feature_group-foo
 ```

@@ -52,8 +52,17 @@ resource "aws_route53_record" "example_amazonses_dkim_record" {
 
 ## Import
 
-Import DKIM tokens using the `domain` attribute. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import DKIM tokens using the `domain` attribute. For example:
 
+```terraform
+import {
+  to = aws_ses_domain_dkim.example
+  id = "example.com"
+}
 ```
-$ terraform import aws_ses_domain_dkim.example example.com
+
+Using `terraform import`, import DKIM tokens using the `domain` attribute. For example:
+
+```console
+% terraform import aws_ses_domain_dkim.example example.com
 ```

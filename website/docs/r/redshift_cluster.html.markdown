@@ -142,8 +142,17 @@ Cluster nodes (for `cluster_nodes`) support the following attributes:
 
 ## Import
 
-Import Redshift Clusters using the `cluster_identifier`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Redshift Clusters using the `cluster_identifier`. For example:
 
+```terraform
+import {
+  to = aws_redshift_cluster.myprodcluster
+  id = "tf-redshift-cluster-12345"
+}
 ```
-$ terraform import aws_redshift_cluster.myprodcluster tf-redshift-cluster-12345
+
+Using `terraform import`, import Redshift Clusters using the `cluster_identifier`. For example:
+
+```console
+% terraform import aws_redshift_cluster.myprodcluster tf-redshift-cluster-12345
 ```

@@ -51,8 +51,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import IOT Role Alias using the alias. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import IOT Role Alias using the alias. For example:
 
-```sh
-$ terraform import aws_iot_role_alias.example myalias
+```terraform
+import {
+  to = aws_iot_role_alias.example
+  id = "myalias"
+}
+```
+
+Using `terraform import`, import IOT Role Alias using the alias. For example:
+
+```console
+% terraform import aws_iot_role_alias.example myalias
 ```

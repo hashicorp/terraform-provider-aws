@@ -134,7 +134,7 @@ The code block supports the following arguments:
 The database block supports the following arguments:
 
 * `database_name` - (Required) Name of the KX database.
-* `cache_configurations` - (Required)  Configuration details for the disk cache to increase performance reading from a KX database mounted to the cluster. See [cache_configurations](#cache_configurations).
+* `cache_configurations` - (Optional) Configuration details for the disk cache to increase performance reading from a KX database mounted to the cluster. See [cache_configurations](#cache_configurations).
 * `changeset_id` - (Optional) A unique identifier of the changeset that is associated with the cluster.
 
 #### cache_configurations
@@ -142,7 +142,7 @@ The database block supports the following arguments:
 The cache_configuration block supports the following arguments:
 
 * `cache_type` - (Required) Type of disk cache.
-* `db_paths` - (Required) Paths within the database to cache.
+* `db_paths` - (Optional) Paths within the database to cache.
 
 ### savedown_storage_configuration
 
@@ -181,8 +181,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import an AWS FinSpace Kx Cluster using the `id` (environment ID and cluster name, comma-delimited). For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import an AWS FinSpace Kx Cluster using the `id` (environment ID and cluster name, comma-delimited). For example:
 
+```terraform
+import {
+  to = aws_finspace_kx_cluster.example
+  id = "n3ceo7wqxoxcti5tujqwzs,my-tf-kx-cluster"
+}
 ```
-$ terraform import aws_finspace_kx_cluster.example n3ceo7wqxoxcti5tujqwzs,my-tf-kx-cluster
+
+Using `terraform import`, import an AWS FinSpace Kx Cluster using the `id` (environment ID and cluster name, comma-delimited). For example:
+
+```console
+% terraform import aws_finspace_kx_cluster.example n3ceo7wqxoxcti5tujqwzs,my-tf-kx-cluster
 ```

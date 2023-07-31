@@ -298,8 +298,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import Security Groups using the `security group id`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Security Groups using the security group `id`. For example:
 
+```terraform
+import {
+  to = aws_security_group.elb_sg
+  id = "sg-903004f8"
+}
 ```
-$ terraform import aws_security_group.elb_sg sg-903004f8
+
+Using `terraform import`, import Security Groups using the security group `id`. For example:
+
+```console
+% terraform import aws_security_group.elb_sg sg-903004f8
 ```

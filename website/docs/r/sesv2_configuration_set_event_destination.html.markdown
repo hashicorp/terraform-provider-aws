@@ -168,8 +168,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import SESv2 (Simple Email V2) Configuration Set Event Destination using the `id` (`configuration_set_name|event_destination_name`). For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import SESv2 (Simple Email V2) Configuration Set Event Destination using the `id` (`configuration_set_name|event_destination_name`). For example:
 
+```terraform
+import {
+  to = aws_sesv2_configuration_set_event_destination.example
+  id = "example_configuration_set|example_event_destination"
+}
 ```
-$ terraform import aws_sesv2_configuration_set_event_destination.example example_configuration_set|example_event_destination
+
+Using `terraform import`, import SESv2 (Simple Email V2) Configuration Set Event Destination using the `id` (`configuration_set_name|event_destination_name`). For example:
+
+```console
+% terraform import aws_sesv2_configuration_set_event_destination.example example_configuration_set|example_event_destination
 ```

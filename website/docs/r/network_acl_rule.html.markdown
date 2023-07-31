@@ -67,16 +67,38 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import individual rules using `NETWORK_ACL_ID:RULE_NUMBER:PROTOCOL:EGRESS`, where `PROTOCOL` can be a decimal (such as "6") or string (such as "tcp") value. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import individual rules using `NETWORK_ACL_ID:RULE_NUMBER:PROTOCOL:EGRESS`, where `PROTOCOL` can be a decimal (such as "6") or string (such as "tcp") value. For example:
 
 **NOTE:** If importing a rule previously provisioned by Terraform, the `PROTOCOL` must be the input value used at creation time. For more information on protocol numbers and keywords, see here: https://www.iana.org/assignments/protocol-numbers/protocol-numbers.xhtml.
 
-```console
-$ terraform import aws_network_acl_rule.my_rule acl-7aaabd18:100:tcp:false
+Using the procotol's string value:
+
+```terraform
+import {
+  to = aws_network_acl_rule.my_rule
+  id = "acl-7aaabd18:100:tcp:false"
+}
 ```
 
-Or by the procotol's decimal value:
+Using the procotol's decimal value:
+
+```terraform
+import {
+  to = aws_network_acl_rule.my_rule
+  id = "acl-7aaabd18:100:6:false"
+}
+```
+
+**Using `terraform import` to import** individual rules using `NETWORK_ACL_ID:RULE_NUMBER:PROTOCOL:EGRESS`, where `PROTOCOL` can be a decimal (such as "6") or string (such as "tcp") value. For example:
+
+Using the procotol's string value:
 
 ```console
-$ terraform import aws_network_acl_rule.my_rule acl-7aaabd18:100:6:false
+% terraform import aws_network_acl_rule.my_rule acl-7aaabd18:100:tcp:false
+```
+
+Using the procotol's decimal value:
+
+```console
+% terraform import aws_network_acl_rule.my_rule acl-7aaabd18:100:6:false
 ```

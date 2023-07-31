@@ -17,6 +17,7 @@ import (
 	directoryservice_sdkv2 "github.com/aws/aws-sdk-go-v2/service/directoryservice"
 	docdbelastic_sdkv2 "github.com/aws/aws-sdk-go-v2/service/docdbelastic"
 	ec2_sdkv2 "github.com/aws/aws-sdk-go-v2/service/ec2"
+	emrserverless_sdkv2 "github.com/aws/aws-sdk-go-v2/service/emrserverless"
 	finspace_sdkv2 "github.com/aws/aws-sdk-go-v2/service/finspace"
 	fis_sdkv2 "github.com/aws/aws-sdk-go-v2/service/fis"
 	glacier_sdkv2 "github.com/aws/aws-sdk-go-v2/service/glacier"
@@ -44,6 +45,7 @@ import (
 	scheduler_sdkv2 "github.com/aws/aws-sdk-go-v2/service/scheduler"
 	securitylake_sdkv2 "github.com/aws/aws-sdk-go-v2/service/securitylake"
 	sesv2_sdkv2 "github.com/aws/aws-sdk-go-v2/service/sesv2"
+	signer_sdkv2 "github.com/aws/aws-sdk-go-v2/service/signer"
 	ssm_sdkv2 "github.com/aws/aws-sdk-go-v2/service/ssm"
 	ssmcontacts_sdkv2 "github.com/aws/aws-sdk-go-v2/service/ssmcontacts"
 	ssmincidents_sdkv2 "github.com/aws/aws-sdk-go-v2/service/ssmincidents"
@@ -127,7 +129,6 @@ import (
 	elbv2_sdkv1 "github.com/aws/aws-sdk-go/service/elbv2"
 	emr_sdkv1 "github.com/aws/aws-sdk-go/service/emr"
 	emrcontainers_sdkv1 "github.com/aws/aws-sdk-go/service/emrcontainers"
-	emrserverless_sdkv1 "github.com/aws/aws-sdk-go/service/emrserverless"
 	eventbridge_sdkv1 "github.com/aws/aws-sdk-go/service/eventbridge"
 	firehose_sdkv1 "github.com/aws/aws-sdk-go/service/firehose"
 	fms_sdkv1 "github.com/aws/aws-sdk-go/service/fms"
@@ -200,7 +201,6 @@ import (
 	ses_sdkv1 "github.com/aws/aws-sdk-go/service/ses"
 	sfn_sdkv1 "github.com/aws/aws-sdk-go/service/sfn"
 	shield_sdkv1 "github.com/aws/aws-sdk-go/service/shield"
-	signer_sdkv1 "github.com/aws/aws-sdk-go/service/signer"
 	simpledb_sdkv1 "github.com/aws/aws-sdk-go/service/simpledb"
 	sns_sdkv1 "github.com/aws/aws-sdk-go/service/sns"
 	sqs_sdkv1 "github.com/aws/aws-sdk-go/service/sqs"
@@ -534,8 +534,8 @@ func (c *AWSClient) EMRContainersConn(ctx context.Context) *emrcontainers_sdkv1.
 	return errs.Must(conn[*emrcontainers_sdkv1.EMRContainers](ctx, c, names.EMRContainers))
 }
 
-func (c *AWSClient) EMRServerlessConn(ctx context.Context) *emrserverless_sdkv1.EMRServerless {
-	return errs.Must(conn[*emrserverless_sdkv1.EMRServerless](ctx, c, names.EMRServerless))
+func (c *AWSClient) EMRServerlessClient(ctx context.Context) *emrserverless_sdkv2.Client {
+	return errs.Must(client[*emrserverless_sdkv2.Client](ctx, c, names.EMRServerless))
 }
 
 func (c *AWSClient) ElastiCacheConn(ctx context.Context) *elasticache_sdkv1.ElastiCache {
@@ -998,8 +998,8 @@ func (c *AWSClient) ShieldConn(ctx context.Context) *shield_sdkv1.Shield {
 	return errs.Must(conn[*shield_sdkv1.Shield](ctx, c, names.Shield))
 }
 
-func (c *AWSClient) SignerConn(ctx context.Context) *signer_sdkv1.Signer {
-	return errs.Must(conn[*signer_sdkv1.Signer](ctx, c, names.Signer))
+func (c *AWSClient) SignerClient(ctx context.Context) *signer_sdkv2.Client {
+	return errs.Must(client[*signer_sdkv2.Client](ctx, c, names.Signer))
 }
 
 func (c *AWSClient) SimpleDBConn(ctx context.Context) *simpledb_sdkv1.SimpleDB {
