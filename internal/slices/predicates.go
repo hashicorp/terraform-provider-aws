@@ -9,3 +9,10 @@ func PredicateEquals[T comparable](v T) Predicate[T] {
 		return x == v
 	}
 }
+
+// PredicateTrue returns a Predicate that always evaluates to true.
+func PredicateTrue[T any]() Predicate[T] {
+	return func(T) bool {
+		return true
+	}
+}
