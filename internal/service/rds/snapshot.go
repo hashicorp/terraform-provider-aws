@@ -17,6 +17,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/slices"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -293,7 +295,7 @@ func FindDBSnapshotByID(ctx context.Context, conn *rds.RDS, id string) (*rds.DBS
 }
 
 func findDBSnapshot(ctx context.Context, conn *rds.RDS, input *rds.DescribeDBSnapshotsInput) (*rds.DBSnapshot, error) {
-	output, err := findDBSnapshots(ctx, conn, input)
+	output, err := findDBSnapshots(ctx, conn, input, tfslices.PredicateTrue[*rds.DBSnapshot]())
 
 	if err != nil {
 		return nil, err
@@ -302,7 +304,7 @@ func findDBSnapshot(ctx context.Context, conn *rds.RDS, input *rds.DescribeDBSna
 	return tfresource.AssertSinglePtrResult(output)
 }
 
-func findDBSnapshots(ctx context.Context, conn *rds.RDS, input *rds.DescribeDBSnapshotsInput) ([]*rds.DBSnapshot, error) {
+func findDBSnapshots(ctx context.Context, conn *rds.RDS, input *rds.DescribeDBSnapshotsInput, f slices.Predicate[*rds.DBSnapshot]) ([]*rds.DBSnapshot, error) {
 	var output []*rds.DBSnapshot
 
 	err := conn.DescribeDBSnapshotsPagesWithContext(ctx, input, func(page *rds.DescribeDBSnapshotsOutput, lastPage bool) bool {
@@ -310,7 +312,11 @@ func findDBSnapshots(ctx context.Context, conn *rds.RDS, input *rds.DescribeDBSn
 			return !lastPage
 		}
 
-		output = append(output, page.DBSnapshots...)
+		for _, v := range page.DBSnapshots {
+			if v != nil && f(v) {
+				output = append(output, v)
+			}
+		}
 
 		return !lastPage
 	})

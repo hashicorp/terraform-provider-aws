@@ -146,7 +146,14 @@ func dataSourceSnapshotRead(ctx context.Context, d *schema.ResourceData, meta in
 		input.SnapshotType = aws.String(v.(string))
 	}
 
-	snapshots, err := findDBSnapshots(ctx, conn, input)
+	f := slices.PredicateTrue[*rds.DBSnapshot]()
+	if tagsToMatch := tftags.New(ctx, d.Get("tags").(map[string]interface{})).IgnoreAWS().IgnoreConfig(ignoreTagsConfig); len(tagsToMatch) > 0 {
+		f = func(v *rds.DBSnapshot) bool {
+			return KeyValueTags(ctx, v.TagList).ContainsAll(tagsToMatch)
+		}
+	}
+
+	snapshots, err := findDBSnapshots(ctx, conn, input, f)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading RDS DB Snapshots: %s", err)
@@ -154,12 +161,6 @@ func dataSourceSnapshotRead(ctx context.Context, d *schema.ResourceData, meta in
 
 	if len(snapshots) < 1 {
 		return sdkdiag.AppendErrorf(diags, "Your query returned no results. Please change your search criteria and try again.")
-	}
-
-	if tagsToMatch := tftags.New(ctx, d.Get("tags").(map[string]interface{})).IgnoreAWS().IgnoreConfig(ignoreTagsConfig); len(tagsToMatch) > 0 {
-		snapshots = slices.Filter(snapshots, func(v *rds.DBSnapshot) bool {
-			return KeyValueTags(ctx, v.TagList).ContainsAll(tagsToMatch)
-		})
 	}
 
 	var snapshot *rds.DBSnapshot
