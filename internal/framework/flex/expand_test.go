@@ -17,6 +17,20 @@ import (
 
 // TODO Simplify by having more fields in structs.
 
+type TestFlex00 struct{}
+
+type TestFlexTF01 struct {
+	Name types.String `tfsdk:"name"`
+}
+
+type TestFlexAWS01 struct {
+	Name string
+}
+
+type TestFlexAWS02 struct {
+	Name *string
+}
+
 type ATestExpand struct{}
 
 type BTestExpand struct {
@@ -153,57 +167,57 @@ func TestGenericExpand(t *testing.T) {
 		},
 		{
 			TestName: "non-pointer Target",
-			Source:   ATestExpand{},
+			Source:   TestFlex00{},
 			Target:   0,
 			WantErr:  true,
 		},
 		{
 			TestName: "non-struct Source",
 			Source:   testString,
-			Target:   &ATestExpand{},
+			Target:   &TestFlex00{},
 			WantErr:  true,
 		},
 		{
 			TestName: "non-struct Target",
-			Source:   ATestExpand{},
+			Source:   TestFlex00{},
 			Target:   &testString,
 			WantErr:  true,
 		},
 		{
 			TestName:   "empty struct Source and Target",
-			Source:     ATestExpand{},
-			Target:     &ATestExpand{},
-			WantTarget: &ATestExpand{},
+			Source:     TestFlex00{},
+			Target:     &TestFlex00{},
+			WantTarget: &TestFlex00{},
 		},
 		{
 			TestName:   "empty struct pointer Source and Target",
-			Source:     &ATestExpand{},
-			Target:     &ATestExpand{},
-			WantTarget: &ATestExpand{},
+			Source:     &TestFlex00{},
+			Target:     &TestFlex00{},
+			WantTarget: &TestFlex00{},
 		},
 		{
 			TestName:   "single string struct pointer Source and empty Target",
-			Source:     &BTestExpand{Name: types.StringValue("a")},
-			Target:     &ATestExpand{},
-			WantTarget: &ATestExpand{},
+			Source:     &TestFlexTF01{Name: types.StringValue("a")},
+			Target:     &TestFlex00{},
+			WantTarget: &TestFlex00{},
 		},
 		{
 			TestName: "does not implement attr.Value Source",
-			Source:   &CTestExpand{Name: "a"},
-			Target:   &CTestExpand{},
+			Source:   &TestFlexAWS01{Name: "a"},
+			Target:   &TestFlexAWS01{},
 			WantErr:  true,
 		},
 		{
 			TestName:   "single string Source and single string Target",
-			Source:     &BTestExpand{Name: types.StringValue("a")},
-			Target:     &CTestExpand{},
-			WantTarget: &CTestExpand{Name: "a"},
+			Source:     &TestFlexTF01{Name: types.StringValue("a")},
+			Target:     &TestFlexAWS01{},
+			WantTarget: &TestFlexAWS01{Name: "a"},
 		},
 		{
 			TestName:   "single string Source and single *string Target",
-			Source:     &BTestExpand{Name: types.StringValue("a")},
-			Target:     &DTestExpand{},
-			WantTarget: &DTestExpand{Name: aws.String("a")},
+			Source:     &TestFlexTF01{Name: types.StringValue("a")},
+			Target:     &TestFlexAWS02{},
+			WantTarget: &TestFlexAWS02{Name: aws.String("a")},
 		},
 		{
 			TestName: "single string Source and single int64 Target",
