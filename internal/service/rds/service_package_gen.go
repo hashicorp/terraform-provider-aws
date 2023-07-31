@@ -54,6 +54,8 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 		{
 			Factory:  DataSourceSnapshot,
 			TypeName: "aws_db_snapshot",
+			Name:     "DB Snapshot",
+			Tags:     &types.ServicePackageResourceTags{},
 		},
 		{
 			Factory:  DataSourceSubnetGroup,

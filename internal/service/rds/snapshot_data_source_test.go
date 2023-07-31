@@ -21,6 +21,8 @@ func TestAccRDSSnapshotDataSource_basic(t *testing.T) {
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_db_snapshot.test"
+	ds1Name := "data.aws_db_snapshot.by_id"
+	ds2Name := "data.aws_db_snapshot.by_tags"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -30,13 +32,17 @@ func TestAccRDSSnapshotDataSource_basic(t *testing.T) {
 			{
 				Config: testAccSnapshotDataSourceConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttrPair("data.aws_db_snapshot.by_id", "db_instance_identifier", resourceName, "db_instance_identifier"),
-					resource.TestCheckResourceAttrPair("data.aws_db_snapshot.by_id", "db_snapshot_arn", resourceName, "db_snapshot_arn"),
-					resource.TestCheckResourceAttrPair("data.aws_db_snapshot.by_id", "db_snapshot_identifier", resourceName, "db_snapshot_identifier"),
+					resource.TestCheckResourceAttrPair(ds1Name, "db_instance_identifier", resourceName, "db_instance_identifier"),
+					resource.TestCheckResourceAttrPair(ds1Name, "db_snapshot_arn", resourceName, "db_snapshot_arn"),
+					resource.TestCheckResourceAttrPair(ds1Name, "db_snapshot_identifier", resourceName, "db_snapshot_identifier"),
+					resource.TestCheckResourceAttrPair(ds1Name, "tags.%", resourceName, "tags.%"),
+					resource.TestCheckResourceAttr(ds1Name, "tags.Name", rName),
 
-					resource.TestCheckResourceAttrPair("data.aws_db_snapshot.by_tags", "db_instance_identifier", resourceName, "db_instance_identifier"),
-					resource.TestCheckResourceAttrPair("data.aws_db_snapshot.by_tags", "db_snapshot_arn", resourceName, "db_snapshot_arn"),
-					resource.TestCheckResourceAttrPair("data.aws_db_snapshot.by_tags", "db_snapshot_identifier", resourceName, "db_snapshot_identifier"),
+					resource.TestCheckResourceAttrPair(ds2Name, "db_instance_identifier", resourceName, "db_instance_identifier"),
+					resource.TestCheckResourceAttrPair(ds2Name, "db_snapshot_arn", resourceName, "db_snapshot_arn"),
+					resource.TestCheckResourceAttrPair(ds2Name, "db_snapshot_identifier", resourceName, "db_snapshot_identifier"),
+					resource.TestCheckResourceAttrPair(ds1Name, "tags.%", resourceName, "tags.%"),
+					resource.TestCheckResourceAttr(ds2Name, "tags.Name", rName),
 				),
 			},
 		},
@@ -51,6 +57,7 @@ resource "aws_db_snapshot" "test" {
 
   tags = {
     Name = %[1]q
+    Test = "true"
   }
 }
 
@@ -60,6 +67,7 @@ resource "aws_db_snapshot_copy" "test" {
 
   tags = {
     Name = "%[1]s-copy"
+    Test = "true"
   }
 }
 

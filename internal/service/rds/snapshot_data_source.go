@@ -18,7 +18,8 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
-// @SDKDataSource("aws_db_snapshot")
+// @SDKDataSource("aws_db_snapshot", name="DB Snapshot")
+// @Tags
 func DataSourceSnapshot() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceSnapshotRead,
@@ -127,7 +128,6 @@ func DataSourceSnapshot() *schema.Resource {
 func dataSourceSnapshotRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RDSConn(ctx)
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	input := &rds.DescribeDBSnapshotsInput{
 		IncludePublic: aws.Bool(d.Get("include_public").(bool)),
@@ -147,9 +147,9 @@ func dataSourceSnapshotRead(ctx context.Context, d *schema.ResourceData, meta in
 	}
 
 	f := slices.PredicateTrue[*rds.DBSnapshot]()
-	if tagsToMatch := tftags.New(ctx, d.Get("tags").(map[string]interface{})).IgnoreAWS().IgnoreConfig(ignoreTagsConfig); len(tagsToMatch) > 0 {
+	if tags := getTagsIn(ctx); len(tags) > 0 {
 		f = func(v *rds.DBSnapshot) bool {
-			return KeyValueTags(ctx, v.TagList).ContainsAll(tagsToMatch)
+			return KeyValueTags(ctx, v.TagList).ContainsAll(KeyValueTags(ctx, tags))
 		}
 	}
 
@@ -198,11 +198,7 @@ func dataSourceSnapshotRead(ctx context.Context, d *schema.ResourceData, meta in
 	d.Set("storage_type", snapshot.StorageType)
 	d.Set("vpc_id", snapshot.VpcId)
 
-	tags := KeyValueTags(ctx, snapshot.TagList)
-
-	if err := d.Set("tags", tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-	}
+	setTagsOut(ctx, snapshot.TagList)
 
 	return diags
 }
