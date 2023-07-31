@@ -463,7 +463,7 @@ func testAccCheckStackSetInstanceStackExists(ctx context.Context, stackInstance 
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudFormationConn(ctx)
 
-		output, err := tfcloudformation.FindStackByID(ctx, conn, aws.StringValue(stackInstance.StackId))
+		output, err := tfcloudformation.FindStackByName(ctx, conn, aws.StringValue(stackInstance.StackId))
 
 		if err != nil {
 			return err

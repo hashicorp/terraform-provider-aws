@@ -269,6 +269,31 @@ func New(ctx context.Context) (*schema.Provider, error) {
 				return ctx
 			}
 			interceptors := interceptorItems{}
+
+			if v.Tags != nil {
+				schema := r.SchemaMap()
+
+				// The data source has opted in to transparent tagging.
+				// Ensure that the schema look OK.
+				if v, ok := schema[names.AttrTags]; ok {
+					if !v.Computed {
+						errs = multierror.Append(errs, fmt.Errorf("`%s` attribute must be Computed: %s", names.AttrTags, typeName))
+						continue
+					}
+				} else {
+					errs = multierror.Append(errs, fmt.Errorf("no `%s` attribute defined in schema: %s", names.AttrTags, typeName))
+					continue
+				}
+
+				interceptors = append(interceptors, interceptorItem{
+					when: Before | After,
+					why:  Read,
+					interceptor: tagsDataSourceInterceptor{
+						tags: v.Tags,
+					},
+				})
+			}
+
 			ds := &wrappedDataSource{
 				bootstrapContext: bootstrapContext,
 				interceptors:     interceptors,
@@ -348,7 +373,7 @@ func New(ctx context.Context) (*schema.Provider, error) {
 				interceptors = append(interceptors, interceptorItem{
 					when: Before | After | Finally,
 					why:  Create | Read | Update,
-					interceptor: tagsInterceptor{
+					interceptor: tagsResourceInterceptor{
 						tags:       v.Tags,
 						updateFunc: tagsUpdateFunc,
 						readFunc:   tagsReadFunc,
