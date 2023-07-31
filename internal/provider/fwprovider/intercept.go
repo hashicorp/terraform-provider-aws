@@ -311,12 +311,12 @@ func (w *wrappedResource) UpgradeState(ctx context.Context) map[int64]resource.S
 	return nil
 }
 
-// tagsInterceptor implements transparent tagging.
-type tagsInterceptor struct {
+// tagsResourceInterceptor implements transparent tagging for resources.
+type tagsResourceInterceptor struct {
 	tags *types.ServicePackageResourceTags
 }
 
-func (r tagsInterceptor) create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse, meta *conns.AWSClient, when when, diags diag.Diagnostics) (context.Context, diag.Diagnostics) {
+func (r tagsResourceInterceptor) create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse, meta *conns.AWSClient, when when, diags diag.Diagnostics) (context.Context, diag.Diagnostics) {
 	if r.tags == nil {
 		return ctx, diags
 	}
@@ -361,7 +361,7 @@ func (r tagsInterceptor) create(ctx context.Context, request resource.CreateRequ
 	return ctx, diags
 }
 
-func (r tagsInterceptor) read(ctx context.Context, request resource.ReadRequest, response *resource.ReadResponse, meta *conns.AWSClient, when when, diags diag.Diagnostics) (context.Context, diag.Diagnostics) {
+func (r tagsResourceInterceptor) read(ctx context.Context, request resource.ReadRequest, response *resource.ReadResponse, meta *conns.AWSClient, when when, diags diag.Diagnostics) (context.Context, diag.Diagnostics) {
 	if r.tags == nil {
 		return ctx, diags
 	}
@@ -466,7 +466,7 @@ func (r tagsInterceptor) read(ctx context.Context, request resource.ReadRequest,
 	return ctx, diags
 }
 
-func (r tagsInterceptor) update(ctx context.Context, request resource.UpdateRequest, response *resource.UpdateResponse, meta *conns.AWSClient, when when, diags diag.Diagnostics) (context.Context, diag.Diagnostics) {
+func (r tagsResourceInterceptor) update(ctx context.Context, request resource.UpdateRequest, response *resource.UpdateResponse, meta *conns.AWSClient, when when, diags diag.Diagnostics) (context.Context, diag.Diagnostics) {
 	if r.tags == nil {
 		return ctx, diags
 	}
@@ -571,6 +571,6 @@ func (r tagsInterceptor) update(ctx context.Context, request resource.UpdateRequ
 	return ctx, diags
 }
 
-func (r tagsInterceptor) delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse, meta *conns.AWSClient, when when, diags diag.Diagnostics) (context.Context, diag.Diagnostics) {
+func (r tagsResourceInterceptor) delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse, meta *conns.AWSClient, when when, diags diag.Diagnostics) (context.Context, diag.Diagnostics) {
 	return ctx, diags
 }

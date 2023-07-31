@@ -414,7 +414,7 @@ func (p *fwprovider) Resources(ctx context.Context) []func() resource.Resource {
 					continue
 				}
 
-				interceptors = append(interceptors, tagsInterceptor{tags: v.Tags})
+				interceptors = append(interceptors, tagsResourceInterceptor{tags: v.Tags})
 			}
 
 			resources = append(resources, func() resource.Resource {
