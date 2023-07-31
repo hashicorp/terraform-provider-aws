@@ -191,7 +191,7 @@ resource "aws_dlm_lifecycle_policy" "example" {
           interval_unit = "MONTHS"
         }
 
-        target = %[1]q
+        target = "us-east-1"
       }
     }
 
