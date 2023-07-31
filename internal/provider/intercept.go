@@ -428,9 +428,9 @@ func (r tagsDataSourceInterceptor) run(ctx context.Context, d schemaResourceData
 			fallthrough
 		case Create, Update:
 			// If the R handler didn't set tags, try and read them from the service API.
-			if tagsInContext.TagsOut.IsNone() {
-				// TODO.
-			}
+			// TODO.
+			// if tagsInContext.TagsOut.IsNone() {
+			// }
 
 			// Remove any provider configured ignore_tags and system tags from those returned from the service API.
 			tags := tagsInContext.TagsOut.UnwrapOrDefault().IgnoreSystem(inContext.ServicePackageName).IgnoreConfig(tagsInContext.IgnoreConfig)
