@@ -23,12 +23,51 @@ type TestFlexTF01 struct {
 	Name types.String `tfsdk:"name"`
 }
 
+type TestFlexTF02 struct {
+	Name types.Int64 `tfsdk:"name"`
+}
+
+// All primitive types.
+type TestFlexTF03 struct {
+	Field1  types.String  `tfsdk:"field1"`
+	Field2  types.String  `tfsdk:"field2"`
+	Field3  types.Int64   `tfsdk:"field3"`
+	Field4  types.Int64   `tfsdk:"field4"`
+	Field5  types.Int64   `tfsdk:"field5"`
+	Field6  types.Int64   `tfsdk:"field6"`
+	Field7  types.Float64 `tfsdk:"field7"`
+	Field8  types.Float64 `tfsdk:"field8"`
+	Field9  types.Float64 `tfsdk:"field9"`
+	Field10 types.Float64 `tfsdk:"field10"`
+	Field11 types.Bool    `tfsdk:"field11"`
+	Field12 types.Bool    `tfsdk:"field12"`
+}
+
 type TestFlexAWS01 struct {
 	Name string
 }
 
 type TestFlexAWS02 struct {
 	Name *string
+}
+
+type TestFlexAWS03 struct {
+	Name int64
+}
+
+type TestFlexAWS04 struct {
+	Field1  string
+	Field2  *string
+	Field3  int32
+	Field4  *int32
+	Field5  int64
+	Field6  *int64
+	Field7  float32
+	Field8  *float32
+	Field9  float64
+	Field10 *float64
+	Field11 bool
+	Field12 *bool
 }
 
 type ATestExpand struct{}
@@ -220,11 +259,45 @@ func TestGenericExpand(t *testing.T) {
 			WantTarget: &TestFlexAWS02{Name: aws.String("a")},
 		},
 		{
-			TestName: "single string Source and single int64 Target",
-			Source:   &BTestExpand{Name: types.StringValue("a")},
-			Target:   &FTestExpand{},
-			WantErr:  true,
+			TestName:   "single string Source and single int64 Target",
+			Source:     &TestFlexTF01{Name: types.StringValue("a")},
+			Target:     &TestFlexAWS03{},
+			WantTarget: &TestFlexAWS03{},
+			WantErr:    true,
 		},
+		{
+			TestName: "primtive types Source and primtive types Target",
+			Source: &TestFlexTF03{
+				Field1:  types.StringValue("field1"),
+				Field2:  types.StringValue("field2"),
+				Field3:  types.Int64Value(3),
+				Field4:  types.Int64Value(-4),
+				Field5:  types.Int64Value(5),
+				Field6:  types.Int64Value(-6),
+				Field7:  types.Float64Value(7.7),
+				Field8:  types.Float64Value(-8.8),
+				Field9:  types.Float64Value(9.99),
+				Field10: types.Float64Value(-10.101),
+				Field11: types.BoolValue(true),
+				Field12: types.BoolValue(false),
+			},
+			Target: &TestFlexAWS04{},
+			WantTarget: &TestFlexAWS04{
+				Field1:  "field1",
+				Field2:  aws.String("field2"),
+				Field3:  3,
+				Field4:  aws.Int32(-4),
+				Field5:  5,
+				Field6:  aws.Int64(-6),
+				Field7:  7.7,
+				Field8:  aws.Float32(-8.8),
+				Field9:  9.99,
+				Field10: aws.Float64(-10.101),
+				Field11: true,
+				Field12: aws.Bool(false),
+			},
+		},
+
 		{
 			TestName:   "single int64 Source and single int64 Target",
 			Source:     &ETestExpand{Name: types.Int64Value(42)},
