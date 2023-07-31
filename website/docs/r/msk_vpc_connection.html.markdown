@@ -5,24 +5,19 @@ page_title: "AWS: aws_msk_vpc_connection"
 description: |-
   Terraform resource for managing an AWS Managed Streaming for Kafka Vpc Connection.
 ---
-<!---
-TIP: A few guiding principles for writing documentation:
-1. Use simple language while avoiding jargon and figures of speech.
-2. Focus on brevity and clarity to keep a reader's attention.
-3. Use active voice and present tense whenever you can.
-4. Document your feature as it exists now; do not mention the future or past if you can help it.
-5. Use accessible and inclusive language.
---->`
-# Resource: aws_kafka_vpc_connection
+# Resource: aws_msk_vpc_connection
 
 Terraform resource for managing an AWS Managed Streaming for Kafka Vpc Connection.
 
 ## Example Usage
 
-### Basic Usage
-
 ```terraform
-resource "aws_kafka_vpc_connection" "example" {
+resource "aws_msk_vpc_connection" "test" {
+  authentication     = "SASL_IAM"
+  target_cluster_arn = "aws_msk_cluster.arn"
+  vpc_id             = aws_vpc.test.id
+  client_subnets     = aws_subnet.test[*].id
+  security_groups    = [aws_security_group.test.id]
 }
 ```
 
@@ -30,18 +25,21 @@ resource "aws_kafka_vpc_connection" "example" {
 
 The following arguments are required:
 
-* `example_arg` - (Required) Concise argument description. Do not begin the description with "An", "The", "Defines", "Indicates", or "Specifies," as these are verbose. In other words, "Indicates the amount of storage," can be rewritten as "Amount of storage," without losing any information.
+* `authentication` - (Required) The authentication type for the client VPC connection. Specify one of these auth type strings: SASL_IAM, SASL_SCRAM, or TLS.
 
-The following arguments are optional:
+* `client_subnets` - (Required) The list of subnets in the client VPC to connect to.
 
-* `optional_arg` - (Optional) Concise argument description. Do not begin the description with "An", "The", "Defines", "Indicates", or "Specifies," as these are verbose. In other words, "Indicates the amount of storage," can be rewritten as "Amount of storage," without losing any information.
+* `security_groups` - (Required) The security groups to attach to the ENIs for the broker nodes.
 
-## Attributes Reference
+* `target_cluster_arn` - (Required) The Amazon Resource Name (ARN) of the cluster.
 
-In addition to all arguments above, the following attributes are exported:
+* `vpc_id` - (Required) The VPC id of the remote client.
 
-* `arn` - ARN of the Vpc Connection. Do not begin the description with "An", "The", "Defines", "Indicates", or "Specifies," as these are verbose. In other words, "Indicates the amount of storage," can be rewritten as "Amount of storage," without losing any information.
-* `example_attribute` - Concise description. Do not begin the description with "An", "The", "Defines", "Indicates", or "Specifies," as these are verbose. In other words, "Indicates the amount of storage," can be rewritten as "Amount of storage," without losing any information.
+## Attribute Reference
+
+This resource exports the following attributes in addition to the arguments above:
+
+* `arn` - Amazon Resource Name (ARN) of the VPC connection.
 
 ## Timeouts
 
@@ -53,8 +51,17 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Managed Streaming for Kafka Vpc Connection can be imported using the `example_id_arg`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import MSK configurations using the configuration ARN. For example:
 
+```terraform
+import {
+  to = aws_msk_vpc_connection.example
+  id = "arn:aws:kafka:eu-west-2:123456789012:vpc-connection/123456789012/example/38173259-79cd-4ee8-87f3-682ea6023f48-2"
+}
 ```
-$ terraform import aws_kafka_vpc_connection.example rft-8012925589
+
+Using `terraform import`, import MSK configurations using the configuration ARN. For example:
+
+```console
+% terraform import aws_msk_vpc_connection.example arn:aws:kafka:eu-west-2:123456789012:vpc-connection/123456789012/example/38173259-79cd-4ee8-87f3-682ea6023f48-2
 ```

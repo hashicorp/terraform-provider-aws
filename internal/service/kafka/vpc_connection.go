@@ -23,12 +23,12 @@ import (
 
 // Function annotations are used for resource registration to the Provider. DO NOT EDIT.
 // @SDKResource("aws_msk_vpc_connection", name="Vpc Connection")
-func ResourceVpcConnection() *schema.Resource {
+func ResourceVPCConnection() *schema.Resource {
 	return &schema.Resource{
 
-		CreateWithoutTimeout: resourceVpcConnectionCreate,
-		ReadWithoutTimeout:   resourceVpcConnectionRead,
-		DeleteWithoutTimeout: resourceVpcConnectionDelete,
+		CreateWithoutTimeout: resourceVPCConnectionCreate,
+		ReadWithoutTimeout:   resourceVPCConnectionRead,
+		DeleteWithoutTimeout: resourceVPCConnectionDelete,
 
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
@@ -38,7 +38,6 @@ func ResourceVpcConnection() *schema.Resource {
 			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
-				ForceNew: true,
 			},
 			"authentication": {
 				Type:     schema.TypeString,
@@ -74,10 +73,10 @@ func ResourceVpcConnection() *schema.Resource {
 }
 
 const (
-	ResNameVpcConnection = "Vpc Connection"
+	ResNameVPCConnection = "VPC Connection"
 )
 
-func resourceVpcConnectionCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceVPCConnectionCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).KafkaClient(ctx)
@@ -95,28 +94,28 @@ func resourceVpcConnectionCreate(ctx context.Context, d *schema.ResourceData, me
 
 	out, err := conn.CreateVpcConnection(ctx, in)
 	if err != nil {
-		return append(diags, create.DiagError(names.Kafka, create.ErrActionCreating, ResNameVpcConnection, d.Get("arn").(string), err)...)
+		return append(diags, create.DiagError(names.Kafka, create.ErrActionCreating, ResNameVPCConnection, d.Get("arn").(string), err)...)
 	}
 
 	if out == nil {
-		return append(diags, create.DiagError(names.Kafka, create.ErrActionCreating, ResNameVpcConnection, d.Get("arn").(string), errors.New("empty output"))...)
+		return append(diags, create.DiagError(names.Kafka, create.ErrActionCreating, ResNameVPCConnection, d.Get("arn").(string), errors.New("empty output"))...)
 	}
 
 	d.SetId(aws.ToString(out.VpcConnectionArn))
 
-	if _, err := waitVpcConnectionCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
-		return append(diags, create.DiagError(names.Kafka, create.ErrActionWaitingForCreation, ResNameVpcConnection, d.Id(), err)...)
+	if _, err := waitVPCConnectionCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
+		return append(diags, create.DiagError(names.Kafka, create.ErrActionWaitingForCreation, ResNameVPCConnection, d.Id(), err)...)
 	}
 
-	return append(diags, resourceVpcConnectionRead(ctx, d, meta)...)
+	return append(diags, resourceVPCConnectionRead(ctx, d, meta)...)
 }
 
-func resourceVpcConnectionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceVPCConnectionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).KafkaClient(ctx)
 
-	out, err := FindVpcConnectionByARN(ctx, conn, d.Id())
+	out, err := FindVPCConnectionByARN(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Kafka VpcConnection (%s) not found, removing from state", d.Id())
@@ -125,7 +124,7 @@ func resourceVpcConnectionRead(ctx context.Context, d *schema.ResourceData, meta
 	}
 
 	if err != nil {
-		return append(diags, create.DiagError(names.Kafka, create.ErrActionReading, ResNameVpcConnection, d.Id(), err)...)
+		return append(diags, create.DiagError(names.Kafka, create.ErrActionReading, ResNameVPCConnection, d.Id(), err)...)
 	}
 
 	d.Set("authentication", out.Authentication)
@@ -134,17 +133,17 @@ func resourceVpcConnectionRead(ctx context.Context, d *schema.ResourceData, meta
 	d.Set("target_cluster_arn", out.TargetClusterArn)
 
 	if err := d.Set("client_subnets", flex.FlattenStringValueSet(out.Subnets)); err != nil {
-		return append(diags, create.DiagError(names.Kafka, create.ErrActionSetting, ResNameVpcConnection, d.Id(), err)...)
+		return append(diags, create.DiagError(names.Kafka, create.ErrActionSetting, ResNameVPCConnection, d.Id(), err)...)
 	}
 
 	if err := d.Set("security_groups", flex.FlattenStringValueSet(out.SecurityGroups)); err != nil {
-		return append(diags, create.DiagError(names.Kafka, create.ErrActionSetting, ResNameVpcConnection, d.Id(), err)...)
+		return append(diags, create.DiagError(names.Kafka, create.ErrActionSetting, ResNameVPCConnection, d.Id(), err)...)
 	}
 
 	return diags
 }
 
-func resourceVpcConnectionDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceVPCConnectionDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).KafkaClient(ctx)
@@ -159,21 +158,21 @@ func resourceVpcConnectionDelete(ctx context.Context, d *schema.ResourceData, me
 		return diags
 	}
 	if err != nil {
-		return append(diags, create.DiagError(names.Kafka, create.ErrActionDeleting, ResNameVpcConnection, d.Id(), err)...)
+		return append(diags, create.DiagError(names.Kafka, create.ErrActionDeleting, ResNameVPCConnection, d.Id(), err)...)
 	}
 
-	if _, err := waitVpcConnectionDeleted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
-		return append(diags, create.DiagError(names.Kafka, create.ErrActionWaitingForDeletion, ResNameVpcConnection, d.Id(), err)...)
+	if _, err := waitVPCConnectionDeleted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
+		return append(diags, create.DiagError(names.Kafka, create.ErrActionWaitingForDeletion, ResNameVPCConnection, d.Id(), err)...)
 	}
 
 	return diags
 }
 
-func waitVpcConnectionCreated(ctx context.Context, conn *kafka.Client, id string, timeout time.Duration) (*kafka.DescribeVpcConnectionOutput, error) {
+func waitVPCConnectionCreated(ctx context.Context, conn *kafka.Client, id string, timeout time.Duration) (*kafka.DescribeVpcConnectionOutput, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending:                   enum.Slice(types.VpcConnectionStateCreating),
 		Target:                    enum.Slice(types.VpcConnectionStateAvailable),
-		Refresh:                   statusVpcConnection(ctx, conn, id),
+		Refresh:                   statusVPCConnection(ctx, conn, id),
 		Timeout:                   timeout,
 		NotFoundChecks:            20,
 		ContinuousTargetOccurence: 2,
@@ -187,11 +186,11 @@ func waitVpcConnectionCreated(ctx context.Context, conn *kafka.Client, id string
 	return nil, err
 }
 
-func waitVpcConnectionDeleted(ctx context.Context, conn *kafka.Client, arn string, timeout time.Duration) (*kafka.DescribeVpcConnectionOutput, error) {
+func waitVPCConnectionDeleted(ctx context.Context, conn *kafka.Client, arn string, timeout time.Duration) (*kafka.DescribeVpcConnectionOutput, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(types.VpcConnectionStateAvailable, types.VpcConnectionStateInactive, types.VpcConnectionStateDeactivating, types.VpcConnectionStateDeleting),
 		Target:  []string{},
-		Refresh: statusVpcConnection(ctx, conn, arn),
+		Refresh: statusVPCConnection(ctx, conn, arn),
 		Timeout: timeout,
 	}
 
@@ -203,9 +202,9 @@ func waitVpcConnectionDeleted(ctx context.Context, conn *kafka.Client, arn strin
 	return nil, err
 }
 
-func statusVpcConnection(ctx context.Context, conn *kafka.Client, arn string) retry.StateRefreshFunc {
+func statusVPCConnection(ctx context.Context, conn *kafka.Client, arn string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		out, err := FindVpcConnectionByARN(ctx, conn, arn)
+		out, err := FindVPCConnectionByARN(ctx, conn, arn)
 		if tfresource.NotFound(err) {
 			return nil, "", nil
 		}
@@ -218,7 +217,7 @@ func statusVpcConnection(ctx context.Context, conn *kafka.Client, arn string) re
 	}
 }
 
-func FindVpcConnectionByARN(ctx context.Context, conn *kafka.Client, arn string) (*kafka.DescribeVpcConnectionOutput, error) {
+func FindVPCConnectionByARN(ctx context.Context, conn *kafka.Client, arn string) (*kafka.DescribeVpcConnectionOutput, error) {
 	in := &kafka.DescribeVpcConnectionInput{
 		Arn: aws.String(arn),
 	}
