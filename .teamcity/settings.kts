@@ -2,6 +2,8 @@ import jetbrains.buildServer.configs.kotlin.* // ktlint-disable no-wildcard-impo
 import jetbrains.buildServer.configs.kotlin.buildFeatures.golang
 import jetbrains.buildServer.configs.kotlin.buildFeatures.notifications
 import jetbrains.buildServer.configs.kotlin.buildSteps.script
+import jetbrains.buildServer.configs.kotlin.failureConditions.failOnText
+import jetbrains.buildServer.configs.kotlin.failureConditions.BuildFailureOnText
 import jetbrains.buildServer.configs.kotlin.triggers.schedule
 import java.io.File
 import java.time.Duration
@@ -444,6 +446,16 @@ object Sweeper : BuildType({
                     enforceCleanCheckoutForDependencies = true
                 }
             }
+        }
+    }
+
+    failureConditions {
+        failOnText {
+            conditionType = BuildFailureOnText.ConditionType.REGEXP
+            pattern = """Sweeper Tests for region \(([-a-z0-9]+)\) ran unsuccessfully"""
+            failureMessage = """Sweeper failure for region "${'$'}1""""
+            reverse = false
+            reportOnlyFirstMatch = false
         }
     }
 
