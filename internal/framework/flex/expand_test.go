@@ -6,7 +6,6 @@ package flex
 import (
 	"context"
 	"testing"
-	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/google/go-cmp/cmp"
@@ -43,6 +42,16 @@ type TestFlexTF03 struct {
 	Field12 types.Bool    `tfsdk:"field12"`
 }
 
+// List/Set/Map of primitive types.
+type TestFlexTF04 struct {
+	Field1 types.List `tfsdk:"field1"`
+	Field2 types.List `tfsdk:"field2"`
+	Field3 types.Set  `tfsdk:"field3"`
+	Field4 types.Set  `tfsdk:"field4"`
+	Field5 types.Map  `tfsdk:"field5"`
+	Field6 types.Map  `tfsdk:"field6"`
+}
+
 type TestFlexAWS01 struct {
 	Name string
 }
@@ -68,6 +77,15 @@ type TestFlexAWS04 struct {
 	Field10 *float64
 	Field11 bool
 	Field12 *bool
+}
+
+type TestFlexAWS05 struct {
+	Field1 []string
+	Field2 []*string
+	Field3 []string
+	Field4 []*string
+	Field5 map[string]string
+	Field6 map[string]*string
 }
 
 type ATestExpand struct{}
@@ -297,127 +315,45 @@ func TestGenericExpand(t *testing.T) {
 				Field12: aws.Bool(false),
 			},
 		},
+		{
+			TestName: "List/Set/Map of primitive types Source and slice/map of primtive types Target",
+			Source: &TestFlexTF04{
+				Field1: types.ListValueMust(types.StringType, []attr.Value{
+					types.StringValue("a"),
+					types.StringValue("b"),
+				}),
+				Field2: types.ListValueMust(types.StringType, []attr.Value{
+					types.StringValue("a"),
+					types.StringValue("b"),
+				}),
+				Field3: types.SetValueMust(types.StringType, []attr.Value{
+					types.StringValue("a"),
+					types.StringValue("b"),
+				}),
+				Field4: types.SetValueMust(types.StringType, []attr.Value{
+					types.StringValue("a"),
+					types.StringValue("b"),
+				}),
+				Field5: types.MapValueMust(types.StringType, map[string]attr.Value{
+					"A": types.StringValue("a"),
+					"B": types.StringValue("b"),
+				}),
+				Field6: types.MapValueMust(types.StringType, map[string]attr.Value{
+					"A": types.StringValue("a"),
+					"B": types.StringValue("b"),
+				}),
+			},
+			Target: &TestFlexAWS05{},
+			WantTarget: &TestFlexAWS05{
+				Field1: []string{"a", "b"},
+				Field2: aws.StringSlice([]string{"a", "b"}),
+				Field3: []string{"a", "b"},
+				Field4: aws.StringSlice([]string{"a", "b"}),
+				Field5: map[string]string{"A": "a", "B": "b"},
+				Field6: aws.StringMap(map[string]string{"A": "a", "B": "b"}),
+			},
+		},
 
-		{
-			TestName:   "single int64 Source and single int64 Target",
-			Source:     &ETestExpand{Name: types.Int64Value(42)},
-			Target:     &FTestExpand{},
-			WantTarget: &FTestExpand{Name: 42},
-		},
-		{
-			TestName:   "single int64 Source and single *int64 Target",
-			Source:     &ETestExpand{Name: types.Int64Value(42)},
-			Target:     &GTestExpand{},
-			WantTarget: &GTestExpand{Name: aws.Int64(42)},
-		},
-		{
-			TestName:   "single int64 Source and single int32 Target",
-			Source:     &ETestExpand{Name: types.Int64Value(42)},
-			Target:     &HTestExpand{},
-			WantTarget: &HTestExpand{Name: 42},
-		},
-		{
-			TestName:   "single int64 Source and single *int32 Target",
-			Source:     &ETestExpand{Name: types.Int64Value(42)},
-			Target:     &ITestExpand{},
-			WantTarget: &ITestExpand{Name: aws.Int32(42)},
-		},
-		{
-			TestName: "single int64 Source and single float64 Target",
-			Source:   &ETestExpand{Name: types.Int64Value(42)},
-			Target:   &KTestExpand{},
-			WantErr:  true,
-		},
-		{
-			TestName:   "single float64 Source and single float64 Target",
-			Source:     &JTestExpand{Name: types.Float64Value(4.2)},
-			Target:     &KTestExpand{},
-			WantTarget: &KTestExpand{Name: 4.2},
-		},
-		{
-			TestName:   "single float64 Source and single *float64 Target",
-			Source:     &JTestExpand{Name: types.Float64Value(4.2)},
-			Target:     &LTestExpand{},
-			WantTarget: &LTestExpand{Name: aws.Float64(4.2)},
-		},
-		{
-			TestName:   "single float64 Source and single float32 Target",
-			Source:     &JTestExpand{Name: types.Float64Value(4.2)},
-			Target:     &MTestExpand{},
-			WantTarget: &MTestExpand{Name: 4.2},
-		},
-		{
-			TestName:   "single float64 Source and single *float32 Target",
-			Source:     &JTestExpand{Name: types.Float64Value(4.2)},
-			Target:     &NTestExpand{},
-			WantTarget: &NTestExpand{Name: aws.Float32(4.2)},
-		},
-		{
-			TestName: "single float64 Source and single bool Target",
-			Source:   &JTestExpand{Name: types.Float64Value(4.2)},
-			Target:   &PTestExpand{},
-			WantErr:  true,
-		},
-		{
-			TestName:   "single bool Source and single bool Target",
-			Source:     &OTestExpand{Name: types.BoolValue(true)},
-			Target:     &PTestExpand{},
-			WantTarget: &PTestExpand{Name: true},
-		},
-		{
-			TestName:   "single bool Source and single *bool Target",
-			Source:     &OTestExpand{Name: types.BoolValue(true)},
-			Target:     &QTestExpand{},
-			WantTarget: &QTestExpand{Name: aws.Bool(true)},
-		},
-		{
-			TestName:   "single set Source and single string slice Target",
-			Source:     &RTestExpand{Names: types.SetValueMust(types.StringType, []attr.Value{types.StringValue("a")})},
-			Target:     &STestExpand{},
-			WantTarget: &STestExpand{Names: []string{"a"}},
-		},
-		{
-			TestName:   "single set Source and single *string slice Target",
-			Source:     &RTestExpand{Names: types.SetValueMust(types.StringType, []attr.Value{types.StringValue("a")})},
-			Target:     &TTestExpand{},
-			WantTarget: &TTestExpand{Names: aws.StringSlice([]string{"a"})},
-		},
-		{
-			TestName:   "single list Source and single string slice Target",
-			Source:     &UTestExpand{Names: types.ListValueMust(types.StringType, []attr.Value{types.StringValue("a")})},
-			Target:     &STestExpand{},
-			WantTarget: &STestExpand{Names: []string{"a"}},
-		},
-		{
-			TestName:   "single list Source and single *string slice Target",
-			Source:     &UTestExpand{Names: types.ListValueMust(types.StringType, []attr.Value{types.StringValue("a")})},
-			Target:     &TTestExpand{},
-			WantTarget: &TTestExpand{Names: aws.StringSlice([]string{"a"})},
-		},
-		{
-			TestName:   "single Duration Source and single string Target",
-			Source:     &VTestExpand{Name: fwtypes.DurationValue(10 * time.Minute)},
-			Target:     &CTestExpand{},
-			WantTarget: &CTestExpand{Name: "10m0s"},
-		},
-		{
-			TestName:   "single Duration Source and single *string Target",
-			Source:     &VTestExpand{Name: fwtypes.DurationValue(10 * time.Minute)},
-			Target:     &DTestExpand{},
-			WantTarget: &DTestExpand{Name: aws.String("10m0s")},
-		},
-		{
-			TestName:   "single map Source and single map[string]string slice Target",
-			Source:     &WTestExpand{Names: types.MapValueMust(types.StringType, map[string]attr.Value{"A": types.StringValue("a")})},
-			Target:     &XTestExpand{},
-			WantTarget: &XTestExpand{Names: map[string]string{"A": "a"}},
-		},
-		{
-			TestName:   "single map Source and single map[string]*string slice Target",
-			Source:     &WTestExpand{Names: types.MapValueMust(types.StringType, map[string]attr.Value{"A": types.StringValue("a")})},
-			Target:     &YTestExpand{},
-			WantTarget: &YTestExpand{Names: aws.StringMap(map[string]string{"A": "a"})},
-		},
 		{
 			TestName:   "single list Source and single *struct Target",
 			Source:     &AATestExpand{Data: fwtypes.NewListNestedObjectValueOfPtr(ctx, &BTestExpand{Name: types.StringValue("a")})},

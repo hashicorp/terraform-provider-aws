@@ -6,7 +6,6 @@ package flex
 import (
 	"context"
 	"testing"
-	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/google/go-cmp/cmp"
@@ -276,139 +275,58 @@ func TestGenericFlatten(t *testing.T) {
 				Field12: types.BoolValue(false),
 			},
 		},
+		{
+			TestName: "zero value slice/map of primtive primtive types Source and List/Set/Map of primtive types Target",
+			Source:   &TestFlexAWS05{},
+			Target:   &TestFlexTF04{},
+			WantTarget: &TestFlexTF04{
+				Field1: types.ListNull(types.StringType),
+				Field2: types.ListNull(types.StringType),
+				Field3: types.SetNull(types.StringType),
+				Field4: types.SetNull(types.StringType),
+				Field5: types.MapNull(types.StringType),
+				Field6: types.MapNull(types.StringType),
+			},
+		},
+		{
+			TestName: "slice/map of primtive primtive types Source and List/Set/Map of primtive types Target",
+			Source: &TestFlexAWS05{
+				Field1: []string{"a", "b"},
+				Field2: aws.StringSlice([]string{"a", "b"}),
+				Field3: []string{"a", "b"},
+				Field4: aws.StringSlice([]string{"a", "b"}),
+				Field5: map[string]string{"A": "a", "B": "b"},
+				Field6: aws.StringMap(map[string]string{"A": "a", "B": "b"}),
+			},
+			Target: &TestFlexTF04{},
+			WantTarget: &TestFlexTF04{
+				Field1: types.ListValueMust(types.StringType, []attr.Value{
+					types.StringValue("a"),
+					types.StringValue("b"),
+				}),
+				Field2: types.ListValueMust(types.StringType, []attr.Value{
+					types.StringValue("a"),
+					types.StringValue("b"),
+				}),
+				Field3: types.SetValueMust(types.StringType, []attr.Value{
+					types.StringValue("a"),
+					types.StringValue("b"),
+				}),
+				Field4: types.SetValueMust(types.StringType, []attr.Value{
+					types.StringValue("a"),
+					types.StringValue("b"),
+				}),
+				Field5: types.MapValueMust(types.StringType, map[string]attr.Value{
+					"A": types.StringValue("a"),
+					"B": types.StringValue("b"),
+				}),
+				Field6: types.MapValueMust(types.StringType, map[string]attr.Value{
+					"A": types.StringValue("a"),
+					"B": types.StringValue("b"),
+				}),
+			},
+		},
 
-		{
-			TestName:   "single int64 Source and single int64 Target",
-			Source:     &ETestFlatten{Name: 42},
-			Target:     &GTestFlatten{},
-			WantTarget: &GTestFlatten{Name: types.Int64Value(42)},
-		},
-		{
-			TestName:   "single *int64 Source and single int64 Target",
-			Source:     &FTestFlatten{Name: aws.Int64(42)},
-			Target:     &GTestFlatten{},
-			WantTarget: &GTestFlatten{Name: types.Int64Value(42)},
-		},
-		{
-			TestName:   "single int32 Source and single int64 Target",
-			Source:     &HTestFlatten{Name: 42},
-			Target:     &GTestFlatten{},
-			WantTarget: &GTestFlatten{Name: types.Int64Value(42)},
-		},
-		{
-			TestName:   "single *int32 Source and single int64 Target",
-			Source:     &ITestFlatten{Name: aws.Int32(42)},
-			Target:     &GTestFlatten{},
-			WantTarget: &GTestFlatten{Name: types.Int64Value(42)},
-		},
-		{
-			TestName: "single *int32 Source and single string Target",
-			Source:   &ITestFlatten{Name: aws.Int32(42)},
-			Target:   &DTestFlatten{},
-			WantErr:  true,
-		},
-		{
-			TestName:   "single float64 Source and single float64 Target",
-			Source:     &JTestFlatten{Name: 4.2},
-			Target:     &LTestFlatten{},
-			WantTarget: &LTestFlatten{Name: types.Float64Value(4.2)},
-		},
-		{
-			TestName:   "single *float64 Source and single float64 Target",
-			Source:     &KTestFlatten{Name: aws.Float64(4.2)},
-			Target:     &LTestFlatten{},
-			WantTarget: &LTestFlatten{Name: types.Float64Value(4.2)},
-		},
-		{
-			TestName:   "single float32 Source and single float64 Target",
-			Source:     &MTestFlatten{Name: 4},
-			Target:     &LTestFlatten{},
-			WantTarget: &LTestFlatten{Name: types.Float64Value(4)},
-		},
-		{
-			TestName:   "single *float32 Source and single float64 Target",
-			Source:     &NTestFlatten{Name: aws.Float32(4)},
-			Target:     &LTestFlatten{},
-			WantTarget: &LTestFlatten{Name: types.Float64Value(4)},
-		},
-		{
-			TestName:   "single nil *float32 Source and single float64 Target",
-			Source:     &NTestFlatten{},
-			Target:     &LTestFlatten{},
-			WantTarget: &LTestFlatten{Name: types.Float64Null()},
-		},
-		{
-			TestName:   "single bool Source and single bool Target",
-			Source:     &OTestFlatten{Name: true},
-			Target:     &QTestFlatten{},
-			WantTarget: &QTestFlatten{Name: types.BoolValue(true)},
-		},
-		{
-			TestName:   "single *bool Source and single bool Target",
-			Source:     &PTestFlatten{Name: aws.Bool(true)},
-			Target:     &QTestFlatten{},
-			WantTarget: &QTestFlatten{Name: types.BoolValue(true)},
-		},
-		{
-			TestName:   "single string slice Source and single set Target",
-			Source:     &RTestFlatten{Names: []string{"a"}},
-			Target:     &TTestFlatten{},
-			WantTarget: &TTestFlatten{Names: types.SetValueMust(types.StringType, []attr.Value{types.StringValue("a")})},
-		},
-		{
-			TestName:   "single nil string slice Source and single set Target",
-			Source:     &RTestFlatten{},
-			Target:     &TTestFlatten{},
-			WantTarget: &TTestFlatten{Names: types.SetNull(types.StringType)},
-		},
-		{
-			TestName:   "single *string slice Source and single set Target",
-			Source:     &STestFlatten{Names: aws.StringSlice([]string{"a"})},
-			Target:     &TTestFlatten{},
-			WantTarget: &TTestFlatten{Names: types.SetValueMust(types.StringType, []attr.Value{types.StringValue("a")})},
-		},
-		{
-			TestName:   "single string slice Source and single list Target",
-			Source:     &RTestFlatten{Names: []string{"a"}},
-			Target:     &UTestFlatten{},
-			WantTarget: &UTestFlatten{Names: types.ListValueMust(types.StringType, []attr.Value{types.StringValue("a")})},
-		},
-		{
-			TestName:   "single *string slice Source and single list Target",
-			Source:     &STestFlatten{Names: aws.StringSlice([]string{"a"})},
-			Target:     &UTestFlatten{},
-			WantTarget: &UTestFlatten{Names: types.ListValueMust(types.StringType, []attr.Value{types.StringValue("a")})},
-		},
-		{
-			TestName:   "single string Source and single Duration Target",
-			Source:     &BTestFlatten{Name: "10m0s"},
-			Target:     &VTestFlatten{},
-			WantTarget: &VTestFlatten{Name: fwtypes.DurationValue(10 * time.Minute)},
-		},
-		{
-			TestName:   "single *string Source and single Duration Target",
-			Source:     &CTestFlatten{Name: aws.String("10m0s")},
-			Target:     &VTestFlatten{},
-			WantTarget: &VTestFlatten{Name: fwtypes.DurationValue(10 * time.Minute)},
-		},
-		{
-			TestName:   "single map[string]string slice Source and single map Target",
-			Source:     &WTestFlatten{Names: map[string]string{"A": "a"}},
-			Target:     &YTestFlatten{},
-			WantTarget: &YTestFlatten{Names: types.MapValueMust(types.StringType, map[string]attr.Value{"A": types.StringValue("a")})},
-		},
-		{
-			TestName:   "single nil map[string]string slice Source and single map Target",
-			Source:     &WTestFlatten{},
-			Target:     &YTestFlatten{},
-			WantTarget: &YTestFlatten{Names: types.MapNull(types.StringType)},
-		},
-		{
-			TestName:   "single map[string]*string slice Source and single map Target",
-			Source:     &XTestFlatten{Names: aws.StringMap(map[string]string{"A": "a"})},
-			Target:     &YTestFlatten{},
-			WantTarget: &YTestFlatten{Names: types.MapValueMust(types.StringType, map[string]attr.Value{"A": types.StringValue("a")})},
-		},
 		{
 			TestName:   "single *struct Source and single list Target",
 			Source:     &AATestFlatten{Data: &BTestFlatten{Name: "a"}},
