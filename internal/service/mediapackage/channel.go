@@ -115,14 +115,15 @@ func resourceChannelRead(ctx context.Context, d *schema.ResourceData, meta inter
 	conn := meta.(*conns.AWSClient).MediaPackageClient(ctx)
 
 	resp, err := findChannelByID(ctx, conn, d.Id())
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "describing MediaPackage Channel: %s", err)
-	}
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] MediaPackage Channel (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
+	}
+
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "reading MediaPackage Channel: %s", err)
 	}
 
 	d.Set("arn", resp.Arn)
