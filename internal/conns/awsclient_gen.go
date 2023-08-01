@@ -31,6 +31,7 @@ import (
 	lambda_sdkv2 "github.com/aws/aws-sdk-go-v2/service/lambda"
 	lightsail_sdkv2 "github.com/aws/aws-sdk-go-v2/service/lightsail"
 	medialive_sdkv2 "github.com/aws/aws-sdk-go-v2/service/medialive"
+	mediapackage_sdkv2 "github.com/aws/aws-sdk-go-v2/service/mediapackage"
 	oam_sdkv2 "github.com/aws/aws-sdk-go-v2/service/oam"
 	opensearchserverless_sdkv2 "github.com/aws/aws-sdk-go-v2/service/opensearchserverless"
 	pipes_sdkv2 "github.com/aws/aws-sdk-go-v2/service/pipes"
@@ -756,6 +757,10 @@ func (c *AWSClient) MediaLiveClient(ctx context.Context) *medialive_sdkv2.Client
 
 func (c *AWSClient) MediaPackageConn(ctx context.Context) *mediapackage_sdkv1.MediaPackage {
 	return errs.Must(conn[*mediapackage_sdkv1.MediaPackage](ctx, c, names.MediaPackage))
+}
+
+func (c *AWSClient) MediaPackageClient(ctx context.Context) *mediapackage_sdkv2.Client {
+	return errs.Must(client[*mediapackage_sdkv2.Client](ctx, c, names.MediaPackage))
 }
 
 func (c *AWSClient) MediaStoreConn(ctx context.Context) *mediastore_sdkv1.MediaStore {

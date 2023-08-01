@@ -34,6 +34,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/lambda v1.39.0
 	github.com/aws/aws-sdk-go-v2/service/lightsail v1.28.0
 	github.com/aws/aws-sdk-go-v2/service/medialive v1.33.0
+	github.com/aws/aws-sdk-go-v2/service/mediapackage v1.22.0
 	github.com/aws/aws-sdk-go-v2/service/oam v1.2.0
 	github.com/aws/aws-sdk-go-v2/service/opensearchserverless v1.4.0
 	github.com/aws/aws-sdk-go-v2/service/pipes v1.3.0
