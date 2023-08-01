@@ -21,7 +21,7 @@ import (
 
 func TestAccKafkaVPCConnection_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var vpcconnection kafka.DescribeVpcConnectionOutput
+	var v kafka.DescribeVpcConnectionOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_msk_vpc_connection.test"
 
@@ -33,9 +33,12 @@ func TestAccKafkaVPCConnection_basic(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCConnectionConfig_basic(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVPCConnectionExists(ctx, resourceName, &vpcconnection),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckVPCConnectionExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttrSet(resourceName, "arn"),
 					resource.TestCheckResourceAttr(resourceName, "authentication", "SASL_IAM"),
+					resource.TestCheckResourceAttr(resourceName, "client_subnets.#", "3"),
+					resource.TestCheckResourceAttr(resourceName, "security_groups.#", "2"),
 				),
 			},
 			{
@@ -49,7 +52,7 @@ func TestAccKafkaVPCConnection_basic(t *testing.T) {
 
 func TestAccKafkaVPCConnection_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	var vpcconnection kafka.DescribeVpcConnectionOutput
+	var v kafka.DescribeVpcConnectionOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_msk_vpc_connection.test"
 
@@ -62,7 +65,7 @@ func TestAccKafkaVPCConnection_disappears(t *testing.T) {
 			{
 				Config: testAccVPCConnectionConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVPCConnectionExists(ctx, resourceName, &vpcconnection),
+					testAccCheckVPCConnectionExists(ctx, resourceName, &v),
 					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfkafka.ResourceVPCConnection(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -96,11 +99,11 @@ func testAccCheckVPCConnectionDestroy(ctx context.Context) resource.TestCheckFun
 		return nil
 	}
 }
-func testAccCheckVPCConnectionExists(ctx context.Context, name string, vpcconnection *kafka.DescribeVpcConnectionOutput) resource.TestCheckFunc {
+func testAccCheckVPCConnectionExists(ctx context.Context, n string, v *kafka.DescribeVpcConnectionOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[name]
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return fmt.Errorf("Not found: %s", name)
+			return fmt.Errorf("Not found: %s", n)
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).KafkaClient(ctx)
@@ -111,59 +114,87 @@ func testAccCheckVPCConnectionExists(ctx context.Context, name string, vpcconnec
 			return err
 		}
 
-		*vpcconnection = *output
+		*v = *output
 
 		return nil
 	}
 }
 
 func testAccVPCConnectionConfig_base(rName string) string {
-	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
-resource "aws_vpc" "test" {
-  cidr_block           = "10.0.0.0/16"
-  enable_dns_hostnames = true
+	return acctest.ConfigCompose(
+		testAccClusterConfig_base(rName),
+		testAccClusterConfig_allowEveryoneNoACLFoundFalse(rName),
+		fmt.Sprintf(`
+resource "aws_msk_cluster" "test" {
+  cluster_name           = %[1]q
+  kafka_version          = "2.7.1"
+  number_of_broker_nodes = 3
+
+  broker_node_group_info {
+    client_subnets  = aws_subnet.test[*].id
+    instance_type   = "kafka.m5.large"
+    security_groups = [aws_security_group.test.id]
+
+    storage_info {
+      ebs_storage_info {
+        volume_size = 10
+      }
+    }
+  }
+
+  configuration_info {
+    arn      = aws_msk_configuration.test.arn
+    revision = aws_msk_configuration.test.latest_revision
+  }
+
+  client_authentication {
+    sasl {
+      iam = true
+    }
+  }
+}
+
+resource "aws_vpc" "client" {
+  cidr_block = "10.0.0.0/16"
 
   tags = {
     Name = %[1]q
   }
 }
 
-resource "aws_subnet" "test" {
+resource "aws_subnet" "client" {
   count = 3
 
-  vpc_id            = aws_vpc.test.id
+  vpc_id            = aws_vpc.client.id
   availability_zone = data.aws_availability_zones.available.names[count.index]
-  cidr_block        = cidrsubnet(aws_vpc.test.cidr_block, 8, count.index)
+  cidr_block        = cidrsubnet(aws_vpc.client.cidr_block, 8, count.index)
 
   tags = {
     Name = %[1]q
   }
 }
-
-
 `, rName))
 }
 
 func testAccVPCConnectionConfig_basic(rName string) string {
 	return acctest.ConfigCompose(testAccVPCConnectionConfig_base(rName), fmt.Sprintf(`
-resource "aws_security_group" "test" {
-  name   = %[1]q
-  vpc_id = aws_vpc.test.id
+resource "aws_security_group" "client" {
+  count = 2
+
+  name   = "%[1]s-${count.index}"
+  vpc_id = aws_vpc.client.id
 
   tags = {
     Name = %[1]q
   }
 }
+
 resource "aws_msk_vpc_connection" "test" {
   authentication     = "SASL_IAM"
-  target_cluster_arn = "aws_msk_cluster.test.arn"
-  vpc_id             = aws_vpc.test.id
-  client_subnets     = aws_subnet.test[*].id
-  security_groups    = [aws_security_group.test.id]
+  target_cluster_arn = aws_msk_cluster.test.arn
+  vpc_id             = aws_vpc.client.id
+  client_subnets     = aws_subnet.client[*].id
+  security_groups    = aws_security_group.client[*].id
 }
-
-
 `, rName))
 }
-
-// aws_msk_cluster.test.arn
