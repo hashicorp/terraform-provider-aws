@@ -14,126 +14,6 @@ import (
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 )
 
-// TODO Simplify by having more fields in structs.
-
-type ATestFlatten struct{}
-
-type BTestFlatten struct {
-	Name string
-}
-
-type CTestFlatten struct {
-	Name *string
-}
-
-type DTestFlatten struct {
-	Name types.String `tfsdk:"name"`
-}
-
-type ETestFlatten struct {
-	Name int64
-}
-
-type FTestFlatten struct {
-	Name *int64
-}
-
-type GTestFlatten struct {
-	Name types.Int64
-}
-
-type HTestFlatten struct {
-	Name int32
-}
-
-type ITestFlatten struct {
-	Name *int32
-}
-
-type JTestFlatten struct {
-	Name float64
-}
-
-type KTestFlatten struct {
-	Name *float64
-}
-
-type LTestFlatten struct {
-	Name types.Float64
-}
-
-type MTestFlatten struct {
-	Name float32
-}
-
-type NTestFlatten struct {
-	Name *float32
-}
-
-type OTestFlatten struct {
-	Name bool
-}
-
-type PTestFlatten struct {
-	Name *bool
-}
-
-type QTestFlatten struct {
-	Name types.Bool
-}
-
-type RTestFlatten struct {
-	Names []string
-}
-
-type STestFlatten struct {
-	Names []*string
-}
-
-type TTestFlatten struct {
-	Names types.Set
-}
-
-type UTestFlatten struct {
-	Names types.List
-}
-
-type VTestFlatten struct {
-	Name fwtypes.Duration
-}
-
-type WTestFlatten struct {
-	Names map[string]string
-}
-
-type XTestFlatten struct {
-	Names map[string]*string
-}
-
-type YTestFlatten struct {
-	Names types.Map
-}
-
-type AATestFlatten struct {
-	Data *BTestFlatten
-}
-
-type BBTestFlatten struct {
-	Data fwtypes.ListNestedObjectValueOf[DTestFlatten]
-}
-
-type CCTestFlatten struct {
-	Data []BTestFlatten
-}
-
-type DDTestFlatten struct {
-	Data []*BTestFlatten
-}
-
-type EETestFlatten struct {
-	Data fwtypes.SetNestedObjectValueOf[DTestFlatten]
-}
-
 func TestGenericFlatten(t *testing.T) {
 	t.Parallel()
 
@@ -338,53 +218,106 @@ func TestGenericFlatten(t *testing.T) {
 			Target:     &TestFlexTF05{},
 			WantTarget: &TestFlexTF05{Field1: fwtypes.NewListNestedObjectValueOfPtr(ctx, &TestFlexTF01{Field1: types.StringValue("a")})},
 		},
-
+		{
+			TestName:   "*struct Source and single set Target",
+			Source:     &TestFlexAWS06{Field1: &TestFlexAWS01{Field1: "a"}},
+			Target:     &TestFlexTF06{},
+			WantTarget: &TestFlexTF06{Field1: fwtypes.NewSetNestedObjectValueOfPtr(ctx, &TestFlexTF01{Field1: types.StringValue("a")})},
+		},
+		{
+			TestName:   "nil []struct and null list Target",
+			Source:     &TestFlexAWS08{},
+			Target:     &TestFlexTF05{},
+			WantTarget: &TestFlexTF05{Field1: fwtypes.NewListNestedObjectValueOfNull[TestFlexTF01](ctx)},
+		},
+		{
+			TestName:   "nil []struct and null set Target",
+			Source:     &TestFlexAWS08{},
+			Target:     &TestFlexTF06{},
+			WantTarget: &TestFlexTF06{Field1: fwtypes.NewSetNestedObjectValueOfNull[TestFlexTF01](ctx)},
+		},
 		{
 			TestName:   "empty []struct and empty list Target",
-			Source:     &CCTestFlatten{Data: []BTestFlatten{}},
-			Target:     &BBTestFlatten{},
-			WantTarget: &BBTestFlatten{Data: fwtypes.NewListNestedObjectValueOfValueSlice(ctx, []DTestFlatten{})},
+			Source:     &TestFlexAWS08{Field1: []TestFlexAWS01{}},
+			Target:     &TestFlexTF05{},
+			WantTarget: &TestFlexTF05{Field1: fwtypes.NewListNestedObjectValueOfValueSlice(ctx, []TestFlexTF01{})},
+		},
+		{
+			TestName:   "empty []struct and empty struct Target",
+			Source:     &TestFlexAWS08{Field1: []TestFlexAWS01{}},
+			Target:     &TestFlexTF06{},
+			WantTarget: &TestFlexTF06{Field1: fwtypes.NewSetNestedObjectValueOfValueSlice(ctx, []TestFlexTF01{})},
 		},
 		{
 			TestName: "non-empty []struct and non-empty list Target",
-			Source: &CCTestFlatten{Data: []BTestFlatten{
-				{Name: "a"},
-				{Name: "b"},
+			Source: &TestFlexAWS08{Field1: []TestFlexAWS01{
+				{Field1: "a"},
+				{Field1: "b"},
 			}},
-			Target: &BBTestFlatten{},
-			WantTarget: &BBTestFlatten{Data: fwtypes.NewListNestedObjectValueOfValueSlice(ctx, []DTestFlatten{
-				{Name: types.StringValue("a")},
-				{Name: types.StringValue("b")},
+			Target: &TestFlexTF05{},
+			WantTarget: &TestFlexTF05{Field1: fwtypes.NewListNestedObjectValueOfValueSlice(ctx, []TestFlexTF01{
+				{Field1: types.StringValue("a")},
+				{Field1: types.StringValue("b")},
 			})},
 		},
 		{
+			TestName: "non-empty []struct and non-empty set Target",
+			Source: &TestFlexAWS08{Field1: []TestFlexAWS01{
+				{Field1: "a"},
+				{Field1: "b"},
+			}},
+			Target: &TestFlexTF06{},
+			WantTarget: &TestFlexTF06{Field1: fwtypes.NewSetNestedObjectValueOfValueSlice(ctx, []TestFlexTF01{
+				{Field1: types.StringValue("a")},
+				{Field1: types.StringValue("b")},
+			})},
+		},
+		{
+			TestName:   "nil []*struct and null list Target",
+			Source:     &TestFlexAWS07{},
+			Target:     &TestFlexTF05{},
+			WantTarget: &TestFlexTF05{Field1: fwtypes.NewListNestedObjectValueOfNull[TestFlexTF01](ctx)},
+		},
+		{
+			TestName:   "nil []*struct and null set Target",
+			Source:     &TestFlexAWS07{},
+			Target:     &TestFlexTF06{},
+			WantTarget: &TestFlexTF06{Field1: fwtypes.NewSetNestedObjectValueOfNull[TestFlexTF01](ctx)},
+		},
+		{
 			TestName:   "empty []*struct and empty list Target",
-			Source:     &DDTestFlatten{Data: []*BTestFlatten{}},
-			Target:     &BBTestFlatten{},
-			WantTarget: &BBTestFlatten{Data: fwtypes.NewListNestedObjectValueOfValueSlice(ctx, []DTestFlatten{})},
+			Source:     &TestFlexAWS07{Field1: []*TestFlexAWS01{}},
+			Target:     &TestFlexTF05{},
+			WantTarget: &TestFlexTF05{Field1: fwtypes.NewListNestedObjectValueOfSlice(ctx, []*TestFlexTF01{})},
+		},
+		{
+			TestName:   "empty []*struct and empty set Target",
+			Source:     &TestFlexAWS07{Field1: []*TestFlexAWS01{}},
+			Target:     &TestFlexTF06{},
+			WantTarget: &TestFlexTF06{Field1: fwtypes.NewSetNestedObjectValueOfSlice(ctx, []*TestFlexTF01{})},
 		},
 		{
 			TestName: "non-empty []*struct and non-empty list Target",
-			Source: &DDTestFlatten{Data: []*BTestFlatten{
-				{Name: "a"},
-				{Name: "b"},
+			Source: &TestFlexAWS07{Field1: []*TestFlexAWS01{
+				{Field1: "a"},
+				{Field1: "b"},
 			}},
-			Target: &BBTestFlatten{},
-			WantTarget: &BBTestFlatten{Data: fwtypes.NewListNestedObjectValueOfValueSlice(ctx, []DTestFlatten{
-				{Name: types.StringValue("a")},
-				{Name: types.StringValue("b")},
+			Target: &TestFlexTF05{},
+			WantTarget: &TestFlexTF05{Field1: fwtypes.NewListNestedObjectValueOfSlice(ctx, []*TestFlexTF01{
+				{Field1: types.StringValue("a")},
+				{Field1: types.StringValue("b")},
 			})},
 		},
 		{
 			TestName: "non-empty []*struct and non-empty set Target",
-			Source: &DDTestFlatten{Data: []*BTestFlatten{
-				{Name: "a"},
-				{Name: "b"},
+			Source: &TestFlexAWS07{Field1: []*TestFlexAWS01{
+				{Field1: "a"},
+				{Field1: "b"},
 			}},
-			Target: &EETestFlatten{},
-			WantTarget: &EETestFlatten{Data: fwtypes.NewSetNestedObjectValueOfValueSlice(ctx, []DTestFlatten{
-				{Name: types.StringValue("a")},
-				{Name: types.StringValue("b")},
+			Target: &TestFlexTF06{},
+			WantTarget: &TestFlexTF06{Field1: fwtypes.NewSetNestedObjectValueOfSlice(ctx, []*TestFlexTF01{
+				{Field1: types.StringValue("a")},
+				{Field1: types.StringValue("b")},
 			})},
 		},
 	}
