@@ -7,6 +7,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"log"
 	"regexp"
 	"time"
 
@@ -113,13 +114,17 @@ func resourceChannelRead(ctx context.Context, d *schema.ResourceData, meta inter
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).MediaPackageClient(ctx)
 
-	input := &mediapackage.DescribeChannelInput{
-		Id: aws.String(d.Id()),
-	}
-	resp, err := conn.DescribeChannel(ctx, input)
+	resp, err := findChannelByID(ctx, conn, d.Id())
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "describing MediaPackage Channel: %s", err)
 	}
+
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] MediaPackage Channel (%s) not found, removing from state", d.Id())
+		d.SetId("")
+		return nil
+	}
+
 	d.Set("arn", resp.Arn)
 	d.Set("channel_id", resp.Id)
 	d.Set("description", resp.Description)
@@ -211,4 +216,28 @@ func flattenHLSIngest(h *types.HlsIngest) []map[string]interface{} {
 	return []map[string]interface{}{
 		{"ingest_endpoints": ingestEndpoints},
 	}
+}
+
+func findChannelByID(ctx context.Context, conn *mediapackage.Client, id string) (*mediapackage.DescribeChannelOutput, error) {
+	in := &mediapackage.DescribeChannelInput{
+		Id: aws.String(id),
+	}
+
+	out, err := conn.DescribeChannel(ctx, in)
+
+	if err != nil {
+		var nfe *types.NotFoundException
+		if errors.As(err, &nfe) {
+			return nil, &retry.NotFoundError{
+				LastRequest: in,
+				LastError:   err,
+			}
+		}
+	}
+
+	if out == nil {
+		return nil, tfresource.NewEmptyResultError(in)
+	}
+
+	return out, nil
 }
