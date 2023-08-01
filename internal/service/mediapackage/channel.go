@@ -234,6 +234,8 @@ func findChannelByID(ctx context.Context, conn *mediapackage.Client, id string) 
 				LastError:   err,
 			}
 		}
+
+		return nil, err
 	}
 
 	if out == nil {
