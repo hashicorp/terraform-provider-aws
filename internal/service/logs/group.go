@@ -23,7 +23,7 @@ import (
 
 // @SDKResource("aws_cloudwatch_log_group", name="Log Group")
 // @Tags
-func resourceGroup() *schema.Resource {
+func ResourceGroup() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceGroupCreate,
 		ReadWithoutTimeout:   resourceGroupRead,
