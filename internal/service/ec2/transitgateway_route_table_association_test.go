@@ -100,6 +100,8 @@ func testAccTransitGatewayRouteTableAssociation_replaceExistingAssociation(t *te
 					resource.TestCheckResourceAttrSet(resourceName, "resource_type"),
 					resource.TestCheckResourceAttrPair(resourceName, "transit_gateway_attachment_id", transitGatewayVpcAttachmentResourceName, "id"),
 					resource.TestCheckResourceAttrPair(resourceName, "transit_gateway_route_table_id", transitGatewayRouteTableResourceName, "id"),
+					resource.TestCheckResourceAttr(transitGatewayVpcAttachmentResourceName, "transit_gateway_default_route_table_association", "true"),
+					resource.TestCheckResourceAttr(transitGatewayVpcAttachmentResourceName, "transit_gateway_default_route_table_propagation", "true"),
 				),
 				// aws_ec2_transit_gateway_vpc_attachment.test.transit_gateway_default_route_table_association shows diff:
 				ExpectNonEmptyPlan: true,
@@ -193,7 +195,6 @@ resource "aws_ec2_transit_gateway_route_table" "test" {
     Name = %[1]q
   }
 }
-
 `, rName))
 }
 
