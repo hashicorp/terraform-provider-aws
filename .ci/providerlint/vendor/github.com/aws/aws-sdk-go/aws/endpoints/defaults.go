@@ -10884,6 +10884,9 @@ var awsPartition = partition{
 		"emr-containers": service{
 			Endpoints: serviceEndpoints{
 				endpointKey{
+					Region: "af-south-1",
+				}: endpoint{},
+				endpointKey{
 					Region: "ap-east-1",
 				}: endpoint{},
 				endpointKey{
@@ -13960,6 +13963,12 @@ var awsPartition = partition{
 					Hostname: "internetmonitor.ca-central-1.api.aws",
 				},
 				endpointKey{
+					Region:  "ca-central-1",
+					Variant: fipsVariant,
+				}: endpoint{
+					Hostname: "internetmonitor-fips.ca-central-1.api.aws",
+				},
+				endpointKey{
 					Region: "eu-central-1",
 				}: endpoint{
 					Hostname: "internetmonitor.eu-central-1.api.aws",
@@ -14020,9 +14029,21 @@ var awsPartition = partition{
 					Hostname: "internetmonitor.us-east-1.api.aws",
 				},
 				endpointKey{
+					Region:  "us-east-1",
+					Variant: fipsVariant,
+				}: endpoint{
+					Hostname: "internetmonitor-fips.us-east-1.api.aws",
+				},
+				endpointKey{
 					Region: "us-east-2",
 				}: endpoint{
 					Hostname: "internetmonitor.us-east-2.api.aws",
+				},
+				endpointKey{
+					Region:  "us-east-2",
+					Variant: fipsVariant,
+				}: endpoint{
+					Hostname: "internetmonitor-fips.us-east-2.api.aws",
 				},
 				endpointKey{
 					Region: "us-west-1",
@@ -14030,9 +14051,21 @@ var awsPartition = partition{
 					Hostname: "internetmonitor.us-west-1.api.aws",
 				},
 				endpointKey{
+					Region:  "us-west-1",
+					Variant: fipsVariant,
+				}: endpoint{
+					Hostname: "internetmonitor-fips.us-west-1.api.aws",
+				},
+				endpointKey{
 					Region: "us-west-2",
 				}: endpoint{
 					Hostname: "internetmonitor.us-west-2.api.aws",
+				},
+				endpointKey{
+					Region:  "us-west-2",
+					Variant: fipsVariant,
+				}: endpoint{
+					Hostname: "internetmonitor-fips.us-west-2.api.aws",
 				},
 			},
 		},
@@ -39735,6 +39768,15 @@ var awsisoPartition = partition{
 					Deprecated: boxedTrue,
 				},
 				endpointKey{
+					Region: "fips-us-iso-west-1",
+				}: endpoint{
+					Hostname: "rbin-fips.us-iso-west-1.c2s.ic.gov",
+					CredentialScope: credentialScope{
+						Region: "us-iso-west-1",
+					},
+					Deprecated: boxedTrue,
+				},
+				endpointKey{
 					Region: "us-iso-east-1",
 				}: endpoint{},
 				endpointKey{
@@ -39742,6 +39784,15 @@ var awsisoPartition = partition{
 					Variant: fipsVariant,
 				}: endpoint{
 					Hostname: "rbin-fips.us-iso-east-1.c2s.ic.gov",
+				},
+				endpointKey{
+					Region: "us-iso-west-1",
+				}: endpoint{},
+				endpointKey{
+					Region:  "us-iso-west-1",
+					Variant: fipsVariant,
+				}: endpoint{
+					Hostname: "rbin-fips.us-iso-west-1.c2s.ic.gov",
 				},
 			},
 		},
