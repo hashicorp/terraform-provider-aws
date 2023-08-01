@@ -14,10 +14,10 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// ListTags lists kinesisanalytics service tags.
+// listTags lists kinesisanalytics service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func ListTags(ctx context.Context, conn kinesisanalyticsiface.KinesisAnalyticsAPI, identifier string) (tftags.KeyValueTags, error) {
+func listTags(ctx context.Context, conn kinesisanalyticsiface.KinesisAnalyticsAPI, identifier string) (tftags.KeyValueTags, error) {
 	input := &kinesisanalytics.ListTagsForResourceInput{
 		ResourceARN: aws.String(identifier),
 	}
@@ -34,7 +34,7 @@ func ListTags(ctx context.Context, conn kinesisanalyticsiface.KinesisAnalyticsAP
 // ListTags lists kinesisanalytics service tags and set them in Context.
 // It is called from outside this package.
 func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier string) error {
-	tags, err := ListTags(ctx, meta.(*conns.AWSClient).KinesisAnalyticsConn(), identifier)
+	tags, err := listTags(ctx, meta.(*conns.AWSClient).KinesisAnalyticsConn(ctx), identifier)
 
 	if err != nil {
 		return err
@@ -76,9 +76,9 @@ func KeyValueTags(ctx context.Context, tags []*kinesisanalytics.Tag) tftags.KeyV
 	return tftags.New(ctx, m)
 }
 
-// GetTagsIn returns kinesisanalytics service tags from Context.
+// getTagsIn returns kinesisanalytics service tags from Context.
 // nil is returned if there are no input tags.
-func GetTagsIn(ctx context.Context) []*kinesisanalytics.Tag {
+func getTagsIn(ctx context.Context) []*kinesisanalytics.Tag {
 	if inContext, ok := tftags.FromContext(ctx); ok {
 		if tags := Tags(inContext.TagsIn.UnwrapOrDefault()); len(tags) > 0 {
 			return tags
@@ -88,17 +88,17 @@ func GetTagsIn(ctx context.Context) []*kinesisanalytics.Tag {
 	return nil
 }
 
-// SetTagsOut sets kinesisanalytics service tags in Context.
-func SetTagsOut(ctx context.Context, tags []*kinesisanalytics.Tag) {
+// setTagsOut sets kinesisanalytics service tags in Context.
+func setTagsOut(ctx context.Context, tags []*kinesisanalytics.Tag) {
 	if inContext, ok := tftags.FromContext(ctx); ok {
 		inContext.TagsOut = types.Some(KeyValueTags(ctx, tags))
 	}
 }
 
-// UpdateTags updates kinesisanalytics service tags.
+// updateTags updates kinesisanalytics service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func UpdateTags(ctx context.Context, conn kinesisanalyticsiface.KinesisAnalyticsAPI, identifier string, oldTagsMap, newTagsMap any) error {
+func updateTags(ctx context.Context, conn kinesisanalyticsiface.KinesisAnalyticsAPI, identifier string, oldTagsMap, newTagsMap any) error {
 	oldTags := tftags.New(ctx, oldTagsMap)
 	newTags := tftags.New(ctx, newTagsMap)
 
@@ -138,5 +138,5 @@ func UpdateTags(ctx context.Context, conn kinesisanalyticsiface.KinesisAnalytics
 // UpdateTags updates kinesisanalytics service tags.
 // It is called from outside this package.
 func (p *servicePackage) UpdateTags(ctx context.Context, meta any, identifier string, oldTags, newTags any) error {
-	return UpdateTags(ctx, meta.(*conns.AWSClient).KinesisAnalyticsConn(), identifier, oldTags, newTags)
+	return updateTags(ctx, meta.(*conns.AWSClient).KinesisAnalyticsConn(ctx), identifier, oldTags, newTags)
 }

@@ -32,8 +32,8 @@ The following arguments are required:
 - `seconds_to_live` - (Required) Specifies the time in seconds until the API key expires. Keys can be valid for up to 30 days.
 - `workspace_id` - (Required) The ID of the workspace that the API key is valid for.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `key` - The key token in JSON format. Use this value as a bearer token to authenticate HTTP requests to the workspace.

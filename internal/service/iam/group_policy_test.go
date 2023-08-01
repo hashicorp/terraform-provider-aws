@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package iam_test
 
 import (
@@ -197,7 +200,7 @@ func TestAccIAMGroupPolicy_unknownsInPolicy(t *testing.T) {
 
 func testAccCheckGroupPolicyDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_iam_group_policy" {
@@ -234,7 +237,7 @@ func testAccCheckGroupPolicyDestroy(ctx context.Context) resource.TestCheckFunc 
 
 func testAccCheckGroupPolicyDisappears(ctx context.Context, out *iam.GetGroupPolicyOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn(ctx)
 
 		params := &iam.DeleteGroupPolicyInput{
 			PolicyName: out.PolicyName,
@@ -265,7 +268,7 @@ func testAccCheckGroupPolicyExists(ctx context.Context,
 			return fmt.Errorf("Not Found: %s", iamGroupPolicyResource)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn(ctx)
 		group, name, err := tfiam.GroupPolicyParseID(policy.Primary.ID)
 		if err != nil {
 			return err

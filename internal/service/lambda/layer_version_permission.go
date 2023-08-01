@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package lambda
 
 import (
@@ -72,6 +75,12 @@ func ResourceLayerVersionPermission() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"skip_destroy": {
+				Type:     schema.TypeBool,
+				Default:  false,
+				ForceNew: true,
+				Optional: true,
+			},
 			"policy": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -82,7 +91,7 @@ func ResourceLayerVersionPermission() *schema.Resource {
 
 func resourceLayerVersionPermissionCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).LambdaConn()
+	conn := meta.(*conns.AWSClient).LambdaConn(ctx)
 
 	layerName := d.Get("layer_name").(string)
 	versionNumber := d.Get("version_number").(int)
@@ -111,7 +120,7 @@ func resourceLayerVersionPermissionCreate(ctx context.Context, d *schema.Resourc
 
 func resourceLayerVersionPermissionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).LambdaConn()
+	conn := meta.(*conns.AWSClient).LambdaConn(ctx)
 
 	layerName, versionNumber, err := ResourceLayerVersionPermissionParseId(d.Id())
 	if err != nil {
@@ -197,7 +206,12 @@ func resourceLayerVersionPermissionRead(ctx context.Context, d *schema.ResourceD
 
 func resourceLayerVersionPermissionDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).LambdaConn()
+	if v, ok := d.GetOk("skip_destroy"); ok && v.(bool) {
+		log.Printf("[DEBUG] Retaining Lambda Layer Permission Version %q", d.Id())
+		return diags
+	}
+
+	conn := meta.(*conns.AWSClient).LambdaConn(ctx)
 
 	layerName, versionNumber, err := ResourceLayerVersionPermissionParseId(d.Id())
 	if err != nil {

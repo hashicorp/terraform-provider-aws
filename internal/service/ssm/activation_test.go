@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ssm_test
 
 import (
@@ -154,7 +157,7 @@ func testAccCheckActivationExists(ctx context.Context, n string, v *ssm.Activati
 			return fmt.Errorf("No SSM Activation ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SSMConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SSMConn(ctx)
 
 		output, err := tfssm.FindActivationByID(ctx, conn, rs.Primary.ID)
 
@@ -170,7 +173,7 @@ func testAccCheckActivationExists(ctx context.Context, n string, v *ssm.Activati
 
 func testAccCheckActivationDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SSMConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SSMConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_ssm_activation" {

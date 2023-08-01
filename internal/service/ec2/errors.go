@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ec2
 
 import (
@@ -12,10 +15,12 @@ import (
 const (
 	errCodeAuthFailure                                       = "AuthFailure"
 	errCodeClientInvalidHostIDNotFound                       = "Client.InvalidHostID.NotFound"
+	errCodeConcurrentMutationLimitExceeded                   = "ConcurrentMutationLimitExceeded"
 	ErrCodeDefaultSubnetAlreadyExistsInAvailabilityZone      = "DefaultSubnetAlreadyExistsInAvailabilityZone"
 	errCodeDependencyViolation                               = "DependencyViolation"
 	errCodeGatewayNotAttached                                = "Gateway.NotAttached"
 	errCodeIncorrectState                                    = "IncorrectState"
+	errCodeInsufficientInstanceCapacity                      = "InsufficientInstanceCapacity"
 	errCodeInvalidAMIIDNotFound                              = "InvalidAMIID.NotFound"
 	errCodeInvalidAMIIDUnavailable                           = "InvalidAMIID.Unavailable"
 	errCodeInvalidAddressNotFound                            = "InvalidAddress.NotFound"
@@ -39,6 +44,7 @@ const (
 	errCodeInvalidGroupInUse                                 = "InvalidGroup.InUse"
 	errCodeInvalidGroupNotFound                              = "InvalidGroup.NotFound"
 	errCodeInvalidHostIDNotFound                             = "InvalidHostID.NotFound"
+	errCodeInvalidInstanceConnectEndpointIdNotFound          = "InvalidInstanceConnectEndpointId.NotFound"
 	errCodeInvalidInstanceID                                 = "InvalidInstanceID"
 	errCodeInvalidInstanceIDNotFound                         = "InvalidInstanceID.NotFound"
 	errCodeInvalidInternetGatewayIDNotFound                  = "InvalidInternetGatewayID.NotFound"
@@ -85,6 +91,7 @@ const (
 	errCodeInvalidSubnetIDNotFound                           = "InvalidSubnetID.NotFound"
 	errCodeInvalidSubnetIdNotFound                           = "InvalidSubnetId.NotFound"
 	errCodeInvalidTrafficMirrorFilterIdNotFound              = "InvalidTrafficMirrorFilterId.NotFound"
+	errCodeInvalidTrafficMirrorFilterRuleIdNotFound          = "InvalidTrafficMirrorFilterRuleId.NotFound"
 	errCodeInvalidTrafficMirrorSessionIdNotFound             = "InvalidTrafficMirrorSessionId.NotFound"
 	errCodeInvalidTrafficMirrorTargetIdNotFound              = "InvalidTrafficMirrorTargetId.NotFound"
 	errCodeInvalidTransitGatewayAttachmentIDNotFound         = "InvalidTransitGatewayAttachmentID.NotFound"
@@ -103,11 +110,14 @@ const (
 	errCodeInvalidVPNGatewayAttachmentNotFound               = "InvalidVpnGatewayAttachment.NotFound"
 	errCodeInvalidVPNGatewayIDNotFound                       = "InvalidVpnGatewayID.NotFound"
 	errCodeNatGatewayNotFound                                = "NatGatewayNotFound"
+	errCodeOperationNotPermitted                             = "OperationNotPermitted"
 	errCodePrefixListVersionMismatch                         = "PrefixListVersionMismatch"
 	errCodeResourceNotReady                                  = "ResourceNotReady"
 	errCodeSnapshotCreationPerVolumeRateExceeded             = "SnapshotCreationPerVolumeRateExceeded"
 	errCodeUnsupportedOperation                              = "UnsupportedOperation"
 	errCodeVolumeInUse                                       = "VolumeInUse"
+	errCodeVPNConnectionLimitExceeded                        = "VpnConnectionLimitExceeded"
+	errCodeVPNGatewayLimitExceeded                           = "VpnGatewayLimitExceeded"
 )
 
 func CancelSpotFleetRequestError(apiObject *ec2.CancelSpotFleetRequestsErrorItem) error {

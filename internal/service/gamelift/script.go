@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package gamelift
 
 import (
@@ -94,11 +97,11 @@ func ResourceScript() *schema.Resource {
 
 func resourceScriptCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).GameLiftConn()
+	conn := meta.(*conns.AWSClient).GameLiftConn(ctx)
 
 	input := gamelift.CreateScriptInput{
 		Name: aws.String(d.Get("name").(string)),
-		Tags: GetTagsIn(ctx),
+		Tags: getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("storage_location"); ok && len(v.([]interface{})) > 0 {
@@ -148,7 +151,7 @@ func resourceScriptCreate(ctx context.Context, d *schema.ResourceData, meta inte
 
 func resourceScriptRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).GameLiftConn()
+	conn := meta.(*conns.AWSClient).GameLiftConn(ctx)
 
 	log.Printf("[INFO] Reading GameLift Script: %s", d.Id())
 	script, err := FindScriptByID(ctx, conn, d.Id())
@@ -177,7 +180,7 @@ func resourceScriptRead(ctx context.Context, d *schema.ResourceData, meta interf
 
 func resourceScriptUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).GameLiftConn()
+	conn := meta.(*conns.AWSClient).GameLiftConn(ctx)
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		log.Printf("[INFO] Updating GameLift Script: %s", d.Id())
@@ -222,7 +225,7 @@ func resourceScriptUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 
 func resourceScriptDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).GameLiftConn()
+	conn := meta.(*conns.AWSClient).GameLiftConn(ctx)
 
 	log.Printf("[INFO] Deleting GameLift Script: %s", d.Id())
 	_, err := conn.DeleteScriptWithContext(ctx, &gamelift.DeleteScriptInput{

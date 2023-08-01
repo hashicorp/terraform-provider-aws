@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package rbin
 
 import (
@@ -156,12 +159,12 @@ const (
 )
 
 func resourceRuleCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).RBinClient()
+	conn := meta.(*conns.AWSClient).RBinClient(ctx)
 
 	in := &rbin.CreateRuleInput{
 		ResourceType:    types.ResourceType(d.Get("resource_type").(string)),
 		RetentionPeriod: expandRetentionPeriod(d.Get("retention_period").([]interface{})),
-		Tags:            GetTagsIn(ctx),
+		Tags:            getTagsIn(ctx),
 	}
 
 	if _, ok := d.GetOk("description"); ok {
@@ -191,7 +194,7 @@ func resourceRuleCreate(ctx context.Context, d *schema.ResourceData, meta interf
 }
 
 func resourceRuleRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).RBinClient()
+	conn := meta.(*conns.AWSClient).RBinClient(ctx)
 
 	out, err := findRuleByID(ctx, conn, d.Id())
 
@@ -230,7 +233,7 @@ func resourceRuleRead(ctx context.Context, d *schema.ResourceData, meta interfac
 }
 
 func resourceRuleUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).RBinClient()
+	conn := meta.(*conns.AWSClient).RBinClient(ctx)
 
 	update := false
 
@@ -244,7 +247,7 @@ func resourceRuleUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 	}
 
 	if d.HasChanges("resource_tags") {
-		in.ResourceTags = expandResourceTags(d.Get("resource_tags").([]interface{}))
+		in.ResourceTags = expandResourceTags(d.Get("resource_tags").(*schema.Set).List())
 		update = true
 	}
 
@@ -273,7 +276,7 @@ func resourceRuleUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 func resourceRuleDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[INFO] Deleting RBin Rule %s", d.Id())
 
-	conn := meta.(*conns.AWSClient).RBinClient()
+	conn := meta.(*conns.AWSClient).RBinClient(ctx)
 
 	_, err := conn.DeleteRule(ctx, &rbin.DeleteRuleInput{
 		Identifier: aws.String(d.Id()),

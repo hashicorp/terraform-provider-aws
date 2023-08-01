@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package s3control
 
 import (
@@ -136,7 +139,7 @@ func resourceMultiRegionAccessPoint() *schema.Resource {
 }
 
 func resourceMultiRegionAccessPointCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn, err := ConnForMRAP(meta.(*conns.AWSClient))
+	conn, err := ConnForMRAP(ctx, meta.(*conns.AWSClient))
 
 	if err != nil {
 		return diag.FromErr(err)
@@ -175,7 +178,7 @@ func resourceMultiRegionAccessPointCreate(ctx context.Context, d *schema.Resourc
 }
 
 func resourceMultiRegionAccessPointRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn, err := ConnForMRAP(meta.(*conns.AWSClient))
+	conn, err := ConnForMRAP(ctx, meta.(*conns.AWSClient))
 
 	if err != nil {
 		return diag.FromErr(err)
@@ -220,7 +223,7 @@ func resourceMultiRegionAccessPointRead(ctx context.Context, d *schema.ResourceD
 }
 
 func resourceMultiRegionAccessPointDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn, err := ConnForMRAP(meta.(*conns.AWSClient))
+	conn, err := ConnForMRAP(ctx, meta.(*conns.AWSClient))
 
 	if err != nil {
 		return diag.FromErr(err)
@@ -251,14 +254,14 @@ func resourceMultiRegionAccessPointDelete(ctx context.Context, d *schema.Resourc
 	_, err = waitMultiRegionAccessPointRequestSucceeded(ctx, conn, accountID, aws.StringValue(output.RequestTokenARN), d.Timeout(schema.TimeoutDelete))
 
 	if err != nil {
-		return diag.Errorf("error waiting for S3 Multi-Region Access Point (%s) delete: %s", d.Id(), err)
+		return diag.Errorf("waiting for S3 Multi-Region Access Point (%s) delete: %s", d.Id(), err)
 	}
 
 	return nil
 }
 
-func ConnForMRAP(client *conns.AWSClient) (*s3control.S3Control, error) {
-	originalConn := client.S3ControlConn()
+func ConnForMRAP(ctx context.Context, client *conns.AWSClient) (*s3control.S3Control, error) {
+	originalConn := client.S3ControlConn(ctx)
 	// All Multi-Region Access Point actions are routed to the US West (Oregon) Region.
 	region := endpoints.UsWest2RegionID
 

@@ -247,8 +247,8 @@ The following arguments are available:
 * `share_with` (Optional) - A list of strings to share with. Must be a substring is all segments. Valid values include: `["*"]` or `["<segment-names>"]`.
 * `share_with_except` (Optional) - A set subtraction of segments to not share with.
 
-## Attributes Reference
+## Attribute Reference
 
-The following attribute is exported:
+This data source exports the following attributes in addition to the arguments above:
 
 * `json` - Standard JSON policy document rendered based on the arguments above.

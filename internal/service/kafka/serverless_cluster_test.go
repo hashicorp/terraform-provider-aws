@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package kafka_test
 
 import (
@@ -155,7 +158,7 @@ func TestAccKafkaServerlessCluster_securityGroup(t *testing.T) {
 
 func testAccCheckServerlessClusterDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).KafkaConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).KafkaConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_msk_serverless_cluster" {
@@ -190,7 +193,7 @@ func testAccCheckServerlessClusterExists(ctx context.Context, n string, v *kafka
 			return fmt.Errorf("No MSK Serverless Cluster ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).KafkaConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).KafkaConn(ctx)
 
 		output, err := tfkafka.FindServerlessClusterByARN(ctx, conn, rs.Primary.ID)
 

@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package dataexchange_test
 
 import (
@@ -153,7 +156,7 @@ func testAccCheckRevisionExists(ctx context.Context, n string, v *dataexchange.G
 			return fmt.Errorf("No ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DataExchangeConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DataExchangeConn(ctx)
 
 		dataSetId, revisionId, err := tfdataexchange.RevisionParseResourceID(rs.Primary.ID)
 		if err != nil {
@@ -176,7 +179,7 @@ func testAccCheckRevisionExists(ctx context.Context, n string, v *dataexchange.G
 
 func testAccCheckRevisionDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DataExchangeConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DataExchangeConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_dataexchange_revision" {

@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package chimesdkvoice
 
 import (
@@ -91,12 +94,12 @@ func ResourceVoiceProfileDomain() *schema.Resource {
 }
 
 func resourceVoiceProfileDomainCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ChimeSDKVoiceConn()
+	conn := meta.(*conns.AWSClient).ChimeSDKVoiceConn(ctx)
 
 	in := &chimesdkvoice.CreateVoiceProfileDomainInput{
 		Name:                              aws.String(d.Get(names.AttrName).(string)),
 		ServerSideEncryptionConfiguration: expandServerSideEncryptionConfiguration(d.Get("server_side_encryption_configuration").([]interface{})),
-		Tags:                              GetTagsIn(ctx),
+		Tags:                              getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk(names.AttrDescription); ok {
@@ -118,7 +121,7 @@ func resourceVoiceProfileDomainCreate(ctx context.Context, d *schema.ResourceDat
 }
 
 func resourceVoiceProfileDomainRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ChimeSDKVoiceConn()
+	conn := meta.(*conns.AWSClient).ChimeSDKVoiceConn(ctx)
 
 	out, err := FindVoiceProfileDomainByID(ctx, conn, d.Id())
 
@@ -145,7 +148,7 @@ func resourceVoiceProfileDomainRead(ctx context.Context, d *schema.ResourceData,
 }
 
 func resourceVoiceProfileDomainUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ChimeSDKVoiceConn()
+	conn := meta.(*conns.AWSClient).ChimeSDKVoiceConn(ctx)
 
 	if d.HasChanges(names.AttrName, names.AttrDescription) {
 		in := &chimesdkvoice.UpdateVoiceProfileDomainInput{
@@ -169,7 +172,7 @@ func resourceVoiceProfileDomainUpdate(ctx context.Context, d *schema.ResourceDat
 }
 
 func resourceVoiceProfileDomainDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ChimeSDKVoiceConn()
+	conn := meta.(*conns.AWSClient).ChimeSDKVoiceConn(ctx)
 
 	log.Printf("[INFO] Deleting ChimeSDKVoice VoiceProfileDomain %s", d.Id())
 

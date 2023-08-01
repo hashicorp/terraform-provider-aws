@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package chimesdkmediapipelines
 
 import (
@@ -466,7 +469,7 @@ func RealTimeAlertConfigurationSchema() *schema.Schema {
 }
 
 func resourceMediaInsightsPipelineConfigurationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ChimeSDKMediaPipelinesConn()
+	conn := meta.(*conns.AWSClient).ChimeSDKMediaPipelinesConn(ctx)
 
 	elements, err := expandElements(d.Get("elements").([]interface{}))
 	if err != nil {
@@ -478,7 +481,7 @@ func resourceMediaInsightsPipelineConfigurationCreate(ctx context.Context, d *sc
 		MediaInsightsPipelineConfigurationName: aws.String(d.Get("name").(string)),
 		ResourceAccessRoleArn:                  aws.String(d.Get("resource_access_role_arn").(string)),
 		Elements:                               elements,
-		Tags:                                   GetTagsIn(ctx),
+		Tags:                                   getTagsIn(ctx),
 	}
 
 	if realTimeAlertConfiguration, ok := d.GetOk("real_time_alert_configuration"); ok && len(realTimeAlertConfiguration.([]interface{})) > 0 {
@@ -519,7 +522,7 @@ func resourceMediaInsightsPipelineConfigurationCreate(ctx context.Context, d *sc
 }
 
 func resourceMediaInsightsPipelineConfigurationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ChimeSDKMediaPipelinesConn()
+	conn := meta.(*conns.AWSClient).ChimeSDKMediaPipelinesConn(ctx)
 
 	out, err := FindMediaInsightsPipelineConfigurationByID(ctx, conn, d.Id())
 
@@ -550,7 +553,7 @@ func resourceMediaInsightsPipelineConfigurationRead(ctx context.Context, d *sche
 }
 
 func resourceMediaInsightsPipelineConfigurationUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ChimeSDKMediaPipelinesConn()
+	conn := meta.(*conns.AWSClient).ChimeSDKMediaPipelinesConn(ctx)
 
 	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
 		elements, err := expandElements(d.Get("elements").([]interface{}))
@@ -594,7 +597,7 @@ func resourceMediaInsightsPipelineConfigurationUpdate(ctx context.Context, d *sc
 }
 
 func resourceMediaInsightsPipelineConfigurationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ChimeSDKMediaPipelinesConn()
+	conn := meta.(*conns.AWSClient).ChimeSDKMediaPipelinesConn(ctx)
 
 	log.Printf("[INFO] Deleting ChimeSDKMediaPipelines MediaInsightsPipelineConfiguration %s", d.Id())
 

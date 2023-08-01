@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package schema
 
 import (
@@ -551,7 +554,7 @@ func expandDecimalValueWhenUnsetConfiguration(tfList []interface{}) *quicksight.
 
 	config := &quicksight.DecimalValueWhenUnsetConfiguration{}
 
-	if v, ok := tfMap["custom_value"].(float64); ok {
+	if v, ok := tfMap["custom_value"].(float64); ok && v != 0.0 {
 		config.CustomValue = aws.Float64(v)
 	}
 	if v, ok := tfMap["value_when_unset_option"].(string); ok && v != "" {
@@ -623,7 +626,7 @@ func expandIntegerValueWhenUnsetConfiguration(tfList []interface{}) *quicksight.
 
 	config := &quicksight.IntegerValueWhenUnsetConfiguration{}
 
-	if v, ok := tfMap["custom_value"].(int); ok {
+	if v, ok := tfMap["custom_value"].(int); ok && v != 0 {
 		config.CustomValue = aws.Int64(int64(v))
 	}
 	if v, ok := tfMap["value_when_unset_option"].(string); ok && v != "" {
@@ -695,7 +698,7 @@ func expandStringValueWhenUnsetConfiguration(tfList []interface{}) *quicksight.S
 
 	config := &quicksight.StringValueWhenUnsetConfiguration{}
 
-	if v, ok := tfMap["custom_value"].(string); ok {
+	if v, ok := tfMap["custom_value"].(string); ok && v != "" {
 		config.CustomValue = aws.String(v)
 	}
 	if v, ok := tfMap["value_when_unset_option"].(string); ok && v != "" {

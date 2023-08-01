@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package redshift_test
 
 import (
@@ -75,7 +78,7 @@ func TestAccRedshiftAuthenticationProfile_disappears(t *testing.T) {
 
 func testAccCheckAuthenticationProfileDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_redshift_authentication_profile" {
@@ -110,7 +113,7 @@ func testAccCheckAuthenticationProfileExists(ctx context.Context, name string) r
 			return fmt.Errorf("Authentication Profile ID is not set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftConn(ctx)
 
 		_, err := tfredshift.FindAuthenticationProfileByID(ctx, conn, rs.Primary.ID)
 

@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package directconnect
 
 import (
@@ -76,7 +79,7 @@ func resourceGatewayAssociationResourceV0() *schema.Resource {
 }
 
 func GatewayAssociationStateUpgradeV0(ctx context.Context, rawState map[string]interface{}, meta interface{}) (map[string]interface{}, error) {
-	conn := meta.(*conns.AWSClient).DirectConnectConn()
+	conn := meta.(*conns.AWSClient).DirectConnectConn(ctx)
 
 	log.Println("[INFO] Found Direct Connect Gateway Association state v0; migrating to v1")
 

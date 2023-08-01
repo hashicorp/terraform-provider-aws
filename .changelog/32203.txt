@@ -1,0 +1,15 @@
+```release-note:new-resource
+aws_transfer_profile
+```
+
+```release-note:new-resource
+aws_transfer_certificate
+```
+
+```release-note:new-resource
+aws_transfer_agreement
+```
+
+```release-note:new-resource
+aws_transfer_connector
+```
