@@ -1057,6 +1057,7 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 func resourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	instance, err := FindInstanceByID(ctx, conn, d.Id())
 
@@ -1269,7 +1270,7 @@ func resourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta inte
 			return sdkdiag.AppendErrorf(diags, "reading EC2 Instance (%s): %s", d.Id(), err)
 		}
 
-		if err := d.Set("volume_tags", KeyValueTags(ctx, volumeTags).IgnoreAWS().Map()); err != nil {
+		if err := d.Set("volume_tags", KeyValueTags(ctx, volumeTags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting volume_tags: %s", err)
 		}
 	}
@@ -1283,7 +1284,7 @@ func resourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta inte
 		return sdkdiag.AppendErrorf(diags, "reading EC2 Instance (%s): %s", d.Id(), err)
 	}
 
-	if err := readBlockDevices(ctx, d, instance, conn); err != nil {
+	if err := readBlockDevices(ctx, d, instance, conn, ignoreTagsConfig); err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading EC2 Instance (%s): %s", d.Id(), err)
 	}
 	if _, ok := d.GetOk("ephemeral_block_device"); !ok {
@@ -2097,8 +2098,8 @@ func modifyInstanceAttributeWithStopStart(ctx context.Context, conn *ec2.EC2, in
 	return nil
 }
 
-func readBlockDevices(ctx context.Context, d *schema.ResourceData, instance *ec2.Instance, conn *ec2.EC2) error {
-	ibds, err := readBlockDevicesFromInstance(ctx, d, instance, conn)
+func readBlockDevices(ctx context.Context, d *schema.ResourceData, instance *ec2.Instance, conn *ec2.EC2, ignoreTagsConfig *tftags.IgnoreConfig) error {
+	ibds, err := readBlockDevicesFromInstance(ctx, d, instance, conn, ignoreTagsConfig)
 	if err != nil {
 		return fmt.Errorf("reading block devices: %w", err)
 	}
@@ -2185,7 +2186,7 @@ func disassociateInstanceProfile(ctx context.Context, associationId *string, con
 	return nil
 }
 
-func readBlockDevicesFromInstance(ctx context.Context, d *schema.ResourceData, instance *ec2.Instance, conn *ec2.EC2) (map[string]interface{}, error) {
+func readBlockDevicesFromInstance(ctx context.Context, d *schema.ResourceData, instance *ec2.Instance, conn *ec2.EC2, ignoreTagsConfig *tftags.IgnoreConfig) (map[string]interface{}, error) {
 	blockDevices := make(map[string]interface{})
 	blockDevices["ebs"] = make([]map[string]interface{}, 0)
 	blockDevices["root"] = nil
@@ -2247,7 +2248,7 @@ func readBlockDevicesFromInstance(ctx context.Context, d *schema.ResourceData, i
 			bd["device_name"] = aws.StringValue(instanceBd.DeviceName)
 		}
 		if v, ok := d.GetOk("volume_tags"); (!ok || v == nil || len(v.(map[string]interface{})) == 0) && vol.Tags != nil {
-			bd["tags"] = KeyValueTags(ctx, vol.Tags).IgnoreAWS().Map()
+			bd["tags"] = KeyValueTags(ctx, vol.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()
 		}
 
 		if blockDeviceIsRoot(instanceBd, instance) {

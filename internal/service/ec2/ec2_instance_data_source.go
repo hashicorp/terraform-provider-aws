@@ -544,7 +544,7 @@ func instanceDescriptionAttributes(ctx context.Context, d *schema.ResourceData, 
 	}
 
 	// Block devices
-	if err := readBlockDevices(ctx, d, instance, conn); err != nil {
+	if err := readBlockDevices(ctx, d, instance, conn, ignoreTagsConfig); err != nil {
 		return fmt.Errorf("reading EC2 Instance (%s): %w", aws.StringValue(instance.InstanceId), err)
 	}
 	if _, ok := d.GetOk("ephemeral_block_device"); !ok {
