@@ -47,16 +47,6 @@ jobs:
           jira_github_url_field_id: 'cf[10089]'
           github_release_name: ${{ needs.on-success-or-workflow-dispatch.outputs.release-tag }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-  archive-release-cards:
-    needs: [on-success-or-workflow-dispatch]
-    runs-on: ubuntu-latest
-    steps:
-      - name: Archive Release Cards
-        uses: breathingdust/github-project-archive@4be60b012447c51a5d60d988168f6360815d9ec9 # v1.1
-        with:
-          github_done_column_id: 11513756
-          github_release_name: ${{ needs.on-success-or-workflow-dispatch.outputs.release-tag }}
-          github_token: ${{ secrets.ORGSCOPED_GITHUB_TOKEN }}
   on-failure:
     runs-on: ubuntu-latest
     if: ${{ github.event.workflow_run.conclusion == 'failure' }}

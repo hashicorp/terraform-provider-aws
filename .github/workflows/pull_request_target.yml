@@ -102,9 +102,8 @@ jobs:
       VIEW_FIELD_ID: "PVTSSF_lADOAAuecM4AF-7hzgMRB34"
       ITEM_URL: ${{ github.event.pull_request.html_url }}
     steps:
-      - name: 'Ready Maintainer Pull Requests'
-        # This isn't pretty, but it ensures that we don't accidentally set the status on accident
-        if: contains(fromJSON('["opened", "ready_for_review"]'), github.event.action) && needs.community_check.outputs.maintainer == 'true' && !github.event.pull_request.draft
+      - name: 'Maintainer Pull Requests'
+        if: github.event.action == 'opened' && needs.community_check.outputs.maintainer == 'true'
         run: |
           # In order to update the item's Status field, we need to capture the project item id from the output
           PROJECT_ITEM_ID=$(gh project item-add ${{ env.PROJECT_NUMBER }} --owner "hashicorp" --url ${{ env.ITEM_URL }} --format json | jq '.id')
@@ -118,14 +117,14 @@ jobs:
           gh project item-edit --id "$PROJECT_ITEM_ID" --project-id ${{ env.PROJECT_ID }} --field-id ${{ env.STATUS_FIELD_ID }} --single-select-option-id ${{ vars.team_project_status_in_progress }}
           gh project item-edit --id "$PROJECT_ITEM_ID" --project-id ${{ env.PROJECT_ID }} --field-id ${{ env.VIEW_FIELD_ID }} --single-select-option-id ${{ vars.team_project_view_working_board }}
 
-      - name: 'Ready Partner Pull Requests'
-        if: contains(github.event.pull_request.labels.*.name, 'partner') && !github.event.pull_request.draft
+      - name: 'Partner Pull Requests'
+        if: github.event.label.name == 'partner'
         run: |
           PROJECT_ITEM_ID=$(gh project item-add ${{ env.PROJECT_NUMBER }} --owner "hashicorp" --url ${{ env.ITEM_URL }} --format json | jq '.id')
           gh project item-edit --id "$PROJECT_ITEM_ID" --project-id ${{ env.PROJECT_ID }} --field-id ${{ env.VIEW_FIELD_ID }} --single-select-option-id ${{ vars.team_project_view_partner_contribution }}
 
-      - name: 'Ready External Maintainer Pull Requests'
-        if: contains(github.event.pull_request.labels.*.name, 'external-maintainer') && !github.event.pull_request.draft
+      - name: 'External Maintainer Pull Requests'
+        if: github.event.label.name == 'external-maintainer'
         run: |
           PROJECT_ITEM_ID=$(gh project item-add ${{ env.PROJECT_NUMBER }} --owner "hashicorp" --url ${{ env.ITEM_URL }} --format json | jq '.id')
           gh project item-edit --id "$PROJECT_ITEM_ID" --project-id ${{ env.PROJECT_ID }} --field-id ${{ env.VIEW_FIELD_ID }} --single-select-option-id ${{ vars.team_project_view_external_maintainer }}
