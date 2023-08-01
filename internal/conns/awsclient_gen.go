@@ -162,7 +162,6 @@ import (
 	managedgrafana_sdkv1 "github.com/aws/aws-sdk-go/service/managedgrafana"
 	mediaconnect_sdkv1 "github.com/aws/aws-sdk-go/service/mediaconnect"
 	mediaconvert_sdkv1 "github.com/aws/aws-sdk-go/service/mediaconvert"
-	mediapackage_sdkv1 "github.com/aws/aws-sdk-go/service/mediapackage"
 	mediastore_sdkv1 "github.com/aws/aws-sdk-go/service/mediastore"
 	memorydb_sdkv1 "github.com/aws/aws-sdk-go/service/memorydb"
 	mq_sdkv1 "github.com/aws/aws-sdk-go/service/mq"
@@ -753,10 +752,6 @@ func (c *AWSClient) MediaConvertConn(ctx context.Context) *mediaconvert_sdkv1.Me
 
 func (c *AWSClient) MediaLiveClient(ctx context.Context) *medialive_sdkv2.Client {
 	return errs.Must(client[*medialive_sdkv2.Client](ctx, c, names.MediaLive))
-}
-
-func (c *AWSClient) MediaPackageConn(ctx context.Context) *mediapackage_sdkv1.MediaPackage {
-	return errs.Must(conn[*mediapackage_sdkv1.MediaPackage](ctx, c, names.MediaPackage))
 }
 
 func (c *AWSClient) MediaPackageClient(ctx context.Context) *mediapackage_sdkv2.Client {
