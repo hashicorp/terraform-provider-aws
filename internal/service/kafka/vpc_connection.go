@@ -28,7 +28,6 @@ import (
 // @SDKResource("aws_msk_vpc_connection", name="VPC Connection")
 func ResourceVPCConnection() *schema.Resource {
 	return &schema.Resource{
-
 		CreateWithoutTimeout: resourceVPCConnectionCreate,
 		ReadWithoutTimeout:   resourceVPCConnectionRead,
 		DeleteWithoutTimeout: resourceVPCConnectionDelete,
@@ -47,26 +46,24 @@ func ResourceVPCConnection() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
-
 			"client_subnets": {
 				Type:     schema.TypeSet,
 				Required: true,
 				ForceNew: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-
 			"security_groups": {
 				Type:     schema.TypeSet,
 				Optional: true,
 				ForceNew: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"vpc_id": {
+			"target_cluster_arn": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"target_cluster_arn": {
+			"vpc_id": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -130,18 +127,12 @@ func resourceVPCConnectionRead(ctx context.Context, d *schema.ResourceData, meta
 		return append(diags, create.DiagError(names.Kafka, create.ErrActionReading, ResNameVPCConnection, d.Id(), err)...)
 	}
 
-	d.Set("authentication", out.Authentication)
 	d.Set("arn", out.VpcConnectionArn)
-	d.Set("vpc_id", out.VpcId)
+	d.Set("authentication", out.Authentication)
+	d.Set("client_subnets", flex.FlattenStringValueSet(out.Subnets))
+	d.Set("security_groups", flex.FlattenStringValueSet(out.SecurityGroups))
 	d.Set("target_cluster_arn", out.TargetClusterArn)
-
-	if err := d.Set("client_subnets", flex.FlattenStringValueSet(out.Subnets)); err != nil {
-		return append(diags, create.DiagError(names.Kafka, create.ErrActionSetting, ResNameVPCConnection, d.Id(), err)...)
-	}
-
-	if err := d.Set("security_groups", flex.FlattenStringValueSet(out.SecurityGroups)); err != nil {
-		return append(diags, create.DiagError(names.Kafka, create.ErrActionSetting, ResNameVPCConnection, d.Id(), err)...)
-	}
+	d.Set("vpc_id", out.VpcId)
 
 	return diags
 }
@@ -159,6 +150,7 @@ func resourceVPCConnectionDelete(ctx context.Context, d *schema.ResourceData, me
 	if errs.IsA[*types.NotFoundException](err) {
 		return diags
 	}
+
 	if err != nil {
 		return append(diags, create.DiagError(names.Kafka, create.ErrActionDeleting, ResNameVPCConnection, d.Id(), err)...)
 	}
@@ -225,15 +217,15 @@ func FindVPCConnectionByARN(ctx context.Context, conn *kafka.Client, arn string)
 	}
 
 	out, err := conn.DescribeVpcConnection(ctx, in)
-	if err != nil {
-		var nfe *types.NotFoundException
-		if errors.As(err, &nfe) {
-			return nil, &retry.NotFoundError{
-				LastError:   err,
-				LastRequest: in,
-			}
-		}
 
+	if errs.IsA[*types.NotFoundException](err) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: in,
+		}
+	}
+
+	if err != nil {
 		return nil, err
 	}
 
