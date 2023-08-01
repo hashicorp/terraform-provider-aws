@@ -141,7 +141,7 @@ elb,elb,elb,elasticloadbalancing,,elb,,elasticloadbalancing,ELB,ELB,,1,,aws_(app
 mediaconnect,mediaconnect,mediaconnect,mediaconnect,,mediaconnect,,,MediaConnect,MediaConnect,,1,,,aws_mediaconnect_,,media_connect_,Elemental MediaConnect,AWS,,,,,,
 mediaconvert,mediaconvert,mediaconvert,mediaconvert,,mediaconvert,,,MediaConvert,MediaConvert,,1,,aws_media_convert_,aws_mediaconvert_,,media_convert_,Elemental MediaConvert,AWS,,,,,,
 medialive,medialive,medialive,medialive,,medialive,,,MediaLive,MediaLive,,,2,,aws_medialive_,,medialive_,Elemental MediaLive,AWS,,,,,,
-mediapackage,mediapackage,mediapackage,mediapackage,,mediapackage,,,MediaPackage,MediaPackage,,1,,aws_media_package_,aws_mediapackage_,,media_package_,Elemental MediaPackage,AWS,,,,,,
+mediapackage,mediapackage,mediapackage,mediapackage,,mediapackage,,,MediaPackage,MediaPackage,,,2,aws_media_package_,aws_mediapackage_,,media_package_,Elemental MediaPackage,AWS,,,,,,
 mediapackage-vod,mediapackagevod,mediapackagevod,mediapackagevod,,mediapackagevod,,,MediaPackageVOD,MediaPackageVod,,1,,,aws_mediapackagevod_,,mediapackagevod_,Elemental MediaPackage VOD,AWS,,x,,,,
 mediastore,mediastore,mediastore,mediastore,,mediastore,,,MediaStore,MediaStore,,1,,aws_media_store_,aws_mediastore_,,media_store_,Elemental MediaStore,AWS,,,,,,
 mediastore-data,mediastoredata,mediastoredata,mediastoredata,,mediastoredata,,,MediaStoreData,MediaStoreData,,1,,,aws_mediastoredata_,,mediastoredata_,Elemental MediaStore Data,AWS,,x,,,,

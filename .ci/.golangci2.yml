@@ -80,8 +80,16 @@ issues:
       text: "SA1019: [a-zA-Z0-9.]+.CustomerMasterKeySpec is deprecated: This field has been deprecated. Instead, use the KeySpec field"
     - linters:
         - staticcheck
+      path: "internal/service/lightsail"
+      text: "SA1019: o.EndpointResolver"
+    - linters:
+        - staticcheck
       path: "internal/service/neptune"
       text: "SA1019: \\w+.(\\w+) is deprecated: (\\w+) has been deprecated"
+    - linters:
+        - staticcheck
+      path: "internal/service/route53domains"
+      text: "SA1019: o.EndpointResolver"
     - linters:
         - staticcheck
       path: "internal/service/s3"
