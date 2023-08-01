@@ -14,10 +14,13 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_db_cluster_snapshot")
+// @SDKDataSource("aws_db_cluster_snapshot", name="DB Cluster Snapshot")
+// @Tags
 func DataSourceClusterSnapshot() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceClusterSnapshotRead,
@@ -99,7 +102,7 @@ func DataSourceClusterSnapshot() *schema.Resource {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
-			"tags": tftags.TagsSchemaComputed(),
+			names.AttrTags: tftags.TagsSchemaComputed(),
 			"vpc_id": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -111,7 +114,6 @@ func DataSourceClusterSnapshot() *schema.Resource {
 func dataSourceClusterSnapshotRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RDSConn(ctx)
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	input := &rds.DescribeDBClusterSnapshotsInput{
 		IncludePublic: aws.Bool(d.Get("include_public").(bool)),
@@ -130,51 +132,32 @@ func dataSourceClusterSnapshotRead(ctx context.Context, d *schema.ResourceData, 
 		input.SnapshotType = aws.String(v.(string))
 	}
 
-	tags, tagsOk := d.GetOk("tags")
-
-	var dbClusterSnapshots []*rds.DBClusterSnapshot
-
-	err := conn.DescribeDBClusterSnapshotsPagesWithContext(ctx, input, func(page *rds.DescribeDBClusterSnapshotsOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
+	f := tfslices.PredicateTrue[*rds.DBClusterSnapshot]()
+	if tags := getTagsIn(ctx); len(tags) > 0 {
+		f = func(v *rds.DBClusterSnapshot) bool {
+			return KeyValueTags(ctx, v.TagList).ContainsAll(KeyValueTags(ctx, tags))
 		}
-
-		for _, dbClusterSnapshot := range page.DBClusterSnapshots {
-			if dbClusterSnapshot == nil {
-				continue
-			}
-
-			if tagsOk {
-				if dbClusterSnapshot.TagList == nil {
-					continue
-				}
-
-				if tagsMatch(tags.(map[string]interface{}), KeyValueTags(ctx, dbClusterSnapshot.TagList).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()) {
-					dbClusterSnapshots = append(dbClusterSnapshots, dbClusterSnapshot)
-				}
-			} else {
-				dbClusterSnapshots = append(dbClusterSnapshots, dbClusterSnapshot)
-			}
-		}
-		return !lastPage
-	})
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading RDS DB Snapshots: %s", err)
 	}
 
-	if len(dbClusterSnapshots) < 1 {
+	snapshots, err := findDBClusterSnapshots(ctx, conn, input, f)
+
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "reading RDS DB Cluster Snapshots: %s", err)
+	}
+
+	if len(snapshots) < 1 {
 		return sdkdiag.AppendErrorf(diags, "Your query returned no results. Please change your search criteria and try again.")
 	}
 
 	var snapshot *rds.DBClusterSnapshot
-	if len(dbClusterSnapshots) > 1 {
+	if len(snapshots) > 1 {
 		if d.Get("most_recent").(bool) {
-			snapshot = mostRecentClusterSnapshot(dbClusterSnapshots)
+			snapshot = mostRecentClusterSnapshot(snapshots)
 		} else {
 			return sdkdiag.AppendErrorf(diags, "Your query returned more than one result. Please try a more specific search criteria.")
 		}
 	} else {
-		snapshot = dbClusterSnapshots[0]
+		snapshot = snapshots[0]
 	}
 
 	d.SetId(aws.StringValue(snapshot.DBClusterSnapshotIdentifier))
@@ -197,9 +180,7 @@ func dataSourceClusterSnapshotRead(ctx context.Context, d *schema.ResourceData, 
 	d.Set("storage_encrypted", snapshot.StorageEncrypted)
 	d.Set("vpc_id", snapshot.VpcId)
 
-	if err := d.Set("tags", KeyValueTags(ctx, snapshot.TagList).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-	}
+	setTagsOut(ctx, snapshot.TagList)
 
 	return diags
 }
@@ -224,17 +205,4 @@ func mostRecentClusterSnapshot(snapshots []*rds.DBClusterSnapshot) *rds.DBCluste
 	sortedSnapshots := snapshots
 	sort.Sort(rdsClusterSnapshotSort(sortedSnapshots))
 	return sortedSnapshots[len(sortedSnapshots)-1]
-}
-
-func tagsMatch(tagsFilter map[string]interface{}, tagsDBSnapshot map[string]string) bool {
-	if len(tagsFilter) > len(tagsDBSnapshot) {
-		return false
-	}
-
-	for k, v := range tagsFilter {
-		if tagsDBSnapshot[k] != v.(string) {
-			return false
-		}
-	}
-	return true
 }

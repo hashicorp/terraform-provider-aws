@@ -27,7 +27,7 @@ import (
 
 const clusterSnapshotCreateTimeout = 2 * time.Minute
 
-// @SDKResource("aws_db_cluster_snapshot", name="Cluster Snapshot")
+// @SDKResource("aws_db_cluster_snapshot", name="DB Cluster Snapshot")
 // @Tags(identifierAttribute="db_cluster_snapshot_arn")
 func ResourceClusterSnapshot() *schema.Resource {
 	return &schema.Resource{
