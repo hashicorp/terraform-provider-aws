@@ -22,7 +22,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccFinSpaceKxCluster_basic(t *testing.T) {
+func testAccKxCluster_basic(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -32,7 +32,7 @@ func TestAccFinSpaceKxCluster_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_finspace_kx_cluster.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, finspace.ServiceID)
@@ -58,7 +58,7 @@ func TestAccFinSpaceKxCluster_basic(t *testing.T) {
 	})
 }
 
-func TestAccFinSpaceKxCluster_disappears(t *testing.T) {
+func testAccKxCluster_disappears(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -68,7 +68,7 @@ func TestAccFinSpaceKxCluster_disappears(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_finspace_kx_cluster.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, finspace.ServiceID)
@@ -89,7 +89,7 @@ func TestAccFinSpaceKxCluster_disappears(t *testing.T) {
 	})
 }
 
-func TestAccFinSpaceKxCluster_description(t *testing.T) {
+func testAccKxCluster_description(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -99,7 +99,7 @@ func TestAccFinSpaceKxCluster_description(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_finspace_kx_cluster.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, finspace.ServiceID)
@@ -119,7 +119,7 @@ func TestAccFinSpaceKxCluster_description(t *testing.T) {
 	})
 }
 
-func TestAccFinSpaceKxCluster_database(t *testing.T) {
+func testAccKxCluster_database(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -129,7 +129,7 @@ func TestAccFinSpaceKxCluster_database(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_finspace_kx_cluster.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, finspace.ServiceID)
@@ -149,7 +149,7 @@ func TestAccFinSpaceKxCluster_database(t *testing.T) {
 	})
 }
 
-func TestAccFinSpaceKxCluster_cacheConfigurations(t *testing.T) {
+func testAccKxCluster_cacheConfigurations(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -159,7 +159,7 @@ func TestAccFinSpaceKxCluster_cacheConfigurations(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_finspace_kx_cluster.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, finspace.ServiceID)
@@ -179,7 +179,7 @@ func TestAccFinSpaceKxCluster_cacheConfigurations(t *testing.T) {
 	})
 }
 
-func TestAccFinSpaceKxCluster_code(t *testing.T) {
+func testAccKxCluster_code(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -190,7 +190,7 @@ func TestAccFinSpaceKxCluster_code(t *testing.T) {
 	resourceName := "aws_finspace_kx_cluster.test"
 	codePath := "test-fixtures/code.zip"
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, finspace.ServiceID)
@@ -209,7 +209,7 @@ func TestAccFinSpaceKxCluster_code(t *testing.T) {
 	})
 }
 
-func TestAccFinSpaceKxCluster_multiAZ(t *testing.T) {
+func testAccKxCluster_multiAZ(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -219,7 +219,7 @@ func TestAccFinSpaceKxCluster_multiAZ(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_finspace_kx_cluster.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, finspace.ServiceID)
@@ -239,7 +239,7 @@ func TestAccFinSpaceKxCluster_multiAZ(t *testing.T) {
 	})
 }
 
-func TestAccFinSpaceKxCluster_rdb(t *testing.T) {
+func testAccKxCluster_rdb(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -249,7 +249,7 @@ func TestAccFinSpaceKxCluster_rdb(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_finspace_kx_cluster.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, finspace.ServiceID)
@@ -269,7 +269,7 @@ func TestAccFinSpaceKxCluster_rdb(t *testing.T) {
 	})
 }
 
-func TestAccFinSpaceKxCluster_executionRole(t *testing.T) {
+func testAccKxCluster_executionRole(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -279,7 +279,7 @@ func TestAccFinSpaceKxCluster_executionRole(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_finspace_kx_cluster.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, finspace.ServiceID)
@@ -299,7 +299,7 @@ func TestAccFinSpaceKxCluster_executionRole(t *testing.T) {
 	})
 }
 
-func TestAccFinSpaceKxCluster_autoScaling(t *testing.T) {
+func testAccKxCluster_autoScaling(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -309,7 +309,7 @@ func TestAccFinSpaceKxCluster_autoScaling(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_finspace_kx_cluster.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, finspace.ServiceID)
@@ -329,7 +329,7 @@ func TestAccFinSpaceKxCluster_autoScaling(t *testing.T) {
 	})
 }
 
-func TestAccFinSpaceKxCluster_initializationScript(t *testing.T) {
+func testAccKxCluster_initializationScript(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -342,7 +342,7 @@ func TestAccFinSpaceKxCluster_initializationScript(t *testing.T) {
 	codePath := "test-fixtures/code.zip"
 	initScriptPath := "code/helloworld.q"
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, finspace.ServiceID)
@@ -361,7 +361,7 @@ func TestAccFinSpaceKxCluster_initializationScript(t *testing.T) {
 	})
 }
 
-func TestAccFinSpaceKxCluster_commandLineArgs(t *testing.T) {
+func testAccKxCluster_commandLineArgs(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -371,7 +371,7 @@ func TestAccFinSpaceKxCluster_commandLineArgs(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_finspace_kx_cluster.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, finspace.ServiceID)
@@ -392,7 +392,7 @@ func TestAccFinSpaceKxCluster_commandLineArgs(t *testing.T) {
 	})
 }
 
-func TestAccFinSpaceKxCluster_tags(t *testing.T) {
+func testAccKxCluster_tags(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -402,7 +402,7 @@ func TestAccFinSpaceKxCluster_tags(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_finspace_kx_cluster.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, finspace.ServiceID)
