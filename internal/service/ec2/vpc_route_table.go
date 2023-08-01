@@ -488,6 +488,11 @@ func routeTableAddRoute(ctx context.Context, conn *ec2.EC2, routeTableID string,
 		errCodeInvalidTransitGatewayIDNotFound,
 	)
 
+	// Local routes cannot be created manually.
+	if tfawserr.ErrMessageContains(err, errCodeInvalidGatewayIDNotFound, "The gateway ID 'local' does not exist") {
+		return fmt.Errorf("cannot create local Route, use `terraform import` to manage existing local Routes")
+	}
+
 	if err != nil {
 		return fmt.Errorf("creating Route in Route Table (%s) with destination (%s): %w", routeTableID, destination, err)
 	}
@@ -719,7 +724,11 @@ func expandReplaceRouteInput(tfMap map[string]interface{}) *ec2.ReplaceRouteInpu
 	}
 
 	if v, ok := tfMap["gateway_id"].(string); ok && v != "" {
-		apiObject.GatewayId = aws.String(v)
+		if v == gatewayIDLocal {
+			apiObject.LocalTarget = aws.Bool(true)
+		} else {
+			apiObject.GatewayId = aws.String(v)
+		}
 	}
 
 	if v, ok := tfMap["local_gateway_id"].(string); ok && v != "" {
@@ -823,7 +832,9 @@ func flattenRoutes(ctx context.Context, conn *ec2.EC2, apiObjects []*ec2.Route) 
 			continue
 		}
 
-		if gatewayID := aws.StringValue(apiObject.GatewayId); gatewayID == gatewayIDLocal || gatewayID == gatewayIDVPCLattice {
+		// not continuing for local so that it can be set without a diff
+		// see local route tests
+		if gatewayID := aws.StringValue(apiObject.GatewayId); gatewayID == gatewayIDVPCLattice {
 			continue
 		}
 
