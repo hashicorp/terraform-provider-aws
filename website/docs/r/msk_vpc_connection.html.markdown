@@ -3,11 +3,11 @@ subcategory: "Managed Streaming for Kafka"
 layout: "aws"
 page_title: "AWS: aws_msk_vpc_connection"
 description: |-
-  Terraform resource for managing an AWS Managed Streaming for Kafka Vpc Connection.
+  Terraform resource for managing an AWS Managed Streaming for Kafka VPC Connection.
 ---
 # Resource: aws_msk_vpc_connection
 
-Terraform resource for managing an AWS Managed Streaming for Kafka Vpc Connection.
+Terraform resource for managing an AWS Managed Streaming for Kafka VPC Connection.
 
 ## Example Usage
 
@@ -26,14 +26,10 @@ resource "aws_msk_vpc_connection" "test" {
 The following arguments are required:
 
 * `authentication` - (Required) The authentication type for the client VPC connection. Specify one of these auth type strings: SASL_IAM, SASL_SCRAM, or TLS.
-
 * `client_subnets` - (Required) The list of subnets in the client VPC to connect to.
-
 * `security_groups` - (Required) The security groups to attach to the ENIs for the broker nodes.
-
 * `target_cluster_arn` - (Required) The Amazon Resource Name (ARN) of the cluster.
-
-* `vpc_id` - (Required) The VPC id of the remote client.
+* `vpc_id` - (Required) The VPC ID of the remote client.
 
 ## Attribute Reference
 

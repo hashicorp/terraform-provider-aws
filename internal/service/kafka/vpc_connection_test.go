@@ -103,10 +103,6 @@ func testAccCheckVPCConnectionExists(ctx context.Context, name string, vpcconnec
 			return fmt.Errorf("Not found: %s", name)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No MSK Serverless Cluster ID is set")
-		}
-
 		conn := acctest.Provider.Meta().(*conns.AWSClient).KafkaClient(ctx)
 
 		output, err := tfkafka.FindVPCConnectionByARN(ctx, conn, rs.Primary.ID)

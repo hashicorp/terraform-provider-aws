@@ -25,7 +25,7 @@ import (
 )
 
 // Function annotations are used for resource registration to the Provider. DO NOT EDIT.
-// @SDKResource("aws_msk_vpc_connection", name="Vpc Connection")
+// @SDKResource("aws_msk_vpc_connection", name="VPC Connection")
 func ResourceVPCConnection() *schema.Resource {
 	return &schema.Resource{
 
@@ -151,8 +151,7 @@ func resourceVPCConnectionDelete(ctx context.Context, d *schema.ResourceData, me
 
 	conn := meta.(*conns.AWSClient).KafkaClient(ctx)
 
-	log.Printf("[INFO] Deleting Kafka VpcConnection %s", d.Id())
-
+	log.Printf("[INFO] Deleting MSK VPC Connection %s", d.Id())
 	_, err := conn.DeleteVpcConnection(ctx, &kafka.DeleteVpcConnectionInput{
 		Arn: aws.String(d.Id()),
 	})
