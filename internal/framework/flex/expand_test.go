@@ -58,6 +58,13 @@ type TestFlexTF06 struct {
 	Field1 fwtypes.SetNestedObjectValueOf[TestFlexTF01] `tfsdk:"field1"`
 }
 
+type TestFlexTF07 struct {
+	Field1 types.String                                  `tfsdk:"field1"`
+	Field2 fwtypes.ListNestedObjectValueOf[TestFlexTF05] `tfsdk:"field2"`
+	Field3 types.Map                                     `tfsdk:"field3"`
+	Field4 fwtypes.SetNestedObjectValueOf[TestFlexTF02]  `tfsdk:"field4"`
+}
+
 type TestFlexAWS01 struct {
 	Field1 string
 }
@@ -104,6 +111,13 @@ type TestFlexAWS07 struct {
 
 type TestFlexAWS08 struct {
 	Field1 []TestFlexAWS01
+}
+
+type TestFlexAWS09 struct {
+	Field1 string
+	Field2 *TestFlexAWS06
+	Field3 map[string]*string
+	Field4 []TestFlexAWS03
 }
 
 func TestGenericExpand(t *testing.T) {
@@ -348,6 +362,33 @@ func TestGenericExpand(t *testing.T) {
 				{Field1: "a"},
 				{Field1: "b"},
 			}},
+		},
+		{
+			TestName: "complex Source and complex Target",
+			Source: &TestFlexTF07{
+				Field1: types.StringValue("m"),
+				Field2: fwtypes.NewListNestedObjectValueOfPtr(ctx, &TestFlexTF05{
+					Field1: fwtypes.NewListNestedObjectValueOfPtr(ctx, &TestFlexTF01{
+						Field1: types.StringValue("n"),
+					}),
+				}),
+				Field3: types.MapValueMust(types.StringType, map[string]attr.Value{
+					"X": types.StringValue("x"),
+					"Y": types.StringValue("y"),
+				}),
+				Field4: fwtypes.NewSetNestedObjectValueOfValueSlice(ctx, []TestFlexTF02{
+					{Field1: types.Int64Value(100)},
+					{Field1: types.Int64Value(2000)},
+					{Field1: types.Int64Value(30000)},
+				}),
+			},
+			Target: &TestFlexAWS09{},
+			WantTarget: &TestFlexAWS09{
+				Field1: "m",
+				Field2: &TestFlexAWS06{Field1: &TestFlexAWS01{Field1: "n"}},
+				Field3: aws.StringMap(map[string]string{"X": "x", "Y": "y"}),
+				Field4: []TestFlexAWS03{{Field1: 100}, {Field1: 2000}, {Field1: 30000}},
+			},
 		},
 	}
 

@@ -320,6 +320,33 @@ func TestGenericFlatten(t *testing.T) {
 				{Field1: types.StringValue("b")},
 			})},
 		},
+		{
+			TestName: "complex Source and complex Target",
+			Source: &TestFlexAWS09{
+				Field1: "m",
+				Field2: &TestFlexAWS06{Field1: &TestFlexAWS01{Field1: "n"}},
+				Field3: aws.StringMap(map[string]string{"X": "x", "Y": "y"}),
+				Field4: []TestFlexAWS03{{Field1: 100}, {Field1: 2000}, {Field1: 30000}},
+			},
+			Target: &TestFlexTF07{},
+			WantTarget: &TestFlexTF07{
+				Field1: types.StringValue("m"),
+				Field2: fwtypes.NewListNestedObjectValueOfPtr(ctx, &TestFlexTF05{
+					Field1: fwtypes.NewListNestedObjectValueOfPtr(ctx, &TestFlexTF01{
+						Field1: types.StringValue("n"),
+					}),
+				}),
+				Field3: types.MapValueMust(types.StringType, map[string]attr.Value{
+					"X": types.StringValue("x"),
+					"Y": types.StringValue("y"),
+				}),
+				Field4: fwtypes.NewSetNestedObjectValueOfValueSlice(ctx, []TestFlexTF02{
+					{Field1: types.Int64Value(100)},
+					{Field1: types.Int64Value(2000)},
+					{Field1: types.Int64Value(30000)},
+				}),
+			},
+		},
 	}
 
 	for _, testCase := range testCases {
