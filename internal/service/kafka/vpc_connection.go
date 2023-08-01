@@ -54,7 +54,7 @@ func ResourceVPCConnection() *schema.Resource {
 			},
 			"security_groups": {
 				Type:     schema.TypeSet,
-				Optional: true,
+				Required: true,
 				ForceNew: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
@@ -84,12 +84,9 @@ func resourceVPCConnectionCreate(ctx context.Context, d *schema.ResourceData, me
 	in := &kafka.CreateVpcConnectionInput{
 		Authentication:   aws.String(d.Get("authentication").(string)),
 		ClientSubnets:    flex.ExpandStringValueSet(d.Get("client_subnets").(*schema.Set)),
+		SecurityGroups:   flex.ExpandStringValueSet(d.Get("security_groups").(*schema.Set)),
 		TargetClusterArn: aws.String(d.Get("target_cluster_arn").(string)),
 		VpcId:            aws.String(d.Get("vpc_id").(string)),
-	}
-
-	if v, ok := d.GetOk("security_groups"); ok {
-		in.SecurityGroups = flex.ExpandStringValueSet(v.(*schema.Set))
 	}
 
 	out, err := conn.CreateVpcConnection(ctx, in)
