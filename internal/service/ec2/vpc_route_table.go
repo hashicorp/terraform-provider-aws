@@ -243,7 +243,7 @@ func resourceRouteTableRead(ctx context.Context, d *schema.ResourceData, meta in
 	if err := d.Set("propagating_vgws", propagatingVGWs); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting propagating_vgws: %s", err)
 	}
-	if err := d.Set("route", flattenRoutes(ctx, conn, routeTable.Routes)); err != nil {
+	if err := d.Set("route", flattenRoutes(ctx, d, conn, routeTable.Routes)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting route: %s", err)
 	}
 	d.Set("vpc_id", routeTable.VpcId)
@@ -820,7 +820,7 @@ func flattenRoute(apiObject *ec2.Route) map[string]interface{} {
 	return tfMap
 }
 
-func flattenRoutes(ctx context.Context, conn *ec2.EC2, apiObjects []*ec2.Route) []interface{} {
+func flattenRoutes(ctx context.Context, d *schema.ResourceData, conn *ec2.EC2, apiObjects []*ec2.Route) []interface{} {
 	if len(apiObjects) == 0 {
 		return nil
 	}
@@ -832,9 +832,13 @@ func flattenRoutes(ctx context.Context, conn *ec2.EC2, apiObjects []*ec2.Route) 
 			continue
 		}
 
-		// not continuing for local so that it can be set without a diff
-		// see local route tests
 		if gatewayID := aws.StringValue(apiObject.GatewayId); gatewayID == gatewayIDVPCLattice {
+			continue
+		}
+
+		// local routes from config need to be included but not default local routes, as determined by hasLocalConfig
+		// see local route tests
+		if gatewayID := aws.StringValue(apiObject.GatewayId); gatewayID == gatewayIDLocal && !hasLocalConfig(d, apiObject) {
 			continue
 		}
 
@@ -863,6 +867,33 @@ func flattenRoutes(ctx context.Context, conn *ec2.EC2, apiObjects []*ec2.Route) 
 	}
 
 	return tfList
+}
+
+// hasLocalConfig along with flattenRoutes prevents default "local" routes made
+// by AWS from getting stored in state. They do this by checking the
+// ResourceData. Normally, you can't count on ResourceData to represent config.
+// However, in this case, a local gateway route in ResourceData must come from
+// config because of the gatekeeping done by hasLocalConfig and flattenRoutes.
+func hasLocalConfig(d *schema.ResourceData, apiObject *ec2.Route) bool {
+	if apiObject.GatewayId == nil {
+		return false
+	}
+	if v, ok := d.GetOk("route"); ok && v.(*schema.Set).Len() > 0 {
+		for _, v := range v.(*schema.Set).List() {
+			v := v.(map[string]interface{})
+			if v["cidr_block"].(string) != aws.StringValue(apiObject.DestinationCidrBlock) &&
+				v["destination_prefix_list_id"] != aws.StringValue(apiObject.DestinationPrefixListId) &&
+				v["ipv6_cidr_block"] != aws.StringValue(apiObject.DestinationIpv6CidrBlock) {
+				continue
+			}
+
+			if v["gateway_id"].(string) == gatewayIDLocal {
+				return true
+			}
+		}
+	}
+
+	return false
 }
 
 // routeTableRouteDestinationAttribute returns the attribute key and value of the route table route's destination.
