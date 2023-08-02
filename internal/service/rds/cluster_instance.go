@@ -217,11 +217,6 @@ func ResourceClusterInstance() *schema.Resource {
 				Optional: true,
 				Default:  false,
 			},
-			"skip_final_snapshot": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-			},
 			"storage_encrypted": {
 				Type:     schema.TypeBool,
 				Computed: true,
