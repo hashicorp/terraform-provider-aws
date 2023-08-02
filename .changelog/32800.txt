@@ -1,0 +1,4 @@
+
+```release-note:enhancement
+resource/aws_finspace_kx_cluster: Adjusted `savedown_storage_config.size` minimum value to `10` GB.
+```
