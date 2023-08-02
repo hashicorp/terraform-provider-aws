@@ -529,6 +529,12 @@ func resourceClusterInstanceDelete(ctx context.Context, d *schema.ResourceData, 
 		DBInstanceIdentifier: aws.String(d.Id()),
 	}
 
+	// Automatically set skip_final_snapshot = true for RDS Custom instances
+	if strings.HasPrefix(d.Get("engine").(string), "custom-") {
+		log.Printf("[DEBUG] RDS Custom engine detected (%s) applying SkipFinalSnapshot: %s", d.Get("engine").(string), "true")
+		input.SkipFinalSnapshot = aws.Bool(true)
+	}
+
 	log.Printf("[DEBUG] Deleting RDS Cluster Instance: %s", d.Id())
 	_, err := tfresource.RetryWhenAWSErrMessageContains(ctx, d.Timeout(schema.TimeoutDelete),
 		func() (interface{}, error) {
