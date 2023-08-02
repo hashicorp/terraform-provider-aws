@@ -869,11 +869,13 @@ func flattenRoutes(ctx context.Context, d *schema.ResourceData, conn *ec2.EC2, a
 	return tfList
 }
 
-// hasLocalConfig along with flattenRoutes prevents default "local" routes made
-// by AWS from getting stored in state. They do this by checking the
-// ResourceData. Normally, you can't count on ResourceData to represent config.
-// However, in this case, a local gateway route in ResourceData must come from
-// config because of the gatekeeping done by hasLocalConfig and flattenRoutes.
+// hasLocalConfig along with flattenRoutes prevents default local routes from
+// being stored in state but allows configured local routes to be stored in
+// state. hasLocalConfig checks the ResourceData and flattenRoutes skips or
+// includes the route. Normally, you can't count on ResourceData to represent
+// config. However, in this case, a local gateway route in ResourceData must
+// come from config because of the gatekeeping done by hasLocalConfig and
+// flattenRoutes.
 func hasLocalConfig(d *schema.ResourceData, apiObject *ec2.Route) bool {
 	if apiObject.GatewayId == nil {
 		return false
