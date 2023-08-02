@@ -16,6 +16,7 @@ Terraform data source for managing an AWS VPC Lattice Service.
 
 ```terraform
 data "aws_vpclattice_service" "example" {
+  name = "example"
 }
 ```
 
@@ -24,8 +25,8 @@ data "aws_vpclattice_service" "example" {
 The arguments of this data source act as filters for querying the available VPC lattice services.
 The given filters must match exactly one VPC lattice service whose data will be exported as attributes.
 
+* `name` - (Optional) Service name.
 * `service_identifier` - (Optional) ID or Amazon Resource Name (ARN) of the service network.
-* `name` - (Optional) Service name that is specified when creating a VPC lattice. For AWS services the service name is usually in the form `com.amazonaws.<region>.<service>` (the SageMaker Notebook service is an exception to this rule, the service name is in the form `aws.sagemaker.<region>.notebook`).
 
 ## Attribute Reference
 
