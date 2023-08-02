@@ -3533,6 +3533,30 @@ func TestAccEC2Instance_LaunchTemplate_spotAndStop(t *testing.T) {
 	})
 }
 
+func TestAccEC2Instance_LaunchTemplate_withVpcSecurityGroup(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v ec2.Instance
+	resourceName := "aws_instance.test"
+	launchTemplateResourceName := "aws_launch_template.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstanceConfig_templateWithVpcSecurityGroups(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckInstanceExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttrPair(resourceName, "launch_template.0.id", launchTemplateResourceName, "id"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccEC2Instance_GetPasswordData_falseToTrue(t *testing.T) {
 	ctx := acctest.Context(t)
 	var before, after ec2.Instance
@@ -8943,6 +8967,70 @@ resource "aws_instance" "test" {
   }
 
   instance_type = data.aws_ec2_instance_type_offering.available.instance_type
+
+  tags = {
+    Name = %[1]q
+  }
+}
+`, rName))
+}
+
+func testAccInstanceConfig_templateWithVpcSecurityGroups(rName string) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigLatestAmazonLinuxHVMEBSAMI(),
+		acctest.AvailableEC2InstanceTypeForRegion("t3.micro", "t2.micro", "t1.micro", "m1.small"),
+		testAccInstanceVPCConfig(rName, false, 0),
+		fmt.Sprintf(`
+resource "aws_iam_role" "test" {
+  name = %[1]q
+
+  assume_role_policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Principal": {
+        "Service": [
+          "ec2.amazonaws.com"
+        ]
+      },
+      "Action": [
+        "sts:AssumeRole"
+      ]
+    }
+  ]
+}
+EOF
+}
+
+resource "aws_iam_instance_profile" "test" {
+  name = %[1]q
+  role = aws_iam_role.test.name
+}
+
+resource "aws_security_group" "test" {
+  vpc_id      = aws_vpc.test.id
+  description = %[1]q
+  name        = %[1]q
+}
+
+resource "aws_launch_template" "test" {
+  name          = %[1]q
+  image_id      = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+  instance_type = data.aws_ec2_instance_type_offering.available.instance_type
+
+  iam_instance_profile {
+    name = aws_iam_instance_profile.test.name
+  }
+  vpc_security_group_ids = [aws_security_group.test.id]
+}
+
+resource "aws_instance" "test" {
+  subnet_id = aws_subnet.test.id
+  launch_template {
+    name = aws_launch_template.test.name
+  }
 
   tags = {
     Name = %[1]q

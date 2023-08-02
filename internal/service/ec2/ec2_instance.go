@@ -2895,10 +2895,11 @@ func buildInstanceOpts(ctx context.Context, d *schema.ResourceData, meta interfa
 		}
 	}
 
+	_, associatePublicIPAddressOk := d.GetOkExists("associate_public_ip_address")
 	networkInterfaces, interfacesOk := d.GetOk("network_interface")
 
 	// If setting subnet and public address, OR manual network interfaces, populate those now.
-	if hasSubnet || interfacesOk {
+	if hasSubnet && associatePublicIPAddressOk || interfacesOk {
 		// Otherwise we're attaching (a) network interface(s)
 		opts.NetworkInterfaces = buildNetworkInterfaceOpts(d, groups, networkInterfaces)
 	} else {
