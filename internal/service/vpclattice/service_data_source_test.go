@@ -17,7 +17,6 @@ import (
 
 func TestAccVPCLatticeServiceDataSource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-
 	var service vpclattice.GetServiceOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	dataSourceName := "data.aws_vpclattice_service.test"
@@ -45,13 +44,10 @@ func TestAccVPCLatticeServiceDataSource_basic(t *testing.T) {
 	})
 }
 
-func TestAccVPCLatticeServiceDataSource_find_by_attributes(t *testing.T) {
+func TestAccVPCLatticeServiceDataSource_byName(t *testing.T) {
 	ctx := acctest.Context(t)
-
 	var service vpclattice.GetServiceOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	tagValue := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	//resourceName := "aws_vpclattice_service.test"
 	dataSourceName := "data.aws_vpclattice_service.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -64,12 +60,8 @@ func TestAccVPCLatticeServiceDataSource_find_by_attributes(t *testing.T) {
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckServiceDestroy(ctx),
 		Steps: []resource.TestStep{
-			// Create a service beforehand since data resource does not depend on it
 			{
-				Config: testAccServiceDataSourceConfig_find_by_attributes_preparation(rName, tagValue),
-			},
-			{
-				Config: testAccServiceDataSourceConfig_find_by_attributes_name_match(rName),
+				Config: testAccServiceDataSourceConfig_byName(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceExists(ctx, dataSourceName, &service),
 					resource.TestCheckResourceAttr(dataSourceName, "name", rName),
@@ -93,21 +85,14 @@ data "aws_vpclattice_service" "test" {
 `, rName)
 }
 
-func testAccServiceDataSourceConfig_find_by_attributes_preparation(rName string, tagValue string) string {
+func testAccServiceDataSourceConfig_byName(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_vpclattice_service" "test" {
   name = %[1]q
-}
-`, rName, tagValue)
 }
 
-func testAccServiceDataSourceConfig_find_by_attributes_name_match(rName string) string {
-	return fmt.Sprintf(`
-resource "aws_vpclattice_service" "test" {
-  name = %[1]q
-}
 data "aws_vpclattice_service" "test" {
-  name = %[1]q
+  name = aws_vpclattice_service.test.name
 }
 `, rName)
 }

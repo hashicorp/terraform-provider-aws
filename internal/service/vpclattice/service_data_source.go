@@ -5,19 +5,20 @@ package vpclattice
 
 import (
 	"context"
+
+	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/vpclattice"
-	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go-v2/service/vpclattice/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_vpclattice_service")
-func DataSourceService() *schema.Resource {
+func dataSourceService() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceServiceRead,
 
@@ -55,12 +56,16 @@ func DataSourceService() *schema.Resource {
 				},
 			},
 			"name": {
-				Type:     schema.TypeString,
-				Optional: true,
+				Type:         schema.TypeString,
+				Optional:     true,
+				Computed:     true,
+				ExactlyOneOf: []string{"name", "service_identifier"},
 			},
 			"service_identifier": {
-				Type:     schema.TypeString,
-				Optional: true,
+				Type:         schema.TypeString,
+				Optional:     true,
+				Computed:     true,
+				ExactlyOneOf: []string{"name", "service_identifier"},
 			},
 			"status": {
 				Type:     schema.TypeString,
@@ -76,28 +81,35 @@ const (
 )
 
 func dataSourceServiceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).VPCLatticeClient(ctx)
-
 	var diags diag.Diagnostics
 	var out *vpclattice.GetServiceOutput
+	conn := meta.(*conns.AWSClient).VPCLatticeClient(ctx)
 
 	if v, ok := d.GetOk("service_identifier"); ok {
-		serviceId := v.(string)
-		service, err := findServiceByID(ctx, conn, serviceId)
-		if err != nil {
-			return create.DiagError(names.VPCLattice, create.ErrActionReading, DSNameService, serviceId, err)
-		}
-		out = service
-	} else {
-		name, hasName := d.GetOk("name")
-		if !hasName {
-			return diag.Errorf("service_identifier or name must be set")
-		}
+		serviceID := v.(string)
+		service, err := findServiceByID(ctx, conn, serviceID)
 
-		service, err := findServiceByAttributes(ctx, conn, name.(string))
 		if err != nil {
 			return sdkdiag.AppendFromErr(diags, err)
 		}
+
+		out = service
+	} else if v, ok := d.GetOk("name"); ok {
+		filter := func(x types.ServiceSummary) bool {
+			return aws.ToString(x.Name) == v.(string)
+		}
+		output, err := findService(ctx, conn, filter)
+
+		if err != nil {
+			return sdkdiag.AppendFromErr(diags, err)
+		}
+
+		service, err := findServiceByID(ctx, conn, aws.ToString(output.Id))
+
+		if err != nil {
+			return sdkdiag.AppendFromErr(diags, err)
+		}
+
 		out = service
 	}
 
@@ -108,7 +120,7 @@ func dataSourceServiceRead(ctx context.Context, d *schema.ResourceData, meta int
 	// If this data source is a companion to a resource, often both will use the
 	// same ID. Otherwise, the ID will be a unique identifier such as an AWS
 	// identifier, ARN, or name.
-	d.SetId(aws.StringValue(out.Id))
+	d.SetId(aws.ToString(out.Id))
 
 	d.Set("arn", out.Arn)
 	d.Set("auth_type", out.AuthType)

@@ -20,6 +20,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -294,6 +295,40 @@ func findServiceByID(ctx context.Context, conn *vpclattice.Client, id string) (*
 	}
 
 	return out, nil
+}
+
+func findService(ctx context.Context, conn *vpclattice.Client, filter tfslices.Predicate[types.ServiceSummary]) (*types.ServiceSummary, error) {
+	output, err := findServices(ctx, conn, filter)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSingleValueResult(output)
+}
+
+func findServices(ctx context.Context, conn *vpclattice.Client, filter tfslices.Predicate[types.ServiceSummary]) ([]types.ServiceSummary, error) {
+	input := &vpclattice.ListServicesInput{}
+	var output []types.ServiceSummary
+	paginator := vpclattice.NewListServicesPaginator(conn, input, func(options *vpclattice.ListServicesPaginatorOptions) {
+		options.Limit = 100
+	})
+
+	for paginator.HasMorePages() {
+		page, err := paginator.NextPage(ctx)
+
+		if err != nil {
+			return nil, err
+		}
+
+		for _, v := range page.Items {
+			if filter(v) {
+				output = append(output, v)
+			}
+		}
+	}
+
+	return output, nil
 }
 
 func flattenDNSEntry(apiObject *types.DnsEntry) map[string]interface{} {
