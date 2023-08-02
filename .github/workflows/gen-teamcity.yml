@@ -17,9 +17,10 @@ jobs:
       - uses: actions/setup-java@5ffc13f4174014e2d4d4572b3d74c3fa61aeb2c2 # v3.11.0
         with:
           distribution: adopt
-          java-version: 11
+          java-version: 17
           cache: maven
       - name: Build TeamCity Configuration
         run: |
           cd .teamcity
-          mvn org.jetbrains.teamcity:teamcity-configs-maven-plugin:generate
+          make tools
+          make validate

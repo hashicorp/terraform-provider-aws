@@ -1,8 +1,12 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package networkfirewall
 
 import (
 	"context"
 	"log"
+	"regexp"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -50,6 +54,46 @@ func ResourceFirewallPolicy() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
+						"policy_variables": {
+							Type:     schema.TypeList,
+							Optional: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"rule_variables": {
+										Type:     schema.TypeSet,
+										Optional: true,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"key": {
+													Type:     schema.TypeString,
+													Required: true,
+													ValidateFunc: validation.All(
+														validation.StringLenBetween(1, 32),
+														validation.StringMatch(regexp.MustCompile(`^[A-Za-z]`), "must begin with alphabetic character"),
+														validation.StringMatch(regexp.MustCompile(`^[A-Za-z0-9_]+$`), "must contain only alphanumeric and underscore characters"),
+													),
+												},
+												"ip_set": {
+													Type:     schema.TypeList,
+													Required: true,
+													MaxItems: 1,
+													Elem: &schema.Resource{
+														Schema: map[string]*schema.Schema{
+															"definition": {
+																Type:     schema.TypeSet,
+																Required: true,
+																Elem:     &schema.Schema{Type: schema.TypeString},
+															},
+														},
+													},
+												},
+											},
+										},
+									},
+								},
+							},
+						},
 						"stateful_default_actions": {
 							Type:     schema.TypeSet,
 							Optional: true,
@@ -332,6 +376,20 @@ func waitFirewallPolicyDeleted(ctx context.Context, conn *networkfirewall.Networ
 	return nil, err
 }
 
+func expandPolicyVariables(tfMap map[string]interface{}) *networkfirewall.PolicyVariables {
+	if tfMap == nil {
+		return nil
+	}
+
+	policyVariables := &networkfirewall.PolicyVariables{}
+
+	if rvMap, ok := tfMap["rule_variables"].(*schema.Set); ok && rvMap.Len() > 0 {
+		policyVariables.RuleVariables = expandIPSets(rvMap.List())
+	}
+
+	return policyVariables
+}
+
 func expandStatefulEngineOptions(l []interface{}) *networkfirewall.StatefulEngineOptions {
 	if len(l) == 0 || l[0] == nil {
 		return nil
@@ -426,6 +484,10 @@ func expandFirewallPolicy(l []interface{}) *networkfirewall.FirewallPolicy {
 		StatelessFragmentDefaultActions: flex.ExpandStringSet(lRaw["stateless_fragment_default_actions"].(*schema.Set)),
 	}
 
+	if v, ok := lRaw["policy_variables"]; ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		policy.PolicyVariables = expandPolicyVariables(v.([]interface{})[0].(map[string]interface{}))
+	}
+
 	if v, ok := lRaw["stateful_default_actions"].(*schema.Set); ok && v.Len() > 0 {
 		policy.StatefulDefaultActions = flex.ExpandStringSet(v)
 	}
@@ -454,6 +516,9 @@ func flattenFirewallPolicy(policy *networkfirewall.FirewallPolicy) []interface{}
 		return []interface{}{}
 	}
 	p := map[string]interface{}{}
+	if policy.PolicyVariables != nil {
+		p["policy_variables"] = flattenPolicyVariables(policy.PolicyVariables)
+	}
 	if policy.StatefulDefaultActions != nil {
 		p["stateful_default_actions"] = flex.FlattenStringSet(policy.StatefulDefaultActions)
 	}
@@ -477,6 +542,18 @@ func flattenFirewallPolicy(policy *networkfirewall.FirewallPolicy) []interface{}
 	}
 
 	return []interface{}{p}
+}
+
+func flattenPolicyVariables(variables *networkfirewall.PolicyVariables) []interface{} {
+	if variables == nil {
+		return []interface{}{}
+	}
+
+	m := map[string]interface{}{
+		"rule_variables": flattenIPSets(variables.RuleVariables),
+	}
+
+	return []interface{}{m}
 }
 
 func flattenStatefulEngineOptions(options *networkfirewall.StatefulEngineOptions) []interface{} {

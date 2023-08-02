@@ -1,8 +1,12 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package acctest
 
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"log"
 	"os"
@@ -13,6 +17,7 @@ import (
 	"testing"
 	"time"
 
+	ec2types "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/aws/endpoints"
@@ -393,6 +398,27 @@ func MatchResourceAttrRegionalARN(resourceName, attributeName, arnService string
 			AccountID: AccountID(),
 			Partition: Partition(),
 			Region:    Region(),
+			Resource:  arnResourceRegexp.String(),
+			Service:   arnService,
+		}.String()
+
+		attributeMatch, err := regexp.Compile(arnRegexp)
+
+		if err != nil {
+			return fmt.Errorf("unable to compile ARN regexp (%s): %w", arnRegexp, err)
+		}
+
+		return resource.TestMatchResourceAttr(resourceName, attributeName, attributeMatch)(s)
+	}
+}
+
+// MatchResourceAttrRegionalARNRegion ensures the Terraform state regexp matches a formatted ARN with the specified region
+func MatchResourceAttrRegionalARNRegion(resourceName, attributeName, arnService, region string, arnResourceRegexp *regexp.Regexp) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		arnRegexp := arn.ARN{
+			AccountID: AccountID(),
+			Partition: Partition(),
+			Region:    region,
 			Resource:  arnResourceRegexp.String(),
 			Service:   arnService,
 		}.String()
@@ -924,6 +950,24 @@ func PreCheckOrganizationManagementAccount(ctx context.Context, t *testing.T) {
 
 	if aws.StringValue(organization.MasterAccountId) != aws.StringValue(callerIdentity.Account) {
 		t.Skip("this AWS account must be the management account of an AWS Organization")
+	}
+}
+
+func PreCheckOrganizationMemberAccount(ctx context.Context, t *testing.T) {
+	organization, err := tforganizations.FindOrganization(ctx, Provider.Meta().(*conns.AWSClient).OrganizationsConn(ctx))
+
+	if err != nil {
+		t.Fatalf("describing AWS Organization: %s", err)
+	}
+
+	callerIdentity, err := tfsts.FindCallerIdentity(ctx, Provider.Meta().(*conns.AWSClient).STSConn(ctx))
+
+	if err != nil {
+		t.Fatalf("getting current identity: %s", err)
+	}
+
+	if aws.StringValue(organization.MasterAccountId) == aws.StringValue(callerIdentity.Account) {
+		t.Skip("this AWS account must not be the management account of an AWS Organization")
 	}
 }
 
@@ -2218,6 +2262,31 @@ func CheckVPCExists(ctx context.Context, n string, v *ec2.Vpc) resource.TestChec
 	}
 }
 
+func CheckVPCExistsV2(ctx context.Context, n string, v *ec2types.Vpc) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[n]
+		if !ok {
+			return fmt.Errorf("not found: %s", n)
+		}
+
+		if rs.Primary.ID == "" {
+			return fmt.Errorf("no VPC ID is set")
+		}
+
+		conn := Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
+
+		output, err := tfec2.FindVPCByIDV2(ctx, conn, rs.Primary.ID)
+
+		if err != nil {
+			return err
+		}
+
+		*v = *output
+
+		return nil
+	}
+}
+
 func CheckCallerIdentityAccountID(n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -2255,7 +2324,7 @@ func CheckResourceAttrGreaterThanValue(n, key string, val int) resource.TestChec
 		}
 
 		if v <= val {
-			return fmt.Errorf("%s: Attribute %q is not greater than %d, got %d", n, key, val, v)
+			return fmt.Errorf("got %d, want > %d", v, val)
 		}
 
 		return nil
@@ -2271,7 +2340,23 @@ func CheckResourceAttrGreaterThanOrEqualValue(n, key string, val int) resource.T
 		}
 
 		if v < val {
-			return fmt.Errorf("%s: Attribute %q is not greater than or equal to %d, got %d", n, key, val, v)
+			return fmt.Errorf("got %d, want >= %d", v, val)
+		}
+
+		return nil
+	})
+}
+
+func CheckResourceAttrIsJSONString(n, key string) resource.TestCheckFunc {
+	return resource.TestCheckResourceAttrWith(n, key, func(value string) error {
+		var m map[string]*json.RawMessage
+
+		if err := json.Unmarshal([]byte(value), &m); err != nil {
+			return err
+		}
+
+		if len(m) == 0 {
+			return errors.New(`empty JSON string`)
 		}
 
 		return nil

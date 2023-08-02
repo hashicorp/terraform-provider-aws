@@ -22,14 +22,14 @@ resource "aws_kinesisanalyticsv2_application_snapshot" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `application_name` - (Required) The name of an existing  [Kinesis Analytics v2 Application](/docs/providers/aws/r/kinesisanalyticsv2_application.html). Note that the application must be running for a snapshot to be created.
 * `snapshot_name` - (Required) The name of the application snapshot.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The application snapshot identifier.
 * `application_version_id` - The current application version ID when the snapshot was created.
@@ -44,8 +44,17 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-`aws_kinesisanalyticsv2_application` can be imported by using `application_name` together with `snapshot_name`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_kinesisanalyticsv2_application` using `application_name` together with `snapshot_name`. For example:
 
+```terraform
+import {
+  to = aws_kinesisanalyticsv2_application_snapshot.example
+  id = "example-application/example-snapshot"
+}
 ```
-$ terraform import aws_kinesisanalyticsv2_application_snapshot.example example-application/example-snapshot
+
+Using `terraform import`, import `aws_kinesisanalyticsv2_application` using `application_name` together with `snapshot_name`. For example:
+
+```console
+% terraform import aws_kinesisanalyticsv2_application_snapshot.example example-application/example-snapshot
 ```

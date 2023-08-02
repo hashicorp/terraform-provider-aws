@@ -3,6 +3,7 @@
 package sweep_test
 
 import (
+	"context"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -68,6 +69,7 @@ import (
 	_ "github.com/hashicorp/terraform-provider-aws/internal/service/emrserverless"
 	_ "github.com/hashicorp/terraform-provider-aws/internal/service/events"
 	_ "github.com/hashicorp/terraform-provider-aws/internal/service/evidently"
+	_ "github.com/hashicorp/terraform-provider-aws/internal/service/finspace"
 	_ "github.com/hashicorp/terraform-provider-aws/internal/service/firehose"
 	_ "github.com/hashicorp/terraform-provider-aws/internal/service/fis"
 	_ "github.com/hashicorp/terraform-provider-aws/internal/service/fsx"
@@ -97,6 +99,7 @@ import (
 	_ "github.com/hashicorp/terraform-provider-aws/internal/service/location"
 	_ "github.com/hashicorp/terraform-provider-aws/internal/service/logs"
 	_ "github.com/hashicorp/terraform-provider-aws/internal/service/medialive"
+	_ "github.com/hashicorp/terraform-provider-aws/internal/service/mediapackage"
 	_ "github.com/hashicorp/terraform-provider-aws/internal/service/memorydb"
 	_ "github.com/hashicorp/terraform-provider-aws/internal/service/mq"
 	_ "github.com/hashicorp/terraform-provider-aws/internal/service/mwaa"
@@ -116,6 +119,7 @@ import (
 	_ "github.com/hashicorp/terraform-provider-aws/internal/service/redshift"
 	_ "github.com/hashicorp/terraform-provider-aws/internal/service/redshiftserverless"
 	_ "github.com/hashicorp/terraform-provider-aws/internal/service/resourceexplorer2"
+	_ "github.com/hashicorp/terraform-provider-aws/internal/service/resourcegroups"
 	_ "github.com/hashicorp/terraform-provider-aws/internal/service/route53"
 	_ "github.com/hashicorp/terraform-provider-aws/internal/service/route53recoverycontrolconfig"
 	_ "github.com/hashicorp/terraform-provider-aws/internal/service/route53resolver"
@@ -131,6 +135,7 @@ import (
 	_ "github.com/hashicorp/terraform-provider-aws/internal/service/ses"
 	_ "github.com/hashicorp/terraform-provider-aws/internal/service/sesv2"
 	_ "github.com/hashicorp/terraform-provider-aws/internal/service/sfn"
+	_ "github.com/hashicorp/terraform-provider-aws/internal/service/signer"
 	_ "github.com/hashicorp/terraform-provider-aws/internal/service/simpledb"
 	_ "github.com/hashicorp/terraform-provider-aws/internal/service/sns"
 	_ "github.com/hashicorp/terraform-provider-aws/internal/service/sqs"
@@ -151,6 +156,6 @@ import (
 )
 
 func TestMain(m *testing.M) {
-	sweep.SweeperClients = make(map[string]interface{})
+	sweep.ServicePackages = servicePackages(context.Background())
 	resource.TestMain(m)
 }

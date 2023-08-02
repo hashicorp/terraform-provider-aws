@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package sagemaker
 
 import (
@@ -109,6 +112,27 @@ func ResourceUserProfile() *schema.Resource {
 													Type:         schema.TypeString,
 													Optional:     true,
 													ValidateFunc: validation.StringInSlice(sagemaker.FeatureStatus_Values(), false),
+												},
+											},
+										},
+									},
+									"workspace_settings": {
+										Type:     schema.TypeList,
+										Optional: true,
+										MaxItems: 1,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"s3_artifact_path": {
+													Type:     schema.TypeString,
+													Optional: true,
+													ValidateFunc: validation.All(
+														validation.StringMatch(regexp.MustCompile(`^(https|s3)://([^/])/?(.*)$`), ""),
+														validation.StringLenBetween(1, 1024),
+													),
+												},
+												"s3_kms_key_id": {
+													Type:     schema.TypeString,
+													Optional: true,
 												},
 											},
 										},

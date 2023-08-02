@@ -30,7 +30,9 @@ output "arn" {
 
 * `virtual_cluster_id` - (Required) ID of the cluster.
 
-## Attributes Reference
+## Attribute Reference
+
+This data source exports the following attributes in addition to the arguments above:
 
 * `id` - ID of the cluster.
 * `name` - Name of the cluster.

@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package opensearch_test
 
 import (
@@ -1524,6 +1527,18 @@ func TestAccOpenSearchDomain_offPeakWindowOptions(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "off_peak_window_options.0.off_peak_window.0.window_start_time.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "off_peak_window_options.0.off_peak_window.0.window_start_time.0.hours", "10"),
 					resource.TestCheckResourceAttr(resourceName, "off_peak_window_options.0.off_peak_window.0.window_start_time.0.minutes", "15"),
+				),
+			},
+			{
+				Config: testAccDomainConfig_offPeakWindowOptions(rName, 0, 0),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDomainExists(ctx, resourceName, &domain),
+					resource.TestCheckResourceAttr(resourceName, "off_peak_window_options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "off_peak_window_options.0.enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "off_peak_window_options.0.off_peak_window.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "off_peak_window_options.0.off_peak_window.0.window_start_time.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "off_peak_window_options.0.off_peak_window.0.window_start_time.0.hours", "0"),
+					resource.TestCheckResourceAttr(resourceName, "off_peak_window_options.0.off_peak_window.0.window_start_time.0.minutes", "0"),
 				),
 			},
 		},

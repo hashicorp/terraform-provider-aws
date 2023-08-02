@@ -36,7 +36,7 @@ resource "aws_opensearch_outbound_connection" "foo" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `connection_alias` - (Required, Forces new resource) Specifies the connection alias that will be used by the customer for this connection.
 * `local_domain_info` - (Required, Forces new resource) Configuration block for the local Opensearch domain.
@@ -54,17 +54,26 @@ The following arguments are supported:
 * `domain_name` - (Required, Forces new resource) The name of the remote domain.
 * `region` - (Required, Forces new resource) The region of the remote domain.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The Id of the connection.
 * `connection_status` - Status of the connection request.
 
 ## Import
 
-AWS Opensearch Outbound Connections can be imported by using the Outbound Connection ID, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import AWS Opensearch Outbound Connections using the Outbound Connection ID. For example:
 
+```terraform
+import {
+  to = aws_opensearch_outbound_connection.foo
+  id = "connection-id"
+}
 ```
-$ terraform import aws_opensearch_outbound_connection.foo connection-id
+
+Using `terraform import`, import AWS Opensearch Outbound Connections using the Outbound Connection ID. For example:
+
+```console
+% terraform import aws_opensearch_outbound_connection.foo connection-id
 ```

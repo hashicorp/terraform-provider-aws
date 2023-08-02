@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package fsx_test
 
 import (
@@ -1021,11 +1024,6 @@ resource "aws_s3_bucket" "test" {
   bucket = %[1]q
 }
 
-resource "aws_s3_bucket_acl" "test" {
-  bucket = aws_s3_bucket.test.id
-  acl    = "private"
-}
-
 resource "aws_fsx_lustre_file_system" "test" {
   export_path      = "s3://${aws_s3_bucket.test.bucket}%[2]s"
   import_path      = "s3://${aws_s3_bucket.test.bucket}"
@@ -1042,11 +1040,6 @@ resource "aws_s3_bucket" "test" {
   bucket = %[1]q
 }
 
-resource "aws_s3_bucket_acl" "test" {
-  bucket = aws_s3_bucket.test.id
-  acl    = "private"
-}
-
 resource "aws_fsx_lustre_file_system" "test" {
   import_path      = "s3://${aws_s3_bucket.test.bucket}%[2]s"
   storage_capacity = 1200
@@ -1060,11 +1053,6 @@ func testAccLustreFileSystemConfig_importedChunkSize(rName string, importedFileC
 	return acctest.ConfigCompose(testAccLustreFileSystemBaseConfig(), fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
   bucket = %[1]q
-}
-
-resource "aws_s3_bucket_acl" "test" {
-  bucket = aws_s3_bucket.test.id
-  acl    = "private"
 }
 
 resource "aws_fsx_lustre_file_system" "test" {
@@ -1368,11 +1356,6 @@ func testAccLustreFileSystemConfig_autoImportPolicy(rName, exportPrefix, policy 
 	return acctest.ConfigCompose(testAccLustreFileSystemBaseConfig(), fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
   bucket = %[1]q
-}
-
-resource "aws_s3_bucket_acl" "test" {
-  bucket = aws_s3_bucket.test.id
-  acl    = "private"
 }
 
 resource "aws_fsx_lustre_file_system" "test" {

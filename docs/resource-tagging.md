@@ -204,7 +204,7 @@ func ResourceAnalyzer() *schema.Resource {
 ```
 
 The `identifierAttribute` argument to the `@Tags` annotation identifies the attribute in the resource's schema whose value is used in tag listing and updating API calls. Common values are `"arn"` and "`id`".
-Once the annotation has been added to the resource's code, run `make servicepackages` to register the resource for transparent tagging. This will add an entry to the `service_package_gen.go` file located in the service package folder.
+Once the annotation has been added to the resource's code, run `make gen` to register the resource for transparent tagging. This will add an entry to the `service_package_gen.go` file located in the service package folder.
 
 #### Resource Create Operation
 
@@ -515,7 +515,7 @@ In the resource documentation (e.g., `website/docs/r/eks_cluster.html.markdown`)
 * `tags` - (Optional) Key-value mapping of resource tags. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 ```
 
-In the resource documentation (e.g., `website/docs/r/eks_cluster.html.markdown`), add the following to the attributes reference:
+In the resource documentation (e.g., `website/docs/r/eks_cluster.html.markdown`), add the following to the attribute reference:
 
 ```markdown
 * `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).

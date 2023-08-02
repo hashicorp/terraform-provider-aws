@@ -39,7 +39,7 @@ resource "aws_route53_resolver_firewall_rule" "example" {
 
 ## Argument Reference
 
-The following argument is supported:
+This resource supports the following arguments:
 
 * `name` - (Required) A name that lets you identify the rule, to manage and use it.
 * `action` - (Required) The action that DNS Firewall should take on a DNS query when it matches one of the domains in the rule's domain list. Valid values: `ALLOW`, `BLOCK`, `ALERT`.
@@ -51,16 +51,25 @@ The following argument is supported:
 * `firewall_rule_group_id` - (Required) The unique identifier of the firewall rule group where you want to create the rule.
 * `priority` - (Required) The setting that determines the processing order of the rule in the rule group. DNS Firewall processes the rules in a rule group by order of priority, starting from the lowest setting.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The ID of the rule.
 
 ## Import
 
- Route 53 Resolver DNS Firewall rules can be imported using the Route 53 Resolver DNS Firewall rule group ID and domain list ID separated by ':', e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import  Route 53 Resolver DNS Firewall rules using the Route 53 Resolver DNS Firewall rule group ID and domain list ID separated by ':'. For example:
 
+```terraform
+import {
+  to = aws_route53_resolver_firewall_rule.example
+  id = "rslvr-frg-0123456789abcdef:rslvr-fdl-0123456789abcdef"
+}
 ```
-$ terraform import aws_route53_resolver_firewall_rule.example rslvr-frg-0123456789abcdef:rslvr-fdl-0123456789abcdef
+
+Using `terraform import`, import  Route 53 Resolver DNS Firewall rules using the Route 53 Resolver DNS Firewall rule group ID and domain list ID separated by ':'. For example:
+
+```console
+% terraform import aws_route53_resolver_firewall_rule.example rslvr-frg-0123456789abcdef:rslvr-fdl-0123456789abcdef
 ```

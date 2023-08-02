@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 //go:build sweep
 // +build sweep
 
@@ -10,8 +13,8 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/accessanalyzer"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
+	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv2"
 )
 
 func init() {
@@ -23,11 +26,11 @@ func init() {
 
 func sweepAnalyzers(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
 		return fmt.Errorf("getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).AccessAnalyzerClient(ctx)
+	conn := client.AccessAnalyzerClient(ctx)
 	input := &accessanalyzer.ListAnalyzersInput{}
 	sweepResources := make([]sweep.Sweepable, 0)
 
@@ -35,7 +38,7 @@ func sweepAnalyzers(region string) error {
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
 
-		if sweep.SkipSweepError(err) {
+		if awsv2.SkipSweepError(err) {
 			log.Printf("[WARN] Skipping IAM Access Analyzer Analyzer sweep for %s: %s", region, err)
 			return nil
 		}
@@ -53,7 +56,7 @@ func sweepAnalyzers(region string) error {
 		}
 	}
 
-	err = sweep.SweepOrchestratorWithContext(ctx, sweepResources)
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
 
 	if err != nil {
 		return fmt.Errorf("sweeping IAM Access Analyzer Analyzers (%s): %w", region, err)

@@ -53,13 +53,13 @@ resource "aws_ram_resource_share_accepter" "receiver_accept" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `share_arn` - (Required) The ARN of the resource share.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `invitation_arn` - The ARN of the resource share invitation.
 * `share_id` - The ID of the resource share as displayed in the console.
@@ -71,8 +71,17 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Resource share accepters can be imported using the resource share ARN, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import resource share accepters using the resource share ARN. For example:
 
+```terraform
+import {
+  to = aws_ram_resource_share_accepter.example
+  id = "arn:aws:ram:us-east-1:123456789012:resource-share/c4b56393-e8d9-89d9-6dc9-883752de4767"
+}
 ```
-$ terraform import aws_ram_resource_share_accepter.example arn:aws:ram:us-east-1:123456789012:resource-share/c4b56393-e8d9-89d9-6dc9-883752de4767
+
+Using `terraform import`, import resource share accepters using the resource share ARN. For example:
+
+```console
+% terraform import aws_ram_resource_share_accepter.example arn:aws:ram:us-east-1:123456789012:resource-share/c4b56393-e8d9-89d9-6dc9-883752de4767
 ```

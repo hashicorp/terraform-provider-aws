@@ -1,3 +1,6 @@
+# Copyright (c) HashiCorp, Inc.
+# SPDX-License-Identifier: MPL-2.0
+
 resource "aws_subnet" "subnet_1" {
   vpc_id            = var.vpc_id
   cidr_block        = var.subnet_1_cidr

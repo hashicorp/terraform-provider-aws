@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package vpclattice_test
 
 import (
@@ -19,6 +22,74 @@ import (
 	tfvpclattice "github.com/hashicorp/terraform-provider-aws/internal/service/vpclattice"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
+
+func TestIDFromIDOrARN(t *testing.T) {
+	t.Parallel()
+
+	testCases := []struct {
+		idOrARN string
+		want    string
+	}{
+		{
+			idOrARN: "",
+			want:    "",
+		},
+		{
+			idOrARN: "sn-1234567890abcdefg",
+			want:    "sn-1234567890abcdefg",
+		},
+		{
+			idOrARN: "arn:aws:vpc-lattice:us-east-1:123456789012:servicenetwork/sn-1234567890abcdefg", //lintignore:AWSAT003,AWSAT005
+			want:    "sn-1234567890abcdefg",
+		},
+	}
+	for _, testCase := range testCases {
+		if got, want := tfvpclattice.IDFromIDOrARN(testCase.idOrARN), testCase.want; got != want {
+			t.Errorf("IDFromIDOrARN(%q) = %v, want %v", testCase.idOrARN, got, want)
+		}
+	}
+}
+
+func TestSuppressEquivalentIDOrARN(t *testing.T) {
+	t.Parallel()
+
+	testCases := []struct {
+		old  string
+		new  string
+		want bool
+	}{
+		{
+			old:  "sn-1234567890abcdefg",
+			new:  "sn-1234567890abcdefg",
+			want: true,
+		},
+		{
+			old:  "sn-1234567890abcdefg",
+			new:  "sn-1234567890abcdefh",
+			want: false,
+		},
+		{
+			old:  "arn:aws:vpc-lattice:us-east-1:123456789012:servicenetwork/sn-1234567890abcdefg", //lintignore:AWSAT003,AWSAT005
+			new:  "sn-1234567890abcdefg",
+			want: true,
+		},
+		{
+			old:  "sn-1234567890abcdefg",
+			new:  "arn:aws:vpc-lattice:us-east-1:123456789012:servicenetwork/sn-1234567890abcdefg", //lintignore:AWSAT003,AWSAT005
+			want: true,
+		},
+		{
+			old:  "arn:aws:vpc-lattice:us-east-1:123456789012:servicenetwork/sn-1234567890abcdefg", //lintignore:AWSAT003,AWSAT005
+			new:  "sn-1234567890abcdefh",
+			want: false,
+		},
+	}
+	for _, testCase := range testCases {
+		if got, want := tfvpclattice.SuppressEquivalentIDOrARN("test_property", testCase.old, testCase.new, nil), testCase.want; got != want {
+			t.Errorf("SuppressEquivalentIDOrARN(%q, %q) = %v, want %v", testCase.old, testCase.new, got, want)
+		}
+	}
+}
 
 func TestAccVPCLatticeServiceNetwork_basic(t *testing.T) {
 	ctx := acctest.Context(t)

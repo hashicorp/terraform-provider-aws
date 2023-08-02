@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package lightsail
 
 import (
@@ -62,6 +65,7 @@ func ResourceDomainEntry() *schema.Resource {
 				Required: true,
 				ValidateFunc: validation.StringInSlice([]string{
 					"A",
+					"AAAA",
 					"CNAME",
 					"MX",
 					"NS",

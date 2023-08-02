@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package provider_test
 
 import (
@@ -772,12 +775,22 @@ func testAccCheckEndpoints(_ context.Context, p **schema.Provider) resource.Test
 
 		providerClient := (*p).Meta().(*conns.AWSClient)
 
-		for _, serviceKey := range names.ProviderPackages() {
-			method := reflect.ValueOf(providerClient).MethodByName(serviceConn(serviceKey))
+		for _, serviceKey := range names.Aliases() {
+			methodName := serviceConn(serviceKey)
+			method := reflect.ValueOf(providerClient).MethodByName(methodName)
 			if !method.IsValid() {
 				continue
 			}
-			result := method.Call([]reflect.Value{})
+			if method.Kind() != reflect.Func {
+				return fmt.Errorf("value %q is not a function", methodName)
+			}
+			if !funcHasConnFuncSignature(method) {
+				return fmt.Errorf("function %q does not match expected signature", methodName)
+			}
+
+			result := method.Call([]reflect.Value{
+				reflect.ValueOf(context.Background()),
+			})
 			if l := len(result); l != 1 {
 				return fmt.Errorf("expected 1 result, got %d", l)
 			}
@@ -811,7 +824,18 @@ func testAccCheckUnusualEndpoints(_ context.Context, p **schema.Provider, unusua
 
 		providerClient := (*p).Meta().(*conns.AWSClient)
 
-		result := reflect.ValueOf(providerClient).MethodByName(serviceConn(unusual.thing)).Call([]reflect.Value{})
+		methodName := serviceConn(unusual.thing)
+		method := reflect.ValueOf(providerClient).MethodByName(methodName)
+		if method.Kind() != reflect.Func {
+			return fmt.Errorf("value %q is not a function", methodName)
+		}
+		if !funcHasConnFuncSignature(method) {
+			return fmt.Errorf("function %q does not match expected signature", methodName)
+		}
+
+		result := method.Call([]reflect.Value{
+			reflect.ValueOf(context.Background()),
+		})
 		if l := len(result); l != 1 {
 			return fmt.Errorf("expected 1 result, got %d", l)
 		}
@@ -830,6 +854,18 @@ func testAccCheckUnusualEndpoints(_ context.Context, p **schema.Provider, unusua
 
 		return nil
 	}
+}
+
+func funcHasConnFuncSignature(method reflect.Value) bool {
+	typ := method.Type()
+	if typ.NumIn() != 1 {
+		return false
+	}
+
+	fn := func(ctx context.Context) {}
+	ftyp := reflect.TypeOf(fn)
+
+	return typ.In(0) == ftyp.In(0)
 }
 
 func serviceConn(key string) string {

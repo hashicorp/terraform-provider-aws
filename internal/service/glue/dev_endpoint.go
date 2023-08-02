@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package glue
 
 import (
@@ -43,7 +46,7 @@ func ResourceDevEndpoint() *schema.Resource {
 			"arguments": {
 				Type:     schema.TypeMap,
 				Optional: true,
-				Elem:     schema.TypeString,
+				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 			"arn": {
 				Type:     schema.TypeString,

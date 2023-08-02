@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package elasticsearch
 
 import (
@@ -1245,4 +1248,32 @@ func advancedOptionsIgnoreDefault(o map[string]interface{}, n map[string]interfa
 	}
 
 	return n
+}
+
+// EBSVolumeTypePermitsIopsInput returns true if the volume type supports the Iops input
+//
+// This check prevents a ValidationException when updating EBS volume types from a value
+// that supports IOPS (ex. gp3) to one that doesn't (ex. gp2).
+func EBSVolumeTypePermitsIopsInput(volumeType string) bool {
+	permittedTypes := []string{elasticsearch.VolumeTypeGp3, elasticsearch.VolumeTypeIo1}
+	for _, t := range permittedTypes {
+		if volumeType == t {
+			return true
+		}
+	}
+	return false
+}
+
+// EBSVolumeTypePermitsIopsInput returns true if the volume type supports the Throughput input
+//
+// This check prevents a ValidationException when updating EBS volume types from a value
+// that supports Throughput (ex. gp3) to one that doesn't (ex. gp2).
+func EBSVolumeTypePermitsThroughputInput(volumeType string) bool {
+	permittedTypes := []string{elasticsearch.VolumeTypeGp3}
+	for _, t := range permittedTypes {
+		if volumeType == t {
+			return true
+		}
+	}
+	return false
 }

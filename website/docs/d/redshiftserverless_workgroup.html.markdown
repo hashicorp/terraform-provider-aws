@@ -26,9 +26,9 @@ The following arguments are required:
 
 * `workgroup_name` - (Required) The name of the workgroup associated with the database.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This data source exports the following attributes in addition to the arguments above:
 
 * `arn` - Amazon Resource Name (ARN) of the Redshift Serverless Workgroup.
 * `id` - The Redshift Workgroup Name.

@@ -27,9 +27,9 @@ The given filters must match exactly one VPC lattice service whose data will be 
 * `service_identifier` - (Optional) ID or Amazon Resource Name (ARN) of the service network.
 * `name` - (Optional) Service name that is specified when creating a VPC lattice. For AWS services the service name is usually in the form `com.amazonaws.<region>.<service>` (the SageMaker Notebook service is an exception to this rule, the service name is in the form `aws.sagemaker.<region>.notebook`).
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This data source exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the service.
 * `auth_type` - Type of IAM policy. Either `NONE` or `AWS_IAM`.

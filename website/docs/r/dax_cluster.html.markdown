@@ -23,7 +23,7 @@ resource "aws_dax_cluster" "bar" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `cluster_endpoint_encryption_type` – (Optional) The type of encryption the
 cluster's endpoint should support. Valid values are: `NONE` and `TLS`.
@@ -74,9 +74,9 @@ The `server_side_encryption` object supports the following:
 
 * `enabled` - (Optional) Whether to enable encryption at rest. Defaults to `false`.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - The ARN of the DAX cluster
 
@@ -103,10 +103,19 @@ consisting of a DNS name and a port number
 
 ## Import
 
-DAX Clusters can be imported using the `cluster_name`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import DAX Clusters using the `cluster_name`. For example:
 
+```terraform
+import {
+  to = aws_dax_cluster.my_cluster
+  id = "my_cluster"
+}
 ```
-$ terraform import aws_dax_cluster.my_cluster my_cluster
+
+Using `terraform import`, import DAX Clusters using the `cluster_name`. For example:
+
+```console
+% terraform import aws_dax_cluster.my_cluster my_cluster
 ```
 
 [1]: http://docs.aws.amazon.com/amazondynamodb/latest/developerguide/DAX.concepts.cluster.html#DAX.concepts.nodes

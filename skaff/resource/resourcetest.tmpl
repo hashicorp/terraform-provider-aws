@@ -98,6 +98,8 @@ import (
 // intricate, they should be unit tested.
 {{- end }}
 func Test{{ .Resource }}ExampleUnitTest(t *testing.T) {
+	t.Parallel()
+
 	testCases := []struct {
 		TestName string
 		Input    string
@@ -125,7 +127,9 @@ func Test{{ .Resource }}ExampleUnitTest(t *testing.T) {
 	}
 
 	for _, testCase := range testCases {
+		testCase := testCase
 		t.Run(testCase.TestName, func(t *testing.T) {
+			t.Parallel()
 			got, err := tf{{ .ServicePackage }}.FunctionFromResource(testCase.Input)
 
 			if err != nil && !testCase.Error {

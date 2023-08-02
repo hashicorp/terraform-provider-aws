@@ -10,6 +10,7 @@ import (
 	aws_sdkv1 "github.com/aws/aws-sdk-go/aws"
 	session_sdkv1 "github.com/aws/aws-sdk-go/aws/session"
 	ec2_sdkv1 "github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -29,6 +30,13 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.Serv
 
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.ServicePackageFrameworkResource {
 	return []*types.ServicePackageFrameworkResource{
+		{
+			Factory: newResourceInstanceConnectEndpoint,
+			Name:    "Instance Connect Endpoint",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "id",
+			},
+		},
 		{
 			Factory: newResourceSecurityGroupEgressRule,
 			Name:    "Security Group Egress Rule",
@@ -327,6 +335,8 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 		{
 			Factory:  DataSourceVPC,
 			TypeName: "aws_vpc",
+			Name:     "VPC",
+			Tags:     &types.ServicePackageResourceTags{},
 		},
 		{
 			Factory:  DataSourceVPCDHCPOptions,
@@ -1138,4 +1148,6 @@ func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (
 	}), nil
 }
 
-var ServicePackage = &servicePackage{}
+func ServicePackage(ctx context.Context) conns.ServicePackage {
+	return &servicePackage{}
+}

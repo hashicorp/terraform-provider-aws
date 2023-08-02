@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ec2_test
 
 import (
@@ -5426,7 +5429,7 @@ func testAccCheckDetachVolumes(ctx context.Context, instance *ec2.Instance) reso
 func TestInstanceHostIDSchema(t *testing.T) {
 	t.Parallel()
 
-	actualSchema := tfec2.ResourceInstance().Schema["host_id"]
+	actualSchema := tfec2.ResourceInstance().SchemaMap()["host_id"]
 	expectedSchema := &schema.Schema{
 		Type:     schema.TypeString,
 		Optional: true,
@@ -5444,7 +5447,7 @@ func TestInstanceHostIDSchema(t *testing.T) {
 func TestInstanceCPUCoreCountSchema(t *testing.T) {
 	t.Parallel()
 
-	actualSchema := tfec2.ResourceInstance().Schema["cpu_core_count"]
+	actualSchema := tfec2.ResourceInstance().SchemaMap()["cpu_core_count"]
 	expectedSchema := &schema.Schema{
 		Type:          schema.TypeInt,
 		Optional:      true,
@@ -5464,7 +5467,7 @@ func TestInstanceCPUCoreCountSchema(t *testing.T) {
 func TestInstanceCPUThreadsPerCoreSchema(t *testing.T) {
 	t.Parallel()
 
-	actualSchema := tfec2.ResourceInstance().Schema["cpu_threads_per_core"]
+	actualSchema := tfec2.ResourceInstance().SchemaMap()["cpu_threads_per_core"]
 	expectedSchema := &schema.Schema{
 		Type:          schema.TypeInt,
 		Optional:      true,

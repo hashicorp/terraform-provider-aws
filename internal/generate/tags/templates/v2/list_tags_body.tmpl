@@ -44,7 +44,7 @@ func {{ .ListTagsFunc }}(ctx context.Context, conn {{ .ClientType }}, identifier
 		return tftags.New(ctx, nil), err
 	}
 
-	return KeyValueTags(ctx, output.{{ .ListTagsOutTagsElem }}{{ if .TagTypeIDElem }}, identifier{{ if .TagResTypeElem }}, resourceType{{ end }}{{ end }}), nil
+	return {{ .KeyValueTagsFunc }}(ctx, output.{{ .ListTagsOutTagsElem }}{{ if .TagTypeIDElem }}, identifier{{ if .TagResTypeElem }}, resourceType{{ end }}{{ end }}), nil
 }
 
 {{- if .IsDefaultListTags }}
