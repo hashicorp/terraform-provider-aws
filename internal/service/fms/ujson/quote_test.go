@@ -3,7 +3,7 @@ package ujson_test
 import (
 	"testing"
 
-	. "github.com/olvrng/ujson"
+	. "github.com/hashicorp/terraform-provider-aws/internal/service/fms/ujson"
 )
 
 type quoteTest struct {

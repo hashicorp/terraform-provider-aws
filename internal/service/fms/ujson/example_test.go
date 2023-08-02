@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"fmt"
 
-	"github.com/olvrng/ujson"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/fms/ujson"
 )
 
 func ExampleWalk() {
