@@ -1147,33 +1147,6 @@ func TestAccVPCRouteTable_localRouteUpdate(t *testing.T) {
 	})
 }
 
-func testAccCreateRouteTable(ctx context.Context, v *ec2.Vpc) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
-		if v.VpcId == nil {
-			return fmt.Errorf("no VPC ID")
-		}
-		input := &ec2.CreateRouteTableInput{
-			VpcId: v.VpcId,
-		}
-
-		output, err := conn.CreateRouteTableWithContext(ctx, input)
-
-		if err != nil {
-			return fmt.Errorf("test creating route table: %w", err)
-		}
-
-		if output == nil || output.RouteTable == nil {
-			return fmt.Errorf("test creating route table: %s", "nil output")
-		}
-
-		if _, err := tfec2.WaitRouteTableReady(ctx, conn, aws.StringValue(output.RouteTable.RouteTableId), time.Minute*2); err != nil {
-			return fmt.Errorf("waiting for test creating route table: %s", err)
-		}
-		return nil
-	}
-}
-
 func testAccCheckRouteTableExists(ctx context.Context, n string, v *ec2.RouteTable) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
