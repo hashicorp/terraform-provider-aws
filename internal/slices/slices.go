@@ -41,10 +41,11 @@ func ApplyToAll[T, U any](s []T, f func(T) U) []U {
 	return v
 }
 
-type FilterFunc[T any] func(T) bool
+// Predicate represents a predicate (boolean-valued function) of one argument.
+type Predicate[T any] func(T) bool
 
 // Filter returns a new slice containing all values that return `true` for the filter function `f`
-func Filter[T any](s []T, f FilterFunc[T]) []T {
+func Filter[T any](s []T, f Predicate[T]) []T {
 	v := make([]T, 0, len(s))
 
 	for _, e := range s {
@@ -57,7 +58,7 @@ func Filter[T any](s []T, f FilterFunc[T]) []T {
 }
 
 // All returns `true` if the filter function `f` retruns `true` for all items
-func All[T any](s []T, f FilterFunc[T]) bool {
+func All[T any](s []T, f Predicate[T]) bool {
 	for _, e := range s {
 		if !f(e) {
 			return false
@@ -67,7 +68,7 @@ func All[T any](s []T, f FilterFunc[T]) bool {
 }
 
 // Any returns `true` if the filter function `f` retruns `true` for any item
-func Any[T any](s []T, f FilterFunc[T]) bool {
+func Any[T any](s []T, f Predicate[T]) bool {
 	for _, e := range s {
 		if f(e) {
 			return true

@@ -17,7 +17,6 @@ variable "team_project_field_status_values" {
     "Waiting"       = "e85f2e5d",
     "Maintainer PR" = "28a034bc",
     "Pending Merge" = "043bc06e",
-    "Backlog"       = "ef47b7a3",
     "Done"          = "98236657"
   }
 }
@@ -27,7 +26,7 @@ variable "team_project_field_view_values" {
   description = "A mapping of the options in the view field in the main team project to their IDs"
   default = {
     "Working Board"          = "8d366764",
-    "Partner Contributions"  = "b0492564",
+    "Partner Contribution"   = "b0492564",
     "External Maintainer"    = "f17c472c",
     "S3 Backend"             = "5c656f1e",
     "Engineering Initiative" = "a62d09b9"

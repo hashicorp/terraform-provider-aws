@@ -52,7 +52,7 @@ func (t *mockService) UpdateTags(context.Context, any, string, string, any) erro
 	return nil
 }
 
-func TestTagsInterceptor(t *testing.T) {
+func TestTagsResourceInterceptor(t *testing.T) {
 	t.Parallel()
 
 	var interceptors interceptorItems
@@ -61,7 +61,7 @@ func TestTagsInterceptor(t *testing.T) {
 		IdentifierAttribute: "id",
 	}
 
-	tags := tagsInterceptor{
+	tags := tagsResourceInterceptor{
 		tags:       sp,
 		updateFunc: tagsUpdateFunc,
 		readFunc:   tagsReadFunc,

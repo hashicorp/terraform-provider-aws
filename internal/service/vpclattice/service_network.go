@@ -7,6 +7,7 @@ import (
 	"context"
 	"errors"
 	"log"
+	"strings"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/vpclattice"
@@ -180,4 +181,17 @@ func findServiceNetworkByID(ctx context.Context, conn *vpclattice.Client, id str
 	}
 
 	return out, nil
+}
+
+// idFromIDOrARN return a resource ID from an ID or ARN.
+func idFromIDOrARN(idOrARN string) string {
+	// e.g. "sn-1234567890abcdefg" or
+	// "arn:aws:vpc-lattice:us-east-1:123456789012:servicenetwork/sn-1234567890abcdefg".
+	return idOrARN[strings.LastIndex(idOrARN, "/")+1:]
+}
+
+// suppressEquivalentIDOrARN provides custom difference suppression
+// for strings that represent equal resource IDs or ARNs.
+func suppressEquivalentIDOrARN(_, old, new string, _ *schema.ResourceData) bool {
+	return idFromIDOrARN(old) == idFromIDOrARN(new)
 }
