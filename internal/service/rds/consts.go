@@ -78,6 +78,7 @@ const (
 	InstanceStatusFailed                                       = "failed"
 	InstanceStatusInaccessibleEncryptionCredentials            = "inaccessible-encryption-credentials"
 	InstanceStatusInaccessibleEncryptionCredentialsRecoverable = "inaccessible-encryption-credentials-recoverable"
+	InstanceStatusIncompatiblCreate                            = "incompatible-create"
 	InstanceStatusIncompatibleNetwork                          = "incompatible-network"
 	InstanceStatusIncompatibleOptionGroup                      = "incompatible-option-group"
 	InstanceStatusIncompatibleParameters                       = "incompatible-parameters"
