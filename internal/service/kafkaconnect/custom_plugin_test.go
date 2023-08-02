@@ -184,13 +184,8 @@ resource "aws_s3_bucket" "test" {
   force_destroy = true
 }
 
-resource "aws_s3_bucket_acl" "test" {
-  bucket = aws_s3_bucket.test.id
-  acl    = "private"
-}
-
 resource "aws_s3_bucket_versioning" "test" {
-  bucket = aws_s3_bucket_acl.test.bucket
+  bucket = aws_s3_bucket.test.bucket
 
   versioning_configuration {
     status = %[2]t ? "Enabled" : "Suspended"
