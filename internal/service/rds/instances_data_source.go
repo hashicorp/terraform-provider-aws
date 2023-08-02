@@ -5,6 +5,8 @@ package rds
 
 import (
 	"context"
+	"log"
+
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/rds"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -14,7 +16,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/generate/namevaluesfilters"
 	"github.com/hashicorp/terraform-provider-aws/names"
-	"log"
 )
 
 // @SDKDataSource("aws_db_instances")
