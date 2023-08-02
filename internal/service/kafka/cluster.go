@@ -112,6 +112,45 @@ func ResourceCluster() *schema.Resource {
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
+									"vpc_connectivity": {
+										Type:     schema.TypeList,
+										Optional: true,
+										MaxItems: 1,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"client_authentication": {
+													Type:     schema.TypeList,
+													Optional: true,
+													MaxItems: 1,
+													Elem: &schema.Resource{
+														Schema: map[string]*schema.Schema{
+															"sasl": {
+																Type:     schema.TypeList,
+																Optional: true,
+																MaxItems: 1,
+																Elem: &schema.Resource{
+																	Schema: map[string]*schema.Schema{
+																		"iam": {
+																			Type:     schema.TypeBool,
+																			Optional: true,
+																		},
+																		"scram": {
+																			Type:     schema.TypeBool,
+																			Optional: true,
+																		},
+																	},
+																},
+															},
+															"tls": {
+																Type:     schema.TypeBool,
+																Optional: true,
+															},
+														},
+													},
+												},
+											},
+										},
+									},
 									"public_access": {
 										Type:     schema.TypeList,
 										Optional: true,
@@ -481,8 +520,13 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 		Tags:                getTagsIn(ctx),
 	}
 
+	if v, ok := d.GetOk("broker_node_group_info.0.connectivity_info.0.vpc_connectivity"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		fmt.Println(v)
+	}
+
 	if v, ok := d.GetOk("broker_node_group_info"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 		input.BrokerNodeGroupInfo = expandBrokerNodeGroupInfo(v.([]interface{})[0].(map[string]interface{}))
+		// input.BrokerNodeGroupInfo.ConnectivityInfo.VpcConnectivity = nil
 	}
 
 	if v, ok := d.GetOk("client_authentication"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
@@ -965,6 +1009,10 @@ func expandConnectivityInfo(tfMap map[string]interface{}) *kafka.ConnectivityInf
 		apiObject.PublicAccess = expandPublicAccess(v[0].(map[string]interface{}))
 	}
 
+	if v, ok := tfMap["vpc_connectivity"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+		apiObject.VpcConnectivity = expandVPCConnectivity(v[0].(map[string]interface{}))
+	}
+
 	return apiObject
 }
 
@@ -1027,6 +1075,62 @@ func expandPublicAccess(tfMap map[string]interface{}) *kafka.PublicAccess {
 
 	if v, ok := tfMap["type"].(string); ok && v != "" {
 		apiObject.Type = aws.String(v)
+	}
+
+	return apiObject
+}
+
+func expandVPCConnectivity(tfMap map[string]interface{}) *kafka.VpcConnectivity {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &kafka.VpcConnectivity{}
+
+	if v, ok := tfMap["client_authentication"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+		apiObject.ClientAuthentication = expandVPCConnectivityClientAuthentication(v[0].(map[string]interface{}))
+	}
+
+	return apiObject
+}
+
+func expandVPCConnectivityClientAuthentication(tfMap map[string]interface{}) *kafka.VpcConnectivityClientAuthentication {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &kafka.VpcConnectivityClientAuthentication{}
+
+	if v, ok := tfMap["sasl"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+		apiObject.Sasl = expandVPCConnectivitySASL(v[0].(map[string]interface{}))
+	}
+
+	if v, ok := tfMap["tls"].(bool); ok {
+		apiObject.Tls = &kafka.VpcConnectivityTls{
+			Enabled: aws.Bool(v),
+		}
+	}
+
+	return apiObject
+}
+
+func expandVPCConnectivitySASL(tfMap map[string]interface{}) *kafka.VpcConnectivitySasl {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &kafka.VpcConnectivitySasl{}
+
+	if v, ok := tfMap["iam"].(bool); ok {
+		apiObject.Iam = &kafka.VpcConnectivityIam{
+			Enabled: aws.Bool(v),
+		}
+	}
+
+	if v, ok := tfMap["scram"].(bool); ok {
+		apiObject.Scram = &kafka.VpcConnectivityScram{
+			Enabled: aws.Bool(v),
+		}
 	}
 
 	return apiObject
@@ -1346,6 +1450,10 @@ func flattenConnectivityInfo(apiObject *kafka.ConnectivityInfo) map[string]inter
 
 	tfMap := map[string]interface{}{}
 
+	if v := apiObject.VpcConnectivity; v != nil {
+		tfMap["vpc_connectivity"] = []interface{}{flattenVPCConnectivity(v)}
+	}
+
 	if v := apiObject.PublicAccess; v != nil {
 		tfMap["public_access"] = []interface{}{flattenPublicAccess(v)}
 	}
@@ -1412,6 +1520,61 @@ func flattenPublicAccess(apiObject *kafka.PublicAccess) map[string]interface{} {
 
 	if v := apiObject.Type; v != nil {
 		tfMap["type"] = aws.StringValue(v)
+	}
+
+	return tfMap
+}
+
+func flattenVPCConnectivity(apiObject *kafka.VpcConnectivity) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+	if v := apiObject.ClientAuthentication; v != nil {
+		tfMap["client_authentication"] = []interface{}{flattenVPCCOnnectivityClientAuthentication(v)}
+	}
+
+	return tfMap
+}
+
+func flattenVPCCOnnectivityClientAuthentication(apiObject *kafka.VpcConnectivityClientAuthentication) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.Sasl; v != nil {
+		tfMap["sasl"] = []interface{}{(flattenVPCConnectivitySASL(v))}
+	}
+
+	if v := apiObject.Tls; v != nil {
+		if v := v.Enabled; v != nil {
+			tfMap["tls"] = aws.BoolValue(v)
+		}
+	}
+
+	return tfMap
+}
+
+func flattenVPCConnectivitySASL(apiObject *kafka.VpcConnectivitySasl) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.Iam; v != nil {
+		if v := v.Enabled; v != nil {
+			tfMap["iam"] = aws.BoolValue(v)
+		}
+	}
+
+	if v := apiObject.Scram; v != nil {
+		if v := v.Enabled; v != nil {
+			tfMap["scram"] = aws.BoolValue(v)
+		}
 	}
 
 	return tfMap
