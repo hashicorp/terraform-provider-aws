@@ -228,7 +228,6 @@ func resourceStateMachineRead(ctx context.Context, d *schema.ResourceData, meta 
 	}
 	d.Set("definition", output.Definition)
 	d.Set("description", output.Description)
-
 	if output.LoggingConfiguration != nil {
 		if err := d.Set("logging_configuration", []interface{}{flattenLoggingConfiguration(output.LoggingConfiguration)}); err != nil {
 			return diag.Errorf("setting logging_configuration: %s", err)
@@ -238,6 +237,7 @@ func resourceStateMachineRead(ctx context.Context, d *schema.ResourceData, meta 
 	}
 	d.Set("name", output.Name)
 	d.Set("name_prefix", create.NamePrefixFromName(aws.StringValue(output.Name)))
+	d.Set("publish", d.Get("publish").(bool))
 	d.Set("role_arn", output.RoleArn)
 	d.Set("revision_id", output.RevisionId)
 	d.Set("status", output.Status)
