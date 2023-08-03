@@ -31,6 +31,7 @@ jobs:
     with:
       providerFqn: "hashicorp/aws"
       languages: "typescript,python"
+      files: "d/*.html.markdown,r/*.html.markdown"
       parallelFileConversions: 1
       maxRunners: 20
       cdktfRegistryDocsVersion: "1.14.2"
