@@ -77,7 +77,7 @@ which take the following arguments:
 * `values` - (Required) Set of values that are accepted for the given field.
   A VPC Peering Connection will be selected if any one of the given values matches.
 
-## Attributes Reference
+## Attribute Reference
 
 All of the argument attributes except `filter` are also exported as result attributes.
 
@@ -90,4 +90,4 @@ All of the argument attributes except `filter` are also exported as result attri
 
 - `read` - (Default `20M`)
 
-<!-- cache-key: cdktf-0.17.1 input-88d242b8e90fbe3cdba9d669b9e2052a89da995594f9fb1c7fcada0c0fd37aed -->
+<!-- cache-key: cdktf-0.17.1 input-a9c5018aed4e1e6786cc7bb5dd8607ab1c1d2ea0787591a3d91d06ccfee33928 -->

@@ -65,7 +65,7 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
-The following arguments are supported:
+This data source supports the following arguments:
 
 * `filter` - (Optional) One or more configuration blocks containing name-values filters. Detailed below.
 * `transitGatewayConnectId` - (Optional) Identifier of the EC2 Transit Gateway Connect.
@@ -77,7 +77,7 @@ The following arguments are supported:
 
 ## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This data source exports the following attributes in addition to the arguments above:
 
 * `protocol` - Tunnel protocol
 * `tags` - Key-value tags for the EC2 Transit Gateway Connect
@@ -90,4 +90,4 @@ In addition to all arguments above, the following attributes are exported:
 
 - `read` - (Default `20M`)
 
-<!-- cache-key: cdktf-0.17.1 input-e8f48ffb39a79e25f21e27492ff83b8d5204dffc24108324f1f587842ad3aa9e -->
+<!-- cache-key: cdktf-0.17.1 input-9d1721683744b25e4682599f551444c6d51b4984d022443ff5e7b4565ef4e5bd -->

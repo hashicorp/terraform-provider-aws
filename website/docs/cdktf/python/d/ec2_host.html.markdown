@@ -78,12 +78,13 @@ The following arguments are required:
 * `name` - (Required) Name of the field to filter by, as defined by [the underlying AWS API](https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_DescribeHosts.html).
 * `values` - (Required) Set of values that are accepted for the given field. A host will be selected if any one of the given values matches.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to the attributes above, the following attributes are exported:
+This data source exports the following attributes in addition to the arguments above:
 
 * `id` - ID of the Dedicated Host.
 * `arn` - ARN of the Dedicated Host.
+* `asset_id` - The ID of the Outpost hardware asset on which the Dedicated Host is allocated.
 * `auto_placement` - Whether auto-placement is on or off.
 * `availability_zone` - Availability Zone of the Dedicated Host.
 * `cores` - Number of cores on the Dedicated Host.
@@ -101,4 +102,4 @@ In addition to the attributes above, the following attributes are exported:
 
 - `read` - (Default `20m`)
 
-<!-- cache-key: cdktf-0.17.1 input-9b4c91c8afc4637faf1832c061bf67a14ccd6dddf8ee04ebb2ecd4958b912e50 -->
+<!-- cache-key: cdktf-0.17.1 input-2c0dd059868ed5217fac4aec77aa468bafc9f69b8de0b12d682d6625c1850767 -->

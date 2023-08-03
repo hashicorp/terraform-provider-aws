@@ -41,14 +41,14 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
-The following arguments are supported:
+This data source supports the following arguments:
 
 * `functionName` - (Required) he name (or ARN) of the Lambda function.
 * `qualifier` - (Optional) Alias name or `"$latest"`.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This data source exports the following attributes in addition to the arguments above:
 
 * `authorizationType` - Type of authentication that the function URL uses.
 * `cors` - The [cross-origin resource sharing (CORS)](https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS) settings for the function URL. See the [`awsLambdaFunctionUrl` resource](/docs/providers/aws/r/lambda_function_url.html) documentation for more details.
@@ -59,4 +59,4 @@ In addition to all arguments above, the following attributes are exported:
 * `lastModifiedTime` - When the function URL configuration was last updated, in [ISO-8601 format](https://www.w3.org/TR/NOTE-datetime).
 * `urlId` - Generated ID for the endpoint.
 
-<!-- cache-key: cdktf-0.17.1 input-4a0cf11c4b54f0b3d5b9ecfa936557b0c1ed7cb01ab0abc0904a8ec9083f4c2a -->
+<!-- cache-key: cdktf-0.17.1 input-854b2f3b33d8d2f28452798da526cac323edaafd3f9f362153c62fd3405d67c1 -->

@@ -42,9 +42,11 @@ class MyConvertedCode(TerraformStack):
         data_aws_eks_cluster_example.override_logical_id("example")
 ```
 
-## Attributes Reference
+## Attribute Reference
+
+This data source exports the following attributes in addition to the arguments above:
 
 * `id` - AWS Region.
 * `names` - Set of EKS clusters names
 
-<!-- cache-key: cdktf-0.17.1 input-274167aa673a17636bb25d6f28b48a3af577eccb197fd9965e06a7c533bef087 -->
+<!-- cache-key: cdktf-0.17.1 input-dcfc76e9158933045e252a7c855e58231f5ae7d708f1bbdd9026d8d93182a8f3 -->

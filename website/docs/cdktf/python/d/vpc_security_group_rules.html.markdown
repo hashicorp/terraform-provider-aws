@@ -49,8 +49,10 @@ which take the following arguments:
 * `values` - (Required) Set of values that are accepted for the given field.
   Security group rule IDs will be selected if any one of the given values match.
 
-## Attributes Reference
+## Attribute Reference
+
+This data source exports the following attributes in addition to the arguments above:
 
 * `ids` - List of all the security group rule IDs found.
 
-<!-- cache-key: cdktf-0.17.1 input-0bc0f66787352529d4f2a0602960ef1e2b9d19bfbc9a77828b7b327da3393d54 -->
+<!-- cache-key: cdktf-0.17.1 input-87719c79ae2f1f4c5613b3ccab85a172f42cc7b1318d60caecef6a1733d22344 -->

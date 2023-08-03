@@ -61,7 +61,7 @@ which take the following arguments:
 * `values` - (Required) Set of values that are accepted for the given field.
   A Local Gateway will be selected if any one of the given values matches.
 
-## Attributes Reference
+## Attribute Reference
 
 All of the argument attributes except `filter` blocks are also exported as
 result attributes. This data source will complete the data by populating
@@ -80,4 +80,4 @@ The following attributes are additionally exported:
 
 - `read` - (Default `20m`)
 
-<!-- cache-key: cdktf-0.17.1 input-56eb53c0592b4dcc9d2d5a1f358fef5265a9b459052c09b2a04aaa3623ccf1be -->
+<!-- cache-key: cdktf-0.17.1 input-e9224792e92736687e2ac8179a6512547c5aaa4078c6bb91db11fd714268b0ee -->
