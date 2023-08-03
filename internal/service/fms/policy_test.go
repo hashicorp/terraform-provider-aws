@@ -270,6 +270,37 @@ func testAccPolicy_tags(t *testing.T) {
 	})
 }
 
+func testAccPolicy_securityGroup(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_fms_policy.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID)
+			acctest.PreCheckOrganizationsEnabled(ctx, t)
+			acctest.PreCheckOrganizationManagementAccount(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, fms.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckPolicyDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccPolicyConfig_securityGroup(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckPolicyExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "resource_type", "AWS::EC2::SecurityGroup"),
+					resource.TestCheckResourceAttr(resourceName, "security_service_policy_data.#", "1"),
+					acctest.CheckResourceAttrJMES(resourceName, "security_service_policy_data.0.managed_service_data", "type", "SECURITY_GROUPS_CONTENT_AUDIT"),
+					acctest.CheckResourceAttrJMES(resourceName, "security_service_policy_data.0.managed_service_data", "securityGroupAction.type", "ALLOW"),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckPolicyDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).FMSConn(ctx)
@@ -630,4 +661,67 @@ resource "aws_wafregional_rule_group" "test" {
   name        = %[1]q
 }
 `, rName, tagKey1, tagValue1, tagKey2, tagValue2))
+}
+
+func testAccPolicyConfig_securityGroup(rName string) string {
+	return acctest.ConfigCompose(testAccPolicyConfig_baseOrgMgmtAccount, fmt.Sprintf(`
+resource "aws_vpc" "test" {
+  cidr_block = "10.0.0.0/16"
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_security_group" "test" {
+  name   = %[1]q
+  vpc_id = aws_vpc.test.id
+
+  tags = {
+    Name = %[1]q
+  }
+
+  ingress {
+    protocol    = "6"
+    from_port   = 80
+    to_port     = 8000
+    cidr_blocks = ["10.0.0.0/8"]
+    description = ""
+  }
+
+  egress {
+    protocol    = "tcp"
+    from_port   = 80
+    to_port     = 8000
+    cidr_blocks = ["10.0.0.0/8"]
+    description = ""
+  }
+}
+
+resource "aws_fms_policy" "test" {
+  name                        = %[1]q
+  delete_all_policy_resources = false
+  exclude_resource_tags       = false
+  remediation_enabled         = false
+  resource_type               = "AWS::EC2::SecurityGroup"
+
+  security_service_policy_data {
+    type = "SECURITY_GROUPS_CONTENT_AUDIT"
+
+    managed_service_data = jsonencode({
+      type = "SECURITY_GROUPS_CONTENT_AUDIT",
+
+      securityGroupAction = {
+        type = "ALLOW"
+      },
+
+      securityGroups = [
+        {
+          id = aws_security_group.test.id
+        }
+      ],
+    })
+  }
+}
+`, rName))
 }
