@@ -76,10 +76,6 @@ First, adopt an existing AWS-created route:
 ```terraform
 resource "aws_vpc" "test" {
   cidr_block = "10.1.0.0/16"
-
-  tags = {
-    Name = "leibovitz"
-  }
 }
 
 resource "aws_route_table" "test" {
@@ -90,10 +86,6 @@ resource "aws_route_table" "test" {
     cidr_block = "10.1.0.0/16"
     gateway_id = "local"
   }
-
-  tags = {
-    Name = "leibovitz"
-  }
 }
 ```
 
@@ -102,10 +94,6 @@ Next, update the target of the route:
 ```terraform
 resource "aws_vpc" "test" {
   cidr_block = "10.1.0.0/16"
-
-  tags = {
-    Name = "leibovitz"
-  }
 }
 
 resource "aws_route_table" "test" {
@@ -115,27 +103,15 @@ resource "aws_route_table" "test" {
     cidr_block           = aws_vpc.test.cidr_block
     network_interface_id = aws_network_interface.test.id
   }
-
-  tags = {
-    Name = "leibovitz"
-  }
 }
 
 resource "aws_subnet" "test" {
   cidr_block = "10.1.1.0/24"
   vpc_id     = aws_vpc.test.id
-
-  tags = {
-    Name = "leibovitz"
-  }
 }
 
 resource "aws_network_interface" "test" {
   subnet_id = aws_subnet.test.id
-
-  tags = {
-    Name = "leibovitz"
-  }
 }
 ```
 
