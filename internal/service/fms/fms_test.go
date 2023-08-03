@@ -14,7 +14,8 @@ func TestAccFMS_serial(t *testing.T) {
 
 	testCases := map[string]map[string]func(t *testing.T){
 		"AdminAccount": {
-			"basic": testAccAdminAccount_basic,
+			"basic":      testAccAdminAccount_basic,
+			"disappears": testAccAdminAccount_disappears,
 		},
 		"Policy": {
 			"alb":                    testAccPolicy_alb,

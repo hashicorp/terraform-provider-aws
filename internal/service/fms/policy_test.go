@@ -379,16 +379,8 @@ func testAccCheckPolicyExists(ctx context.Context, n string) resource.TestCheckF
 	}
 }
 
-const testAccPolicyConfig_baseOrgMgmtAccount = `
-data "aws_caller_identity" "current" {}
-
-resource "aws_fms_admin_account" "test" {
-  account_id = data.aws_caller_identity.current.account_id
-}
-`
-
 func testAccPolicyConfig_basic(policyName, ruleGroupName string) string {
-	return acctest.ConfigCompose(testAccPolicyConfig_baseOrgMgmtAccount, fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccAdminAccountConfig_basic, fmt.Sprintf(`
 resource "aws_fms_policy" "test" {
   exclude_resource_tags = false
   name                  = %[1]q
@@ -416,7 +408,7 @@ resource "aws_wafregional_rule_group" "test" {
 }
 
 func testAccPolicyConfig_policyOption(policyName, ruleGroupName string) string {
-	return acctest.ConfigCompose(testAccPolicyConfig_baseOrgMgmtAccount, fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccAdminAccountConfig_basic, fmt.Sprintf(`
 resource "aws_fms_policy" "test" {
   exclude_resource_tags = false
   name                  = %[1]q
@@ -453,7 +445,7 @@ resource "aws_wafregional_rule_group" "test" {
 }
 
 func testAccPolicyConfig_cloudFrontDistribution(rName string) string {
-	return acctest.ConfigCompose(testAccPolicyConfig_baseOrgMgmtAccount, fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccAdminAccountConfig_basic, fmt.Sprintf(`
 resource "aws_fms_policy" "test" {
   exclude_resource_tags = false
   name                  = %[1]q
@@ -529,7 +521,7 @@ resource "aws_kinesis_firehose_delivery_stream" "test" {
 }
 
 func testAccPolicyConfig_updated(policyName, ruleGroupName string) string {
-	return acctest.ConfigCompose(testAccPolicyConfig_baseOrgMgmtAccount, fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccAdminAccountConfig_basic, fmt.Sprintf(`
 resource "aws_fms_policy" "test" {
   exclude_resource_tags = false
   name                  = %[1]q
@@ -560,7 +552,7 @@ resource "aws_wafregional_rule_group" "test" {
 }
 
 func testAccPolicyConfig_include(rName string) string {
-	return acctest.ConfigCompose(testAccPolicyConfig_baseOrgMgmtAccount, fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccAdminAccountConfig_basic, fmt.Sprintf(`
 resource "aws_fms_policy" "test" {
   exclude_resource_tags = false
   name                  = %[1]q
@@ -587,7 +579,7 @@ resource "aws_wafregional_rule_group" "test" {
 }
 
 func testAccPolicyConfig_resourceTags1(rName, tagKey1, tagValue1 string) string {
-	return acctest.ConfigCompose(testAccPolicyConfig_baseOrgMgmtAccount, fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccAdminAccountConfig_basic, fmt.Sprintf(`
 resource "aws_fms_policy" "test" {
   exclude_resource_tags = false
   name                  = %[1]q
@@ -614,7 +606,7 @@ resource "aws_wafregional_rule_group" "test" {
 }
 
 func testAccPolicyConfig_resourceTags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
-	return acctest.ConfigCompose(testAccPolicyConfig_baseOrgMgmtAccount, fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccAdminAccountConfig_basic, fmt.Sprintf(`
 resource "aws_fms_policy" "test" {
   exclude_resource_tags = false
   name                  = %[1]q
@@ -642,7 +634,7 @@ resource "aws_wafregional_rule_group" "test" {
 }
 
 func testAccPolicyConfig_tags1(rName, tagKey1, tagValue1 string) string {
-	return acctest.ConfigCompose(testAccPolicyConfig_baseOrgMgmtAccount, fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccAdminAccountConfig_basic, fmt.Sprintf(`
 resource "aws_fms_policy" "test" {
   exclude_resource_tags = false
   name                  = %[1]q
@@ -669,7 +661,7 @@ resource "aws_wafregional_rule_group" "test" {
 }
 
 func testAccPolicyConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
-	return acctest.ConfigCompose(testAccPolicyConfig_baseOrgMgmtAccount, fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccAdminAccountConfig_basic, fmt.Sprintf(`
 resource "aws_fms_policy" "test" {
   exclude_resource_tags = false
   name                  = %[1]q
@@ -697,7 +689,7 @@ resource "aws_wafregional_rule_group" "test" {
 }
 
 func testAccPolicyConfig_alb(rName string) string {
-	return acctest.ConfigCompose(testAccPolicyConfig_baseOrgMgmtAccount, fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccAdminAccountConfig_basic, fmt.Sprintf(`
 locals {
   msd = {
     type = "WAFV2"
@@ -760,7 +752,7 @@ resource "aws_fms_policy" "test" {
 }
 
 func testAccPolicyConfig_securityGroup(rName string) string {
-	return acctest.ConfigCompose(testAccPolicyConfig_baseOrgMgmtAccount, fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccAdminAccountConfig_basic, fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
 

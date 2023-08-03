@@ -5,5 +5,9 @@ package fms
 
 // Exports for use in tests only.
 var (
+	ResourceAdminAccount = resourceAdminAccount
+	ResourcePolicy       = resourcePolicy
+
+	FindAdminAccount          = findAdminAccount
 	RemoveEmptyFieldsFromJSON = removeEmptyFieldsFromJSON
 )

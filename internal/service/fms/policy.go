@@ -30,7 +30,7 @@ const (
 
 // @SDKResource("aws_fms_policy", name="Policy")
 // @Tags(identifierAttribute="arn")
-func ResourcePolicy() *schema.Resource {
+func resourcePolicy() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourcePolicyCreate,
 		ReadWithoutTimeout:   resourcePolicyRead,
