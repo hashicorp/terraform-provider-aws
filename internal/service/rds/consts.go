@@ -61,7 +61,7 @@ const (
 	InstanceEngineSQLServerExpress    = "sqlserver-ex"
 	InstanceEngineSQLServerStandard   = "sqlserver-se"
 	InstanceEngineSQLServerWeb        = "sqlserver-ewb"
-	InstanceEngineCustom              = "custom-"
+	InstanceEngineCustomPrefix        = "custom-"
 )
 
 // https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/accessing-monitoring.html#Overview.DBInstance.Status.
@@ -122,6 +122,7 @@ const (
 	ClusterEngineAuroraPostgreSQL = "aurora-postgresql"
 	ClusterEngineMySQL            = "mysql"
 	ClusterEnginePostgres         = "postgres"
+	ClusterEngineCustomPrefix     = "custom-"
 )
 
 func ClusterEngine_Values() []string {
