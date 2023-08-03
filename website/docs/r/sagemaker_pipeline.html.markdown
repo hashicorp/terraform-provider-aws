@@ -77,6 +77,6 @@ import {
 
 Using `terraform import`, import pipelines using the `pipeline_name`. For example:
 
-```
-$ terraform import aws_sagemaker_pipeline.test_pipeline pipeline
+```console
+% terraform import aws_sagemaker_pipeline.test_pipeline pipeline
 ```
