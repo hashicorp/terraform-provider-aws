@@ -24,10 +24,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-const (
-	ResNamePolicy = "Policy"
-)
-
 // @SDKResource("aws_fms_policy", name="Policy")
 // @Tags(identifierAttribute="arn")
 func resourcePolicy() *schema.Resource {
@@ -229,7 +225,7 @@ func resourcePolicyRead(ctx context.Context, d *schema.ResourceData, meta interf
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).FMSConn(ctx)
 
-	output, err := FindPolicyByID(ctx, conn, d.Id())
+	output, err := findPolicyByID(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] FMS Policy %s not found, removing from state", d.Id())
@@ -315,7 +311,7 @@ func resourcePolicyDelete(ctx context.Context, d *schema.ResourceData, meta inte
 	return diags
 }
 
-func FindPolicyByID(ctx context.Context, conn *fms.FMS, id string) (*fms.GetPolicyOutput, error) {
+func findPolicyByID(ctx context.Context, conn *fms.FMS, id string) (*fms.GetPolicyOutput, error) {
 	input := &fms.GetPolicyInput{
 		PolicyId: aws.String(id),
 	}
