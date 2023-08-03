@@ -10,32 +10,40 @@ import (
 func TestOmitEmpty(t *testing.T) {
 	input := "{\"type\":\"SECURITY_GROUPS_CONTENT_AUDIT\",\"preManagedOptions1\":null,\"securityGroups\":[{\"id\":\"sg-041cb51d2ebd60360\"}],\"securityGroupAction\":{\"type\":\"ALLOW\",\"excludeRules\":[]},\"preManagedOptions1\":null}"
 	want := "{\"type\":\"SECURITY_GROUPS_CONTENT_AUDIT\",\"securityGroups\":[{\"id\":\"sg-041cb51d2ebd60360\"}],\"securityGroupAction\":{\"type\":\"ALLOW\"}}"
-	b := make([]byte, 0, 1024)
+	b := make([]byte, 0, len(want))
+	lenBeforeArray := 0
 
 	err := ujson.Walk([]byte(input), func(l int, key, value []byte) bool {
-		t.Logf("level: %d key: %s, value: %s", l, string(key), string(value))
+		n := len(b)
+
 		// For valid JSON, values will never be empty.
 		skip := false
 		switch value[0] {
 		case 'n': // Null (null)
 			skip = true
+		case '[': // Start of array
+			lenBeforeArray = n
 		case ']': // End of array
-			skip = b[len(b)-1] == '['
+			if b[n-1] == '[' {
+				b = b[:lenBeforeArray]
+				lenBeforeArray = 0
+				skip = true
+			}
 		}
 
 		if skip {
 			return false
 		}
 
-		if len(b) != 0 && ujson.ShouldAddComma(value, b[len(b)-1]) {
+		if n != 0 && ujson.ShouldAddComma(value, b[n-1]) {
 			b = append(b, ',')
 		}
-
 		if len(key) > 0 {
 			b = append(b, key...)
 			b = append(b, ':')
 		}
 		b = append(b, value...)
+
 		return true
 	})
 
