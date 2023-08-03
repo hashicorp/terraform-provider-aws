@@ -59,7 +59,7 @@ resource "aws_batch_job_queue" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `name` - (Required) Specifies the name of the job queue.
 * `compute_environments` - (Required) Specifies the set of compute environments
@@ -71,17 +71,26 @@ The following arguments are supported:
 * `state` - (Required) The state of the job queue. Must be one of: `ENABLED` or `DISABLED`
 * `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - The Amazon Resource Name of the job queue.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 
-Batch Job Queue can be imported using the `arn`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Batch Job Queue using the `arn`. For example:
 
+```terraform
+import {
+  to = aws_batch_job_queue.test_queue
+  id = "arn:aws:batch:us-east-1:123456789012:job-queue/sample"
+}
 ```
-$ terraform import aws_batch_job_queue.test_queue arn:aws:batch:us-east-1:123456789012:job-queue/sample
+
+Using `terraform import`, import Batch Job Queue using the `arn`. For example:
+
+```console
+% terraform import aws_batch_job_queue.test_queue arn:aws:batch:us-east-1:123456789012:job-queue/sample
 ```

@@ -27,21 +27,30 @@ resource "aws_pinpoint_baidu_channel" "channel" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `application_id` - (Required) The application ID.
 * `enabled` - (Optional) Specifies whether to enable the channel. Defaults to `true`.
 * `api_key` - (Required) Platform credential API key from Baidu.
 * `secret_key` - (Required) Platform credential Secret key from Baidu.
 
-## Attributes Reference
+## Attribute Reference
 
-No additional attributes are exported.
+This resource exports no additional attributes.
 
 ## Import
 
-Pinpoint Baidu Channel can be imported using the `application-id`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Pinpoint Baidu Channel using the `application-id`. For example:
 
+```terraform
+import {
+  to = aws_pinpoint_baidu_channel.channel
+  id = "application-id"
+}
 ```
-$ terraform import aws_pinpoint_baidu_channel.channel application-id
+
+Using `terraform import`, import Pinpoint Baidu Channel using the `application-id`. For example:
+
+```console
+% terraform import aws_pinpoint_baidu_channel.channel application-id
 ```

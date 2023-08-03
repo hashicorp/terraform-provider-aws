@@ -183,7 +183,7 @@ resource "aws_codedeploy_deployment_group" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `app_name` - (Required) The name of the application.
 * `deployment_group_name` - (Required) The name of the deployment group.
@@ -345,9 +345,9 @@ Add triggers to a Deployment Group to receive notifications about events related
 * `trigger_name` - (Required) The name of the notification trigger.
 * `trigger_target_arn` - (Required) The ARN of the SNS topic through which notifications are sent.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - The ARN of the CodeDeploy deployment group.
 * `id` - Application name and deployment group name.
@@ -357,10 +357,19 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-CodeDeploy Deployment Groups can be imported by their `app_name`, a colon, and `deployment_group_name`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import CodeDeploy Deployment Groups using `app_name`, a colon, and `deployment_group_name`. For example:
 
+```terraform
+import {
+  to = aws_codedeploy_deployment_group.example
+  id = "my-application:my-deployment-group"
+}
 ```
-$ terraform import aws_codedeploy_deployment_group.example my-application:my-deployment-group
+
+Using `terraform import`, import CodeDeploy Deployment Groups using `app_name`, a colon, and `deployment_group_name`. For example:
+
+```console
+% terraform import aws_codedeploy_deployment_group.example my-application:my-deployment-group
 ```
 
 [1]: http://docs.aws.amazon.com/codedeploy/latest/userguide/monitoring-sns-event-notifications-create-trigger.html

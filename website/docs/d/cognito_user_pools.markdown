@@ -33,7 +33,9 @@ resource "aws_api_gateway_authorizer" "cognito" {
 
 * `name` - (Required) Name of the cognito user pools. Name is not a unique attribute for cognito user pool, so multiple pools might be returned with given name. If the pool name is expected to be unique, you can reference the pool id via ```tolist(data.aws_cognito_user_pools.selected.ids)[0]```
 
-## Attributes Reference
+## Attribute Reference
+
+This data source exports the following attributes in addition to the arguments above:
 
 * `ids` - Set of cognito user pool ids.
 * `arns` - Set of cognito user pool Amazon Resource Names (ARNs).

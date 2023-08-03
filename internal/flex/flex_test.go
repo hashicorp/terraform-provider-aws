@@ -15,31 +15,27 @@ import (
 func TestExpandStringList(t *testing.T) {
 	t.Parallel()
 
-	configured := []interface{}{"abc", "xyz123"}
-	got := ExpandStringList(configured)
-	want := []*string{
-		aws.String("abc"),
-		aws.String("xyz123"),
+	testCases := []struct {
+		configured []interface{}
+		want       []*string
+	}{
+		{
+			configured: []interface{}{"abc", "xyz123"},
+			want:       []*string{aws.String("abc"), aws.String("xyz123")},
+		},
+		{
+			configured: []interface{}{"abc", 123, "xyz123"},
+			want:       []*string{aws.String("abc"), aws.String("xyz123")},
+		},
+		{
+			configured: []interface{}{"foo", "bar", "", "baz"},
+			want:       []*string{aws.String("foo"), aws.String("bar"), aws.String("baz")},
+		},
 	}
-
-	if !cmp.Equal(got, want) {
-		t.Errorf("expanded = %v, want = %v", got, want)
-	}
-}
-
-func TestExpandStringListEmptyItems(t *testing.T) {
-	t.Parallel()
-
-	configured := []interface{}{"foo", "bar", "", "baz"}
-	got := ExpandStringList(configured)
-	want := []*string{
-		aws.String("foo"),
-		aws.String("bar"),
-		aws.String("baz"),
-	}
-
-	if !cmp.Equal(got, want) {
-		t.Errorf("expanded = %v, want = %v", got, want)
+	for _, testCase := range testCases {
+		if got, want := ExpandStringList(testCase.configured), testCase.want; !cmp.Equal(got, want) {
+			t.Errorf("ExpandStringList(%v) = %v, want %v", testCase.configured, got, want)
+		}
 	}
 }
 

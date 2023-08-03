@@ -73,6 +73,21 @@ func attributeFiltersFromMultimap(m map[string][]string) []*ec2.Filter {
 	return filters
 }
 
+// tagFilters returns an array of EC2 Filter objects to be used when listing resources by tag.
+func tagFilters(ctx context.Context) []*ec2.Filter {
+	tags := getTagsIn(ctx)
+	filters := make([]*ec2.Filter, len(tags))
+
+	for i, tag := range tags {
+		filters[i] = &ec2.Filter{
+			Name:   aws.String(fmt.Sprintf("tag:%s", aws.StringValue(tag.Key))),
+			Values: aws.StringSlice([]string{aws.StringValue(tag.Value)}),
+		}
+	}
+
+	return filters
+}
+
 // CustomFiltersSchema returns a *schema.Schema that represents
 // a set of custom filtering criteria that a user can specify as input
 // to a data source that wraps one of the many "Describe..." API calls
@@ -195,4 +210,44 @@ func BuildCustomFilters(ctx context.Context, filterSet types.Set) []*ec2.Filter 
 	}
 
 	return filters
+}
+
+// These were in 'internal/service/ec2/common_schema_data_source.go'.
+// TODO Deduplicate.
+
+func BuildFiltersDataSource(set *schema.Set) []*ec2.Filter {
+	var filters []*ec2.Filter
+	for _, v := range set.List() {
+		m := v.(map[string]interface{})
+		var filterValues []*string
+		for _, e := range m["values"].([]interface{}) {
+			filterValues = append(filterValues, aws.String(e.(string)))
+		}
+		filters = append(filters, &ec2.Filter{
+			Name:   aws.String(m["name"].(string)),
+			Values: filterValues,
+		})
+	}
+	return filters
+}
+
+func DataSourceFiltersSchema() *schema.Schema {
+	return &schema.Schema{
+		Type:     schema.TypeSet,
+		Optional: true,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"name": {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+
+				"values": {
+					Type:     schema.TypeList,
+					Required: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+			},
+		},
+	}
 }

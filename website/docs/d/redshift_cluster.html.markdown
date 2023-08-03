@@ -43,13 +43,13 @@ resource "aws_kinesis_firehose_delivery_stream" "example_stream" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This data source supports the following arguments:
 
 * `cluster_identifier` - (Required) Cluster identifier
 
 ## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This data source exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of cluster.
 * `allow_version_upgrade` - Whether major version upgrades can be applied during maintenance period

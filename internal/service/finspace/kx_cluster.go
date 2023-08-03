@@ -203,7 +203,7 @@ func ResourceKxCluster() *schema.Resource {
 					Schema: map[string]*schema.Schema{
 						"cache_configurations": {
 							Type:     schema.TypeList,
-							Required: true,
+							Optional: true,
 							ForceNew: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
@@ -220,7 +220,7 @@ func ResourceKxCluster() *schema.Resource {
 										Elem: &schema.Schema{
 											Type: schema.TypeString,
 										},
-										Required: true,
+										Optional: true,
 										ForceNew: true,
 									},
 								},
@@ -303,7 +303,7 @@ func ResourceKxCluster() *schema.Resource {
 							Type:         schema.TypeInt,
 							Required:     true,
 							ForceNew:     true,
-							ValidateFunc: validation.IntBetween(4, 16000),
+							ValidateFunc: validation.IntBetween(10, 16000),
 						},
 					},
 				},
@@ -1009,7 +1009,7 @@ func flattenSavedownStorageConfiguration(apiObject *types.KxSavedownStorageConfi
 		m["type"] = v
 	}
 
-	if v := apiObject.Size; v >= 4 && v <= 16000 {
+	if v := apiObject.Size; v >= 10 && v <= 16000 {
 		m["size"] = v
 	}
 

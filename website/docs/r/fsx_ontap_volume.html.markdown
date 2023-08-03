@@ -46,7 +46,7 @@ resource "aws_fsx_ontap_volume" "test" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `name` - (Required) The name of the Volume. You can use a maximum of 203 alphanumeric characters, plus the underscore (_) special character.
 * `junction_path` - (Optional) Specifies the location in the storage virtual machine's namespace where the volume is mounted. The junction_path must have a leading forward slash, such as `/vol3`
@@ -60,14 +60,14 @@ The following arguments are supported:
 
 ### tiering_policy
 
-The following arguments are supported for `tiering_policy` configuration block:
+The `tiering_policy` configuration block supports the following arguments:
 
 * `name` - (Required) Specifies the tiering policy for the ONTAP volume for moving data to the capacity pool storage. Valid values are `SNAPSHOT_ONLY`, `AUTO`, `ALL`, `NONE`. Default value is `SNAPSHOT_ONLY`.
 * `cooling_period` - (Optional) Specifies the number of days that user data in a volume must remain inactive before it is considered "cold" and moved to the capacity pool. Used with `AUTO` and `SNAPSHOT_ONLY` tiering policies only. Valid values are whole numbers between 2 and 183. Default values are 31 days for `AUTO` and 2 days for `SNAPSHOT_ONLY`.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - Amazon Resource Name of the volune.
 * `id` - Identifier of the volume, e.g., `fsvol-12345678`
@@ -87,8 +87,17 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-FSx ONTAP volume can be imported using the `id`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import FSx ONTAP volume using the `id`. For example:
 
+```terraform
+import {
+  to = aws_fsx_ontap_volume.example
+  id = "fsvol-12345678abcdef123"
+}
 ```
-$ terraform import aws_fsx_ontap_volume.example fsvol-12345678abcdef123
+
+Using `terraform import`, import FSx ONTAP volume using the `id`. For example:
+
+```console
+% terraform import aws_fsx_ontap_volume.example fsvol-12345678abcdef123
 ```

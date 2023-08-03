@@ -31,15 +31,15 @@ resource "aws_codecommit_approval_rule_template" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `content` - (Required) The content of the approval rule template. Maximum of 3000 characters.
 * `name` - (Required) The name for the approval rule template. Maximum of 100 characters.
 * `description` - (Optional) The description of the approval rule template. Maximum of 1000 characters.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `approval_rule_template_id` - The ID of the approval rule template
 * `creation_date` - The date the approval rule template was created, in [RFC3339 format](https://tools.ietf.org/html/rfc3339#section-5.8).
@@ -49,8 +49,17 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-CodeCommit approval rule templates can be imported using the `name`, e.g.
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import CodeCommit approval rule templates using the `name`. For example:
 
+```terraform
+import {
+  to = aws_codecommit_approval_rule_template.imported
+  id = "ExistingApprovalRuleTemplateName"
+}
 ```
-$ terraform import aws_codecommit_approval_rule_template.imported ExistingApprovalRuleTemplateName
+
+Using `terraform import`, import CodeCommit approval rule templates using the `name`. For example:
+
+```console
+% terraform import aws_codecommit_approval_rule_template.imported ExistingApprovalRuleTemplateName
 ```

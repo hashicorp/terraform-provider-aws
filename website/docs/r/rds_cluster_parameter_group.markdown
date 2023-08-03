@@ -35,7 +35,7 @@ resource "aws_rds_cluster_parameter_group" "default" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `name` - (Optional, Forces new resource) The name of the DB cluster parameter group. If omitted, Terraform will assign a random, unique name.
 * `name_prefix` - (Optional, Forces new resource) Creates a unique name beginning with the specified prefix. Conflicts with `name`.
@@ -52,9 +52,9 @@ Parameter blocks support the following:
     engines can't apply some parameters without a reboot, and you will need to
     specify "pending-reboot" here.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The db cluster parameter group name.
 * `arn` - The ARN of the db cluster parameter group.
@@ -62,8 +62,17 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-RDS Cluster Parameter Groups can be imported using the `name`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import RDS Cluster Parameter Groups using the `name`. For example:
 
+```terraform
+import {
+  to = aws_rds_cluster_parameter_group.cluster_pg
+  id = "production-pg-1"
+}
 ```
-$ terraform import aws_rds_cluster_parameter_group.cluster_pg production-pg-1
+
+Using `terraform import`, import RDS Cluster Parameter Groups using the `name`. For example:
+
+```console
+% terraform import aws_rds_cluster_parameter_group.cluster_pg production-pg-1
 ```
