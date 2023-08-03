@@ -480,6 +480,25 @@ func routeTableAddRoute(ctx context.Context, conn *ec2.EC2, routeTableID string,
 
 	input.RouteTableId = aws.String(routeTableID)
 
+	_, target := routeTableRouteTargetAttribute(tfMap)
+
+	if target == gatewayIDLocal {
+		// created by AWS so probably doesn't need a retry but just to be sure
+		// we provide a small one
+		_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, time.Second*15,
+			func() (interface{}, error) {
+				return routeFinder(ctx, conn, routeTableID, destination)
+			},
+			errCodeInvalidRouteNotFound,
+		)
+
+		if tfresource.NotFound(err) {
+			return fmt.Errorf("local route cannot be created but must exist to be adopted, %s %s does not exist", target, destination)
+		}
+
+		return nil
+	}
+
 	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, timeout,
 		func() (interface{}, error) {
 			return conn.CreateRouteWithContext(ctx, input)
@@ -488,11 +507,7 @@ func routeTableAddRoute(ctx context.Context, conn *ec2.EC2, routeTableID string,
 		errCodeInvalidTransitGatewayIDNotFound,
 	)
 
-	// Local routes cannot be created manually.
-	if tfawserr.ErrMessageContains(err, errCodeInvalidGatewayIDNotFound, "The gateway ID 'local' does not exist") {
-		return fmt.Errorf("cannot create local Route, use `terraform import` to manage existing local Routes")
-	}
-
+	// local routes can be adopted
 	if err != nil {
 		return fmt.Errorf("creating Route in Route Table (%s) with destination (%s): %w", routeTableID, destination, err)
 	}

@@ -1,3 +1,3 @@
 ```release-note:enhancement
-resource/aws_route_table: Allow an existing route to be changed to/from a `local` target such as `gateway_id = "local"` and `network_interface_id = "eni-0bf6fcb204c94231e"`
+resource/aws_route_table: Allow an existing local route to be adopted or imported and the target to be updated
 ```

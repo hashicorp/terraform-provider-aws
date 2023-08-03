@@ -1065,7 +1065,67 @@ func TestAccVPCRouteTable_localRoute(t *testing.T) {
 	})
 }
 
-func TestAccVPCRouteTable_localRouteUpdate(t *testing.T) {
+func TestAccVPCRouteTable_localRouteAdoptUpdate(t *testing.T) {
+	ctx := acctest.Context(t)
+	var routeTable ec2.RouteTable
+	var vpc ec2.Vpc
+	resourceName := "aws_route_table.test"
+	vpcResourceName := "aws_vpc.test"
+	eniResourceName := "aws_network_interface.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	vpcCIDR := "10.1.0.0/16"
+	localGatewayCIDR := "10.1.0.0/16"
+	localGatewayCIDRBad := "10.2.0.0/16"
+	subnetCIDR := "10.1.1.0/24"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRouteDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccVPCRouteTableConfig_ipv4NetworkInterfaceToLocal(rName, vpcCIDR, localGatewayCIDRBad, subnetCIDR),
+				ExpectError: regexp.MustCompile("must exist to be adopted"),
+			},
+			{
+				Config: testAccVPCRouteTableConfig_ipv4NetworkInterfaceToLocal(rName, vpcCIDR, localGatewayCIDR, subnetCIDR),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					acctest.CheckVPCExists(ctx, vpcResourceName, &vpc),
+					testAccCheckRouteTableExists(ctx, resourceName, &routeTable),
+					testAccCheckRouteTableNumberOfRoutes(&routeTable, 1),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "route.*", map[string]string{
+						"gateway_id": "local",
+						"cidr_block": localGatewayCIDR,
+					}),
+				),
+			},
+			{
+				Config: testAccVPCRouteTableConfig_ipv4LocalNetworkInterface(rName, vpcCIDR, subnetCIDR),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					acctest.CheckVPCExists(ctx, vpcResourceName, &vpc),
+					testAccCheckRouteTableExists(ctx, resourceName, &routeTable),
+					testAccCheckRouteTableNumberOfRoutes(&routeTable, 1),
+					testAccCheckRouteTableRoute(resourceName, "cidr_block", vpcCIDR, "network_interface_id", eniResourceName, "id"),
+				),
+			},
+			{
+				Config: testAccVPCRouteTableConfig_ipv4NetworkInterfaceToLocal(rName, vpcCIDR, localGatewayCIDR, subnetCIDR),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					acctest.CheckVPCExists(ctx, vpcResourceName, &vpc),
+					testAccCheckRouteTableExists(ctx, resourceName, &routeTable),
+					testAccCheckRouteTableNumberOfRoutes(&routeTable, 1),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "route.*", map[string]string{
+						"gateway_id": "local",
+						"cidr_block": localGatewayCIDR,
+					}),
+				),
+			},
+		},
+	})
+}
+
+func TestAccVPCRouteTable_localRouteImportUpdate(t *testing.T) {
 	ctx := acctest.Context(t)
 	var routeTable ec2.RouteTable
 	var vpc ec2.Vpc
@@ -1076,7 +1136,6 @@ func TestAccVPCRouteTable_localRouteUpdate(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	vpcCIDR := "10.1.0.0/16"
 	localGatewayCIDR := "10.1.0.0/16"
-	eniCIDR := "10.1.0.0/16"
 	subnetCIDR := "10.1.1.0/24"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -1125,7 +1184,7 @@ func TestAccVPCRouteTable_localRouteUpdate(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccVPCRouteTableConfig_ipv4LocalNetworkInterface(rName, vpcCIDR, eniCIDR, subnetCIDR),
+				Config: testAccVPCRouteTableConfig_ipv4LocalNetworkInterface(rName, vpcCIDR, subnetCIDR),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					acctest.CheckVPCExists(ctx, vpcResourceName, &vpc),
 					testAccCheckRouteTableExists(ctx, resourceName, &routeTable),
@@ -1146,7 +1205,7 @@ func TestAccVPCRouteTable_localRouteUpdate(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccVPCRouteTableConfig_ipv4LocalNetworkInterface(rName, vpcCIDR, eniCIDR, subnetCIDR),
+				Config: testAccVPCRouteTableConfig_ipv4LocalNetworkInterface(rName, vpcCIDR, subnetCIDR),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					acctest.CheckVPCExists(ctx, vpcResourceName, &vpc),
 					testAccCheckRouteTableExists(ctx, resourceName, &routeTable),
@@ -2411,7 +2470,7 @@ resource "aws_route_table" "test" {
 `, rName)
 }
 
-func testAccVPCRouteTableConfig_ipv4LocalNetworkInterface(rName, vpcCIDR, eniCIDR, subnetCIDR string) string {
+func testAccVPCRouteTableConfig_ipv4LocalNetworkInterface(rName, vpcCIDR, subnetCIDR string) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = %[2]q
@@ -2435,7 +2494,7 @@ resource "aws_route_table" "test" {
 }
 
 resource "aws_subnet" "test" {
-  cidr_block = %[4]q
+  cidr_block = %[3]q
   vpc_id     = aws_vpc.test.id
 
   tags = {
@@ -2450,7 +2509,7 @@ resource "aws_network_interface" "test" {
     Name = %[1]q
   }
 }
-`, rName, vpcCIDR, eniCIDR, subnetCIDR)
+`, rName, vpcCIDR, subnetCIDR)
 }
 
 func testAccVPCRouteTableConfig_ipv4NetworkInterfaceToLocal(rName, vpcCIDR, gatewayCIDR, subnetCIDR string) string {
