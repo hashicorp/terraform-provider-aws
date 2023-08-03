@@ -184,7 +184,7 @@ func ResourceCluster() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 				ValidateFunc: validation.Any(
-					validation.StringMatch(regexp.MustCompile(`^custom.*$`), "must begin with custom"),
+					validation.StringMatch(regexp.MustCompile(fmt.Sprintf(`^%s.*$`, InstanceEngineCustomPrefix)), fmt.Sprintf("must begin with %s", InstanceEngineCustomPrefix)),
 					validation.StringInSlice(ClusterEngine_Values(), false),
 				),
 			},
