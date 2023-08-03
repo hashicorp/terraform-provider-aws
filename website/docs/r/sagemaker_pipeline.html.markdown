@@ -56,9 +56,9 @@ The following arguments are supported:
 * `object_key` - (Required) The object key (or key name) uniquely identifies the object in an S3 bucket.
 * `version_id` - (Optional) Version Id of the pipeline definition file. If not specified, Amazon SageMaker will retrieve the latest version.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The name of the Pipeline.
 * `arn` - The Amazon Resource Name (ARN) assigned by AWS to this Pipeline.
@@ -66,7 +66,16 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-SageMaker Pipelines can be imported using the `pipeline_name`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import pipelines using the `pipeline_name`. For example:
+
+```terraform
+import {
+  to = aws_sagemaker_pipeline.test_pipeline
+  id = "pipeline"
+}
+```
+
+Using `terraform import`, import pipelines using the `pipeline_name`. For example:
 
 ```
 $ terraform import aws_sagemaker_pipeline.test_pipeline pipeline
