@@ -4,12 +4,16 @@ package kms
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/kms"
 	"github.com/aws/aws-sdk-go/service/kms/kmsiface"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -23,6 +27,13 @@ func listTags(ctx context.Context, conn kmsiface.KMSAPI, identifier string) (tft
 	}
 
 	output, err := conn.ListResourceTagsWithContext(ctx, input)
+
+	if tfawserr.ErrCodeEquals(err, "NotFoundException") {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
 
 	if err != nil {
 		return tftags.New(ctx, nil), err
@@ -132,6 +143,12 @@ func updateTags(ctx context.Context, conn kmsiface.KMSAPI, identifier string, ol
 		}
 	}
 
+	if len(removedTags) > 0 || len(updatedTags) > 0 {
+		if err := waitTagsPropagated(ctx, conn, identifier, newTags); err != nil {
+			return fmt.Errorf("waiting for resource (%s) tag propagation: %w", identifier, err)
+		}
+	}
+
 	return nil
 }
 
@@ -139,4 +156,29 @@ func updateTags(ctx context.Context, conn kmsiface.KMSAPI, identifier string, ol
 // It is called from outside this package.
 func (p *servicePackage) UpdateTags(ctx context.Context, meta any, identifier string, oldTags, newTags any) error {
 	return updateTags(ctx, meta.(*conns.AWSClient).KMSConn(ctx), identifier, oldTags, newTags)
+}
+
+// waitTagsPropagated waits for kms service tags to be propagated.
+// The identifier is typically the Amazon Resource Name (ARN), although
+// it may also be a different identifier depending on the service.
+func waitTagsPropagated(ctx context.Context, conn kmsiface.KMSAPI, id string, tags tftags.KeyValueTags) error {
+	checkFunc := func() (bool, error) {
+		output, err := listTags(ctx, conn, id)
+
+		if tfresource.NotFound(err) {
+			return false, nil
+		}
+
+		if err != nil {
+			return false, err
+		}
+
+		return output.Equal(tags), nil
+	}
+	opts := tfresource.WaitOpts{
+		ContinuousTargetOccurence: 5,
+		MinTimeout:                1 * time.Second,
+	}
+
+	return tfresource.WaitUntil(ctx, 10*time.Minute, checkFunc, opts)
 }

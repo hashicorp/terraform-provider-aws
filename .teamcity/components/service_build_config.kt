@@ -1,10 +1,12 @@
-import java.io.File
 import jetbrains.buildServer.configs.kotlin.AbsoluteId
+import jetbrains.buildServer.configs.kotlin.BuildSteps
 import jetbrains.buildServer.configs.kotlin.BuildType
 import jetbrains.buildServer.configs.kotlin.DslContext
 import jetbrains.buildServer.configs.kotlin.ParameterDisplay
 import jetbrains.buildServer.configs.kotlin.buildFeatures.notifications
+import jetbrains.buildServer.configs.kotlin.buildSteps.ScriptBuildStep
 import jetbrains.buildServer.configs.kotlin.buildSteps.script
+import java.io.File
 
 data class ServiceSpec(
     val readableName: String,
@@ -52,10 +54,7 @@ class Service(name: String, spec: ServiceSpec) {
 
             val serviceDir = "./internal/service/$packageName"
             steps {
-                script {
-                    name = "Setup GOENV"
-                    scriptContent = File("./scripts/setup_goenv.sh").readText()
-                }
+                ConfigureGoEnv()
                 script {
                     name = "Compile Test Binary"
                     workingDir = serviceDir
@@ -104,4 +103,11 @@ class Service(name: String, spec: ServiceSpec) {
             }
         }
     }
+}
+
+fun BuildSteps.ConfigureGoEnv() {
+    step(ScriptBuildStep {
+        name = "Configure GOENV"
+        scriptContent = File("./scripts/configure_goenv.sh").readText()
+    })
 }

@@ -203,9 +203,9 @@ The following arguments are required:
 * `match_options` - (Optional) Match options that you can use to filter your results. MatchOptions is only applicable for actions related to cost category. The default values for MatchOptions is `EQUALS` and `CASE_SENSITIVE`. Valid values are: `EQUALS`,  `ABSENT`, `STARTS_WITH`, `ENDS_WITH`, `CONTAINS`, `CASE_SENSITIVE`, `CASE_INSENSITIVE`.
 * `values` - (Optional) Specific value of the Cost Category.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the anomaly subscription.
 * `id` - Unique ID of the anomaly subscription. Same as `arn`.
@@ -213,8 +213,17 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-`aws_ce_anomaly_subscription` can be imported using the `id`, e.g.
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_ce_anomaly_subscription` using the `id`. For example:
 
+```terraform
+import {
+  to = aws_ce_anomaly_subscription.example
+  id = "AnomalySubscriptionARN"
+}
 ```
-$ terraform import aws_ce_anomaly_subscription.example AnomalySubscriptionARN
+
+Using `terraform import`, import `aws_ce_anomaly_subscription` using the `id`. For example:
+
+```console
+% terraform import aws_ce_anomaly_subscription.example AnomalySubscriptionARN
 ```

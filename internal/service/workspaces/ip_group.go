@@ -1,11 +1,15 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package workspaces
 
 import (
 	"context"
 	"log"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/workspaces"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/workspaces"
+	"github.com/aws/aws-sdk-go-v2/service/workspaces/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -66,10 +70,10 @@ func ResourceIPGroup() *schema.Resource {
 
 func resourceIPGroupCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).WorkSpacesConn(ctx)
+	conn := meta.(*conns.AWSClient).WorkSpacesClient(ctx)
 
 	rules := d.Get("rules").(*schema.Set).List()
-	resp, err := conn.CreateIpGroupWithContext(ctx, &workspaces.CreateIpGroupInput{
+	resp, err := conn.CreateIpGroup(ctx, &workspaces.CreateIpGroupInput{
 		GroupName: aws.String(d.Get("name").(string)),
 		GroupDesc: aws.String(d.Get("description").(string)),
 		UserRules: expandIPGroupRules(rules),
@@ -80,17 +84,17 @@ func resourceIPGroupCreate(ctx context.Context, d *schema.ResourceData, meta int
 		return sdkdiag.AppendErrorf(diags, "creating WorkSpaces IP Group: %s", err)
 	}
 
-	d.SetId(aws.StringValue(resp.GroupId))
+	d.SetId(aws.ToString(resp.GroupId))
 
 	return append(diags, resourceIPGroupRead(ctx, d, meta)...)
 }
 
 func resourceIPGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).WorkSpacesConn(ctx)
+	conn := meta.(*conns.AWSClient).WorkSpacesClient(ctx)
 
-	resp, err := conn.DescribeIpGroupsWithContext(ctx, &workspaces.DescribeIpGroupsInput{
-		GroupIds: []*string{aws.String(d.Id())},
+	resp, err := conn.DescribeIpGroups(ctx, &workspaces.DescribeIpGroupsInput{
+		GroupIds: []string{d.Id()},
 	})
 	if err != nil {
 		if len(resp.Result) == 0 {
@@ -121,12 +125,12 @@ func resourceIPGroupRead(ctx context.Context, d *schema.ResourceData, meta inter
 
 func resourceIPGroupUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).WorkSpacesConn(ctx)
+	conn := meta.(*conns.AWSClient).WorkSpacesClient(ctx)
 
 	if d.HasChange("rules") {
 		rules := d.Get("rules").(*schema.Set).List()
 
-		_, err := conn.UpdateRulesOfIpGroupWithContext(ctx, &workspaces.UpdateRulesOfIpGroupInput{
+		_, err := conn.UpdateRulesOfIpGroup(ctx, &workspaces.UpdateRulesOfIpGroupInput{
 			GroupId:   aws.String(d.Id()),
 			UserRules: expandIPGroupRules(rules),
 		})
@@ -140,34 +144,38 @@ func resourceIPGroupUpdate(ctx context.Context, d *schema.ResourceData, meta int
 
 func resourceIPGroupDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).WorkSpacesConn(ctx)
+	conn := meta.(*conns.AWSClient).WorkSpacesClient(ctx)
 
 	var found bool
 	log.Printf("[DEBUG] Finding directories associated with WorkSpaces IP Group (%s)", d.Id())
-	err := conn.DescribeWorkspaceDirectoriesPagesWithContext(ctx, nil, func(page *workspaces.DescribeWorkspaceDirectoriesOutput, lastPage bool) bool {
-		for _, dir := range page.Directories {
+	paginator := workspaces.NewDescribeWorkspaceDirectoriesPaginator(conn, &workspaces.DescribeWorkspaceDirectoriesInput{}, func(out *workspaces.DescribeWorkspaceDirectoriesPaginatorOptions) {})
+
+	for paginator.HasMorePages() {
+		out, err := paginator.NextPage(ctx)
+
+		if err != nil {
+			diags = sdkdiag.AppendErrorf(diags, "describing WorkSpaces Directories: %s", err)
+		}
+		for _, dir := range out.Directories {
 			for _, ipg := range dir.IpGroupIds {
-				groupID := aws.StringValue(ipg)
+				groupID := ipg
 				if groupID == d.Id() {
 					found = true
-					log.Printf("[DEBUG] WorkSpaces IP Group (%s) associated with WorkSpaces Directory (%s), disassociating", groupID, aws.StringValue(dir.DirectoryId))
-					_, err := conn.DisassociateIpGroupsWithContext(ctx, &workspaces.DisassociateIpGroupsInput{
+					log.Printf("[DEBUG] WorkSpaces IP Group (%s) associated with WorkSpaces Directory (%s), disassociating", groupID, aws.ToString(dir.DirectoryId))
+					_, err := conn.DisassociateIpGroups(ctx, &workspaces.DisassociateIpGroupsInput{
 						DirectoryId: dir.DirectoryId,
-						GroupIds:    aws.StringSlice([]string{d.Id()}),
+						GroupIds:    []string{d.Id()},
 					})
 					if err != nil {
-						diags = sdkdiag.AppendErrorf(diags, "disassociating WorkSpaces IP Group (%s) from WorkSpaces Directory (%s): %s", d.Id(), aws.StringValue(dir.DirectoryId), err)
+						diags = sdkdiag.AppendErrorf(diags, "disassociating WorkSpaces IP Group (%s) from WorkSpaces Directory (%s): %s", d.Id(), aws.ToString(dir.DirectoryId), err)
 						continue
 					}
-					log.Printf("[INFO] WorkSpaces IP Group (%s) disassociated from WorkSpaces Directory (%s)", d.Id(), aws.StringValue(dir.DirectoryId))
+					log.Printf("[INFO] WorkSpaces IP Group (%s) disassociated from WorkSpaces Directory (%s)", d.Id(), aws.ToString(dir.DirectoryId))
 				}
 			}
 		}
-		return !lastPage
-	})
-	if err != nil {
-		diags = sdkdiag.AppendErrorf(diags, "describing WorkSpaces Directories: %s", err)
 	}
+
 	if diags.HasError() {
 		return diags
 	}
@@ -177,7 +185,7 @@ func resourceIPGroupDelete(ctx context.Context, d *schema.ResourceData, meta int
 	}
 
 	log.Printf("[DEBUG] Deleting WorkSpaces IP Group (%s)", d.Id())
-	_, err = conn.DeleteIpGroupWithContext(ctx, &workspaces.DeleteIpGroupInput{
+	_, err := conn.DeleteIpGroup(ctx, &workspaces.DeleteIpGroupInput{
 		GroupId: aws.String(d.Id()),
 	})
 	if err != nil {
@@ -188,12 +196,12 @@ func resourceIPGroupDelete(ctx context.Context, d *schema.ResourceData, meta int
 	return diags
 }
 
-func expandIPGroupRules(rules []interface{}) []*workspaces.IpRuleItem {
-	var result []*workspaces.IpRuleItem
+func expandIPGroupRules(rules []interface{}) []types.IpRuleItem {
+	var result []types.IpRuleItem
 	for _, rule := range rules {
 		r := rule.(map[string]interface{})
 
-		result = append(result, &workspaces.IpRuleItem{
+		result = append(result, types.IpRuleItem{
 			IpRule:   aws.String(r["source"].(string)),
 			RuleDesc: aws.String(r["description"].(string)),
 		})
@@ -201,17 +209,17 @@ func expandIPGroupRules(rules []interface{}) []*workspaces.IpRuleItem {
 	return result
 }
 
-func flattenIPGroupRules(rules []*workspaces.IpRuleItem) []map[string]interface{} {
+func flattenIPGroupRules(rules []types.IpRuleItem) []map[string]interface{} {
 	result := make([]map[string]interface{}, 0, len(rules))
 	for _, rule := range rules {
 		r := map[string]interface{}{}
 
 		if v := rule.IpRule; v != nil {
-			r["source"] = aws.StringValue(v)
+			r["source"] = aws.ToString(v)
 		}
 
 		if v := rule.RuleDesc; v != nil {
-			r["description"] = aws.StringValue(rule.RuleDesc)
+			r["description"] = aws.ToString(rule.RuleDesc)
 		}
 
 		result = append(result, r)

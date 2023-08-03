@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package opensearchserverless
 
 import (
@@ -98,7 +101,7 @@ func (d *dataSourceCollection) Read(ctx context.Context, req datasource.ReadRequ
 	var out *awstypes.CollectionDetail
 
 	if !data.ID.IsNull() && !data.ID.IsUnknown() {
-		output, err := FindCollectionByID(ctx, conn, data.ID.ValueString())
+		output, err := findCollectionByID(ctx, conn, data.ID.ValueString())
 		if err != nil {
 			resp.Diagnostics.AddError(
 				create.ProblemStandardMessage(names.OpenSearchServerless, create.ErrActionReading, DSNameCollection, data.ID.String(), err),
@@ -111,7 +114,7 @@ func (d *dataSourceCollection) Read(ctx context.Context, req datasource.ReadRequ
 	}
 
 	if !data.Name.IsNull() && !data.Name.IsUnknown() {
-		output, err := FindCollectionByName(ctx, conn, data.Name.ValueString())
+		output, err := findCollectionByName(ctx, conn, data.Name.ValueString())
 		if err != nil {
 			resp.Diagnostics.AddError(
 				create.ProblemStandardMessage(names.OpenSearchServerless, create.ErrActionReading, DSNameCollection, data.ID.String(), err),

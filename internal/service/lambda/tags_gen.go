@@ -13,6 +13,39 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// listTags lists lambda service tags.
+// The identifier is typically the Amazon Resource Name (ARN), although
+// it may also be a different identifier depending on the service.
+func listTags(ctx context.Context, conn *lambda.Client, identifier string) (tftags.KeyValueTags, error) {
+	input := &lambda.ListTagsInput{
+		Resource: aws.String(identifier),
+	}
+
+	output, err := conn.ListTags(ctx, input)
+
+	if err != nil {
+		return tftags.New(ctx, nil), err
+	}
+
+	return KeyValueTags(ctx, output.Tags), nil
+}
+
+// ListTags lists lambda service tags and set them in Context.
+// It is called from outside this package.
+func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier string) error {
+	tags, err := listTags(ctx, meta.(*conns.AWSClient).LambdaClient(ctx), identifier)
+
+	if err != nil {
+		return err
+	}
+
+	if inContext, ok := tftags.FromContext(ctx); ok {
+		inContext.TagsOut = types.Some(tags)
+	}
+
+	return nil
+}
+
 // map[string]string handling
 
 // Tags returns lambda service tags.

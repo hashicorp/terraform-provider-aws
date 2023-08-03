@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package servicediscovery_test
 
 import (
@@ -94,10 +97,17 @@ func TestAccServiceDiscoveryPrivateDNSNamespace_description(t *testing.T) {
 		CheckDestroy:             testAccCheckPrivateDNSNamespaceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccPrivateDNSNamespaceConfig_description(rName, "test"),
+				Config: testAccPrivateDNSNamespaceConfig_description(rName, "desc1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPrivateDNSNamespaceExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "description", "test"),
+					resource.TestCheckResourceAttr(resourceName, "description", "desc1"),
+				),
+			},
+			{
+				Config: testAccPrivateDNSNamespaceConfig_description(rName, "desc2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckPrivateDNSNamespaceExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "description", "desc2"),
 				),
 			},
 		},

@@ -1,4 +1,4 @@
-SWEEP               ?= us-west-2,us-east-1,us-east-2
+SWEEP               ?= us-west-2,us-east-1,us-east-2,us-west-1
 TEST                ?= ./...
 SWEEP_DIR           ?= ./internal/sweep
 PKG_NAME            ?= internal
@@ -94,6 +94,9 @@ cleango:
 
 clean: cleango build tools
 
+copyright:
+	@copywrite headers
+
 depscheck:
 	@echo "==> Checking source code with go mod tidy..."
 	@$(GO_VER) mod tidy
@@ -185,6 +188,8 @@ importlint:
 	@impi --local . --scheme stdThirdPartyLocal ./internal/...
 
 lint: golangci-lint providerlint importlint
+
+lint-fix: testacc-lint-fix website-lint-fix docs-lint-fix
 
 providerlint:
 	@echo "==> Checking source code with providerlint..."
@@ -365,13 +370,14 @@ tfsdk2fw:
 
 tools:
 	cd .ci/providerlint && $(GO_VER) install .
-	cd .ci/tools && $(GO_VER) install github.com/bflad/tfproviderdocs
+	cd .ci/tools && $(GO_VER) install github.com/YakDriver/tfproviderdocs
 	cd .ci/tools && $(GO_VER) install github.com/client9/misspell/cmd/misspell
 	cd .ci/tools && $(GO_VER) install github.com/golangci/golangci-lint/cmd/golangci-lint
 	cd .ci/tools && $(GO_VER) install github.com/katbyte/terrafmt
 	cd .ci/tools && $(GO_VER) install github.com/terraform-linters/tflint
 	cd .ci/tools && $(GO_VER) install github.com/pavius/impi/cmd/impi
 	cd .ci/tools && $(GO_VER) install github.com/hashicorp/go-changelog/cmd/changelog-build
+	cd .ci/tools && $(GO_VER) install github.com/hashicorp/copywrite
 	cd .ci/tools && $(GO_VER) install github.com/rhysd/actionlint/cmd/actionlint
 	cd .ci/tools && $(GO_VER) install mvdan.cc/gofumpt
 
@@ -425,6 +431,7 @@ yamllint:
 	golangci-lint \
 	importlint \
 	lint \
+	lint-fix \
 	providerlint \
 	sane \
 	sanity \

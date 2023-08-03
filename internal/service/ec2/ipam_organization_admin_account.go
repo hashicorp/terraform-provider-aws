@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ec2
 
 // ec2 has no action for Describe() to see if IPAM delegated admin has already been assigned

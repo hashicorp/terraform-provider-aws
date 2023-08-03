@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package guardduty_test
 
 import (
@@ -156,11 +159,6 @@ resource "aws_guardduty_detector" "test_gd" {
 resource "aws_s3_bucket" "gd_bucket" {
   bucket        = %[1]q
   force_destroy = true
-}
-
-resource "aws_s3_bucket_acl" "gd_bucket_acl" {
-  bucket = aws_s3_bucket.gd_bucket.id
-  acl    = "private"
 }
 
 resource "aws_s3_bucket_policy" "gd_bucket_policy" {

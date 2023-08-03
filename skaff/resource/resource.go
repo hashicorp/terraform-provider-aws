@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package resource
 
 import (
@@ -33,6 +36,7 @@ type TemplateData struct {
 	ResourceSnake        string
 	HumanFriendlyService string
 	IncludeComments      bool
+	IncludeTags          bool
 	ServicePackage       string
 	Service              string
 	ServiceLower         string
@@ -67,7 +71,7 @@ func ProviderResourceName(servicePackage, snakeName string) string {
 	return fmt.Sprintf("aws_%s_%s", servicePackage, snakeName)
 }
 
-func Create(resName, snakeName string, comments, force, v2, pluginFramework bool) error {
+func Create(resName, snakeName string, comments, force, v2, pluginFramework, tags bool) error {
 	wd, err := os.Getwd() // os.Getenv("GOPACKAGE") not available since this is not run with go generate
 	if err != nil {
 		return fmt.Errorf("error reading working directory: %s", err)
@@ -110,6 +114,7 @@ func Create(resName, snakeName string, comments, force, v2, pluginFramework bool
 		ResourceSnake:        snakeName,
 		HumanFriendlyService: hf,
 		IncludeComments:      comments,
+		IncludeTags:          tags,
 		ServicePackage:       servicePackage,
 		Service:              s,
 		ServiceLower:         strings.ToLower(s),
