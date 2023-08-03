@@ -21,12 +21,26 @@ jobs:
       # https://docs.github.com/en/actions/learn-github-actions/expressions#example
       username: ${{ github.event.action == 'assigned' && github.event.assignee.login || github.event.pull_request.user.login }}
 
+  generate_token:
+    name: 'Generate Token'
+    runs-on: ubuntu-latest
+    outputs:
+      token: ${{ steps.generate.outputs.token }}
+    steps:
+      - name: 'Generate'
+        id: generate
+        uses: tibdex/github-app-token@b62528385c34dbc9f38e5f4225ac829252d1ea92 # v1.8.0
+        with:
+          app_id: ${{ secrets.APP_ID }}
+          installation_id: ${{ secrets.INSTALLATION_ID }}
+          private_key: ${{ secrets.APP_PEM }}
+
   labeler:
     name: 'Automation Labeler'
-    needs: community_check
+    needs: [community_check, generate_token]
     runs-on: ubuntu-latest
     env:
-      GH_TOKEN: ${{ github.token }}
+      GH_TOKEN: ${{ needs.generate_token.outputs.token }}
       PR_URL: ${{ github.event.pull_request.html_url }}
     steps:
       - name: 'Add needs-triage for non-maintainers'
@@ -92,9 +106,9 @@ jobs:
   add_to_project:
     name: 'Add to Project'
     runs-on: ubuntu-latest
-    needs: community_check
+    needs: [community_check, generate_token]
     env:
-      GH_TOKEN: ${{ secrets.PROJECT_SCOPED_TOKEN }}
+      GH_TOKEN: ${{ needs.generate_token.outputs.token }}
       # Some gh project calls take the project's ID, some take the project's number
       PROJECT_ID: "PVT_kwDOAAuecM4AF-7h"
       PROJECT_NUMBER: "196"
