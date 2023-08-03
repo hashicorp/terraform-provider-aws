@@ -31,6 +31,7 @@ func ResourcePipeline() *schema.Resource {
 		ReadWithoutTimeout:   resourcePipelineRead,
 		UpdateWithoutTimeout: resourcePipelineUpdate,
 		DeleteWithoutTimeout: resourcePipelineDelete,
+
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
@@ -53,28 +54,6 @@ func ResourcePipeline() *schema.Resource {
 						},
 					},
 				},
-			},
-			"pipeline_name": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-				ValidateFunc: validation.All(
-					validation.StringLenBetween(1, 256),
-					validation.StringMatch(regexp.MustCompile(`^[a-zA-Z0-9]([a-zA-Z0-9\-])*$`), "Valid characters are a-z, A-Z, 0-9, and - (hyphen)."),
-				),
-			},
-			"pipeline_description": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validation.StringLenBetween(1, 3072),
-			},
-			"pipeline_display_name": {
-				Type:     schema.TypeString,
-				Required: true,
-				ValidateFunc: validation.All(
-					validation.StringLenBetween(1, 256),
-					validation.StringMatch(regexp.MustCompile(`^[a-zA-Z0-9]([a-zA-Z0-9\-])*$`), "Valid characters are a-z, A-Z, 0-9, and - (hyphen)."),
-				),
 			},
 			"pipeline_definition": {
 				Type:         schema.TypeString,
@@ -107,6 +86,28 @@ func ResourcePipeline() *schema.Resource {
 					},
 				},
 			},
+			"pipeline_description": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ValidateFunc: validation.StringLenBetween(1, 3072),
+			},
+			"pipeline_display_name": {
+				Type:     schema.TypeString,
+				Required: true,
+				ValidateFunc: validation.All(
+					validation.StringLenBetween(1, 256),
+					validation.StringMatch(regexp.MustCompile(`^[a-zA-Z0-9]([a-zA-Z0-9\-])*$`), "Valid characters are a-z, A-Z, 0-9, and - (hyphen)."),
+				),
+			},
+			"pipeline_name": {
+				Type:     schema.TypeString,
+				Required: true,
+				ForceNew: true,
+				ValidateFunc: validation.All(
+					validation.StringLenBetween(1, 256),
+					validation.StringMatch(regexp.MustCompile(`^[a-zA-Z0-9]([a-zA-Z0-9\-])*$`), "Valid characters are a-z, A-Z, 0-9, and - (hyphen)."),
+				),
+			},
 			"role_arn": {
 				Type:         schema.TypeString,
 				Optional:     true,
@@ -115,6 +116,7 @@ func ResourcePipeline() *schema.Resource {
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
+
 		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
@@ -125,15 +127,15 @@ func resourcePipelineCreate(ctx context.Context, d *schema.ResourceData, meta in
 
 	name := d.Get("pipeline_name").(string)
 	input := &sagemaker.CreatePipelineInput{
-		PipelineName:        aws.String(name),
-		PipelineDisplayName: aws.String(d.Get("pipeline_display_name").(string)),
-		RoleArn:             aws.String(d.Get("role_arn").(string)),
 		ClientRequestToken:  aws.String(id.UniqueId()),
+		PipelineDisplayName: aws.String(d.Get("pipeline_display_name").(string)),
+		PipelineName:        aws.String(name),
+		RoleArn:             aws.String(d.Get("role_arn").(string)),
 		Tags:                getTagsIn(ctx),
 	}
 
-	if v, ok := d.GetOk("pipeline_description"); ok {
-		input.PipelineDescription = aws.String(v.(string))
+	if v, ok := d.GetOk("parallelism_configuration"); ok {
+		input.ParallelismConfiguration = expandParallelismConfiguration(v.([]interface{}))
 	}
 
 	if v, ok := d.GetOk("pipeline_definition"); ok {
@@ -144,8 +146,8 @@ func resourcePipelineCreate(ctx context.Context, d *schema.ResourceData, meta in
 		input.PipelineDefinitionS3Location = expandPipelineDefinitionS3Location(v.([]interface{}))
 	}
 
-	if v, ok := d.GetOk("parallelism_configuration"); ok {
-		input.ParallelismConfiguration = expandParallelismConfiguration(v.([]interface{}))
+	if v, ok := d.GetOk("pipeline_description"); ok {
+		input.PipelineDescription = aws.String(v.(string))
 	}
 
 	_, err := conn.CreatePipelineWithContext(ctx, input)
@@ -176,15 +178,14 @@ func resourcePipelineRead(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 
 	d.Set("arn", pipeline.PipelineArn)
+	if err := d.Set("parallelism_configuration", flattenParallelismConfiguration(pipeline.ParallelismConfiguration)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting parallelism_configuration: %s", err)
+	}
+	d.Set("pipeline_definition", pipeline.PipelineDefinition)
 	d.Set("pipeline_description", pipeline.PipelineDescription)
 	d.Set("pipeline_display_name", pipeline.PipelineDisplayName)
 	d.Set("pipeline_name", pipeline.PipelineName)
 	d.Set("role_arn", pipeline.RoleArn)
-	d.Set("pipeline_definition", pipeline.PipelineDefinition)
-
-	if err := d.Set("parallelism_configuration", flattenParallelismConfiguration(pipeline.ParallelismConfiguration)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting parallelism_configuration: %s", err)
-	}
 
 	return diags
 }
@@ -198,16 +199,8 @@ func resourcePipelineUpdate(ctx context.Context, d *schema.ResourceData, meta in
 			PipelineName: aws.String(d.Id()),
 		}
 
-		if d.HasChange("pipeline_display_name") {
-			input.PipelineDisplayName = aws.String(d.Get("pipeline_display_name").(string))
-		}
-
-		if d.HasChange("pipeline_description") {
-			input.PipelineDescription = aws.String(d.Get("pipeline_description").(string))
-		}
-
-		if d.HasChange("role_arn") {
-			input.RoleArn = aws.String(d.Get("role_arn").(string))
+		if d.HasChange("parallelism_configuration") {
+			input.ParallelismConfiguration = expandParallelismConfiguration(d.Get("parallelism_configuration").([]interface{}))
 		}
 
 		if d.HasChange("pipeline_definition") {
@@ -218,8 +211,16 @@ func resourcePipelineUpdate(ctx context.Context, d *schema.ResourceData, meta in
 			input.PipelineDefinitionS3Location = expandPipelineDefinitionS3Location(d.Get("pipeline_definition_s3_location").([]interface{}))
 		}
 
-		if d.HasChange("parallelism_configuration") {
-			input.ParallelismConfiguration = expandParallelismConfiguration(d.Get("parallelism_configuration").([]interface{}))
+		if d.HasChange("pipeline_description") {
+			input.PipelineDescription = aws.String(d.Get("pipeline_description").(string))
+		}
+
+		if d.HasChange("pipeline_display_name") {
+			input.PipelineDisplayName = aws.String(d.Get("pipeline_display_name").(string))
+		}
+
+		if d.HasChange("role_arn") {
+			input.RoleArn = aws.String(d.Get("role_arn").(string))
 		}
 
 		_, err := conn.UpdatePipelineWithContext(ctx, input)
