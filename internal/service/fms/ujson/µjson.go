@@ -1,14 +1,17 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 // Package ujson implements a fast and minimal JSON parser and transformer that
 // works on unstructured json. Example use cases:
 //
-//     1. Walk through unstructured json:
-//       - Print all keys and values
-//       - Extract some values
-//     2. Transform unstructured json:
-//       - Remove all spaces
-//       - Reformat
-//       - Remove blacklist fields
-//       - Wrap int64 in string for processing by JavaScript
+//  1. Walk through unstructured json:
+//     - Print all keys and values
+//     - Extract some values
+//  2. Transform unstructured json:
+//     - Remove all spaces
+//     - Reformat
+//     - Remove blacklist fields
+//     - Wrap int64 in string for processing by JavaScript
 //
 // without fully unmarshalling it into a map[string]interface{}
 //
@@ -17,31 +20,31 @@
 // The single most important function is "Walk()", which parses the given json
 // and call callback function for each key/value pair processed.
 //
-//    {
-//        "id": 12345,
-//        "name": "foo",
-//        "numbers": ["one", "two"],
-//        "tags": {"color": "red", "priority": "high"},
-//        "active": true
-//    }
+//	{
+//	    "id": 12345,
+//	    "name": "foo",
+//	    "numbers": ["one", "two"],
+//	    "tags": {"color": "red", "priority": "high"},
+//	    "active": true
+//	}
 //
 // Calling "Walk()" with the above input will produce:
 //
-//    | level | key        | value   |
-//    |-------|------------|---------|
-//    |   0   |            | {       |
-//    |   1   | "id"       | 12345   |
-//    |   1   | "name"     | "foo"   |
-//    |   1   | "numbers"  | [       |
-//    |   2   |            | "one"   |
-//    |   2   |            | "two"   |
-//    |   1   |            | ]       |
-//    |   1   | "tags"     | {       |
-//    |   2   | "color"    | "red"   |
-//    |   2   | "priority" | "high"  |
-//    |   1   |            | }       |
-//    |   1   | "active"   | true    |
-//    |   0   |            | }       |
+//	| level | key        | value   |
+//	|-------|------------|---------|
+//	|   0   |            | {       |
+//	|   1   | "id"       | 12345   |
+//	|   1   | "name"     | "foo"   |
+//	|   1   | "numbers"  | [       |
+//	|   2   |            | "one"   |
+//	|   2   |            | "two"   |
+//	|   1   |            | ]       |
+//	|   1   | "tags"     | {       |
+//	|   2   | "color"    | "red"   |
+//	|   2   | "priority" | "high"  |
+//	|   1   |            | }       |
+//	|   1   | "active"   | true    |
+//	|   0   |            | }       |
 //
 // "level" indicates the indentation of the key/value pair as if the json is
 // formatted properly. Keys and values are provided as raw literal. Strings are
@@ -50,12 +53,12 @@
 // "value" will never be empty (for valid json). You can test the first byte
 // ("value[0]") to get its type:
 //
-//     - 'n'     : Null ("null")
-//     - 'f', 't': Boolean ("false", "true")
-//     - '0'-'9' : Number
-//     - '"'     : String, see "Unquote"
-//     - '[', ']': Array
-//     - '{', '}': Object
+//   - 'n'     : Null ("null")
+//   - 'f', 't': Boolean ("false", "true")
+//   - '0'-'9' : Number
+//   - '"'     : String, see "Unquote"
+//   - '[', ']': Array
+//   - '{', '}': Object
 //
 // When processing arrays and objects, first the open bracket ("[", "{") will be
 // provided as "value", followed by its children, and finally the close bracket
@@ -70,9 +73,9 @@ import "fmt"
 //
 // The function "callback":
 //
-//     - may convert key and value to string for processing
-//     - may return false to skip processing the current object or array
-//     - must not modify any slice it receives.
+//   - may convert key and value to string for processing
+//   - may return false to skip processing the current object or array
+//   - must not modify any slice it receives.
 func Walk(input []byte, callback func(level int, key, value []byte) bool) error {
 	var key []byte
 	i, si, ei, st, sst := 0, 0, 0, 0, 1024
