@@ -104,7 +104,7 @@ resource "aws_vpc" "test" {
   cidr_block = "10.1.0.0/16"
 
   tags = {
-    Name = "lihaspoj"
+    Name = "leibovitz"
   }
 }
 
@@ -117,7 +117,7 @@ resource "aws_route_table" "test" {
   }
 
   tags = {
-    Name = "lihaspoj"
+    Name = "leibovitz"
   }
 }
 
@@ -126,7 +126,7 @@ resource "aws_subnet" "test" {
   vpc_id     = aws_vpc.test.id
 
   tags = {
-    Name = "lihaspoj"
+    Name = "leibovitz"
   }
 }
 
@@ -134,7 +134,7 @@ resource "aws_network_interface" "test" {
   subnet_id = aws_subnet.test.id
 
   tags = {
-    Name = "lihaspoj"
+    Name = "leibovitz"
   }
 }
 ```

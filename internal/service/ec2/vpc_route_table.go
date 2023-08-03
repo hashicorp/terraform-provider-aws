@@ -507,7 +507,6 @@ func routeTableAddRoute(ctx context.Context, conn *ec2.EC2, routeTableID string,
 		errCodeInvalidTransitGatewayIDNotFound,
 	)
 
-	// local routes can be adopted
 	if err != nil {
 		return fmt.Errorf("creating Route in Route Table (%s) with destination (%s): %w", routeTableID, destination, err)
 	}
