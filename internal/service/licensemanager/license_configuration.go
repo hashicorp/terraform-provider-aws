@@ -183,10 +183,6 @@ func resourceLicenseConfigurationDelete(ctx context.Context, d *schema.ResourceD
 		LicenseConfigurationArn: aws.String(d.Id()),
 	})
 
-	if tfawserr.ErrCodeEquals(err, licensemanager.ErrCodeInvalidParameterValueException) {
-		return nil
-	}
-
 	if err != nil {
 		return diag.Errorf("deleting License Manager License Configuration (%s): %s", d.Id(), err)
 	}
