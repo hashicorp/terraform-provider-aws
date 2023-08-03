@@ -17,6 +17,7 @@ func TestAccFMS_serial(t *testing.T) {
 			"basic": testAccAdminAccount_basic,
 		},
 		"Policy": {
+			"alb":                    testAccPolicy_alb,
 			"basic":                  testAccPolicy_basic,
 			"cloudfrontDistribution": testAccPolicy_cloudFrontDistribution,
 			"includeMap":             testAccPolicy_includeMap,

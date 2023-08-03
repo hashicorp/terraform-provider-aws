@@ -270,6 +270,38 @@ func testAccPolicy_tags(t *testing.T) {
 	})
 }
 
+func testAccPolicy_alb(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_fms_policy.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID)
+			acctest.PreCheckOrganizationsEnabled(ctx, t)
+			acctest.PreCheckOrganizationManagementAccount(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, fms.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckPolicyDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccPolicyConfig_alb(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckPolicyExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "resource_type", "AWS::ElasticLoadBalancingV2::LoadBalancer"),
+					resource.TestCheckResourceAttr(resourceName, "security_service_policy_data.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "security_service_policy_data.0.type", "WAFV2"),
+					acctest.CheckResourceAttrJMES(resourceName, "security_service_policy_data.0.managed_service_data", "type", "WAFV2"),
+					acctest.CheckResourceAttrJMES(resourceName, "security_service_policy_data.0.managed_service_data", "defaultAction.type", "ALLOW"),
+				),
+			},
+		},
+	})
+}
+
 func testAccPolicy_securityGroup(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -293,6 +325,7 @@ func testAccPolicy_securityGroup(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "resource_type", "AWS::EC2::SecurityGroup"),
 					resource.TestCheckResourceAttr(resourceName, "security_service_policy_data.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "security_service_policy_data.0.type", "SECURITY_GROUPS_CONTENT_AUDIT"),
 					acctest.CheckResourceAttrJMES(resourceName, "security_service_policy_data.0.managed_service_data", "type", "SECURITY_GROUPS_CONTENT_AUDIT"),
 					acctest.CheckResourceAttrJMES(resourceName, "security_service_policy_data.0.managed_service_data", "securityGroupAction.type", "ALLOW"),
 				),
@@ -661,6 +694,69 @@ resource "aws_wafregional_rule_group" "test" {
   name        = %[1]q
 }
 `, rName, tagKey1, tagValue1, tagKey2, tagValue2))
+}
+
+func testAccPolicyConfig_alb(rName string) string {
+	return acctest.ConfigCompose(testAccPolicyConfig_baseOrgMgmtAccount, fmt.Sprintf(`
+locals {
+  msd = {
+    type = "WAFV2"
+    preProcessRuleGroups = [
+      {
+        overrideAction = {
+          type = "NONE"
+        }
+        managedRuleGroupIdentifier = {
+          vendorName           = "AWS"
+          managedRuleGroupName = "AWSManagedRulesAmazonIpReputationList"
+          version              = null
+        }
+        ruleGroupArn           = null
+        ruleGroupType          = "ManagedRuleGroup"
+        excludeRules           = null
+        sampledRequestsEnabled = true
+      },
+      {
+        overrideAction = {
+          type = "NONE"
+        },
+        managedRuleGroupIdentifier = {
+          vendorName           = "AWS"
+          managedRuleGroupName = "AWSManagedRulesKnownBadInputsRuleSet"
+          version              = "Version_1.1"
+        },
+        ruleGroupArn           = null
+        ruleGroupType          = "ManagedRuleGroup"
+        excludeRules           = null
+        sampledRequestsEnabled = true
+      }
+    ]
+    postProcessRuleGroups                   = []
+    loggingConfiguration                    = null
+    sampledRequestsEnabledForDefaultActions = true
+    defaultAction = {
+      type = "ALLOW"
+    }
+    overrideCustomerWebACLAssociation = true
+  }
+}
+
+resource "aws_fms_policy" "test" {
+  name = %[1]q
+  resource_tags = {
+    "disable" = ""
+  }
+  exclude_resource_tags       = true
+  remediation_enabled         = true
+  resource_type_list          = ["AWS::ElasticLoadBalancingV2::LoadBalancer"]
+  delete_all_policy_resources = false
+
+  security_service_policy_data {
+    type                 = "WAFV2"
+    managed_service_data = jsonencode(local.msd)
+  }
+}
+`, rName))
 }
 
 func testAccPolicyConfig_securityGroup(rName string) string {
