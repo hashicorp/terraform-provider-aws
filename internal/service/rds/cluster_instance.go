@@ -2,6 +2,7 @@ package rds
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"regexp"
 	"strings"
@@ -109,7 +110,7 @@ func ResourceClusterInstance() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 				ValidateFunc: validation.Any(
-					validation.StringMatch(regexp.MustCompile(`^custom.*$`), "must begin with custom"),
+					validation.StringMatch(regexp.MustCompile(fmt.Sprintf(`^%s.*$`, InstanceEngineCustomPrefix)), fmt.Sprintf("must begin with %s", InstanceEngineCustomPrefix)),
 					validation.StringInSlice(ClusterEngine_Values(), false),
 				),
 			},
@@ -525,7 +526,7 @@ func resourceClusterInstanceDelete(ctx context.Context, d *schema.ResourceData, 
 	}
 
 	// Automatically set skip_final_snapshot = true for RDS Custom instances
-	if strings.HasPrefix(d.Get("engine").(string), "custom-") {
+	if strings.HasPrefix(d.Get("engine").(string), InstanceEngineCustomPrefix) {
 		log.Printf("[DEBUG] RDS Custom engine detected (%s) applying SkipFinalSnapshot: %s", d.Get("engine").(string), "true")
 		input.SkipFinalSnapshot = aws.Bool(true)
 	}
