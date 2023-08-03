@@ -22,7 +22,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccFinSpaceKxUser_basic(t *testing.T) {
+func testAccKxUser_basic(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -33,7 +33,7 @@ func TestAccFinSpaceKxUser_basic(t *testing.T) {
 	userName := sdkacctest.RandString(sdkacctest.RandIntRange(1, 50))
 	resourceName := "aws_finspace_kx_user.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, finspace.ServiceID)
@@ -58,7 +58,7 @@ func TestAccFinSpaceKxUser_basic(t *testing.T) {
 	})
 }
 
-func TestAccFinSpaceKxUser_disappears(t *testing.T) {
+func testAccKxUser_disappears(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -69,7 +69,7 @@ func TestAccFinSpaceKxUser_disappears(t *testing.T) {
 	userName := sdkacctest.RandString(sdkacctest.RandIntRange(1, 50))
 	resourceName := "aws_finspace_kx_user.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, finspace.ServiceID)
@@ -90,7 +90,7 @@ func TestAccFinSpaceKxUser_disappears(t *testing.T) {
 	})
 }
 
-func TestAccFinSpaceKxUser_updateRole(t *testing.T) {
+func testAccKxUser_updateRole(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -101,7 +101,7 @@ func TestAccFinSpaceKxUser_updateRole(t *testing.T) {
 	userName := sdkacctest.RandString(sdkacctest.RandIntRange(1, 50))
 	resourceName := "aws_finspace_kx_user.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, finspace.ServiceID)
@@ -126,7 +126,7 @@ func TestAccFinSpaceKxUser_updateRole(t *testing.T) {
 	})
 }
 
-func TestAccFinSpaceKxUser_tags(t *testing.T) {
+func testAccKxUser_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
@@ -137,7 +137,7 @@ func TestAccFinSpaceKxUser_tags(t *testing.T) {
 	userName := sdkacctest.RandString(sdkacctest.RandIntRange(1, 50))
 	resourceName := "aws_finspace_kx_user.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, finspace.ServiceID)

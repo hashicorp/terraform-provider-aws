@@ -28,9 +28,9 @@ The following arguments are required:
 * `name` - (Required) Name of the State Machine alias.
 * `statemachine_arn` - (Required) ARN of the State Machine.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This data source exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN identifying the State Machine alias.
 * `creation_date` - Date the state machine Alias was created.

@@ -18,9 +18,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_vpc")
+// @SDKDataSource("aws_vpc", name="VPC")
+// @Tags
 func DataSourceVPC() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceVPCRead,
@@ -112,7 +114,7 @@ func DataSourceVPC() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
-			"tags": tftags.TagsSchemaComputed(),
+			names.AttrTags: tftags.TagsSchemaComputed(),
 		},
 	}
 }
@@ -120,7 +122,6 @@ func DataSourceVPC() *schema.Resource {
 func dataSourceVPCRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	// We specify "default" as boolean, but EC2 filters want
 	// it to be serialized as a string. Note that setting it to
@@ -146,15 +147,9 @@ func dataSourceVPCRead(ctx context.Context, d *schema.ResourceData, meta interfa
 		input.VpcIds = aws.StringSlice([]string{v.(string)})
 	}
 
-	if tags, tagsOk := d.GetOk("tags"); tagsOk {
-		input.Filters = append(input.Filters, BuildTagFilterList(
-			Tags(tftags.New(ctx, tags.(map[string]interface{}))),
-		)...)
-	}
+	input.Filters = append(input.Filters, BuildCustomFilterList(d.Get("filter").(*schema.Set))...)
+	input.Filters = append(input.Filters, tagFilters(ctx)...)
 
-	input.Filters = append(input.Filters, BuildCustomFilterList(
-		d.Get("filter").(*schema.Set),
-	)...)
 	if len(input.Filters) == 0 {
 		// Don't send an empty filters list; the EC2 API won't accept it.
 		input.Filters = nil
@@ -229,9 +224,7 @@ func dataSourceVPCRead(ctx context.Context, d *schema.ResourceData, meta interfa
 		d.Set("ipv6_cidr_block", nil)
 	}
 
-	if err := d.Set("tags", KeyValueTags(ctx, vpc.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-	}
+	setTagsOut(ctx, vpc.Tags)
 
 	return diags
 }

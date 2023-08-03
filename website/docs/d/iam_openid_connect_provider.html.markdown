@@ -31,7 +31,9 @@ data "aws_iam_openid_connect_provider" "example" {
 * `arn` - (Optional) ARN of the OpenID Connect provider.
 * `url` - (Optional) URL of the OpenID Connect provider.
 
-## Attributes Reference
+## Attribute Reference
+
+This data source exports the following attributes in addition to the arguments above:
 
 * `client_id_list` - List of client IDs (also known as audiences). When a mobile or web app registers with an OpenID Connect provider, they establish a value that identifies the application. (This is the value that's sent as the client_id parameter on OAuth requests.)
 * `thumbprint_list` - List of server certificate thumbprints for the OpenID Connect (OIDC) identity provider's server certificate(s).

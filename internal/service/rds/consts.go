@@ -101,12 +101,6 @@ const (
 )
 
 const (
-	InstanceAutomatedBackupStatusPending     = "pending"
-	InstanceAutomatedBackupStatusReplicating = "replicating"
-	InstanceAutomatedBackupStatusRetained    = "retained"
-)
-
-const (
 	EventSubscriptionStatusActive    = "active"
 	EventSubscriptionStatusCreating  = "creating"
 	EventSubscriptionStatusDeleting  = "deleting"
@@ -226,6 +220,18 @@ func TimeoutAction_Values() []string {
 	return []string{
 		TimeoutActionForceApplyCapacityChange,
 		TimeoutActionRollbackCapacityChange,
+	}
+}
+
+const (
+	backupTargetOutposts = "outposts"
+	backupTargetRegion   = "region"
+)
+
+func backupTarget_Values() []string {
+	return []string{
+		backupTargetOutposts,
+		backupTargetRegion,
 	}
 }
 

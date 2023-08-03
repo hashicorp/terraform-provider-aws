@@ -38,7 +38,7 @@ resource "aws_route53domains_registered_domain" "example" {
 
 ~> **NOTE:** You must specify the same privacy setting for `admin_privacy`, `registrant_privacy` and `tech_privacy`.
 
-The following arguments are supported:
+This argument supports the following arguments:
 
 * `admin_contact` - (Optional) Details about the domain administrative contact.
 * `admin_privacy` - (Optional) Whether domain administrative contact information is concealed from WHOIS queries. Default: `true`.
@@ -74,9 +74,9 @@ The `name_server` object supports the following:
 * `glue_ips` - (Optional) Glue IP addresses of a name server. The list can contain only one IPv4 and one IPv6 address.
 * `name` - (Required) The fully qualified host name of the name server.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The domain name.
 * `abuse_contact_email` - Email address to contact to report incorrect contact information for a domain, to report that the domain is being used to send spam, to report that someone is cybersquatting on a domain name, or report some other type of abuse.

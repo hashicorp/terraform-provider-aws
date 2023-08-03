@@ -49,6 +49,10 @@ func main() {
 			continue
 		}
 
+		if l[names.ColNotImplemented] != "" {
+			continue
+		}
+
 		if l[names.ColProviderPackageActual] == "" && l[names.ColProviderPackageCorrect] == "" {
 			continue
 		}

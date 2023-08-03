@@ -76,9 +76,9 @@ The `attachment` block supports the following:
 * `instance` - (Required) ID of the instance to attach to.
 * `device_index` - (Required) Integer to define the devices index.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the network interface.
 * `id` - ID of the network interface.
@@ -89,8 +89,17 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Network Interfaces can be imported using the `id`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Network Interfaces using the `id`. For example:
 
+```terraform
+import {
+  to = aws_network_interface.test
+  id = "eni-e5aa89a3"
+}
 ```
-$ terraform import aws_network_interface.test eni-e5aa89a3
+
+Using `terraform import`, import Network Interfaces using the `id`. For example:
+
+```console
+% terraform import aws_network_interface.test eni-e5aa89a3
 ```

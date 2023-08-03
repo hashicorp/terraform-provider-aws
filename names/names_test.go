@@ -316,12 +316,6 @@ func TestFullHumanFriendly(t *testing.T) {
 			Error:    false,
 		},
 		{
-			TestName: DRS,
-			Input:    DRS,
-			Expected: "AWS DRS (Elastic Disaster Recovery)",
-			Error:    false,
-		},
-		{
 			TestName: "doesnotexist",
 			Input:    "doesnotexist",
 			Expected: "",
@@ -368,8 +362,8 @@ func TestAWSGoV1Package(t *testing.T) {
 		},
 		{
 			TestName: "same as AWS",
-			Input:    Translate,
-			Expected: Translate,
+			Input:    CloudTrail,
+			Expected: CloudTrail,
 			Error:    false,
 		},
 		{

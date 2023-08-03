@@ -104,7 +104,7 @@ func sweepHealthChecks(region string) error {
 		errs = multierror.Append(errs, fmt.Errorf("describing Route53 Health Checks for %s: %w", region, err))
 	}
 
-	if err = sweep.SweepOrchestratorWithContext(ctx, sweepResources, tfresource.WithDelayRand(1*time.Minute), tfresource.WithMinPollInterval(10*time.Second), tfresource.WithPollInterval(18*time.Second)); err != nil {
+	if err = sweep.SweepOrchestrator(ctx, sweepResources, tfresource.WithDelayRand(1*time.Minute), tfresource.WithMinPollInterval(10*time.Second), tfresource.WithPollInterval(18*time.Second)); err != nil {
 		errs = multierror.Append(errs, fmt.Errorf("sweeping Route53 Health Checks for %s: %w", region, err))
 	}
 
@@ -184,7 +184,7 @@ func sweepKeySigningKeys(region string) error {
 		errs = multierror.Append(errs, fmt.Errorf("getting Route53 Key-Signing Keys for %s: %w", region, err))
 	}
 
-	if err = sweep.SweepOrchestratorWithContext(ctx, sweepResources, tfresource.WithDelayRand(1*time.Minute), tfresource.WithMinPollInterval(30*time.Second), tfresource.WithPollInterval(30*time.Second)); err != nil {
+	if err = sweep.SweepOrchestrator(ctx, sweepResources, tfresource.WithDelayRand(1*time.Minute), tfresource.WithMinPollInterval(30*time.Second), tfresource.WithPollInterval(30*time.Second)); err != nil {
 		errs = multierror.Append(errs, fmt.Errorf("sweeping Route53 Key-Signing Keys for %s: %w", region, err))
 	}
 
@@ -234,7 +234,7 @@ func sweepQueryLogs(region string) error {
 		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("retrieving Route53 query logging configurations: %w", err))
 	}
 
-	if err := sweep.SweepOrchestratorWithContext(ctx, sweepResources); err != nil {
+	if err := sweep.SweepOrchestrator(ctx, sweepResources); err != nil {
 		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error sweeping Route53 query logging configurations: %w", err))
 	}
 
@@ -276,7 +276,7 @@ func sweepTrafficPolicies(region string) error {
 		return fmt.Errorf("listing Route 53 Traffic Policies (%s): %w", region, err)
 	}
 
-	err = sweep.SweepOrchestratorWithContext(ctx, sweepResources)
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
 
 	if err != nil {
 		return fmt.Errorf("sweeping Route 53 Traffic Policies (%s): %w", region, err)
@@ -320,7 +320,7 @@ func sweepTrafficPolicyInstances(region string) error {
 		return fmt.Errorf("listing Route 53 Traffic Policy Instances (%s): %w", region, err)
 	}
 
-	err = sweep.SweepOrchestratorWithContext(ctx, sweepResources)
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
 
 	if err != nil {
 		return fmt.Errorf("sweeping Route 53 Traffic Policy Instances (%s): %w", region, err)
@@ -379,7 +379,7 @@ func sweepZones(region string) error {
 		errs = multierror.Append(errs, fmt.Errorf("describing Route53 Hosted Zones for %s: %w", region, err))
 	}
 
-	if err = sweep.SweepOrchestratorWithContext(ctx, sweepResources, tfresource.WithDelayRand(1*time.Minute), tfresource.WithMinPollInterval(10*time.Second), tfresource.WithPollInterval(18*time.Second)); err != nil {
+	if err = sweep.SweepOrchestrator(ctx, sweepResources, tfresource.WithDelayRand(1*time.Minute), tfresource.WithMinPollInterval(10*time.Second), tfresource.WithPollInterval(18*time.Second)); err != nil {
 		errs = multierror.Append(errs, fmt.Errorf("sweeping Route53 Hosted Zones for %s: %w", region, err))
 	}
 

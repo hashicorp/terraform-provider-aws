@@ -56,9 +56,9 @@ The following arguments are optional:
 
 - `tags` - (Optional) Map of tags to assign to the resource.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 - `arn` - The Amazon Resource Name (ARN) of the contact or escalation plan.
 
@@ -66,8 +66,17 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Import SSM Contact using the `ARN`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import SSM Contact using the `ARN`. For example:
 
+```terraform
+import {
+  to = aws_ssmcontacts_contact.example
+  id = "{ARNValue}"
+}
 ```
-$ terraform import aws_ssmcontacts_contact.example {ARNValue}
+
+Using `terraform import`, import SSM Contact using the `ARN`. For example:
+
+```console
+% terraform import aws_ssmcontacts_contact.example {ARNValue}
 ```

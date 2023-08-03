@@ -66,7 +66,7 @@ func sweepReplicationInstances(region string) error {
 		errs = multierror.Append(errs, fmt.Errorf("error describing DMS Replication Instances: %w", err))
 	}
 
-	if err = sweep.SweepOrchestratorWithContext(ctx, sweepResources); err != nil {
+	if err = sweep.SweepOrchestrator(ctx, sweepResources); err != nil {
 		errs = multierror.Append(errs, fmt.Errorf("error sweeping DMS Replication Instances for %s: %w", region, err))
 	}
 
@@ -110,7 +110,7 @@ func sweepReplicationTasks(region string) error {
 		errs = multierror.Append(errs, fmt.Errorf("error describing DMS Replication Tasks: %w", err))
 	}
 
-	if err = sweep.SweepOrchestratorWithContext(ctx, sweepResources); err != nil {
+	if err = sweep.SweepOrchestrator(ctx, sweepResources); err != nil {
 		errs = multierror.Append(errs, fmt.Errorf("error sweeping DMS Replication Tasks for %s: %w", region, err))
 	}
 
@@ -151,7 +151,7 @@ func sweepEndpoints(region string) error {
 		errs = multierror.Append(errs, fmt.Errorf("error describing DMS Endpoints: %w", err))
 	}
 
-	if err = sweep.SweepOrchestratorWithContext(ctx, sweepResources); err != nil {
+	if err = sweep.SweepOrchestrator(ctx, sweepResources); err != nil {
 		errs = multierror.Append(errs, fmt.Errorf("error sweeping DMS Endpoints for %s: %w", region, err))
 	}
 

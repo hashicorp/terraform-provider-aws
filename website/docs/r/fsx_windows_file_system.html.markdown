@@ -77,7 +77,7 @@ The following arguments are optional:
 
 ### self_managed_active_directory
 
-The following arguments are supported for `self_managed_active_directory` configuration block:
+The `self_managed_active_directory` configuration block supports the following arguments:
 
 * `dns_ips` - (Required) A list of up to two IP addresses of DNS servers or domain controllers in the self-managed AD directory. The IP addresses need to be either in the same VPC CIDR range as the file system or in the private IP version 4 (IPv4) address ranges as specified in [RFC 1918](https://tools.ietf.org/html/rfc1918).
 * `domain_name` - (Required) The fully qualified domain name of the self-managed AD directory. For example, `corp.example.com`.
@@ -92,9 +92,9 @@ The following arguments are supported for `self_managed_active_directory` config
 * `file_access_audit_log_level` - (Optional) Sets which attempt type is logged by Amazon FSx for file and folder accesses. Valid values are `SUCCESS_ONLY`, `FAILURE_ONLY`, `SUCCESS_AND_FAILURE`, and `DISABLED`. Default value is `DISABLED`.
 * `file_share_access_audit_log_level` - (Optional) Sets which attempt type is logged by Amazon FSx for file share accesses. Valid values are `SUCCESS_ONLY`, `FAILURE_ONLY`, `SUCCESS_AND_FAILURE`, and `DISABLED`. Default value is `DISABLED`.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - Amazon Resource Name of the file system.
 * `dns_name` - DNS name for the file system, e.g., `fs-12345678.corp.example.com` (domain name matching the Active Directory domain name)
@@ -116,13 +116,22 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-FSx File Systems can be imported using the `id`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import FSx File Systems using the `id`. For example:
 
-```
-$ terraform import aws_fsx_windows_file_system.example fs-543ab12b1ca672f33
+```terraform
+import {
+  to = aws_fsx_windows_file_system.example
+  id = "fs-543ab12b1ca672f33"
+}
 ```
 
-Certain resource arguments, like `security_group_ids` and the `self_managed_active_directory` configuation block `password`, do not have a FSx API method for reading the information after creation. If these arguments are set in the Terraform configuration on an imported resource, Terraform will always show a difference. To workaround this behavior, either omit the argument from the Terraform configuration or use [`ignore_changes`](https://www.terraform.io/docs/configuration/meta-arguments/lifecycle.html#ignore_changes) to hide the difference, e.g.,
+Using `terraform import`, import FSx File Systems using the `id`. For example:
+
+```console
+% terraform import aws_fsx_windows_file_system.example fs-543ab12b1ca672f33
+```
+
+Certain resource arguments, like `security_group_ids` and the `self_managed_active_directory` configuation block `password`, do not have a FSx API method for reading the information after creation. If these arguments are set in the Terraform configuration on an imported resource, Terraform will always show a difference. To workaround this behavior, either omit the argument from the Terraform configuration or use [`ignore_changes`](https://www.terraform.io/docs/configuration/meta-arguments/lifecycle.html#ignore_changes) to hide the difference. For example:
 
 ```terraform
 resource "aws_fsx_windows_file_system" "example" {
