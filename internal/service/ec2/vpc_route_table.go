@@ -243,7 +243,7 @@ func resourceRouteTableRead(ctx context.Context, d *schema.ResourceData, meta in
 	if err := d.Set("propagating_vgws", propagatingVGWs); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting propagating_vgws: %s", err)
 	}
-	if err := d.Set("route", flattenRoutes(ctx, d, conn, routeTable.Routes)); err != nil {
+	if err := d.Set("route", flattenRoutes(ctx, conn, d, routeTable.Routes)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting route: %s", err)
 	}
 	d.Set("vpc_id", routeTable.VpcId)
@@ -835,7 +835,7 @@ func flattenRoute(apiObject *ec2.Route) map[string]interface{} {
 	return tfMap
 }
 
-func flattenRoutes(ctx context.Context, d *schema.ResourceData, conn *ec2.EC2, apiObjects []*ec2.Route) []interface{} {
+func flattenRoutes(ctx context.Context, conn *ec2.EC2, d *schema.ResourceData, apiObjects []*ec2.Route) []interface{} {
 	if len(apiObjects) == 0 {
 		return nil
 	}
