@@ -231,7 +231,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-- `create` - (Default `120M`)
+- `create` - (Default `240M`)
 - `update` - (Default `90M`)
 - `delete` - (Default `90M`)
 
