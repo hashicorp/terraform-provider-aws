@@ -155,7 +155,7 @@ func TestUnquoteInvalidUTF8(t *testing.T) {
 			t.Errorf("%d. Unquote(%q) = err %v; want %q", i, tt.in, err, tt.wantErr)
 		}
 		if tt.wantErr == "" && err == nil && string(got) != tt.want {
-			t.Errorf("%d. Unquote(%q) = %02x; want %02x", i, tt.in, []byte(got), []byte(tt.want))
+			t.Errorf("%d. Unquote(%q) = %02x; want %02x", i, tt.in, got, []byte(tt.want))
 		}
 	}
 }
