@@ -37,7 +37,7 @@ func DataSourceKeyPair() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"filter": DataSourceFiltersSchema(),
+			"filter": CustomFiltersSchema(),
 			"fingerprint": {
 				Type:     schema.TypeString,
 				Computed: true,

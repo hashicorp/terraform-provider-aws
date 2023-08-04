@@ -21,7 +21,7 @@ func DataSourceTransitGatewayRouteTableRoutes() *schema.Resource {
 		ReadWithoutTimeout: dataSourceTransitGatewayRouteTableRoutesRead,
 
 		Schema: map[string]*schema.Schema{
-			"filter": DataSourceFiltersSchema(),
+			"filter": CustomFiltersSchema(),
 			"routes": {
 				Type:     schema.TypeList,
 				Computed: true,

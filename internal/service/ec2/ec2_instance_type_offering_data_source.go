@@ -26,7 +26,7 @@ func DataSourceInstanceTypeOffering() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"filter": DataSourceFiltersSchema(),
+			"filter": CustomFiltersSchema(),
 			"instance_type": {
 				Type:     schema.TypeString,
 				Computed: true,

@@ -100,7 +100,7 @@ func DataSourceNetworkInterface() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"filter": DataSourceFiltersSchema(),
+			"filter": CustomFiltersSchema(),
 			"id": {
 				Type:     schema.TypeString,
 				Optional: true,

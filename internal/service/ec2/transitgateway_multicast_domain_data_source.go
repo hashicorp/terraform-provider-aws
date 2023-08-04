@@ -50,7 +50,7 @@ func DataSourceTransitGatewayMulticastDomain() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"filter": DataSourceFiltersSchema(),
+			"filter": CustomFiltersSchema(),
 			"igmpv2_support": {
 				Type:     schema.TypeString,
 				Computed: true,

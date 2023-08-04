@@ -47,7 +47,7 @@ func DataSourceTransitGatewayConnectPeer() *schema.Resource {
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"filter": DataSourceFiltersSchema(),
+			"filter": CustomFiltersSchema(),
 			"inside_cidr_blocks": {
 				Type:     schema.TypeList,
 				Computed: true,

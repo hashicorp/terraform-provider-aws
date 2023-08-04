@@ -94,7 +94,7 @@ func DataSourceAMI() *schema.Resource {
 				Optional: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"filter": DataSourceFiltersSchema(),
+			"filter": CustomFiltersSchema(),
 			"hypervisor": {
 				Type:     schema.TypeString,
 				Computed: true,

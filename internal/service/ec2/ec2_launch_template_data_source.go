@@ -210,7 +210,7 @@ func DataSourceLaunchTemplate() *schema.Resource {
 					},
 				},
 			},
-			"filter": DataSourceFiltersSchema(),
+			"filter": CustomFiltersSchema(),
 			"hibernation_options": {
 				Type:     schema.TypeList,
 				Computed: true,

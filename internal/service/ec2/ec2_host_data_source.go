@@ -49,7 +49,7 @@ func DataSourceHost() *schema.Resource {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
-			"filter": DataSourceFiltersSchema(),
+			"filter": CustomFiltersSchema(),
 			"host_id": {
 				Type:     schema.TypeString,
 				Optional: true,

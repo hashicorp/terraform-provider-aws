@@ -46,7 +46,7 @@ func DataSourceEBSSnapshot() *schema.Resource {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
-			"filter": DataSourceFiltersSchema(),
+			"filter": CustomFiltersSchema(),
 			"kms_key_id": {
 				Type:     schema.TypeString,
 				Computed: true,

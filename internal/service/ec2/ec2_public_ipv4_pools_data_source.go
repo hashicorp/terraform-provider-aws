@@ -21,7 +21,7 @@ func DataSourcePublicIPv4Pools() *schema.Resource {
 		ReadWithoutTimeout: dataSourcePublicIPv4PoolsRead,
 
 		Schema: map[string]*schema.Schema{
-			"filter": DataSourceFiltersSchema(),
+			"filter": CustomFiltersSchema(),
 			"pool_ids": {
 				Type:     schema.TypeList,
 				Computed: true,

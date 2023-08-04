@@ -25,7 +25,7 @@ func DataSourceIPAMPoolCIDRs() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"filter": DataSourceFiltersSchema(),
+			"filter": CustomFiltersSchema(),
 			"ipam_pool_id": {
 				Type:     schema.TypeString,
 				Required: true,

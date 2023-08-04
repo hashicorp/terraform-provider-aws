@@ -36,7 +36,7 @@ func DataSourceAMIIDs() *schema.Resource {
 				Optional: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"filter": DataSourceFiltersSchema(),
+			"filter": CustomFiltersSchema(),
 			"ids": {
 				Type:     schema.TypeList,
 				Computed: true,

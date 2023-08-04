@@ -32,7 +32,7 @@ func DataSourceSecurityGroups() *schema.Resource {
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"filter": DataSourceFiltersSchema(),
+			"filter": CustomFiltersSchema(),
 			"ids": {
 				Type:     schema.TypeList,
 				Computed: true,

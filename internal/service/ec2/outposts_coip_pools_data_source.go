@@ -26,7 +26,7 @@ func DataSourceCoIPPools() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"filter": DataSourceFiltersSchema(),
+			"filter": CustomFiltersSchema(),
 			"pool_ids": {
 				Type:     schema.TypeList,
 				Computed: true,

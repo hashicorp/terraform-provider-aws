@@ -20,7 +20,7 @@ func DataSourceManagedPrefixLists() *schema.Resource {
 		ReadWithoutTimeout: dataSourceManagedPrefixListsRead,
 
 		Schema: map[string]*schema.Schema{
-			"filter": DataSourceFiltersSchema(),
+			"filter": CustomFiltersSchema(),
 			"ids": {
 				Type:     schema.TypeList,
 				Computed: true,

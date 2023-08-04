@@ -22,7 +22,7 @@ func DataSourceIPAMPools() *schema.Resource {
 		ReadWithoutTimeout: dataSourceIPAMPoolsRead,
 
 		Schema: map[string]*schema.Schema{
-			"filter": DataSourceFiltersSchema(),
+			"filter": CustomFiltersSchema(),
 			"ipam_pools": {
 				Type:     schema.TypeSet,
 				Computed: true,
