@@ -1,0 +1,5 @@
+```release-note:enhancement
+resource/aws_rds_cluster_instance: Added `custom_iam_instance_profile` to allow RDS Custom users to specify an IAM Instance Profile for the RDS Cluster Instance
+resource/aws_rds_cluster_instance: Updated `engine` to allow for RDS Custom engine types  
+resource/aws_rds_cluster: Added `db_system_id` to support RDS Custom engine types that require a DB System ID
+```
