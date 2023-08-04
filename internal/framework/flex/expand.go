@@ -338,7 +338,7 @@ func (visitor expandVisitor) list(ctx context.Context, vFrom basetypes.ListValua
 }
 
 // listOfString copies a Plugin Framework ListOfString(ish) value to a compatible AWS API field.
-func (visitor expandVisitor) listOfString(ctx context.Context, vFrom basetypes.ListValue, vTo reflect.Value) diag.Diagnostics {
+func (visitor expandVisitor) listOfString(ctx context.Context, vFrom basetypes.ListValue, vTo reflect.Value) diag.Diagnostics { //nolint:unparam
 	var diags diag.Diagnostics
 
 	switch vTo.Kind() {
@@ -396,7 +396,7 @@ func (visitor expandVisitor) map_(ctx context.Context, vFrom basetypes.MapValuab
 }
 
 // mapOfString copies a Plugin Framework MapOfString(ish) value to a compatible AWS API field.
-func (visitor expandVisitor) mapOfString(ctx context.Context, vFrom basetypes.MapValue, vTo reflect.Value) diag.Diagnostics {
+func (visitor expandVisitor) mapOfString(ctx context.Context, vFrom basetypes.MapValue, vTo reflect.Value) diag.Diagnostics { //nolint:unparam
 	var diags diag.Diagnostics
 
 	switch vTo.Kind() {
@@ -463,7 +463,7 @@ func (visitor expandVisitor) set(ctx context.Context, vFrom basetypes.SetValuabl
 }
 
 // setOfString copies a Plugin Framework SetOfString(ish) value to a compatible AWS API field.
-func (visitor expandVisitor) setOfString(ctx context.Context, vFrom basetypes.SetValue, vTo reflect.Value) diag.Diagnostics {
+func (visitor expandVisitor) setOfString(ctx context.Context, vFrom basetypes.SetValue, vTo reflect.Value) diag.Diagnostics { //nolint:unparam
 	var diags diag.Diagnostics
 
 	switch vTo.Kind() {
