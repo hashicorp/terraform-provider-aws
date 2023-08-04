@@ -145,10 +145,13 @@ func (r *resourceInstanceConnectEndpoint) Create(ctx context.Context, request re
 
 	input := &ec2.CreateInstanceConnectEndpointInput{
 		ClientToken:       aws.String(id.UniqueId()),
-		PreserveClientIp:  aws.Bool(data.PreserveClientIp.ValueBool()),
-		SecurityGroupIds:  flex.ExpandFrameworkStringValueSet(ctx, data.SecurityGroupIds),
-		SubnetId:          aws.String(data.SubnetId.ValueString()),
 		TagSpecifications: getTagSpecificationsInV2(ctx, awstypes.ResourceTypeInstanceConnectEndpoint),
+	}
+
+	response.Diagnostics.Append(flex.Expand(ctx, &data, input)...)
+
+	if response.Diagnostics.HasError() {
+		return
 	}
 
 	output, err := conn.CreateInstanceConnectEndpoint(ctx, input)
