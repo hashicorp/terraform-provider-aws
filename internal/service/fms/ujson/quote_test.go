@@ -4,6 +4,7 @@
 package ujson_test
 
 import (
+	"errors"
 	"testing"
 
 	. "github.com/hashicorp/terraform-provider-aws/internal/service/fms/ujson"
@@ -122,7 +123,7 @@ func TestUnquote(t *testing.T) {
 	}
 
 	for _, s := range misquoted {
-		if out, err := Unquote([]byte(s)); out != nil || err != ErrSyntax {
+		if out, err := Unquote([]byte(s)); out != nil || !errors.Is(err, ErrSyntax) {
 			t.Errorf("Unquote(%#q) = %q, %v want %q, %v", s, out, err, "", ErrSyntax)
 		}
 	}
