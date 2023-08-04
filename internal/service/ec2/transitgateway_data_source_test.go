@@ -70,8 +70,7 @@ func TestAccTransitGatewayDataSource_serial(t *testing.T) {
 			"basic":  testAccTransitGatewayRouteTablePropagationsDataSource_basic,
 		},
 		"RouteTableRoutes": {
-			"basic":  testAccTransitGatewayRouteTableRoutesDataSource_basic,
-			"filter": testAccTransitGatewayRouteTableRoutesDataSource_filter,
+			"basic": testAccTransitGatewayRouteTableRoutesDataSource_basic,
 		},
 		"VpcAttachment": {
 			"Filter": testAccTransitGatewayVPCAttachmentDataSource_Filter,
