@@ -12,10 +12,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 )
-
-// TODO Replace some error Diagnostics with logging.
 
 // Flatten "flattens" an AWS SDK for Go v2 API data structure into
 // a resource's "business logic" data structure, implemented using
@@ -77,7 +76,11 @@ func (visitor flattenVisitor) visit(ctx context.Context, fieldName string, vFrom
 		return diags
 	}
 
-	diags.Append(visitor.newIncompatibleTypesError(vFrom, tTo))
+	tflog.Info(ctx, "AutoFlex Flatten; incompatible types", map[string]interface{}{
+		"from": vFrom.Kind(),
+		"to":   tTo,
+	})
+
 	return diags
 }
 
@@ -100,7 +103,11 @@ func (visitor flattenVisitor) bool(ctx context.Context, vFrom reflect.Value, tTo
 		return diags
 	}
 
-	diags.Append(visitor.newIncompatibleTypesError(vFrom, tTo))
+	tflog.Info(ctx, "AutoFlex Flatten; incompatible types", map[string]interface{}{
+		"from": vFrom.Kind(),
+		"to":   tTo,
+	})
+
 	return diags
 }
 
@@ -123,7 +130,11 @@ func (visitor flattenVisitor) float(ctx context.Context, vFrom reflect.Value, tT
 		return diags
 	}
 
-	diags.Append(visitor.newIncompatibleTypesError(vFrom, tTo))
+	tflog.Info(ctx, "AutoFlex Flatten; incompatible types", map[string]interface{}{
+		"from": vFrom.Kind(),
+		"to":   tTo,
+	})
+
 	return diags
 }
 
@@ -146,7 +157,11 @@ func (visitor flattenVisitor) int(ctx context.Context, vFrom reflect.Value, tTo 
 		return diags
 	}
 
-	diags.Append(visitor.newIncompatibleTypesError(vFrom, tTo))
+	tflog.Info(ctx, "AutoFlex Flatten; incompatible types", map[string]interface{}{
+		"from": vFrom.Kind(),
+		"to":   tTo,
+	})
+
 	return diags
 }
 
@@ -169,7 +184,11 @@ func (visitor flattenVisitor) string(ctx context.Context, vFrom reflect.Value, t
 		return diags
 	}
 
-	diags.Append(visitor.newIncompatibleTypesError(vFrom, tTo))
+	tflog.Info(ctx, "AutoFlex Flatten; incompatible types", map[string]interface{}{
+		"from": vFrom.Kind(),
+		"to":   tTo,
+	})
+
 	return diags
 }
 
@@ -224,7 +243,11 @@ func (visitor flattenVisitor) ptr(ctx context.Context, vFrom reflect.Value, tTo 
 		}
 	}
 
-	diags.Append(visitor.newIncompatibleTypesError(vFrom, tTo))
+	tflog.Info(ctx, "AutoFlex Flatten; incompatible types", map[string]interface{}{
+		"from": vFrom.Kind(),
+		"to":   tTo,
+	})
+
 	return diags
 }
 
@@ -333,7 +356,11 @@ func (visitor flattenVisitor) slice(ctx context.Context, vFrom reflect.Value, tT
 		}
 	}
 
-	diags.Append(visitor.newIncompatibleTypesError(vFrom, tTo))
+	tflog.Info(ctx, "AutoFlex Flatten; incompatible types", map[string]interface{}{
+		"from": vFrom.Kind(),
+		"to":   tTo,
+	})
+
 	return diags
 }
 
@@ -391,7 +418,11 @@ func (visitor flattenVisitor) map_(ctx context.Context, vFrom reflect.Value, tTo
 		}
 	}
 
-	diags.Append(visitor.newIncompatibleTypesError(vFrom, tTo))
+	tflog.Info(ctx, "AutoFlex Flatten; incompatible types", map[string]interface{}{
+		"from": vFrom.Kind(),
+		"to":   tTo,
+	})
+
 	return diags
 }
 
@@ -481,8 +512,4 @@ func (visitor flattenVisitor) sliceOfStructNestedObject(ctx context.Context, vFr
 
 	vTo.Set(reflect.ValueOf(val))
 	return diags
-}
-
-func (visitor flattenVisitor) newIncompatibleTypesError(vFrom reflect.Value, tTo attr.Type) diag.ErrorDiagnostic {
-	return diag.NewErrorDiagnostic("Incompatible types", fmt.Sprintf("%s cannot be flattened to %s", vFrom.Kind(), tTo))
 }

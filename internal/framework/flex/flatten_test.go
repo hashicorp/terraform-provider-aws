@@ -101,7 +101,6 @@ func TestGenericFlatten(t *testing.T) {
 			Source:     &TestFlexAWS01{Field1: "a"},
 			Target:     &TestFlexTF02{},
 			WantTarget: &TestFlexTF02{},
-			WantErr:    true,
 		},
 		{
 			TestName: "zero value primtive types Source and primtive types Target",
