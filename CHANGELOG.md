@@ -1,5 +1,9 @@
 ## 5.12.0 (Unreleased)
 
+FEATURES:
+
+* **New Resource:** `aws_codecatalyst_dev_environment` ([#32366](https://github.com/hashicorp/terraform-provider-aws/issues/32366))
+
 ENHANCEMENTS:
 
 * resource/aws_fms_admin_account: Add configurable timeouts ([#32860](https://github.com/hashicorp/terraform-provider-aws/issues/32860))
