@@ -166,10 +166,10 @@ The following arguments are optional:
 * `terraform_key` - (Optional) The JSON key used to store lifecycle information in the input JSON payload. Defaults to `tf`. This additional key is only included when `lifecycle_scope` is set to `CRUD`.
 * `triggers` - (Optional) Map of arbitrary keys and values that, when changed, will trigger a re-invocation. To force a re-invocation without changing these keys/values, use the [`terraform taint` command](https://www.terraform.io/docs/commands/taint.html).
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `result` - String result of the lambda function invocation.
 
-<!-- cache-key: cdktf-0.17.1 input-a89eca188310a83bde16db2d742938d50b043a2fe8170f54458feb4b2597ac20 -->
+<!-- cache-key: cdktf-0.17.1 input-7112258209b5478d3ef1a608e7acf55c35e00752fc231e672e536ec0d294422f -->

@@ -45,16 +45,16 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `securityGroupId` - (Required) The ID of the security group to be associated with the VPC endpoint.
 * `vpcEndpointId` - (Required) The ID of the VPC endpoint with which the security group will be associated.
 * `replaceDefaultAssociation` - (Optional) Whether this association should replace the association with the VPC's default security group that is created when no security groups are specified during VPC endpoint creation. At most 1 association per-VPC endpoint should be configured with `replace_default_association = true`.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The ID of the association.
 
-<!-- cache-key: cdktf-0.17.1 input-6cb630b43f2115befdd71ee6d0818a0f6b425e4ee3456394f3b745b95a49b052 -->
+<!-- cache-key: cdktf-0.17.1 input-e0b24d11f8b79893f0c7abf7d276f5c7e882e53eb0977668d0e09c4fa0c3576b -->

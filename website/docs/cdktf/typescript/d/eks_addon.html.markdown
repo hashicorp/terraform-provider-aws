@@ -44,9 +44,9 @@ class MyConvertedCode extends TerraformStack {
   the names returned by [list-addon](https://docs.aws.amazon.com/cli/latest/reference/eks/list-addons.html).
 * `clusterName` – (Required) Name of the EKS Cluster. Must be between 1-100 characters in length. Must begin with an alphanumeric character, and must only contain alphanumeric characters, dashes and underscores (`^[0-9A-Za-z][A-Za-z0-9\-_]+$`).
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This data source exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the EKS add-on.
 * `addonVersion` - Version of EKS add-on.
@@ -57,4 +57,4 @@ In addition to all arguments above, the following attributes are exported:
 * `createdAt` - Date and time in [RFC3339 format](https://tools.ietf.org/html/rfc3339#section-5.8) that the EKS add-on was created.
 * `modifiedAt` - Date and time in [RFC3339 format](https://tools.ietf.org/html/rfc3339#section-5.8) that the EKS add-on was updated.
 
-<!-- cache-key: cdktf-0.17.1 input-414b9dec9ae6658bd8a3d889aaa0e503cb54705163463e46cac57f90b6df8762 -->
+<!-- cache-key: cdktf-0.17.1 input-553bc4808c728491b5414f2d688994a4b0a80d9290f35e4271bd6e2834213ffb -->

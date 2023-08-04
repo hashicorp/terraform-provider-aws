@@ -36,16 +36,16 @@ class MyConvertedCode(TerraformStack):
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `group_ip_address` - (Required) The IP address assigned to the transit gateway multicast group.
 * `network_interface_id` - (Required) The group members' network interface ID to register with the transit gateway multicast group.
 * `transit_gateway_multicast_domain_id` - (Required) The ID of the transit gateway multicast domain.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - EC2 Transit Gateway Multicast Group Member identifier.
 
-<!-- cache-key: cdktf-0.17.1 input-65215e11717df1869097637d2ac9989417c165158f1d4b33781b1f0782026494 -->
+<!-- cache-key: cdktf-0.17.1 input-561db583d91352dec7ba040b0abbb86f30bfd413562c455a18fa76289ce3489f -->

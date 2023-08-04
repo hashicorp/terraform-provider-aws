@@ -65,7 +65,7 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
-The following arguments are supported:
+This data source supports the following arguments:
 
 * `filter` - (Optional) One or more configuration blocks containing name-values filters. Detailed below.
 * `transitGatewayConnectPeerId` - (Optional) Identifier of the EC2 Transit Gateway Connect Peer.
@@ -77,7 +77,7 @@ The following arguments are supported:
 
 ## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This data source exports the following attributes in addition to the arguments above:
 
 * `arn` - EC2 Transit Gateway Connect Peer ARN
 * `bgpAsn` - BGP ASN number assigned customer device
@@ -95,4 +95,4 @@ In addition to all arguments above, the following attributes are exported:
 
 - `read` - (Default `20M`)
 
-<!-- cache-key: cdktf-0.17.1 input-a0228e9767ba578a3b6804ef58116c8059b5ce9bdff514d3016220006eabf6d3 -->
+<!-- cache-key: cdktf-0.17.1 input-3bd4c9e7e6f26191e1ea71278ee4046a31a2441aa9d86a38639bf000e83931d8 -->

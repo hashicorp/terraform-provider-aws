@@ -12,6 +12,7 @@ import (
 	cleanrooms_sdkv2 "github.com/aws/aws-sdk-go-v2/service/cleanrooms"
 	cloudcontrol_sdkv2 "github.com/aws/aws-sdk-go-v2/service/cloudcontrol"
 	cloudwatchlogs_sdkv2 "github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs"
+	codecatalyst_sdkv2 "github.com/aws/aws-sdk-go-v2/service/codecatalyst"
 	comprehend_sdkv2 "github.com/aws/aws-sdk-go-v2/service/comprehend"
 	computeoptimizer_sdkv2 "github.com/aws/aws-sdk-go-v2/service/computeoptimizer"
 	directoryservice_sdkv2 "github.com/aws/aws-sdk-go-v2/service/directoryservice"
@@ -31,6 +32,7 @@ import (
 	lambda_sdkv2 "github.com/aws/aws-sdk-go-v2/service/lambda"
 	lightsail_sdkv2 "github.com/aws/aws-sdk-go-v2/service/lightsail"
 	medialive_sdkv2 "github.com/aws/aws-sdk-go-v2/service/medialive"
+	mediapackage_sdkv2 "github.com/aws/aws-sdk-go-v2/service/mediapackage"
 	oam_sdkv2 "github.com/aws/aws-sdk-go-v2/service/oam"
 	opensearchserverless_sdkv2 "github.com/aws/aws-sdk-go-v2/service/opensearchserverless"
 	pipes_sdkv2 "github.com/aws/aws-sdk-go-v2/service/pipes"
@@ -161,7 +163,6 @@ import (
 	managedgrafana_sdkv1 "github.com/aws/aws-sdk-go/service/managedgrafana"
 	mediaconnect_sdkv1 "github.com/aws/aws-sdk-go/service/mediaconnect"
 	mediaconvert_sdkv1 "github.com/aws/aws-sdk-go/service/mediaconvert"
-	mediapackage_sdkv1 "github.com/aws/aws-sdk-go/service/mediapackage"
 	mediastore_sdkv1 "github.com/aws/aws-sdk-go/service/mediastore"
 	memorydb_sdkv1 "github.com/aws/aws-sdk-go/service/memorydb"
 	mq_sdkv1 "github.com/aws/aws-sdk-go/service/mq"
@@ -380,6 +381,10 @@ func (c *AWSClient) CodeArtifactConn(ctx context.Context) *codeartifact_sdkv1.Co
 
 func (c *AWSClient) CodeBuildConn(ctx context.Context) *codebuild_sdkv1.CodeBuild {
 	return errs.Must(conn[*codebuild_sdkv1.CodeBuild](ctx, c, names.CodeBuild))
+}
+
+func (c *AWSClient) CodeCatalystClient(ctx context.Context) *codecatalyst_sdkv2.Client {
+	return errs.Must(client[*codecatalyst_sdkv2.Client](ctx, c, names.CodeCatalyst))
 }
 
 func (c *AWSClient) CodeCommitConn(ctx context.Context) *codecommit_sdkv1.CodeCommit {
@@ -754,8 +759,8 @@ func (c *AWSClient) MediaLiveClient(ctx context.Context) *medialive_sdkv2.Client
 	return errs.Must(client[*medialive_sdkv2.Client](ctx, c, names.MediaLive))
 }
 
-func (c *AWSClient) MediaPackageConn(ctx context.Context) *mediapackage_sdkv1.MediaPackage {
-	return errs.Must(conn[*mediapackage_sdkv1.MediaPackage](ctx, c, names.MediaPackage))
+func (c *AWSClient) MediaPackageClient(ctx context.Context) *mediapackage_sdkv2.Client {
+	return errs.Must(client[*mediapackage_sdkv2.Client](ctx, c, names.MediaPackage))
 }
 
 func (c *AWSClient) MediaStoreConn(ctx context.Context) *mediastore_sdkv1.MediaStore {

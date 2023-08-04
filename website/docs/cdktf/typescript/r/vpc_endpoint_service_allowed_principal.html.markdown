@@ -47,15 +47,15 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `vpcEndpointServiceId` - (Required) The ID of the VPC endpoint service to allow permission.
 * `principalArn` - (Required) The ARN of the principal to allow permissions.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The ID of the association.
 
-<!-- cache-key: cdktf-0.17.1 input-3950b2541785ea9ee804423ef1956d635524e029541c795ad1e155357f97699b -->
+<!-- cache-key: cdktf-0.17.1 input-8ff7831d801343519ca1bf1af9bc9600a8326d54f66a019278e06cc2bc3ebf39 -->

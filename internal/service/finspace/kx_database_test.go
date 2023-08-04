@@ -22,7 +22,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccFinSpaceKxDatabase_basic(t *testing.T) {
+func testAccKxDatabase_basic(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -32,7 +32,7 @@ func TestAccFinSpaceKxDatabase_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_finspace_kx_database.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, finspace.ServiceID)
@@ -57,7 +57,7 @@ func TestAccFinSpaceKxDatabase_basic(t *testing.T) {
 	})
 }
 
-func TestAccFinSpaceKxDatabase_disappears(t *testing.T) {
+func testAccKxDatabase_disappears(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -67,7 +67,7 @@ func TestAccFinSpaceKxDatabase_disappears(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_finspace_kx_database.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, finspace.ServiceID)
@@ -88,7 +88,7 @@ func TestAccFinSpaceKxDatabase_disappears(t *testing.T) {
 	})
 }
 
-func TestAccFinSpaceKxDatabase_description(t *testing.T) {
+func testAccKxDatabase_description(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -98,7 +98,7 @@ func TestAccFinSpaceKxDatabase_description(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_finspace_kx_database.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, finspace.ServiceID)
@@ -125,7 +125,7 @@ func TestAccFinSpaceKxDatabase_description(t *testing.T) {
 	})
 }
 
-func TestAccFinSpaceKxDatabase_tags(t *testing.T) {
+func testAccKxDatabase_tags(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -135,7 +135,7 @@ func TestAccFinSpaceKxDatabase_tags(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_finspace_kx_database.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, finspace.ServiceID)

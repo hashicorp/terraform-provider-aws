@@ -44,7 +44,9 @@ class MyConvertedCode(TerraformStack):
 
 * `name` - (Required) Name of the cluster. Must be between 1-100 characters in length. Must begin with an alphanumeric character, and must only contain alphanumeric characters, dashes and underscores (`^[0-9A-Za-z][A-Za-z0-9\-_]+$`).
 
-## Attributes Reference
+## Attribute Reference
+
+This data source exports the following attributes in addition to the arguments above:
 
 * `id` - Name of the cluster
 * `arn` - ARN of the cluster.
@@ -80,4 +82,4 @@ class MyConvertedCode(TerraformStack):
     * `subnet_ids` – List of subnet IDs
     * `vpc_id` – The VPC associated with your cluster.
 
-<!-- cache-key: cdktf-0.17.1 input-cd2045721c29fe799b5cd23b6a89c06af4785e1584d34ce61fbdf960e2df49e1 -->
+<!-- cache-key: cdktf-0.17.1 input-c6c973609d8849dfdbe288511dbb8b53a13192e5d23e4a6f41498b65a5c39508 -->

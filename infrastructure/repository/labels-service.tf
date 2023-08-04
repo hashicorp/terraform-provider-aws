@@ -54,6 +54,7 @@ variable "service_labels" {
     "cloudwatch",
     "codeartifact",
     "codebuild",
+    "codecatalyst",
     "codecommit",
     "codeguruprofiler",
     "codegurureviewer",

@@ -10,9 +10,7 @@ import (
 	"regexp"
 	"testing"
 
-	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/vpclattice"
-	"github.com/aws/aws-sdk-go-v2/service/vpclattice/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -20,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	tfvpclattice "github.com/hashicorp/terraform-provider-aws/internal/service/vpclattice"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -93,7 +92,6 @@ func TestSuppressEquivalentIDOrARN(t *testing.T) {
 
 func TestAccVPCLatticeServiceNetwork_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-
 	var servicenetwork vpclattice.GetServiceNetworkOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_vpclattice_service_network.test"
@@ -127,7 +125,6 @@ func TestAccVPCLatticeServiceNetwork_basic(t *testing.T) {
 
 func TestAccVPCLatticeServiceNetwork_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-
 	var servicenetwork vpclattice.GetServiceNetworkOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_vpclattice_service_network.test"
@@ -156,7 +153,6 @@ func TestAccVPCLatticeServiceNetwork_disappears(t *testing.T) {
 
 func TestAccVPCLatticeServiceNetwork_full(t *testing.T) {
 	ctx := acctest.Context(t)
-
 	var servicenetwork vpclattice.GetServiceNetworkOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_vpclattice_service_network.test"
@@ -244,18 +240,17 @@ func testAccCheckServiceNetworkDestroy(ctx context.Context) resource.TestCheckFu
 				continue
 			}
 
-			_, err := conn.GetServiceNetwork(ctx, &vpclattice.GetServiceNetworkInput{
-				ServiceNetworkIdentifier: aws.String(rs.Primary.ID),
-			})
+			_, err := tfvpclattice.FindServiceNetworkByID(ctx, conn, rs.Primary.ID)
+
+			if tfresource.NotFound(err) {
+				continue
+			}
+
 			if err != nil {
-				var nfe *types.ResourceNotFoundException
-				if errors.As(err, &nfe) {
-					return nil
-				}
 				return err
 			}
 
-			return create.Error(names.VPCLattice, create.ErrActionCheckingDestroyed, tfvpclattice.ResNameServiceNetwork, rs.Primary.ID, errors.New("not destroyed"))
+			return fmt.Errorf("VPC Lattice Service Network %s still exists", rs.Primary.ID)
 		}
 
 		return nil
@@ -274,12 +269,10 @@ func testAccCheckServiceNetworkExists(ctx context.Context, name string, servicen
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).VPCLatticeClient(ctx)
-		resp, err := conn.GetServiceNetwork(ctx, &vpclattice.GetServiceNetworkInput{
-			ServiceNetworkIdentifier: aws.String(rs.Primary.ID),
-		})
+		resp, err := tfvpclattice.FindServiceNetworkByID(ctx, conn, rs.Primary.ID)
 
 		if err != nil {
-			return create.Error(names.VPCLattice, create.ErrActionCheckingExistence, tfvpclattice.ResNameServiceNetwork, rs.Primary.ID, err)
+			return err
 		}
 
 		*servicenetwork = *resp

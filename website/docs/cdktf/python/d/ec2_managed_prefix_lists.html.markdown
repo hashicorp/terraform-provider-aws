@@ -63,7 +63,9 @@ which take the following arguments:
 * `values` - (Required) Set of values that are accepted for the given field.
   A managed prefix list will be selected if any one of the given values matches.
 
-## Attributes Reference
+## Attribute Reference
+
+This data source exports the following attributes in addition to the arguments above:
 
 * `id` - AWS Region.
 * `ids` - List of all the managed prefix list ids found.
@@ -74,4 +76,4 @@ which take the following arguments:
 
 - `read` - (Default `20m`)
 
-<!-- cache-key: cdktf-0.17.1 input-34b67ee42a5e4e01675b0661ae691e66cc897092214d5887d7cc8ea40ac77b4a -->
+<!-- cache-key: cdktf-0.17.1 input-145158f6b1f653afe1f39eba16c020b3a0c007043249f21a1109df310923bf6a -->

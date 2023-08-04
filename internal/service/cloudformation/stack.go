@@ -598,7 +598,7 @@ func WaitStackDeleted(ctx context.Context, conn *cloudformation.CloudFormation, 
 	return output, err
 }
 
-func findStackEventsForOperation(ctx context.Context, conn *cloudformation.CloudFormation, name, requestToken string, f slices.FilterFunc[*cloudformation.StackEvent]) ([]*cloudformation.StackEvent, error) {
+func findStackEventsForOperation(ctx context.Context, conn *cloudformation.CloudFormation, name, requestToken string, filter slices.Predicate[*cloudformation.StackEvent]) ([]*cloudformation.StackEvent, error) {
 	input := &cloudformation.DescribeStackEventsInput{
 		StackName: aws.String(name),
 	}
@@ -611,6 +611,10 @@ func findStackEventsForOperation(ctx context.Context, conn *cloudformation.Cloud
 		}
 
 		for _, v := range page.StackEvents {
+			if v == nil {
+				continue
+			}
+
 			if currentToken := aws.StringValue(v.ClientRequestToken); !tokenSeen {
 				if currentToken != requestToken {
 					continue
@@ -622,7 +626,7 @@ func findStackEventsForOperation(ctx context.Context, conn *cloudformation.Cloud
 				}
 			}
 
-			if f(v) {
+			if filter(v) {
 				output = append(output, v)
 			}
 		}
