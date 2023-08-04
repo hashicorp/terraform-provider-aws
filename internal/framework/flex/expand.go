@@ -13,7 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
-	"github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 )
 
 // Expand "expands" a resource's "business logic" data structure,
@@ -323,7 +323,7 @@ func (visitor expandVisitor) list(ctx context.Context, vFrom basetypes.ListValua
 		return diags
 
 	case basetypes.ObjectTypable:
-		if vFrom, ok := vFrom.(types.NestedObjectValue); ok {
+		if vFrom, ok := vFrom.(fwtypes.NestedObjectValue); ok {
 			diags.Append(visitor.nestedObject(ctx, vFrom, vTo)...)
 			return diags
 		}
@@ -448,7 +448,7 @@ func (visitor expandVisitor) set(ctx context.Context, vFrom basetypes.SetValuabl
 		return diags
 
 	case basetypes.ObjectTypable:
-		if vFrom, ok := vFrom.(types.NestedObjectValue); ok {
+		if vFrom, ok := vFrom.(fwtypes.NestedObjectValue); ok {
 			diags.Append(visitor.nestedObject(ctx, vFrom, vTo)...)
 			return diags
 		}
@@ -497,7 +497,7 @@ func (visitor expandVisitor) setOfString(ctx context.Context, vFrom basetypes.Se
 }
 
 // nestedObject copies a Plugin Framework NestedObjectValue value to a compatible AWS API field.
-func (visitor expandVisitor) nestedObject(ctx context.Context, vFrom types.NestedObjectValue, vTo reflect.Value) diag.Diagnostics {
+func (visitor expandVisitor) nestedObject(ctx context.Context, vFrom fwtypes.NestedObjectValue, vTo reflect.Value) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	switch tTo := vTo.Type(); vTo.Kind() {
@@ -537,7 +537,7 @@ func (visitor expandVisitor) nestedObject(ctx context.Context, vFrom types.Neste
 }
 
 // nestedObjectToStruct copies a Plugin Framework NestedObjectValue to a compatible AWS API (*)struct field.
-func (visitor expandVisitor) nestedObjectToStruct(ctx context.Context, vFrom types.NestedObjectValue, tStruct reflect.Type, vTo reflect.Value) diag.Diagnostics {
+func (visitor expandVisitor) nestedObjectToStruct(ctx context.Context, vFrom fwtypes.NestedObjectValue, tStruct reflect.Type, vTo reflect.Value) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	// Get the nested Object as a pointer.
@@ -565,7 +565,7 @@ func (visitor expandVisitor) nestedObjectToStruct(ctx context.Context, vFrom typ
 }
 
 // nestedObjectToSlice copies a Plugin Framework NestedObjectValue to a compatible AWS API [](*)struct field.
-func (visitor expandVisitor) nestedObjectToSlice(ctx context.Context, vFrom types.NestedObjectValue, tSlice, tElem reflect.Type, vTo reflect.Value) diag.Diagnostics {
+func (visitor expandVisitor) nestedObjectToSlice(ctx context.Context, vFrom fwtypes.NestedObjectValue, tSlice, tElem reflect.Type, vTo reflect.Value) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	// Get the nested Objects as a slice.
