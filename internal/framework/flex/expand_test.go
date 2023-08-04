@@ -195,7 +195,6 @@ func TestGenericExpand(t *testing.T) {
 			Source:     &TestFlexTF01{Field1: types.StringValue("a")},
 			Target:     &TestFlexAWS03{},
 			WantTarget: &TestFlexAWS03{},
-			WantErr:    true,
 		},
 		{
 			TestName: "primtive types Source and primtive types Target",

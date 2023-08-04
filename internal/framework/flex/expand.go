@@ -12,10 +12,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 )
-
-// TODO Replace some error Diagnostics with logging.
 
 // Expand "expands" a resource's "business logic" data structure,
 // implemented using Terraform Plugin Framework data types, into
@@ -138,7 +137,11 @@ func (visitor expandVisitor) visit(ctx context.Context, fieldName string, valFro
 		return diags
 	}
 
-	diags.Append(visitor.newIncompatibleTypesError(ctx, vFrom, vTo))
+	tflog.Info(ctx, "AutoFlex Expand; incompatible types", map[string]interface{}{
+		"from": vFrom.Type(ctx),
+		"to":   vTo.Kind(),
+	})
+
 	return diags
 }
 
@@ -171,7 +174,11 @@ func (visitor expandVisitor) bool(ctx context.Context, vFrom basetypes.BoolValua
 		}
 	}
 
-	diags.Append(visitor.newIncompatibleTypesError(ctx, vFrom, vTo))
+	tflog.Info(ctx, "AutoFlex Expand; incompatible types", map[string]interface{}{
+		"from": vFrom.Type(ctx),
+		"to":   vTo.Kind(),
+	})
+
 	return diags
 }
 
@@ -211,7 +218,11 @@ func (visitor expandVisitor) float64(ctx context.Context, vFrom basetypes.Float6
 		}
 	}
 
-	diags.Append(visitor.newIncompatibleTypesError(ctx, vFrom, vTo))
+	tflog.Info(ctx, "AutoFlex Expand; incompatible types", map[string]interface{}{
+		"from": vFrom.Type(ctx),
+		"to":   vTo.Kind(),
+	})
+
 	return diags
 }
 
@@ -251,7 +262,11 @@ func (visitor expandVisitor) int64(ctx context.Context, vFrom basetypes.Int64Val
 		}
 	}
 
-	diags.Append(visitor.newIncompatibleTypesError(ctx, vFrom, vTo))
+	tflog.Info(ctx, "AutoFlex Expand; incompatible types", map[string]interface{}{
+		"from": vFrom.Type(ctx),
+		"to":   vTo.Kind(),
+	})
+
 	return diags
 }
 
@@ -284,7 +299,11 @@ func (visitor expandVisitor) string(ctx context.Context, vFrom basetypes.StringV
 		}
 	}
 
-	diags.Append(visitor.newIncompatibleTypesError(ctx, vFrom, vTo))
+	tflog.Info(ctx, "AutoFlex Expand; incompatible types", map[string]interface{}{
+		"from": vFrom.Type(ctx),
+		"to":   vTo.Kind(),
+	})
+
 	return diags
 }
 
@@ -310,7 +329,11 @@ func (visitor expandVisitor) list(ctx context.Context, vFrom basetypes.ListValua
 		}
 	}
 
-	diags.Append(visitor.newIncompatibleListTypesError(ctx, v, vTo))
+	tflog.Info(ctx, "AutoFlex Expand; incompatible types", map[string]interface{}{
+		"from list[%s]": v.ElementType(ctx),
+		"to":            vTo.Kind(),
+	})
+
 	return diags
 }
 
@@ -340,7 +363,11 @@ func (visitor expandVisitor) listOfString(ctx context.Context, vFrom basetypes.L
 		}
 	}
 
-	diags.Append(visitor.newIncompatibleListTypesError(ctx, vFrom, vTo))
+	tflog.Info(ctx, "AutoFlex Expand; incompatible types", map[string]interface{}{
+		"from list[%s]": vFrom.ElementType(ctx),
+		"to":            vTo.Kind(),
+	})
+
 	return diags
 }
 
@@ -360,7 +387,11 @@ func (visitor expandVisitor) map_(ctx context.Context, vFrom basetypes.MapValuab
 		return diags
 	}
 
-	diags.Append(visitor.newIncompatibleMapTypesError(ctx, v, vTo))
+	tflog.Info(ctx, "AutoFlex Expand; incompatible types", map[string]interface{}{
+		"from map[string, %s]": v.ElementType(ctx),
+		"to":                   vTo.Kind(),
+	})
+
 	return diags
 }
 
@@ -393,7 +424,11 @@ func (visitor expandVisitor) mapOfString(ctx context.Context, vFrom basetypes.Ma
 		}
 	}
 
-	diags.Append(visitor.newIncompatibleMapTypesError(ctx, vFrom, vTo))
+	tflog.Info(ctx, "AutoFlex Expand; incompatible types", map[string]interface{}{
+		"from map[string, %s]": vFrom.ElementType(ctx),
+		"to":                   vTo.Kind(),
+	})
+
 	return diags
 }
 
@@ -419,7 +454,11 @@ func (visitor expandVisitor) set(ctx context.Context, vFrom basetypes.SetValuabl
 		}
 	}
 
-	diags.Append(visitor.newIncompatibleSetTypesError(ctx, v, vTo))
+	tflog.Info(ctx, "AutoFlex Expand; incompatible types", map[string]interface{}{
+		"from set[%s]": v.ElementType(ctx),
+		"to":           vTo.Kind(),
+	})
+
 	return diags
 }
 
@@ -449,7 +488,11 @@ func (visitor expandVisitor) setOfString(ctx context.Context, vFrom basetypes.Se
 		}
 	}
 
-	diags.Append(visitor.newIncompatibleSetTypesError(ctx, vFrom, vTo))
+	tflog.Info(ctx, "AutoFlex Expand; incompatible types", map[string]interface{}{
+		"from set[%s]": vFrom.ElementType(ctx),
+		"to":           vTo.Kind(),
+	})
+
 	return diags
 }
 
@@ -555,20 +598,4 @@ func (visitor expandVisitor) nestedObjectToSlice(ctx context.Context, vFrom type
 	vTo.Set(t)
 
 	return diags
-}
-
-func (visitor expandVisitor) newIncompatibleTypesError(ctx context.Context, vFrom attr.Value, vTo reflect.Value) diag.ErrorDiagnostic {
-	return diag.NewErrorDiagnostic("Incompatible types", fmt.Sprintf("%s cannot be expanded to %s", vFrom.Type(ctx), vTo.Kind()))
-}
-
-func (visitor expandVisitor) newIncompatibleListTypesError(ctx context.Context, vFrom basetypes.ListValue, vTo reflect.Value) diag.ErrorDiagnostic {
-	return diag.NewErrorDiagnostic("Incompatible types", fmt.Sprintf("list[%s] cannot be expanded to %s", vFrom.ElementType(ctx), vTo.Kind()))
-}
-
-func (visitor expandVisitor) newIncompatibleMapTypesError(ctx context.Context, vFrom basetypes.MapValue, vTo reflect.Value) diag.ErrorDiagnostic {
-	return diag.NewErrorDiagnostic("Incompatible types", fmt.Sprintf("map[string, %s] cannot be expanded to %s", vFrom.ElementType(ctx), vTo.Kind()))
-}
-
-func (visitor expandVisitor) newIncompatibleSetTypesError(ctx context.Context, vFrom basetypes.SetValue, vTo reflect.Value) diag.ErrorDiagnostic {
-	return diag.NewErrorDiagnostic("Incompatible types", fmt.Sprintf("set[%s] cannot be expanded to %s", vFrom.ElementType(ctx), vTo.Kind()))
 }
