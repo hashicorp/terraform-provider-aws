@@ -316,7 +316,10 @@ func TestWalk(t *testing.T) {
 	}
 
 	for _, tt := range tests {
+		tt := tt
 		t.Run("Walk/"+tt.input, func(t *testing.T) {
+			t.Parallel()
+
 			var b strings.Builder
 			err := Walk([]byte(tt.input),
 				func(st int, key, value []byte) bool {
@@ -332,7 +335,10 @@ func TestWalk(t *testing.T) {
 	}
 
 	for _, tt := range tests {
+		tt := tt
 		t.Run("Reconstruct/"+tt.input, func(t *testing.T) {
+			t.Parallel()
+
 			// Handle the special testcase ending with newline. This test
 			// reconstructs output json and compare with the input. Because
 			// reconstruct will not append the last newline, so we must trim it
