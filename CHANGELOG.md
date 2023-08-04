@@ -1,4 +1,13 @@
 ## 5.12.0 (Unreleased)
+
+ENHANCEMENTS:
+
+* resource/aws_fms_admin_account: Add configurable timeouts ([#32860](https://github.com/hashicorp/terraform-provider-aws/issues/32860))
+
+BUG FIXES:
+
+* resource/aws_fms_policy: Prevent erroneous diffs on `security_service_policy_data.managed_service_data` ([#32860](https://github.com/hashicorp/terraform-provider-aws/issues/32860))
+
 ## 5.11.0 (August  3, 2023)
 
 FEATURES:
