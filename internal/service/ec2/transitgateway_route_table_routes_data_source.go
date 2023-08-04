@@ -21,7 +21,7 @@ func DataSourceTransitGatewayRouteTableRoutes() *schema.Resource {
 		ReadWithoutTimeout: dataSourceTransitGatewayRouteTableRoutesRead,
 
 		Schema: map[string]*schema.Schema{
-			"filter": CustomFiltersSchema(),
+			"filter": CustomRequiredFiltersSchema(),
 			"routes": {
 				Type:     schema.TypeList,
 				Computed: true,
@@ -65,15 +65,8 @@ func dataSourceTransitGatewayRouteTableRoutesRead(ctx context.Context, d *schema
 
 	tgwRouteTableID := d.Get("transit_gateway_route_table_id").(string)
 	input := &ec2.SearchTransitGatewayRoutesInput{
+		Filters:                    BuildCustomFilterList(d.Get("filter").(*schema.Set)),
 		TransitGatewayRouteTableId: aws.String(tgwRouteTableID),
-	}
-
-	input.Filters = append(input.Filters, BuildCustomFilterList(
-		d.Get("filter").(*schema.Set),
-	)...)
-
-	if len(input.Filters) == 0 {
-		input.Filters = nil
 	}
 
 	output, err := FindTransitGatewayRoutes(ctx, conn, input)

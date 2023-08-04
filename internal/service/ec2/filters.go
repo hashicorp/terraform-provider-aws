@@ -125,6 +125,28 @@ func CustomFiltersSchema() *schema.Schema {
 	}
 }
 
+func CustomRequiredFiltersSchema() *schema.Schema {
+	return &schema.Schema{
+		Type:     schema.TypeSet,
+		Required: true,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"name": {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+				"values": {
+					Type:     schema.TypeSet,
+					Required: true,
+					Elem: &schema.Schema{
+						Type: schema.TypeString,
+					},
+				},
+			},
+		},
+	}
+}
+
 // CustomFiltersBlock is the Plugin Framework variant of CustomFiltersSchema.
 func CustomFiltersBlock() datasourceschema.Block {
 	return datasourceschema.SetNestedBlock{

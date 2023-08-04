@@ -12,16 +12,6 @@ Provides informations for routes of a specific transit gateway, such as state, t
 
 ## Example Usage
 
-### By Transit Gateway Identifier
-
-```terraform
-data "aws_ec2_transit_gateway_route_table_routes" "test" {
-  transit_gateway_route_table_id = aws_ec2_transit_gateway_route_table.example.id
-}
-```
-
-### By Transit Gateway Identifier and filter
-
 ```terraform
 data "aws_ec2_transit_gateway_route_table_routes" "test" {
   filter {
@@ -182,18 +172,14 @@ resource "aws_ec2_transit_gateway_route" "default-region-to-eu-central-1" {
 
 The following arguments are required:
 
+* `filter` - (Required) Custom filter block as described below.
 * `transit_gateway_route_table_id` - (Required) Identifier of EC2 Transit Gateway Route Table.
-
-The following arguments are optional:
-
-* `filter` - (Optional) Custom filter block as described below.
 
 More complex filters can be expressed using one or more `filter` sub-blocks,
 which take the following arguments:
 
 * `name` - (Required) Name of the field to filter by, as defined by
   [the underlying AWS API](https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_SearchTransitGatewayRoutes.html).
-
 * `values` - (Required) Set of values that are accepted for the given field.
 
 ## Attributes Reference
@@ -203,7 +189,7 @@ In addition to all arguments above, the following attributes are exported:
 * `id` - The transit gateway route table id suffixed by `-routes`
 * `routes` - List of Transit Gateway Routes.
 
-#### Routes set Attributes Reference
+#### Routes list Attributes Reference
 
 * `destination_cidr_block` - The CIDR used for route destination matches.
 * `prefix_list_id` - The ID of the prefix list used for destination matches.
