@@ -28,6 +28,8 @@ var quotetests = []quoteTest{
 }
 
 func TestQuote(t *testing.T) {
+	t.Parallel()
+
 	for _, tt := range quotetests {
 		if out := AppendQuote([]byte("abc"), []byte(tt.in)); string(out) != "abc"+tt.out {
 			t.Errorf("AppendQuote(%q, %s) = %s, want %s", "abc", tt.in, out, "abc"+tt.out)
@@ -36,6 +38,8 @@ func TestQuote(t *testing.T) {
 }
 
 func TestQuoteToASCII(t *testing.T) {
+	t.Parallel()
+
 	for _, tt := range quotetests {
 		if out := AppendQuoteToASCII([]byte("abc"), []byte(tt.in)); string(out) != "abc"+tt.ascii {
 			t.Errorf("AppendQuoteToASCII(%q, %s) = %s, want %s", "abc", tt.in, out, "abc"+tt.ascii)
@@ -44,6 +48,8 @@ func TestQuoteToASCII(t *testing.T) {
 }
 
 func TestQuoteToGraphic(t *testing.T) {
+	t.Parallel()
+
 	for _, tt := range quotetests {
 		if out := AppendQuoteToGraphic([]byte("abc"), []byte(tt.in)); string(out) != "abc"+tt.graphic {
 			t.Errorf("AppendQuoteToGraphic(%q, %s) = %s, want %s", "abc", tt.in, out, "abc"+tt.graphic)
@@ -100,6 +106,8 @@ var misquoted = []string{
 }
 
 func TestUnquote(t *testing.T) {
+	t.Parallel()
+
 	for _, tt := range unquotetests {
 		if out, err := Unquote([]byte(tt.in)); err != nil || string(out) != tt.out {
 			t.Errorf("Unquote(%#q) = %q, %v want %q, nil", tt.in, out, err, tt.out)
@@ -122,6 +130,8 @@ func TestUnquote(t *testing.T) {
 
 // Issue 23685: invalid UTF-8 should not go through the fast path.
 func TestUnquoteInvalidUTF8(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		in string
 

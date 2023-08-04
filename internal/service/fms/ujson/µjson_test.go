@@ -10,6 +10,8 @@ import (
 )
 
 func TestWalk(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		input    string
 		expected string
