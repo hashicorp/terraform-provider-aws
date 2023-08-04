@@ -3197,6 +3197,8 @@ resource "aws_rds_cluster" "test" {
 
 func testAccClusterConfig_kmsKey(n int) string {
 	return fmt.Sprintf(`
+data "aws_caller_identity" "current" {}
+data "aws_partition" "current" {}
 
 resource "aws_kms_key" "foo" {
   description = "Terraform acc test %[1]d"
@@ -3211,6 +3213,7 @@ resource "aws_kms_key" "foo" {
       "Effect": "Allow",
       "Principal": {
         "AWS": "*"
+        "AWS" = "arn:${data.aws_partition.current.partition}:iam::${data.aws_caller_identity.current.account_id}:root"
       },
       "Action": "kms:*",
       "Resource": "*"
@@ -3646,8 +3649,8 @@ data "aws_availability_zones" "available" {
   }
 }
 
+data "aws_partition" "current" {}
 data "aws_caller_identity" "current" {}
-
 data "aws_region" "current" {}
 
 resource "aws_rds_cluster_parameter_group" "test" {
@@ -3696,6 +3699,7 @@ resource "aws_kms_key" "test" {
       "Effect": "Allow",
       "Principal": {
         "AWS": "*"
+		"AWS" = "arn:${data.aws_partition.current.partition}:iam::${data.aws_caller_identity.current.account_id}:root"
       },
       "Action": "kms:*",
       "Resource": "*"
