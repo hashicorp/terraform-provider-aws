@@ -4,8 +4,24 @@
 package fms
 
 import (
+	"encoding/json"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/fms/ujson"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
+
+// suppressEquivalentManagedServiceDataJSON provides custom difference suppression
+// for strings that are equivalent once empty fields have been removed.
+func suppressEquivalentManagedServiceDataJSON(k, old, new string, d *schema.ResourceData) bool {
+	if !json.Valid([]byte(old)) || !json.Valid([]byte(new)) {
+		return old == new
+	}
+
+	old, new = removeEmptyFieldsFromJSON(old), removeEmptyFieldsFromJSON(new)
+
+	return verify.JSONStringsEqual(old, new)
+}
 
 // removeEmptyFieldsFromJSON removes `null` and empty array (`[]`) fields from a valid JSON string.
 func removeEmptyFieldsFromJSON(in string) string {

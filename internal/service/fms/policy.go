@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
@@ -147,9 +148,15 @@ func resourcePolicy() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"managed_service_data": {
-							Type:             schema.TypeString,
-							Optional:         true,
-							DiffSuppressFunc: verify.SuppressEquivalentJSONDiffs,
+							Type:                  schema.TypeString,
+							Optional:              true,
+							ValidateFunc:          validation.StringIsJSON,
+							DiffSuppressFunc:      suppressEquivalentManagedServiceDataJSON,
+							DiffSuppressOnRefresh: true,
+							StateFunc: func(v interface{}) string {
+								json, _ := structure.NormalizeJsonString(v)
+								return json
+							},
 						},
 						"policy_option": {
 							Type:     schema.TypeList,
