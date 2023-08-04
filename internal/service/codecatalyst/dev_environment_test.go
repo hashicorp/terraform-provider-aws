@@ -168,14 +168,30 @@ func testAccCheckDevEnvironmentExists(ctx context.Context, name string, DevEnvir
 func testAccPreCheck(ctx context.Context, t *testing.T) {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).CodeCatalystClient(ctx)
 
-	spaceName := "terraform"
-	projectName := "terraform"
+	/*
+		If no Amazon CodeCatalyst token is available then the Go SDK crashes:
 
-	input := &codecatalyst.ListDevEnvironmentsInput{
-		SpaceName:   aws.String(spaceName),
-		ProjectName: aws.String(projectName),
-	}
-	_, err := conn.ListDevEnvironments(ctx, input)
+		panic: runtime error: invalid memory address or nil pointer dereference [recovered]
+			panic: runtime error: invalid memory address or nil pointer dereference
+		[signal SIGSEGV: segmentation violation code=0x1 addr=0x18 pc=0x13b9c10]
+
+		goroutine 51 [running]:
+		testing.tRunner.func1.2({0xc732900, 0x15190320})
+			/Users/ewbankkit/sdk/go1.20.5/src/testing/testing.go:1526 +0x24e
+		testing.tRunner.func1()
+			/Users/ewbankkit/sdk/go1.20.5/src/testing/testing.go:1529 +0x39f
+		panic({0xc732900, 0x15190320})
+			/Users/ewbankkit/sdk/go1.20.5/src/runtime/panic.go:884 +0x213
+		github.com/aws/smithy-go/auth/bearer.(*AuthenticationMiddleware).HandleFinalize(0xc002690360, {0xf06b6e0, 0xc0023ab200}, {{0xdcae320?, 0xc0023aaa80?}}, {0xef7e740, 0xc000c4b170})
+			/Users/ewbankkit/go/pkg/mod/github.com/aws/smithy-go@v1.14.0/auth/bearer/middleware.go:59 +0x70
+	*/
+	defer func() {
+		if err := recover(); err != nil {
+			t.Skipf("skipping acceptance testing: %s", err)
+		}
+	}()
+
+	_, err := conn.VerifySession(ctx, &codecatalyst.VerifySessionInput{})
 
 	if acctest.PreCheckSkipError(err) {
 		t.Skipf("skipping acceptance testing: %s", err)
