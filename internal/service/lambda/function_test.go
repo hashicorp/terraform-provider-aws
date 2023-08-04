@@ -16,8 +16,9 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/lambda"
 	"github.com/aws/aws-sdk-go-v2/service/lambda/types"
+	"github.com/aws/aws-sdk-go-v2/service/signer"
+	signertypes "github.com/aws/aws-sdk-go-v2/service/signer/types"
 	"github.com/aws/aws-sdk-go/aws/endpoints"
-	"github.com/aws/aws-sdk-go/service/signer"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -3888,38 +3889,37 @@ func TestFlattenImageConfigShouldNotFailWithEmptyImageConfig(t *testing.T) {
 }
 
 func testAccPreCheckSignerSigningProfile(ctx context.Context, t *testing.T, platformID string) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).SignerConn(ctx)
+	conn := acctest.Provider.Meta().(*conns.AWSClient).SignerClient(ctx)
 
-	var foundPlatform bool
-	err := conn.ListSigningPlatformsPagesWithContext(ctx, &signer.ListSigningPlatformsInput{}, func(page *signer.ListSigningPlatformsOutput, lastPage bool) bool {
+	input := &signer.ListSigningPlatformsInput{}
+
+	pages := signer.NewListSigningPlatformsPaginator(conn, input)
+
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if acctest.PreCheckSkipError(err) {
+			t.Skipf("skipping acceptance testing: %s", err)
+		}
+
+		if err != nil {
+			t.Fatalf("unexpected PreCheck error: %s", err)
+		}
+
 		if page == nil {
-			return !lastPage
+			t.Skip("skipping acceptance testing: empty response")
 		}
 
 		for _, platform := range page.Platforms {
-			if platform == nil {
+			if platform == (signertypes.SigningPlatform{}) {
 				continue
 			}
 
 			if aws.ToString(platform.PlatformId) == platformID {
-				foundPlatform = true
-
-				return false
+				return
 			}
 		}
-
-		return !lastPage
-	})
-
-	if acctest.PreCheckSkipError(err) {
-		t.Skipf("skipping acceptance testing: %s", err)
 	}
 
-	if err != nil {
-		t.Fatalf("unexpected PreCheck error: %s", err)
-	}
-
-	if !foundPlatform {
-		t.Skipf("skipping acceptance testing: Signing Platform (%s) not found", platformID)
-	}
+	t.Skipf("skipping acceptance testing: Signing Platform (%s) not found", platformID)
 }

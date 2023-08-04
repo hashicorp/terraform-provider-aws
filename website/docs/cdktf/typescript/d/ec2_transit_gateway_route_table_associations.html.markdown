@@ -57,11 +57,11 @@ which take the following arguments:
 * `values` - (Required) Set of values that are accepted for the given field.
   A Transit Gateway Route Table will be selected if any one of the given values matches.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This data source exports the following attributes in addition to the arguments above:
 
 * `id` - AWS Region.
 * `ids` - Set of Transit Gateway Route Table Association identifiers.
 
-<!-- cache-key: cdktf-0.17.1 input-f5431c712bc460939eff4f13ee315f6c314d3bbb3a79a668ec2278449b7548b6 -->
+<!-- cache-key: cdktf-0.17.1 input-bfa58264f45212830b07dd741569d6e94ca91a2bd3663b4e9cf46da0d1431ddd -->

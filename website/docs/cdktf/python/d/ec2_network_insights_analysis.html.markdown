@@ -42,14 +42,14 @@ whose data will be exported as attributes.
 
 ### filter Configuration Block
 
-The following arguments are supported by the `filter` configuration block:
+The `filter` configuration block supports the following arguments:
 
 * `name` - (Required) Name of the filter field. Valid values can be found in the EC2 [`DescribeNetworkInsightsAnalyses`](https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_DescribeNetworkInsightsAnalyses.html) API Reference.
 * `values` - (Required) Set of values that are accepted for the given filter field. Results will be selected if any given value matches.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This data source exports the following attributes in addition to the arguments above:
 
 * `alternate_path_hints` - Potential intermediate components of a feasible path.
 * `arn` - ARN of the selected Network Insights Analysis.
@@ -64,4 +64,4 @@ In addition to all arguments above, the following attributes are exported:
 * `status_message` - Message to provide more context when the `status` is `failed`.
 * `warning_message` - Warning message.
 
-<!-- cache-key: cdktf-0.17.1 input-56159c91965c21fbdc8ca0c6f12ca5f32b05dec8d3bf96c00e582befed10c93b -->
+<!-- cache-key: cdktf-0.17.1 input-d7f40f52a0f576e9ad55308a3c0b7c20a1611a5a4641eb6f08ff3a89153793e8 -->

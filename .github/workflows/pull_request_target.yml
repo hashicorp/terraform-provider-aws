@@ -61,10 +61,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: 'Checkout Repo'
-        uses: actions/checkout@c85c95e3d7251135ab7dc9ce3241c5835cc595a9
+        uses: actions/checkout@c85c95e3d7251135ab7dc9ce3241c5835cc595a9 # v3.5.3
 
       - name: 'Apply Labels'
-        uses: actions/labeler@ba790c862c380240c6d5e7427be5ace9a05c754b # v4.0.3
+        uses: actions/labeler@0967ca812e7fdc8f5f71402a1b486d5bd061fe20 # v4.2.0
         with:
           configuration-path: .github/labeler-pr-triage.yml
           repo-token: ${{ secrets.GITHUB_TOKEN }}
@@ -102,9 +102,8 @@ jobs:
       VIEW_FIELD_ID: "PVTSSF_lADOAAuecM4AF-7hzgMRB34"
       ITEM_URL: ${{ github.event.pull_request.html_url }}
     steps:
-      - name: 'Ready Maintainer Pull Requests'
-        # This isn't pretty, but it ensures that we don't accidentally set the status on accident
-        if: contains(fromJSON('["opened", "ready_for_review"]'), github.event.action) && needs.community_check.outputs.maintainer == 'true' && !github.event.pull_request.draft
+      - name: 'Maintainer Pull Requests'
+        if: github.event.action == 'opened' && needs.community_check.outputs.maintainer == 'true'
         run: |
           # In order to update the item's Status field, we need to capture the project item id from the output
           PROJECT_ITEM_ID=$(gh project item-add ${{ env.PROJECT_NUMBER }} --owner "hashicorp" --url ${{ env.ITEM_URL }} --format json | jq '.id')
@@ -118,14 +117,14 @@ jobs:
           gh project item-edit --id "$PROJECT_ITEM_ID" --project-id ${{ env.PROJECT_ID }} --field-id ${{ env.STATUS_FIELD_ID }} --single-select-option-id ${{ vars.team_project_status_in_progress }}
           gh project item-edit --id "$PROJECT_ITEM_ID" --project-id ${{ env.PROJECT_ID }} --field-id ${{ env.VIEW_FIELD_ID }} --single-select-option-id ${{ vars.team_project_view_working_board }}
 
-      - name: 'Ready Partner Pull Requests'
-        if: contains(github.event.pull_request.labels.*.name, 'partner') && !github.event.pull_request.draft
+      - name: 'Partner Pull Requests'
+        if: github.event.label.name == 'partner'
         run: |
           PROJECT_ITEM_ID=$(gh project item-add ${{ env.PROJECT_NUMBER }} --owner "hashicorp" --url ${{ env.ITEM_URL }} --format json | jq '.id')
           gh project item-edit --id "$PROJECT_ITEM_ID" --project-id ${{ env.PROJECT_ID }} --field-id ${{ env.VIEW_FIELD_ID }} --single-select-option-id ${{ vars.team_project_view_partner_contribution }}
 
-      - name: 'Ready External Maintainer Pull Requests'
-        if: contains(github.event.pull_request.labels.*.name, 'external-maintainer') && !github.event.pull_request.draft
+      - name: 'External Maintainer Pull Requests'
+        if: github.event.label.name == 'external-maintainer'
         run: |
           PROJECT_ITEM_ID=$(gh project item-add ${{ env.PROJECT_NUMBER }} --owner "hashicorp" --url ${{ env.ITEM_URL }} --format json | jq '.id')
           gh project item-edit --id "$PROJECT_ITEM_ID" --project-id ${{ env.PROJECT_ID }} --field-id ${{ env.VIEW_FIELD_ID }} --single-select-option-id ${{ vars.team_project_view_external_maintainer }}
@@ -143,31 +142,24 @@ jobs:
           gh project item-edit --id "$PROJECT_ITEM_ID" --project-id ${{ env.PROJECT_ID }} --field-id ${{ env.VIEW_FIELD_ID }} --single-select-option-id ${{ vars.team_project_view_engineering_initiative }}
 
   add_to_milestone:
-    name: 'Add to Milestone'
+    name: 'Add Merged Pull Requests and Related Issues to Milestone'
     if: github.event.action == 'closed' && github.event.pull_request.merged
     runs-on: ubuntu-latest
     steps:
       - name: 'Checkout'
-        uses: actions/checkout@c85c95e3d7251135ab7dc9ce3241c5835cc595a9
-        with:
-          ref: ${{ github.event.pull_request.base.ref }}
+        uses: actions/checkout@c85c95e3d7251135ab7dc9ce3241c5835cc595a9 # v3.5.3
 
-      - name: 'Get Current Milestone'
+      - name: 'Get Current Milestone Name'
         id: get-current-milestone
-        run: |
-            echo "current_milestone=v$(head -1 CHANGELOG.md | cut -d " " -f 2)" >> "$GITHUB_OUTPUT"
+        run: echo "current_milestone=v$(head -1 CHANGELOG.md | cut -d " " -f 2)" >> "$GITHUB_OUTPUT"
 
-      - name: 'Get Milestone ID'
-        id: get-milestone-id
-        run: |
-          echo "milestone_id=$(curl -H "Authorization: Bearer ${{secrets.GITHUB_TOKEN}}" https://api.github.com/repos/${{ github.repository_owner }}/${{ github.event.repository.name }}/milestones | jq 'map(select(.title == "${{ steps.get-current-milestone.outputs.current_milestone }}"))[0].number')" >> "$GITHUB_OUTPUT"
-
-      - name: 'Add Pull Request and Linked Issues to Milestone'
-        uses: breathingdust/current-milestone-action@e74e4e4baaa22653aeef90db0c7894db093af076
-        with:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          pull_number: ${{ github.event.pull_request.number }}
-          milestone_number: ${{ steps.get-milestone-id.outputs.milestone_id }}
+      - name: 'Add Items to Milestone'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          MILESTONE: ${{ steps.get-current-milestone.outputs.current_milestone }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+        shell: bash
+        run: ./.ci/scripts/add-to-milestone.sh
 
   community_note:
     name: 'Community Note'
@@ -175,7 +167,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: 'Add community note to new Pull Requests'
-        uses: peter-evans/create-or-update-comment@c6c9a1a66007646a28c153e2a8580a5bad27bcfa
+        uses: peter-evans/create-or-update-comment@c6c9a1a66007646a28c153e2a8580a5bad27bcfa # v3.0.2
         with:
           issue-number: ${{ github.event.pull_request.number }}
           body: |
@@ -199,7 +191,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: 'Add comment to add helpful context for new contributors'
-        uses: actions/first-interaction@v1.1.1
+        uses: actions/first-interaction@1d8459ca65b335265f1285568221e229d45a995e # v1.1.1
         with:
           repo-token: ${{ secrets.GITHUB_TOKEN }}
           pr-message: |-
@@ -218,7 +210,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: 'Comment if maintainers cannot edit'
-        uses: peter-evans/create-or-update-comment@c6c9a1a66007646a28c153e2a8580a5bad27bcfa
+        uses: peter-evans/create-or-update-comment@c6c9a1a66007646a28c153e2a8580a5bad27bcfa # v3.0.2
         with:
           issue-number: ${{ github.event.pull_request.number }}
           body: |

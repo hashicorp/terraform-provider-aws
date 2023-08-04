@@ -53,7 +53,7 @@ class MyConvertedCode(TerraformStack):
 
 ## Argument Reference
 
-The following arguments are supported:
+This data source supports the following arguments:
 
 * `filter` - (Optional) One or more configuration blocks containing name-values filters. Detailed below.
 
@@ -64,7 +64,7 @@ The following arguments are supported:
 
 ## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This data source exports the following attributes in addition to the arguments above:
 
 * `ids` A list of all attachments ids matching the filter. You can retrieve more information about the attachment using the [aws_ec2_transit_gateway_attachment][2] data source, searching by identifier.
 
@@ -77,4 +77,4 @@ In addition to all arguments above, the following attributes are exported:
 
 - `read` - (Default `20m`)
 
-<!-- cache-key: cdktf-0.17.1 input-5aab4b9996d301d85a81444ffb46bbaa0a94e492c4d5d3b1c1df96c4c03b5905 -->
+<!-- cache-key: cdktf-0.17.1 input-d711b87a1b40869313a118f25c07038992c92b0b5b1accc3b33147f75288e032 -->

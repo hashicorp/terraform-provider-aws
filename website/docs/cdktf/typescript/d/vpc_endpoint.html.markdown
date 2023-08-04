@@ -62,13 +62,14 @@ which take the following arguments:
 * `values` - (Required) Set of values that are accepted for the given field.
   A VPC Endpoint will be selected if any one of the given values matches.
 
-## Attributes Reference
+## Attribute Reference
 
 In addition to all arguments above except `filter`, the following attributes are exported:
 
 * `arn` - ARN of the VPC endpoint.
 * `cidrBlocks` - List of CIDR blocks for the exposed AWS service. Applicable for endpoints of type `gateway`.
-* `dnsEntry` - DNS entries for the VPC Endpoint. Applicable for endpoints of type `interface`. DNS blocks are documented below.
+* `dnsEntry` - DNS entries for the VPC Endpoint. Applicable for endpoints of type `interface`. [DNS entry blocks are documented below](#dns_entry-block).
+* `dnsOptions` - DNS options for the VPC Endpoint. [DNS options blocks are documented below](#dns_options-block).
 * `networkInterfaceIds` - One or more network interfaces for the VPC Endpoint. Applicable for endpoints of type `interface`.
 * `ownerId` - ID of the AWS account that owns the VPC endpoint.
 * `policy` - Policy document associated with the VPC Endpoint. Applicable for endpoints of type `gateway`.
@@ -80,10 +81,19 @@ In addition to all arguments above except `filter`, the following attributes are
 * `subnetIds` - One or more subnets in which the VPC Endpoint is located. Applicable for endpoints of type `interface`.
 * `vpcEndpointType` - VPC Endpoint type, `gateway` or `interface`.
 
+### `dnsEntry` Block
+
 DNS blocks (for `dnsEntry`) support the following attributes:
 
 * `dnsName` - DNS name.
 * `hostedZoneId` - ID of the private hosted zone.
+
+### `dnsOptions` Block
+
+DNS options (for `dnsOptions`) support the following attributes:
+
+* `dnsRecordIpType` - The DNS records created for the endpoint.
+* `privateDnsOnlyForInboundResolverEndpoint` - Indicates whether to enable private DNS only for inbound endpoints.
 
 ## Timeouts
 
@@ -91,4 +101,4 @@ DNS blocks (for `dnsEntry`) support the following attributes:
 
 - `read` - (Default `20M`)
 
-<!-- cache-key: cdktf-0.17.1 input-044112f0148b73c3dbe80b51e3cbe006dadc7b20780adad3112c01231a036cad -->
+<!-- cache-key: cdktf-0.17.1 input-cf41a1af88fdcd16967d2fea2f7220a7cac0581c1bfd6c1afb6c5a31ae85ffb1 -->

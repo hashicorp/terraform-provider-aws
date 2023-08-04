@@ -58,15 +58,15 @@ class MyConvertedCode(TerraformStack):
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `subnet_id` - (Required) The ID of the subnet to associate with the transit gateway multicast domain.
 * `transit_gateway_attachment_id` - (Required) The ID of the transit gateway attachment.
 * `transit_gateway_multicast_domain_id` - (Required) The ID of the transit gateway multicast domain.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - EC2 Transit Gateway Multicast Domain Association identifier.
 
@@ -77,4 +77,4 @@ In addition to all arguments above, the following attributes are exported:
 - `create` - (Default `10m`)
 - `delete` - (Default `10m`)
 
-<!-- cache-key: cdktf-0.17.1 input-0aab754cf2f3ec5b55918c480d40a25c05ca4acac47f8f8d44dabc61eeb6bf26 -->
+<!-- cache-key: cdktf-0.17.1 input-6c4de69f84e7a9ddb2ed6ce4cfadb8fa72c50ebf1d30ec7a4dc0c8b0330dd7d7 -->

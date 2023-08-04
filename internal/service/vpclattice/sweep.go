@@ -57,7 +57,7 @@ func sweepServices(region string) error {
 		}
 
 		for _, v := range page.Items {
-			r := ResourceService()
+			r := resourceService()
 			d := r.Data(nil)
 			d.SetId(aws.ToString(v.Id))
 
@@ -98,7 +98,7 @@ func sweepServiceNetworks(region string) error {
 		}
 
 		for _, v := range page.Items {
-			r := ResourceServiceNetwork()
+			r := resourceServiceNetwork()
 			d := r.Data(nil)
 			d.SetId(aws.ToString(v.Id))
 

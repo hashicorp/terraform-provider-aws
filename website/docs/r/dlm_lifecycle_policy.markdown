@@ -172,7 +172,7 @@ resource "aws_dlm_lifecycle_policy" "example" {
 
 ### Example Event Based Policy Usage
 
-```
+```terraform
 data "aws_caller_identity" "current" {}
 
 resource "aws_dlm_lifecycle_policy" "example" {
@@ -191,7 +191,7 @@ resource "aws_dlm_lifecycle_policy" "example" {
           interval_unit = "MONTHS"
         }
 
-        target = %[1]q
+        target = "us-east-1"
       }
     }
 
@@ -286,30 +286,30 @@ This resource supports the following arguments:
 
 #### Create Rule arguments
 
-* `cron_expression` - (Optional) The schedule, as a Cron expression. The schedule interval must be between 1 hour and 1 year.
-* `interval` - (Optional) How often this lifecycle policy should be evaluated. `1`, `2`,`3`,`4`,`6`,`8`,`12` or `24` are valid values.
-* `interval_unit` - (Optional) The unit for how often the lifecycle policy should be evaluated. `HOURS` is currently the only allowed value and also the default value.
+* `cron_expression` - (Optional) The schedule, as a Cron expression. The schedule interval must be between 1 hour and 1 year. Conflicts with `interval`, `interval_unit`, and `times`.
+* `interval` - (Optional) How often this lifecycle policy should be evaluated. `1`, `2`,`3`,`4`,`6`,`8`,`12` or `24` are valid values. Conflicts with `cron_expression`. If set, `interval_unit` and `times` must also be set.
+* `interval_unit` - (Optional) The unit for how often the lifecycle policy should be evaluated. `HOURS` is currently the only allowed value and also the default value. Conflicts with `cron_expression`. Must be set if `interval` is set.
 * `location` - (Optional) Specifies the destination for snapshots created by the policy. To create snapshots in the same Region as the source resource, specify `CLOUD`. To create snapshots on the same Outpost as the source resource, specify `OUTPOST_LOCAL`. If you omit this parameter, `CLOUD` is used by default. If the policy targets resources in an AWS Region, then you must create snapshots in the same Region as the source resource. If the policy targets resources on an Outpost, then you can create snapshots on the same Outpost as the source resource, or in the Region of that Outpost. Valid values are `CLOUD` and `OUTPOST_LOCAL`.
-* `times` - (Optional) A list of times in 24 hour clock format that sets when the lifecycle policy should be evaluated. Max of 1.
+* `times` - (Optional) A list of times in 24 hour clock format that sets when the lifecycle policy should be evaluated. Max of 1. Conflicts with `cron_expression`. Must be set if `interval` is set.
 
 #### Deprecate Rule arguments
 
-* `count` - (Optional) Specifies the number of oldest AMIs to deprecate. Must be an integer between `1` and `1000`.
-* `interval` - (Optional) Specifies the period after which to deprecate AMIs created by the schedule. The maximum is 100 years. This is equivalent to 1200 months, 5200 weeks, or 36500 days.
-* `interval_unit` - (Optional) The unit of time for time-based retention. Valid values are `DAYS`, `WEEKS`, `MONTHS`, `YEARS`.
+* `count` - (Optional) Specifies the number of oldest AMIs to deprecate. Must be an integer between `1` and `1000`. Conflicts with `interval` and `interval_unit`.
+* `interval` - (Optional) Specifies the period after which to deprecate AMIs created by the schedule. The maximum is 100 years. This is equivalent to 1200 months, 5200 weeks, or 36500 days. Conflicts with `count`. If set, `interval_unit` must also be set.
+* `interval_unit` - (Optional) The unit of time for time-based retention. Valid values are `DAYS`, `WEEKS`, `MONTHS`, `YEARS`. Conflicts with `count`. Must be set if `interval` is set.
 
 #### Fast Restore Rule arguments
 
 * `availability_zones` - (Required) The Availability Zones in which to enable fast snapshot restore.
-* `count` - (Optional) The number of snapshots to be enabled with fast snapshot restore. Must be an integer between `1` and `1000`.
-* `interval` - (Optional) The amount of time to enable fast snapshot restore. The maximum is 100 years. This is equivalent to 1200 months, 5200 weeks, or 36500 days.
-* `interval_unit` - (Optional) The unit of time for enabling fast snapshot restore. Valid values are `DAYS`, `WEEKS`, `MONTHS`, `YEARS`.
+* `count` - (Optional) The number of snapshots to be enabled with fast snapshot restore. Must be an integer between `1` and `1000`. Conflicts with `interval` and `interval_unit`.
+* `interval` - (Optional) The amount of time to enable fast snapshot restore. The maximum is 100 years. This is equivalent to 1200 months, 5200 weeks, or 36500 days. Conflicts with `count`. If set, `interval_unit` must also be set.
+* `interval_unit` - (Optional) The unit of time for enabling fast snapshot restore. Valid values are `DAYS`, `WEEKS`, `MONTHS`, `YEARS`. Conflicts with `count`. Must be set if `interval` is set.
 
 #### Retain Rule arguments
 
-* `count` - (Optional) How many snapshots to keep. Must be an integer between `1` and `1000`.
-* `interval` - (Optional) The amount of time to retain each snapshot. The maximum is 100 years. This is equivalent to 1200 months, 5200 weeks, or 36500 days.
-* `interval_unit` - (Optional) The unit of time for time-based retention. Valid values are `DAYS`, `WEEKS`, `MONTHS`, `YEARS`.
+* `count` - (Optional) How many snapshots to keep. Must be an integer between `1` and `1000`. Conflicts with `interval` and `interval_unit`.
+* `interval` - (Optional) The amount of time to retain each snapshot. The maximum is 100 years. This is equivalent to 1200 months, 5200 weeks, or 36500 days. Conflicts with `count`. If set, `interval_unit` must also be set.
+* `interval_unit` - (Optional) The unit of time for time-based retention. Valid values are `DAYS`, `WEEKS`, `MONTHS`, `YEARS`. Conflicts with `count`. Must be set if `interval` is set.
 
 #### Share Rule arguments
 

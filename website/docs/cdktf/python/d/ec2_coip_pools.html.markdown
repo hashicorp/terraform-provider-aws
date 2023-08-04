@@ -52,7 +52,9 @@ which take the following arguments:
 * `values` - (Required) Set of values that are accepted for the given field.
   A COIP Pool will be selected if any one of the given values matches.
 
-## Attributes Reference
+## Attribute Reference
+
+This data source exports the following attributes in addition to the arguments above:
 
 * `id` - AWS Region.
 * `pool_ids` - Set of COIP Pool Identifiers
@@ -63,4 +65,4 @@ which take the following arguments:
 
 - `read` - (Default `20m`)
 
-<!-- cache-key: cdktf-0.17.1 input-c1c9a426e16105b7a02e1c1b1adc831132ac241239b921ea8b6a60157547ed64 -->
+<!-- cache-key: cdktf-0.17.1 input-b91d2cae592ac5bf459745fca131316d289583f055df2569fd13d50a3ac7f511 -->

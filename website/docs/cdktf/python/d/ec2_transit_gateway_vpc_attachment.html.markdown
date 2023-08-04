@@ -58,7 +58,7 @@ class MyConvertedCode(TerraformStack):
 
 ## Argument Reference
 
-The following arguments are supported:
+This data source supports the following arguments:
 
 * `filter` - (Optional) One or more configuration blocks containing name-values filters. Detailed below.
 * `id` - (Optional) Identifier of the EC2 Transit Gateway VPC Attachment.
@@ -70,7 +70,7 @@ The following arguments are supported:
 
 ## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This data source exports the following attributes in addition to the arguments above:
 
 * `appliance_mode_support` - Whether Appliance Mode support is enabled.
 * `dns_support` - Whether DNS support is enabled.
@@ -88,4 +88,4 @@ In addition to all arguments above, the following attributes are exported:
 
 - `read` - (Default `20m`)
 
-<!-- cache-key: cdktf-0.17.1 input-d9a7b3de207778ae6262226683d82d8cf55a2755353a69faa2211b11f09ae695 -->
+<!-- cache-key: cdktf-0.17.1 input-1163f41ecbd71e0e8d7980fd48db7828f6a894bd96414a472ab369bf6fdfcc81 -->
