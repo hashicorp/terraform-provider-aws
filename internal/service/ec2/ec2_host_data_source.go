@@ -94,7 +94,7 @@ func dataSourceHostRead(ctx context.Context, d *schema.ResourceData, meta interf
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	input := &ec2.DescribeHostsInput{
-		Filter: BuildFiltersDataSource(d.Get("filter").(*schema.Set)),
+		Filter: BuildCustomFilterList(d.Get("filter").(*schema.Set)),
 	}
 
 	if v, ok := d.GetOk("host_id"); ok {

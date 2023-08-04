@@ -51,7 +51,7 @@ func dataSourceSubnetsRead(ctx context.Context, d *schema.ResourceData, meta int
 
 	if filters, filtersOk := d.GetOk("filter"); filtersOk {
 		input.Filters = append(input.Filters,
-			BuildFiltersDataSource(filters.(*schema.Set))...)
+			BuildCustomFilterList(filters.(*schema.Set))...)
 	}
 
 	if len(input.Filters) == 0 {

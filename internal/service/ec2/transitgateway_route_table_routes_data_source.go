@@ -68,7 +68,7 @@ func dataSourceTransitGatewayRouteTableRoutesRead(ctx context.Context, d *schema
 		TransitGatewayRouteTableId: aws.String(tgwRouteTableID),
 	}
 
-	input.Filters = append(input.Filters, BuildFiltersDataSource(
+	input.Filters = append(input.Filters, BuildCustomFilterList(
 		d.Get("filter").(*schema.Set),
 	)...)
 

@@ -56,7 +56,7 @@ func dataSourceEIPsRead(ctx context.Context, d *schema.ResourceData, meta interf
 
 	if filters, filtersOk := d.GetOk("filter"); filtersOk {
 		input.Filters = append(input.Filters,
-			BuildFiltersDataSource(filters.(*schema.Set))...)
+			BuildCustomFilterList(filters.(*schema.Set))...)
 	}
 
 	if len(input.Filters) == 0 {

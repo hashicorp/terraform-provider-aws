@@ -155,7 +155,7 @@ type customFilterData struct {
 // of the "Describe..." functions in the EC2 API.
 //
 // This function is intended only to be used in conjunction with
-// ec2CustomFitlersSchema. See the docs on that function for more details
+// CustomFiltersSchema. See the docs on that function for more details
 // on the configuration pattern this is intended to support.
 func BuildCustomFilterList(filterSet *schema.Set) []*ec2.Filter {
 	if filterSet == nil {
@@ -209,24 +209,5 @@ func BuildCustomFilters(ctx context.Context, filterSet types.Set) []*ec2.Filter 
 		}
 	}
 
-	return filters
-}
-
-// These were in 'internal/service/ec2/common_schema_data_source.go'.
-// TODO Deduplicate.
-
-func BuildFiltersDataSource(set *schema.Set) []*ec2.Filter {
-	var filters []*ec2.Filter
-	for _, v := range set.List() {
-		m := v.(map[string]interface{})
-		var filterValues []*string
-		for _, e := range m["values"].([]interface{}) {
-			filterValues = append(filterValues, aws.String(e.(string)))
-		}
-		filters = append(filters, &ec2.Filter{
-			Name:   aws.String(m["name"].(string)),
-			Values: filterValues,
-		})
-	}
 	return filters
 }
