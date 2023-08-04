@@ -5,7 +5,6 @@ package ec2
 
 import (
 	"context"
-	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
@@ -20,17 +19,9 @@ import (
 func DataSourceTransitGatewayRouteTableRoutes() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceTransitGatewayRouteTableRoutesRead,
-		Timeouts: &schema.ResourceTimeout{
-			Read: schema.DefaultTimeout(20 * time.Minute),
-		},
 
 		Schema: map[string]*schema.Schema{
 			"filter": DataSourceFiltersSchema(),
-			"transit_gateway_route_table_id": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: validation.NoZeroValues,
-			},
 			"routes": {
 				Type:     schema.TypeList,
 				Computed: true,
@@ -59,19 +50,24 @@ func DataSourceTransitGatewayRouteTableRoutes() *schema.Resource {
 					},
 				},
 			},
+			"transit_gateway_route_table_id": {
+				Type:         schema.TypeString,
+				Required:     true,
+				ValidateFunc: validation.NoZeroValues,
+			},
 		},
 	}
 }
 
 func dataSourceTransitGatewayRouteTableRoutesRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	routes := []interface{}{}
-	conn := meta.(*conns.AWSClient).EC2Conn()
-	input := &ec2.SearchTransitGatewayRoutesInput{}
-	if v, ok := d.GetOk("transit_gateway_route_table_id"); ok {
-		input.TransitGatewayRouteTableId = aws.String(v.(string))
-		d.SetId(v.(string) + "-routes")
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
+
+	tgwRouteTableID := d.Get("transit_gateway_route_table_id").(string)
+	input := &ec2.SearchTransitGatewayRoutesInput{
+		TransitGatewayRouteTableId: aws.String(tgwRouteTableID),
 	}
+
 	input.Filters = append(input.Filters, BuildFiltersDataSource(
 		d.Get("filter").(*schema.Set),
 	)...)
@@ -79,12 +75,16 @@ func dataSourceTransitGatewayRouteTableRoutesRead(ctx context.Context, d *schema
 	if len(input.Filters) == 0 {
 		input.Filters = nil
 	}
+
 	output, err := FindTransitGatewayRoutes(ctx, conn, input)
+
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading EC2 Transit Gateway Route Table Routes: %s", err)
+		return sdkdiag.AppendErrorf(diags, "reading EC2 Transit Gateway Route Table (%s) Routes: %s", tgwRouteTableID, err)
 	}
 
-	//d.SetId(meta.(*conns.AWSClient).Region)
+	d.SetId(tgwRouteTableID)
+
+	routes := []interface{}{}
 	for _, route := range output {
 		routes = append(routes, map[string]interface{}{
 			"destination_cidr_block": aws.StringValue(route.DestinationCidrBlock),
@@ -94,8 +94,10 @@ func dataSourceTransitGatewayRouteTableRoutesRead(ctx context.Context, d *schema
 			"type": aws.StringValue(route.Type),
 		})
 	}
+
 	if err := d.Set("routes", routes); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting route: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting routes: %s", err)
 	}
+
 	return diags
 }
