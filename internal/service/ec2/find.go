@@ -4605,7 +4605,11 @@ func FindTransitGatewayStaticRoute(ctx context.Context, conn *ec2.EC2, transitGa
 		TransitGatewayRouteTableId: aws.String(transitGatewayRouteTableID),
 	}
 
-	output, _ := FindTransitGatewayRoutes(ctx, conn, input)
+	output, err := FindTransitGatewayRoutes(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
 
 	for _, route := range output {
 		if route == nil {
