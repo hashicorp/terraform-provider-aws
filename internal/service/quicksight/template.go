@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package quicksight
 
 import (
@@ -42,80 +45,83 @@ func ResourceTemplate() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: map[string]*schema.Schema{
-			"arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"aws_account_id": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ForceNew:     true,
-				ValidateFunc: verify.ValidAccountID,
-			},
-			"created_time": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"definition": quicksightschema.TemplateDefinitionSchema(),
-			"last_updated_time": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"name": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: validation.StringLenBetween(1, 2048),
-			},
-			"permissions": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MinItems: 1,
-				MaxItems: 64,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"actions": {
-							Type:     schema.TypeSet,
-							Required: true,
-							MinItems: 1,
-							MaxItems: 16,
-							Elem:     &schema.Schema{Type: schema.TypeString},
-						},
-						"principal": {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: validation.StringLenBetween(1, 256),
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"arn": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"aws_account_id": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					Computed:     true,
+					ForceNew:     true,
+					ValidateFunc: verify.ValidAccountID,
+				},
+				"created_time": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"definition": quicksightschema.TemplateDefinitionSchema(),
+				"last_updated_time": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"name": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ValidateFunc: validation.StringLenBetween(1, 2048),
+				},
+				"permissions": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MinItems: 1,
+					MaxItems: 64,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"actions": {
+								Type:     schema.TypeSet,
+								Required: true,
+								MinItems: 1,
+								MaxItems: 16,
+								Elem:     &schema.Schema{Type: schema.TypeString},
+							},
+							"principal": {
+								Type:         schema.TypeString,
+								Required:     true,
+								ValidateFunc: validation.StringLenBetween(1, 256),
+							},
 						},
 					},
 				},
-			},
-			"source_entity": quicksightschema.TemplateSourceEntitySchema(),
-			"source_entity_arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"status": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			"template_id": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"version_description": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: validation.StringLenBetween(1, 512),
-			},
-			"version_number": {
-				Type:     schema.TypeInt,
-				Computed: true,
-			},
+				"source_entity": quicksightschema.TemplateSourceEntitySchema(),
+				"source_entity_arn": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"status": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				"template_id": {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				"version_description": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ValidateFunc: validation.StringLenBetween(1, 512),
+				},
+				"version_number": {
+					Type:     schema.TypeInt,
+					Computed: true,
+				},
+			}
 		},
+
 		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
@@ -125,7 +131,7 @@ const (
 )
 
 func resourceTemplateCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).QuickSightConn()
+	conn := meta.(*conns.AWSClient).QuickSightConn(ctx)
 
 	awsAccountId := meta.(*conns.AWSClient).AccountID
 	if v, ok := d.GetOk("aws_account_id"); ok {
@@ -139,7 +145,7 @@ func resourceTemplateCreate(ctx context.Context, d *schema.ResourceData, meta in
 		AwsAccountId: aws.String(awsAccountId),
 		TemplateId:   aws.String(templateId),
 		Name:         aws.String(d.Get("name").(string)),
-		Tags:         GetTagsIn(ctx),
+		Tags:         getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("version_description"); ok {
@@ -171,7 +177,7 @@ func resourceTemplateCreate(ctx context.Context, d *schema.ResourceData, meta in
 }
 
 func resourceTemplateRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).QuickSightConn()
+	conn := meta.(*conns.AWSClient).QuickSightConn(ctx)
 
 	awsAccountId, templateId, err := ParseTemplateId(d.Id())
 	if err != nil {
@@ -232,7 +238,7 @@ func resourceTemplateRead(ctx context.Context, d *schema.ResourceData, meta inte
 }
 
 func resourceTemplateUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).QuickSightConn()
+	conn := meta.(*conns.AWSClient).QuickSightConn(ctx)
 
 	awsAccountId, templateId, err := ParseTemplateId(d.Id())
 	if err != nil {
@@ -296,7 +302,7 @@ func resourceTemplateUpdate(ctx context.Context, d *schema.ResourceData, meta in
 }
 
 func resourceTemplateDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).QuickSightConn()
+	conn := meta.(*conns.AWSClient).QuickSightConn(ctx)
 
 	awsAccountId, templateId, err := ParseTemplateId(d.Id())
 	if err != nil {

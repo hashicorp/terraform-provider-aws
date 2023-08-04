@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package chime
 
 import (
@@ -76,7 +79,7 @@ func ResourceVoiceConnectorStreaming() *schema.Resource {
 }
 
 func resourceVoiceConnectorStreamingCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ChimeSDKVoiceConn()
+	conn := meta.(*conns.AWSClient).ChimeSDKVoiceConn(ctx)
 
 	vcId := d.Get("voice_connector_id").(string)
 	input := &chimesdkvoice.PutVoiceConnectorStreamingConfigurationInput{
@@ -108,7 +111,7 @@ func resourceVoiceConnectorStreamingCreate(ctx context.Context, d *schema.Resour
 }
 
 func resourceVoiceConnectorStreamingRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ChimeSDKVoiceConn()
+	conn := meta.(*conns.AWSClient).ChimeSDKVoiceConn(ctx)
 
 	input := &chimesdkvoice.GetVoiceConnectorStreamingConfigurationInput{
 		VoiceConnectorId: aws.String(d.Id()),
@@ -145,7 +148,7 @@ func resourceVoiceConnectorStreamingRead(ctx context.Context, d *schema.Resource
 }
 
 func resourceVoiceConnectorStreamingUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ChimeSDKVoiceConn()
+	conn := meta.(*conns.AWSClient).ChimeSDKVoiceConn(ctx)
 
 	vcId := d.Get("voice_connector_id").(string)
 
@@ -178,7 +181,7 @@ func resourceVoiceConnectorStreamingUpdate(ctx context.Context, d *schema.Resour
 }
 
 func resourceVoiceConnectorStreamingDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ChimeSDKVoiceConn()
+	conn := meta.(*conns.AWSClient).ChimeSDKVoiceConn(ctx)
 
 	input := &chimesdkvoice.DeleteVoiceConnectorStreamingConfigurationInput{
 		VoiceConnectorId: aws.String(d.Id()),

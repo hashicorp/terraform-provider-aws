@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package batch
 
 import (
@@ -76,14 +79,14 @@ func ResourceJobQueue() *schema.Resource {
 
 func resourceJobQueueCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).BatchConn()
+	conn := meta.(*conns.AWSClient).BatchConn(ctx)
 
 	input := batch.CreateJobQueueInput{
 		ComputeEnvironmentOrder: createComputeEnvironmentOrder(d.Get("compute_environments").([]interface{})),
 		JobQueueName:            aws.String(d.Get("name").(string)),
 		Priority:                aws.Int64(int64(d.Get("priority").(int))),
 		State:                   aws.String(d.Get("state").(string)),
-		Tags:                    GetTagsIn(ctx),
+		Tags:                    getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("scheduling_policy_arn"); ok {
@@ -119,7 +122,7 @@ func resourceJobQueueCreate(ctx context.Context, d *schema.ResourceData, meta in
 
 func resourceJobQueueRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).BatchConn()
+	conn := meta.(*conns.AWSClient).BatchConn(ctx)
 
 	jq, err := GetJobQueue(ctx, conn, d.Id())
 	if err != nil {
@@ -152,14 +155,14 @@ func resourceJobQueueRead(ctx context.Context, d *schema.ResourceData, meta inte
 	d.Set("scheduling_policy_arn", jq.SchedulingPolicyArn)
 	d.Set("state", jq.State)
 
-	SetTagsOut(ctx, jq.Tags)
+	setTagsOut(ctx, jq.Tags)
 
 	return diags
 }
 
 func resourceJobQueueUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).BatchConn()
+	conn := meta.(*conns.AWSClient).BatchConn(ctx)
 
 	if d.HasChanges("compute_environments", "priority", "scheduling_policy_arn", "state") {
 		name := d.Get("name").(string)
@@ -209,7 +212,7 @@ func resourceJobQueueUpdate(ctx context.Context, d *schema.ResourceData, meta in
 
 func resourceJobQueueDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).BatchConn()
+	conn := meta.(*conns.AWSClient).BatchConn(ctx)
 	name := d.Get("name").(string)
 
 	log.Printf("[DEBUG] Disabling Batch Job Queue: %s", name)

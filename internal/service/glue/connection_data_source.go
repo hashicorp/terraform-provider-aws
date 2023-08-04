@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package glue
 
 import (
@@ -85,7 +88,7 @@ func DataSourceConnection() *schema.Resource {
 }
 
 func dataSourceConnectionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).GlueConn()
+	conn := meta.(*conns.AWSClient).GlueConn(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	id := d.Get("id").(string)
@@ -129,7 +132,7 @@ func dataSourceConnectionRead(ctx context.Context, d *schema.ResourceData, meta 
 		return diag.Errorf("setting match_criteria: %s", err)
 	}
 
-	tags, err := ListTags(ctx, conn, connectionArn)
+	tags, err := listTags(ctx, conn, connectionArn)
 
 	if err != nil {
 		return diag.Errorf("listing tags for Glue Connection (%s): %s", connectionArn, err)

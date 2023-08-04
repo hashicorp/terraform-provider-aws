@@ -21,23 +21,32 @@ resource "aws_config_aggregate_authorization" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `account_id` - (Required) Account ID
 * `region` - (Required) Region
 * `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - The ARN of the authorization
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 
-Config aggregate authorizations can be imported using `account_id:region`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Config aggregate authorizations using `account_id:region`. For example:
 
+```terraform
+import {
+  to = aws_config_aggregate_authorization.example
+  id = "123456789012:us-east-1"
+}
 ```
-$ terraform import aws_config_aggregate_authorization.example 123456789012:us-east-1
+
+Using `terraform import`, import Config aggregate authorizations using `account_id:region`. For example:
+
+```console
+% terraform import aws_config_aggregate_authorization.example 123456789012:us-east-1
 ```

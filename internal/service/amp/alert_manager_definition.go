@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package amp
 
 import (
@@ -40,7 +43,7 @@ func ResourceAlertManagerDefinition() *schema.Resource {
 }
 
 func resourceAlertManagerDefinitionCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).AMPConn()
+	conn := meta.(*conns.AWSClient).AMPConn(ctx)
 
 	workspaceID := d.Get("workspace_id").(string)
 	input := &prometheusservice.CreateAlertManagerDefinitionInput{
@@ -64,7 +67,7 @@ func resourceAlertManagerDefinitionCreate(ctx context.Context, d *schema.Resourc
 }
 
 func resourceAlertManagerDefinitionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).AMPConn()
+	conn := meta.(*conns.AWSClient).AMPConn(ctx)
 
 	amd, err := FindAlertManagerDefinitionByID(ctx, conn, d.Id())
 
@@ -85,7 +88,7 @@ func resourceAlertManagerDefinitionRead(ctx context.Context, d *schema.ResourceD
 }
 
 func resourceAlertManagerDefinitionUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).AMPConn()
+	conn := meta.(*conns.AWSClient).AMPConn(ctx)
 
 	input := &prometheusservice.PutAlertManagerDefinitionInput{
 		Data:        []byte(d.Get("definition").(string)),
@@ -106,7 +109,7 @@ func resourceAlertManagerDefinitionUpdate(ctx context.Context, d *schema.Resourc
 }
 
 func resourceAlertManagerDefinitionDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).AMPConn()
+	conn := meta.(*conns.AWSClient).AMPConn(ctx)
 
 	log.Printf("[DEBUG] Deleting Prometheus Alert Manager Definition: (%s)", d.Id())
 	_, err := conn.DeleteAlertManagerDefinitionWithContext(ctx, &prometheusservice.DeleteAlertManagerDefinitionInput{

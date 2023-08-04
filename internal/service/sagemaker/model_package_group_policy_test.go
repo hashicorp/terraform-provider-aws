@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package sagemaker_test
 
 import (
@@ -95,7 +98,7 @@ func TestAccSageMakerModelPackageGroupPolicy_Disappears_modelPackageGroup(t *tes
 
 func testAccCheckModelPackageGroupPolicyDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SageMakerConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SageMakerConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_sagemaker_model_package_group_policy" {
@@ -127,7 +130,7 @@ func testAccCheckModelPackageGroupPolicyExists(ctx context.Context, n string, mp
 			return fmt.Errorf("No sagmaker Model Package Group ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SageMakerConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SageMakerConn(ctx)
 		resp, err := tfsagemaker.FindModelPackageGroupPolicyByName(ctx, conn, rs.Primary.ID)
 		if err != nil {
 			return err

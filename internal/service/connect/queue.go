@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package connect
 
 import (
@@ -26,9 +29,7 @@ func ResourceQueue() *schema.Resource {
 		CreateWithoutTimeout: resourceQueueCreate,
 		ReadWithoutTimeout:   resourceQueueRead,
 		UpdateWithoutTimeout: resourceQueueUpdate,
-		// Queues do not support deletion today. NoOp the Delete method.
-		// Users can rename their queues manually if they want.
-		DeleteWithoutTimeout: schema.NoopContext,
+		DeleteWithoutTimeout: resourceQueueDelete,
 
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
@@ -112,14 +113,14 @@ func ResourceQueue() *schema.Resource {
 }
 
 func resourceQueueCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ConnectConn()
+	conn := meta.(*conns.AWSClient).ConnectConn(ctx)
 
 	instanceID := d.Get("instance_id").(string)
 	name := d.Get("name").(string)
 	input := &connect.CreateQueueInput{
 		InstanceId: aws.String(instanceID),
 		Name:       aws.String(name),
-		Tags:       GetTagsIn(ctx),
+		Tags:       getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("description"); ok {
@@ -159,7 +160,7 @@ func resourceQueueCreate(ctx context.Context, d *schema.ResourceData, meta inter
 }
 
 func resourceQueueRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ConnectConn()
+	conn := meta.(*conns.AWSClient).ConnectConn(ctx)
 
 	instanceID, queueID, err := QueueParseID(d.Id())
 
@@ -208,13 +209,13 @@ func resourceQueueRead(ctx context.Context, d *schema.ResourceData, meta interfa
 
 	d.Set("quick_connect_ids", aws.StringValueSlice(quickConnectIds))
 
-	SetTagsOut(ctx, resp.Queue.Tags)
+	setTagsOut(ctx, resp.Queue.Tags)
 
 	return nil
 }
 
 func resourceQueueUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ConnectConn()
+	conn := meta.(*conns.AWSClient).ConnectConn(ctx)
 
 	instanceID, queueID, err := QueueParseID(d.Id())
 
@@ -341,6 +342,27 @@ func resourceQueueUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 
 	return resourceQueueRead(ctx, d, meta)
+}
+
+func resourceQueueDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	conn := meta.(*conns.AWSClient).ConnectConn(ctx)
+
+	instanceID, queueID, err := QueueParseID(d.Id())
+
+	if err != nil {
+		return diag.FromErr(err)
+	}
+
+	_, err = conn.DeleteQueueWithContext(ctx, &connect.DeleteQueueInput{
+		InstanceId: aws.String(instanceID),
+		QueueId:    aws.String(queueID),
+	})
+
+	if err != nil {
+		return diag.Errorf("deleting Queue (%s): %s", d.Id(), err)
+	}
+
+	return nil
 }
 
 func expandOutboundCallerConfig(outboundCallerConfig []interface{}) *connect.OutboundCallerConfig {

@@ -138,7 +138,7 @@ resource "aws_amplify_app" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `name` - (Required) Name for an Amplify app.
 * `access_token` - (Optional) Personal access token for a third-party source control system for an Amplify app. The personal access token is used to create a webhook and a read-only deploy key. The token is not stored.
@@ -179,9 +179,9 @@ A `custom_rule` block supports the following arguments:
 * `status` - (Optional) Status code for a URL rewrite or redirect rule. Valid values: `200`, `301`, `302`, `404`, `404-200`.
 * `target` - (Required) Target pattern for a URL rewrite or redirect rule.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the Amplify app.
 * `default_domain` - Default domain for the Amplify app.
@@ -198,10 +198,19 @@ A `production_branch` block supports the following attributes:
 
 ## Import
 
-Amplify App can be imported using Amplify App ID (appId), e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Amplify App using Amplify App ID (appId). For example:
 
+```terraform
+import {
+  to = aws_amplify_app.example
+  id = "d2ypk4k47z8u6"
+}
 ```
-$ terraform import aws_amplify_app.example d2ypk4k47z8u6
+
+Using `terraform import`, import Amplify App using Amplify App ID (appId). For example:
+
+```console
+% terraform import aws_amplify_app.example d2ypk4k47z8u6
 ```
 
 App ID can be obtained from App ARN (e.g., `arn:aws:amplify:us-east-1:12345678:apps/d2ypk4k47z8u6`).

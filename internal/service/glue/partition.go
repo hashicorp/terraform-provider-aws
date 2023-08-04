@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package glue
 
 import (
@@ -203,7 +206,7 @@ func ResourcePartition() *schema.Resource {
 
 func resourcePartitionCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).GlueConn()
+	conn := meta.(*conns.AWSClient).GlueConn(ctx)
 	catalogID := createCatalogID(d, meta.(*conns.AWSClient).AccountID)
 	dbName := d.Get("database_name").(string)
 	tableName := d.Get("table_name").(string)
@@ -229,7 +232,7 @@ func resourcePartitionCreate(ctx context.Context, d *schema.ResourceData, meta i
 
 func resourcePartitionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).GlueConn()
+	conn := meta.(*conns.AWSClient).GlueConn(ctx)
 
 	log.Printf("[DEBUG] Reading Glue Partition: %s", d.Id())
 	partition, err := FindPartitionByValues(ctx, conn, d.Id())
@@ -272,7 +275,7 @@ func resourcePartitionRead(ctx context.Context, d *schema.ResourceData, meta int
 
 func resourcePartitionUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).GlueConn()
+	conn := meta.(*conns.AWSClient).GlueConn(ctx)
 
 	catalogID, dbName, tableName, values, err := readPartitionID(d.Id())
 	if err != nil {
@@ -296,7 +299,7 @@ func resourcePartitionUpdate(ctx context.Context, d *schema.ResourceData, meta i
 
 func resourcePartitionDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).GlueConn()
+	conn := meta.(*conns.AWSClient).GlueConn(ctx)
 
 	catalogID, dbName, tableName, values, err := readPartitionID(d.Id())
 	if err != nil {

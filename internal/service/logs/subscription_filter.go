@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package logs
 
 import (
@@ -73,7 +76,7 @@ func resourceSubscriptionFilter() *schema.Resource {
 }
 
 func resourceSubscriptionFilterPut(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).LogsConn()
+	conn := meta.(*conns.AWSClient).LogsConn(ctx)
 
 	logGroupName := d.Get("log_group_name").(string)
 	name := d.Get("name").(string)
@@ -122,7 +125,7 @@ func resourceSubscriptionFilterPut(ctx context.Context, d *schema.ResourceData, 
 }
 
 func resourceSubscriptionFilterRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).LogsConn()
+	conn := meta.(*conns.AWSClient).LogsConn(ctx)
 
 	subscriptionFilter, err := FindSubscriptionFilterByTwoPartKey(ctx, conn, d.Get("log_group_name").(string), d.Get("name").(string))
 
@@ -147,7 +150,7 @@ func resourceSubscriptionFilterRead(ctx context.Context, d *schema.ResourceData,
 }
 
 func resourceSubscriptionFilterDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).LogsConn()
+	conn := meta.(*conns.AWSClient).LogsConn(ctx)
 
 	log.Printf("[INFO] Deleting CloudWatch Logs Subscription Filter: %s", d.Id())
 	_, err := conn.DeleteSubscriptionFilterWithContext(ctx, &cloudwatchlogs.DeleteSubscriptionFilterInput{

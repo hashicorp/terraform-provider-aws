@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package location
 
 import (
@@ -76,12 +79,12 @@ func ResourceRouteCalculator() *schema.Resource {
 }
 
 func resourceRouteCalculatorCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).LocationConn()
+	conn := meta.(*conns.AWSClient).LocationConn(ctx)
 
 	in := &locationservice.CreateRouteCalculatorInput{
 		CalculatorName: aws.String(d.Get("calculator_name").(string)),
 		DataSource:     aws.String(d.Get("data_source").(string)),
-		Tags:           GetTagsIn(ctx),
+		Tags:           getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("description"); ok {
@@ -103,7 +106,7 @@ func resourceRouteCalculatorCreate(ctx context.Context, d *schema.ResourceData, 
 }
 
 func resourceRouteCalculatorRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).LocationConn()
+	conn := meta.(*conns.AWSClient).LocationConn(ctx)
 
 	out, err := findRouteCalculatorByName(ctx, conn, d.Id())
 
@@ -128,7 +131,7 @@ func resourceRouteCalculatorRead(ctx context.Context, d *schema.ResourceData, me
 }
 
 func resourceRouteCalculatorUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).LocationConn()
+	conn := meta.(*conns.AWSClient).LocationConn(ctx)
 
 	update := false
 
@@ -155,7 +158,7 @@ func resourceRouteCalculatorUpdate(ctx context.Context, d *schema.ResourceData, 
 }
 
 func resourceRouteCalculatorDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).LocationConn()
+	conn := meta.(*conns.AWSClient).LocationConn(ctx)
 
 	log.Printf("[INFO] Deleting Location Service Route Calculator %s", d.Id())
 

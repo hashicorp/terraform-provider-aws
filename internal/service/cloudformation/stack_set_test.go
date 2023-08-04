@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package cloudformation_test
 
 import (
@@ -743,7 +746,7 @@ func testAccCheckStackSetExists(ctx context.Context, resourceName string, v *clo
 
 		callAs := rs.Primary.Attributes["call_as"]
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudFormationConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudFormationConn(ctx)
 
 		output, err := tfcloudformation.FindStackSetByName(ctx, conn, rs.Primary.ID, callAs)
 
@@ -759,7 +762,7 @@ func testAccCheckStackSetExists(ctx context.Context, resourceName string, v *clo
 
 func testAccCheckStackSetDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudFormationConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudFormationConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_cloudformation_stack_set" {
@@ -806,7 +809,7 @@ func testAccCheckStackSetRecreated(i, j *cloudformation.StackSet) resource.TestC
 }
 
 func testAccPreCheckStackSet(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).CloudFormationConn()
+	conn := acctest.Provider.Meta().(*conns.AWSClient).CloudFormationConn(ctx)
 
 	input := &cloudformation.ListStackSetsInput{}
 	_, err := conn.ListStackSetsWithContext(ctx, input)

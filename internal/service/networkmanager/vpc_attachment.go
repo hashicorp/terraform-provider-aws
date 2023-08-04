@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package networkmanager
 
 import (
@@ -123,14 +126,14 @@ func ResourceVPCAttachment() *schema.Resource {
 }
 
 func resourceVPCAttachmentCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).NetworkManagerConn()
+	conn := meta.(*conns.AWSClient).NetworkManagerConn(ctx)
 
 	coreNetworkID := d.Get("core_network_id").(string)
 	vpcARN := d.Get("vpc_arn").(string)
 	input := &networkmanager.CreateVpcAttachmentInput{
 		CoreNetworkId: aws.String(coreNetworkID),
 		SubnetArns:    flex.ExpandStringSet(d.Get("subnet_arns").(*schema.Set)),
-		Tags:          GetTagsIn(ctx),
+		Tags:          getTagsIn(ctx),
 		VpcArn:        aws.String(vpcARN),
 	}
 
@@ -155,7 +158,7 @@ func resourceVPCAttachmentCreate(ctx context.Context, d *schema.ResourceData, me
 }
 
 func resourceVPCAttachmentRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).NetworkManagerConn()
+	conn := meta.(*conns.AWSClient).NetworkManagerConn(ctx)
 
 	vpcAttachment, err := FindVPCAttachmentByID(ctx, conn, d.Id())
 
@@ -196,13 +199,13 @@ func resourceVPCAttachmentRead(ctx context.Context, d *schema.ResourceData, meta
 	d.Set("subnet_arns", aws.StringValueSlice(vpcAttachment.SubnetArns))
 	d.Set("vpc_arn", a.ResourceArn)
 
-	SetTagsOut(ctx, a.Tags)
+	setTagsOut(ctx, a.Tags)
 
 	return nil
 }
 
 func resourceVPCAttachmentUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).NetworkManagerConn()
+	conn := meta.(*conns.AWSClient).NetworkManagerConn(ctx)
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		input := &networkmanager.UpdateVpcAttachmentInput{
@@ -250,7 +253,7 @@ func resourceVPCAttachmentUpdate(ctx context.Context, d *schema.ResourceData, me
 }
 
 func resourceVPCAttachmentDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).NetworkManagerConn()
+	conn := meta.(*conns.AWSClient).NetworkManagerConn(ctx)
 
 	// If ResourceAttachmentAccepter is used, then VPC Attachment state
 	// is not updated from StatePendingAttachmentAcceptance and the delete fails if deleted immediately after create

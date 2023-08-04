@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package elbv2_test
 
 import (
@@ -620,7 +623,7 @@ func testAccCheckListenerDefaultActionOrderDisappears(ctx context.Context, liste
 			return fmt.Errorf("Unable to find default action order %d from default actions: %#v", actionOrderToDelete, listener.DefaultActions)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ELBV2Conn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ELBV2Conn(ctx)
 
 		input := &elbv2.ModifyListenerInput{
 			DefaultActions: newDefaultActions,
@@ -644,7 +647,7 @@ func testAccCheckListenerExists(ctx context.Context, n string, res *elbv2.Listen
 			return errors.New("No Listener ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ELBV2Conn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ELBV2Conn(ctx)
 
 		listener, err := tfelbv2.FindListenerByARN(ctx, conn, rs.Primary.ID)
 
@@ -663,7 +666,7 @@ func testAccCheckListenerExists(ctx context.Context, n string, res *elbv2.Listen
 
 func testAccCheckListenerDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ELBV2Conn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ELBV2Conn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_lb_listener" && rs.Type != "aws_alb_listener" {

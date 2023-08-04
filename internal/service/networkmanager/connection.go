@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package networkmanager
 
 import (
@@ -36,7 +39,7 @@ func ResourceConnection() *schema.Resource {
 				parsedARN, err := arn.Parse(d.Id())
 
 				if err != nil {
-					return nil, fmt.Errorf("error parsing ARN (%s): %w", d.Id(), err)
+					return nil, fmt.Errorf("parsing ARN (%s): %w", d.Id(), err)
 				}
 
 				// See https://docs.aws.amazon.com/service-authorization/latest/reference/list_networkmanager.html#networkmanager-resources-for-iam-policies.
@@ -101,14 +104,14 @@ func ResourceConnection() *schema.Resource {
 }
 
 func resourceConnectionCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).NetworkManagerConn()
+	conn := meta.(*conns.AWSClient).NetworkManagerConn(ctx)
 
 	globalNetworkID := d.Get("global_network_id").(string)
 	input := &networkmanager.CreateConnectionInput{
 		ConnectedDeviceId: aws.String(d.Get("connected_device_id").(string)),
 		DeviceId:          aws.String(d.Get("device_id").(string)),
 		GlobalNetworkId:   aws.String(globalNetworkID),
-		Tags:              GetTagsIn(ctx),
+		Tags:              getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("connected_link_id"); ok {
@@ -140,7 +143,7 @@ func resourceConnectionCreate(ctx context.Context, d *schema.ResourceData, meta 
 }
 
 func resourceConnectionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).NetworkManagerConn()
+	conn := meta.(*conns.AWSClient).NetworkManagerConn(ctx)
 
 	globalNetworkID := d.Get("global_network_id").(string)
 	connection, err := FindConnectionByTwoPartKey(ctx, conn, globalNetworkID, d.Id())
@@ -163,13 +166,13 @@ func resourceConnectionRead(ctx context.Context, d *schema.ResourceData, meta in
 	d.Set("global_network_id", connection.GlobalNetworkId)
 	d.Set("link_id", connection.LinkId)
 
-	SetTagsOut(ctx, connection.Tags)
+	setTagsOut(ctx, connection.Tags)
 
 	return nil
 }
 
 func resourceConnectionUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).NetworkManagerConn()
+	conn := meta.(*conns.AWSClient).NetworkManagerConn(ctx)
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		globalNetworkID := d.Get("global_network_id").(string)
@@ -197,7 +200,7 @@ func resourceConnectionUpdate(ctx context.Context, d *schema.ResourceData, meta 
 }
 
 func resourceConnectionDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).NetworkManagerConn()
+	conn := meta.(*conns.AWSClient).NetworkManagerConn(ctx)
 
 	globalNetworkID := d.Get("global_network_id").(string)
 

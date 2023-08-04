@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package s3_test
 
 import (
@@ -1180,7 +1183,7 @@ func TestAccS3BucketReplicationConfiguration_migrate_withChange(t *testing.T) {
 // version, but for use with "same region" tests requiring only one provider.
 func testAccCheckBucketReplicationConfigurationDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Conn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Conn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_s3_bucket_replication_configuration" {
@@ -1211,7 +1214,7 @@ func testAccCheckBucketReplicationConfigurationDestroy(ctx context.Context) reso
 
 func testAccCheckBucketReplicationConfigurationDestroyWithProvider(ctx context.Context) acctest.TestCheckWithProviderFunc {
 	return func(s *terraform.State, provider *schema.Provider) error {
-		conn := provider.Meta().(*conns.AWSClient).S3Conn()
+		conn := provider.Meta().(*conns.AWSClient).S3Conn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_s3_bucket_replication_configuration" {
@@ -1251,7 +1254,7 @@ func testAccCheckBucketReplicationConfigurationExists(ctx context.Context, n str
 			return fmt.Errorf("No ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Conn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Conn(ctx)
 
 		_, err := tfs3.FindBucketReplicationConfigurationByID(ctx, conn, rs.Primary.ID)
 

@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package datasync
 
 import (
@@ -115,13 +118,13 @@ func ResourceLocationEFS() *schema.Resource {
 
 func resourceLocationEFSCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DataSyncConn()
+	conn := meta.(*conns.AWSClient).DataSyncConn(ctx)
 
 	input := &datasync.CreateLocationEfsInput{
 		Ec2Config:        expandEC2Config(d.Get("ec2_config").([]interface{})),
 		EfsFilesystemArn: aws.String(d.Get("efs_file_system_arn").(string)),
 		Subdirectory:     aws.String(d.Get("subdirectory").(string)),
-		Tags:             GetTagsIn(ctx),
+		Tags:             getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("access_point_arn"); ok {
@@ -149,7 +152,7 @@ func resourceLocationEFSCreate(ctx context.Context, d *schema.ResourceData, meta
 
 func resourceLocationEFSRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DataSyncConn()
+	conn := meta.(*conns.AWSClient).DataSyncConn(ctx)
 
 	input := &datasync.DescribeLocationEfsInput{
 		LocationArn: aws.String(d.Id()),
@@ -168,7 +171,7 @@ func resourceLocationEFSRead(ctx context.Context, d *schema.ResourceData, meta i
 		return sdkdiag.AppendErrorf(diags, "reading DataSync Location EFS (%s): %s", d.Id(), err)
 	}
 
-	subdirectory, err := SubdirectoryFromLocationURI(aws.StringValue(output.LocationUri))
+	subdirectory, err := subdirectoryFromLocationURI(aws.StringValue(output.LocationUri))
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading DataSync Location EFS (%s): %s", d.Id(), err)
@@ -199,7 +202,7 @@ func resourceLocationEFSUpdate(ctx context.Context, d *schema.ResourceData, meta
 
 func resourceLocationEFSDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DataSyncConn()
+	conn := meta.(*conns.AWSClient).DataSyncConn(ctx)
 
 	input := &datasync.DeleteLocationInput{
 		LocationArn: aws.String(d.Id()),

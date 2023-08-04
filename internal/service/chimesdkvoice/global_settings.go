@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package chimesdkvoice
 
 import (
@@ -19,7 +22,7 @@ import (
 
 const (
 	ResNameGlobalSettings            = "Global Settings"
-	globalSettingsPropagationTimeout = time.Second * 10
+	globalSettingsPropagationTimeout = 20 * time.Second
 )
 
 // @SDKResource("aws_chimesdkvoice_global_settings")
@@ -54,7 +57,7 @@ func ResourceGlobalSettings() *schema.Resource {
 
 func resourceGlobalSettingsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ChimeSDKVoiceConn()
+	conn := meta.(*conns.AWSClient).ChimeSDKVoiceConn(ctx)
 
 	// Include retry handling to allow for propagation of the Global Settings
 	// logging bucket configuration
@@ -62,10 +65,12 @@ func resourceGlobalSettingsRead(ctx context.Context, d *schema.ResourceData, met
 	err := tfresource.Retry(ctx, globalSettingsPropagationTimeout, func() *retry.RetryError {
 		var getErr error
 		out, getErr = conn.GetGlobalSettingsWithContext(ctx, &chimesdkvoice.GetGlobalSettingsInput{})
+
 		if getErr != nil {
 			return retry.NonRetryableError(getErr)
 		}
-		if out.VoiceConnector == nil {
+
+		if out.VoiceConnector == nil || out.VoiceConnector.CdrBucket == nil {
 			return retry.RetryableError(tfresource.NewEmptyResultError(&chimesdkvoice.GetGlobalSettingsInput{}))
 		}
 
@@ -91,7 +96,7 @@ func resourceGlobalSettingsRead(ctx context.Context, d *schema.ResourceData, met
 
 func resourceGlobalSettingsUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ChimeSDKVoiceConn()
+	conn := meta.(*conns.AWSClient).ChimeSDKVoiceConn(ctx)
 
 	if d.HasChange("voice_connector") {
 		input := &chimesdkvoice.UpdateGlobalSettingsInput{
@@ -110,7 +115,7 @@ func resourceGlobalSettingsUpdate(ctx context.Context, d *schema.ResourceData, m
 
 func resourceGlobalSettingsDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ChimeSDKVoiceConn()
+	conn := meta.(*conns.AWSClient).ChimeSDKVoiceConn(ctx)
 
 	_, err := conn.UpdateGlobalSettingsWithContext(ctx, &chimesdkvoice.UpdateGlobalSettingsInput{
 		VoiceConnector: &chimesdkvoice.VoiceConnectorSettings{},

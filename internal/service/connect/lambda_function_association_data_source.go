@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package connect
 
 import (
@@ -28,7 +31,7 @@ func DataSourceLambdaFunctionAssociation() *schema.Resource {
 }
 
 func dataSourceLambdaFunctionAssociationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ConnectConn()
+	conn := meta.(*conns.AWSClient).ConnectConn(ctx)
 	functionArn := d.Get("function_arn")
 	instanceID := d.Get("instance_id")
 

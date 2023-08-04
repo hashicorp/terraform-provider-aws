@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package schema
 
 import (
@@ -40,7 +43,7 @@ func diffFromValues(ctx context.Context, prior, planned, config cty.Value, res *
 	removeConfigUnknowns(cfg.Config)
 	removeConfigUnknowns(cfg.Raw)
 
-	diff, err := schemaMap(res.Schema).Diff(ctx, instanceState, cfg, cust, nil, false)
+	diff, err := schemaMap(res.SchemaMap()).Diff(ctx, instanceState, cfg, cust, nil, false)
 	if err != nil {
 		return nil, err
 	}

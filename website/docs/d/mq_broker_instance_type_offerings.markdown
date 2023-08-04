@@ -36,13 +36,15 @@ data "aws_mq_broker_instance_type_offerings" "all" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This data source supports the following arguments:
 
 * `engine_type` - (Optional) Filter response by engine type.
 * `host_instance_type` - (Optional) Filter response by host instance type.
 * `storage_type` - (Optional) Filter response by storage type.
 
-## Attributes Reference
+## Attribute Reference
+
+This data source exports the following attributes in addition to the arguments above:
 
 * `broker_instance_options` -  Option for host instance type. See Broker Instance Options below.
 

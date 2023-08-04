@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package networkmanager
 
 import (
@@ -61,7 +64,7 @@ func ResourceTransitGatewayConnectPeerAssociation() *schema.Resource {
 }
 
 func resourceTransitGatewayConnectPeerAssociationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).NetworkManagerConn()
+	conn := meta.(*conns.AWSClient).NetworkManagerConn(ctx)
 
 	globalNetworkID := d.Get("global_network_id").(string)
 	connectPeerARN := d.Get("transit_gateway_connect_peer_arn").(string)
@@ -93,7 +96,7 @@ func resourceTransitGatewayConnectPeerAssociationCreate(ctx context.Context, d *
 }
 
 func resourceTransitGatewayConnectPeerAssociationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).NetworkManagerConn()
+	conn := meta.(*conns.AWSClient).NetworkManagerConn(ctx)
 
 	globalNetworkID, connectPeerARN, err := TransitGatewayConnectPeerAssociationParseResourceID(d.Id())
 
@@ -122,7 +125,7 @@ func resourceTransitGatewayConnectPeerAssociationRead(ctx context.Context, d *sc
 }
 
 func resourceTransitGatewayConnectPeerAssociationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).NetworkManagerConn()
+	conn := meta.(*conns.AWSClient).NetworkManagerConn(ctx)
 
 	globalNetworkID, connectPeerARN, err := TransitGatewayConnectPeerAssociationParseResourceID(d.Id())
 
@@ -153,11 +156,11 @@ func disassociateTransitGatewayConnectPeer(ctx context.Context, conn *networkman
 	}
 
 	if err != nil {
-		return fmt.Errorf("error deleting Network Manager Transit Gateway Connect Peer Association (%s): %w", id, err)
+		return fmt.Errorf("deleting Network Manager Transit Gateway Connect Peer Association (%s): %w", id, err)
 	}
 
 	if _, err := waitTransitGatewayConnectPeerAssociationDeleted(ctx, conn, globalNetworkID, connectPeerARN, timeout); err != nil {
-		return fmt.Errorf("error waiting for Network Manager Transit Gateway Connect Peer Association (%s) delete: %w", id, err)
+		return fmt.Errorf("waiting for Network Manager Transit Gateway Connect Peer Association (%s) delete: %w", id, err)
 	}
 
 	return nil

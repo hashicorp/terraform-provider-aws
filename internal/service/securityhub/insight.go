@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package securityhub
 
 import (
@@ -144,7 +147,7 @@ func ResourceInsight() *schema.Resource {
 }
 
 func resourceInsightCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).SecurityHubConn()
+	conn := meta.(*conns.AWSClient).SecurityHubConn(ctx)
 
 	name := d.Get("name").(string)
 
@@ -173,7 +176,7 @@ func resourceInsightCreate(ctx context.Context, d *schema.ResourceData, meta int
 }
 
 func resourceInsightRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).SecurityHubConn()
+	conn := meta.(*conns.AWSClient).SecurityHubConn(ctx)
 
 	insight, err := FindInsight(ctx, conn, d.Id())
 
@@ -207,7 +210,7 @@ func resourceInsightRead(ctx context.Context, d *schema.ResourceData, meta inter
 }
 
 func resourceInsightUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).SecurityHubConn()
+	conn := meta.(*conns.AWSClient).SecurityHubConn(ctx)
 
 	input := &securityhub.UpdateInsightInput{
 		InsightArn: aws.String(d.Id()),
@@ -235,7 +238,7 @@ func resourceInsightUpdate(ctx context.Context, d *schema.ResourceData, meta int
 }
 
 func resourceInsightDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).SecurityHubConn()
+	conn := meta.(*conns.AWSClient).SecurityHubConn(ctx)
 
 	input := &securityhub.DeleteInsightInput{
 		InsightArn: aws.String(d.Id()),

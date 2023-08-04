@@ -35,7 +35,7 @@ resource "aws_glue_security_configuration" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `encryption_configuration` – (Required) Configuration block containing encryption configuration. Detailed below.
 * `name` – (Required) Name of the security configuration.
@@ -61,16 +61,25 @@ The following arguments are supported:
 * `s3_encryption_mode` - (Optional) Encryption mode to use for S3 data. Valid values: `DISABLED`, `SSE-KMS`, `SSE-S3`. Default value: `DISABLED`.
 * `kms_key_arn` - (Optional) Amazon Resource Name (ARN) of the KMS key to be used to encrypt the data.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - Glue security configuration name
 
 ## Import
 
-Glue Security Configurations can be imported using `name`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Glue Security Configurations using `name`. For example:
 
+```terraform
+import {
+  to = aws_glue_security_configuration.example
+  id = "example"
+}
 ```
-$ terraform import aws_glue_security_configuration.example example
+
+Using `terraform import`, import Glue Security Configurations using `name`. For example:
+
+```console
+% terraform import aws_glue_security_configuration.example example
 ```

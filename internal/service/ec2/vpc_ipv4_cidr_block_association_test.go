@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ec2_test
 
 import (
@@ -154,7 +157,7 @@ func testAccCheckVPCAssociationCIDRPrefix(association *ec2.VpcCidrBlockAssociati
 
 func testAccCheckVPCIPv4CIDRBlockAssociationDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_vpc_ipv4_cidr_block_association" {
@@ -189,7 +192,7 @@ func testAccCheckVPCIPv4CIDRBlockAssociationExists(ctx context.Context, n string
 			return fmt.Errorf("No EC2 VPC IPv4 CIDR Block Association is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
 
 		output, _, err := tfec2.FindVPCCIDRBlockAssociationByID(ctx, conn, rs.Primary.ID)
 

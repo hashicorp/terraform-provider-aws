@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package iot
 
 import (
@@ -112,12 +115,12 @@ func ResourceProvisioningTemplate() *schema.Resource {
 }
 
 func resourceProvisioningTemplateCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).IoTConn()
+	conn := meta.(*conns.AWSClient).IoTConn(ctx)
 
 	name := d.Get("name").(string)
 	input := &iot.CreateProvisioningTemplateInput{
 		Enabled:      aws.Bool(d.Get("enabled").(bool)),
-		Tags:         GetTagsIn(ctx),
+		Tags:         getTagsIn(ctx),
 		TemplateName: aws.String(name),
 	}
 
@@ -153,7 +156,7 @@ func resourceProvisioningTemplateCreate(ctx context.Context, d *schema.ResourceD
 }
 
 func resourceProvisioningTemplateRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).IoTConn()
+	conn := meta.(*conns.AWSClient).IoTConn(ctx)
 
 	output, err := FindProvisioningTemplateByName(ctx, conn, d.Id())
 
@@ -186,7 +189,7 @@ func resourceProvisioningTemplateRead(ctx context.Context, d *schema.ResourceDat
 }
 
 func resourceProvisioningTemplateUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).IoTConn()
+	conn := meta.(*conns.AWSClient).IoTConn(ctx)
 
 	if d.HasChange("template_body") {
 		input := &iot.CreateProvisioningTemplateVersionInput{
@@ -227,7 +230,7 @@ func resourceProvisioningTemplateUpdate(ctx context.Context, d *schema.ResourceD
 }
 
 func resourceProvisioningTemplateDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).IoTConn()
+	conn := meta.(*conns.AWSClient).IoTConn(ctx)
 
 	log.Printf("[INFO] Deleting IoT Provisioning Template: %s", d.Id())
 	_, err := conn.DeleteProvisioningTemplateWithContext(ctx, &iot.DeleteProvisioningTemplateInput{

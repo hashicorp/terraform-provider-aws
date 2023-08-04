@@ -48,9 +48,9 @@ The following arguments are optional:
 * `role` - (Optional) Name of the role to add to the profile.
 * `tags` - (Optional) Map of resource tags for the IAM Instance Profile. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN assigned by AWS to the instance profile.
 * `create_date` - Creation timestamp of the instance profile.
@@ -62,8 +62,17 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Instance Profiles can be imported using the `name`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Instance Profiles using the `name`. For example:
 
+```terraform
+import {
+  to = aws_iam_instance_profile.test_profile
+  id = "app-instance-profile-1"
+}
 ```
-$ terraform import aws_iam_instance_profile.test_profile app-instance-profile-1
+
+Using `terraform import`, import Instance Profiles using the `name`. For example:
+
+```console
+% terraform import aws_iam_instance_profile.test_profile app-instance-profile-1
 ```

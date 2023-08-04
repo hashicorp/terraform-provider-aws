@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package iam_test
 
 import (
@@ -132,7 +135,7 @@ func testAccCheckSigningCertificateExists(ctx context.Context, n string, cred *i
 		if rs.Primary.ID == "" {
 			return fmt.Errorf("No Server Cert ID is set")
 		}
-		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn(ctx)
 
 		certId, userName, err := tfiam.DecodeSigningCertificateId(rs.Primary.ID)
 		if err != nil {
@@ -152,7 +155,7 @@ func testAccCheckSigningCertificateExists(ctx context.Context, n string, cred *i
 
 func testAccCheckSigningCertificateDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_iam_signing_certificate" {

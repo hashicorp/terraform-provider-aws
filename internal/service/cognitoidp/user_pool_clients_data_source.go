@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package cognitoidp
 
 import (
@@ -40,7 +43,7 @@ func DataSourceUserPoolClients() *schema.Resource {
 
 func dataSourceuserPoolClientsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CognitoIDPConn()
+	conn := meta.(*conns.AWSClient).CognitoIDPConn(ctx)
 
 	userPoolID := d.Get("user_pool_id").(string)
 	input := &cognitoidentityprovider.ListUserPoolClientsInput{

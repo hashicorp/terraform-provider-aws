@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package macie2
 
 import (
@@ -94,7 +97,7 @@ func ResourceMember() *schema.Resource {
 }
 
 func resourceMemberCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).Macie2Conn()
+	conn := meta.(*conns.AWSClient).Macie2Conn(ctx)
 
 	accountId := d.Get("account_id").(string)
 	input := &macie2.CreateMemberInput{
@@ -102,7 +105,7 @@ func resourceMemberCreate(ctx context.Context, d *schema.ResourceData, meta inte
 			AccountId: aws.String(accountId),
 			Email:     aws.String(d.Get("email").(string)),
 		},
-		Tags: GetTagsIn(ctx),
+		Tags: getTagsIn(ctx),
 	}
 
 	var err error
@@ -184,7 +187,7 @@ func resourceMemberCreate(ctx context.Context, d *schema.ResourceData, meta inte
 }
 
 func resourceMemberRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).Macie2Conn()
+	conn := meta.(*conns.AWSClient).Macie2Conn(ctx)
 
 	input := &macie2.GetMemberInput{
 		Id: aws.String(d.Id()),
@@ -214,7 +217,7 @@ func resourceMemberRead(ctx context.Context, d *schema.ResourceData, meta interf
 	d.Set("updated_at", aws.TimeValue(resp.UpdatedAt).Format(time.RFC3339))
 	d.Set("arn", resp.Arn)
 
-	SetTagsOut(ctx, resp.Tags)
+	setTagsOut(ctx, resp.Tags)
 
 	status := aws.StringValue(resp.RelationshipStatus)
 	log.Printf("[DEBUG] print resp.RelationshipStatus: %v", aws.StringValue(resp.RelationshipStatus))
@@ -240,7 +243,7 @@ func resourceMemberRead(ctx context.Context, d *schema.ResourceData, meta interf
 }
 
 func resourceMemberUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).Macie2Conn()
+	conn := meta.(*conns.AWSClient).Macie2Conn(ctx)
 
 	// Invitation workflow
 
@@ -323,7 +326,7 @@ func resourceMemberUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 }
 
 func resourceMemberDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).Macie2Conn()
+	conn := meta.(*conns.AWSClient).Macie2Conn(ctx)
 
 	input := &macie2.DeleteMemberInput{
 		Id: aws.String(d.Id()),

@@ -37,6 +37,6 @@ The following arguments are required:
 - `id` - (Required) The ID of the target. If the target type of the target group is INSTANCE, this is an instance ID. If the target type is IP , this is an IP address. If the target type is LAMBDA, this is the ARN of the Lambda function. If the target type is ALB, this is the ARN of the Application Load Balancer.
 - `port` - (Optional) The port on which the target is listening. For HTTP, the default is 80. For HTTPS, the default is 443.
 
-## Attributes Reference
+## Attribute Reference
 
-No additional attributes are exported.
+This resource exports no additional attributes.

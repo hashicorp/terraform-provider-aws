@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package apigateway_test
 
 import (
@@ -179,7 +182,7 @@ func TestAccAPIGatewayRestAPI_endpoint(t *testing.T) {
 					// This can eventually be moved to a PreCheck function
 					// If the region does not support EDGE endpoint type, this test will either show
 					// SKIP (if REGIONAL passed) or FAIL (if REGIONAL failed)
-					conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayConn()
+					conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayConn(ctx)
 					output, err := conn.CreateRestApiWithContext(ctx, &apigateway.CreateRestApiInput{
 						Name: aws.String(sdkacctest.RandomWithPrefix("tf-acc-test-edge-endpoint-precheck")),
 						EndpointConfiguration: &apigateway.EndpointConfiguration{
@@ -229,7 +232,7 @@ func TestAccAPIGatewayRestAPI_Endpoint_private(t *testing.T) {
 				PreConfig: func() {
 					// Ensure region supports PRIVATE endpoint
 					// This can eventually be moved to a PreCheck function
-					conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayConn()
+					conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayConn(ctx)
 					output, err := conn.CreateRestApiWithContext(ctx, &apigateway.CreateRestApiInput{
 						Name: aws.String(sdkacctest.RandomWithPrefix("tf-acc-test-private-endpoint-precheck")),
 						EndpointConfiguration: &apigateway.EndpointConfiguration{
@@ -1407,7 +1410,7 @@ func TestAccAPIGatewayRestAPI_Policy_setByBody(t *testing.T) {
 
 func testAccCheckRestAPIRoutes(ctx context.Context, conf *apigateway.RestApi, routes []string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayConn(ctx)
 
 		resp, err := conn.GetResourcesWithContext(ctx, &apigateway.GetResourcesInput{
 			RestApiId: conf.Id,
@@ -1438,7 +1441,7 @@ func testAccCheckRestAPIRoutes(ctx context.Context, conf *apigateway.RestApi, ro
 
 func testAccCheckRestAPIEndpointsCount(ctx context.Context, conf *apigateway.RestApi, count int) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayConn(ctx)
 
 		resp, err := conn.GetRestApiWithContext(ctx, &apigateway.GetRestApiInput{
 			RestApiId: conf.Id,
@@ -1471,7 +1474,7 @@ func testAccCheckRestAPIExists(ctx context.Context, n string, v *apigateway.Rest
 			return fmt.Errorf("No API Gateway ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayConn(ctx)
 
 		output, err := tfapigateway.FindRESTAPIByID(ctx, conn, rs.Primary.ID)
 
@@ -1487,7 +1490,7 @@ func testAccCheckRestAPIExists(ctx context.Context, n string, v *apigateway.Rest
 
 func testAccCheckRestAPIDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_api_gateway_rest_api" {

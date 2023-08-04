@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package opensearch
 
 import (
@@ -48,7 +51,7 @@ func ResourceOutboundConnection() *schema.Resource {
 }
 
 func resourceOutboundConnectionCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).OpenSearchConn()
+	conn := meta.(*conns.AWSClient).OpenSearchConn(ctx)
 
 	// Create the Outbound Connection
 	createOpts := &opensearchservice.CreateOutboundConnectionInput{
@@ -77,7 +80,7 @@ func resourceOutboundConnectionCreate(ctx context.Context, d *schema.ResourceDat
 }
 
 func resourceOutboundConnectionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).OpenSearchConn()
+	conn := meta.(*conns.AWSClient).OpenSearchConn(ctx)
 
 	ccscRaw, statusCode, err := outboundConnectionRefreshState(ctx, conn, d.Id())()
 
@@ -103,7 +106,7 @@ func resourceOutboundConnectionRead(ctx context.Context, d *schema.ResourceData,
 }
 
 func resourceOutboundConnectionDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).OpenSearchConn()
+	conn := meta.(*conns.AWSClient).OpenSearchConn(ctx)
 
 	req := &opensearchservice.DeleteOutboundConnectionInput{
 		ConnectionId: aws.String(d.Id()),
@@ -182,7 +185,7 @@ func outboundConnectionWaitUntilAvailable(ctx context.Context, conn *opensearchs
 		Timeout: timeout,
 	}
 	if _, err := stateConf.WaitForStateContext(ctx); err != nil {
-		return fmt.Errorf("Error waiting for Outbound Connection (%s) to become available: %s", id, err)
+		return fmt.Errorf("waiting for Outbound Connection (%s) to become available: %s", id, err)
 	}
 	return nil
 }

@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ec2_test
 
 import (
@@ -49,7 +52,7 @@ func testAccCheckEBSDefaultKMSKeyDestroy(ctx context.Context) resource.TestCheck
 			return err
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
 
 		resp, err := conn.GetEbsDefaultKmsKeyIdWithContext(ctx, &ec2.GetEbsDefaultKmsKeyIdInput{})
 		if err != nil {
@@ -81,7 +84,7 @@ func testAccCheckEBSDefaultKMSKey(ctx context.Context, name string) resource.Tes
 			return err
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
 
 		resp, err := conn.GetEbsDefaultKmsKeyIdWithContext(ctx, &ec2.GetEbsDefaultKmsKeyIdInput{})
 		if err != nil {
@@ -99,7 +102,7 @@ func testAccCheckEBSDefaultKMSKey(ctx context.Context, name string) resource.Tes
 
 // testAccEBSManagedDefaultKey returns' the account's AWS-managed default CMK.
 func testAccEBSManagedDefaultKey(ctx context.Context) (*arn.ARN, error) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).KMSConn()
+	conn := acctest.Provider.Meta().(*conns.AWSClient).KMSConn(ctx)
 
 	alias, err := tfkms.FindAliasByName(ctx, conn, "alias/aws/ebs")
 	if err != nil {

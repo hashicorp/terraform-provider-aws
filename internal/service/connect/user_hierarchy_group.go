@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package connect
 
 import (
@@ -117,14 +120,14 @@ func userHierarchyPathLevelSchema() *schema.Schema {
 }
 
 func resourceUserHierarchyGroupCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ConnectConn()
+	conn := meta.(*conns.AWSClient).ConnectConn(ctx)
 
 	instanceID := d.Get("instance_id").(string)
 	userHierarchyGroupName := d.Get("name").(string)
 	input := &connect.CreateUserHierarchyGroupInput{
 		InstanceId: aws.String(instanceID),
 		Name:       aws.String(userHierarchyGroupName),
-		Tags:       GetTagsIn(ctx),
+		Tags:       getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("parent_group_id"); ok {
@@ -148,7 +151,7 @@ func resourceUserHierarchyGroupCreate(ctx context.Context, d *schema.ResourceDat
 }
 
 func resourceUserHierarchyGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ConnectConn()
+	conn := meta.(*conns.AWSClient).ConnectConn(ctx)
 
 	instanceID, userHierarchyGroupID, err := UserHierarchyGroupParseID(d.Id())
 
@@ -185,13 +188,13 @@ func resourceUserHierarchyGroupRead(ctx context.Context, d *schema.ResourceData,
 		return diag.Errorf("setting Connect User Hierarchy Group hierarchy_path (%s): %s", d.Id(), err)
 	}
 
-	SetTagsOut(ctx, resp.HierarchyGroup.Tags)
+	setTagsOut(ctx, resp.HierarchyGroup.Tags)
 
 	return nil
 }
 
 func resourceUserHierarchyGroupUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ConnectConn()
+	conn := meta.(*conns.AWSClient).ConnectConn(ctx)
 
 	instanceID, userHierarchyGroupID, err := UserHierarchyGroupParseID(d.Id())
 
@@ -214,7 +217,7 @@ func resourceUserHierarchyGroupUpdate(ctx context.Context, d *schema.ResourceDat
 }
 
 func resourceUserHierarchyGroupDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ConnectConn()
+	conn := meta.(*conns.AWSClient).ConnectConn(ctx)
 
 	instanceID, userHierarchyGroupID, err := UserHierarchyGroupParseID(d.Id())
 

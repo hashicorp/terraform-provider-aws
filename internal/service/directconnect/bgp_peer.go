@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package directconnect
 
 import (
@@ -82,7 +85,7 @@ func ResourceBGPPeer() *schema.Resource {
 
 func resourceBGPPeerCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DirectConnectConn()
+	conn := meta.(*conns.AWSClient).DirectConnectConn(ctx)
 
 	vifId := d.Get("virtual_interface_id").(string)
 	addrFamily := d.Get("address_family").(string)
@@ -136,7 +139,7 @@ func resourceBGPPeerCreate(ctx context.Context, d *schema.ResourceData, meta int
 
 func resourceBGPPeerRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DirectConnectConn()
+	conn := meta.(*conns.AWSClient).DirectConnectConn(ctx)
 
 	vifId := d.Get("virtual_interface_id").(string)
 	addrFamily := d.Get("address_family").(string)
@@ -165,7 +168,7 @@ func resourceBGPPeerRead(ctx context.Context, d *schema.ResourceData, meta inter
 
 func resourceBGPPeerDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DirectConnectConn()
+	conn := meta.(*conns.AWSClient).DirectConnectConn(ctx)
 
 	vifId := d.Get("virtual_interface_id").(string)
 	addrFamily := d.Get("address_family").(string)

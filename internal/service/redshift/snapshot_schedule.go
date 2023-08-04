@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package redshift
 
 import (
@@ -76,7 +79,7 @@ func ResourceSnapshotSchedule() *schema.Resource {
 
 func resourceSnapshotScheduleCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).RedshiftConn()
+	conn := meta.(*conns.AWSClient).RedshiftConn(ctx)
 
 	var identifier string
 	if v, ok := d.GetOk("identifier"); ok {
@@ -91,7 +94,7 @@ func resourceSnapshotScheduleCreate(ctx context.Context, d *schema.ResourceData,
 	createOpts := &redshift.CreateSnapshotScheduleInput{
 		ScheduleIdentifier:  aws.String(identifier),
 		ScheduleDefinitions: flex.ExpandStringSet(d.Get("definitions").(*schema.Set)),
-		Tags:                GetTagsIn(ctx),
+		Tags:                getTagsIn(ctx),
 	}
 	if attr, ok := d.GetOk("description"); ok {
 		createOpts.ScheduleDescription = aws.String(attr.(string))
@@ -109,7 +112,7 @@ func resourceSnapshotScheduleCreate(ctx context.Context, d *schema.ResourceData,
 
 func resourceSnapshotScheduleRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).RedshiftConn()
+	conn := meta.(*conns.AWSClient).RedshiftConn(ctx)
 
 	descOpts := &redshift.DescribeSnapshotSchedulesInput{
 		ScheduleIdentifier: aws.String(d.Id()),
@@ -133,7 +136,7 @@ func resourceSnapshotScheduleRead(ctx context.Context, d *schema.ResourceData, m
 		return sdkdiag.AppendErrorf(diags, "setting definitions: %s", err)
 	}
 
-	SetTagsOut(ctx, snapshotSchedule.Tags)
+	setTagsOut(ctx, snapshotSchedule.Tags)
 
 	arn := arn.ARN{
 		Partition: meta.(*conns.AWSClient).Partition,
@@ -150,7 +153,7 @@ func resourceSnapshotScheduleRead(ctx context.Context, d *schema.ResourceData, m
 
 func resourceSnapshotScheduleUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).RedshiftConn()
+	conn := meta.(*conns.AWSClient).RedshiftConn(ctx)
 
 	if d.HasChange("definitions") {
 		modifyOpts := &redshift.ModifySnapshotScheduleInput{
@@ -168,7 +171,7 @@ func resourceSnapshotScheduleUpdate(ctx context.Context, d *schema.ResourceData,
 
 func resourceSnapshotScheduleDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).RedshiftConn()
+	conn := meta.(*conns.AWSClient).RedshiftConn(ctx)
 
 	if d.Get("force_destroy").(bool) {
 		if err := resourceSnapshotScheduleDeleteAllAssociatedClusters(ctx, conn, d.Id()); err != nil {

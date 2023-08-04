@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package networkmanager
 
 import (
@@ -61,7 +64,7 @@ func ResourceCustomerGatewayAssociation() *schema.Resource {
 }
 
 func resourceCustomerGatewayAssociationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).NetworkManagerConn()
+	conn := meta.(*conns.AWSClient).NetworkManagerConn(ctx)
 
 	globalNetworkID := d.Get("global_network_id").(string)
 	customerGatewayARN := d.Get("customer_gateway_arn").(string)
@@ -116,7 +119,7 @@ func resourceCustomerGatewayAssociationCreate(ctx context.Context, d *schema.Res
 }
 
 func resourceCustomerGatewayAssociationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).NetworkManagerConn()
+	conn := meta.(*conns.AWSClient).NetworkManagerConn(ctx)
 
 	globalNetworkID, customerGatewayARN, err := CustomerGatewayAssociationParseResourceID(d.Id())
 
@@ -145,7 +148,7 @@ func resourceCustomerGatewayAssociationRead(ctx context.Context, d *schema.Resou
 }
 
 func resourceCustomerGatewayAssociationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).NetworkManagerConn()
+	conn := meta.(*conns.AWSClient).NetworkManagerConn(ctx)
 
 	globalNetworkID, customerGatewayARN, err := CustomerGatewayAssociationParseResourceID(d.Id())
 
@@ -176,11 +179,11 @@ func disassociateCustomerGateway(ctx context.Context, conn *networkmanager.Netwo
 	}
 
 	if err != nil {
-		return fmt.Errorf("error deleting Network Manager Customer Gateway Association (%s): %w", id, err)
+		return fmt.Errorf("deleting Network Manager Customer Gateway Association (%s): %w", id, err)
 	}
 
 	if _, err := waitCustomerGatewayAssociationDeleted(ctx, conn, globalNetworkID, customerGatewayARN, timeout); err != nil {
-		return fmt.Errorf("error waiting for Network Manager Customer Gateway Association (%s) delete: %w", id, err)
+		return fmt.Errorf("waiting for Network Manager Customer Gateway Association (%s) delete: %w", id, err)
 	}
 
 	return nil

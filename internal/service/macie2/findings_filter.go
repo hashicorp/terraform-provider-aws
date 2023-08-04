@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package macie2
 
 import (
@@ -132,13 +135,13 @@ func ResourceFindingsFilter() *schema.Resource {
 }
 
 func resourceFindingsFilterCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).Macie2Conn()
+	conn := meta.(*conns.AWSClient).Macie2Conn(ctx)
 
 	input := &macie2.CreateFindingsFilterInput{
 		ClientToken: aws.String(id.UniqueId()),
 		Name:        aws.String(create.Name(d.Get("name").(string), d.Get("name_prefix").(string))),
 		Action:      aws.String(d.Get("action").(string)),
-		Tags:        GetTagsIn(ctx),
+		Tags:        getTagsIn(ctx),
 	}
 
 	var err error
@@ -183,7 +186,7 @@ func resourceFindingsFilterCreate(ctx context.Context, d *schema.ResourceData, m
 }
 
 func resourceFindingsFilterRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).Macie2Conn()
+	conn := meta.(*conns.AWSClient).Macie2Conn(ctx)
 
 	input := &macie2.GetFindingsFilterInput{
 		Id: aws.String(d.Id()),
@@ -211,7 +214,7 @@ func resourceFindingsFilterRead(ctx context.Context, d *schema.ResourceData, met
 	d.Set("action", resp.Action)
 	d.Set("position", resp.Position)
 
-	SetTagsOut(ctx, resp.Tags)
+	setTagsOut(ctx, resp.Tags)
 
 	d.Set("arn", resp.Arn)
 
@@ -219,7 +222,7 @@ func resourceFindingsFilterRead(ctx context.Context, d *schema.ResourceData, met
 }
 
 func resourceFindingsFilterUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).Macie2Conn()
+	conn := meta.(*conns.AWSClient).Macie2Conn(ctx)
 
 	input := &macie2.UpdateFindingsFilterInput{
 		Id: aws.String(d.Id()),
@@ -257,7 +260,7 @@ func resourceFindingsFilterUpdate(ctx context.Context, d *schema.ResourceData, m
 }
 
 func resourceFindingsFilterDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).Macie2Conn()
+	conn := meta.(*conns.AWSClient).Macie2Conn(ctx)
 
 	input := &macie2.DeleteFindingsFilterInput{
 		Id: aws.String(d.Id()),
@@ -315,28 +318,28 @@ func expandFindingCriteriaFilter(findingCriterias []interface{}) (*macie2.Findin
 		if v, ok := crit["lt"].(string); ok && v != "" {
 			i, err := expandConditionIntField(field, v)
 			if err != nil {
-				return nil, fmt.Errorf("error parsing condition %q for field %q: %w", "lt", field, err)
+				return nil, fmt.Errorf("parsing condition %q for field %q: %w", "lt", field, err)
 			}
 			conditional.Lt = aws.Int64(i)
 		}
 		if v, ok := crit["lte"].(string); ok && v != "" {
 			i, err := expandConditionIntField(field, v)
 			if err != nil {
-				return nil, fmt.Errorf("error parsing condition %q for field %q: %w", "lte", field, err)
+				return nil, fmt.Errorf("parsing condition %q for field %q: %w", "lte", field, err)
 			}
 			conditional.Lte = aws.Int64(i)
 		}
 		if v, ok := crit["gt"].(string); ok && v != "" {
 			i, err := expandConditionIntField(field, v)
 			if err != nil {
-				return nil, fmt.Errorf("error parsing condition %q for field %q: %w", "gt", field, err)
+				return nil, fmt.Errorf("parsing condition %q for field %q: %w", "gt", field, err)
 			}
 			conditional.Gt = aws.Int64(i)
 		}
 		if v, ok := crit["gte"].(string); ok && v != "" {
 			i, err := expandConditionIntField(field, v)
 			if err != nil {
-				return nil, fmt.Errorf("error parsing condition %q for field %q: %w", "gte", field, err)
+				return nil, fmt.Errorf("parsing condition %q for field %q: %w", "gte", field, err)
 			}
 			conditional.Gte = aws.Int64(i)
 		}

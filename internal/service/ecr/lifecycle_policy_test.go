@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ecr_test
 
 import (
@@ -95,7 +98,7 @@ func TestAccECRLifecyclePolicy_detectDiff(t *testing.T) {
 
 func testAccCheckLifecyclePolicyDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ECRConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ECRConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_ecr_lifecycle_policy" {
@@ -129,7 +132,7 @@ func testAccCheckLifecyclePolicyExists(ctx context.Context, name string) resourc
 			return fmt.Errorf("Not found: %s", name)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ECRConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ECRConn(ctx)
 
 		input := &ecr.GetLifecyclePolicyInput{
 			RepositoryName: aws.String(rs.Primary.ID),

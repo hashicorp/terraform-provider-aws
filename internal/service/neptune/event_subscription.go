@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package neptune
 
 import (
@@ -98,7 +101,7 @@ func ResourceEventSubscription() *schema.Resource {
 
 func resourceEventSubscriptionCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).NeptuneConn()
+	conn := meta.(*conns.AWSClient).NeptuneConn(ctx)
 
 	if v, ok := d.GetOk("name"); ok {
 		d.Set("name", v.(string))
@@ -112,7 +115,7 @@ func resourceEventSubscriptionCreate(ctx context.Context, d *schema.ResourceData
 		SubscriptionName: aws.String(d.Get("name").(string)),
 		SnsTopicArn:      aws.String(d.Get("sns_topic_arn").(string)),
 		Enabled:          aws.Bool(d.Get("enabled").(bool)),
-		Tags:             GetTagsIn(ctx),
+		Tags:             getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("source_ids"); ok {
@@ -168,7 +171,7 @@ func resourceEventSubscriptionCreate(ctx context.Context, d *schema.ResourceData
 
 func resourceEventSubscriptionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).NeptuneConn()
+	conn := meta.(*conns.AWSClient).NeptuneConn(ctx)
 
 	sub, err := resourceEventSubscriptionRetrieve(ctx, d.Id(), conn)
 	if err != nil {
@@ -205,7 +208,7 @@ func resourceEventSubscriptionRead(ctx context.Context, d *schema.ResourceData, 
 
 func resourceEventSubscriptionUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).NeptuneConn()
+	conn := meta.(*conns.AWSClient).NeptuneConn(ctx)
 
 	requestUpdate := false
 
@@ -310,7 +313,7 @@ func resourceEventSubscriptionUpdate(ctx context.Context, d *schema.ResourceData
 
 func resourceEventSubscriptionDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).NeptuneConn()
+	conn := meta.(*conns.AWSClient).NeptuneConn(ctx)
 
 	log.Printf("[DEBUG] Deleting Neptune Event Subscription: %s", d.Id())
 	_, err := conn.DeleteEventSubscriptionWithContext(ctx, &neptune.DeleteEventSubscriptionInput{

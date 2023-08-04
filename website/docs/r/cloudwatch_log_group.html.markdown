@@ -25,7 +25,7 @@ resource "aws_cloudwatch_log_group" "yada" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `name` - (Optional, Forces new resource) The name of the log group. If omitted, Terraform will assign a random, unique name.
 * `name_prefix` - (Optional, Forces new resource) Creates a unique name beginning with the specified prefix. Conflicts with `name`.
@@ -38,17 +38,26 @@ AWS CloudWatch Logs stops encrypting newly ingested data for the log group. All 
 permissions for the CMK whenever the encrypted data is requested.
 * `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - The Amazon Resource Name (ARN) specifying the log group. Any `:*` suffix added by the API, denoting all CloudWatch Log Streams under the CloudWatch Log Group, is removed for greater compatibility with other AWS services that do not accept the suffix.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 
-Cloudwatch Log Groups can be imported using the `name`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Cloudwatch Log Groups using the `name`. For example:
 
+```terraform
+import {
+  to = aws_cloudwatch_log_group.test_group
+  id = "yada"
+}
 ```
-$ terraform import aws_cloudwatch_log_group.test_group yada
+
+Using `terraform import`, import Cloudwatch Log Groups using the `name`. For example:
+
+```console
+% terraform import aws_cloudwatch_log_group.test_group yada
 ```

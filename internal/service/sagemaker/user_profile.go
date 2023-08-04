@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package sagemaker
 
 import (
@@ -109,6 +112,27 @@ func ResourceUserProfile() *schema.Resource {
 													Type:         schema.TypeString,
 													Optional:     true,
 													ValidateFunc: validation.StringInSlice(sagemaker.FeatureStatus_Values(), false),
+												},
+											},
+										},
+									},
+									"workspace_settings": {
+										Type:     schema.TypeList,
+										Optional: true,
+										MaxItems: 1,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"s3_artifact_path": {
+													Type:     schema.TypeString,
+													Optional: true,
+													ValidateFunc: validation.All(
+														validation.StringMatch(regexp.MustCompile(`^(https|s3)://([^/])/?(.*)$`), ""),
+														validation.StringLenBetween(1, 1024),
+													),
+												},
+												"s3_kms_key_id": {
+													Type:     schema.TypeString,
+													Optional: true,
 												},
 											},
 										},
@@ -412,12 +436,12 @@ func ResourceUserProfile() *schema.Resource {
 
 func resourceUserProfileCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SageMakerConn()
+	conn := meta.(*conns.AWSClient).SageMakerConn(ctx)
 
 	input := &sagemaker.CreateUserProfileInput{
 		UserProfileName: aws.String(d.Get("user_profile_name").(string)),
 		DomainId:        aws.String(d.Get("domain_id").(string)),
-		Tags:            GetTagsIn(ctx),
+		Tags:            getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("user_settings"); ok {
@@ -455,7 +479,7 @@ func resourceUserProfileCreate(ctx context.Context, d *schema.ResourceData, meta
 
 func resourceUserProfileRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SageMakerConn()
+	conn := meta.(*conns.AWSClient).SageMakerConn(ctx)
 
 	domainID, userProfileName, err := decodeUserProfileName(d.Id())
 	if err != nil {
@@ -489,7 +513,7 @@ func resourceUserProfileRead(ctx context.Context, d *schema.ResourceData, meta i
 
 func resourceUserProfileUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SageMakerConn()
+	conn := meta.(*conns.AWSClient).SageMakerConn(ctx)
 
 	if d.HasChange("user_settings") {
 		domainID := d.Get("domain_id").(string)
@@ -517,7 +541,7 @@ func resourceUserProfileUpdate(ctx context.Context, d *schema.ResourceData, meta
 
 func resourceUserProfileDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SageMakerConn()
+	conn := meta.(*conns.AWSClient).SageMakerConn(ctx)
 
 	userProfileName := d.Get("user_profile_name").(string)
 	domainID := d.Get("domain_id").(string)

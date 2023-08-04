@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package rds
 
 import (
@@ -95,12 +98,6 @@ const (
 	InstanceStatusStorageFull                                  = "storage-full"
 	InstanceStatusStorageOptimization                          = "storage-optimization"
 	InstanceStatusUpgrading                                    = "upgrading"
-)
-
-const (
-	InstanceAutomatedBackupStatusPending     = "pending"
-	InstanceAutomatedBackupStatusReplicating = "replicating"
-	InstanceAutomatedBackupStatusRetained    = "retained"
 )
 
 const (
@@ -223,6 +220,18 @@ func TimeoutAction_Values() []string {
 	return []string{
 		TimeoutActionForceApplyCapacityChange,
 		TimeoutActionRollbackCapacityChange,
+	}
+}
+
+const (
+	backupTargetOutposts = "outposts"
+	backupTargetRegion   = "region"
+)
+
+func backupTarget_Values() []string {
+	return []string{
+		backupTargetOutposts,
+		backupTargetRegion,
 	}
 }
 

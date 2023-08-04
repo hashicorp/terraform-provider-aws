@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package chime
 
 import (
@@ -55,7 +58,7 @@ func ResourceVoiceConnectorGroup() *schema.Resource {
 }
 
 func resourceVoiceConnectorGroupCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ChimeConn()
+	conn := meta.(*conns.AWSClient).ChimeConn(ctx)
 
 	input := &chime.CreateVoiceConnectorGroupInput{
 		Name: aws.String(d.Get("name").(string)),
@@ -76,7 +79,7 @@ func resourceVoiceConnectorGroupCreate(ctx context.Context, d *schema.ResourceDa
 }
 
 func resourceVoiceConnectorGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ChimeConn()
+	conn := meta.(*conns.AWSClient).ChimeConn(ctx)
 
 	getInput := &chime.GetVoiceConnectorGroupInput{
 		VoiceConnectorGroupId: aws.String(d.Id()),
@@ -101,7 +104,7 @@ func resourceVoiceConnectorGroupRead(ctx context.Context, d *schema.ResourceData
 }
 
 func resourceVoiceConnectorGroupUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ChimeConn()
+	conn := meta.(*conns.AWSClient).ChimeConn(ctx)
 
 	input := &chime.UpdateVoiceConnectorGroupInput{
 		Name:                  aws.String(d.Get("name").(string)),
@@ -124,7 +127,7 @@ func resourceVoiceConnectorGroupUpdate(ctx context.Context, d *schema.ResourceDa
 }
 
 func resourceVoiceConnectorGroupDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ChimeConn()
+	conn := meta.(*conns.AWSClient).ChimeConn(ctx)
 
 	if v, ok := d.GetOk("connector"); ok && v.(*schema.Set).Len() > 0 {
 		if err := resourceVoiceConnectorGroupUpdate(ctx, d, meta); err != nil {

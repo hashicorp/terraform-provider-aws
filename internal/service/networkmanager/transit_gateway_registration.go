@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package networkmanager
 
 import (
@@ -52,7 +55,7 @@ func ResourceTransitGatewayRegistration() *schema.Resource {
 }
 
 func resourceTransitGatewayRegistrationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).NetworkManagerConn()
+	conn := meta.(*conns.AWSClient).NetworkManagerConn(ctx)
 
 	globalNetworkID := d.Get("global_network_id").(string)
 	transitGatewayARN := d.Get("transit_gateway_arn").(string)
@@ -79,7 +82,7 @@ func resourceTransitGatewayRegistrationCreate(ctx context.Context, d *schema.Res
 }
 
 func resourceTransitGatewayRegistrationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).NetworkManagerConn()
+	conn := meta.(*conns.AWSClient).NetworkManagerConn(ctx)
 
 	globalNetworkID, transitGatewayARN, err := TransitGatewayRegistrationParseResourceID(d.Id())
 
@@ -106,7 +109,7 @@ func resourceTransitGatewayRegistrationRead(ctx context.Context, d *schema.Resou
 }
 
 func resourceTransitGatewayRegistrationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).NetworkManagerConn()
+	conn := meta.(*conns.AWSClient).NetworkManagerConn(ctx)
 
 	globalNetworkID, transitGatewayARN, err := TransitGatewayRegistrationParseResourceID(d.Id())
 
@@ -137,11 +140,11 @@ func deregisterTransitGateway(ctx context.Context, conn *networkmanager.NetworkM
 	}
 
 	if err != nil {
-		return fmt.Errorf("error deleting Network Manager Transit Gateway Registration (%s): %w", id, err)
+		return fmt.Errorf("deleting Network Manager Transit Gateway Registration (%s): %w", id, err)
 	}
 
 	if _, err := waitTransitGatewayRegistrationDeleted(ctx, conn, globalNetworkID, transitGatewayARN, timeout); err != nil {
-		return fmt.Errorf("error waiting for Network Manager Transit Gateway Registration (%s) delete: %w", id, err)
+		return fmt.Errorf("waiting for Network Manager Transit Gateway Registration (%s) delete: %w", id, err)
 	}
 
 	return nil

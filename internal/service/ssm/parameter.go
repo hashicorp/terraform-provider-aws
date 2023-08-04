@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ssm
 
 import (
@@ -143,7 +146,7 @@ func ResourceParameter() *schema.Resource {
 
 func resourceParameterCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SSMConn()
+	conn := meta.(*conns.AWSClient).SSMConn(ctx)
 
 	name := d.Get("name").(string)
 
@@ -179,7 +182,7 @@ func resourceParameterCreate(ctx context.Context, d *schema.ResourceData, meta i
 	// AWS SSM Service only supports PutParameter requests with Tags
 	// iff Overwrite is not provided or is false; in this resource's case,
 	// the Overwrite value is always set in the paramInput so we check for the value
-	tags := GetTagsIn(ctx)
+	tags := getTagsIn(ctx)
 	if !aws.BoolValue(input.Overwrite) {
 		input.Tags = tags
 	}
@@ -212,7 +215,7 @@ func resourceParameterCreate(ctx context.Context, d *schema.ResourceData, meta i
 
 func resourceParameterRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SSMConn()
+	conn := meta.(*conns.AWSClient).SSMConn(ctx)
 
 	input := &ssm.GetParameterInput{
 		Name:           aws.String(d.Id()),
@@ -225,7 +228,7 @@ func resourceParameterRead(ctx context.Context, d *schema.ResourceData, meta int
 		resp, err = conn.GetParameterWithContext(ctx, input)
 
 		if tfawserr.ErrCodeEquals(err, ssm.ErrCodeParameterNotFound) && d.IsNewResource() && d.Get("data_type").(string) == "aws:ec2:image" {
-			return retry.RetryableError(fmt.Errorf("error reading SSM Parameter (%s) after creation: this can indicate that the provided parameter value could not be validated by SSM", d.Id()))
+			return retry.RetryableError(fmt.Errorf("reading SSM Parameter (%s) after creation: this can indicate that the provided parameter value could not be validated by SSM", d.Id()))
 		}
 
 		if err != nil {
@@ -298,9 +301,9 @@ func resourceParameterRead(ctx context.Context, d *schema.ResourceData, meta int
 
 func resourceParameterUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SSMConn()
+	conn := meta.(*conns.AWSClient).SSMConn(ctx)
 
-	if d.HasChangesExcept("tags", "tags_all") {
+	if d.HasChangesExcept("overwrite", "tags", "tags_all") {
 		value := d.Get("value").(string)
 
 		if v, ok := d.Get("insecure_value").(string); ok && v != "" {
@@ -351,7 +354,7 @@ func resourceParameterUpdate(ctx context.Context, d *schema.ResourceData, meta i
 
 func resourceParameterDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SSMConn()
+	conn := meta.(*conns.AWSClient).SSMConn(ctx)
 
 	_, err := conn.DeleteParameterWithContext(ctx, &ssm.DeleteParameterInput{
 		Name: aws.String(d.Get("name").(string)),

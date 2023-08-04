@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/aws_redshift_cluster: Add `cluster_namespace_arn` attribute
+```
+
+```release-note:enhancement
+data-source/aws_redshift_cluster: Add `cluster_namespace_arn` attribute
+```

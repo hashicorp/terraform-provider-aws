@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ec2_test
 
 import (
@@ -2212,7 +2215,7 @@ func testAccCheckRouteExists(ctx context.Context, n string, v *ec2.Route) resour
 			return fmt.Errorf("No ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
 
 		var route *ec2.Route
 		var err error
@@ -2241,7 +2244,7 @@ func testAccCheckRouteDestroy(ctx context.Context) resource.TestCheckFunc {
 				continue
 			}
 
-			conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
+			conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
 
 			var err error
 			if v := rs.Primary.Attributes["destination_cidr_block"]; v != "" {
@@ -3313,6 +3316,10 @@ func testAccVPCRouteConfig_resourceIPv4Endpoint(rName, destinationCidr string) s
 		fmt.Sprintf(`
 data "aws_caller_identity" "current" {}
 
+data "aws_iam_session_context" "current" {
+  arn = data.aws_caller_identity.current.arn
+}
+
 resource "aws_vpc" "test" {
   cidr_block = "10.10.10.0/25"
 
@@ -3342,7 +3349,7 @@ resource "aws_lb" "test" {
 
 resource "aws_vpc_endpoint_service" "test" {
   acceptance_required        = false
-  allowed_principals         = [data.aws_caller_identity.current.arn]
+  allowed_principals         = [data.aws_iam_session_context.current.issuer_arn]
   gateway_load_balancer_arns = [aws_lb.test.arn]
 
   tags = {
@@ -3383,6 +3390,10 @@ func testAccVPCRouteConfig_resourceIPv6Endpoint(rName, destinationIpv6Cidr strin
 		fmt.Sprintf(`
 data "aws_caller_identity" "current" {}
 
+data "aws_iam_session_context" "current" {
+  arn = data.aws_caller_identity.current.arn
+}
+
 resource "aws_vpc" "test" {
   cidr_block = "10.10.10.0/25"
 
@@ -3412,7 +3423,7 @@ resource "aws_lb" "test" {
 
 resource "aws_vpc_endpoint_service" "test" {
   acceptance_required        = false
-  allowed_principals         = [data.aws_caller_identity.current.arn]
+  allowed_principals         = [data.aws_iam_session_context.current.issuer_arn]
   gateway_load_balancer_arns = [aws_lb.test.arn]
 
   tags = {
@@ -3567,6 +3578,10 @@ resource "aws_nat_gateway" "test" {
 
 data "aws_caller_identity" "current" {}
 
+data "aws_iam_session_context" "current" {
+  arn = data.aws_caller_identity.current.arn
+}
+
 resource "aws_lb" "test" {
   load_balancer_type = "gateway"
   name               = %[1]q
@@ -3578,7 +3593,7 @@ resource "aws_lb" "test" {
 
 resource "aws_vpc_endpoint_service" "test" {
   acceptance_required        = false
-  allowed_principals         = [data.aws_caller_identity.current.arn]
+  allowed_principals         = [data.aws_iam_session_context.current.issuer_arn]
   gateway_load_balancer_arns = [aws_lb.test.arn]
 
   tags = {
