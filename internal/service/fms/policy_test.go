@@ -429,7 +429,7 @@ resource "aws_fms_policy" "test" {
     managed_service_data = "{\"type\": \"WAF\", \"ruleGroups\": [{\"id\":\"${aws_wafregional_rule_group.test.id}\", \"overrideAction\" : {\"type\": \"COUNT\"}}],\"defaultAction\": {\"type\": \"BLOCK\"}, \"overrideCustomerWebACLAssociation\": false}"
   }
 
-  # depends_on = [aws_fms_admin_account.test]
+  depends_on = [aws_fms_admin_account.test]
 }
 
 resource "aws_wafregional_rule_group" "test" {
@@ -466,7 +466,7 @@ resource "aws_fms_policy" "test" {
     }
   }
 
-  # depends_on = [aws_fms_admin_account.test]
+  depends_on = [aws_fms_admin_account.test]
 }
 
 resource "aws_wafregional_rule_group" "test" {
@@ -491,7 +491,7 @@ resource "aws_fms_policy" "test" {
     managed_service_data = "{\"type\":\"WAFV2\",\"preProcessRuleGroups\":[{\"ruleGroupArn\":null,\"overrideAction\":{\"type\":\"NONE\"},\"managedRuleGroupIdentifier\":{\"version\":null,\"vendorName\":\"AWS\",\"managedRuleGroupName\":\"AWSManagedRulesAmazonIpReputationList\"},\"ruleGroupType\":\"ManagedRuleGroup\",\"excludeRules\":[]}],\"postProcessRuleGroups\":[],\"defaultAction\":{\"type\":\"ALLOW\"},\"overrideCustomerWebACLAssociation\":false,\"loggingConfiguration\":{\"logDestinationConfigs\":[\"${aws_kinesis_firehose_delivery_stream.test.arn}\"],\"redactedFields\":[{\"redactedFieldType\":\"SingleHeader\",\"redactedFieldValue\":\"Cookies\"}]}}"
   }
 
-  # depends_on = [aws_fms_admin_account.test]
+  depends_on = [aws_fms_admin_account.test]
 }
 
 resource "aws_iam_role" "test" {
@@ -574,7 +574,7 @@ resource "aws_fms_policy" "test" {
     create_before_destroy = false
   }
 
-  # depends_on = [aws_fms_admin_account.test]
+  depends_on = [aws_fms_admin_account.test]
 }
 
 resource "aws_wafregional_rule_group" "test" {
@@ -601,7 +601,7 @@ resource "aws_fms_policy" "test" {
     managed_service_data = "{\"type\": \"WAF\", \"ruleGroups\": [{\"id\":\"${aws_wafregional_rule_group.test.id}\", \"overrideAction\" : {\"type\": \"COUNT\"}}],\"defaultAction\": {\"type\": \"BLOCK\"}, \"overrideCustomerWebACLAssociation\": false}"
   }
 
-  # depends_on = [aws_fms_admin_account.test]
+  depends_on = [aws_fms_admin_account.test]
 }
 
 resource "aws_wafregional_rule_group" "test" {
@@ -628,7 +628,7 @@ resource "aws_fms_policy" "test" {
     %[2]q = %[3]q
   }
 
-  # depends_on = [aws_fms_admin_account.test]
+  depends_on = [aws_fms_admin_account.test]
 }
 
 resource "aws_wafregional_rule_group" "test" {
@@ -656,7 +656,7 @@ resource "aws_fms_policy" "test" {
     %[4]q = %[5]q
   }
 
-  # depends_on = [aws_fms_admin_account.test]
+  depends_on = [aws_fms_admin_account.test]
 }
 
 resource "aws_wafregional_rule_group" "test" {
@@ -683,7 +683,7 @@ resource "aws_fms_policy" "test" {
     %[2]q = %[3]q
   }
 
-  # depends_on = [aws_fms_admin_account.test]
+  depends_on = [aws_fms_admin_account.test]
 }
 
 resource "aws_wafregional_rule_group" "test" {
@@ -711,7 +711,7 @@ resource "aws_fms_policy" "test" {
     %[4]q = %[5]q
   }
 
-  # depends_on = [aws_fms_admin_account.test]
+  depends_on = [aws_fms_admin_account.test]
 }
 
 resource "aws_wafregional_rule_group" "test" {
@@ -781,7 +781,7 @@ resource "aws_fms_policy" "test" {
     managed_service_data = jsonencode(local.msd)
   }
 
-  # depends_on = [aws_fms_admin_account.test]
+  depends_on = [aws_fms_admin_account.test]
 }
 `, rName))
 }
@@ -846,7 +846,7 @@ resource "aws_fms_policy" "test" {
     })
   }
 
-  # depends_on = [aws_fms_admin_account.test]
+  depends_on = [aws_fms_admin_account.test]
 }
 `, rName))
 }

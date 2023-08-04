@@ -96,14 +96,10 @@ func testAccCheckAdminAccountDestroy(ctx context.Context) resource.TestCheckFunc
 	}
 }
 
-// const testAccAdminAccountConfig_basic = `
-// data "aws_caller_identity" "current" {}
-
-// resource "aws_fms_admin_account" "test" {
-//   account_id = data.aws_caller_identity.current.account_id
-// }
-// `
-
 const testAccAdminAccountConfig_basic = `
 data "aws_caller_identity" "current" {}
+
+resource "aws_fms_admin_account" "test" {
+  account_id = data.aws_caller_identity.current.account_id
+}
 `
