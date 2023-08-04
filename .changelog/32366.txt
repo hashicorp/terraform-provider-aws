@@ -1,3 +1,3 @@
 ```release-note:new-resource
-aws_codecatalyst_devenvironment
+aws_codecatalyst_dev_environment
 ```
