@@ -404,9 +404,11 @@ func TestAccCloudWatchCompositeAlarm_actionSuppressor(t *testing.T) {
 				Config: testAccCompositeAlarmConfig_actionSuppressor(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCompositeAlarmExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "actions_suppressor_alarm", fmt.Sprintf("%[1]s-0", rName)),
-					resource.TestCheckResourceAttr(resourceName, "actions_suppressor_extension_period", "10"),
-					resource.TestCheckResourceAttr(resourceName, "actions_suppressor_wait_period", "20"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "actions_suppressor.*", map[string]string{
+						"alarm":            fmt.Sprintf("%[1]s-0", rName),
+						"extension_period": "10",
+						"wait_period":      "20",
+					}),
 				),
 			},
 			{
@@ -670,9 +672,11 @@ resource "aws_cloudwatch_composite_alarm" "test" {
   insufficient_data_actions 		  = [aws_sns_topic.test[1].arn]
   ok_actions                		  = [aws_sns_topic.test[2].arn]
 
-  actions_suppressor_alarm  		  = "${aws_cloudwatch_metric_alarm.test[0].alarm_name}"
-  actions_suppressor_extension_period = 10
-  actions_suppressor_wait_period	  = 20
+  actions_suppressor {
+	alarm  		  		= "${aws_cloudwatch_metric_alarm.test[0].alarm_name}"
+	extension_period 	= 10
+	wait_period	  		= 20
+  }
 }
 `, rName))
 }

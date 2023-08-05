@@ -43,18 +43,27 @@ func ResourceCompositeAlarm() *schema.Resource {
 				Default:  true,
 				ForceNew: true,
 			},
-			"actions_suppressor_alarm": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validation.StringLenBetween(1, 1600),
-			},
-			"actions_suppressor_extension_period": {
-				Type:     schema.TypeInt,
+			"actions_suppressor": {
+				Type:     schema.TypeList,
 				Optional: true,
-			},
-			"actions_suppressor_wait_period": {
-				Type:     schema.TypeInt,
-				Optional: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"alarm": {
+							Type:         schema.TypeString,
+							Required:     true,
+							ValidateFunc: validation.StringLenBetween(1, 1600),
+						},
+						"extension_period": {
+							Type:     schema.TypeInt,
+							Required: true,
+						},
+						"wait_period": {
+							Type:     schema.TypeInt,
+							Required: true,
+						},
+					},
+				},
 			},
 			"alarm_actions": {
 				Type:     schema.TypeSet,
@@ -174,9 +183,6 @@ func resourceCompositeAlarmRead(ctx context.Context, d *schema.ResourceData, met
 	}
 
 	d.Set("actions_enabled", alarm.ActionsEnabled)
-	d.Set("actions_suppressor_alarm", alarm.ActionsSuppressor)
-	d.Set("actions_suppressor_extension_period", alarm.ActionsSuppressorExtensionPeriod)
-	d.Set("actions_suppressor_wait_period", alarm.ActionsSuppressorWaitPeriod)
 	d.Set("alarm_actions", aws.StringValueSlice(alarm.AlarmActions))
 	d.Set("alarm_description", alarm.AlarmDescription)
 	d.Set("alarm_name", alarm.AlarmName)
@@ -184,6 +190,12 @@ func resourceCompositeAlarmRead(ctx context.Context, d *schema.ResourceData, met
 	d.Set("arn", alarm.AlarmArn)
 	d.Set("insufficient_data_actions", aws.StringValueSlice(alarm.InsufficientDataActions))
 	d.Set("ok_actions", aws.StringValueSlice(alarm.OKActions))
+
+	if alarm.ActionsSuppressor != nil {
+		if err := d.Set("actions_suppressor", []interface{}{flattenActionsSuppressor(alarm)}); err != nil {
+			return diag.Errorf("setting actions_suppressor (%s): %s", d.Id(), err)
+		}
+	}
 
 	return nil
 }
@@ -263,16 +275,11 @@ func expandPutCompositeAlarmInput(ctx context.Context, d *schema.ResourceData) *
 		apiObject.AlarmActions = flex.ExpandStringSet(v.(*schema.Set))
 	}
 
-	if v, ok := d.GetOk("actions_suppressor_alarm"); ok {
-		apiObject.ActionsSuppressor = aws.String(v.(string))
-	}
-
-	if v, ok := d.GetOk("actions_suppressor_extension_period"); ok {
-		apiObject.ActionsSuppressorExtensionPeriod = aws.Int64(int64(v.(int)))
-	}
-
-	if v, ok := d.GetOk("actions_suppressor_wait_period"); ok {
-		apiObject.ActionsSuppressorWaitPeriod = aws.Int64(int64(v.(int)))
+	if v, ok := d.GetOk("actions_suppressor"); ok && v != nil && len(v.([]interface{})) > 0 {
+		alarm := expandActionsSuppressor(v.([]interface{}))
+		apiObject.ActionsSuppressor = alarm.ActionsSuppressor
+		apiObject.ActionsSuppressorExtensionPeriod = alarm.ActionsSuppressorExtensionPeriod
+		apiObject.ActionsSuppressorWaitPeriod = alarm.ActionsSuppressorWaitPeriod
 	}
 
 	if v, ok := d.GetOk("alarm_description"); ok {
@@ -296,4 +303,35 @@ func expandPutCompositeAlarmInput(ctx context.Context, d *schema.ResourceData) *
 	}
 
 	return apiObject
+}
+
+func flattenActionsSuppressor(alarm *cloudwatch.CompositeAlarm) map[string]interface{} {
+	actionsSuppressor := map[string]interface{}{
+		"alarm":            aws.StringValue(alarm.ActionsSuppressor),
+		"extension_period": aws.Int64Value(alarm.ActionsSuppressorExtensionPeriod),
+		"wait_period":      aws.Int64Value(alarm.ActionsSuppressorWaitPeriod),
+	}
+	return actionsSuppressor
+}
+
+func expandActionsSuppressor(v []interface{}) *cloudwatch.CompositeAlarm {
+
+	if v[0] == nil {
+		return nil
+	}
+
+	alarmResource := v[0].(map[string]interface{})
+	alarm := cloudwatch.CompositeAlarm{}
+
+	if v, ok := alarmResource["alarm"]; ok && v.(string) != "" {
+		alarm.ActionsSuppressor = aws.String(v.(string))
+	}
+	if v, ok := alarmResource["extension_period"]; ok {
+		alarm.ActionsSuppressorExtensionPeriod = aws.Int64(int64(v.(int)))
+	}
+	if v, ok := alarmResource["wait_period"]; ok {
+		alarm.ActionsSuppressorWaitPeriod = aws.Int64(int64(v.(int)))
+	}
+
+	return &alarm
 }
