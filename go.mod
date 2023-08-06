@@ -4,62 +4,63 @@ go 1.20
 
 require (
 	github.com/ProtonMail/go-crypto v0.0.0-20230217124315-7d5c6f04bbb8
-	github.com/aws/aws-sdk-go v1.44.315
+	github.com/aws/aws-sdk-go v1.44.316
 	github.com/aws/aws-sdk-go-v2 v1.20.0
 	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.13.7
-	github.com/aws/aws-sdk-go-v2/service/accessanalyzer v1.20.0
-	github.com/aws/aws-sdk-go-v2/service/account v1.11.0
-	github.com/aws/aws-sdk-go-v2/service/acm v1.18.0
-	github.com/aws/aws-sdk-go-v2/service/appconfig v1.18.0
-	github.com/aws/aws-sdk-go-v2/service/auditmanager v1.26.0
-	github.com/aws/aws-sdk-go-v2/service/cleanrooms v1.3.0
-	github.com/aws/aws-sdk-go-v2/service/cloudcontrol v1.12.0
-	github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs v1.23.0
-	github.com/aws/aws-sdk-go-v2/service/comprehend v1.25.0
-	github.com/aws/aws-sdk-go-v2/service/computeoptimizer v1.25.0
-	github.com/aws/aws-sdk-go-v2/service/directoryservice v1.18.0
-	github.com/aws/aws-sdk-go-v2/service/docdbelastic v1.2.0
-	github.com/aws/aws-sdk-go-v2/service/ec2 v1.109.0
-	github.com/aws/aws-sdk-go-v2/service/emrserverless v1.10.0
-	github.com/aws/aws-sdk-go-v2/service/finspace v1.11.0
-	github.com/aws/aws-sdk-go-v2/service/fis v1.15.0
-	github.com/aws/aws-sdk-go-v2/service/glacier v1.15.0
-	github.com/aws/aws-sdk-go-v2/service/healthlake v1.17.0
-	github.com/aws/aws-sdk-go-v2/service/identitystore v1.17.0
-	github.com/aws/aws-sdk-go-v2/service/inspector2 v1.16.0
-	github.com/aws/aws-sdk-go-v2/service/internetmonitor v1.4.0
-	github.com/aws/aws-sdk-go-v2/service/ivschat v1.5.0
-	github.com/aws/aws-sdk-go-v2/service/kendra v1.42.0
-	github.com/aws/aws-sdk-go-v2/service/keyspaces v1.4.0
-	github.com/aws/aws-sdk-go-v2/service/lambda v1.39.0
-	github.com/aws/aws-sdk-go-v2/service/lightsail v1.28.0
-	github.com/aws/aws-sdk-go-v2/service/medialive v1.33.0
-	github.com/aws/aws-sdk-go-v2/service/mediapackage v1.22.0
-	github.com/aws/aws-sdk-go-v2/service/oam v1.2.0
-	github.com/aws/aws-sdk-go-v2/service/opensearchserverless v1.4.0
-	github.com/aws/aws-sdk-go-v2/service/pipes v1.3.0
-	github.com/aws/aws-sdk-go-v2/service/pricing v1.21.0
-	github.com/aws/aws-sdk-go-v2/service/qldb v1.16.0
-	github.com/aws/aws-sdk-go-v2/service/rbin v1.9.0
-	github.com/aws/aws-sdk-go-v2/service/rds v1.49.0
-	github.com/aws/aws-sdk-go-v2/service/resourceexplorer2 v1.3.0
-	github.com/aws/aws-sdk-go-v2/service/rolesanywhere v1.3.0
-	github.com/aws/aws-sdk-go-v2/service/route53domains v1.16.0
-	github.com/aws/aws-sdk-go-v2/service/s3control v1.32.0
-	github.com/aws/aws-sdk-go-v2/service/scheduler v1.2.0
-	github.com/aws/aws-sdk-go-v2/service/securitylake v1.6.0
-	github.com/aws/aws-sdk-go-v2/service/sesv2 v1.19.0
-	github.com/aws/aws-sdk-go-v2/service/signer v1.16.0
-	github.com/aws/aws-sdk-go-v2/service/ssm v1.37.0
-	github.com/aws/aws-sdk-go-v2/service/ssmcontacts v1.16.0
-	github.com/aws/aws-sdk-go-v2/service/ssmincidents v1.22.0
-	github.com/aws/aws-sdk-go-v2/service/swf v1.16.0
-	github.com/aws/aws-sdk-go-v2/service/timestreamwrite v1.18.0
-	github.com/aws/aws-sdk-go-v2/service/transcribe v1.28.0
-	github.com/aws/aws-sdk-go-v2/service/verifiedpermissions v1.1.0
-	github.com/aws/aws-sdk-go-v2/service/vpclattice v1.1.0
-	github.com/aws/aws-sdk-go-v2/service/workspaces v1.29.0
-	github.com/aws/aws-sdk-go-v2/service/xray v1.17.0
+	github.com/aws/aws-sdk-go-v2/service/accessanalyzer v1.20.1
+	github.com/aws/aws-sdk-go-v2/service/account v1.11.1
+	github.com/aws/aws-sdk-go-v2/service/acm v1.18.1
+	github.com/aws/aws-sdk-go-v2/service/appconfig v1.18.1
+	github.com/aws/aws-sdk-go-v2/service/auditmanager v1.26.1
+	github.com/aws/aws-sdk-go-v2/service/cleanrooms v1.3.1
+	github.com/aws/aws-sdk-go-v2/service/cloudcontrol v1.12.1
+	github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs v1.23.1
+	github.com/aws/aws-sdk-go-v2/service/codecatalyst v1.3.2
+	github.com/aws/aws-sdk-go-v2/service/comprehend v1.25.1
+	github.com/aws/aws-sdk-go-v2/service/computeoptimizer v1.25.1
+	github.com/aws/aws-sdk-go-v2/service/directoryservice v1.18.1
+	github.com/aws/aws-sdk-go-v2/service/docdbelastic v1.2.1
+	github.com/aws/aws-sdk-go-v2/service/ec2 v1.110.0
+	github.com/aws/aws-sdk-go-v2/service/emrserverless v1.10.1
+	github.com/aws/aws-sdk-go-v2/service/finspace v1.11.1
+	github.com/aws/aws-sdk-go-v2/service/fis v1.15.1
+	github.com/aws/aws-sdk-go-v2/service/glacier v1.15.1
+	github.com/aws/aws-sdk-go-v2/service/healthlake v1.17.1
+	github.com/aws/aws-sdk-go-v2/service/identitystore v1.17.1
+	github.com/aws/aws-sdk-go-v2/service/inspector2 v1.16.1
+	github.com/aws/aws-sdk-go-v2/service/internetmonitor v1.5.0
+	github.com/aws/aws-sdk-go-v2/service/ivschat v1.5.1
+	github.com/aws/aws-sdk-go-v2/service/kendra v1.42.1
+	github.com/aws/aws-sdk-go-v2/service/keyspaces v1.4.1
+	github.com/aws/aws-sdk-go-v2/service/lambda v1.39.1
+	github.com/aws/aws-sdk-go-v2/service/lightsail v1.28.1
+	github.com/aws/aws-sdk-go-v2/service/medialive v1.34.0
+	github.com/aws/aws-sdk-go-v2/service/mediapackage v1.22.1
+	github.com/aws/aws-sdk-go-v2/service/oam v1.2.1
+	github.com/aws/aws-sdk-go-v2/service/opensearchserverless v1.4.1
+	github.com/aws/aws-sdk-go-v2/service/pipes v1.3.1
+	github.com/aws/aws-sdk-go-v2/service/pricing v1.21.1
+	github.com/aws/aws-sdk-go-v2/service/qldb v1.16.1
+	github.com/aws/aws-sdk-go-v2/service/rbin v1.9.1
+	github.com/aws/aws-sdk-go-v2/service/rds v1.50.0
+	github.com/aws/aws-sdk-go-v2/service/resourceexplorer2 v1.3.1
+	github.com/aws/aws-sdk-go-v2/service/rolesanywhere v1.3.1
+	github.com/aws/aws-sdk-go-v2/service/route53domains v1.16.1
+	github.com/aws/aws-sdk-go-v2/service/s3control v1.32.1
+	github.com/aws/aws-sdk-go-v2/service/scheduler v1.2.1
+	github.com/aws/aws-sdk-go-v2/service/securitylake v1.6.1
+	github.com/aws/aws-sdk-go-v2/service/sesv2 v1.19.1
+	github.com/aws/aws-sdk-go-v2/service/signer v1.16.1
+	github.com/aws/aws-sdk-go-v2/service/ssm v1.37.1
+	github.com/aws/aws-sdk-go-v2/service/ssmcontacts v1.16.1
+	github.com/aws/aws-sdk-go-v2/service/ssmincidents v1.22.1
+	github.com/aws/aws-sdk-go-v2/service/swf v1.16.1
+	github.com/aws/aws-sdk-go-v2/service/timestreamwrite v1.18.1
+	github.com/aws/aws-sdk-go-v2/service/transcribe v1.28.1
+	github.com/aws/aws-sdk-go-v2/service/verifiedpermissions v1.1.1
+	github.com/aws/aws-sdk-go-v2/service/vpclattice v1.1.1
+	github.com/aws/aws-sdk-go-v2/service/workspaces v1.29.1
+	github.com/aws/aws-sdk-go-v2/service/xray v1.17.1
 	github.com/beevik/etree v1.2.0
 	github.com/google/go-cmp v0.5.9
 	github.com/hashicorp/aws-cloudformation-resource-schema-sdk-go v0.21.0
@@ -72,9 +73,9 @@ require (
 	github.com/hashicorp/go-uuid v1.0.3
 	github.com/hashicorp/go-version v1.6.0
 	github.com/hashicorp/hcl/v2 v2.17.0
-	github.com/hashicorp/terraform-plugin-framework v1.3.3
+	github.com/hashicorp/terraform-plugin-framework v1.3.4
 	github.com/hashicorp/terraform-plugin-framework-timeouts v0.4.1
-	github.com/hashicorp/terraform-plugin-framework-validators v0.10.0
+	github.com/hashicorp/terraform-plugin-framework-validators v0.11.0
 	github.com/hashicorp/terraform-plugin-go v0.18.0
 	github.com/hashicorp/terraform-plugin-log v0.9.0
 	github.com/hashicorp/terraform-plugin-mux v0.11.2
