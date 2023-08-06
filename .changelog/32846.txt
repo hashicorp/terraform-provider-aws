@@ -9,3 +9,7 @@ resource/aws_rds_cluster_instance: Update `engine` plan-time validation to allow
 ```release-note:enhancement
 resource/aws_rds_cluster: Add `db_system_id` argument to support RDS Custom engine types
 ```
+
+```release-note:enhancement
+data-source/aws_rds_cluster: Add `db_system_id` attribute
+```

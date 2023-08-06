@@ -62,6 +62,10 @@ func DataSourceCluster() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"db_system_id": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"enabled_cloudwatch_logs_exports": {
 				Type:     schema.TypeList,
 				Computed: true,
