@@ -24,6 +24,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -1600,8 +1601,54 @@ func FindDBClusterByID(ctx context.Context, conn *rds.RDS, id string) (*rds.DBCl
 	input := &rds.DescribeDBClustersInput{
 		DBClusterIdentifier: aws.String(id),
 	}
+	output, err := findDBCluster(ctx, conn, input)
 
-	output, err := conn.DescribeDBClustersWithContext(ctx, input)
+	if err != nil {
+		return nil, err
+	}
+
+	// Eventual consistency check.
+	if arn.IsARN(id) {
+		if aws.StringValue(output.DBClusterArn) != id {
+			return nil, &retry.NotFoundError{
+				LastRequest: input,
+			}
+		}
+	} else if aws.StringValue(output.DBClusterIdentifier) != id {
+		return nil, &retry.NotFoundError{
+			LastRequest: input,
+		}
+	}
+
+	return output, nil
+}
+
+func findDBCluster(ctx context.Context, conn *rds.RDS, input *rds.DescribeDBClustersInput) (*rds.DBCluster, error) {
+	output, err := findDBClusters(ctx, conn, input, tfslices.PredicateTrue[*rds.DBCluster]())
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSinglePtrResult(output)
+}
+
+func findDBClusters(ctx context.Context, conn *rds.RDS, input *rds.DescribeDBClustersInput, filter tfslices.Predicate[*rds.DBCluster]) ([]*rds.DBCluster, error) {
+	var output []*rds.DBCluster
+
+	err := conn.DescribeDBClustersPagesWithContext(ctx, input, func(page *rds.DescribeDBClustersOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, v := range page.DBClusters {
+			if v != nil && filter(v) {
+				output = append(output, v)
+			}
+		}
+
+		return !lastPage
+	})
 
 	if tfawserr.ErrCodeEquals(err, rds.ErrCodeDBClusterNotFoundFault) {
 		return nil, &retry.NotFoundError{
@@ -1614,30 +1661,7 @@ func FindDBClusterByID(ctx context.Context, conn *rds.RDS, id string) (*rds.DBCl
 		return nil, err
 	}
 
-	if output == nil || len(output.DBClusters) == 0 || output.DBClusters[0] == nil {
-		return nil, tfresource.NewEmptyResultError(input)
-	}
-
-	if count := len(output.DBClusters); count > 1 {
-		return nil, tfresource.NewTooManyResultsError(count, input)
-	}
-
-	dbCluster := output.DBClusters[0]
-
-	// Eventual consistency check.
-	if arn.IsARN(id) {
-		if aws.StringValue(dbCluster.DBClusterArn) != id {
-			return nil, &retry.NotFoundError{
-				LastRequest: input,
-			}
-		}
-	} else if aws.StringValue(dbCluster.DBClusterIdentifier) != id {
-		return nil, &retry.NotFoundError{
-			LastRequest: input,
-		}
-	}
-
-	return dbCluster, nil
+	return output, nil
 }
 
 func statusDBCluster(ctx context.Context, conn *rds.RDS, id string) retry.StateRefreshFunc {
