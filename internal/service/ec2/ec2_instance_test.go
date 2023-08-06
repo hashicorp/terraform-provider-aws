@@ -5396,13 +5396,7 @@ func testAccCheckInstanceRecreated(before, after *ec2.Instance) resource.TestChe
 
 func testAccCheckInstanceDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		return testAccCheckInstanceDestroyWithProvider(ctx)(s, acctest.Provider)
-	}
-}
-
-func testAccCheckInstanceDestroyWithProvider(ctx context.Context) acctest.TestCheckWithProviderFunc {
-	return func(s *terraform.State, provider *schema.Provider) error {
-		conn := provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_instance" {
@@ -5427,10 +5421,6 @@ func testAccCheckInstanceDestroyWithProvider(ctx context.Context) acctest.TestCh
 }
 
 func testAccCheckInstanceExists(ctx context.Context, n string, v *ec2.Instance) resource.TestCheckFunc {
-	return testAccCheckInstanceExistsWithProvider(ctx, n, v, func() *schema.Provider { return acctest.Provider })
-}
-
-func testAccCheckInstanceExistsWithProvider(ctx context.Context, n string, v *ec2.Instance, providerF func() *schema.Provider) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -5441,7 +5431,7 @@ func testAccCheckInstanceExistsWithProvider(ctx context.Context, n string, v *ec
 			return fmt.Errorf("No EC2 Instance ID is set")
 		}
 
-		conn := providerF().Meta().(*conns.AWSClient).EC2Conn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
 
 		output, err := tfec2.FindInstanceByID(ctx, conn, rs.Primary.ID)
 
