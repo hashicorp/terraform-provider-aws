@@ -3533,7 +3533,7 @@ func TestAccEC2Instance_LaunchTemplate_spotAndStop(t *testing.T) {
 	})
 }
 
-func TestAccEC2Instance_LaunchTemplate_withVpcSecurityGroup(t *testing.T) {
+func TestAccEC2Instance_LaunchTemplate_withVPCSecurityGroup(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v ec2.Instance
 	resourceName := "aws_instance.test"
@@ -3547,7 +3547,7 @@ func TestAccEC2Instance_LaunchTemplate_withVpcSecurityGroup(t *testing.T) {
 		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInstanceConfig_templateWithVpcSecurityGroups(rName),
+				Config: testAccInstanceConfig_templateWithVPCSecurityGroups(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttrPair(resourceName, "launch_template.0.id", launchTemplateResourceName, "id"),
@@ -5334,6 +5334,46 @@ func TestAccEC2Instance_CapacityReservation_modifyTarget(t *testing.T) {
 	})
 }
 
+func TestAccEC2Instance_basicWithSpot(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v ec2.Instance
+	resourceName := "aws_instance.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		// No subnet_id specified requires default VPC with default subnets.
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstanceConfig_basicWithSpot(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttrSet(resourceName, "spot_instance_request_id"),
+					resource.TestCheckResourceAttr(resourceName, "instance_lifecycle", "spot"),
+					resource.TestCheckResourceAttr(resourceName, "instance_market_options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "instance_market_options.0.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "instance_market_options.0.market_type", "spot"),
+					resource.TestCheckResourceAttr(resourceName, "instance_market_options.0.spot_options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "instance_market_options.0.spot_options.0.%", "4"),
+					resource.TestCheckResourceAttr(resourceName, "instance_market_options.0.spot_options.0.instance_interruption_behavior", "terminate"),
+					resource.TestCheckResourceAttrSet(resourceName, "instance_market_options.0.spot_options.0.max_price"),
+					resource.TestCheckResourceAttr(resourceName, "instance_market_options.0.spot_options.0.spot_instance_type", "one-time"),
+					resource.TestCheckResourceAttr(resourceName, "instance_market_options.0.spot_options.0.valid_until", ""),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"user_data_replace_on_change"},
+			},
+		},
+	})
+}
+
 func testAccCheckInstanceNotRecreated(before, after *ec2.Instance) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		if before, after := aws.StringValue(before.InstanceId), aws.StringValue(after.InstanceId); before != after {
@@ -5593,46 +5633,6 @@ func defaultSubnetCount(ctx context.Context, t *testing.T) int {
 	return len(subnets)
 }
 
-func TestAccEC2Instance_basicWithSpot(t *testing.T) {
-	ctx := acctest.Context(t)
-	var v ec2.Instance
-	resourceName := "aws_instance.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-
-	resource.ParallelTest(t, resource.TestCase{
-		// No subnet_id specified requires default VPC with default subnets.
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccInstanceConfig_basicWithSpot(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInstanceExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttrSet(resourceName, "spot_instance_request_id"),
-					resource.TestCheckResourceAttr(resourceName, "instance_lifecycle", "spot"),
-					resource.TestCheckResourceAttr(resourceName, "instance_market_options.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "instance_market_options.0.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "instance_market_options.0.market_type", "spot"),
-					resource.TestCheckResourceAttr(resourceName, "instance_market_options.0.spot_options.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "instance_market_options.0.spot_options.0.%", "4"),
-					resource.TestCheckResourceAttr(resourceName, "instance_market_options.0.spot_options.0.instance_interruption_behavior", "terminate"),
-					resource.TestCheckResourceAttrSet(resourceName, "instance_market_options.0.spot_options.0.max_price"),
-					resource.TestCheckResourceAttr(resourceName, "instance_market_options.0.spot_options.0.spot_instance_type", "one-time"),
-					resource.TestCheckResourceAttr(resourceName, "instance_market_options.0.spot_options.0.valid_until", ""),
-				),
-			},
-			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"user_data_replace_on_change"},
-			},
-		},
-	})
-}
-
 // testAccLatestAmazonLinuxPVEBSAMIConfig returns the configuration for a data source that
 // describes the latest Amazon Linux AMI using PV virtualization and an EBS root device.
 // The data source is named 'amzn-ami-minimal-pv-ebs'.
@@ -5860,9 +5860,12 @@ data "aws_vpc" "default" {
 }
 
 resource "aws_security_group" "test" {
-  name        = %[1]q
-  description = %[1]q
-  vpc_id      = data.aws_vpc.default.id
+  name   = %[1]q
+  vpc_id = data.aws_vpc.default.id
+
+  tags = {
+    Name = %[1]q
+  }
 }
 
 resource "aws_instance" "test" {
@@ -5888,9 +5891,12 @@ data "aws_vpc" "default" {
 }
 
 resource "aws_security_group" "test" {
-  name        = %[1]q
-  description = %[1]q
-  vpc_id      = data.aws_vpc.default.id
+  name   = %[1]q
+  vpc_id = data.aws_vpc.default.id
+
+  tags = {
+    Name = %[1]q
+  }
 }
 
 resource "aws_instance" "test" {
@@ -7745,15 +7751,21 @@ resource "aws_subnet" "test2" {
 }
 
 resource "aws_security_group" "test" {
-  vpc_id      = aws_vpc.test.id
-  description = "%[1]s_1"
-  name        = "%[1]s_1"
+  vpc_id = aws_vpc.test.id
+  name   = "%[1]s_1"
+
+  tags = {
+    Name = %[1]q
+  }
 }
 
 resource "aws_security_group" "test2" {
-  vpc_id      = aws_vpc.test.id
-  description = "%[1]s_2"
-  name        = "%[1]s_2"
+  vpc_id = aws_vpc.test.id
+  name   = "%[1]s_2"
+
+  tags = {
+    Name = %[1]q
+  }
 }
 
 resource "aws_instance" "test" {
@@ -7805,15 +7817,21 @@ resource "aws_subnet" "test2" {
 }
 
 resource "aws_security_group" "test" {
-  vpc_id      = aws_vpc.test.id
-  description = "%[1]s_1"
-  name        = "%[1]s_1"
+  vpc_id = aws_vpc.test.id
+  name   = "%[1]s_1"
+
+  tags = {
+    Name = %[1]q
+  }
 }
 
 resource "aws_security_group" "test2" {
-  vpc_id      = aws_vpc.test.id
-  description = "%[1]s_2"
-  name        = "%[1]s_2"
+  vpc_id = aws_vpc.test.id
+  name   = "%[1]s_2"
+
+  tags = {
+    Name = %[1]q
+  }
 }
 
 resource "aws_instance" "test" {
@@ -7856,9 +7874,12 @@ func testAccInstanceConfig_publicAndPrivateSecondaryIPs(rName string, isPublic b
 		testAccInstanceVPCConfig(rName, false, 0),
 		fmt.Sprintf(`
 resource "aws_security_group" "test" {
-  vpc_id      = aws_vpc.test.id
-  description = %[1]q
-  name        = %[1]q
+  vpc_id = aws_vpc.test.id
+  name   = %[1]q
+
+  tags = {
+    Name = %[1]q
+  }
 }
 
 resource "aws_instance" "test" {
@@ -7887,9 +7908,12 @@ func testAccInstanceConfig_privateIPAndSecondaryIPs(rName, privateIP, secondaryI
 		testAccInstanceVPCConfig(rName, false, 0),
 		fmt.Sprintf(`
 resource "aws_security_group" "test" {
-  vpc_id      = aws_vpc.test.id
-  description = %[1]q
-  name        = %[1]q
+  vpc_id = aws_vpc.test.id
+  name   = %[1]q
+
+  tags = {
+    Name = %[1]q
+  }
 }
 
 resource "aws_instance" "test" {
@@ -7917,9 +7941,12 @@ func testAccInstanceConfig_privateIPAndSecondaryIPsNullPrivate(rName, secondaryI
 		testAccInstanceVPCConfig(rName, false, 0),
 		fmt.Sprintf(`
 resource "aws_security_group" "test" {
-  vpc_id      = aws_vpc.test.id
-  description = %[1]q
-  name        = %[1]q
+  vpc_id = aws_vpc.test.id
+  name   = %[1]q
+
+  tags = {
+    Name = %[1]q
+  }
 }
 
 resource "aws_instance" "test" {
@@ -8975,7 +9002,7 @@ resource "aws_instance" "test" {
 `, rName))
 }
 
-func testAccInstanceConfig_templateWithVpcSecurityGroups(rName string) string {
+func testAccInstanceConfig_templateWithVPCSecurityGroups(rName string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigLatestAmazonLinuxHVMEBSAMI(),
 		acctest.AvailableEC2InstanceTypeForRegion("t3.micro", "t2.micro", "t1.micro", "m1.small"),
@@ -9010,9 +9037,12 @@ resource "aws_iam_instance_profile" "test" {
 }
 
 resource "aws_security_group" "test" {
-  vpc_id      = aws_vpc.test.id
-  description = %[1]q
-  name        = %[1]q
+  vpc_id = aws_vpc.test.id
+  name   = %[1]q
+
+  tags = {
+    Name = %[1]q
+  }
 }
 
 resource "aws_launch_template" "test" {
@@ -9023,11 +9053,13 @@ resource "aws_launch_template" "test" {
   iam_instance_profile {
     name = aws_iam_instance_profile.test.name
   }
+
   vpc_security_group_ids = [aws_security_group.test.id]
 }
 
 resource "aws_instance" "test" {
   subnet_id = aws_subnet.test.id
+
   launch_template {
     name = aws_launch_template.test.name
   }
