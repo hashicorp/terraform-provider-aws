@@ -227,11 +227,25 @@ This resource supports the following arguments:
 ### broker_node_group_info connectivity_info Argument Reference
 
 * `public_access` - (Optional) Access control settings for brokers. See below.
-* `vpc_connectivity` - (Optional) VPC connection control settings for brokers.
+* `vpc_connectivity` - (Optional) VPC connectivity access control for brokers.. See below.
 
 ### connectivity_info public_access Argument Reference
 
-* `type` - (Optional) Public access type. Valida values: `DISABLED`, `SERVICE_PROVIDED_EIPS`.
+* `type` - (Optional) Public access type. Valid values: `DISABLED`, `SERVICE_PROVIDED_EIPS`.
+
+### connectivity_info vpc_connectivity Argument Reference
+
+* `client_authentication` - (Optional) Includes all client authentication information for VPC connectivity. See below.
+
+### vpc_connectivity client_authentication Argument Reference
+
+* `sasl` - (Optional) SASL authentication type details for VPC connectivity. See below.
+* `tls` - (Optional) Enables TLS authentication for VPC connectivity.
+
+### vpc_connectivity client_authentication sasl Argument Reference
+
+* `iam` - (Optional) Enables SASL/IAM authentication for VPC connectivity.
+* `scram` - (Optional) Enables SASL/SCRAM authentication for VPC connectivity.
 
 ### connectivity_info vpc_connectivity Argument Reference
 
