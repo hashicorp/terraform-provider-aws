@@ -52,7 +52,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
-- `display_name` - (Optional) Full friendly name of the contact or escalation plan. 1-255 characters, alphanumeric, _ (underscore), - (hyphen), and spaces.
+- `display_name` - (Optional) Full friendly name of the contact or escalation plan. If set, must be between 1 and 255 characters, and may contain alphanumerics, underscores (`_`), hyphens (`-`), periods (`.`), and spaces.
 
 - `tags` - (Optional) Map of tags to assign to the resource.
 
