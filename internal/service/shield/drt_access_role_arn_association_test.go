@@ -15,9 +15,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
-	"github.com/hashicorp/terraform-provider-aws/names"
-
 	tfshield "github.com/hashicorp/terraform-provider-aws/internal/service/shield"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // Acceptance test access AWS and cost money to run.
@@ -38,12 +37,12 @@ func TestAccShieldDRTAccessRoleArnAssociation_basic(t *testing.T) {
 			testAccPreCheckRoleArn(ctx, t)
 		},
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDRTAccessRoleArnAssociationDestroy(ctx, t),
+		CheckDestroy:             testAccCheckDRTAccessRoleArnAssociationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDRTAccessRoleArnAssociationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDRTAccessRoleArnAssociationExists(ctx, resourceName, &drtaccessrolearnassociation, t),
+					testAccCheckDRTAccessRoleArnAssociationExists(ctx, resourceName, &drtaccessrolearnassociation),
 				),
 			},
 		},
@@ -66,12 +65,12 @@ func TestAccShieldDRTAccessRoleArnAssociation_disappears(t *testing.T) {
 			testAccPreCheckRoleArn(ctx, t)
 		},
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDRTAccessRoleArnAssociationDestroy(ctx, t),
+		CheckDestroy:             testAccCheckDRTAccessRoleArnAssociationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDRTAccessRoleArnAssociationConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDRTAccessRoleArnAssociationExists(ctx, resourceName, &drtaccessrolearnassociation, t),
+					testAccCheckDRTAccessRoleArnAssociationExists(ctx, resourceName, &drtaccessrolearnassociation),
 					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfshield.ResourceDRTAccessRoleArnAssociation, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -80,11 +79,9 @@ func TestAccShieldDRTAccessRoleArnAssociation_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckDRTAccessRoleArnAssociationDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
+func testAccCheckDRTAccessRoleArnAssociationDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-
 		conn := acctest.Provider.Meta().(*conns.AWSClient).ShieldConn(ctx)
-
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_shield_drt_access_role_arn_association" {
 				continue
@@ -96,9 +93,6 @@ func testAccCheckDRTAccessRoleArnAssociationDestroy(ctx context.Context, t *test
 			if errs.IsA[*types.ResourceNotFoundException](err) {
 				return nil
 			}
-			if err != nil {
-				return nil
-			}
 
 			if resp != nil && (resp.RoleArn == nil || *resp.RoleArn == "") {
 				return nil
@@ -106,34 +100,11 @@ func testAccCheckDRTAccessRoleArnAssociationDestroy(ctx context.Context, t *test
 
 			return create.Error(names.Shield, create.ErrActionCheckingDestroyed, tfshield.ResNameDRTAccessRoleArnAssociation, rs.Primary.ID, errors.New("not destroyed"))
 		}
-
 		return nil
 	}
 }
 
-func testAccCheckDRTAccessRoleArnAssociationNotExists(ctx context.Context, name string, drtaccessrolearnassociation *shield.DescribeDRTAccessOutput, t *testing.T) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[name]
-		if ok {
-			return create.Error(names.Shield, create.ErrActionCheckingExistence, tfshield.ResNameDRTAccessRoleArnAssociation, name, errors.New("found"))
-		}
-		if rs.Primary.ID != "" {
-			return create.Error(names.Shield, create.ErrActionCheckingExistence, tfshield.ResNameDRTAccessRoleArnAssociation, name, errors.New("set"))
-		}
-
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ShieldConn(ctx)
-		resp, err := conn.DescribeDRTAccessWithContext(ctx, &shield.DescribeDRTAccessInput{})
-		if err != nil {
-			return create.Error(names.Shield, create.ErrActionCheckingExistence, tfshield.ResNameDRTAccessRoleArnAssociation, rs.Primary.ID, err)
-		}
-
-		*drtaccessrolearnassociation = *resp
-
-		return nil
-	}
-}
-
-func testAccCheckDRTAccessRoleArnAssociationExists(ctx context.Context, name string, drtaccessrolearnassociation *shield.DescribeDRTAccessOutput, t *testing.T) resource.TestCheckFunc {
+func testAccCheckDRTAccessRoleArnAssociationExists(ctx context.Context, name string, drtaccessrolearnassociation *shield.DescribeDRTAccessOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -169,6 +140,8 @@ func testAccPreCheckRoleArn(ctx context.Context, t *testing.T) {
 
 func testAccDRTAccessRoleArnAssociationConfig_basic(rName string) string {
 	return fmt.Sprintf(`
+data "aws_partition" "current" {}
+
 resource "aws_iam_role" "test" {
 	name = %[1]q
 	assume_role_policy = jsonencode({
@@ -194,7 +167,7 @@ resource "aws_shield_protection_group" "test" {
 
 resource "aws_iam_role_policy_attachment" "test" {
   role       = aws_iam_role.test.name
-  policy_arn = "arn:aws:iam::aws:policy/service-role/AWSShieldDRTAccessPolicy"
+  policy_arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/service-role/AWSShieldDRTAccessPolicy"
 }
 
 resource "aws_shield_drt_access_role_arn_association" "test" {

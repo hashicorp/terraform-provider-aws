@@ -1,35 +1,6 @@
 package shield
 
-// **PLEASE DELETE THIS AND ALL TIP COMMENTS BEFORE SUBMITTING A PR FOR REVIEW!**
-//
-// TIP: ==== INTRODUCTION ====
-// Thank you for trying the skaff tool!
-//
-// You have opted to include these helpful comments. They all include "TIP:"
-// to help you find and remove them when you're done with them.
-//
-// While some aspects of this file are customized to your input, the
-// scaffold tool does *not* look at the AWS API and ensure it has correct
-// function, structure, and variable names. It makes guesses based on
-// commonalities. You will need to make significant adjustments.
-//
-// In other words, as generated, this is a rough outline of the work you will
-// need to do. If something doesn't make sense for your situation, get rid of
-// it.
-
 import (
-	// TIP: ==== IMPORTS ====
-	// This is a common set of imports but not customized to your code since
-	// your code hasn't been written yet. Make sure you, your IDE, or
-	// goimports -w <file> fixes these imports.
-	//
-	// The provider linter wants your imports to be in two groups: first,
-	// standard library (i.e., "fmt" or "strings"), second, everything else.
-	//
-	// Also, AWS Go SDK v2 may handle nested structures differently than v1,
-	// using the services/shield/types package. If so, you'll
-	// need to import types and reference the nested types, e.g., as
-	// awstypes.<Type Name>.
 	"context"
 	"errors"
 	"time"
@@ -81,7 +52,7 @@ func (r *resourceDRTAccessLogBucketAssociation) Schema(ctx context.Context, req 
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			"id": schema.StringAttribute{ // required by hashicorps terraform plugin testing framework
-				DeprecationMessage:  "id is only for framework compatability and not used by the provider",
+				DeprecationMessage:  "id is only for framework compatibility and not used by the provider",
 				MarkdownDescription: "The ID of the directory.",
 				Computed:            true,
 				PlanModifiers: []planmodifier.String{
@@ -174,13 +145,15 @@ func (r *resourceDRTAccessLogBucketAssociation) Read(ctx context.Context, req re
 		)
 		return
 	}
-
-	associatedLogBucket := getAssociatedLogBucket(state.LogBucket.ValueString(), out.LogBucketList)
-	if out != nil && len(out.LogBucketList) > 0 && associatedLogBucket == nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.Shield, create.ErrActionSetting, ResNameDRTAccessLogBucketAssociation, state.LogBucket.String(), nil),
-			errors.New("Log Bucket not in list").Error(),
-		)
+	var associatedLogBucket *string
+	if out != nil {
+		associatedLogBucket = getAssociatedLogBucket(state.LogBucket.ValueString(), out.LogBucketList)
+		if len(out.LogBucketList) > 0 && associatedLogBucket == nil {
+			resp.Diagnostics.AddError(
+				create.ProblemStandardMessage(names.Shield, create.ErrActionSetting, ResNameDRTAccessLogBucketAssociation, state.LogBucket.String(), nil),
+				errors.New("Log Bucket not in list").Error(),
+			)
+		}
 	}
 
 	if state.ID.IsNull() || state.ID.IsUnknown() {
@@ -194,7 +167,6 @@ func (r *resourceDRTAccessLogBucketAssociation) Read(ctx context.Context, req re
 
 func getAssociatedLogBucket(bucket string, bucketList []*string) *string {
 	for _, bkt := range bucketList {
-
 		if *bkt == bucket {
 			return bkt
 		}
@@ -205,7 +177,6 @@ func getAssociatedLogBucket(bucket string, bucketList []*string) *string {
 func (r *resourceDRTAccessLogBucketAssociation) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
 	conn := r.Meta().ShieldConn(ctx)
 
-	// TIP: -- 2. Fetch the plan
 	var plan, state resourceDRTAccessLogBucketAssociationData
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
@@ -234,7 +205,6 @@ func (r *resourceDRTAccessLogBucketAssociation) Update(ctx context.Context, req 
 		}
 	}
 
-	// TIP: -- 5. Use a waiter to wait for update to complete
 	updateTimeout := r.UpdateTimeout(ctx, plan.Timeouts)
 	_, err := waitDRTAccessLogBucketAssociationUpdated(ctx, conn, plan.LogBucket.ValueString(), updateTimeout)
 	if err != nil {
@@ -255,7 +225,6 @@ func (r *resourceDRTAccessLogBucketAssociation) Delete(ctx context.Context, req 
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
-
 	}
 	if state.LogBucket.ValueString() == "" {
 		return

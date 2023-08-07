@@ -3,7 +3,6 @@ package shield
 import (
 	"context"
 	"errors"
-	"fmt"
 	"regexp"
 	"time"
 
@@ -22,7 +21,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -55,7 +53,7 @@ func (r *resourceDRTAccessRoleArnAssociation) Schema(ctx context.Context, req re
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			"id": schema.StringAttribute{ // required by hashicorps terraform plugin testing framework
-				DeprecationMessage:  "id is only for framework compatability and not used by the provider",
+				DeprecationMessage:  "id is only for framework compatibility and not used by the provider",
 				MarkdownDescription: "The ID of the directory.",
 				Computed:            true,
 				PlanModifiers: []planmodifier.String{
@@ -67,7 +65,7 @@ func (r *resourceDRTAccessRoleArnAssociation) Schema(ctx context.Context, req re
 				Validators: []validator.String{
 					stringvalidator.LengthBetween(1, 2048),
 					stringvalidator.RegexMatches(
-						regexp.MustCompile(`^arn:aws:iam::\d{12}:role/?[a-zA-Z_0-9+=,.@\-_/]+`),
+						regexp.MustCompile(`^arn:?[a-zA-Z\-]+:iam::\d{12}:role/?[a-zA-Z_0-9+=,.@\-_/]+`),
 						"must match arn pattern",
 					),
 				},
@@ -89,7 +87,6 @@ func (r *resourceDRTAccessRoleArnAssociation) Create(ctx context.Context, req re
 	var plan resourceDRTAccessRoleArnAssociationData
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	if resp.Diagnostics.HasError() {
-
 		return
 	}
 
@@ -99,7 +96,6 @@ func (r *resourceDRTAccessRoleArnAssociation) Create(ctx context.Context, req re
 
 	out, err := conn.AssociateDRTRoleWithContext(ctx, in)
 	if err != nil {
-
 		resp.Diagnostics.AddError(
 			create.ProblemStandardMessage(names.Shield, create.ErrActionCreating, ResNameDRTAccessRoleArnAssociation, plan.RoleArn.String(), err),
 			err.Error(),
@@ -107,7 +103,6 @@ func (r *resourceDRTAccessRoleArnAssociation) Create(ctx context.Context, req re
 		return
 	}
 	if out == nil {
-
 		resp.Diagnostics.AddError(
 			create.ProblemStandardMessage(names.Shield, create.ErrActionCreating, ResNameDRTAccessRoleArnAssociation, plan.RoleArn.String(), nil),
 			errors.New("empty output").Error(),
@@ -131,7 +126,6 @@ func (r *resourceDRTAccessRoleArnAssociation) Create(ctx context.Context, req re
 }
 
 func (r *resourceDRTAccessRoleArnAssociation) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
-
 	conn := r.Meta().ShieldConn(ctx)
 
 	var state resourceDRTAccessRoleArnAssociationData
@@ -141,7 +135,6 @@ func (r *resourceDRTAccessRoleArnAssociation) Read(ctx context.Context, req reso
 	}
 
 	in := &shield.DescribeDRTAccessInput{}
-
 	out, err := conn.DescribeDRTAccessWithContext(ctx, in)
 
 	if tfresource.NotFound(err) {
@@ -157,7 +150,7 @@ func (r *resourceDRTAccessRoleArnAssociation) Read(ctx context.Context, req reso
 	}
 	if state.ID.IsNull() || state.ID.IsUnknown() {
 		// Setting ID of state - required by hashicorps terraform plugin testing framework for Import. See issue https://github.com/hashicorp/terraform-plugin-testing/issues/84
-		state.ID = types.StringValue(fmt.Sprintf("%s", state.RoleArn.ValueString()))
+		state.ID = types.StringValue(state.RoleArn.ValueString())
 	}
 
 	state.RoleArn = flex.StringToFramework(ctx, out.RoleArn)
@@ -176,7 +169,6 @@ func (r *resourceDRTAccessRoleArnAssociation) Update(ctx context.Context, req re
 	}
 
 	if !plan.RoleArn.Equal(state.RoleArn) {
-
 		in := &shield.AssociateDRTRoleInput{
 			RoleArn: aws.String(plan.RoleArn.ValueString()),
 		}
@@ -226,7 +218,6 @@ func (r *resourceDRTAccessRoleArnAssociation) Delete(ctx context.Context, req re
 	if err != nil {
 		var nfe *shield.ResourceNotFoundException
 		if errors.As(err, &nfe) {
-
 			return
 		}
 
@@ -247,7 +238,6 @@ func (r *resourceDRTAccessRoleArnAssociation) Delete(ctx context.Context, req re
 		)
 		return
 	}
-
 }
 
 func waitDRTAccessRoleArnAssociationCreated(ctx context.Context, conn *shield.Shield, roleArn string, timeout time.Duration) (*shield.DescribeDRTAccessOutput, error) {
