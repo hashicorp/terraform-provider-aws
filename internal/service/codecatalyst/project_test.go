@@ -134,8 +134,6 @@ func testAccCheckProjectExists(ctx context.Context, name string, project *codeca
 
 func testAccProjectConfig_basic(rName string) string {
 	return fmt.Sprintf(`
-
-
 resource "aws_codecatalyst_project" "test" {
   space_name             = "tf-cc-aws-provider"
   display_name           = %[1]q

@@ -149,7 +149,6 @@ func resourceProjectUpdate(ctx context.Context, d *schema.ResourceData, meta int
 func resourceProjectDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).CodeCatalystClient(ctx)
 
-	//log.Printf("[INFO] Deleting CodeCatalyst Project is not currently supprted")
 	log.Printf("[INFO] Deleting CodeCatalyst Project %s", d.Id())
 
 	_, err := conn.DeleteProject(ctx, &codecatalyst.DeleteProjectInput{
