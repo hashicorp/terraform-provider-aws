@@ -14,11 +14,11 @@ Terraform data source for managing an AWS CodeCatalyst Dev Environment.
 ### Basic Usage
 
 ```terraform
-	data "aws_codecatalyst_dev_environment" "example" {
-		space_name    	= "myspace"
-		project_name  	= "myproject"
-		env_id 	  		  = aws_codecatalyst_dev_environment.example.id
-	}
+data "aws_codecatalyst_dev_environment" "example" {
+  space_name   = "myspace"
+  project_name = "myproject"
+  env_id       = aws_codecatalyst_dev_environment.example.id
+}
 ```
 
 ## Argument Reference
@@ -33,11 +33,11 @@ The following arguments are required:
 
 This data source exports the following attributes in addition to the arguments above:
 
-* `alias` - The user-specified alias for the Dev Environment. 
-* `creator_id` - The system-generated unique ID of the user who created the Dev Environment. 
+* `alias` - The user-specified alias for the Dev Environment.
+* `creator_id` - The system-generated unique ID of the user who created the Dev Environment.
 * `ides` - Information about the integrated development environment (IDE) configured for a Dev Environment.
 * `inactivity_timeout_minutes` - The amount of time the Dev Environment will run without any activity detected before stopping, in minutes. Only whole integers are allowed. Dev Environments consume compute minutes when running.
-* `instance_type` - The Amazon EC2 instace type to use for the Dev Environment. 
+* `instance_type` - The Amazon EC2 instace type to use for the Dev Environment.
 * `last_updated_time` - The time when the Dev Environment was last updated, in coordinated universal time (UTC) timestamp format as specified in [RFC 3339](https://www.rfc-editor.org/rfc/rfc3339#section-5.6).
 * `persistent_storage` - Information about the amount of storage allocated to the Dev Environment.
 * `repositories` - The source repository that contains the branch to clone into the Dev Environment.
