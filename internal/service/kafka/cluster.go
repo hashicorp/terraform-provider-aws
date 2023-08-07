@@ -512,6 +512,8 @@ func ResourceCluster() *schema.Resource {
 func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).KafkaConn(ctx)
 
+	var vpcConnectivityExits bool
+
 	name := d.Get("cluster_name").(string)
 	input := &kafka.CreateClusterInput{
 		ClusterName:         aws.String(name),
@@ -520,13 +522,13 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 		Tags:                getTagsIn(ctx),
 	}
 
-	if v, ok := d.GetOk("broker_node_group_info.0.connectivity_info.0.vpc_connectivity"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		fmt.Println(v)
-	}
-
 	if v, ok := d.GetOk("broker_node_group_info"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 		input.BrokerNodeGroupInfo = expandBrokerNodeGroupInfo(v.([]interface{})[0].(map[string]interface{}))
-		// input.BrokerNodeGroupInfo.ConnectivityInfo.VpcConnectivity = nil
+		// Because vpc connectivity can be set only after the cluster is created if the block exists we set it to nil
+		if v, ok := d.GetOk("broker_node_group_info.0.connectivity_info.0.vpc_connectivity"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+			input.BrokerNodeGroupInfo.ConnectivityInfo.VpcConnectivity = nil
+			vpcConnectivityExits = true
+		}
 	}
 
 	if v, ok := d.GetOk("client_authentication"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
@@ -569,6 +571,20 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 
 	if err != nil {
 		return diag.Errorf("waiting for MSK Cluster (%s) create: %s", d.Id(), err)
+	}
+	//vpc_connectivity can be created only after the cluster is created so if the block exists we wait for the cluster to be created and then update the vpc_connectivity
+	if vpcConnectivityExits {
+		cluster, err := FindClusterByARN(ctx, conn, d.Id())
+		if !d.IsNewResource() && tfresource.NotFound(err) {
+			log.Printf("[WARN] MSK Cluster (%s) not found, removing from state", d.Id())
+			d.SetId("")
+			return nil
+		}
+		if err != nil {
+			return diag.Errorf("reading MSK Cluster (%s): %s", d.Id(), err)
+		}
+
+		clusterUpdateVPCConnection(ctx, d, meta, cluster.ClusterArn, cluster.CurrentVersion)
 	}
 
 	return resourceClusterRead(ctx, d, meta)
@@ -671,6 +687,39 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta inter
 	setTagsOut(ctx, cluster.Tags)
 
 	return nil
+}
+
+func clusterUpdateVPCConnection(ctx context.Context, d *schema.ResourceData, meta interface{}, arn *string, version *string) diag.Diagnostics {
+	conn := meta.(*conns.AWSClient).KafkaConn(ctx)
+	input := &kafka.UpdateConnectivityInput{
+		ClusterArn:     arn,
+		CurrentVersion: version,
+	}
+
+	if v, ok := d.GetOk("broker_node_group_info.0.connectivity_info"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		input.ConnectivityInfo = expandConnectivityInfo(v.([]interface{})[0].(map[string]interface{}))
+	}
+
+	output, err := conn.UpdateConnectivityWithContext(ctx, input)
+
+	if err != nil {
+		return diag.Errorf("updating MSK Cluster (%s) broker connectivity: %s", d.Id(), err)
+	}
+
+	clusterOperationARN := aws.StringValue(output.ClusterOperationArn)
+
+	_, err = waitClusterOperationCompleted(ctx, conn, clusterOperationARN, d.Timeout(schema.TimeoutUpdate))
+
+	if err != nil {
+		return diag.Errorf("waiting for MSK Cluster (%s) operation (%s): %s", d.Id(), clusterOperationARN, err)
+	}
+
+	// refresh the current_version attribute after each update
+	if err := refreshClusterVersion(ctx, d, meta); err != nil {
+		return diag.FromErr(err)
+	}
+
+	return resourceClusterRead(ctx, d, meta)
 }
 
 func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
