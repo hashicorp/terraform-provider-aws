@@ -127,12 +127,12 @@ func testAccVPCConnectionConfig_base(rName string) string {
 		fmt.Sprintf(`
 resource "aws_msk_cluster" "test" {
   cluster_name           = %[1]q
-  kafka_version          = "2.7.1"
+  kafka_version          = "2.8.1"
   number_of_broker_nodes = 3
 
   broker_node_group_info {
     client_subnets  = aws_subnet.test[*].id
-    instance_type   = "kafka.m5.large"
+    instance_type   = "kafka.t3.small"
     security_groups = [aws_security_group.test.id]
 
     connectivity_info {
