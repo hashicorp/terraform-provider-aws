@@ -540,10 +540,12 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 		Tags:                getTagsIn(ctx),
 	}
 
+	var vpcConnectivity *kafka.VpcConnectivity
 	if v, ok := d.GetOk("broker_node_group_info"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 		input.BrokerNodeGroupInfo = expandBrokerNodeGroupInfo(v.([]interface{})[0].(map[string]interface{}))
 		// "BadRequestException: When creating a cluster, all vpcConnectivity auth schemes must be disabled (‘enabled’ : false). You can enable auth schemes after the cluster is created"
 		if input.BrokerNodeGroupInfo != nil && input.BrokerNodeGroupInfo.ConnectivityInfo != nil {
+			vpcConnectivity = input.BrokerNodeGroupInfo.ConnectivityInfo.VpcConnectivity
 			input.BrokerNodeGroupInfo.ConnectivityInfo.VpcConnectivity = nil
 		}
 	}
@@ -584,7 +586,9 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 
 	d.SetId(aws.StringValue(output.ClusterArn))
 
-	if _, err := waitClusterCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
+	cluster, err := waitClusterCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate))
+
+	if err != nil {
 		return diag.Errorf("waiting for MSK Cluster (%s) create: %s", d.Id(), err)
 	}
 	//vpc_connectivity can be created only after the cluster is created so if the block exists we wait for the cluster to be created and then update the vpc_connectivity
@@ -597,7 +601,27 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 		clusterUpdateVPCConnection(ctx, d, meta, cluster.ClusterArn, cluster.CurrentVersion)
 	}
 
-	// TODO: Update VPC Connectivity if necessary.
+	if vpcConnectivity != nil {
+		input := &kafka.UpdateConnectivityInput{
+			ClusterArn: aws.String(d.Id()),
+			ConnectivityInfo: &kafka.ConnectivityInfo{
+				VpcConnectivity: vpcConnectivity,
+			},
+			CurrentVersion: cluster.CurrentVersion,
+		}
+
+		output, err := conn.UpdateConnectivityWithContext(ctx, input)
+
+		if err != nil {
+			return diag.Errorf("updating MSK Cluster (%s) broker connectivity: %s", d.Id(), err)
+		}
+
+		clusterOperationARN := aws.StringValue(output.ClusterOperationArn)
+
+		if _, err := waitClusterOperationCompleted(ctx, conn, clusterOperationARN, d.Timeout(schema.TimeoutCreate)); err != nil {
+			return diag.Errorf("waiting for MSK Cluster (%s) operation (%s) complete: %s", d.Id(), clusterOperationARN, err)
+		}
+	}
 
 	return resourceClusterRead(ctx, d, meta)
 }
@@ -751,8 +775,6 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 		if err := refreshClusterVersion(ctx, d, meta); err != nil {
 			return diag.FromErr(err)
 		}
-
-		// TODO: Update VPC Connectivity if necessary.
 	}
 
 	if d.HasChange("broker_node_group_info.0.instance_type") {
