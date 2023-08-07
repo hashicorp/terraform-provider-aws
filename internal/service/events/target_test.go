@@ -2236,7 +2236,7 @@ resource "aws_cloudwatch_event_target" "test" {
   sagemaker_pipeline_target {
     pipeline_parameter_list {
       name  = "key"
-	  value = "value"
+      value = "value"
     }
   }
 
