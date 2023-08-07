@@ -1,7 +1,3 @@
 ```release-note:new-resource
 aws_codecatalyst_dev_environment
 ```
-
-```release-note:new-resource
-aws_codecatalyst_project
-```
