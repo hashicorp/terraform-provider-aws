@@ -68,7 +68,7 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
-The following arguments are supported:
+This data source supports the following arguments:
 
 * `transitGatewayId` - (Optional) Identifier of the EC2 Transit Gateway.
 * `vpnConnectionId` - (Optional) Identifier of the EC2 VPN Connection.
@@ -77,14 +77,14 @@ The following arguments are supported:
 
 ### filter Configuration Block
 
-The following arguments are supported by the `filter` configuration block:
+The `filter` configuration block supports the following arguments:
 
 * `name` - (Required) Name of the filter field. Valid values can be found in the [EC2 DescribeTransitGatewayAttachments API Reference](https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_DescribeTransitGatewayAttachments.html).
 * `values` - (Required) Set of values that are accepted for the given filter field. Results will be selected if any given value matches.
 
 ## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This data source exports the following attributes in addition to the arguments above:
 
 * `id` - EC2 Transit Gateway VPN Attachment identifier
 * `tags` - Key-value tags for the EC2 Transit Gateway VPN Attachment
@@ -95,4 +95,4 @@ In addition to all arguments above, the following attributes are exported:
 
 - `read` - (Default `20M`)
 
-<!-- cache-key: cdktf-0.17.1 input-2149138dd4a425dc46526663f1027084972afb2d6643d8f1be249b8702bebeb1 -->
+<!-- cache-key: cdktf-0.17.1 input-88b75ea1f3920ded56d1eddbe0d74b036502601096fcc354c6675666bea832df -->

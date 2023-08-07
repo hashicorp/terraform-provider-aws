@@ -44,6 +44,8 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 		{
 			Factory:  DataSourceInstance,
 			TypeName: "aws_db_instance",
+			Name:     "DB Instance",
+			Tags:     &types.ServicePackageResourceTags{},
 		},
 		{
 			Factory:  DataSourceInstances,

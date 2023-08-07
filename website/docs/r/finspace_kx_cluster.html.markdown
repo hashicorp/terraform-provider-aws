@@ -150,7 +150,7 @@ The savedown_storage_configuration block supports the following arguments:
 
 * `type` - (Required) Type of writeable storage space for temporarily storing your savedown data. The valid values are:
     * SDS01 - This type represents 3000 IOPS and io2 ebs volume type.
-* `size` - (Required) Size of temporary storage in bytes.
+* `size` - (Required) Size of temporary storage in gigabytes. Must be between 10 and 16000.
 
 ### vpc_configuration
 

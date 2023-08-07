@@ -46,7 +46,7 @@ class MyConvertedCode(TerraformStack):
 
 ## Argument Reference
 
-The following arguments are supported:
+This data source supports the following arguments:
 
 * `filter` - (Optional) One or more configuration blocks containing name-values filters. See the [EC2 API Reference](https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_DescribeInstanceTypes.html) for supported filters. Detailed below.
 
@@ -57,7 +57,7 @@ The following arguments are supported:
 
 ## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This data source exports the following attributes in addition to the arguments above:
 
 * `id` - AWS Region.
 * `instance_types` - List of EC2 Instance Types.
@@ -68,4 +68,4 @@ In addition to all arguments above, the following attributes are exported:
 
 - `read` - (Default `20m`)
 
-<!-- cache-key: cdktf-0.17.1 input-5948af49a7b80d2c68167a564344d97e7d0a4780fb7397e6ec5945e26f7c7f9a -->
+<!-- cache-key: cdktf-0.17.1 input-03e38077d0e2af0e80115aa30d25c82dfe7e6f8b184cc0e1b4e0116655ad11fb -->

@@ -39,9 +39,9 @@ The following arguments are required:
 
 * `service_network_identifier` - (Required) Identifier of the network service.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This data source exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the Service Network.
 * `auth_type` - Authentication type for the service network. Either `NONE` or `AWS_IAM`.
@@ -52,4 +52,4 @@ In addition to all arguments above, the following attributes are exported:
 * `number_of_associated_services` - Number of services associated with this service network.
 * `number_of_associated_vpcs` - Number of VPCs associated with this service network.
 
-<!-- cache-key: cdktf-0.17.1 input-9f9c81fb1b942a0abf911f77859e24c2d3bdf43e9769e5e74706eb8234bf0dec -->
+<!-- cache-key: cdktf-0.17.1 input-c539f91d88b5096cbf562c14cc4bb30e227fb9632cb22b7e29fdfe584d5c8b9b -->

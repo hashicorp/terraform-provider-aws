@@ -5954,6 +5954,9 @@ func testAccInstanceConfig_kmsKeyID(rName string) string {
 	return acctest.ConfigCompose(
 		testAccInstanceConfig_orderableClassMySQL(),
 		fmt.Sprintf(`
+data "aws_caller_identity" "current" {}
+data "aws_partition" "current" {}
+
 resource "aws_kms_key" "test" {
   description = %[1]q
 
@@ -5966,7 +5969,7 @@ resource "aws_kms_key" "test" {
       "Sid": "Enable IAM User Permissions",
       "Effect": "Allow",
       "Principal": {
-        "AWS": "*"
+        "AWS": "arn:${data.aws_partition.current.partition}:iam::${data.aws_caller_identity.current.account_id}:root"
       },
       "Action": "kms:*",
       "Resource": "*"
@@ -9931,6 +9934,9 @@ resource "aws_db_instance" "test" {
 
 func testAccInstanceConfig_ReplicateSourceDB_performanceInsightsEnabled(rName string) string {
 	return fmt.Sprintf(`
+data "aws_caller_identity" "current" {}
+data "aws_partition" "current" {}
+
 resource "aws_kms_key" "test" {
   description = "Terraform acc test"
 
@@ -9943,7 +9949,7 @@ resource "aws_kms_key" "test" {
       "Sid": "Enable IAM User Permissions",
       "Effect": "Allow",
       "Principal": {
-        "AWS": "*"
+        "AWS": "arn:${data.aws_partition.current.partition}:iam::${data.aws_caller_identity.current.account_id}:root"
       },
       "Action": "kms:*",
       "Resource": "*"
@@ -9992,6 +9998,9 @@ resource "aws_db_instance" "test" {
 
 func testAccInstanceConfig_SnapshotID_performanceInsightsEnabled(rName string) string {
 	return fmt.Sprintf(`
+data "aws_caller_identity" "current" {}
+data "aws_partition" "current" {}
+
 resource "aws_kms_key" "test" {
   description = "Terraform acc test"
 
@@ -10004,7 +10013,7 @@ resource "aws_kms_key" "test" {
       "Sid": "Enable IAM User Permissions",
       "Effect": "Allow",
       "Principal": {
-        "AWS": "*"
+        "AWS": "arn:${data.aws_partition.current.partition}:iam::${data.aws_caller_identity.current.account_id}:root"
       },
       "Action": "kms:*",
       "Resource": "*"

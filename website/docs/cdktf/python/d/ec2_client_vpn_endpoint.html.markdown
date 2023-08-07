@@ -58,7 +58,7 @@ class MyConvertedCode(TerraformStack):
 
 ## Argument Reference
 
-The following arguments are supported:
+This data source supports the following arguments:
 
 * `client_vpn_endpoint_id` - (Optional) ID of the Client VPN endpoint.
 * `filter` - (Optional) One or more configuration blocks containing name-values filters. Detailed below.
@@ -75,7 +75,7 @@ The following arguments are required:
 
 ## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This data source exports the following attributes in addition to the arguments above:
 
 * `arn` -  The ARN of the Client VPN endpoint.
 * `authentication_options` - Information about the authentication method used by the Client VPN endpoint.
@@ -101,4 +101,4 @@ In addition to all arguments above, the following attributes are exported:
 
 - `read` - (Default `20m`)
 
-<!-- cache-key: cdktf-0.17.1 input-86166d26a95ae3c88a4d4e7f8804306d48860395f262b9f351921ba97ba82ccc -->
+<!-- cache-key: cdktf-0.17.1 input-59f6f06c6cf9645ca1b189844289fe1fb6172dca20e441b5097e6b1a94115c5a -->

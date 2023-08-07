@@ -59,13 +59,14 @@ which take the following arguments:
 * `values` - (Required) Set of values that are accepted for the given field.
   A VPC Endpoint will be selected if any one of the given values matches.
 
-## Attributes Reference
+## Attribute Reference
 
 In addition to all arguments above except `filter`, the following attributes are exported:
 
 * `arn` - ARN of the VPC endpoint.
 * `cidr_blocks` - List of CIDR blocks for the exposed AWS service. Applicable for endpoints of type `Gateway`.
-* `dns_entry` - DNS entries for the VPC Endpoint. Applicable for endpoints of type `Interface`. DNS blocks are documented below.
+* `dns_entry` - DNS entries for the VPC Endpoint. Applicable for endpoints of type `Interface`. [DNS entry blocks are documented below](#dns_entry-block).
+* `dns_options` - DNS options for the VPC Endpoint. [DNS options blocks are documented below](#dns_options-block).
 * `network_interface_ids` - One or more network interfaces for the VPC Endpoint. Applicable for endpoints of type `Interface`.
 * `owner_id` - ID of the AWS account that owns the VPC endpoint.
 * `policy` - Policy document associated with the VPC Endpoint. Applicable for endpoints of type `Gateway`.
@@ -77,10 +78,19 @@ In addition to all arguments above except `filter`, the following attributes are
 * `subnet_ids` - One or more subnets in which the VPC Endpoint is located. Applicable for endpoints of type `Interface`.
 * `vpc_endpoint_type` - VPC Endpoint type, `Gateway` or `Interface`.
 
+### `dns_entry` Block
+
 DNS blocks (for `dns_entry`) support the following attributes:
 
 * `dns_name` - DNS name.
 * `hosted_zone_id` - ID of the private hosted zone.
+
+### `dns_options` Block
+
+DNS options (for `dns_options`) support the following attributes:
+
+* `dns_record_ip_type` - The DNS records created for the endpoint.
+* `private_dns_only_for_inbound_resolver_endpoint` - Indicates whether to enable private DNS only for inbound endpoints.
 
 ## Timeouts
 
@@ -88,4 +98,4 @@ DNS blocks (for `dns_entry`) support the following attributes:
 
 - `read` - (Default `20m`)
 
-<!-- cache-key: cdktf-0.17.1 input-044112f0148b73c3dbe80b51e3cbe006dadc7b20780adad3112c01231a036cad -->
+<!-- cache-key: cdktf-0.17.1 input-cf41a1af88fdcd16967d2fea2f7220a7cac0581c1bfd6c1afb6c5a31ae85ffb1 -->
