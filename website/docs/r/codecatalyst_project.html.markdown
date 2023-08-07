@@ -16,9 +16,9 @@ Terraform resource for managing an AWS CodeCatalyst Project.
 
 ```terraform
 resource "aws_codecatalyst_project" "test" {
-  space_name             = "myproject"
-  display_name           = "MyProject"
-  description            = "My CodeCatalyst Project created using Terraform"
+  space_name   = "myproject"
+  display_name = "MyProject"
+  description  = "My CodeCatalyst Project created using Terraform"
 }
 ```
 
@@ -29,8 +29,6 @@ The following arguments are required:
 * `space_name` - (Required) The name of the space.
 * `description` - (Optional) The description of the project. This description will be displayed to all users of the project. We recommend providing a brief description of the project and its intended purpose.
 * `display_name` - (Required) The friendly name of the project that will be displayed to users.
-
-
 
 ## Attribute Reference
 
