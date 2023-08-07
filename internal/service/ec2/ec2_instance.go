@@ -546,6 +546,12 @@ func ResourceInstance() *schema.Resource {
 							Default:      ec2.InstanceMetadataEndpointStateEnabled,
 							ValidateFunc: validation.StringInSlice(ec2.InstanceMetadataEndpointState_Values(), false),
 						},
+						"http_protocol_ipv6": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							Default:      ec2.InstanceMetadataProtocolStateDisabled,
+							ValidateFunc: validation.StringInSlice(ec2.InstanceMetadataProtocolState_Values(), false),
+						},
 						"http_put_response_hop_limit": {
 							Type:         schema.TypeInt,
 							Optional:     true,
@@ -1813,6 +1819,7 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta in
 
 				if tfMap["http_endpoint"].(string) == ec2.InstanceMetadataEndpointStateEnabled {
 					// These parameters are not allowed unless HttpEndpoint is enabled.
+					input.HttpProtocolIpv6 = aws.String(tfMap["http_protocol_ipv6"].(string))
 					input.HttpPutResponseHopLimit = aws.Int64(int64(tfMap["http_put_response_hop_limit"].(int)))
 					input.HttpTokens = aws.String(tfMap["http_tokens"].(string))
 					input.InstanceMetadataTags = aws.String(tfMap["instance_metadata_tags"].(string))
@@ -3100,6 +3107,9 @@ func expandInstanceMetadataOptions(l []interface{}) *ec2.InstanceMetadataOptions
 
 	if m["http_endpoint"].(string) == ec2.InstanceMetadataEndpointStateEnabled {
 		// These parameters are not allowed unless HttpEndpoint is enabled
+		if v, ok := m["http_protocol_ipv6"].(string); ok && v != "" {
+			opts.HttpProtocolIpv6 = aws.String(v)
+		}
 
 		if v, ok := m["http_tokens"].(string); ok && v != "" {
 			opts.HttpTokens = aws.String(v)
@@ -3176,6 +3186,7 @@ func flattenInstanceMetadataOptions(opts *ec2.InstanceMetadataOptionsResponse) [
 
 	m := map[string]interface{}{
 		"http_endpoint":               aws.StringValue(opts.HttpEndpoint),
+		"http_protocol_ipv6":          aws.StringValue(opts.HttpProtocolIpv6),
 		"http_put_response_hop_limit": aws.Int64Value(opts.HttpPutResponseHopLimit),
 		"http_tokens":                 aws.StringValue(opts.HttpTokens),
 		"instance_metadata_tags":      aws.StringValue(opts.InstanceMetadataTags),
