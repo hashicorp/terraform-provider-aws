@@ -135,15 +135,16 @@ resource "aws_msk_cluster" "test" {
     instance_type   = "kafka.m5.large"
     security_groups = [aws_security_group.test.id]
 
-	connectivity_info {
-		vpc_connectivity {
-			client_authentication {
-				sasl {
-				  iam = true
-				}
-			}
-		}
-	}
+    connectivity_info {
+      vpc_connectivity {
+        client_authentication {
+          sasl {
+            iam = true
+          }
+        }
+      }
+    }
+
     storage_info {
       ebs_storage_info {
         volume_size = 10
