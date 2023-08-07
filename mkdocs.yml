@@ -7,7 +7,7 @@ repo_url: https://github.com/hashicorp/terraform-provider-aws
 edit_uri: "https://github.com/hashicorp/terraform-provider-aws/tree/main/docs"
 
 nav:
-  - Welcome: index.md
+  - Welcome: 
   - Contribute:
       - Development Environment: development-environment.md
       - Contribution Guides:
