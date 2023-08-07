@@ -38,23 +38,26 @@ func TestAccEventsTarget_basic(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTargetConfig_basic(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTargetExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "rule", rName),
-					resource.TestCheckResourceAttr(resourceName, "event_bus_name", "default"),
-					resource.TestCheckResourceAttr(resourceName, "target_id", rName),
 					resource.TestCheckResourceAttrPair(resourceName, "arn", snsTopicResourceName, "arn"),
-
+					resource.TestCheckResourceAttr(resourceName, "batch_target.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "dead_letter_config.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "ecs_target.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "event_bus_name", "default"),
+					resource.TestCheckResourceAttr(resourceName, "http_target.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "input", ""),
 					resource.TestCheckResourceAttr(resourceName, "input_path", ""),
-					resource.TestCheckResourceAttr(resourceName, "role_arn", ""),
-					resource.TestCheckResourceAttr(resourceName, "run_command_targets.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "batch_target.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "ecs_target.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "http_target.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "kinesis_target.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "sqs_target.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "input_transformer.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "kinesis_target.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "redshift_target.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "retry_policy.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "role_arn", ""),
+					resource.TestCheckResourceAttr(resourceName, "rule", rName),
+					resource.TestCheckResourceAttr(resourceName, "run_command_targets.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "sagemaker_pipeline_target.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "sqs_target.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "target_id", rName),
 				),
 			},
 			{
