@@ -520,10 +520,6 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 		Tags:                getTagsIn(ctx),
 	}
 
-	if v, ok := d.GetOk("broker_node_group_info.0.connectivity_info.0.vpc_connectivity"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		fmt.Println(v)
-	}
-
 	if v, ok := d.GetOk("broker_node_group_info"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 		input.BrokerNodeGroupInfo = expandBrokerNodeGroupInfo(v.([]interface{})[0].(map[string]interface{}))
 		// input.BrokerNodeGroupInfo.ConnectivityInfo.VpcConnectivity = nil
