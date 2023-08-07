@@ -17,7 +17,16 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.Serv
 }
 
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.ServicePackageFrameworkResource {
-	return []*types.ServicePackageFrameworkResource{}
+	return []*types.ServicePackageFrameworkResource{
+		{
+			Factory: newResourceDRTAccessLogBucketAssociation,
+			Name:    "DRT Access Log Bucket Association",
+		},
+		{
+			Factory: newResourceDRTAccessRoleArnAssociation,
+			Name:    "DRT Access Role Arn Association",
+		},
+	}
 }
 
 func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePackageSDKDataSource {
