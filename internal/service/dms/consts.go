@@ -125,10 +125,12 @@ func encryptionMode_Values() []string {
 }
 
 const (
+	replicationStatusCreated              = "created"
 	replicationStatusReady                = "ready"
 	replicationStatusRunning              = "running"
 	replicationStatusStopping             = "stopping"
 	replicationStatusStopped              = "stopped"
+	replicationStatusFailed               = "failed"
 	replicationStatusInitialising         = "initializing"
 	replicationStatusMetadataResources    = "preparing_metadata_resources"
 	replicationStatusTestingConnection    = "testing_connection"

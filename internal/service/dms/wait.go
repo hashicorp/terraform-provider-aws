@@ -137,12 +137,28 @@ func waitReplicationRunning(ctx context.Context, conn *dms.DatabaseMigrationServ
 
 func waitReplicationStopped(ctx context.Context, conn *dms.DatabaseMigrationService, id string) error {
 	stateConf := &retry.StateChangeConf{
-		Pending:    []string{replicationStatusLoadStarted, replicationStatusStopped},
-		Target:     []string{replicationStatusLoadStoppedAndDeprovisioned},
+		Pending:    []string{replicationStatusLoadStarted},
+		Target:     []string{replicationStatusStopped},
 		Refresh:    statusReplication(ctx, conn, id),
 		Timeout:    replicationRunningTimeout,
 		MinTimeout: 10 * time.Second,
 		Delay:      60 * time.Second, // Wait 30 secs before starting
+	}
+
+	// Wait, catching any errors
+	_, err := stateConf.WaitForStateContext(ctx)
+
+	return err
+}
+
+func waitReplicationDeleted(ctx context.Context, conn *dms.DatabaseMigrationService, id string, timeout time.Duration) error {
+	stateConf := &retry.StateChangeConf{
+		Pending:    []string{replicationTaskStatusDeleting, replicationStatusStopped},
+		Target:     []string{},
+		Refresh:    statusReplication(ctx, conn, id),
+		Timeout:    replicationRunningTimeout,
+		MinTimeout: 10 * time.Second,
+		Delay:      time.Second, // Wait 30 secs before starting
 	}
 
 	// Wait, catching any errors

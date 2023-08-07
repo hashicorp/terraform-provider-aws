@@ -306,6 +306,14 @@ func resourceServerlessReplicationUpdate(ctx context.Context, d *schema.Resource
 	}
 
 	if hasChanges {
+
+		replication, _ := FindReplicationById(ctx, d.Id(), conn)
+		if *replication.Status != replicationStatusCreated && *replication.Status != replicationStatusStopped && *replication.Status != replicationStatusFailed {
+			if err := stopReplication(ctx, d.Id(), conn); err != nil {
+				return sdkdiag.AppendFromErr(diags, err)
+			}
+		}
+
 		_, err := conn.ModifyReplicationConfigWithContext(ctx, request)
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "modifying DMS Serverless Replication Config (%s): %s", d.Id(), err)
@@ -331,6 +339,13 @@ func resourceServerlessReplicationDelete(ctx context.Context, d *schema.Resource
 
 	if tfawserr.ErrCodeEquals(err, dms.ErrCodeResourceNotFoundFault) {
 		return diags
+	}
+
+	if err := waitReplicationDeleted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
+		if tfawserr.ErrCodeEquals(err, dms.ErrCodeResourceNotFoundFault) {
+			return diags
+		}
+		return sdkdiag.AppendErrorf(diags, "waiting for DMS Replication config (%s) to be deleted: %s", d.Id(), err)
 	}
 
 	return diags
@@ -399,33 +414,10 @@ func expandComputeConfigInput(v []interface{}) *dms.ComputeConfig {
 	return &computeConfig
 }
 
-func findReplicationById(ctx context.Context, id string, conn *dms.DatabaseMigrationService) (*dms.Replication, error) {
-	response, err := conn.DescribeReplicationsWithContext(ctx, &dms.DescribeReplicationsInput{
-		Filters: []*dms.Filter{
-			{
-				Name:   aws.String("replication-config-id"),
-				Values: []*string{aws.String(id)},
-			},
-		},
-	})
-
-	if tfawserr.ErrCodeEquals(err, dms.ErrCodeResourceNotFoundFault) {
-		log.Printf("[WARN] DMS Serverless Replication (%s) not found", id)
-		return nil, err
-	}
-
-	if response == nil || len(response.Replications) == 0 || response.Replications[0] == nil {
-		log.Printf("[WARN] DMS Serverless Replication (%s) not found", id)
-		return nil, err
-	}
-
-	return response.Replications[0], nil
-}
-
 func startReplication(ctx context.Context, id string, conn *dms.DatabaseMigrationService) error {
 	log.Printf("[DEBUG] Starting DMS Serverless Replication: (%s)", id)
 
-	replication, _ := findReplicationById(ctx, id, conn)
+	replication, _ := FindReplicationById(ctx, id, conn)
 
 	startReplicationType := replicationTypeValueStartReplication
 	if *replication.Status != replicationStatusReady {
@@ -452,7 +444,11 @@ func startReplication(ctx context.Context, id string, conn *dms.DatabaseMigratio
 func stopReplication(ctx context.Context, id string, conn *dms.DatabaseMigrationService) error {
 	log.Printf("[DEBUG] Stopping DMS Serverless Replication: (%s)", id)
 
-	replication, _ := findReplicationById(ctx, id, conn)
+	replication, _ := FindReplicationById(ctx, id, conn)
+
+	if *replication.Status == replicationStatusStopped || *replication.Status == replicationStatusCreated || *replication.Status == replicationStatusFailed {
+		return fmt.Errorf("cannot stop DMS Serverless Replication in current status: %s", *replication.Status)
+	}
 
 	_, err := conn.StopReplicationWithContext(ctx, &dms.StopReplicationInput{
 		ReplicationConfigArn: aws.String(*replication.ReplicationConfigArn),

@@ -46,7 +46,7 @@ func statusReplicationTask(ctx context.Context, conn *dms.DatabaseMigrationServi
 
 func statusReplication(ctx context.Context, conn *dms.DatabaseMigrationService, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := findReplicationById(ctx, id, conn)
+		output, err := FindReplicationById(ctx, id, conn)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil

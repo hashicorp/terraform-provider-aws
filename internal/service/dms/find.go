@@ -5,6 +5,7 @@ package dms
 
 import (
 	"context"
+	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
 	dms "github.com/aws/aws-sdk-go/service/databasemigrationservice"
@@ -94,4 +95,27 @@ func FindReplicationTaskByID(ctx context.Context, conn *dms.DatabaseMigrationSer
 	}
 
 	return results[0], nil
+}
+
+func FindReplicationById(ctx context.Context, id string, conn *dms.DatabaseMigrationService) (*dms.Replication, error) {
+	response, err := conn.DescribeReplicationsWithContext(ctx, &dms.DescribeReplicationsInput{
+		Filters: []*dms.Filter{
+			{
+				Name:   aws.String("replication-config-id"),
+				Values: []*string{aws.String(id)},
+			},
+		},
+	})
+
+	if tfawserr.ErrCodeEquals(err, dms.ErrCodeResourceNotFoundFault) {
+		log.Printf("[WARN] DMS Serverless Replication (%s) not found", id)
+		return nil, err
+	}
+
+	if response == nil || len(response.Replications) == 0 || response.Replications[0] == nil {
+		log.Printf("[WARN] DMS Serverless Replication (%s) not found", id)
+		return nil, err
+	}
+
+	return response.Replications[0], nil
 }
