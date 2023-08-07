@@ -536,10 +536,9 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 
 	if v, ok := d.GetOk("broker_node_group_info"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 		input.BrokerNodeGroupInfo = expandBrokerNodeGroupInfo(v.([]interface{})[0].(map[string]interface{}))
-		// Because vpc connectivity can be set only after the cluster is created if the block exists we set it to nil
-		if v, ok := d.GetOk("broker_node_group_info.0.connectivity_info.0.vpc_connectivity"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		// "BadRequestException: When creating a cluster, all vpcConnectivity auth schemes must be disabled (‘enabled’ : false). You can enable auth schemes after the cluster is created"
+		if input.BrokerNodeGroupInfo != nil && input.BrokerNodeGroupInfo.ConnectivityInfo != nil {
 			input.BrokerNodeGroupInfo.ConnectivityInfo.VpcConnectivity = nil
-			vpcConnectivityExits = true
 		}
 	}
 
@@ -1509,12 +1508,12 @@ func flattenConnectivityInfo(apiObject *kafka.ConnectivityInfo) map[string]inter
 
 	tfMap := map[string]interface{}{}
 
-	if v := apiObject.VpcConnectivity; v != nil {
-		tfMap["vpc_connectivity"] = []interface{}{flattenVPCConnectivity(v)}
-	}
-
 	if v := apiObject.PublicAccess; v != nil {
 		tfMap["public_access"] = []interface{}{flattenPublicAccess(v)}
+	}
+
+	if v := apiObject.VpcConnectivity; v != nil {
+		tfMap["vpc_connectivity"] = []interface{}{flattenVPCConnectivity(v)}
 	}
 
 	return tfMap
@@ -1591,13 +1590,13 @@ func flattenVPCConnectivity(apiObject *kafka.VpcConnectivity) map[string]interfa
 
 	tfMap := map[string]interface{}{}
 	if v := apiObject.ClientAuthentication; v != nil {
-		tfMap["client_authentication"] = []interface{}{flattenVPCCOnnectivityClientAuthentication(v)}
+		tfMap["client_authentication"] = []interface{}{flattenVPCConnectivityClientAuthentication(v)}
 	}
 
 	return tfMap
 }
 
-func flattenVPCCOnnectivityClientAuthentication(apiObject *kafka.VpcConnectivityClientAuthentication) map[string]interface{} {
+func flattenVPCConnectivityClientAuthentication(apiObject *kafka.VpcConnectivityClientAuthentication) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}
