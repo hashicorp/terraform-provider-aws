@@ -43,7 +43,7 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
-The following arguments are supported:
+This data source supports the following arguments:
 
 * `instanceType` - (Optional) Type of instance for which to query Spot Price information.
 * `availabilityZone` - (Optional) Availability zone in which to query Spot price information.
@@ -56,7 +56,7 @@ The following arguments are supported:
 
 ## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This data source exports the following attributes in addition to the arguments above:
 
 * `id` - AWS Region.
 * `spotPrice` - Most recent Spot Price value for the given instance type and AZ.
@@ -68,4 +68,4 @@ In addition to all arguments above, the following attributes are exported:
 
 - `read` - (Default `20M`)
 
-<!-- cache-key: cdktf-0.17.1 input-5f57429f9fe1e4ba33e515d8d643d119473ff58bb60dd4d219c499ffaa02b9c9 -->
+<!-- cache-key: cdktf-0.17.1 input-84288ca39edef310f32dba7504a9418ce015393e96eb2b8cc8a803eca06e4db4 -->

@@ -39,9 +39,9 @@ The following arguments are required:
 
 * `pool_id` - (Required) AWS resource IDs of a public IPv4 pool (as a string) for which this data source will fetch detailed information.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This data source exports the following attributes in addition to the arguments above:
 
 * `description` - Description of the pool, if any.
 * `network_border_group` - Name of the location from which the address pool is advertised.
@@ -54,4 +54,4 @@ In addition to all arguments above, the following attributes are exported:
 * `total_address_count` - Total number of addresses in the pool.
 * `total_available_address_count` - Total number of available addresses in the pool.
 
-<!-- cache-key: cdktf-0.17.1 input-6aa34590ccc7e3d0622ca88ec8ec1e0690413e3549fd336def6464c101e07acf -->
+<!-- cache-key: cdktf-0.17.1 input-48bacd43b83d45d6042e5adf0821e82fae16e4191784bc09d4af47b05ff7cf8b -->

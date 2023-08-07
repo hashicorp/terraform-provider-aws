@@ -953,12 +953,7 @@ resource "aws_lambda_permission" "test" {
 }
 
 resource "aws_s3_bucket" "test" {
-  bucket = "%s"
-}
-
-resource "aws_s3_bucket_acl" "test" {
-  bucket = aws_s3_bucket.test.id
-  acl    = "private"
+  bucket = %[1]q
 }
 `, rName))
 }

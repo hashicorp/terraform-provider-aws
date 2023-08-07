@@ -42,10 +42,10 @@ The following arguments are required:
 
 * `resourceArn` - (Required) Resource ARN of the resource for which a policy is retrieved.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This data source exports the following attributes in addition to the arguments above:
 
 * `policy` - JSON-encoded string representation of the applied resource policy.
 
-<!-- cache-key: cdktf-0.17.1 input-9ee50768d0b167d6df9c10ed0d96e415931d8e1cb194122e392470887850373e -->
+<!-- cache-key: cdktf-0.17.1 input-8bbfef254a190e7f80aa5a7e593ea739d64afa50ba608c823c8b66809a5ca7a5 -->

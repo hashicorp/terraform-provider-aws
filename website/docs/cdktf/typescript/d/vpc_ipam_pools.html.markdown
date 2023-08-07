@@ -59,9 +59,9 @@ IPAM Pools in the current region.
 * `name` - (Required) The name of the filter. Filter names are case-sensitive.
 * `values` - (Required) The filter values. Filter values are case-sensitive.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all of the arguments above, the following attributes are exported:
+This data source exports the following attributes in addition to the arguments above:
 
 * `ipamPools` - List of IPAM pools and their attributes. See below for details
 
@@ -85,4 +85,4 @@ The following attributes are available on each pool entry found.
 * `sourceIpamPoolId` - ID of the source IPAM pool.
 * `tags` - Map of tags to assigned to the resource.
 
-<!-- cache-key: cdktf-0.17.1 input-0543d0f8e7577931eee039bee450871411554581ffc38a78af89d6b2fd50c6ad -->
+<!-- cache-key: cdktf-0.17.1 input-0f25f29b8da73a8eab1f57b2d6fd05fbdbacc033fa3a351d8ef07553310a8208 -->

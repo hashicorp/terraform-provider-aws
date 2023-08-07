@@ -33,11 +33,11 @@ class MyConvertedCode(TerraformStack):
 
 The resource does not support any arguments.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This data source exports the following attributes in addition to the arguments above:
 
 * `function_names` - A list of Lambda Function names.
 * `function_arns` - A list of Lambda Function ARNs.
 
-<!-- cache-key: cdktf-0.17.1 input-15dd8bea75f34968e0576610967430b8fdd9ec4cdceac038c68467145bb2f9a4 -->
+<!-- cache-key: cdktf-0.17.1 input-9ccb856a004c433861654de03521b43801920ad0f1aab4468643725a2469eb74 -->

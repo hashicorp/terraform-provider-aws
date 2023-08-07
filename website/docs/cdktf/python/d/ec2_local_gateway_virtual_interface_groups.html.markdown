@@ -45,7 +45,7 @@ The `filter` configuration block supports the following arguments:
 
 ## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This data source exports the following attributes in addition to the arguments above:
 
 * `id` - AWS Region.
 * `ids` - Set of EC2 Local Gateway Virtual Interface Group identifiers.
@@ -57,4 +57,4 @@ In addition to all arguments above, the following attributes are exported:
 
 - `read` - (Default `20m`)
 
-<!-- cache-key: cdktf-0.17.1 input-c7ad9cd4b80f965d2bf2e4d0d094399cc47edf44b5a28085f45c0ac3949e454a -->
+<!-- cache-key: cdktf-0.17.1 input-cd5323f4e3c93b1fcf956785701876e0cd9b44a0db7f8464b46be04b9eacf2f4 -->

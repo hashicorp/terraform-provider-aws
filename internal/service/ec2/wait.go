@@ -1366,7 +1366,7 @@ func WaitTransitGatewayRouteCreated(ctx context.Context, conn *ec2.EC2, transitG
 		Pending: []string{ec2.TransitGatewayRouteStatePending},
 		Target:  []string{ec2.TransitGatewayRouteStateActive, ec2.TransitGatewayRouteStateBlackhole},
 		Timeout: TransitGatewayRouteCreatedTimeout,
-		Refresh: StatusTransitGatewayRouteState(ctx, conn, transitGatewayRouteTableID, destination),
+		Refresh: StatusTransitGatewayStaticRouteState(ctx, conn, transitGatewayRouteTableID, destination),
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
@@ -1383,7 +1383,7 @@ func WaitTransitGatewayRouteDeleted(ctx context.Context, conn *ec2.EC2, transitG
 		Pending: []string{ec2.TransitGatewayRouteStateActive, ec2.TransitGatewayRouteStateBlackhole, ec2.TransitGatewayRouteStateDeleting},
 		Target:  []string{},
 		Timeout: TransitGatewayRouteDeletedTimeout,
-		Refresh: StatusTransitGatewayRouteState(ctx, conn, transitGatewayRouteTableID, destination),
+		Refresh: StatusTransitGatewayStaticRouteState(ctx, conn, transitGatewayRouteTableID, destination),
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)

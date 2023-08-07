@@ -38,7 +38,7 @@ class MyConvertedCode(TerraformStack):
 
 ## Argument Reference
 
-The following arguments are supported:
+This data source supports the following arguments:
 
 * `filter` - (Optional) Custom filter block as described below.
 
@@ -54,9 +54,9 @@ which take the following arguments:
 * `values` - (Required) Set of values that are accepted for the given field.
   A Transit Gateway Route Table will be selected if any one of the given values matches.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This data source exports the following attributes in addition to the arguments above:
 
 * `id` - AWS Region.
 * `ids` - Set of Transit Gateway Route Table identifiers.
@@ -67,4 +67,4 @@ In addition to all arguments above, the following attributes are exported:
 
 - `read` - (Default `20m`)
 
-<!-- cache-key: cdktf-0.17.1 input-fa24fd98c9be593f3667314adc167d04b2c5bf98200d7aac02439eaf959c3671 -->
+<!-- cache-key: cdktf-0.17.1 input-dd6ce3b8d03c97c0be1c62a1eb6f7e48e7f33a7530f057628e07baf248805ae7 -->

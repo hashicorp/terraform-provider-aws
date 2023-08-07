@@ -62,14 +62,14 @@ which take the following arguments:
 * `values` - (Required) Set of values that are accepted for the given field.
   A COIP Pool will be selected if any one of the given values matches.
 
-## Attributes Reference
+## Attribute Reference
 
 All of the argument attributes except `filter` blocks are also exported as
 result attributes. This data source will complete the data by populating
 any fields that are not included in the configuration with the data for
 the selected COIP Pool.
 
-In addition, the following attributes are exported:
+This data source exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the COIP pool
 * `pool_cidrs` - Set of CIDR blocks in pool
@@ -80,4 +80,4 @@ In addition, the following attributes are exported:
 
 - `read` - (Default `20m`)
 
-<!-- cache-key: cdktf-0.17.1 input-4018a02fb3e3ba399170a12145e567c04dd4dcf3d3de820650bd0da4b7852ab7 -->
+<!-- cache-key: cdktf-0.17.1 input-9daefdcf6a9406d85608497b3074a6f9c1cdbfdb9d671dde53dad6ac78ca710e -->
