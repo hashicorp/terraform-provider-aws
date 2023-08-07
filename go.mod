@@ -4,7 +4,7 @@ go 1.20
 
 require (
 	github.com/ProtonMail/go-crypto v0.0.0-20230217124315-7d5c6f04bbb8
-	github.com/aws/aws-sdk-go v1.44.316
+	github.com/aws/aws-sdk-go v1.44.317
 	github.com/aws/aws-sdk-go-v2 v1.20.0
 	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.13.7
 	github.com/aws/aws-sdk-go-v2/service/accessanalyzer v1.20.1
@@ -64,8 +64,8 @@ require (
 	github.com/beevik/etree v1.2.0
 	github.com/google/go-cmp v0.5.9
 	github.com/hashicorp/aws-cloudformation-resource-schema-sdk-go v0.21.0
-	github.com/hashicorp/aws-sdk-go-base/v2 v2.0.0-beta.32
-	github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2 v2.0.0-beta.33
+	github.com/hashicorp/aws-sdk-go-base/v2 v2.0.0-beta.33
+	github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2 v2.0.0-beta.34
 	github.com/hashicorp/awspolicyequivalence v1.6.0
 	github.com/hashicorp/go-cleanhttp v0.5.2
 	github.com/hashicorp/go-cty v1.4.1-0.20200414143053-d3edf31b6320
@@ -90,7 +90,7 @@ require (
 	github.com/mitchellh/mapstructure v1.5.0
 	github.com/pquerna/otp v1.4.0
 	github.com/shopspring/decimal v1.3.1
-	golang.org/x/crypto v0.11.0
+	golang.org/x/crypto v0.12.0
 	golang.org/x/exp v0.0.0-20230510235704-dd950f8aeaea
 	golang.org/x/tools v0.6.0
 	gopkg.in/dnaeon/go-vcr.v3 v3.1.2
@@ -106,18 +106,18 @@ require (
 	github.com/apparentlymart/go-textseg/v13 v13.0.0 // indirect
 	github.com/armon/go-radix v0.0.0-20180808171621-7fddfc383310 // indirect
 	github.com/aws/aws-sdk-go-v2/aws/protocol/eventstream v1.4.11 // indirect
-	github.com/aws/aws-sdk-go-v2/config v1.18.28 // indirect
-	github.com/aws/aws-sdk-go-v2/credentials v1.13.27 // indirect
+	github.com/aws/aws-sdk-go-v2/config v1.18.32 // indirect
+	github.com/aws/aws-sdk-go-v2/credentials v1.13.31 // indirect
 	github.com/aws/aws-sdk-go-v2/internal/configsources v1.1.37 // indirect
 	github.com/aws/aws-sdk-go-v2/internal/endpoints/v2 v2.4.31 // indirect
-	github.com/aws/aws-sdk-go-v2/internal/ini v1.3.36 // indirect
-	github.com/aws/aws-sdk-go-v2/service/iam v1.21.1 // indirect
+	github.com/aws/aws-sdk-go-v2/internal/ini v1.3.38 // indirect
+	github.com/aws/aws-sdk-go-v2/service/iam v1.22.1 // indirect
 	github.com/aws/aws-sdk-go-v2/service/internal/endpoint-discovery v1.7.31 // indirect
 	github.com/aws/aws-sdk-go-v2/service/internal/presigned-url v1.9.31 // indirect
 	github.com/aws/aws-sdk-go-v2/service/internal/s3shared v1.15.0 // indirect
-	github.com/aws/aws-sdk-go-v2/service/sso v1.12.13 // indirect
-	github.com/aws/aws-sdk-go-v2/service/ssooidc v1.14.13 // indirect
-	github.com/aws/aws-sdk-go-v2/service/sts v1.19.3 // indirect
+	github.com/aws/aws-sdk-go-v2/service/sso v1.13.1 // indirect
+	github.com/aws/aws-sdk-go-v2/service/ssooidc v1.15.1 // indirect
+	github.com/aws/aws-sdk-go-v2/service/sts v1.21.1 // indirect
 	github.com/aws/smithy-go v1.14.0 // indirect
 	github.com/bgentry/speakeasy v0.1.0 // indirect
 	github.com/boombuler/barcode v1.0.1-0.20190219062509-6c824513bacc // indirect
@@ -159,8 +159,8 @@ require (
 	go.opentelemetry.io/otel/trace v1.16.0 // indirect
 	golang.org/x/mod v0.10.0 // indirect
 	golang.org/x/net v0.11.0 // indirect
-	golang.org/x/sys v0.10.0 // indirect
-	golang.org/x/text v0.11.0 // indirect
+	golang.org/x/sys v0.11.0 // indirect
+	golang.org/x/text v0.12.0 // indirect
 	google.golang.org/appengine v1.6.7 // indirect
 	google.golang.org/genproto v0.0.0-20230410155749-daa745c078e1 // indirect
 	google.golang.org/grpc v1.56.1 // indirect

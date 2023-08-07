@@ -23163,6 +23163,9 @@ var awsPartition = partition{
 					Region: "eu-west-3",
 				}: endpoint{},
 				endpointKey{
+					Region: "il-central-1",
+				}: endpoint{},
+				endpointKey{
 					Region: "me-central-1",
 				}: endpoint{},
 				endpointKey{
