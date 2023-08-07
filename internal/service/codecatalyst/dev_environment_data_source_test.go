@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package codecatalyst_test
 
 import (
@@ -43,24 +46,23 @@ func TestAccCodeCatalystDevEnvironmentDataSource_basic(t *testing.T) {
 
 func testAccDevEnvironmentDataSourceConfig_basic(rName string) string {
 	return fmt.Sprintf(`
+resource "aws_codecatalyst_dev_environment" "test" {
+  alias         = %[1]q
+  space_name    = "tf-cc-aws-provider"
+  project_name  = "tf-cc"
+  instance_type = "dev.standard1.small"
+  persistent_storage {
+    size = 16
+  }
+  ides {
+    name = "VSCode"
+  }
+}
 
-	resource "aws_codecatalyst_dev_environment" "test" {
-		alias         = %[1]q
-		space_name    = "tf-cc-aws-provider"
-		project_name  = "tf-cc"
-		instance_type = "dev.standard1.small"
-		persistent_storage {
-		  size = 16
-		}
-		ides {
-		  name = "VSCode"
-		}
-	}
-
-	data "aws_codecatalyst_dev_environment" "test" {
-		space_name    	= "tf-cc-aws-provider"
-		project_name  	= "tf-cc"
-		env_id 	  		= aws_codecatalyst_dev_environment.test.id
-	}
+data "aws_codecatalyst_dev_environment" "test" {
+  space_name   = "tf-cc-aws-provider"
+  project_name = "tf-cc"
+  env_id       = aws_codecatalyst_dev_environment.test.id
+}
 `, rName)
 }
