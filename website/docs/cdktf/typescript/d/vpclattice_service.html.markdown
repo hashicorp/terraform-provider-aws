@@ -45,9 +45,9 @@ The following arguments are required:
 
 * `serviceIdentifier` - (Required) ID or Amazon Resource Name (ARN) of the service network
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This data source exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the service.
 * `authType` - Type of IAM policy. Either `none` or `awsIam`.
@@ -58,4 +58,4 @@ In addition to all arguments above, the following attributes are exported:
 * `status` - Status of the service.
 * `tags` - List of tags associated with the service.
 
-<!-- cache-key: cdktf-0.17.1 input-85529f84696452b8f17645977759bc5fa9f20e5a342632edcd61b21c9d5a23ef -->
+<!-- cache-key: cdktf-0.17.1 input-42e3a18e3bfa9dab30cc3b42137c36ffe3286c713ec521450182df078db9c0e9 -->

@@ -52,7 +52,9 @@ which take the following arguments:
 * `values` - (Required) Set of values that are accepted for the given field.
   A Local Gateway Route Table will be selected if any one of the given values matches.
 
-## Attributes Reference
+## Attribute Reference
+
+This data source exports the following attributes in addition to the arguments above:
 
 * `id` - AWS Region.
 * `ids` - Set of Local Gateway Route Table identifiers
@@ -63,4 +65,4 @@ which take the following arguments:
 
 - `read` - (Default `20m`)
 
-<!-- cache-key: cdktf-0.17.1 input-6cee9559daa21ba439753064a3a6eb96fd5b6326abef88de2b9f66f02ac0770e -->
+<!-- cache-key: cdktf-0.17.1 input-a7fa07e5df9221f1a1960ea3ec891c58f8a438a9471e6be0d1a428fa3ee9bed1 -->

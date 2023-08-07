@@ -96,7 +96,7 @@ VPC whose data will be exported as attributes.
 * `ipam_pool_id` - ID of the IPAM pool you would like the list of provisioned CIDRs.
 * `filter` - Custom filter block as described below.
 
-## Attributes Reference
+## Attribute Reference
 
 All of the argument attributes except `filter` blocks are also exported as
 result attributes. This data source will complete the data by populating
@@ -118,4 +118,4 @@ The following attribute is additionally exported:
 
 - `read` - (Default `1m`)
 
-<!-- cache-key: cdktf-0.17.1 input-a04bcb66c8aa6aba2f4f8315b0fab1a83c2547415e3d33e3f7b98be70db55a2d -->
+<!-- cache-key: cdktf-0.17.1 input-b9fe0569a3bb59535a5bd318b59bb8f37d4a198fb5bfa62af131cfaa8ffd8980 -->

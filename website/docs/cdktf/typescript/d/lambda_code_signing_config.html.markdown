@@ -43,13 +43,13 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
-The following arguments are supported:
+This data source supports the following arguments:
 
 * `arn` - (Required) ARN of the code signing configuration.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This data source exports the following attributes in addition to the arguments above:
 
 * `allowedPublishers` - List of allowed publishers as signing profiles for this code signing configuration.
 * `configId` - Unique identifier for the code signing configuration.
@@ -67,4 +67,4 @@ In addition to all arguments above, the following attributes are exported:
 
 [1]: https://docs.aws.amazon.com/lambda/latest/dg/configuration-codesigning.html
 
-<!-- cache-key: cdktf-0.17.1 input-5afdefce5d0b268b19c36274b069b7899d615a87f4179249cc899ab27ee14760 -->
+<!-- cache-key: cdktf-0.17.1 input-7579a58de49284320a865ba064d26b395888e4b37e0c54bd6bcef30caa65b6ed -->

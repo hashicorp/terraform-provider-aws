@@ -71,14 +71,14 @@ whose data will be exported as attributes.
 
 ### filter Configuration Block
 
-The following arguments are supported by the `filter` configuration block:
+The `filter` configuration block supports the following arguments:
 
 * `name` - (Required) Name of the filter field. Valid values can be found in the EC2 [DescribeManagedPrefixLists](https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_DescribeManagedPrefixLists.html) API Reference.
 * `values` - (Required) Set of values that are accepted for the given filter field. Results will be selected if any given value matches.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This data source exports the following attributes in addition to the arguments above:
 
 * `id` - ID of the selected prefix list.
 * `arn` - ARN of the selected prefix list.
@@ -95,4 +95,4 @@ In addition to all arguments above, the following attributes are exported:
 
 - `read` - (Default `20m`)
 
-<!-- cache-key: cdktf-0.17.1 input-3e3c72b875acdabeff222d7efc6381624218bdc684c16b8ec1c38859e1e80f26 -->
+<!-- cache-key: cdktf-0.17.1 input-cdbf4a9d93a044622eb9a1f8a3e9a7b0a043366fdd2b0bae53faf5879d45c641 -->

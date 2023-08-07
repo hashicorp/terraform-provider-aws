@@ -58,7 +58,7 @@ class MyConvertedCode(TerraformStack):
 
 ## Argument Reference
 
-The following arguments are supported:
+This data source supports the following arguments:
 
 * `filter` - (Optional) One or more configuration blocks containing name-values filters. Detailed below.
 * `id` - (Optional) Identifier of the EC2 Transit Gateway.
@@ -70,7 +70,7 @@ The following arguments are supported:
 
 ## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This data source exports the following attributes in addition to the arguments above:
 
 * `amazon_side_asn` - Private Autonomous System Number (ASN) for the Amazon side of a BGP session
 * `arn` - EC2 Transit Gateway ARN
@@ -94,4 +94,4 @@ In addition to all arguments above, the following attributes are exported:
 
 - `read` - (Default `20m`)
 
-<!-- cache-key: cdktf-0.17.1 input-e24eaaf1aa0b28a091689ddfaeaf01ceb3851faa3d8dd0eefba334e1fd10a072 -->
+<!-- cache-key: cdktf-0.17.1 input-ffa9ee3ddd9d388f5e2e15cbd5dbf081b080b3ce321303e9a320db13aad75c6f -->

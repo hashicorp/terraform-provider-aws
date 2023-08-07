@@ -58,7 +58,7 @@ class MyConvertedCode(TerraformStack):
 
 ## Argument Reference
 
-The following arguments are supported:
+This data source supports the following arguments:
 
 * `filter` - (Optional) One or more configuration blocks containing name-values filters. Detailed below.
 * `id` - (Optional) Identifier of the EC2 Transit Gateway Peering Attachment.
@@ -75,7 +75,7 @@ which take the following arguments:
 
 ## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This data source exports the following attributes in addition to the arguments above:
 
 * `peer_account_id` - Identifier of the peer AWS account
 * `peer_region` - Identifier of the peer AWS region
@@ -88,4 +88,4 @@ In addition to all arguments above, the following attributes are exported:
 
 - `read` - (Default `20m`)
 
-<!-- cache-key: cdktf-0.17.1 input-070f687dc6ea215734d45f7c1eda427968f4bc99d8b79e65dcd8d643efb5d83c -->
+<!-- cache-key: cdktf-0.17.1 input-64a386696c78ec2309a46c70c800259471a55f51d87aca95430609381da1032a -->

@@ -38,16 +38,16 @@ class MyConvertedCode(TerraformStack):
 
 ## Argument Reference
 
-The following arguments are supported:
+This data source supports the following arguments:
 
 * `layer_name` - (Required) Name of the lambda layer.
 * `version` - (Optional) Specific layer version. Conflicts with `compatible_runtime` and `compatible_architecture`. If omitted, the latest available layer version will be used.
 * `compatible_runtime` (Optional) Specific runtime the layer version must support. Conflicts with `version`. If specified, the latest available layer version supporting the provided runtime will be used.
 * `compatible_architecture` (Optional) Specific architecture the layer version could support. Conflicts with `version`. If specified, the latest available layer version supporting the provided architecture will be used.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This data source exports the following attributes in addition to the arguments above:
 
 * `description` - Description of the specific Lambda Layer version.
 * `license_info` - License info associated with the specific Lambda Layer version.
@@ -65,4 +65,4 @@ In addition to all arguments above, the following attributes are exported:
 [1]: https://docs.aws.amazon.com/lambda/latest/dg/API_GetLayerVersion.html#SSS-GetLayerVersion-response-CompatibleRuntimes
 [2]: https://docs.aws.amazon.com/lambda/latest/dg/API_GetLayerVersion.html#SSS-GetLayerVersion-response-CompatibleArchitectures
 
-<!-- cache-key: cdktf-0.17.1 input-6949ca0e378eed0fc966db8892793e3ccb85b735327921a8e3d9fadf92dee0bb -->
+<!-- cache-key: cdktf-0.17.1 input-69ef06c57b86008a1c6e25d93dabac271b612b904a1a89dbe3fd5507d10e6742 -->

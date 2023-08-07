@@ -34,13 +34,13 @@ class MyConvertedCode(TerraformStack):
 
 ## Argument Reference
 
-The following argument is supported:
+This data source supports the following arguments:
 
 * `instance_type` - (Required) Instance
 
 ## Attribute Reference
 
-In addition to the argument above, the following attributes are exported:
+This data source exports the following attributes in addition to the arguments above:
 
 ~> **NOTE:** Not all attributes are set for every instance type.
 
@@ -110,4 +110,4 @@ In addition to the argument above, the following attributes are exported:
 
 - `read` - (Default `20m`)
 
-<!-- cache-key: cdktf-0.17.1 input-2b636f57a79c9545305113d01a6f8b0a344a9f774db0d6a467fd46c35a6802c0 -->
+<!-- cache-key: cdktf-0.17.1 input-b7277db3a541ce0f8fed6f01d3571ab61e9905732dcb0c8ed05bebf2a1116184 -->

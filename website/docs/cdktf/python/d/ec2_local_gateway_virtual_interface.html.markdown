@@ -55,7 +55,7 @@ The `filter` configuration block supports the following arguments:
 
 ## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This data source exports the following attributes in addition to the arguments above:
 
 * `local_address` - Local address.
 * `local_bgp_asn` - Border Gateway Protocol (BGP) Autonomous System Number (ASN) of the EC2 Local Gateway.
@@ -70,4 +70,4 @@ In addition to all arguments above, the following attributes are exported:
 
 - `read` - (Default `20m`)
 
-<!-- cache-key: cdktf-0.17.1 input-8e096e1216ac507f824ce02a9ba18794bf5791c0f496d83b673af9b7c193c051 -->
+<!-- cache-key: cdktf-0.17.1 input-84b19b85b29b524237f0dba8dd0b0098f8acc444d8a902be6fcf51bfed3a262a -->
