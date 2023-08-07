@@ -818,6 +818,41 @@ func TestAccEventsTarget_sqs(t *testing.T) {
 	})
 }
 
+func TestAccEventsTarget_sageMakerPipeline(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v eventbridge.Target
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_cloudwatch_event_target.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, eventbridge.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTargetDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTargetConfig_sageMakerPipeline(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckTargetExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttrPair(resourceName, "arn", "aws_sagemaker_pipeline.test", "arn"),
+					resource.TestCheckResourceAttr(resourceName, "sagemaker_pipeline_target.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "sagemaker_pipeline_target.0.pipeline_parameter_list.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "sagemaker_pipeline_target.0.pipeline_parameter_list.*", map[string]string{
+						"name":  "key",
+						"value": "value",
+					}),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateIdFunc: testAccTargetImportStateIdFunc(resourceName),
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccEventsTarget_Input_transformer(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_cloudwatch_event_target.test"
@@ -2179,6 +2214,107 @@ resource "aws_sqs_queue" "test" {
   fifo_queue = true
 
   sqs_managed_sse_enabled = true
+}
+`, rName)
+}
+
+func testAccTargetConfig_sageMakerPipeline(rName string) string {
+	return fmt.Sprintf(`
+data "aws_partition" "current" {}
+
+resource "aws_cloudwatch_event_rule" "test" {
+  name                = %[1]q
+  description         = "schedule_batch_test"
+  schedule_expression = "rate(5 minutes)"
+}
+
+resource "aws_cloudwatch_event_target" "test" {
+  arn      = aws_sagemaker_pipeline.test.arn
+  rule     = aws_cloudwatch_event_rule.test.id
+  role_arn = aws_iam_role.test.arn
+
+  sagemaker_pipeline_target {
+    pipeline_parameter_list {
+      name  = "key"
+	  value = "value"
+    }
+  }
+
+  target_id = %[1]q
+}
+
+resource "aws_iam_role" "test" {
+  name = %[1]q
+
+  assume_role_policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Action": "sts:AssumeRole",
+      "Principal": {
+        "Service": "events.${data.aws_partition.current.dns_suffix}"
+      },
+      "Effect": "Allow",
+      "Sid": ""
+    }
+  ]
+}
+EOF
+}
+
+resource "aws_iam_role_policy" "test" {
+  name = %[1]q
+  role = aws_iam_role.test.id
+
+  policy = <<EOF
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Action": "sagemaker:*",
+            "Effect": "Allow",
+            "Resource": [
+                "*"
+            ]
+        }
+    ]
+}
+EOF
+}
+
+resource "aws_iam_role" "sagemaker" {
+  name               = "%[1]s-2"
+  path               = "/"
+  assume_role_policy = data.aws_iam_policy_document.test.json
+}
+
+data "aws_iam_policy_document" "test" {
+  statement {
+    actions = ["sts:AssumeRole"]
+
+    principals {
+      type        = "Service"
+      identifiers = ["sagemaker.amazonaws.com"]
+    }
+  }
+}
+
+resource "aws_sagemaker_pipeline" "test" {
+  pipeline_name         = %[1]q
+  pipeline_display_name = %[1]q
+  role_arn              = aws_iam_role.sagemaker.arn
+
+  pipeline_definition = jsonencode({
+    Version = "2020-12-01"
+    Steps = [{
+      Name = "Test"
+      Type = "Fail"
+      Arguments = {
+        ErrorMessage = "test"
+      }
+    }]
+  })
 }
 `, rName)
 }
