@@ -14,6 +14,7 @@ import (
 const (
 	propagationTimeout            = 2 * time.Minute
 	replicationTaskRunningTimeout = 5 * time.Minute
+	replicationRunningTimeout     = 60 * time.Minute
 )
 
 func waitEndpointDeleted(ctx context.Context, conn *dms.DatabaseMigrationService, id string, timeout time.Duration) error {
@@ -99,6 +100,47 @@ func waitReplicationTaskStopped(ctx context.Context, conn *dms.DatabaseMigration
 		Target:     []string{replicationTaskStatusStopped},
 		Refresh:    statusReplicationTask(ctx, conn, id),
 		Timeout:    replicationTaskRunningTimeout,
+		MinTimeout: 10 * time.Second,
+		Delay:      60 * time.Second, // Wait 30 secs before starting
+	}
+
+	// Wait, catching any errors
+	_, err := stateConf.WaitForStateContext(ctx)
+
+	return err
+}
+
+func waitReplicationRunning(ctx context.Context, conn *dms.DatabaseMigrationService, id string) error {
+	stateConf := &retry.StateChangeConf{
+		Pending: []string{
+			replicationStatusReady,
+			replicationStatusInitialising,
+			replicationStatusMetadataResources,
+			replicationStatusTestingConnection,
+			replicationStatusFetchingMetadata,
+			replicationStatusCalculatingCapacity,
+			replicationStatusProvisioningCapacity,
+			replicationStatusReplicationStarting,
+		},
+		Target:     []string{replicationStatusRunning},
+		Refresh:    statusReplication(ctx, conn, id),
+		Timeout:    replicationRunningTimeout,
+		MinTimeout: 10 * time.Second,
+		Delay:      30 * time.Second, // Wait 30 secs before starting
+	}
+
+	// Wait, catching any errors
+	_, err := stateConf.WaitForStateContext(ctx)
+
+	return err
+}
+
+func waitReplicationStopped(ctx context.Context, conn *dms.DatabaseMigrationService, id string) error {
+	stateConf := &retry.StateChangeConf{
+		Pending:    []string{replicationStatusLoadStarted, replicationStatusStopped},
+		Target:     []string{replicationStatusLoadStoppedAndDeprovisioned},
+		Refresh:    statusReplication(ctx, conn, id),
+		Timeout:    replicationRunningTimeout,
 		MinTimeout: 10 * time.Second,
 		Delay:      60 * time.Second, // Wait 30 secs before starting
 	}

@@ -106,6 +106,14 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 				IdentifierAttribute: "endpoint_arn",
 			},
 		},
+		{
+			Factory:  ResourceServerlessReplication,
+			TypeName: "aws_dms_serverless_replication",
+			Name:     "Serverless Replication",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "replication_config_arn",
+			},
+		},
 	}
 }
 

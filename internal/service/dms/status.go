@@ -43,3 +43,19 @@ func statusReplicationTask(ctx context.Context, conn *dms.DatabaseMigrationServi
 		return output, aws.StringValue(output.Status), nil
 	}
 }
+
+func statusReplication(ctx context.Context, conn *dms.DatabaseMigrationService, id string) retry.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := findReplicationById(ctx, id, conn)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, aws.StringValue(output.Status), nil
+	}
+}

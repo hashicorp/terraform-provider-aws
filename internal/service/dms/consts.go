@@ -123,3 +123,25 @@ func encryptionMode_Values() []string {
 		encryptionModeSseS3,
 	}
 }
+
+const (
+	replicationStatusReady                = "ready"
+	replicationStatusRunning              = "running"
+	replicationStatusStopping             = "stopping"
+	replicationStatusStopped              = "stopped"
+	replicationStatusInitialising         = "initializing"
+	replicationStatusMetadataResources    = "preparing_metadata_resources"
+	replicationStatusTestingConnection    = "testing_connection"
+	replicationStatusFetchingMetadata     = "fetching_metadata"
+	replicationStatusCalculatingCapacity  = "calculating_capacity"
+	replicationStatusProvisioningCapacity = "provisioning_capacity"
+	replicationStatusReplicationStarting  = "replication_starting"
+
+	replicationStatusLoadStarted                 = "load_started"
+	replicationStatusLoadStoppedAndDeprovisioned = "stopped_and_deprovisioned"
+)
+
+const (
+	replicationTypeValueStartReplication = "creating"
+	replicationTypeValueResumeProcessing = "resume-processing"
+)
