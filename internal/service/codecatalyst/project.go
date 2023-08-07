@@ -68,7 +68,6 @@ const (
 )
 
 func resourceProjectCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-
 	conn := meta.(*conns.AWSClient).CodeCatalystClient(ctx)
 
 	in := &codecatalyst.CreateProjectInput{
@@ -146,7 +145,6 @@ func resourceProjectUpdate(ctx context.Context, d *schema.ResourceData, meta int
 	}
 
 	return append(diags, resourceDevEnvironmentRead(ctx, d, meta)...)
-
 }
 
 func resourceProjectDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
@@ -168,21 +166,6 @@ func resourceProjectDelete(ctx context.Context, d *schema.ResourceData, meta int
 	}
 
 	return nil
-}
-
-func statusProject(ctx context.Context, conn *codecatalyst.Client, id string, spaceName *string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-		out, err := findProjectByName(ctx, conn, id, spaceName)
-		if tfresource.NotFound(err) {
-			return nil, "", nil
-		}
-
-		if err != nil {
-			return nil, "", err
-		}
-
-		return out, aws.ToString(out.Name), nil
-	}
 }
 
 func findProjectByName(ctx context.Context, conn *codecatalyst.Client, id string, spaceName *string) (*codecatalyst.GetProjectOutput, error) {
