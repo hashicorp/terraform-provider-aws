@@ -25,13 +25,16 @@ import (
 
 func TestAccCodeCatalystSourceRepository_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-
 	var sourcerepository codecatalyst.GetSourceRepositoryOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_codecatalyst_source_repository.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.CodeCatalyst)
+			testAccPreCheck(ctx, t)
+		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.CodeCatalyst),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckSourceRepositoryDestroy(ctx),
@@ -51,13 +54,16 @@ func TestAccCodeCatalystSourceRepository_basic(t *testing.T) {
 
 func TestAccCodeCatalystSourceRepository_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-
 	var sourcerepository codecatalyst.GetSourceRepositoryOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_codecatalyst_source_repository.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.CodeCatalyst)
+			testAccPreCheck(ctx, t)
+		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.CodeCatalyst),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckSourceRepositoryDestroy(ctx),
