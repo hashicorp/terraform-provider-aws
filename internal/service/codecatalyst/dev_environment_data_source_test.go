@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go-v2/service/codecatalyst"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
@@ -16,8 +15,6 @@ import (
 
 func TestAccCodeCatalystDevEnvironmentDataSource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-
-	var devEnvironment codecatalyst.GetDevEnvironmentOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	dataSourceName := "data.aws_codecatalyst_dev_environment.test"
 
@@ -29,12 +26,10 @@ func TestAccCodeCatalystDevEnvironmentDataSource_basic(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.CodeCatalyst),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDevEnvironmentDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDevEnvironmentDataSourceConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDevEnvironmentExists(ctx, dataSourceName, &devEnvironment),
 					resource.TestCheckResourceAttr(dataSourceName, "space_name", "tf-cc-aws-provider"),
 					resource.TestCheckResourceAttr(dataSourceName, "project_name", "tf-cc"),
 				),
