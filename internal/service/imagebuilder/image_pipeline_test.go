@@ -280,7 +280,7 @@ func TestAccImageBuilderImagePipeline_ImageScanning_imageScanningEnabled(t *test
 				Config: testAccImagePipelineConfig_testsConfigurationScanningEnabled(rName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckImagePipelineExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "image_scanning_configuration.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "image_scanning_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "image_scanning_configuration.0.image_scanning_enabled", "false"),
 				),
 			},
