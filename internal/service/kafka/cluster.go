@@ -577,7 +577,6 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 		cluster, err := FindClusterByARN(ctx, conn, d.Id())
 		if !d.IsNewResource() && tfresource.NotFound(err) {
 			log.Printf("[WARN] MSK Cluster (%s) not found, removing from state", d.Id())
-			d.SetId("")
 			return nil
 		}
 		if err != nil {
