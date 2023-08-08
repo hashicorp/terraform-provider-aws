@@ -1485,7 +1485,7 @@ func TestAccEC2Instance_BlockDeviceTags_volumeTags(t *testing.T) {
 	})
 }
 
-func TestAccEC2Instance_BlockDeviceTags_withAttachedVolume(t *testing.T) {
+func TestAccEC2Instance_BlockDeviceTags_attachedVolume(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v ec2.Instance
 	resourceName := "aws_instance.test"
@@ -1653,7 +1653,7 @@ func TestAccEC2Instance_instanceProfileChange(t *testing.T) {
 	})
 }
 
-func TestAccEC2Instance_withIAMInstanceProfile(t *testing.T) {
+func TestAccEC2Instance_iamInstanceProfile(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v ec2.Instance
 	resourceName := "aws_instance.test"
@@ -1693,7 +1693,7 @@ func TestAccEC2Instance_withIAMInstanceProfile(t *testing.T) {
 }
 
 // Reference: https://github.com/hashicorp/terraform-provider-aws/issues/17719
-func TestAccEC2Instance_withIAMInstanceProfilePath(t *testing.T) {
+func TestAccEC2Instance_iamInstanceProfilePath(t *testing.T) {
 	ctx := acctest.Context(t)
 	var instance ec2.Instance
 	resourceName := "aws_instance.test"
@@ -3484,7 +3484,7 @@ func TestAccEC2Instance_LaunchTemplate_swapIDAndName(t *testing.T) {
 	})
 }
 
-func TestAccEC2Instance_LaunchTemplate_withIAMInstanceProfile(t *testing.T) {
+func TestAccEC2Instance_LaunchTemplate_iamInstanceProfile(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v ec2.Instance
 	resourceName := "aws_instance.test"
@@ -3533,7 +3533,7 @@ func TestAccEC2Instance_LaunchTemplate_spotAndStop(t *testing.T) {
 	})
 }
 
-func TestAccEC2Instance_LaunchTemplate_withVPCSecurityGroup(t *testing.T) {
+func TestAccEC2Instance_LaunchTemplate_vpcSecurityGroup(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v ec2.Instance
 	resourceName := "aws_instance.test"
