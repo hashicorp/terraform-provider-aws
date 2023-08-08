@@ -61,7 +61,7 @@ func sweepAccountAssignments(region string) error {
 		return err
 	}
 
-	instanceArn := dsData.Get("arns").(*schema.Set).List()[0].(string)
+	instanceArn := dsData.Get("arns").([]interface{})[0].(string)
 
 	// To sweep account assignments, we need to first determine which Permission Sets
 	// are available and then search for their respective assignments
