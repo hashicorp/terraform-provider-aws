@@ -1238,7 +1238,8 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 			output := outputRaw.(*rds.RestoreDBInstanceFromDBSnapshotOutput)
 			resourceID = aws.StringValue(output.DBInstance.DbiResourceId)
 		}
-	} else if v, ok := d.GetOk("restore_to_point_in_time"); ok {
+	} else if v, ok := d.GetOk("restore_to_point_in_time"); ok && v.([]interface{})[0] != nil {
+
 		tfMap := v.([]interface{})[0].(map[string]interface{})
 
 		input := &rds.RestoreDBInstanceToPointInTimeInput{
