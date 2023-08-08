@@ -83,6 +83,18 @@ func ResourceCluster() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"bootstrap_brokers_vpc_connectivity_sasl_iam": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"bootstrap_brokers_vpc_connectivity_sasl_scram": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"bootstrap_brokers_vpc_connectivity_tls": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"broker_node_group_info": {
 				Type:     schema.TypeList,
 				Required: true,
@@ -575,10 +587,6 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 	//vpc_connectivity can be created only after the cluster is created so if the block exists we wait for the cluster to be created and then update the vpc_connectivity
 	if vpcConnectivityExits {
 		cluster, err := FindClusterByARN(ctx, conn, d.Id())
-		if !d.IsNewResource() && tfresource.NotFound(err) {
-			log.Printf("[WARN] MSK Cluster (%s) not found, removing from state", d.Id())
-			return nil
-		}
 		if err != nil {
 			return diag.Errorf("reading MSK Cluster (%s): %s", d.Id(), err)
 		}
@@ -620,6 +628,9 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta inter
 	d.Set("bootstrap_brokers_sasl_iam", SortEndpointsString(aws.StringValue(output.BootstrapBrokerStringSaslIam)))
 	d.Set("bootstrap_brokers_sasl_scram", SortEndpointsString(aws.StringValue(output.BootstrapBrokerStringSaslScram)))
 	d.Set("bootstrap_brokers_tls", SortEndpointsString(aws.StringValue(output.BootstrapBrokerStringTls)))
+	d.Set("bootstrap_brokers_vpc_connectivity_sasl_iam", SortEndpointsString(aws.StringValue(output.BootstrapBrokerStringVpcConnectivitySaslIam)))
+	d.Set("bootstrap_brokers_vpc_connectivity_sasl_scram", SortEndpointsString(aws.StringValue(output.BootstrapBrokerStringVpcConnectivitySaslScram)))
+	d.Set("bootstrap_brokers_vpc_connectivity_tls", SortEndpointsString(aws.StringValue(output.BootstrapBrokerStringVpcConnectivityTls)))
 
 	if cluster.BrokerNodeGroupInfo != nil {
 		if err := d.Set("broker_node_group_info", []interface{}{flattenBrokerNodeGroupInfo(cluster.BrokerNodeGroupInfo)}); err != nil {

@@ -227,10 +227,29 @@ This resource supports the following arguments:
 ### broker_node_group_info connectivity_info Argument Reference
 
 * `public_access` - (Optional) Access control settings for brokers. See below.
+* `vpc_connectivity` - (Optional) VPC connection control settings for brokers.
 
 ### connectivity_info public_access Argument Reference
 
 * `type` - (Optional) Public access type. Valida values: `DISABLED`, `SERVICE_PROVIDED_EIPS`.
+
+### connectivity_info vpc_connectivity Argument Reference
+
+* `client_authentication` - (Optional) VPC connection control settings for brokers.
+
+### vpc connectivity client_authentication Argument Reference
+
+* `sasl` - (Optional) Configuration block for specifying SASL client authentication. See below.
+* `tls` - (Optional) Configuration block for specifying TLS client authentication. See below.
+
+#### vpc connectivity client_authentication sasl Argument Reference
+
+* `iam` - (Optional) Enables IAM client authentication. Defaults to `false`.
+* `scram` - (Optional) SASL/SCRAM authentication is enabled or not. Defaults to `false`.
+
+#### vpc connectivity client_authentication tls Argument Reference
+
+* `tls` - (Optional) TLS authentication is enabled or not. Defaults to `false`.
 
 ### broker_node_group_info storage_info Argument Reference
 
@@ -325,6 +344,9 @@ This resource exports the following attributes in addition to the arguments abov
 * `bootstrap_brokers_sasl_iam` - One or more DNS names (or IP addresses) and SASL IAM port pairs. For example, `b-1.exampleClusterName.abcde.c2.kafka.us-east-1.amazonaws.com:9098,b-2.exampleClusterName.abcde.c2.kafka.us-east-1.amazonaws.com:9098,b-3.exampleClusterName.abcde.c2.kafka.us-east-1.amazonaws.com:9098`. This attribute will have a value if `encryption_info.0.encryption_in_transit.0.client_broker` is set to `TLS_PLAINTEXT` or `TLS` and `client_authentication.0.sasl.0.iam` is set to `true`. The resource sorts the list alphabetically. AWS may not always return all endpoints so the values may not be stable across applies.
 * `bootstrap_brokers_sasl_scram` - One or more DNS names (or IP addresses) and SASL SCRAM port pairs. For example, `b-1.exampleClusterName.abcde.c2.kafka.us-east-1.amazonaws.com:9096,b-2.exampleClusterName.abcde.c2.kafka.us-east-1.amazonaws.com:9096,b-3.exampleClusterName.abcde.c2.kafka.us-east-1.amazonaws.com:9096`. This attribute will have a value if `encryption_info.0.encryption_in_transit.0.client_broker` is set to `TLS_PLAINTEXT` or `TLS` and `client_authentication.0.sasl.0.scram` is set to `true`. The resource sorts the list alphabetically. AWS may not always return all endpoints so the values may not be stable across applies.
 * `bootstrap_brokers_tls` - One or more DNS names (or IP addresses) and TLS port pairs. For example, `b-1.exampleClusterName.abcde.c2.kafka.us-east-1.amazonaws.com:9094,b-2.exampleClusterName.abcde.c2.kafka.us-east-1.amazonaws.com:9094,b-3.exampleClusterName.abcde.c2.kafka.us-east-1.amazonaws.com:9094`. This attribute will have a value if `encryption_info.0.encryption_in_transit.0.client_broker` is set to `TLS_PLAINTEXT` or `TLS`. The resource sorts the list alphabetically. AWS may not always return all endpoints so the values may not be stable across applies.
+* `bootstrap_brokers_vpc_connectivity_sasl_iam` - A string containing one or more dns name (or IP) and SASL IAM port pairs for VPC connectivity. AWS may not always return all endpoints so the values may not be stable across applies.
+* `bootstrap_brokers_vpc_connectivity_sasl_scram` - A string containing one or more dns name (or IP) and SASL SCRAM port pairs for VPC connectivity. AWS may not always return all endpoints so the values may not be stable across applies.
+* `bootstrap_brokers_vpc_connectivity_tls` - A string containing one or more dns name (or IP) and Tls port pairs for VPC connectivity. AWS may not always return all endpoints so the values may not be stable across applies.
 * `current_version` - Current version of the MSK Cluster used for updates, e.g., `K13V1IB3VIYZZH`
 * `encryption_info.0.encryption_at_rest_kms_key_arn` - The ARN of the KMS key used for encryption at rest of the broker data volumes.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
