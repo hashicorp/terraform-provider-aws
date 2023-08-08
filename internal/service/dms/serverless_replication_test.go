@@ -27,7 +27,7 @@ func TestAccDMSServerlessReplication_basic(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, dms.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckReplicationTaskDestroy(ctx),
+		CheckDestroy:             testAccCheckReplicationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccServerlessReplication_basic(rName),
