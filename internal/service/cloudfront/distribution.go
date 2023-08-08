@@ -229,6 +229,10 @@ func ResourceDistribution() *schema.Resource {
 					},
 				},
 			},
+			"continuous_deployment_policy_id": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
 			"comment": {
 				Type:         schema.TypeString,
 				Optional:     true,
@@ -821,6 +825,12 @@ func ResourceDistribution() *schema.Resource {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  false,
+			},
+			"staging": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
+				ForceNew: true,
 			},
 
 			names.AttrTags:    tftags.TagsSchema(),
