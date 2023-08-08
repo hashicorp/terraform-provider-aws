@@ -58,13 +58,23 @@ func TestAccDMSServerlessReplication_update(t *testing.T) {
 		CheckDestroy:             testAccCheckReplicationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccServerlessReplication_update(rName, "cdc", 8, 64),
+				Config: testAccServerlessReplication_update(rName, "cdc", 2, 16),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckReplicationExists(ctx, resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "replication_config_arn"),
 					resource.TestCheckResourceAttr(resourceName, "replication_type", "cdc"),
-					resource.TestCheckResourceAttr(resourceName, "compute_config.0.max_capacity_units", "64"),
-					resource.TestCheckResourceAttr(resourceName, "compute_config.0.min_capacity_units", "8"),
+					resource.TestCheckResourceAttr(resourceName, "compute_config.0.max_capacity_units", "16"),
+					resource.TestCheckResourceAttr(resourceName, "compute_config.0.min_capacity_units", "2"),
+				),
+			},
+			{
+				Config: testAccServerlessReplication_update(rName, "cdc", 4, 32),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckReplicationExists(ctx, resourceName),
+					resource.TestCheckResourceAttrSet(resourceName, "replication_config_arn"),
+					resource.TestCheckResourceAttr(resourceName, "replication_type", "cdc"),
+					resource.TestCheckResourceAttr(resourceName, "compute_config.0.max_capacity_units", "32"),
+					resource.TestCheckResourceAttr(resourceName, "compute_config.0.min_capacity_units", "4"),
 				),
 			},
 		},
