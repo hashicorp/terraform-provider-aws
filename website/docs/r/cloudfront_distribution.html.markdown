@@ -16,7 +16,9 @@ For information about CloudFront distributions, see the [Amazon CloudFront Devel
 
 ## Example Usage
 
-The following example below creates a CloudFront distribution with an S3 origin.
+### S3 Origin
+
+The example below creates a CloudFront distribution with an S3 origin.
 
 ```terraform
 resource "aws_s3_bucket" "b" {
@@ -139,7 +141,9 @@ resource "aws_cloudfront_distribution" "s3_distribution" {
 }
 ```
 
-The example below creates a CloudFront distribution with an origin group for failover routing:
+### With Failover Routing
+
+The example below creates a CloudFront distribution with an origin group for failover routing.
 
 ```terraform
 resource "aws_cloudfront_distribution" "s3_distribution" {
@@ -186,7 +190,9 @@ resource "aws_cloudfront_distribution" "s3_distribution" {
 }
 ```
 
-CloudFront distribution using [managed policies](https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/using-managed-cache-policies.html) (ex: CachingDisabled):
+### With Managed Caching Policy
+
+The example below creates a CloudFront distribution with an [AWS managed caching policy](https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/using-managed-cache-policies.html).
 
 ```terraform
 locals {
@@ -225,6 +231,7 @@ resource "aws_cloudfront_distribution" "s3_distribution" {
   viewer_certificate {
     cloudfront_default_certificate = true
   }
+
   # ... other configuration ...
 }
 ```
