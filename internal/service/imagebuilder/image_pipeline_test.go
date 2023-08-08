@@ -45,6 +45,8 @@ func TestAccImageBuilderImagePipeline_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "distribution_configuration_arn", ""),
 					resource.TestCheckResourceAttr(resourceName, "enhanced_image_metadata_enabled", "true"),
 					resource.TestCheckResourceAttrPair(resourceName, "image_recipe_arn", imageRecipeResourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "image_scanning_configuration.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "image_tests_configuration.0.timeout_minutes", "720"),
 					resource.TestCheckResourceAttr(resourceName, "image_tests_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "image_tests_configuration.0.image_tests_enabled", "true"),
 					resource.TestCheckResourceAttr(resourceName, "image_tests_configuration.0.timeout_minutes", "720"),
@@ -257,6 +259,42 @@ func TestAccImageBuilderImagePipeline_containerRecipeARN(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckImagePipelineExists(ctx, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "container_recipe_arn", containerRecipeResourceName2, "arn"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccImageBuilderImagePipeline_ImageScanning_imageScanningEnabled(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_imagebuilder_image_pipeline.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, imagebuilder.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckImagePipelineDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccImagePipelineConfig_testsConfigurationScanningEnabled(rName, false),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckImagePipelineExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "image_scanning_configuration.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "image_scanning_configuration.0.image_scanning_enabled", "false"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccImagePipelineConfig_testsConfigurationScanningEnabled(rName, true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckImagePipelineExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "image_scanning_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "image_scanning_configuration.0.image_scanning_enabled", "true"),
 				),
 			},
 		},
@@ -858,6 +896,22 @@ resource "aws_imagebuilder_image_pipeline" "test" {
   name                             = %[1]q
 }
 `, rName))
+}
+
+func testAccImagePipelineConfig_testsConfigurationScanningEnabled(rName string, imageScanningEnabled bool) string {
+	return acctest.ConfigCompose(
+		testAccImagePipelineBaseConfig(rName),
+		fmt.Sprintf(`
+resource "aws_imagebuilder_image_pipeline" "test" {
+  image_recipe_arn                 = aws_imagebuilder_image_recipe.test.arn
+  infrastructure_configuration_arn = aws_imagebuilder_infrastructure_configuration.test.arn
+  name                             = %[1]q
+
+  image_scanning_configuration {
+    image_scanning_enabled = %[2]t
+  }
+}
+`, rName, imageScanningEnabled))
 }
 
 func testAccImagePipelineConfig_testsConfigurationTestsEnabled(rName string, imageTestsEnabled bool) string {
