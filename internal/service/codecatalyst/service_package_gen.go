@@ -39,6 +39,11 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			TypeName: "aws_codecatalyst_dev_environment",
 			Name:     "DevEnvironment",
 		},
+		{
+			Factory:  ResourceProject,
+			TypeName: "aws_codecatalyst_project",
+			Name:     "Project",
+		},
 	}
 }
 
