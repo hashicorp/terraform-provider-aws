@@ -65,5 +65,10 @@ resource "aws_msk_vpc_connection" "test" {
   client_subnets     = aws_subnet.client[*].id
   security_groups    = aws_security_group.client[*].id
 }
+
+data "aws_msk_vpc_connection" "test" {
+	arn = aws_msk_vpc_connection.test.arn
+}
+
 `, rName))
 }
