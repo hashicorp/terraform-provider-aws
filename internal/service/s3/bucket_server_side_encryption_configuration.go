@@ -88,7 +88,6 @@ func resourceBucketServerSideEncryptionConfigurationCreate(ctx context.Context, 
 			Rules: expandBucketServerSideEncryptionConfigurationRules(d.Get("rule").(*schema.Set).List()),
 		},
 	}
-
 	if expectedBucketOwner != "" {
 		input.ExpectedBucketOwner = aws.String(expectedBucketOwner)
 	}
@@ -161,7 +160,6 @@ func resourceBucketServerSideEncryptionConfigurationUpdate(ctx context.Context, 
 			Rules: expandBucketServerSideEncryptionConfigurationRules(d.Get("rule").(*schema.Set).List()),
 		},
 	}
-
 	if expectedBucketOwner != "" {
 		input.ExpectedBucketOwner = aws.String(expectedBucketOwner)
 	}
@@ -192,7 +190,6 @@ func resourceBucketServerSideEncryptionConfigurationDelete(ctx context.Context, 
 	input := &s3.DeleteBucketEncryptionInput{
 		Bucket: aws.String(bucket),
 	}
-
 	if expectedBucketOwner != "" {
 		input.ExpectedBucketOwner = aws.String(expectedBucketOwner)
 	}
@@ -205,14 +202,6 @@ func resourceBucketServerSideEncryptionConfigurationDelete(ctx context.Context, 
 
 	if err != nil {
 		return diag.Errorf("deleting S3 Bucket Server-side Encryption Configuration (%s): %s", d.Id(), err)
-	}
-
-	_, err = tfresource.RetryUntilNotFound(ctx, propagationTimeout, func() (interface{}, error) {
-		return FindBucketServerSideEncryptionConfiguration(ctx, conn, bucket, expectedBucketOwner)
-	})
-
-	if err != nil {
-		return diag.Errorf("waiting for S3 Bucket Server-side Encryption Configuration (%s) delete: %s", d.Id(), err)
 	}
 
 	return nil
