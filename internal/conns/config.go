@@ -5,15 +5,18 @@ package conns
 
 import (
 	"context"
-	"log"
+	"fmt"
 
 	aws_sdkv2 "github.com/aws/aws-sdk-go-v2/aws"
 	imds_sdkv2 "github.com/aws/aws-sdk-go-v2/feature/ec2/imds"
 	endpoints_sdkv1 "github.com/aws/aws-sdk-go/aws/endpoints"
 	awsbase "github.com/hashicorp/aws-sdk-go-base/v2"
 	awsbasev1 "github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2"
+	basediag "github.com/hashicorp/aws-sdk-go-base/v2/diag"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -54,6 +57,8 @@ type Config struct {
 
 // ConfigureProvider configures the provided provider Meta (instance data).
 func (c *Config) ConfigureProvider(ctx context.Context, client *AWSClient) (*AWSClient, diag.Diagnostics) {
+	var diags diag.Diagnostics
+
 	awsbaseConfig := awsbase.Config{
 		AccessKey:                     c.AccessKey,
 		APNInfo:                       StdUserAgentProducts(c.TerraformVersion),
@@ -105,39 +110,62 @@ func (c *Config) ConfigureProvider(ctx context.Context, client *AWSClient) (*AWS
 	}
 
 	tflog.Debug(ctx, "Configuring Terraform AWS Provider")
-	ctx, cfg, err := awsbase.GetAwsConfig(ctx, &awsbaseConfig)
-	if err != nil {
-		return nil, diag.Errorf("configuring Terraform AWS Provider: %s", err)
+	ctx, cfg, awsDiags := awsbase.GetAwsConfig(ctx, &awsbaseConfig)
+
+	for _, d := range awsDiags {
+		diags = append(diags, diag.Diagnostic{
+			Severity: baseSeverityToSdkSeverity(d.Severity()),
+			Summary:  d.Summary(),
+			Detail:   d.Detail(),
+		})
+	}
+
+	if diags.HasError() {
+		return nil, diags
 	}
 
 	if !c.SkipRegionValidation {
 		if err := awsbase.ValidateRegion(cfg.Region); err != nil {
-			return nil, diag.FromErr(err)
+			return nil, sdkdiag.AppendFromErr(diags, err)
 		}
 	}
 	c.Region = cfg.Region
 
 	tflog.Debug(ctx, "Creating AWS SDK v1 session")
-	sess, err := awsbasev1.GetSession(ctx, &cfg, &awsbaseConfig)
-	if err != nil {
-		return nil, diag.Errorf("creating AWS SDK v1 session: %s", err)
+	sess, awsDiags := awsbasev1.GetSession(ctx, &cfg, &awsbaseConfig)
+
+	for _, d := range awsDiags {
+		diags = append(diags, diag.Diagnostic{
+			Severity: baseSeverityToSdkSeverity(d.Severity()),
+			Summary:  fmt.Sprintf("creating AWS SDK v1 session: %s", d.Summary()),
+			Detail:   d.Detail(),
+		})
+	}
+
+	if diags.HasError() {
+		return nil, diags
 	}
 
 	tflog.Debug(ctx, "Retrieving AWS account details")
-	accountID, partition, err := awsbase.GetAwsAccountIDAndPartition(ctx, cfg, &awsbaseConfig)
-	if err != nil {
-		return nil, diag.Errorf("retrieving AWS account details: %s", err)
+	accountID, partition, awsDiags := awsbase.GetAwsAccountIDAndPartition(ctx, cfg, &awsbaseConfig)
+	for _, d := range awsDiags {
+		diags = append(diags, diag.Diagnostic{
+			Severity: baseSeverityToSdkSeverity(d.Severity()),
+			Summary:  fmt.Sprintf("retrieving AWS account details: %s", d.Summary()),
+			Detail:   d.Detail(),
+		})
 	}
 
 	if accountID == "" {
-		// TODO: Make this a Warning Diagnostic
-		log.Println("[WARN] AWS account ID not found for provider. See https://www.terraform.io/docs/providers/aws/index.html#skip_requesting_account_id for implications.")
+		diags = append(diags, errs.NewWarningDiagnostic(
+			"AWS account ID not found for provider",
+			"See https://www.terraform.io/docs/providers/aws/index.html#skip_requesting_account_id for implications."))
 	}
 
 	if len(c.ForbiddenAccountIds) > 0 {
 		for _, forbiddenAccountID := range c.ForbiddenAccountIds {
 			if accountID == forbiddenAccountID {
-				return nil, diag.Errorf("AWS account ID not allowed: %s", accountID)
+				return nil, sdkdiag.AppendErrorf(diags, "AWS account ID not allowed: %s", accountID)
 			}
 		}
 	}
@@ -150,7 +178,7 @@ func (c *Config) ConfigureProvider(ctx context.Context, client *AWSClient) (*AWS
 			}
 		}
 		if !found {
-			return nil, diag.Errorf("AWS account ID not allowed: %s", accountID)
+			return nil, sdkdiag.AppendErrorf(diags, "AWS account ID not allowed: %s", accountID)
 		}
 	}
 
@@ -178,5 +206,16 @@ func (c *Config) ConfigureProvider(ctx context.Context, client *AWSClient) (*AWS
 	client.s3UsePathStyle = c.S3UsePathStyle
 	client.stsRegion = c.STSRegion
 
-	return client, nil
+	return client, diags
+}
+
+func baseSeverityToSdkSeverity(s basediag.Severity) diag.Severity {
+	switch s {
+	case basediag.SeverityWarning:
+		return diag.Warning
+	case basediag.SeverityError:
+		return diag.Error
+	default:
+		return -1
+	}
 }
