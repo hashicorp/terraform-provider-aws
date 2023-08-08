@@ -34,6 +34,10 @@ The following arguments are optional:
 
 * `description` - (Optional) The description of the project. This description will be displayed to all users of the project. We recommend providing a brief description of the project and its intended purpose.
 
+## Attribute Reference
+
+This resource exports no additional attributes.
+
 ## Timeouts
 
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
