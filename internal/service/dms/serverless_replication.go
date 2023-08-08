@@ -252,13 +252,6 @@ func resourceServerlessReplicationUpdate(ctx context.Context, d *schema.Resource
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DMSConn(ctx)
 
-	replication, _ := FindReplicationById(ctx, d.Id(), conn)
-
-	// API will return Internal Server Error 500 when trying to modify this resource in deprovisioned state
-	if replication.ProvisionData.ProvisionState != nil && *replication.ProvisionData.ProvisionState == "deprovisioned" {
-		return sdkdiag.AppendErrorf(diags, "error: cannot update when in %s state, remove and recreate resource.", *replication.ProvisionData.ProvisionState)
-	}
-
 	request := &dms.ModifyReplicationConfigInput{
 		ReplicationConfigArn: aws.String(d.Get("replication_config_arn").(string)),
 	}
