@@ -40,6 +40,7 @@ func testAccGroupImportStep(n string) resource.TestStep {
 		ImportStateVerify: true,
 		ImportStateVerifyIgnore: []string{
 			"force_delete",
+			"ignore_failed_scaling_activities",
 			"initial_lifecycle_hook",
 			"tag",
 			"tags",
