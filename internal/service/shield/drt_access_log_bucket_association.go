@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package shield
 
 import (
@@ -6,7 +9,6 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
-	awstypes "github.com/aws/aws-sdk-go-v2/service/shield/types"
 	"github.com/aws/aws-sdk-go/service/shield"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
@@ -167,7 +169,7 @@ func (r *resourceDRTAccessLogBucketAssociation) Read(ctx context.Context, req re
 
 func getAssociatedLogBucket(bucket string, bucketList []*string) *string {
 	for _, bkt := range bucketList {
-		if *bkt == bucket {
+		if aws.ToString(bkt) == bucket {
 			return bkt
 		}
 	}
@@ -236,7 +238,7 @@ func (r *resourceDRTAccessLogBucketAssociation) Delete(ctx context.Context, req 
 
 	_, err := conn.DisassociateDRTLogBucketWithContext(ctx, in)
 	if err != nil {
-		var nfe *awstypes.ResourceNotFoundException
+		var nfe *shield.ResourceNotFoundException
 		if errors.As(err, &nfe) {
 			return
 		}
@@ -348,7 +350,7 @@ func describeDRTAccessLogBucketAssociation(ctx context.Context, conn *shield.Shi
 
 	out, err := conn.DescribeDRTAccessWithContext(ctx, in)
 	if err != nil {
-		var nfe *awstypes.ResourceNotFoundException
+		var nfe *shield.ResourceNotFoundException
 		if errors.As(err, &nfe) {
 			return nil, &retry.NotFoundError{
 				LastError:   err,

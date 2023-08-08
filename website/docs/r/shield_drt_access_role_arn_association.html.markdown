@@ -35,16 +35,13 @@ resource "aws_iam_role_policy_attachment" "test" {
   role       = aws_iam_role.test.name
   policy_arn = "arn:aws:iam::aws:policy/service-role/AWSShieldDRTAccessPolicy"
 }
-d
+
 resource "aws_shield_drt_access_role_arn_association" "test" {
   role_arn             = aws_iam_role.test.arn
 }
 ```
-
 ## Argument Reference
 
 The following arguments are required:
 
 * `role_arn` - (Required) The Amazon Resource Name (ARN) of the role the SRT will use to access your AWS account. Prior to making the AssociateDRTRole request, you must attach the `AWSShieldDRTAccessPolicy` managed policy to this role.
-
-

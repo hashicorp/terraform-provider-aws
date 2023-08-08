@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package shield_test
 
 import (
@@ -6,7 +9,6 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go-v2/service/shield/types"
 	"github.com/aws/aws-sdk-go/service/shield"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -122,7 +124,7 @@ func testAccCheckDRTAccessLogBucketAssociationDestroy(ctx context.Context) resou
 			input := &shield.DescribeDRTAccessInput{}
 			resp, err := conn.DescribeDRTAccessWithContext(ctx, input)
 
-			if errs.IsA[*types.ResourceNotFoundException](err) {
+			if errs.IsA[*shield.ResourceNotFoundException](err) {
 				return nil
 			}
 			if resp != nil {
@@ -184,104 +186,105 @@ func testAccPreCheckLogBucket(ctx context.Context, t *testing.T) {
 func testAccDRTAccessLogBucketAssociationConfig_basic(rName string, bucket string) string {
 	return fmt.Sprintf(`
 
-	data "aws_partition" "current" {}
 
-	resource "aws_s3_bucket" "test" {
-		bucket = %[2]q
-	}
+data "aws_partition" "current" {}
 
-	resource "aws_iam_role" "test" {
-		name = %[1]q
-		assume_role_policy = jsonencode({
-			Version = "2012-10-17"
-			Statement = [
-				{
-					"Sid": "",
-					"Effect": "Allow",
-					"Principal": {
-							"Service": "drt.shield.amazonaws.com"
-					},
-					"Action": "sts:AssumeRole"
-				},
-			]
-		})
-	}
-	
-	resource "aws_iam_role_policy_attachment" "test" {
-		role       = aws_iam_role.test.name
-		policy_arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/service-role/AWSShieldDRTAccessPolicy"
-	}
+resource "aws_s3_bucket" "test" {
+  bucket = %[2]q
+}
 
-	resource "aws_shield_protection_group" "test" {
-		protection_group_id = %[1]q
-		aggregation         = "MAX"
-		pattern             = "ALL"
-	}
-	
-	resource "aws_shield_drt_access_role_arn_association" "test" {
-		role_arn             = aws_iam_role.test.arn
-	}
+resource "aws_iam_role" "test" {
+  name = %[1]q
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        "Sid" : "",
+        "Effect" : "Allow",
+        "Principal" : {
+          "Service" : "drt.shield.amazonaws.com"
+        },
+        "Action" : "sts:AssumeRole"
+      },
+    ]
+  })
+}
 
-	resource "aws_shield_drt_access_log_bucket_association" "test" {
-		log_bucket = aws_s3_bucket.test.id
-		role_arn_association_id = aws_shield_drt_access_role_arn_association.test.id
-	}
+resource "aws_iam_role_policy_attachment" "test" {
+  role       = aws_iam_role.test.name
+  policy_arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/service-role/AWSShieldDRTAccessPolicy"
+}
+
+resource "aws_shield_protection_group" "test" {
+  protection_group_id = %[1]q
+  aggregation         = "MAX"
+  pattern             = "ALL"
+}
+
+resource "aws_shield_drt_access_role_arn_association" "test" {
+  role_arn = aws_iam_role.test.arn
+}
+
+resource "aws_shield_drt_access_log_bucket_association" "test" {
+  log_bucket              = aws_s3_bucket.test.id
+  role_arn_association_id = aws_shield_drt_access_role_arn_association.test.id
+}
 `, rName, bucket)
 }
 
 func testAccDRTAccessLogBucketAssociationConfig_multibucket(rName string, buckets []string) string {
 	return fmt.Sprintf(`
-	data "aws_partition" "current" {}
+data "aws_partition" "current" {}
 
-	resource "aws_s3_bucket" "test1" {
-		bucket = %[2]q
-	}
-	resource "aws_s3_bucket" "test2" {
-		bucket =  %[3]q 
-	}
+resource "aws_s3_bucket" "test1" {
+  bucket = %[2]q
+}
+resource "aws_s3_bucket" "test2" {
+  bucket = %[3]q
+}
 
-	resource "aws_iam_role" "test" {
-		name = %[1]q
-		assume_role_policy = jsonencode({
-			Version = "2012-10-17"
-			Statement = [
-				{
-					"Sid": "",
-					"Effect": "Allow",
-					"Principal": {
-							"Service": "drt.shield.amazonaws.com"
-					},
-					"Action": "sts:AssumeRole"
-				},
-			]
-		})
-	}
-	
-	resource "aws_iam_role_policy_attachment" "test" {
-		role       = aws_iam_role.test.name
-		policy_arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/service-role/AWSShieldDRTAccessPolicy"
-	}
+resource "aws_iam_role" "test" {
+  name = %[1]q
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        "Sid" : "",
+        "Effect" : "Allow",
+        "Principal" : {
+          "Service" : "drt.shield.amazonaws.com"
+        },
+        "Action" : "sts:AssumeRole"
+      },
+    ]
+  })
+}
 
-	resource "aws_shield_protection_group" "test" {
-		protection_group_id = %[1]q
-		aggregation         = "MAX"
-		pattern             = "ALL"
-	}
-	
-	resource "aws_shield_drt_access_role_arn_association" "test" {
-		role_arn             = aws_iam_role.test.arn
-	}
+resource "aws_iam_role_policy_attachment" "test" {
+  role       = aws_iam_role.test.name
+  policy_arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/service-role/AWSShieldDRTAccessPolicy"
+}
 
-	resource "aws_shield_drt_access_log_bucket_association" "test1" {
-		log_bucket = aws_s3_bucket.test1.id
-		role_arn_association_id = aws_shield_drt_access_role_arn_association.test.id
-	}
-	resource "aws_shield_drt_access_log_bucket_association" "test2" {
-		log_bucket = aws_s3_bucket.test2.id
-		role_arn_association_id = aws_shield_drt_access_role_arn_association.test.id
-		depends_on = [
-			aws_shield_drt_access_log_bucket_association.test1
-		]
-	}
+resource "aws_shield_protection_group" "test" {
+  protection_group_id = %[1]q
+  aggregation         = "MAX"
+  pattern             = "ALL"
+}
+
+resource "aws_shield_drt_access_role_arn_association" "test" {
+  role_arn = aws_iam_role.test.arn
+}
+
+resource "aws_shield_drt_access_log_bucket_association" "test1" {
+  log_bucket              = aws_s3_bucket.test1.id
+  role_arn_association_id = aws_shield_drt_access_role_arn_association.test.id
+}
+resource "aws_shield_drt_access_log_bucket_association" "test2" {
+  log_bucket              = aws_s3_bucket.test2.id
+  role_arn_association_id = aws_shield_drt_access_role_arn_association.test.id
+  depends_on = [
+    aws_shield_drt_access_log_bucket_association.test1
+  ]
+}
 `, rName, buckets[0], buckets[1])
 }

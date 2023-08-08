@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package shield_test
 
 import (
@@ -6,7 +9,6 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go-v2/service/shield/types"
 	"github.com/aws/aws-sdk-go/service/shield"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -90,7 +92,7 @@ func testAccCheckDRTAccessRoleArnAssociationDestroy(ctx context.Context) resourc
 			input := &shield.DescribeDRTAccessInput{}
 			resp, err := conn.DescribeDRTAccessWithContext(ctx, input)
 
-			if errs.IsA[*types.ResourceNotFoundException](err) {
+			if errs.IsA[*shield.ResourceNotFoundException](err) {
 				return nil
 			}
 
@@ -143,17 +145,17 @@ func testAccDRTAccessRoleArnAssociationConfig_basic(rName string) string {
 data "aws_partition" "current" {}
 
 resource "aws_iam_role" "test" {
-	name = %[1]q
-	assume_role_policy = jsonencode({
+  name = %[1]q
+  assume_role_policy = jsonencode({
     Version = "2012-10-17"
     Statement = [
       {
-        "Sid": "",
-				"Effect": "Allow",
-				"Principal": {
-						"Service": "drt.shield.amazonaws.com"
-				},
-				"Action": "sts:AssumeRole"
+        "Sid" : "",
+        "Effect" : "Allow",
+        "Principal" : {
+          "Service" : "drt.shield.amazonaws.com"
+        },
+        "Action" : "sts:AssumeRole"
       },
     ]
   })
@@ -171,7 +173,7 @@ resource "aws_iam_role_policy_attachment" "test" {
 }
 
 resource "aws_shield_drt_access_role_arn_association" "test" {
-  role_arn             = aws_iam_role.test.arn
+  role_arn = aws_iam_role.test.arn
 }
 `, rName)
 }
