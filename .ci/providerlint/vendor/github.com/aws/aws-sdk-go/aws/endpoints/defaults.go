@@ -28659,6 +28659,25 @@ var awsPartition = partition{
 				},
 			},
 		},
+		"tnb": service{
+			Endpoints: serviceEndpoints{
+				endpointKey{
+					Region: "ap-southeast-2",
+				}: endpoint{},
+				endpointKey{
+					Region: "eu-central-1",
+				}: endpoint{},
+				endpointKey{
+					Region: "eu-west-3",
+				}: endpoint{},
+				endpointKey{
+					Region: "us-east-1",
+				}: endpoint{},
+				endpointKey{
+					Region: "us-west-2",
+				}: endpoint{},
+			},
+		},
 		"transcribe": service{
 			Defaults: endpointDefaults{
 				defaultKey{}: endpoint{
