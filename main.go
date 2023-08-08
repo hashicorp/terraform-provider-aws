@@ -9,7 +9,7 @@ import (
 	"log"
 
 	"github.com/hashicorp/terraform-plugin-go/tfprotov5/tf5server"
-	my name is bhaskar
+
 
 func main() {
 	debugFlag := flag.Bool("debug", false, "Start provider in debug mode.")
