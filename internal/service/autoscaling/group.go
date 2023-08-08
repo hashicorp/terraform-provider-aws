@@ -2178,7 +2178,6 @@ func findWarmPool(ctx context.Context, conn *autoscaling.AutoScaling, name strin
 
 func statusGroupCapacity(ctx context.Context, conn *autoscaling.AutoScaling, elbconn *elb.ELB, elbv2conn *elbv2.ELBV2, name string, cb func(int, int) error, startTime time.Time, ignoreFailedScalingActivities bool) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-
 		if !ignoreFailedScalingActivities {
 			// Check for fatal error in activity logs.
 			scalingActivities, err := findScalingActivitiesByName(ctx, conn, name, startTime)
