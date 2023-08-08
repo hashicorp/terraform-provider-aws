@@ -122,7 +122,7 @@ func waitReplicationRunning(ctx context.Context, conn *dms.DatabaseMigrationServ
 			replicationStatusProvisioningCapacity,
 			replicationStatusReplicationStarting,
 		},
-		Target:     []string{replicationStatusRunning},
+		Target:     []string{replicationStatusRunning, replicationStatusStopped},
 		Refresh:    statusReplication(ctx, conn, id),
 		Timeout:    replicationRunningTimeout,
 		MinTimeout: 10 * time.Second,
