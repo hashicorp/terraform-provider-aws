@@ -6,6 +6,7 @@ package imagebuilder_test
 import (
 	"context"
 	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -295,6 +296,49 @@ func TestAccImageBuilderImagePipeline_ImageScanning_imageScanningEnabled(t *test
 					testAccCheckImagePipelineExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "image_scanning_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "image_scanning_configuration.0.image_scanning_enabled", "true"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccImageBuilderImagePipeline_ImageScanning_imageScanningEnabledAdvanced(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_imagebuilder_image_pipeline.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, imagebuilder.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckImagePipelineDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccImagePipelineConfig_testsConfigurationScanningEnabledAdvanced(rName, []string {"a", "b"}, "testRepoName"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckImagePipelineExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "image_scanning_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "image_scanning_configuration.0.image_scanning_enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "image_scanning_configuration.1.ecr_configuration.0.repository_name", "testRepoName"),
+					resource.TestCheckResourceAttr(resourceName, "image_scanning_configuration.1.ecr_configuration.0.container_tags.0", "a"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "image_scanning_configuration.1.ecr_configuration.0.container_tags.*", "a"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "image_scanning_configuration.1.ecr_configuration.0.container_tags.*", "b"),
+					resource.TestCheckResourceAttr(resourceName, "image_scanning_configuration.1.ecr_configuration.0.container_tags.1", "b"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccImagePipelineConfig_testsConfigurationScanningEnabledAdvanced(rName, []string {"a", "c"}, "testRepoName"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckImagePipelineExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "image_scanning_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "image_scanning_configuration.0.image_scanning_enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "image_scanning_configuration.0.ecr_configuration.0.container_tags.0", "a"),
+					resource.TestCheckResourceAttr(resourceName, "image_scanning_configuration.0.ecr_configuration.0.container_tags.1", "c"),
 				),
 			},
 		},
@@ -912,6 +956,30 @@ resource "aws_imagebuilder_image_pipeline" "test" {
   }
 }
 `, rName, imageScanningEnabled))
+}
+
+func testAccImagePipelineConfig_testsConfigurationScanningEnabledAdvanced(rName string, imageTags []string , repositoryName string) string {
+	commaSepImageTags := ""
+	if len(imageTags) > 0  {
+		commaSepImageTags = "\"" + strings.Join(imageTags, "\", \"") + "\""
+	} 
+	return acctest.ConfigCompose(
+		testAccImagePipelineBaseConfig(rName),
+		fmt.Sprintf(`
+resource "aws_imagebuilder_image_pipeline" "test" {
+  image_recipe_arn                 = aws_imagebuilder_image_recipe.test.arn
+  infrastructure_configuration_arn = aws_imagebuilder_infrastructure_configuration.test.arn
+  name                             = %[1]q
+
+  image_scanning_configuration {
+    image_scanning_enabled = true
+	ecr_configuration {
+		container_tags = [%[2]s]
+		repository_name = %[3]q
+	}
+  }
+}
+`, rName, commaSepImageTags, repositoryName))
 }
 
 func testAccImagePipelineConfig_testsConfigurationTestsEnabled(rName string, imageTestsEnabled bool) string {

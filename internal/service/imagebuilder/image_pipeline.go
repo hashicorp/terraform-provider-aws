@@ -105,13 +105,13 @@ func ResourceImagePipeline() *schema.Resource {
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"container_tags": {
-										Type:     schema.TypeList,
+										Type:     schema.TypeSet,
 										Optional: true,
 										Elem:  &schema.Schema{
 											Type: schema.TypeString,
 										  },
 									},
-									"respository_name": {
+									"repository_name": {
 										Type:     schema.TypeString,
 										Optional: true,
 									},
