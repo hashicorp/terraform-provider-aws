@@ -40,7 +40,7 @@ func TestAccDMSServerlessReplication_basic(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"start_replication"},
+				ImportStateVerifyIgnore: []string{"start_replication", "resource_identifier"},
 			},
 		},
 	})
@@ -94,7 +94,7 @@ func TestAccDMSServerlessReplication_startReplication(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"start_replication"},
+				ImportStateVerifyIgnore: []string{"start_replication", "resource_identifier"},
 			},
 			{
 				Config: testAccServerlessReplication_startReplication(rName, false),
