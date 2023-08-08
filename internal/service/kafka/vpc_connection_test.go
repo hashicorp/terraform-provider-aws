@@ -132,7 +132,7 @@ resource "aws_msk_cluster" "test" {
 
   broker_node_group_info {
     client_subnets  = aws_subnet.test[*].id
-    instance_type   = "kafka.t3.small"
+    instance_type   = "kafka.m5.large"
     security_groups = [aws_security_group.test.id]
 
     connectivity_info {
