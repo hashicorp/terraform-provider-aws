@@ -30,6 +30,7 @@ The following arguments are required:
 * `display_name` - (Required) The friendly name of the project that will be displayed to users.
 
 The following arguments are optional:
+
 * `description` - (Optional) The description of the project. This description will be displayed to all users of the project. We recommend providing a brief description of the project and its intended purpose.
 
 ## Attribute Reference
