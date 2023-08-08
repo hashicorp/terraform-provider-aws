@@ -21,7 +21,7 @@ import (
 func TestAccDMSServerlessReplication_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_dms_replication.test"
+	resourceName := "aws_dms_serverless_replication.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -33,19 +33,75 @@ func TestAccDMSServerlessReplication_basic(t *testing.T) {
 				Config: testAccServerlessReplication_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckReplicationExists(ctx, resourceName),
-					resource.TestCheckResourceAttrSet(resourceName, "replication_task_arn"),
+					resource.TestCheckResourceAttrSet(resourceName, "replication_config_arn"),
 				),
-			},
-			{
-				Config:             testAccServerlessReplication_basic(rName),
-				PlanOnly:           true,
-				ExpectNonEmptyPlan: false,
 			},
 			{
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"start_replication_task"},
+				ImportStateVerifyIgnore: []string{"start_replication"},
+			},
+		},
+	})
+}
+
+func TestAccDMSServerlessReplication_update(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_dms_serverless_replication.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, dms.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckReplicationDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccServerlessReplication_update(rName, "cdc", 8, 64),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckReplicationExists(ctx, resourceName),
+					resource.TestCheckResourceAttrSet(resourceName, "replication_config_arn"),
+					resource.TestCheckResourceAttr(resourceName, "replication_type", "cdc"),
+					resource.TestCheckResourceAttr(resourceName, "compute_config.0.max_capacity_units", "64"),
+					resource.TestCheckResourceAttr(resourceName, "compute_config.0.min_capacity_units", "8"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccDMSServerlessReplication_startReplication(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_dms_serverless_replication.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, dms.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckReplicationDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccServerlessReplication_startReplication(rName, true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckReplicationExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "start_replication", "true"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"start_replication"},
+			},
+			{
+				Config: testAccServerlessReplication_startReplication(rName, false),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckReplicationExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "start_replication", "false"),
+				),
 			},
 		},
 	})
@@ -103,8 +159,8 @@ func testAccServerlessReplication_basic(rName string) string {
 		fmt.Sprintf(`
 resource "aws_dms_serverless_replication" "test" {
   replication_config_identifier = %[1]q
-  resource_identifier = "target"
-  replication_type = "full-load"
+  resource_identifier = %[1]q
+  replication_type = "cdc"
   source_endpoint_arn = aws_dms_endpoint.source.endpoint_arn
   target_endpoint_arn = aws_dms_endpoint.target.endpoint_arn
   table_mappings = "{\"rules\":[{\"rule-type\":\"selection\",\"rule-id\":\"1\",\"rule-name\":\"1\",\"object-locator\":{\"schema-name\":\"%%\",\"table-name\":\"%%\"},\"rule-action\":\"include\"}]}"
@@ -117,6 +173,54 @@ resource "aws_dms_serverless_replication" "test" {
   }
 }
 `, rName))
+}
+
+func testAccServerlessReplication_update(rName, replicationType string, minCapacity, maxCapacity int) string {
+	return acctest.ConfigCompose(
+		serverlessReplicationDbToDb(rName),
+		serverlessReplicationBase(rName),
+		fmt.Sprintf(`
+resource "aws_dms_serverless_replication" "test" {
+  replication_config_identifier = %[1]q
+  resource_identifier = %[1]q
+  replication_type = %[2]q
+  source_endpoint_arn = aws_dms_endpoint.source.endpoint_arn
+  target_endpoint_arn = aws_dms_endpoint.target.endpoint_arn
+  table_mappings = "{\"rules\":[{\"rule-type\":\"selection\",\"rule-id\":\"1\",\"rule-name\":\"1\",\"object-locator\":{\"schema-name\":\"%%\",\"table-name\":\"%%\"},\"rule-action\":\"include\"}]}"
+
+  compute_config {
+    replication_subnet_group_id = aws_dms_replication_subnet_group.test.replication_subnet_group_id
+    max_capacity_units = "%[3]d"
+    min_capacity_units = "%[4]d"
+    preferred_maintenance_window = "sun:23:45-mon:00:30"
+  }
+}
+`, rName, replicationType, maxCapacity, minCapacity))
+}
+
+func testAccServerlessReplication_startReplication(rName string, start bool) string {
+	return acctest.ConfigCompose(
+		serverlessReplicationDbToDb(rName),
+		serverlessReplicationBase(rName),
+		fmt.Sprintf(`
+resource "aws_dms_serverless_replication" "test" {
+  replication_config_identifier = %[1]q
+  resource_identifier = %[1]q
+  replication_type = "cdc"
+  source_endpoint_arn = aws_dms_endpoint.source.endpoint_arn
+  target_endpoint_arn = aws_dms_endpoint.target.endpoint_arn
+  table_mappings = "{\"rules\":[{\"rule-type\":\"selection\",\"rule-id\":\"1\",\"rule-name\":\"1\",\"object-locator\":{\"schema-name\":\"%%\",\"table-name\":\"%%\"},\"rule-action\":\"include\"}]}"
+
+  start_replication = %[2]t
+
+  compute_config {
+    replication_subnet_group_id = aws_dms_replication_subnet_group.test.replication_subnet_group_id
+    max_capacity_units = "128"
+    min_capacity_units = "2"
+    preferred_maintenance_window = "sun:23:45-mon:00:30"
+  }
+}
+`, rName, start))
 }
 
 func serverlessReplicationDbToDb(rName string) string {
@@ -221,18 +325,30 @@ data "aws_region" "current" {}
 
 resource "aws_vpc" "test" {
   cidr_block = "10.1.0.0/16"
+
+  tags = {
+    Name = "%[1]s-vpc"
+  }
 }
 
 resource "aws_subnet" "test1" {
   cidr_block        = "10.1.1.0/24"
   availability_zone = data.aws_availability_zones.available.names[0]
   vpc_id            = aws_vpc.test.id
+
+  tags = {
+    Name = "%[1]s-subnet-test1"
+  }
 }
 
 resource "aws_subnet" "test2" {
   cidr_block        = "10.1.2.0/24"
   availability_zone = data.aws_availability_zones.available.names[1]
   vpc_id            = aws_vpc.test.id
+
+  tags = {
+    Name = "%[1]s-subnet-test2"
+  }
 }
 
 resource "aws_dms_replication_subnet_group" "test" {

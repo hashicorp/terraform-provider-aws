@@ -109,12 +109,22 @@ func FindReplicationById(ctx context.Context, id string, conn *dms.DatabaseMigra
 
 	if tfawserr.ErrCodeEquals(err, dms.ErrCodeResourceNotFoundFault) {
 		log.Printf("[WARN] DMS Serverless Replication (%s) not found", id)
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: id,
+		}
+	}
+
+	if err != nil {
 		return nil, err
 	}
 
-	if response == nil || len(response.Replications) == 0 || response.Replications[0] == nil {
-		log.Printf("[WARN] DMS Serverless Replication (%s) not found", id)
-		return nil, err
+	if len(response.Replications) == 0 {
+		return nil, tfresource.NewEmptyResultError(id)
+	}
+
+	if count := len(response.Replications); count > 1 {
+		return nil, tfresource.NewTooManyResultsError(count, id)
 	}
 
 	return response.Replications[0], nil

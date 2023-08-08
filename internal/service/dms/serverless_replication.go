@@ -142,6 +142,7 @@ func ResourceServerlessReplication() *schema.Resource {
 			},
 			"resource_identifier": {
 				Type:     schema.TypeString,
+				Computed: true,
 				Optional: true,
 			},
 			"supplemental_settings": {
@@ -251,46 +252,74 @@ func resourceServerlessReplicationUpdate(ctx context.Context, d *schema.Resource
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DMSConn(ctx)
 
+	replication, _ := FindReplicationById(ctx, d.Id(), conn)
+
+	// API will return Internal Server Error 500 when trying to modify this resource in deprovisioned state
+	if replication.ProvisionData.ProvisionState != nil && *replication.ProvisionData.ProvisionState == "deprovisioned" {
+		return sdkdiag.AppendErrorf(diags, "error: cannot update when in %s state, remove and recreate resource.", *replication.ProvisionData.ProvisionState)
+	}
+
 	request := &dms.ModifyReplicationConfigInput{
 		ReplicationConfigArn: aws.String(d.Get("replication_config_arn").(string)),
 	}
 	hasChanges := false
 
-	if d.HasChange("compute_config") {
-		if v, ok := d.GetOk("compute_config"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-			request.ComputeConfig = expandComputeConfigInput(v.([]interface{}))
+	if d.HasChangesExcept("tags", "tags_all", "start_replication") {
+
+		if d.HasChange("compute_config") {
+			if v, ok := d.GetOk("compute_config"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+				request.ComputeConfig = expandComputeConfigInput(v.([]interface{}))
+			}
+			hasChanges = true
 		}
-		hasChanges = true
-	}
 
-	if d.HasChange("replication_type") {
-		request.ReplicationType = aws.String(d.Get("replication_type").(string))
-		hasChanges = true
-	}
+		if d.HasChange("replication_type") {
+			request.ReplicationType = aws.String(d.Get("replication_type").(string))
+			hasChanges = true
+		}
 
-	if d.HasChange("source_endpoint_arn") {
-		request.SourceEndpointArn = aws.String(d.Get("source_endpoint_arn").(string))
-		hasChanges = true
-	}
+		if d.HasChange("source_endpoint_arn") {
+			request.SourceEndpointArn = aws.String(d.Get("source_endpoint_arn").(string))
+			hasChanges = true
+		}
 
-	if d.HasChange("table_mappings") {
-		request.TableMappings = aws.String(d.Get("table_mappings").(string))
-		hasChanges = true
-	}
+		if d.HasChange("table_mappings") {
+			request.TableMappings = aws.String(d.Get("table_mappings").(string))
+			hasChanges = true
+		}
 
-	if d.HasChange("target_endpoint_arn") {
-		request.TargetEndpointArn = aws.String(d.Get("target_endpoint_arn").(string))
-		hasChanges = true
-	}
+		if d.HasChange("target_endpoint_arn") {
+			request.TargetEndpointArn = aws.String(d.Get("target_endpoint_arn").(string))
+			hasChanges = true
+		}
 
-	if d.HasChange("replication_settings") {
-		request.ReplicationSettings = aws.String(d.Get("replication_settings").(string))
-		hasChanges = true
-	}
+		if d.HasChange("replication_settings") {
+			request.ReplicationSettings = aws.String(d.Get("replication_settings").(string))
+			hasChanges = true
+		}
 
-	if d.HasChange("supplemental_settings") {
-		request.SupplementalSettings = aws.String(d.Get("supplemental_settings").(string))
-		hasChanges = true
+		if d.HasChange("supplemental_settings") {
+			request.SupplementalSettings = aws.String(d.Get("supplemental_settings").(string))
+			hasChanges = true
+		}
+
+		if hasChanges {
+
+			if err := stopReplication(ctx, d.Id(), conn); err != nil {
+				return sdkdiag.AppendFromErr(diags, err)
+			}
+
+			_, err := conn.ModifyReplicationConfigWithContext(ctx, request)
+			if err != nil {
+				return sdkdiag.AppendErrorf(diags, "modifying DMS Serverless Replication Config (%s): %s", d.Id(), err)
+			}
+
+			if d.Get("start_replication").(bool) {
+				if err := startReplication(ctx, d.Id(), conn); err != nil {
+					return sdkdiag.AppendFromErr(diags, err)
+				}
+			}
+		}
 	}
 
 	if d.HasChange("start_replication") {
@@ -302,21 +331,6 @@ func resourceServerlessReplicationUpdate(ctx context.Context, d *schema.Resource
 			if err := stopReplication(ctx, d.Id(), conn); err != nil {
 				return sdkdiag.AppendFromErr(diags, err)
 			}
-		}
-	}
-
-	if hasChanges {
-
-		replication, _ := FindReplicationById(ctx, d.Id(), conn)
-		if *replication.Status != replicationStatusCreated && *replication.Status != replicationStatusStopped && *replication.Status != replicationStatusFailed {
-			if err := stopReplication(ctx, d.Id(), conn); err != nil {
-				return sdkdiag.AppendFromErr(diags, err)
-			}
-		}
-
-		_, err := conn.ModifyReplicationConfigWithContext(ctx, request)
-		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "modifying DMS Serverless Replication Config (%s): %s", d.Id(), err)
 		}
 	}
 
@@ -419,6 +433,10 @@ func startReplication(ctx context.Context, id string, conn *dms.DatabaseMigratio
 
 	replication, _ := FindReplicationById(ctx, id, conn)
 
+	if *replication.Status == replicationStatusRunning {
+		return nil
+	}
+
 	startReplicationType := replicationTypeValueStartReplication
 	if *replication.Status != replicationStatusReady {
 		startReplicationType = replicationTypeValueResumeProcessing
@@ -447,7 +465,7 @@ func stopReplication(ctx context.Context, id string, conn *dms.DatabaseMigration
 	replication, _ := FindReplicationById(ctx, id, conn)
 
 	if *replication.Status == replicationStatusStopped || *replication.Status == replicationStatusCreated || *replication.Status == replicationStatusFailed {
-		return fmt.Errorf("cannot stop DMS Serverless Replication in current status: %s", *replication.Status)
+		return nil
 	}
 
 	_, err := conn.StopReplicationWithContext(ctx, &dms.StopReplicationInput{

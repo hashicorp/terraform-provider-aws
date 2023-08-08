@@ -137,7 +137,7 @@ func waitReplicationRunning(ctx context.Context, conn *dms.DatabaseMigrationServ
 
 func waitReplicationStopped(ctx context.Context, conn *dms.DatabaseMigrationService, id string) error {
 	stateConf := &retry.StateChangeConf{
-		Pending:    []string{replicationStatusLoadStarted},
+		Pending:    []string{replicationStatusStopping, replicationStatusRunning},
 		Target:     []string{replicationStatusStopped},
 		Refresh:    statusReplication(ctx, conn, id),
 		Timeout:    replicationRunningTimeout,
