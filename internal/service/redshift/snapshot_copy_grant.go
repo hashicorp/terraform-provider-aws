@@ -42,16 +42,16 @@ func ResourceSnapshotCopyGrant() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"snapshot_copy_grant_name": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
 			"kms_key_id": {
 				Type:     schema.TypeString,
 				Optional: true,
 				ForceNew: true,
 				Computed: true,
+			},
+			"snapshot_copy_grant_name": {
+				Type:     schema.TypeString,
+				Required: true,
+				ForceNew: true,
 			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
@@ -65,10 +65,9 @@ func resourceSnapshotCopyGrantCreate(ctx context.Context, d *schema.ResourceData
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RedshiftConn(ctx)
 
-	grantName := d.Get("snapshot_copy_grant_name").(string)
-
-	input := redshift.CreateSnapshotCopyGrantInput{
-		SnapshotCopyGrantName: aws.String(grantName),
+	name := d.Get("snapshot_copy_grant_name").(string)
+	input := &redshift.CreateSnapshotCopyGrantInput{
+		SnapshotCopyGrantName: aws.String(name),
 		Tags:                  getTagsIn(ctx),
 	}
 
@@ -76,25 +75,20 @@ func resourceSnapshotCopyGrantCreate(ctx context.Context, d *schema.ResourceData
 		input.KmsKeyId = aws.String(v.(string))
 	}
 
-	log.Printf("[DEBUG]: Adding new Redshift SnapshotCopyGrant: %s", input)
-
-	var out *redshift.CreateSnapshotCopyGrantOutput
-	var err error
-
-	out, err = conn.CreateSnapshotCopyGrantWithContext(ctx, &input)
+	_, err := conn.CreateSnapshotCopyGrantWithContext(ctx, input)
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating Redshift Snapshot Copy Grant (%s): %s", grantName, err)
+		return sdkdiag.AppendErrorf(diags, "creating Redshift Snapshot Copy Grant (%s): %s", name, err)
 	}
 
-	log.Printf("[DEBUG] Created new Redshift SnapshotCopyGrant: %s", *out.SnapshotCopyGrant.SnapshotCopyGrantName)
-	d.SetId(grantName)
+	d.SetId(name)
 
 	_, err = tfresource.RetryWhenNotFound(ctx, 3*time.Minute, func() (any, error) {
-		return findSnapshotCopyGrant(ctx, conn, grantName)
+		return findSnapshotCopyGrant(ctx, conn, d.Id())
 	})
+
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating Redshift Snapshot Copy Grant (%s): waiting for completion: %s", grantName, err)
+		return sdkdiag.AppendErrorf(diags, "waiting for Redshift Snapshot Copy Grant (%s) create: %s", d.Id(), err)
 	}
 
 	return append(diags, resourceSnapshotCopyGrantRead(ctx, d, meta)...)
