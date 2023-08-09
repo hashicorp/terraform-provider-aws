@@ -67,7 +67,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			TypeName: "aws_transfer_profile",
 			Name:     "Profile",
 			Tags: &types.ServicePackageResourceTags{
-				IdentifierAttribute: "profile_id",
+				IdentifierAttribute: "arn",
 			},
 		},
 		{
