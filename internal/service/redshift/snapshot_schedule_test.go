@@ -362,16 +362,17 @@ func testAccCheckSnapshotScheduleCreateSnapshotScheduleAssociation(ctx context.C
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftConn(ctx)
 
-		if _, err := conn.ModifyClusterSnapshotScheduleWithContext(ctx, &redshift.ModifyClusterSnapshotScheduleInput{
+		_, err := conn.ModifyClusterSnapshotScheduleWithContext(ctx, &redshift.ModifyClusterSnapshotScheduleInput{
 			ClusterIdentifier:    cluster.ClusterIdentifier,
 			ScheduleIdentifier:   snapshotSchedule.ScheduleIdentifier,
 			DisassociateSchedule: aws.Bool(false),
-		}); err != nil {
-			return fmt.Errorf("Error associate Redshift Cluster and Snapshot Schedule: %s", err)
+		})
+
+		if err != nil {
+			return err
 		}
 
-		id := fmt.Sprintf("%s/%s", aws.StringValue(cluster.ClusterIdentifier), aws.StringValue(snapshotSchedule.ScheduleIdentifier))
-		if _, err := tfredshift.WaitScheduleAssociationActive(ctx, conn, id); err != nil {
+		if _, err := tfredshift.WaitSnapshotScheduleAssociationCreated(ctx, conn, aws.StringValue(cluster.ClusterIdentifier), aws.StringValue(snapshotSchedule.ScheduleIdentifier)); err != nil {
 			return err
 		}
 

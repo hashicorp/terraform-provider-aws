@@ -164,8 +164,10 @@ func resourceSnapshotScheduleDelete(ctx context.Context, d *schema.ResourceData,
 	conn := meta.(*conns.AWSClient).RedshiftConn(ctx)
 
 	if d.Get("force_destroy").(bool) {
-		if err := resourceSnapshotScheduleDeleteAllAssociatedClusters(ctx, conn, d.Id()); err != nil {
-			return sdkdiag.AppendErrorf(diags, "deleting Redshift Snapshot Schedule (%s): %s", d.Id(), err)
+		diags = append(diags, snapshotScheduleDisassociateAll(ctx, conn, d.Id())...)
+
+		if diags.HasError() {
+			return diags
 		}
 	}
 
@@ -185,53 +187,40 @@ func resourceSnapshotScheduleDelete(ctx context.Context, d *schema.ResourceData,
 	return diags
 }
 
-func resourceSnapshotScheduleDeleteAllAssociatedClusters(ctx context.Context, conn *redshift.Redshift, scheduleIdentifier string) error {
-	resp, err := conn.DescribeSnapshotSchedulesWithContext(ctx, &redshift.DescribeSnapshotSchedulesInput{
-		ScheduleIdentifier: aws.String(scheduleIdentifier),
-	})
-	if tfawserr.ErrCodeEquals(err, redshift.ErrCodeSnapshotScheduleNotFoundFault) {
-		return nil
-	}
-	if err != nil {
-		return err
-	}
-	if resp.SnapshotSchedules == nil || len(resp.SnapshotSchedules) != 1 {
-		log.Printf("[WARN] Unable to find Redshift Cluster Snapshot Schedule (%s)", scheduleIdentifier)
-		return nil
-	}
+func snapshotScheduleDisassociateAll(ctx context.Context, conn *redshift.Redshift, id string) diag.Diagnostics {
+	var diags diag.Diagnostics
 
-	snapshotSchedule := resp.SnapshotSchedules[0]
+	snapshotSchedule, err := FindSnapshotScheduleByID(ctx, conn, id)
+
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "reading Redshift Snapshot Schedule (%s): %s", id, err)
+	}
 
 	for _, associatedCluster := range snapshotSchedule.AssociatedClusters {
+		clusterIdentifier := aws.StringValue(associatedCluster.ClusterIdentifier)
 		_, err = conn.ModifyClusterSnapshotScheduleWithContext(ctx, &redshift.ModifyClusterSnapshotScheduleInput{
-			ClusterIdentifier:    associatedCluster.ClusterIdentifier,
-			ScheduleIdentifier:   aws.String(scheduleIdentifier),
+			ClusterIdentifier:    aws.String(clusterIdentifier),
+			ScheduleIdentifier:   aws.String(id),
 			DisassociateSchedule: aws.Bool(true),
 		})
 
-		clusterId := aws.StringValue(associatedCluster.ClusterIdentifier)
+		if tfawserr.ErrCodeEquals(err, redshift.ErrCodeClusterNotFoundFault, redshift.ErrCodeSnapshotScheduleNotFoundFault) {
+			continue
+		}
 
-		if tfawserr.ErrCodeEquals(err, redshift.ErrCodeClusterNotFoundFault) {
-			log.Printf("[WARN] Redshift Snapshot Cluster (%s) not found, removing from state", clusterId)
-			continue
-		}
-		if tfawserr.ErrCodeEquals(err, redshift.ErrCodeSnapshotScheduleNotFoundFault) {
-			log.Printf("[WARN] Redshift Snapshot Schedule (%s) not found, removing from state", scheduleIdentifier)
-			continue
-		}
 		if err != nil {
-			return fmt.Errorf("disassociating Redshift Cluster (%s): %s", clusterId, err)
+			return sdkdiag.AppendErrorf(diags, "deleting Redshift Snapshot Schedule Association (%s): %s", SnapshotScheduleAssociationCreateResourceID(clusterIdentifier, id), err)
 		}
 	}
 
 	for _, associatedCluster := range snapshotSchedule.AssociatedClusters {
-		id := fmt.Sprintf("%s/%s", aws.StringValue(associatedCluster.ClusterIdentifier), scheduleIdentifier)
-		if _, err := waitScheduleAssociationDeleted(ctx, conn, id); err != nil {
-			return err
+		clusterIdentifier := aws.StringValue(associatedCluster.ClusterIdentifier)
+		if _, err := waitSnapshotScheduleAssociationDeleted(ctx, conn, clusterIdentifier, id); err != nil {
+			return sdkdiag.AppendErrorf(diags, "waiting for Redshift Snapshot Schedule Association (%s) delete: %s", SnapshotScheduleAssociationCreateResourceID(clusterIdentifier, id), err)
 		}
 	}
 
-	return nil
+	return diags
 }
 
 func FindSnapshotScheduleByID(ctx context.Context, conn *redshift.Redshift, id string) (*redshift.SnapshotSchedule, error) {
