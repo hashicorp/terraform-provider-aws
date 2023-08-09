@@ -15,9 +15,9 @@ import (
 )
 
 // @SDKDataSource("aws_msk_vpc_connection", name="VPC Connection")
-func DataSourceVpcConnection() *schema.Resource {
+func DataSourceVPCConnection() *schema.Resource {
 	return &schema.Resource{
-		ReadWithoutTimeout: dataSourceVpcConnectionRead,
+		ReadWithoutTimeout: dataSourceVPCConnectionRead,
 
 		Schema: map[string]*schema.Schema{
 			"arn": {
@@ -50,7 +50,7 @@ func DataSourceVpcConnection() *schema.Resource {
 	}
 }
 
-func dataSourceVpcConnectionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceVPCConnectionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).KafkaClient(ctx)
 
