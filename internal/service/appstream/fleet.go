@@ -158,7 +158,7 @@ func ResourceFleet() *schema.Resource {
 				Type:         schema.TypeInt,
 				Optional:     true,
 				Computed:     true,
-				ValidateFunc: validation.IntBetween(600, 360000),
+				ValidateFunc: validation.IntBetween(600, 432000),
 			},
 			"name": {
 				Type:     schema.TypeString,
