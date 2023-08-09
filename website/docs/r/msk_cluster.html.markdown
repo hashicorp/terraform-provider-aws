@@ -227,7 +227,7 @@ This resource supports the following arguments:
 ### broker_node_group_info connectivity_info Argument Reference
 
 * `public_access` - (Optional) Access control settings for brokers. See below.
-* `vpc_connectivity` - (Optional) VPC connectivity access control for brokers.. See below.
+* `vpc_connectivity` - (Optional) VPC connectivity access control for brokers. See below.
 
 ### connectivity_info public_access Argument Reference
 
@@ -246,24 +246,6 @@ This resource supports the following arguments:
 
 * `iam` - (Optional) Enables SASL/IAM authentication for VPC connectivity.
 * `scram` - (Optional) Enables SASL/SCRAM authentication for VPC connectivity.
-
-### connectivity_info vpc_connectivity Argument Reference
-
-* `client_authentication` - (Optional) VPC connection control settings for brokers.
-
-### vpc connectivity client_authentication Argument Reference
-
-* `sasl` - (Optional) Configuration block for specifying SASL client authentication. See below.
-* `tls` - (Optional) Configuration block for specifying TLS client authentication. See below.
-
-#### vpc connectivity client_authentication sasl Argument Reference
-
-* `iam` - (Optional) Enables IAM client authentication. Defaults to `false`.
-* `scram` - (Optional) SASL/SCRAM authentication is enabled or not. Defaults to `false`.
-
-#### vpc connectivity client_authentication tls Argument Reference
-
-* `tls` - (Optional) TLS authentication is enabled or not. Defaults to `false`.
 
 ### broker_node_group_info storage_info Argument Reference
 
