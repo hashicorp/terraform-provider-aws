@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package kafka
 
 import (
@@ -11,7 +14,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 )
 
-// @SDKDataSource("aws_msk_vpc_connection", name="Vpc Connection")
+// @SDKDataSource("aws_msk_vpc_connection", name="VPC Connection")
 func DataSourceVpcConnection() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceVpcConnectionRead,
