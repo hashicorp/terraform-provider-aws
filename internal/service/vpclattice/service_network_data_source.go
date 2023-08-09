@@ -7,10 +7,12 @@ import (
 	"context"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -53,7 +55,7 @@ func DataSourceServiceNetwork() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"tags": tftags.TagsSchemaComputed(),
+			names.AttrTags: tftags.TagsSchemaComputed(),
 		},
 	}
 }
@@ -63,7 +65,9 @@ const (
 )
 
 func dataSourceServiceNetworkRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).VPCLatticeClient(ctx)
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	serviceNetworkID := d.Get("service_network_identifier").(string)
 	out, err := findServiceNetworkByID(ctx, conn, serviceNetworkID)
@@ -73,7 +77,8 @@ func dataSourceServiceNetworkRead(ctx context.Context, d *schema.ResourceData, m
 	}
 
 	d.SetId(aws.ToString(out.Id))
-	d.Set("arn", out.Arn)
+	outArn := aws.ToString(out.Arn)
+	d.Set("arn", outArn)
 	d.Set("auth_type", out.AuthType)
 	d.Set("created_at", aws.ToTime(out.CreatedAt).String())
 	d.Set("last_updated_at", aws.ToTime(out.LastUpdatedAt).String())
@@ -82,17 +87,27 @@ func dataSourceServiceNetworkRead(ctx context.Context, d *schema.ResourceData, m
 	d.Set("number_of_associated_vpcs", out.NumberOfAssociatedVPCs)
 	d.Set("service_network_identifier", out.Id)
 
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
-	tags, err := listTags(ctx, conn, aws.ToString(out.Arn))
+	// https://docs.aws.amazon.com/vpc-lattice/latest/ug/sharing.html#sharing-perms
+	// Owners and consumers can list tags and can tag/untag resources in a service network that the account created.
+	// They can't list tags and tag/untag resources in a service network that aren't created by the account.
+	var tags tftags.KeyValueTags
 
+	parsedArn, err := arn.Parse(outArn)
 	if err != nil {
-		return create.DiagError(names.VPCLattice, create.ErrActionReading, DSNameServiceNetwork, serviceNetworkID, err)
+		return sdkdiag.AppendErrorf(diags, "parsing ARN: %s", err)
 	}
 
-	//lintignore:AWSR002
+	if parsedArn.AccountID == meta.(*conns.AWSClient).AccountID {
+		tags, err = listTags(ctx, conn, outArn)
+
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "listing tags for VPC Lattice Service Network (%s): %s", outArn, err)
+		}
+	}
+
 	if err := d.Set("tags", tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return create.DiagError(names.VPCLattice, create.ErrActionSetting, DSNameServiceNetwork, d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 
-	return nil
+	return diags
 }
