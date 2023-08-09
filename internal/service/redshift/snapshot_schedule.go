@@ -150,13 +150,15 @@ func resourceSnapshotScheduleUpdate(ctx context.Context, d *schema.ResourceData,
 	conn := meta.(*conns.AWSClient).RedshiftConn(ctx)
 
 	if d.HasChange("definitions") {
-		modifyOpts := &redshift.ModifySnapshotScheduleInput{
-			ScheduleIdentifier:  aws.String(d.Id()),
+		input := &redshift.ModifySnapshotScheduleInput{
 			ScheduleDefinitions: flex.ExpandStringSet(d.Get("definitions").(*schema.Set)),
+			ScheduleIdentifier:  aws.String(d.Id()),
 		}
-		_, err := conn.ModifySnapshotScheduleWithContext(ctx, modifyOpts)
+
+		_, err := conn.ModifySnapshotScheduleWithContext(ctx, input)
+
 		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "modifying Redshift Snapshot Schedule %s: %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "updating Redshift Snapshot Schedule (%s): %s", d.Id(), err)
 		}
 	}
 
