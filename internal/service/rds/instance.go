@@ -1239,9 +1239,7 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 			resourceID = aws.StringValue(output.DBInstance.DbiResourceId)
 		}
 	} else if v, ok := d.GetOk("restore_to_point_in_time"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-
 		tfMap := v.([]interface{})[0].(map[string]interface{})
-
 		input := &rds.RestoreDBInstanceToPointInTimeInput{
 			AutoMinorVersionUpgrade:    aws.Bool(d.Get("auto_minor_version_upgrade").(bool)),
 			CopyTagsToSnapshot:         aws.Bool(d.Get("copy_tags_to_snapshot").(bool)),
