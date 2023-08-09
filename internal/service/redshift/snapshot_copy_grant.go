@@ -138,7 +138,7 @@ func resourceSnapshotCopyGrantDelete(ctx context.Context, d *schema.ResourceData
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RedshiftConn(ctx)
 
-	log.Printf("[DEBUG] DeletingRedshift Snapshot Copy Grant: %s", d.Id())
+	log.Printf("[DEBUG] Deleting Redshift Snapshot Copy Grant: %s", d.Id())
 	_, err := conn.DeleteSnapshotCopyGrantWithContext(ctx, &redshift.DeleteSnapshotCopyGrantInput{
 		SnapshotCopyGrantName: aws.String(d.Id()),
 	})

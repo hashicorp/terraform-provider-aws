@@ -169,12 +169,15 @@ func resourceSnapshotScheduleDelete(ctx context.Context, d *schema.ResourceData,
 		}
 	}
 
+	log.Printf("[DEBUG] Deleting Redshift Snapshot Schedule: %s", d.Id())
 	_, err := conn.DeleteSnapshotScheduleWithContext(ctx, &redshift.DeleteSnapshotScheduleInput{
 		ScheduleIdentifier: aws.String(d.Id()),
 	})
+
 	if tfawserr.ErrCodeEquals(err, redshift.ErrCodeSnapshotScheduleNotFoundFault) {
 		return diags
 	}
+
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "deleting Redshift Snapshot Schedule (%s): %s", d.Id(), err)
 	}
