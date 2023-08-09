@@ -9,3 +9,7 @@ resource/aws_msk_broker: Add `vpc_connectivity` attribute to the `broker_node_gr
 ```release-note:enhancement
 resource/aws_msk_broker: Add `bootstrap_brokers_vpc_connectivity_sasl_iam`, `bootstrap_brokers_vpc_connectivity_sasl_scram` and `bootstrap_brokers_vpc_connectivity_tls` attributes
 ```
+
+```release-note:new-data-source
+aws_msk_vpc_connection
+```
