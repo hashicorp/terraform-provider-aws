@@ -38,7 +38,8 @@ resource "aws_ce_anomaly_subscription" "test" {
 ```
 
 ### Threshold Expression Example
-#### Configuration block for specific Dimension
+
+#### For a Specific Dimension
 
 ```terraform
 resource "aws_ce_anomaly_subscription" "test" {
@@ -63,7 +64,9 @@ resource "aws_ce_anomaly_subscription" "test" {
   }
 }
 ```
-#### Configuration block for and expression
+
+#### Using an `and` Expression
+
 ```terraform
 resource "aws_ce_anomaly_subscription" "test" {
   name      = "AWSServiceMonitor"
