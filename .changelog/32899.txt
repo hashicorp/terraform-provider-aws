@@ -1,4 +1,4 @@
-```release-note:resource
+```release-note:new-resource
 aws_codecatalyst_source_repository
 ```
 
