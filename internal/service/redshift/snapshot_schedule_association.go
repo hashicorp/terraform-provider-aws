@@ -5,14 +5,17 @@ package redshift
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log"
 	"strings"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/redshift"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
@@ -130,4 +133,113 @@ func SnapshotScheduleAssociationParseID(id string) (clusterIdentifier, scheduleI
 	clusterIdentifier = parts[0]
 	scheduleIdentifier = parts[1]
 	return
+}
+
+func FindScheduleAssociationById(ctx context.Context, conn *redshift.Redshift, id string) (string, *redshift.ClusterAssociatedToSchedule, error) {
+	clusterIdentifier, scheduleIdentifier, err := SnapshotScheduleAssociationParseID(id)
+	if err != nil {
+		return "", nil, fmt.Errorf("parsing Redshift Cluster Snapshot Schedule Association ID %s: %s", id, err)
+	}
+
+	input := &redshift.DescribeSnapshotSchedulesInput{
+		ClusterIdentifier:  aws.String(clusterIdentifier),
+		ScheduleIdentifier: aws.String(scheduleIdentifier),
+	}
+	resp, err := conn.DescribeSnapshotSchedulesWithContext(ctx, input)
+
+	if tfawserr.ErrCodeEquals(err, redshift.ErrCodeSnapshotScheduleNotFoundFault) {
+		return "", nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return "", nil, err
+	}
+
+	if resp.SnapshotSchedules == nil || len(resp.SnapshotSchedules) == 0 {
+		return "", nil, tfresource.NewEmptyResultError(input)
+	}
+
+	snapshotSchedule := resp.SnapshotSchedules[0]
+
+	if snapshotSchedule == nil {
+		return "", nil, tfresource.NewEmptyResultError(input)
+	}
+
+	var associatedCluster *redshift.ClusterAssociatedToSchedule
+	for _, cluster := range snapshotSchedule.AssociatedClusters {
+		if aws.StringValue(cluster.ClusterIdentifier) == clusterIdentifier {
+			associatedCluster = cluster
+			break
+		}
+	}
+
+	if associatedCluster == nil {
+		return "", nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return aws.StringValue(snapshotSchedule.ScheduleIdentifier), associatedCluster, nil
+}
+
+func statusScheduleAssociation(ctx context.Context, conn *redshift.Redshift, id string) retry.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		_, output, err := FindScheduleAssociationById(ctx, conn, id)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, aws.StringValue(output.ScheduleAssociationState), nil
+	}
+}
+
+const (
+	snapshotScheduleAssociationActivatedTimeout = 75 * time.Minute
+	snapshotScheduleAssociationDestroyedTimeout = 75 * time.Minute
+)
+
+func WaitScheduleAssociationActive(ctx context.Context, conn *redshift.Redshift, id string) (*redshift.ClusterAssociatedToSchedule, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending:    []string{redshift.ScheduleStateModifying},
+		Target:     []string{redshift.ScheduleStateActive},
+		Refresh:    statusScheduleAssociation(ctx, conn, id),
+		Timeout:    snapshotScheduleAssociationActivatedTimeout,
+		MinTimeout: 10 * time.Second,
+		Delay:      30 * time.Second,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*redshift.ClusterAssociatedToSchedule); ok {
+		tfresource.SetLastError(err, errors.New(aws.StringValue(output.ScheduleAssociationState)))
+
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitScheduleAssociationDeleted(ctx context.Context, conn *redshift.Redshift, id string) (*redshift.ClusterAssociatedToSchedule, error) { //nolint:unparam
+	stateConf := &retry.StateChangeConf{
+		Pending:    []string{redshift.ScheduleStateModifying, redshift.ScheduleStateActive},
+		Target:     []string{},
+		Refresh:    statusScheduleAssociation(ctx, conn, id),
+		Timeout:    snapshotScheduleAssociationDestroyedTimeout,
+		MinTimeout: 10 * time.Second,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*redshift.ClusterAssociatedToSchedule); ok {
+		tfresource.SetLastError(err, errors.New(aws.StringValue(output.ScheduleAssociationState)))
+		return output, err
+	}
+
+	return nil, err
 }
