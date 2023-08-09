@@ -19,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -108,29 +109,17 @@ func resourceSnapshotScheduleRead(ctx context.Context, d *schema.ResourceData, m
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RedshiftConn(ctx)
 
-	descOpts := &redshift.DescribeSnapshotSchedulesInput{
-		ScheduleIdentifier: aws.String(d.Id()),
-	}
+	snapshotSchedule, err := FindSnapshotScheduleByID(ctx, conn, d.Id())
 
-	resp, err := conn.DescribeSnapshotSchedulesWithContext(ctx, descOpts)
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "describing Redshift Cluster Snapshot Schedule %s: %s", d.Id(), err)
-	}
-
-	if !d.IsNewResource() && (resp.SnapshotSchedules == nil || len(resp.SnapshotSchedules) != 1) {
-		log.Printf("[WARN] Redshift Cluster Snapshot Schedule (%s) not found, removing from state", d.Id())
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] Redshift Snapshot Schedule (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
 	}
-	snapshotSchedule := resp.SnapshotSchedules[0]
 
-	d.Set("identifier", snapshotSchedule.ScheduleIdentifier)
-	d.Set("description", snapshotSchedule.ScheduleDescription)
-	if err := d.Set("definitions", flex.FlattenStringList(snapshotSchedule.ScheduleDefinitions)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting definitions: %s", err)
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "reading Redshift Snapshot Schedule (%s): %s", d.Id(), err)
 	}
-
-	setTagsOut(ctx, snapshotSchedule.Tags)
 
 	arn := arn.ARN{
 		Partition: meta.(*conns.AWSClient).Partition,
@@ -139,8 +128,13 @@ func resourceSnapshotScheduleRead(ctx context.Context, d *schema.ResourceData, m
 		AccountID: meta.(*conns.AWSClient).AccountID,
 		Resource:  fmt.Sprintf("snapshotschedule:%s", d.Id()),
 	}.String()
-
 	d.Set("arn", arn)
+	d.Set("definitions", aws.StringValueSlice(snapshotSchedule.ScheduleDefinitions))
+	d.Set("description", snapshotSchedule.ScheduleDescription)
+	d.Set("identifier", snapshotSchedule.ScheduleIdentifier)
+	d.Set("identifier_prefix", create.NamePrefixFromName(aws.StringValue(snapshotSchedule.ScheduleIdentifier)))
+
+	setTagsOut(ctx, snapshotSchedule.Tags)
 
 	return diags
 }
@@ -235,4 +229,22 @@ func resourceSnapshotScheduleDeleteAllAssociatedClusters(ctx context.Context, co
 	}
 
 	return nil
+}
+
+func FindSnapshotScheduleByID(ctx context.Context, conn *redshift.Redshift, id string) (*redshift.SnapshotSchedule, error) {
+	input := &redshift.DescribeSnapshotSchedulesInput{
+		ScheduleIdentifier: aws.String(id),
+	}
+
+	output, err := conn.DescribeSnapshotSchedulesWithContext(ctx, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return tfresource.AssertSinglePtrResult(output.SnapshotSchedules)
 }
