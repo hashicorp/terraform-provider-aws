@@ -43,7 +43,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			TypeName: "aws_transfer_agreement",
 			Name:     "Agreement",
 			Tags: &types.ServicePackageResourceTags{
-				IdentifierAttribute: "agreement_id",
+				IdentifierAttribute: "arn",
 			},
 		},
 		{
