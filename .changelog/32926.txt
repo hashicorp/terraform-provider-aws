@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_codeartifact_domain: Change the type of asset_size_bytes to float (64) instead of int (32) to prevent `value out of range` panic
+```

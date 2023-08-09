@@ -62,7 +62,7 @@ func ResourceDomain() *schema.Resource {
 				Computed: true,
 			},
 			"asset_size_bytes": {
-				Type:     schema.TypeInt,
+				Type:     schema.TypeFloat,
 				Computed: true,
 			},
 			"repository_count": {
