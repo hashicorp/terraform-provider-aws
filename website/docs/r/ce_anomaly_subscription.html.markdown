@@ -84,16 +84,16 @@ resource "aws_ce_anomaly_subscription" "test" {
   threshold_expression {
     and {
       dimension {
-        key = "ANOMALY_TOTAL_IMPACT_ABSOLUTE"
+        key           = "ANOMALY_TOTAL_IMPACT_ABSOLUTE"
         match_options = ["GREATER_THAN_OR_EQUAL"]
-        values = ["100"]
+        values        = ["100"]
       }
     }
     and {
       dimension {
-        key = "ANOMALY_TOTAL_IMPACT_PERCENTAGE"
+        key           = "ANOMALY_TOTAL_IMPACT_PERCENTAGE"
         match_options = ["GREATER_THAN_OR_EQUAL"]
-        values = ["50"]
+        values        = ["50"]
       }
     }
   }
