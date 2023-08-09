@@ -31,6 +31,7 @@ func ResourceSnapshotSchedule() *schema.Resource {
 		ReadWithoutTimeout:   resourceSnapshotScheduleRead,
 		UpdateWithoutTimeout: resourceSnapshotScheduleUpdate,
 		DeleteWithoutTimeout: resourceSnapshotScheduleDelete,
+
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
@@ -40,6 +41,21 @@ func ResourceSnapshotSchedule() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"definitions": {
+				Type:     schema.TypeSet,
+				Required: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+			},
+			"description": {
+				Type:     schema.TypeString,
+				Optional: true,
+				ForceNew: true,
+			},
+			"force_destroy": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
+			},
 			"identifier": {
 				Type:          schema.TypeString,
 				Optional:      true,
@@ -48,26 +64,11 @@ func ResourceSnapshotSchedule() *schema.Resource {
 				ConflictsWith: []string{"identifier_prefix"},
 			},
 			"identifier_prefix": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-				ForceNew: true,
-			},
-			"description": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
-			},
-			"definitions": {
-				Type:     schema.TypeSet,
-				Required: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-				Set:      schema.HashString,
-			},
-			"force_destroy": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
+				Type:          schema.TypeString,
+				Optional:      true,
+				Computed:      true,
+				ForceNew:      true,
+				ConflictsWith: []string{"identifier"},
 			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
