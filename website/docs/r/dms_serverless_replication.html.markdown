@@ -27,9 +27,9 @@ resource "aws_dms_serverless_replication" "name" {
   start_replication = true
 
   compute_config {
-    replication_subnet_group_id = aws_dms_replication_subnet_group.default.replication_subnet_group_id
-    max_capacity_units = "64"
-    min_capacity_units = "2"
+    replication_subnet_group_id  = aws_dms_replication_subnet_group.default.replication_subnet_group_id
+    max_capacity_units           = "64"
+    min_capacity_units           = "2"
     preferred_maintenance_window = "sun:23:45-mon:00:30"
   }
 }
@@ -45,7 +45,7 @@ This resource supports the following arguments:
 * `replication_type` - (Required) The migration type. Can be one of `full-load | cdc | full-load-and-cdc`.
 * `source_endpoint_arn` - (Required) The Amazon Resource Name (ARN) string that uniquely identifies the source endpoint.
 * `table_mappings` - (Required) An escaped JSON string that contains the table mappings. For information on table mapping see [Using Table Mapping with an AWS Database Migration Service Task to Select and Filter Data](http://docs.aws.amazon.com/dms/latest/userguide/CHAP_Tasks.CustomizingTasks.TableMapping.html)
-* `target_endpoint_arn` - (Required) The Amazon Resource Name (ARN) string that uniquely identifies the target endpoint. 
+* `target_endpoint_arn` - (Required) The Amazon Resource Name (ARN) string that uniquely identifies the target endpoint.
 * `replication_settings` - (Optional) An escaped JSON string that are used to provision this replication configuration. For example, [Change processing tuning settings](https://docs.aws.amazon.com/dms/latest/userguide/CHAP_Tasks.CustomizingTasks.TaskSettings.ChangeProcessingTuning.html)
 * `resource_identifier` - (Optional) Unique value or name that you set for a given resource that can be used to construct an Amazon Resource Name (ARN) for that resource. For more information, see [Fine-grained access control using resource names and tags](https://docs.aws.amazon.com/dms/latest/userguide/CHAP_Security.html#CHAP_Security.FineGrainedAccess)
 * `supplemental_settings` - (Optional) JSON settings for specifying supplemental data. For more information see [Specifying supplemental data for task settings](https://docs.aws.amazon.com/dms/latest/userguide/CHAP_Tasks.TaskData.html)
@@ -58,13 +58,13 @@ This resource supports the following arguments:
 * `kms_key_id` - (Optional) An Key Management Service (KMS) key Amazon Resource Name (ARN) that is used to encrypt the data during DMS Serverless replication. If you don't specify a value for the KmsKeyId parameter, DMS uses your default encryption key.
 * `max_capacity_units` - (Required) Specifies the maximum value of the DMS capacity units (DCUs) for which a given DMS Serverless replication can be provisioned. A single DCU is 2GB of RAM, with 2 DCUs as the minimum value allowed. The list of valid DCU values includes 2, 4, 8, 16, 32, 64, 128, 192, 256, and 384.
 * `min_capacity_units` - (Optional) Specifies the minimum value of the DMS capacity units (DCUs) for which a given DMS Serverless replication can be provisioned. The list of valid DCU values includes 2, 4, 8, 16, 32, 64, 128, 192, 256, and 384. If this value isn't set DMS scans the current activity of available source tables to identify an optimum setting for this parameter.
-* `multi_az` - (Optional) Specifies if the replication instance is a multi-az deployment. You cannot set the `availability_zone` parameter if the `multi_az` parameter is set to `true`. 
+* `multi_az` - (Optional) Specifies if the replication instance is a multi-az deployment. You cannot set the `availability_zone` parameter if the `multi_az` parameter is set to `true`.
 * `preferred_maintenance_window` - (Optional) The weekly time range during which system maintenance can occur, in Universal Coordinated Time (UTC).
 
     - Default: A 30-minute window selected at random from an 8-hour block of time per region, occurring on a random day of the week.
     - Format: `ddd:hh24:mi-ddd:hh24:mi`
     - Valid Days: `mon, tue, wed, thu, fri, sat, sun`
-    - Constraints: Minimum 30-minute window. 
+    - Constraints: Minimum 30-minute window.
 
 * `replication_subnet_group_id` - (Optional) Specifies a subnet group identifier to associate with the DMS Serverless replication.
 * `vpc_security_group_ids` - (Optional) Specifies the virtual private cloud (VPC) security group to use with the DMS Serverless replication. The VPC security group must work with the VPC containing the replication.

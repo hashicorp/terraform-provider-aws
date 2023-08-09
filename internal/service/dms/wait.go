@@ -151,7 +151,7 @@ func waitReplicationStopped(ctx context.Context, conn *dms.DatabaseMigrationServ
 	return err
 }
 
-func waitReplicationDeleted(ctx context.Context, conn *dms.DatabaseMigrationService, id string, timeout time.Duration) error {
+func waitReplicationDeleted(ctx context.Context, conn *dms.DatabaseMigrationService, id string) error {
 	stateConf := &retry.StateChangeConf{
 		Pending:    []string{replicationTaskStatusDeleting, replicationStatusStopped},
 		Target:     []string{},

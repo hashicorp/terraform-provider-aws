@@ -258,7 +258,6 @@ func resourceServerlessReplicationUpdate(ctx context.Context, d *schema.Resource
 	hasChanges := false
 
 	if d.HasChangesExcept("tags", "tags_all", "start_replication") {
-
 		if d.HasChange("compute_config") {
 			if v, ok := d.GetOk("compute_config"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 				request.ComputeConfig = expandComputeConfigInput(v.([]interface{}))
@@ -297,7 +296,6 @@ func resourceServerlessReplicationUpdate(ctx context.Context, d *schema.Resource
 		}
 
 		if hasChanges {
-
 			if err := stopReplication(ctx, d.Id(), conn); err != nil {
 				return sdkdiag.AppendFromErr(diags, err)
 			}
@@ -334,7 +332,9 @@ func resourceServerlessReplicationDelete(ctx context.Context, d *schema.Resource
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DMSConn(ctx)
 
-	stopReplication(ctx, d.Id(), conn)
+	if err := stopReplication(ctx, d.Id(), conn); err != nil {
+		return sdkdiag.AppendFromErr(diags, err)
+	}
 
 	request := &dms.DeleteReplicationConfigInput{
 		ReplicationConfigArn: aws.String(d.Get("replication_config_arn").(string)),
@@ -348,7 +348,7 @@ func resourceServerlessReplicationDelete(ctx context.Context, d *schema.Resource
 		return diags
 	}
 
-	if err := waitReplicationDeleted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
+	if err := waitReplicationDeleted(ctx, conn, d.Id()); err != nil {
 		if tfawserr.ErrCodeEquals(err, dms.ErrCodeResourceNotFoundFault) {
 			return diags
 		}

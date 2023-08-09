@@ -138,9 +138,6 @@ const (
 	replicationStatusCalculatingCapacity  = "calculating_capacity"
 	replicationStatusProvisioningCapacity = "provisioning_capacity"
 	replicationStatusReplicationStarting  = "replication_starting"
-
-	replicationStatusLoadStarted                 = "load_started"
-	replicationStatusLoadStoppedAndDeprovisioned = "stopped_and_deprovisioned"
 )
 
 const (
