@@ -20,6 +20,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/types/nullable"
@@ -437,6 +438,8 @@ func New(ctx context.Context) (*schema.Provider, error) {
 
 // configure ensures that the provider is fully configured.
 func configure(ctx context.Context, provider *schema.Provider, d *schema.ResourceData) (*conns.AWSClient, diag.Diagnostics) {
+	var diags diag.Diagnostics
+
 	terraformVersion := provider.TerraformVersion
 	if terraformVersion == "" {
 		// Terraform 0.12 introduced this field to the protocol
@@ -470,7 +473,7 @@ func configure(ctx context.Context, provider *schema.Provider, d *schema.Resourc
 	if v, ok := d.Get("retry_mode").(string); ok && v != "" {
 		mode, err := aws.ParseRetryMode(v)
 		if err != nil {
-			return nil, diag.FromErr(err)
+			return nil, sdkdiag.AppendFromErr(diags, err)
 		}
 		config.RetryMode = mode
 	}
@@ -505,7 +508,7 @@ func configure(ctx context.Context, provider *schema.Provider, d *schema.Resourc
 		endpoints, err := expandEndpoints(ctx, v.(*schema.Set).List())
 
 		if err != nil {
-			return nil, diag.FromErr(err)
+			return nil, sdkdiag.AppendFromErr(diags, err)
 		}
 
 		config.Endpoints = endpoints
@@ -545,7 +548,8 @@ func configure(ctx context.Context, provider *schema.Provider, d *schema.Resourc
 	} else {
 		meta = new(conns.AWSClient)
 	}
-	meta, diags := config.ConfigureProvider(ctx, meta)
+	meta, ds := config.ConfigureProvider(ctx, meta)
+	diags = append(diags, ds...)
 
 	if diags.HasError() {
 		return nil, diags

@@ -1526,6 +1526,10 @@ func PreCheckSkipError(err error) bool {
 	if tfawserr.ErrMessageContains(err, "InvalidAction", "Unavailable Operation") {
 		return true
 	}
+	// ignore when not authorized to call API from account
+	if tfawserr.ErrCodeEquals(err, "ForbiddenException") {
+		return true
+	}
 	return false
 }
 

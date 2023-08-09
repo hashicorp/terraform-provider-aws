@@ -228,6 +228,10 @@ func DataSourceInstance() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
+						"http_protocol_ipv6": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
 						"http_put_response_hop_limit": {
 							Type:     schema.TypeInt,
 							Computed: true,

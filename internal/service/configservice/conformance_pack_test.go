@@ -55,7 +55,7 @@ func testAccConformancePack_basic(t *testing.T) {
 	})
 }
 
-func testAccConformancePack_forceNew(t *testing.T) {
+func testAccConformancePack_updateName(t *testing.T) {
 	ctx := acctest.Context(t)
 	var before, after configservice.ConformancePackDetail
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -72,6 +72,7 @@ func testAccConformancePack_forceNew(t *testing.T) {
 				Config: testAccConformancePackConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConformancePackExists(ctx, resourceName, &before),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
 				),
 			},
 			{
