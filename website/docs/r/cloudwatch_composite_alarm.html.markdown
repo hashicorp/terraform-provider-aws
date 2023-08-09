@@ -28,7 +28,7 @@ ALARM(${aws_cloudwatch_metric_alarm.bravo.alarm_name})
 EOF
 
   actions_suppressor {
-    alarm = "suppressor-alarm"
+    alarm            = "suppressor-alarm"
     extension_period = 10
     wait_period      = 20
   }
