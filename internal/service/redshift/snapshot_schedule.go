@@ -13,9 +13,9 @@ import (
 	"github.com/aws/aws-sdk-go/service/redshift"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -82,31 +82,24 @@ func resourceSnapshotScheduleCreate(ctx context.Context, d *schema.ResourceData,
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RedshiftConn(ctx)
 
-	var identifier string
-	if v, ok := d.GetOk("identifier"); ok {
-		identifier = v.(string)
-	} else {
-		if v, ok := d.GetOk("identifier_prefix"); ok {
-			identifier = id.PrefixedUniqueId(v.(string))
-		} else {
-			identifier = id.UniqueId()
-		}
-	}
-	createOpts := &redshift.CreateSnapshotScheduleInput{
+	identifier := create.Name(d.Get("identifier").(string), d.Get("identifier_prefix").(string))
+	input := &redshift.CreateSnapshotScheduleInput{
 		ScheduleIdentifier:  aws.String(identifier),
 		ScheduleDefinitions: flex.ExpandStringSet(d.Get("definitions").(*schema.Set)),
 		Tags:                getTagsIn(ctx),
 	}
-	if attr, ok := d.GetOk("description"); ok {
-		createOpts.ScheduleDescription = aws.String(attr.(string))
+
+	if v, ok := d.GetOk("description"); ok {
+		input.ScheduleDescription = aws.String(v.(string))
 	}
 
-	resp, err := conn.CreateSnapshotScheduleWithContext(ctx, createOpts)
+	output, err := conn.CreateSnapshotScheduleWithContext(ctx, input)
+
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating Redshift Snapshot Schedule: %s", err)
+		return sdkdiag.AppendErrorf(diags, "creating Redshift Snapshot Schedule (%s): %s", identifier, err)
 	}
 
-	d.SetId(aws.StringValue(resp.ScheduleIdentifier))
+	d.SetId(aws.StringValue(output.ScheduleIdentifier))
 
 	return append(diags, resourceSnapshotScheduleRead(ctx, d, meta)...)
 }
