@@ -50,9 +50,8 @@ func ResourceCompositeAlarm() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"alarm": {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: validation.StringLenBetween(1, 1600),
+							Type:     schema.TypeString,
+							Required: true,
 						},
 						"extension_period": {
 							Type:     schema.TypeInt,
@@ -315,7 +314,6 @@ func flattenActionsSuppressor(alarm *cloudwatch.CompositeAlarm) map[string]inter
 }
 
 func expandActionsSuppressor(v []interface{}) *cloudwatch.CompositeAlarm {
-
 	if v[0] == nil {
 		return nil
 	}

@@ -666,16 +666,16 @@ resource "aws_sns_topic" "test" {
 }
 
 resource "aws_cloudwatch_composite_alarm" "test" {
-  alarm_actions             		  = [aws_sns_topic.test[0].arn]
-  alarm_name                		  = %[1]q
-  alarm_rule                		  = "ALARM(${aws_cloudwatch_metric_alarm.test[0].alarm_name})"
-  insufficient_data_actions 		  = [aws_sns_topic.test[1].arn]
-  ok_actions                		  = [aws_sns_topic.test[2].arn]
+  alarm_actions             = [aws_sns_topic.test[0].arn]
+  alarm_name                = %[1]q
+  alarm_rule                = "ALARM(${aws_cloudwatch_metric_alarm.test[0].alarm_name})"
+  insufficient_data_actions = [aws_sns_topic.test[1].arn]
+  ok_actions                = [aws_sns_topic.test[2].arn]
 
   actions_suppressor {
-	alarm  		  		= "${aws_cloudwatch_metric_alarm.test[0].alarm_name}"
-	extension_period 	= 10
-	wait_period	  		= 20
+    alarm            = aws_cloudwatch_metric_alarm.test[0].alarm_name
+    extension_period = 10
+    wait_period      = 20
   }
 }
 `, rName))
