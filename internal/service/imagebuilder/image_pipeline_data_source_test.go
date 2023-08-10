@@ -68,6 +68,11 @@ func TestAccImageBuilderImagePipelineDataSource_containerRecipeARN(t *testing.T)
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, "arn", resourceName, "arn"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "container_recipe_arn", resourceName, "container_recipe_arn"),
+					resource.TestCheckResourceAttr(resourceName, "image_scanning_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "image_scanning_configuration.0.image_scanning_enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "image_scanning_configuration.0.ecr_configuration.0.repository_name", rName),
+					resource.TestCheckTypeSetElemAttr(resourceName, "image_scanning_configuration.0.ecr_configuration.0.container_tags.*", "b"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "image_scanning_configuration.0.ecr_configuration.0.container_tags.*", "a"),
 				),
 			},
 		},
@@ -187,6 +192,14 @@ resource "aws_imagebuilder_image_pipeline" "test" {
   container_recipe_arn             = aws_imagebuilder_container_recipe.test.arn
   infrastructure_configuration_arn = aws_imagebuilder_infrastructure_configuration.test.arn
   name                             = %[1]q
+
+  image_scanning_configuration {
+    image_scanning_enabled = true
+	ecr_configuration {
+		container_tags = ["a", "b"]
+		repository_name = aws_ecr_repository.test.name
+	}
+  }
 }
 
 data "aws_imagebuilder_image_pipeline" "test" {

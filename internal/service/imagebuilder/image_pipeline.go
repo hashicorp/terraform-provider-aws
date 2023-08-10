@@ -428,8 +428,8 @@ func expandImageScanningConfiguration(tfMap map[string]interface{}) *imagebuilde
 		apiObject.ImageScanningEnabled = aws.Bool(v)
 	}
 
-	if v, ok := tfMap["ecr_configuration"].(map[string]interface{}); ok && len(v) > 0 {
-		apiObject.EcrConfiguration = expandEcrConfiguration(v)
+	if v, ok := tfMap["ecr_configuration"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+		apiObject.EcrConfiguration = expandEcrConfiguration(v[0].(map[string]interface{}))
 	}
 
 	return apiObject
@@ -446,7 +446,7 @@ func expandEcrConfiguration(tfMap map[string]interface{}) *imagebuilder.EcrConfi
 		apiObject.ContainerTags = flex.ExpandStringSet(v)
 	}
 
-	if v, ok := tfMap["respository_name"].(string); ok {
+	if v, ok := tfMap["repository_name"].(string); ok {
 		apiObject.RepositoryName = aws.String(v)
 	}
 
@@ -505,7 +505,7 @@ func flattenImageScanningConfiguration(apiObject *imagebuilder.ImageScanningConf
 	}
 
 	if v := apiObject.EcrConfiguration; v != nil {
-		tfMap["ecr_configuration"] = flattenEcrConfiguration(apiObject.EcrConfiguration)
+		tfMap["ecr_configuration"] = []interface{}{flattenEcrConfiguration(v)}
 	}
 
 	return tfMap

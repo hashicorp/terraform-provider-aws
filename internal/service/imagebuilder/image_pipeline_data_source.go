@@ -63,6 +63,42 @@ func DataSourceImagePipeline() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"image_scanning_configuration": {
+				Type:     schema.TypeList,
+				Optional: true,
+				Computed: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"image_scanning_enabled": {
+							Type:     schema.TypeBool,
+							Optional: true,
+							Default:  false,
+						},
+						"ecr_configuration": {
+							Type:     schema.TypeList,
+							Optional: true,
+							Computed: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"container_tags": {
+										Type:     schema.TypeSet,
+										Optional: true,
+										Elem:  &schema.Schema{
+											Type: schema.TypeString,
+										  },
+									},
+									"repository_name": {
+										Type:     schema.TypeString,
+										Optional: true,
+									},
+								},
+							},
+						},
+					},
+				},
+			},
 			"image_tests_configuration": {
 				Type:     schema.TypeList,
 				Computed: true,
@@ -154,6 +190,12 @@ func dataSourceImagePipelineRead(ctx context.Context, d *schema.ResourceData, me
 		d.Set("image_tests_configuration", []interface{}{flattenImageTestsConfiguration(imagePipeline.ImageTestsConfiguration)})
 	} else {
 		d.Set("image_tests_configuration", nil)
+	}
+
+	if imagePipeline.ImageScanningConfiguration != nil {
+		d.Set("image_scanning_configuration", []interface{}{flattenImageScanningConfiguration(imagePipeline.ImageScanningConfiguration)})
+	} else {
+		d.Set("image_scanning_configuration", nil)
 	}
 
 	d.Set("infrastructure_configuration_arn", imagePipeline.InfrastructureConfigurationArn)

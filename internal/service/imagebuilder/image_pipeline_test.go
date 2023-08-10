@@ -314,16 +314,14 @@ func TestAccImageBuilderImagePipeline_ImageScanning_imageScanningEnabledAdvanced
 		CheckDestroy:             testAccCheckImagePipelineDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccImagePipelineConfig_testsConfigurationScanningEnabledAdvanced(rName, []string {"a", "b"}, "testRepoName"),
+				Config: testAccImagePipelineConfig_testsConfigurationScanningEnabledAdvanced(rName, []string {"a", "b"}),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckImagePipelineExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "image_scanning_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "image_scanning_configuration.0.image_scanning_enabled", "true"),
-					resource.TestCheckResourceAttr(resourceName, "image_scanning_configuration.1.ecr_configuration.0.repository_name", "testRepoName"),
-					resource.TestCheckResourceAttr(resourceName, "image_scanning_configuration.1.ecr_configuration.0.container_tags.0", "a"),
-					resource.TestCheckTypeSetElemAttr(resourceName, "image_scanning_configuration.1.ecr_configuration.0.container_tags.*", "a"),
-					resource.TestCheckTypeSetElemAttr(resourceName, "image_scanning_configuration.1.ecr_configuration.0.container_tags.*", "b"),
-					resource.TestCheckResourceAttr(resourceName, "image_scanning_configuration.1.ecr_configuration.0.container_tags.1", "b"),
+					resource.TestCheckResourceAttr(resourceName, "image_scanning_configuration.0.ecr_configuration.0.repository_name", rName),
+					resource.TestCheckTypeSetElemAttr(resourceName, "image_scanning_configuration.0.ecr_configuration.0.container_tags.*", "b"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "image_scanning_configuration.0.ecr_configuration.0.container_tags.*", "a"),
 				),
 			},
 			{
@@ -332,13 +330,14 @@ func TestAccImageBuilderImagePipeline_ImageScanning_imageScanningEnabledAdvanced
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccImagePipelineConfig_testsConfigurationScanningEnabledAdvanced(rName, []string {"a", "c"}, "testRepoName"),
+				Config: testAccImagePipelineConfig_testsConfigurationScanningEnabledAdvanced(rName, []string {"a", "c"}),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckImagePipelineExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "image_scanning_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "image_scanning_configuration.0.image_scanning_enabled", "true"),
-					resource.TestCheckResourceAttr(resourceName, "image_scanning_configuration.0.ecr_configuration.0.container_tags.0", "a"),
-					resource.TestCheckResourceAttr(resourceName, "image_scanning_configuration.0.ecr_configuration.0.container_tags.1", "c"),
+					resource.TestCheckResourceAttr(resourceName, "image_scanning_configuration.0.ecr_configuration.0.repository_name", rName),
+					resource.TestCheckTypeSetElemAttr(resourceName, "image_scanning_configuration.0.ecr_configuration.0.container_tags.*", "c"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "image_scanning_configuration.0.ecr_configuration.0.container_tags.*", "a"),
 				),
 			},
 		},
@@ -753,6 +752,38 @@ resource "aws_imagebuilder_image_recipe" "test" {
   version      = "1.0.0"
 }
 
+resource "aws_ecr_repository" "test" {
+  name                 = %[1]q
+  image_tag_mutability = "MUTABLE"
+  
+  image_scanning_configuration {
+    scan_on_push = false
+  }
+}
+
+resource "aws_imagebuilder_container_recipe" "test" {
+  component {
+	component_arn = aws_imagebuilder_component.test.arn
+  }
+
+  target_repository {
+    repository_name = aws_ecr_repository.test.name
+    service         = "ECR"
+  }
+
+  dockerfile_template_data=<<EOF
+  FROM {{{ imagebuilder:parentImage }}}
+  {{{ imagebuilder:environments }}}
+  {{{ imagebuilder:components }}}
+  EOF
+
+  container_type = "DOCKER"
+  name         = %[1]q
+  parent_image      = "amazonlinux:latest"
+  working_directory = "/tmp"
+  version      = "1.0.0"
+}
+
 resource "aws_imagebuilder_infrastructure_configuration" "test" {
   instance_profile_name = aws_iam_instance_profile.test.name
   name                  = %[1]q
@@ -958,7 +989,7 @@ resource "aws_imagebuilder_image_pipeline" "test" {
 `, rName, imageScanningEnabled))
 }
 
-func testAccImagePipelineConfig_testsConfigurationScanningEnabledAdvanced(rName string, imageTags []string , repositoryName string) string {
+func testAccImagePipelineConfig_testsConfigurationScanningEnabledAdvanced(rName string, imageTags []string) string {
 	commaSepImageTags := ""
 	if len(imageTags) > 0  {
 		commaSepImageTags = "\"" + strings.Join(imageTags, "\", \"") + "\""
@@ -967,7 +998,7 @@ func testAccImagePipelineConfig_testsConfigurationScanningEnabledAdvanced(rName 
 		testAccImagePipelineBaseConfig(rName),
 		fmt.Sprintf(`
 resource "aws_imagebuilder_image_pipeline" "test" {
-  image_recipe_arn                 = aws_imagebuilder_image_recipe.test.arn
+  container_recipe_arn                 = aws_imagebuilder_container_recipe.test.arn
   infrastructure_configuration_arn = aws_imagebuilder_infrastructure_configuration.test.arn
   name                             = %[1]q
 
@@ -975,11 +1006,11 @@ resource "aws_imagebuilder_image_pipeline" "test" {
     image_scanning_enabled = true
 	ecr_configuration {
 		container_tags = [%[2]s]
-		repository_name = %[3]q
+		repository_name = aws_ecr_repository.test.name
 	}
   }
 }
-`, rName, commaSepImageTags, repositoryName))
+`, rName, commaSepImageTags))
 }
 
 func testAccImagePipelineConfig_testsConfigurationTestsEnabled(rName string, imageTestsEnabled bool) string {
