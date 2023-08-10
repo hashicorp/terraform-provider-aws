@@ -182,6 +182,13 @@ func resourceCompositeAlarmRead(ctx context.Context, d *schema.ResourceData, met
 	}
 
 	d.Set("actions_enabled", alarm.ActionsEnabled)
+	if alarm.ActionsSuppressor != nil {
+		if err := d.Set("actions_suppressor", []interface{}{flattenActionsSuppressor(alarm)}); err != nil {
+			return diag.Errorf("setting actions_suppressor: %s", err)
+		}
+	} else {
+		d.Set("actions_suppressor", nil)
+	}
 	d.Set("alarm_actions", aws.StringValueSlice(alarm.AlarmActions))
 	d.Set("alarm_description", alarm.AlarmDescription)
 	d.Set("alarm_name", alarm.AlarmName)
@@ -189,12 +196,6 @@ func resourceCompositeAlarmRead(ctx context.Context, d *schema.ResourceData, met
 	d.Set("arn", alarm.AlarmArn)
 	d.Set("insufficient_data_actions", aws.StringValueSlice(alarm.InsufficientDataActions))
 	d.Set("ok_actions", aws.StringValueSlice(alarm.OKActions))
-
-	if alarm.ActionsSuppressor != nil {
-		if err := d.Set("actions_suppressor", []interface{}{flattenActionsSuppressor(alarm)}); err != nil {
-			return diag.Errorf("setting actions_suppressor (%s): %s", d.Id(), err)
-		}
-	}
 
 	return nil
 }
@@ -253,15 +254,11 @@ func FindCompositeAlarmByName(ctx context.Context, conn *cloudwatch.CloudWatch, 
 		return nil, err
 	}
 
-	if output == nil || len(output.CompositeAlarms) == 0 || output.CompositeAlarms[0] == nil {
+	if output == nil {
 		return nil, tfresource.NewEmptyResultError(input)
 	}
 
-	if count := len(output.CompositeAlarms); count > 1 {
-		return nil, tfresource.NewTooManyResultsError(count, input)
-	}
-
-	return output.CompositeAlarms[0], nil
+	return tfresource.AssertSinglePtrResult(output.CompositeAlarms)
 }
 
 func expandPutCompositeAlarmInput(ctx context.Context, d *schema.ResourceData) *cloudwatch.PutCompositeAlarmInput {

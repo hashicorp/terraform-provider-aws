@@ -35,6 +35,7 @@ func TestAccCloudWatchCompositeAlarm_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCompositeAlarmExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "actions_enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "actions_suppressor.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "alarm_actions.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "alarm_description", ""),
 					resource.TestCheckResourceAttr(resourceName, "alarm_name", rName),
@@ -389,7 +390,7 @@ func TestAccCloudWatchCompositeAlarm_allActions(t *testing.T) {
 	})
 }
 
-func TestAccCloudWatchCompositeAlarm_actionSuppressor(t *testing.T) {
+func TestAccCloudWatchCompositeAlarm_actionsSuppressor(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_cloudwatch_composite_alarm.test"
@@ -404,11 +405,10 @@ func TestAccCloudWatchCompositeAlarm_actionSuppressor(t *testing.T) {
 				Config: testAccCompositeAlarmConfig_actionSuppressor(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCompositeAlarmExists(ctx, resourceName),
-					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "actions_suppressor.*", map[string]string{
-						"alarm":            fmt.Sprintf("%[1]s-0", rName),
-						"extension_period": "10",
-						"wait_period":      "20",
-					}),
+					resource.TestCheckResourceAttr(resourceName, "actions_suppressor.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "actions_suppressor.0.alarm", fmt.Sprintf("%[1]s-0", rName)),
+					resource.TestCheckResourceAttr(resourceName, "actions_suppressor.0.extension_period", "10"),
+					resource.TestCheckResourceAttr(resourceName, "actions_suppressor.0.wait_period", "20"),
 				),
 			},
 			{
