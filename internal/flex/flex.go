@@ -23,8 +23,22 @@ const (
 func ExpandStringList(configured []interface{}) []*string {
 	vs := make([]*string, 0, len(configured))
 	for _, v := range configured {
-		if v, ok := v.(string); ok && v != "" {
+		if v, ok := v.(string); ok && v != "" { // v != "" is not necessary here, "" = !ok (weird Go-ism)
 			vs = append(vs, aws.String(v))
+		}
+	}
+	return vs
+}
+
+// ExpandStringListEmpty the result of flatmap. Expand for an array of strings
+// and returns a []*string. Empty strings are NOT skipped.
+func ExpandStringListEmpty(configured []interface{}) []*string {
+	vs := make([]*string, 0, len(configured))
+	for _, v := range configured {
+		if v, ok := v.(string); ok { // empty string is !ok
+			vs = append(vs, aws.String(v))
+		} else {
+			vs = append(vs, aws.String(""))
 		}
 	}
 	return vs
