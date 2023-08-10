@@ -292,7 +292,7 @@ func resourceFleetCreate(ctx context.Context, d *schema.ResourceData, meta inter
 		output, err = conn.CreateFleetWithContext(ctx, input)
 	}
 	if err != nil {
-		return diag.Errorf("creating Appstream Fleet (%s): %s", d.Id(), err)
+		return diag.Errorf("creating Appstream Fleet (%s): %s", d.Get("name").(string), err)
 	}
 
 	d.SetId(aws.StringValue(output.Fleet.Name))
