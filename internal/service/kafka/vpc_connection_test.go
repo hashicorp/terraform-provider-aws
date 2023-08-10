@@ -50,6 +50,35 @@ func TestAccKafkaVPCConnection_basic(t *testing.T) {
 	})
 }
 
+func TestAccKafkaVPCConnection_tags(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v kafka.DescribeVpcConnectionOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_msk_vpc_connection.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.Kafka),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckVPCConnectionDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVPCConnectionConfig_tags(rName, "key1", "value1"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckVPCConnectionExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccKafkaVPCConnection_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v kafka.DescribeVpcConnectionOutput
@@ -210,4 +239,30 @@ resource "aws_msk_vpc_connection" "test" {
   security_groups    = aws_security_group.client[*].id
 }
 `, rName))
+}
+
+func testAccVPCConnectionConfig_tags(rName, tagKey1, tagValue1 string) string {
+	return acctest.ConfigCompose(testAccVPCConnectionConfig_base(rName), fmt.Sprintf(`
+resource "aws_security_group" "client" {
+  count = 2
+
+  name   = "%[1]s-${count.index}"
+  vpc_id = aws_vpc.client.id
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_msk_vpc_connection" "test" {
+  authentication     = "SASL_IAM"
+  target_cluster_arn = aws_msk_cluster.test.arn
+  vpc_id             = aws_vpc.client.id
+  client_subnets     = aws_subnet.client[*].id
+  security_groups    = aws_security_group.client[*].id
+  tags = {
+    %[2]q = %[3]q
+  }
+}
+`, rName, tagKey1, tagValue1))
 }
