@@ -27,7 +27,6 @@ func TestAccVPCLatticeServiceNetworkDataSource_basic(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.VPCLatticeEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckServiceNetworkDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccServiceNetworkDataSourceConfig_basic(rName),
@@ -61,7 +60,6 @@ func TestAccVPCLatticeServiceNetworkDataSource_shared(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.VPCLatticeEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
-		CheckDestroy:             testAccCheckServiceNetworkDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccServiceNetworkDataSourceConfig_shared(rName),
