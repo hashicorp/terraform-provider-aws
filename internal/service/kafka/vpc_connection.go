@@ -81,6 +81,7 @@ func resourceVPCConnectionCreate(ctx context.Context, d *schema.ResourceData, me
 		SecurityGroups:   flex.ExpandStringValueSet(d.Get("security_groups").(*schema.Set)),
 		TargetClusterArn: aws.String(d.Get("target_cluster_arn").(string)),
 		VpcId:            aws.String(d.Get("vpc_id").(string)),
+		Tags:             getTagsInV2(ctx),
 	}
 
 	out, err := conn.CreateVpcConnection(ctx, in)
