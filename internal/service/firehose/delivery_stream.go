@@ -29,12 +29,13 @@ import (
 )
 
 const (
-	destinationTypeExtendedS3    = "extended_s3"
-	destinationTypeElasticsearch = "elasticsearch"
-	destinationTypeOpensearch    = "opensearch"
-	destinationTypeRedshift      = "redshift"
-	destinationTypeSplunk        = "splunk"
-	destinationTypeHTTPEndpoint  = "http_endpoint"
+	destinationTypeExtendedS3           = "extended_s3"
+	destinationTypeElasticsearch        = "elasticsearch"
+	destinationTypeOpensearch           = "opensearch"
+	destinationTypeOpensearchServerless = "opensearchserverless"
+	destinationTypeRedshift             = "redshift"
+	destinationTypeSplunk               = "splunk"
+	destinationTypeHTTPEndpoint         = "http_endpoint"
 )
 
 func cloudWatchLoggingOptionsSchema() *schema.Schema {
@@ -325,6 +326,37 @@ func flattenOpensearchConfiguration(description *firehose.Amazonopensearchservic
 
 	if description.ClusterEndpoint != nil {
 		m["cluster_endpoint"] = aws.StringValue(description.ClusterEndpoint)
+	}
+
+	if description.BufferingHints != nil {
+		m["buffering_interval"] = int(aws.Int64Value(description.BufferingHints.IntervalInSeconds))
+		m["buffering_size"] = int(aws.Int64Value(description.BufferingHints.SizeInMBs))
+	}
+
+	if description.RetryOptions != nil {
+		m["retry_duration"] = int(aws.Int64Value(description.RetryOptions.DurationInSeconds))
+	}
+
+	return []map[string]interface{}{m}
+}
+
+func flattenOpensearchServerlessConfiguration(description *firehose.AmazonOpenSearchServerlessDestinationDescription) []map[string]interface{} {
+	if description == nil {
+		return []map[string]interface{}{}
+	}
+
+	m := map[string]interface{}{
+		"cloudwatch_logging_options": flattenCloudWatchLoggingOptions(description.CloudWatchLoggingOptions),
+		"role_arn":                   aws.StringValue(description.RoleARN),
+		"index_name":                 aws.StringValue(description.IndexName),
+		"s3_backup_mode":             aws.StringValue(description.S3BackupMode),
+		"s3_configuration":           flattenS3Configuration(description.S3DestinationDescription),
+		"vpc_config":                 flattenVPCConfiguration(description.VpcConfigurationDescription),
+		"processing_configuration":   flattenProcessingConfiguration(description.ProcessingConfiguration, aws.StringValue(description.RoleARN)),
+	}
+
+	if description.CollectionEndpoint != nil {
+		m["collection_endpoint"] = aws.StringValue(description.CollectionEndpoint)
 	}
 
 	if description.BufferingHints != nil {
@@ -837,6 +869,11 @@ func flattenDeliveryStream(d *schema.ResourceData, s *firehose.DeliveryStreamDes
 			if err := d.Set("opensearch_configuration", flattenOpensearchConfiguration(destination.AmazonopensearchserviceDestinationDescription)); err != nil {
 				return fmt.Errorf("setting opensearch_configuration: %s", err)
 			}
+		} else if destination.AmazonOpenSearchServerlessDestinationDescription != nil {
+			d.Set("destination", destinationTypeOpensearchServerless)
+			if err := d.Set("opensearchserverless_configuration", flattenOpensearchServerlessConfiguration(destination.AmazonOpenSearchServerlessDestinationDescription)); err != nil {
+				return fmt.Errorf("setting opensearchserverless_configuration: %s", err)
+			}
 		} else if destination.SplunkDestinationDescription != nil {
 			d.Set("destination", destinationTypeSplunk)
 			if err := d.Set("splunk_configuration", flattenSplunkConfiguration(destination.SplunkDestinationDescription)); err != nil {
@@ -1005,6 +1042,7 @@ func ResourceDeliveryStream() *schema.Resource {
 					destinationTypeRedshift,
 					destinationTypeElasticsearch,
 					destinationTypeOpensearch,
+					destinationTypeOpensearchServerless,
 					destinationTypeSplunk,
 					destinationTypeHTTPEndpoint,
 				}, false),
@@ -1618,6 +1656,99 @@ func ResourceDeliveryStream() *schema.Resource {
 							Optional:      true,
 							ConflictsWith: []string{"opensearch_configuration.0.domain_arn"},
 						},
+					},
+				},
+			},
+
+			"opensearchserverless_configuration": {
+				Type:     schema.TypeList,
+				Optional: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"buffering_interval": {
+							Type:         schema.TypeInt,
+							Optional:     true,
+							Default:      300,
+							ValidateFunc: validation.IntBetween(60, 900),
+						},
+
+						"buffering_size": {
+							Type:         schema.TypeInt,
+							Optional:     true,
+							Default:      5,
+							ValidateFunc: validation.IntBetween(1, 100),
+						},
+
+						"collection_endpoint": {
+							Type:     schema.TypeString,
+							Required: true,
+						},
+
+						"index_name": {
+							Type:     schema.TypeString,
+							Required: true,
+						},
+
+						"retry_duration": {
+							Type:         schema.TypeInt,
+							Optional:     true,
+							Default:      300,
+							ValidateFunc: validation.IntBetween(0, 7200),
+						},
+
+						"role_arn": {
+							Type:         schema.TypeString,
+							Required:     true,
+							ValidateFunc: verify.ValidARN,
+						},
+
+						"s3_configuration": s3ConfigurationSchema(),
+
+						"s3_backup_mode": {
+							Type:         schema.TypeString,
+							ForceNew:     true,
+							Optional:     true,
+							Default:      firehose.AmazonOpenSearchServerlessS3BackupModeFailedDocumentsOnly,
+							ValidateFunc: validation.StringInSlice(firehose.AmazonOpenSearchServerlessS3BackupMode_Values(), false),
+						},
+
+						"vpc_config": {
+							Type:     schema.TypeList,
+							Optional: true,
+							ForceNew: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"vpc_id": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+									"subnet_ids": {
+										Type:     schema.TypeSet,
+										Required: true,
+										ForceNew: true,
+										Elem:     &schema.Schema{Type: schema.TypeString},
+									},
+									"security_group_ids": {
+										Type:     schema.TypeSet,
+										Required: true,
+										ForceNew: true,
+										Elem:     &schema.Schema{Type: schema.TypeString},
+									},
+									"role_arn": {
+										Type:         schema.TypeString,
+										Required:     true,
+										ForceNew:     true,
+										ValidateFunc: verify.ValidARN,
+									},
+								},
+							},
+						},
+
+						"cloudwatch_logging_options": cloudWatchLoggingOptionsSchema(),
+
+						"processing_configuration": processingConfigurationSchema(),
 					},
 				},
 			},
@@ -2551,6 +2682,77 @@ func updateOpensearchConfig(d *schema.ResourceData) (*firehose.Amazonopensearchs
 	return update, nil
 }
 
+func createOpensearchServerlessConfig(d *schema.ResourceData) (*firehose.AmazonOpenSearchServerlessDestinationConfiguration, error) {
+	esConfig, ok := d.GetOk("opensearchserverless_configuration")
+	if !ok {
+		return nil, elasticsearchDestinationRequiredParamErr("opensearchserverless_configuration", destinationTypeOpensearchServerless)
+	}
+	esList := esConfig.([]interface{})
+
+	es := esList[0].(map[string]interface{})
+
+	config := &firehose.AmazonOpenSearchServerlessDestinationConfiguration{
+		BufferingHints:  extractOpensearchServerlessBufferingHints(es),
+		IndexName:       aws.String(es["index_name"].(string)),
+		RetryOptions:    extractOpensearchServerlessRetryOptions(es),
+		RoleARN:         aws.String(es["role_arn"].(string)),
+		S3Configuration: createS3Config(es["s3_configuration"].([]interface{})),
+	}
+
+	if v, ok := es["collection_endpoint"]; ok && v.(string) != "" {
+		config.CollectionEndpoint = aws.String(v.(string))
+	}
+
+	if _, ok := es["cloudwatch_logging_options"]; ok {
+		config.CloudWatchLoggingOptions = extractCloudWatchLoggingConfiguration(es)
+	}
+
+	if _, ok := es["processing_configuration"]; ok {
+		config.ProcessingConfiguration = extractProcessingConfiguration(es)
+	}
+
+	if s3BackupMode, ok := es["s3_backup_mode"]; ok {
+		config.S3BackupMode = aws.String(s3BackupMode.(string))
+	}
+
+	if _, ok := es["vpc_config"]; ok {
+		config.VpcConfiguration = extractVPCConfiguration(es)
+	}
+
+	return config, nil
+}
+
+func updateOpensearchServerlessConfig(d *schema.ResourceData) (*firehose.AmazonOpenSearchServerlessDestinationUpdate, error) {
+	esConfig, ok := d.GetOk("opensearchserverless_configuration")
+	if !ok {
+		return nil, elasticsearchDestinationRequiredParamErr("opensearchserverless_configuration", destinationTypeOpensearchServerless)
+	}
+	esList := esConfig.([]interface{})
+
+	es := esList[0].(map[string]interface{})
+
+	update := &firehose.AmazonOpenSearchServerlessDestinationUpdate{
+		BufferingHints: extractOpensearchServerlessBufferingHints(es),
+		IndexName:      aws.String(es["index_name"].(string)),
+		RetryOptions:   extractOpensearchServerlessRetryOptions(es),
+		RoleARN:        aws.String(es["role_arn"].(string)),
+		S3Update:       updateS3Config(es["s3_configuration"].([]interface{})),
+	}
+	if v, ok := es["collection_endpoint"]; ok && v.(string) != "" {
+		update.CollectionEndpoint = aws.String(v.(string))
+	}
+
+	if _, ok := es["cloudwatch_logging_options"]; ok {
+		update.CloudWatchLoggingOptions = extractCloudWatchLoggingConfiguration(es)
+	}
+
+	if _, ok := es["processing_configuration"]; ok {
+		update.ProcessingConfiguration = extractProcessingConfiguration(es)
+	}
+
+	return update, nil
+}
+
 func createSplunkConfig(d *schema.ResourceData) (*firehose.SplunkDestinationConfiguration, error) {
 	splunkRaw, ok := d.GetOk("splunk_configuration")
 	if !ok {
@@ -2784,6 +2986,19 @@ func extractOpensearchBufferingHints(es map[string]interface{}) *firehose.Amazon
 	return bufferingHints
 }
 
+func extractOpensearchServerlessBufferingHints(es map[string]interface{}) *firehose.AmazonOpenSearchServerlessBufferingHints {
+	bufferingHints := &firehose.AmazonOpenSearchServerlessBufferingHints{}
+
+	if bufferingInterval, ok := es["buffering_interval"].(int); ok {
+		bufferingHints.IntervalInSeconds = aws.Int64(int64(bufferingInterval))
+	}
+	if bufferingSize, ok := es["buffering_size"].(int); ok {
+		bufferingHints.SizeInMBs = aws.Int64(int64(bufferingSize))
+	}
+
+	return bufferingHints
+}
+
 func extractElasticsearchRetryOptions(es map[string]interface{}) *firehose.ElasticsearchRetryOptions {
 	retryOptions := &firehose.ElasticsearchRetryOptions{}
 
@@ -2796,6 +3011,16 @@ func extractElasticsearchRetryOptions(es map[string]interface{}) *firehose.Elast
 
 func extractOpensearchRetryOptions(es map[string]interface{}) *firehose.AmazonopensearchserviceRetryOptions {
 	retryOptions := &firehose.AmazonopensearchserviceRetryOptions{}
+
+	if retryDuration, ok := es["retry_duration"].(int); ok {
+		retryOptions.DurationInSeconds = aws.Int64(int64(retryDuration))
+	}
+
+	return retryOptions
+}
+
+func extractOpensearchServerlessRetryOptions(es map[string]interface{}) *firehose.AmazonOpenSearchServerlessRetryOptions {
+	retryOptions := &firehose.AmazonOpenSearchServerlessRetryOptions{}
 
 	if retryDuration, ok := es["retry_duration"].(int); ok {
 		retryOptions.DurationInSeconds = aws.Int64(int64(retryDuration))
@@ -2887,6 +3112,12 @@ func resourceDeliveryStreamCreate(ctx context.Context, d *schema.ResourceData, m
 				return sdkdiag.AppendErrorf(diags, "creating Kinesis Firehose Delivery Stream (%s): %s", sn, err)
 			}
 			input.AmazonopensearchserviceDestinationConfiguration = osConfig
+		} else if d.Get("destination").(string) == destinationTypeOpensearchServerless {
+			osConfig, err := createOpensearchServerlessConfig(d)
+			if err != nil {
+				return sdkdiag.AppendErrorf(diags, "creating Kinesis Firehose Delivery Stream (%s): %s", sn, err)
+			}
+			input.AmazonOpenSearchServerlessDestinationConfiguration = osConfig
 		} else if d.Get("destination").(string) == destinationTypeRedshift {
 			rc, err := createRedshiftConfig(d)
 			if err != nil {
@@ -3022,6 +3253,12 @@ func resourceDeliveryStreamUpdate(ctx context.Context, d *schema.ResourceData, m
 					return sdkdiag.AppendErrorf(diags, "updating Kinesis Firehose Delivery Stream (%s): %s", sn, err)
 				}
 				updateInput.AmazonopensearchserviceDestinationUpdate = esUpdate
+			} else if d.Get("destination").(string) == destinationTypeOpensearchServerless {
+				osUpdate, err := updateOpensearchServerlessConfig(d)
+				if err != nil {
+					return sdkdiag.AppendErrorf(diags, "creating Kinesis Firehose Delivery Stream (%s): %s", sn, err)
+				}
+				updateInput.AmazonOpenSearchServerlessDestinationUpdate = osUpdate
 			} else if d.Get("destination").(string) == destinationTypeRedshift {
 				rc, err := updateRedshiftConfig(d)
 				if err != nil {
