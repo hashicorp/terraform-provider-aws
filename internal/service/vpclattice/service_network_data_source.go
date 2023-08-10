@@ -11,14 +11,14 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_vpclattice_service_network")
-func DataSourceServiceNetwork() *schema.Resource {
+// @Tags
+func dataSourceServiceNetwork() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceServiceNetworkRead,
 
@@ -60,20 +60,15 @@ func DataSourceServiceNetwork() *schema.Resource {
 	}
 }
 
-const (
-	DSNameServiceNetwork = "Service Network Data Source"
-)
-
 func dataSourceServiceNetworkRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).VPCLatticeClient(ctx)
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	serviceNetworkID := d.Get("service_network_identifier").(string)
 	out, err := findServiceNetworkByID(ctx, conn, serviceNetworkID)
 
 	if err != nil {
-		return create.DiagError(names.VPCLattice, create.ErrActionReading, DSNameServiceNetwork, serviceNetworkID, err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	d.SetId(aws.ToString(out.Id))
@@ -90,23 +85,19 @@ func dataSourceServiceNetworkRead(ctx context.Context, d *schema.ResourceData, m
 	// https://docs.aws.amazon.com/vpc-lattice/latest/ug/sharing.html#sharing-perms
 	// Owners and consumers can list tags and can tag/untag resources in a service network that the account created.
 	// They can't list tags and tag/untag resources in a service network that aren't created by the account.
-	var tags tftags.KeyValueTags
-
 	parsedARN, err := arn.Parse(serviceNetworkARN)
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	if parsedARN.AccountID == meta.(*conns.AWSClient).AccountID {
-		tags, err = listTags(ctx, conn, serviceNetworkARN)
+		tags, err := listTags(ctx, conn, serviceNetworkARN)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "listing tags for VPC Lattice Service Network (%s): %s", serviceNetworkARN, err)
 		}
-	}
 
-	if err := d.Set("tags", tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
+		setTagsOut(ctx, Tags(tags))
 	}
 
 	return diags
