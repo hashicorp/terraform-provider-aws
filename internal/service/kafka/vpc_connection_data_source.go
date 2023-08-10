@@ -12,9 +12,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_msk_vpc_connection", name="VPC Connection")
+// @Tags
 func DataSourceVPCConnection() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceVPCConnectionRead,
@@ -38,6 +41,7 @@ func DataSourceVPCConnection() *schema.Resource {
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
+			names.AttrTags: tftags.TagsSchemaComputed(),
 			"target_cluster_arn": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -69,5 +73,7 @@ func dataSourceVPCConnectionRead(ctx context.Context, d *schema.ResourceData, me
 	d.Set("target_cluster_arn", out.TargetClusterArn)
 	d.Set("vpc_id", out.VpcId)
 
-	return nil
+	setTagsOutV2(ctx, out.Tags)
+
+	return diags
 }

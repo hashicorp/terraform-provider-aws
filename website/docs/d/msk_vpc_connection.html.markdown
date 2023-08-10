@@ -27,8 +27,9 @@ This data source supports the following arguments:
 
 This data source exports the following attributes in addition to the arguments above:
 
-* `authentication` - The authentication type for the client VPC connection.
+* `authentication` - The authentication type for the client VPC Connection.
 * `client_subnets` - The list of subnets in the client VPC.
 * `security_groups` - The security groups attached to the ENIs for the broker nodes.
+* `tags` - Map of key-value pairs assigned to the VPC Connection.
 * `target_cluster_arn` - The Amazon Resource Name (ARN) of the cluster.
 * `vpc_id` - The VPC ID of the remote client.
