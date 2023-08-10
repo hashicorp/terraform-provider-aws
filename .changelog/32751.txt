@@ -1,11 +1,3 @@
 ```release-note:enhancement
-resource/aws_cloudwatch_composite_alarm: Add `alarm` attribute
-```
-
-```release-note:enhancement
-resource/aws_cloudwatch_composite_alarm: Add `extension_period` attribute
-```
-
-```release-note:enhancement
-resource/aws_cloudwatch_composite_alarm: Add `wait_period` attribute
+resource/aws_cloudwatch_composite_alarm: Add `alarm`, `extension_period` and `wait_period` attributes
 ```
