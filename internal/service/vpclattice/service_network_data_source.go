@@ -77,8 +77,8 @@ func dataSourceServiceNetworkRead(ctx context.Context, d *schema.ResourceData, m
 	}
 
 	d.SetId(aws.ToString(out.Id))
-	outArn := aws.ToString(out.Arn)
-	d.Set("arn", outArn)
+	serviceNetworkARN := aws.ToString(out.Arn)
+	d.Set("arn", serviceNetworkARN)
 	d.Set("auth_type", out.AuthType)
 	d.Set("created_at", aws.ToTime(out.CreatedAt).String())
 	d.Set("last_updated_at", aws.ToTime(out.LastUpdatedAt).String())
@@ -92,16 +92,16 @@ func dataSourceServiceNetworkRead(ctx context.Context, d *schema.ResourceData, m
 	// They can't list tags and tag/untag resources in a service network that aren't created by the account.
 	var tags tftags.KeyValueTags
 
-	parsedArn, err := arn.Parse(outArn)
+	parsedARN, err := arn.Parse(serviceNetworkARN)
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "parsing ARN: %s", err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	if parsedArn.AccountID == meta.(*conns.AWSClient).AccountID {
-		tags, err = listTags(ctx, conn, outArn)
+	if parsedARN.AccountID == meta.(*conns.AWSClient).AccountID {
+		tags, err = listTags(ctx, conn, serviceNetworkARN)
 
 		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "listing tags for VPC Lattice Service Network (%s): %s", outArn, err)
+			return sdkdiag.AppendErrorf(diags, "listing tags for VPC Lattice Service Network (%s): %s", serviceNetworkARN, err)
 		}
 	}
 
