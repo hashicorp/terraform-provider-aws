@@ -35,7 +35,7 @@ func TestAccRAMResourceShareDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(datasourceName, "name", resourceName, "name"),
 					resource.TestCheckResourceAttrPair(datasourceName, "id", resourceName, "id"),
 					resource.TestCheckResourceAttrSet(datasourceName, "owning_account_id"),
-					resource.TestCheckResourceAttr(datasourceName, "resources.%", "0"),
+					resource.TestCheckResourceAttr(datasourceName, "resource_arns.#", "0"),
 				),
 			},
 		},
@@ -82,7 +82,7 @@ func TestAccRAMResourceShareDataSource_resources(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(datasourceName, "name", resourceName, "name"),
 					resource.TestCheckResourceAttrPair(datasourceName, "id", resourceName, "id"),
-					resource.TestCheckResourceAttr(datasourceName, "resources.#", "1"),
+					resource.TestCheckResourceAttr(datasourceName, "resource_arns.#", "1"),
 				),
 			},
 		},

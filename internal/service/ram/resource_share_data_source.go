@@ -75,7 +75,7 @@ func DataSourceResourceShare() *schema.Resource {
 				Computed: true,
 			},
 
-			"resources": {
+			"resource_arns": {
 				Type:     schema.TypeList,
 				Computed: true,
 				Elem: &schema.Schema{
@@ -164,7 +164,7 @@ func dataSourceResourceShareRead(ctx context.Context, d *schema.ResourceData, me
 		return sdkdiag.AppendErrorf(diags, "reading RAM resource share (%s) resources: %s", d.Id(), err)
 	}
 
-	if err := d.Set("resources", flex.FlattenStringList(resourceARNs)); err != nil {
+	if err := d.Set("resource_arns", flex.FlattenStringList(resourceARNs)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting resources: %s", err)
 	}
 
