@@ -273,6 +273,10 @@ func resourceFleetCreate(ctx context.Context, d *schema.ResourceData, meta inter
 				return retry.RetryableError(err)
 			}
 
+			if tfawserr.ErrCodeEquals(err, appstream.ErrCodeConcurrentModificationException) {
+				return retry.RetryableError(err)
+			}
+
 			// Retry for IAM eventual consistency on error:
 			if tfawserr.ErrMessageContains(err, appstream.ErrCodeInvalidRoleException, "encountered an error because your IAM role") {
 				return retry.RetryableError(err)
