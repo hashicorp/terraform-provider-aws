@@ -23,6 +23,10 @@ func DataSourceResourceShare() *schema.Resource {
 		ReadWithoutTimeout: dataSourceResourceShareRead,
 
 		Schema: map[string]*schema.Schema{
+			"arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"filter": {
 				Type:     schema.TypeSet,
 				Optional: true,
@@ -40,41 +44,14 @@ func DataSourceResourceShare() *schema.Resource {
 					},
 				},
 			},
-
-			"resource_owner": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: validation.StringInSlice(ram.ResourceOwner_Values(), false),
-			},
-
-			"resource_share_status": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validation.StringInSlice(ram.ResourceShareStatus_Values(), false),
-			},
-
 			"name": {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-
-			"arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-
 			"owning_account_id": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
-			"tags": tftags.TagsSchemaComputed(),
-
-			"status": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-
 			"resource_arns": {
 				Type:     schema.TypeList,
 				Computed: true,
@@ -82,6 +59,21 @@ func DataSourceResourceShare() *schema.Resource {
 					Type: schema.TypeString,
 				},
 			},
+			"resource_owner": {
+				Type:         schema.TypeString,
+				Required:     true,
+				ValidateFunc: validation.StringInSlice(ram.ResourceOwner_Values(), false),
+			},
+			"resource_share_status": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ValidateFunc: validation.StringInSlice(ram.ResourceShareStatus_Values(), false),
+			},
+			"status": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"tags": tftags.TagsSchemaComputed(),
 		},
 	}
 }
