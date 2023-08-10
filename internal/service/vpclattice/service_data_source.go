@@ -134,6 +134,7 @@ func dataSourceServiceRead(ctx context.Context, d *schema.ResourceData, meta int
 		d.Set("dns_entry", nil)
 	}
 	d.Set("name", out.Name)
+	d.Set("service_identifier", out.Id)
 	d.Set("status", out.Status)
 
 	return nil
