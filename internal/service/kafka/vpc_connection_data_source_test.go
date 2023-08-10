@@ -36,7 +36,7 @@ func TestAccKafkaVPCConnectionDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(dataSourceName, "security_groups.#", resourceName, "security_groups.#"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "tags.% ", resourceName, "tags.%"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "target_cluster_arn", resourceName, "target_cluster_arn"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "vpc_id ", resourceName, "vpc_id"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "vpc_id", resourceName, "vpc_id"),
 				),
 			},
 		},
