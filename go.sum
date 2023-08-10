@@ -92,6 +92,8 @@ github.com/aws/aws-sdk-go-v2/service/internetmonitor v1.5.1 h1:FIz4JayB2l/H8faUL
 github.com/aws/aws-sdk-go-v2/service/internetmonitor v1.5.1/go.mod h1:RBEokX/chcFhau6WEUtmCSzJOvrcz3OAFLG2Vn/x/48=
 github.com/aws/aws-sdk-go-v2/service/ivschat v1.5.2 h1:jOcz2ouUK1D2VoL7RjMjA5iBFzpX+YjslbAKPkMm5Ew=
 github.com/aws/aws-sdk-go-v2/service/ivschat v1.5.2/go.mod h1:JeQFIBSSUCkwfbgB7/66Cf0q5u6ChdqF1PdLpwr2sPI=
+github.com/aws/aws-sdk-go-v2/service/kafka v1.22.2 h1:c7uSqmenr/jlnqMRGtMq4KtQG0Np+0l64085FDVE1cg=
+github.com/aws/aws-sdk-go-v2/service/kafka v1.22.2/go.mod h1:i+CD7MAhQ2q3uVUOUE8S65802YqPc7mHl/CB84nkHhU=
 github.com/aws/aws-sdk-go-v2/service/kendra v1.42.2 h1:T6kAoh8M4U33t1iR8qLUCYr4bOC2rY46Aq7ACqWx0iw=
 github.com/aws/aws-sdk-go-v2/service/kendra v1.42.2/go.mod h1:RebebESsSw0RZpu9oKUncXaWMBDXccVgOuOAWBiMDfw=
 github.com/aws/aws-sdk-go-v2/service/keyspaces v1.4.2 h1:9NFUlI+MxnnwWNOP6t3rKDwRiqVWOLaebs8nzo3rjpA=
