@@ -32,6 +32,7 @@ resource "aws_cognito_user_pool" "example" {
   sms_configuration {
     external_id    = "example"
     sns_caller_arn = aws_iam_role.example.arn
+    sns_region     = "us-east-1"
   }
 
   software_token_mfa_configuration {
@@ -72,13 +73,14 @@ The following arguments are optional:
 * `admin_create_user_config` - (Optional) Configuration block for creating a new user profile. [Detailed below](#admin_create_user_config).
 * `alias_attributes` - (Optional) Attributes supported as an alias for this user pool. Valid values: `phone_number`, `email`, or `preferred_username`. Conflicts with `username_attributes`.
 * `auto_verified_attributes` - (Optional) Attributes to be auto-verified. Valid values: `email`, `phone_number`.
+* `deletion_protection` - (Optional) When active, DeletionProtection prevents accidental deletion of your user pool. Before you can delete a user pool that you have protected against deletion, you must deactivate this feature. Valid values are `ACTIVE` and `INACTIVE`, Default value is `INACTIVE`.
 * `device_configuration` - (Optional) Configuration block for the user pool's device tracking. [Detailed below](#device_configuration).
 * `email_configuration` - (Optional) Configuration block for configuring email. [Detailed below](#email_configuration).
 * `email_verification_message` - (Optional) String representing the email verification message. Conflicts with `verification_message_template` configuration block `email_message` argument.
 * `email_verification_subject` - (Optional) String representing the email verification subject. Conflicts with `verification_message_template` configuration block `email_subject` argument.
 * `lambda_config` - (Optional) Configuration block for the AWS Lambda triggers associated with the user pool. [Detailed below](#lambda_config).
 * `mfa_configuration` - (Optional) Multi-Factor Authentication (MFA) configuration for the User Pool. Defaults of `OFF`. Valid values are `OFF` (MFA Tokens are not required), `ON` (MFA is required for all users to sign in; requires at least one of `sms_configuration` or `software_token_mfa_configuration` to be configured), or `OPTIONAL` (MFA Will be required only for individual users who have MFA Enabled; requires at least one of `sms_configuration` or `software_token_mfa_configuration` to be configured).
-* `password_policy` - (Optional) Configuration blocked for information about the user pool password policy. [Detailed below](#password_policy).
+* `password_policy` - (Optional) Configuration block for information about the user pool password policy. [Detailed below](#password_policy).
 * `schema` - (Optional) Configuration block for the schema attributes of a user pool. [Detailed below](#schema). Schema attributes from the [standard attribute set](https://docs.aws.amazon.com/cognito/latest/developerguide/user-pool-settings-attributes.html#cognito-user-pools-standard-attributes) only need to be specified if they are different from the default configuration. Attributes can be added, but not modified or removed. Maximum of 50 attributes.
 * `sms_authentication_message` - (Optional) String representing the SMS authentication message. The Message must contain the `{####}` placeholder, which will be replaced with the code.
 * `sms_configuration` - (Optional) Configuration block for Short Message Service (SMS) settings. [Detailed below](#sms_configuration). These settings apply to SMS user verification and SMS Multi-Factor Authentication (MFA). Due to Cognito API restrictions, the SMS configuration cannot be removed without recreating the Cognito User Pool. For user data safety, this resource will ignore the removal of this configuration by disabling drift detection. To force resource recreation after this configuration has been applied, see the [`taint` command](https://www.terraform.io/docs/commands/taint.html).
@@ -93,7 +95,7 @@ The following arguments are optional:
 
 ### account_recovery_setting
 
-* `recovery_mechanism` - (Required) List of Account Recovery Options of the following structure:
+* `recovery_mechanism` - (Optional) List of Account Recovery Options of the following structure:
     * `name` - (Required) Recovery method for a user. Can be of the following: `verified_email`, `verified_phone_number`, and `admin_only`.
     * `priority` - (Required) Positive integer specifying priority of a method with 1 being the highest priority.
 
@@ -116,10 +118,10 @@ The following arguments are optional:
 ### email_configuration
 
 * `configuration_set` - (Optional) Email configuration set name from SES.
-* `email_sending_account` - (Optional) Email delivery method to use. `COGNITO_DEFAULT` for the default email functionality built into Cognito or `DEVELOPER` to use your Amazon SES configuration.
+* `email_sending_account` - (Optional) Email delivery method to use. `COGNITO_DEFAULT` for the default email functionality built into Cognito or `DEVELOPER` to use your Amazon SES configuration. Required to be `DEVELOPER` if `from_email_address` is set.
 * `from_email_address` - (Optional) Sender’s email address or sender’s display name with their email address (e.g., `john@example.com`, `John Smith <john@example.com>` or `\"John Smith Ph.D.\" <john@example.com>`). Escaped double quotes are required around display names that contain certain characters as specified in [RFC 5322](https://tools.ietf.org/html/rfc5322).
 * `reply_to_email_address` - (Optional) REPLY-TO email address.
-* `source_arn` - (Optional) ARN of the SES verified email identity to to use. Required if `email_sending_account` is set to `DEVELOPER`.
+* `source_arn` - (Optional) ARN of the SES verified email identity to use. Required if `email_sending_account` is set to `DEVELOPER`.
 
 ### lambda_config
 
@@ -204,6 +206,7 @@ resource "aws_cognito_user_pool" "example" {
 
 * `external_id` - (Required) External ID used in IAM role trust relationships. For more information about using external IDs, see [How to Use an External ID When Granting Access to Your AWS Resources to a Third Party](http://docs.aws.amazon.com/IAM/latest/UserGuide/id_roles_create_for-user_externalid.html).
 * `sns_caller_arn` - (Required) ARN of the Amazon SNS caller. This is usually the IAM role that you've given Cognito permission to assume.
+* `sns_region` - (Optional) The AWS Region to use with Amazon SNS integration. You can choose the same Region as your user pool, or a supported Legacy Amazon SNS alternate Region. Amazon Cognito resources in the Asia Pacific (Seoul) AWS Region must use your Amazon SNS configuration in the Asia Pacific (Tokyo) Region. For more information, see [SMS message settings for Amazon Cognito user pools](https://docs.aws.amazon.com/cognito/latest/developerguide/user-pool-sms-settings.html).
 
 ### software_token_mfa_configuration
 
@@ -232,9 +235,9 @@ The following arguments are required in the `software_token_mfa_configuration` c
 * `email_subject_by_link` - (Optional) Subject line for the email message template for sending a confirmation link to the user.
 * `sms_message` - (Optional) SMS message template. Must contain the `{####}` placeholder. Conflicts with `sms_verification_message` argument.
   
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the user pool.
 * `creation_date` - Date the user pool was created.
@@ -248,8 +251,17 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Cognito User Pools can be imported using the `id`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Cognito User Pools using the `id`. For example:
 
+```terraform
+import {
+  to = aws_cognito_user_pool.pool
+  id = "us-west-2_abc123"
+}
 ```
-$ terraform import aws_cognito_user_pool.pool us-west-2_abc123
+
+Using `terraform import`, import Cognito User Pools using the `id`. For example:
+
+```console
+% terraform import aws_cognito_user_pool.pool us-west-2_abc123
 ```

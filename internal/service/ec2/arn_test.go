@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ec2_test
 
 import (
@@ -8,6 +11,8 @@ import (
 )
 
 func TestInstanceProfileARNToName(t *testing.T) {
+	t.Parallel()
+
 	testCases := []struct {
 		TestName      string
 		InputARN      string
@@ -17,12 +22,12 @@ func TestInstanceProfileARNToName(t *testing.T) {
 		{
 			TestName:      "empty ARN",
 			InputARN:      "",
-			ExpectedError: regexp.MustCompile(`error parsing ARN`),
+			ExpectedError: regexp.MustCompile(`parsing ARN`),
 		},
 		{
 			TestName:      "unparsable ARN",
 			InputARN:      "test",
-			ExpectedError: regexp.MustCompile(`error parsing ARN`),
+			ExpectedError: regexp.MustCompile(`parsing ARN`),
 		},
 		{
 			TestName:      "invalid ARN service",
@@ -52,7 +57,10 @@ func TestInstanceProfileARNToName(t *testing.T) {
 	}
 
 	for _, testCase := range testCases {
+		testCase := testCase
 		t.Run(testCase.TestName, func(t *testing.T) {
+			t.Parallel()
+
 			got, err := tfec2.InstanceProfileARNToName(testCase.InputARN)
 
 			if err == nil && testCase.ExpectedError != nil {

@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package cloudfront
 
 import (
@@ -9,7 +12,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/cloudfront"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -18,6 +21,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @SDKResource("aws_cloudfront_origin_access_control")
 func ResourceOriginAccessControl() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceOriginAccessControlCreate,
@@ -69,7 +73,7 @@ const (
 )
 
 func resourceOriginAccessControlCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).CloudFrontConn
+	conn := meta.(*conns.AWSClient).CloudFrontConn(ctx)
 
 	in := &cloudfront.CreateOriginAccessControlInput{
 		OriginAccessControlConfig: &cloudfront.OriginAccessControlConfig{
@@ -96,7 +100,7 @@ func resourceOriginAccessControlCreate(ctx context.Context, d *schema.ResourceDa
 }
 
 func resourceOriginAccessControlRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).CloudFrontConn
+	conn := meta.(*conns.AWSClient).CloudFrontConn(ctx)
 
 	out, err := findOriginAccessControlByID(ctx, conn, d.Id())
 
@@ -127,7 +131,7 @@ func resourceOriginAccessControlRead(ctx context.Context, d *schema.ResourceData
 }
 
 func resourceOriginAccessControlUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).CloudFrontConn
+	conn := meta.(*conns.AWSClient).CloudFrontConn(ctx)
 
 	in := &cloudfront.UpdateOriginAccessControlInput{
 		Id:      aws.String(d.Id()),
@@ -151,7 +155,7 @@ func resourceOriginAccessControlUpdate(ctx context.Context, d *schema.ResourceDa
 }
 
 func resourceOriginAccessControlDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).CloudFrontConn
+	conn := meta.(*conns.AWSClient).CloudFrontConn(ctx)
 
 	log.Printf("[INFO] Deleting CloudFront Origin Access Control %s", d.Id())
 
@@ -177,7 +181,7 @@ func findOriginAccessControlByID(ctx context.Context, conn *cloudfront.CloudFron
 	}
 	out, err := conn.GetOriginAccessControlWithContext(ctx, in)
 	if tfawserr.ErrCodeEquals(err, cloudfront.ErrCodeNoSuchOriginAccessControl) {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: in,
 		}

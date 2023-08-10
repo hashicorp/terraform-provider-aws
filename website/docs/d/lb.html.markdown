@@ -37,7 +37,7 @@ data "aws_lb" "test" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This data source supports the following arguments:
 
 * `arn` - (Optional) Full ARN of the load balancer.
 * `name` - (Optional) Unique name of the load balancer.
@@ -45,13 +45,13 @@ The following arguments are supported:
 
 ~> **NOTE:** When both `arn` and `name` are specified, `arn` takes precedence. `tags` has lowest precedence.
 
-## Attributes Reference
+## Attribute Reference
 
 See the [LB Resource](/docs/providers/aws/r/lb.html) for details on the
 returned attributes - they are identical.
 
 ## Timeouts
 
-[Configuration options](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts):
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
 - `read` - (Default `20m`)

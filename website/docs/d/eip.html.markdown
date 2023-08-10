@@ -60,9 +60,9 @@ Elastic IP whose data will be exported as attributes.
 * `public_ip` - (Optional) Public IP of the specific EIP to retrieve.
 * `tags` - (Optional) Map of tags, each pair of which must exactly match a pair on the desired Elastic IP
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This data source exports the following attributes in addition to the arguments above:
 
 * `association_id` - ID representing the association of the address with an instance in a VPC.
 * `domain` - Whether the address is for use in EC2-Classic (standard) or in a VPC (vpc).
@@ -84,6 +84,6 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Timeouts
 
-[Configuration options](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts):
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
 - `read` - (Default `20m`)

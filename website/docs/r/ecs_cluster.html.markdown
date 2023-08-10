@@ -10,8 +10,6 @@ description: |-
 
 Provides an ECS cluster.
 
-~> **NOTE on Clusters and Cluster Capacity Providers:** Terraform provides both a standalone [`aws_ecs_cluster_capacity_providers`](/docs/providers/aws/r/ecs_cluster_capacity_providers.html) resource, as well as allowing the capacity providers and default strategies to be managed in-line by the `aws_ecs_cluster` resource. You cannot use a Cluster with in-line capacity providers in conjunction with the Capacity Providers resource, nor use more than one Capacity Providers resource with a single Cluster, as doing so will cause a conflict and will lead to mutual overwrites.
-
 ## Example Usage
 
 ```terraform
@@ -54,42 +52,13 @@ resource "aws_ecs_cluster" "test" {
 }
 ```
 
-### Example with Capacity Providers
-
-```terraform
-resource "aws_ecs_cluster" "example" {
-  name = "example"
-}
-
-resource "aws_ecs_cluster_capacity_providers" "example" {
-  cluster_name = aws_ecs_cluster.example.name
-
-  capacity_providers = [aws_ecs_capacity_provider.example.name]
-
-  default_capacity_provider_strategy {
-    base              = 1
-    weight            = 100
-    capacity_provider = aws_ecs_capacity_provider.example.name
-  }
-}
-
-resource "aws_ecs_capacity_provider" "example" {
-  name = "example"
-
-  auto_scaling_group_provider {
-    auto_scaling_group_arn = aws_autoscaling_group.example.arn
-  }
-}
-```
-
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
-* `capacity_providers` - (Optional, **Deprecated** use the `aws_ecs_cluster_capacity_providers` resource instead) List of short names of one or more capacity providers to associate with the cluster. Valid values also include `FARGATE` and `FARGATE_SPOT`.
 * `configuration` - (Optional) The execute command configuration for the cluster. Detailed below.
-* `default_capacity_provider_strategy` - (Optional, **Deprecated** use the `aws_ecs_cluster_capacity_providers` resource instead) Configuration block for capacity provider strategy to use by default for the cluster. Can be one or more. Detailed below.
 * `name` - (Required) Name of the cluster (up to 255 letters, numbers, hyphens, and underscores)
+* `service_connect_defaults` - (Optional) Configures a default Service Connect namespace. Detailed below.
 * `setting` - (Optional) Configuration block(s) with cluster settings. For example, this can be used to enable CloudWatch Container Insights for a cluster. Detailed below.
 * `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
@@ -111,20 +80,18 @@ The following arguments are supported:
 * `s3_bucket_encryption_enabled` - (Optional) Whether or not to enable encryption on the logs sent to S3. If not specified, encryption will be disabled.
 * `s3_key_prefix` - (Optional) An optional folder in the S3 bucket to place logs in.
 
-### `default_capacity_provider_strategy`
-
-* `capacity_provider` - (Required) The short name of the capacity provider.
-* `weight` - (Optional) The relative percentage of the total number of launched tasks that should use the specified capacity provider.
-* `base` - (Optional) The number of tasks, at a minimum, to run on the specified capacity provider. Only one capacity provider in a capacity provider strategy can have a base defined.
-
 ### `setting`
 
 * `name` - (Required) Name of the setting to manage. Valid values: `containerInsights`.
 * `value` -  (Required) The value to assign to the setting. Valid values are `enabled` and `disabled`.
 
-## Attributes Reference
+### `service_connect_defaults`
 
-In addition to all arguments above, the following attributes are exported:
+* `namespace` - (Required) The ARN of the [`aws_service_discovery_http_namespace`](/docs/providers/aws/r/service_discovery_http_namespace.html) that's used when you create a service and don't specify a Service Connect configuration.
+
+## Attribute Reference
+
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN that identifies the cluster.
 * `id` - ARN that identifies the cluster.
@@ -132,8 +99,17 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-ECS clusters can be imported using the `name`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import ECS clusters using the `name`. For example:
 
+```terraform
+import {
+  to = aws_ecs_cluster.stateless
+  id = "stateless-app"
+}
 ```
-$ terraform import aws_ecs_cluster.stateless stateless-app
+
+Using `terraform import`, import ECS clusters using the `name`. For example:
+
+```console
+% terraform import aws_ecs_cluster.stateless stateless-app
 ```

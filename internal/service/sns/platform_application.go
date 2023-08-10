@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package sns
 
 import (
@@ -97,6 +100,7 @@ var (
 	}, platformApplicationSchema).WithSkipUpdate("apple_platform_bundle_id").WithSkipUpdate("apple_platform_team_id").WithSkipUpdate("platform_credential").WithSkipUpdate("platform_principal")
 )
 
+// @SDKResource("aws_sns_platform_application")
 func ResourcePlatformApplication() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourcePlatformApplicationCreate,
@@ -105,7 +109,7 @@ func ResourcePlatformApplication() *schema.Resource {
 		DeleteWithoutTimeout: resourcePlatformApplicationDelete,
 
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: platformApplicationSchema,
@@ -113,7 +117,7 @@ func ResourcePlatformApplication() *schema.Resource {
 }
 
 func resourcePlatformApplicationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).SNSConn
+	conn := meta.(*conns.AWSClient).SNSConn(ctx)
 
 	attributes, err := platformApplicationAttributeMap.ResourceDataToAPIAttributesCreate(d)
 
@@ -128,7 +132,7 @@ func resourcePlatformApplicationCreate(ctx context.Context, d *schema.ResourceDa
 		Platform:   aws.String(d.Get("platform").(string)),
 	}
 
-	outputRaw, err := tfresource.RetryWhenAWSErrMessageContainsContext(ctx, propagationTimeout, func() (interface{}, error) {
+	outputRaw, err := tfresource.RetryWhenAWSErrMessageContains(ctx, propagationTimeout, func() (interface{}, error) {
 		return conn.CreatePlatformApplicationWithContext(ctx, input)
 	}, sns.ErrCodeInvalidParameterException, "is not a valid role to allow SNS to write to Cloudwatch Logs")
 
@@ -142,7 +146,7 @@ func resourcePlatformApplicationCreate(ctx context.Context, d *schema.ResourceDa
 }
 
 func resourcePlatformApplicationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).SNSConn
+	conn := meta.(*conns.AWSClient).SNSConn(ctx)
 
 	// There is no SNS Describe/GetPlatformApplication to fetch attributes like name and platform
 	// We will use the ID, which should be a platform application ARN, to:
@@ -180,7 +184,7 @@ func resourcePlatformApplicationRead(ctx context.Context, d *schema.ResourceData
 }
 
 func resourcePlatformApplicationUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).SNSConn
+	conn := meta.(*conns.AWSClient).SNSConn(ctx)
 
 	attributes, err := platformApplicationAttributeMap.ResourceDataToAPIAttributesUpdate(d)
 
@@ -221,7 +225,7 @@ func resourcePlatformApplicationUpdate(ctx context.Context, d *schema.ResourceDa
 		PlatformApplicationArn: aws.String(d.Id()),
 	}
 
-	_, err = tfresource.RetryWhenAWSErrMessageContainsContext(ctx, propagationTimeout, func() (interface{}, error) {
+	_, err = tfresource.RetryWhenAWSErrMessageContains(ctx, propagationTimeout, func() (interface{}, error) {
 		return conn.SetPlatformApplicationAttributesWithContext(ctx, input)
 	}, sns.ErrCodeInvalidParameterException, "is not a valid role to allow SNS to write to Cloudwatch Logs")
 
@@ -233,7 +237,7 @@ func resourcePlatformApplicationUpdate(ctx context.Context, d *schema.ResourceDa
 }
 
 func resourcePlatformApplicationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).SNSConn
+	conn := meta.(*conns.AWSClient).SNSConn(ctx)
 
 	log.Printf("[DEBUG] Deleting SNS Platform Application: %s", d.Id())
 	_, err := conn.DeletePlatformApplicationWithContext(ctx, &sns.DeletePlatformApplicationInput{

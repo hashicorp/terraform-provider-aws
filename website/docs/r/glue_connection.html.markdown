@@ -26,6 +26,24 @@ resource "aws_glue_connection" "example" {
 }
 ```
 
+### Non-VPC Connection with secret manager reference
+
+```terraform
+
+data "aws_secretmanager_secret" "example" {
+  name = "example-secret"
+}
+
+resource "aws_glue_connection" "example" {
+  connection_properties = {
+    JDBC_CONNECTION_URL = "jdbc:mysql://example.com/exampledatabase"
+    SECRET_ID           = data.aws_secretmanager_secret.example.name
+  }
+
+  name = "example"
+}
+```
+
 ### VPC Connection
 
 For more information, see the [AWS Documentation](https://docs.aws.amazon.com/glue/latest/dg/populate-add-connection.html#connection-JDBC-VPC).
@@ -50,7 +68,7 @@ resource "aws_glue_connection" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `catalog_id` – (Optional) The ID of the Data Catalog in which to create the connection. If none is supplied, the AWS account ID is used by default.
 * `connection_properties` – (Optional) A map of key-value pairs used as parameters for this connection.
@@ -67,9 +85,9 @@ The following arguments are supported:
 * `security_group_id_list` - (Optional) The security group ID list used by the connection.
 * `subnet_id` - (Optional) The subnet ID used by the connection.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - Catalog ID and name of the connection
 * `arn` - The ARN of the Glue Connection.
@@ -77,8 +95,17 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Glue Connections can be imported using the `CATALOG-ID` (AWS account ID if not custom) and `NAME`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Glue Connections using the `CATALOG-ID` (AWS account ID if not custom) and `NAME`. For example:
 
+```terraform
+import {
+  to = aws_glue_connection.MyConnection
+  id = "123456789012:MyConnection"
+}
 ```
-$ terraform import aws_glue_connection.MyConnection 123456789012:MyConnection
+
+Using `terraform import`, import Glue Connections using the `CATALOG-ID` (AWS account ID if not custom) and `NAME`. For example:
+
+```console
+% terraform import aws_glue_connection.MyConnection 123456789012:MyConnection
 ```

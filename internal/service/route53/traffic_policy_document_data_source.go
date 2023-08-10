@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package route53
 
 import (
@@ -11,9 +14,10 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
+// @SDKDataSource("aws_route53_traffic_policy_document")
 func DataSourceTrafficPolicyDocument() *schema.Resource {
 	return &schema.Resource{
-		ReadContext: dataSourceTrafficPolicyDocumentRead,
+		ReadWithoutTimeout: dataSourceTrafficPolicyDocumentRead,
 
 		Schema: map[string]*schema.Schema{
 			"endpoint": {

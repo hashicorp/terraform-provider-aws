@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ec2
 
 import (
@@ -15,23 +18,28 @@ import (
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @SDKResource("aws_vpn_connection", name="VPN Connection")
+// @Tags(identifierAttribute="id")
 func ResourceVPNConnection() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceVPNConnectionCreate,
-		Read:   resourceVPNConnectionRead,
-		Update: resourceVPNConnectionUpdate,
-		Delete: resourceVPNConnectionDelete,
+		CreateWithoutTimeout: resourceVPNConnectionCreate,
+		ReadWithoutTimeout:   resourceVPNConnectionRead,
+		UpdateWithoutTimeout: resourceVPNConnectionUpdate,
+		DeleteWithoutTimeout: resourceVPNConnectionDelete,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -121,16 +129,16 @@ func ResourceVPNConnection() *schema.Resource {
 				Computed: true,
 				ForceNew: true,
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			"transit_gateway_attachment_id": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
 			"transit_gateway_id": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ExactlyOneOf: []string{"transit_gateway_id", "vpn_gateway_id"},
+				Type:          schema.TypeString,
+				Optional:      true,
+				ConflictsWith: []string{"vpn_gateway_id"},
 			},
 			"transport_transit_gateway_attachment_id": {
 				Type:     schema.TypeString,
@@ -180,6 +188,10 @@ func ResourceVPNConnection() *schema.Resource {
 					}
 					return false
 				},
+			},
+			"tunnel1_enable_tunnel_lifecycle_control": {
+				Type:     schema.TypeBool,
+				Optional: true,
 			},
 			"tunnel1_ike_versions": {
 				Type:     schema.TypeSet,
@@ -393,6 +405,10 @@ func ResourceVPNConnection() *schema.Resource {
 					}
 					return false
 				},
+			},
+			"tunnel2_enable_tunnel_lifecycle_control": {
+				Type:     schema.TypeBool,
+				Optional: true,
 			},
 			"tunnel2_ike_versions": {
 				Type:     schema.TypeSet,
@@ -608,9 +624,9 @@ func ResourceVPNConnection() *schema.Resource {
 				},
 			},
 			"vpn_gateway_id": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ExactlyOneOf: []string{"transit_gateway_id", "vpn_gateway_id"},
+				Type:          schema.TypeString,
+				Optional:      true,
+				ConflictsWith: []string{"transit_gateway_id"},
 			},
 		},
 
@@ -623,11 +639,12 @@ func ResourceVPNConnection() *schema.Resource {
 
 // https://docs.aws.amazon.com/vpn/latest/s2svpn/VPNTunnels.html.
 var (
-	defaultVPNTunnelOptionsDPDTimeoutAction           = vpnTunnelOptionsDPDTimeoutActionClear
-	defaultVPNTunnelOptionsDPDTimeoutSeconds          = 30
-	defaultVPNTunnelOptionsIKEVersions                = []string{vpnTunnelOptionsIKEVersion1, vpnTunnelOptionsIKEVersion2}
-	defaultVPNTunnelOptionsPhase1DHGroupNumbers       = []int{2, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24}
-	defaultVPNTunnelOptionsPhase1EncryptionAlgorithms = []string{
+	defaultVPNTunnelOptionsDPDTimeoutAction             = vpnTunnelOptionsDPDTimeoutActionClear
+	defaultVPNTunnelOptionsDPDTimeoutSeconds            = 30
+	defaultVPNTunnelOptionsEnableTunnelLifecycleControl = false
+	defaultVPNTunnelOptionsIKEVersions                  = []string{vpnTunnelOptionsIKEVersion1, vpnTunnelOptionsIKEVersion2}
+	defaultVPNTunnelOptionsPhase1DHGroupNumbers         = []int{2, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24}
+	defaultVPNTunnelOptionsPhase1EncryptionAlgorithms   = []string{
 		vpnTunnelOptionsPhase1EncryptionAlgorithmAES128,
 		vpnTunnelOptionsPhase1EncryptionAlgorithmAES256,
 		vpnTunnelOptionsPhase1EncryptionAlgorithmAES128_GCM_16,
@@ -660,15 +677,14 @@ var (
 	defaultVPNTunnelOptionsStartupAction          = vpnTunnelOptionsStartupActionAdd
 )
 
-func resourceVPNConnectionCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+func resourceVPNConnectionCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	input := &ec2.CreateVpnConnectionInput{
 		CustomerGatewayId: aws.String(d.Get("customer_gateway_id").(string)),
 		Options:           expandVPNConnectionOptionsSpecification(d),
-		TagSpecifications: tagSpecificationsFromKeyValueTags(tags, ec2.ResourceTypeVpnConnection),
+		TagSpecifications: getTagSpecificationsIn(ctx, ec2.ResourceTypeVpnConnection),
 		Type:              aws.String(d.Get("type").(string)),
 	}
 
@@ -681,37 +697,36 @@ func resourceVPNConnectionCreate(d *schema.ResourceData, meta interface{}) error
 	}
 
 	log.Printf("[DEBUG] Creating EC2 VPN Connection: %s", input)
-	output, err := conn.CreateVpnConnection(input)
+	output, err := conn.CreateVpnConnectionWithContext(ctx, input)
 
 	if err != nil {
-		return fmt.Errorf("error creating EC2 VPN Connection: %w", err)
+		return sdkdiag.AppendErrorf(diags, "creating EC2 VPN Connection: %s", err)
 	}
 
 	d.SetId(aws.StringValue(output.VpnConnection.VpnConnectionId))
 
-	if _, err := WaitVPNConnectionCreated(conn, d.Id()); err != nil {
-		return fmt.Errorf("error waiting for EC2 VPN Connection (%s) create: %w", d.Id(), err)
+	if _, err := WaitVPNConnectionCreated(ctx, conn, d.Id()); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for EC2 VPN Connection (%s) create: %s", d.Id(), err)
 	}
 
 	// Read off the API to populate our RO fields.
-	return resourceVPNConnectionRead(d, meta)
+	return append(diags, resourceVPNConnectionRead(ctx, d, meta)...)
 }
 
-func resourceVPNConnectionRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+func resourceVPNConnectionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
-	vpnConnection, err := FindVPNConnectionByID(conn, d.Id())
+	vpnConnection, err := FindVPNConnectionByID(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] EC2 VPN Connection (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading EC2 VPN Connection (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading EC2 VPN Connection (%s): %s", d.Id(), err)
 	}
 
 	arn := arn.ARN{
@@ -737,10 +752,10 @@ func resourceVPNConnectionRead(d *schema.ResourceData, meta interface{}) error {
 			}),
 		}
 
-		output, err := FindTransitGatewayAttachment(conn, input)
+		output, err := FindTransitGatewayAttachment(ctx, conn, input)
 
 		if err != nil {
-			return fmt.Errorf("error reading EC2 VPN Connection (%s) Transit Gateway Attachment: %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "reading EC2 VPN Connection (%s) Transit Gateway Attachment: %s", d.Id(), err)
 		}
 
 		d.Set("transit_gateway_attachment_id", output.TransitGatewayAttachmentId)
@@ -751,23 +766,14 @@ func resourceVPNConnectionRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if err := d.Set("routes", flattenVPNStaticRoutes(vpnConnection.Routes)); err != nil {
-		return fmt.Errorf("error setting routes: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting routes: %s", err)
 	}
 
 	if err := d.Set("vgw_telemetry", flattenVGWTelemetries(vpnConnection.VgwTelemetry)); err != nil {
-		return fmt.Errorf("error setting vgw_telemetry: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting vgw_telemetry: %s", err)
 	}
 
-	tags := KeyValueTags(vpnConnection.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("error setting tags_all: %w", err)
-	}
+	setTagsOut(ctx, vpnConnection.Tags)
 
 	if v := vpnConnection.Options; v != nil {
 		d.Set("enable_acceleration", v.EnableAcceleration)
@@ -783,7 +789,7 @@ func resourceVPNConnectionRead(d *schema.ResourceData, meta interface{}) error {
 		for i, prefix := range []string{"tunnel1_", "tunnel2_"} {
 			if len(v.TunnelOptions) > i {
 				if err := flattenTunnelOption(d, prefix, v.TunnelOptions[i]); err != nil {
-					return err
+					return sdkdiag.AppendErrorf(diags, "reading EC2 VPN Connection (%s): %s", d.Id(), err)
 				}
 			}
 		}
@@ -841,11 +847,12 @@ func resourceVPNConnectionRead(d *schema.ResourceData, meta interface{}) error {
 		d.Set("tunnel2_vgw_inside_address", nil)
 	}
 
-	return nil
+	return diags
 }
 
-func resourceVPNConnectionUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+func resourceVPNConnectionUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	if d.HasChanges("customer_gateway_id", "transit_gateway_id", "vpn_gateway_id") {
 		input := &ec2.ModifyVpnConnectionInput{
@@ -864,14 +871,14 @@ func resourceVPNConnectionUpdate(d *schema.ResourceData, meta interface{}) error
 			input.VpnGatewayId = aws.String(v)
 		}
 
-		_, err := conn.ModifyVpnConnection(input)
+		_, err := conn.ModifyVpnConnectionWithContext(ctx, input)
 
 		if err != nil {
-			return fmt.Errorf("error modifying EC2 VPN Connection (%s): %w", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "modifying EC2 VPN Connection (%s): %s", d.Id(), err)
 		}
 
-		if _, err := WaitVPNConnectionUpdated(conn, d.Id()); err != nil {
-			return fmt.Errorf("error waiting for EC2 VPN Connection (%s) update: %w", d.Id(), err)
+		if _, err := WaitVPNConnectionUpdated(ctx, conn, d.Id()); err != nil {
+			return sdkdiag.AppendErrorf(diags, "waiting for EC2 VPN Connection (%s) update: %s", d.Id(), err)
 		}
 	}
 
@@ -896,14 +903,14 @@ func resourceVPNConnectionUpdate(d *schema.ResourceData, meta interface{}) error
 			input.RemoteIpv6NetworkCidr = aws.String(d.Get("remote_ipv6_network_cidr").(string))
 		}
 
-		_, err := conn.ModifyVpnConnectionOptions(input)
+		_, err := conn.ModifyVpnConnectionOptionsWithContext(ctx, input)
 
 		if err != nil {
-			return fmt.Errorf("error modifying EC2 VPN Connection (%s) connection options: %w", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "modifying EC2 VPN Connection (%s) connection options: %s", d.Id(), err)
 		}
 
-		if _, err := WaitVPNConnectionUpdated(conn, d.Id()); err != nil {
-			return fmt.Errorf("error waiting for EC2 VPN Connection (%s) connection options update: %w", d.Id(), err)
+		if _, err := WaitVPNConnectionUpdated(ctx, conn, d.Id()); err != nil {
+			return sdkdiag.AppendErrorf(diags, "waiting for EC2 VPN Connection (%s) connection options update: %s", d.Id(), err)
 		}
 	}
 
@@ -916,50 +923,43 @@ func resourceVPNConnectionUpdate(d *schema.ResourceData, meta interface{}) error
 			}
 
 			log.Printf("[DEBUG] Modifying EC2 VPN Connection tunnel (%d) options: %s", i+1, input)
-			_, err := conn.ModifyVpnTunnelOptions(input)
+			_, err := conn.ModifyVpnTunnelOptionsWithContext(ctx, input)
 
 			if err != nil {
-				return fmt.Errorf("error modifying EC2 VPN Connection (%s) tunnel (%d) options: %w", d.Id(), i+1, err)
+				return sdkdiag.AppendErrorf(diags, "modifying EC2 VPN Connection (%s) tunnel (%d) options: %s", d.Id(), i+1, err)
 			}
 
-			if _, err := WaitVPNConnectionUpdated(conn, d.Id()); err != nil {
-				return fmt.Errorf("error waiting for EC2 VPN Connection (%s) tunnel (%d) options update: %w", d.Id(), i+1, err)
+			if _, err := WaitVPNConnectionUpdated(ctx, conn, d.Id()); err != nil {
+				return sdkdiag.AppendErrorf(diags, "waiting for EC2 VPN Connection (%s) tunnel (%d) options update: %s", d.Id(), i+1, err)
 			}
 		}
 	}
 
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		if err := UpdateTags(conn, d.Id(), o, n); err != nil {
-			return fmt.Errorf("error updating EC2 VPN Connection (%s) tags: %w", d.Id(), err)
-		}
-	}
-
-	return resourceVPNConnectionRead(d, meta)
+	return append(diags, resourceVPNConnectionRead(ctx, d, meta)...)
 }
 
-func resourceVPNConnectionDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+func resourceVPNConnectionDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	log.Printf("[INFO] Deleting EC2 VPN Connection: %s", d.Id())
-	_, err := conn.DeleteVpnConnection(&ec2.DeleteVpnConnectionInput{
+	_, err := conn.DeleteVpnConnectionWithContext(ctx, &ec2.DeleteVpnConnectionInput{
 		VpnConnectionId: aws.String(d.Id()),
 	})
 
 	if tfawserr.ErrCodeEquals(err, errCodeInvalidVPNConnectionIDNotFound) {
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("error deleting EC2 VPN Connection (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting EC2 VPN Connection (%s): %s", d.Id(), err)
 	}
 
-	if _, err := WaitVPNConnectionDeleted(conn, d.Id()); err != nil {
-		return fmt.Errorf("error waiting for EC2 VPN Connection (%s) delete: %w", d.Id(), err)
+	if _, err := WaitVPNConnectionDeleted(ctx, conn, d.Id()); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for EC2 VPN Connection (%s) delete: %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 func expandVPNConnectionOptionsSpecification(d *schema.ResourceData) *ec2.VpnConnectionOptionsSpecification {
@@ -1020,6 +1020,10 @@ func expandVPNTunnelOptionsSpecification(d *schema.ResourceData, prefix string) 
 
 	if v, ok := d.GetOk(prefix + "dpd_timeout_seconds"); ok {
 		apiObject.DPDTimeoutSeconds = aws.Int64(int64(v.(int)))
+	}
+
+	if v, ok := d.GetOk(prefix + "enable_tunnel_lifecycle_control"); ok {
+		apiObject.EnableTunnelLifecycleControl = aws.Bool(v.(bool))
 	}
 
 	if v, ok := d.GetOk(prefix + "ike_versions"); ok {
@@ -1165,6 +1169,16 @@ func expandModifyVPNTunnelOptionsSpecification(d *schema.ResourceData, prefix st
 			apiObject.DPDTimeoutSeconds = aws.Int64(int64(v.(int)))
 		} else {
 			apiObject.DPDTimeoutSeconds = aws.Int64(int64(defaultVPNTunnelOptionsDPDTimeoutSeconds))
+		}
+
+		hasChange = true
+	}
+
+	if key := prefix + "enable_tunnel_lifecycle_control"; d.HasChange(key) {
+		if v, ok := d.GetOk(key); ok {
+			apiObject.EnableTunnelLifecycleControl = aws.Bool(v.(bool))
+		} else {
+			apiObject.EnableTunnelLifecycleControl = aws.Bool(defaultVPNTunnelOptionsEnableTunnelLifecycleControl)
 		}
 
 		hasChange = true
@@ -1359,6 +1373,7 @@ func flattenTunnelOption(d *schema.ResourceData, prefix string, apiObject *ec2.T
 
 	d.Set(prefix+"dpd_timeout_action", apiObject.DpdTimeoutAction)
 	d.Set(prefix+"dpd_timeout_seconds", apiObject.DpdTimeoutSeconds)
+	d.Set(prefix+"enable_tunnel_lifecycle_control", apiObject.EnableTunnelLifecycleControl)
 
 	for _, v := range apiObject.IkeVersions {
 		s = append(s, v.Value)
@@ -1411,7 +1426,6 @@ func flattenTunnelOption(d *schema.ResourceData, prefix string, apiObject *ec2.T
 	d.Set(prefix+"phase2_integrity_algorithms", aws.StringValueSlice(s))
 
 	d.Set(prefix+"phase2_lifetime_seconds", apiObject.Phase2LifetimeSeconds)
-
 	d.Set(prefix+"rekey_fuzz_percentage", apiObject.RekeyFuzzPercentage)
 	d.Set(prefix+"rekey_margin_time_seconds", apiObject.RekeyMarginTimeSeconds)
 	d.Set(prefix+"replay_window_size", apiObject.ReplayWindowSize)

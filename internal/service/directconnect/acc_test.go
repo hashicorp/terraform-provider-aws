@@ -1,20 +1,24 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package directconnect_test
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/directconnect"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func testAccCheckVirtualInterfaceExists(name string, vif *directconnect.VirtualInterface) resource.TestCheckFunc {
+func testAccCheckVirtualInterfaceExists(ctx context.Context, name string, vif *directconnect.VirtualInterface) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DirectConnectConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DirectConnectConn(ctx)
 
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -24,7 +28,7 @@ func testAccCheckVirtualInterfaceExists(name string, vif *directconnect.VirtualI
 			return fmt.Errorf("No ID is set")
 		}
 
-		resp, err := conn.DescribeVirtualInterfaces(&directconnect.DescribeVirtualInterfacesInput{
+		resp, err := conn.DescribeVirtualInterfacesWithContext(ctx, &directconnect.DescribeVirtualInterfacesInput{
 			VirtualInterfaceId: aws.String(rs.Primary.ID),
 		})
 		if err != nil {
@@ -43,8 +47,8 @@ func testAccCheckVirtualInterfaceExists(name string, vif *directconnect.VirtualI
 	}
 }
 
-func testAccCheckVirtualInterfaceDestroy(s *terraform.State, t string) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).DirectConnectConn
+func testAccCheckVirtualInterfaceDestroy(ctx context.Context, s *terraform.State, t string) error { // nosemgrep:ci.semgrep.acctest.naming.destroy-check-signature
+	conn := acctest.Provider.Meta().(*conns.AWSClient).DirectConnectConn(ctx)
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != t {
@@ -54,7 +58,7 @@ func testAccCheckVirtualInterfaceDestroy(s *terraform.State, t string) error {
 			return fmt.Errorf("No ID is set")
 		}
 
-		resp, err := conn.DescribeVirtualInterfaces(&directconnect.DescribeVirtualInterfacesInput{
+		resp, err := conn.DescribeVirtualInterfacesWithContext(ctx, &directconnect.DescribeVirtualInterfacesInput{
 			VirtualInterfaceId: aws.String(rs.Primary.ID),
 		})
 		if tfawserr.ErrMessageContains(err, directconnect.ErrCodeClientException, "does not exist") {

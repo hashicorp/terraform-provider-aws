@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package kms_test
 
 import (
@@ -8,6 +11,8 @@ import (
 )
 
 func TestAliasARNToKeyARN(t *testing.T) {
+	t.Parallel()
+
 	testCases := []struct {
 		TestName      string
 		InputARN      string
@@ -17,12 +22,12 @@ func TestAliasARNToKeyARN(t *testing.T) {
 		{
 			TestName:      "empty ARN",
 			InputARN:      "",
-			ExpectedError: regexp.MustCompile(`error parsing ARN`),
+			ExpectedError: regexp.MustCompile(`parsing ARN`),
 		},
 		{
 			TestName:      "unparsable ARN",
 			InputARN:      "test",
-			ExpectedError: regexp.MustCompile(`error parsing ARN`),
+			ExpectedError: regexp.MustCompile(`parsing ARN`),
 		},
 		{
 			TestName:      "invalid ARN service",
@@ -37,7 +42,10 @@ func TestAliasARNToKeyARN(t *testing.T) {
 	}
 
 	for _, testCase := range testCases {
+		testCase := testCase
 		t.Run(testCase.TestName, func(t *testing.T) {
+			t.Parallel()
+
 			got, err := tfkms.AliasARNToKeyARN(testCase.InputARN, "test-key")
 
 			if err == nil && testCase.ExpectedError != nil {
@@ -60,6 +68,8 @@ func TestAliasARNToKeyARN(t *testing.T) {
 }
 
 func TestKeyARNOrIDEqual(t *testing.T) {
+	t.Parallel()
+
 	testCases := []struct {
 		name   string
 		first  string
@@ -124,7 +134,10 @@ func TestKeyARNOrIDEqual(t *testing.T) {
 	}
 
 	for _, testCase := range testCases {
+		testCase := testCase
 		t.Run(testCase.name, func(t *testing.T) {
+			t.Parallel()
+
 			got := tfkms.KeyARNOrIDEqual(testCase.first, testCase.second)
 
 			if got != testCase.want {

@@ -1,10 +1,12 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 //go:build sweep
 // +build sweep
 
 package route53
 
 import (
-	"context"
 	"fmt"
 	"log"
 	"strings"
@@ -14,9 +16,9 @@ import (
 	"github.com/aws/aws-sdk-go/service/route53"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/go-multierror"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func init() {
@@ -63,19 +65,20 @@ func init() {
 }
 
 func sweepHealthChecks(region string) error {
-	client, err := sweep.SharedRegionalSweepClient(region)
+	ctx := sweep.Context(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 
 	if err != nil {
 		return fmt.Errorf("getting client: %s", err)
 	}
 
-	conn := client.(*conns.AWSClient).Route53Conn
+	conn := client.Route53Conn(ctx)
 	sweepResources := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
 
 	input := &route53.ListHealthChecksInput{}
 
-	err = conn.ListHealthChecksPages(input, func(page *route53.ListHealthChecksOutput, lastPage bool) bool {
+	err = conn.ListHealthChecksPagesWithContext(ctx, input, func(page *route53.ListHealthChecksOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
@@ -101,7 +104,7 @@ func sweepHealthChecks(region string) error {
 		errs = multierror.Append(errs, fmt.Errorf("describing Route53 Health Checks for %s: %w", region, err))
 	}
 
-	if err = sweep.SweepOrchestratorWithContext(context.Background(), sweepResources, 0*time.Minute, 1*time.Minute, 10*time.Second, 18*time.Second, 10*time.Minute); err != nil {
+	if err = sweep.SweepOrchestrator(ctx, sweepResources, tfresource.WithDelayRand(1*time.Minute), tfresource.WithMinPollInterval(10*time.Second), tfresource.WithPollInterval(18*time.Second)); err != nil {
 		errs = multierror.Append(errs, fmt.Errorf("sweeping Route53 Health Checks for %s: %w", region, err))
 	}
 
@@ -114,19 +117,20 @@ func sweepHealthChecks(region string) error {
 }
 
 func sweepKeySigningKeys(region string) error {
-	client, err := sweep.SharedRegionalSweepClient(region)
+	ctx := sweep.Context(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 
 	if err != nil {
 		return fmt.Errorf("getting client: %s", err)
 	}
 
-	conn := client.(*conns.AWSClient).Route53Conn
+	conn := client.Route53Conn(ctx)
 	sweepResources := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
 
 	input := &route53.ListHostedZonesInput{}
 
-	err = conn.ListHostedZonesPages(input, func(page *route53.ListHostedZonesOutput, lastPage bool) bool {
+	err = conn.ListHostedZonesPagesWithContext(ctx, input, func(page *route53.ListHostedZonesOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
@@ -150,7 +154,7 @@ func sweepKeySigningKeys(region string) error {
 				HostedZoneId: detail.Id,
 			}
 
-			output, err := conn.GetDNSSEC(dnsInput)
+			output, err := conn.GetDNSSECWithContext(ctx, dnsInput)
 
 			if tfawserr.ErrMessageContains(err, route53.ErrCodeInvalidArgument, "private hosted zones") {
 				continue
@@ -180,7 +184,7 @@ func sweepKeySigningKeys(region string) error {
 		errs = multierror.Append(errs, fmt.Errorf("getting Route53 Key-Signing Keys for %s: %w", region, err))
 	}
 
-	if err = sweep.SweepOrchestratorWithContext(context.Background(), sweepResources, 0*time.Millisecond, 1*time.Minute, 30*time.Second, 30*time.Second, 10*time.Minute); err != nil {
+	if err = sweep.SweepOrchestrator(ctx, sweepResources, tfresource.WithDelayRand(1*time.Minute), tfresource.WithMinPollInterval(30*time.Second), tfresource.WithPollInterval(30*time.Second)); err != nil {
 		errs = multierror.Append(errs, fmt.Errorf("sweeping Route53 Key-Signing Keys for %s: %w", region, err))
 	}
 
@@ -193,14 +197,17 @@ func sweepKeySigningKeys(region string) error {
 }
 
 func sweepQueryLogs(region string) error {
-	client, err := sweep.SharedRegionalSweepClient(region)
+	ctx := sweep.Context(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
 		return fmt.Errorf("getting client: %w", err)
 	}
-	conn := client.(*conns.AWSClient).Route53Conn
+	conn := client.Route53Conn(ctx)
+
+	sweepResources := make([]sweep.Sweepable, 0)
 	var sweeperErrs *multierror.Error
 
-	err = conn.ListQueryLoggingConfigsPages(&route53.ListQueryLoggingConfigsInput{}, func(page *route53.ListQueryLoggingConfigsOutput, lastPage bool) bool {
+	err = conn.ListQueryLoggingConfigsPagesWithContext(ctx, &route53.ListQueryLoggingConfigsInput{}, func(page *route53.ListQueryLoggingConfigsOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
@@ -211,13 +218,8 @@ func sweepQueryLogs(region string) error {
 			r := ResourceQueryLog()
 			d := r.Data(nil)
 			d.SetId(id)
-			err := r.Delete(d, client)
-			if err != nil {
-				sweeperErr := fmt.Errorf("deleting Route53 query logging configuration (%s): %w", id, err)
-				log.Printf("[ERROR] %s", sweeperErr)
-				sweeperErrs = multierror.Append(sweeperErrs, sweeperErr)
-				continue
-			}
+
+			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
 
 		return !lastPage
@@ -232,19 +234,24 @@ func sweepQueryLogs(region string) error {
 		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("retrieving Route53 query logging configurations: %w", err))
 	}
 
+	if err := sweep.SweepOrchestrator(ctx, sweepResources); err != nil {
+		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error sweeping Route53 query logging configurations: %w", err))
+	}
+
 	return sweeperErrs.ErrorOrNil()
 }
 
 func sweepTrafficPolicies(region string) error {
-	client, err := sweep.SharedRegionalSweepClient(region)
+	ctx := sweep.Context(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
 		return fmt.Errorf("getting client: %w", err)
 	}
-	conn := client.(*conns.AWSClient).Route53Conn
+	conn := client.Route53Conn(ctx)
 	input := &route53.ListTrafficPoliciesInput{}
 	sweepResources := make([]sweep.Sweepable, 0)
 
-	err = listTrafficPoliciesPages(conn, input, func(page *route53.ListTrafficPoliciesOutput, lastPage bool) bool {
+	err = listTrafficPoliciesPages(ctx, conn, input, func(page *route53.ListTrafficPoliciesOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
@@ -269,7 +276,7 @@ func sweepTrafficPolicies(region string) error {
 		return fmt.Errorf("listing Route 53 Traffic Policies (%s): %w", region, err)
 	}
 
-	err = sweep.SweepOrchestrator(sweepResources)
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
 
 	if err != nil {
 		return fmt.Errorf("sweeping Route 53 Traffic Policies (%s): %w", region, err)
@@ -279,15 +286,16 @@ func sweepTrafficPolicies(region string) error {
 }
 
 func sweepTrafficPolicyInstances(region string) error {
-	client, err := sweep.SharedRegionalSweepClient(region)
+	ctx := sweep.Context(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
 		return fmt.Errorf("getting client: %w", err)
 	}
-	conn := client.(*conns.AWSClient).Route53Conn
+	conn := client.Route53Conn(ctx)
 	input := &route53.ListTrafficPolicyInstancesInput{}
 	sweepResources := make([]sweep.Sweepable, 0)
 
-	err = listTrafficPolicyInstancesPages(conn, input, func(page *route53.ListTrafficPolicyInstancesOutput, lastPage bool) bool {
+	err = listTrafficPolicyInstancesPages(ctx, conn, input, func(page *route53.ListTrafficPolicyInstancesOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
@@ -312,7 +320,7 @@ func sweepTrafficPolicyInstances(region string) error {
 		return fmt.Errorf("listing Route 53 Traffic Policy Instances (%s): %w", region, err)
 	}
 
-	err = sweep.SweepOrchestrator(sweepResources)
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
 
 	if err != nil {
 		return fmt.Errorf("sweeping Route 53 Traffic Policy Instances (%s): %w", region, err)
@@ -322,19 +330,20 @@ func sweepTrafficPolicyInstances(region string) error {
 }
 
 func sweepZones(region string) error {
-	client, err := sweep.SharedRegionalSweepClient(region)
+	ctx := sweep.Context(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 
 	if err != nil {
 		return fmt.Errorf("getting client: %s", err)
 	}
 
-	conn := client.(*conns.AWSClient).Route53Conn
+	conn := client.Route53Conn(ctx)
 	sweepResources := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
 
 	input := &route53.ListHostedZonesInput{}
 
-	err = conn.ListHostedZonesPages(input, func(page *route53.ListHostedZonesOutput, lastPage bool) bool {
+	err = conn.ListHostedZonesPagesWithContext(ctx, input, func(page *route53.ListHostedZonesOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
@@ -370,7 +379,7 @@ func sweepZones(region string) error {
 		errs = multierror.Append(errs, fmt.Errorf("describing Route53 Hosted Zones for %s: %w", region, err))
 	}
 
-	if err = sweep.SweepOrchestratorWithContext(context.Background(), sweepResources, 0*time.Minute, 1*time.Minute, 10*time.Second, 18*time.Second, 10*time.Minute); err != nil {
+	if err = sweep.SweepOrchestrator(ctx, sweepResources, tfresource.WithDelayRand(1*time.Minute), tfresource.WithMinPollInterval(10*time.Second), tfresource.WithPollInterval(18*time.Second)); err != nil {
 		errs = multierror.Append(errs, fmt.Errorf("sweeping Route53 Hosted Zones for %s: %w", region, err))
 	}
 

@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package identitystore
 
 import (
@@ -17,9 +20,10 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @SDKDataSource("aws_identitystore_user")
 func DataSourceUser() *schema.Resource {
 	return &schema.Resource{
-		ReadContext: dataSourceUserRead,
+		ReadWithoutTimeout: dataSourceUserRead,
 
 		Schema: map[string]*schema.Schema{
 			"addresses": {
@@ -63,10 +67,9 @@ func DataSourceUser() *schema.Resource {
 				},
 			},
 			"alternate_identifier": {
-				Type:          schema.TypeList,
-				Optional:      true,
-				MaxItems:      1,
-				ConflictsWith: []string{"filter", "user_id"},
+				Type:     schema.TypeList,
+				Optional: true,
+				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"external_id": {
@@ -107,6 +110,7 @@ func DataSourceUser() *schema.Resource {
 						},
 					},
 				},
+				ExactlyOneOf: []string{"alternate_identifier", "user_id"},
 			},
 			"display_name": {
 				Type:     schema.TypeString,
@@ -144,26 +148,6 @@ func DataSourceUser() *schema.Resource {
 						"issuer": {
 							Type:     schema.TypeString,
 							Computed: true,
-						},
-					},
-				},
-			},
-			"filter": {
-				Deprecated:    "Use the alternate_identifier attribute instead.",
-				Type:          schema.TypeList,
-				Optional:      true,
-				MaxItems:      1,
-				AtLeastOneOf:  []string{"alternate_identifier", "filter", "user_id"},
-				ConflictsWith: []string{"alternate_identifier"},
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"attribute_path": {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-						"attribute_value": {
-							Type:     schema.TypeString,
-							Required: true,
 						},
 					},
 				},
@@ -253,15 +237,14 @@ func DataSourceUser() *schema.Resource {
 				Computed: true,
 			},
 			"user_id": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				Computed:      true,
-				AtLeastOneOf:  []string{"alternate_identifier", "filter", "user_id"},
-				ConflictsWith: []string{"alternate_identifier"},
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
 				ValidateFunc: validation.All(
 					validation.StringLenBetween(1, 47),
 					validation.StringMatch(regexp.MustCompile(`^([0-9a-f]{10}-|)[A-Fa-f0-9]{8}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{12}$`), "must match ([0-9a-f]{10}-|)[A-Fa-f0-9]{8}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{12}"),
 				),
+				ExactlyOneOf: []string{"alternate_identifier", "user_id"},
 			},
 			"user_name": {
 				Type:     schema.TypeString,
@@ -280,60 +263,49 @@ const (
 )
 
 func dataSourceUserRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).IdentityStoreConn
+	conn := meta.(*conns.AWSClient).IdentityStoreClient(ctx)
 
-	identityStoreId := d.Get("identity_store_id").(string)
+	identityStoreID := d.Get("identity_store_id").(string)
 
-	var getUserIdInput *identitystore.GetUserIdInput
+	var userID string
 
 	if v, ok := d.GetOk("alternate_identifier"); ok && len(v.([]interface{})) > 0 {
-		getUserIdInput = &identitystore.GetUserIdInput{
+		input := &identitystore.GetUserIdInput{
 			AlternateIdentifier: expandAlternateIdentifier(v.([]interface{})[0].(map[string]interface{})),
-			IdentityStoreId:     aws.String(identityStoreId),
+			IdentityStoreId:     aws.String(identityStoreID),
 		}
-	} else if v, ok := d.GetOk("filter"); ok && len(v.([]interface{})) > 0 {
-		getUserIdInput = &identitystore.GetUserIdInput{
-			AlternateIdentifier: &types.AlternateIdentifierMemberUniqueAttribute{
-				Value: *expandUniqueAttribute(v.([]interface{})[0].(map[string]interface{})),
-			},
-			IdentityStoreId: aws.String(identityStoreId),
-		}
-	}
 
-	var userId string
-
-	if getUserIdInput != nil {
-		output, err := conn.GetUserId(ctx, getUserIdInput)
+		output, err := conn.GetUserId(ctx, input)
 
 		if err != nil {
 			var e *types.ResourceNotFoundException
 			if errors.As(err, &e) {
 				return diag.Errorf("no Identity Store User found matching criteria; try different search")
 			} else {
-				return create.DiagError(names.IdentityStore, create.ErrActionReading, DSNameUser, identityStoreId, err)
+				return create.DiagError(names.IdentityStore, create.ErrActionReading, DSNameUser, identityStoreID, err)
 			}
 		}
 
-		userId = aws.ToString(output.UserId)
+		userID = aws.ToString(output.UserId)
 	}
 
 	if v, ok := d.GetOk("user_id"); ok && v.(string) != "" {
-		if userId != "" && userId != v.(string) {
+		if userID != "" && userID != v.(string) {
 			// We were given a filter, and it found a user different to this one.
 			return diag.Errorf("no Identity Store User found matching criteria; try different search")
 		}
 
-		userId = v.(string)
+		userID = v.(string)
 	}
 
-	user, err := findUserByID(ctx, conn, identityStoreId, userId)
+	user, err := FindUserByTwoPartKey(ctx, conn, identityStoreID, userID)
 
 	if err != nil {
 		if tfresource.NotFound(err) {
 			return diag.Errorf("no Identity Store User found matching criteria; try different search")
 		}
 
-		return create.DiagError(names.IdentityStore, create.ErrActionReading, DSNameUser, identityStoreId, err)
+		return create.DiagError(names.IdentityStore, create.ErrActionReading, DSNameUser, identityStoreID, err)
 	}
 
 	d.SetId(aws.ToString(user.UserId))

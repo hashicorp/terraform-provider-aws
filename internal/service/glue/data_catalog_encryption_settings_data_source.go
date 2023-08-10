@@ -1,8 +1,10 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package glue
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/glue"
@@ -11,9 +13,10 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
+// @SDKDataSource("aws_glue_data_catalog_encryption_settings")
 func DataSourceDataCatalogEncryptionSettings() *schema.Resource {
 	return &schema.Resource{
-		ReadContext: dataSourceDataCatalogEncryptionSettingsRead,
+		ReadWithoutTimeout: dataSourceDataCatalogEncryptionSettingsRead,
 		Schema: map[string]*schema.Schema{
 			"catalog_id": {
 				Type:     schema.TypeString,
@@ -64,22 +67,22 @@ func DataSourceDataCatalogEncryptionSettings() *schema.Resource {
 }
 
 func dataSourceDataCatalogEncryptionSettingsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).GlueConn
+	conn := meta.(*conns.AWSClient).GlueConn(ctx)
 
 	catalogID := d.Get("catalog_id").(string)
-	output, err := conn.GetDataCatalogEncryptionSettings(&glue.GetDataCatalogEncryptionSettingsInput{
+	output, err := conn.GetDataCatalogEncryptionSettingsWithContext(ctx, &glue.GetDataCatalogEncryptionSettingsInput{
 		CatalogId: aws.String(catalogID),
 	})
 
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error reading Glue Data Catalog Encryption Settings (%s): %w", catalogID, err))
+		return diag.Errorf("reading Glue Data Catalog Encryption Settings (%s): %s", catalogID, err)
 	}
 
 	d.SetId(catalogID)
 	d.Set("catalog_id", d.Id())
 	if output.DataCatalogEncryptionSettings != nil {
 		if err := d.Set("data_catalog_encryption_settings", []interface{}{flattenDataCatalogEncryptionSettings(output.DataCatalogEncryptionSettings)}); err != nil {
-			return diag.FromErr(fmt.Errorf("error setting data_catalog_encryption_settings: %w", err))
+			return diag.Errorf("setting data_catalog_encryption_settings: %s", err)
 		}
 	} else {
 		d.Set("data_catalog_encryption_settings", nil)

@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package iam_test
 
 import (
@@ -7,7 +10,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws/endpoints"
 	"github.com/aws/aws-sdk-go/service/iam"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
@@ -15,8 +18,9 @@ func TestAccIAMPolicyDocumentDataSource_basic(t *testing.T) {
 	// This really ought to be able to be a unit test rather than an
 	// acceptance test, but just instantiating the AWS provider requires
 	// some AWS API calls, and so this needs valid AWS credentials to work.
+	ctx := acctest.Context(t)
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, iam.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
@@ -33,10 +37,11 @@ func TestAccIAMPolicyDocumentDataSource_basic(t *testing.T) {
 }
 
 func TestAccIAMPolicyDocumentDataSource_singleConditionValue(t *testing.T) {
+	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_iam_policy_document.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, iam.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
@@ -50,9 +55,29 @@ func TestAccIAMPolicyDocumentDataSource_singleConditionValue(t *testing.T) {
 	})
 }
 
-func TestAccIAMPolicyDocumentDataSource_conditionWithBoolValue(t *testing.T) {
+func TestAccIAMPolicyDocumentDataSource_multipleConditionKeys(t *testing.T) {
+	ctx := acctest.Context(t)
+	dataSourceName := "data.aws_iam_policy_document.test"
+
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, iam.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccPolicyDocumentDataSourceConfig_multipleConditionKeys,
+				Check: resource.ComposeTestCheckFunc(
+					acctest.CheckResourceAttrEquivalentJSON(dataSourceName, "json", testAccPolicyDocumentConfig_multipleConditionKeys_ExpectedJSON),
+				),
+			},
+		},
+	})
+}
+
+func TestAccIAMPolicyDocumentDataSource_conditionWithBoolValue(t *testing.T) {
+	ctx := acctest.Context(t)
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, iam.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
@@ -72,8 +97,9 @@ func TestAccIAMPolicyDocumentDataSource_source(t *testing.T) {
 	// This really ought to be able to be a unit test rather than an
 	// acceptance test, but just instantiating the AWS provider requires
 	// some AWS API calls, and so this needs valid AWS credentials to work.
+	ctx := acctest.Context(t)
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, iam.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
@@ -98,8 +124,9 @@ func TestAccIAMPolicyDocumentDataSource_source(t *testing.T) {
 }
 
 func TestAccIAMPolicyDocumentDataSource_sourceList(t *testing.T) {
+	ctx := acctest.Context(t)
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, iam.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
@@ -116,8 +143,9 @@ func TestAccIAMPolicyDocumentDataSource_sourceList(t *testing.T) {
 }
 
 func TestAccIAMPolicyDocumentDataSource_sourceConflicting(t *testing.T) {
+	ctx := acctest.Context(t)
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, iam.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
@@ -134,8 +162,9 @@ func TestAccIAMPolicyDocumentDataSource_sourceConflicting(t *testing.T) {
 }
 
 func TestAccIAMPolicyDocumentDataSource_sourceListConflicting(t *testing.T) {
+	ctx := acctest.Context(t)
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, iam.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
@@ -148,8 +177,9 @@ func TestAccIAMPolicyDocumentDataSource_sourceListConflicting(t *testing.T) {
 }
 
 func TestAccIAMPolicyDocumentDataSource_override(t *testing.T) {
+	ctx := acctest.Context(t)
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, iam.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
@@ -166,8 +196,9 @@ func TestAccIAMPolicyDocumentDataSource_override(t *testing.T) {
 }
 
 func TestAccIAMPolicyDocumentDataSource_overrideList(t *testing.T) {
+	ctx := acctest.Context(t)
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, iam.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
@@ -184,8 +215,9 @@ func TestAccIAMPolicyDocumentDataSource_overrideList(t *testing.T) {
 }
 
 func TestAccIAMPolicyDocumentDataSource_noStatementMerge(t *testing.T) {
+	ctx := acctest.Context(t)
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, iam.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
@@ -202,8 +234,9 @@ func TestAccIAMPolicyDocumentDataSource_noStatementMerge(t *testing.T) {
 }
 
 func TestAccIAMPolicyDocumentDataSource_noStatementOverride(t *testing.T) {
+	ctx := acctest.Context(t)
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, iam.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
@@ -220,8 +253,9 @@ func TestAccIAMPolicyDocumentDataSource_noStatementOverride(t *testing.T) {
 }
 
 func TestAccIAMPolicyDocumentDataSource_duplicateSid(t *testing.T) {
+	ctx := acctest.Context(t)
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, iam.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
@@ -242,8 +276,9 @@ func TestAccIAMPolicyDocumentDataSource_duplicateSid(t *testing.T) {
 }
 
 func TestAccIAMPolicyDocumentDataSource_sourcePolicyValidJSON(t *testing.T) {
+	ctx := acctest.Context(t)
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, iam.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
@@ -264,8 +299,9 @@ func TestAccIAMPolicyDocumentDataSource_sourcePolicyValidJSON(t *testing.T) {
 }
 
 func TestAccIAMPolicyDocumentDataSource_overridePolicyDocumentValidJSON(t *testing.T) {
+	ctx := acctest.Context(t)
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, iam.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
@@ -285,56 +321,13 @@ func TestAccIAMPolicyDocumentDataSource_overridePolicyDocumentValidJSON(t *testi
 	})
 }
 
-func TestAccIAMPolicyDocumentDataSource_overrideJSONValidJSON(t *testing.T) {
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, iam.EndpointsID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		Steps: []resource.TestStep{
-			{
-				Config:      testAccPolicyDocumentDataSourceConfig_overrideJSON_invalidJSON,
-				ExpectError: regexp.MustCompile(`"override_json" contains an invalid JSON: unexpected end of JSON input`),
-			},
-			{
-				Config: testAccPolicyDocumentDataSourceConfig_overrideJSON_emptyString,
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("data.aws_iam_policy_document.test", "json",
-						testAccPolicyDocumentExpectedJSONNoStatement,
-					),
-				),
-			},
-		},
-	})
-}
-
-func TestAccIAMPolicyDocumentDataSource_sourceJSONValidJSON(t *testing.T) {
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, iam.EndpointsID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		Steps: []resource.TestStep{
-			{
-				Config:      testAccPolicyDocumentDataSourceConfig_sourceJSON_invalidJSON,
-				ExpectError: regexp.MustCompile(`"source_json" contains an invalid JSON: unexpected end of JSON input`),
-			},
-			{
-				Config: testAccPolicyDocumentDataSourceConfig_sourceJSON_emptyString,
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("data.aws_iam_policy_document.test", "json",
-						testAccPolicyDocumentExpectedJSONNoStatement,
-					),
-				),
-			},
-		},
-	})
-}
-
 // Reference: https://github.com/hashicorp/terraform-provider-aws/issues/10777
 func TestAccIAMPolicyDocumentDataSource_StatementPrincipalIdentifiers_stringAndSlice(t *testing.T) {
+	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_iam_policy_document.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, iam.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
@@ -350,10 +343,11 @@ func TestAccIAMPolicyDocumentDataSource_StatementPrincipalIdentifiers_stringAndS
 
 // Reference: https://github.com/hashicorp/terraform-provider-aws/issues/10777
 func TestAccIAMPolicyDocumentDataSource_StatementPrincipalIdentifiers_multiplePrincipals(t *testing.T) {
+	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_iam_policy_document.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartition(t, endpoints.AwsPartitionID) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartition(t, endpoints.AwsPartitionID) },
 		ErrorCheck:               acctest.ErrorCheck(t, iam.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
@@ -368,10 +362,11 @@ func TestAccIAMPolicyDocumentDataSource_StatementPrincipalIdentifiers_multiplePr
 }
 
 func TestAccIAMPolicyDocumentDataSource_StatementPrincipalIdentifiers_multiplePrincipalsGov(t *testing.T) {
+	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_iam_policy_document.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartition(t, endpoints.AwsUsGovPartitionID) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartition(t, endpoints.AwsUsGovPartitionID) },
 		ErrorCheck:               acctest.ErrorCheck(t, iam.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
@@ -386,8 +381,9 @@ func TestAccIAMPolicyDocumentDataSource_StatementPrincipalIdentifiers_multiplePr
 }
 
 func TestAccIAMPolicyDocumentDataSource_version20081017(t *testing.T) {
+	ctx := acctest.Context(t)
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, iam.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
@@ -524,7 +520,6 @@ func testAccPolicyDocumentExpectedJSON() string {
       "Resource": "arn:%[1]s:s3:::*"
     },
     {
-      "Sid": "",
       "Effect": "Allow",
       "Action": "s3:ListBucket",
       "Resource": "arn:%[1]s:s3:::foo",
@@ -542,7 +537,6 @@ func testAccPolicyDocumentExpectedJSON() string {
       }
     },
     {
-      "Sid": "",
       "Effect": "Allow",
       "Action": "s3:*",
       "Resource": [
@@ -554,13 +548,11 @@ func testAccPolicyDocumentExpectedJSON() string {
       }
     },
     {
-      "Sid": "",
       "Effect": "Deny",
       "NotAction": "s3:*",
       "NotResource": "arn:%[1]s:s3:::*"
     },
     {
-      "Sid": "",
       "Effect": "Allow",
       "Action": "kinesis:*",
       "Principal": {
@@ -568,7 +560,6 @@ func testAccPolicyDocumentExpectedJSON() string {
       }
     },
     {
-      "Sid": "",
       "Effect": "Allow",
       "Action": "firehose:*",
       "Principal": "*"
@@ -604,7 +595,6 @@ const testAccPolicyDocumentConfig_SingleConditionValue_ExpectedJSON = `{
   "Version": "2012-10-17",
   "Statement": [
     {
-      "Sid": "",
       "Effect": "Deny",
       "Action": "elasticfilesystem:*",
       "Resource": "*",
@@ -619,6 +609,58 @@ const testAccPolicyDocumentConfig_SingleConditionValue_ExpectedJSON = `{
     }
   ]
 }`
+
+const testAccPolicyDocumentDataSourceConfig_multipleConditionKeys = `
+data "aws_iam_policy_document" "test" {
+  statement {
+    sid = "AWSCloudTrailWrite20150319"
+
+    effect = "Allow"
+
+    principals {
+      type        = "Service"
+      identifiers = ["cloudtrail.amazonaws.com"]
+    }
+
+    actions = ["s3:PutObject"]
+
+    resources = ["*"]
+
+    condition {
+      test     = "StringEquals"
+      variable = "s3:x-amz-acl"
+      values   = ["bucket-owner-full-control"]
+    }
+    condition {
+      test     = "StringEquals"
+      variable = "aws:SourceArn"
+      values   = ["some-other-value"]
+    }
+  }
+}
+`
+
+var testAccPolicyDocumentConfig_multipleConditionKeys_ExpectedJSON = `{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "AWSCloudTrailWrite20150319",
+      "Effect": "Allow",
+      "Action": "s3:PutObject",
+      "Resource": "*",
+      "Principal": {
+        "Service": "cloudtrail.amazonaws.com"
+      },
+      "Condition": {
+        "StringEquals": {
+          "s3:x-amz-acl": "bucket-owner-full-control",
+          "aws:SourceArn": "some-other-value"
+        }
+      }
+    }
+  ]
+}
+`
 
 var testAccPolicyDocumentDataSourceConfig_deprecated = `
 data "aws_partition" "current" {}
@@ -710,7 +752,7 @@ data "aws_iam_policy_document" "test" {
 }
 
 data "aws_iam_policy_document" "test_source" {
-  source_json = data.aws_iam_policy_document.test.json
+  source_policy_documents = [data.aws_iam_policy_document.test.json]
 
   statement {
     sid       = "SourceJSONTest1"
@@ -735,7 +777,6 @@ func testAccPolicyDocumentSourceExpectedJSON() string {
       "Resource": "arn:%[1]s:s3:::*"
     },
     {
-      "Sid": "",
       "Effect": "Allow",
       "Action": "s3:ListBucket",
       "Resource": "arn:%[1]s:s3:::foo",
@@ -752,7 +793,6 @@ func testAccPolicyDocumentSourceExpectedJSON() string {
       }
     },
     {
-      "Sid": "",
       "Effect": "Allow",
       "Action": "s3:*",
       "Resource": [
@@ -767,13 +807,11 @@ func testAccPolicyDocumentSourceExpectedJSON() string {
       }
     },
     {
-      "Sid": "",
       "Effect": "Deny",
       "NotAction": "s3:*",
       "NotResource": "arn:%[1]s:s3:::*"
     },
     {
-      "Sid": "",
       "Effect": "Allow",
       "Action": "kinesis:*",
       "Principal": {
@@ -781,7 +819,6 @@ func testAccPolicyDocumentSourceExpectedJSON() string {
       }
     },
     {
-      "Sid": "",
       "Effect": "Allow",
       "Action": "firehose:*",
       "Principal": "*"
@@ -841,7 +878,6 @@ var testAccPolicyDocumentSourceListExpectedJSON = `{
   "Version": "2012-10-17",
   "Statement": [
     {
-      "Sid": "",
       "Effect": "Allow",
       "Action": "foo:ActionOne"
     },
@@ -856,7 +892,6 @@ var testAccPolicyDocumentSourceListExpectedJSON = `{
       "Action": "foo:ActionTwo"
     },
     {
-      "Sid": "",
       "Effect": "Allow",
       "Action": "bar:ActionTwo"
     }
@@ -865,7 +900,7 @@ var testAccPolicyDocumentSourceListExpectedJSON = `{
 
 var testAccPolicyDocumentDataSourceConfig_blankDeprecated = `
 data "aws_iam_policy_document" "test_source_blank" {
-  source_json = ""
+  source_policy_documents = [""]
 
   statement {
     sid       = "SourceJSONTest2"
@@ -897,7 +932,7 @@ data "aws_iam_policy_document" "test_source" {
 }
 
 data "aws_iam_policy_document" "test_source_conflicting" {
-  source_json = data.aws_iam_policy_document.test_source.json
+  source_policy_documents = [data.aws_iam_policy_document.test_source.json]
 
   statement {
     sid       = "SourceJSONTestConflicting"
@@ -974,7 +1009,7 @@ data "aws_iam_policy_document" "override" {
 }
 
 data "aws_iam_policy_document" "test_override" {
-  override_json = data.aws_iam_policy_document.override.json
+  override_policy_documents = [data.aws_iam_policy_document.override.json]
 
   statement {
     actions   = ["ec2:*"]
@@ -998,7 +1033,6 @@ var testAccPolicyDocumentOverrideExpectedJSON = `{
   "Version": "2012-10-17",
   "Statement": [
     {
-      "Sid": "",
       "Effect": "Allow",
       "Action": "ec2:*",
       "Resource": "*"
@@ -1058,7 +1092,6 @@ var testAccPolicyDocumentOverrideListExpectedJSON = `{
   "Version": "2012-10-17",
   "Statement": [
     {
-      "Sid": "",
       "Effect": "Allow",
       "Action": "foo:ActionOne"
     },
@@ -1093,8 +1126,8 @@ data "aws_iam_policy_document" "override" {
 }
 
 data "aws_iam_policy_document" "yak_politik" {
-  source_json   = data.aws_iam_policy_document.source.json
-  override_json = data.aws_iam_policy_document.override.json
+  source_policy_documents   = [data.aws_iam_policy_document.source.json]
+  override_policy_documents = [data.aws_iam_policy_document.override.json]
 }
 `
 
@@ -1102,7 +1135,6 @@ var testAccPolicyDocumentNoStatementMergeExpectedJSON = `{
   "Version": "2012-10-17",
   "Statement": [
     {
-      "Sid": "",
       "Effect": "Allow",
       "Action": "ec2:DescribeAccountAttributes",
       "Resource": "*"
@@ -1134,8 +1166,8 @@ data "aws_iam_policy_document" "override" {
 }
 
 data "aws_iam_policy_document" "yak_politik" {
-  source_json   = data.aws_iam_policy_document.source.json
-  override_json = data.aws_iam_policy_document.override.json
+  source_policy_documents   = [data.aws_iam_policy_document.source.json]
+  override_policy_documents = [data.aws_iam_policy_document.override.json]
 }
 `
 
@@ -1191,13 +1223,11 @@ var testAccPolicyDocumentDuplicateBlankSidExpectedJSON = `{
   "Version": "2012-10-17",
   "Statement": [
     {
-      "Sid": "",
       "Effect": "Allow",
       "Action": "ec2:DescribeAccountAttributes",
       "Resource": "*"
     },
     {
-      "Sid": "",
       "Effect": "Allow",
       "Action": "s3:GetObject",
       "Resource": "*"
@@ -1220,7 +1250,6 @@ const testAccPolicyDocumentVersion20081017ExpectedJSONDataSourceConfig = `{
   "Version": "2008-10-17",
   "Statement": [
     {
-      "Sid": "",
       "Effect": "Allow",
       "Action": "ec2:*",
       "Resource": "*"
@@ -1517,29 +1546,5 @@ data "aws_iam_policy_document" "test" {
 var testAccPolicyDocumentDataSourceConfig_overridePolicyDocument_invalidJSON = `
 data "aws_iam_policy_document" "test" {
   override_policy_documents = ["{"]
-}
-`
-
-var testAccPolicyDocumentDataSourceConfig_overrideJSON_emptyString = `
-data "aws_iam_policy_document" "test" {
-  override_json = ""
-}
-`
-
-var testAccPolicyDocumentDataSourceConfig_overrideJSON_invalidJSON = `
-data "aws_iam_policy_document" "test" {
-  override_json = "{"
-}
-`
-
-var testAccPolicyDocumentDataSourceConfig_sourceJSON_emptyString = `
-data "aws_iam_policy_document" "test" {
-  source_json = ""
-}
-`
-
-var testAccPolicyDocumentDataSourceConfig_sourceJSON_invalidJSON = `
-data "aws_iam_policy_document" "test" {
-  source_json = "{"
 }
 `

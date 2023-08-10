@@ -26,12 +26,13 @@ The following arguments are required:
 
 * `pool_name` - (Required) Name of the dedicated IP pool.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This data source exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the Dedicated IP Pool.
 * `dedicated_ips` - A list of objects describing the pool's dedicated IP's. See [`dedicated_ips`](#dedicated_ips).
+* `scaling_mode` - (Optional) IP pool scaling mode. Valid values: `STANDARD`, `MANAGED`.
 * `tags` - A map of tags attached to the pool.
 
 ### dedicated_ips

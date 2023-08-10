@@ -1,33 +1,50 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package gamelift
 
 import (
-	"fmt"
+	"context"
 	"log"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/gamelift"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @SDKResource("aws_gamelift_game_session_queue", name="Game Session Queue")
+// @Tags(identifierAttribute="arn")
 func ResourceGameSessionQueue() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceGameSessionQueueCreate,
-		Read:   resourceGameSessionQueueRead,
-		Update: resourceGameSessionQueueUpdate,
-		Delete: resourceGameSessionQueueDelete,
+		CreateWithoutTimeout: resourceGameSessionQueueCreate,
+		ReadWithoutTimeout:   resourceGameSessionQueueRead,
+		UpdateWithoutTimeout: resourceGameSessionQueueUpdate,
+		DeleteWithoutTimeout: resourceGameSessionQueueDelete,
+
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
 			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
+			},
+			"custom_event_data": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ValidateFunc: validation.StringLenBetween(0, 256),
 			},
 			"destinations": {
 				Type:     schema.TypeList,
@@ -63,8 +80,8 @@ func ResourceGameSessionQueue() *schema.Resource {
 					},
 				},
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			"timeout_in_seconds": {
 				Type:         schema.TypeInt,
 				Optional:     true,
@@ -76,96 +93,156 @@ func ResourceGameSessionQueue() *schema.Resource {
 	}
 }
 
-func resourceGameSessionQueueCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).GameLiftConn
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+func resourceGameSessionQueueCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).GameLiftConn(ctx)
 
-	input := gamelift.CreateGameSessionQueueInput{
-		Name:                  aws.String(d.Get("name").(string)),
+	name := d.Get("name").(string)
+	input := &gamelift.CreateGameSessionQueueInput{
+		Name:                  aws.String(name),
 		Destinations:          expandGameSessionQueueDestinations(d.Get("destinations").([]interface{})),
 		PlayerLatencyPolicies: expandGameSessionPlayerLatencyPolicies(d.Get("player_latency_policy").([]interface{})),
 		TimeoutInSeconds:      aws.Int64(int64(d.Get("timeout_in_seconds").(int))),
-		Tags:                  Tags(tags.IgnoreAWS()),
+		Tags:                  getTagsIn(ctx),
+	}
+
+	if v, ok := d.GetOk("custom_event_data"); ok {
+		input.CustomEventData = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("notification_target"); ok {
 		input.NotificationTarget = aws.String(v.(string))
 	}
 
-	log.Printf("[INFO] Creating GameLift Session Queue: %s", input)
-	out, err := conn.CreateGameSessionQueue(&input)
+	output, err := conn.CreateGameSessionQueueWithContext(ctx, input)
+
 	if err != nil {
-		return fmt.Errorf("error creating GameLift Game Session Queue: %s", err)
+		return sdkdiag.AppendErrorf(diags, "creating GameLift Game Session Queue (%s): %s", name, err)
 	}
 
-	d.SetId(aws.StringValue(out.GameSessionQueue.Name))
+	d.SetId(aws.StringValue(output.GameSessionQueue.Name))
 
-	return resourceGameSessionQueueRead(d, meta)
+	return append(diags, resourceGameSessionQueueRead(ctx, d, meta)...)
 }
 
-func resourceGameSessionQueueRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).GameLiftConn
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+func resourceGameSessionQueueRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).GameLiftConn(ctx)
 
-	log.Printf("[INFO] Describing GameLift Session Queues: %s", d.Id())
-	limit := int64(1)
-	out, err := conn.DescribeGameSessionQueues(&gamelift.DescribeGameSessionQueuesInput{
-		Names: aws.StringSlice([]string{d.Id()}),
-		Limit: &limit,
-	})
-	if err != nil {
-		if tfawserr.ErrCodeEquals(err, gamelift.ErrCodeNotFoundException) {
-			log.Printf("[WARN] GameLift Session Queues (%s) not found, removing from state", d.Id())
-			d.SetId("")
-			return nil
-		}
-		return fmt.Errorf("error reading GameLift Game Session Queue (%s): %s", d.Id(), err)
-	}
-	sessionQueues := out.GameSessionQueues
+	sessionQueue, err := FindGameSessionQueueByName(ctx, conn, d.Id())
 
-	if len(sessionQueues) < 1 {
-		log.Printf("[WARN] GameLift Session Queue (%s) not found, removing from state", d.Id())
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] GameLift Game Session Queue %s not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
-	if len(sessionQueues) != 1 {
-		return fmt.Errorf("expected exactly 1 GameLift Session Queues, found %d under %q",
-			len(sessionQueues), d.Id())
+
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "reading GameLift Game Session Queue (%s): %s", d.Id(), err)
 	}
-	sessionQueue := sessionQueues[0]
 
 	arn := aws.StringValue(sessionQueue.GameSessionQueueArn)
 	d.Set("arn", arn)
+	d.Set("custom_event_data", sessionQueue.CustomEventData)
 	d.Set("name", sessionQueue.Name)
 	d.Set("notification_target", sessionQueue.NotificationTarget)
 	d.Set("timeout_in_seconds", sessionQueue.TimeoutInSeconds)
 	if err := d.Set("destinations", flattenGameSessionQueueDestinations(sessionQueue.Destinations)); err != nil {
-		return fmt.Errorf("error setting destinations: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting destinations: %s", err)
 	}
 	if err := d.Set("player_latency_policy", flattenPlayerLatencyPolicies(sessionQueue.PlayerLatencyPolicies)); err != nil {
-		return fmt.Errorf("error setting player_latency_policy: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting player_latency_policy: %s", err)
 	}
 
-	tags, err := ListTags(conn, arn)
+	return diags
+}
+
+func resourceGameSessionQueueUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).GameLiftConn(ctx)
+
+	if d.HasChangesExcept("tags", "tags_all") {
+		input := &gamelift.UpdateGameSessionQueueInput{
+			Name:                  aws.String(d.Id()),
+			Destinations:          expandGameSessionQueueDestinations(d.Get("destinations").([]interface{})),
+			PlayerLatencyPolicies: expandGameSessionPlayerLatencyPolicies(d.Get("player_latency_policy").([]interface{})),
+			TimeoutInSeconds:      aws.Int64(int64(d.Get("timeout_in_seconds").(int))),
+		}
+
+		if v, ok := d.GetOk("custom_event_data"); ok {
+			input.CustomEventData = aws.String(v.(string))
+		}
+
+		if v, ok := d.GetOk("notification_target"); ok {
+			input.NotificationTarget = aws.String(v.(string))
+		}
+
+		_, err := conn.UpdateGameSessionQueueWithContext(ctx, input)
+
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating GameLift Game Session Queue (%s): %s", d.Id(), err)
+		}
+	}
+
+	return append(diags, resourceGameSessionQueueRead(ctx, d, meta)...)
+}
+
+func resourceGameSessionQueueDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).GameLiftConn(ctx)
+
+	log.Printf("[INFO] Deleting GameLift Session Queue: %s", d.Id())
+	_, err := conn.DeleteGameSessionQueueWithContext(ctx, &gamelift.DeleteGameSessionQueueInput{
+		Name: aws.String(d.Id()),
+	})
+
+	if tfawserr.ErrCodeEquals(err, gamelift.ErrCodeNotFoundException) {
+		return diags
+	}
 
 	if err != nil {
-		return fmt.Errorf("error listing tags for Game Lift Session Queue (%s): %s", arn, err)
+		return sdkdiag.AppendErrorf(diags, "deleting GameLift Game Session Queue (%s): %s", d.Id(), err)
 	}
 
-	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+	// Deletions can take a few seconds.
+	_, err = tfresource.RetryUntilNotFound(ctx, 30*time.Second, func() (interface{}, error) {
+		return FindGameSessionQueueByName(ctx, conn, d.Id())
+	})
 
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for GameLift Game Session Queue (%s) delete: %s", d.Id(), err)
 	}
 
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("error setting tags_all: %w", err)
+	return diags
+}
+
+func FindGameSessionQueueByName(ctx context.Context, conn *gamelift.GameLift, name string) (*gamelift.GameSessionQueue, error) {
+	input := &gamelift.DescribeGameSessionQueuesInput{
+		Names: aws.StringSlice([]string{name}),
 	}
 
-	return nil
+	output, err := conn.DescribeGameSessionQueuesWithContext(ctx, input)
+
+	if tfawserr.ErrCodeEquals(err, gamelift.ErrCodeNotFoundException) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || len(output.GameSessionQueues) == 0 || output.GameSessionQueues[0] == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	if count := len(output.GameSessionQueues); count > 1 {
+		return nil, tfresource.NewTooManyResultsError(count, input)
+	}
+
+	return output.GameSessionQueues[0], nil
 }
 
 func flattenGameSessionQueueDestinations(destinations []*gamelift.GameSessionQueueDestination) []interface{} {
@@ -191,55 +268,6 @@ func flattenPlayerLatencyPolicies(playerLatencyPolicies []*gamelift.PlayerLatenc
 		l = append(l, m)
 	}
 	return l
-}
-
-func resourceGameSessionQueueUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).GameLiftConn
-
-	log.Printf("[INFO] Updating GameLift Session Queue: %s", d.Id())
-
-	input := gamelift.UpdateGameSessionQueueInput{
-		Name:                  aws.String(d.Id()),
-		Destinations:          expandGameSessionQueueDestinations(d.Get("destinations").([]interface{})),
-		PlayerLatencyPolicies: expandGameSessionPlayerLatencyPolicies(d.Get("player_latency_policy").([]interface{})),
-		TimeoutInSeconds:      aws.Int64(int64(d.Get("timeout_in_seconds").(int))),
-	}
-
-	if v, ok := d.GetOk("notification_target"); ok {
-		input.NotificationTarget = aws.String(v.(string))
-	}
-
-	_, err := conn.UpdateGameSessionQueue(&input)
-	if err != nil {
-		return fmt.Errorf("error updating GameLift Game Session Queue (%s): %s", d.Id(), err)
-	}
-
-	arn := d.Get("arn").(string)
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		if err := UpdateTags(conn, arn, o, n); err != nil {
-			return fmt.Errorf("error updating Game Lift Session Queue (%s) tags: %s", arn, err)
-		}
-	}
-
-	return resourceGameSessionQueueRead(d, meta)
-}
-
-func resourceGameSessionQueueDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).GameLiftConn
-	log.Printf("[INFO] Deleting GameLift Session Queue: %s", d.Id())
-	_, err := conn.DeleteGameSessionQueue(&gamelift.DeleteGameSessionQueueInput{
-		Name: aws.String(d.Id()),
-	})
-	if tfawserr.ErrCodeEquals(err, gamelift.ErrCodeNotFoundException) {
-		return nil
-	}
-	if err != nil {
-		return fmt.Errorf("error deleting GameLift Game Session Queue (%s): %s", d.Id(), err)
-	}
-
-	return nil
 }
 
 func expandGameSessionQueueDestinations(destinationsMap []interface{}) []*gamelift.GameSessionQueueDestination {

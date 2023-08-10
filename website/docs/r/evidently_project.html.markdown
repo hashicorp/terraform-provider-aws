@@ -66,7 +66,7 @@ resource "aws_evidently_project" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `data_delivery` - (Optional) A block that contains information about where Evidently is to store evaluation events for longer term storage, if you choose to do so. If you choose not to store these events, Evidently deletes them after using them to produce metrics and other experiment results that you can view. See below.
 * `description` - (Optional) Specifies the description of the project.
@@ -89,9 +89,17 @@ The `s3_destination` block supports the following arguments:
 * `bucket` - (Optional) The name of the bucket in which Evidently stores evaluation events.
 * `prefix` - (Optional) The bucket prefix in which Evidently stores evaluation events.
 
-## Attributes Reference
+## Timeouts
 
-In addition to all arguments above, the following attributes are exported:
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
+
+* `create` - (Default `2m`)
+* `delete` - (Default `2m`)
+* `update` - (Default `2m`)
+
+## Attribute Reference
+
+This resource exports the following attributes in addition to the arguments above:
 
 * `active_experiment_count` - The number of ongoing experiments currently in the project.
 * `active_launch_count` - The number of ongoing launches currently in the project.
@@ -99,7 +107,7 @@ In addition to all arguments above, the following attributes are exported:
 * `created_time` - The date and time that the project is created.
 * `experiment_count` - The number of experiments currently in the project. This includes all experiments that have been created and not deleted, whether they are ongoing or not.
 * `feature_count` - The number of features currently in the project.
-* `id` - The ID has the same value as the name of the project.
+* `id` - The ID has the same value as the arn of the project.
 * `last_updated_time` - The date and time that the project was most recently updated.
 * `launch_count` - The number of launches currently in the project. This includes all launches that have been created and not deleted, whether they are ongoing or not.
 * `status` - The current state of the project. Valid values are `AVAILABLE` and `UPDATING`.
@@ -107,8 +115,17 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-CloudWatch Evidently Project can be imported using the `name`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import CloudWatch Evidently Project using the `arn`. For example:
 
+```terraform
+import {
+  to = aws_evidently_project.example
+  id = "arn:aws:evidently:us-east-1:123456789012:segment/example"
+}
 ```
-$ terraform import aws_evidently_project.example example
+
+Using `terraform import`, import CloudWatch Evidently Project using the `arn`. For example:
+
+```console
+% terraform import aws_evidently_project.example arn:aws:evidently:us-east-1:123456789012:segment/example
 ```

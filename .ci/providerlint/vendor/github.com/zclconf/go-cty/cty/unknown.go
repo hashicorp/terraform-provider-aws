@@ -3,11 +3,19 @@ package cty
 // unknownType is the placeholder type used for the sigil value representing
 // "Unknown", to make it unambigiously distinct from any other possible value.
 type unknownType struct {
+	// refinement is an optional object which, if present, describes some
+	// additional constraints we know about the range of real values this
+	// unknown value could be a placeholder for.
+	refinement unknownValRefinement
 }
 
-// unknown is a special value that can be used as the internal value of a
-// Value to create a placeholder for a value that isn't yet known.
-var unknown interface{} = &unknownType{}
+// totallyUnknown is the representation a a value we know nothing about at
+// all. Subsequent refinements of an unknown value will cause creation of
+// other values of unknownType that can represent additional constraints
+// on the unknown value, but all unknown values start as totally unknown
+// and we will also typically lose all unknown value refinements when
+// round-tripping through serialization formats.
+var totallyUnknown interface{} = &unknownType{}
 
 // UnknownVal returns an Value that represents an unknown value of the given
 // type. Unknown values can be used to represent a value that is
@@ -19,7 +27,7 @@ var unknown interface{} = &unknownType{}
 func UnknownVal(t Type) Value {
 	return Value{
 		ty: t,
-		v:  unknown,
+		v:  totallyUnknown,
 	}
 }
 
@@ -80,6 +88,6 @@ func init() {
 	}
 	DynamicVal = Value{
 		ty: DynamicPseudoType,
-		v:  unknown,
+		v:  totallyUnknown,
 	}
 }

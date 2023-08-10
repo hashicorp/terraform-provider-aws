@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package datasync
 
 import (
@@ -13,9 +16,9 @@ var (
 	s3OutpostsAccessPointARNResourcePattern = regexp.MustCompile(`^outpost/.*/accesspoint/.*?(/.*)$`)
 )
 
-// SubdirectoryFromLocationURI extracts the subdirectory from a location URI.
+// subdirectoryFromLocationURI extracts the subdirectory from a location URI.
 // https://docs.aws.amazon.com/datasync/latest/userguide/API_LocationListEntry.html#DataSync-Type-LocationListEntry-LocationUri
-func SubdirectoryFromLocationURI(uri string) (string, error) {
+func subdirectoryFromLocationURI(uri string) (string, error) {
 	submatches := locationURIPattern.FindStringSubmatch(uri)
 
 	if len(submatches) != 3 {

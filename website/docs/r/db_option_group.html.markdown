@@ -60,7 +60,7 @@ More information about this can be found [here](https://docs.aws.amazon.com/Amaz
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `name` - (Optional, Forces new resource) The name of the option group. If omitted, Terraform will assign a random, unique name. Must be lowercase, to match as it is stored in AWS.
 * `name_prefix` - (Optional, Forces new resource) Creates a unique name beginning with the specified prefix. Conflicts with `name`. Must be lowercase, to match as it is stored in AWS.
@@ -84,9 +84,9 @@ Option Settings blocks support the following:
 * `name` - (Optional) The Name of the setting.
 * `value` - (Optional) The Value of the setting.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The db option group name.
 * `arn` - The ARN of the db option group.
@@ -94,14 +94,23 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Timeouts
 
-[Configuration options](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts):
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
 - `delete` - (Default `15m`)
 
 ## Import
 
-DB Option groups can be imported using the `name`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import DB Option groups using the `name`. For example:
 
+```terraform
+import {
+  to = aws_db_option_group.example
+  id = "mysql-option-group"
+}
 ```
-$ terraform import aws_db_option_group.example mysql-option-group
+
+Using `terraform import`, import DB Option groups using the `name`. For example:
+
+```console
+% terraform import aws_db_option_group.example mysql-option-group
 ```

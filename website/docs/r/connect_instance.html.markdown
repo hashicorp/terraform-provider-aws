@@ -49,7 +49,7 @@ resource "aws_connect_instance" "test" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `auto_resolve_best_voices_enabled` - (Optional) Specifies whether auto resolve best voices is enabled. Defaults to `true`.
 * `contact_flow_logs_enabled` - (Optional) Specifies whether contact flow logs are enabled. Defaults to `false`.
@@ -59,12 +59,13 @@ The following arguments are supported:
 * `identity_management_type` - (Required) Specifies the identity management type attached to the instance. Allowed Values are: `SAML`, `CONNECT_MANAGED`, `EXISTING_DIRECTORY`.
 * `inbound_calls_enabled` - (Required) Specifies whether inbound calls are enabled.
 * `instance_alias` - (Optional) Specifies the name of the instance. Required if `directory_id` not specified.
+* `multi_party_conference_enabled` - (Optional) Specifies whether multi-party calls/conference is enabled. Defaults to `false`.
 * `outbound_calls_enabled` - (Required) Specifies whether outbound calls are enabled.
 <!-- * `use_custom_tts_voices` - (Optional) Whether use custom tts voices is enabled. Defaults to `false` -->
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The identifier of the instance.
 * `arn` - Amazon Resource Name (ARN) of the instance.
@@ -74,15 +75,24 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Timeouts
 
-[Configuration options](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts):
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
 * `create` - (Default `5m`)
 * `delete` - (Default `5m`)
 
 ## Import
 
-Connect instances can be imported using the `id`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Connect instances using the `id`. For example:
 
+```terraform
+import {
+  to = aws_connect_instance.example
+  id = "f1288a1f-6193-445a-b47e-af739b2"
+}
 ```
-$ terraform import aws_connect_instance.example f1288a1f-6193-445a-b47e-af739b2
+
+Using `terraform import`, import Connect instances using the `id`. For example:
+
+```console
+% terraform import aws_connect_instance.example f1288a1f-6193-445a-b47e-af739b2
 ```

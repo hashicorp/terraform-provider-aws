@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package sqs
 
 import (
@@ -5,6 +8,8 @@ import (
 )
 
 func TestBytesEqualQuotedAndUnquoted(t *testing.T) {
+	t.Parallel()
+
 	unquoted := `{"test": "test"}`
 	quoted := "{\"test\": \"test\"}"
 
@@ -21,6 +26,8 @@ func TestBytesEqualQuotedAndUnquoted(t *testing.T) {
 }
 
 func TestBytesEqualWhitespaceAndNoWhitespace(t *testing.T) {
+	t.Parallel()
+
 	noWhitespace := `{"test":"test"}`
 	whitespace := `
 {
@@ -43,6 +50,8 @@ func TestBytesEqualWhitespaceAndNoWhitespace(t *testing.T) {
 }
 
 func TestStringsEquivalentWhitespaceAndNoWhitespace(t *testing.T) {
+	t.Parallel()
+
 	noWhitespace := `{"test":"test"}`
 	whitespace := `
 {

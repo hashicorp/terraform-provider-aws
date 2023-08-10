@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package elb_test
 
 import (
@@ -6,47 +9,48 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/elb"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func TestAccELBAttachment_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	var conf elb.LoadBalancerDescription
 	resourceName := "aws_elb.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, elb.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckLoadBalancerDestroy,
+		CheckDestroy:             testAccCheckLoadBalancerDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAttachmentConfig_1(),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckLoadBalancerExists(resourceName, &conf),
+					testAccCheckLoadBalancerExists(ctx, resourceName, &conf),
 					testAccAttachmentCheckInstanceCount(&conf, 1),
 				),
 			},
 			{
 				Config: testAccAttachmentConfig_2(),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckLoadBalancerExists(resourceName, &conf),
+					testAccCheckLoadBalancerExists(ctx, resourceName, &conf),
 					testAccAttachmentCheckInstanceCount(&conf, 2),
 				),
 			},
 			{
 				Config: testAccAttachmentConfig_3(),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckLoadBalancerExists(resourceName, &conf),
+					testAccCheckLoadBalancerExists(ctx, resourceName, &conf),
 					testAccAttachmentCheckInstanceCount(&conf, 2),
 				),
 			},
 			{
 				Config: testAccAttachmentConfig_4(),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckLoadBalancerExists(resourceName, &conf),
+					testAccCheckLoadBalancerExists(ctx, resourceName, &conf),
 					testAccAttachmentCheckInstanceCount(&conf, 0),
 				),
 			},
@@ -56,11 +60,12 @@ func TestAccELBAttachment_basic(t *testing.T) {
 
 // remove and instance and check that it's correctly re-attached.
 func TestAccELBAttachment_drift(t *testing.T) {
+	ctx := acctest.Context(t)
 	var conf elb.LoadBalancerDescription
 	resourceName := "aws_elb.test"
 
 	testAccAttachmentConfig_deregInstance := func() {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ELBConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ELBConn(ctx)
 
 		deRegisterInstancesOpts := elb.DeregisterInstancesFromLoadBalancerInput{
 			LoadBalancerName: conf.LoadBalancerName,
@@ -69,23 +74,22 @@ func TestAccELBAttachment_drift(t *testing.T) {
 
 		log.Printf("[DEBUG] deregistering instance %v from ELB", *conf.Instances[0].InstanceId)
 
-		_, err := conn.DeregisterInstancesFromLoadBalancer(&deRegisterInstancesOpts)
+		_, err := conn.DeregisterInstancesFromLoadBalancerWithContext(ctx, &deRegisterInstancesOpts)
 		if err != nil {
 			t.Fatalf("Failure deregistering instances from ELB: %s", err)
 		}
-
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, elb.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckLoadBalancerDestroy,
+		CheckDestroy:             testAccCheckLoadBalancerDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAttachmentConfig_1(),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckLoadBalancerExists(resourceName, &conf),
+					testAccCheckLoadBalancerExists(ctx, resourceName, &conf),
 					testAccAttachmentCheckInstanceCount(&conf, 1),
 				),
 			},
@@ -94,7 +98,7 @@ func TestAccELBAttachment_drift(t *testing.T) {
 				Config:    testAccAttachmentConfig_1(),
 				PreConfig: testAccAttachmentConfig_deregInstance,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckLoadBalancerExists(resourceName, &conf),
+					testAccCheckLoadBalancerExists(ctx, resourceName, &conf),
 					testAccAttachmentCheckInstanceCount(&conf, 1),
 				),
 			},

@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package sdktypes
 
 import (
@@ -37,7 +40,7 @@ func ValidateDuration(i any, path cty.Path) diag.Diagnostics {
 		return diag.Diagnostics{errs.NewIncorrectValueTypeAttributeError(path, "string")}
 	}
 
-	duration, err := time.ParseDuration(v)
+	duration, _, err := Duration(v).Value()
 	if err != nil {
 		return diag.Diagnostics{errs.NewInvalidValueAttributeErrorf(path, "Cannot be parsed as duration: %s", err)}
 	}
@@ -47,4 +50,24 @@ func ValidateDuration(i any, path cty.Path) diag.Diagnostics {
 	}
 
 	return nil
+}
+
+func ValidateDurationBetween(min, max time.Duration) schema.SchemaValidateDiagFunc {
+	return func(i any, path cty.Path) diag.Diagnostics {
+		v, ok := i.(string)
+		if !ok {
+			return diag.Diagnostics{errs.NewIncorrectValueTypeAttributeError(path, "string")}
+		}
+
+		duration, _, err := Duration(v).Value()
+		if err != nil {
+			return diag.Diagnostics{errs.NewInvalidValueAttributeErrorf(path, "Cannot be parsed as duration: %s", err)}
+		}
+
+		if duration < min || duration > max {
+			return diag.Diagnostics{errs.NewInvalidValueAttributeErrorf(path, "Expected to be in the range (%d - %d)", min, max)}
+		}
+
+		return nil
+	}
 }

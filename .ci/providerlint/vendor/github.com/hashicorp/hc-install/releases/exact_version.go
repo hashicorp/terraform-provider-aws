@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package releases
 
 import (
@@ -115,7 +118,10 @@ func (ev *ExactVersion) Install(ctx context.Context) (string, error) {
 		d.BaseURL = ev.apiBaseURL
 	}
 
-	err = d.DownloadAndUnpack(ctx, pv, dstDir)
+	zipFilePath, err := d.DownloadAndUnpack(ctx, pv, dstDir)
+	if zipFilePath != "" {
+		ev.pathsToRemove = append(ev.pathsToRemove, zipFilePath)
+	}
 	if err != nil {
 		return "", err
 	}

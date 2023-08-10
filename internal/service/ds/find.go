@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ds
 
 import (
@@ -6,17 +9,17 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/directoryservice"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func FindDirectoryByID(conn *directoryservice.DirectoryService, id string) (*directoryservice.DirectoryDescription, error) {
+func FindDirectoryByID(ctx context.Context, conn *directoryservice.DirectoryService, id string) (*directoryservice.DirectoryDescription, error) {
 	input := &directoryservice.DescribeDirectoriesInput{
 		DirectoryIds: aws.StringSlice([]string{id}),
 	}
 	var output []*directoryservice.DirectoryDescription
 
-	err := describeDirectoriesPages(conn, input, func(page *directoryservice.DescribeDirectoriesOutput, lastPage bool) bool {
+	err := describeDirectoriesPages(ctx, conn, input, func(page *directoryservice.DescribeDirectoriesOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
@@ -31,7 +34,7 @@ func FindDirectoryByID(conn *directoryservice.DirectoryService, id string) (*dir
 	})
 
 	if tfawserr.ErrCodeEquals(err, directoryservice.ErrCodeEntityDoesNotExistException) {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -52,7 +55,7 @@ func FindDirectoryByID(conn *directoryservice.DirectoryService, id string) (*dir
 	directory := output[0]
 
 	if stage := aws.StringValue(directory.Stage); stage == directoryservice.DirectoryStageDeleted {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			Message:     stage,
 			LastRequest: input,
 		}
@@ -61,13 +64,13 @@ func FindDirectoryByID(conn *directoryservice.DirectoryService, id string) (*dir
 	return directory, nil
 }
 
-func FindDomainController(conn *directoryservice.DirectoryService, directoryID, domainControllerID string) (*directoryservice.DomainController, error) {
+func FindDomainController(ctx context.Context, conn *directoryservice.DirectoryService, directoryID, domainControllerID string) (*directoryservice.DomainController, error) {
 	input := &directoryservice.DescribeDomainControllersInput{
 		DirectoryId:         aws.String(directoryID),
 		DomainControllerIds: aws.StringSlice([]string{domainControllerID}),
 	}
 
-	output, err := FindDomainControllers(conn, input)
+	output, err := FindDomainControllers(ctx, conn, input)
 
 	if err != nil {
 		return nil, err
@@ -84,7 +87,7 @@ func FindDomainController(conn *directoryservice.DirectoryService, directoryID, 
 	domainController := output[0]
 
 	if status := aws.StringValue(domainController.Status); status == directoryservice.DomainControllerStatusDeleted {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			Message:     status,
 			LastRequest: input,
 		}
@@ -93,10 +96,10 @@ func FindDomainController(conn *directoryservice.DirectoryService, directoryID, 
 	return domainController, nil
 }
 
-func FindDomainControllers(conn *directoryservice.DirectoryService, input *directoryservice.DescribeDomainControllersInput) ([]*directoryservice.DomainController, error) {
+func FindDomainControllers(ctx context.Context, conn *directoryservice.DirectoryService, input *directoryservice.DescribeDomainControllersInput) ([]*directoryservice.DomainController, error) {
 	var output []*directoryservice.DomainController
 
-	err := conn.DescribeDomainControllersPages(input, func(page *directoryservice.DescribeDomainControllersOutput, lastPage bool) bool {
+	err := conn.DescribeDomainControllersPagesWithContext(ctx, input, func(page *directoryservice.DescribeDomainControllersOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
@@ -111,7 +114,7 @@ func FindDomainControllers(conn *directoryservice.DirectoryService, input *direc
 	})
 
 	if tfawserr.ErrCodeEquals(err, directoryservice.ErrCodeEntityDoesNotExistException) {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -125,7 +128,7 @@ func FindDomainControllers(conn *directoryservice.DirectoryService, input *direc
 }
 
 func FindRadiusSettings(ctx context.Context, conn *directoryservice.DirectoryService, directoryID string) (*directoryservice.RadiusSettings, error) {
-	output, err := FindDirectoryByID(conn, directoryID)
+	output, err := FindDirectoryByID(ctx, conn, directoryID)
 
 	if err != nil {
 		return nil, err
@@ -145,7 +148,7 @@ func FindRegion(ctx context.Context, conn *directoryservice.DirectoryService, di
 	}
 	var output []*directoryservice.RegionDescription
 
-	err := describeRegionsPagesWithContext(ctx, conn, input, func(page *directoryservice.DescribeRegionsOutput, lastPage bool) bool {
+	err := describeRegionsPages(ctx, conn, input, func(page *directoryservice.DescribeRegionsOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
@@ -160,7 +163,7 @@ func FindRegion(ctx context.Context, conn *directoryservice.DirectoryService, di
 	})
 
 	if tfawserr.ErrCodeEquals(err, directoryservice.ErrCodeDirectoryDoesNotExistException) {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -181,7 +184,7 @@ func FindRegion(ctx context.Context, conn *directoryservice.DirectoryService, di
 	region := output[0]
 
 	if status := aws.StringValue(region.Status); status == directoryservice.DirectoryStageDeleted {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			Message:     status,
 			LastRequest: input,
 		}
@@ -196,10 +199,24 @@ func FindSharedDirectory(ctx context.Context, conn *directoryservice.DirectorySe
 		SharedDirectoryIds: aws.StringSlice([]string{sharedDirectoryID}),
 	}
 
-	output, err := conn.DescribeSharedDirectoriesWithContext(ctx, input)
+	var output []*directoryservice.SharedDirectory
+
+	err := conn.DescribeSharedDirectoriesPagesWithContext(ctx, input, func(page *directoryservice.DescribeSharedDirectoriesOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, v := range page.SharedDirectories {
+			if v != nil {
+				output = append(output, v)
+			}
+		}
+
+		return !lastPage
+	})
 
 	if tfawserr.ErrCodeEquals(err, directoryservice.ErrCodeEntityDoesNotExistException) {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -209,18 +226,18 @@ func FindSharedDirectory(ctx context.Context, conn *directoryservice.DirectorySe
 		return nil, err
 	}
 
-	if output == nil || len(output.SharedDirectories) == 0 || output.SharedDirectories[0] == nil {
+	if len(output) == 0 {
 		return nil, tfresource.NewEmptyResultError(input)
 	}
 
-	if count := len(output.SharedDirectories); count > 1 {
+	if count := len(output); count > 1 {
 		return nil, tfresource.NewTooManyResultsError(count, input)
 	}
 
-	sharedDirectory := output.SharedDirectories[0]
+	sharedDirectory := output[0]
 
 	if status := aws.StringValue(sharedDirectory.ShareStatus); status == directoryservice.ShareStatusDeleted {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			Message:     status,
 			LastRequest: input,
 		}

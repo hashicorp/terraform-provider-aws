@@ -1,21 +1,26 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package redshift_test
 
 import (
+	"context"
 	"fmt"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/redshift"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func TestAccRedshiftOrderableClusterDataSource_clusterType(t *testing.T) {
+	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_redshift_orderable_cluster.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccOrderableClusterPreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccOrderableClusterPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, redshift.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             nil,
@@ -31,10 +36,11 @@ func TestAccRedshiftOrderableClusterDataSource_clusterType(t *testing.T) {
 }
 
 func TestAccRedshiftOrderableClusterDataSource_clusterVersion(t *testing.T) {
+	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_redshift_orderable_cluster.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccOrderableClusterPreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccOrderableClusterPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, redshift.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             nil,
@@ -50,11 +56,12 @@ func TestAccRedshiftOrderableClusterDataSource_clusterVersion(t *testing.T) {
 }
 
 func TestAccRedshiftOrderableClusterDataSource_nodeType(t *testing.T) {
+	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_redshift_orderable_cluster.test"
 	nodeType := "dc2.8xlarge"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccOrderableClusterPreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccOrderableClusterPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, redshift.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             nil,
@@ -70,11 +77,12 @@ func TestAccRedshiftOrderableClusterDataSource_nodeType(t *testing.T) {
 }
 
 func TestAccRedshiftOrderableClusterDataSource_preferredNodeTypes(t *testing.T) {
+	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_redshift_orderable_cluster.test"
 	preferredNodeType := "dc2.8xlarge"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccOrderableClusterPreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccOrderableClusterPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, redshift.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             nil,
@@ -89,14 +97,14 @@ func TestAccRedshiftOrderableClusterDataSource_preferredNodeTypes(t *testing.T) 
 	})
 }
 
-func testAccOrderableClusterPreCheck(t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftConn
+func testAccOrderableClusterPreCheck(ctx context.Context, t *testing.T) {
+	conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftConn(ctx)
 
 	input := &redshift.DescribeOrderableClusterOptionsInput{
 		MaxRecords: aws.Int64(20),
 	}
 
-	_, err := conn.DescribeOrderableClusterOptions(input)
+	_, err := conn.DescribeOrderableClusterOptionsWithContext(ctx, input)
 
 	if acctest.PreCheckSkipError(err) {
 		t.Skipf("skipping acceptance testing: %s", err)

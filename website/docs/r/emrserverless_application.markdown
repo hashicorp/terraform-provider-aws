@@ -63,8 +63,10 @@ resource "aws_emrserverless_application" "example" {
 
 The following arguments are required:
 
+* `architecture` – (Optional) The CPU architecture of an application. Valid values are `ARM64` or `X86_64`. Default value is `X86_64`.
 * `auto_start_configuration` – (Optional) The configuration for an application to automatically start on job submission.
 * `auto_stop_configuration` – (Optional) The configuration for an application to automatically stop after a certain amount of time being idle.
+* `image_configuration` – (Optional) The image configuration applied to all worker types.
 * `initial_capacity` – (Optional) The capacity to initialize when the application is created.
 * `maximum_capacity` – (Optional) The maximum capacity to allocate when the application is created. This is cumulative across all workers at any given point in time, not just when an application is created. No new resources will be created once any one of the defined limits is hit.
 * `name` – (Required) The name of the application.
@@ -98,6 +100,10 @@ The following arguments are required:
 * `security_group_ids` - (Optional) The array of security group Ids for customer VPC connectivity.
 * `subnet_ids` - (Optional) The array of subnet Ids for customer VPC connectivity.
 
+#### image_configuration Arguments
+
+* `image_uri` - (Required) The image URI.
+
 #### initial_capacity_config Arguments
 
 * `worker_configuration` - (Optional) The resource configuration of the initial capacity configuration.
@@ -109,9 +115,9 @@ The following arguments are required:
 * `disk` - (Optional) The disk requirements for every worker instance of the worker type.
 * `memory` - (Required) The memory requirements for every worker instance of the worker type.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the cluster.
 * `id` - The ID of the cluster.
@@ -119,8 +125,17 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-EMR Severless applications can be imported using the `id`, e.g.
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import EMR Severless applications using the `id`. For example:
 
+```terraform
+import {
+  to = aws_emrserverless_application.example
+  id = "id"
+}
 ```
-$ terraform import aws_emrserverless_application.example id
+
+Using `terraform import`, import EMR Severless applications using the `id`. For example:
+
+```console
+% terraform import aws_emrserverless_application.example id
 ```

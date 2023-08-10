@@ -49,7 +49,7 @@ several valid keys, for a full reference, check out
 Terraform will fail. Ensure that your search is specific enough to return
 a single Instance ID only.
 
-## Attributes Reference
+## Attribute Reference
 
 `id` is set to the ID of the found Instance. In addition, the following attributes
 are exported:
@@ -92,6 +92,7 @@ interpolation.
     * `auto_recovery` - Automatic recovery behavior of the instance.
 * `metadata_options` - Metadata options of the Instance.
     * `http_endpoint` - State of the metadata service: `enabled`, `disabled`.
+    * `http_protocol_ipv6` - Whether the IPv6 endpoint for the instance metadata service is `enabled` or `disabled`
     * `http_tokens` - If session tokens are required: `optional`, `required`.
     * `http_put_response_hop_limit` - Desired HTTP PUT response hop limit for instance metadata requests.
     * `instance_metadata_tags` - If access to instance tags is allowed from the metadata service: `enabled`, `disabled`.
@@ -130,7 +131,7 @@ interpolation.
 
 ## Timeouts
 
-[Configuration options](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts):
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
 - `read` - (Default `20m`)
 

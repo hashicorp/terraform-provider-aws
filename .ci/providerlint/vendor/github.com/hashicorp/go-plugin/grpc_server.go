@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package plugin
 
 import (
@@ -107,14 +110,26 @@ func (s *GRPCServer) Init() error {
 	return nil
 }
 
-// Stop calls Stop on the underlying grpc.Server
+// Stop calls Stop on the underlying grpc.Server and Close on the underlying
+// grpc.Broker if present.
 func (s *GRPCServer) Stop() {
 	s.server.Stop()
+
+	if s.broker != nil {
+		s.broker.Close()
+		s.broker = nil
+	}
 }
 
-// GracefulStop calls GracefulStop on the underlying grpc.Server
+// GracefulStop calls GracefulStop on the underlying grpc.Server and Close on
+// the underlying grpc.Broker if present.
 func (s *GRPCServer) GracefulStop() {
 	s.server.GracefulStop()
+
+	if s.broker != nil {
+		s.broker.Close()
+		s.broker = nil
+	}
 }
 
 // Config is the GRPCServerConfig encoded as JSON then base64.

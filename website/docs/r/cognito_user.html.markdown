@@ -67,7 +67,7 @@ resource "aws_cognito_user" "example" {
 The following arguments are required:
 
 * `user_pool_id` - (Required) The user pool ID for the user pool where the user will be created.
-* `user_name` - (Required) The username for the user. Must be unique within the user pool. Must be a UTF-8 string between 1 and 128 characters. After the user is created, the username cannot be changed.
+* `username` - (Required) The username for the user. Must be unique within the user pool. Must be a UTF-8 string between 1 and 128 characters. After the user is created, the username cannot be changed.
 
 The following arguments are optional:
 
@@ -83,9 +83,9 @@ The following arguments are optional:
 
 ~> **NOTE:** Clearing `password` or `temporary_password` does not reset user's password in Cognito.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `status` - current user status.
 * `sub` - unique user id that is never reassignable to another user.
@@ -93,8 +93,17 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Cognito User can be imported using the `user_pool_id`/`name` attributes concatenated, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Cognito User using the `user_pool_id`/`name` attributes concatenated. For example:
 
+```terraform
+import {
+  to = aws_cognito_user.user
+  id = "us-east-1_vG78M4goG/user"
+}
 ```
-$ terraform import aws_cognito_user.user us-east-1_vG78M4goG/user
+
+Using `terraform import`, import Cognito User using the `user_pool_id`/`name` attributes concatenated. For example:
+
+```console
+% terraform import aws_cognito_user.user us-east-1_vG78M4goG/user
 ```

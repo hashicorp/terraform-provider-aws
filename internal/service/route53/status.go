@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package route53
 
 import (
@@ -5,17 +8,17 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/route53"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func statusChangeInfo(conn *route53.Route53, changeID string) resource.StateRefreshFunc {
+func statusChangeInfo(ctx context.Context, conn *route53.Route53, changeID string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		input := &route53.GetChangeInput{
 			Id: aws.String(changeID),
 		}
 
-		output, err := conn.GetChange(input)
+		output, err := conn.GetChangeWithContext(ctx, input)
 
 		if err != nil {
 			return nil, "", err
@@ -29,9 +32,9 @@ func statusChangeInfo(conn *route53.Route53, changeID string) resource.StateRefr
 	}
 }
 
-func statusHostedZoneDNSSEC(conn *route53.Route53, hostedZoneID string) resource.StateRefreshFunc {
+func statusHostedZoneDNSSEC(ctx context.Context, conn *route53.Route53, hostedZoneID string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		hostedZoneDnssec, err := FindHostedZoneDNSSEC(conn, hostedZoneID)
+		hostedZoneDnssec, err := FindHostedZoneDNSSEC(ctx, conn, hostedZoneID)
 
 		if err != nil {
 			return nil, "", err
@@ -45,9 +48,9 @@ func statusHostedZoneDNSSEC(conn *route53.Route53, hostedZoneID string) resource
 	}
 }
 
-func statusKeySigningKey(conn *route53.Route53, hostedZoneID string, name string) resource.StateRefreshFunc {
+func statusKeySigningKey(ctx context.Context, conn *route53.Route53, hostedZoneID string, name string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		keySigningKey, err := FindKeySigningKey(conn, hostedZoneID, name)
+		keySigningKey, err := FindKeySigningKey(ctx, conn, hostedZoneID, name)
 
 		if err != nil {
 			return nil, "", err
@@ -61,7 +64,7 @@ func statusKeySigningKey(conn *route53.Route53, hostedZoneID string, name string
 	}
 }
 
-func statusTrafficPolicyInstanceState(ctx context.Context, conn *route53.Route53, id string) resource.StateRefreshFunc {
+func statusTrafficPolicyInstanceState(ctx context.Context, conn *route53.Route53, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := FindTrafficPolicyInstanceByID(ctx, conn, id)
 

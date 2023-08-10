@@ -1,59 +1,31 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package rds
 
 import (
-	"errors"
-	"fmt"
-	"log"
+	"context"
 	"sort"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/rds"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @SDKDataSource("aws_db_cluster_snapshot", name="DB Cluster Snapshot")
+// @Tags
 func DataSourceClusterSnapshot() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceClusterSnapshotRead,
+		ReadWithoutTimeout: dataSourceClusterSnapshotRead,
 
 		Schema: map[string]*schema.Schema{
-			//selection criteria
-			"db_cluster_identifier": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-
-			"db_cluster_snapshot_identifier": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-
-			"snapshot_type": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-
-			"include_shared": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-			},
-
-			"include_public": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-			},
-			"most_recent": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-			},
-
-			//Computed values returned
 			"allocated_storage": {
 				Type:     schema.TypeInt,
 				Computed: true,
@@ -63,13 +35,17 @@ func DataSourceClusterSnapshot() *schema.Resource {
 				Elem:     &schema.Schema{Type: schema.TypeString},
 				Computed: true,
 			},
+			"db_cluster_identifier": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
 			"db_cluster_snapshot_arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"storage_encrypted": {
-				Type:     schema.TypeBool,
-				Computed: true,
+			"db_cluster_snapshot_identifier": {
+				Type:     schema.TypeString,
+				Optional: true,
 			},
 			"engine": {
 				Type:     schema.TypeString,
@@ -83,19 +59,38 @@ func DataSourceClusterSnapshot() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"include_public": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
+			},
+			"include_shared": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
+			},
 			"license_model": {
 				Type:     schema.TypeString,
 				Computed: true,
+			},
+			"most_recent": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
 			},
 			"port": {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
-			"source_db_cluster_snapshot_arn": {
+			"snapshot_create_time": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"snapshot_create_time": {
+			"snapshot_type": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
+			"source_db_cluster_snapshot_arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -103,68 +98,71 @@ func DataSourceClusterSnapshot() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"storage_encrypted": {
+				Type:     schema.TypeBool,
+				Computed: true,
+			},
+			names.AttrTags: tftags.TagsSchemaComputed(),
 			"vpc_id": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"tags": tftags.TagsSchemaComputed(),
 		},
 	}
 }
 
-func dataSourceClusterSnapshotRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).RDSConn
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+func dataSourceClusterSnapshotRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).RDSConn(ctx)
 
-	clusterIdentifier, clusterIdentifierOk := d.GetOk("db_cluster_identifier")
-	snapshotIdentifier, snapshotIdentifierOk := d.GetOk("db_cluster_snapshot_identifier")
-
-	if !clusterIdentifierOk && !snapshotIdentifierOk {
-		return errors.New("One of db_cluster_snapshot_identifier or db_cluster_identifier must be assigned")
-	}
-
-	params := &rds.DescribeDBClusterSnapshotsInput{
+	input := &rds.DescribeDBClusterSnapshotsInput{
 		IncludePublic: aws.Bool(d.Get("include_public").(bool)),
 		IncludeShared: aws.Bool(d.Get("include_shared").(bool)),
 	}
+
+	if v, ok := d.GetOk("db_cluster_identifier"); ok {
+		input.DBClusterIdentifier = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("db_cluster_snapshot_identifier"); ok {
+		input.DBClusterSnapshotIdentifier = aws.String(v.(string))
+	}
+
 	if v, ok := d.GetOk("snapshot_type"); ok {
-		params.SnapshotType = aws.String(v.(string))
-	}
-	if clusterIdentifierOk {
-		params.DBClusterIdentifier = aws.String(clusterIdentifier.(string))
-	}
-	if snapshotIdentifierOk {
-		params.DBClusterSnapshotIdentifier = aws.String(snapshotIdentifier.(string))
+		input.SnapshotType = aws.String(v.(string))
 	}
 
-	log.Printf("[DEBUG] Reading DB Cluster Snapshot: %s", params)
-	resp, err := conn.DescribeDBClusterSnapshots(params)
+	f := tfslices.PredicateTrue[*rds.DBClusterSnapshot]()
+	if tags := getTagsIn(ctx); len(tags) > 0 {
+		f = func(v *rds.DBClusterSnapshot) bool {
+			return KeyValueTags(ctx, v.TagList).ContainsAll(KeyValueTags(ctx, tags))
+		}
+	}
+
+	snapshots, err := findDBClusterSnapshots(ctx, conn, input, f)
+
 	if err != nil {
-		return err
+		return sdkdiag.AppendErrorf(diags, "reading RDS DB Cluster Snapshots: %s", err)
 	}
 
-	if len(resp.DBClusterSnapshots) < 1 {
-		return errors.New("Your query returned no results. Please change your search criteria and try again.")
+	if len(snapshots) < 1 {
+		return sdkdiag.AppendErrorf(diags, "Your query returned no results. Please change your search criteria and try again.")
 	}
 
 	var snapshot *rds.DBClusterSnapshot
-	if len(resp.DBClusterSnapshots) > 1 {
-		recent := d.Get("most_recent").(bool)
-		log.Printf("[DEBUG] aws_db_cluster_snapshot - multiple results found and `most_recent` is set to: %t", recent)
-		if recent {
-			snapshot = mostRecentClusterSnapshot(resp.DBClusterSnapshots)
+	if len(snapshots) > 1 {
+		if d.Get("most_recent").(bool) {
+			snapshot = mostRecentClusterSnapshot(snapshots)
 		} else {
-			return errors.New("Your query returned more than one result. Please try a more specific search criteria.")
+			return sdkdiag.AppendErrorf(diags, "Your query returned more than one result. Please try a more specific search criteria.")
 		}
 	} else {
-		snapshot = resp.DBClusterSnapshots[0]
+		snapshot = snapshots[0]
 	}
 
 	d.SetId(aws.StringValue(snapshot.DBClusterSnapshotIdentifier))
 	d.Set("allocated_storage", snapshot.AllocatedStorage)
-	if err := d.Set("availability_zones", flex.FlattenStringList(snapshot.AvailabilityZones)); err != nil {
-		return fmt.Errorf("error setting availability_zones: %w", err)
-	}
+	d.Set("availability_zones", aws.StringValueSlice(snapshot.AvailabilityZones))
 	d.Set("db_cluster_identifier", snapshot.DBClusterIdentifier)
 	d.Set("db_cluster_snapshot_arn", snapshot.DBClusterSnapshotArn)
 	d.Set("db_cluster_snapshot_identifier", snapshot.DBClusterSnapshotIdentifier)
@@ -182,17 +180,9 @@ func dataSourceClusterSnapshotRead(d *schema.ResourceData, meta interface{}) err
 	d.Set("storage_encrypted", snapshot.StorageEncrypted)
 	d.Set("vpc_id", snapshot.VpcId)
 
-	tags, err := ListTags(conn, d.Get("db_cluster_snapshot_arn").(string))
+	setTagsOut(ctx, snapshot.TagList)
 
-	if err != nil {
-		return fmt.Errorf("error listing tags for RDS DB Cluster Snapshot (%s): %w", d.Get("db_cluster_snapshot_arn").(string), err)
-	}
-
-	if err := d.Set("tags", tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
-	}
-
-	return nil
+	return diags
 }
 
 type rdsClusterSnapshotSort []*rds.DBClusterSnapshot

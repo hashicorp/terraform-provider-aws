@@ -27,6 +27,7 @@ Some flags control generation a certain section of code, such as whether the gen
 | `ServiceTagsMap` |  | Whether to generate map service tags (use this or `ServiceTagsSlice`, not both) | `-ServiceTagsMap` |
 | `ServiceTagsSlice` |  | Whether to generate slice service tags (use this or `ServiceTagsMap`, not both) | `-ServiceTagsSlice` |
 | `UpdateTags` |  | Whether to generate UpdateTags | `-UpdateTags` |
+| `ContextOnly` |  | Whether to generator only Context-aware functions | `-ContextOnly` |
 | `ListTagsInFiltIDName` |  | List tags input filter identifier name | `-ListTagsInFiltIDName=resource-id` |
 | `ListTagsInIDElem` | `ResourceArn` | List tags input identifier element | `-ListTagsInIDElem=ResourceARN` |
 | `ListTagsInIDNeedSlice` |  | Whether list tags input identifier needs a slice | `-ListTagsInIDNeedSlice=yes` |
@@ -35,6 +36,7 @@ Some flags control generation a certain section of code, such as whether the gen
 | `TagInCustomVal` |  | Tag input custom value | `-TagInCustomVal=aws.StringMap(updatedTags.IgnoreAWS().Map())` |
 | `TagInIDElem` | `ResourceArn` | Tag input identifier element | `-TagInIDElem=ResourceARN` |
 | `TagInIDNeedSlice` |  | Tag input identifier needs a slice | `-TagInIDNeedSlice=yes` |
+| `TagInIDNeedValueSlice` |  | Tag input identifier needs a slice of values, rather than a slice of pointers | `-TagInIDNeedValueSlice=yes` |
 | `TagInTagsElem` | Tags | Tag input tags element | `-TagInTagsElem=TagsList` |
 | `TagKeyType` |  | Tag key type | `-TagKeyType=TagKeyOnly` |
 | `TagOp` | `TagResource` | Tag operation | `-TagOp=AddTags` |
@@ -350,7 +352,7 @@ func AthenaUpdateTags(conn *athena.Athena, identifier string, oldTagsMap interfa
         _, err := conn.UntagResource(input)
 
         if err != nil {
-            return fmt.Errorf("error untagging resource (%s): %s", identifier, err)
+            return fmt.Errorf("untagging resource (%s): %s", identifier, err)
         }
     }
 
@@ -363,7 +365,7 @@ func AthenaUpdateTags(conn *athena.Athena, identifier string, oldTagsMap interfa
         _, err := conn.TagResource(input)
 
         if err != nil {
-            return fmt.Errorf("error tagging resource (%s): %s", identifier, err)
+            return fmt.Errorf("tagging resource (%s): %s", identifier, err)
         }
     }
 

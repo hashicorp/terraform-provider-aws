@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package organizations
 
 import (
@@ -9,6 +12,8 @@ import (
 )
 
 func TestFlattenOrganizationalUnits(t *testing.T) {
+	t.Parallel()
+
 	input := []*organizations.OrganizationalUnit{
 		{
 			Arn:  aws.String("arn:aws:organizations::123456789012:ou/o-abcde12345/ou-ab12-abcd1234"), //lintignore:AWSAT005

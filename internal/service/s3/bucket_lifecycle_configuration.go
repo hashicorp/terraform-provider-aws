@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package s3
 
 import (
@@ -12,22 +15,23 @@ import (
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/experimental/nullable"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/types/nullable"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_s3_bucket_lifecycle_configuration")
 func ResourceBucketLifecycleConfiguration() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: resourceBucketLifecycleConfigurationCreate,
-		ReadContext:   resourceBucketLifecycleConfigurationRead,
-		UpdateContext: resourceBucketLifecycleConfigurationUpdate,
-		DeleteContext: resourceBucketLifecycleConfigurationDelete,
+		CreateWithoutTimeout: resourceBucketLifecycleConfigurationCreate,
+		ReadWithoutTimeout:   resourceBucketLifecycleConfigurationRead,
+		UpdateWithoutTimeout: resourceBucketLifecycleConfigurationUpdate,
+		DeleteWithoutTimeout: resourceBucketLifecycleConfigurationDelete,
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
@@ -252,14 +256,14 @@ func ResourceBucketLifecycleConfiguration() *schema.Resource {
 }
 
 func resourceBucketLifecycleConfigurationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).S3Conn
+	conn := meta.(*conns.AWSClient).S3Conn(ctx)
 
 	bucket := d.Get("bucket").(string)
 	expectedBucketOwner := d.Get("expected_bucket_owner").(string)
 
-	rules, err := ExpandLifecycleRules(d.Get("rule").([]interface{}))
+	rules, err := ExpandLifecycleRules(ctx, d.Get("rule").([]interface{}))
 	if err != nil {
-		return diag.Errorf("error creating S3 Lifecycle Configuration for bucket (%s): %s", bucket, err)
+		return diag.Errorf("creating S3 Lifecycle Configuration for bucket (%s): %s", bucket, err)
 	}
 
 	input := &s3.PutBucketLifecycleConfigurationInput{
@@ -273,25 +277,25 @@ func resourceBucketLifecycleConfigurationCreate(ctx context.Context, d *schema.R
 		input.ExpectedBucketOwner = aws.String(expectedBucketOwner)
 	}
 
-	_, err = tfresource.RetryWhenAWSErrCodeEquals(2*time.Minute, func() (interface{}, error) {
+	_, err = tfresource.RetryWhenAWSErrCodeEquals(ctx, 2*time.Minute, func() (interface{}, error) {
 		return conn.PutBucketLifecycleConfigurationWithContext(ctx, input)
 	}, s3.ErrCodeNoSuchBucket)
 
 	if err != nil {
-		return diag.Errorf("error creating S3 Lifecycle Configuration for bucket (%s): %s", bucket, err)
+		return diag.Errorf("creating S3 Lifecycle Configuration for bucket (%s): %s", bucket, err)
 	}
 
 	d.SetId(CreateResourceID(bucket, expectedBucketOwner))
 
 	if err = waitForLifecycleConfigurationRulesStatus(ctx, conn, bucket, expectedBucketOwner, rules); err != nil {
-		return diag.Errorf("error waiting for S3 Lifecycle Configuration for bucket (%s) to reach expected rules status after update: %s", d.Id(), err)
+		return diag.Errorf("waiting for S3 Lifecycle Configuration for bucket (%s) to reach expected rules status after update: %s", d.Id(), err)
 	}
 
 	return resourceBucketLifecycleConfigurationRead(ctx, d, meta)
 }
 
 func resourceBucketLifecycleConfigurationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).S3Conn
+	conn := meta.(*conns.AWSClient).S3Conn(ctx)
 
 	bucket, expectedBucketOwner, err := ParseResourceID(d.Id())
 	if err != nil {
@@ -308,7 +312,7 @@ func resourceBucketLifecycleConfigurationRead(ctx context.Context, d *schema.Res
 
 	var lastOutput, output *s3.GetBucketLifecycleConfigurationOutput
 
-	err = resource.RetryContext(ctx, lifecycleConfigurationRulesSteadyTimeout, func() *resource.RetryError {
+	err = retry.RetryContext(ctx, lifecycleConfigurationRulesSteadyTimeout, func() *retry.RetryError {
 		var err error
 
 		time.Sleep(lifecycleConfigurationExtraRetryDelay)
@@ -316,16 +320,16 @@ func resourceBucketLifecycleConfigurationRead(ctx context.Context, d *schema.Res
 		output, err = conn.GetBucketLifecycleConfigurationWithContext(ctx, input)
 
 		if d.IsNewResource() && tfawserr.ErrCodeEquals(err, ErrCodeNoSuchLifecycleConfiguration, s3.ErrCodeNoSuchBucket) {
-			return resource.RetryableError(err)
+			return retry.RetryableError(err)
 		}
 
 		if err != nil {
-			return resource.NonRetryableError(err)
+			return retry.NonRetryableError(err)
 		}
 
 		if lastOutput == nil || !reflect.DeepEqual(*lastOutput, *output) {
 			lastOutput = output
-			return resource.RetryableError(fmt.Errorf("bucket lifecycle configuration has not stablized; trying again"))
+			return retry.RetryableError(fmt.Errorf("bucket lifecycle configuration has not stablized; trying again"))
 		}
 
 		return nil
@@ -342,29 +346,29 @@ func resourceBucketLifecycleConfigurationRead(ctx context.Context, d *schema.Res
 	}
 
 	if err != nil {
-		return diag.Errorf("error getting S3 Bucket Lifecycle Configuration (%s): %s", d.Id(), err)
+		return diag.Errorf("getting S3 Bucket Lifecycle Configuration (%s): %s", d.Id(), err)
 	}
 
 	d.Set("bucket", bucket)
 	d.Set("expected_bucket_owner", expectedBucketOwner)
-	if err := d.Set("rule", FlattenLifecycleRules(output.Rules)); err != nil {
-		return diag.Errorf("error setting rule: %s", err)
+	if err := d.Set("rule", FlattenLifecycleRules(ctx, output.Rules)); err != nil {
+		return diag.Errorf("setting rule: %s", err)
 	}
 
 	return nil
 }
 
 func resourceBucketLifecycleConfigurationUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).S3Conn
+	conn := meta.(*conns.AWSClient).S3Conn(ctx)
 
 	bucket, expectedBucketOwner, err := ParseResourceID(d.Id())
 	if err != nil {
 		return diag.FromErr(err)
 	}
 
-	rules, err := ExpandLifecycleRules(d.Get("rule").([]interface{}))
+	rules, err := ExpandLifecycleRules(ctx, d.Get("rule").([]interface{}))
 	if err != nil {
-		return diag.Errorf("error updating S3 Bucket Lifecycle Configuration rule: %s", err)
+		return diag.Errorf("updating S3 Bucket Lifecycle Configuration rule: %s", err)
 	}
 
 	input := &s3.PutBucketLifecycleConfigurationInput{
@@ -378,23 +382,23 @@ func resourceBucketLifecycleConfigurationUpdate(ctx context.Context, d *schema.R
 		input.ExpectedBucketOwner = aws.String(expectedBucketOwner)
 	}
 
-	_, err = tfresource.RetryWhenAWSErrCodeEquals(2*time.Minute, func() (interface{}, error) {
+	_, err = tfresource.RetryWhenAWSErrCodeEquals(ctx, 2*time.Minute, func() (interface{}, error) {
 		return conn.PutBucketLifecycleConfigurationWithContext(ctx, input)
 	}, ErrCodeNoSuchLifecycleConfiguration)
 
 	if err != nil {
-		return diag.Errorf("error updating S3 Bucket Lifecycle Configuration (%s): %s", d.Id(), err)
+		return diag.Errorf("updating S3 Bucket Lifecycle Configuration (%s): %s", d.Id(), err)
 	}
 
 	if err := waitForLifecycleConfigurationRulesStatus(ctx, conn, bucket, expectedBucketOwner, rules); err != nil {
-		return diag.Errorf("error waiting for S3 Lifecycle Configuration for bucket (%s) to reach expected rules status after update: %s", d.Id(), err)
+		return diag.Errorf("waiting for S3 Lifecycle Configuration for bucket (%s) to reach expected rules status after update: %s", d.Id(), err)
 	}
 
 	return resourceBucketLifecycleConfigurationRead(ctx, d, meta)
 }
 
 func resourceBucketLifecycleConfigurationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).S3Conn
+	conn := meta.(*conns.AWSClient).S3Conn(ctx)
 
 	bucket, expectedBucketOwner, err := ParseResourceID(d.Id())
 	if err != nil {
@@ -416,7 +420,7 @@ func resourceBucketLifecycleConfigurationDelete(ctx context.Context, d *schema.R
 	}
 
 	if err != nil {
-		return diag.Errorf("error deleting S3 Bucket Lifecycle Configuration (%s): %s", d.Id(), err)
+		return diag.Errorf("deleting S3 Bucket Lifecycle Configuration (%s): %s", d.Id(), err)
 	}
 
 	return nil

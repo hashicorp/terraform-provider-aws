@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package comprehend_test
 
 import (
@@ -9,9 +12,10 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/comprehend"
 	"github.com/aws/aws-sdk-go-v2/service/comprehend/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfcomprehend "github.com/hashicorp/terraform-provider-aws/internal/service/comprehend"
@@ -19,6 +23,7 @@ import (
 )
 
 func TestAccComprehendDocumentClassifier_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -29,19 +34,19 @@ func TestAccComprehendDocumentClassifier_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(names.ComprehendEndpointID, t)
-			testAccPreCheck(t)
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.ComprehendEndpointID)
+			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.ComprehendEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDocumentClassifierDestroy,
+		CheckDestroy:             testAccCheckDocumentClassifierDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDocumentClassifierConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDocumentClassifierExists(resourceName, &documentclassifier),
-					testAccCheckDocumentClassifierPublishedVersions(resourceName, 1),
+					testAccCheckDocumentClassifierExists(ctx, resourceName, &documentclassifier),
+					testAccCheckDocumentClassifierPublishedVersions(ctx, resourceName, 1),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttrPair(resourceName, "data_access_role_arn", "aws_iam_role.test", "arn"),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "comprehend", regexp.MustCompile(fmt.Sprintf(`document-classifier/%s/version/%s$`, rName, uniqueIDPattern()))),
@@ -58,7 +63,7 @@ func TestAccComprehendDocumentClassifier_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "tags_all.%", "0"),
 					acctest.CheckResourceAttrNameGenerated(resourceName, "version_name"),
-					resource.TestCheckResourceAttr(resourceName, "version_name_prefix", resource.UniqueIdPrefix),
+					resource.TestCheckResourceAttr(resourceName, "version_name_prefix", id.UniqueIdPrefix),
 					resource.TestCheckResourceAttr(resourceName, "volume_kms_key_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "vpc_config.#", "0"),
 				),
@@ -77,6 +82,7 @@ func TestAccComprehendDocumentClassifier_basic(t *testing.T) {
 }
 
 func TestAccComprehendDocumentClassifier_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -87,19 +93,19 @@ func TestAccComprehendDocumentClassifier_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(names.ComprehendEndpointID, t)
-			testAccPreCheck(t)
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.ComprehendEndpointID)
+			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.ComprehendEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDocumentClassifierDestroy,
+		CheckDestroy:             testAccCheckDocumentClassifierDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDocumentClassifierConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDocumentClassifierExists(resourceName, &documentclassifier),
-					acctest.CheckResourceDisappears(acctest.Provider, tfcomprehend.ResourceDocumentClassifier(), resourceName),
+					testAccCheckDocumentClassifierExists(ctx, resourceName, &documentclassifier),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfcomprehend.ResourceDocumentClassifier(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -108,6 +114,7 @@ func TestAccComprehendDocumentClassifier_disappears(t *testing.T) {
 }
 
 func TestAccComprehendDocumentClassifier_versionName(t *testing.T) {
+	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -120,19 +127,19 @@ func TestAccComprehendDocumentClassifier_versionName(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(names.ComprehendEndpointID, t)
-			testAccPreCheck(t)
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.ComprehendEndpointID)
+			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.ComprehendEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDocumentClassifierDestroy,
+		CheckDestroy:             testAccCheckDocumentClassifierDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDocumentClassifierConfig_versionName(rName, vName1, "key", "value1"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDocumentClassifierExists(resourceName, &documentclassifier),
-					testAccCheckDocumentClassifierPublishedVersions(resourceName, 1),
+					testAccCheckDocumentClassifierExists(ctx, resourceName, &documentclassifier),
+					testAccCheckDocumentClassifierPublishedVersions(ctx, resourceName, 1),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "version_name", vName1),
 					resource.TestCheckResourceAttr(resourceName, "version_name_prefix", ""),
@@ -149,8 +156,8 @@ func TestAccComprehendDocumentClassifier_versionName(t *testing.T) {
 			{
 				Config: testAccDocumentClassifierConfig_versionName(rName, vName2, "key", "value2"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDocumentClassifierExists(resourceName, &documentclassifier),
-					testAccCheckDocumentClassifierPublishedVersions(resourceName, 2),
+					testAccCheckDocumentClassifierExists(ctx, resourceName, &documentclassifier),
+					testAccCheckDocumentClassifierPublishedVersions(ctx, resourceName, 2),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "version_name", vName2),
 					resource.TestCheckResourceAttr(resourceName, "version_name_prefix", ""),
@@ -169,6 +176,7 @@ func TestAccComprehendDocumentClassifier_versionName(t *testing.T) {
 }
 
 func TestAccComprehendDocumentClassifier_versionNameEmpty(t *testing.T) {
+	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -179,19 +187,19 @@ func TestAccComprehendDocumentClassifier_versionNameEmpty(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(names.ComprehendEndpointID, t)
-			testAccPreCheck(t)
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.ComprehendEndpointID)
+			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.ComprehendEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDocumentClassifierDestroy,
+		CheckDestroy:             testAccCheckDocumentClassifierDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDocumentClassifierConfig_versionNameEmpty(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDocumentClassifierExists(resourceName, &documentclassifier),
-					testAccCheckDocumentClassifierPublishedVersions(resourceName, 1),
+					testAccCheckDocumentClassifierExists(ctx, resourceName, &documentclassifier),
+					testAccCheckDocumentClassifierPublishedVersions(ctx, resourceName, 1),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "version_name", ""),
 					resource.TestCheckResourceAttr(resourceName, "version_name_prefix", ""),
@@ -208,6 +216,7 @@ func TestAccComprehendDocumentClassifier_versionNameEmpty(t *testing.T) {
 }
 
 func TestAccComprehendDocumentClassifier_versionNameGenerated(t *testing.T) {
+	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -218,21 +227,21 @@ func TestAccComprehendDocumentClassifier_versionNameGenerated(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(names.ComprehendEndpointID, t)
-			testAccPreCheck(t)
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.ComprehendEndpointID)
+			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.ComprehendEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDocumentClassifierDestroy,
+		CheckDestroy:             testAccCheckDocumentClassifierDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDocumentClassifierConfig_versionNameNotSet(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDocumentClassifierExists(resourceName, &documentclassifier),
-					testAccCheckDocumentClassifierPublishedVersions(resourceName, 1),
+					testAccCheckDocumentClassifierExists(ctx, resourceName, &documentclassifier),
+					testAccCheckDocumentClassifierPublishedVersions(ctx, resourceName, 1),
 					acctest.CheckResourceAttrNameGenerated(resourceName, "version_name"),
-					resource.TestCheckResourceAttr(resourceName, "version_name_prefix", resource.UniqueIdPrefix),
+					resource.TestCheckResourceAttr(resourceName, "version_name_prefix", id.UniqueIdPrefix),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "comprehend", regexp.MustCompile(fmt.Sprintf(`document-classifier/%s/version/%s$`, rName, uniqueIDPattern()))),
 				),
 			},
@@ -246,6 +255,7 @@ func TestAccComprehendDocumentClassifier_versionNameGenerated(t *testing.T) {
 }
 
 func TestAccComprehendDocumentClassifier_versionNamePrefix(t *testing.T) {
+	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -256,19 +266,19 @@ func TestAccComprehendDocumentClassifier_versionNamePrefix(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(names.ComprehendEndpointID, t)
-			testAccPreCheck(t)
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.ComprehendEndpointID)
+			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.ComprehendEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDocumentClassifierDestroy,
+		CheckDestroy:             testAccCheckDocumentClassifierDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDocumentClassifierConfig_versioNamePrefix(rName, "tf-acc-test-prefix-"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDocumentClassifierExists(resourceName, &documentclassifier),
-					testAccCheckDocumentClassifierPublishedVersions(resourceName, 1),
+					testAccCheckDocumentClassifierExists(ctx, resourceName, &documentclassifier),
+					testAccCheckDocumentClassifierPublishedVersions(ctx, resourceName, 1),
 					acctest.CheckResourceAttrNameFromPrefix(resourceName, "version_name", "tf-acc-test-prefix-"),
 					resource.TestCheckResourceAttr(resourceName, "version_name_prefix", "tf-acc-test-prefix-"),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "comprehend", regexp.MustCompile(fmt.Sprintf(`document-classifier/%s/version/%s$`, rName, prefixedUniqueIDPattern("tf-acc-test-prefix-")))),
@@ -284,6 +294,7 @@ func TestAccComprehendDocumentClassifier_versionNamePrefix(t *testing.T) {
 }
 
 func TestAccComprehendDocumentClassifier_testDocuments(t *testing.T) {
+	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -294,19 +305,19 @@ func TestAccComprehendDocumentClassifier_testDocuments(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(names.ComprehendEndpointID, t)
-			testAccPreCheck(t)
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.ComprehendEndpointID)
+			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.ComprehendEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDocumentClassifierDestroy,
+		CheckDestroy:             testAccCheckDocumentClassifierDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDocumentClassifierConfig_testDocuments(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDocumentClassifierExists(resourceName, &documentclassifier),
-					testAccCheckDocumentClassifierPublishedVersions(resourceName, 1),
+					testAccCheckDocumentClassifierExists(ctx, resourceName, &documentclassifier),
+					testAccCheckDocumentClassifierPublishedVersions(ctx, resourceName, 1),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "comprehend", regexp.MustCompile(fmt.Sprintf(`document-classifier/%s/version/%s$`, rName, uniqueIDPattern()))),
 					resource.TestCheckResourceAttr(resourceName, "input_data_config.#", "1"),
@@ -318,7 +329,7 @@ func TestAccComprehendDocumentClassifier_testDocuments(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "tags_all.%", "0"),
 					acctest.CheckResourceAttrNameGenerated(resourceName, "version_name"),
-					resource.TestCheckResourceAttr(resourceName, "version_name_prefix", resource.UniqueIdPrefix),
+					resource.TestCheckResourceAttr(resourceName, "version_name_prefix", id.UniqueIdPrefix),
 					resource.TestCheckResourceAttr(resourceName, "volume_kms_key_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "vpc_config.#", "0"),
 				),
@@ -333,6 +344,7 @@ func TestAccComprehendDocumentClassifier_testDocuments(t *testing.T) {
 }
 
 func TestAccComprehendDocumentClassifier_SingleLabel_ValidateNoDelimiterSet(t *testing.T) {
+	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -341,13 +353,13 @@ func TestAccComprehendDocumentClassifier_SingleLabel_ValidateNoDelimiterSet(t *t
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(names.ComprehendEndpointID, t)
-			testAccPreCheck(t)
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.ComprehendEndpointID)
+			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.ComprehendEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDocumentClassifierDestroy,
+		CheckDestroy:             testAccCheckDocumentClassifierDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccDocumentClassifierConfig_modeDefault_ValidateNoDelimiterSet(rName, tfcomprehend.DocumentClassifierLabelSeparatorDefault),
@@ -370,6 +382,7 @@ func TestAccComprehendDocumentClassifier_SingleLabel_ValidateNoDelimiterSet(t *t
 }
 
 func TestAccComprehendDocumentClassifier_multiLabel_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -380,19 +393,19 @@ func TestAccComprehendDocumentClassifier_multiLabel_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(names.ComprehendEndpointID, t)
-			testAccPreCheck(t)
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.ComprehendEndpointID)
+			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.ComprehendEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDocumentClassifierDestroy,
+		CheckDestroy:             testAccCheckDocumentClassifierDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDocumentClassifierConfig_multiLabel_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDocumentClassifierExists(resourceName, &documentclassifier),
-					testAccCheckDocumentClassifierPublishedVersions(resourceName, 1),
+					testAccCheckDocumentClassifierExists(ctx, resourceName, &documentclassifier),
+					testAccCheckDocumentClassifierPublishedVersions(ctx, resourceName, 1),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttrPair(resourceName, "data_access_role_arn", "aws_iam_role.test", "arn"),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "comprehend", regexp.MustCompile(fmt.Sprintf(`document-classifier/%s/version/%s$`, rName, uniqueIDPattern()))),
@@ -406,7 +419,7 @@ func TestAccComprehendDocumentClassifier_multiLabel_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "tags_all.%", "0"),
 					acctest.CheckResourceAttrNameGenerated(resourceName, "version_name"),
-					resource.TestCheckResourceAttr(resourceName, "version_name_prefix", resource.UniqueIdPrefix),
+					resource.TestCheckResourceAttr(resourceName, "version_name_prefix", id.UniqueIdPrefix),
 					resource.TestCheckResourceAttr(resourceName, "volume_kms_key_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "vpc_config.#", "0"),
 				),
@@ -425,6 +438,7 @@ func TestAccComprehendDocumentClassifier_multiLabel_basic(t *testing.T) {
 }
 
 func TestAccComprehendDocumentClassifier_outputDataConfig_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -435,19 +449,19 @@ func TestAccComprehendDocumentClassifier_outputDataConfig_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(names.ComprehendEndpointID, t)
-			testAccPreCheck(t)
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.ComprehendEndpointID)
+			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.ComprehendEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDocumentClassifierDestroy,
+		CheckDestroy:             testAccCheckDocumentClassifierDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDocumentClassifierConfig_outputDataConfig_basic(rName, "outputs"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDocumentClassifierExists(resourceName, &documentclassifier),
-					testAccCheckDocumentClassifierPublishedVersions(resourceName, 1),
+					testAccCheckDocumentClassifierExists(ctx, resourceName, &documentclassifier),
+					testAccCheckDocumentClassifierPublishedVersions(ctx, resourceName, 1),
 					resource.TestCheckResourceAttr(resourceName, "output_data_config.#", "1"),
 					resource.TestMatchResourceAttr(resourceName, "output_data_config.0.s3_uri", regexp.MustCompile(`s3://.+/outputs`)),
 					resource.TestMatchResourceAttr(resourceName, "output_data_config.0.output_s3_uri", regexp.MustCompile(`s3://.+/outputs/[-A-Za-z0-9]+/output/output.tar.gz`)),
@@ -467,6 +481,7 @@ func TestAccComprehendDocumentClassifier_outputDataConfig_basic(t *testing.T) {
 }
 
 func TestAccComprehendDocumentClassifier_outputDataConfig_kmsKeyCreateID(t *testing.T) {
+	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -477,19 +492,19 @@ func TestAccComprehendDocumentClassifier_outputDataConfig_kmsKeyCreateID(t *test
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(names.ComprehendEndpointID, t)
-			testAccPreCheck(t)
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.ComprehendEndpointID)
+			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.ComprehendEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDocumentClassifierDestroy,
+		CheckDestroy:             testAccCheckDocumentClassifierDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDocumentClassifierConfig_outputDataConfig_kmsKeyId(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDocumentClassifierExists(resourceName, &documentclassifier),
-					testAccCheckDocumentClassifierPublishedVersions(resourceName, 1),
+					testAccCheckDocumentClassifierExists(ctx, resourceName, &documentclassifier),
+					testAccCheckDocumentClassifierPublishedVersions(ctx, resourceName, 1),
 					resource.TestCheckResourceAttr(resourceName, "output_data_config.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "output_data_config.0.kms_key_id", "aws_kms_key.output", "key_id"),
 				),
@@ -508,6 +523,7 @@ func TestAccComprehendDocumentClassifier_outputDataConfig_kmsKeyCreateID(t *test
 }
 
 func TestAccComprehendDocumentClassifier_outputDataConfig_kmsKeyCreateARN(t *testing.T) {
+	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -518,19 +534,19 @@ func TestAccComprehendDocumentClassifier_outputDataConfig_kmsKeyCreateARN(t *tes
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(names.ComprehendEndpointID, t)
-			testAccPreCheck(t)
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.ComprehendEndpointID)
+			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.ComprehendEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDocumentClassifierDestroy,
+		CheckDestroy:             testAccCheckDocumentClassifierDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDocumentClassifierConfig_outputDataConfig_kmsKeyARN(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDocumentClassifierExists(resourceName, &documentclassifier),
-					testAccCheckDocumentClassifierPublishedVersions(resourceName, 1),
+					testAccCheckDocumentClassifierExists(ctx, resourceName, &documentclassifier),
+					testAccCheckDocumentClassifierPublishedVersions(ctx, resourceName, 1),
 					resource.TestCheckResourceAttr(resourceName, "output_data_config.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "output_data_config.0.kms_key_id", "aws_kms_key.output", "arn"),
 				),
@@ -549,6 +565,7 @@ func TestAccComprehendDocumentClassifier_outputDataConfig_kmsKeyCreateARN(t *tes
 }
 
 func TestAccComprehendDocumentClassifier_outputDataConfig_kmsKeyCreateAliasName(t *testing.T) {
+	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -559,19 +576,19 @@ func TestAccComprehendDocumentClassifier_outputDataConfig_kmsKeyCreateAliasName(
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(names.ComprehendEndpointID, t)
-			testAccPreCheck(t)
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.ComprehendEndpointID)
+			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.ComprehendEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDocumentClassifierDestroy,
+		CheckDestroy:             testAccCheckDocumentClassifierDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDocumentClassifierConfig_outputDataConfig_kmsKeyAliasName(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDocumentClassifierExists(resourceName, &documentclassifier),
-					testAccCheckDocumentClassifierPublishedVersions(resourceName, 1),
+					testAccCheckDocumentClassifierExists(ctx, resourceName, &documentclassifier),
+					testAccCheckDocumentClassifierPublishedVersions(ctx, resourceName, 1),
 					resource.TestCheckResourceAttr(resourceName, "output_data_config.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "output_data_config.0.kms_key_id", "aws_kms_alias.output", "name"),
 				),
@@ -590,6 +607,7 @@ func TestAccComprehendDocumentClassifier_outputDataConfig_kmsKeyCreateAliasName(
 }
 
 func TestAccComprehendDocumentClassifier_outputDataConfig_kmsKeyCreateAliasARN(t *testing.T) {
+	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -600,19 +618,19 @@ func TestAccComprehendDocumentClassifier_outputDataConfig_kmsKeyCreateAliasARN(t
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(names.ComprehendEndpointID, t)
-			testAccPreCheck(t)
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.ComprehendEndpointID)
+			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.ComprehendEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDocumentClassifierDestroy,
+		CheckDestroy:             testAccCheckDocumentClassifierDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDocumentClassifierConfig_outputDataConfig_kmsKeyAliasARN(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDocumentClassifierExists(resourceName, &documentclassifier),
-					testAccCheckDocumentClassifierPublishedVersions(resourceName, 1),
+					testAccCheckDocumentClassifierExists(ctx, resourceName, &documentclassifier),
+					testAccCheckDocumentClassifierPublishedVersions(ctx, resourceName, 1),
 					resource.TestCheckResourceAttr(resourceName, "output_data_config.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "output_data_config.0.kms_key_id", "aws_kms_alias.output", "arn"),
 				),
@@ -631,6 +649,7 @@ func TestAccComprehendDocumentClassifier_outputDataConfig_kmsKeyCreateAliasARN(t
 }
 
 func TestAccComprehendDocumentClassifier_outputDataConfig_kmsKeyAdd(t *testing.T) {
+	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -641,19 +660,19 @@ func TestAccComprehendDocumentClassifier_outputDataConfig_kmsKeyAdd(t *testing.T
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(names.ComprehendEndpointID, t)
-			testAccPreCheck(t)
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.ComprehendEndpointID)
+			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.ComprehendEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDocumentClassifierDestroy,
+		CheckDestroy:             testAccCheckDocumentClassifierDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDocumentClassifierConfig_outputDataConfig_kmsKeyNone(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDocumentClassifierExists(resourceName, &v1),
-					testAccCheckDocumentClassifierPublishedVersions(resourceName, 1),
+					testAccCheckDocumentClassifierExists(ctx, resourceName, &v1),
+					testAccCheckDocumentClassifierPublishedVersions(ctx, resourceName, 1),
 					resource.TestCheckResourceAttr(resourceName, "output_data_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "output_data_config.0.kms_key_id", ""),
 				),
@@ -661,8 +680,8 @@ func TestAccComprehendDocumentClassifier_outputDataConfig_kmsKeyAdd(t *testing.T
 			{
 				Config: testAccDocumentClassifierConfig_outputDataConfig_kmsKeySet(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDocumentClassifierExists(resourceName, &v2),
-					testAccCheckDocumentClassifierPublishedVersions(resourceName, 2),
+					testAccCheckDocumentClassifierExists(ctx, resourceName, &v2),
+					testAccCheckDocumentClassifierPublishedVersions(ctx, resourceName, 2),
 					resource.TestCheckResourceAttr(resourceName, "output_data_config.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "output_data_config.0.kms_key_id", "aws_kms_key.output", "key_id"),
 				),
@@ -677,6 +696,7 @@ func TestAccComprehendDocumentClassifier_outputDataConfig_kmsKeyAdd(t *testing.T
 }
 
 func TestAccComprehendDocumentClassifier_outputDataConfig_kmsKeyUpdate(t *testing.T) {
+	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -687,19 +707,19 @@ func TestAccComprehendDocumentClassifier_outputDataConfig_kmsKeyUpdate(t *testin
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(names.ComprehendEndpointID, t)
-			testAccPreCheck(t)
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.ComprehendEndpointID)
+			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.ComprehendEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDocumentClassifierDestroy,
+		CheckDestroy:             testAccCheckDocumentClassifierDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDocumentClassifierConfig_outputDataConfig_kmsKeySet(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDocumentClassifierExists(resourceName, &v1),
-					testAccCheckDocumentClassifierPublishedVersions(resourceName, 1),
+					testAccCheckDocumentClassifierExists(ctx, resourceName, &v1),
+					testAccCheckDocumentClassifierPublishedVersions(ctx, resourceName, 1),
 					resource.TestCheckResourceAttr(resourceName, "output_data_config.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "output_data_config.0.kms_key_id", "aws_kms_key.output", "key_id"),
 				),
@@ -707,8 +727,8 @@ func TestAccComprehendDocumentClassifier_outputDataConfig_kmsKeyUpdate(t *testin
 			{
 				Config: testAccDocumentClassifierConfig_outputDataConfig_kmsKeyUpdate(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDocumentClassifierExists(resourceName, &v2),
-					testAccCheckDocumentClassifierPublishedVersions(resourceName, 2),
+					testAccCheckDocumentClassifierExists(ctx, resourceName, &v2),
+					testAccCheckDocumentClassifierPublishedVersions(ctx, resourceName, 2),
 					resource.TestCheckResourceAttr(resourceName, "output_data_config.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "output_data_config.0.kms_key_id", "aws_kms_key.output2", "key_id"),
 				),
@@ -723,6 +743,7 @@ func TestAccComprehendDocumentClassifier_outputDataConfig_kmsKeyUpdate(t *testin
 }
 
 func TestAccComprehendDocumentClassifier_outputDataConfig_kmsKeyRemove(t *testing.T) {
+	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -733,19 +754,19 @@ func TestAccComprehendDocumentClassifier_outputDataConfig_kmsKeyRemove(t *testin
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(names.ComprehendEndpointID, t)
-			testAccPreCheck(t)
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.ComprehendEndpointID)
+			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.ComprehendEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDocumentClassifierDestroy,
+		CheckDestroy:             testAccCheckDocumentClassifierDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDocumentClassifierConfig_outputDataConfig_kmsKeySet(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDocumentClassifierExists(resourceName, &v1),
-					testAccCheckDocumentClassifierPublishedVersions(resourceName, 1),
+					testAccCheckDocumentClassifierExists(ctx, resourceName, &v1),
+					testAccCheckDocumentClassifierPublishedVersions(ctx, resourceName, 1),
 					resource.TestCheckResourceAttr(resourceName, "output_data_config.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "output_data_config.0.kms_key_id", "aws_kms_key.output", "key_id"),
 				),
@@ -753,8 +774,8 @@ func TestAccComprehendDocumentClassifier_outputDataConfig_kmsKeyRemove(t *testin
 			{
 				Config: testAccDocumentClassifierConfig_outputDataConfig_kmsKeyNone(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDocumentClassifierExists(resourceName, &v2),
-					testAccCheckDocumentClassifierPublishedVersions(resourceName, 2),
+					testAccCheckDocumentClassifierExists(ctx, resourceName, &v2),
+					testAccCheckDocumentClassifierPublishedVersions(ctx, resourceName, 2),
 					resource.TestCheckResourceAttr(resourceName, "output_data_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "output_data_config.0.kms_key_id", ""),
 				),
@@ -769,6 +790,7 @@ func TestAccComprehendDocumentClassifier_outputDataConfig_kmsKeyRemove(t *testin
 }
 
 func TestAccComprehendDocumentClassifier_multiLabel_labelDelimiter(t *testing.T) {
+	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -781,19 +803,19 @@ func TestAccComprehendDocumentClassifier_multiLabel_labelDelimiter(t *testing.T)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(names.ComprehendEndpointID, t)
-			testAccPreCheck(t)
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.ComprehendEndpointID)
+			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.ComprehendEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDocumentClassifierDestroy,
+		CheckDestroy:             testAccCheckDocumentClassifierDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDocumentClassifierConfig_multiLabel_delimiter(rName, delimiter),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDocumentClassifierExists(resourceName, &documentclassifier),
-					testAccCheckDocumentClassifierPublishedVersions(resourceName, 1),
+					testAccCheckDocumentClassifierExists(ctx, resourceName, &documentclassifier),
+					testAccCheckDocumentClassifierPublishedVersions(ctx, resourceName, 1),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttrPair(resourceName, "data_access_role_arn", "aws_iam_role.test", "arn"),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "comprehend", regexp.MustCompile(fmt.Sprintf(`document-classifier/%s/version/%s$`, rName, uniqueIDPattern()))),
@@ -807,7 +829,7 @@ func TestAccComprehendDocumentClassifier_multiLabel_labelDelimiter(t *testing.T)
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "tags_all.%", "0"),
 					acctest.CheckResourceAttrNameGenerated(resourceName, "version_name"),
-					resource.TestCheckResourceAttr(resourceName, "version_name_prefix", resource.UniqueIdPrefix),
+					resource.TestCheckResourceAttr(resourceName, "version_name_prefix", id.UniqueIdPrefix),
 					resource.TestCheckResourceAttr(resourceName, "volume_kms_key_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "vpc_config.#", "0"),
 				),
@@ -820,8 +842,8 @@ func TestAccComprehendDocumentClassifier_multiLabel_labelDelimiter(t *testing.T)
 			{
 				Config: testAccDocumentClassifierConfig_multiLabel_delimiter(rName, delimiterUpdated),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDocumentClassifierExists(resourceName, &documentclassifier),
-					testAccCheckDocumentClassifierPublishedVersions(resourceName, 2),
+					testAccCheckDocumentClassifierExists(ctx, resourceName, &documentclassifier),
+					testAccCheckDocumentClassifierPublishedVersions(ctx, resourceName, 2),
 					resource.TestCheckResourceAttr(resourceName, "input_data_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "input_data_config.0.label_delimiter", delimiterUpdated),
 				),
@@ -836,6 +858,7 @@ func TestAccComprehendDocumentClassifier_multiLabel_labelDelimiter(t *testing.T)
 }
 
 func TestAccComprehendDocumentClassifier_KMSKeys_CreateIDs(t *testing.T) {
+	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -846,19 +869,19 @@ func TestAccComprehendDocumentClassifier_KMSKeys_CreateIDs(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(names.ComprehendEndpointID, t)
-			testAccPreCheck(t)
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.ComprehendEndpointID)
+			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.ComprehendEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDocumentClassifierDestroy,
+		CheckDestroy:             testAccCheckDocumentClassifierDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDocumentClassifierConfig_kmsKeyIds(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDocumentClassifierExists(resourceName, &documentclassifier),
-					testAccCheckDocumentClassifierPublishedVersions(resourceName, 1),
+					testAccCheckDocumentClassifierExists(ctx, resourceName, &documentclassifier),
+					testAccCheckDocumentClassifierPublishedVersions(ctx, resourceName, 1),
 					resource.TestCheckResourceAttrPair(resourceName, "model_kms_key_id", "aws_kms_key.model", "key_id"),
 					resource.TestCheckResourceAttrPair(resourceName, "volume_kms_key_id", "aws_kms_key.volume", "key_id"),
 				),
@@ -877,6 +900,7 @@ func TestAccComprehendDocumentClassifier_KMSKeys_CreateIDs(t *testing.T) {
 }
 
 func TestAccComprehendDocumentClassifier_KMSKeys_CreateARNs(t *testing.T) {
+	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -887,19 +911,19 @@ func TestAccComprehendDocumentClassifier_KMSKeys_CreateARNs(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(names.ComprehendEndpointID, t)
-			testAccPreCheck(t)
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.ComprehendEndpointID)
+			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.ComprehendEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDocumentClassifierDestroy,
+		CheckDestroy:             testAccCheckDocumentClassifierDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDocumentClassifierConfig_kmsKeyARNs(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDocumentClassifierExists(resourceName, &documentclassifier),
-					testAccCheckDocumentClassifierPublishedVersions(resourceName, 1),
+					testAccCheckDocumentClassifierExists(ctx, resourceName, &documentclassifier),
+					testAccCheckDocumentClassifierPublishedVersions(ctx, resourceName, 1),
 					resource.TestCheckResourceAttrPair(resourceName, "model_kms_key_id", "aws_kms_key.model", "arn"),
 					resource.TestCheckResourceAttrPair(resourceName, "volume_kms_key_id", "aws_kms_key.volume", "arn"),
 				),
@@ -918,6 +942,7 @@ func TestAccComprehendDocumentClassifier_KMSKeys_CreateARNs(t *testing.T) {
 }
 
 func TestAccComprehendDocumentClassifier_KMSKeys_Add(t *testing.T) {
+	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -928,19 +953,19 @@ func TestAccComprehendDocumentClassifier_KMSKeys_Add(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(names.ComprehendEndpointID, t)
-			testAccPreCheck(t)
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.ComprehendEndpointID)
+			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.ComprehendEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDocumentClassifierDestroy,
+		CheckDestroy:             testAccCheckDocumentClassifierDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDocumentClassifierConfig_kmsKeys_None(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDocumentClassifierExists(resourceName, &v1),
-					testAccCheckDocumentClassifierPublishedVersions(resourceName, 1),
+					testAccCheckDocumentClassifierExists(ctx, resourceName, &v1),
+					testAccCheckDocumentClassifierPublishedVersions(ctx, resourceName, 1),
 					resource.TestCheckResourceAttr(resourceName, "model_kms_key_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "volume_kms_key_id", ""),
 				),
@@ -948,8 +973,8 @@ func TestAccComprehendDocumentClassifier_KMSKeys_Add(t *testing.T) {
 			{
 				Config: testAccDocumentClassifierConfig_kmsKeys_Set(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDocumentClassifierExists(resourceName, &v2),
-					testAccCheckDocumentClassifierPublishedVersions(resourceName, 2),
+					testAccCheckDocumentClassifierExists(ctx, resourceName, &v2),
+					testAccCheckDocumentClassifierPublishedVersions(ctx, resourceName, 2),
 					resource.TestCheckResourceAttrPair(resourceName, "model_kms_key_id", "aws_kms_key.model", "key_id"),
 					resource.TestCheckResourceAttrPair(resourceName, "volume_kms_key_id", "aws_kms_key.volume", "key_id"),
 				),
@@ -964,6 +989,7 @@ func TestAccComprehendDocumentClassifier_KMSKeys_Add(t *testing.T) {
 }
 
 func TestAccComprehendDocumentClassifier_KMSKeys_Update(t *testing.T) {
+	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -974,19 +1000,19 @@ func TestAccComprehendDocumentClassifier_KMSKeys_Update(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(names.ComprehendEndpointID, t)
-			testAccPreCheck(t)
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.ComprehendEndpointID)
+			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.ComprehendEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDocumentClassifierDestroy,
+		CheckDestroy:             testAccCheckDocumentClassifierDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDocumentClassifierConfig_kmsKeys_Set(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDocumentClassifierExists(resourceName, &v1),
-					testAccCheckDocumentClassifierPublishedVersions(resourceName, 1),
+					testAccCheckDocumentClassifierExists(ctx, resourceName, &v1),
+					testAccCheckDocumentClassifierPublishedVersions(ctx, resourceName, 1),
 					resource.TestCheckResourceAttrPair(resourceName, "model_kms_key_id", "aws_kms_key.model", "key_id"),
 					resource.TestCheckResourceAttrPair(resourceName, "volume_kms_key_id", "aws_kms_key.volume", "key_id"),
 				),
@@ -994,8 +1020,8 @@ func TestAccComprehendDocumentClassifier_KMSKeys_Update(t *testing.T) {
 			{
 				Config: testAccDocumentClassifierConfig_kmsKeys_Update(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDocumentClassifierExists(resourceName, &v2),
-					testAccCheckDocumentClassifierPublishedVersions(resourceName, 2),
+					testAccCheckDocumentClassifierExists(ctx, resourceName, &v2),
+					testAccCheckDocumentClassifierPublishedVersions(ctx, resourceName, 2),
 					resource.TestCheckResourceAttrPair(resourceName, "model_kms_key_id", "aws_kms_key.model2", "key_id"),
 					resource.TestCheckResourceAttrPair(resourceName, "volume_kms_key_id", "aws_kms_key.volume2", "key_id"),
 				),
@@ -1010,6 +1036,7 @@ func TestAccComprehendDocumentClassifier_KMSKeys_Update(t *testing.T) {
 }
 
 func TestAccComprehendDocumentClassifier_KMSKeys_Remove(t *testing.T) {
+	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -1020,19 +1047,19 @@ func TestAccComprehendDocumentClassifier_KMSKeys_Remove(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(names.ComprehendEndpointID, t)
-			testAccPreCheck(t)
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.ComprehendEndpointID)
+			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.ComprehendEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDocumentClassifierDestroy,
+		CheckDestroy:             testAccCheckDocumentClassifierDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDocumentClassifierConfig_kmsKeys_Set(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDocumentClassifierExists(resourceName, &v1),
-					testAccCheckDocumentClassifierPublishedVersions(resourceName, 1),
+					testAccCheckDocumentClassifierExists(ctx, resourceName, &v1),
+					testAccCheckDocumentClassifierPublishedVersions(ctx, resourceName, 1),
 					resource.TestCheckResourceAttrPair(resourceName, "model_kms_key_id", "aws_kms_key.model", "key_id"),
 					resource.TestCheckResourceAttrPair(resourceName, "volume_kms_key_id", "aws_kms_key.volume", "key_id"),
 				),
@@ -1040,8 +1067,8 @@ func TestAccComprehendDocumentClassifier_KMSKeys_Remove(t *testing.T) {
 			{
 				Config: testAccDocumentClassifierConfig_kmsKeys_None(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDocumentClassifierExists(resourceName, &v2),
-					testAccCheckDocumentClassifierPublishedVersions(resourceName, 2),
+					testAccCheckDocumentClassifierExists(ctx, resourceName, &v2),
+					testAccCheckDocumentClassifierPublishedVersions(ctx, resourceName, 2),
 					resource.TestCheckResourceAttr(resourceName, "model_kms_key_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "volume_kms_key_id", ""),
 				),
@@ -1056,6 +1083,7 @@ func TestAccComprehendDocumentClassifier_KMSKeys_Remove(t *testing.T) {
 }
 
 func TestAccComprehendDocumentClassifier_VPCConfig_Create(t *testing.T) {
+	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -1066,19 +1094,19 @@ func TestAccComprehendDocumentClassifier_VPCConfig_Create(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(names.ComprehendEndpointID, t)
-			testAccPreCheck(t)
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.ComprehendEndpointID)
+			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.ComprehendEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDocumentClassifierDestroy,
+		CheckDestroy:             testAccCheckDocumentClassifierDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDocumentClassifierConfig_vpcConfig(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDocumentClassifierExists(resourceName, &dc1),
-					testAccCheckDocumentClassifierPublishedVersions(resourceName, 1),
+					testAccCheckDocumentClassifierExists(ctx, resourceName, &dc1),
+					testAccCheckDocumentClassifierPublishedVersions(ctx, resourceName, 1),
 					resource.TestCheckResourceAttr(resourceName, "vpc_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "vpc_config.0.security_group_ids.#", "1"),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "vpc_config.0.security_group_ids.*", "aws_security_group.test.0", "id"),
@@ -1095,8 +1123,8 @@ func TestAccComprehendDocumentClassifier_VPCConfig_Create(t *testing.T) {
 			{
 				Config: testAccDocumentClassifierConfig_vpcConfig_Update(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDocumentClassifierExists(resourceName, &dc2),
-					testAccCheckDocumentClassifierPublishedVersions(resourceName, 2),
+					testAccCheckDocumentClassifierExists(ctx, resourceName, &dc2),
+					testAccCheckDocumentClassifierPublishedVersions(ctx, resourceName, 2),
 					resource.TestCheckResourceAttr(resourceName, "vpc_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "vpc_config.0.security_group_ids.#", "1"),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "vpc_config.0.security_group_ids.*", "aws_security_group.test.1", "id"),
@@ -1115,6 +1143,7 @@ func TestAccComprehendDocumentClassifier_VPCConfig_Create(t *testing.T) {
 }
 
 func TestAccComprehendDocumentClassifier_VPCConfig_Add(t *testing.T) {
+	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -1125,27 +1154,27 @@ func TestAccComprehendDocumentClassifier_VPCConfig_Add(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(names.ComprehendEndpointID, t)
-			testAccPreCheck(t)
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.ComprehendEndpointID)
+			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.ComprehendEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDocumentClassifierDestroy,
+		CheckDestroy:             testAccCheckDocumentClassifierDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDocumentClassifierConfig_vpcConfig_None(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDocumentClassifierExists(resourceName, &dc1),
-					testAccCheckDocumentClassifierPublishedVersions(resourceName, 1),
+					testAccCheckDocumentClassifierExists(ctx, resourceName, &dc1),
+					testAccCheckDocumentClassifierPublishedVersions(ctx, resourceName, 1),
 					resource.TestCheckResourceAttr(resourceName, "vpc_config.#", "0"),
 				),
 			},
 			{
 				Config: testAccDocumentClassifierConfig_vpcConfig(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDocumentClassifierExists(resourceName, &dc2),
-					testAccCheckDocumentClassifierPublishedVersions(resourceName, 2),
+					testAccCheckDocumentClassifierExists(ctx, resourceName, &dc2),
+					testAccCheckDocumentClassifierPublishedVersions(ctx, resourceName, 2),
 					resource.TestCheckResourceAttr(resourceName, "vpc_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "vpc_config.0.security_group_ids.#", "1"),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "vpc_config.0.security_group_ids.*", "aws_security_group.test.0", "id"),
@@ -1164,6 +1193,7 @@ func TestAccComprehendDocumentClassifier_VPCConfig_Add(t *testing.T) {
 }
 
 func TestAccComprehendDocumentClassifier_VPCConfig_Remove(t *testing.T) {
+	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -1174,19 +1204,19 @@ func TestAccComprehendDocumentClassifier_VPCConfig_Remove(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(names.ComprehendEndpointID, t)
-			testAccPreCheck(t)
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.ComprehendEndpointID)
+			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.ComprehendEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDocumentClassifierDestroy,
+		CheckDestroy:             testAccCheckDocumentClassifierDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDocumentClassifierConfig_vpcConfig(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDocumentClassifierExists(resourceName, &dc1),
-					testAccCheckDocumentClassifierPublishedVersions(resourceName, 1),
+					testAccCheckDocumentClassifierExists(ctx, resourceName, &dc1),
+					testAccCheckDocumentClassifierPublishedVersions(ctx, resourceName, 1),
 					resource.TestCheckResourceAttr(resourceName, "vpc_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "vpc_config.0.security_group_ids.#", "1"),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "vpc_config.0.security_group_ids.*", "aws_security_group.test.0", "id"),
@@ -1203,8 +1233,8 @@ func TestAccComprehendDocumentClassifier_VPCConfig_Remove(t *testing.T) {
 			{
 				Config: testAccDocumentClassifierConfig_vpcConfig_None(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDocumentClassifierExists(resourceName, &dc2),
-					testAccCheckDocumentClassifierPublishedVersions(resourceName, 2),
+					testAccCheckDocumentClassifierExists(ctx, resourceName, &dc2),
+					testAccCheckDocumentClassifierPublishedVersions(ctx, resourceName, 2),
 					resource.TestCheckResourceAttr(resourceName, "vpc_config.#", "0"),
 				),
 			},
@@ -1218,6 +1248,7 @@ func TestAccComprehendDocumentClassifier_VPCConfig_Remove(t *testing.T) {
 }
 
 func TestAccComprehendDocumentClassifier_tags(t *testing.T) {
+	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -1228,19 +1259,19 @@ func TestAccComprehendDocumentClassifier_tags(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(names.ComprehendEndpointID, t)
-			testAccPreCheck(t)
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.ComprehendEndpointID)
+			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.ComprehendEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDocumentClassifierDestroy,
+		CheckDestroy:             testAccCheckDocumentClassifierDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDocumentClassifierConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDocumentClassifierExists(resourceName, &v1),
-					testAccCheckDocumentClassifierPublishedVersions(resourceName, 1),
+					testAccCheckDocumentClassifierExists(ctx, resourceName, &v1),
+					testAccCheckDocumentClassifierPublishedVersions(ctx, resourceName, 1),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
@@ -1253,9 +1284,9 @@ func TestAccComprehendDocumentClassifier_tags(t *testing.T) {
 			{
 				Config: testAccDocumentClassifierConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDocumentClassifierExists(resourceName, &v2),
+					testAccCheckDocumentClassifierExists(ctx, resourceName, &v2),
 					testAccCheckDocumentClassifierNotRecreated(&v1, &v2),
-					testAccCheckDocumentClassifierPublishedVersions(resourceName, 1),
+					testAccCheckDocumentClassifierPublishedVersions(ctx, resourceName, 1),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
@@ -1264,9 +1295,9 @@ func TestAccComprehendDocumentClassifier_tags(t *testing.T) {
 			{
 				Config: testAccDocumentClassifierConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDocumentClassifierExists(resourceName, &v3),
+					testAccCheckDocumentClassifierExists(ctx, resourceName, &v3),
 					testAccCheckDocumentClassifierNotRecreated(&v2, &v3),
-					testAccCheckDocumentClassifierPublishedVersions(resourceName, 1),
+					testAccCheckDocumentClassifierPublishedVersions(ctx, resourceName, 1),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
@@ -1276,6 +1307,7 @@ func TestAccComprehendDocumentClassifier_tags(t *testing.T) {
 }
 
 func TestAccComprehendDocumentClassifier_DefaultTags_providerOnly(t *testing.T) {
+	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -1286,13 +1318,13 @@ func TestAccComprehendDocumentClassifier_DefaultTags_providerOnly(t *testing.T) 
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(names.ComprehendEndpointID, t)
-			testAccPreCheck(t)
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.ComprehendEndpointID)
+			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.ComprehendEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDocumentClassifierDestroy,
+		CheckDestroy:             testAccCheckDocumentClassifierDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: acctest.ConfigCompose(
@@ -1300,8 +1332,8 @@ func TestAccComprehendDocumentClassifier_DefaultTags_providerOnly(t *testing.T) 
 					testAccDocumentClassifierConfig_tags0(rName),
 				),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDocumentClassifierExists(resourceName, &v1),
-					testAccCheckDocumentClassifierPublishedVersions(resourceName, 1),
+					testAccCheckDocumentClassifierExists(ctx, resourceName, &v1),
+					testAccCheckDocumentClassifierPublishedVersions(ctx, resourceName, 1),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "tags_all.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags_all.providerkey1", "providervalue1"),
@@ -1318,9 +1350,9 @@ func TestAccComprehendDocumentClassifier_DefaultTags_providerOnly(t *testing.T) 
 					testAccDocumentClassifierConfig_tags0(rName),
 				),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDocumentClassifierExists(resourceName, &v2),
+					testAccCheckDocumentClassifierExists(ctx, resourceName, &v2),
 					testAccCheckDocumentClassifierNotRecreated(&v1, &v2),
-					testAccCheckDocumentClassifierPublishedVersions(resourceName, 1),
+					testAccCheckDocumentClassifierPublishedVersions(ctx, resourceName, 1),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "tags_all.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags_all.providerkey1", "providervalue1"),
@@ -1333,9 +1365,9 @@ func TestAccComprehendDocumentClassifier_DefaultTags_providerOnly(t *testing.T) 
 					testAccDocumentClassifierConfig_tags0(rName),
 				),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDocumentClassifierExists(resourceName, &v3),
+					testAccCheckDocumentClassifierExists(ctx, resourceName, &v3),
 					testAccCheckDocumentClassifierNotRecreated(&v2, &v3),
-					testAccCheckDocumentClassifierPublishedVersions(resourceName, 1),
+					testAccCheckDocumentClassifierPublishedVersions(ctx, resourceName, 1),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "tags_all.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags_all.providerkey1", "value1"),
@@ -1345,45 +1377,46 @@ func TestAccComprehendDocumentClassifier_DefaultTags_providerOnly(t *testing.T) 
 	})
 }
 
-func testAccCheckDocumentClassifierDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).ComprehendConn
-	ctx := context.Background()
+func testAccCheckDocumentClassifierDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ComprehendClient(ctx)
 
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_comprehend_document_classifier" {
-			continue
-		}
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_comprehend_document_classifier" {
+				continue
+			}
 
-		name, err := tfcomprehend.DocumentClassifierParseARN(rs.Primary.ID)
-		if err != nil {
-			return err
-		}
-
-		input := &comprehend.ListDocumentClassifiersInput{
-			Filter: &types.DocumentClassifierFilter{
-				DocumentClassifierName: aws.String(name),
-			},
-		}
-		total := 0
-		paginator := comprehend.NewListDocumentClassifiersPaginator(conn, input)
-		for paginator.HasMorePages() {
-			output, err := paginator.NextPage(ctx)
+			name, err := tfcomprehend.DocumentClassifierParseARN(rs.Primary.ID)
 			if err != nil {
 				return err
 			}
-			total += len(output.DocumentClassifierPropertiesList)
+
+			input := &comprehend.ListDocumentClassifiersInput{
+				Filter: &types.DocumentClassifierFilter{
+					DocumentClassifierName: aws.String(name),
+				},
+			}
+			total := 0
+			paginator := comprehend.NewListDocumentClassifiersPaginator(conn, input)
+			for paginator.HasMorePages() {
+				output, err := paginator.NextPage(ctx)
+				if err != nil {
+					return err
+				}
+				total += len(output.DocumentClassifierPropertiesList)
+			}
+
+			if total != 0 {
+				return fmt.Errorf("Expected Comprehend Document Classifier (%s) to be destroyed, found %d versions", rs.Primary.ID, total)
+			}
+			return nil
 		}
 
-		if total != 0 {
-			return fmt.Errorf("Expected Comprehend Document Classifier (%s) to be destroyed, found %d versions", rs.Primary.ID, total)
-		}
 		return nil
 	}
-
-	return nil
 }
 
-func testAccCheckDocumentClassifierExists(name string, documentclassifier *types.DocumentClassifierProperties) resource.TestCheckFunc {
+func testAccCheckDocumentClassifierExists(ctx context.Context, name string, documentclassifier *types.DocumentClassifierProperties) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -1394,8 +1427,7 @@ func testAccCheckDocumentClassifierExists(name string, documentclassifier *types
 			return fmt.Errorf("No Comprehend Document Classifier is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ComprehendConn
-		ctx := context.Background()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ComprehendClient(ctx)
 
 		resp, err := tfcomprehend.FindDocumentClassifierByID(ctx, conn, rs.Primary.ID)
 		if err != nil {
@@ -1432,7 +1464,7 @@ func documentClassifierIdentity(before, after *types.DocumentClassifierPropertie
 	return aws.ToTime(before.SubmitTime).Equal(aws.ToTime(after.SubmitTime))
 }
 
-func testAccCheckDocumentClassifierPublishedVersions(name string, expected int) resource.TestCheckFunc {
+func testAccCheckDocumentClassifierPublishedVersions(ctx context.Context, name string, expected int) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -1443,8 +1475,7 @@ func testAccCheckDocumentClassifierPublishedVersions(name string, expected int) 
 			return fmt.Errorf("No Comprehend Document Classifier is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ComprehendConn
-		ctx := context.Background()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ComprehendClient(ctx)
 
 		name, err := tfcomprehend.DocumentClassifierParseARN(rs.Primary.ID)
 		if err != nil {

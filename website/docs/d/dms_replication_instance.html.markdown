@@ -1,0 +1,44 @@
+---
+subcategory: "DMS (Database Migration)"
+layout: "aws"
+page_title: "AWS: aws_dms_replication_instance"
+description: |-
+  Terraform data source for managing an AWS DMS (Database Migration) Replication Instance.
+---
+
+# Data Source: aws_dms_replication_instance
+
+Terraform data source for managing an AWS DMS (Database Migration) Replication Instance.
+
+## Example Usage
+
+```terraform
+data "aws_dms_replication_instance" "test" {
+  replication_instance_id = aws_dms_replication_instance.test.replication_instance_id
+}
+```
+
+## Argument Reference
+
+The following arguments are required:
+
+* `replication_instance_id` - (Required) The replication instance identifier.
+
+## Attribute Reference
+
+This data source exports the following attributes in addition to the arguments above:
+
+* `allocated_storage` - The amount of storage (in gigabytes) to be initially allocated for the replication instance.
+* `auto_minor_version_upgrade` - Indicates that minor engine upgrades will be applied automatically to the replication instance during the maintenance window.
+* `availability_zone` - The EC2 Availability Zone that the replication instance will be created in.
+* `engine_version` - The engine version number of the replication instance.
+* `kms_key_arn` - The Amazon Resource Name (ARN) for the KMS key used to encrypt the connection parameters.
+* `multi_az` - Specifies if the replication instance is a multi-az deployment.
+* `preferred_maintenance_window` - The weekly time range during which system maintenance can occur, in Universal Coordinated Time (UTC).
+* `publicly_accessible` - Specifies the accessibility options for the replication instance. A value of true represents an instance with a public IP address. A value of false represents an instance with a private IP address.
+* `replication_instance_arn` - The Amazon Resource Name (ARN) of the replication instance.
+* `replication_instance_class` - The compute and memory capacity of the replication instance as specified by the replication instance class. See [AWS DMS User Guide](https://docs.aws.amazon.com/dms/latest/userguide/CHAP_ReplicationInstance.Types.html) for information on instance classes.
+* `replication_instance_private_ips` - A list of the private IP addresses of the replication instance.
+* `replication_instance_public_ips` - A list of the public IP addresses of the replication instance.
+* `replication_subnet_group_id` - A subnet group to associate with the replication instance.
+* `vpc_security_group_ids` - A set of VPC security group IDs that are used with the replication instance.

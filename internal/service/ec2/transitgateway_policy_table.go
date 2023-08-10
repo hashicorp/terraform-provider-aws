@@ -1,6 +1,10 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ec2
 
 import (
+	"context"
 	"fmt"
 	"log"
 
@@ -8,23 +12,28 @@ import (
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @SDKResource("aws_ec2_transit_gateway_policy_table", name="Transit Gateway Policy Table")
+// @Tags(identifierAttribute="id")
 func ResourceTransitGatewayPolicyTable() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceTransitGatewayPolicyTableCreate,
-		Read:   resourceTransitGatewayPolicyTableRead,
-		Update: resourceTransitGatewayPolicyTableUpdate,
-		Delete: resourceTransitGatewayPolicyTableDelete,
+		CreateWithoutTimeout: resourceTransitGatewayPolicyTableCreate,
+		ReadWithoutTimeout:   resourceTransitGatewayPolicyTableRead,
+		UpdateWithoutTimeout: resourceTransitGatewayPolicyTableUpdate,
+		DeleteWithoutTimeout: resourceTransitGatewayPolicyTableDelete,
 
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		CustomizeDiff: verify.SetTagsDiff,
@@ -38,8 +47,8 @@ func ResourceTransitGatewayPolicyTable() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			"transit_gateway_id": {
 				Type:         schema.TypeString,
 				Required:     true,
@@ -50,48 +59,46 @@ func ResourceTransitGatewayPolicyTable() *schema.Resource {
 	}
 }
 
-func resourceTransitGatewayPolicyTableCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+func resourceTransitGatewayPolicyTableCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	transitGatewayID := d.Get("transit_gateway_id").(string)
 	input := &ec2.CreateTransitGatewayPolicyTableInput{
-		TagSpecifications: tagSpecificationsFromKeyValueTags(tags, ec2.ResourceTypeTransitGatewayPolicyTable),
+		TagSpecifications: getTagSpecificationsIn(ctx, ec2.ResourceTypeTransitGatewayPolicyTable),
 		TransitGatewayId:  aws.String(transitGatewayID),
 	}
 
 	log.Printf("[DEBUG] Creating EC2 Transit Gateway Policy Table: %s", input)
-	output, err := conn.CreateTransitGatewayPolicyTable(input)
+	output, err := conn.CreateTransitGatewayPolicyTableWithContext(ctx, input)
 
 	if err != nil {
-		return fmt.Errorf("creating EC2 Transit Gateway (%s) Policy Table: %w", transitGatewayID, err)
+		return sdkdiag.AppendErrorf(diags, "creating EC2 Transit Gateway (%s) Policy Table: %s", transitGatewayID, err)
 	}
 
 	d.SetId(aws.StringValue(output.TransitGatewayPolicyTable.TransitGatewayPolicyTableId))
 
-	if _, err := WaitTransitGatewayPolicyTableCreated(conn, d.Id()); err != nil {
-		return fmt.Errorf("waiting for EC2 Transit Gateway Policy Table (%s) create: %w", d.Id(), err)
+	if _, err := WaitTransitGatewayPolicyTableCreated(ctx, conn, d.Id()); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for EC2 Transit Gateway Policy Table (%s) create: %s", d.Id(), err)
 	}
 
-	return resourceTransitGatewayPolicyTableRead(d, meta)
+	return append(diags, resourceTransitGatewayPolicyTableRead(ctx, d, meta)...)
 }
 
-func resourceTransitGatewayPolicyTableRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+func resourceTransitGatewayPolicyTableRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
-	transitGatewayPolicyTable, err := FindTransitGatewayPolicyTableByID(conn, d.Id())
+	transitGatewayPolicyTable, err := FindTransitGatewayPolicyTableByID(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] EC2 Transit Gateway Policy Table (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("reading EC2 Transit Gateway Policy Table (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading EC2 Transit Gateway Policy Table (%s): %s", d.Id(), err)
 	}
 
 	arn := arn.ARN{
@@ -105,53 +112,39 @@ func resourceTransitGatewayPolicyTableRead(d *schema.ResourceData, meta interfac
 	d.Set("state", transitGatewayPolicyTable.State)
 	d.Set("transit_gateway_id", transitGatewayPolicyTable.TransitGatewayId)
 
-	tags := KeyValueTags(transitGatewayPolicyTable.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+	setTagsOut(ctx, transitGatewayPolicyTable.Tags)
 
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("setting tags: %w", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("setting tags_all: %w", err)
-	}
-
-	return nil
+	return diags
 }
 
-func resourceTransitGatewayPolicyTableUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+func resourceTransitGatewayPolicyTableUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
+	// Tags only.
 
-		if err := UpdateTags(conn, d.Id(), o, n); err != nil {
-			return fmt.Errorf("updating EC2 Transit Gateway Policy Table (%s) tags: %w", d.Id(), err)
-		}
-	}
-
-	return nil
+	return append(diags, resourceTransitGatewayPolicyTableRead(ctx, d, meta)...)
 }
 
-func resourceTransitGatewayPolicyTableDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+func resourceTransitGatewayPolicyTableDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	log.Printf("[DEBUG] Deleting EC2 Transit Gateway Policy Table: %s", d.Id())
-	_, err := conn.DeleteTransitGatewayPolicyTable(&ec2.DeleteTransitGatewayPolicyTableInput{
+	_, err := conn.DeleteTransitGatewayPolicyTableWithContext(ctx, &ec2.DeleteTransitGatewayPolicyTableInput{
 		TransitGatewayPolicyTableId: aws.String(d.Id()),
 	})
 
 	if tfawserr.ErrCodeEquals(err, errCodeInvalidTransitGatewayPolicyTableIdNotFound) {
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("deleting EC2 Transit Gateway Policy Table (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting EC2 Transit Gateway Policy Table (%s): %s", d.Id(), err)
 	}
 
-	if _, err := WaitTransitGatewayPolicyTableDeleted(conn, d.Id()); err != nil {
-		return fmt.Errorf("waiting for EC2 Transit Gateway Policy Table (%s) delete: %w", d.Id(), err)
+	if _, err := WaitTransitGatewayPolicyTableDeleted(ctx, conn, d.Id()); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for EC2 Transit Gateway Policy Table (%s) delete: %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }

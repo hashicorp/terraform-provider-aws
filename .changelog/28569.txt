@@ -1,0 +1,7 @@
+```release-note:bug
+resource/aws_grafana_workspace: Fix updating `vpc_configuration`
+```
+
+```release-note:enhancement
+resource/aws_grafana_workspace: Add `configuration` argument
+```

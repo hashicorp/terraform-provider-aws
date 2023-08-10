@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package elb
 
 import (
@@ -5,6 +8,8 @@ import (
 )
 
 func TestValidName(t *testing.T) {
+	t.Parallel()
+
 	validNames := []string{
 		"tf-test-elb",
 	}
@@ -32,6 +37,8 @@ func TestValidName(t *testing.T) {
 }
 
 func TestValidNamePrefix(t *testing.T) {
+	t.Parallel()
+
 	validNamePrefixes := []string{
 		"test-",
 	}

@@ -1,30 +1,31 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package elasticache
 
 import (
-	"fmt"
+	"context"
 	"log"
 	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/elasticache"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 )
 
+// @SDKDataSource("aws_elasticache_replication_group")
 func DataSourceReplicationGroup() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceReplicationGroupRead,
+		ReadWithoutTimeout: dataSourceReplicationGroupRead,
 		Schema: map[string]*schema.Schema{
 			"replication_group_id": {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: validateReplicationGroupID,
-			},
-			"replication_group_description": {
-				Type:       schema.TypeString,
-				Computed:   true,
-				Deprecated: "Use description instead",
 			},
 			"arn": {
 				Type:     schema.TypeString,
@@ -65,11 +66,6 @@ func DataSourceReplicationGroup() *schema.Resource {
 			"num_node_groups": {
 				Type:     schema.TypeInt,
 				Computed: true,
-			},
-			"number_cache_clusters": {
-				Type:       schema.TypeInt,
-				Computed:   true,
-				Deprecated: "Use num_cache_clusters instead",
 			},
 			"member_clusters": {
 				Type:     schema.TypeSet,
@@ -124,19 +120,19 @@ func DataSourceReplicationGroup() *schema.Resource {
 	}
 }
 
-func dataSourceReplicationGroupRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ElastiCacheConn
+func dataSourceReplicationGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).ElastiCacheConn(ctx)
 
 	groupID := d.Get("replication_group_id").(string)
 
-	rg, err := FindReplicationGroupByID(conn, groupID)
+	rg, err := FindReplicationGroupByID(ctx, conn, groupID)
 	if err != nil {
-		return fmt.Errorf("error reading ElastiCache Replication Group (%s): %w", groupID, err)
+		return sdkdiag.AppendErrorf(diags, "reading ElastiCache Replication Group (%s): %s", groupID, err)
 	}
 
 	d.SetId(aws.StringValue(rg.ReplicationGroupId))
 	d.Set("description", rg.Description)
-	d.Set("replication_group_description", rg.Description)
 	d.Set("arn", rg.ARN)
 	d.Set("auth_token_enabled", rg.AuthTokenEnabled)
 
@@ -166,7 +162,7 @@ func dataSourceReplicationGroupRead(d *schema.ResourceData, meta interface{}) er
 	} else {
 		if rg.NodeGroups == nil {
 			d.SetId("")
-			return fmt.Errorf("ElastiCache Replication Group (%s) doesn't have node groups", aws.StringValue(rg.ReplicationGroupId))
+			return sdkdiag.AppendErrorf(diags, "ElastiCache Replication Group (%s) doesn't have node groups", aws.StringValue(rg.ReplicationGroupId))
 		}
 		d.Set("port", rg.NodeGroups[0].PrimaryEndpoint.Port)
 		d.Set("primary_endpoint_address", rg.NodeGroups[0].PrimaryEndpoint.Address)
@@ -174,9 +170,8 @@ func dataSourceReplicationGroupRead(d *schema.ResourceData, meta interface{}) er
 	}
 
 	d.Set("num_cache_clusters", len(rg.MemberClusters))
-	d.Set("number_cache_clusters", len(rg.MemberClusters))
 	if err := d.Set("member_clusters", flex.FlattenStringList(rg.MemberClusters)); err != nil {
-		return fmt.Errorf("error setting member_clusters: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting member_clusters: %s", err)
 	}
 	d.Set("node_type", rg.CacheNodeType)
 	d.Set("num_node_groups", len(rg.NodeGroups))
@@ -184,5 +179,5 @@ func dataSourceReplicationGroupRead(d *schema.ResourceData, meta interface{}) er
 	d.Set("log_delivery_configuration", flattenLogDeliveryConfigurations(rg.LogDeliveryConfigurations))
 	d.Set("snapshot_window", rg.SnapshotWindow)
 	d.Set("snapshot_retention_limit", rg.SnapshotRetentionLimit)
-	return nil
+	return diags
 }

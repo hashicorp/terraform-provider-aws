@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ec2_test
 
 import (
@@ -8,6 +11,8 @@ import (
 )
 
 func TestSecurityGroupMigrateState(t *testing.T) {
+	t.Parallel()
+
 	cases := map[string]struct {
 		StateVersion int
 		Attributes   map[string]string
@@ -49,6 +54,8 @@ func TestSecurityGroupMigrateState(t *testing.T) {
 }
 
 func TestSecurityGroupMigrateState_empty(t *testing.T) {
+	t.Parallel()
+
 	var is *terraform.InstanceState
 	var meta interface{}
 

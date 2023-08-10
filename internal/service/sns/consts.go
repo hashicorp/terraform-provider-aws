@@ -1,6 +1,11 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package sns
 
-import "time"
+import (
+	"time"
+)
 
 const (
 	FIFOTopicNameSuffix = ".fifo"
@@ -58,6 +63,7 @@ const (
 	SubscriptionAttributeNameDeliveryPolicy               = "DeliveryPolicy"
 	SubscriptionAttributeNameEndpoint                     = "Endpoint"
 	SubscriptionAttributeNameFilterPolicy                 = "FilterPolicy"
+	SubscriptionAttributeNameFilterPolicyScope            = "FilterPolicyScope"
 	SubscriptionAttributeNameOwner                        = "Owner"
 	SubscriptionAttributeNamePendingConfirmation          = "PendingConfirmation"
 	SubscriptionAttributeNameProtocol                     = "Protocol"
@@ -88,12 +94,38 @@ const (
 	TopicAttributeNameLambdaSuccessFeedbackSampleRate      = "LambdaSuccessFeedbackSampleRate"
 	TopicAttributeNameOwner                                = "Owner"
 	TopicAttributeNamePolicy                               = "Policy"
+	TopicAttributeNameSignatureVersion                     = "SignatureVersion"
 	TopicAttributeNameSQSFailureFeedbackRoleARN            = "SQSFailureFeedbackRoleArn"
 	TopicAttributeNameSQSSuccessFeedbackRoleARN            = "SQSSuccessFeedbackRoleArn"
 	TopicAttributeNameSQSSuccessFeedbackSampleRate         = "SQSSuccessFeedbackSampleRate"
 	TopicAttributeNameTopicARN                             = "TopicArn"
+	TopicAttributeNameTracingConfig                        = "TracingConfig"
 )
 
 const (
 	propagationTimeout = 2 * time.Minute
 )
+
+const (
+	SubscriptionFilterPolicyScopeMessageAttributes = "MessageAttributes"
+	SubscriptionFilterPolicyScopeMessageBody       = "MessageBody"
+)
+
+func SubscriptionFilterPolicyScope_Values() []string {
+	return []string{
+		SubscriptionFilterPolicyScopeMessageAttributes,
+		SubscriptionFilterPolicyScopeMessageBody,
+	}
+}
+
+const (
+	TopicTracingConfigActive      = "Active"
+	TopicTracingConfigPassThrough = "PassThrough"
+)
+
+func TopicTracingConfig_Values() []string {
+	return []string{
+		TopicTracingConfigActive,
+		TopicTracingConfigPassThrough,
+	}
+}

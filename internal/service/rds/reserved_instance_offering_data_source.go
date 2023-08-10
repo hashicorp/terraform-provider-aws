@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package rds
 
 import (
@@ -18,9 +21,10 @@ const (
 	ResNameReservedInstanceOffering = "Reserved Instance Offering"
 )
 
+// @SDKDataSource("aws_rds_reserved_instance_offering")
 func DataSourceReservedOffering() *schema.Resource {
 	return &schema.Resource{
-		ReadContext: dataSourceReservedOfferingRead,
+		ReadWithoutTimeout: dataSourceReservedOfferingRead,
 		Schema: map[string]*schema.Schema{
 			"currency_code": {
 				Type:     schema.TypeString,
@@ -64,7 +68,7 @@ func DataSourceReservedOffering() *schema.Resource {
 }
 
 func dataSourceReservedOfferingRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).RDSConn
+	conn := meta.(*conns.AWSClient).RDSConn(ctx)
 
 	input := &rds.DescribeReservedDBInstancesOfferingsInput{
 		DBInstanceClass:    aws.String(d.Get("db_instance_class").(string)),
@@ -75,7 +79,6 @@ func dataSourceReservedOfferingRead(ctx context.Context, d *schema.ResourceData,
 	}
 
 	resp, err := conn.DescribeReservedDBInstancesOfferingsWithContext(ctx, input)
-
 	if err != nil {
 		return create.DiagError(names.RDS, create.ErrActionReading, ResNameReservedInstanceOffering, "unknown", err)
 	}

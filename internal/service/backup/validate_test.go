@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package backup
 
 import (
@@ -6,6 +9,8 @@ import (
 )
 
 func TestValidReportPlanName(t *testing.T) {
+	t.Parallel()
+
 	validNames := []string{
 		strings.Repeat("W", 256), // <= 256
 	}
@@ -29,6 +34,8 @@ func TestValidReportPlanName(t *testing.T) {
 }
 
 func TestValidFrameworkName(t *testing.T) {
+	t.Parallel()
+
 	validNames := []string{
 		strings.Repeat("W", 256), // <= 256
 	}

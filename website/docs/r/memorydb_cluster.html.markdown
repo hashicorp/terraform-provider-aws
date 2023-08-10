@@ -36,6 +36,7 @@ The following arguments are required:
 The following arguments are optional:
 
 * `auto_minor_version_upgrade` - (Optional, Forces new resource) When set to `true`, the cluster will automatically receive minor engine version upgrades after launch. Defaults to `true`.
+* `data_tiering` - (Optional, Forces new resource) Enables data tiering. This option is not supported by all instance types. For more information, see [Data tiering](https://docs.aws.amazon.com/memorydb/latest/devguide/data-tiering.html).
 * `description` - (Optional) Description for the cluster. Defaults to `"Managed by Terraform"`.
 * `engine_version` - (Optional) Version number of the Redis engine to be used for the cluster. Downgrades are not supported.
 * `final_snapshot_name` - (Optional) Name of the final cluster snapshot to be created when this resource is deleted. If omitted, no final snapshot will be made.
@@ -57,9 +58,9 @@ The following arguments are optional:
 * `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `tls_enabled` - (Optional, Forces new resource) A flag to enable in-transit encryption on the cluster. When set to `false`, the `acl_name` must be `open-access`. Defaults to `true`.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - Same as `name`.
 * `arn` - The ARN of the cluster.
@@ -82,7 +83,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Timeouts
 
-[Configuration options](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts):
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
 - `create` - (Default `120m`)
 - `update` - (Default `120m`)
@@ -90,8 +91,17 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Use the `name` to import a cluster. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import a cluster using the `name`. For example:
 
+```terraform
+import {
+  to = aws_memorydb_cluster.example
+  id = "my-cluster"
+}
 ```
-$ terraform import aws_memorydb_cluster.example my-cluster
+
+Using `terraform import`, import a cluster using the `name`. For example:
+
+```console
+% terraform import aws_memorydb_cluster.example my-cluster
 ```

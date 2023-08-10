@@ -75,7 +75,7 @@ VPC whose data will be exported as attributes.
 * `ipam_pool_id` - ID of the IPAM pool you would like the list of provisioned CIDRs.
 * `filter` - Custom filter block as described below.
 
-## Attributes Reference
+## Attribute Reference
 
 All of the argument attributes except `filter` blocks are also exported as
 result attributes. This data source will complete the data by populating
@@ -93,6 +93,6 @@ The following attribute is additionally exported:
 
 ## Timeouts
 
-[Configuration options](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts):
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
 - `read` - (Default `1m`)

@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/aws_lightsail_instance: Add `ip_address_type` argument
+```
+
+```release-note:bug
+resource/aws_lightsail_instance_public_ports: Resource will now be removed from state properly when parent instance is removed 
+```

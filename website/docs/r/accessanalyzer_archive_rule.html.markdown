@@ -54,16 +54,25 @@ The following arguments are required:
 * `exists` - (Optional) Boolean comparator.
 * `neq` - (Optional) Not Equals comparator.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - Resource ID in the format: `analyzer_name/rule_name`.
 
 ## Import
 
-AccessAnalyzer ArchiveRule can be imported using the `analyzer_name/rule_name`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import AccessAnalyzer ArchiveRule using the `analyzer_name/rule_name`. For example:
 
+```terraform
+import {
+  to = aws_accessanalyzer_archive_rule.example
+  id = "example-analyzer/example-rule"
+}
 ```
-$ terraform import aws_accessanalyzer_archive_rule.example example-analyzer/example-rule
+
+Using `terraform import`, import AccessAnalyzer ArchiveRule using the `analyzer_name/rule_name`. For example:
+
+```console
+% terraform import aws_accessanalyzer_archive_rule.example example-analyzer/example-rule
 ```

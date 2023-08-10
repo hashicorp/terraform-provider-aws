@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package elasticache
 
 import (
@@ -10,6 +13,8 @@ import (
 )
 
 func TestValidMemcachedVersionString(t *testing.T) {
+	t.Parallel()
+
 	testcases := []struct {
 		version string
 		valid   bool
@@ -49,7 +54,10 @@ func TestValidMemcachedVersionString(t *testing.T) {
 	}
 
 	for _, testcase := range testcases {
+		testcase := testcase
 		t.Run(testcase.version, func(t *testing.T) {
+			t.Parallel()
+
 			warnings, errors := validMemcachedVersionString(testcase.version, "key")
 
 			if l := len(warnings); l != 0 {
@@ -72,6 +80,8 @@ func TestValidMemcachedVersionString(t *testing.T) {
 }
 
 func TestValidRedisVersionString(t *testing.T) {
+	t.Parallel()
+
 	testcases := []struct {
 		version string
 		valid   bool
@@ -132,10 +142,49 @@ func TestValidRedisVersionString(t *testing.T) {
 			version: "6.y",
 			valid:   false,
 		},
+		{
+			version: "7.0",
+			valid:   true,
+		},
+		{
+			version: "7.2",
+			valid:   true,
+		},
+		{
+			version: "7.x",
+			valid:   false,
+		},
+		{
+			version: "7.2.x",
+			valid:   false,
+		},
+		{
+			version: "7.5.0",
+			valid:   false,
+		},
+		{
+			version: "7.5.",
+			valid:   false,
+		},
+		{
+			version: "7.",
+			valid:   false,
+		},
+		{
+			version: "7",
+			valid:   false,
+		},
+		{
+			version: "7.y",
+			valid:   false,
+		},
 	}
 
 	for _, testcase := range testcases {
+		testcase := testcase
 		t.Run(testcase.version, func(t *testing.T) {
+			t.Parallel()
+
 			warnings, errors := validRedisVersionString(testcase.version, "key")
 
 			if l := len(warnings); l != 0 {
@@ -158,6 +207,8 @@ func TestValidRedisVersionString(t *testing.T) {
 }
 
 func TestValidateClusterEngineVersion(t *testing.T) {
+	t.Parallel()
+
 	testcases := []struct {
 		engine  string
 		version string
@@ -179,6 +230,11 @@ func TestValidateClusterEngineVersion(t *testing.T) {
 			version: "6.0",
 			valid:   false,
 		},
+		{
+			engine:  "",
+			version: "7.0",
+			valid:   false,
+		},
 
 		{
 			engine:  engineMemcached,
@@ -195,6 +251,11 @@ func TestValidateClusterEngineVersion(t *testing.T) {
 			version: "6.0",
 			valid:   false,
 		},
+		{
+			engine:  engineMemcached,
+			version: "7.0",
+			valid:   false,
+		},
 
 		{
 			engine:  engineRedis,
@@ -209,12 +270,19 @@ func TestValidateClusterEngineVersion(t *testing.T) {
 		{
 			engine:  engineRedis,
 			version: "6.0",
+			valid:   true,
+		},
+		{
+			engine:  engineRedis,
+			version: "7.0",
 			valid:   true,
 		},
 	}
 
 	for _, testcase := range testcases {
+		testcase := testcase
 		t.Run(fmt.Sprintf("%s %s", testcase.engine, testcase.version), func(t *testing.T) {
+			t.Parallel()
 			err := validateClusterEngineVersion(testcase.engine, testcase.version)
 
 			if testcase.valid {
@@ -239,6 +307,8 @@ func (d *mockGetChangeDiffer) GetChange(key string) (interface{}, interface{}) {
 }
 
 func TestCustomizeDiffEngineVersionIsDowngrade(t *testing.T) {
+	t.Parallel()
+
 	testcases := map[string]struct {
 		old, new string
 		expected bool
@@ -261,17 +331,17 @@ func TestCustomizeDiffEngineVersionIsDowngrade(t *testing.T) {
 			expected: false,
 		},
 
-		// "upgrade major 6.x": {
-		// 	old:            "5.0.6",
-		// 	new:            "6.x",
-		// 	expectForceNew: false,
-		// },
+		"upgrade major 6.x": {
+			old:      "5.0.6",
+			new:      "6.x",
+			expected: false,
+		},
 
-		// "upgrade major 6.digit": {
-		// 	old:            "5.0.6",
-		// 	new:            "6.0",
-		// 	expectForceNew: false,
-		// },
+		"upgrade major 6.digit": {
+			old:      "5.0.6",
+			new:      "6.0",
+			expected: false,
+		},
 
 		"downgrade minor versions": {
 			old:      "1.3.5",
@@ -303,21 +373,24 @@ func TestCustomizeDiffEngineVersionIsDowngrade(t *testing.T) {
 			expected: false,
 		},
 
-		"downgrade from major 7.x to 6.x": {
-			old:      "7.x",
-			new:      "6.x",
-			expected: true,
-		},
-
 		"downgrade from major 7.digit to 6.x": {
 			old:      "7.2",
 			new:      "6.x",
 			expected: true,
 		},
+
+		"downgrade from major 7.digit to 6.digit": {
+			old:      "7.2",
+			new:      "6.2",
+			expected: true,
+		},
 	}
 
 	for name, testcase := range testcases {
+		testcase := testcase
 		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
 			diff := &mockGetChangeDiffer{
 				old: testcase.old,
 				new: testcase.new,
@@ -362,6 +435,8 @@ func (d *mockForceNewDiffer) ForceNew(key string) error {
 }
 
 func TestCustomizeDiffEngineVersionForceNewOnDowngrade(t *testing.T) {
+	t.Parallel()
+
 	testcases := map[string]struct {
 		isNew          bool
 		old, new       string
@@ -398,17 +473,23 @@ func TestCustomizeDiffEngineVersionForceNewOnDowngrade(t *testing.T) {
 			expectForceNew: false,
 		},
 
-		// "upgrade major 6.x": {
-		// 	old:            "5.0.6",
-		// 	new:            "6.x",
-		// 	expectForceNew: false,
-		// },
+		"upgrade major 6.x": {
+			old:            "5.0.6",
+			new:            "6.x",
+			expectForceNew: false,
+		},
 
-		// "upgrade major 6.digit": {
-		// 	old:            "5.0.6",
-		// 	new:            "6.0",
-		// 	expectForceNew: false,
-		// },
+		"upgrade major 6.digit": {
+			old:            "5.0.6",
+			new:            "6.0",
+			expectForceNew: false,
+		},
+
+		"upgrade major 7.digit": {
+			old:            "6.x",
+			new:            "7.0",
+			expectForceNew: false,
+		},
 
 		"downgrade minor versions": {
 			old:            "1.3.5",
@@ -440,21 +521,30 @@ func TestCustomizeDiffEngineVersionForceNewOnDowngrade(t *testing.T) {
 			expectForceNew: false,
 		},
 
-		"downgrade from major 7.x to 6.x": {
-			old:            "7.x",
-			new:            "6.x",
-			expectForceNew: true,
-		},
-
 		"downgrade from major 7.digit to 6.x": {
 			old:            "7.2",
 			new:            "6.x",
 			expectForceNew: true,
 		},
+
+		"downgrade from major 7.digit to 6.digit": {
+			old:            "7.2",
+			new:            "6.2",
+			expectForceNew: true,
+		},
+
+		"downgrade major 7.digit": {
+			old:            "7.2",
+			new:            "7.0",
+			expectForceNew: true,
+		},
 	}
 
 	for name, testcase := range testcases {
+		testcase := testcase
 		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
 			diff := &mockForceNewDiffer{}
 			if !testcase.isNew {
 				diff.id = "some id"
@@ -483,6 +573,8 @@ func TestCustomizeDiffEngineVersionForceNewOnDowngrade(t *testing.T) {
 }
 
 func TestNormalizeEngineVersion(t *testing.T) {
+	t.Parallel()
+
 	testcases := []struct {
 		version    string
 		normalized string
@@ -504,13 +596,25 @@ func TestNormalizeEngineVersion(t *testing.T) {
 			valid:      true,
 		},
 		{
+			version:    "7.2",
+			normalized: "7.2.0",
+			valid:      true,
+		},
+		{
 			version: "5.x",
+			valid:   false,
+		},
+		{
+			version: "7.x",
 			valid:   false,
 		},
 	}
 
 	for _, testcase := range testcases {
+		testcase := testcase
 		t.Run(testcase.version, func(t *testing.T) {
+			t.Parallel()
+
 			version, err := normalizeEngineVersion(testcase.version)
 
 			if testcase.valid {
@@ -530,6 +634,8 @@ func TestNormalizeEngineVersion(t *testing.T) {
 }
 
 func TestVersionDiff(t *testing.T) {
+	t.Parallel()
+
 	cases := []struct {
 		v1       string
 		v2       string
@@ -597,6 +703,8 @@ func (d *mockChangesDiffer) GetChange(key string) (interface{}, interface{}) {
 }
 
 func TestParamGroupNameRequiresMajorVersionUpgrade(t *testing.T) {
+	t.Parallel()
+
 	testcases := map[string]struct {
 		isNew                  bool
 		paramOld, paramNew     string
@@ -672,7 +780,11 @@ func TestParamGroupNameRequiresMajorVersionUpgrade(t *testing.T) {
 	}
 
 	for name, testcase := range testcases {
+		testcase := testcase
+
 		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
 			diff := &mockChangesDiffer{
 				values: map[string]mockDiff{
 					"parameter_group_name": {
@@ -705,7 +817,6 @@ func TestParamGroupNameRequiresMajorVersionUpgrade(t *testing.T) {
 					t.Fatalf("unexpected error: %q", err.Error())
 				}
 			}
-
 		})
 	}
 }

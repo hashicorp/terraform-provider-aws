@@ -91,26 +91,29 @@ resource "aws_gamelift_game_server_group" "example" {
 
 ```terraform
 data "aws_partition" "current" {}
-resource "aws_iam_role" "example" {
-  assume_role_policy = <<-EOF
-    {
-      "Version": "2012-10-17",
-      "Statement": [
-        {
-          "Effect": "Allow",
-          "Principal": {
-            "Service": [
-              "autoscaling.amazonaws.com",
-              "gamelift.amazonaws.com"
-            ]
-          },
-          "Action": "sts:AssumeRole"
-        }
+
+data "aws_iam_policy_document" "assume_role" {
+  statement {
+    effect = "Allow"
+
+    principals {
+      type = "Service"
+
+      identifiers = [
+        "autoscaling.amazonaws.com",
+        "gamelift.amazonaws.com",
       ]
     }
-  EOF
+
+    actions = ["sts:AssumeRole"]
+  }
+}
+
+resource "aws_iam_role" "example" {
+  assume_role_policy = data.aws_iam_policy_document.assume_role.json
   name               = "gamelift-game-server-group-example"
 }
+
 resource "aws_iam_role_policy_attachment" "example" {
   policy_arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/GameLiftGameServerGroupPolicy"
   role       = aws_iam_role.example.name
@@ -119,7 +122,7 @@ resource "aws_iam_role_policy_attachment" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `balancing_strategy` - (Optional) Indicates how GameLift FleetIQ balances the use of Spot Instances and On-Demand Instances.
   Valid values: `SPOT_ONLY`, `SPOT_PREFERRED`, `ON_DEMAND_ONLY`. Defaults to `SPOT_PREFERRED`.
@@ -179,9 +182,9 @@ You can specify the template using either the template name or ID.
 * `name` - (Optional) A readable identifier for an existing EC2 launch template.
 * `version` - (Optional) The version of the EC2 launch template to use. If none is set, the default is the first version created.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The name of the GameLift Game Server Group.
 * `arn` - The ARN of the GameLift Game Server Group.
@@ -189,15 +192,24 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Timeouts
 
-[Configuration options](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts):
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
 * `create` - (Default `10m`)
 * `delete` - (Default `30m`)
 
 ## Import
 
-GameLift Game Server Group can be imported using the `name`, e.g.
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import GameLift Game Server Group using the `name`. For example:
 
+```terraform
+import {
+  to = aws_gamelift_game_server_group.example
+  id = "example"
+}
 ```
-$ terraform import aws_gamelift_game_server_group.example example
+
+Using `terraform import`, import GameLift Game Server Group using the `name`. For example:
+
+```console
+% terraform import aws_gamelift_game_server_group.example example
 ```

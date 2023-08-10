@@ -1,20 +1,26 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package apigateway_test
 
 import (
+	"context"
 	"fmt"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/apigateway"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfapigateway "github.com/hashicorp/terraform-provider-aws/internal/service/apigateway"
 )
 
 func TestDecodeBasePathMappingID(t *testing.T) {
+	t.Parallel()
+
 	var testCases = []struct {
 		Input      string
 		DomainName string
@@ -67,23 +73,24 @@ func TestDecodeBasePathMappingID(t *testing.T) {
 }
 
 func TestAccAPIGatewayBasePathMapping_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	var conf apigateway.BasePathMapping
 
 	name := acctest.RandomSubdomain()
 
-	key := acctest.TLSRSAPrivateKeyPEM(2048)
-	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(key, name)
+	key := acctest.TLSRSAPrivateKeyPEM(t, 2048)
+	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(t, key, name)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, apigateway.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckBasePathDestroy(name),
+		CheckDestroy:             testAccCheckBasePathDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBasePathMappingConfig_basic(name, key, certificate, acctest.ResourcePrefix),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBasePathExists("aws_api_gateway_base_path_mapping.test", &conf),
+					testAccCheckBasePathExists(ctx, "aws_api_gateway_base_path_mapping.test", &conf),
 				),
 			},
 			{
@@ -97,23 +104,24 @@ func TestAccAPIGatewayBasePathMapping_basic(t *testing.T) {
 
 // https://github.com/hashicorp/terraform/issues/9212
 func TestAccAPIGatewayBasePathMapping_BasePath_empty(t *testing.T) {
+	ctx := acctest.Context(t)
 	var conf apigateway.BasePathMapping
 
 	name := acctest.RandomSubdomain()
 
-	key := acctest.TLSRSAPrivateKeyPEM(2048)
-	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(key, name)
+	key := acctest.TLSRSAPrivateKeyPEM(t, 2048)
+	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(t, key, name)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, apigateway.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckBasePathDestroy(name),
+		CheckDestroy:             testAccCheckBasePathDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBasePathMappingConfig_basic(name, key, certificate, ""),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBasePathExists("aws_api_gateway_base_path_mapping.test", &conf),
+					testAccCheckBasePathExists(ctx, "aws_api_gateway_base_path_mapping.test", &conf),
 				),
 			},
 			{
@@ -126,30 +134,31 @@ func TestAccAPIGatewayBasePathMapping_BasePath_empty(t *testing.T) {
 }
 
 func TestAccAPIGatewayBasePathMapping_updates(t *testing.T) {
+	ctx := acctest.Context(t)
 	var confFirst, conf apigateway.BasePathMapping
 	resourceName := "aws_api_gateway_base_path_mapping.test"
 	name := acctest.RandomSubdomain()
 
-	key := acctest.TLSRSAPrivateKeyPEM(2048)
-	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(key, name)
+	key := acctest.TLSRSAPrivateKeyPEM(t, 2048)
+	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(t, key, name)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, apigateway.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckBasePathDestroy(name),
+		CheckDestroy:             testAccCheckBasePathDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBasePathMappingConfig_basic(name, key, certificate, ""),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBasePathExists(resourceName, &confFirst),
+					testAccCheckBasePathExists(ctx, resourceName, &confFirst),
 					testAccCheckBasePathStageAttribute(&confFirst, "test"),
 				),
 			},
 			{
 				Config: testAccBasePathMappingConfig_altStageAndAPI(name, key, certificate, ""),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBasePathExists(resourceName, &conf),
+					testAccCheckBasePathExists(ctx, resourceName, &conf),
 					testAccCheckBasePathBasePathAttribute(&conf, "(none)"),
 					testAccCheckBasePathStageAttribute(&conf, "test2"),
 					testAccCheckRestAPIIDAttributeHasChanged(&conf, &confFirst),
@@ -159,7 +168,7 @@ func TestAccAPIGatewayBasePathMapping_updates(t *testing.T) {
 			{
 				Config: testAccBasePathMappingConfig_altStageAndAPI(name, key, certificate, "thing"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBasePathExists(resourceName, &conf),
+					testAccCheckBasePathExists(ctx, resourceName, &conf),
 					testAccCheckBasePathBasePathAttribute(&conf, "thing"),
 					testAccCheckBasePathStageAttribute(&conf, "test2"),
 					resource.TestCheckResourceAttr(resourceName, "stage_name", "test2"),
@@ -176,25 +185,26 @@ func TestAccAPIGatewayBasePathMapping_updates(t *testing.T) {
 }
 
 func TestAccAPIGatewayBasePathMapping_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
 	var conf apigateway.BasePathMapping
 
 	name := acctest.RandomSubdomain()
 	resourceName := "aws_api_gateway_base_path_mapping.test"
 
-	key := acctest.TLSRSAPrivateKeyPEM(2048)
-	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(key, name)
+	key := acctest.TLSRSAPrivateKeyPEM(t, 2048)
+	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(t, key, name)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, apigateway.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckBasePathDestroy(name),
+		CheckDestroy:             testAccCheckBasePathDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBasePathMappingConfig_basic(name, key, certificate, acctest.ResourcePrefix),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBasePathExists(resourceName, &conf),
-					acctest.CheckResourceDisappears(acctest.Provider, tfapigateway.ResourceBasePathMapping(), resourceName),
+					testAccCheckBasePathExists(ctx, resourceName, &conf),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfapigateway.ResourceBasePathMapping(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -202,7 +212,7 @@ func TestAccAPIGatewayBasePathMapping_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckBasePathExists(n string, res *apigateway.BasePathMapping) resource.TestCheckFunc {
+func testAccCheckBasePathExists(ctx context.Context, n string, res *apigateway.BasePathMapping) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -213,7 +223,7 @@ func testAccCheckBasePathExists(n string, res *apigateway.BasePathMapping) resou
 			return fmt.Errorf("No API Gateway ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayConn(ctx)
 
 		domainName, basePath, err := tfapigateway.DecodeBasePathMappingID(rs.Primary.ID)
 		if err != nil {
@@ -224,7 +234,7 @@ func testAccCheckBasePathExists(n string, res *apigateway.BasePathMapping) resou
 			DomainName: aws.String(domainName),
 			BasePath:   aws.String(basePath),
 		}
-		describe, err := conn.GetBasePathMapping(req)
+		describe, err := conn.GetBasePathMappingWithContext(ctx, req)
 		if err != nil {
 			return err
 		}
@@ -235,9 +245,9 @@ func testAccCheckBasePathExists(n string, res *apigateway.BasePathMapping) resou
 	}
 }
 
-func testAccCheckBasePathDestroy(name string) resource.TestCheckFunc {
+func testAccCheckBasePathDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_api_gateway_base_path_mapping" {
@@ -253,7 +263,7 @@ func testAccCheckBasePathDestroy(name string) resource.TestCheckFunc {
 				DomainName: aws.String(domainName),
 				BasePath:   aws.String(basePath),
 			}
-			_, err = conn.GetBasePathMapping(req)
+			_, err = conn.GetBasePathMappingWithContext(ctx, req)
 
 			if err != nil {
 				if tfawserr.ErrCodeEquals(err, apigateway.ErrCodeNotFoundException) {

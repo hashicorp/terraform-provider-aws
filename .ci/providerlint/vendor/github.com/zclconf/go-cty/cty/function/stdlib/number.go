@@ -11,6 +11,7 @@ import (
 )
 
 var AbsoluteFunc = function.New(&function.Spec{
+	Description: `If the given number is negative then returns its positive equivalent, or otherwise returns the given number unchanged.`,
 	Params: []function.Parameter{
 		{
 			Name:             "num",
@@ -19,13 +20,15 @@ var AbsoluteFunc = function.New(&function.Spec{
 			AllowMarked:      true,
 		},
 	},
-	Type: function.StaticReturnType(cty.Number),
+	Type:         function.StaticReturnType(cty.Number),
+	RefineResult: refineNonNull,
 	Impl: func(args []cty.Value, retType cty.Type) (cty.Value, error) {
 		return args[0].Absolute(), nil
 	},
 })
 
 var AddFunc = function.New(&function.Spec{
+	Description: `Returns the sum of the two given numbers.`,
 	Params: []function.Parameter{
 		{
 			Name:             "a",
@@ -38,7 +41,8 @@ var AddFunc = function.New(&function.Spec{
 			AllowDynamicType: true,
 		},
 	},
-	Type: function.StaticReturnType(cty.Number),
+	Type:         function.StaticReturnType(cty.Number),
+	RefineResult: refineNonNull,
 	Impl: func(args []cty.Value, retType cty.Type) (ret cty.Value, err error) {
 		// big.Float.Add can panic if the input values are opposing infinities,
 		// so we must catch that here in order to remain within
@@ -59,6 +63,7 @@ var AddFunc = function.New(&function.Spec{
 })
 
 var SubtractFunc = function.New(&function.Spec{
+	Description: `Returns the difference between the two given numbers.`,
 	Params: []function.Parameter{
 		{
 			Name:             "a",
@@ -71,7 +76,8 @@ var SubtractFunc = function.New(&function.Spec{
 			AllowDynamicType: true,
 		},
 	},
-	Type: function.StaticReturnType(cty.Number),
+	Type:         function.StaticReturnType(cty.Number),
+	RefineResult: refineNonNull,
 	Impl: func(args []cty.Value, retType cty.Type) (ret cty.Value, err error) {
 		// big.Float.Sub can panic if the input values are infinities,
 		// so we must catch that here in order to remain within
@@ -92,6 +98,7 @@ var SubtractFunc = function.New(&function.Spec{
 })
 
 var MultiplyFunc = function.New(&function.Spec{
+	Description: `Returns the product of the two given numbers.`,
 	Params: []function.Parameter{
 		{
 			Name:             "a",
@@ -104,7 +111,8 @@ var MultiplyFunc = function.New(&function.Spec{
 			AllowDynamicType: true,
 		},
 	},
-	Type: function.StaticReturnType(cty.Number),
+	Type:         function.StaticReturnType(cty.Number),
+	RefineResult: refineNonNull,
 	Impl: func(args []cty.Value, retType cty.Type) (ret cty.Value, err error) {
 		// big.Float.Mul can panic if the input values are both zero or both
 		// infinity, so we must catch that here in order to remain within
@@ -126,6 +134,7 @@ var MultiplyFunc = function.New(&function.Spec{
 })
 
 var DivideFunc = function.New(&function.Spec{
+	Description: `Divides the first given number by the second.`,
 	Params: []function.Parameter{
 		{
 			Name:             "a",
@@ -138,7 +147,8 @@ var DivideFunc = function.New(&function.Spec{
 			AllowDynamicType: true,
 		},
 	},
-	Type: function.StaticReturnType(cty.Number),
+	Type:         function.StaticReturnType(cty.Number),
+	RefineResult: refineNonNull,
 	Impl: func(args []cty.Value, retType cty.Type) (ret cty.Value, err error) {
 		// big.Float.Quo can panic if the input values are both zero or both
 		// infinity, so we must catch that here in order to remain within
@@ -160,6 +170,7 @@ var DivideFunc = function.New(&function.Spec{
 })
 
 var ModuloFunc = function.New(&function.Spec{
+	Description: `Divides the first given number by the second and then returns the remainder.`,
 	Params: []function.Parameter{
 		{
 			Name:             "a",
@@ -172,7 +183,8 @@ var ModuloFunc = function.New(&function.Spec{
 			AllowDynamicType: true,
 		},
 	},
-	Type: function.StaticReturnType(cty.Number),
+	Type:         function.StaticReturnType(cty.Number),
+	RefineResult: refineNonNull,
 	Impl: func(args []cty.Value, retType cty.Type) (ret cty.Value, err error) {
 		// big.Float.Mul can panic if the input values are both zero or both
 		// infinity, so we must catch that here in order to remain within
@@ -194,90 +206,107 @@ var ModuloFunc = function.New(&function.Spec{
 })
 
 var GreaterThanFunc = function.New(&function.Spec{
+	Description: `Returns true if and only if the second number is greater than the first.`,
 	Params: []function.Parameter{
 		{
 			Name:             "a",
 			Type:             cty.Number,
+			AllowUnknown:     true,
 			AllowDynamicType: true,
 			AllowMarked:      true,
 		},
 		{
 			Name:             "b",
 			Type:             cty.Number,
+			AllowUnknown:     true,
 			AllowDynamicType: true,
 			AllowMarked:      true,
 		},
 	},
-	Type: function.StaticReturnType(cty.Bool),
+	Type:         function.StaticReturnType(cty.Bool),
+	RefineResult: refineNonNull,
 	Impl: func(args []cty.Value, retType cty.Type) (ret cty.Value, err error) {
 		return args[0].GreaterThan(args[1]), nil
 	},
 })
 
 var GreaterThanOrEqualToFunc = function.New(&function.Spec{
+	Description: `Returns true if and only if the second number is greater than or equal to the first.`,
 	Params: []function.Parameter{
 		{
 			Name:             "a",
 			Type:             cty.Number,
+			AllowUnknown:     true,
 			AllowDynamicType: true,
 			AllowMarked:      true,
 		},
 		{
 			Name:             "b",
 			Type:             cty.Number,
+			AllowUnknown:     true,
 			AllowDynamicType: true,
 			AllowMarked:      true,
 		},
 	},
-	Type: function.StaticReturnType(cty.Bool),
+	Type:         function.StaticReturnType(cty.Bool),
+	RefineResult: refineNonNull,
 	Impl: func(args []cty.Value, retType cty.Type) (ret cty.Value, err error) {
 		return args[0].GreaterThanOrEqualTo(args[1]), nil
 	},
 })
 
 var LessThanFunc = function.New(&function.Spec{
+	Description: `Returns true if and only if the second number is less than the first.`,
 	Params: []function.Parameter{
 		{
 			Name:             "a",
 			Type:             cty.Number,
+			AllowUnknown:     true,
 			AllowDynamicType: true,
 			AllowMarked:      true,
 		},
 		{
 			Name:             "b",
 			Type:             cty.Number,
+			AllowUnknown:     true,
 			AllowDynamicType: true,
 			AllowMarked:      true,
 		},
 	},
-	Type: function.StaticReturnType(cty.Bool),
+	Type:         function.StaticReturnType(cty.Bool),
+	RefineResult: refineNonNull,
 	Impl: func(args []cty.Value, retType cty.Type) (ret cty.Value, err error) {
 		return args[0].LessThan(args[1]), nil
 	},
 })
 
 var LessThanOrEqualToFunc = function.New(&function.Spec{
+	Description: `Returns true if and only if the second number is less than or equal to the first.`,
 	Params: []function.Parameter{
 		{
 			Name:             "a",
 			Type:             cty.Number,
+			AllowUnknown:     true,
 			AllowDynamicType: true,
 			AllowMarked:      true,
 		},
 		{
 			Name:             "b",
 			Type:             cty.Number,
+			AllowUnknown:     true,
 			AllowDynamicType: true,
 			AllowMarked:      true,
 		},
 	},
-	Type: function.StaticReturnType(cty.Bool),
+	Type:         function.StaticReturnType(cty.Bool),
+	RefineResult: refineNonNull,
 	Impl: func(args []cty.Value, retType cty.Type) (ret cty.Value, err error) {
 		return args[0].LessThanOrEqualTo(args[1]), nil
 	},
 })
 
 var NegateFunc = function.New(&function.Spec{
+	Description: `Multiplies the given number by -1.`,
 	Params: []function.Parameter{
 		{
 			Name:             "num",
@@ -286,20 +315,23 @@ var NegateFunc = function.New(&function.Spec{
 			AllowMarked:      true,
 		},
 	},
-	Type: function.StaticReturnType(cty.Number),
+	Type:         function.StaticReturnType(cty.Number),
+	RefineResult: refineNonNull,
 	Impl: func(args []cty.Value, retType cty.Type) (cty.Value, error) {
 		return args[0].Negate(), nil
 	},
 })
 
 var MinFunc = function.New(&function.Spec{
-	Params: []function.Parameter{},
+	Description: `Returns the numerically smallest of all of the given numbers.`,
+	Params:      []function.Parameter{},
 	VarParam: &function.Parameter{
 		Name:             "numbers",
 		Type:             cty.Number,
 		AllowDynamicType: true,
 	},
-	Type: function.StaticReturnType(cty.Number),
+	Type:         function.StaticReturnType(cty.Number),
+	RefineResult: refineNonNull,
 	Impl: func(args []cty.Value, retType cty.Type) (cty.Value, error) {
 		if len(args) == 0 {
 			return cty.NilVal, fmt.Errorf("must pass at least one number")
@@ -317,13 +349,15 @@ var MinFunc = function.New(&function.Spec{
 })
 
 var MaxFunc = function.New(&function.Spec{
-	Params: []function.Parameter{},
+	Description: `Returns the numerically greatest of all of the given numbers.`,
+	Params:      []function.Parameter{},
 	VarParam: &function.Parameter{
 		Name:             "numbers",
 		Type:             cty.Number,
 		AllowDynamicType: true,
 	},
-	Type: function.StaticReturnType(cty.Number),
+	Type:         function.StaticReturnType(cty.Number),
+	RefineResult: refineNonNull,
 	Impl: func(args []cty.Value, retType cty.Type) (cty.Value, error) {
 		if len(args) == 0 {
 			return cty.NilVal, fmt.Errorf("must pass at least one number")
@@ -341,6 +375,7 @@ var MaxFunc = function.New(&function.Spec{
 })
 
 var IntFunc = function.New(&function.Spec{
+	Description: `Discards any fractional portion of the given number.`,
 	Params: []function.Parameter{
 		{
 			Name:             "num",
@@ -348,7 +383,8 @@ var IntFunc = function.New(&function.Spec{
 			AllowDynamicType: true,
 		},
 	},
-	Type: function.StaticReturnType(cty.Number),
+	Type:         function.StaticReturnType(cty.Number),
+	RefineResult: refineNonNull,
 	Impl: func(args []cty.Value, retType cty.Type) (cty.Value, error) {
 		bf := args[0].AsBigFloat()
 		if bf.IsInt() {
@@ -363,13 +399,15 @@ var IntFunc = function.New(&function.Spec{
 // CeilFunc is a function that returns the closest whole number greater
 // than or equal to the given value.
 var CeilFunc = function.New(&function.Spec{
+	Description: `Returns the smallest whole number that is greater than or equal to the given value.`,
 	Params: []function.Parameter{
 		{
 			Name: "num",
 			Type: cty.Number,
 		},
 	},
-	Type: function.StaticReturnType(cty.Number),
+	Type:         function.StaticReturnType(cty.Number),
+	RefineResult: refineNonNull,
 	Impl: func(args []cty.Value, retType cty.Type) (ret cty.Value, err error) {
 		f := args[0].AsBigFloat()
 
@@ -392,13 +430,15 @@ var CeilFunc = function.New(&function.Spec{
 // FloorFunc is a function that returns the closest whole number lesser
 // than or equal to the given value.
 var FloorFunc = function.New(&function.Spec{
+	Description: `Returns the greatest whole number that is less than or equal to the given value.`,
 	Params: []function.Parameter{
 		{
 			Name: "num",
 			Type: cty.Number,
 		},
 	},
-	Type: function.StaticReturnType(cty.Number),
+	Type:         function.StaticReturnType(cty.Number),
+	RefineResult: refineNonNull,
 	Impl: func(args []cty.Value, retType cty.Type) (ret cty.Value, err error) {
 		f := args[0].AsBigFloat()
 
@@ -420,6 +460,7 @@ var FloorFunc = function.New(&function.Spec{
 
 // LogFunc is a function that returns the logarithm of a given number in a given base.
 var LogFunc = function.New(&function.Spec{
+	Description: `Returns the logarithm of the given number in the given base.`,
 	Params: []function.Parameter{
 		{
 			Name: "num",
@@ -430,7 +471,8 @@ var LogFunc = function.New(&function.Spec{
 			Type: cty.Number,
 		},
 	},
-	Type: function.StaticReturnType(cty.Number),
+	Type:         function.StaticReturnType(cty.Number),
+	RefineResult: refineNonNull,
 	Impl: func(args []cty.Value, retType cty.Type) (ret cty.Value, err error) {
 		var num float64
 		if err := gocty.FromCtyValue(args[0], &num); err != nil {
@@ -448,6 +490,7 @@ var LogFunc = function.New(&function.Spec{
 
 // PowFunc is a function that returns the logarithm of a given number in a given base.
 var PowFunc = function.New(&function.Spec{
+	Description: `Returns the given number raised to the given power (exponentiation).`,
 	Params: []function.Parameter{
 		{
 			Name: "num",
@@ -458,7 +501,8 @@ var PowFunc = function.New(&function.Spec{
 			Type: cty.Number,
 		},
 	},
-	Type: function.StaticReturnType(cty.Number),
+	Type:         function.StaticReturnType(cty.Number),
+	RefineResult: refineNonNull,
 	Impl: func(args []cty.Value, retType cty.Type) (ret cty.Value, err error) {
 		var num float64
 		if err := gocty.FromCtyValue(args[0], &num); err != nil {
@@ -477,13 +521,15 @@ var PowFunc = function.New(&function.Spec{
 // SignumFunc is a function that determines the sign of a number, returning a
 // number between -1 and 1 to represent the sign..
 var SignumFunc = function.New(&function.Spec{
+	Description: `Returns 0 if the given number is zero, 1 if the given number is positive, or -1 if the given number is negative.`,
 	Params: []function.Parameter{
 		{
 			Name: "num",
 			Type: cty.Number,
 		},
 	},
-	Type: function.StaticReturnType(cty.Number),
+	Type:         function.StaticReturnType(cty.Number),
+	RefineResult: refineNonNull,
 	Impl: func(args []cty.Value, retType cty.Type) (ret cty.Value, err error) {
 		var num int
 		if err := gocty.FromCtyValue(args[0], &num); err != nil {
@@ -502,6 +548,7 @@ var SignumFunc = function.New(&function.Spec{
 
 // ParseIntFunc is a function that parses a string argument and returns an integer of the specified base.
 var ParseIntFunc = function.New(&function.Spec{
+	Description: `Parses the given string as a number of the given base, or raises an error if the string contains invalid characters.`,
 	Params: []function.Parameter{
 		{
 			Name: "number",
@@ -519,6 +566,7 @@ var ParseIntFunc = function.New(&function.Spec{
 		}
 		return cty.Number, nil
 	},
+	RefineResult: refineNonNull,
 
 	Impl: func(args []cty.Value, retType cty.Type) (cty.Value, error) {
 		var numstr string

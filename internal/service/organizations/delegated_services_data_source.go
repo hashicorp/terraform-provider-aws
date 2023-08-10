@@ -1,8 +1,10 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package organizations
 
 import (
 	"context"
-	"fmt"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -13,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKDataSource("aws_organizations_delegated_services")
 func DataSourceDelegatedServices() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceDelegatedServicesRead,
@@ -43,46 +46,59 @@ func DataSourceDelegatedServices() *schema.Resource {
 }
 
 func dataSourceDelegatedServicesRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).OrganizationsConn
+	conn := meta.(*conns.AWSClient).OrganizationsConn(ctx)
 
-	input := &organizations.ListDelegatedServicesForAccountInput{
-		AccountId: aws.String(d.Get("account_id").(string)),
+	accountID := d.Get("account_id").(string)
+	output, err := findDelegatedServicesByAccountID(ctx, conn, accountID)
+
+	if err != nil {
+		return diag.Errorf("reading Organizations Delegated Services (%s): %s", accountID, err)
 	}
 
-	var delegators []*organizations.DelegatedService
+	d.SetId(meta.(*conns.AWSClient).AccountID)
+	if err = d.Set("delegated_services", flattenDelegatedServices(output)); err != nil {
+		return diag.Errorf("setting delegated_services: %s", err)
+	}
+
+	return nil
+}
+
+func findDelegatedServicesByAccountID(ctx context.Context, conn *organizations.Organizations, accountID string) ([]*organizations.DelegatedService, error) {
+	input := &organizations.ListDelegatedServicesForAccountInput{
+		AccountId: aws.String(accountID),
+	}
+	var output []*organizations.DelegatedService
+
 	err := conn.ListDelegatedServicesForAccountPagesWithContext(ctx, input, func(page *organizations.ListDelegatedServicesForAccountOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
 
-		delegators = append(delegators, page.DelegatedServices...)
+		output = append(output, page.DelegatedServices...)
 
 		return !lastPage
 	})
+
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error describing organizations delegated services: %w", err))
+		return nil, err
 	}
 
-	if err = d.Set("delegated_services", flattenDelegatedServices(delegators)); err != nil {
-		return diag.FromErr(fmt.Errorf("error setting delegated_services: %w", err))
-	}
-
-	d.SetId(meta.(*conns.AWSClient).AccountID)
-
-	return nil
+	return output, nil
 }
 
-func flattenDelegatedServices(delegatedServices []*organizations.DelegatedService) []map[string]interface{} {
-	if len(delegatedServices) == 0 {
+func flattenDelegatedServices(apiObjects []*organizations.DelegatedService) []map[string]interface{} {
+	if len(apiObjects) == 0 {
 		return nil
 	}
 
-	var result []map[string]interface{}
-	for _, delegated := range delegatedServices {
-		result = append(result, map[string]interface{}{
-			"delegation_enabled_date": aws.TimeValue(delegated.DelegationEnabledDate).Format(time.RFC3339),
-			"service_principal":       aws.StringValue(delegated.ServicePrincipal),
+	var tfList []map[string]interface{}
+
+	for _, apiObject := range apiObjects {
+		tfList = append(tfList, map[string]interface{}{
+			"delegation_enabled_date": aws.TimeValue(apiObject.DelegationEnabledDate).Format(time.RFC3339),
+			"service_principal":       aws.StringValue(apiObject.ServicePrincipal),
 		})
 	}
-	return result
+
+	return tfList
 }

@@ -1,6 +1,10 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package cloudtrail_test
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"regexp"
@@ -8,9 +12,9 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cloudtrail"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfcloudtrail "github.com/hashicorp/terraform-provider-aws/internal/service/cloudtrail"
@@ -18,7 +22,6 @@ import (
 
 func init() {
 	acctest.RegisterServiceErrorCheckFunc(cloudtrail.EndpointsID, testAccErrorCheckSkip)
-
 }
 
 // testAccErrorCheckSkip skips CloudTrail tests that have error messages indicating unsupported features
@@ -29,6 +32,8 @@ func testAccErrorCheckSkip(t *testing.T) resource.ErrorCheckFunc {
 }
 
 func TestAccCloudTrail_serial(t *testing.T) {
+	t.Parallel()
+
 	testCases := map[string]map[string]func(t *testing.T){
 		"Trail": {
 			"basic":                 testAcc_basic,
@@ -49,34 +54,25 @@ func TestAccCloudTrail_serial(t *testing.T) {
 		},
 	}
 
-	for group, m := range testCases {
-		m := m
-		t.Run(group, func(t *testing.T) {
-			for name, tc := range m {
-				tc := tc
-				t.Run(name, func(t *testing.T) {
-					tc(t)
-				})
-			}
-		})
-	}
+	acctest.RunSerialTests2Levels(t, testCases, 0)
 }
 
 func testAcc_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	var trail cloudtrail.Trail
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_cloudtrail.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, cloudtrail.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDestroy,
+		CheckDestroy:             testAccCheckTrailDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCloudTrailConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckExists(resourceName, &trail),
+					testAccCheckExists(ctx, resourceName, &trail),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "cloudtrail", fmt.Sprintf("trail/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "include_global_service_events", "true"),
 					resource.TestCheckResourceAttr(resourceName, "is_organization_trail", "false"),
@@ -92,7 +88,7 @@ func testAcc_basic(t *testing.T) {
 			{
 				Config: testAccCloudTrailConfig_modified(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckExists(resourceName, &trail),
+					testAccCheckExists(ctx, resourceName, &trail),
 					resource.TestCheckResourceAttr(resourceName, "s3_key_prefix", "prefix"),
 					resource.TestCheckResourceAttr(resourceName, "include_global_service_events", "false"),
 					testAccCheckLogValidationEnabled(resourceName, false, &trail),
@@ -109,20 +105,21 @@ func testAcc_basic(t *testing.T) {
 }
 
 func testAcc_cloudWatch(t *testing.T) {
+	ctx := acctest.Context(t)
 	var trail cloudtrail.Trail
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_cloudtrail.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, cloudtrail.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDestroy,
+		CheckDestroy:             testAccCheckTrailDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCloudTrailConfig_cloudWatch(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckExists(resourceName, &trail),
+					testAccCheckExists(ctx, resourceName, &trail),
 					resource.TestCheckResourceAttrSet(resourceName, "cloud_watch_logs_group_arn"),
 					resource.TestCheckResourceAttrSet(resourceName, "cloud_watch_logs_role_arn"),
 				),
@@ -135,7 +132,7 @@ func testAcc_cloudWatch(t *testing.T) {
 			{
 				Config: testAccCloudTrailConfig_cloudWatchModified(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckExists(resourceName, &trail),
+					testAccCheckExists(ctx, resourceName, &trail),
 					resource.TestCheckResourceAttrSet(resourceName, "cloud_watch_logs_group_arn"),
 					resource.TestCheckResourceAttrSet(resourceName, "cloud_watch_logs_role_arn"),
 				),
@@ -150,23 +147,24 @@ func testAcc_cloudWatch(t *testing.T) {
 }
 
 func testAcc_enableLogging(t *testing.T) {
+	ctx := acctest.Context(t)
 	var trail cloudtrail.Trail
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_cloudtrail.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, cloudtrail.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDestroy,
+		CheckDestroy:             testAccCheckTrailDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCloudTrailConfig_enableLogging(rName, true),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckExists(resourceName, &trail),
+					testAccCheckExists(ctx, resourceName, &trail),
 					// AWS will create the trail with logging turned off.
 					// Test that "enable_logging" default works.
-					testAccCheckLoggingEnabled(resourceName, true),
+					testAccCheckLoggingEnabled(ctx, resourceName, true),
 					testAccCheckLogValidationEnabled(resourceName, false, &trail),
 					resource.TestCheckResourceAttr(resourceName, "kms_key_id", ""),
 				),
@@ -179,8 +177,8 @@ func testAcc_enableLogging(t *testing.T) {
 			{
 				Config: testAccCloudTrailConfig_enableLogging(rName, false),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckExists(resourceName, &trail),
-					testAccCheckLoggingEnabled(resourceName, false),
+					testAccCheckExists(ctx, resourceName, &trail),
+					testAccCheckLoggingEnabled(ctx, resourceName, false),
 					testAccCheckLogValidationEnabled(resourceName, false, &trail),
 					resource.TestCheckResourceAttr(resourceName, "kms_key_id", ""),
 				),
@@ -193,8 +191,8 @@ func testAcc_enableLogging(t *testing.T) {
 			{
 				Config: testAccCloudTrailConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckExists(resourceName, &trail),
-					testAccCheckLoggingEnabled(resourceName, true),
+					testAccCheckExists(ctx, resourceName, &trail),
+					testAccCheckLoggingEnabled(ctx, resourceName, true),
 					testAccCheckLogValidationEnabled(resourceName, false, &trail),
 					resource.TestCheckResourceAttr(resourceName, "kms_key_id", ""),
 				),
@@ -204,20 +202,21 @@ func testAcc_enableLogging(t *testing.T) {
 }
 
 func testAcc_multiRegion(t *testing.T) {
+	ctx := acctest.Context(t)
 	var trail cloudtrail.Trail
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_cloudtrail.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, cloudtrail.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDestroy,
+		CheckDestroy:             testAccCheckTrailDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCloudTrailConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckExists(resourceName, &trail),
+					testAccCheckExists(ctx, resourceName, &trail),
 					resource.TestCheckResourceAttr(resourceName, "is_multi_region_trail", "false"),
 					testAccCheckLogValidationEnabled(resourceName, false, &trail),
 					resource.TestCheckResourceAttr(resourceName, "kms_key_id", ""),
@@ -226,7 +225,7 @@ func testAcc_multiRegion(t *testing.T) {
 			{
 				Config: testAccCloudTrailConfig_multiRegion(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckExists(resourceName, &trail),
+					testAccCheckExists(ctx, resourceName, &trail),
 					resource.TestCheckResourceAttr(resourceName, "is_multi_region_trail", "true"),
 					testAccCheckLogValidationEnabled(resourceName, false, &trail),
 					resource.TestCheckResourceAttr(resourceName, "kms_key_id", ""),
@@ -240,7 +239,7 @@ func testAcc_multiRegion(t *testing.T) {
 			{
 				Config: testAccCloudTrailConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckExists(resourceName, &trail),
+					testAccCheckExists(ctx, resourceName, &trail),
 					resource.TestCheckResourceAttr(resourceName, "is_multi_region_trail", "false"),
 					testAccCheckLogValidationEnabled(resourceName, false, &trail),
 					resource.TestCheckResourceAttr(resourceName, "kms_key_id", ""),
@@ -251,20 +250,21 @@ func testAcc_multiRegion(t *testing.T) {
 }
 
 func testAcc_organization(t *testing.T) {
+	ctx := acctest.Context(t)
 	var trail cloudtrail.Trail
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_cloudtrail.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckOrganizationsAccount(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckOrganizationsAccount(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, cloudtrail.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDestroy,
+		CheckDestroy:             testAccCheckTrailDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCloudTrailConfig_organization(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckExists(resourceName, &trail),
+					testAccCheckExists(ctx, resourceName, &trail),
 					resource.TestCheckResourceAttr(resourceName, "is_organization_trail", "true"),
 					testAccCheckLogValidationEnabled(resourceName, false, &trail),
 					resource.TestCheckResourceAttr(resourceName, "kms_key_id", ""),
@@ -278,7 +278,7 @@ func testAcc_organization(t *testing.T) {
 			{
 				Config: testAccCloudTrailConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckExists(resourceName, &trail),
+					testAccCheckExists(ctx, resourceName, &trail),
 					resource.TestCheckResourceAttr(resourceName, "is_organization_trail", "false"),
 					testAccCheckLogValidationEnabled(resourceName, false, &trail),
 					resource.TestCheckResourceAttr(resourceName, "kms_key_id", ""),
@@ -289,20 +289,21 @@ func testAcc_organization(t *testing.T) {
 }
 
 func testAcc_logValidation(t *testing.T) {
+	ctx := acctest.Context(t)
 	var trail cloudtrail.Trail
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_cloudtrail.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, cloudtrail.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDestroy,
+		CheckDestroy:             testAccCheckTrailDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCloudTrailConfig_logValidation(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckExists(resourceName, &trail),
+					testAccCheckExists(ctx, resourceName, &trail),
 					resource.TestCheckResourceAttr(resourceName, "s3_key_prefix", ""),
 					resource.TestCheckResourceAttr(resourceName, "include_global_service_events", "true"),
 					testAccCheckLogValidationEnabled(resourceName, true, &trail),
@@ -317,7 +318,7 @@ func testAcc_logValidation(t *testing.T) {
 			{
 				Config: testAccCloudTrailConfig_logValidationModified(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckExists(resourceName, &trail),
+					testAccCheckExists(ctx, resourceName, &trail),
 					resource.TestCheckResourceAttr(resourceName, "s3_key_prefix", ""),
 					resource.TestCheckResourceAttr(resourceName, "include_global_service_events", "true"),
 					testAccCheckLogValidationEnabled(resourceName, false, &trail),
@@ -329,6 +330,7 @@ func testAcc_logValidation(t *testing.T) {
 }
 
 func testAcc_kmsKey(t *testing.T) {
+	ctx := acctest.Context(t)
 	var trail cloudtrail.Trail
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -336,15 +338,15 @@ func testAcc_kmsKey(t *testing.T) {
 	kmsResourceName := "aws_kms_key.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, cloudtrail.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDestroy,
+		CheckDestroy:             testAccCheckTrailDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCloudTrailConfig_kmsKey(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckExists(resourceName, &trail),
+					testAccCheckExists(ctx, resourceName, &trail),
 					resource.TestCheckResourceAttr(resourceName, "s3_key_prefix", ""),
 					resource.TestCheckResourceAttr(resourceName, "include_global_service_events", "true"),
 					testAccCheckLogValidationEnabled(resourceName, false, &trail),
@@ -361,6 +363,7 @@ func testAcc_kmsKey(t *testing.T) {
 }
 
 func testAcc_tags(t *testing.T) {
+	ctx := acctest.Context(t)
 	var trail cloudtrail.Trail
 	var trailTags []*cloudtrail.Tag
 	var trailTagsModified []*cloudtrail.Tag
@@ -368,17 +371,17 @@ func testAcc_tags(t *testing.T) {
 	resourceName := "aws_cloudtrail.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, cloudtrail.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDestroy,
+		CheckDestroy:             testAccCheckTrailDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCloudTrailConfig_tags(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckExists(resourceName, &trail),
+					testAccCheckExists(ctx, resourceName, &trail),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
-					testAccCheckLoadTags(&trail, &trailTags),
+					testAccCheckLoadTags(ctx, &trail, &trailTags),
 					resource.TestCheckResourceAttr(resourceName, "tags.Yak", "milk"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Fox", "tail"),
 					testAccCheckLogValidationEnabled(resourceName, false, &trail),
@@ -393,9 +396,9 @@ func testAcc_tags(t *testing.T) {
 			{
 				Config: testAccCloudTrailConfig_tagsModified(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckExists(resourceName, &trail),
+					testAccCheckExists(ctx, resourceName, &trail),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "3"),
-					testAccCheckLoadTags(&trail, &trailTagsModified),
+					testAccCheckLoadTags(ctx, &trail, &trailTagsModified),
 					resource.TestCheckResourceAttr(resourceName, "tags.Yak", "milk"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Emu", "toes"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Fox", "tail"),
@@ -406,9 +409,9 @@ func testAcc_tags(t *testing.T) {
 			{
 				Config: testAccCloudTrailConfig_tagsModifiedAgain(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckExists(resourceName, &trail),
+					testAccCheckExists(ctx, resourceName, &trail),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-					testAccCheckLoadTags(&trail, &trailTagsModified),
+					testAccCheckLoadTags(ctx, &trail, &trailTagsModified),
 					testAccCheckLogValidationEnabled(resourceName, false, &trail),
 					resource.TestCheckResourceAttr(resourceName, "kms_key_id", ""),
 				),
@@ -418,20 +421,21 @@ func testAcc_tags(t *testing.T) {
 }
 
 func testAcc_globalServiceEvents(t *testing.T) {
+	ctx := acctest.Context(t)
 	var trail cloudtrail.Trail
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_cloudtrail.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, cloudtrail.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDestroy,
+		CheckDestroy:             testAccCheckTrailDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCloudTrailConfig_globalServiceEvents(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckExists(resourceName, &trail),
+					testAccCheckExists(ctx, resourceName, &trail),
 					resource.TestCheckResourceAttr(resourceName, "include_global_service_events", "false"),
 				),
 			},
@@ -445,14 +449,15 @@ func testAcc_globalServiceEvents(t *testing.T) {
 }
 
 func testAcc_eventSelector(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_cloudtrail.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, cloudtrail.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDestroy,
+		CheckDestroy:             testAccCheckTrailDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCloudTrailConfig_eventSelector(rName),
@@ -516,14 +521,15 @@ func testAcc_eventSelector(t *testing.T) {
 }
 
 func testAcc_eventSelectorDynamoDB(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_cloudtrail.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, cloudtrail.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDestroy,
+		CheckDestroy:             testAccCheckTrailDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCloudTrailConfig_eventSelectorDynamoDB(rName),
@@ -542,14 +548,15 @@ func testAcc_eventSelectorDynamoDB(t *testing.T) {
 }
 
 func testAcc_eventSelectorExclude(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_cloudtrail.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, cloudtrail.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDestroy,
+		CheckDestroy:             testAccCheckTrailDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCloudTrailConfig_eventSelectorExcludeKMS(rName),
@@ -591,14 +598,15 @@ func testAcc_eventSelectorExclude(t *testing.T) {
 }
 
 func testAcc_insightSelector(t *testing.T) {
+	ctx := acctest.Context(t)
 	resourceName := "aws_cloudtrail.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, cloudtrail.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDestroy,
+		CheckDestroy:             testAccCheckTrailDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCloudTrailConfig_insightSelector(rName),
@@ -638,14 +646,15 @@ func testAcc_insightSelector(t *testing.T) {
 }
 
 func testAcc_advanced_event_selector(t *testing.T) {
+	ctx := acctest.Context(t)
 	resourceName := "aws_cloudtrail.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, cloudtrail.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDestroy,
+		CheckDestroy:             testAccCheckTrailDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCloudTrailConfig_advancedEventSelector(rName),
@@ -736,22 +745,23 @@ func testAcc_advanced_event_selector(t *testing.T) {
 }
 
 func testAcc_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
 	var trail cloudtrail.Trail
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_cloudtrail.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, cloudtrail.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDestroy,
+		CheckDestroy:             testAccCheckTrailDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCloudTrailConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckExists(resourceName, &trail),
-					acctest.CheckResourceDisappears(acctest.Provider, tfcloudtrail.ResourceCloudTrail(), resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tfcloudtrail.ResourceCloudTrail(), resourceName),
+					testAccCheckExists(ctx, resourceName, &trail),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfcloudtrail.ResourceCloudTrail(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfcloudtrail.ResourceCloudTrail(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -759,18 +769,18 @@ func testAcc_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckExists(n string, trail *cloudtrail.Trail) resource.TestCheckFunc {
+func testAccCheckExists(ctx context.Context, n string, trail *cloudtrail.Trail) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudTrailConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudTrailConn(ctx)
 		params := cloudtrail.DescribeTrailsInput{
 			TrailNameList: []*string{aws.String(rs.Primary.ID)},
 		}
-		resp, err := conn.DescribeTrails(&params)
+		resp, err := conn.DescribeTrailsWithContext(ctx, &params)
 		if err != nil {
 			return err
 		}
@@ -783,18 +793,18 @@ func testAccCheckExists(n string, trail *cloudtrail.Trail) resource.TestCheckFun
 	}
 }
 
-func testAccCheckLoggingEnabled(n string, desired bool) resource.TestCheckFunc {
+func testAccCheckLoggingEnabled(ctx context.Context, n string, desired bool) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudTrailConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudTrailConn(ctx)
 		params := cloudtrail.GetTrailStatusInput{
 			Name: aws.String(rs.Primary.ID),
 		}
-		resp, err := conn.GetTrailStatus(&params)
+		resp, err := conn.GetTrailStatusWithContext(ctx, &params)
 
 		if err != nil {
 			return err
@@ -840,38 +850,40 @@ func testAccCheckLogValidationEnabled(n string, desired bool, trail *cloudtrail.
 	}
 }
 
-func testAccCheckDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).CloudTrailConn
+func testAccCheckTrailDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudTrailConn(ctx)
 
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_cloudtrail" {
-			continue
-		}
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_cloudtrail" {
+				continue
+			}
 
-		params := cloudtrail.DescribeTrailsInput{
-			TrailNameList: []*string{aws.String(rs.Primary.ID)},
-		}
+			params := cloudtrail.DescribeTrailsInput{
+				TrailNameList: []*string{aws.String(rs.Primary.ID)},
+			}
 
-		resp, err := conn.DescribeTrails(&params)
+			resp, err := conn.DescribeTrailsWithContext(ctx, &params)
 
-		if err == nil {
-			if len(resp.TrailList) != 0 &&
-				aws.StringValue(resp.TrailList[0].Name) == rs.Primary.ID {
-				return fmt.Errorf("CloudTrail still exists: %s", rs.Primary.ID)
+			if err == nil {
+				if len(resp.TrailList) != 0 &&
+					aws.StringValue(resp.TrailList[0].Name) == rs.Primary.ID {
+					return fmt.Errorf("CloudTrail still exists: %s", rs.Primary.ID)
+				}
 			}
 		}
-	}
 
-	return nil
+		return nil
+	}
 }
 
-func testAccCheckLoadTags(trail *cloudtrail.Trail, tags *[]*cloudtrail.Tag) resource.TestCheckFunc {
+func testAccCheckLoadTags(ctx context.Context, trail *cloudtrail.Trail, tags *[]*cloudtrail.Tag) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudTrailConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudTrailConn(ctx)
 		input := cloudtrail.ListTagsInput{
 			ResourceIdList: []*string{trail.TrailARN},
 		}
-		out, err := conn.ListTags(&input)
+		out, err := conn.ListTagsWithContext(ctx, &input)
 		if err != nil {
 			return err
 		}
@@ -886,7 +898,11 @@ func testAccCheckLoadTags(trail *cloudtrail.Trail, tags *[]*cloudtrail.Tag) reso
 
 func testAccBaseConfig(rName string) string {
 	return fmt.Sprintf(`
+data "aws_caller_identity" "current" {}
+
 data "aws_partition" "current" {}
+
+data "aws_region" "current" {}
 
 resource "aws_s3_bucket" "test" {
   bucket        = %[1]q
@@ -899,21 +915,31 @@ resource "aws_s3_bucket_policy" "test" {
     Version = "2012-10-17"
     Statement = [
       {
-        Sid       = "AWSCloudTrailAclCheck"
-        Effect    = "Allow"
-        Principal = "*"
-        Action    = "s3:GetBucketAcl"
-        Resource  = "arn:${data.aws_partition.current.partition}:s3:::%[1]s"
-      },
-      {
-        Sid       = "AWSCloudTrailWrite"
-        Effect    = "Allow"
-        Principal = "*"
-        Action    = "s3:PutObject"
-        Resource  = "arn:${data.aws_partition.current.partition}:s3:::%[1]s/*"
+        Sid    = "AWSCloudTrailAclCheck"
+        Effect = "Allow"
+        Principal = {
+          Service = "cloudtrail.amazonaws.com"
+        }
+        Action   = "s3:GetBucketAcl"
+        Resource = "arn:${data.aws_partition.current.partition}:s3:::%[1]s"
         Condition = {
           StringEquals = {
-            "s3:x-amz-acl" = "bucket-owner-full-control"
+            "aws:SourceArn" = "arn:${data.aws_partition.current.partition}:cloudtrail:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:trail/%[1]s"
+          }
+        }
+      },
+      {
+        Sid    = "AWSCloudTrailWrite"
+        Effect = "Allow"
+        Principal = {
+          Service = "cloudtrail.amazonaws.com"
+        }
+        Action   = "s3:PutObject"
+        Resource = "arn:${data.aws_partition.current.partition}:s3:::%[1]s/*"
+        Condition = {
+          StringEquals = {
+            "s3:x-amz-acl"  = "bucket-owner-full-control"
+            "aws:SourceArn" = "arn:${data.aws_partition.current.partition}:cloudtrail:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:trail/%[1]s"
           }
         }
       }
@@ -1488,13 +1514,13 @@ resource "aws_cloudtrail" "test" {
 }
 
 func testAccCloudTrailConfig_advancedEventSelector(rName string) string {
-	return fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccBaseConfig(rName), fmt.Sprintf(`
 resource "aws_cloudtrail" "test" {
   # Must have bucket policy attached first
   depends_on = [aws_s3_bucket_policy.test]
 
   name           = %[1]q
-  s3_bucket_name = aws_s3_bucket.test1.id
+  s3_bucket_name = aws_s3_bucket.test.id
 
   advanced_event_selector {
     name = "s3Custom"
@@ -1584,46 +1610,9 @@ resource "aws_cloudtrail" "test" {
   }
 }
 
-data "aws_partition" "current" {}
-
-resource "aws_s3_bucket" "test1" {
-  bucket        = "%[1]s-1"
-  force_destroy = true
-}
-
-resource "aws_s3_bucket_policy" "test" {
-  bucket = aws_s3_bucket.test1.id
-  policy = <<POLICY
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Sid": "AWSCloudTrailAclCheck",
-      "Effect": "Allow",
-      "Principal": "*",
-      "Action": "s3:GetBucketAcl",
-      "Resource": "arn:${data.aws_partition.current.partition}:s3:::%[1]s-1"
-    },
-    {
-      "Sid": "AWSCloudTrailWrite",
-      "Effect": "Allow",
-      "Principal": "*",
-      "Action": "s3:PutObject",
-      "Resource": "arn:${data.aws_partition.current.partition}:s3:::%[1]s-1/*",
-      "Condition": {
-        "StringEquals": {
-          "s3:x-amz-acl": "bucket-owner-full-control"
-        }
-      }
-    }
-  ]
-}
-POLICY
-}
-
 resource "aws_s3_bucket" "test2" {
   bucket        = "%[1]s-2"
   force_destroy = true
 }
-`, rName)
+`, rName))
 }

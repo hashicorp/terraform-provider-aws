@@ -18,7 +18,7 @@ resource "aws_appstream_image_builder" "test_fleet" {
   description                    = "Description of a ImageBuilder"
   display_name                   = "Display name of a ImageBuilder"
   enable_default_internet_access = false
-  image_name                     = "AppStream-WinServer2012R2-07-19-2021"
+  image_name                     = "AppStream-WinServer2019-10-05-2022"
   instance_type                  = "stream.standard.large"
 
   vpc_config {
@@ -73,9 +73,9 @@ The `vpc_config` block supports the following arguments:
 * `security_group_ids` - (Optional) Identifiers of the security groups for the image builder or image builder.
 * `subnet_ids` - (Optional) Identifiers of the subnets to which a network interface is attached from the image builder instance or image builder instance.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the appstream image builder.
 * `created_time` -  Date and time, in UTC and extended RFC 3339 format, when the image builder was created.
@@ -85,8 +85,17 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-`aws_appstream_image_builder` can be imported using the `name`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_appstream_image_builder` using the `name`. For example:
 
+```terraform
+import {
+  to = aws_appstream_image_builder.example
+  id = "imageBuilderExample"
+}
 ```
-$ terraform import aws_appstream_image_builder.example imageBuilderExample
+
+Using `terraform import`, import `aws_appstream_image_builder` using the `name`. For example:
+
+```console
+% terraform import aws_appstream_image_builder.example imageBuilderExample
 ```

@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ec2
 
 import (
@@ -6,10 +9,11 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
+	datasourceschema "github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 )
 
 // BuildTagFilterList takes a []*ec2.Tag and produces a []*ec2.Filter that
@@ -69,6 +73,21 @@ func attributeFiltersFromMultimap(m map[string][]string) []*ec2.Filter {
 	return filters
 }
 
+// tagFilters returns an array of EC2 Filter objects to be used when listing resources by tag.
+func tagFilters(ctx context.Context) []*ec2.Filter {
+	tags := getTagsIn(ctx)
+	filters := make([]*ec2.Filter, len(tags))
+
+	for i, tag := range tags {
+		filters[i] = &ec2.Filter{
+			Name:   aws.String(fmt.Sprintf("tag:%s", aws.StringValue(tag.Key))),
+			Values: aws.StringSlice([]string{aws.StringValue(tag.Value)}),
+		}
+	}
+
+	return filters
+}
+
 // CustomFiltersSchema returns a *schema.Schema that represents
 // a set of custom filtering criteria that a user can specify as input
 // to a data source that wraps one of the many "Describe..." API calls
@@ -106,20 +125,42 @@ func CustomFiltersSchema() *schema.Schema {
 	}
 }
 
-// CustomFiltersBlock is the Plugin Framework variant of CustomFiltersSchema.
-func CustomFiltersBlock() tfsdk.Block {
-	return tfsdk.Block{
-		Attributes: map[string]tfsdk.Attribute{
-			"name": {
-				Type:     types.StringType,
-				Required: true,
-			},
-			"values": {
-				Type:     types.SetType{ElemType: types.StringType},
-				Required: true,
+func CustomRequiredFiltersSchema() *schema.Schema {
+	return &schema.Schema{
+		Type:     schema.TypeSet,
+		Required: true,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"name": {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+				"values": {
+					Type:     schema.TypeSet,
+					Required: true,
+					Elem: &schema.Schema{
+						Type: schema.TypeString,
+					},
+				},
 			},
 		},
-		NestingMode: tfsdk.BlockNestingModeSet,
+	}
+}
+
+// CustomFiltersBlock is the Plugin Framework variant of CustomFiltersSchema.
+func CustomFiltersBlock() datasourceschema.Block {
+	return datasourceschema.SetNestedBlock{
+		NestedObject: datasourceschema.NestedBlockObject{
+			Attributes: map[string]datasourceschema.Attribute{
+				"name": datasourceschema.StringAttribute{
+					Required: true,
+				},
+				"values": datasourceschema.SetAttribute{
+					ElementType: types.StringType,
+					Required:    true,
+				},
+			},
+		},
 	}
 }
 
@@ -136,7 +177,7 @@ type customFilterData struct {
 // of the "Describe..." functions in the EC2 API.
 //
 // This function is intended only to be used in conjunction with
-// ec2CustomFitlersSchema. See the docs on that function for more details
+// CustomFiltersSchema. See the docs on that function for more details
 // on the configuration pattern this is intended to support.
 func BuildCustomFilterList(filterSet *schema.Set) []*ec2.Filter {
 	if filterSet == nil {
@@ -171,7 +212,7 @@ func BuildCustomFilters(ctx context.Context, filterSet types.Set) []*ec2.Filter 
 
 	var filters []*ec2.Filter
 
-	for _, v := range filterSet.Elems {
+	for _, v := range filterSet.Elements() {
 		var data customFilterData
 
 		if tfsdk.ValueAs(ctx, v, &data).HasError() {
@@ -184,7 +225,7 @@ func BuildCustomFilters(ctx context.Context, filterSet types.Set) []*ec2.Filter 
 
 		if v := flex.ExpandFrameworkStringSet(ctx, data.Values); v != nil {
 			filters = append(filters, &ec2.Filter{
-				Name:   aws.String(data.Name.Value),
+				Name:   flex.StringFromFramework(ctx, data.Name),
 				Values: v,
 			})
 		}

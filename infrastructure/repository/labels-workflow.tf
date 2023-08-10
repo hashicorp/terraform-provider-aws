@@ -1,6 +1,9 @@
+# Copyright (c) HashiCorp, Inc.
+# SPDX-License-Identifier: MPL-2.0
+
 variable "workflow_labels" {
   default = {
-    # Stop the search. Keep these alphabetibelized.
+    # Stop the search. Keep these alphabetized.
 
     "authentication" = {
       color       = "844fba", # color:terraform (main)
@@ -38,6 +41,10 @@ variable "workflow_labels" {
       color       = "844fba", # color:terraform (main)
       description = "Requests to existing resources that expand the functionality or scope."
     },
+    "engineering-initiative" = {
+      color       = "844fba", # color:terraform (main)
+      description = "Maintainer driven proposals to improve operation, or development experience of the provider."
+    },
     "eventual-consistency" = {
       color       = "844fba", # color:terraform (main)
       description = "Pertains to eventual consistency issues."
@@ -45,6 +52,10 @@ variable "workflow_labels" {
     "examples" = {
       color       = "63d0ff", # color:packer
       description = "Introduces or discusses updates to examples."
+    },
+    "external-maintainer" = {
+      color       = "63d0ff", # color:packer
+      description = "Contribution from a trusted external contributor."
     },
     "flex" = {
       color       = "844fba", # color:terraform (main)
@@ -82,6 +93,10 @@ variable "workflow_labels" {
       color       = "ac72f0", # color:terraform (link on black)
       description = "Introduces a new service."
     },
+    "partner" = {
+      color       = "ff9900", # color:aws
+      description = "Contribution from a partner."
+    },
     "pre-service-packages" = {
       color       = "ffec6e", # color:vault
       description = "Includes pre-Service Packages aspects."
@@ -89,6 +104,10 @@ variable "workflow_labels" {
     "prerelease-tf-testing" = {
       color       = "60dea9", # color:nomad
       description = "Pertains to testing Terraform releases prior to release."
+    },
+    "prioritized" = {
+      color       = "d1ebff", # color:terraform accent
+      description = "Part of the maintainer teams immediate focus. To be addressed within the current quarter.",
     },
     "proposal" = {
       color       = "d1ebff", # color:terraform accent

@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 //go:build sweep
 // +build sweep
 
@@ -9,8 +12,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/service/dax"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
@@ -22,13 +24,14 @@ func init() {
 }
 
 func sweepClusters(region string) error {
-	client, err := sweep.SharedRegionalSweepClient(region)
+	ctx := sweep.Context(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
 		return fmt.Errorf("Error getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).DAXConn
+	conn := client.DAXConn(ctx)
 
-	resp, err := conn.DescribeClusters(&dax.DescribeClustersInput{})
+	resp, err := conn.DescribeClustersWithContext(ctx, &dax.DescribeClustersInput{})
 	if err != nil {
 		// GovCloud (with no DAX support) has an endpoint that responds with:
 		// InvalidParameterValueException: Access Denied to API Version: DAX_V3
@@ -48,7 +51,7 @@ func sweepClusters(region string) error {
 
 	for _, cluster := range resp.Clusters {
 		log.Printf("[INFO] Deleting DAX cluster %s", *cluster.ClusterName)
-		_, err := conn.DeleteCluster(&dax.DeleteClusterInput{
+		_, err := conn.DeleteClusterWithContext(ctx, &dax.DeleteClusterInput{
 			ClusterName: cluster.ClusterName,
 		})
 		if err != nil {

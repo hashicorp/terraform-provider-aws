@@ -16,20 +16,13 @@ import (
 	"runtime/debug"
 	"strings"
 	"sync"
+	"testing"
 	"time"
+
+	"golang.org/x/tools/internal/goroot"
 
 	exec "golang.org/x/sys/execabs"
 )
-
-// Testing is an abstraction of a *testing.T.
-type Testing interface {
-	Skipf(format string, args ...interface{})
-	Fatalf(format string, args ...interface{})
-}
-
-type helperer interface {
-	Helper()
-}
 
 // packageMainIsDevel reports whether the module containing package main
 // is a development version (if module information is available).
@@ -97,6 +90,23 @@ func hasTool(tool string) error {
 			GOROOT := strings.TrimSpace(string(out))
 			if GOROOT != runtime.GOROOT() {
 				checkGoGoroot.err = fmt.Errorf("'go env GOROOT' does not match runtime.GOROOT:\n\tgo env: %s\n\tGOROOT: %s", GOROOT, runtime.GOROOT())
+				return
+			}
+
+			// Also ensure that that GOROOT includes a compiler: 'go' commands
+			// don't in general work without it, and some builders
+			// (such as android-amd64-emu) seem to lack it in the test environment.
+			cmd := exec.Command(tool, "tool", "-n", "compile")
+			stderr := new(bytes.Buffer)
+			stderr.Write([]byte("\n"))
+			cmd.Stderr = stderr
+			out, err = cmd.Output()
+			if err != nil {
+				checkGoGoroot.err = fmt.Errorf("%v: %v%s", cmd, err, stderr)
+				return
+			}
+			if _, err := os.Stat(string(bytes.TrimSpace(out))); err != nil {
+				checkGoGoroot.err = err
 			}
 		})
 		if checkGoGoroot.err != nil {
@@ -172,14 +182,13 @@ func allowMissingTool(tool string) bool {
 
 // NeedsTool skips t if the named tool is not present in the path.
 // As a special case, "cgo" means "go" is present and can compile cgo programs.
-func NeedsTool(t Testing, tool string) {
-	if t, ok := t.(helperer); ok {
-		t.Helper()
-	}
+func NeedsTool(t testing.TB, tool string) {
 	err := hasTool(tool)
 	if err == nil {
 		return
 	}
+
+	t.Helper()
 	if allowMissingTool(tool) {
 		t.Skipf("skipping because %s tool not available: %v", tool, err)
 	} else {
@@ -189,10 +198,8 @@ func NeedsTool(t Testing, tool string) {
 
 // NeedsGoPackages skips t if the go/packages driver (or 'go' tool) implied by
 // the current process environment is not present in the path.
-func NeedsGoPackages(t Testing) {
-	if t, ok := t.(helperer); ok {
-		t.Helper()
-	}
+func NeedsGoPackages(t testing.TB) {
+	t.Helper()
 
 	tool := os.Getenv("GOPACKAGESDRIVER")
 	switch tool {
@@ -212,10 +219,8 @@ func NeedsGoPackages(t Testing) {
 
 // NeedsGoPackagesEnv skips t if the go/packages driver (or 'go' tool) implied
 // by env is not present in the path.
-func NeedsGoPackagesEnv(t Testing, env []string) {
-	if t, ok := t.(helperer); ok {
-		t.Helper()
-	}
+func NeedsGoPackagesEnv(t testing.TB, env []string) {
+	t.Helper()
 
 	for _, v := range env {
 		if strings.HasPrefix(v, "GOPACKAGESDRIVER=") {
@@ -236,10 +241,8 @@ func NeedsGoPackagesEnv(t Testing, env []string) {
 // and then run them with os.StartProcess or exec.Command.
 // Android doesn't have the userspace go build needs to run,
 // and js/wasm doesn't support running subprocesses.
-func NeedsGoBuild(t Testing) {
-	if t, ok := t.(helperer); ok {
-		t.Helper()
-	}
+func NeedsGoBuild(t testing.TB) {
+	t.Helper()
 
 	// This logic was derived from internal/testing.HasGoBuild and
 	// may need to be updated as that function evolves.
@@ -298,29 +301,25 @@ func Go1Point() int {
 
 // NeedsGo1Point skips t if the Go version used to run the test is older than
 // 1.x.
-func NeedsGo1Point(t Testing, x int) {
-	if t, ok := t.(helperer); ok {
-		t.Helper()
-	}
+func NeedsGo1Point(t testing.TB, x int) {
 	if Go1Point() < x {
+		t.Helper()
 		t.Skipf("running Go version %q is version 1.%d, older than required 1.%d", runtime.Version(), Go1Point(), x)
 	}
 }
 
 // SkipAfterGo1Point skips t if the Go version used to run the test is newer than
 // 1.x.
-func SkipAfterGo1Point(t Testing, x int) {
-	if t, ok := t.(helperer); ok {
-		t.Helper()
-	}
+func SkipAfterGo1Point(t testing.TB, x int) {
 	if Go1Point() > x {
+		t.Helper()
 		t.Skipf("running Go version %q is version 1.%d, newer than maximum 1.%d", runtime.Version(), Go1Point(), x)
 	}
 }
 
 // Deadline returns the deadline of t, if known,
 // using the Deadline method added in Go 1.15.
-func Deadline(t Testing) (time.Time, bool) {
+func Deadline(t testing.TB) (time.Time, bool) {
 	td, ok := t.(interface {
 		Deadline() (time.Time, bool)
 	})
@@ -328,4 +327,66 @@ func Deadline(t Testing) (time.Time, bool) {
 		return time.Time{}, false
 	}
 	return td.Deadline()
+}
+
+// WriteImportcfg writes an importcfg file used by the compiler or linker to
+// dstPath containing entries for the packages in std and cmd in addition
+// to the package to package file mappings in additionalPackageFiles.
+func WriteImportcfg(t testing.TB, dstPath string, additionalPackageFiles map[string]string) {
+	importcfg, err := goroot.Importcfg()
+	for k, v := range additionalPackageFiles {
+		importcfg += fmt.Sprintf("\npackagefile %s=%s", k, v)
+	}
+	if err != nil {
+		t.Fatalf("preparing the importcfg failed: %s", err)
+	}
+	ioutil.WriteFile(dstPath, []byte(importcfg), 0655)
+	if err != nil {
+		t.Fatalf("writing the importcfg failed: %s", err)
+	}
+}
+
+var (
+	gorootOnce sync.Once
+	gorootPath string
+	gorootErr  error
+)
+
+func findGOROOT() (string, error) {
+	gorootOnce.Do(func() {
+		gorootPath = runtime.GOROOT()
+		if gorootPath != "" {
+			// If runtime.GOROOT() is non-empty, assume that it is valid. (It might
+			// not be: for example, the user may have explicitly set GOROOT
+			// to the wrong directory.)
+			return
+		}
+
+		cmd := exec.Command("go", "env", "GOROOT")
+		out, err := cmd.Output()
+		if err != nil {
+			gorootErr = fmt.Errorf("%v: %v", cmd, err)
+		}
+		gorootPath = strings.TrimSpace(string(out))
+	})
+
+	return gorootPath, gorootErr
+}
+
+// GOROOT reports the path to the directory containing the root of the Go
+// project source tree. This is normally equivalent to runtime.GOROOT, but
+// works even if the test binary was built with -trimpath.
+//
+// If GOROOT cannot be found, GOROOT skips t if t is non-nil,
+// or panics otherwise.
+func GOROOT(t testing.TB) string {
+	path, err := findGOROOT()
+	if err != nil {
+		if t == nil {
+			panic(err)
+		}
+		t.Helper()
+		t.Skip(err)
+	}
+	return path
 }

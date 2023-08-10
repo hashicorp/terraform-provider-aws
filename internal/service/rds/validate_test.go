@@ -1,13 +1,18 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package rds
 
 import (
 	"strings"
 	"testing"
 
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 )
 
 func TestValidEventSubscriptionName(t *testing.T) {
+	t.Parallel()
+
 	validNames := []string{
 		"valid-name",
 		"valid02-name",
@@ -41,6 +46,8 @@ func TestValidEventSubscriptionName(t *testing.T) {
 }
 
 func TestValidOptionGroupName(t *testing.T) {
+	t.Parallel()
+
 	cases := []struct {
 		Value    string
 		ErrCount int
@@ -77,6 +84,8 @@ func TestValidOptionGroupName(t *testing.T) {
 }
 
 func TestValidOptionGroupNamePrefix(t *testing.T) {
+	t.Parallel()
+
 	cases := []struct {
 		Value    string
 		ErrCount int
@@ -109,6 +118,8 @@ func TestValidOptionGroupNamePrefix(t *testing.T) {
 }
 
 func TestValidParamGroupName(t *testing.T) {
+	t.Parallel()
+
 	cases := []struct {
 		Value    string
 		ErrCount int
@@ -153,6 +164,8 @@ func TestValidParamGroupName(t *testing.T) {
 }
 
 func TestValidSubnetGroupName(t *testing.T) {
+	t.Parallel()
+
 	cases := []struct {
 		Value    string
 		ErrCount int
@@ -185,6 +198,8 @@ func TestValidSubnetGroupName(t *testing.T) {
 }
 
 func TestValidSubnetGroupNamePrefix(t *testing.T) {
+	t.Parallel()
+
 	cases := []struct {
 		Value    string
 		ErrCount int

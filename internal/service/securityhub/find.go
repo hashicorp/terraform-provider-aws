@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package securityhub
 
 import (
@@ -6,14 +9,15 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/securityhub"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func FindAdminAccount(conn *securityhub.SecurityHub, adminAccountID string) (*securityhub.AdminAccount, error) {
+func FindAdminAccount(ctx context.Context, conn *securityhub.SecurityHub, adminAccountID string) (*securityhub.AdminAccount, error) {
 	input := &securityhub.ListOrganizationAdminAccountsInput{}
 	var result *securityhub.AdminAccount
 
-	err := conn.ListOrganizationAdminAccountsPages(input, func(page *securityhub.ListOrganizationAdminAccountsOutput, lastPage bool) bool {
+	err := conn.ListOrganizationAdminAccountsPagesWithContext(ctx, input, func(page *securityhub.ListOrganizationAdminAccountsOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
@@ -77,7 +81,7 @@ func FindStandardsControlByStandardsSubscriptionARNAndStandardsControlARN(ctx co
 	})
 
 	if tfawserr.ErrCodeEquals(err, securityhub.ErrCodeResourceNotFoundException) {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -88,47 +92,8 @@ func FindStandardsControlByStandardsSubscriptionARNAndStandardsControlARN(ctx co
 	}
 
 	if output == nil {
-		return nil, &resource.NotFoundError{
-			Message:     "Empty result",
-			LastRequest: input,
-		}
+		return nil, tfresource.NewEmptyResultError(input)
 	}
 
 	return output, nil
-}
-
-func FindStandardsSubscriptionByARN(conn *securityhub.SecurityHub, arn string) (*securityhub.StandardsSubscription, error) {
-	input := &securityhub.GetEnabledStandardsInput{
-		StandardsSubscriptionArns: aws.StringSlice([]string{arn}),
-	}
-
-	output, err := conn.GetEnabledStandards(input)
-
-	if tfawserr.ErrCodeEquals(err, securityhub.ErrCodeResourceNotFoundException) {
-		return nil, &resource.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
-		}
-	}
-
-	if output == nil || len(output.StandardsSubscriptions) == 0 || output.StandardsSubscriptions[0] == nil {
-		return nil, &resource.NotFoundError{
-			Message:     "Empty result",
-			LastRequest: input,
-		}
-	}
-
-	// TODO Check for multiple results.
-	// TODO https://github.com/hashicorp/terraform-provider-aws/pull/17613.
-
-	subscription := output.StandardsSubscriptions[0]
-
-	if status := aws.StringValue(subscription.StandardsStatus); status == securityhub.StandardsStatusFailed {
-		return nil, &resource.NotFoundError{
-			Message:     status,
-			LastRequest: input,
-		}
-	}
-
-	return subscription, nil
 }

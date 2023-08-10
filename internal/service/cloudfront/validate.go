@@ -1,10 +1,13 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package cloudfront
 
 import (
 	"fmt"
 	"regexp"
 
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 )
 
 var regionRegexp = regexp.MustCompile(`^[a-z]{2}(-[a-z]+)+-\d$`)
@@ -28,7 +31,7 @@ func validPublicKeyNamePrefix(v interface{}, k string) (ws []string, errors []er
 		errors = append(errors, fmt.Errorf(
 			"only alphanumeric characters, underscores and hyphens allowed in %q", k))
 	}
-	prefixMaxLength := 128 - resource.UniqueIDSuffixLength
+	prefixMaxLength := 128 - id.UniqueIDSuffixLength
 	if len(value) > prefixMaxLength {
 		errors = append(errors, fmt.Errorf(
 			"%q cannot be greater than %d characters", k, prefixMaxLength))

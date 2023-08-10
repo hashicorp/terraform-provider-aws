@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package amp_test
 
 import (
@@ -7,9 +10,9 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/prometheusservice"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfamp "github.com/hashicorp/terraform-provider-aws/internal/service/amp"
@@ -17,19 +20,23 @@ import (
 )
 
 func TestAccAMPWorkspace_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	var v prometheusservice.WorkspaceDescription
 	resourceName := "aws_prometheus_workspace.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(prometheusservice.EndpointsID, t) },
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, prometheusservice.EndpointsID)
+		},
 		ErrorCheck:               acctest.ErrorCheck(t, prometheusservice.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckWorkspaceDestroy,
+		CheckDestroy:             testAccCheckWorkspaceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccWorkspaceConfig_basic(),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckWorkspaceExists(resourceName, &v),
+					testAccCheckWorkspaceExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "alias", ""),
 					resource.TestCheckResourceAttrSet(resourceName, "arn"),
 					resource.TestCheckResourceAttr(resourceName, "logging_configuration.#", "0"),
@@ -47,20 +54,24 @@ func TestAccAMPWorkspace_basic(t *testing.T) {
 }
 
 func TestAccAMPWorkspace_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
 	var v prometheusservice.WorkspaceDescription
 	resourceName := "aws_prometheus_workspace.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(prometheusservice.EndpointsID, t) },
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, prometheusservice.EndpointsID)
+		},
 		ErrorCheck:               acctest.ErrorCheck(t, prometheusservice.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckWorkspaceDestroy,
+		CheckDestroy:             testAccCheckWorkspaceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccWorkspaceConfig_basic(),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckWorkspaceExists(resourceName, &v),
-					acctest.CheckResourceDisappears(acctest.Provider, tfamp.ResourceWorkspace(), resourceName),
+					testAccCheckWorkspaceExists(ctx, resourceName, &v),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfamp.ResourceWorkspace(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -69,19 +80,20 @@ func TestAccAMPWorkspace_disappears(t *testing.T) {
 }
 
 func TestAccAMPWorkspace_tags(t *testing.T) {
+	ctx := acctest.Context(t)
 	var v prometheusservice.WorkspaceDescription
 	resourceName := "aws_prometheus_workspace.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, prometheusservice.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckWorkspaceDestroy,
+		CheckDestroy:             testAccCheckWorkspaceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccWorkspaceConfig_tags1("key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckWorkspaceExists(resourceName, &v),
+					testAccCheckWorkspaceExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
@@ -94,7 +106,7 @@ func TestAccAMPWorkspace_tags(t *testing.T) {
 			{
 				Config: testAccWorkspaceConfig_tags2("key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckWorkspaceExists(resourceName, &v),
+					testAccCheckWorkspaceExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
@@ -103,7 +115,7 @@ func TestAccAMPWorkspace_tags(t *testing.T) {
 			{
 				Config: testAccWorkspaceConfig_tags1("key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckWorkspaceExists(resourceName, &v),
+					testAccCheckWorkspaceExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
@@ -113,21 +125,25 @@ func TestAccAMPWorkspace_tags(t *testing.T) {
 }
 
 func TestAccAMPWorkspace_alias(t *testing.T) {
+	ctx := acctest.Context(t)
 	var v1, v2, v3, v4 prometheusservice.WorkspaceDescription
 	rName1 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_prometheus_workspace.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(prometheusservice.EndpointsID, t) },
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, prometheusservice.EndpointsID)
+		},
 		ErrorCheck:               acctest.ErrorCheck(t, prometheusservice.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckWorkspaceDestroy,
+		CheckDestroy:             testAccCheckWorkspaceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccWorkspaceConfig_alias(rName1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckWorkspaceExists(resourceName, &v1),
+					testAccCheckWorkspaceExists(ctx, resourceName, &v1),
 					resource.TestCheckResourceAttr(resourceName, "alias", rName1),
 				),
 			},
@@ -139,7 +155,7 @@ func TestAccAMPWorkspace_alias(t *testing.T) {
 			{
 				Config: testAccWorkspaceConfig_alias(rName2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckWorkspaceExists(resourceName, &v2),
+					testAccCheckWorkspaceExists(ctx, resourceName, &v2),
 					testAccCheckVPNConnectionNotRecreated(&v1, &v2),
 					resource.TestCheckResourceAttr(resourceName, "alias", rName2),
 				),
@@ -147,7 +163,7 @@ func TestAccAMPWorkspace_alias(t *testing.T) {
 			{
 				Config: testAccWorkspaceConfig_basic(),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckWorkspaceExists(resourceName, &v3),
+					testAccCheckWorkspaceExists(ctx, resourceName, &v3),
 					testAccCheckVPNConnectionRecreated(&v2, &v3),
 					resource.TestCheckResourceAttr(resourceName, "alias", ""),
 				),
@@ -155,7 +171,7 @@ func TestAccAMPWorkspace_alias(t *testing.T) {
 			{
 				Config: testAccWorkspaceConfig_alias(rName1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckWorkspaceExists(resourceName, &v4),
+					testAccCheckWorkspaceExists(ctx, resourceName, &v4),
 					testAccCheckVPNConnectionNotRecreated(&v3, &v4),
 					resource.TestCheckResourceAttr(resourceName, "alias", rName1),
 				),
@@ -165,20 +181,21 @@ func TestAccAMPWorkspace_alias(t *testing.T) {
 }
 
 func TestAccAMPWorkspace_loggingConfiguration(t *testing.T) {
+	ctx := acctest.Context(t)
 	var v prometheusservice.WorkspaceDescription
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_prometheus_workspace.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, prometheusservice.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckWorkspaceDestroy,
+		CheckDestroy:             testAccCheckWorkspaceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccWorkspaceConfig_loggingConfiguration(rName, 0),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckWorkspaceExists(resourceName, &v),
+					testAccCheckWorkspaceExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "logging_configuration.#", "1"),
 					resource.TestCheckResourceAttrSet(resourceName, "logging_configuration.0.log_group_arn"),
 				),
@@ -191,7 +208,7 @@ func TestAccAMPWorkspace_loggingConfiguration(t *testing.T) {
 			{
 				Config: testAccWorkspaceConfig_loggingConfiguration(rName, 1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckWorkspaceExists(resourceName, &v),
+					testAccCheckWorkspaceExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "logging_configuration.#", "1"),
 					resource.TestCheckResourceAttrSet(resourceName, "logging_configuration.0.log_group_arn"),
 				),
@@ -199,15 +216,23 @@ func TestAccAMPWorkspace_loggingConfiguration(t *testing.T) {
 			{
 				Config: testAccWorkspaceConfig_basic(),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckWorkspaceExists(resourceName, &v),
+					testAccCheckWorkspaceExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "logging_configuration.#", "0"),
+				),
+			},
+			{
+				Config: testAccWorkspaceConfig_loggingConfiguration(rName, 0),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckWorkspaceExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "logging_configuration.#", "1"),
+					resource.TestCheckResourceAttrSet(resourceName, "logging_configuration.0.log_group_arn"),
 				),
 			},
 		},
 	})
 }
 
-func testAccCheckWorkspaceExists(n string, v *prometheusservice.WorkspaceDescription) resource.TestCheckFunc {
+func testAccCheckWorkspaceExists(ctx context.Context, n string, v *prometheusservice.WorkspaceDescription) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -218,9 +243,9 @@ func testAccCheckWorkspaceExists(n string, v *prometheusservice.WorkspaceDescrip
 			return fmt.Errorf("No Prometheus Workspace ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AMPConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AMPConn(ctx)
 
-		output, err := tfamp.FindWorkspaceByID(context.Background(), conn, rs.Primary.ID)
+		output, err := tfamp.FindWorkspaceByID(ctx, conn, rs.Primary.ID)
 
 		if err != nil {
 			return err
@@ -232,28 +257,30 @@ func testAccCheckWorkspaceExists(n string, v *prometheusservice.WorkspaceDescrip
 	}
 }
 
-func testAccCheckWorkspaceDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).AMPConn
+func testAccCheckWorkspaceDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AMPConn(ctx)
 
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_prometheus_workspace" {
-			continue
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_prometheus_workspace" {
+				continue
+			}
+
+			_, err := tfamp.FindWorkspaceByID(ctx, conn, rs.Primary.ID)
+
+			if tfresource.NotFound(err) {
+				continue
+			}
+
+			if err != nil {
+				return err
+			}
+
+			return fmt.Errorf("Prometheus Workspace %s still exists", rs.Primary.ID)
 		}
 
-		_, err := tfamp.FindWorkspaceByID(context.Background(), conn, rs.Primary.ID)
-
-		if tfresource.NotFound(err) {
-			continue
-		}
-
-		if err != nil {
-			return err
-		}
-
-		return fmt.Errorf("Prometheus Workspace %s still exists", rs.Primary.ID)
+		return nil
 	}
-
-	return nil
 }
 
 func testAccCheckVPNConnectionRecreated(before, after *prometheusservice.WorkspaceDescription) resource.TestCheckFunc {

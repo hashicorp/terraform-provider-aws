@@ -20,13 +20,13 @@ data "aws_backup_framework" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This data source supports the following arguments:
 
 * `name` - (Required) Backup framework name.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to the arguments above, the following attributes are exported:
+This data source exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the backup framework.
 * `control` - One or more control blocks that make up the framework. Each control in the list has a name, input parameters, and scope. Detailed below.
@@ -38,20 +38,23 @@ In addition to the arguments above, the following attributes are exported:
 * `tags` - Metadata that helps organize the frameworks you create.
 
 ### Control Attributes
-For **control** the following attributes are supported:
+
+`control` has the following attributes:
 
 * `input_parameter` - One or more input parameter blocks. An example of a control with two parameters is: "backup plan frequency is at least daily and the retention period is at least 1 year". The first parameter is daily. The second parameter is 1 year. Detailed below.
 * `name` - Name of a control.
 * `scope` - Scope of a control. The control scope defines what the control will evaluate. Three examples of control scopes are: a specific backup plan, all backup plans with a specific tag, or all backup plans. Detailed below.
 
 ### Input Parameter Attributes
-For **input_parameter** the following attributes are supported:
+
+`input_parameter` has the following attributes:
 
 * `name` - Name of a parameter, for example, BackupPlanFrequency.
 * `value` - Value of parameter, for example, hourly.
 
 ### Scope Attributes
-For **scope** the following attributes are supported:
+
+`scope` has the following attributes:
 
 * `compliance_resource_ids` - The ID of the only AWS resource that you want your control scope to contain.
 * `compliance_resource_types` - Describes whether the control scope includes one or more types of resources, such as EFS or RDS.

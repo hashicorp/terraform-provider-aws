@@ -73,9 +73,9 @@ The following arguments are optional:
 
 * `labels` - (Optional) Key-value map of Kubernetes labels for selection.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - Amazon Resource Name (ARN) of the EKS Fargate Profile.
 * `id` - EKS Cluster name and EKS Fargate Profile name separated by a colon (`:`).
@@ -84,15 +84,24 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Timeouts
 
-[Configuration options](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts):
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
 * `create` - (Default `10m`)
 * `delete` - (Default `10m`)
 
 ## Import
 
-EKS Fargate Profiles can be imported using the `cluster_name` and `fargate_profile_name` separated by a colon (`:`), e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import EKS Fargate Profiles using the `cluster_name` and `fargate_profile_name` separated by a colon (`:`). For example:
 
+```terraform
+import {
+  to = aws_eks_fargate_profile.my_fargate_profile
+  id = "my_cluster:my_fargate_profile"
+}
 ```
-$ terraform import aws_eks_fargate_profile.my_fargate_profile my_cluster:my_fargate_profile
+
+Using `terraform import`, import EKS Fargate Profiles using the `cluster_name` and `fargate_profile_name` separated by a colon (`:`). For example:
+
+```console
+% terraform import aws_eks_fargate_profile.my_fargate_profile my_cluster:my_fargate_profile
 ```

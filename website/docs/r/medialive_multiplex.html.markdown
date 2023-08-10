@@ -58,16 +58,15 @@ The following arguments are optional:
 * `transport_stream_reserved_bitrate` - (Optional) Transport stream reserved bit rate.
 * `maximum_video_buffer_delay_milliseconds` - (Optional) Maximum video buffer delay.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the Multiplex.
-* `example_attribute` - Concise description.
 
 ## Timeouts
 
-[Configuration options](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts):
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
 * `create` - (Default `30m`)
 * `update` - (Default `30m`)
@@ -75,8 +74,17 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-MediaLive Multiplex can be imported using the `id`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import MediaLive Multiplex using the `id`. For example:
 
+```terraform
+import {
+  to = aws_medialive_multiplex.example
+  id = "12345678"
+}
 ```
-$ terraform import aws_medialive_multiplex.example 12345678
+
+Using `terraform import`, import MediaLive Multiplex using the `id`. For example:
+
+```console
+% terraform import aws_medialive_multiplex.example 12345678
 ```

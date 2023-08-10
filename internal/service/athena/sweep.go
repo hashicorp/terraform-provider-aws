@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 //go:build sweep
 // +build sweep
 
@@ -10,8 +13,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/athena"
 	"github.com/hashicorp/go-multierror"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
@@ -23,11 +25,12 @@ func init() {
 }
 
 func sweepDatabases(region string) error {
-	client, err := sweep.SharedRegionalSweepClient(region)
+	ctx := sweep.Context(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).AthenaConn
+	conn := client.AthenaConn(ctx)
 	input := &athena.ListDatabasesInput{
 		CatalogName: aws.String("AwsDataCatalog"),
 	}
@@ -35,7 +38,7 @@ func sweepDatabases(region string) error {
 
 	sweepResources := make([]sweep.Sweepable, 0)
 	for {
-		output, err := conn.ListDatabases(input)
+		output, err := conn.ListDatabasesWithContext(ctx, input)
 
 		for _, v := range output.DatabaseList {
 			name := aws.StringValue(v.Name)
@@ -68,7 +71,7 @@ func sweepDatabases(region string) error {
 		return nil
 	}
 
-	err = sweep.SweepOrchestrator(sweepResources)
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
 
 	if err != nil {
 		errs = multierror.Append(errs, fmt.Errorf("error sweeping Athena Databases (%s): %w", region, err))
