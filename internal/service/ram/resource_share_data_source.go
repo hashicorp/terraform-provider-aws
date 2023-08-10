@@ -14,11 +14,13 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
 // @SDKDataSource("aws_ram_resource_share")
-func DataSourceResourceShare() *schema.Resource {
+// @Tags
+func dataSourceResourceShare() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceResourceShareRead,
 
@@ -81,102 +83,95 @@ func DataSourceResourceShare() *schema.Resource {
 func dataSourceResourceShareRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RAMConn(ctx)
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	name := d.Get("name").(string)
-	owner := d.Get("resource_owner").(string)
-
-	filters, filtersOk := d.GetOk("filter")
-
-	params := &ram.GetResourceSharesInput{
+	resourceOwner := d.Get("resource_owner").(string)
+	inputG := &ram.GetResourceSharesInput{
 		Name:          aws.String(name),
-		ResourceOwner: aws.String(owner),
+		ResourceOwner: aws.String(resourceOwner),
+	}
+
+	if v, ok := d.GetOk("filter"); ok && v.(*schema.Set).Len() > 0 {
+		inputG.TagFilters = expandTagFilters(v.(*schema.Set).List())
 	}
 
 	if v, ok := d.GetOk("resource_share_status"); ok {
-		params.ResourceShareStatus = aws.String(v.(string))
+		inputG.ResourceShareStatus = aws.String(v.(string))
 	}
 
-	if filtersOk {
-		params.TagFilters = buildTagFilters(filters.(*schema.Set))
-	}
-
-	for {
-		resp, err := conn.GetResourceSharesWithContext(ctx, params)
-
-		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "retrieving resource share: empty response for: %s", params)
-		}
-
-		if len(resp.ResourceShares) > 1 {
-			return sdkdiag.AppendErrorf(diags, "Multiple resource shares found for: %s", name)
-		}
-
-		if resp == nil || len(resp.ResourceShares) == 0 {
-			return sdkdiag.AppendErrorf(diags, "No matching resource found: %s", err)
-		}
-
-		for _, r := range resp.ResourceShares {
-			if aws.StringValue(r.Name) == name {
-				d.SetId(aws.StringValue(r.ResourceShareArn))
-				d.Set("arn", r.ResourceShareArn)
-				d.Set("owning_account_id", r.OwningAccountId)
-				d.Set("status", r.Status)
-
-				if err := d.Set("tags", KeyValueTags(ctx, r.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-					return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-				}
-
-				break
-			}
-		}
-
-		if resp.NextToken == nil {
-			break
-		}
-
-		params.NextToken = resp.NextToken
-	}
-
-	listInput := &ram.ListResourcesInput{
-		ResourceOwner:     aws.String(d.Get("resource_owner").(string)),
-		ResourceShareArns: aws.StringSlice([]string{d.Get("arn").(string)}),
-	}
-
-	var resourceARNs []*string
-	err := conn.ListResourcesPages(listInput, func(page *ram.ListResourcesOutput, lastPage bool) bool {
-		for _, resource := range page.Resources {
-			resourceARNs = append(resourceARNs, resource.Arn)
-		}
-
-		return !lastPage
-	})
+	share, err := findResourceShare(ctx, conn, inputG)
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading RAM resource share (%s) resources: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading RAM Resource Share (%s): %s", name, err)
 	}
 
-	if err := d.Set("resource_arns", flex.FlattenStringList(resourceARNs)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting resources: %s", err)
+	arn := aws.StringValue(share.ResourceShareArn)
+	d.SetId(arn)
+	d.Set("arn", arn)
+	d.Set("name", share.Name)
+	d.Set("owning_account_id", share.OwningAccountId)
+	d.Set("status", share.Status)
+
+	setTagsOut(ctx, share.Tags)
+
+	inputL := &ram.ListResourcesInput{
+		ResourceOwner:     aws.String(resourceOwner),
+		ResourceShareArns: aws.StringSlice([]string{arn}),
 	}
+	resources, err := findResources(ctx, conn, inputL)
+
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "reading RAM Resource Share (%s) resources: %s", arn, err)
+	}
+
+	resourceARNs := tfslices.ApplyToAll(resources, func(r *ram.Resource) string {
+		return aws.StringValue(r.Arn)
+	})
+	d.Set("resource_arns", resourceARNs)
 
 	return diags
 }
 
-func buildTagFilters(set *schema.Set) []*ram.TagFilter {
-	var filters []*ram.TagFilter
-
-	for _, v := range set.List() {
-		m := v.(map[string]interface{})
-		var filterValues []*string
-		for _, e := range m["values"].([]interface{}) {
-			filterValues = append(filterValues, aws.String(e.(string)))
-		}
-		filters = append(filters, &ram.TagFilter{
-			TagKey:    aws.String(m["name"].(string)),
-			TagValues: filterValues,
-		})
+func expandTagFilter(tfMap map[string]interface{}) *ram.TagFilter {
+	if tfMap == nil {
+		return nil
 	}
 
-	return filters
+	apiObject := &ram.TagFilter{}
+
+	if v, ok := tfMap["name"].(string); ok && v != "" {
+		apiObject.TagKey = aws.String(v)
+	}
+
+	if v, ok := tfMap["values"].([]interface{}); ok && len(v) > 0 {
+		apiObject.TagValues = flex.ExpandStringList(v)
+	}
+
+	return apiObject
+}
+
+func expandTagFilters(tfList []interface{}) []*ram.TagFilter {
+	if len(tfList) == 0 {
+		return nil
+	}
+
+	var apiObjects []*ram.TagFilter
+
+	for _, tfMapRaw := range tfList {
+		tfMap, ok := tfMapRaw.(map[string]interface{})
+
+		if !ok {
+			continue
+		}
+
+		apiObject := expandTagFilter(tfMap)
+
+		if apiObject == nil {
+			continue
+		}
+
+		apiObjects = append(apiObjects, apiObject)
+	}
+
+	return apiObjects
 }
