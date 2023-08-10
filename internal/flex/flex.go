@@ -23,7 +23,7 @@ const (
 func ExpandStringList(configured []interface{}) []*string {
 	vs := make([]*string, 0, len(configured))
 	for _, v := range configured {
-		if v, ok := v.(string); ok && v != "" { // v != "" is not necessary here, "" = !ok (weird Go-ism)
+		if v, ok := v.(string); ok && v != "" {
 			vs = append(vs, aws.String(v))
 		}
 	}
@@ -35,7 +35,7 @@ func ExpandStringList(configured []interface{}) []*string {
 func ExpandStringListEmpty(configured []interface{}) []*string {
 	vs := make([]*string, 0, len(configured))
 	for _, v := range configured {
-		if v, ok := v.(string); ok { // empty string is !ok
+		if v, ok := v.(string); ok { // empty string in config turns into nil in []interface{} so !ok
 			vs = append(vs, aws.String(v))
 		} else {
 			vs = append(vs, aws.String(""))
