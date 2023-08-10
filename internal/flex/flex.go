@@ -31,7 +31,7 @@ func ExpandStringList(configured []interface{}) []*string {
 }
 
 // ExpandStringListEmpty the result of flatmap. Expand for an array of strings
-// and returns a []*string. Empty strings are NOT skipped.
+// and returns a []*string. Adds an empty element for every nil or uncastable.
 func ExpandStringListEmpty(configured []interface{}) []*string {
 	vs := make([]*string, 0, len(configured))
 	for _, v := range configured {
