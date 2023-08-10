@@ -39,6 +39,7 @@ func TestAccKafkaVPCConnection_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "authentication", "SASL_IAM"),
 					resource.TestCheckResourceAttr(resourceName, "client_subnets.#", "3"),
 					resource.TestCheckResourceAttr(resourceName, "security_groups.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
 			},
 			{
@@ -63,7 +64,7 @@ func TestAccKafkaVPCConnection_tags(t *testing.T) {
 		CheckDestroy:             testAccCheckVPCConnectionDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVPCConnectionConfig_tags(rName, "key1", "value1"),
+				Config: testAccVPCConnectionConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckVPCConnectionExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -74,6 +75,23 @@ func TestAccKafkaVPCConnection_tags(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+			},
+			{
+				Config: testAccVPCConnectionConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckVPCConnectionExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+				),
+			},
+			{
+				Config: testAccVPCConnectionConfig_tags1(rName, "key2", "value2"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckVPCConnectionExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+				),
 			},
 		},
 	})
@@ -241,7 +259,7 @@ resource "aws_msk_vpc_connection" "test" {
 `, rName))
 }
 
-func testAccVPCConnectionConfig_tags(rName, tagKey1, tagValue1 string) string {
+func testAccVPCConnectionConfig_tags1(rName, tagKey1, tagValue1 string) string {
 	return acctest.ConfigCompose(testAccVPCConnectionConfig_base(rName), fmt.Sprintf(`
 resource "aws_security_group" "client" {
   count = 2
@@ -260,9 +278,38 @@ resource "aws_msk_vpc_connection" "test" {
   vpc_id             = aws_vpc.client.id
   client_subnets     = aws_subnet.client[*].id
   security_groups    = aws_security_group.client[*].id
+
   tags = {
     %[2]q = %[3]q
   }
 }
 `, rName, tagKey1, tagValue1))
+}
+
+func testAccVPCConnectionConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+	return acctest.ConfigCompose(testAccVPCConnectionConfig_base(rName), fmt.Sprintf(`
+resource "aws_security_group" "client" {
+  count = 2
+
+  name   = "%[1]s-${count.index}"
+  vpc_id = aws_vpc.client.id
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_msk_vpc_connection" "test" {
+  authentication     = "SASL_IAM"
+  target_cluster_arn = aws_msk_cluster.test.arn
+  vpc_id             = aws_vpc.client.id
+  client_subnets     = aws_subnet.client[*].id
+  security_groups    = aws_security_group.client[*].id
+
+  tags = {
+    %[2]q = %[3]q
+    %[4]q = %[5]q
+  }
+}
+`, rName, tagKey1, tagValue1, tagKey2, tagValue2))
 }
