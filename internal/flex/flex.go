@@ -23,7 +23,7 @@ const (
 func ExpandStringList(configured []interface{}) []*string {
 	vs := make([]*string, 0, len(configured))
 	for _, v := range configured {
-		if v, ok := v.(string); ok && v != "" {
+		if v, ok := v.(string); ok && v != "" { // v != "" may not do anything since in []interface{}, empty string will be nil so !ok
 			vs = append(vs, aws.String(v))
 		}
 	}
