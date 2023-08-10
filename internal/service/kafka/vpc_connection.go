@@ -19,15 +19,19 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// Function annotations are used for resource registration to the Provider. DO NOT EDIT.
 // @SDKResource("aws_msk_vpc_connection", name="VPC Connection")
+// @Tags(identifierAttribute="id")
 func ResourceVPCConnection() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceVPCConnectionCreate,
 		ReadWithoutTimeout:   resourceVPCConnectionRead,
+		UpdateWithoutTimeout: resourceVPCConnectionUpdate,
 		DeleteWithoutTimeout: resourceVPCConnectionDelete,
 
 		Importer: &schema.ResourceImporter{
@@ -56,6 +60,8 @@ func ResourceVPCConnection() *schema.Resource {
 				ForceNew: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			"target_cluster_arn": {
 				Type:     schema.TypeString,
 				Required: true,
@@ -67,21 +73,22 @@ func ResourceVPCConnection() *schema.Resource {
 				ForceNew: true,
 			},
 		},
+
+		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
 func resourceVPCConnectionCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-
 	conn := meta.(*conns.AWSClient).KafkaClient(ctx)
 
 	in := &kafka.CreateVpcConnectionInput{
 		Authentication:   aws.String(d.Get("authentication").(string)),
 		ClientSubnets:    flex.ExpandStringValueSet(d.Get("client_subnets").(*schema.Set)),
 		SecurityGroups:   flex.ExpandStringValueSet(d.Get("security_groups").(*schema.Set)),
+		Tags:             getTagsInV2(ctx),
 		TargetClusterArn: aws.String(d.Get("target_cluster_arn").(string)),
 		VpcId:            aws.String(d.Get("vpc_id").(string)),
-		Tags:             getTagsInV2(ctx),
 	}
 
 	out, err := conn.CreateVpcConnection(ctx, in)
@@ -101,7 +108,6 @@ func resourceVPCConnectionCreate(ctx context.Context, d *schema.ResourceData, me
 
 func resourceVPCConnectionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-
 	conn := meta.(*conns.AWSClient).KafkaClient(ctx)
 
 	out, err := FindVPCConnectionByARN(ctx, conn, d.Id())
@@ -123,12 +129,19 @@ func resourceVPCConnectionRead(ctx context.Context, d *schema.ResourceData, meta
 	d.Set("target_cluster_arn", out.TargetClusterArn)
 	d.Set("vpc_id", out.VpcId)
 
+	setTagsOutV2(ctx, out.Tags)
+
 	return diags
+}
+
+func resourceVPCConnectionUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	// Tags only.
+	return append(diags, resourceVPCConnectionRead(ctx, d, meta)...)
 }
 
 func resourceVPCConnectionDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-
 	conn := meta.(*conns.AWSClient).KafkaClient(ctx)
 
 	log.Printf("[INFO] Deleting MSK VPC Connection: %s", d.Id())

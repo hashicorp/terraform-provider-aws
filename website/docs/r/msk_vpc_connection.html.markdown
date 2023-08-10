@@ -28,6 +28,7 @@ The following arguments are required:
 * `authentication` - (Required) The authentication type for the client VPC connection. Specify one of these auth type strings: SASL_IAM, SASL_SCRAM, or TLS.
 * `client_subnets` - (Required) The list of subnets in the client VPC to connect to.
 * `security_groups` - (Required) The security groups to attach to the ENIs for the broker nodes.
+* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `target_cluster_arn` - (Required) The Amazon Resource Name (ARN) of the cluster.
 * `vpc_id` - (Required) The VPC ID of the remote client.
 
@@ -36,6 +37,7 @@ The following arguments are required:
 This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - Amazon Resource Name (ARN) of the VPC connection.
+* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Timeouts
 
