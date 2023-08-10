@@ -47,6 +47,7 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 			Factory:  DataSourceVPCConnection,
 			TypeName: "aws_msk_vpc_connection",
 			Name:     "VPC Connection",
+			Tags:     &types.ServicePackageResourceTags{},
 		},
 	}
 }
@@ -81,6 +82,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			Factory:  ResourceVPCConnection,
 			TypeName: "aws_msk_vpc_connection",
 			Name:     "VPC Connection",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "id",
+			},
 		},
 	}
 }
