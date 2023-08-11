@@ -90,9 +90,9 @@ The following arguments are required:
 * `entry_point_arguments` - (Optional) The arguments for job application.
 * `spark_submit_parameters` - (Optional) The Spark submit parameters that are used for job runs.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the job template.
 * `id` - The ID of the job template.
@@ -100,8 +100,17 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-EKS job templates can be imported using the `id`, e.g.
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import EKS job templates using the `id`. For example:
 
+```terraform
+import {
+  to = aws_emrcontainers_job_template.example
+  id = "a1b2c3d4e5f6g7h8i9j10k11l"
+}
 ```
-$ terraform import aws_emrcontainers_job_template.example a1b2c3d4e5f6g7h8i9j10k11l
+
+Using `terraform import`, import EKS job templates using the `id`. For example:
+
+```console
+% terraform import aws_emrcontainers_job_template.example a1b2c3d4e5f6g7h8i9j10k11l
 ```

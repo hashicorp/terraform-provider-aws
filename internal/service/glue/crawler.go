@@ -29,7 +29,7 @@ import (
 )
 
 func targets() []string {
-	return []string{"s3_target", "dynamodb_target", "mongodb_target", "jdbc_target", "catalog_target", "delta_target", "iceberg_target"}
+	return []string{"s3_target", "dynamodb_target", "mongodb_target", "jdbc_target", "catalog_target", "delta_target", "iceberg_target", "hudi_target"}
 }
 
 // @SDKResource("aws_glue_crawler", name="Crawler")
@@ -157,6 +157,35 @@ func ResourceCrawler() *schema.Resource {
 							Type:         schema.TypeFloat,
 							Optional:     true,
 							ValidateFunc: validation.FloatBetween(0.1, 1.5),
+						},
+					},
+				},
+			},
+			"hudi_target": {
+				Type:         schema.TypeList,
+				Optional:     true,
+				MinItems:     1,
+				AtLeastOneOf: targets(),
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"connection_name": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+						"exclusions": {
+							Type:     schema.TypeList,
+							Optional: true,
+							Elem:     &schema.Schema{Type: schema.TypeString},
+						},
+						"maximum_traversal_depth": {
+							Type:         schema.TypeInt,
+							Required:     true,
+							ValidateFunc: validation.IntBetween(1, 20),
+						},
+						"paths": {
+							Type:     schema.TypeSet,
+							Required: true,
+							Elem:     &schema.Schema{Type: schema.TypeString},
 						},
 					},
 				},
@@ -520,6 +549,10 @@ func resourceCrawlerRead(ctx context.Context, d *schema.ResourceData, meta inter
 			return sdkdiag.AppendErrorf(diags, "setting delta_target: %s", err)
 		}
 
+		if err := d.Set("hudi_target", flattenHudiTargets(crawler.Targets.HudiTargets)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting hudi_target: %s", err)
+		}
+
 		if err := d.Set("iceberg_target", flattenIcebergTargets(crawler.Targets.IcebergTargets)); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting iceberg_target: %s", err)
 		}
@@ -772,6 +805,10 @@ func expandCrawlerTargets(d *schema.ResourceData) *glue.CrawlerTargets {
 		crawlerTargets.DeltaTargets = expandDeltaTargets(v.([]interface{}))
 	}
 
+	if v, ok := d.GetOk("hudi_target"); ok {
+		crawlerTargets.HudiTargets = expandHudiTargets(v.([]interface{}))
+	}
+
 	if v, ok := d.GetOk("iceberg_target"); ok {
 		crawlerTargets.IcebergTargets = expandIcebergTargets(v.([]interface{}))
 	}
@@ -960,6 +997,36 @@ func expandDeltaTarget(cfg map[string]interface{}) *glue.DeltaTarget {
 	return target
 }
 
+func expandHudiTargets(targets []interface{}) []*glue.HudiTarget {
+	if len(targets) < 1 {
+		return []*glue.HudiTarget{}
+	}
+
+	perms := make([]*glue.HudiTarget, len(targets))
+	for i, rawCfg := range targets {
+		cfg := rawCfg.(map[string]interface{})
+		perms[i] = expandHudiTarget(cfg)
+	}
+	return perms
+}
+
+func expandHudiTarget(cfg map[string]interface{}) *glue.HudiTarget {
+	target := &glue.HudiTarget{
+		Paths:                 flex.ExpandStringSet(cfg["paths"].(*schema.Set)),
+		MaximumTraversalDepth: aws.Int64(int64(cfg["maximum_traversal_depth"].(int))),
+	}
+
+	if v, ok := cfg["exclusions"]; ok {
+		target.Exclusions = flex.ExpandStringList(v.([]interface{}))
+	}
+
+	if v, ok := cfg["connection_name"].(string); ok {
+		target.ConnectionName = aws.String(v)
+	}
+
+	return target
+}
+
 func expandIcebergTargets(targets []interface{}) []*glue.IcebergTarget {
 	if len(targets) < 1 {
 		return []*glue.IcebergTarget{}
@@ -1079,6 +1146,21 @@ func flattenDeltaTargets(deltaTargets []*glue.DeltaTarget) []map[string]interfac
 		attrs["create_native_delta_table"] = aws.BoolValue(deltaTarget.CreateNativeDeltaTable)
 		attrs["delta_tables"] = flex.FlattenStringSet(deltaTarget.DeltaTables)
 		attrs["write_manifest"] = aws.BoolValue(deltaTarget.WriteManifest)
+
+		result = append(result, attrs)
+	}
+	return result
+}
+
+func flattenHudiTargets(hudiTargets []*glue.HudiTarget) []map[string]interface{} {
+	result := make([]map[string]interface{}, 0)
+
+	for _, hudiTarget := range hudiTargets {
+		attrs := make(map[string]interface{})
+		attrs["connection_name"] = aws.StringValue(hudiTarget.ConnectionName)
+		attrs["maximum_traversal_depth"] = aws.Int64Value(hudiTarget.MaximumTraversalDepth)
+		attrs["paths"] = flex.FlattenStringSet(hudiTarget.Paths)
+		attrs["exclusions"] = flex.FlattenStringList(hudiTarget.Exclusions)
 
 		result = append(result, attrs)
 	}

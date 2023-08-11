@@ -11,7 +11,7 @@ jobs:
     if: github.repository_owner == 'hashicorp'
     steps:
       - name: open-pr-stats
-        uses: breathingdust/github-team-slackbot@8f1053f9b472b94e6564ebc499a92136c48ace1f
+        uses: breathingdust/github-team-slackbot@8f1053f9b472b94e6564ebc499a92136c48ace1f # v18.5.1
         with:
           github_token: ${{ secrets.ORGSCOPED_GITHUB_TOKEN}}
           org: hashicorp

@@ -124,7 +124,7 @@ func sweepComponents(region string) error {
 		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error listing Image Builder Components: %w", err))
 	}
 
-	if err := sweep.SweepOrchestratorWithContext(ctx, sweepResources); err != nil {
+	if err := sweep.SweepOrchestrator(ctx, sweepResources); err != nil {
 		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error sweeping Image Builder Components: %w", err))
 	}
 
@@ -173,7 +173,7 @@ func sweepDistributionConfigurations(region string) error {
 		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error listing Image Builder Distribution Configurations: %w", err))
 	}
 
-	if err := sweep.SweepOrchestratorWithContext(ctx, sweepResources); err != nil {
+	if err := sweep.SweepOrchestrator(ctx, sweepResources); err != nil {
 		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error sweeping Image Builder Distribution Configurations: %w", err))
 	}
 
@@ -222,7 +222,7 @@ func sweepImagePipelines(region string) error {
 		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error listing Image Builder Image Pipelines: %w", err))
 	}
 
-	if err := sweep.SweepOrchestratorWithContext(ctx, sweepResources); err != nil {
+	if err := sweep.SweepOrchestrator(ctx, sweepResources); err != nil {
 		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error sweeping Image Builder Image Pipelines: %w", err))
 	}
 
@@ -273,7 +273,7 @@ func sweepImageRecipes(region string) error {
 		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error listing Image Builder Image Recipes: %w", err))
 	}
 
-	if err := sweep.SweepOrchestratorWithContext(ctx, sweepResources); err != nil {
+	if err := sweep.SweepOrchestrator(ctx, sweepResources); err != nil {
 		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error sweeping Image Builder Image Recipes: %w", err))
 	}
 
@@ -324,7 +324,7 @@ func sweepContainerRecipes(region string) error {
 		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error listing Image Builder Container Recipes: %w", err))
 	}
 
-	if err := sweep.SweepOrchestratorWithContext(ctx, sweepResources); err != nil {
+	if err := sweep.SweepOrchestrator(ctx, sweepResources); err != nil {
 		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error sweeping Image Builder Container Recipes: %w", err))
 	}
 
@@ -400,7 +400,7 @@ func sweepImages(region string) error {
 		errs = multierror.Append(errs, fmt.Errorf("error listing Image Builder Images for %s: %w", region, err))
 	}
 
-	if err := sweep.SweepOrchestratorWithContext(ctx, sweepResources); err != nil {
+	if err := sweep.SweepOrchestrator(ctx, sweepResources); err != nil {
 		errs = multierror.Append(errs, fmt.Errorf("error sweeping Image Builder Images for %s: %w", region, err))
 	}
 
@@ -455,7 +455,7 @@ func sweepInfrastructureConfigurations(region string) error {
 		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error listing Image Builder Infrastructure Configurations: %w", err))
 	}
 
-	if err := sweep.SweepOrchestratorWithContext(ctx, sweepResources); err != nil {
+	if err := sweep.SweepOrchestrator(ctx, sweepResources); err != nil {
 		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error sweeping Image Builder Infrastructure Configurations: %w", err))
 	}
 

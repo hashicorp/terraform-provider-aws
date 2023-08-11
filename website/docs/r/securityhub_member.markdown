@@ -25,15 +25,15 @@ resource "aws_securityhub_member" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `account_id` - (Required) The ID of the member AWS account.
 * `email` - (Optional) The email of the member AWS account.
 * `invite` - (Optional) Boolean whether to invite the account to Security Hub as a member. Defaults to `false`.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The ID of the member AWS account (matches `account_id`).
 * `master_id` - The ID of the master Security Hub AWS account.
@@ -41,8 +41,17 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Security Hub members can be imported using their account ID, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Security Hub members using their account ID. For example:
 
+```terraform
+import {
+  to = aws_securityhub_member.example
+  id = "123456789012"
+}
 ```
-$ terraform import aws_securityhub_member.example 123456789012
+
+Using `terraform import`, import Security Hub members using their account ID. For example:
+
+```console
+% terraform import aws_securityhub_member.example 123456789012
 ```

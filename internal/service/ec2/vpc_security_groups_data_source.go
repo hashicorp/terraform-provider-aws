@@ -32,7 +32,7 @@ func DataSourceSecurityGroups() *schema.Resource {
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"filter": DataSourceFiltersSchema(),
+			"filter": CustomFiltersSchema(),
 			"ids": {
 				Type:     schema.TypeList,
 				Computed: true,
@@ -57,7 +57,7 @@ func dataSourceSecurityGroupsRead(ctx context.Context, d *schema.ResourceData, m
 		Tags(tftags.New(ctx, d.Get("tags").(map[string]interface{}))),
 	)...)
 
-	input.Filters = append(input.Filters, BuildFiltersDataSource(
+	input.Filters = append(input.Filters, BuildCustomFilterList(
 		d.Get("filter").(*schema.Set),
 	)...)
 

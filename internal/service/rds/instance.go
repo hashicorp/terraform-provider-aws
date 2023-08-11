@@ -18,8 +18,8 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/rds/types"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/rds"
-	"github.com/aws/smithy-go"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	tfawserr_sdkv2 "github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
@@ -30,6 +30,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -144,6 +145,13 @@ func ResourceInstance() *schema.Resource {
 				Optional:     true,
 				Computed:     true,
 				ValidateFunc: validation.IntBetween(0, 35),
+			},
+			"backup_target": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Computed:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.StringInSlice(backupTarget_Values(), false),
 			},
 			"backup_window": {
 				Type:         schema.TypeString,
@@ -852,6 +860,9 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 		if _, ok := d.GetOk("timezone"); ok {
 			diags = sdkdiag.AppendErrorf(diags, `"timezone" doesn't work with restores"`)
 		}
+		if _, ok := d.GetOk("backup_target"); ok {
+			diags = sdkdiag.AppendErrorf(diags, `"backup_target" doesn't work with restores"`)
+		}
 		if diags.HasError() {
 			return diags
 		}
@@ -1049,6 +1060,10 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 			requiresModifyDbInstance = true
 		}
 
+		if v, ok := d.GetOk("backup_target"); ok {
+			input.BackupTarget = aws.String(v.(string))
+		}
+
 		if v, ok := d.GetOk("backup_window"); ok {
 			modifyDbInstanceInput.PreferredBackupWindow = aws.String(v.(string))
 			requiresModifyDbInstance = true
@@ -1223,9 +1238,8 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 			output := outputRaw.(*rds.RestoreDBInstanceFromDBSnapshotOutput)
 			resourceID = aws.StringValue(output.DBInstance.DbiResourceId)
 		}
-	} else if v, ok := d.GetOk("restore_to_point_in_time"); ok {
+	} else if v, ok := d.GetOk("restore_to_point_in_time"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 		tfMap := v.([]interface{})[0].(map[string]interface{})
-
 		input := &rds.RestoreDBInstanceToPointInTimeInput{
 			AutoMinorVersionUpgrade:    aws.Bool(d.Get("auto_minor_version_upgrade").(bool)),
 			CopyTagsToSnapshot:         aws.Bool(d.Get("copy_tags_to_snapshot").(bool)),
@@ -1260,6 +1274,10 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 
 		if v, ok := d.GetOk("availability_zone"); ok {
 			input.AvailabilityZone = aws.String(v.(string))
+		}
+
+		if v, ok := d.GetOk("backup_target"); ok {
+			input.BackupTarget = aws.String(v.(string))
 		}
 
 		if v, ok := d.GetOk("custom_iam_instance_profile"); ok {
@@ -1405,6 +1423,10 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 
 		if v, ok := d.GetOk("availability_zone"); ok {
 			input.AvailabilityZone = aws.String(v.(string))
+		}
+
+		if v, ok := d.GetOk("backup_target"); ok {
+			input.BackupTarget = aws.String(v.(string))
 		}
 
 		if v, ok := d.GetOk("backup_window"); ok {
@@ -1626,6 +1648,7 @@ func resourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta inte
 	d.Set("auto_minor_version_upgrade", v.AutoMinorVersionUpgrade)
 	d.Set("availability_zone", v.AvailabilityZone)
 	d.Set("backup_retention_period", v.BackupRetentionPeriod)
+	d.Set("backup_target", v.BackupTarget)
 	d.Set("backup_window", v.PreferredBackupWindow)
 	d.Set("ca_cert_identifier", v.CACertificateIdentifier)
 	d.Set("character_set_name", v.CharacterSetName)
@@ -1900,12 +1923,11 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta in
 				},
 				func(err error) (bool, error) {
 					// Retry for IAM eventual consistency.
-					apiErr, ok := errs.As[smithy.APIError](err)
-					if ok && apiErr.ErrorCode() == errCodeInvalidParameterValue && strings.Contains(apiErr.ErrorMessage(), "IAM role ARN value is invalid or does not include the required permissions") {
+					if tfawserr_sdkv2.ErrMessageContains(err, errCodeInvalidParameterValue, "IAM role ARN value is invalid or does not include the required permissions") {
 						return true, err
 					}
 
-					if ok && apiErr.ErrorCode() == errCodeInvalidParameterCombination && strings.Contains(apiErr.ErrorMessage(), "disable deletion pro") {
+					if tfawserr_sdkv2.ErrMessageContains(err, errCodeInvalidParameterCombination, "disable deletion pro") {
 						return true, err
 					}
 
@@ -2185,8 +2207,7 @@ func dbInstanceModify(ctx context.Context, conn *rds_sdkv2.Client, resourceID st
 		},
 		func(err error) (bool, error) {
 			// Retry for IAM eventual consistency.
-			apiErr, ok := errs.As[smithy.APIError](err)
-			if ok && apiErr.ErrorCode() == errCodeInvalidParameterValue && strings.Contains(apiErr.ErrorMessage(), "IAM role ARN value is invalid or does not include the required permissions") {
+			if tfawserr_sdkv2.ErrMessageContains(err, errCodeInvalidParameterValue, "IAM role ARN value is invalid or does not include the required permissions") {
 				return true, err
 			}
 
@@ -2347,9 +2368,10 @@ func parseDBInstanceARN(s string) (dbInstanceARN, error) {
 // "db-BE6UI2KLPQP3OVDYD74ZEV6NUM" rather than a DB identifier. However, in some cases only
 // the identifier is available, and can be used.
 func findDBInstanceByIDSDKv1(ctx context.Context, conn *rds.RDS, id string) (*rds.DBInstance, error) {
+	idLooksLikeDbiResourceId := regexp.MustCompile(`^db-[a-zA-Z0-9]{2,255}$`).MatchString(id)
 	input := &rds.DescribeDBInstancesInput{}
 
-	if regexp.MustCompile(`^db-[a-zA-Z0-9]{2,255}$`).MatchString(id) {
+	if idLooksLikeDbiResourceId {
 		input.Filters = []*rds.Filter{
 			{
 				Name:   aws.String("dbi-resource-id"),
@@ -2360,15 +2382,50 @@ func findDBInstanceByIDSDKv1(ctx context.Context, conn *rds.RDS, id string) (*rd
 		input.DBInstanceIdentifier = aws.String(id)
 	}
 
-	output, err := conn.DescribeDBInstancesWithContext(ctx, input)
+	output, err := findDBInstanceSDKv1(ctx, conn, input)
 
 	// in case a DB has an *identifier* starting with "db-""
-	if regexp.MustCompile(`^db-[a-zA-Z0-9]{2,255}$`).MatchString(id) && (output == nil || len(output.DBInstances) == 0) {
-		input = &rds.DescribeDBInstancesInput{
+	if idLooksLikeDbiResourceId && tfresource.NotFound(err) {
+		input := &rds.DescribeDBInstancesInput{
 			DBInstanceIdentifier: aws.String(id),
 		}
-		output, err = conn.DescribeDBInstancesWithContext(ctx, input)
+
+		output, err = findDBInstanceSDKv1(ctx, conn, input)
 	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	return output, nil
+}
+
+func findDBInstanceSDKv1(ctx context.Context, conn *rds.RDS, input *rds.DescribeDBInstancesInput) (*rds.DBInstance, error) {
+	output, err := findDBInstancesSDKv1(ctx, conn, input, tfslices.PredicateTrue[*rds.DBInstance]())
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSinglePtrResult(output)
+}
+
+func findDBInstancesSDKv1(ctx context.Context, conn *rds.RDS, input *rds.DescribeDBInstancesInput, filter tfslices.Predicate[*rds.DBInstance]) ([]*rds.DBInstance, error) {
+	var output []*rds.DBInstance
+
+	err := conn.DescribeDBInstancesPagesWithContext(ctx, input, func(page *rds.DescribeDBInstancesOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, v := range page.DBInstances {
+			if v != nil && filter(v) {
+				output = append(output, v)
+			}
+		}
+
+		return !lastPage
+	})
 
 	if tfawserr.ErrCodeEquals(err, rds.ErrCodeDBInstanceNotFoundFault) {
 		return nil, &retry.NotFoundError{
@@ -2381,11 +2438,7 @@ func findDBInstanceByIDSDKv1(ctx context.Context, conn *rds.RDS, id string) (*rd
 		return nil, err
 	}
 
-	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
-	}
-
-	return tfresource.AssertSinglePtrResult(output.DBInstances)
+	return output, nil
 }
 
 // findDBInstanceByIDSDKv2 in general should be called with a DbiResourceId of the form

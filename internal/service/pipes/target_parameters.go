@@ -1874,7 +1874,7 @@ func flattenPipeTargetParameters(apiObject *types.PipeTargetParameters) map[stri
 	}
 
 	if v := apiObject.EcsTaskParameters; v != nil {
-		tfMap["cloudwatch_logs_parameters"] = []interface{}{flattenPipeTargetECSTaskParameters(v)}
+		tfMap["ecs_task_parameters"] = []interface{}{flattenPipeTargetECSTaskParameters(v)}
 	}
 
 	if v := apiObject.EventBridgeEventBusParameters; v != nil {

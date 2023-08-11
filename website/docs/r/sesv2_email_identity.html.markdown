@@ -77,9 +77,9 @@ The following arguments are optional:
 * `domain_signing_selector` - (Optional) [Bring Your Own DKIM] A string that's used to identify a public key in the DNS configuration for a domain.
 * `next_signing_key_length` - (Optional) [Easy DKIM] The key length of the future DKIM key pair to be generated. This can be changed at most once per day. Valid values: `RSA_1024_BIT`, `RSA_2048_BIT`.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the Email Identity.
 * `dkim_signing_attributes` - A list of objects that contains at most one element with information about the private key and selector that you want to use to configure DKIM for the identity for Bring Your Own DKIM (BYODKIM) for the identity, or, configures the key length to be used for Easy DKIM.
@@ -95,8 +95,17 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-SESv2 (Simple Email V2) Email Identity can be imported using the `email_identity`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import SESv2 (Simple Email V2) Email Identity using the `email_identity`. For example:
 
+```terraform
+import {
+  to = aws_sesv2_email_identity.example
+  id = "example.com"
+}
 ```
-$ terraform import aws_sesv2_email_identity.example example.com
+
+Using `terraform import`, import SESv2 (Simple Email V2) Email Identity using the `email_identity`. For example:
+
+```console
+% terraform import aws_sesv2_email_identity.example example.com
 ```

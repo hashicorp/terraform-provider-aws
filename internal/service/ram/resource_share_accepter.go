@@ -235,3 +235,27 @@ func resourceResourceShareAccepterDelete(ctx context.Context, d *schema.Resource
 func resourceResourceShareGetIDFromARN(arn string) string {
 	return strings.Replace(arn[strings.LastIndex(arn, ":")+1:], "resource-share/", "rs-", -1)
 }
+
+func findResources(ctx context.Context, conn *ram.RAM, input *ram.ListResourcesInput) ([]*ram.Resource, error) {
+	var output []*ram.Resource
+
+	err := conn.ListResourcesPagesWithContext(ctx, input, func(page *ram.ListResourcesOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, v := range page.Resources {
+			if v != nil {
+				output = append(output, v)
+			}
+		}
+
+		return !lastPage
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	return output, nil
+}
