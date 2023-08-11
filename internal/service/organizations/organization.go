@@ -236,7 +236,7 @@ func resourceOrganizationRead(ctx context.Context, d *schema.ResourceData, meta 
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).OrganizationsConn(ctx)
 
-	org, err := FindOrganization(ctx, conn)
+	org, err := findOrganization(ctx, conn)
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Organization does not exist, removing from state: %s", d.Id())
@@ -281,7 +281,7 @@ func resourceOrganizationRead(ctx context.Context, d *schema.ResourceData, meta 
 	if err := d.Set("non_master_accounts", flattenAccounts(nonManagementAccounts)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting non_master_accounts: %s", err)
 	}
-	if err := d.Set("roots", FlattenRoots(roots)); err != nil {
+	if err := d.Set("roots", flattenRoots(roots)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting roots: %s", err)
 	}
 
@@ -417,7 +417,7 @@ func resourceOrganizationDelete(ctx context.Context, d *schema.ResourceData, met
 	return diags
 }
 
-func FindOrganization(ctx context.Context, conn *organizations.Organizations) (*organizations.Organization, error) {
+func findOrganization(ctx context.Context, conn *organizations.Organizations) (*organizations.Organization, error) {
 	input := &organizations.DescribeOrganizationInput{}
 
 	output, err := conn.DescribeOrganizationWithContext(ctx, input)
@@ -534,7 +534,7 @@ func flattenAccounts(accounts []*organizations.Account) []map[string]interface{}
 	return result
 }
 
-func FlattenRoots(roots []*organizations.Root) []map[string]interface{} {
+func flattenRoots(roots []*organizations.Root) []map[string]interface{} {
 	if len(roots) == 0 {
 		return nil
 	}

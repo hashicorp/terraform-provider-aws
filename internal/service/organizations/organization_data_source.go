@@ -154,7 +154,7 @@ func dataSourceOrganizationRead(ctx context.Context, d *schema.ResourceData, met
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).OrganizationsConn(ctx)
 
-	org, err := FindOrganization(ctx, conn)
+	org, err := findOrganization(ctx, conn)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading Organizations Organization: %s", err)
@@ -235,7 +235,7 @@ func dataSourceOrganizationRead(ctx context.Context, d *schema.ResourceData, met
 			return sdkdiag.AppendErrorf(diags, "setting non_master_accounts: %s", err)
 		}
 
-		if err := d.Set("roots", FlattenRoots(roots)); err != nil {
+		if err := d.Set("roots", flattenRoots(roots)); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting roots: %s", err)
 		}
 	}
