@@ -2396,15 +2396,15 @@ resource "aws_dms_endpoint" "test" {
 func testAccEndpointConfig_babelfish(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_dms_endpoint" "test" {
-  endpoint_id                 = %[1]q
-  endpoint_type               = "target"
-  engine_name                 = "babelfish"
-  server_name                 = "tftest"
-  port                        = 27017
-  username                    = "tftest"
-  password                    = "tftest"
-  database_name               = "tftest"
-  ssl_mode                    = "none"
+  endpoint_id   = %[1]q
+  endpoint_type = "target"
+  engine_name   = "babelfish"
+  server_name   = "tftest"
+  port          = 27017
+  username      = "tftest"
+  password      = "tftest"
+  database_name = "tftest"
+  ssl_mode      = "none"
 
   tags = {
     Name   = %[1]q
@@ -2418,15 +2418,15 @@ resource "aws_dms_endpoint" "test" {
 func testAccEndpointConfig_babelfishUpdate(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_dms_endpoint" "test" {
-  endpoint_id                 = %[1]q
-  endpoint_type               = "target"
-  engine_name                 = "babelfish"
-  server_name                 = "tftest-new-server_name"
-  port                        = 27018
-  username                    = "tftest-new-username"
-  password                    = "tftest-new-password"
-  database_name               = "tftest-new-database_name"
-  ssl_mode                    = "require"
+  endpoint_id   = %[1]q
+  endpoint_type = "target"
+  engine_name   = "babelfish"
+  server_name   = "tftest-new-server_name"
+  port          = 27018
+  username      = "tftest-new-username"
+  password      = "tftest-new-password"
+  database_name = "tftest-new-database_name"
+  ssl_mode      = "require"
 
   tags = {
     Name   = %[1]q
