@@ -129,7 +129,7 @@ func testAccCheckClusterPolicyExists(ctx context.Context, n string, v *kafka.Get
 }
 
 func testAccClusterPolicyConfig_basic(rName string) string {
-	return acctest.ConfigCompose(testAccClusterConfig_basic(rName), `
+	return acctest.ConfigCompose(testAccVPCConnectionConfig_basic(rName), `
 data "aws_caller_identity" "current" {}
 data "aws_partition" "current" {}
 
@@ -153,6 +153,8 @@ resource "aws_msk_cluster_policy" "test" {
       Resource = aws_msk_cluster.test.arn
     }]
   })
+
+  depends_on = [aws_msk_vpc_connection.test]
 }
 `)
 }
