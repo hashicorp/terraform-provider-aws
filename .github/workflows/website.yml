@@ -21,7 +21,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@c85c95e3d7251135ab7dc9ce3241c5835cc595a9 # v3.5.3
-      - uses: YakDriver/md-check-links@9044b7162323b91150cef35355e1a3514564aa82 # v2.0.5
+      - uses: YakDriver/md-check-links@7450f426b758f0bf97f99ceb1aadcf57640a9ede # v2.0.6
         name: markdown-link-check website/docs/**/[a-h].markdown
         with:
           use-quiet-mode: "yes"
@@ -37,7 +37,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@c85c95e3d7251135ab7dc9ce3241c5835cc595a9 # v3.5.3
-      - uses: YakDriver/md-check-links@9044b7162323b91150cef35355e1a3514564aa82 # v2.0.5
+      - uses: YakDriver/md-check-links@7450f426b758f0bf97f99ceb1aadcf57640a9ede # v2.0.6
         name: markdown-link-check website/docs/**/[i-z].markdown
         with:
           use-quiet-mode: "yes"
@@ -53,7 +53,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@c85c95e3d7251135ab7dc9ce3241c5835cc595a9 # v3.5.3
-      - uses: YakDriver/md-check-links@9044b7162323b91150cef35355e1a3514564aa82 # v2.0.5
+      - uses: YakDriver/md-check-links@7450f426b758f0bf97f99ceb1aadcf57640a9ede # v2.0.6
         name: markdown-link-check website/docs/**/*.md
         with:
           use-quiet-mode: "yes"
