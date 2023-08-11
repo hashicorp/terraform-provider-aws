@@ -564,6 +564,8 @@ resource "aws_s3_bucket_ownership_controls" "test" {
 }
 
 resource "aws_s3_bucket_logging" "test" {
+  depends_on = [aws_s3_bucket_ownership_controls.test]
+
   bucket = aws_s3_bucket.test.id
 
   target_bucket = aws_s3_bucket.log_bucket.id
@@ -612,6 +614,8 @@ resource "aws_s3_bucket_ownership_controls" "test" {
 }
 
 resource "aws_s3_bucket_logging" "test" {
+  depends_on = [aws_s3_bucket_ownership_controls.test]
+
   bucket = aws_s3_bucket.test.id
 
   target_bucket = aws_s3_bucket.log_bucket.id
@@ -662,6 +666,8 @@ resource "aws_s3_bucket_ownership_controls" "test" {
 }
 
 resource "aws_s3_bucket_logging" "test" {
+  depends_on = [aws_s3_bucket_ownership_controls.test]
+
   bucket = aws_s3_bucket.test.id
 
   target_bucket = aws_s3_bucket.log_bucket.id

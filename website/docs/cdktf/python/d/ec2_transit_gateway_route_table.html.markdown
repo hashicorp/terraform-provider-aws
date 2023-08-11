@@ -61,7 +61,7 @@ class MyConvertedCode(TerraformStack):
 
 ## Argument Reference
 
-The following arguments are supported:
+This data source supports the following arguments:
 
 * `filter` - (Optional) One or more configuration blocks containing name-values filters. Detailed below.
 * `id` - (Optional) Identifier of the EC2 Transit Gateway Route Table.
@@ -73,7 +73,7 @@ The following arguments are supported:
 
 ## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This data source exports the following attributes in addition to the arguments above:
 
 * `arn` - EC2 Transit Gateway Route Table ARN.
 * `default_association_route_table` - Boolean whether this is the default association route table for the EC2 Transit Gateway
@@ -88,4 +88,4 @@ In addition to all arguments above, the following attributes are exported:
 
 - `read` - (Default `20m`)
 
-<!-- cache-key: cdktf-0.17.1 input-1208f03f1c84c0e2ce61d9b6b1a78aed169974d74a04009ae9e848da55024189 -->
+<!-- cache-key: cdktf-0.17.1 input-64c18727eda903f3fe0bc6e70c5f6f2c068e6f4cc7b9427d36d59676ca309a0a -->

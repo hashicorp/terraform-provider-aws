@@ -56,7 +56,8 @@ This resource supports the following arguments:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `connector_id`  - The unique identifier for the AS2 profile
+* `arn` - The ARN of the connector.
+* `connector_id`  - The unique identifier for the AS2 profile.
 
 ## Import
 

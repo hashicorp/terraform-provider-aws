@@ -47,8 +47,10 @@ class MyConvertedCode(TerraformStack):
 * `qualifier` - (Optional) Qualifier (a.k.a version) of the lambda function. Defaults
  to `$LATEST`.
 
-## Attributes Reference
+## Attribute Reference
+
+This data source exports the following attributes in addition to the arguments above:
 
 * `result` - String result of the lambda function invocation.
 
-<!-- cache-key: cdktf-0.17.1 input-a25bea4de0829f95daf03a443e908936b519b082dd94be7ebd9dd10d4ed1f74e -->
+<!-- cache-key: cdktf-0.17.1 input-858416cde9289de24a6c4454bdaf3179b1c69d4515be797eefce2b9c352ef2b3 -->

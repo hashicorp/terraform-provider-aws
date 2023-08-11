@@ -42,14 +42,14 @@ whose data will be exported as attributes.
 
 ### filter Configuration Block
 
-The following arguments are supported by the `filter` configuration block:
+The `filter` configuration block supports the following arguments:
 
 * `name` - (Required) Name of the filter field. Valid values can be found in the EC2 [`DescribeSecurityGroupRules`](https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_DescribeSecurityGroupRules.html) API Reference.
 * `values` - (Required) Set of values that are accepted for the given filter field. Results will be selected if any given value matches.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This data source exports the following attributes in addition to the arguments above:
 
 * `arn` - The Amazon Resource Name (ARN) of the security group rule.
 * `cidr_ipv4` - The destination IPv4 CIDR range.
@@ -64,4 +64,4 @@ In addition to all arguments above, the following attributes are exported:
 * `tags` - A map of tags assigned to the resource.
 * `to_port` - (Optional) The end of port range for the TCP and UDP protocols, or an ICMP/ICMPv6 code.
 
-<!-- cache-key: cdktf-0.17.1 input-14ee6092b02cbf111e66425fb716bfc711cab810dc1981275a880a16e0f310c0 -->
+<!-- cache-key: cdktf-0.17.1 input-60bbadf919e19a6b86244afce1efa5865475dc66aa0bf2f6b2d6643a6824df84 -->

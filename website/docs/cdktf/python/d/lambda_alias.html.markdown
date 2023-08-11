@@ -34,18 +34,18 @@ class MyConvertedCode(TerraformStack):
 
 ## Argument Reference
 
-The following arguments are supported:
+This data source supports the following arguments:
 
 * `function_name` - (Required) Name of the aliased Lambda function.
 * `name` - (Required) Name of the Lambda alias.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This data source exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN identifying the Lambda function alias.
 * `description` - Description of alias.
 * `function_version` - Lambda function version which the alias uses.
 * `invoke_arn` - ARN to be used for invoking Lambda Function from API Gateway - to be used in aws_api_gateway_integration's `uri`.
 
-<!-- cache-key: cdktf-0.17.1 input-f939a27fa1685870ef9323a6e4f51fdf567c3293cb0e615909a66154f3991788 -->
+<!-- cache-key: cdktf-0.17.1 input-9a9ef3f242a9fa98f2fce5f412613b9059a876ab618fe7d6d35642bfb3e5874d -->

@@ -25,7 +25,7 @@ func DataSourceSpotPrice() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"filter": DataSourceFiltersSchema(),
+			"filter": CustomFiltersSchema(),
 			"instance_type": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -68,7 +68,7 @@ func dataSourceSpotPriceRead(ctx context.Context, d *schema.ResourceData, meta i
 	}
 
 	if v, ok := d.GetOk("filter"); ok {
-		input.Filters = BuildFiltersDataSource(v.(*schema.Set))
+		input.Filters = BuildCustomFilterList(v.(*schema.Set))
 	}
 
 	var foundSpotPrice []*ec2.SpotPrice

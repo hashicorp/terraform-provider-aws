@@ -43,6 +43,12 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 			Factory:  DataSourceVersion,
 			TypeName: "aws_msk_kafka_version",
 		},
+		{
+			Factory:  DataSourceVPCConnection,
+			TypeName: "aws_msk_vpc_connection",
+			Name:     "VPC Connection",
+			Tags:     &types.ServicePackageResourceTags{},
+		},
 	}
 }
 
@@ -73,6 +79,14 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			Factory:  ResourceServerlessCluster,
 			TypeName: "aws_msk_serverless_cluster",
 			Name:     "Serverless Cluster",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "id",
+			},
+		},
+		{
+			Factory:  ResourceVPCConnection,
+			TypeName: "aws_msk_vpc_connection",
+			Name:     "VPC Connection",
 			Tags: &types.ServicePackageResourceTags{
 				IdentifierAttribute: "id",
 			},
