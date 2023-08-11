@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package dms_test
 
 import (
@@ -5,8 +8,8 @@ import (
 	"testing"
 
 	dms "github.com/aws/aws-sdk-go/service/databasemigrationservice"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
@@ -28,6 +31,10 @@ func TestAccDMSReplicationInstanceDataSource_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckReplicationInstanceExists(ctx, dataSourceName),
 					resource.TestCheckResourceAttrPair(dataSourceName, "replication_instance_id", resourceName, "replication_instance_id"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "replication_instance_arn", resourceName, "replication_instance_arn"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "replication_instance_class", resourceName, "replication_instance_class"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "replication_instance_private_ips.#", resourceName, "replication_instance_private_ips.#"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "replication_instance_public_ips.#", resourceName, "replication_instance_public_ips.#"),
 				),
 			},
 		},

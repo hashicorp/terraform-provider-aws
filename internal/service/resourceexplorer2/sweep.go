@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 //go:build sweep
 // +build sweep
 
@@ -9,9 +12,10 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/resourceexplorer2"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
+	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv2"
+	"github.com/hashicorp/terraform-provider-aws/internal/sweep/framework"
 )
 
 func init() {
@@ -23,11 +27,11 @@ func init() {
 
 func sweepIndexes(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).ResourceExplorer2Client()
+	conn := client.ResourceExplorer2Client(ctx)
 	input := &resourceexplorer2.ListIndexesInput{}
 	sweepResources := make([]sweep.Sweepable, 0)
 
@@ -35,7 +39,7 @@ func sweepIndexes(region string) error {
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
 
-		if sweep.SkipSweepError(err) {
+		if awsv2.SkipSweepError(err) {
 			log.Printf("[WARN] Skipping Resource Explorer Index sweep for %s: %s", region, err)
 			return nil
 		}
@@ -45,11 +49,13 @@ func sweepIndexes(region string) error {
 		}
 
 		for _, v := range page.Indexes {
-			sweepResources = append(sweepResources, sweep.NewSweepFrameworkResource(newResourceIndex, aws.ToString(v.Arn), client))
+			sweepResources = append(sweepResources, framework.NewSweepResource(newResourceIndex, client,
+				framework.NewAttribute("id", aws.ToString(v.Arn)),
+			))
 		}
 	}
 
-	err = sweep.SweepOrchestratorWithContext(ctx, sweepResources)
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
 
 	if err != nil {
 		return fmt.Errorf("error sweeping Resource Explorer Indexes (%s): %w", region, err)

@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package verify
 
 import (
@@ -216,32 +219,6 @@ func TestValidARN(t *testing.T) {
 		_, errors := ValidARN(v, "arn")
 		if len(errors) == 0 {
 			t.Fatalf("%q should be an invalid ARN", v)
-		}
-	}
-}
-
-func TestValidateCIDRBlock(t *testing.T) {
-	t.Parallel()
-
-	for _, ts := range []struct {
-		cidr  string
-		valid bool
-	}{
-		{"10.2.2.0/24", true},
-		{"10.2.2.0/1234", false},
-		{"10.2.2.2/24", false},
-		{"::/0", true},
-		{"::0/0", true},
-		{"2000::/15", true},
-		{"2001::/15", false},
-		{"", false},
-	} {
-		err := ValidateCIDRBlock(ts.cidr)
-		if !ts.valid && err == nil {
-			t.Fatalf("Input '%s' should error but didn't!", ts.cidr)
-		}
-		if ts.valid && err != nil {
-			t.Fatalf("Got unexpected error for '%s' input: %s", ts.cidr, err)
 		}
 	}
 }
@@ -757,6 +734,44 @@ func TestFloatGreaterThan(t *testing.T) {
 			t.Errorf("%s: unexpected errors %s", tn, errors)
 		} else if len(errors) == 0 && tc.ExpectValidationErrors {
 			t.Errorf("%s: expected errors but got none", tn)
+		}
+	}
+}
+
+func TestValidServicePrincipal(t *testing.T) {
+	t.Parallel()
+
+	v := ""
+	_, errors := ValidServicePrincipal(v, "test.google.com")
+	if len(errors) != 0 {
+		t.Fatalf("%q should not be validated as an Service Principal name: %q", v, errors)
+	}
+
+	validNames := []string{
+		"a4b.amazonaws.com",
+		"appstream.application-autoscaling.amazonaws.com",
+		"alexa-appkit.amazon.com",
+		"member.org.stacksets.cloudformation.amazonaws.com",
+		"vpc-flow-logs.amazonaws.com",
+		"logs.eu-central-1.amazonaws.com",
+	}
+	for _, v := range validNames {
+		_, errors := ValidServicePrincipal(v, "arn")
+		if len(errors) != 0 {
+			t.Fatalf("%q should be a valid Service Principal: %q", v, errors)
+		}
+	}
+
+	invalidNames := []string{
+		"test.google.com",
+		"transfer.amz.com",
+		"test",
+		"testwithwildcard*",
+	}
+	for _, v := range invalidNames {
+		_, errors := ValidServicePrincipal(v, "arn")
+		if len(errors) == 0 {
+			t.Fatalf("%q should be an invalid Service Principal", v)
 		}
 	}
 }

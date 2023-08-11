@@ -24,7 +24,7 @@ data "aws_docdb_orderable_db_instance" "test" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This data source supports the following arguments:
 
 * `engine` - (Optional) DB engine. Default: `docdb`
 * `engine_version` - (Optional) Version of the DB engine.
@@ -35,6 +35,6 @@ The following arguments are supported:
 
 ## Attribute Reference
 
-In addition to all arguments above, the following attribute is exported:
+This data source exports the following attributes in addition to the arguments above:
 
 * `availability_zones` - Availability zones where the instance is available.

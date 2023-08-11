@@ -1,8 +1,8 @@
-```release-note:breaking-change
+```release-note:note
 resource/aws_instance: The `cpu_core_count` argument is deprecated in favor of the `cpu_options` block. The `cpu_options` block can set `core_count`
 ```
 
-```release-note:breaking-change
+```release-note:note
 resource/aws_instance: The `cpu_threads_per_core` argument is deprecated in favor of the `cpu_options` block. The `cpu_options` block can set `threads_per_core`
 ```
 

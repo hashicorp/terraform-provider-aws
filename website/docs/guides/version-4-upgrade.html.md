@@ -8,7 +8,7 @@ description: |-
 
 # Terraform AWS Provider Version 4 Upgrade Guide
 
-Version 4.0.0 of the AWS provider for Terraform is a major release and includes some changes that you will need to consider when upgrading. We intend this guide to help with that process and focus only on changes from version 3.X to version 4.0.0. See the [Version 3 Upgrade Guide](/docs/providers/aws/guides/version-3-upgrade.html) for information about upgrading from 1.X to version 3.0.0.
+Version 4.0.0 of the AWS provider for Terraform is a major release and includes some changes that you will need to consider when upgrading. We intend this guide to help with that process and focus only on changes from version 3.X to version 4.0.0. See the [Version 3 Upgrade Guide](/docs/providers/aws/guides/version-3-upgrade.html) for information about upgrading from 2.X to version 3.0.0.
 
 We previously marked most of the changes we outline in this guide as deprecated in the Terraform plan/apply output throughout previous provider releases. You can find these changes, including deprecation notices, in the [Terraform AWS Provider CHANGELOG](https://github.com/hashicorp/terraform-provider-aws/blob/main/CHANGELOG.md).
 
@@ -20,6 +20,8 @@ These changes bring the provider in line with the AWS CLI and SDKs.
 See [Changes to Authentication](#changes-to-authentication) for more details.
 
 ~> **NOTE:** Version 4.0.0 of the AWS Provider will be the last major version to support [EC2-Classic resources](#ec2-classic-resource-and-data-source-support) as AWS plans to fully retire EC2-Classic Networking. See the [AWS News Blog](https://aws.amazon.com/blogs/aws/ec2-classic-is-retiring-heres-how-to-prepare/) for additional details.
+
+~> **NOTE:** Version 4.0.0 of the AWS Provider will be the last major version to support [Macie Classic resources](#macie-classic-resource-support) as AWS plans to fully retire Macie Classic. See the [Amazon Macie Classic FAQs](https://aws.amazon.com/macie/classic-faqs/) for additional details.
 
 Upgrade topics:
 
@@ -72,7 +74,6 @@ Upgrade topics:
 - [Resource: aws_fsx_ontap_storage_virtual_machine](#resource-aws_fsx_ontap_storage_virtual_machine)
 - [Resource: aws_lb_target_group](#resource-aws_lb_target_group)
 - [Resource: aws_s3_bucket_object](#resource-aws_s3_bucket_object)
-- [Resource: aws_spot_instance_request](#resource-aws_spot_instance_request)
 
 <!-- /TOC -->
 
@@ -81,6 +82,7 @@ Additional Topics:
 <!-- TOC depthFrom:2 depthTo:2 -->
 
 - [EC2-Classic resource and data source support](#ec2-classic-resource-and-data-source-support)
+- [Macie Classic resource support](#macie-classic-resource-support)
 
 <!-- /TOC -->
 
@@ -251,7 +253,7 @@ resource "aws_s3_bucket" "example" {
 
 Terraform CLI with v4.9.0 of the AWS Provider will report back:
 
-```shell
+```console
 aws_s3_bucket.example: Refreshing state... [id=yournamehere]
 ...
 No changes. Your infrastructure matches the configuration.
@@ -1377,7 +1379,7 @@ resource "aws_s3_bucket_accelerate_configuration" "example" {
 
 Run `terraform import` on each new resource, _e.g._,
 
-```shell
+```console
 $ terraform import aws_s3_bucket_accelerate_configuration.example yournamehere
 aws_s3_bucket_accelerate_configuration.example: Importing from ID "yournamehere"...
 aws_s3_bucket_accelerate_configuration.example: Import prepared!
@@ -1435,7 +1437,7 @@ resource "aws_s3_bucket_acl" "example" {
 
 Run `terraform import` on each new resource, _e.g._,
 
-```shell
+```console
 $ terraform import aws_s3_bucket_acl.example yournamehere,private
 aws_s3_bucket_acl.example: Importing from ID "yournamehere,private"...
 aws_s3_bucket_acl.example: Import prepared!
@@ -1506,7 +1508,7 @@ resource "aws_s3_bucket_cors_configuration" "example" {
 
 Run `terraform import` on each new resource, _e.g._,
 
-```shell
+```console
 $ terraform import aws_s3_bucket_cors_configuration.example yournamehere
 aws_s3_bucket_cors_configuration.example: Importing from ID "yournamehere"...
 aws_s3_bucket_cors_configuration.example: Import prepared!
@@ -1603,7 +1605,7 @@ resource "aws_s3_bucket_acl" "example" {
 
 Run `terraform import` on each new resource, _e.g._,
 
-```shell
+```console
 $ terraform import aws_s3_bucket_acl.example yournamehere
 aws_s3_bucket_acl.example: Importing from ID "yournamehere"...
 aws_s3_bucket_acl.example: Import prepared!
@@ -1706,7 +1708,7 @@ resource "aws_s3_bucket_lifecycle_configuration" "example" {
 
 Run `terraform import` on each new resource, _e.g._,
 
-```shell
+```console
 $ terraform import aws_s3_bucket_lifecycle_configuration.example yournamehere
 aws_s3_bucket_lifecycle_configuration.example: Importing from ID "yournamehere"...
 aws_s3_bucket_lifecycle_configuration.example: Import prepared!
@@ -1789,7 +1791,7 @@ resource "aws_s3_bucket_lifecycle_configuration" "example" {
 
 Run `terraform import` on each new resource, _e.g._,
 
-```shell
+```console
 $ terraform import aws_s3_bucket_lifecycle_configuration.example yournamehere
 aws_s3_bucket_lifecycle_configuration.example: Importing from ID "yournamehere"...
 aws_s3_bucket_lifecycle_configuration.example: Import prepared!
@@ -1876,7 +1878,7 @@ resource "aws_s3_bucket_lifecycle_configuration" "example" {
 
 Run `terraform import` on each new resource, _e.g._,
 
-```shell
+```console
 $ terraform import aws_s3_bucket_lifecycle_configuration.example yournamehere
 aws_s3_bucket_lifecycle_configuration.example: Importing from ID "yournamehere"...
 aws_s3_bucket_lifecycle_configuration.example: Import prepared!
@@ -2008,7 +2010,7 @@ resource "aws_s3_bucket_lifecycle_configuration" "example" {
 
 Run `terraform import` on each new resource, _e.g._,
 
-```shell
+```console
 $ terraform import aws_s3_bucket_lifecycle_configuration.example yournamehere
 aws_s3_bucket_lifecycle_configuration.example: Importing from ID "yournamehere"...
 aws_s3_bucket_lifecycle_configuration.example: Import prepared!
@@ -2081,7 +2083,7 @@ resource "aws_s3_bucket_logging" "example" {
 
 Run `terraform import` on each new resource, _e.g._,
 
-```shell
+```console
 $ terraform import aws_s3_bucket_logging.example yournamehere
 aws_s3_bucket_logging.example: Importing from ID "yournamehere"...
 aws_s3_bucket_logging.example: Import prepared!
@@ -2155,7 +2157,7 @@ resource "aws_s3_bucket_object_lock_configuration" "example" {
 
 Run `terraform import` on each new resource, _e.g._,
 
-```shell
+```console
 $ terraform import aws_s3_bucket_object_lock_configuration.example yournamehere
 aws_s3_bucket_object_lock_configuration.example: Importing from ID "yournamehere"...
 aws_s3_bucket_object_lock_configuration.example: Import prepared!
@@ -2245,7 +2247,7 @@ EOF
 
 Run `terraform import` on each new resource, _e.g._,
 
-```shell
+```console
 $ terraform import aws_s3_bucket_policy.example yournamehere
 aws_s3_bucket_policy.example: Importing from ID "yournamehere"...
 aws_s3_bucket_policy.example: Import prepared!
@@ -2357,7 +2359,7 @@ resource "aws_s3_bucket_replication_configuration" "example" {
 
 Run `terraform import` on each new resource, _e.g._,
 
-```shell
+```console
 $ terraform import aws_s3_bucket_replication_configuration.example yournamehere
 aws_s3_bucket_replication_configuration.example: Importing from ID "yournamehere"...
 aws_s3_bucket_replication_configuration.example: Import prepared!
@@ -2415,7 +2417,7 @@ resource "aws_s3_bucket_request_payment_configuration" "example" {
 
 Run `terraform import` on each new resource, _e.g._,
 
-```shell
+```console
 $ terraform import aws_s3_bucket_request_payment_configuration.example yournamehere
 aws_s3_bucket_request_payment_configuration.example: Importing from ID "yournamehere"...
 aws_s3_bucket_request_payment_configuration.example: Import prepared!
@@ -2486,7 +2488,7 @@ resource "aws_s3_bucket_server_side_encryption_configuration" "example" {
 
 Run `terraform import` on each new resource, _e.g._,
 
-```shell
+```console
 $ terraform import aws_s3_bucket_server_side_encryption_configuration.example yournamehere
 aws_s3_bucket_server_side_encryption_configuration.example: Importing from ID "yournamehere"...
 aws_s3_bucket_server_side_encryption_configuration.example: Import prepared!
@@ -2552,7 +2554,7 @@ resource "aws_s3_bucket_versioning" "example" {
 
 Run `terraform import` on each new resource, _e.g._,
 
-```shell
+```console
 $ terraform import aws_s3_bucket_versioning.example yournamehere
 aws_s3_bucket_versioning.example: Importing from ID "yournamehere"...
 aws_s3_bucket_versioning.example: Import prepared!
@@ -2660,7 +2662,7 @@ resource and remove `versioning` and its nested arguments in the `aws_s3_bucket`
 
 Run `terraform import` on each new resource, _e.g._,
 
-```shell
+```console
 $ terraform import aws_s3_bucket_versioning.example yournamehere
 aws_s3_bucket_versioning.example: Importing from ID "yournamehere"...
 aws_s3_bucket_versioning.example: Import prepared!
@@ -2756,7 +2758,7 @@ resource "aws_s3_bucket_website_configuration" "example" {
 
 Run `terraform import` on each new resource, _e.g._,
 
-```shell
+```console
 $ terraform import aws_s3_bucket_website_configuration.example yournamehere
 aws_s3_bucket_website_configuration.example: Importing from ID "yournamehere"...
 aws_s3_bucket_website_configuration.example: Import prepared!
@@ -3528,30 +3530,6 @@ For example, the following will import an S3 object into state, assuming the con
 
 ~> **CAUTION:** We do not recommend modifying the state file manually. If you do, you can make it unusable. However, if you accept that risk, some community members have upgraded to the new resource by searching and replacing `"type": "aws_s3_bucket_object",` with `"type": "aws_s3_object",` in the state file, and then running `terraform apply -refresh-only`.
 
-## Resource: aws_spot_instance_request
-
-### instance_interruption_behaviour Argument removal
-
-Switch your Terraform configuration from the `instance_interruption_behaviour` attribute to the `instance_interruption_behavior` attribute instead.
-
-For example, given this previous configuration:
-
-```terraform
-resource "aws_spot_instance_request" "example" {
-  # ... other configuration ...
-  instance_interruption_behaviour = "hibernate"
-}
-```
-
-An updated configuration:
-
-```terraform
-resource "aws_spot_instance_request" "example" {
-  # ... other configuration ...
-  instance_interruption_behavior =  "hibernate"
-}
-```
-
 ## EC2-Classic Resource and Data Source Support
 
 While an upgrade to this major version will not directly impact EC2-Classic resources configured with Terraform,
@@ -3569,3 +3547,10 @@ be compatible with EC2-Classic as AWS completes their EC2-Classic networking ret
 * [ElastiCache clusters](/docs/providers/aws/r/elasticache_cluster.html)
 * [Spot Requests](/docs/providers/aws/r/spot_instance_request.html)
 * [Capacity Reservations](/docs/providers/aws/r/ec2_capacity_reservation.html)
+
+## Macie Classic Resource Support
+
+These resources should be considered deprecated and will be removed in version 5.0.0.
+
+* Macie Member Account Association
+* Macie S3 Bucket Association

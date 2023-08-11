@@ -5,6 +5,10 @@ package connect
 import (
 	"context"
 
+	aws_sdkv1 "github.com/aws/aws-sdk-go/aws"
+	session_sdkv1 "github.com/aws/aws-sdk-go/aws/session"
+	connect_sdkv1 "github.com/aws/aws-sdk-go/service/connect"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -70,12 +74,20 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 			TypeName: "aws_connect_security_profile",
 		},
 		{
+			Factory:  DataSourceUser,
+			TypeName: "aws_connect_user",
+		},
+		{
 			Factory:  DataSourceUserHierarchyGroup,
 			TypeName: "aws_connect_user_hierarchy_group",
 		},
 		{
 			Factory:  DataSourceUserHierarchyStructure,
 			TypeName: "aws_connect_user_hierarchy_structure",
+		},
+		{
+			Factory:  DataSourceVocabulary,
+			TypeName: "aws_connect_vocabulary",
 		},
 	}
 }
@@ -197,4 +209,13 @@ func (p *servicePackage) ServicePackageName() string {
 	return names.Connect
 }
 
-var ServicePackage = &servicePackage{}
+// NewConn returns a new AWS SDK for Go v1 client for this service package's AWS API.
+func (p *servicePackage) NewConn(ctx context.Context, config map[string]any) (*connect_sdkv1.Connect, error) {
+	sess := config["session"].(*session_sdkv1.Session)
+
+	return connect_sdkv1.New(sess.Copy(&aws_sdkv1.Config{Endpoint: aws_sdkv1.String(config["endpoint"].(string))})), nil
+}
+
+func ServicePackage(ctx context.Context) conns.ServicePackage {
+	return &servicePackage{}
+}

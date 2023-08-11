@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package iam
 
 import (
@@ -77,7 +80,7 @@ func ResourceRolePolicy() *schema.Resource {
 
 func resourceRolePolicyPut(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).IAMConn()
+	conn := meta.(*conns.AWSClient).IAMConn(ctx)
 
 	policy, err := verify.LegacyPolicyNormalize(d.Get("policy").(string))
 	if err != nil {
@@ -109,7 +112,7 @@ func resourceRolePolicyPut(ctx context.Context, d *schema.ResourceData, meta int
 
 func resourceRolePolicyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).IAMConn()
+	conn := meta.(*conns.AWSClient).IAMConn(ctx)
 
 	role, name, err := RolePolicyParseID(d.Id())
 	if err != nil {
@@ -177,7 +180,7 @@ func resourceRolePolicyRead(ctx context.Context, d *schema.ResourceData, meta in
 
 func resourceRolePolicyDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).IAMConn()
+	conn := meta.(*conns.AWSClient).IAMConn(ctx)
 
 	role, name, err := RolePolicyParseID(d.Id())
 	if err != nil {

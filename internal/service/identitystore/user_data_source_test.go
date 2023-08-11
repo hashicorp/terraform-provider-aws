@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package identitystore_test
 
 import (
@@ -6,8 +9,8 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/identitystore"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
@@ -47,33 +50,6 @@ func TestAccIdentityStoreUserDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(dataSourceName, "user_name", resourceName, "user_name"),
 					resource.TestCheckResourceAttr(dataSourceName, "user_name", name),
 					resource.TestCheckResourceAttrPair(dataSourceName, "user_type", resourceName, "user_type"),
-				),
-			},
-		},
-	})
-}
-
-func TestAccIdentityStoreUserDataSource_filterUserName(t *testing.T) {
-	ctx := acctest.Context(t)
-	dataSourceName := "data.aws_identitystore_user.test"
-	resourceName := "aws_identitystore_user.test"
-	name := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	email := acctest.RandomEmailAddress(acctest.RandomDomainName())
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck: func() {
-			acctest.PreCheck(ctx, t)
-			testAccPreCheckSSOAdminInstances(ctx, t)
-		},
-		ErrorCheck:               acctest.ErrorCheck(t, identitystore.EndpointsID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckUserDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccUserDataSourceConfig_filterUserName(name, email),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrPair(dataSourceName, "user_id", resourceName, "user_id"),
-					resource.TestCheckResourceAttr(dataSourceName, "user_name", name),
 				),
 			},
 		},
@@ -134,33 +110,6 @@ func TestAccIdentityStoreUserDataSource_email(t *testing.T) {
 	})
 }
 
-func TestAccIdentityStoreUserDataSource_userID(t *testing.T) {
-	ctx := acctest.Context(t)
-	dataSourceName := "data.aws_identitystore_user.test"
-	resourceName := "aws_identitystore_user.test"
-	name := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	email := acctest.RandomEmailAddress(acctest.RandomDomainName())
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck: func() {
-			acctest.PreCheck(ctx, t)
-			testAccPreCheckSSOAdminInstances(ctx, t)
-		},
-		ErrorCheck:               acctest.ErrorCheck(t, identitystore.EndpointsID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckUserDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccUserDataSourceConfig_id(name, email),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrPair(dataSourceName, "user_id", resourceName, "user_id"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "user_name", resourceName, "user_name"),
-				),
-			},
-		},
-	})
-}
-
 func TestAccIdentityStoreUserDataSource_nonExistent(t *testing.T) {
 	ctx := acctest.Context(t)
 	resource.ParallelTest(t, resource.TestCase{
@@ -177,28 +126,7 @@ func TestAccIdentityStoreUserDataSource_nonExistent(t *testing.T) {
 	})
 }
 
-func TestAccIdentityStoreUserDataSource_userIdFilterMismatch(t *testing.T) {
-	ctx := acctest.Context(t)
-	name1 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	email1 := acctest.RandomEmailAddress(acctest.RandomDomainName())
-	name2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	email2 := acctest.RandomEmailAddress(acctest.RandomDomainName())
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckSSOAdminInstances(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, identitystore.EndpointsID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckUserDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config:      testAccUserDataSourceConfig_userIdFilterMismatch(name1, email1, name2, email2),
-				ExpectError: regexp.MustCompile(`no Identity Store User found matching criteria`),
-			},
-		},
-	})
-}
-
-func TestAccIdentityStoreUserDataSource_externalIdConflictsWithUniqueAttribute(t *testing.T) {
+func TestAccIdentityStoreUserDataSource_externalIDConflictsWithUniqueAttribute(t *testing.T) {
 	ctx := acctest.Context(t)
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckSSOAdminInstances(ctx, t) },
@@ -207,14 +135,14 @@ func TestAccIdentityStoreUserDataSource_externalIdConflictsWithUniqueAttribute(t
 		CheckDestroy:             testAccCheckUserDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccUserDataSourceConfig_externalIdConflictsWithUniqueAttribute,
+				Config:      testAccUserDataSourceConfig_externalIDConflictsWithUniqueAttribute,
 				ExpectError: regexp.MustCompile(`Invalid combination of arguments`),
 			},
 		},
 	})
 }
 
-func TestAccIdentityStoreUserDataSource_filterConflictsWithExternalId(t *testing.T) {
+func TestAccIdentityStoreUserDataSource_userIDConflictsWithExternalID(t *testing.T) {
 	ctx := acctest.Context(t)
 	name := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	email := acctest.RandomEmailAddress(acctest.RandomDomainName())
@@ -226,27 +154,8 @@ func TestAccIdentityStoreUserDataSource_filterConflictsWithExternalId(t *testing
 		CheckDestroy:             testAccCheckUserDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccUserDataSourceConfig_filterConflictsWithUniqueAttribute(name, email),
-				ExpectError: regexp.MustCompile(`Conflicting configuration arguments`),
-			},
-		},
-	})
-}
-
-func TestAccIdentityStoreUserDataSource_userIdConflictsWithExternalId(t *testing.T) {
-	ctx := acctest.Context(t)
-	name := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	email := acctest.RandomEmailAddress(acctest.RandomDomainName())
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckSSOAdminInstances(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, identitystore.EndpointsID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckUserDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config:      testAccUserDataSourceConfig_userIdConflictsWithUniqueAttribute(name, email),
-				ExpectError: regexp.MustCompile(`Conflicting configuration arguments`),
+				Config:      testAccUserDataSourceConfig_userIDConflictsWithUniqueAttribute(name, email),
+				ExpectError: regexp.MustCompile(`Invalid combination of arguments`),
 			},
 		},
 	})
@@ -332,22 +241,6 @@ data "aws_identitystore_user" "test" {
 `, name, email)
 }
 
-func testAccUserDataSourceConfig_filterUserName(name, email string) string {
-	return acctest.ConfigCompose(
-		testAccUserDataSourceConfig_base(name, email),
-		`
-data "aws_identitystore_user" "test" {
-  identity_store_id = tolist(data.aws_ssoadmin_instances.test.identity_store_ids)[0]
-
-  filter {
-    attribute_path  = "UserName"
-    attribute_value = aws_identitystore_user.test.user_name
-  }
-}
-`,
-	)
-}
-
 func testAccUserDataSourceConfig_uniqueAttributeUserName(name, email string) string {
 	return acctest.ConfigCompose(
 		testAccUserDataSourceConfig_base(name, email),
@@ -384,55 +277,6 @@ data "aws_identitystore_user" "test" {
 	)
 }
 
-func testAccUserDataSourceConfig_id(name, email string) string {
-	return acctest.ConfigCompose(
-		testAccUserDataSourceConfig_base(name, email),
-		`
-data "aws_identitystore_user" "test" {
-  identity_store_id = tolist(data.aws_ssoadmin_instances.test.identity_store_ids)[0]
-
-  filter {
-    attribute_path  = "UserName"
-    attribute_value = aws_identitystore_user.test.user_name
-  }
-
-  user_id = aws_identitystore_user.test.user_id
-}
-`)
-}
-
-func testAccUserDataSourceConfig_userIdFilterMismatch(name1, email1, name2, email2 string) string {
-	return acctest.ConfigCompose(
-		testAccUserDataSourceConfig_base(name1, email1),
-		fmt.Sprintf(`
-resource "aws_identitystore_user" "test2" {
-  identity_store_id = tolist(data.aws_ssoadmin_instances.test.identity_store_ids)[0]
-  display_name      = "Acceptance Test"
-  user_name         = %[1]q
-
-  name {
-    family_name = "Acceptance"
-    given_name  = "Test"
-  }
-
-  emails {
-    value = %[2]q
-  }
-}
-
-data "aws_identitystore_user" "test" {
-  identity_store_id = tolist(data.aws_ssoadmin_instances.test.identity_store_ids)[0]
-
-  filter {
-    attribute_path  = "UserName"
-    attribute_value = aws_identitystore_user.test.user_name
-  }
-
-  user_id = aws_identitystore_user.test2.user_id
-}
-`, name2, email2))
-}
-
 const testAccUserDataSourceConfig_nonExistent = `
 data "aws_ssoadmin_instances" "test" {}
 
@@ -448,7 +292,7 @@ data "aws_identitystore_user" "test" {
 }
 `
 
-const testAccUserDataSourceConfig_externalIdConflictsWithUniqueAttribute = `
+const testAccUserDataSourceConfig_externalIDConflictsWithUniqueAttribute = `
 data "aws_ssoadmin_instances" "test" {}
 
 data "aws_identitystore_user" "test" {
@@ -468,29 +312,7 @@ data "aws_identitystore_user" "test" {
 }
 `
 
-func testAccUserDataSourceConfig_filterConflictsWithUniqueAttribute(name, email string) string {
-	return acctest.ConfigCompose(
-		testAccUserDataSourceConfig_base(name, email),
-		`
-data "aws_identitystore_user" "test" {
-  identity_store_id = tolist(data.aws_ssoadmin_instances.test.identity_store_ids)[0]
-
-  alternate_identifier {
-    unique_attribute {
-      attribute_path  = "UserName"
-      attribute_value = aws_identitystore_user.test.user_name
-    }
-  }
-
-  filter {
-    attribute_path  = "UserName"
-    attribute_value = aws_identitystore_user.test.user_name
-  }
-}
-`)
-}
-
-func testAccUserDataSourceConfig_userIdConflictsWithUniqueAttribute(name, email string) string {
+func testAccUserDataSourceConfig_userIDConflictsWithUniqueAttribute(name, email string) string {
 	return acctest.ConfigCompose(
 		testAccUserDataSourceConfig_base(name, email),
 		`

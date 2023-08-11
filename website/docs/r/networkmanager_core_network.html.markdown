@@ -10,8 +10,6 @@ description: |-
 
 Provides a core network resource.
 
-~> **NOTE on Core Networks and Policy Attachments:** For a given core network, this resource's `policy_document` argument is incompatible with using the [`aws_networkmanager_core_network_policy_attachment` resource](/docs/providers/aws/r/networkmanager_core_network_policy_attachment.html). When using this resource's `policy_document` argument and the `aws_networkmanager_core_network_policy_attachment` resource, both will attempt to manage the core network's policy document and Terraform will show a permanent difference.
-
 ## Example Usage
 
 ### Basic
@@ -171,12 +169,12 @@ resource "aws_networkmanager_vpc_attachment" "example_us_east_1" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `description` - (Optional) Description of the Core Network.
 * `base_policy_region` - (Optional, **Deprecated** use the `base_policy_regions` argument instead) The base policy created by setting the `create_base_policy` argument to `true` requires a region to be set in the `edge-locations`, `location` key. If `base_policy_region` is not specified, the region used in the base policy defaults to the region specified in the `provider` block.
 * `base_policy_regions` - (Optional) A list of regions to add to the base policy. The base policy created by setting the `create_base_policy` argument to `true` requires one or more regions to be set in the `edge-locations`, `location` key. If `base_policy_regions` is not specified, the region used in the base policy defaults to the region specified in the `provider` block.
-* `create_base_policy` - (Optional) Specifies whether to create a base policy when a core network is created or updated. A base policy is created and set to `LIVE` to allow attachments to the core network (e.g. VPC Attachments) before applying a policy document provided using the [`aws_networkmanager_core_network_policy_attachment` resource](/docs/providers/aws/r/networkmanager_core_network_policy_attachment.html). This base policy is needed if your core network does not have any `LIVE` policies (e.g. a core network resource created without the `policy_document` argument) and your policy document has static routes pointing to VPC attachments and you want to attach your VPCs to the core network before applying the desired policy document. Valid values are `true` or `false`. Conflicts with `policy_document`. An example of this Terraform snippet can be found above [for VPC Attachment in a single region](#with-vpc-attachment-single-region) and [for VPC Attachment multi-region](#with-vpc-attachment-multi-region). An example base policy is shown below. This base policy is overridden with the policy that you specify in the [`aws_networkmanager_core_network_policy_attachment` resource](/docs/providers/aws/r/networkmanager_core_network_policy_attachment.html).
+* `create_base_policy` - (Optional) Specifies whether to create a base policy when a core network is created or updated. A base policy is created and set to `LIVE` to allow attachments to the core network (e.g. VPC Attachments) before applying a policy document provided using the [`aws_networkmanager_core_network_policy_attachment` resource](/docs/providers/aws/r/networkmanager_core_network_policy_attachment.html). This base policy is needed if your core network does not have any `LIVE` policies and your policy document has static routes pointing to VPC attachments and you want to attach your VPCs to the core network before applying the desired policy document. Valid values are `true` or `false`. An example of this Terraform snippet can be found above [for VPC Attachment in a single region](#with-vpc-attachment-single-region) and [for VPC Attachment multi-region](#with-vpc-attachment-multi-region). An example base policy is shown below. This base policy is overridden with the policy that you specify in the [`aws_networkmanager_core_network_policy_attachment` resource](/docs/providers/aws/r/networkmanager_core_network_policy_attachment.html).
 
 ```json
 {
@@ -204,7 +202,6 @@ The following arguments are supported:
 ```
 
 * `global_network_id` - (Required) The ID of the global network that a core network will be a part of.
-* `policy_document` - (Optional, **Deprecated** use the [`aws_networkmanager_core_network_policy_attachment`](networkmanager_core_network_policy_attachment.html) resource instead) Policy document for creating a core network. Note that updating this argument will result in the new policy document version being set as the `LATEST` and `LIVE` policy document. Refer to the [Core network policies documentation](https://docs.aws.amazon.com/network-manager/latest/cloudwan/cloudwan-policy-change-sets.html) for more information. Conflicts with `create_base_policy`.
 * `tags` - (Optional) Key-value tags for the Core Network. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Timeouts
@@ -215,9 +212,9 @@ The following arguments are supported:
 * `delete` - (Default `30m`)
 * `update` - (Default `30m`)
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - Core Network Amazon Resource Name (ARN).
 * `created_at` - Timestamp when a core network was created.
@@ -245,8 +242,17 @@ The `segments` configuration block supports the following arguments:
 
 ## Import
 
-`aws_networkmanager_core_network` can be imported using the core network ID, e.g.
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_networkmanager_core_network` using the core network ID. For example:
 
+```terraform
+import {
+  to = aws_networkmanager_core_network.example
+  id = "core-network-0d47f6t230mz46dy4"
+}
 ```
-$ terraform import aws_networkmanager_core_network.example core-network-0d47f6t230mz46dy4
+
+Using `terraform import`, import `aws_networkmanager_core_network` using the core network ID. For example:
+
+```console
+% terraform import aws_networkmanager_core_network.example core-network-0d47f6t230mz46dy4
 ```

@@ -24,8 +24,8 @@ The following arguments are required:
 
 * `rest_api_id` - (Required) ID of the associated REST API.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This data source exports the following attributes in addition to the arguments above:
 
 * `ids` - List of Authorizer identifiers.

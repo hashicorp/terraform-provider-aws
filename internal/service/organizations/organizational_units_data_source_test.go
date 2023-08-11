@@ -1,10 +1,13 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package organizations_test
 
 import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/organizations"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
@@ -24,7 +27,7 @@ func testAccOrganizationalUnitsDataSource_basic(t *testing.T) {
 			{
 				Config: testAccOrganizationalUnitsDataSourceConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
-					acctest.CheckResourceAttrGreaterThanValue(topOUDataSourceName, "children.#", "0"),
+					acctest.CheckResourceAttrGreaterThanValue(topOUDataSourceName, "children.#", 0),
 					resource.TestCheckResourceAttr(newOUDataSourceName, "children.#", "0"),
 				),
 			},

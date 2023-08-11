@@ -21,14 +21,14 @@ data "aws_lex_intent" "order_flowers" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This data source supports the following arguments:
 
 * `name` - (Required) Name of the intent. The name is case sensitive.
 * `version` - (Optional) Version of the intent.
 
-## Attributes Reference
+## Attribute Reference
 
-The following attributes are exported.
+This data source exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the Lex intent.
 * `checksum` - Checksum identifying the version of the intent that was created. The checksum is not

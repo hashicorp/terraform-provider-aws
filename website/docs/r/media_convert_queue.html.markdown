@@ -20,7 +20,7 @@ resource "aws_media_convert_queue" "test" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `name` - (Required) A unique identifier describing the queue
 * `description` - (Optional) A description of the queue
@@ -37,9 +37,9 @@ The following arguments are supported:
 * `renewal_type` - (Required) Specifies whether the term of your reserved queue pricing plan. Valid values are `AUTO_RENEW` or `EXPIRE`.
 * `reserved_slots` - (Required) Specifies the number of reserved transcode slots (RTS) for queue.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The same as `name`
 * `arn` - The Arn of the queue
@@ -47,8 +47,17 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Media Convert Queue can be imported via the queue name, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Media Convert Queue using the queue name. For example:
 
+```terraform
+import {
+  to = aws_media_convert_queue.test
+  id = "tf-test-queue"
+}
 ```
-$ terraform import aws_media_convert_queue.test tf-test-queue
+
+Using `terraform import`, import Media Convert Queue using the queue name. For example:
+
+```console
+% terraform import aws_media_convert_queue.test tf-test-queue
 ```

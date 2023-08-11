@@ -22,11 +22,13 @@ resource "aws_cloudwatch_metric_stream" "main" {
   output_format = "json"
 
   include_filter {
-    namespace = "AWS/EC2"
+    namespace    = "AWS/EC2"
+    metric_names = ["CPUUtilization", "NetworkOut"]
   }
 
   include_filter {
-    namespace = "AWS/EBS"
+    namespace    = "AWS/EBS"
+    metric_names = []
   }
 }
 
@@ -122,9 +124,9 @@ resource "aws_iam_role_policy" "firehose_to_s3" {
 
 resource "aws_kinesis_firehose_delivery_stream" "s3_stream" {
   name        = "metric-stream-test-stream"
-  destination = "s3"
+  destination = "extended_s3"
 
-  s3_configuration {
+  extended_s3_configuration {
     role_arn   = aws_iam_role.firehose_to_s3.arn
     bucket_arn = aws_s3_bucket.bucket.arn
   }
@@ -174,8 +176,8 @@ The following arguments are required:
 
 The following arguments are optional:
 
-* `exclude_filter` - (Optional) List of exclusive metric filters. If you specify this parameter, the stream sends metrics from all metric namespaces except for the namespaces that you specify here. Conflicts with `include_filter`.
-* `include_filter` - (Optional) List of inclusive metric filters. If you specify this parameter, the stream sends only the metrics from the metric namespaces that you specify here. Conflicts with `exclude_filter`.
+* `exclude_filter` - (Optional) List of exclusive metric filters. If you specify this parameter, the stream sends metrics from all metric namespaces except for the namespaces and the conditional metric names that you specify here. If you don't specify metric names or provide empty metric names whole metric namespace is excluded. Conflicts with `include_filter`.
+* `include_filter` - (Optional) List of inclusive metric filters. If you specify this parameter, the stream sends only the conditional metric names from the metric namespaces that you specify here. If you don't specify metric names or provide empty metric names whole metric namespace is included. Conflicts with `exclude_filter`.
 * `name` - (Optional, Forces new resource) Friendly name of the metric stream. If omitted, Terraform will assign a random, unique name. Conflicts with `name_prefix`.
 * `name_prefix` - (Optional, Forces new resource) Creates a unique friendly name beginning with the specified prefix. Conflicts with `name`.
 * `tags` - (Optional) Map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
@@ -187,10 +189,12 @@ The following arguments are optional:
 #### `exclude_filter`
 
 * `namespace` - (Required) Name of the metric namespace in the filter.
+* `metric_names` - (Optional) An array that defines the metrics you want to exclude for this metric namespace
 
 #### `include_filter`
 
 * `namespace` - (Required) Name of the metric namespace in the filter.
+* `metric_names` - (Optional) An array that defines the metrics you want to include for this metric namespace
 
 #### `statistics_configurations`
 
@@ -202,9 +206,9 @@ The following arguments are optional:
 * `metric_name` - (Required) The name of the metric.
 * `namespace` - (Required) The namespace of the metric.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the metric stream.
 * `creation_date` - Date and time in [RFC3339 format](https://tools.ietf.org/html/rfc3339#section-5.8) that the metric stream was created.
@@ -214,8 +218,17 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-CloudWatch metric streams can be imported using the `name`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import CloudWatch metric streams using the `name`. For example:
 
+```terraform
+import {
+  to = aws_cloudwatch_metric_stream.sample
+  id = "sample-stream-name"
+}
 ```
-$ terraform import aws_cloudwatch_metric_stream.sample sample-stream-name
+
+Using `terraform import`, import CloudWatch metric streams using the `name`. For example:
+
+```console
+% terraform import aws_cloudwatch_metric_stream.sample sample-stream-name
 ```

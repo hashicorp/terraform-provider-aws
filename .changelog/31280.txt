@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/aws_acmpca_certificate_authority: Add `key_storage_security_standard` argument
+```
+
+```release-note:enhancement
+data-source/aws_acmpca_certificate_authority: Add `key_storage_security_standard` attribute
+```
