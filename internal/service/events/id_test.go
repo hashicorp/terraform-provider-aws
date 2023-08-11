@@ -326,6 +326,15 @@ func TestTargetParseImportID(t *testing.T) {
 			ExpectedPart2: "TestTarget",
 		},
 		{
+			TestName: "ARN based partner event bus",
+			// lintignore:AWSAT003,AWSAT005
+			InputID: "arn:aws:events:us-east-2:123456789012:event-bus/aws.partner/genesys.com/cloud/a12bc345-d678-90e1-2f34-gh5678i9012ej/_genesys/TestRule/TestTarget",
+			// lintignore:AWSAT003,AWSAT005
+			ExpectedPart0: "arn:aws:events:us-east-2:123456789012:event-bus/aws.partner/genesys.com/cloud/a12bc345-d678-90e1-2f34-gh5678i9012ej/_genesys",
+			ExpectedPart1: "TestRule",
+			ExpectedPart2: "TestTarget",
+		},
+		{
 			TestName:      "empty partner event rule and target",
 			InputID:       "aws.partner/example.com/Test//",
 			ExpectedError: true,
