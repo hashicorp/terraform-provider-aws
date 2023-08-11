@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package kinesisvideo_test
 
 import (
@@ -9,10 +12,10 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/kinesisvideo"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfkinesisvideo "github.com/hashicorp/terraform-provider-aws/internal/service/kinesisvideo"
@@ -179,7 +182,7 @@ func TestAccKinesisVideoStream_disappears(t *testing.T) {
 
 func testAccCheckStreamDisappears(ctx context.Context, resourceName string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).KinesisVideoConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).KinesisVideoConn(ctx)
 
 		rs, ok := s.RootModule().Resources[resourceName]
 		if !ok {
@@ -227,7 +230,7 @@ func testAccCheckStreamExists(ctx context.Context, n string, stream *kinesisvide
 			return fmt.Errorf("No Kinesis ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).KinesisVideoConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).KinesisVideoConn(ctx)
 		describeOpts := &kinesisvideo.DescribeStreamInput{
 			StreamARN: aws.String(rs.Primary.ID),
 		}
@@ -248,7 +251,7 @@ func testAccCheckStreamDestroy(ctx context.Context) resource.TestCheckFunc {
 			if rs.Type != "aws_kinesis_video_stream" {
 				continue
 			}
-			conn := acctest.Provider.Meta().(*conns.AWSClient).KinesisVideoConn()
+			conn := acctest.Provider.Meta().(*conns.AWSClient).KinesisVideoConn(ctx)
 			describeOpts := &kinesisvideo.DescribeStreamInput{
 				StreamARN: aws.String(rs.Primary.ID),
 			}

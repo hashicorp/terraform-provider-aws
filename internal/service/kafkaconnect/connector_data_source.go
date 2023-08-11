@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package kafkaconnect
 
 import (
@@ -38,7 +41,7 @@ func DataSourceConnector() *schema.Resource {
 }
 
 func dataSourceConnectorRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).KafkaConnectConn()
+	conn := meta.(*conns.AWSClient).KafkaConnectConn(ctx)
 
 	name := d.Get("name")
 	var output []*kafkaconnect.ConnectorSummary
@@ -58,7 +61,7 @@ func dataSourceConnectorRead(ctx context.Context, d *schema.ResourceData, meta i
 	})
 
 	if err != nil {
-		return diag.Errorf("error listing MSK Connect Connectors: %s", err)
+		return diag.Errorf("listing MSK Connect Connectors: %s", err)
 	}
 
 	if len(output) == 0 || output[0] == nil {

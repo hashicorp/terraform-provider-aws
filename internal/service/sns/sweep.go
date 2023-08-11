@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 //go:build sweep
 // +build sweep
 
@@ -9,8 +12,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/sns"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
@@ -53,12 +55,12 @@ func init() {
 
 func sweepPlatformApplications(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
 	input := &sns.ListPlatformApplicationsInput{}
-	conn := client.(*conns.AWSClient).SNSConn()
+	conn := client.SNSConn(ctx)
 	sweepResources := make([]sweep.Sweepable, 0)
 
 	err = conn.ListPlatformApplicationsPagesWithContext(ctx, input, func(page *sns.ListPlatformApplicationsOutput, lastPage bool) bool {
@@ -86,7 +88,7 @@ func sweepPlatformApplications(region string) error {
 		return fmt.Errorf("error listing SNS Platform Applications: %w", err)
 	}
 
-	err = sweep.SweepOrchestratorWithContext(ctx, sweepResources)
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
 
 	if err != nil {
 		return fmt.Errorf("error sweeping SNS Platform Applications (%s): %w", region, err)
@@ -97,12 +99,12 @@ func sweepPlatformApplications(region string) error {
 
 func sweepTopics(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
 	input := &sns.ListTopicsInput{}
-	conn := client.(*conns.AWSClient).SNSConn()
+	conn := client.SNSConn(ctx)
 	sweepResources := make([]sweep.Sweepable, 0)
 
 	err = conn.ListTopicsPagesWithContext(ctx, input, func(page *sns.ListTopicsOutput, lastPage bool) bool {
@@ -130,7 +132,7 @@ func sweepTopics(region string) error {
 		return fmt.Errorf("error listing SNS Topics: %w", err)
 	}
 
-	err = sweep.SweepOrchestratorWithContext(ctx, sweepResources)
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
 
 	if err != nil {
 		return fmt.Errorf("error sweeping SNS Topics (%s): %w", region, err)
@@ -141,12 +143,12 @@ func sweepTopics(region string) error {
 
 func sweepTopicSubscriptions(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
 	input := &sns.ListSubscriptionsInput{}
-	conn := client.(*conns.AWSClient).SNSConn()
+	conn := client.SNSConn(ctx)
 	sweepResources := make([]sweep.Sweepable, 0)
 
 	err = conn.ListSubscriptionsPagesWithContext(ctx, input, func(page *sns.ListSubscriptionsOutput, lastPage bool) bool {
@@ -179,7 +181,7 @@ func sweepTopicSubscriptions(region string) error {
 		return fmt.Errorf("error listing SNS Topic Subscriptions: %w", err)
 	}
 
-	err = sweep.SweepOrchestratorWithContext(ctx, sweepResources)
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
 
 	if err != nil {
 		return fmt.Errorf("error sweeping SNS Topic Subscriptions (%s): %w", region, err)

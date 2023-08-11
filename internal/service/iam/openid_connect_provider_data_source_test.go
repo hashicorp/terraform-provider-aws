@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package iam_test
 
 import (
@@ -5,8 +8,8 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/iam"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
@@ -25,7 +28,7 @@ func TestAccIAMOpenidConnectProviderDataSource_basic(t *testing.T) {
 			{
 				Config: testAccOpenIDConnectProviderDataSourceConfig_basic(rString),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckOpenIDConnectProvider(ctx, resourceName),
+					testAccCheckOpenIDConnectProviderExists(ctx, resourceName),
 					resource.TestCheckResourceAttrPair(dataSourceName, "arn", resourceName, "arn"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "url", resourceName, "url"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "client_id_list", resourceName, "client_id_list"),
@@ -52,7 +55,7 @@ func TestAccIAMOpenidConnectProviderDataSource_url(t *testing.T) {
 			{
 				Config: testAccOpenIDConnectProviderDataSourceConfig_url(rString),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckOpenIDConnectProvider(ctx, resourceName),
+					testAccCheckOpenIDConnectProviderExists(ctx, resourceName),
 					resource.TestCheckResourceAttrPair(dataSourceName, "arn", resourceName, "arn"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "url", resourceName, "url"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "client_id_list", resourceName, "client_id_list"),
@@ -79,7 +82,7 @@ func TestAccIAMOpenidConnectProviderDataSource_tags(t *testing.T) {
 			{
 				Config: testAccOpenIDConnectProviderDataSourceConfig_tags(rString),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckOpenIDConnectProvider(ctx, resourceName),
+					testAccCheckOpenIDConnectProviderExists(ctx, resourceName),
 					resource.TestCheckResourceAttrPair(dataSourceName, "arn", resourceName, "arn"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "url", resourceName, "url"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "client_id_list", resourceName, "client_id_list"),
@@ -92,52 +95,52 @@ func TestAccIAMOpenidConnectProviderDataSource_tags(t *testing.T) {
 	})
 }
 
-func testAccOpenIDConnectProviderDataSourceConfig_basic(rString string) string {
+func testAccOpenIDConnectProviderDataSourceConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_openid_connect_provider" "test" {
-  url = "https://accounts.testle.com/%s"
+  url = "https://accounts.testle.com/%[1]s"
 
   client_id_list = [
     "266362248691-re108qaeld573ia0l6clj2i5ac7r7291.apps.testleusercontent.com",
   ]
 
-  thumbprint_list = []
+  thumbprint_list = ["cf23df2207d99a74fbe169e3eba035e633b65d94"]
 }
 
 data "aws_iam_openid_connect_provider" "test" {
   arn = aws_iam_openid_connect_provider.test.arn
 }
-`, rString)
+`, rName)
 }
 
-func testAccOpenIDConnectProviderDataSourceConfig_url(rString string) string {
+func testAccOpenIDConnectProviderDataSourceConfig_url(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_openid_connect_provider" "test" {
-  url = "https://accounts.testle.com/%s"
+  url = "https://accounts.testle.com/%[1]s"
 
   client_id_list = [
     "266362248691-re108qaeld573ia0l6clj2i5ac7r7291.apps.testleusercontent.com",
   ]
 
-  thumbprint_list = []
+  thumbprint_list = ["cf23df2207d99a74fbe169e3eba035e633b65d94"]
 }
 
 data "aws_iam_openid_connect_provider" "test" {
   url = "https://${aws_iam_openid_connect_provider.test.url}"
 }
-`, rString)
+`, rName)
 }
 
-func testAccOpenIDConnectProviderDataSourceConfig_tags(rString string) string {
+func testAccOpenIDConnectProviderDataSourceConfig_tags(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_openid_connect_provider" "test" {
-  url = "https://accounts.testle.com/%s"
+  url = "https://accounts.testle.com/%[1]s"
 
   client_id_list = [
     "266362248691-re108qaeld573ia0l6clj2i5ac7r7291.apps.testleusercontent.com",
   ]
 
-  thumbprint_list = []
+  thumbprint_list = ["cf23df2207d99a74fbe169e3eba035e633b65d94"]
 
   tags = {
     tag1 = "test-value1"
@@ -148,5 +151,5 @@ resource "aws_iam_openid_connect_provider" "test" {
 data "aws_iam_openid_connect_provider" "test" {
   arn = aws_iam_openid_connect_provider.test.arn
 }
-`, rString)
+`, rName)
 }

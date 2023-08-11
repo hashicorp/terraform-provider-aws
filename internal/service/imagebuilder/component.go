@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package imagebuilder
 
 import (
@@ -128,11 +131,11 @@ func ResourceComponent() *schema.Resource {
 
 func resourceComponentCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ImageBuilderConn()
+	conn := meta.(*conns.AWSClient).ImageBuilderConn(ctx)
 
 	input := &imagebuilder.CreateComponentInput{
 		ClientToken: aws.String(id.UniqueId()),
-		Tags:        GetTagsIn(ctx),
+		Tags:        getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("change_description"); ok {
@@ -188,7 +191,7 @@ func resourceComponentCreate(ctx context.Context, d *schema.ResourceData, meta i
 
 func resourceComponentRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ImageBuilderConn()
+	conn := meta.(*conns.AWSClient).ImageBuilderConn(ctx)
 
 	input := &imagebuilder.GetComponentInput{
 		ComponentBuildVersionArn: aws.String(d.Id()),
@@ -224,7 +227,7 @@ func resourceComponentRead(ctx context.Context, d *schema.ResourceData, meta int
 	d.Set("platform", component.Platform)
 	d.Set("supported_os_versions", aws.StringValueSlice(component.SupportedOsVersions))
 
-	SetTagsOut(ctx, component.Tags)
+	setTagsOut(ctx, component.Tags)
 
 	d.Set("type", component.Type)
 	d.Set("version", component.Version)
@@ -248,7 +251,7 @@ func resourceComponentDelete(ctx context.Context, d *schema.ResourceData, meta i
 		return diags
 	}
 
-	conn := meta.(*conns.AWSClient).ImageBuilderConn()
+	conn := meta.(*conns.AWSClient).ImageBuilderConn(ctx)
 
 	input := &imagebuilder.DeleteComponentInput{
 		ComponentBuildVersionArn: aws.String(d.Id()),

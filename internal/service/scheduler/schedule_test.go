@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package scheduler_test
 
 import (
@@ -9,8 +12,8 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/service/scheduler"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	tfscheduler "github.com/hashicorp/terraform-provider-aws/internal/service/scheduler"
@@ -1585,7 +1588,7 @@ func TestAccSchedulerSchedule_targetSQSParameters(t *testing.T) {
 
 func testAccCheckScheduleDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.ProviderMeta(t).SchedulerClient()
+		conn := acctest.ProviderMeta(t).SchedulerClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_scheduler_schedule" {
@@ -1632,7 +1635,7 @@ func testAccCheckScheduleExists(ctx context.Context, t *testing.T, name string, 
 			return err
 		}
 
-		conn := acctest.ProviderMeta(t).SchedulerClient()
+		conn := acctest.ProviderMeta(t).SchedulerClient(ctx)
 
 		output, err := tfscheduler.FindScheduleByTwoPartKey(ctx, conn, groupName, scheduleName)
 

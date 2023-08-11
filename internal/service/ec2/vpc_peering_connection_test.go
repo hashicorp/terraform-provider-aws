@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ec2_test
 
 import (
@@ -9,10 +12,10 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
@@ -130,7 +133,7 @@ func TestAccVPCPeeringConnection_options(t *testing.T) {
 	resourceName := "aws_vpc_peering_connection.test"
 
 	testAccepterChange := func(*terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
 		log.Printf("[DEBUG] Test change to the VPC Peering Connection Options.")
 
 		_, err := conn.ModifyVpcPeeringConnectionOptionsWithContext(ctx, &ec2.ModifyVpcPeeringConnectionOptionsInput{
@@ -166,16 +169,6 @@ func TestAccVPCPeeringConnection_options(t *testing.T) {
 						"requester.0.allow_remote_vpc_dns_resolution",
 						"false",
 					),
-					resource.TestCheckResourceAttr(
-						resourceName,
-						"requester.0.allow_classic_link_to_remote_vpc",
-						"false",
-					),
-					resource.TestCheckResourceAttr(
-						resourceName,
-						"requester.0.allow_vpc_to_remote_classic_link",
-						"false",
-					),
 					// Accepter's view:
 					resource.TestCheckResourceAttr(
 						resourceName,
@@ -186,16 +179,6 @@ func TestAccVPCPeeringConnection_options(t *testing.T) {
 						resourceName,
 						"accepter.0.allow_remote_vpc_dns_resolution",
 						"true",
-					),
-					resource.TestCheckResourceAttr(
-						resourceName,
-						"accepter.0.allow_classic_link_to_remote_vpc",
-						"false",
-					),
-					resource.TestCheckResourceAttr(
-						resourceName,
-						"accepter.0.allow_vpc_to_remote_classic_link",
-						"false",
 					),
 					testAccepterChange,
 				),
@@ -226,16 +209,6 @@ func TestAccVPCPeeringConnection_options(t *testing.T) {
 						"requester.0.allow_remote_vpc_dns_resolution",
 						"false",
 					),
-					resource.TestCheckResourceAttr(
-						resourceName,
-						"requester.0.allow_classic_link_to_remote_vpc",
-						"false",
-					),
-					resource.TestCheckResourceAttr(
-						resourceName,
-						"requester.0.allow_vpc_to_remote_classic_link",
-						"false",
-					),
 					// Accepter's view:
 					resource.TestCheckResourceAttr(
 						resourceName,
@@ -246,16 +219,6 @@ func TestAccVPCPeeringConnection_options(t *testing.T) {
 						resourceName,
 						"accepter.0.allow_remote_vpc_dns_resolution",
 						"true",
-					),
-					resource.TestCheckResourceAttr(
-						resourceName,
-						"accepter.0.allow_classic_link_to_remote_vpc",
-						"false",
-					),
-					resource.TestCheckResourceAttr(
-						resourceName,
-						"accepter.0.allow_vpc_to_remote_classic_link",
-						"false",
 					),
 				),
 			},
@@ -420,7 +383,7 @@ func TestAccVPCPeeringConnection_optionsNoAutoAccept(t *testing.T) {
 
 func testAccCheckVPCPeeringConnectionDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_vpc_peering_connection" {
@@ -459,7 +422,7 @@ func testAccCheckVPCPeeringConnectionExistsWithProvider(ctx context.Context, n s
 			return fmt.Errorf("No EC2 VPC Peering Connection ID is set.")
 		}
 
-		conn := providerF().Meta().(*conns.AWSClient).EC2Conn()
+		conn := providerF().Meta().(*conns.AWSClient).EC2Conn(ctx)
 
 		output, err := tfec2.FindVPCPeeringConnectionByID(ctx, conn, rs.Primary.ID)
 
@@ -590,11 +553,6 @@ resource "aws_vpc_peering_connection" "test" {
   accepter {
     allow_remote_vpc_dns_resolution = true
   }
-
-  requester {
-    allow_vpc_to_remote_classic_link = false
-    allow_classic_link_to_remote_vpc = false
-  }
 }
 `, rName)
 }
@@ -721,11 +679,6 @@ resource "aws_vpc_peering_connection" "test" {
 
   accepter {
     allow_remote_vpc_dns_resolution = true
-  }
-
-  requester {
-    allow_vpc_to_remote_classic_link = false
-    allow_classic_link_to_remote_vpc = false
   }
 }
 `, rName)

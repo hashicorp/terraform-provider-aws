@@ -1,11 +1,11 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package rds
 
 import (
 	"fmt"
 	"regexp"
-
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
 func validEventSubscriptionName(v interface{}, k string) (ws []string, errors []error) {
@@ -141,10 +141,6 @@ func validSubnetGroupNamePrefix(v interface{}, k string) (ws []string, errors []
 			"%q cannot be longer than 229 characters", k))
 	}
 	return
-}
-
-func validClusterEngine() schema.SchemaValidateFunc {
-	return validation.StringInSlice(ClusterEngine_Values(), false)
 }
 
 func validIdentifier(v interface{}, k string) (ws []string, errors []error) {

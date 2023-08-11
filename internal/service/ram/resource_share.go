@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ram
 
 import (
@@ -9,11 +12,13 @@ import (
 	"github.com/aws/aws-sdk-go/service/ram"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -70,13 +75,13 @@ func ResourceResourceShare() *schema.Resource {
 
 func resourceResourceShareCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).RAMConn()
+	conn := meta.(*conns.AWSClient).RAMConn(ctx)
 
 	name := d.Get("name").(string)
 	input := &ram.CreateResourceShareInput{
 		AllowExternalPrincipals: aws.Bool(d.Get("allow_external_principals").(bool)),
 		Name:                    aws.String(name),
-		Tags:                    GetTagsIn(ctx),
+		Tags:                    getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("permission_arns"); ok && v.(*schema.Set).Len() > 0 {
@@ -101,7 +106,7 @@ func resourceResourceShareCreate(ctx context.Context, d *schema.ResourceData, me
 
 func resourceResourceShareRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).RAMConn()
+	conn := meta.(*conns.AWSClient).RAMConn(ctx)
 
 	resourceShare, err := FindResourceShareOwnerSelfByARN(ctx, conn, d.Id())
 
@@ -125,7 +130,7 @@ func resourceResourceShareRead(ctx context.Context, d *schema.ResourceData, meta
 	d.Set("arn", resourceShare.ResourceShareArn)
 	d.Set("name", resourceShare.Name)
 
-	SetTagsOut(ctx, resourceShare.Tags)
+	setTagsOut(ctx, resourceShare.Tags)
 
 	perms, err := conn.ListResourceSharePermissionsWithContext(ctx, &ram.ListResourceSharePermissionsInput{
 		ResourceShareArn: aws.String(d.Id()),
@@ -148,7 +153,7 @@ func resourceResourceShareRead(ctx context.Context, d *schema.ResourceData, meta
 
 func resourceResourceShareUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).RAMConn()
+	conn := meta.(*conns.AWSClient).RAMConn(ctx)
 
 	if d.HasChanges("name", "allow_external_principals") {
 		input := &ram.UpdateResourceShareInput{
@@ -170,7 +175,7 @@ func resourceResourceShareUpdate(ctx context.Context, d *schema.ResourceData, me
 
 func resourceResourceShareDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).RAMConn()
+	conn := meta.(*conns.AWSClient).RAMConn(ctx)
 
 	log.Printf("[DEBUG] Deleting RAM Resource Share: %s", d.Id())
 	_, err := conn.DeleteResourceShareWithContext(ctx, &ram.DeleteResourceShareInput{
@@ -190,4 +195,45 @@ func resourceResourceShareDelete(ctx context.Context, d *schema.ResourceData, me
 	}
 
 	return diags
+}
+
+func findResourceShare(ctx context.Context, conn *ram.RAM, input *ram.GetResourceSharesInput) (*ram.ResourceShare, error) {
+	output, err := findResourceShares(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSinglePtrResult(output)
+}
+
+func findResourceShares(ctx context.Context, conn *ram.RAM, input *ram.GetResourceSharesInput) ([]*ram.ResourceShare, error) {
+	var output []*ram.ResourceShare
+
+	err := conn.GetResourceSharesPagesWithContext(ctx, input, func(page *ram.GetResourceSharesOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, v := range page.ResourceShares {
+			if v != nil {
+				output = append(output, v)
+			}
+		}
+
+		return !lastPage
+	})
+
+	if tfawserr.ErrCodeEquals(err, ram.ErrCodeUnknownResourceException) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	return output, nil
 }

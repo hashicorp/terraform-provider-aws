@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package guardduty
 
 import (
@@ -57,7 +60,7 @@ func ResourcePublishingDestination() *schema.Resource {
 
 func resourcePublishingDestinationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).GuardDutyConn()
+	conn := meta.(*conns.AWSClient).GuardDutyConn(ctx)
 
 	detectorID := d.Get("detector_id").(string)
 	input := guardduty.CreatePublishingDestinationInput{
@@ -88,7 +91,7 @@ func resourcePublishingDestinationCreate(ctx context.Context, d *schema.Resource
 
 func resourcePublishingDestinationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).GuardDutyConn()
+	conn := meta.(*conns.AWSClient).GuardDutyConn(ctx)
 
 	destinationId, detectorId, err := DecodePublishDestinationID(d.Id())
 
@@ -120,7 +123,7 @@ func resourcePublishingDestinationRead(ctx context.Context, d *schema.ResourceDa
 
 func resourcePublishingDestinationUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).GuardDutyConn()
+	conn := meta.(*conns.AWSClient).GuardDutyConn(ctx)
 
 	destinationId, detectorId, err := DecodePublishDestinationID(d.Id())
 
@@ -146,7 +149,7 @@ func resourcePublishingDestinationUpdate(ctx context.Context, d *schema.Resource
 
 func resourcePublishingDestinationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).GuardDutyConn()
+	conn := meta.(*conns.AWSClient).GuardDutyConn(ctx)
 
 	destinationId, detectorId, err := DecodePublishDestinationID(d.Id())
 

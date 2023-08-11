@@ -6,14 +6,18 @@ import (
 	{{- if .FmtPkg }}
 	"fmt"
 	{{- end }}
-	{{- if .StrConvPkg }}
-	"strconv"
+	{{- if .TimePkg }}
+	"time"
 	{{- end }}
 
+	{{ if not .SkipAWSImp }}
 	"github.com/aws/aws-sdk-go/aws"
+	{{- end }}
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	{{- if .AWSService }}
+		{{- if not .SkipServiceImp }}
 	"github.com/aws/aws-sdk-go/service/{{ .AWSService }}"
+		{{- end }}
 	{{- end }}
 	{{- if .AWSServiceIfacePackage }}
 	"github.com/aws/aws-sdk-go/service/{{ .AWSServiceIfacePackage }}"

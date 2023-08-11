@@ -1,8 +1,12 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package redshift
 
 import (
 	"context"
 	"log"
+	"regexp"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -48,9 +52,10 @@ func ResourceScheduledAction() *schema.Resource {
 				Required: true,
 			},
 			"name": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
+				Type:         schema.TypeString,
+				Required:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.StringMatch(regexp.MustCompile(`^[a-z0-9-]{1,63}$`), ""),
 			},
 			"schedule": {
 				Type:     schema.TypeString,
@@ -147,7 +152,7 @@ func ResourceScheduledAction() *schema.Resource {
 
 func resourceScheduledActionCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).RedshiftConn()
+	conn := meta.(*conns.AWSClient).RedshiftConn(ctx)
 
 	name := d.Get("name").(string)
 	input := &redshift.CreateScheduledActionInput{
@@ -199,7 +204,7 @@ func resourceScheduledActionCreate(ctx context.Context, d *schema.ResourceData, 
 
 func resourceScheduledActionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).RedshiftConn()
+	conn := meta.(*conns.AWSClient).RedshiftConn(ctx)
 
 	scheduledAction, err := FindScheduledActionByName(ctx, conn, d.Id())
 
@@ -246,7 +251,7 @@ func resourceScheduledActionRead(ctx context.Context, d *schema.ResourceData, me
 
 func resourceScheduledActionUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).RedshiftConn()
+	conn := meta.(*conns.AWSClient).RedshiftConn(ctx)
 
 	input := &redshift.ModifyScheduledActionInput{
 		ScheduledActionName: aws.String(d.Get("name").(string)),
@@ -296,7 +301,7 @@ func resourceScheduledActionUpdate(ctx context.Context, d *schema.ResourceData, 
 
 func resourceScheduledActionDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).RedshiftConn()
+	conn := meta.(*conns.AWSClient).RedshiftConn(ctx)
 
 	log.Printf("[DEBUG] Deleting Redshift Scheduled Action: %s", d.Id())
 	_, err := conn.DeleteScheduledActionWithContext(ctx, &redshift.DeleteScheduledActionInput{

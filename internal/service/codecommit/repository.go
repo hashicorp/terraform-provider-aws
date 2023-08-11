@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package codecommit
 
 import (
@@ -79,17 +82,17 @@ func ResourceRepository() *schema.Resource {
 
 func resourceRepositoryCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CodeCommitConn()
+	conn := meta.(*conns.AWSClient).CodeCommitConn(ctx)
 
 	input := &codecommit.CreateRepositoryInput{
 		RepositoryName:        aws.String(d.Get("repository_name").(string)),
 		RepositoryDescription: aws.String(d.Get("description").(string)),
-		Tags:                  GetTagsIn(ctx),
+		Tags:                  getTagsIn(ctx),
 	}
 
 	out, err := conn.CreateRepositoryWithContext(ctx, input)
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "Error creating CodeCommit Repository: %s", err)
+		return sdkdiag.AppendErrorf(diags, "creating CodeCommit Repository: %s", err)
 	}
 
 	d.SetId(d.Get("repository_name").(string))
@@ -109,7 +112,7 @@ func resourceRepositoryCreate(ctx context.Context, d *schema.ResourceData, meta 
 
 func resourceRepositoryRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CodeCommitConn()
+	conn := meta.(*conns.AWSClient).CodeCommitConn(ctx)
 
 	input := &codecommit.GetRepositoryInput{
 		RepositoryName: aws.String(d.Id()),
@@ -142,7 +145,7 @@ func resourceRepositoryRead(ctx context.Context, d *schema.ResourceData, meta in
 
 func resourceRepositoryUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CodeCommitConn()
+	conn := meta.(*conns.AWSClient).CodeCommitConn(ctx)
 
 	if d.HasChange("default_branch") {
 		if err := resourceUpdateDefaultBranch(ctx, conn, d); err != nil {
@@ -161,14 +164,14 @@ func resourceRepositoryUpdate(ctx context.Context, d *schema.ResourceData, meta 
 
 func resourceRepositoryDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CodeCommitConn()
+	conn := meta.(*conns.AWSClient).CodeCommitConn(ctx)
 
 	log.Printf("[DEBUG] CodeCommit Delete Repository: %s", d.Id())
 	_, err := conn.DeleteRepositoryWithContext(ctx, &codecommit.DeleteRepositoryInput{
 		RepositoryName: aws.String(d.Id()),
 	})
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "Error deleting CodeCommit Repository: %s", err.Error())
+		return sdkdiag.AppendErrorf(diags, "deleting CodeCommit Repository: %s", err.Error())
 	}
 
 	return diags
@@ -182,7 +185,7 @@ func resourceUpdateDescription(ctx context.Context, conn *codecommit.CodeCommit,
 
 	_, err := conn.UpdateRepositoryDescriptionWithContext(ctx, branchInput)
 	if err != nil {
-		return fmt.Errorf("Error Updating Repository Description for CodeCommit Repository: %s", err.Error())
+		return fmt.Errorf("Updating Repository Description for CodeCommit Repository: %s", err.Error())
 	}
 
 	return nil
@@ -195,7 +198,7 @@ func resourceUpdateDefaultBranch(ctx context.Context, conn *codecommit.CodeCommi
 
 	out, err := conn.ListBranchesWithContext(ctx, input)
 	if err != nil {
-		return fmt.Errorf("Error reading CodeCommit Repository branches: %s", err.Error())
+		return fmt.Errorf("reading CodeCommit Repository branches: %s", err.Error())
 	}
 
 	if len(out.Branches) == 0 {
@@ -210,7 +213,7 @@ func resourceUpdateDefaultBranch(ctx context.Context, conn *codecommit.CodeCommi
 
 	_, err = conn.UpdateDefaultBranchWithContext(ctx, branchInput)
 	if err != nil {
-		return fmt.Errorf("Error Updating Default Branch for CodeCommit Repository: %s", err.Error())
+		return fmt.Errorf("Updating Default Branch for CodeCommit Repository: %s", err.Error())
 	}
 
 	return nil

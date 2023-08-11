@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package docdb
 
 import (
@@ -178,7 +181,7 @@ func ResourceClusterInstance() *schema.Resource {
 
 func resourceClusterInstanceCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DocDBConn()
+	conn := meta.(*conns.AWSClient).DocDBConn(ctx)
 
 	input := &docdb.CreateDBInstanceInput{
 		DBInstanceClass:         aws.String(d.Get("instance_class").(string)),
@@ -186,7 +189,7 @@ func resourceClusterInstanceCreate(ctx context.Context, d *schema.ResourceData, 
 		Engine:                  aws.String(d.Get("engine").(string)),
 		PromotionTier:           aws.Int64(int64(d.Get("promotion_tier").(int))),
 		AutoMinorVersionUpgrade: aws.Bool(d.Get("auto_minor_version_upgrade").(bool)),
-		Tags:                    GetTagsIn(ctx),
+		Tags:                    getTagsIn(ctx),
 	}
 
 	if attr, ok := d.GetOk("availability_zone"); ok {
@@ -215,7 +218,6 @@ func resourceClusterInstanceCreate(ctx context.Context, d *schema.ResourceData, 
 		input.PreferredMaintenanceWindow = aws.String(attr.(string))
 	}
 
-	log.Printf("[DEBUG] Creating DocDB Instance opts: %s", input)
 	var resp *docdb.CreateDBInstanceOutput
 	err := retry.RetryContext(ctx, propagationTimeout, func() *retry.RetryError {
 		var err error
@@ -232,7 +234,7 @@ func resourceClusterInstanceCreate(ctx context.Context, d *schema.ResourceData, 
 		resp, err = conn.CreateDBInstanceWithContext(ctx, input)
 	}
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating DocDB Instance: %s", err)
+		return sdkdiag.AppendErrorf(diags, "creating DocumentDB Cluster Instance: %s", err)
 	}
 
 	d.SetId(aws.StringValue(resp.DBInstance.DBInstanceIdentifier))
@@ -250,7 +252,7 @@ func resourceClusterInstanceCreate(ctx context.Context, d *schema.ResourceData, 
 	// Wait, catching any errors
 	_, err = stateConf.WaitForStateContext(ctx)
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "waiting for DocDB Instance (%s) to become available: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for DocumentDB Cluster Instance (%s) to become available: %s", d.Id(), err)
 	}
 
 	return append(diags, resourceClusterInstanceRead(ctx, d, meta)...)
@@ -258,16 +260,16 @@ func resourceClusterInstanceCreate(ctx context.Context, d *schema.ResourceData, 
 
 func resourceClusterInstanceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DocDBConn()
+	conn := meta.(*conns.AWSClient).DocDBConn(ctx)
 
 	db, err := resourceInstanceRetrieve(ctx, conn, d.Id())
 	if !d.IsNewResource() && tfresource.NotFound(err) {
-		log.Printf("[WARN] DocDB Cluster Instance (%s): not found, removing from state.", d.Id())
+		log.Printf("[WARN] DocumentDB Cluster Instance (%s): not found, removing from state.", d.Id())
 		d.SetId("")
 		return diags
 	}
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "retrieving DocDB Cluster Instance (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "retrieving DocumentDB Cluster Instance (%s): %s", d.Id(), err)
 	}
 
 	// Retrieve DB Cluster information, to determine if this Instance is a writer
@@ -283,7 +285,7 @@ func resourceClusterInstanceRead(ctx context.Context, d *schema.ResourceData, me
 	}
 
 	if dbc == nil {
-		return sdkdiag.AppendErrorf(diags, "Error finding DocDB Cluster (%s) for Cluster Instance (%s): %s",
+		return sdkdiag.AppendErrorf(diags, "finding DocumentDB Cluster (%s) for Cluster Instance (%s): %s",
 			aws.StringValue(db.DBClusterIdentifier), aws.StringValue(db.DBInstanceIdentifier), err)
 	}
 
@@ -334,7 +336,7 @@ func resourceClusterInstanceRead(ctx context.Context, d *schema.ResourceData, me
 
 func resourceClusterInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DocDBConn()
+	conn := meta.(*conns.AWSClient).DocDBConn(ctx)
 	requestUpdate := false
 
 	req := &docdb.ModifyDBInstanceInput{
@@ -392,7 +394,7 @@ func resourceClusterInstanceUpdate(ctx context.Context, d *schema.ResourceData, 
 			_, err = conn.ModifyDBInstanceWithContext(ctx, req)
 		}
 		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "Error modifying DB Instance %s: %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "modifying DB Instance %s: %s", d.Id(), err)
 		}
 
 		// reuse db_instance refresh func
@@ -408,7 +410,7 @@ func resourceClusterInstanceUpdate(ctx context.Context, d *schema.ResourceData, 
 		// Wait, catching any errors
 		_, err = stateConf.WaitForStateContext(ctx)
 		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "waiting for DocDB Instance (%s) update: %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "waiting for DocumentDB Cluster Instance (%s) update: %s", d.Id(), err)
 		}
 	}
 
@@ -417,16 +419,16 @@ func resourceClusterInstanceUpdate(ctx context.Context, d *schema.ResourceData, 
 
 func resourceClusterInstanceDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DocDBConn()
+	conn := meta.(*conns.AWSClient).DocDBConn(ctx)
 
 	opts := docdb.DeleteDBInstanceInput{DBInstanceIdentifier: aws.String(d.Id())}
 
 	if _, err := conn.DeleteDBInstanceWithContext(ctx, &opts); err != nil {
-		return sdkdiag.AppendErrorf(diags, "deleting DocDB Instance (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting DocumentDB Cluster Instance (%s): %s", d.Id(), err)
 	}
 
 	// re-uses db_instance refresh func
-	log.Println("[INFO] Waiting for DocDB Cluster Instance to be destroyed")
+	log.Println("[INFO] Waiting for DocumentDB Cluster Instance to be destroyed")
 	stateConf := &retry.StateChangeConf{
 		Pending:    resourceClusterInstanceDeletePendingStates,
 		Target:     []string{},
@@ -437,7 +439,7 @@ func resourceClusterInstanceDelete(ctx context.Context, d *schema.ResourceData, 
 	}
 
 	if _, err := stateConf.WaitForStateContext(ctx); err != nil {
-		return sdkdiag.AppendErrorf(diags, "waiting for DocDB Instance (%s) deletion: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for DocumentDB Cluster Instance (%s) deletion: %s", d.Id(), err)
 	}
 
 	return diags

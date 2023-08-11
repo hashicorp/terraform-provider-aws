@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package lexmodels
 
 import (
@@ -286,7 +289,7 @@ func hasIntentConfigChanges(d verify.ResourceDiffer) bool {
 
 func resourceIntentCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).LexModelsConn()
+	conn := meta.(*conns.AWSClient).LexModelsConn(ctx)
 	name := d.Get("name").(string)
 
 	input := &lexmodelbuildingservice.PutIntentInput{
@@ -360,7 +363,7 @@ func resourceIntentCreate(ctx context.Context, d *schema.ResourceData, meta inte
 
 func resourceIntentRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).LexModelsConn()
+	conn := meta.(*conns.AWSClient).LexModelsConn(ctx)
 
 	resp, err := conn.GetIntentWithContext(ctx, &lexmodelbuildingservice.GetIntentInput{
 		Name:    aws.String(d.Id()),
@@ -435,7 +438,7 @@ func resourceIntentRead(ctx context.Context, d *schema.ResourceData, meta interf
 
 func resourceIntentUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).LexModelsConn()
+	conn := meta.(*conns.AWSClient).LexModelsConn(ctx)
 
 	input := &lexmodelbuildingservice.PutIntentInput{
 		Checksum:      aws.String(d.Get("checksum").(string)),
@@ -506,7 +509,7 @@ func resourceIntentUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 
 func resourceIntentDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).LexModelsConn()
+	conn := meta.(*conns.AWSClient).LexModelsConn(ctx)
 
 	input := &lexmodelbuildingservice.DeleteIntentInput{
 		Name: aws.String(d.Id()),

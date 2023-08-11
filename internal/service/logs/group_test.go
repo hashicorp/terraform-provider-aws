@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package logs_test
 
 import (
@@ -7,8 +10,8 @@ import (
 
 	"github.com/aws/aws-sdk-go/service/cloudwatchlogs"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	tflogs "github.com/hashicorp/terraform-provider-aws/internal/service/logs"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -326,7 +329,7 @@ func testAccCheckGroupExists(ctx context.Context, t *testing.T, n string, v *clo
 			return fmt.Errorf("No CloudWatch Logs Log Group ID is set")
 		}
 
-		conn := acctest.ProviderMeta(t).LogsConn()
+		conn := acctest.ProviderMeta(t).LogsConn(ctx)
 
 		output, err := tflogs.FindLogGroupByName(ctx, conn, rs.Primary.ID)
 
@@ -342,7 +345,7 @@ func testAccCheckGroupExists(ctx context.Context, t *testing.T, n string, v *clo
 
 func testAccCheckGroupDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.ProviderMeta(t).LogsConn()
+		conn := acctest.ProviderMeta(t).LogsConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_cloudwatch_log_group" {
@@ -368,7 +371,7 @@ func testAccCheckGroupDestroy(ctx context.Context, t *testing.T) resource.TestCh
 
 func testAccCheckGroupNoDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.ProviderMeta(t).LogsConn()
+		conn := acctest.ProviderMeta(t).LogsConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_cloudwatch_log_group" {

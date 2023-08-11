@@ -28,7 +28,7 @@ can be found in the [`generate` package documentation](https://github.com/hashic
 The generator will create several types of tagging-related code.
 All services that support tagging will generate the function `KeyValueTags`, which converts from service-specific structs returned by the AWS SDK into a common format used by the provider,
 and the function `Tags`, which converts from the common format back to the service-specific structs.
-In addition, many services have separate functions to list or update tags, so the corresponding `ListTags` and `UpdateTags` can be generated.
+In addition, many services have separate functions to list or update tags, so the corresponding `listTags` and `updateTags` can be generated.
 Optionally, to retrieve a specific tag, you can generate the `GetTag` function.
 
 If the service directory does not contain a `generate.go` file, create one.
@@ -109,6 +109,11 @@ For example, the Route 53 service uses the field `Keys`, so the flag is `-UntagI
 For more details on flags for generating tag updating functions, see the
 [documentation for the tag generator](https://github.com/hashicorp/terraform-provider-aws/tree/main/internal/generate/tags/README.md)
 
+#### Generating Standalone Post-Creation Tag Updating Functions
+
+When creating a resource, some AWS APIs support passing tags in the Create call while others require setting the tags after the initial creation.
+If the API does not support tagging on creation, pass the `-CreateTags` flag to generate a `createTags` function that can be called from the resource Create handler function.
+
 ### Specifying the AWS SDK for Go version
 
 The vast majority of the Terraform AWS Provider is implemented using [version 1 of the AWS SDK for Go](https://github.com/aws/aws-sdk-go).
@@ -135,10 +140,11 @@ imports (
   /* ... other imports ... */
   tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 ```
 
-Add the `tags` parameter and `tags_all` attribute to the schema.
+Add the `tags` parameter and `tags_all` attribute to the schema, using constants defined in the `names` package.
 The `tags` parameter contains the tags set directly on the resource.
 The `tags_all` attribute contains union of the tags set directly on the resource and default tags configured on the provider.
 
@@ -148,8 +154,8 @@ func ResourceCluster() *schema.Resource {
     /* ... other configuration ... */
 		Schema: map[string]*schema.Schema{
       /* ... other configuration ... */
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
     },
   }
 }
@@ -183,7 +189,84 @@ func ResourceExample() *schema.Resource {
 }
 ```
 
-### Resource Create Operation
+### Transparent Tagging
+
+Most services can use a facility we call _transparent_ (or _implicit_) _tagging_, where the majority of resource tagging functionality is implemented using code located in the provider's runtime packages (see `internal/provider/intercept.go` and `internal/provider/fwprovider/intercept.go` for details) and not in the resource's CRUD handler functions. Resource implementers opt-in to transparent tagging by adding an _annotation_ (a specially formatted Go comment) to the resource's factory function (similar to the [resource self-registration mechanism](add-a-new-resource.md)).
+
+```go
+// @SDKResource("aws_accessanalyzer_analyzer", name="Analyzer")
+// @Tags(identifierAttribute="arn")
+func ResourceAnalyzer() *schema.Resource {
+  return &schema.Resource{
+    ...
+  }
+}
+```
+
+The `identifierAttribute` argument to the `@Tags` annotation identifies the attribute in the resource's schema whose value is used in tag listing and updating API calls. Common values are `"arn"` and "`id`".
+Once the annotation has been added to the resource's code, run `make gen` to register the resource for transparent tagging. This will add an entry to the `service_package_gen.go` file located in the service package folder.
+
+#### Resource Create Operation
+
+When creating a resource, some AWS APIs support passing tags in the Create call
+while others require setting the tags after the initial creation.
+
+If the API supports tagging on creation (e.g., the `Input` struct accepts a `Tags` field),
+use the `getTagsIn` function to get any configured tags, e.g., with EKS Clusters:
+
+```go
+input := &eks.CreateClusterInput{
+  /* ... other configuration ... */
+  Tags: getTagsIn(ctx),
+}
+```
+
+Otherwise, if the API does not support tagging on creation, call `createTags` after the resource has been created, e.g., with Device Farm device pools:
+
+```go
+if err := createTags(ctx, conn, d.Id(), getTagsIn(ctx)); err != nil {
+  return sdkdiag.AppendErrorf(diags, "setting DeviceFarm Device Pool (%s) tags: %s", d.Id(), err)
+}
+```
+
+#### Resource Read Operation
+
+In the resource `Read` operation, use the `setTagsOut` function to signal to the transparent tagging mechanism that the resource has tags that should be saved into Terraform state, e.g., with EKS Clusters:
+
+```go
+/* ... other d.Set(...) logic ... */
+
+setTagsOut(ctx, cluster.Tags)
+```
+
+If the service API does not return the tags directly from reading the resource and requires use of the generated `listTags` function, do nothing and the transparent tagging mechanism will make the `listTags` call and save any tags into Terraform state.
+
+#### Resource Update Operation
+
+In the resource `Update` operation, only non-`tags` updates need be done as the transparent tagging mechanism makes the `updateTags` call.
+
+```go
+if d.HasChangesExcept("tags", "tags_all") {
+  ...
+}
+```
+
+Ensure that the `Update` operation always calls the resource `Read` operation before returning so that the transparent tagging mechanism correctly saves any tags into Terraform state, e.g., with Access Analyzer analyzers:
+
+```go
+func resourceAnalyzerUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+  var diags diag.Diagnostics
+  // Tags only.
+  return append(diags, resourceAnalyzerRead(ctx, d, meta)...)
+}
+```
+
+### Explicit Tagging
+
+If the resource cannot opt-in to transparent tagging, more boilerplate code must be explicitly added to the resource CRUD handler functions.
+This section describes how to do this.
+
+#### Resource Create Operation
 
 When creating a resource, some AWS APIs support passing tags in the Create call
 while others require setting the tags after the initial creation.
@@ -229,7 +312,7 @@ tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]in
 /* ... creation steps ... */
 
 if len(tags) > 0 {
-  if err := UpdateTags(ctx, conn, d.Id(), nil, tags); err != nil {
+  if err := updateTags(ctx, conn, d.Id(), nil, tags); err != nil {
     return fmt.Errorf("adding DeviceFarm Device Pool (%s) tags: %w", d.Id(), err)
   }
 }
@@ -250,7 +333,7 @@ This example shows using `TagSpecifications`:
   }
   ```
 
-### Resource Read Operation
+#### Resource Read Operation
 
 In the resource `Read` operation, implement the logic to convert the service tags to save them into the Terraform state for drift detection, e.g., with EKS Clusters:
 
@@ -273,7 +356,7 @@ if err := d.Set("tags_all", tags.Map()); err != nil {
 ```
 
 If the service API does not return the tags directly from reading the resource and requires a separate API call,
-use the generated `ListTags` function, e.g., with Athena Workgroups:
+use the generated `listTags` function, e.g., with Athena Workgroups:
 
 ```go
 // Typically declared near conn := /* ... */
@@ -282,7 +365,7 @@ ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
 /* ... other d.Set(...) logic ... */
 
-tags, err := ListTags(ctx, conn, arn.String())
+tags, err := listTags(ctx, conn, arn.String())
 
 if err != nil {
   return fmt.Errorf("listing tags for resource (%s): %w", arn, err)
@@ -299,14 +382,14 @@ if err := d.Set("tags_all", tags.Map()); err != nil {
 }
 ```
 
-### Resource Update Operation
+#### Resource Update Operation
 
 In the resource `Update` operation, implement the logic to handle tagging updates, e.g., with EKS Clusters:
 
 ```go
 if d.HasChange("tags_all") {
   o, n := d.GetChange("tags_all")
-  if err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n); err != nil {
+  if err := updateTags(ctx, conn, d.Get("arn").(string), o, n); err != nil {
     return fmt.Errorf("updating tags: %w", err)
   }
 }
@@ -432,7 +515,7 @@ In the resource documentation (e.g., `website/docs/r/eks_cluster.html.markdown`)
 * `tags` - (Optional) Key-value mapping of resource tags. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 ```
 
-In the resource documentation (e.g., `website/docs/r/eks_cluster.html.markdown`), add the following to the attributes reference:
+In the resource documentation (e.g., `website/docs/r/eks_cluster.html.markdown`), add the following to the attribute reference:
 
 ```markdown
 * `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).

@@ -1,6 +1,9 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package elbv2
 
-import ( // nosemgrep:ci.aws-sdk-go-multiple-service-imports
+import ( // nosemgrep:ci.semgrep.aws.multiple-service-imports
 	"bytes"
 	"context"
 	"errors"
@@ -23,6 +26,7 @@ import ( // nosemgrep:ci.aws-sdk-go-multiple-service-imports
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
@@ -302,7 +306,7 @@ func suppressIfLBTypeNot(t string) schema.SchemaDiffSuppressFunc {
 
 func resourceLoadBalancerCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ELBV2Conn()
+	conn := meta.(*conns.AWSClient).ELBV2Conn(ctx)
 
 	var name string
 	if v, ok := d.GetOk("name"); ok {
@@ -312,12 +316,25 @@ func resourceLoadBalancerCreate(ctx context.Context, d *schema.ResourceData, met
 	} else {
 		name = id.PrefixedUniqueId("tf-lb-")
 	}
+
+	exist, err := FindLoadBalancer(ctx, conn, &elbv2.DescribeLoadBalancersInput{
+		Names: aws.StringSlice([]string{name}),
+	})
+
+	if err != nil && !tfresource.NotFound(err) {
+		return sdkdiag.AppendErrorf(diags, "reading ELBv2 Load Balancer (%s): %s", name, err)
+	}
+
+	if exist != nil {
+		return sdkdiag.AppendErrorf(diags, "ELBv2 Target Group (%s) already exists", name)
+	}
+
 	d.Set("name", name)
 
 	lbType := d.Get("load_balancer_type").(string)
 	input := &elbv2.CreateLoadBalancerInput{
 		Name: aws.String(name),
-		Tags: GetTagsIn(ctx),
+		Tags: getTagsIn(ctx),
 		Type: aws.String(lbType),
 	}
 
@@ -347,10 +364,10 @@ func resourceLoadBalancerCreate(ctx context.Context, d *schema.ResourceData, met
 
 	output, err := conn.CreateLoadBalancerWithContext(ctx, input)
 
-	// Some partitions may not support tag-on-create
-	if input.Tags != nil && verify.ErrorISOUnsupported(conn.PartitionID, err) {
-		log.Printf("[WARN] ELBv2 Load Balancer (%s) create failed (%s) with tags. Trying create without tags.", name, err)
+	// Some partitions (e.g. ISO) may not support tag-on-create.
+	if input.Tags != nil && errs.IsUnsupportedOperationInPartitionError(conn.PartitionID, err) {
 		input.Tags = nil
+
 		output, err = conn.CreateLoadBalancerWithContext(ctx, input)
 	}
 
@@ -364,18 +381,17 @@ func resourceLoadBalancerCreate(ctx context.Context, d *schema.ResourceData, met
 		return sdkdiag.AppendErrorf(diags, "waiting for ELBv2 Load Balancer (%s) create: %s", d.Id(), err)
 	}
 
-	// Post-create tagging supported in some partitions
-	if tags := KeyValueTags(ctx, GetTagsIn(ctx)); input.Tags == nil && len(tags) > 0 {
-		err := UpdateTags(ctx, conn, d.Id(), nil, tags)
+	// For partitions not supporting tag-on-create, attempt tag after create.
+	if tags := getTagsIn(ctx); input.Tags == nil && len(tags) > 0 {
+		err := createTags(ctx, conn, d.Id(), tags)
 
-		// if default tags only, log and continue (i.e., should error if explicitly setting tags and they can't be)
-		if v, ok := d.GetOk("tags"); (!ok || len(v.(map[string]interface{})) == 0) && verify.ErrorISOUnsupported(conn.PartitionID, err) {
-			log.Printf("[WARN] error adding tags after create for ELBv2 Load Balancer (%s): %s", d.Id(), err)
+		// If default tags only, continue. Otherwise, error.
+		if v, ok := d.GetOk(names.AttrTags); (!ok || len(v.(map[string]interface{})) == 0) && errs.IsUnsupportedOperationInPartitionError(conn.PartitionID, err) {
 			return append(diags, resourceLoadBalancerUpdate(ctx, d, meta)...)
 		}
 
 		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "creating ELBv2 Load Balancer (%s) tags: %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "setting ELBv2 Load Balancer (%s) tags: %s", d.Id(), err)
 		}
 	}
 
@@ -384,7 +400,7 @@ func resourceLoadBalancerCreate(ctx context.Context, d *schema.ResourceData, met
 
 func resourceLoadBalancerRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ELBV2Conn()
+	conn := meta.(*conns.AWSClient).ELBV2Conn(ctx)
 
 	lb, err := FindLoadBalancerByARN(ctx, conn, d.Id())
 
@@ -406,7 +422,7 @@ func resourceLoadBalancerRead(ctx context.Context, d *schema.ResourceData, meta 
 
 func resourceLoadBalancerUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ELBV2Conn()
+	conn := meta.(*conns.AWSClient).ELBV2Conn(ctx)
 
 	attributes := make([]*elbv2.LoadBalancerAttribute, 0)
 
@@ -612,7 +628,7 @@ func resourceLoadBalancerUpdate(ctx context.Context, d *schema.ResourceData, met
 
 func resourceLoadBalancerDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ELBV2Conn()
+	conn := meta.(*conns.AWSClient).ELBV2Conn(ctx)
 
 	log.Printf("[INFO] Deleting LB: %s", d.Id())
 
@@ -624,7 +640,7 @@ func resourceLoadBalancerDelete(ctx context.Context, d *schema.ResourceData, met
 		return sdkdiag.AppendErrorf(diags, "deleting LB: %s", err)
 	}
 
-	ec2conn := meta.(*conns.AWSClient).EC2Conn()
+	ec2conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	err := cleanupALBNetworkInterfaces(ctx, ec2conn, d.Id())
 	if err != nil {
@@ -897,7 +913,7 @@ func SuffixFromARN(arn *string) string {
 
 // flattenResource takes a *elbv2.LoadBalancer and populates all respective resource fields.
 func flattenResource(ctx context.Context, d *schema.ResourceData, meta interface{}, lb *elbv2.LoadBalancer) error {
-	conn := meta.(*conns.AWSClient).ELBV2Conn()
+	conn := meta.(*conns.AWSClient).ELBV2Conn(ctx)
 
 	d.Set("arn", lb.LoadBalancerArn)
 	d.Set("arn_suffix", SuffixFromARN(lb.LoadBalancerArn))

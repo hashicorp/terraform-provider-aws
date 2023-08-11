@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package worklink
 
 import (
@@ -133,7 +136,7 @@ func ResourceFleet() *schema.Resource {
 
 func resourceFleetCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).WorkLinkConn()
+	conn := meta.(*conns.AWSClient).WorkLinkConn(ctx)
 
 	input := &worklink.CreateFleetInput{
 		FleetName:                  aws.String(d.Get("name").(string)),
@@ -172,7 +175,7 @@ func resourceFleetCreate(ctx context.Context, d *schema.ResourceData, meta inter
 
 func resourceFleetRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).WorkLinkConn()
+	conn := meta.(*conns.AWSClient).WorkLinkConn(ctx)
 
 	resp, err := conn.DescribeFleetMetadataWithContext(ctx, &worklink.DescribeFleetMetadataInput{
 		FleetArn: aws.String(d.Id()),
@@ -236,7 +239,7 @@ func resourceFleetRead(ctx context.Context, d *schema.ResourceData, meta interfa
 
 func resourceFleetUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).WorkLinkConn()
+	conn := meta.(*conns.AWSClient).WorkLinkConn(ctx)
 
 	input := &worklink.UpdateFleetMetadataInput{
 		FleetArn:                   aws.String(d.Id()),
@@ -283,7 +286,7 @@ func resourceFleetUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 
 func resourceFleetDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).WorkLinkConn()
+	conn := meta.(*conns.AWSClient).WorkLinkConn(ctx)
 
 	input := &worklink.DeleteFleetInput{
 		FleetArn: aws.String(d.Id()),

@@ -14,10 +14,10 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// ListTags lists organizations service tags.
+// listTags lists organizations service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func ListTags(ctx context.Context, conn organizationsiface.OrganizationsAPI, identifier string) (tftags.KeyValueTags, error) {
+func listTags(ctx context.Context, conn organizationsiface.OrganizationsAPI, identifier string) (tftags.KeyValueTags, error) {
 	input := &organizations.ListTagsForResourceInput{
 		ResourceId: aws.String(identifier),
 	}
@@ -34,7 +34,7 @@ func ListTags(ctx context.Context, conn organizationsiface.OrganizationsAPI, ide
 // ListTags lists organizations service tags and set them in Context.
 // It is called from outside this package.
 func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier string) error {
-	tags, err := ListTags(ctx, meta.(*conns.AWSClient).OrganizationsConn(), identifier)
+	tags, err := listTags(ctx, meta.(*conns.AWSClient).OrganizationsConn(ctx), identifier)
 
 	if err != nil {
 		return err
@@ -76,9 +76,9 @@ func KeyValueTags(ctx context.Context, tags []*organizations.Tag) tftags.KeyValu
 	return tftags.New(ctx, m)
 }
 
-// GetTagsIn returns organizations service tags from Context.
+// getTagsIn returns organizations service tags from Context.
 // nil is returned if there are no input tags.
-func GetTagsIn(ctx context.Context) []*organizations.Tag {
+func getTagsIn(ctx context.Context) []*organizations.Tag {
 	if inContext, ok := tftags.FromContext(ctx); ok {
 		if tags := Tags(inContext.TagsIn.UnwrapOrDefault()); len(tags) > 0 {
 			return tags
@@ -88,17 +88,17 @@ func GetTagsIn(ctx context.Context) []*organizations.Tag {
 	return nil
 }
 
-// SetTagsOut sets organizations service tags in Context.
-func SetTagsOut(ctx context.Context, tags []*organizations.Tag) {
+// setTagsOut sets organizations service tags in Context.
+func setTagsOut(ctx context.Context, tags []*organizations.Tag) {
 	if inContext, ok := tftags.FromContext(ctx); ok {
 		inContext.TagsOut = types.Some(KeyValueTags(ctx, tags))
 	}
 }
 
-// UpdateTags updates organizations service tags.
+// updateTags updates organizations service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func UpdateTags(ctx context.Context, conn organizationsiface.OrganizationsAPI, identifier string, oldTagsMap, newTagsMap any) error {
+func updateTags(ctx context.Context, conn organizationsiface.OrganizationsAPI, identifier string, oldTagsMap, newTagsMap any) error {
 	oldTags := tftags.New(ctx, oldTagsMap)
 	newTags := tftags.New(ctx, newTagsMap)
 
@@ -138,5 +138,5 @@ func UpdateTags(ctx context.Context, conn organizationsiface.OrganizationsAPI, i
 // UpdateTags updates organizations service tags.
 // It is called from outside this package.
 func (p *servicePackage) UpdateTags(ctx context.Context, meta any, identifier string, oldTags, newTags any) error {
-	return UpdateTags(ctx, meta.(*conns.AWSClient).OrganizationsConn(), identifier, oldTags, newTags)
+	return updateTags(ctx, meta.(*conns.AWSClient).OrganizationsConn(ctx), identifier, oldTags, newTags)
 }

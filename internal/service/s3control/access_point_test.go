@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package s3control_test
 
 import (
@@ -8,9 +11,9 @@ import (
 
 	"github.com/aws/aws-sdk-go/service/s3control"
 	awspolicy "github.com/hashicorp/awspolicyequivalence"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfs3control "github.com/hashicorp/terraform-provider-aws/internal/service/s3control"
@@ -144,11 +147,11 @@ func TestAccS3ControlAccessPoint_policy(t *testing.T) {
       "Sid": "",
       "Effect": "Allow",
       "Principal": {
-        "AWS": "*"
+        "AWS": "arn:%[1]s:iam::%[3]s:root"
       },
       "Action": "s3:GetObjectTagging",
       "Resource": [
-        "arn:%s:s3:%s:%s:accesspoint/%s/object/*"
+        "arn:%[1]s:s3:%[2]s:%[3]s:accesspoint/%[4]s/object/*"
       ]
     }
   ]
@@ -162,14 +165,14 @@ func TestAccS3ControlAccessPoint_policy(t *testing.T) {
       "Sid": "",
       "Effect": "Allow",
       "Principal": {
-        "AWS": "*"
+        "AWS": "arn:%[1]s:iam::%[3]s:root"
       },
       "Action": [
         "s3:GetObjectLegalHold",
         "s3:GetObjectRetention"
       ],
       "Resource": [
-        "arn:%s:s3:%s:%s:accesspoint/%s/object/*"
+        "arn:%[1]s:s3:%[2]s:%[3]s:accesspoint/%[4]s/object/*"
       ]
     }
   ]
@@ -190,7 +193,7 @@ func TestAccS3ControlAccessPoint_policy(t *testing.T) {
 					acctest.CheckResourceAttrAccountID(resourceName, "account_id"),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "s3", fmt.Sprintf("accesspoint/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "bucket", rName),
-					resource.TestCheckResourceAttr(resourceName, "has_public_access_policy", "true"),
+					resource.TestCheckResourceAttr(resourceName, "has_public_access_policy", "false"),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "network_origin", "Internet"),
 					resource.TestCheckResourceAttr(resourceName, "public_access_block_configuration.#", "1"),
@@ -217,7 +220,6 @@ func TestAccS3ControlAccessPoint_policy(t *testing.T) {
 				Config: testAccAccessPointConfig_noPolicy(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAccessPointExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "has_public_access_policy", "false"),
 					resource.TestCheckResourceAttr(resourceName, "policy", ""),
 				),
 			},
@@ -309,7 +311,7 @@ func TestAccS3ControlAccessPoint_vpc(t *testing.T) {
 
 func testAccCheckAccessPointDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).S3ControlConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).S3ControlConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_s3_access_point" {
@@ -356,7 +358,7 @@ func testAccCheckAccessPointExists(ctx context.Context, n string, v *s3control.G
 			return err
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).S3ControlConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).S3ControlConn(ctx)
 
 		output, err := tfs3control.FindAccessPointByTwoPartKey(ctx, conn, accountID, name)
 
@@ -387,7 +389,7 @@ func testAccCheckAccessPointHasPolicy(ctx context.Context, n string, fn func() s
 			return err
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).S3ControlConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).S3ControlConn(ctx)
 
 		actualPolicyText, _, err := tfs3control.FindAccessPointPolicyAndStatusByTwoPartKey(ctx, conn, accountID, name)
 
@@ -492,7 +494,7 @@ data "aws_iam_policy_document" "test" {
 
     principals {
       type        = "AWS"
-      identifiers = ["*"]
+      identifiers = ["arn:${data.aws_partition.current.partition}:iam::${data.aws_caller_identity.current.account_id}:root"]
     }
   }
 }
@@ -537,7 +539,7 @@ data "aws_iam_policy_document" "test" {
 
     principals {
       type        = "AWS"
-      identifiers = ["*"]
+      identifiers = ["arn:${data.aws_partition.current.partition}:iam::${data.aws_caller_identity.current.account_id}:root"]
     }
   }
 }

@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package fsx
 
 import (
@@ -245,6 +248,28 @@ func ResourceLustreFileSystem() *schema.Resource {
 					},
 				},
 			},
+			"root_squash_configuration": {
+				Type:     schema.TypeList,
+				Optional: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"no_squash_nids": {
+							Type:     schema.TypeSet,
+							Optional: true,
+							Elem: &schema.Schema{
+								Type:         schema.TypeString,
+								ValidateFunc: validation.StringMatch(regexp.MustCompile(`^([0-9\[\]\-]*\.){3}([0-9\[\]\-]*)@tcp$`), "must be in the standard Lustre NID foramt"),
+							},
+						},
+						"root_squash": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							ValidateFunc: validation.StringMatch(regexp.MustCompile(`^([0-9]{1,10}):([0-9]{1,10})$`), "must be in the format UID:GID"),
+						},
+					},
+				},
+			},
 		},
 
 		CustomizeDiff: customdiff.Sequence(
@@ -270,7 +295,7 @@ func resourceLustreFileSystemSchemaCustomizeDiff(_ context.Context, d *schema.Re
 
 func resourceLustreFileSystemCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).FSxConn()
+	conn := meta.(*conns.AWSClient).FSxConn(ctx)
 
 	input := &fsx.CreateFileSystemInput{
 		ClientRequestToken: aws.String(id.UniqueId()),
@@ -281,7 +306,7 @@ func resourceLustreFileSystemCreate(ctx context.Context, d *schema.ResourceData,
 		LustreConfiguration: &fsx.CreateFileSystemLustreConfiguration{
 			DeploymentType: aws.String(d.Get("deployment_type").(string)),
 		},
-		Tags: GetTagsIn(ctx),
+		Tags: getTagsIn(ctx),
 	}
 
 	backupInput := &fsx.CreateFileSystemFromBackupInput{
@@ -291,7 +316,7 @@ func resourceLustreFileSystemCreate(ctx context.Context, d *schema.ResourceData,
 		LustreConfiguration: &fsx.CreateFileSystemLustreConfiguration{
 			DeploymentType: aws.String(d.Get("deployment_type").(string)),
 		},
-		Tags: GetTagsIn(ctx),
+		Tags: getTagsIn(ctx),
 	}
 
 	//Applicable only for TypePersistent1 and TypePersistent2
@@ -370,6 +395,11 @@ func resourceLustreFileSystemCreate(ctx context.Context, d *schema.ResourceData,
 		backupInput.LustreConfiguration.LogConfiguration = expandLustreLogCreateConfiguration(v.([]interface{}))
 	}
 
+	if v, ok := d.GetOk("root_squash_configuration"); ok && len(v.([]interface{})) > 0 {
+		input.LustreConfiguration.RootSquashConfiguration = expandLustreRootSquashConfiguration(v.([]interface{}))
+		backupInput.LustreConfiguration.RootSquashConfiguration = expandLustreRootSquashConfiguration(v.([]interface{}))
+	}
+
 	if v, ok := d.GetOk("backup_id"); ok {
 		backupInput.BackupId = aws.String(v.(string))
 
@@ -401,7 +431,7 @@ func resourceLustreFileSystemCreate(ctx context.Context, d *schema.ResourceData,
 
 func resourceLustreFileSystemUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).FSxConn()
+	conn := meta.(*conns.AWSClient).FSxConn(ctx)
 
 	if d.HasChangesExcept("tags_all", "tags") {
 		var waitAdminAction = false
@@ -440,6 +470,11 @@ func resourceLustreFileSystemUpdate(ctx context.Context, d *schema.ResourceData,
 			waitAdminAction = true
 		}
 
+		if d.HasChange("root_squash_configuration") {
+			input.LustreConfiguration.RootSquashConfiguration = expandLustreRootSquashConfiguration(d.Get("root_squash_configuration").([]interface{}))
+			waitAdminAction = true
+		}
+
 		_, err := conn.UpdateFileSystemWithContext(ctx, input)
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating FSX Lustre File System (%s): %s", d.Id(), err)
@@ -461,7 +496,7 @@ func resourceLustreFileSystemUpdate(ctx context.Context, d *schema.ResourceData,
 
 func resourceLustreFileSystemRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).FSxConn()
+	conn := meta.(*conns.AWSClient).FSxConn(ctx)
 
 	filesystem, err := FindFileSystemByID(ctx, conn, d.Id())
 	if !d.IsNewResource() && tfresource.NotFound(err) {
@@ -517,7 +552,11 @@ func resourceLustreFileSystemRead(ctx context.Context, d *schema.ResourceData, m
 		return sdkdiag.AppendErrorf(diags, "setting log_configuration: %s", err)
 	}
 
-	SetTagsOut(ctx, filesystem.Tags)
+	if err := d.Set("root_squash_configuration", flattenLustreRootSquashConfiguration(lustreConfig.RootSquashConfiguration)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting root_squash_configuration: %s", err)
+	}
+
+	setTagsOut(ctx, filesystem.Tags)
 
 	d.Set("vpc_id", filesystem.VpcId)
 	d.Set("weekly_maintenance_start_time", lustreConfig.WeeklyMaintenanceStartTime)
@@ -532,7 +571,7 @@ func resourceLustreFileSystemRead(ctx context.Context, d *schema.ResourceData, m
 
 func resourceLustreFileSystemDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).FSxConn()
+	conn := meta.(*conns.AWSClient).FSxConn(ctx)
 
 	request := &fsx.DeleteFileSystemInput{
 		FileSystemId: aws.String(d.Id()),
@@ -554,6 +593,43 @@ func resourceLustreFileSystemDelete(ctx context.Context, d *schema.ResourceData,
 	}
 
 	return diags
+}
+
+func expandLustreRootSquashConfiguration(l []interface{}) *fsx.LustreRootSquashConfiguration {
+	if len(l) == 0 || l[0] == nil {
+		return nil
+	}
+
+	data := l[0].(map[string]interface{})
+	req := &fsx.LustreRootSquashConfiguration{}
+
+	if v, ok := data["root_squash"].(string); ok && v != "" {
+		req.RootSquash = aws.String(v)
+	}
+
+	if v, ok := data["no_squash_nids"].(*schema.Set); ok && v.Len() > 0 {
+		req.NoSquashNids = flex.ExpandStringSet(v)
+	}
+
+	return req
+}
+
+func flattenLustreRootSquashConfiguration(adopts *fsx.LustreRootSquashConfiguration) []map[string]interface{} {
+	if adopts == nil {
+		return []map[string]interface{}{}
+	}
+
+	m := map[string]interface{}{}
+
+	if adopts.RootSquash != nil {
+		m["root_squash"] = aws.StringValue(adopts.RootSquash)
+	}
+
+	if adopts.NoSquashNids != nil {
+		m["no_squash_nids"] = flex.FlattenStringSet(adopts.NoSquashNids)
+	}
+
+	return []map[string]interface{}{m}
 }
 
 func expandLustreLogCreateConfiguration(l []interface{}) *fsx.LustreLogCreateConfiguration {

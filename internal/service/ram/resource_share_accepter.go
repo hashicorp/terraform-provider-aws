@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ram
 
 import (
@@ -85,7 +88,7 @@ func ResourceResourceShareAccepter() *schema.Resource {
 
 func resourceResourceShareAccepterCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).RAMConn()
+	conn := meta.(*conns.AWSClient).RAMConn(ctx)
 
 	shareARN := d.Get("share_arn").(string)
 
@@ -130,7 +133,7 @@ func resourceResourceShareAccepterCreate(ctx context.Context, d *schema.Resource
 func resourceResourceShareAccepterRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	accountID := meta.(*conns.AWSClient).AccountID
-	conn := meta.(*conns.AWSClient).RAMConn()
+	conn := meta.(*conns.AWSClient).RAMConn(ctx)
 
 	invitation, err := FindResourceShareInvitationByResourceShareARNAndStatus(ctx, conn, d.Id(), ram.ResourceShareInvitationStatusAccepted)
 
@@ -195,7 +198,7 @@ func resourceResourceShareAccepterRead(ctx context.Context, d *schema.ResourceDa
 
 func resourceResourceShareAccepterDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).RAMConn()
+	conn := meta.(*conns.AWSClient).RAMConn(ctx)
 
 	receiverAccountID := d.Get("receiver_account_id").(string)
 
@@ -231,4 +234,28 @@ func resourceResourceShareAccepterDelete(ctx context.Context, d *schema.Resource
 
 func resourceResourceShareGetIDFromARN(arn string) string {
 	return strings.Replace(arn[strings.LastIndex(arn, ":")+1:], "resource-share/", "rs-", -1)
+}
+
+func findResources(ctx context.Context, conn *ram.RAM, input *ram.ListResourcesInput) ([]*ram.Resource, error) {
+	var output []*ram.Resource
+
+	err := conn.ListResourcesPagesWithContext(ctx, input, func(page *ram.ListResourcesOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, v := range page.Resources {
+			if v != nil {
+				output = append(output, v)
+			}
+		}
+
+		return !lastPage
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	return output, nil
 }

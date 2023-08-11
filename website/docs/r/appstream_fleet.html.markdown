@@ -78,9 +78,9 @@ The following arguments are optional:
 * `security_group_ids` - Identifiers of the security groups for the fleet or image builder.
 * `subnet_ids` - Identifiers of the subnets to which a network interface is attached from the fleet instance or image builder instance.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - Unique identifier (ID) of the appstream fleet.
 * `arn` - ARN of the appstream fleet.
@@ -96,8 +96,17 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-`aws_appstream_fleet` can be imported using the id, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_appstream_fleet` using the id. For example:
 
+```terraform
+import {
+  to = aws_appstream_fleet.example
+  id = "fleetNameExample"
+}
 ```
-$ terraform import aws_appstream_fleet.example fleetNameExample
+
+Using `terraform import`, import `aws_appstream_fleet` using the id. For example:
+
+```console
+% terraform import aws_appstream_fleet.example fleetNameExample
 ```

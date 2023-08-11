@@ -21,22 +21,31 @@ resource "aws_ssm_service_setting" "test_setting" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `setting_id` - (Required) ID of the service setting.
 * `setting_value` - (Required) Value of the service setting.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the service setting.
 * `status` - Status of the service setting. Value can be `Default`, `Customized` or `PendingUpdate`.
 
 ## Import
 
-AWS SSM Service Setting can be imported using the `setting_id`, e.g.
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import AWS SSM Service Setting using the `setting_id`. For example:
 
-```sh
-$ terraform import aws_ssm_service_setting.example arn:aws:ssm:us-east-1:123456789012:servicesetting/ssm/parameter-store/high-throughput-enabled
+```terraform
+import {
+  to = aws_ssm_service_setting.example
+  id = "arn:aws:ssm:us-east-1:123456789012:servicesetting/ssm/parameter-store/high-throughput-enabled"
+}
+```
+
+Using `terraform import`, import AWS SSM Service Setting using the `setting_id`. For example:
+
+```console
+% terraform import aws_ssm_service_setting.example arn:aws:ssm:us-east-1:123456789012:servicesetting/ssm/parameter-store/high-throughput-enabled
 ```

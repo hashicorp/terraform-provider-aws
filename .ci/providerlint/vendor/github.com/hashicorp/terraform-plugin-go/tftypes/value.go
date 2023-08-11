@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package tftypes
 
 import (
@@ -8,7 +11,7 @@ import (
 	"strconv"
 	"strings"
 
-	msgpack "github.com/vmihailenco/msgpack/v4"
+	msgpack "github.com/vmihailenco/msgpack/v5"
 )
 
 // ValueConverter is an interface that provider-defined types can implement to
@@ -540,6 +543,7 @@ func (val Value) IsFullyKnown() bool {
 	case primitive:
 		return true
 	case List, Set, Tuple:
+		//nolint:forcetypeassert // NewValue func validates the type
 		for _, v := range val.value.([]Value) {
 			if !v.IsFullyKnown() {
 				return false
@@ -547,6 +551,7 @@ func (val Value) IsFullyKnown() bool {
 		}
 		return true
 	case Map, Object:
+		//nolint:forcetypeassert // NewValue func validates the type
 		for _, v := range val.value.(map[string]Value) {
 			if !v.IsFullyKnown() {
 				return false

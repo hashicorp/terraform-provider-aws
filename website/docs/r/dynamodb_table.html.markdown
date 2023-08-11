@@ -239,9 +239,9 @@ Optional arguments:
 * `enabled` - (Required) Whether TTL is enabled.
 * `attribute_name` - (Required) Name of the table attribute to store the TTL timestamp in.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the table
 * `id` - Name of the table
@@ -264,8 +264,17 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-DynamoDB tables can be imported using the `name`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import DynamoDB tables using the `name`. For example:
 
+```terraform
+import {
+  to = aws_dynamodb_table.basic-dynamodb-table
+  id = "GameScores"
+}
 ```
-$ terraform import aws_dynamodb_table.basic-dynamodb-table GameScores
+
+Using `terraform import`, import DynamoDB tables using the `name`. For example:
+
+```console
+% terraform import aws_dynamodb_table.basic-dynamodb-table GameScores
 ```

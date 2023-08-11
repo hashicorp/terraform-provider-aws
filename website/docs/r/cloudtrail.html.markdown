@@ -22,21 +22,19 @@ Enable CloudTrail to capture all compatible management events in region.
 For capturing events from services like IAM, `include_global_service_events` must be enabled.
 
 ```terraform
-data "aws_caller_identity" "current" {}
-
-resource "aws_cloudtrail" "foobar" {
-  name                          = "tf-trail-foobar"
-  s3_bucket_name                = aws_s3_bucket.foo.id
+resource "aws_cloudtrail" "example" {
+  name                          = "example"
+  s3_bucket_name                = aws_s3_bucket.example.id
   s3_key_prefix                 = "prefix"
   include_global_service_events = false
 }
 
-resource "aws_s3_bucket" "foo" {
+resource "aws_s3_bucket" "example" {
   bucket        = "tf-test-trail"
   force_destroy = true
 }
 
-data "aws_iam_policy_document" "foo" {
+data "aws_iam_policy_document" "example" {
   statement {
     sid    = "AWSCloudTrailAclCheck"
     effect = "Allow"
@@ -47,7 +45,12 @@ data "aws_iam_policy_document" "foo" {
     }
 
     actions   = ["s3:GetBucketAcl"]
-    resources = [aws_s3_bucket.foo.arn]
+    resources = [aws_s3_bucket.example.arn]
+    condition {
+      test     = "StringEquals"
+      variable = "aws:SourceArn"
+      values   = ["arn:${data.aws_partition.current.partition}:cloudtrail:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:trail/example"]
+    }
   }
 
   statement {
@@ -60,19 +63,30 @@ data "aws_iam_policy_document" "foo" {
     }
 
     actions   = ["s3:PutObject"]
-    resources = ["${aws_s3_bucket.foo.arn}/prefix/AWSLogs/${data.aws_caller_identity.current.account_id}/*"]
+    resources = ["${aws_s3_bucket.example.arn}/prefix/AWSLogs/${data.aws_caller_identity.current.account_id}/*"]
 
     condition {
       test     = "StringEquals"
       variable = "s3:x-amz-acl"
       values   = ["bucket-owner-full-control"]
     }
+    condition {
+      test     = "StringEquals"
+      variable = "aws:SourceArn"
+      values   = ["arn:${data.aws_partition.current.partition}:cloudtrail:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:trail/example"]
+    }
   }
 }
-resource "aws_s3_bucket_policy" "foo" {
-  bucket = aws_s3_bucket.foo.id
-  policy = data.aws_iam_policy_document.foo.json
+resource "aws_s3_bucket_policy" "example" {
+  bucket = aws_s3_bucket.example.id
+  policy = data.aws_iam_policy_document.example.json
 }
+
+data "aws_caller_identity" "current" {}
+
+data "aws_partition" "current" {}
+
+data "aws_region" "current" {}
 ```
 
 ### Data Event Logging
@@ -230,7 +244,7 @@ resource "aws_cloudtrail" "example" {
       field = "resources.ARN"
 
       #The trailing slash is intentional; do not exclude it.
-      equals = [
+      starts_with = [
         "${data.aws_s3_bucket.important-bucket-1.arn}/",
         "${data.aws_s3_bucket.important-bucket-2.arn}/"
       ]
@@ -263,7 +277,6 @@ resource "aws_cloudtrail" "example" {
     field_selector {
       field = "resources.ARN"
 
-      #The trailing slash is intentional; do not exclude it.
       equals = [
         "${data.aws_s3_bucket.important-bucket-3.arn}/important-prefix"
       ]
@@ -351,9 +364,9 @@ The following arguments are optional:
 * `not_starts_with` (Optional) - A list of values that excludes events that match the first few characters of the event record field specified as the value of `field`.
 * `starts_with` (Optional) - A list of values that includes events that match the first few characters of the event record field specified as the value of `field`.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the trail.
 * `home_region` - Region in which the trail was created.
@@ -362,8 +375,17 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Cloudtrails can be imported using the `name`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Cloudtrails using the `name`. For example:
 
+```terraform
+import {
+  to = aws_cloudtrail.sample
+  id = "my-sample-trail"
+}
 ```
-$ terraform import aws_cloudtrail.sample my-sample-trail
+
+Using `terraform import`, import Cloudtrails using the `name`. For example:
+
+```console
+% terraform import aws_cloudtrail.sample my-sample-trail
 ```

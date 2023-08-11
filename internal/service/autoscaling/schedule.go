@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package autoscaling
 
 import (
@@ -90,7 +93,7 @@ func ResourceSchedule() *schema.Resource {
 
 func resourceSchedulePut(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).AutoScalingConn()
+	conn := meta.(*conns.AWSClient).AutoScalingConn(ctx)
 
 	name := d.Get("scheduled_action_name").(string)
 	input := &autoscaling.PutScheduledUpdateGroupActionInput{
@@ -151,7 +154,7 @@ func resourceSchedulePut(ctx context.Context, d *schema.ResourceData, meta inter
 
 func resourceScheduleRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).AutoScalingConn()
+	conn := meta.(*conns.AWSClient).AutoScalingConn(ctx)
 
 	sa, err := FindScheduledUpdateGroupAction(ctx, conn, d.Get("autoscaling_group_name").(string), d.Id())
 
@@ -196,7 +199,7 @@ func resourceScheduleRead(ctx context.Context, d *schema.ResourceData, meta inte
 
 func resourceScheduleDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).AutoScalingConn()
+	conn := meta.(*conns.AWSClient).AutoScalingConn(ctx)
 
 	log.Printf("[INFO] Deleting Auto Scaling Scheduled Action: %s", d.Id())
 	_, err := conn.DeleteScheduledActionWithContext(ctx, &autoscaling.DeleteScheduledActionInput{

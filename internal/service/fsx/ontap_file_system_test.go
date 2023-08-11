@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package fsx_test
 
 import (
@@ -8,9 +11,9 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/fsx"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tffsx "github.com/hashicorp/terraform-provider-aws/internal/service/fsx"
@@ -284,11 +287,11 @@ func TestAccFSxOntapFileSystem_routeTableIDs(t *testing.T) {
 		CheckDestroy:             testAccCheckOntapFileSystemDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccONTAPFileSystemConfig_routeTable(rName),
+				Config: testAccONTAPFileSystemConfig_routeTable(rName, 1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOntapFileSystemExists(ctx, resourceName, &filesystem1),
 					resource.TestCheckResourceAttr(resourceName, "route_table_ids.#", "1"),
-					resource.TestCheckTypeSetElemAttrPair(resourceName, "route_table_ids.*", "aws_route_table.test", "id"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "route_table_ids.*", "aws_route_table.test.0", "id"),
 				),
 			},
 			{
@@ -296,6 +299,23 @@ func TestAccFSxOntapFileSystem_routeTableIDs(t *testing.T) {
 				ImportState:             true,
 				ImportStateVerify:       true,
 				ImportStateVerifyIgnore: []string{"security_group_ids"},
+			},
+			{
+				Config: testAccONTAPFileSystemConfig_routeTable(rName, 2),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckOntapFileSystemExists(ctx, resourceName, &filesystem1),
+					resource.TestCheckResourceAttr(resourceName, "route_table_ids.#", "2"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "route_table_ids.*", "aws_route_table.test.0", "id"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "route_table_ids.*", "aws_route_table.test.1", "id"),
+				),
+			},
+			{
+				Config: testAccONTAPFileSystemConfig_routeTable(rName, 1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckOntapFileSystemExists(ctx, resourceName, &filesystem1),
+					resource.TestCheckResourceAttr(resourceName, "route_table_ids.#", "1"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "route_table_ids.*", "aws_route_table.test.0", "id"),
+				),
 			},
 		},
 	})
@@ -578,7 +598,7 @@ func testAccCheckOntapFileSystemExists(ctx context.Context, resourceName string,
 			return fmt.Errorf("Not found: %s", resourceName)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).FSxConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).FSxConn(ctx)
 
 		filesystem, err := tffsx.FindFileSystemByID(ctx, conn, rs.Primary.ID)
 		if err != nil {
@@ -597,7 +617,7 @@ func testAccCheckOntapFileSystemExists(ctx context.Context, resourceName string,
 
 func testAccCheckOntapFileSystemDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).FSxConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).FSxConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_fsx_ontap_file_system" {
@@ -750,7 +770,7 @@ resource "aws_fsx_ontap_file_system" "test" {
 `, rName, iops))
 }
 
-func testAccONTAPFileSystemConfig_routeTable(rName string) string {
+func testAccONTAPFileSystemConfig_routeTable(rName string, cnt int) string {
 	return acctest.ConfigCompose(testAccOntapFileSystemBaseConfig(rName), fmt.Sprintf(`
 resource "aws_internet_gateway" "test" {
   vpc_id = aws_vpc.test.id
@@ -761,6 +781,8 @@ resource "aws_internet_gateway" "test" {
 }
 
 resource "aws_route_table" "test" {
+  count = %[2]d
+
   vpc_id = aws_vpc.test.id
 
   route {
@@ -779,13 +801,13 @@ resource "aws_fsx_ontap_file_system" "test" {
   deployment_type     = "MULTI_AZ_1"
   throughput_capacity = 128
   preferred_subnet_id = aws_subnet.test1.id
-  route_table_ids     = [aws_route_table.test.id]
+  route_table_ids     = aws_route_table.test[*].id
 
   tags = {
     Name = %[1]q
   }
 }
-`, rName))
+`, rName, cnt))
 }
 
 func testAccONTAPFileSystemConfig_securityGroupIDs1(rName string) string {
