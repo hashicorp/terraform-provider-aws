@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package cognitoidentity_test
 
 import (
@@ -146,7 +149,7 @@ func TestAccCognitoIdentityPoolRolesAttachment_roleMappingsWithAmbiguousRoleReso
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccPoolRolesAttachmentConfig_roleMappingsWithAmbiguousRoleResolutionError(name),
-				ExpectError: regexp.MustCompile(`Error validating ambiguous role resolution`),
+				ExpectError: regexp.MustCompile(`validating ambiguous role resolution`),
 			},
 		},
 	})
@@ -199,7 +202,7 @@ func testAccCheckPoolRolesAttachmentExists(ctx context.Context, n string) resour
 			return errors.New("No Cognito Identity Pool Roles Attachment ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CognitoIdentityConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CognitoIdentityConn(ctx)
 
 		_, err := conn.GetIdentityPoolRolesWithContext(ctx, &cognitoidentity.GetIdentityPoolRolesInput{
 			IdentityPoolId: aws.String(rs.Primary.Attributes["identity_pool_id"]),
@@ -211,7 +214,7 @@ func testAccCheckPoolRolesAttachmentExists(ctx context.Context, n string) resour
 
 func testAccCheckPoolRolesAttachmentDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CognitoIdentityConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CognitoIdentityConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_cognito_identity_pool_roles_attachment" {

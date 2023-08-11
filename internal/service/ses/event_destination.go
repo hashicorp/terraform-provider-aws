@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ses
 
 import (
@@ -139,7 +142,7 @@ func ResourceEventDestination() *schema.Resource {
 
 func resourceEventDestinationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SESConn()
+	conn := meta.(*conns.AWSClient).SESConn(ctx)
 
 	configurationSetName := d.Get("configuration_set_name").(string)
 	eventDestinationName := d.Get("name").(string)
@@ -196,7 +199,7 @@ func resourceEventDestinationCreate(ctx context.Context, d *schema.ResourceData,
 
 func resourceEventDestinationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SESConn()
+	conn := meta.(*conns.AWSClient).SESConn(ctx)
 
 	configurationSetName := d.Get("configuration_set_name").(string)
 	input := &ses.DescribeConfigurationSetInput{
@@ -257,7 +260,7 @@ func resourceEventDestinationRead(ctx context.Context, d *schema.ResourceData, m
 
 func resourceEventDestinationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SESConn()
+	conn := meta.(*conns.AWSClient).SESConn(ctx)
 
 	log.Printf("[DEBUG] SES Delete Configuration Set Destination: %s", d.Id())
 	_, err := conn.DeleteConfigurationSetEventDestinationWithContext(ctx, &ses.DeleteConfigurationSetEventDestinationInput{

@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package provider
 
 import (
@@ -8,6 +11,7 @@ import (
 	"regexp"
 	"time"
 
+	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/feature/ec2/imds"
 	awsbase "github.com/hashicorp/aws-sdk-go-base/v2"
 	multierror "github.com/hashicorp/go-multierror"
@@ -16,9 +20,10 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/experimental/nullable"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/types/nullable"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -41,7 +46,6 @@ func New(ctx context.Context) (*schema.Provider, error) {
 				Elem:          &schema.Schema{Type: schema.TypeString},
 				Optional:      true,
 				ConflictsWith: []string{"forbidden_account_ids"},
-				Set:           schema.HashString,
 			},
 			"assume_role":                   assumeRoleSchema(),
 			"assume_role_with_web_identity": assumeRoleWithWebIdentitySchema(),
@@ -86,7 +90,6 @@ func New(ctx context.Context) (*schema.Provider, error) {
 				Elem:          &schema.Schema{Type: schema.TypeString},
 				Optional:      true,
 				ConflictsWith: []string{"allowed_account_ids"},
-				Set:           schema.HashString,
 			},
 			"http_proxy": {
 				Type:     schema.TypeString,
@@ -105,14 +108,12 @@ func New(ctx context.Context) (*schema.Provider, error) {
 							Type:        schema.TypeSet,
 							Optional:    true,
 							Elem:        &schema.Schema{Type: schema.TypeString},
-							Set:         schema.HashString,
 							Description: "Resource tag keys to ignore across all resources.",
 						},
 						"key_prefixes": {
 							Type:        schema.TypeSet,
 							Optional:    true,
 							Elem:        &schema.Schema{Type: schema.TypeString},
-							Set:         schema.HashString,
 							Description: "Resource tag key prefixes to ignore across all resources.",
 						},
 					},
@@ -142,6 +143,12 @@ func New(ctx context.Context) (*schema.Provider, error) {
 				Optional: true,
 				Description: "The region where AWS operations will take place. Examples\n" +
 					"are us-east-1, us-west-2, etc.", // lintignore:AWSAT003,
+			},
+			"retry_mode": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Description: "Specifies how retries are attempted. Valid values are `standard` and `adaptive`. " +
+					"Can also be configured using the `AWS_RETRY_MODE` environment variable.",
 			},
 			"s3_use_path_style": {
 				Type:     schema.TypeBool,
@@ -263,6 +270,31 @@ func New(ctx context.Context) (*schema.Provider, error) {
 				return ctx
 			}
 			interceptors := interceptorItems{}
+
+			if v.Tags != nil {
+				schema := r.SchemaMap()
+
+				// The data source has opted in to transparent tagging.
+				// Ensure that the schema look OK.
+				if v, ok := schema[names.AttrTags]; ok {
+					if !v.Computed {
+						errs = multierror.Append(errs, fmt.Errorf("`%s` attribute must be Computed: %s", names.AttrTags, typeName))
+						continue
+					}
+				} else {
+					errs = multierror.Append(errs, fmt.Errorf("no `%s` attribute defined in schema: %s", names.AttrTags, typeName))
+					continue
+				}
+
+				interceptors = append(interceptors, interceptorItem{
+					when: Before | After,
+					why:  Read,
+					interceptor: tagsDataSourceInterceptor{
+						tags: v.Tags,
+					},
+				})
+			}
+
 			ds := &wrappedDataSource{
 				bootstrapContext: bootstrapContext,
 				interceptors:     interceptors,
@@ -316,9 +348,11 @@ func New(ctx context.Context) (*schema.Provider, error) {
 			interceptors := interceptorItems{}
 
 			if v.Tags != nil {
+				schema := r.SchemaMap()
+
 				// The resource has opted in to transparent tagging.
 				// Ensure that the schema look OK.
-				if v, ok := r.Schema[names.AttrTags]; ok {
+				if v, ok := schema[names.AttrTags]; ok {
 					if v.Computed {
 						errs = multierror.Append(errs, fmt.Errorf("`%s` attribute cannot be Computed: %s", names.AttrTags, typeName))
 						continue
@@ -327,7 +361,7 @@ func New(ctx context.Context) (*schema.Provider, error) {
 					errs = multierror.Append(errs, fmt.Errorf("no `%s` attribute defined in schema: %s", names.AttrTags, typeName))
 					continue
 				}
-				if v, ok := r.Schema[names.AttrTagsAll]; ok {
+				if v, ok := schema[names.AttrTagsAll]; ok {
 					if !v.Computed {
 						errs = multierror.Append(errs, fmt.Errorf("`%s` attribute must be Computed: %s", names.AttrTags, typeName))
 						continue
@@ -340,7 +374,7 @@ func New(ctx context.Context) (*schema.Provider, error) {
 				interceptors = append(interceptors, interceptorItem{
 					when: Before | After | Finally,
 					why:  Create | Read | Update,
-					interceptor: tagsInterceptor{
+					interceptor: tagsResourceInterceptor{
 						tags:       v.Tags,
 						updateFunc: tagsUpdateFunc,
 						readFunc:   tagsReadFunc,
@@ -404,6 +438,8 @@ func New(ctx context.Context) (*schema.Provider, error) {
 
 // configure ensures that the provider is fully configured.
 func configure(ctx context.Context, provider *schema.Provider, d *schema.ResourceData) (*conns.AWSClient, diag.Diagnostics) {
+	var diags diag.Diagnostics
+
 	terraformVersion := provider.TerraformVersion
 	if terraformVersion == "" {
 		// Terraform 0.12 introduced this field to the protocol
@@ -432,6 +468,14 @@ func configure(ctx context.Context, provider *schema.Provider, d *schema.Resourc
 		Token:                          d.Get("token").(string),
 		UseDualStackEndpoint:           d.Get("use_dualstack_endpoint").(bool),
 		UseFIPSEndpoint:                d.Get("use_fips_endpoint").(bool),
+	}
+
+	if v, ok := d.Get("retry_mode").(string); ok && v != "" {
+		mode, err := aws.ParseRetryMode(v)
+		if err != nil {
+			return nil, sdkdiag.AppendFromErr(diags, err)
+		}
+		config.RetryMode = mode
 	}
 
 	if v, ok := d.GetOk("allowed_account_ids"); ok && v.(*schema.Set).Len() > 0 {
@@ -464,7 +508,7 @@ func configure(ctx context.Context, provider *schema.Provider, d *schema.Resourc
 		endpoints, err := expandEndpoints(ctx, v.(*schema.Set).List())
 
 		if err != nil {
-			return nil, diag.FromErr(err)
+			return nil, sdkdiag.AppendFromErr(diags, err)
 		}
 
 		config.Endpoints = endpoints
@@ -504,7 +548,8 @@ func configure(ctx context.Context, provider *schema.Provider, d *schema.Resourc
 	} else {
 		meta = new(conns.AWSClient)
 	}
-	meta, diags := config.ConfigureProvider(ctx, meta)
+	meta, ds := config.ConfigureProvider(ctx, meta)
+	diags = append(diags, ds...)
 
 	if diags.HasError() {
 		return nil, diags

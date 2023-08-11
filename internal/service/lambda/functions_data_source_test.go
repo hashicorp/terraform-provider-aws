@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package lambda_test
 
 import (
@@ -22,8 +25,8 @@ func TestAccLambdaFunctionsDataSource_basic(t *testing.T) {
 			{
 				Config: testAccFunctionsDataSourceConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					acctest.CheckResourceAttrGreaterThanValue(dataSourceName, "function_arns.#", "0"),
-					acctest.CheckResourceAttrGreaterThanValue(dataSourceName, "function_names.#", "0"),
+					acctest.CheckResourceAttrGreaterThanValue(dataSourceName, "function_arns.#", 0),
+					acctest.CheckResourceAttrGreaterThanValue(dataSourceName, "function_names.#", 0),
 				),
 			},
 		},

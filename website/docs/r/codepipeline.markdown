@@ -167,7 +167,7 @@ data "aws_kms_alias" "s3kmskey" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `name` - (Required) The name of the pipeline.
 * `role_arn` - (Required) A service role Amazon Resource Name (ARN) that grants AWS CodePipeline permission to make calls to AWS services on your behalf.
@@ -209,9 +209,9 @@ An `action` block supports the following arguments:
 
 ~> **Note:** The input artifact of an action must exactly match the output artifact declared in a preceding action, but the input artifact does not have to be the next action in strict sequence from the action that provided the output artifact. Actions in parallel can declare different output artifacts, which are in turn consumed by different following actions.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The codepipeline ID.
 * `arn` - The codepipeline ARN.
@@ -219,8 +219,17 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-CodePipelines can be imported using the name, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import CodePipelines using the name. For example:
 
+```terraform
+import {
+  to = aws_codepipeline.foo
+  id = "example"
+}
 ```
-$ terraform import aws_codepipeline.foo example
+
+Using `terraform import`, import CodePipelines using the name. For example:
+
+```console
+% terraform import aws_codepipeline.foo example
 ```

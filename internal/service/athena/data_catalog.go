@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package athena
 
 import (
@@ -75,13 +78,13 @@ func ResourceDataCatalog() *schema.Resource {
 }
 
 func resourceDataCatalogCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).AthenaConn()
+	conn := meta.(*conns.AWSClient).AthenaConn(ctx)
 
 	name := d.Get("name").(string)
 	input := &athena.CreateDataCatalogInput{
 		Name:        aws.String(name),
 		Description: aws.String(d.Get("description").(string)),
-		Tags:        GetTagsIn(ctx),
+		Tags:        getTagsIn(ctx),
 		Type:        aws.String(d.Get("type").(string)),
 	}
 
@@ -102,7 +105,7 @@ func resourceDataCatalogCreate(ctx context.Context, d *schema.ResourceData, meta
 }
 
 func resourceDataCatalogRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).AthenaConn()
+	conn := meta.(*conns.AWSClient).AthenaConn(ctx)
 
 	input := &athena.GetDataCatalogInput{
 		Name: aws.String(d.Id()),
@@ -155,7 +158,7 @@ func resourceDataCatalogRead(ctx context.Context, d *schema.ResourceData, meta i
 }
 
 func resourceDataCatalogUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).AthenaConn()
+	conn := meta.(*conns.AWSClient).AthenaConn(ctx)
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		input := &athena.UpdateDataCatalogInput{
@@ -182,7 +185,7 @@ func resourceDataCatalogUpdate(ctx context.Context, d *schema.ResourceData, meta
 }
 
 func resourceDataCatalogDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).AthenaConn()
+	conn := meta.(*conns.AWSClient).AthenaConn(ctx)
 
 	log.Printf("[DEBUG] Deleting Athena Data Catalog: (%s)", d.Id())
 	_, err := conn.DeleteDataCatalogWithContext(ctx, &athena.DeleteDataCatalogInput{

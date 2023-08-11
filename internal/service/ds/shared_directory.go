@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ds
 
 import (
@@ -86,7 +89,7 @@ func ResourceSharedDirectory() *schema.Resource {
 }
 
 func resourceSharedDirectoryCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).DSConn()
+	conn := meta.(*conns.AWSClient).DSConn(ctx)
 
 	dirId := d.Get("directory_id").(string)
 	input := directoryservice.ShareDirectoryInput{
@@ -114,7 +117,7 @@ func resourceSharedDirectoryCreate(ctx context.Context, d *schema.ResourceData, 
 }
 
 func resourceSharedDirectoryRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).DSConn()
+	conn := meta.(*conns.AWSClient).DSConn(ctx)
 
 	ownerDirID, sharedDirID, err := parseSharedDirectoryID(d.Id())
 
@@ -153,7 +156,7 @@ func resourceSharedDirectoryRead(ctx context.Context, d *schema.ResourceData, me
 }
 
 func resourceSharedDirectoryDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).DSConn()
+	conn := meta.(*conns.AWSClient).DSConn(ctx)
 
 	dirId := d.Get("directory_id").(string)
 	sharedId := d.Get("shared_directory_id").(string)

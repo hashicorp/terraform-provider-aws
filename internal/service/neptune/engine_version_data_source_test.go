@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package neptune_test
 
 import (
@@ -86,7 +89,7 @@ func TestAccNeptuneEngineVersionDataSource_defaultOnly(t *testing.T) {
 }
 
 func testAccEngineVersionPreCheck(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).NeptuneConn()
+	conn := acctest.Provider.Meta().(*conns.AWSClient).NeptuneConn(ctx)
 
 	input := &neptune.DescribeDBEngineVersionsInput{
 		Engine:      aws.String("neptune"),

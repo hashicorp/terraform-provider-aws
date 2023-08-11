@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package cloudwatch_test
 
 import (
@@ -492,7 +495,7 @@ func testAccCheckMetricStreamExists(ctx context.Context, n string) resource.Test
 			return fmt.Errorf("No CloudWatch Metric Stream ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudWatchConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudWatchConn(ctx)
 
 		_, err := tfcloudwatch.FindMetricStreamByName(ctx, conn, rs.Primary.ID)
 
@@ -502,7 +505,7 @@ func testAccCheckMetricStreamExists(ctx context.Context, n string) resource.Test
 
 func testAccCheckMetricStreamDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudWatchConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudWatchConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_cloudwatch_metric_stream" {
@@ -572,7 +575,8 @@ EOF
 }
 
 resource "aws_s3_bucket" "bucket" {
-  bucket = %[1]q
+  bucket        = %[1]q
+  force_destroy = true
 }
 
 resource "aws_iam_role" "firehose_to_s3" {
@@ -623,9 +627,9 @@ EOF
 
 resource "aws_kinesis_firehose_delivery_stream" "s3_stream" {
   name        = %[1]q
-  destination = "s3"
+  destination = "extended_s3"
 
-  s3_configuration {
+  extended_s3_configuration {
     role_arn   = aws_iam_role.firehose_to_s3.arn
     bucket_arn = aws_s3_bucket.bucket.arn
   }

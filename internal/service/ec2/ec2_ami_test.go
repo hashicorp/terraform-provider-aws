@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ec2_test
 
 import (
@@ -594,7 +597,7 @@ func TestAccEC2AMI_imdsSupport(t *testing.T) {
 
 func testAccCheckAMIDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
 
 		for n, rs := range s.RootModule().Resources {
 			// The configuration may contain aws_ami data sources.
@@ -636,7 +639,7 @@ func testAccCheckAMIExists(ctx context.Context, n string, v *ec2.Image) resource
 			return fmt.Errorf("No EC2 AMI ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
 
 		output, err := tfec2.FindImageByID(ctx, conn, rs.Primary.ID)
 

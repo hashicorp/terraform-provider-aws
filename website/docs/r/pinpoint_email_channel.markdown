@@ -64,7 +64,7 @@ resource "aws_iam_role_policy" "role_policy" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `application_id` - (Required) The application ID.
 * `enabled` - (Optional) Whether the channel is enabled or disabled. Defaults to `true`.
@@ -73,16 +73,25 @@ The following arguments are supported:
 * `identity` - (Required) The ARN of an identity verified with SES.
 * `role_arn` - (Optional) The ARN of an IAM Role used to submit events to Mobile Analytics' event ingestion service.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `messages_per_second` - Messages per second that can be sent.
 
 ## Import
 
-Pinpoint Email Channel can be imported using the `application-id`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Pinpoint Email Channel using the `application-id`. For example:
 
+```terraform
+import {
+  to = aws_pinpoint_email_channel.email
+  id = "application-id"
+}
 ```
-$ terraform import aws_pinpoint_email_channel.email application-id
+
+Using `terraform import`, import Pinpoint Email Channel using the `application-id`. For example:
+
+```console
+% terraform import aws_pinpoint_email_channel.email application-id
 ```

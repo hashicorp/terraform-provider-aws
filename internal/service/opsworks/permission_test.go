@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package opsworks_test
 
 import (
@@ -110,7 +113,7 @@ func testAccCheckPermissionExists(ctx context.Context, n string, v *opsworks.Per
 			return fmt.Errorf("No OpsWorks Layer ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).OpsWorksConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).OpsWorksConn(ctx)
 
 		output, err := tfopsworks.FindPermissionByTwoPartKey(ctx, conn, rs.Primary.Attributes["user_arn"], rs.Primary.Attributes["stack_id"])
 

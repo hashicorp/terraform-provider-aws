@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package elasticache
 
 import (
@@ -70,12 +73,12 @@ func ResourceUserGroup() *schema.Resource {
 
 func resourceUserGroupCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ElastiCacheConn()
+	conn := meta.(*conns.AWSClient).ElastiCacheConn(ctx)
 
 	userGroupID := d.Get("user_group_id").(string)
 	input := &elasticache.CreateUserGroupInput{
 		Engine:      aws.String(d.Get("engine").(string)),
-		Tags:        GetTagsIn(ctx),
+		Tags:        getTagsIn(ctx),
 		UserGroupId: aws.String(userGroupID),
 	}
 
@@ -103,7 +106,7 @@ func resourceUserGroupCreate(ctx context.Context, d *schema.ResourceData, meta i
 	}
 
 	// For partitions not supporting tag-on-create, attempt tag after create.
-	if tags := GetTagsIn(ctx); input.Tags == nil && len(tags) > 0 {
+	if tags := getTagsIn(ctx); input.Tags == nil && len(tags) > 0 {
 		err := createTags(ctx, conn, aws.StringValue(output.ARN), tags)
 
 		// If default tags only, continue. Otherwise, error.
@@ -121,7 +124,7 @@ func resourceUserGroupCreate(ctx context.Context, d *schema.ResourceData, meta i
 
 func resourceUserGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ElastiCacheConn()
+	conn := meta.(*conns.AWSClient).ElastiCacheConn(ctx)
 
 	userGroup, err := FindUserGroupByID(ctx, conn, d.Id())
 
@@ -145,7 +148,7 @@ func resourceUserGroupRead(ctx context.Context, d *schema.ResourceData, meta int
 
 func resourceUserGroupUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ElastiCacheConn()
+	conn := meta.(*conns.AWSClient).ElastiCacheConn(ctx)
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		input := &elasticache.ModifyUserGroupInput{
@@ -181,7 +184,7 @@ func resourceUserGroupUpdate(ctx context.Context, d *schema.ResourceData, meta i
 
 func resourceUserGroupDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ElastiCacheConn()
+	conn := meta.(*conns.AWSClient).ElastiCacheConn(ctx)
 
 	log.Printf("[INFO] Deleting ElastiCache User Group: %s", d.Id())
 	_, err := conn.DeleteUserGroupWithContext(ctx, &elasticache.DeleteUserGroupInput{

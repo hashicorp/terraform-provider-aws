@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package cognitoidp_test
 
 import (
@@ -300,7 +303,7 @@ func testAccCheckUserExists(ctx context.Context, n string) resource.TestCheckFun
 			return fmt.Errorf("No Cognito User ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CognitoIDPConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CognitoIDPConn(ctx)
 
 		_, err := tfcognitoidp.FindUserByTwoPartKey(ctx, conn, rs.Primary.Attributes["user_pool_id"], rs.Primary.Attributes["username"])
 
@@ -310,7 +313,7 @@ func testAccCheckUserExists(ctx context.Context, n string) resource.TestCheckFun
 
 func testAccCheckUserDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CognitoIDPConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CognitoIDPConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_cognito_user" {
@@ -350,7 +353,7 @@ func testAccUserTemporaryPassword(ctx context.Context, userResName string, clien
 		userPassword := userRs.Primary.Attributes["temporary_password"]
 		clientId := clientRs.Primary.Attributes["id"]
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CognitoIDPConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CognitoIDPConn(ctx)
 
 		params := &cognitoidentityprovider.InitiateAuthInput{
 			AuthFlow: aws.String(cognitoidentityprovider.AuthFlowTypeUserPasswordAuth),
@@ -390,7 +393,7 @@ func testAccUserPassword(ctx context.Context, userResName string, clientResName 
 		userPassword := userRs.Primary.Attributes["password"]
 		clientId := clientRs.Primary.Attributes["id"]
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CognitoIDPConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CognitoIDPConn(ctx)
 
 		params := &cognitoidentityprovider.InitiateAuthInput{
 			AuthFlow: aws.String(cognitoidentityprovider.AuthFlowTypeUserPasswordAuth),

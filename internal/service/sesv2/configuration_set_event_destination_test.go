@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package sesv2_test
 
 import (
@@ -246,7 +249,7 @@ func TestAccSESV2ConfigurationSetEventDestination_disappears(t *testing.T) {
 
 func testAccCheckConfigurationSetEventDestinationDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SESV2Client()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SESV2Client(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_sesv2_configuration_set_event_destination" {
@@ -280,7 +283,7 @@ func testAccCheckConfigurationSetEventDestinationExists(ctx context.Context, nam
 			return create.Error(names.SESV2, create.ErrActionCheckingExistence, tfsesv2.ResNameConfigurationSetEventDestination, name, errors.New("not set"))
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SESV2Client()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SESV2Client(ctx)
 
 		_, err := tfsesv2.FindConfigurationSetEventDestinationByID(ctx, conn, rs.Primary.ID)
 
@@ -346,11 +349,6 @@ func testAccConfigurationSetEventDestinationConfig_kinesisFirehoseDestinationBas
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
   bucket = %[1]q
-}
-
-resource "aws_s3_bucket_acl" "test" {
-  bucket = aws_s3_bucket.test.id
-  acl    = "private"
 }
 
 resource "aws_iam_role" "bucket" {
@@ -422,9 +420,9 @@ func testAccConfigurationSetEventDestinationConfig_kinesisFirehoseDestination1(r
 		fmt.Sprintf(`
 resource "aws_kinesis_firehose_delivery_stream" "test1" {
   name        = "%[1]s-1"
-  destination = "s3"
+  destination = "extended_s3"
 
-  s3_configuration {
+  extended_s3_configuration {
     role_arn   = aws_iam_role.bucket.arn
     bucket_arn = aws_s3_bucket.test.arn
   }
@@ -458,9 +456,9 @@ func testAccConfigurationSetEventDestinationConfig_kinesisFirehoseDestination2(r
 		fmt.Sprintf(`
 resource "aws_kinesis_firehose_delivery_stream" "test2" {
   name        = "%[1]s-2"
-  destination = "s3"
+  destination = "extended_s3"
 
-  s3_configuration {
+  extended_s3_configuration {
     role_arn   = aws_iam_role.bucket.arn
     bucket_arn = aws_s3_bucket.test.arn
   }

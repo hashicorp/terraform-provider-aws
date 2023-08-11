@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package eks_test
 
 import (
@@ -192,7 +195,7 @@ func testAccCheckFargateProfileExists(ctx context.Context, n string, v *eks.Farg
 			return err
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EKSConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EKSConn(ctx)
 
 		output, err := tfeks.FindFargateProfileByClusterNameAndFargateProfileName(ctx, conn, clusterName, fargateProfileName)
 
@@ -208,7 +211,7 @@ func testAccCheckFargateProfileExists(ctx context.Context, n string, v *eks.Farg
 
 func testAccCheckFargateProfileDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EKSConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EKSConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_eks_fargate_profile" {
@@ -378,7 +381,7 @@ resource "aws_eip" "private" {
   count      = 2
   depends_on = [aws_internet_gateway.test]
 
-  vpc = true
+  domain = "vpc"
 
   tags = {
     Name = %[1]q

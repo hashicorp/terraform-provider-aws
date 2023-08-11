@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package cloudfront_test
 
 import (
@@ -109,7 +112,7 @@ func TestAccCloudFrontMonitoringSubscription_update(t *testing.T) {
 
 func testAccCheckMonitoringSubscriptionDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudFrontConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudFrontConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_cloudfront_monitoring_subscription" {
@@ -144,7 +147,7 @@ func testAccCheckMonitoringSubscriptionExists(ctx context.Context, n string, v *
 			return fmt.Errorf("No CloudFront Monitoring Subscription ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudFrontConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudFrontConn(ctx)
 
 		output, err := tfcloudfront.FindMonitoringSubscriptionByDistributionID(ctx, conn, rs.Primary.ID)
 

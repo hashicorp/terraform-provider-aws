@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package secretsmanager_test
 
 import (
@@ -116,9 +119,6 @@ func testAccSecretCheckDataSource(datasourceName, resourceName string) resource.
 			"kms_key_id",
 			"name",
 			"policy",
-			"rotation_enabled",
-			"rotation_lambda_arn",
-			"rotation_rules.#",
 			"tags.#",
 		}
 

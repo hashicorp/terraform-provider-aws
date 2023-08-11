@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ec2
 
 import (
@@ -66,7 +69,7 @@ func ResourceVPCEndpointConnectionNotification() *schema.Resource {
 
 func resourceVPCEndpointConnectionNotificationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	input := &ec2.CreateVpcEndpointConnectionNotificationInput{
 		ConnectionEvents:          flex.ExpandStringSet(d.Get("connection_events").(*schema.Set)),
@@ -94,7 +97,7 @@ func resourceVPCEndpointConnectionNotificationCreate(ctx context.Context, d *sch
 
 func resourceVPCEndpointConnectionNotificationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	cn, err := FindVPCConnectionNotificationByID(ctx, conn, d.Id())
 
@@ -120,7 +123,7 @@ func resourceVPCEndpointConnectionNotificationRead(ctx context.Context, d *schem
 
 func resourceVPCEndpointConnectionNotificationUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	input := &ec2.ModifyVpcEndpointConnectionNotificationInput{
 		ConnectionNotificationId: aws.String(d.Id()),
@@ -145,7 +148,7 @@ func resourceVPCEndpointConnectionNotificationUpdate(ctx context.Context, d *sch
 
 func resourceVPCEndpointConnectionNotificationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	log.Printf("[DEBUG] Deleting EC2 VPC Endpoint Connection Notification: %s", d.Id())
 	_, err := conn.DeleteVpcEndpointConnectionNotificationsWithContext(ctx, &ec2.DeleteVpcEndpointConnectionNotificationsInput{

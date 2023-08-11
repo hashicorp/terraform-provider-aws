@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package vpclattice_test
 
 import (
@@ -448,7 +451,7 @@ func TestAccVPCLatticeListener_tags(t *testing.T) {
 
 func testAccCheckListenerDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).VPCLatticeClient()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).VPCLatticeClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_vpclattice_listener" {
@@ -485,7 +488,7 @@ func testAccCheckListenerExists(ctx context.Context, name string, listener *vpcl
 			return create.Error(names.VPCLattice, create.ErrActionCheckingExistence, tfvpclattice.ResNameListener, name, errors.New("not set"))
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).VPCLatticeClient()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).VPCLatticeClient(ctx)
 		resp, err := conn.GetListener(ctx, &vpclattice.GetListenerInput{
 			ListenerIdentifier: aws.String(rs.Primary.Attributes["listener_id"]),
 			ServiceIdentifier:  aws.String(rs.Primary.Attributes["service_identifier"]),

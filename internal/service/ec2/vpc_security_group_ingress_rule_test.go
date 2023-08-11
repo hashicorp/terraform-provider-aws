@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ec2_test
 
 import (
@@ -1005,7 +1008,7 @@ func testAccCheckSecurityGroupRuleRecreated(i, j *ec2.SecurityGroupRule) resourc
 
 func testAccCheckSecurityGroupIngressRuleDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_vpc_security_group_ingress_rule" {
@@ -1040,7 +1043,7 @@ func testAccCheckSecurityGroupIngressRuleExists(ctx context.Context, n string, v
 			return fmt.Errorf("No VPC Security Group Ingress Rule ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
 
 		output, err := tfec2.FindSecurityGroupIngressRuleByID(ctx, conn, rs.Primary.ID)
 
@@ -1056,7 +1059,7 @@ func testAccCheckSecurityGroupIngressRuleExists(ctx context.Context, n string, v
 
 func testAccCheckSecurityGroupIngressRuleUpdateTags(ctx context.Context, v *ec2.SecurityGroupRule, oldTags, newTags map[string]string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
 
 		return tfec2.UpdateTags(ctx, conn, aws.StringValue(v.SecurityGroupRuleId), oldTags, newTags)
 	}
@@ -1116,7 +1119,7 @@ resource "aws_vpc_security_group_ingress_rule" "test" {
 func testAccVPCSecurityGroupIngressRuleConfig_computed(rName string) string {
 	return acctest.ConfigCompose(testAccVPCSecurityGroupRuleConfig_base(rName), `
 resource "aws_eip" "test" {
-  vpc = true
+  domain = "vpc"
 }
 
 resource "aws_vpc_security_group_ingress_rule" "test" {

@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package cognitoidp_test
 
 import (
@@ -1044,8 +1047,6 @@ resource "aws_cognito_identity_pool" "test" {
 
 resource "aws_opensearch_domain" "test" {
   domain_name = %[1]q
-
-  engine_version = "OpenSearch_1.1"
 
   cognito_options {
     enabled          = true

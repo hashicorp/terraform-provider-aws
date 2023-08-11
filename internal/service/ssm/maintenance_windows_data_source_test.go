@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ssm_test
 
 import (
@@ -33,7 +36,7 @@ func TestAccSSMMaintenanceWindowsDataSource_filter(t *testing.T) {
 			{
 				Config: testAccMaintenanceWindowsDataSourceConfig_filterEnabled(rName1, rName2, rName3),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					acctest.CheckResourceAttrGreaterThanValue(dataSourceName, "ids.#", "1"),
+					acctest.CheckResourceAttrGreaterThanValue(dataSourceName, "ids.#", 1),
 				),
 			},
 		},

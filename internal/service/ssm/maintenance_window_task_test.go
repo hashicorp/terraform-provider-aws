@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ssm_test
 
 import (
@@ -496,7 +499,7 @@ func testAccCheckMaintenanceWindowTaskExists(ctx context.Context, n string, task
 			return fmt.Errorf("No SSM Maintenance Window Task Window ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SSMConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SSMConn(ctx)
 
 		resp, err := conn.DescribeMaintenanceWindowTasksWithContext(ctx, &ssm.DescribeMaintenanceWindowTasksInput{
 			WindowId: aws.String(rs.Primary.Attributes["window_id"]),
@@ -518,7 +521,7 @@ func testAccCheckMaintenanceWindowTaskExists(ctx context.Context, n string, task
 
 func testAccCheckMaintenanceWindowTaskDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SSMConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SSMConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_ssm_maintenance_window_task" {
@@ -905,11 +908,6 @@ resource "aws_s3_bucket" "test" {
   force_destroy = true
 }
 
-resource "aws_s3_bucket_acl" "test" {
-  bucket = aws_s3_bucket.test.id
-  acl    = "private"
-}
-
 resource "aws_ssm_maintenance_window_task" "test" {
   window_id        = aws_ssm_maintenance_window.test.id
   task_type        = "AUTOMATION"
@@ -1017,11 +1015,6 @@ func testAccMaintenanceWindowTaskConfig_runCommandUpdate(rName, comment string, 
 resource "aws_s3_bucket" "test" {
   bucket        = %[1]q
   force_destroy = true
-}
-
-resource "aws_s3_bucket_acl" "test" {
-  bucket = aws_s3_bucket.test.id
-  acl    = "private"
 }
 
 resource "aws_ssm_maintenance_window_task" "test" {

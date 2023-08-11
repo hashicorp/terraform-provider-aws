@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package kms
 
 import (
@@ -99,7 +102,7 @@ func FindKeyByID(ctx context.Context, conn *kms.KMS, id string) (*kms.KeyMetadat
 }
 
 func FindDefaultKey(ctx context.Context, service, region string, meta interface{}) (string, error) {
-	conn := meta.(*conns.AWSClient).KMSConn()
+	conn := meta.(*conns.AWSClient).KMSConn(ctx)
 
 	if aws.StringValue(conn.Config.Region) != region {
 		session, err := conns.NewSessionForRegion(&conn.Config, region, meta.(*conns.AWSClient).TerraformVersion)

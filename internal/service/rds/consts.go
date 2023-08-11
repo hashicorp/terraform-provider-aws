@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package rds
 
 import (
@@ -22,6 +25,7 @@ const (
 	ClusterStatusRebooting                  = "rebooting"
 	ClusterStatusRenaming                   = "renaming"
 	ClusterStatusResettingMasterCredentials = "resetting-master-credentials"
+	ClusterStatusScalingCompute             = "scaling-compute"
 	ClusterStatusUpgrading                  = "upgrading"
 )
 
@@ -60,6 +64,7 @@ const (
 	InstanceEngineSQLServerExpress    = "sqlserver-ex"
 	InstanceEngineSQLServerStandard   = "sqlserver-se"
 	InstanceEngineSQLServerWeb        = "sqlserver-ewb"
+	InstanceEngineCustomPrefix        = "custom-"
 )
 
 // https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/accessing-monitoring.html#Overview.DBInstance.Status.
@@ -76,6 +81,7 @@ const (
 	InstanceStatusFailed                                       = "failed"
 	InstanceStatusInaccessibleEncryptionCredentials            = "inaccessible-encryption-credentials"
 	InstanceStatusInaccessibleEncryptionCredentialsRecoverable = "inaccessible-encryption-credentials-recoverable"
+	InstanceStatusIncompatiblCreate                            = "incompatible-create"
 	InstanceStatusIncompatibleNetwork                          = "incompatible-network"
 	InstanceStatusIncompatibleOptionGroup                      = "incompatible-option-group"
 	InstanceStatusIncompatibleParameters                       = "incompatible-parameters"
@@ -97,12 +103,6 @@ const (
 )
 
 const (
-	InstanceAutomatedBackupStatusPending     = "pending"
-	InstanceAutomatedBackupStatusReplicating = "replicating"
-	InstanceAutomatedBackupStatusRetained    = "retained"
-)
-
-const (
 	EventSubscriptionStatusActive    = "active"
 	EventSubscriptionStatusCreating  = "creating"
 	EventSubscriptionStatusDeleting  = "deleting"
@@ -119,6 +119,7 @@ const (
 	ClusterEngineAuroraPostgreSQL = "aurora-postgresql"
 	ClusterEngineMySQL            = "mysql"
 	ClusterEnginePostgres         = "postgres"
+	ClusterEngineCustomPrefix     = "custom-"
 )
 
 func ClusterEngine_Values() []string {
@@ -222,6 +223,18 @@ func TimeoutAction_Values() []string {
 	return []string{
 		TimeoutActionForceApplyCapacityChange,
 		TimeoutActionRollbackCapacityChange,
+	}
+}
+
+const (
+	backupTargetOutposts = "outposts"
+	backupTargetRegion   = "region"
+)
+
+func backupTarget_Values() []string {
+	return []string{
+		backupTargetOutposts,
+		backupTargetRegion,
 	}
 }
 

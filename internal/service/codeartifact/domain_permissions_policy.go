@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package codeartifact
 
 import (
@@ -67,7 +70,7 @@ func ResourceDomainPermissionsPolicy() *schema.Resource {
 
 func resourceDomainPermissionsPolicyPut(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CodeArtifactConn()
+	conn := meta.(*conns.AWSClient).CodeArtifactConn(ctx)
 	log.Print("[DEBUG] Creating CodeArtifact Domain Permissions Policy")
 
 	policy, err := structure.NormalizeJsonString(d.Get("policy_document").(string))
@@ -101,7 +104,7 @@ func resourceDomainPermissionsPolicyPut(ctx context.Context, d *schema.ResourceD
 
 func resourceDomainPermissionsPolicyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CodeArtifactConn()
+	conn := meta.(*conns.AWSClient).CodeArtifactConn(ctx)
 	log.Printf("[DEBUG] Reading CodeArtifact Domain Permissions Policy: %s", d.Id())
 
 	domainOwner, domainName, err := DecodeDomainID(d.Id())
@@ -147,7 +150,7 @@ func resourceDomainPermissionsPolicyRead(ctx context.Context, d *schema.Resource
 
 func resourceDomainPermissionsPolicyDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CodeArtifactConn()
+	conn := meta.(*conns.AWSClient).CodeArtifactConn(ctx)
 	log.Printf("[DEBUG] Deleting CodeArtifact Domain Permissions Policy: %s", d.Id())
 
 	domainOwner, domainName, err := DecodeDomainID(d.Id())

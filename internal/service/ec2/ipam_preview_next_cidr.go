@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ec2
 
 import (
@@ -65,7 +68,7 @@ func ResourceIPAMPreviewNextCIDR() *schema.Resource {
 
 func resourceIPAMPreviewNextCIDRCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 	poolId := d.Get("ipam_pool_id").(string)
 
 	input := &ec2.AllocateIpamPoolCidrInput{
@@ -85,7 +88,7 @@ func resourceIPAMPreviewNextCIDRCreate(ctx context.Context, d *schema.ResourceDa
 	output, err := conn.AllocateIpamPoolCidrWithContext(ctx, input)
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "Error allocating cidr from IPAM pool (%s): %s", d.Get("ipam_pool_id").(string), err)
+		return sdkdiag.AppendErrorf(diags, "allocating cidr from IPAM pool (%s): %s", d.Get("ipam_pool_id").(string), err)
 	}
 
 	if output == nil || output.IpamPoolAllocation == nil {

@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ssm
 
 import (
@@ -99,7 +102,7 @@ func ResourceMaintenanceWindowTarget() *schema.Resource {
 
 func resourceMaintenanceWindowTargetCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SSMConn()
+	conn := meta.(*conns.AWSClient).SSMConn(ctx)
 
 	log.Printf("[INFO] Registering SSM Maintenance Window Target")
 
@@ -133,7 +136,7 @@ func resourceMaintenanceWindowTargetCreate(ctx context.Context, d *schema.Resour
 
 func resourceMaintenanceWindowTargetRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SSMConn()
+	conn := meta.(*conns.AWSClient).SSMConn(ctx)
 
 	windowID := d.Get("window_id").(string)
 	params := &ssm.DescribeMaintenanceWindowTargetsInput{
@@ -186,7 +189,7 @@ func resourceMaintenanceWindowTargetRead(ctx context.Context, d *schema.Resource
 
 func resourceMaintenanceWindowTargetUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SSMConn()
+	conn := meta.(*conns.AWSClient).SSMConn(ctx)
 
 	log.Printf("[INFO] Updating SSM Maintenance Window Target: %s", d.Id())
 
@@ -218,7 +221,7 @@ func resourceMaintenanceWindowTargetUpdate(ctx context.Context, d *schema.Resour
 
 func resourceMaintenanceWindowTargetDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SSMConn()
+	conn := meta.(*conns.AWSClient).SSMConn(ctx)
 
 	log.Printf("[INFO] Deregistering SSM Maintenance Window Target: %s", d.Id())
 

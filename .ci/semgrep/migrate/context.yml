@@ -6,6 +6,9 @@ rules:
       include:
         - internal/service/*
         - internal/acctest/*
+      exclude:
+        - "internal/service/*/service_package.go"
+        - "internal/service/*/service_package_gen.go"
     patterns:
       - pattern: |
           $CONN.$API(...)

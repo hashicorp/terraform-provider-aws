@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package wafv2_test
 
 import (
@@ -97,7 +100,7 @@ func testAccCheckWebACLAssociationDestroy(ctx context.Context) resource.TestChec
 				return err
 			}
 
-			conn := acctest.Provider.Meta().(*conns.AWSClient).WAFV2Conn()
+			conn := acctest.Provider.Meta().(*conns.AWSClient).WAFV2Conn(ctx)
 
 			_, err = tfwafv2.FindWebACLByResourceARN(ctx, conn, resourceARN)
 
@@ -133,7 +136,7 @@ func testAccCheckWebACLAssociationExists(ctx context.Context, n string) resource
 			return err
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).WAFV2Conn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).WAFV2Conn(ctx)
 
 		_, err = tfwafv2.FindWebACLByResourceARN(ctx, conn, resourceARN)
 

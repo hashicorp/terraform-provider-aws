@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ssoadmin
 
 import (
@@ -57,7 +60,7 @@ func ResourceManagedPolicyAttachment() *schema.Resource {
 
 func resourceManagedPolicyAttachmentCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SSOAdminConn()
+	conn := meta.(*conns.AWSClient).SSOAdminConn(ctx)
 
 	instanceArn := d.Get("instance_arn").(string)
 	managedPolicyArn := d.Get("managed_policy_arn").(string)
@@ -87,7 +90,7 @@ func resourceManagedPolicyAttachmentCreate(ctx context.Context, d *schema.Resour
 
 func resourceManagedPolicyAttachmentRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SSOAdminConn()
+	conn := meta.(*conns.AWSClient).SSOAdminConn(ctx)
 
 	managedPolicyArn, permissionSetArn, instanceArn, err := ParseManagedPolicyAttachmentID(d.Id())
 	if err != nil {
@@ -122,7 +125,7 @@ func resourceManagedPolicyAttachmentRead(ctx context.Context, d *schema.Resource
 
 func resourceManagedPolicyAttachmentDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SSOAdminConn()
+	conn := meta.(*conns.AWSClient).SSOAdminConn(ctx)
 
 	managedPolicyArn, permissionSetArn, instanceArn, err := ParseManagedPolicyAttachmentID(d.Id())
 	if err != nil {
@@ -155,7 +158,7 @@ func resourceManagedPolicyAttachmentDelete(ctx context.Context, d *schema.Resour
 func ParseManagedPolicyAttachmentID(id string) (string, string, string, error) {
 	idParts := strings.Split(id, ",")
 	if len(idParts) != 3 || idParts[0] == "" || idParts[1] == "" || idParts[2] == "" {
-		return "", "", "", fmt.Errorf("error parsing ID: expected MANAGED_POLICY_ARN,PERMISSION_SET_ARN,INSTANCE_ARN")
+		return "", "", "", fmt.Errorf("parsing ID: expected MANAGED_POLICY_ARN,PERMISSION_SET_ARN,INSTANCE_ARN")
 	}
 	return idParts[0], idParts[1], idParts[2], nil
 }

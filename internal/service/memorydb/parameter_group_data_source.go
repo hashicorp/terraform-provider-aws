@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package memorydb
 
 import (
@@ -56,7 +59,7 @@ func DataSourceParameterGroup() *schema.Resource {
 }
 
 func dataSourceParameterGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).MemoryDBConn()
+	conn := meta.(*conns.AWSClient).MemoryDBConn(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	name := d.Get("name").(string)
@@ -78,21 +81,21 @@ func dataSourceParameterGroupRead(ctx context.Context, d *schema.ResourceData, m
 
 	parameters, err := listParameterGroupParameters(ctx, conn, d.Get("family").(string), d.Id(), userDefinedParameters)
 	if err != nil {
-		return diag.Errorf("error listing parameters for MemoryDB Parameter Group (%s): %s", d.Id(), err)
+		return diag.Errorf("listing parameters for MemoryDB Parameter Group (%s): %s", d.Id(), err)
 	}
 
 	if err := d.Set("parameter", flattenParameters(parameters)); err != nil {
 		return diag.Errorf("failed to set parameter: %s", err)
 	}
 
-	tags, err := ListTags(ctx, conn, d.Get("arn").(string))
+	tags, err := listTags(ctx, conn, d.Get("arn").(string))
 
 	if err != nil {
-		return diag.Errorf("error listing tags for MemoryDB Parameter Group (%s): %s", d.Id(), err)
+		return diag.Errorf("listing tags for MemoryDB Parameter Group (%s): %s", d.Id(), err)
 	}
 
 	if err := d.Set("tags", tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return diag.Errorf("error setting tags: %s", err)
+		return diag.Errorf("setting tags: %s", err)
 	}
 
 	return nil

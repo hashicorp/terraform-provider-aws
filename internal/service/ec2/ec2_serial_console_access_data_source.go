@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ec2
 
 import (
@@ -28,12 +31,12 @@ func DataSourceSerialConsoleAccess() *schema.Resource {
 	}
 }
 func dataSourceSerialConsoleAccessRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	output, err := conn.GetSerialConsoleAccessStatusWithContext(ctx, &ec2.GetSerialConsoleAccessStatusInput{})
 
 	if err != nil {
-		return diag.Errorf("error reading EC2 Serial Console Access: %s", err)
+		return diag.Errorf("reading EC2 Serial Console Access: %s", err)
 	}
 
 	d.SetId(meta.(*conns.AWSClient).Region)

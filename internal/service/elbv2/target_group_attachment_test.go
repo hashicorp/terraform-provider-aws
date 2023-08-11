@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package elbv2_test
 
 import (
@@ -145,7 +148,7 @@ func testAccCheckTargetGroupAttachmentDisappears(ctx context.Context, n string) 
 			return fmt.Errorf("Attachment not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ELBV2Conn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ELBV2Conn(ctx)
 		targetGroupArn := rs.Primary.Attributes["target_group_arn"]
 
 		target := &elbv2.TargetDescription{
@@ -183,7 +186,7 @@ func testAccCheckTargetGroupAttachmentExists(ctx context.Context, n string) reso
 			return errors.New("No Target Group Attachment ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ELBV2Conn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ELBV2Conn(ctx)
 
 		_, hasPort := rs.Primary.Attributes["port"]
 		targetGroupArn := rs.Primary.Attributes["target_group_arn"]
@@ -215,7 +218,7 @@ func testAccCheckTargetGroupAttachmentExists(ctx context.Context, n string) reso
 
 func testAccCheckTargetGroupAttachmentDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ELBV2Conn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ELBV2Conn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_lb_target_group_attachment" && rs.Type != "aws_alb_target_group_attachment" {

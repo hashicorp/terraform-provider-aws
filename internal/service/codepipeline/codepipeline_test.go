@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package codepipeline_test
 
 import (
@@ -621,7 +624,7 @@ func testAccCheckPipelineExists(ctx context.Context, n string, v *codepipeline.P
 			return fmt.Errorf("No CodePipeline ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CodePipelineConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CodePipelineConn(ctx)
 
 		output, err := tfcodepipeline.FindPipelineByName(ctx, conn, rs.Primary.ID)
 
@@ -637,7 +640,7 @@ func testAccCheckPipelineExists(ctx context.Context, n string, v *codepipeline.P
 
 func testAccCheckPipelineDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CodePipelineConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CodePipelineConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_codepipeline" {
@@ -667,12 +670,12 @@ func testAccPreCheckSupported(ctx context.Context, t *testing.T, regions ...stri
 		conf := &conns.Config{
 			Region: region,
 		}
-		client, diags := conf.ConfigureProvider(ctx, &conns.AWSClient{})
+		client, diags := conf.ConfigureProvider(ctx, acctest.Provider.Meta().(*conns.AWSClient))
 
 		if diags.HasError() {
 			t.Fatalf("error getting AWS client for region %s", region)
 		}
-		conn := client.CodePipelineConn()
+		conn := client.CodePipelineConn(ctx)
 
 		input := &codepipeline.ListPipelinesInput{}
 		_, err := conn.ListPipelinesWithContext(ctx, input)
@@ -1402,11 +1405,6 @@ func testAccS3Bucket(bucket, rName string) string {
 resource "aws_s3_bucket" "%[1]s" {
   bucket = "tf-test-pipeline-%[1]s-%[2]s"
 }
-
-resource "aws_s3_bucket_acl" "%[1]s" {
-  bucket = aws_s3_bucket.%[1]s.id
-  acl    = "private"
-}
 `, bucket, rName)
 }
 
@@ -1414,12 +1412,6 @@ func testAccS3BucketWithProvider(bucket, rName, provider string) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "%[1]s" {
   bucket   = "tf-test-pipeline-%[1]s-%[2]s"
-  provider = %[3]s
-}
-
-resource "aws_s3_bucket_acl" "%[1]s" {
-  bucket   = aws_s3_bucket.%[1]s.id
-  acl      = "private"
   provider = %[3]s
 }
 `, bucket, rName, provider)
@@ -1489,11 +1481,6 @@ resource "aws_codestarconnections_connection" "test" {
 
 resource "aws_s3_bucket" "foo" {
   bucket = "tf-test-pipeline-%[1]s"
-}
-
-resource "aws_s3_bucket_acl" "foo_acl" {
-  bucket = aws_s3_bucket.foo.id
-  acl    = "private"
 }
 `, rName))
 }

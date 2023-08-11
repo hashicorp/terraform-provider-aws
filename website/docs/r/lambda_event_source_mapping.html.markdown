@@ -161,7 +161,7 @@ resource "aws_lambda_event_source_mapping" "example" {
 * `maximum_record_age_in_seconds`: - (Optional) The maximum age of a record that Lambda sends to a function for processing. Only available for stream sources (DynamoDB and Kinesis). Must be either -1 (forever, and the default value) or between 60 and 604800 (inclusive).
 * `maximum_retry_attempts`: - (Optional) The maximum number of times to retry when the function returns an error. Only available for stream sources (DynamoDB and Kinesis). Minimum and default of -1 (forever), maximum of 10000.
 * `parallelization_factor`: - (Optional) The number of batches to process from each shard concurrently. Only available for stream sources (DynamoDB and Kinesis). Minimum and default of 1, maximum of 10.
-* `queues` - (Optional) The name of the Amazon MQ broker destination queue to consume. Only available for MQ sources. A single queue name must be specified.
+* `queues` - (Optional) The name of the Amazon MQ broker destination queue to consume. Only available for MQ sources. The list must contain exactly one queue name.
 * `scaling_config` - (Optional) Scaling configuration of the event source. Only available for SQS queues. Detailed below.
 * `self_managed_event_source`: - (Optional) For Self Managed Kafka sources, the location of the self managed cluster. If set, configuration must also include `source_access_configuration`. Detailed below.
 * `self_managed_kafka_event_source_config` - (Optional) Additional configuration block for Self Managed Kafka sources. Incompatible with "event_source_arn" and "amazon_managed_kafka_event_source_config". Detailed below.
@@ -214,9 +214,9 @@ resource "aws_lambda_event_source_mapping" "example" {
 * `type` - (Required) The type of this configuration.  For Self Managed Kafka you will need to supply blocks for type `VPC_SUBNET` and `VPC_SECURITY_GROUP`.
 * `uri` - (Required) The URI for this configuration.  For type `VPC_SUBNET` the value should be `subnet:subnet_id` where `subnet_id` is the value you would find in an aws_subnet resource's id attribute.  For type `VPC_SECURITY_GROUP` the value should be `security_group:security_group_id` where `security_group_id` is the value you would find in an aws_security_group resource's id attribute.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `function_arn` - The the ARN of the Lambda function the event source mapping is sending events to. (Note: this is a computed value that differs from `function_name` above.)
 * `last_modified` - The date this resource was last modified.
@@ -230,8 +230,17 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Lambda event source mappings can be imported using the `UUID` (event source mapping identifier), e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Lambda event source mappings using the `UUID` (event source mapping identifier). For example:
 
+```terraform
+import {
+  to = aws_lambda_event_source_mapping.event_source_mapping
+  id = "12345kxodurf3443"
+}
 ```
-$ terraform import aws_lambda_event_source_mapping.event_source_mapping 12345kxodurf3443
+
+Using `terraform import`, import Lambda event source mappings using the `UUID` (event source mapping identifier). For example:
+
+```console
+% terraform import aws_lambda_event_source_mapping.event_source_mapping 12345kxodurf3443
 ```

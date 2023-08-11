@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package medialive
 
 import (
@@ -78,10 +81,10 @@ const (
 )
 
 func resourceInputSecurityGroupCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).MediaLiveClient()
+	conn := meta.(*conns.AWSClient).MediaLiveClient(ctx)
 
 	in := &medialive.CreateInputSecurityGroupInput{
-		Tags:           GetTagsIn(ctx),
+		Tags:           getTagsIn(ctx),
 		WhitelistRules: expandWhitelistRules(d.Get("whitelist_rules").(*schema.Set).List()),
 	}
 
@@ -104,7 +107,7 @@ func resourceInputSecurityGroupCreate(ctx context.Context, d *schema.ResourceDat
 }
 
 func resourceInputSecurityGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).MediaLiveClient()
+	conn := meta.(*conns.AWSClient).MediaLiveClient(ctx)
 
 	out, err := FindInputSecurityGroupByID(ctx, conn, d.Id())
 
@@ -126,7 +129,7 @@ func resourceInputSecurityGroupRead(ctx context.Context, d *schema.ResourceData,
 }
 
 func resourceInputSecurityGroupUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).MediaLiveClient()
+	conn := meta.(*conns.AWSClient).MediaLiveClient(ctx)
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		in := &medialive.UpdateInputSecurityGroupInput{
@@ -152,7 +155,7 @@ func resourceInputSecurityGroupUpdate(ctx context.Context, d *schema.ResourceDat
 }
 
 func resourceInputSecurityGroupDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).MediaLiveClient()
+	conn := meta.(*conns.AWSClient).MediaLiveClient(ctx)
 
 	log.Printf("[INFO] Deleting MediaLive InputSecurityGroup %s", d.Id())
 

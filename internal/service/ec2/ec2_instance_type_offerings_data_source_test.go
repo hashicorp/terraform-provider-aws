@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ec2_test
 
 import (
@@ -24,9 +27,9 @@ func TestAccEC2InstanceTypeOfferingsDataSource_filter(t *testing.T) {
 			{
 				Config: testAccInstanceTypeOfferingsDataSourceConfig_filter(),
 				Check: resource.ComposeTestCheckFunc(
-					acctest.CheckResourceAttrGreaterThanValue(dataSourceName, "instance_types.#", "0"),
-					acctest.CheckResourceAttrGreaterThanValue(dataSourceName, "locations.#", "0"),
-					acctest.CheckResourceAttrGreaterThanValue(dataSourceName, "location_types.#", "0"),
+					acctest.CheckResourceAttrGreaterThanValue(dataSourceName, "instance_types.#", 0),
+					acctest.CheckResourceAttrGreaterThanValue(dataSourceName, "locations.#", 0),
+					acctest.CheckResourceAttrGreaterThanValue(dataSourceName, "location_types.#", 0),
 				),
 			},
 		},
@@ -46,9 +49,9 @@ func TestAccEC2InstanceTypeOfferingsDataSource_locationType(t *testing.T) {
 			{
 				Config: testAccInstanceTypeOfferingsDataSourceConfig_location(),
 				Check: resource.ComposeTestCheckFunc(
-					acctest.CheckResourceAttrGreaterThanValue(dataSourceName, "instance_types.#", "0"),
-					acctest.CheckResourceAttrGreaterThanValue(dataSourceName, "locations.#", "0"),
-					acctest.CheckResourceAttrGreaterThanValue(dataSourceName, "location_types.#", "0"),
+					acctest.CheckResourceAttrGreaterThanValue(dataSourceName, "instance_types.#", 0),
+					acctest.CheckResourceAttrGreaterThanValue(dataSourceName, "locations.#", 0),
+					acctest.CheckResourceAttrGreaterThanValue(dataSourceName, "location_types.#", 0),
 				),
 			},
 		},
@@ -56,7 +59,7 @@ func TestAccEC2InstanceTypeOfferingsDataSource_locationType(t *testing.T) {
 }
 
 func testAccPreCheckInstanceTypeOfferings(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
+	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
 
 	input := &ec2.DescribeInstanceTypeOfferingsInput{
 		MaxResults: aws.Int64(5),

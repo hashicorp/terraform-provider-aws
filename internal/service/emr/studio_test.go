@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package emr_test
 
 import (
@@ -186,7 +189,7 @@ func testAccCheckStudioExists(ctx context.Context, resourceName string, studio *
 			return fmt.Errorf("Not found: %s", resourceName)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EMRConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EMRConn(ctx)
 
 		output, err := tfemr.FindStudioByID(ctx, conn, rs.Primary.ID)
 		if err != nil {
@@ -205,7 +208,7 @@ func testAccCheckStudioExists(ctx context.Context, resourceName string, studio *
 
 func testAccCheckStudioDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EMRConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EMRConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_emr_studio" {
