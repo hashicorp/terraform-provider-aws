@@ -7,7 +7,7 @@ on:
       - "release/**"
   pull_request:
     paths:
-      - .github/workflows/terraform_provider.yml
+      - .github/workflows/provider.yml
       - .ci/.golangci.yml
       - .ci/tools/go.mod
       - .markdownlint.yml
@@ -116,7 +116,7 @@ jobs:
   go_test:
     name: go test
     needs: [go_build]
-    runs-on: [custom, linux, large]
+    runs-on: [custom, linux, xl]
     steps:
       - uses: actions/checkout@c85c95e3d7251135ab7dc9ce3241c5835cc595a9 # v3.5.3
         with:
