@@ -35,8 +35,6 @@ func TestAccOrganizations_serial(t *testing.T) {
 			"DataSource_basic":                  testAccOrganizationDataSource_basic,
 			"DataSource_memberAccount":          testAccOrganizationDataSource_memberAccount,
 			"DataSource_delegatedAdministrator": testAccOrganizationDataSource_delegatedAdministrator,
-			"ChildAccountsDataSource":           testAccOrganizationalUnitChildAccountsDataSource_basic,
-			"DescendantAccountsDataSource":      testAccOrganizationalUnitDescendantAccountsDataSource_basic,
 		},
 		"Account": {
 			"basic":           testAccAccount_basic,
@@ -46,13 +44,13 @@ func TestAccOrganizations_serial(t *testing.T) {
 			"GovCloud":        testAccAccount_govCloud,
 		},
 		"OrganizationalUnit": {
-			"basic":      testAccOrganizationalUnit_basic,
-			"disappears": testAccOrganizationalUnit_disappears,
-			"Name":       testAccOrganizationalUnit_Name,
-			"Tags":       testAccOrganizationalUnit_Tags,
-		},
-		"OrganizationalUnits": {
-			"DataSource": testAccOrganizationalUnitsDataSource_basic,
+			"basic":                        testAccOrganizationalUnit_basic,
+			"disappears":                   testAccOrganizationalUnit_disappears,
+			"Name":                         testAccOrganizationalUnit_Name,
+			"Tags":                         testAccOrganizationalUnit_Tags,
+			"ChildAccountsDataSource":      testAccOrganizationalUnitChildAccountsDataSource_basic,
+			"DescendantAccountsDataSource": testAccOrganizationalUnitDescendantAccountsDataSource_basic,
+			"PluralDataSource":             testAccOrganizationalUnitsDataSource_basic,
 		},
 		"Policy": {
 			"basic":                  testAccPolicy_basic,
