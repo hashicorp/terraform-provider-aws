@@ -1601,7 +1601,7 @@ func FindDBClusterByID(ctx context.Context, conn *rds.RDS, id string) (*rds.DBCl
 	input := &rds.DescribeDBClustersInput{
 		DBClusterIdentifier: aws.String(id),
 	}
-	output, err := findDBCluster(ctx, conn, input)
+	output, err := findDBCluster(ctx, conn, input, tfslices.PredicateTrue[*rds.DBCluster]())
 
 	if err != nil {
 		return nil, err
@@ -1623,8 +1623,8 @@ func FindDBClusterByID(ctx context.Context, conn *rds.RDS, id string) (*rds.DBCl
 	return output, nil
 }
 
-func findDBCluster(ctx context.Context, conn *rds.RDS, input *rds.DescribeDBClustersInput) (*rds.DBCluster, error) {
-	output, err := findDBClusters(ctx, conn, input, tfslices.PredicateTrue[*rds.DBCluster]())
+func findDBCluster(ctx context.Context, conn *rds.RDS, input *rds.DescribeDBClustersInput, filter tfslices.Predicate[*rds.DBCluster]) (*rds.DBCluster, error) {
+	output, err := findDBClusters(ctx, conn, input, filter)
 
 	if err != nil {
 		return nil, err
