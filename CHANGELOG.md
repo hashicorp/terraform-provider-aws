@@ -1,4 +1,9 @@
 ## 5.13.0 (Unreleased)
+
+ENHANCEMENTS:
+
+* data-source/aws_ram_resource_share: Add `resource_arns` attribute ([#22591](https://github.com/hashicorp/terraform-provider-aws/issues/22591))
+
 ## 5.12.0 (August 10, 2023)
 
 NOTES:
