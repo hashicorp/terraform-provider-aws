@@ -154,7 +154,7 @@ func dataSourceOrganizationRead(ctx context.Context, d *schema.ResourceData, met
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).OrganizationsConn(ctx)
 
-	org, err := findOrganization(ctx, conn)
+	org, err := FindOrganization(ctx, conn)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading Organizations Organization: %s", err)

@@ -236,7 +236,7 @@ func resourceOrganizationRead(ctx context.Context, d *schema.ResourceData, meta 
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).OrganizationsConn(ctx)
 
-	org, err := findOrganization(ctx, conn)
+	org, err := FindOrganization(ctx, conn)
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Organization does not exist, removing from state: %s", d.Id())
@@ -417,7 +417,8 @@ func resourceOrganizationDelete(ctx context.Context, d *schema.ResourceData, met
 	return diags
 }
 
-func findOrganization(ctx context.Context, conn *organizations.Organizations) (*organizations.Organization, error) {
+// FindOrganization is called from the acctest package and so can't be made private and exported as "test-only".
+func FindOrganization(ctx context.Context, conn *organizations.Organizations) (*organizations.Organization, error) {
 	input := &organizations.DescribeOrganizationInput{}
 
 	output, err := conn.DescribeOrganizationWithContext(ctx, input)
