@@ -141,6 +141,9 @@ func testAccCheckClusterPolicyExists(ctx context.Context, name string, clusterpo
 
 func testAccClusterPolicyConfig_basic(rName string) string {
 	return acctest.ConfigCompose(testAccClusterConfig_basic(rName), `
+data "aws_caller_identity" "current" {}
+data "aws_partition" "current" {}
+
 resource "aws_msk_cluster_policy" "test" {
   cluster_arn = aws_msk_cluster.test.arn
 

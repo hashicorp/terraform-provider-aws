@@ -14,25 +14,29 @@ Terraform resource for managing an AWS Managed Streaming for Kafka Cluster Polic
 ### Basic Usage
 
 ```terraform
-resource "aws_msk_cluster_policy" "test" {
-	  cluster_arn = aws_msk_cluster.test.arn
-	  policy = jsonencode({
-	    Version = "2012-10-17",
-	    Statement = [{
-	      Sid    = "testMskClusterPolicy"
-	      Effect = "Allow"
-		  Principal = {
-			    "AWS" = "arn:${data.aws_partition.current.partition}:iam::${data.aws_caller_identity.current.account_id}:root"
-		  }
-	      Action = [
-			    "kafka:Describe*",
-			    "kafka:Get*",
-			    "kafka:CreateVpcConnection",
-			    "kafka:GetBootstrapBrokers",
-	      ]
-	      Resource = aws_msk_cluster.test.arn
-	    }]
-	  })
+data "aws_caller_identity" "current" {}
+data "aws_partition" "current" {}
+
+resource "aws_msk_cluster_policy" "example" {
+  cluster_arn = aws_msk_cluster.example.arn
+
+  policy = jsonencode({
+    Version = "2012-10-17",
+    Statement = [{
+      Sid    = "ExampleMskClusterPolicy"
+      Effect = "Allow"
+      Principal = {
+        "AWS" = "arn:${data.aws_partition.current.partition}:iam::${data.aws_caller_identity.current.account_id}:root"
+      }
+      Action = [
+        "kafka:Describe*",
+        "kafka:Get*",
+        "kafka:CreateVpcConnection",
+        "kafka:GetBootstrapBrokers",
+      ]
+      Resource = aws_msk_cluster.example.arn
+    }]
+  })
 }
 ```
 
@@ -41,40 +45,27 @@ resource "aws_msk_cluster_policy" "test" {
 The following arguments are required:
 
 * `cluster_arn` - (Required) The Amazon Resource Name (ARN) that uniquely identifies the cluster.
-
 * `policy` - (Required) Resource policy for cluster.
-
-The following arguments are optional:
-
-* `current_version` - (Optional) Current cluster policy version.
 
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `current_version` - Resource policy version
-
-## Timeouts
-
-[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
-
-* `create` - (Default `60m`)
-* `update` - (Default `180m`)
-* `delete` - (Default `90m`)
+* `id` - Same as `cluster_arn`.
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Managed Streaming for Kafka Cluster Policy using the `example_id_arg`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Managed Streaming for Kafka Cluster Policy using the `cluster_arn. For example:
 
 ```terraform
 import {
   to = aws_msk_cluster_policy.example
-  id = "cluster_policy-id-12345678"
+  id = "arn:aws:kafka:us-west-2:123456789012:cluster/example/279c0212-d057-4dba-9aa9-1c4e5a25bfc7-3"
 }
 ```
 
-Using `terraform import`, import Managed Streaming for Kafka Cluster Policy using the `example_id_arg`. For example:
+Using `terraform import`, import Managed Streaming for Kafka Cluster Policy using the `cluster_arn`. For example:
 
 ```console
-% terraform import aws_msk_cluster_policy.example cluster_policy-id-12345678
+% terraform import aws_msk_cluster_policy.example arn:aws:kafka:us-west-2:123456789012:cluster/example/279c0212-d057-4dba-9aa9-1c4e5a25bfc7-3
 ```
