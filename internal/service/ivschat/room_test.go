@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ivschat_test
 
 import (
@@ -277,7 +280,7 @@ func TestAccIVSChatRoom_update_remove_messageReviewHandler_uri(t *testing.T) {
 
 func testAccCheckRoomDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).IVSChatClient()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).IVSChatClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_ivschat_room" {
@@ -314,7 +317,7 @@ func testAccCheckRoomExists(ctx context.Context, name string, room *ivschat.GetR
 			return create.Error(names.IVSChat, create.ErrActionCheckingExistence, tfivschat.ResNameRoom, name, errors.New("not set"))
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).IVSChatClient()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).IVSChatClient(ctx)
 
 		resp, err := conn.GetRoom(ctx, &ivschat.GetRoomInput{
 			Identifier: aws.String(rs.Primary.ID),
@@ -331,7 +334,7 @@ func testAccCheckRoomExists(ctx context.Context, name string, room *ivschat.GetR
 }
 
 func testAccPreCheckRoom(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).IVSChatClient()
+	conn := acctest.Provider.Meta().(*conns.AWSClient).IVSChatClient(ctx)
 
 	input := &ivschat.ListRoomsInput{}
 	_, err := conn.ListRooms(ctx, input)

@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package fsx
 
 import (
@@ -59,7 +62,7 @@ func DataSourceOpenzfsSnapshot() *schema.Resource {
 
 func dataSourceOpenzfsSnapshotRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).FSxConn()
+	conn := meta.(*conns.AWSClient).FSxConn(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	input := &fsx.DescribeSnapshotsInput{}
@@ -110,7 +113,7 @@ func dataSourceOpenzfsSnapshotRead(ctx context.Context, d *schema.ResourceData, 
 	}
 
 	//Snapshot tags do not get returned with describe call so need to make a separate list tags call
-	tags, tagserr := ListTags(ctx, conn, *snapshot.ResourceARN)
+	tags, tagserr := listTags(ctx, conn, *snapshot.ResourceARN)
 
 	if tagserr != nil {
 		return sdkdiag.AppendErrorf(diags, "reading Tags for FSx OpenZFS Snapshot (%s): %s", d.Id(), err)

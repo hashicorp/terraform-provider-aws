@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package apprunner_test
 
 import (
@@ -167,7 +170,7 @@ func testAccCheckVPCConnectorDestroy(ctx context.Context) resource.TestCheckFunc
 				continue
 			}
 
-			conn := acctest.Provider.Meta().(*conns.AWSClient).AppRunnerConn()
+			conn := acctest.Provider.Meta().(*conns.AWSClient).AppRunnerConn(ctx)
 
 			_, err := tfapprunner.FindVPCConnectorByARN(ctx, conn, rs.Primary.ID)
 
@@ -197,7 +200,7 @@ func testAccCheckVPCConnectorExists(ctx context.Context, n string) resource.Test
 			return fmt.Errorf("No App Runner VPC Connector ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AppRunnerConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AppRunnerConn(ctx)
 
 		_, err := tfapprunner.FindVPCConnectorByARN(ctx, conn, rs.Primary.ID)
 
@@ -258,7 +261,7 @@ resource "aws_apprunner_vpc_connector" "test" {
 }
 
 func testAccPreCheckVPCConnector(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).AppRunnerConn()
+	conn := acctest.Provider.Meta().(*conns.AWSClient).AppRunnerConn(ctx)
 
 	input := &apprunner.ListVpcConnectorsInput{}
 

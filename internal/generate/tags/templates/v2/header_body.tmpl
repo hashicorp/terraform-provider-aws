@@ -6,14 +6,21 @@ import (
 	{{- if .FmtPkg }}
 	"fmt"
 	{{- end }}
+	{{- if .TimePkg }}
+	"time"
+	{{- end }}
 
+	{{ if not .SkipAWSImp }}
 	"github.com/aws/aws-sdk-go-v2/aws"
+	{{- end }}
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	{{- if .AWSService }}
+		{{- if not .SkipServiceImp }}
 	"github.com/aws/aws-sdk-go-v2/service/{{ .AWSService }}"
-	{{- if not .SkipTypesImp }}
+		{{- end }}
+		{{- if not .SkipTypesImp }}
 	awstypes "github.com/aws/aws-sdk-go-v2/service/{{ .AWSService }}/types"
-	{{- end }}
+		{{- end }}
 	{{- end }}
 	{{- if .HelperSchemaPkg }}
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"

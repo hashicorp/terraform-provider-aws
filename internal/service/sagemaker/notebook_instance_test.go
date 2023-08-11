@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package sagemaker_test
 
 import (
@@ -670,7 +673,7 @@ func TestAccSageMakerNotebookInstance_acceleratorTypes(t *testing.T) {
 
 func testAccCheckNotebookInstanceDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SageMakerConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SageMakerConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_sagemaker_notebook_instance" {
@@ -705,7 +708,7 @@ func testAccCheckNotebookInstanceExists(ctx context.Context, n string, v *sagema
 			return fmt.Errorf("No SageMaker Notebook Instance ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SageMakerConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SageMakerConn(ctx)
 
 		output, err := tfsagemaker.FindNotebookInstanceByName(ctx, conn, rs.Primary.ID)
 

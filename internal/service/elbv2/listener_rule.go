@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package elbv2
 
 import (
@@ -496,12 +499,12 @@ func suppressIfActionTypeNot(t string) schema.SchemaDiffSuppressFunc {
 
 func resourceListenerRuleCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ELBV2Conn()
+	conn := meta.(*conns.AWSClient).ELBV2Conn(ctx)
 
 	listenerARN := d.Get("listener_arn").(string)
 	input := &elbv2.CreateRuleInput{
 		ListenerArn: aws.String(listenerARN),
-		Tags:        GetTagsIn(ctx),
+		Tags:        getTagsIn(ctx),
 	}
 
 	var err error
@@ -532,7 +535,7 @@ func resourceListenerRuleCreate(ctx context.Context, d *schema.ResourceData, met
 	d.SetId(aws.StringValue(output.Rules[0].RuleArn))
 
 	// Post-create tagging supported in some partitions
-	if tags := GetTagsIn(ctx); input.Tags == nil && len(tags) > 0 {
+	if tags := getTagsIn(ctx); input.Tags == nil && len(tags) > 0 {
 		err := createTags(ctx, conn, d.Id(), tags)
 
 		// If default tags only, continue. Otherwise, error.
@@ -550,7 +553,7 @@ func resourceListenerRuleCreate(ctx context.Context, d *schema.ResourceData, met
 
 func resourceListenerRuleRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ELBV2Conn()
+	conn := meta.(*conns.AWSClient).ELBV2Conn(ctx)
 
 	var resp *elbv2.DescribeRulesOutput
 	var req = &elbv2.DescribeRulesInput{
@@ -773,7 +776,7 @@ func resourceListenerRuleRead(ctx context.Context, d *schema.ResourceData, meta 
 
 func resourceListenerRuleUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ELBV2Conn()
+	conn := meta.(*conns.AWSClient).ELBV2Conn(ctx)
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		if d.HasChange("priority") {
@@ -832,7 +835,7 @@ func resourceListenerRuleUpdate(ctx context.Context, d *schema.ResourceData, met
 
 func resourceListenerRuleDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ELBV2Conn()
+	conn := meta.(*conns.AWSClient).ELBV2Conn(ctx)
 
 	_, err := conn.DeleteRuleWithContext(ctx, &elbv2.DeleteRuleInput{
 		RuleArn: aws.String(d.Id()),

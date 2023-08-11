@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package kafka_test
 
 import (
@@ -149,7 +152,7 @@ func testAccCheckScramSecretAssociationDestroy(ctx context.Context) resource.Tes
 				continue
 			}
 
-			conn := acctest.Provider.Meta().(*conns.AWSClient).KafkaConn()
+			conn := acctest.Provider.Meta().(*conns.AWSClient).KafkaConn(ctx)
 			input := &kafka.ListScramSecretsInput{
 				ClusterArn: aws.String(rs.Primary.ID),
 			}
@@ -177,7 +180,7 @@ func testAccCheckScramSecretAssociationExists(ctx context.Context, resourceName 
 			return fmt.Errorf("No ID is set for %s", resourceName)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).KafkaConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).KafkaConn(ctx)
 		_, err := tfkafka.FindScramSecrets(ctx, conn, rs.Primary.ID)
 
 		return err
@@ -190,7 +193,7 @@ data "aws_partition" "current" {}
 
 resource "aws_msk_cluster" "test" {
   cluster_name           = %[1]q
-  kafka_version          = "2.5.1"
+  kafka_version          = "2.8.1"
   number_of_broker_nodes = 3
 
   broker_node_group_info {

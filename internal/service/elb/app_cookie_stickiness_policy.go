@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package elb
 
 import (
@@ -65,7 +68,7 @@ func ResourceAppCookieStickinessPolicy() *schema.Resource {
 
 func resourceAppCookieStickinessPolicyCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ELBConn()
+	conn := meta.(*conns.AWSClient).ELBConn(ctx)
 
 	lbName := d.Get("load_balancer").(string)
 	lbPort := d.Get("lb_port").(int)
@@ -102,7 +105,7 @@ func resourceAppCookieStickinessPolicyCreate(ctx context.Context, d *schema.Reso
 
 func resourceAppCookieStickinessPolicyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ELBConn()
+	conn := meta.(*conns.AWSClient).ELBConn(ctx)
 
 	lbName, lbPort, policyName, err := AppCookieStickinessPolicyParseResourceID(d.Id())
 
@@ -136,7 +139,7 @@ func resourceAppCookieStickinessPolicyRead(ctx context.Context, d *schema.Resour
 
 func resourceAppCookieStickinessPolicyDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ELBConn()
+	conn := meta.(*conns.AWSClient).ELBConn(ctx)
 
 	lbName, lbPort, policyName, err := AppCookieStickinessPolicyParseResourceID(d.Id())
 

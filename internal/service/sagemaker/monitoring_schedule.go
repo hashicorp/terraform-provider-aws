@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package sagemaker
 
 import (
@@ -92,7 +95,7 @@ func ResourceMonitoringSchedule() *schema.Resource {
 
 func resourceMonitoringScheduleCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SageMakerConn()
+	conn := meta.(*conns.AWSClient).SageMakerConn(ctx)
 
 	var name string
 	if v, ok := d.GetOk("name"); ok {
@@ -104,7 +107,7 @@ func resourceMonitoringScheduleCreate(ctx context.Context, d *schema.ResourceDat
 	createOpts := &sagemaker.CreateMonitoringScheduleInput{
 		MonitoringScheduleConfig: expandMonitoringScheduleConfig(d.Get("monitoring_schedule_config").([]interface{})),
 		MonitoringScheduleName:   aws.String(name),
-		Tags:                     GetTagsIn(ctx),
+		Tags:                     getTagsIn(ctx),
 	}
 
 	_, err := conn.CreateMonitoringScheduleWithContext(ctx, createOpts)
@@ -122,7 +125,7 @@ func resourceMonitoringScheduleCreate(ctx context.Context, d *schema.ResourceDat
 
 func resourceMonitoringScheduleRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SageMakerConn()
+	conn := meta.(*conns.AWSClient).SageMakerConn(ctx)
 
 	monitoringSchedule, err := FindMonitoringScheduleByName(ctx, conn, d.Id())
 
@@ -148,7 +151,7 @@ func resourceMonitoringScheduleRead(ctx context.Context, d *schema.ResourceData,
 
 func resourceMonitoringScheduleUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SageMakerConn()
+	conn := meta.(*conns.AWSClient).SageMakerConn(ctx)
 
 	if d.HasChanges("monitoring_schedule_config") {
 		modifyOpts := &sagemaker.UpdateMonitoringScheduleInput{
@@ -173,7 +176,7 @@ func resourceMonitoringScheduleUpdate(ctx context.Context, d *schema.ResourceDat
 
 func resourceMonitoringScheduleDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SageMakerConn()
+	conn := meta.(*conns.AWSClient).SageMakerConn(ctx)
 
 	deleteOpts := &sagemaker.DeleteMonitoringScheduleInput{
 		MonitoringScheduleName: aws.String(d.Id()),

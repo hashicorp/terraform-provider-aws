@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package redshift_test
 
 import (
@@ -141,7 +144,7 @@ func testAccCheckClusterSnapshotExists(ctx context.Context, n string, v *redshif
 			return fmt.Errorf("No Redshift Cluster Snapshot is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftConn(ctx)
 
 		out, err := tfredshift.FindClusterSnapshotByID(ctx, conn, rs.Primary.ID)
 
@@ -157,7 +160,7 @@ func testAccCheckClusterSnapshotExists(ctx context.Context, n string, v *redshif
 
 func testAccCheckClusterSnapshotDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_redshift_cluster_snapshot" {

@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package cloudsearch
 
 import (
@@ -175,7 +178,7 @@ func ResourceDomain() *schema.Resource {
 
 func resourceDomainCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CloudSearchConn()
+	conn := meta.(*conns.AWSClient).CloudSearchConn(ctx)
 
 	name := d.Get("name").(string)
 	input := cloudsearch.CreateDomainInput{
@@ -263,7 +266,7 @@ func resourceDomainCreate(ctx context.Context, d *schema.ResourceData, meta inte
 
 func resourceDomainRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CloudSearchConn()
+	conn := meta.(*conns.AWSClient).CloudSearchConn(ctx)
 
 	domainStatus, err := FindDomainStatusByName(ctx, conn, d.Id())
 
@@ -339,7 +342,7 @@ func resourceDomainRead(ctx context.Context, d *schema.ResourceData, meta interf
 
 func resourceDomainUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CloudSearchConn()
+	conn := meta.(*conns.AWSClient).CloudSearchConn(ctx)
 	requiresIndexDocuments := false
 
 	if d.HasChange("scaling_parameters") {
@@ -470,7 +473,7 @@ func resourceDomainUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 
 func resourceDomainDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CloudSearchConn()
+	conn := meta.(*conns.AWSClient).CloudSearchConn(ctx)
 
 	log.Printf("[DEBUG] Deleting CloudSearch Domain: %s", d.Id())
 	_, err := conn.DeleteDomainWithContext(ctx, &cloudsearch.DeleteDomainInput{
@@ -542,7 +545,7 @@ func defineIndexFields(ctx context.Context, conn *cloudsearch.CloudSearch, domai
 			_, err = conn.DefineIndexFieldWithContext(ctx, input)
 
 			if err != nil {
-				return fmt.Errorf("error defining CloudSearch Domain (%s) index field (%s): %w", domainName, aws.StringValue(apiObject.IndexFieldName), err)
+				return fmt.Errorf("defining CloudSearch Domain (%s) index field (%s): %w", domainName, aws.StringValue(apiObject.IndexFieldName), err)
 			}
 		}
 	}

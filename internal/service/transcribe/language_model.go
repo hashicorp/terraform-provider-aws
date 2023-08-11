@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package transcribe
 
 import (
@@ -106,13 +109,13 @@ const (
 )
 
 func resourceLanguageModelCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).TranscribeClient()
+	conn := meta.(*conns.AWSClient).TranscribeClient(ctx)
 
 	in := &transcribe.CreateLanguageModelInput{
 		BaseModelName: types.BaseModelName(d.Get("base_model_name").(string)),
 		LanguageCode:  types.CLMLanguageCode(d.Get("language_code").(string)),
 		ModelName:     aws.String(d.Get("model_name").(string)),
-		Tags:          GetTagsIn(ctx),
+		Tags:          getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("input_data_config"); ok && len(v.([]interface{})) > 0 {
@@ -146,7 +149,7 @@ func resourceLanguageModelCreate(ctx context.Context, d *schema.ResourceData, me
 }
 
 func resourceLanguageModelRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).TranscribeClient()
+	conn := meta.(*conns.AWSClient).TranscribeClient(ctx)
 
 	out, err := FindLanguageModelByName(ctx, conn, d.Id())
 
@@ -186,7 +189,7 @@ func resourceLanguageModelUpdate(ctx context.Context, d *schema.ResourceData, me
 }
 
 func resourceLanguageModelDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).TranscribeClient()
+	conn := meta.(*conns.AWSClient).TranscribeClient(ctx)
 
 	log.Printf("[INFO] Deleting Transcribe LanguageModel %s", d.Id())
 

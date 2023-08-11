@@ -47,21 +47,30 @@ resource "aws_ram_principal_association" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `principal` - (Required) The principal to associate with the resource share. Possible values are an AWS account ID, an AWS Organizations Organization ARN, or an AWS Organizations Organization Unit ARN.
 * `resource_share_arn` - (Required) The Amazon Resource Name (ARN) of the resource share.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The Amazon Resource Name (ARN) of the Resource Share and the principal, separated by a comma.
 
 ## Import
 
-RAM Principal Associations can be imported using their Resource Share ARN and the `principal` separated by a comma, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import RAM Principal Associations using their Resource Share ARN and the `principal` separated by a comma. For example:
 
+```terraform
+import {
+  to = aws_ram_principal_association.example
+  id = "arn:aws:ram:eu-west-1:123456789012:resource-share/73da1ab9-b94a-4ba3-8eb4-45917f7f4b12,123456789012"
+}
 ```
-$ terraform import aws_ram_principal_association.example arn:aws:ram:eu-west-1:123456789012:resource-share/73da1ab9-b94a-4ba3-8eb4-45917f7f4b12,123456789012
+
+Using `terraform import`, import RAM Principal Associations using their Resource Share ARN and the `principal` separated by a comma. For example:
+
+```console
+% terraform import aws_ram_principal_association.example arn:aws:ram:eu-west-1:123456789012:resource-share/73da1ab9-b94a-4ba3-8eb4-45917f7f4b12,123456789012
 ```

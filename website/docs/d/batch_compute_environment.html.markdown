@@ -21,13 +21,13 @@ data "aws_batch_compute_environment" "batch-mongo" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This data source supports the following arguments:
 
 * `compute_environment_name` - (Required) Name of the Batch Compute Environment
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This data source exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the compute environment.
 * `ecs_cluster_arn` - ARN of the underlying Amazon ECS cluster used by the compute environment.

@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package organizations_test
 
 import (
@@ -24,7 +27,7 @@ func testAccOrganizationalUnitsDataSource_basic(t *testing.T) {
 			{
 				Config: testAccOrganizationalUnitsDataSourceConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
-					acctest.CheckResourceAttrGreaterThanValue(topOUDataSourceName, "children.#", "0"),
+					acctest.CheckResourceAttrGreaterThanValue(topOUDataSourceName, "children.#", 0),
 					resource.TestCheckResourceAttr(newOUDataSourceName, "children.#", "0"),
 				),
 			},

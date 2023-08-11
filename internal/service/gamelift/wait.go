@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package gamelift
 
 import (
@@ -185,7 +188,7 @@ func waitGameServerGroupTerminated(ctx context.Context, conn *gamelift.GameLift,
 	}
 
 	if err != nil {
-		return fmt.Errorf("error deleting GameLift Game Server Group (%s): %w", name, err)
+		return fmt.Errorf("deleting GameLift Game Server Group (%s): %w", name, err)
 	}
 
 	return nil

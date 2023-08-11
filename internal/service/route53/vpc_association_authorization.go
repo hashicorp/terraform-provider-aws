@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package route53
 
 import (
@@ -51,7 +54,7 @@ func ResourceVPCAssociationAuthorization() *schema.Resource {
 
 func resourceVPCAssociationAuthorizationCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).Route53Conn()
+	conn := meta.(*conns.AWSClient).Route53Conn(ctx)
 
 	req := &route53.CreateVPCAssociationAuthorizationInput{
 		HostedZoneId: aws.String(d.Get("zone_id").(string)),
@@ -82,7 +85,7 @@ func resourceVPCAssociationAuthorizationCreate(ctx context.Context, d *schema.Re
 
 func resourceVPCAssociationAuthorizationRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).Route53Conn()
+	conn := meta.(*conns.AWSClient).Route53Conn(ctx)
 
 	zone_id, vpc_id, err := VPCAssociationAuthorizationParseID(d.Id())
 	if err != nil {
@@ -132,7 +135,7 @@ func resourceVPCAssociationAuthorizationRead(ctx context.Context, d *schema.Reso
 
 func resourceVPCAssociationAuthorizationDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).Route53Conn()
+	conn := meta.(*conns.AWSClient).Route53Conn(ctx)
 
 	zone_id, vpc_id, err := VPCAssociationAuthorizationParseID(d.Id())
 	if err != nil {

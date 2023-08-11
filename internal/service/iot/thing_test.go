@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package iot_test
 
 import (
@@ -125,7 +128,7 @@ func testAccCheckThingExists(ctx context.Context, n string, v *iot.DescribeThing
 			return fmt.Errorf("No IoT Thing ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).IoTConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).IoTConn(ctx)
 
 		output, err := tfiot.FindThingByName(ctx, conn, rs.Primary.ID)
 
@@ -141,7 +144,7 @@ func testAccCheckThingExists(ctx context.Context, n string, v *iot.DescribeThing
 
 func testAccCheckThingDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).IoTConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).IoTConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_iot_thing" {

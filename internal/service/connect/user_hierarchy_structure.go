@@ -1,8 +1,10 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package connect
 
 import (
 	"context"
-	"fmt"
 	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -91,7 +93,7 @@ func userHierarchyLevelSchema() *schema.Schema {
 }
 
 func resourceUserHierarchyStructureCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ConnectConn()
+	conn := meta.(*conns.AWSClient).ConnectConn(ctx)
 
 	instanceID := d.Get("instance_id").(string)
 
@@ -104,7 +106,7 @@ func resourceUserHierarchyStructureCreate(ctx context.Context, d *schema.Resourc
 	_, err := conn.UpdateUserHierarchyStructureWithContext(ctx, input)
 
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error creating Connect User Hierarchy Structure for Connect Instance (%s): %w", instanceID, err))
+		return diag.Errorf("creating Connect User Hierarchy Structure for Connect Instance (%s): %s", instanceID, err)
 	}
 
 	d.SetId(instanceID)
@@ -113,7 +115,7 @@ func resourceUserHierarchyStructureCreate(ctx context.Context, d *schema.Resourc
 }
 
 func resourceUserHierarchyStructureRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ConnectConn()
+	conn := meta.(*conns.AWSClient).ConnectConn(ctx)
 
 	instanceID := d.Id()
 
@@ -128,15 +130,15 @@ func resourceUserHierarchyStructureRead(ctx context.Context, d *schema.ResourceD
 	}
 
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error getting Connect User Hierarchy Structure (%s): %w", d.Id(), err))
+		return diag.Errorf("getting Connect User Hierarchy Structure (%s): %s", d.Id(), err)
 	}
 
 	if resp == nil || resp.HierarchyStructure == nil {
-		return diag.FromErr(fmt.Errorf("error getting Connect User Hierarchy Structure (%s): empty response", d.Id()))
+		return diag.Errorf("getting Connect User Hierarchy Structure (%s): empty response", d.Id())
 	}
 
 	if err := d.Set("hierarchy_structure", flattenUserHierarchyStructure(resp.HierarchyStructure)); err != nil {
-		return diag.FromErr(fmt.Errorf("error setting Connect User Hierarchy Structure hierarchy_structure for Connect instance: (%s)", d.Id()))
+		return diag.Errorf("setting Connect User Hierarchy Structure hierarchy_structure for Connect instance: (%s)", d.Id())
 	}
 
 	d.Set("instance_id", instanceID)
@@ -145,7 +147,7 @@ func resourceUserHierarchyStructureRead(ctx context.Context, d *schema.ResourceD
 }
 
 func resourceUserHierarchyStructureUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ConnectConn()
+	conn := meta.(*conns.AWSClient).ConnectConn(ctx)
 
 	instanceID := d.Id()
 
@@ -156,7 +158,7 @@ func resourceUserHierarchyStructureUpdate(ctx context.Context, d *schema.Resourc
 		})
 
 		if err != nil {
-			return diag.FromErr(fmt.Errorf("error updating UserHierarchyStructure Name (%s): %w", d.Id(), err))
+			return diag.Errorf("updating UserHierarchyStructure Name (%s): %s", d.Id(), err)
 		}
 	}
 
@@ -164,7 +166,7 @@ func resourceUserHierarchyStructureUpdate(ctx context.Context, d *schema.Resourc
 }
 
 func resourceUserHierarchyStructureDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ConnectConn()
+	conn := meta.(*conns.AWSClient).ConnectConn(ctx)
 
 	instanceID := d.Id()
 
@@ -174,7 +176,7 @@ func resourceUserHierarchyStructureDelete(ctx context.Context, d *schema.Resourc
 	})
 
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error deleting UserHierarchyStructure (%s): %w", d.Id(), err))
+		return diag.Errorf("deleting UserHierarchyStructure (%s): %s", d.Id(), err)
 	}
 
 	return nil

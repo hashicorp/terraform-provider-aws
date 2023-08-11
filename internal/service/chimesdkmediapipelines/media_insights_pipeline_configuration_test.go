@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package chimesdkmediapipelines_test
 
 import (
@@ -251,7 +254,7 @@ func TestAccChimeSDKMediaPipelinesMediaInsightsPipelineConfiguration_tags(t *tes
 
 func testAccCheckMediaInsightsPipelineConfigurationDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ChimeSDKMediaPipelinesConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ChimeSDKMediaPipelinesConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_chimesdkmediapipelines_media_insights_pipeline_configuration" {
@@ -287,7 +290,7 @@ func testAccCheckMediaInsightsPipelineConfigurationExists(ctx context.Context, n
 				tfchimesdkmediapipelines.ResNameMediaInsightsPipelineConfiguration, name, errors.New("not set"))
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ChimeSDKMediaPipelinesConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ChimeSDKMediaPipelinesConn(ctx)
 		resp, err := tfchimesdkmediapipelines.FindMediaInsightsPipelineConfigurationByID(ctx, conn, rs.Primary.ID)
 		if err != nil {
 			return create.Error(names.ChimeSDKMediaPipelines, create.ErrActionCheckingExistence,
@@ -301,7 +304,7 @@ func testAccCheckMediaInsightsPipelineConfigurationExists(ctx context.Context, n
 }
 
 func testAccPreCheck(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).ChimeSDKMediaPipelinesConn()
+	conn := acctest.Provider.Meta().(*conns.AWSClient).ChimeSDKMediaPipelinesConn(ctx)
 
 	input := &chimesdkmediapipelines.ListMediaInsightsPipelineConfigurationsInput{}
 	_, err := conn.ListMediaInsightsPipelineConfigurationsWithContext(ctx, input)

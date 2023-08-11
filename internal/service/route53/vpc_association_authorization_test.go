@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package route53_test
 
 import (
@@ -132,7 +135,7 @@ func TestAccRoute53VPCAssociationAuthorization_crossRegion(t *testing.T) {
 
 func testAccCheckVPCAssociationAuthorizationDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).Route53Conn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).Route53Conn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_route53_vpc_association_authorization" {
@@ -182,7 +185,7 @@ func testAccCheckVPCAssociationAuthorizationExists(ctx context.Context, n string
 			return err
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).Route53Conn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).Route53Conn(ctx)
 
 		req := route53.ListVPCAssociationAuthorizationsInput{
 			HostedZoneId: aws.String(zone_id),

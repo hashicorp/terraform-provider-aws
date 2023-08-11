@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ec2_test
 
 import (
@@ -16,7 +19,7 @@ import (
 
 func testAccManagedPrefixListGetIdByNameDataSource(ctx context.Context, name string, id *string, arn *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
 
 		output, err := conn.DescribeManagedPrefixListsWithContext(ctx, &ec2.DescribeManagedPrefixListsInput{
 			Filters: []*ec2.Filter{

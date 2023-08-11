@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package chime_test
 
 import (
@@ -24,7 +27,10 @@ func TestAccChimeVoiceConnectorStreaming_basic(t *testing.T) {
 	resourceName := "aws_chime_voice_connector_streaming.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheck(ctx, t)
+		},
 		ErrorCheck:               acctest.ErrorCheck(t, chime.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckVoiceConnectorStreamingDestroy(ctx),
@@ -53,7 +59,10 @@ func TestAccChimeVoiceConnectorStreaming_disappears(t *testing.T) {
 	resourceName := "aws_chime_voice_connector_streaming.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheck(ctx, t)
+		},
 		ErrorCheck:               acctest.ErrorCheck(t, chime.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckVoiceConnectorStreamingDestroy(ctx),
@@ -76,7 +85,10 @@ func TestAccChimeVoiceConnectorStreaming_update(t *testing.T) {
 	resourceName := "aws_chime_voice_connector_streaming.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheck(ctx, t)
+		},
 		ErrorCheck:               acctest.ErrorCheck(t, chime.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckVoiceConnectorStreamingDestroy(ctx),
@@ -201,7 +213,7 @@ func testAccCheckVoiceConnectorStreamingExists(ctx context.Context, name string)
 			return fmt.Errorf("no Chime Voice Connector streaming configuration ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ChimeSDKVoiceConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ChimeSDKVoiceConn(ctx)
 		input := &chimesdkvoice.GetVoiceConnectorStreamingConfigurationInput{
 			VoiceConnectorId: aws.String(rs.Primary.ID),
 		}
@@ -225,7 +237,7 @@ func testAccCheckVoiceConnectorStreamingDestroy(ctx context.Context) resource.Te
 			if rs.Type != "aws_chime_voice_connector_termination" {
 				continue
 			}
-			conn := acctest.Provider.Meta().(*conns.AWSClient).ChimeSDKVoiceConn()
+			conn := acctest.Provider.Meta().(*conns.AWSClient).ChimeSDKVoiceConn(ctx)
 			input := &chimesdkvoice.GetVoiceConnectorStreamingConfigurationInput{
 				VoiceConnectorId: aws.String(rs.Primary.ID),
 			}

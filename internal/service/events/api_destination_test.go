@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package events_test
 
 import (
@@ -206,7 +209,7 @@ func TestAccEventsAPIDestination_disappears(t *testing.T) {
 
 func testAccCheckAPIDestinationDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EventsConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EventsConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_cloudwatch_event_api_destination" {
@@ -235,7 +238,7 @@ func testAccCheckAPIDestinationExists(ctx context.Context, n string, v *eventbri
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EventsConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EventsConn(ctx)
 		params := eventbridge.DescribeApiDestinationInput{
 			Name: aws.String(rs.Primary.ID),
 		}

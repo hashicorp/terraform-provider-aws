@@ -13,7 +13,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Send Slack Notification
-        uses: slackapi/slack-github-action@e28cf165c92ffef168d23c5c9000cffc8a25e117
+        uses: slackapi/slack-github-action@e28cf165c92ffef168d23c5c9000cffc8a25e117 # v1.24.0
         env:
           SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
           EVENT_URL: ${{ github.event.issue.html_url || github.event.pull_request.html_url }}
@@ -39,15 +39,3 @@ jobs:
             		}
             	]
             }
-
-  AddToWorkingBoard:
-    name: Add regression to Working Board
-    if: github.event.label.name == 'regression'
-    runs-on: ubuntu-latest
-    steps:
-      - name: Add regressions to To Do column
-        uses: alex-page/github-project-automation-plus@v0.8.3
-        with:
-          project: AWS Provider Working Board
-          column: To Do
-          repo-token: ${{ secrets.ORGSCOPED_GITHUB_TOKEN }}
