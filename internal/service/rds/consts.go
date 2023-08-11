@@ -103,6 +103,14 @@ const (
 )
 
 const (
+	GlobalClusterStatusAvailable = "available"
+	GlobalClusterStatusCreating  = "creating"
+	GlobalClusterStatusDeleting  = "deleting"
+	GlobalClusterStatusModifying = "modifying"
+	GlobalClusterStatusUpgrading = "upgrading"
+)
+
+const (
 	EventSubscriptionStatusActive    = "active"
 	EventSubscriptionStatusCreating  = "creating"
 	EventSubscriptionStatusDeleting  = "deleting"

@@ -19,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfrds "github.com/hashicorp/terraform-provider-aws/internal/service/rds"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func TestClusterIDRegionFromARN(t *testing.T) {
@@ -148,7 +149,7 @@ func TestAccRDSGlobalCluster_disappears(t *testing.T) {
 				Config: testAccGlobalClusterConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGlobalClusterExists(ctx, resourceName, &globalCluster1),
-					testAccCheckGlobalClusterDisappears(ctx, &globalCluster1),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfrds.ResourceGlobalCluster(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -611,33 +612,22 @@ func TestAccRDSGlobalCluster_storageEncrypted(t *testing.T) {
 	})
 }
 
-func testAccCheckGlobalClusterExists(ctx context.Context, resourceName string, globalCluster *rds.GlobalCluster) resource.TestCheckFunc {
+func testAccCheckGlobalClusterExists(ctx context.Context, n string, v *rds.GlobalCluster) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[resourceName]
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return fmt.Errorf("Not found: %s", resourceName)
-		}
-
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No RDS Global Cluster ID is set")
+			return fmt.Errorf("Not found: %s", n)
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn(ctx)
 
-		cluster, err := tfrds.DescribeGlobalCluster(ctx, conn, rs.Primary.ID)
+		output, err := tfrds.FindGlobalClusterByID(ctx, conn, rs.Primary.ID)
+
 		if err != nil {
 			return err
 		}
 
-		if cluster == nil {
-			return fmt.Errorf("RDS Global Cluster not found")
-		}
-
-		if aws.StringValue(cluster.Status) != "available" {
-			return fmt.Errorf("RDS Global Cluster (%s) exists in non-available (%s) state", rs.Primary.ID, aws.StringValue(cluster.Status))
-		}
-
-		*globalCluster = *cluster
+		*v = *output
 
 		return nil
 	}
@@ -652,9 +642,9 @@ func testAccCheckGlobalClusterDestroy(ctx context.Context) resource.TestCheckFun
 				continue
 			}
 
-			globalCluster, err := tfrds.DescribeGlobalCluster(ctx, conn, rs.Primary.ID)
+			_, err := tfrds.FindGlobalClusterByID(ctx, conn, rs.Primary.ID)
 
-			if tfawserr.ErrCodeEquals(err, rds.ErrCodeGlobalClusterNotFoundFault) {
+			if tfresource.NotFound(err) {
 				continue
 			}
 
@@ -662,31 +652,10 @@ func testAccCheckGlobalClusterDestroy(ctx context.Context) resource.TestCheckFun
 				return err
 			}
 
-			if globalCluster == nil {
-				continue
-			}
-
-			return fmt.Errorf("RDS Global Cluster (%s) still exists in non-deleted (%s) state", rs.Primary.ID, aws.StringValue(globalCluster.Status))
+			return fmt.Errorf("RDS Global Cluster %s still exists", rs.Primary.ID)
 		}
 
 		return nil
-	}
-}
-
-func testAccCheckGlobalClusterDisappears(ctx context.Context, globalCluster *rds.GlobalCluster) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn(ctx)
-
-		input := &rds.DeleteGlobalClusterInput{
-			GlobalClusterIdentifier: globalCluster.GlobalClusterIdentifier,
-		}
-
-		_, err := conn.DeleteGlobalClusterWithContext(ctx, input)
-		if err != nil {
-			return err
-		}
-
-		return tfrds.WaitForGlobalClusterDeletion(ctx, conn, aws.StringValue(globalCluster.GlobalClusterIdentifier), tfrds.GlobalClusterClusterDeleteTimeout)
 	}
 }
 
