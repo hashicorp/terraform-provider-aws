@@ -127,7 +127,7 @@ func resourceListenerCertificateRead(ctx context.Context, d *schema.ResourceData
 		err = findListenerCertificate(ctx, conn, certificateArn, listenerArn, true, nil)
 	}
 
-	if !d.IsNewResource() && tfresource.NotFound(err) || tfawserr.ErrCodeEquals(err, elbv2.ErrCodeListenerNotFoundException) {
+	if !d.IsNewResource() && tfresource.NotFound(err) {
 		create.LogNotFoundRemoveState(names.ELBV2, create.ErrActionReading, ResNameListenerCertificate, d.Id())
 		d.SetId("")
 		return nil
@@ -184,6 +184,12 @@ func findListenerCertificate(ctx context.Context, conn *elbv2.ELBV2, certificate
 	}
 
 	resp, err := conn.DescribeListenerCertificatesWithContext(ctx, params)
+	if tfawserr.ErrCodeEquals(err, elbv2.ErrCodeListenerNotFoundException) {
+		return &retry.NotFoundError{
+			LastRequest: params,
+			LastError:   err,
+		}
+	}
 	if err != nil {
 		return err
 	}
