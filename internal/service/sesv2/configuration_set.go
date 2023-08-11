@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package sesv2
 
 import (
@@ -181,11 +184,11 @@ const (
 )
 
 func resourceConfigurationSetCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).SESV2Client()
+	conn := meta.(*conns.AWSClient).SESV2Client(ctx)
 
 	in := &sesv2.CreateConfigurationSetInput{
 		ConfigurationSetName: aws.String(d.Get("configuration_set_name").(string)),
-		Tags:                 GetTagsIn(ctx),
+		Tags:                 getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("delivery_options"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
@@ -227,7 +230,7 @@ func resourceConfigurationSetCreate(ctx context.Context, d *schema.ResourceData,
 }
 
 func resourceConfigurationSetRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).SESV2Client()
+	conn := meta.(*conns.AWSClient).SESV2Client(ctx)
 
 	out, err := FindConfigurationSetByID(ctx, conn, d.Id())
 
@@ -241,15 +244,7 @@ func resourceConfigurationSetRead(ctx context.Context, d *schema.ResourceData, m
 		return create.DiagError(names.SESV2, create.ErrActionReading, ResNameConfigurationSet, d.Id(), err)
 	}
 
-	arn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition,
-		Service:   "ses",
-		Region:    meta.(*conns.AWSClient).Region,
-		AccountID: meta.(*conns.AWSClient).AccountID,
-		Resource:  fmt.Sprintf("configuration-set/%s", d.Id()),
-	}.String()
-
-	d.Set("arn", arn)
+	d.Set("arn", configurationSetNameToARN(meta, aws.ToString(out.ConfigurationSetName)))
 	d.Set("configuration_set_name", out.ConfigurationSetName)
 
 	if out.DeliveryOptions != nil {
@@ -304,7 +299,7 @@ func resourceConfigurationSetRead(ctx context.Context, d *schema.ResourceData, m
 }
 
 func resourceConfigurationSetUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).SESV2Client()
+	conn := meta.(*conns.AWSClient).SESV2Client(ctx)
 
 	if d.HasChanges("delivery_options") {
 		in := &sesv2.PutConfigurationSetDeliveryOptionsInput{
@@ -430,7 +425,7 @@ func resourceConfigurationSetUpdate(ctx context.Context, d *schema.ResourceData,
 }
 
 func resourceConfigurationSetDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).SESV2Client()
+	conn := meta.(*conns.AWSClient).SESV2Client(ctx)
 
 	log.Printf("[INFO] Deleting SESV2 ConfigurationSet %s", d.Id())
 
@@ -728,4 +723,14 @@ func expandGuardianOptions(tfMap map[string]interface{}) *types.GuardianOptions 
 	}
 
 	return a
+}
+
+func configurationSetNameToARN(meta interface{}, configurationSetName string) string {
+	return arn.ARN{
+		Partition: meta.(*conns.AWSClient).Partition,
+		Service:   "ses",
+		Region:    meta.(*conns.AWSClient).Region,
+		AccountID: meta.(*conns.AWSClient).AccountID,
+		Resource:  fmt.Sprintf("configuration-set/%s", configurationSetName),
+	}.String()
 }

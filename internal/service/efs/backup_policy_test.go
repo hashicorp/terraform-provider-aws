@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package efs_test
 
 import (
@@ -7,9 +10,9 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/efs"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfefs "github.com/hashicorp/terraform-provider-aws/internal/service/efs"
@@ -126,7 +129,7 @@ func testAccCheckBackupPolicyExists(ctx context.Context, name string, v *efs.Bac
 			return fmt.Errorf("no ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EFSConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EFSConn(ctx)
 
 		output, err := tfefs.FindBackupPolicyByID(ctx, conn, rs.Primary.ID)
 
@@ -142,7 +145,7 @@ func testAccCheckBackupPolicyExists(ctx context.Context, name string, v *efs.Bac
 
 func testAccCheckBackupPolicyDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EFSConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EFSConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_efs_backup_policy" {

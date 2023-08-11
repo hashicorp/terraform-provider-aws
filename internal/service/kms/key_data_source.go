@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package kms
 
 import (
@@ -26,11 +29,19 @@ func DataSourceKey() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"cloud_hsm_cluster_id": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"creation_date": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
 			"customer_master_key_spec": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"custom_key_store_id": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -61,6 +72,10 @@ func DataSourceKey() *schema.Resource {
 				ValidateFunc: ValidateKeyOrAlias,
 			},
 			"key_manager": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"key_spec": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -124,9 +139,25 @@ func DataSourceKey() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"pending_deletion_window_in_days": {
+				Type:     schema.TypeInt,
+				Computed: true,
+			},
 			"valid_to": {
 				Type:     schema.TypeString,
 				Computed: true,
+			},
+			"xks_key_configuration": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"id": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+					},
+				},
 			},
 		},
 	}
@@ -134,7 +165,7 @@ func DataSourceKey() *schema.Resource {
 
 func dataSourceKeyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).KMSConn()
+	conn := meta.(*conns.AWSClient).KMSConn(ctx)
 
 	keyID := d.Get("key_id").(string)
 	input := &kms.DescribeKeyInput{
@@ -155,8 +186,10 @@ func dataSourceKeyRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	d.SetId(aws.StringValue(keyMetadata.KeyId))
 	d.Set("arn", keyMetadata.Arn)
 	d.Set("aws_account_id", keyMetadata.AWSAccountId)
+	d.Set("cloud_hsm_cluster_id", keyMetadata.CloudHsmClusterId)
 	d.Set("creation_date", aws.TimeValue(keyMetadata.CreationDate).Format(time.RFC3339))
 	d.Set("customer_master_key_spec", keyMetadata.CustomerMasterKeySpec)
+	d.Set("custom_key_store_id", keyMetadata.CustomKeyStoreId)
 	if keyMetadata.DeletionDate != nil {
 		d.Set("deletion_date", aws.TimeValue(keyMetadata.DeletionDate).Format(time.RFC3339))
 	}
@@ -164,6 +197,7 @@ func dataSourceKeyRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	d.Set("enabled", keyMetadata.Enabled)
 	d.Set("expiration_model", keyMetadata.ExpirationModel)
 	d.Set("key_manager", keyMetadata.KeyManager)
+	d.Set("key_spec", keyMetadata.KeySpec)
 	d.Set("key_state", keyMetadata.KeyState)
 	d.Set("key_usage", keyMetadata.KeyUsage)
 	d.Set("multi_region", keyMetadata.MultiRegion)
@@ -175,8 +209,16 @@ func dataSourceKeyRead(ctx context.Context, d *schema.ResourceData, meta interfa
 		d.Set("multi_region_configuration", nil)
 	}
 	d.Set("origin", keyMetadata.Origin)
+	d.Set("pending_deletion_window_in_days", keyMetadata.PendingDeletionWindowInDays)
 	if keyMetadata.ValidTo != nil {
 		d.Set("valid_to", aws.TimeValue(keyMetadata.ValidTo).Format(time.RFC3339))
+	}
+	if keyMetadata.XksKeyConfiguration != nil {
+		if err := d.Set("xks_key_configuration", []interface{}{flattenXksKeyConfigurationType(keyMetadata.XksKeyConfiguration)}); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting xks_key_configuration: %s", err)
+		}
+	} else {
+		d.Set("xks_key_configuration", nil)
 	}
 
 	return diags
@@ -238,4 +280,18 @@ func flattenMultiRegionKeys(apiObjects []*kms.MultiRegionKey) []interface{} {
 	}
 
 	return tfList
+}
+
+func flattenXksKeyConfigurationType(apiObject *kms.XksKeyConfigurationType) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.Id; v != nil {
+		tfMap["id"] = aws.StringValue(v)
+	}
+
+	return tfMap
 }

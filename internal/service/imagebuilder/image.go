@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package imagebuilder
 
 import (
@@ -141,6 +144,23 @@ func ResourceImage() *schema.Resource {
 								},
 							},
 						},
+						"containers": {
+							Type:     schema.TypeSet,
+							Computed: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"image_uris": {
+										Type:     schema.TypeSet,
+										Computed: true,
+										Elem:     &schema.Schema{Type: schema.TypeString},
+									},
+									"region": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+								},
+							},
+						},
 					},
 				},
 			},
@@ -162,12 +182,12 @@ func ResourceImage() *schema.Resource {
 
 func resourceImageCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ImageBuilderConn()
+	conn := meta.(*conns.AWSClient).ImageBuilderConn(ctx)
 
 	input := &imagebuilder.CreateImageInput{
 		ClientToken:                  aws.String(id.UniqueId()),
 		EnhancedImageMetadataEnabled: aws.Bool(d.Get("enhanced_image_metadata_enabled").(bool)),
-		Tags:                         GetTagsIn(ctx),
+		Tags:                         getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("container_recipe_arn"); ok {
@@ -211,7 +231,7 @@ func resourceImageCreate(ctx context.Context, d *schema.ResourceData, meta inter
 
 func resourceImageRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ImageBuilderConn()
+	conn := meta.(*conns.AWSClient).ImageBuilderConn(ctx)
 
 	input := &imagebuilder.GetImageInput{
 		ImageBuildVersionArn: aws.String(d.Id()),
@@ -272,7 +292,7 @@ func resourceImageRead(ctx context.Context, d *schema.ResourceData, meta interfa
 		d.Set("output_resources", nil)
 	}
 
-	SetTagsOut(ctx, image.Tags)
+	setTagsOut(ctx, image.Tags)
 
 	d.Set("version", image.Version)
 
@@ -289,7 +309,7 @@ func resourceImageUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 
 func resourceImageDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ImageBuilderConn()
+	conn := meta.(*conns.AWSClient).ImageBuilderConn(ctx)
 
 	input := &imagebuilder.DeleteImageInput{
 		ImageBuildVersionArn: aws.String(d.Id()),
@@ -317,6 +337,10 @@ func flattenOutputResources(apiObject *imagebuilder.OutputResources) map[string]
 
 	if v := apiObject.Amis; v != nil {
 		tfMap["amis"] = flattenAMIs(v)
+	}
+
+	if v := apiObject.Containers; v != nil {
+		tfMap["containers"] = flattenContainers(v)
 	}
 
 	return tfMap
@@ -365,6 +389,42 @@ func flattenAMIs(apiObjects []*imagebuilder.Ami) []interface{} {
 		}
 
 		tfList = append(tfList, flattenAMI(apiObject))
+	}
+
+	return tfList
+}
+
+func flattenContainer(apiObject *imagebuilder.Container) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.ImageUris; v != nil {
+		tfMap["image_uris"] = aws.StringValueSlice(v)
+	}
+
+	if v := apiObject.Region; v != nil {
+		tfMap["region"] = aws.StringValue(v)
+	}
+
+	return tfMap
+}
+
+func flattenContainers(apiObjects []*imagebuilder.Container) []interface{} {
+	if len(apiObjects) == 0 {
+		return nil
+	}
+
+	var tfList []interface{}
+
+	for _, apiObject := range apiObjects {
+		if apiObject == nil {
+			continue
+		}
+
+		tfList = append(tfList, flattenContainer(apiObject))
 	}
 
 	return tfList

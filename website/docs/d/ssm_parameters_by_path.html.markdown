@@ -25,7 +25,7 @@ data "aws_ssm_parameters_by_path" "foo" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This data source supports the following arguments:
 
 * `path` - (Required) Prefix path of the parameter.
 * `with_decryption` - (Optional) Whether to return decrypted `SecureString` value. Defaults to `true`.

@@ -1,0 +1,59 @@
+rules:
+  # To fix:
+  #   find internal/service/*/*.go -print | xargs ruby -p -i -e 'gsub(/diag.FromErr\(fmt.Errorf\((.*)\)\)/, "diag.Errorf(\\1)")'
+  # then
+  #   find internal/service/*/*.go -print | xargs ruby -p -i -e 'gsub(/diag.Errorf\((.*)%w(.*)\)/, "diag.Errorf(\\1%s\\2)")'
+  # and maybe
+  #   goimports -w ./internal/service
+  - id: no-diag.FromErr-fmt.Errorf
+    languages: [go]
+    message: Use diag.Errorf(...) instead of diag.FromErr(fmt.Errorf(...))
+    paths:
+      include:
+        - internal/
+    patterns:
+      - pattern-regex: diag.FromErr\(fmt.Errorf\(
+    severity: ERROR
+
+  # To fix:
+  #   find internal/service/*/*.go -print | xargs ruby -p -i -e 'gsub(/diag.Errorf\((")error (.*)\)/, "diag.Errorf(\\1\\2)")'
+  #   find internal/service/*/*.go -print | xargs ruby -p -i -e 'gsub(/diag.Errorf\((")Error (.*)\)/, "diag.Errorf(\\1\\2)")'
+  - id: no-diag.Errorf-leading-error
+    languages: [go]
+    message: Remove leading 'error ' from diag.Errorf("error ...")
+    paths:
+      include:
+        - internal/
+    patterns:
+      - pattern-regex: 'diag.Errorf\("\s*[Ee]rror '
+    severity: ERROR
+
+  # To fix:
+  #   find internal/service/*/*.go -print | xargs ruby -p -i -e 'gsub(/AppendErrorf\(diags, (")Error (.*)\)/, "AppendErrorf(diags, \\1\\2)")'
+  #   find internal/service/*/*.go -print | xargs ruby -p -i -e 'gsub(/AppendErrorf\(diags, (")error (.*)\)/, "AppendErrorf(diags, \\1\\2)")'
+  - id: no-AppendErrorf-leading-error
+    languages: [go]
+    message: Remove leading 'Error ' from AppendErrorf(diags, "Error ...")
+    paths:
+      include:
+        - internal/
+    patterns:
+      - pattern-regex: 'AppendErrorf\(diags, "\s*[Ee]rror '
+    severity: ERROR
+
+  # To fix:
+  #   find internal -name '*.go' ! -name 'sweep.go' ! -name '*_test.go' -print | xargs ruby -p -i -e 'gsub(/fmt.Errorf\((")error (.*)\)/, "fmt.Errorf(\\1\\2)")'
+  #   find internal -name '*.go' ! -name 'sweep.go' ! -name '*_test.go' -print | xargs ruby -p -i -e 'gsub(/fmt.Errorf\((")Error (.*)\)/, "fmt.Errorf(\\1\\2)")'
+  - id: no-fmt.Errorf-leading-error
+    languages: [go]
+    message: Remove leading 'error ' from fmt.Errorf("error ...")
+    paths:
+      include:
+        - internal/
+      exclude:
+        - "internal/service/**/*_test.go"
+        - "internal/service/**/sweep.go"
+        - "internal/acctest/acctest.go"
+    patterns:
+      - pattern-regex: 'fmt.Errorf\("\s*[Ee]rror '
+    severity: ERROR

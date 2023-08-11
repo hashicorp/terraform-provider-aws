@@ -20,7 +20,7 @@ data "aws_outposts_outpost" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This data source supports the following arguments:
 
 * `id` - (Optional) Identifier of the Outpost.
 * `name` - (Optional) Name of the Outpost.
@@ -29,9 +29,13 @@ The following arguments are supported:
 
 ## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This data source exports the following attributes in addition to the arguments above:
 
 * `availability_zone` - Availability Zone name.
 * `availability_zone_id` - Availability Zone identifier.
-* `description` - Description.
-* `site_id` - Site identifier.
+* `description` - The description of the Outpost.
+* `lifecycle_status` - The life cycle status.
+* `site_arn` - The Amazon Resource Name (ARN) of the site.
+* `site_id` - The ID of the site.
+* `supported_hardware_type` - The hardware type.
+* `tags` - The Outpost tags.

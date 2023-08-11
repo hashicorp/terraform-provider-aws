@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package dataexchange
 
 import (
@@ -59,18 +62,18 @@ func ResourceDataSet() *schema.Resource {
 
 func resourceDataSetCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DataExchangeConn()
+	conn := meta.(*conns.AWSClient).DataExchangeConn(ctx)
 
 	input := &dataexchange.CreateDataSetInput{
 		Name:        aws.String(d.Get("name").(string)),
 		AssetType:   aws.String(d.Get("asset_type").(string)),
 		Description: aws.String(d.Get("description").(string)),
-		Tags:        GetTagsIn(ctx),
+		Tags:        getTagsIn(ctx),
 	}
 
 	out, err := conn.CreateDataSetWithContext(ctx, input)
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "Error creating DataExchange DataSet: %s", err)
+		return sdkdiag.AppendErrorf(diags, "creating DataExchange DataSet: %s", err)
 	}
 
 	d.SetId(aws.StringValue(out.Id))
@@ -80,7 +83,7 @@ func resourceDataSetCreate(ctx context.Context, d *schema.ResourceData, meta int
 
 func resourceDataSetRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DataExchangeConn()
+	conn := meta.(*conns.AWSClient).DataExchangeConn(ctx)
 
 	dataSet, err := FindDataSetById(ctx, conn, d.Id())
 
@@ -99,14 +102,14 @@ func resourceDataSetRead(ctx context.Context, d *schema.ResourceData, meta inter
 	d.Set("description", dataSet.Description)
 	d.Set("arn", dataSet.Arn)
 
-	SetTagsOut(ctx, dataSet.Tags)
+	setTagsOut(ctx, dataSet.Tags)
 
 	return diags
 }
 
 func resourceDataSetUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DataExchangeConn()
+	conn := meta.(*conns.AWSClient).DataExchangeConn(ctx)
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		input := &dataexchange.UpdateDataSetInput{
@@ -124,7 +127,7 @@ func resourceDataSetUpdate(ctx context.Context, d *schema.ResourceData, meta int
 		log.Printf("[DEBUG] Updating DataExchange DataSet: %s", d.Id())
 		_, err := conn.UpdateDataSetWithContext(ctx, input)
 		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "Error Updating DataExchange DataSet: %s", err)
+			return sdkdiag.AppendErrorf(diags, "updating DataExchange DataSet (%s): %s", d.Id(), err)
 		}
 	}
 
@@ -133,7 +136,7 @@ func resourceDataSetUpdate(ctx context.Context, d *schema.ResourceData, meta int
 
 func resourceDataSetDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DataExchangeConn()
+	conn := meta.(*conns.AWSClient).DataExchangeConn(ctx)
 
 	input := &dataexchange.DeleteDataSetInput{
 		DataSetId: aws.String(d.Id()),
@@ -145,7 +148,7 @@ func resourceDataSetDelete(ctx context.Context, d *schema.ResourceData, meta int
 		if tfawserr.ErrCodeEquals(err, dataexchange.ErrCodeResourceNotFoundException) {
 			return diags
 		}
-		return sdkdiag.AppendErrorf(diags, "Error deleting DataExchange DataSet: %s", err)
+		return sdkdiag.AppendErrorf(diags, "deleting DataExchange DataSet: %s", err)
 	}
 
 	return diags

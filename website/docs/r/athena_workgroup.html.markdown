@@ -34,7 +34,7 @@ resource "aws_athena_workgroup" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `name` - (Required) Name of the workgroup.
 * `configuration` - (Optional) Configuration block with various settings for the workgroup. Documented below.
@@ -73,9 +73,9 @@ The following arguments are supported:
 * `encryption_option` - (Required) Whether Amazon S3 server-side encryption with Amazon S3-managed keys (`SSE_S3`), server-side encryption with KMS-managed keys (`SSE_KMS`), or client-side encryption with KMS-managed keys (`CSE_KMS`) is used. If a query runs in a workgroup and the workgroup overrides client-side settings, then the workgroup's setting for encryption is used. It specifies whether query results must be encrypted, for all queries that run in this workgroup.
 * `kms_key_arn` - (Optional) For `SSE_KMS` and `CSE_KMS`, this is the KMS key ARN.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the workgroup
 * `configuration` - Configuration block with various settings for the workgroup
@@ -86,8 +86,17 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Athena Workgroups can be imported using their name, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Athena Workgroups using their name. For example:
 
+```terraform
+import {
+  to = aws_athena_workgroup.example
+  id = "example"
+}
 ```
-$ terraform import aws_athena_workgroup.example example
+
+Using `terraform import`, import Athena Workgroups using their name. For example:
+
+```console
+% terraform import aws_athena_workgroup.example example
 ```

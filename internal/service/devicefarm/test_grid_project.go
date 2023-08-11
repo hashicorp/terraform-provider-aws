@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package devicefarm
 
 import (
@@ -80,7 +83,7 @@ func ResourceTestGridProject() *schema.Resource {
 
 func resourceTestGridProjectCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DeviceFarmConn()
+	conn := meta.(*conns.AWSClient).DeviceFarmConn(ctx)
 
 	name := d.Get("name").(string)
 	input := &devicefarm.CreateTestGridProjectInput{
@@ -95,20 +98,16 @@ func resourceTestGridProjectCreate(ctx context.Context, d *schema.ResourceData, 
 		input.VpcConfig = expandTestGridProjectVPCConfig(v.([]interface{}))
 	}
 
-	log.Printf("[DEBUG] Creating DeviceFarm Test Grid Project: %s", name)
-	out, err := conn.CreateTestGridProjectWithContext(ctx, input)
+	output, err := conn.CreateTestGridProjectWithContext(ctx, input)
+
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "Error creating DeviceFarm Test Grid Project: %s", err)
+		return sdkdiag.AppendErrorf(diags, "creating DeviceFarm Test Grid Project (%s): %s", name, err)
 	}
 
-	arn := aws.StringValue(out.TestGridProject.Arn)
-	log.Printf("[DEBUG] Successsfully Created DeviceFarm Test Grid Project: %s", arn)
-	d.SetId(arn)
+	d.SetId(aws.StringValue(output.TestGridProject.Arn))
 
-	if tags := KeyValueTags(ctx, GetTagsIn(ctx)); len(tags) > 0 {
-		if err := UpdateTags(ctx, conn, arn, nil, tags); err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating DeviceFarm Test Grid Project (%s) tags: %s", arn, err)
-		}
+	if err := createTags(ctx, conn, d.Id(), getTagsIn(ctx)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting DeviceFarm Test Grid Project (%s) tags: %s", d.Id(), err)
 	}
 
 	return append(diags, resourceTestGridProjectRead(ctx, d, meta)...)
@@ -116,7 +115,7 @@ func resourceTestGridProjectCreate(ctx context.Context, d *schema.ResourceData, 
 
 func resourceTestGridProjectRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DeviceFarmConn()
+	conn := meta.(*conns.AWSClient).DeviceFarmConn(ctx)
 
 	project, err := FindTestGridProjectByARN(ctx, conn, d.Id())
 
@@ -143,7 +142,7 @@ func resourceTestGridProjectRead(ctx context.Context, d *schema.ResourceData, me
 
 func resourceTestGridProjectUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DeviceFarmConn()
+	conn := meta.(*conns.AWSClient).DeviceFarmConn(ctx)
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		input := &devicefarm.UpdateTestGridProjectInput{
@@ -158,10 +157,10 @@ func resourceTestGridProjectUpdate(ctx context.Context, d *schema.ResourceData, 
 			input.Description = aws.String(d.Get("description").(string))
 		}
 
-		log.Printf("[DEBUG] Updating DeviceFarm Test Grid Project: %s", d.Id())
 		_, err := conn.UpdateTestGridProjectWithContext(ctx, input)
+
 		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "Error Updating DeviceFarm Test Grid Project: %s", err)
+			return sdkdiag.AppendErrorf(diags, "updating DeviceFarm Test Grid Project (%s): %s", d.Id(), err)
 		}
 	}
 
@@ -170,19 +169,19 @@ func resourceTestGridProjectUpdate(ctx context.Context, d *schema.ResourceData, 
 
 func resourceTestGridProjectDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DeviceFarmConn()
-
-	input := &devicefarm.DeleteTestGridProjectInput{
-		ProjectArn: aws.String(d.Id()),
-	}
+	conn := meta.(*conns.AWSClient).DeviceFarmConn(ctx)
 
 	log.Printf("[DEBUG] Deleting DeviceFarm Test Grid Project: %s", d.Id())
-	_, err := conn.DeleteTestGridProjectWithContext(ctx, input)
+	_, err := conn.DeleteTestGridProjectWithContext(ctx, &devicefarm.DeleteTestGridProjectInput{
+		ProjectArn: aws.String(d.Id()),
+	})
+
+	if tfawserr.ErrCodeEquals(err, devicefarm.ErrCodeNotFoundException) {
+		return diags
+	}
+
 	if err != nil {
-		if tfawserr.ErrCodeEquals(err, devicefarm.ErrCodeNotFoundException) {
-			return diags
-		}
-		return sdkdiag.AppendErrorf(diags, "Error deleting DeviceFarm Test Grid Project: %s", err)
+		return sdkdiag.AppendErrorf(diags, "deleting DeviceFarm Test Grid Project (%s): %s", d.Id(), err)
 	}
 
 	return diags

@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package redshift_test
 
 import (
@@ -5,8 +8,8 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/redshift"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
@@ -30,6 +33,7 @@ func TestAccRedshiftClusterDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(dataSourceName, "automated_snapshot_retention_period"),
 					resource.TestCheckResourceAttrSet(dataSourceName, "availability_zone"),
 					resource.TestCheckResourceAttrSet(dataSourceName, "cluster_identifier"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "cluster_namespace_arn", resourceName, "cluster_namespace_arn"),
 					resource.TestCheckResourceAttrSet(dataSourceName, "cluster_parameter_group_name"),
 					resource.TestCheckResourceAttrSet(dataSourceName, "cluster_public_key"),
 					resource.TestCheckResourceAttrSet(dataSourceName, "cluster_revision_number"),
@@ -180,8 +184,6 @@ data "aws_redshift_cluster" "test" {
 
 func testAccClusterDataSourceConfig_logging(rName string) string {
 	return fmt.Sprintf(`
-data "aws_redshift_service_account" "test" {}
-
 resource "aws_s3_bucket" "test" {
   bucket        = %[1]q
   force_destroy = true
@@ -193,8 +195,8 @@ data "aws_iam_policy_document" "test" {
     resources = ["${aws_s3_bucket.test.arn}/*"]
 
     principals {
-      identifiers = [data.aws_redshift_service_account.test.arn]
-      type        = "AWS"
+      type        = "Service"
+      identifiers = ["redshift.amazonaws.com"]
     }
   }
 
@@ -203,8 +205,8 @@ data "aws_iam_policy_document" "test" {
     resources = [aws_s3_bucket.test.arn]
 
     principals {
-      identifiers = [data.aws_redshift_service_account.test.arn]
-      type        = "AWS"
+      type        = "Service"
+      identifiers = ["redshift.amazonaws.com"]
     }
   }
 }

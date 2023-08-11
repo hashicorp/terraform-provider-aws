@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package dynamodb
 
 import (
@@ -45,9 +48,11 @@ func ResourceTableItem() *schema.Resource {
 				Optional: true,
 			},
 			"item": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: validateTableItem,
+				Type:                  schema.TypeString,
+				Required:              true,
+				ValidateFunc:          validateTableItem,
+				DiffSuppressFunc:      verify.SuppressEquivalentJSONDiffs,
+				DiffSuppressOnRefresh: true,
 			},
 		},
 	}
@@ -63,7 +68,7 @@ func validateTableItem(v interface{}, k string) (ws []string, errors []error) {
 
 func resourceTableItemCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DynamoDBConn()
+	conn := meta.(*conns.AWSClient).DynamoDBConn(ctx)
 
 	tableName := d.Get("table_name").(string)
 	hashKey := d.Get("hash_key").(string)
@@ -97,7 +102,7 @@ func resourceTableItemCreate(ctx context.Context, d *schema.ResourceData, meta i
 func resourceTableItemUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	log.Printf("[DEBUG] Updating DynamoDB table %s", d.Id())
-	conn := meta.(*conns.AWSClient).DynamoDBConn()
+	conn := meta.(*conns.AWSClient).DynamoDBConn(ctx)
 
 	if d.HasChange("item") {
 		tableName := d.Get("table_name").(string)
@@ -110,7 +115,7 @@ func resourceTableItemUpdate(ctx context.Context, d *schema.ResourceData, meta i
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating DynamoDB Table Item (%s): %s", d.Id(), err)
 		}
-		newQueryKey := BuildTableItemqueryKey(attributes, hashKey, rangeKey)
+		newQueryKey := BuildTableItemQueryKey(attributes, hashKey, rangeKey)
 
 		updates := map[string]*dynamodb.AttributeValueUpdate{}
 		for key, value := range attributes {
@@ -152,7 +157,7 @@ func resourceTableItemUpdate(ctx context.Context, d *schema.ResourceData, meta i
 
 		// New record is created via UpdateItem in case we're changing hash key
 		// so we need to get rid of the old one
-		oldQueryKey := BuildTableItemqueryKey(oldAttributes, hashKey, rangeKey)
+		oldQueryKey := BuildTableItemQueryKey(oldAttributes, hashKey, rangeKey)
 		if !reflect.DeepEqual(oldQueryKey, newQueryKey) {
 			log.Printf("[DEBUG] Deleting old record: %#v", oldQueryKey)
 			_, err := conn.DeleteItemWithContext(ctx, &dynamodb.DeleteItemInput{
@@ -173,7 +178,7 @@ func resourceTableItemUpdate(ctx context.Context, d *schema.ResourceData, meta i
 
 func resourceTableItemRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DynamoDBConn()
+	conn := meta.(*conns.AWSClient).DynamoDBConn(ctx)
 
 	log.Printf("[DEBUG] Loading data for DynamoDB table item '%s'", d.Id())
 
@@ -185,7 +190,7 @@ func resourceTableItemRead(ctx context.Context, d *schema.ResourceData, meta int
 		return sdkdiag.AppendErrorf(diags, "reading DynamoDB Table Item (%s): %s", d.Id(), err)
 	}
 
-	key := BuildTableItemqueryKey(attributes, hashKey, rangeKey)
+	key := BuildTableItemQueryKey(attributes, hashKey, rangeKey)
 	result, err := FindTableItem(ctx, conn, tableName, key)
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
@@ -214,7 +219,7 @@ func resourceTableItemRead(ctx context.Context, d *schema.ResourceData, meta int
 
 func resourceTableItemDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DynamoDBConn()
+	conn := meta.(*conns.AWSClient).DynamoDBConn(ctx)
 
 	attributes, err := ExpandTableItemAttributes(d.Get("item").(string))
 	if err != nil {
@@ -222,7 +227,7 @@ func resourceTableItemDelete(ctx context.Context, d *schema.ResourceData, meta i
 	}
 	hashKey := d.Get("hash_key").(string)
 	rangeKey := d.Get("range_key").(string)
-	queryKey := BuildTableItemqueryKey(attributes, hashKey, rangeKey)
+	queryKey := BuildTableItemQueryKey(attributes, hashKey, rangeKey)
 
 	_, err = conn.DeleteItemWithContext(ctx, &dynamodb.DeleteItemInput{
 		Key:       queryKey,
@@ -310,7 +315,7 @@ func buildTableItemID(tableName string, hashKey string, rangeKey string, attrs m
 	return strings.Join(id, "|")
 }
 
-func BuildTableItemqueryKey(attrs map[string]*dynamodb.AttributeValue, hashKey string, rangeKey string) map[string]*dynamodb.AttributeValue {
+func BuildTableItemQueryKey(attrs map[string]*dynamodb.AttributeValue, hashKey string, rangeKey string) map[string]*dynamodb.AttributeValue {
 	queryKey := map[string]*dynamodb.AttributeValue{
 		hashKey: attrs[hashKey],
 	}

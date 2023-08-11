@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package emr
 
 import (
@@ -460,6 +463,29 @@ func ResourceCluster() *schema.Resource {
 				ForceNew: true,
 				Required: true,
 			},
+			"placement_group_config": {
+				Type:       schema.TypeList,
+				ForceNew:   true,
+				Optional:   true,
+				ConfigMode: schema.SchemaConfigModeAttr,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"instance_role": {
+							Type:         schema.TypeString,
+							ForceNew:     true,
+							Required:     true,
+							ValidateFunc: validation.StringInSlice(emr.InstanceRoleType_Values(), false),
+						},
+						"placement_strategy": {
+							Type:         schema.TypeString,
+							ForceNew:     true,
+							Optional:     true,
+							Computed:     true,
+							ValidateFunc: validation.StringInSlice(emr.PlacementGroupStrategy_Values(), false),
+						},
+					},
+				},
+			},
 			"release_label": {
 				Type:     schema.TypeString,
 				ForceNew: true,
@@ -598,7 +624,7 @@ func instanceFleetConfigSchema() *schema.Resource {
 										Type:     schema.TypeMap,
 										Optional: true,
 										ForceNew: true,
-										Elem:     schema.TypeString,
+										Elem:     &schema.Schema{Type: schema.TypeString},
 									},
 								},
 							},
@@ -741,7 +767,7 @@ func instanceFleetConfigSchema() *schema.Resource {
 
 func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EMRConn()
+	conn := meta.(*conns.AWSClient).EMRConn(ctx)
 
 	applications := d.Get("applications").(*schema.Set).List()
 	keepJobFlowAliveWhenNoSteps := true
@@ -882,7 +908,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 		ReleaseLabel:      aws.String(d.Get("release_label").(string)),
 		ServiceRole:       aws.String(d.Get("service_role").(string)),
 		VisibleToAllUsers: aws.Bool(d.Get("visible_to_all_users").(bool)),
-		Tags:              GetTagsIn(ctx),
+		Tags:              getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("additional_info"); ok {
@@ -962,6 +988,11 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 		params.AutoTerminationPolicy = expandAutoTerminationPolicy(v.([]interface{}))
 	}
 
+	if v, ok := d.GetOk("placement_group_config"); ok {
+		placementGroupConfigs := v.([]interface{})
+		params.PlacementGroupConfigs = expandPlacementGroupConfigs(placementGroupConfigs)
+	}
+
 	var resp *emr.RunJobFlowOutput
 	err := retry.RetryContext(ctx, propagationTimeout, func() *retry.RetryError {
 		var err error
@@ -1015,7 +1046,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 
 func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EMRConn()
+	conn := meta.(*conns.AWSClient).EMRConn(ctx)
 
 	cluster, err := FindClusterByID(ctx, conn, d.Id())
 
@@ -1070,7 +1101,7 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta inter
 		}
 	}
 
-	SetTagsOut(ctx, cluster.Tags)
+	setTagsOut(ctx, cluster.Tags)
 
 	d.Set("name", cluster.Name)
 
@@ -1176,12 +1207,16 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta inter
 		return sdkdiag.AppendErrorf(diags, "setting auto_termination_policy: %s", err)
 	}
 
+	if err := d.Set("placement_group_config", flattenPlacementGroupConfigs(cluster.PlacementGroups)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting placement_group_config: %s", err)
+	}
+
 	return diags
 }
 
 func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EMRConn()
+	conn := meta.(*conns.AWSClient).EMRConn(ctx)
 
 	if d.HasChange("visible_to_all_users") {
 		_, err := conn.SetVisibleToAllUsersWithContext(ctx, &emr.SetVisibleToAllUsersInput{
@@ -1381,7 +1416,7 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 
 func resourceClusterDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EMRConn()
+	conn := meta.(*conns.AWSClient).EMRConn(ctx)
 
 	log.Printf("[DEBUG] Deleting EMR Cluster: %s", d.Id())
 	_, err := conn.TerminateJobFlowsWithContext(ctx, &emr.TerminateJobFlowsInput{
@@ -1705,7 +1740,7 @@ func expandBootstrapActions(bootstrapActions []interface{}) []*emr.BootstrapActi
 			Name: aws.String(actionName),
 			ScriptBootstrapAction: &emr.ScriptBootstrapActionConfig{
 				Path: aws.String(actionPath),
-				Args: flex.ExpandStringList(actionArgs),
+				Args: flex.ExpandStringListEmpty(actionArgs),
 			},
 		}
 		actionsOut = append(actionsOut, action)
@@ -2262,4 +2297,44 @@ func flattenAutoTerminationPolicy(atp *emr.AutoTerminationPolicy) []map[string]i
 	result = append(result, attrs)
 
 	return result
+}
+
+func expandPlacementGroupConfigs(placementGroupConfigs []interface{}) []*emr.PlacementGroupConfig {
+	placementGroupConfigsOut := []*emr.PlacementGroupConfig{}
+
+	for _, raw := range placementGroupConfigs {
+		placementGroupAttributes := raw.(map[string]interface{})
+		instanceRole := placementGroupAttributes["instance_role"].(string)
+
+		placementGroupConfig := &emr.PlacementGroupConfig{
+			InstanceRole: aws.String(instanceRole),
+		}
+		if v, ok := placementGroupAttributes["placement_strategy"]; ok && v.(string) != "" {
+			placementGroupConfig.PlacementStrategy = aws.String(v.(string))
+		}
+		placementGroupConfigsOut = append(placementGroupConfigsOut, placementGroupConfig)
+	}
+
+	return placementGroupConfigsOut
+}
+
+func flattenPlacementGroupConfigs(placementGroupSpecifications []*emr.PlacementGroupConfig) []interface{} {
+	if placementGroupSpecifications == nil {
+		return []interface{}{}
+	}
+
+	placementGroupConfigs := make([]interface{}, 0)
+
+	for _, pgc := range placementGroupSpecifications {
+		placementGroupConfig := make(map[string]interface{})
+
+		placementGroupConfig["instance_role"] = aws.StringValue(pgc.InstanceRole)
+
+		if pgc.PlacementStrategy != nil {
+			placementGroupConfig["placement_strategy"] = aws.StringValue(pgc.PlacementStrategy)
+		}
+		placementGroupConfigs = append(placementGroupConfigs, placementGroupConfig)
+	}
+
+	return placementGroupConfigs
 }

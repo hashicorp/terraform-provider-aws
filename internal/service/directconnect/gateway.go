@@ -1,9 +1,11 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package directconnect
 
 import (
 	"context"
 	"log"
-	"regexp"
 	"strconv"
 	"time"
 
@@ -12,7 +14,6 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -39,9 +40,8 @@ func ResourceGateway() *schema.Resource {
 				ValidateFunc: verify.ValidAmazonSideASN,
 			},
 			"name": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: validation.StringMatch(regexp.MustCompile(`^[a-z0-9-]{1,100}$`), "Name must contain no more than 100 characters. Valid characters are a-z, 0-9, and hyphens (–)."),
+				Type:     schema.TypeString,
+				Required: true,
 			},
 			"owner_account_id": {
 				Type:     schema.TypeString,
@@ -58,7 +58,7 @@ func ResourceGateway() *schema.Resource {
 
 func resourceGatewayCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DirectConnectConn()
+	conn := meta.(*conns.AWSClient).DirectConnectConn(ctx)
 
 	name := d.Get("name").(string)
 	input := &directconnect.CreateDirectConnectGatewayInput{
@@ -87,7 +87,7 @@ func resourceGatewayCreate(ctx context.Context, d *schema.ResourceData, meta int
 
 func resourceGatewayRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DirectConnectConn()
+	conn := meta.(*conns.AWSClient).DirectConnectConn(ctx)
 
 	output, err := FindGatewayByID(ctx, conn, d.Id())
 
@@ -110,7 +110,7 @@ func resourceGatewayRead(ctx context.Context, d *schema.ResourceData, meta inter
 
 func resourceGatewayUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DirectConnectConn()
+	conn := meta.(*conns.AWSClient).DirectConnectConn(ctx)
 
 	if d.HasChange("name") {
 		input := &directconnect.UpdateDirectConnectGatewayInput{
@@ -130,7 +130,7 @@ func resourceGatewayUpdate(ctx context.Context, d *schema.ResourceData, meta int
 
 func resourceGatewayDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DirectConnectConn()
+	conn := meta.(*conns.AWSClient).DirectConnectConn(ctx)
 
 	log.Printf("[DEBUG] Deleting Direct Connect Gateway: %s", d.Id())
 	_, err := conn.DeleteDirectConnectGatewayWithContext(ctx, &directconnect.DeleteDirectConnectGatewayInput{

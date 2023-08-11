@@ -44,7 +44,7 @@ data "aws_s3_object" "lambda" {
 }
 
 resource "aws_lambda_function" "test_lambda" {
-  s3_bucket         = data.aws_s3_object.lambda.id
+  s3_bucket         = data.aws_s3_object.lambda.bucket
   s3_key            = data.aws_s3_object.lambda.key
   s3_object_version = data.aws_s3_object.lambda.version_id
   function_name     = "lambda_function_name"
@@ -55,15 +55,15 @@ resource "aws_lambda_function" "test_lambda" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This data source supports the following arguments:
 
 * `bucket` - (Required) Name of the bucket to read the object from. Alternatively, an [S3 access point](https://docs.aws.amazon.com/AmazonS3/latest/dev/using-access-points.html) ARN can be specified
 * `key` - (Required) Full path to the object inside the bucket
 * `version_id` - (Optional) Specific version ID of the object returned (defaults to latest version)
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This data source exports the following attributes in addition to the arguments above:
 
 * `body` - Object data (see **limitations above** to understand cases in which this field is actually available)
 * `bucket_key_enabled` - (Optional) Whether or not to use [Amazon S3 Bucket Keys](https://docs.aws.amazon.com/AmazonS3/latest/dev/bucket-key.html) for SSE-KMS.

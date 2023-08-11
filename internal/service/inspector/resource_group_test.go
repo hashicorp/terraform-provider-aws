@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package inspector_test
 
 import (
@@ -8,8 +11,8 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/inspector"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
@@ -48,7 +51,7 @@ func TestAccInspectorResourceGroup_basic(t *testing.T) {
 
 func testAccCheckResourceGroupExists(ctx context.Context, name string, rg *inspector.ResourceGroup) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).InspectorConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).InspectorConn(ctx)
 
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -65,7 +68,7 @@ func testAccCheckResourceGroupExists(ctx context.Context, name string, rg *inspe
 			return err
 		}
 		if len(output.ResourceGroups) == 0 {
-			return fmt.Errorf("No matching Inspector resource groups")
+			return fmt.Errorf("No matching Inspector Classic Resource Groups")
 		}
 
 		*rg = *output.ResourceGroups[0]
@@ -77,7 +80,7 @@ func testAccCheckResourceGroupExists(ctx context.Context, name string, rg *inspe
 func testAccCheckResourceGroupRecreated(v1, v2 *inspector.ResourceGroup) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		if v2.CreatedAt.Equal(*v1.CreatedAt) {
-			return fmt.Errorf("Inspector resource group not recreated when changing tags")
+			return fmt.Errorf("Inspector Classic Resource Group not recreated when changing tags")
 		}
 
 		return nil

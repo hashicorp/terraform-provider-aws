@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package emr
 
 import (
@@ -61,7 +64,7 @@ const (
 )
 
 func resourceBlockPublicAccessConfigurationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).EMRConn()
+	conn := meta.(*conns.AWSClient).EMRConn(ctx)
 
 	blockPublicAccessConfiguration := &emr.BlockPublicAccessConfiguration{}
 
@@ -85,7 +88,7 @@ func resourceBlockPublicAccessConfigurationCreate(ctx context.Context, d *schema
 }
 
 func resourceBlockPublicAccessConfigurationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).EMRConn()
+	conn := meta.(*conns.AWSClient).EMRConn(ctx)
 
 	out, err := FindBlockPublicAccessConfiguration(ctx, conn)
 
@@ -102,7 +105,7 @@ func resourceBlockPublicAccessConfigurationRead(ctx context.Context, d *schema.R
 }
 
 func resourceBlockPublicAccessConfigurationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).EMRConn()
+	conn := meta.(*conns.AWSClient).EMRConn(ctx)
 
 	log.Print("[INFO] Restoring EMR Block Public Access Configuration to default settings")
 

@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package route53recoveryreadiness
 
 import (
@@ -29,6 +32,7 @@ func ResourceCell() *schema.Resource {
 		ReadWithoutTimeout:   resourceCellRead,
 		UpdateWithoutTimeout: resourceCellUpdate,
 		DeleteWithoutTimeout: resourceCellDelete,
+
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
@@ -71,25 +75,24 @@ func ResourceCell() *schema.Resource {
 
 func resourceCellCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).Route53RecoveryReadinessConn()
+	conn := meta.(*conns.AWSClient).Route53RecoveryReadinessConn(ctx)
 
+	name := d.Get("cell_name").(string)
 	input := &route53recoveryreadiness.CreateCellInput{
-		CellName: aws.String(d.Get("cell_name").(string)),
+		CellName: aws.String(name),
 		Cells:    flex.ExpandStringList(d.Get("cells").([]interface{})),
 	}
 
-	resp, err := conn.CreateCellWithContext(ctx, input)
+	output, err := conn.CreateCellWithContext(ctx, input)
+
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating Route53 Recovery Readiness Cell: %s", err)
+		return sdkdiag.AppendErrorf(diags, "creating Route53 Recovery Readiness Cell (%s): %s", name, err)
 	}
 
-	d.SetId(aws.StringValue(resp.CellName))
+	d.SetId(aws.StringValue(output.CellName))
 
-	if tags := KeyValueTags(ctx, GetTagsIn(ctx)); len(tags) > 0 {
-		arn := aws.StringValue(resp.CellArn)
-		if err := UpdateTags(ctx, conn, arn, nil, tags); err != nil {
-			return sdkdiag.AppendErrorf(diags, "adding Route53 Recovery Readiness Cell (%s) tags: %s", d.Id(), err)
-		}
+	if err := createTags(ctx, conn, aws.StringValue(output.CellArn), getTagsIn(ctx)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting Route53 Recovery Readiness Cell (%s) tags: %s", d.Id(), err)
 	}
 
 	return append(diags, resourceCellRead(ctx, d, meta)...)
@@ -97,7 +100,7 @@ func resourceCellCreate(ctx context.Context, d *schema.ResourceData, meta interf
 
 func resourceCellRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).Route53RecoveryReadinessConn()
+	conn := meta.(*conns.AWSClient).Route53RecoveryReadinessConn(ctx)
 
 	input := &route53recoveryreadiness.GetCellInput{
 		CellName: aws.String(d.Id()),
@@ -106,13 +109,13 @@ func resourceCellRead(ctx context.Context, d *schema.ResourceData, meta interfac
 	resp, err := conn.GetCellWithContext(ctx, input)
 
 	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, route53recoveryreadiness.ErrCodeResourceNotFoundException) {
-		log.Printf("[WARN] Route53RecoveryReadiness Cell (%s) not found, removing from state", d.Id())
+		log.Printf("[WARN] Route53 Recovery Readiness Cell (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
 	}
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "describing Route53 Recovery Readiness Cell: %s", err)
+		return sdkdiag.AppendErrorf(diags, "reading Route53 Recovery Readiness Cell (%s): %s", d.Id(), err)
 	}
 
 	d.Set("arn", resp.CellArn)
@@ -125,16 +128,19 @@ func resourceCellRead(ctx context.Context, d *schema.ResourceData, meta interfac
 
 func resourceCellUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).Route53RecoveryReadinessConn()
+	conn := meta.(*conns.AWSClient).Route53RecoveryReadinessConn(ctx)
 
-	input := &route53recoveryreadiness.UpdateCellInput{
-		CellName: aws.String(d.Id()),
-		Cells:    flex.ExpandStringList(d.Get("cells").([]interface{})),
-	}
+	if d.HasChangesExcept("tags", "tags_all") {
+		input := &route53recoveryreadiness.UpdateCellInput{
+			CellName: aws.String(d.Id()),
+			Cells:    flex.ExpandStringList(d.Get("cells").([]interface{})),
+		}
 
-	_, err := conn.UpdateCellWithContext(ctx, input)
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "updating Route53 Recovery Readiness Cell: %s", err)
+		_, err := conn.UpdateCellWithContext(ctx, input)
+
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating Route53 Recovery Readiness Cell (%s): %s", d.Id(), err)
+		}
 	}
 
 	return append(diags, resourceCellRead(ctx, d, meta)...)
@@ -142,17 +148,19 @@ func resourceCellUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 
 func resourceCellDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).Route53RecoveryReadinessConn()
+	conn := meta.(*conns.AWSClient).Route53RecoveryReadinessConn(ctx)
 
-	input := &route53recoveryreadiness.DeleteCellInput{
+	log.Printf("[DEBUG] Deleting Route53 Recovery Readiness Cell: %s", d.Id())
+	_, err := conn.DeleteCellWithContext(ctx, &route53recoveryreadiness.DeleteCellInput{
 		CellName: aws.String(d.Id()),
+	})
+
+	if tfawserr.ErrCodeEquals(err, route53recoveryreadiness.ErrCodeResourceNotFoundException) {
+		return diags
 	}
-	_, err := conn.DeleteCellWithContext(ctx, input)
+
 	if err != nil {
-		if tfawserr.ErrCodeEquals(err, route53recoveryreadiness.ErrCodeResourceNotFoundException) {
-			return diags
-		}
-		return sdkdiag.AppendErrorf(diags, "deleting Route53 Recovery Readiness Cell: %s", err)
+		return sdkdiag.AppendErrorf(diags, "deleting Route53 Recovery Readiness Cell (%s): %s", d.Id(), err)
 	}
 
 	gcinput := &route53recoveryreadiness.GetCellInput{

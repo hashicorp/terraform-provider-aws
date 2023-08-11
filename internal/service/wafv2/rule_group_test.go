@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package wafv2_test
 
 import (
@@ -8,9 +11,9 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/wafv2"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfwafv2 "github.com/hashicorp/terraform-provider-aws/internal/service/wafv2"
@@ -108,6 +111,7 @@ func TestAccWAFV2RuleGroup_updateRule(t *testing.T) {
 						"action.0.block.#":                  "0",
 						"action.0.count.#":                  "1",
 						"action.0.captcha.#":                "0",
+						"action.0.challenge.#":              "0",
 						"statement.#":                       "1",
 						"statement.0.geo_match_statement.#": "1",
 						"statement.0.geo_match_statement.0.country_codes.#": "2",
@@ -153,13 +157,14 @@ func TestAccWAFV2RuleGroup_updateRuleProperties(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "visibility_config.0.sampled_requests_enabled", "false"),
 					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
-						"name":               "rule-1",
-						"priority":           "1",
-						"action.#":           "1",
-						"action.0.allow.#":   "0",
-						"action.0.block.#":   "0",
-						"action.0.count.#":   "1",
-						"action.0.captcha.#": "0",
+						"name":                 "rule-1",
+						"priority":             "1",
+						"action.#":             "1",
+						"action.0.allow.#":     "0",
+						"action.0.block.#":     "0",
+						"action.0.count.#":     "1",
+						"action.0.captcha.#":   "0",
+						"action.0.challenge.#": "0",
 						"visibility_config.0.cloudwatch_metrics_enabled": "false",
 						"visibility_config.0.metric_name":                "friendly-rule-metric-name",
 						"visibility_config.0.sampled_requests_enabled":   "false",
@@ -186,14 +191,15 @@ func TestAccWAFV2RuleGroup_updateRuleProperties(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "visibility_config.0.sampled_requests_enabled", "false"),
 					resource.TestCheckResourceAttr(resourceName, "rule.#", "2"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
-						"name":                "rule-1",
-						"priority":            "1",
-						"action.#":            "1",
-						"action.0.allow.#":    "0",
-						"action.0.block.#":    "0",
-						"action.0.count.#":    "1",
-						"action.0.captcha.#":  "0",
-						"visibility_config.#": "1",
+						"name":                 "rule-1",
+						"priority":             "1",
+						"action.#":             "1",
+						"action.0.allow.#":     "0",
+						"action.0.block.#":     "0",
+						"action.0.count.#":     "1",
+						"action.0.captcha.#":   "0",
+						"action.0.challenge.#": "0",
+						"visibility_config.#":  "1",
 						"visibility_config.0.cloudwatch_metrics_enabled": "false",
 						"visibility_config.0.metric_name":                "rule-1",
 						"visibility_config.0.sampled_requests_enabled":   "false",
@@ -202,14 +208,15 @@ func TestAccWAFV2RuleGroup_updateRuleProperties(t *testing.T) {
 						"statement.0.geo_match_statement.0.country_codes.#": "2",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
-						"name":                ruleName2,
-						"priority":            "2",
-						"action.#":            "1",
-						"action.0.allow.#":    "0",
-						"action.0.block.#":    "1",
-						"action.0.count.#":    "0",
-						"action.0.captcha.#":  "0",
-						"visibility_config.#": "1",
+						"name":                 ruleName2,
+						"priority":             "2",
+						"action.#":             "1",
+						"action.0.allow.#":     "0",
+						"action.0.block.#":     "1",
+						"action.0.count.#":     "0",
+						"action.0.captcha.#":   "0",
+						"action.0.challenge.#": "0",
+						"visibility_config.#":  "1",
 						"visibility_config.0.cloudwatch_metrics_enabled": "false",
 						"visibility_config.0.metric_name":                ruleName2,
 						"visibility_config.0.sampled_requests_enabled":   "false",
@@ -248,14 +255,15 @@ func TestAccWAFV2RuleGroup_updateRuleProperties(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "visibility_config.0.sampled_requests_enabled", "false"),
 					resource.TestCheckResourceAttr(resourceName, "rule.#", "2"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
-						"name":                "rule-1",
-						"priority":            "5",
-						"action.#":            "1",
-						"action.0.allow.#":    "0",
-						"action.0.block.#":    "0",
-						"action.0.count.#":    "1",
-						"action.0.captcha.#":  "0",
-						"visibility_config.#": "1",
+						"name":                 "rule-1",
+						"priority":             "5",
+						"action.#":             "1",
+						"action.0.allow.#":     "0",
+						"action.0.block.#":     "0",
+						"action.0.count.#":     "1",
+						"action.0.captcha.#":   "0",
+						"action.0.challenge.#": "0",
+						"visibility_config.#":  "1",
 						"visibility_config.0.cloudwatch_metrics_enabled": "false",
 						"visibility_config.0.metric_name":                "rule-1",
 						"visibility_config.0.sampled_requests_enabled":   "false",
@@ -264,14 +272,15 @@ func TestAccWAFV2RuleGroup_updateRuleProperties(t *testing.T) {
 						"statement.0.geo_match_statement.0.country_codes.#": "2",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
-						"name":                "updated",
-						"priority":            "10",
-						"action.#":            "1",
-						"action.0.allow.#":    "0",
-						"action.0.block.#":    "1",
-						"action.0.count.#":    "0",
-						"action.0.captcha.#":  "0",
-						"visibility_config.#": "1",
+						"name":                 "updated",
+						"priority":             "10",
+						"action.#":             "1",
+						"action.0.allow.#":     "0",
+						"action.0.block.#":     "1",
+						"action.0.count.#":     "0",
+						"action.0.captcha.#":   "0",
+						"action.0.challenge.#": "0",
+						"visibility_config.#":  "1",
 						"visibility_config.0.cloudwatch_metrics_enabled": "false",
 						"visibility_config.0.metric_name":                "updated",
 						"visibility_config.0.sampled_requests_enabled":   "false",
@@ -1425,6 +1434,7 @@ func TestAccWAFV2RuleGroup_ruleAction(t *testing.T) {
 						"action.0.block.#":                           "0",
 						"action.0.count.#":                           "0",
 						"action.0.captcha.#":                         "0",
+						"action.0.challenge.#":                       "0",
 					}),
 				),
 			},
@@ -1446,6 +1456,7 @@ func TestAccWAFV2RuleGroup_ruleAction(t *testing.T) {
 						"action.0.block.0.custom_response.#": "0",
 						"action.0.count.#":                   "0",
 						"action.0.captcha.#":                 "0",
+						"action.0.challenge.#":               "0",
 					}),
 				),
 			},
@@ -1467,6 +1478,7 @@ func TestAccWAFV2RuleGroup_ruleAction(t *testing.T) {
 						"action.0.count.#": "1",
 						"action.0.count.0.custom_request_handling.#": "0",
 						"action.0.captcha.#":                         "0",
+						"action.0.challenge.#":                       "0",
 					}),
 				),
 			},
@@ -1512,9 +1524,10 @@ func TestAccWAFV2RuleGroup_RuleAction_customRequestHandling(t *testing.T) {
 						"action.0.allow.0.custom_request_handling.0.insert_header.0.value": "test-val1",
 						"action.0.allow.0.custom_request_handling.0.insert_header.1.name":  "x-hdr2",
 						"action.0.allow.0.custom_request_handling.0.insert_header.1.value": "test-val2",
-						"action.0.block.#":   "0",
-						"action.0.count.#":   "0",
-						"action.0.captcha.#": "0",
+						"action.0.block.#":     "0",
+						"action.0.count.#":     "0",
+						"action.0.captcha.#":   "0",
+						"action.0.challenge.#": "0",
 					}),
 				),
 			},
@@ -1540,7 +1553,8 @@ func TestAccWAFV2RuleGroup_RuleAction_customRequestHandling(t *testing.T) {
 						"action.0.count.0.custom_request_handling.0.insert_header.0.value": "test-val1",
 						"action.0.count.0.custom_request_handling.0.insert_header.1.name":  "x-hdr2",
 						"action.0.count.0.custom_request_handling.0.insert_header.1.value": "test-val2",
-						"action.0.captcha.#": "0",
+						"action.0.captcha.#":   "0",
+						"action.0.challenge.#": "0",
 					}),
 				),
 			},
@@ -1588,8 +1602,9 @@ func TestAccWAFV2RuleGroup_RuleAction_customResponse(t *testing.T) {
 						"action.0.block.0.custom_response.0.response_header.0.value": "test-val1",
 						"action.0.block.0.custom_response.0.response_header.1.name":  "x-hdr2",
 						"action.0.block.0.custom_response.0.response_header.1.value": "test-val2",
-						"action.0.count.#":   "0",
-						"action.0.captcha.#": "0",
+						"action.0.count.#":     "0",
+						"action.0.captcha.#":   "0",
+						"action.0.challenge.#": "0",
 					}),
 				),
 			},
@@ -1621,8 +1636,9 @@ func TestAccWAFV2RuleGroup_RuleAction_customResponse(t *testing.T) {
 						"action.0.block.0.custom_response.#": "1",
 						"action.0.block.0.custom_response.0.response_code":            "429",
 						"action.0.block.0.custom_response.0.custom_response_body_key": "test_body_1",
-						"action.0.count.#":   "0",
-						"action.0.captcha.#": "0",
+						"action.0.count.#":     "0",
+						"action.0.captcha.#":   "0",
+						"action.0.challenge.#": "0",
 					}),
 				),
 			},
@@ -1655,8 +1671,9 @@ func TestAccWAFV2RuleGroup_RuleAction_customResponse(t *testing.T) {
 						"action.0.block.0.custom_response.#": "1",
 						"action.0.block.0.custom_response.0.response_code":            "429",
 						"action.0.block.0.custom_response.0.custom_response_body_key": "test_body_2",
-						"action.0.count.#":   "0",
-						"action.0.captcha.#": "0",
+						"action.0.count.#":     "0",
+						"action.0.captcha.#":   "0",
+						"action.0.challenge.#": "0",
 					}),
 				),
 			},
@@ -2092,7 +2109,7 @@ func TestAccWAFV2RuleGroup_Operators_maxNested(t *testing.T) {
 }
 
 func testAccPreCheckScopeRegional(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).WAFV2Conn()
+	conn := acctest.Provider.Meta().(*conns.AWSClient).WAFV2Conn(ctx)
 
 	input := &wafv2.ListRuleGroupsInput{
 		Scope: aws.String(wafv2.ScopeRegional),
@@ -2116,7 +2133,7 @@ func testAccCheckRuleGroupDestroy(ctx context.Context) resource.TestCheckFunc {
 				continue
 			}
 
-			conn := acctest.Provider.Meta().(*conns.AWSClient).WAFV2Conn()
+			conn := acctest.Provider.Meta().(*conns.AWSClient).WAFV2Conn(ctx)
 
 			_, err := tfwafv2.FindRuleGroupByThreePartKey(ctx, conn, rs.Primary.ID, rs.Primary.Attributes["name"], rs.Primary.Attributes["scope"])
 
@@ -2146,7 +2163,7 @@ func testAccCheckRuleGroupExists(ctx context.Context, n string, v *wafv2.RuleGro
 			return fmt.Errorf("No WAFv2 RuleGroup ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).WAFV2Conn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).WAFV2Conn(ctx)
 
 		output, err := tfwafv2.FindRuleGroupByThreePartKey(ctx, conn, rs.Primary.ID, rs.Primary.Attributes["name"], rs.Primary.Attributes["scope"])
 

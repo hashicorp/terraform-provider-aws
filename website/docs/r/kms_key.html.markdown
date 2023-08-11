@@ -13,6 +13,7 @@ Manages a single-Region or multi-Region primary KMS key.
 ~> **NOTE on KMS Key Policy:** KMS Key Policy can be configured in either the standalone resource [`aws_kms_key_policy`](kms_key_policy.html)
 or with the parameter `policy` in this resource.
 Configuring with both will cause inconsistencies and may overwrite configuration.
+
 ## Example Usage
 
 ```terraform
@@ -24,7 +25,7 @@ resource "aws_kms_key" "a" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `description` - (Optional) The description of the key as viewed in AWS console.
 * `key_usage` - (Optional) Specifies the intended use of the key. Valid values: `ENCRYPT_DECRYPT`, `SIGN_VERIFY`, or `GENERATE_VERIFY_MAC`.
@@ -48,9 +49,9 @@ If the KMS key is a multi-Region primary key with replicas, the waiting period b
 * `multi_region` - (Optional) Indicates whether the KMS key is a multi-Region (`true`) or regional (`false`) key. Defaults to `false`.
 * `tags` - (Optional) A map of tags to assign to the object. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - The Amazon Resource Name (ARN) of the key.
 * `key_id` - The globally unique identifier for the key.
@@ -58,8 +59,17 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-KMS Keys can be imported using the `id`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import KMS Keys using the `id`. For example:
 
+```terraform
+import {
+  to = aws_kms_key.a
+  id = "1234abcd-12ab-34cd-56ef-1234567890ab"
+}
 ```
-$ terraform import aws_kms_key.a 1234abcd-12ab-34cd-56ef-1234567890ab
+
+Using `terraform import`, import KMS Keys using the `id`. For example:
+
+```console
+% terraform import aws_kms_key.a 1234abcd-12ab-34cd-56ef-1234567890ab
 ```

@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_pipes_pipe: Fix `ValidationException` errors when updating pipe
+```

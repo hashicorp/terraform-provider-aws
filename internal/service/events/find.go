@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package events
 
 import (
@@ -34,45 +37,6 @@ func FindConnectionByName(ctx context.Context, conn *eventbridge.EventBridge, na
 	}
 
 	return output, nil
-}
-
-func FindRuleByEventBusAndRuleNames(ctx context.Context, conn *eventbridge.EventBridge, eventBusName, ruleName string) (*eventbridge.DescribeRuleOutput, error) {
-	input := eventbridge.DescribeRuleInput{
-		Name: aws.String(ruleName),
-	}
-
-	if eventBusName != "" {
-		input.EventBusName = aws.String(eventBusName)
-	}
-
-	output, err := conn.DescribeRuleWithContext(ctx, &input)
-
-	if tfawserr.ErrCodeEquals(err, eventbridge.ErrCodeResourceNotFoundException) {
-		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
-		}
-	}
-
-	if err != nil {
-		return nil, err
-	}
-
-	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
-	}
-
-	return output, nil
-}
-
-func FindRuleByResourceID(ctx context.Context, conn *eventbridge.EventBridge, id string) (*eventbridge.DescribeRuleOutput, error) {
-	eventBusName, ruleName, err := RuleParseResourceID(id)
-
-	if err != nil {
-		return nil, err
-	}
-
-	return FindRuleByEventBusAndRuleNames(ctx, conn, eventBusName, ruleName)
 }
 
 func FindTargetByThreePartKey(ctx context.Context, conn *eventbridge.EventBridge, busName, ruleName, targetID string) (*eventbridge.Target, error) {

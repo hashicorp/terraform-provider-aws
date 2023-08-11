@@ -182,6 +182,12 @@ service/chimesdkmeetings:
 service/chimesdkmessaging:
   - 'internal/service/chimesdkmessaging/**/*'
   - 'website/**/chimesdkmessaging_*'
+service/chimesdkvoice:
+  - 'internal/service/chimesdkvoice/**/*'
+  - 'website/**/chimesdkvoice_*'
+service/cleanrooms:
+  - 'internal/service/cleanrooms/**/*'
+  - 'website/**/cleanrooms_*'
 service/cloud9:
   - 'internal/service/cloud9/**/*'
   - 'website/**/cloud9_*'
@@ -220,6 +226,9 @@ service/codeartifact:
 service/codebuild:
   - 'internal/service/codebuild/**/*'
   - 'website/**/codebuild_*'
+service/codecatalyst:
+  - 'internal/service/codecatalyst/**/*'
+  - 'website/**/codecatalyst_*'
 service/codecommit:
   - 'internal/service/codecommit/**/*'
   - 'website/**/codecommit_*'
@@ -512,6 +521,9 @@ service/inspector:
 service/inspector2:
   - 'internal/service/inspector2/**/*'
   - 'website/**/inspector2_*'
+service/internetmonitor:
+  - 'internal/service/internetmonitor/**/*'
+  - 'website/**/internetmonitor_*'
 service/iot:
   - 'internal/service/iot/**/*'
   - 'website/**/iot_*'
@@ -1034,6 +1046,9 @@ service/translate:
 service/verifiedaccess:
   - 'internal/service/ec2/**/verifiedaccess_*'
   - 'website/**/verifiedaccess*'
+service/verifiedpermissions:
+  - 'internal/service/verifiedpermissions/**/*'
+  - 'website/**/verifiedpermissions_*'
 service/voiceid:
   - 'internal/service/voiceid/**/*'
   - 'website/**/voiceid_*'

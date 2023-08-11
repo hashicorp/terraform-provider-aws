@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ec2
 
 import (
@@ -41,6 +44,13 @@ func SpotAllocationStrategy_Values() []string {
 		SpotAllocationStrategyLowestPrice,
 	)
 }
+
+const (
+	// https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/spot-request-status.html#spot-instance-request-status-understand
+	spotInstanceRequestStatusCodeFulfilled          = "fulfilled"
+	spotInstanceRequestStatusCodePendingEvaluation  = "pending-evaluation"
+	spotInstanceRequestStatusCodePendingFulfillment = "pending-fulfillment"
+)
 
 const (
 	// https://docs.aws.amazon.com/vpc/latest/privatelink/vpce-interface.html#vpce-interface-lifecycle
@@ -225,7 +235,8 @@ func vpnConnectionType_Values() []string {
 }
 
 const (
-	AmazonIPv6PoolID = "Amazon"
+	amazonIPv6PoolID      = "Amazon"
+	ipamManagedIPv6PoolID = "IPAM Managed"
 )
 
 const (
@@ -280,4 +291,9 @@ func securityGroupRuleType_Values() []string {
 const (
 	ResInstance      = "Instance"
 	ResInstanceState = "Instance State"
+)
+
+const (
+	gatewayIDLocal      = "local"
+	gatewayIDVPCLattice = "VpcLattice"
 )

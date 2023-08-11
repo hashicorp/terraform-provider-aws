@@ -20,13 +20,13 @@ data "aws_backup_plan" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This data source supports the following arguments:
 
 * `plan_id` - (Required) Backup plan ID.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to the arguments above, the following attributes are exported:
+This data source exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the backup plan.
 * `name` - Display name of a backup plan.

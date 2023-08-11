@@ -42,28 +42,25 @@ resource "aws_rds_cluster_instance" "aurora" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This data source supports the following arguments:
 
 * `most_recent` - (Optional) If more than one result is returned, use the most recent Snapshot.
-
 * `db_cluster_identifier` - (Optional) Returns the list of snapshots created by the specific db_cluster
-
 * `db_cluster_snapshot_identifier` - (Optional) Returns information on a specific snapshot_id.
-
 * `snapshot_type` - (Optional) Type of snapshots to be returned. If you don't specify a SnapshotType
 value, then both automated and manual DB cluster snapshots are returned. Shared and public DB Cluster Snapshots are not
 included in the returned results by default. Possible values are, `automated`, `manual`, `shared`, `public` and `awsbackup`.
-
 * `include_shared` - (Optional) Set this value to true to include shared manual DB Cluster Snapshots from other
 AWS accounts that this AWS account has been given permission to copy or restore, otherwise set this value to false.
 The default is `false`.
-
 * `include_public` - (Optional) Set this value to true to include manual DB Cluster Snapshots that are public and can be
 copied or restored by any AWS account, otherwise set this value to false. The default is `false`.
+* `tags` - (Optional) Mapping of tags, each pair of which must exactly match
+  a pair on the desired DB cluster snapshot.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This data source exports the following attributes in addition to the arguments above:
 
 * `allocated_storage` - Allocated storage size in gigabytes (GB).
 * `availability_zones` - List of EC2 Availability Zones that instances in the DB cluster snapshot can be restored in.

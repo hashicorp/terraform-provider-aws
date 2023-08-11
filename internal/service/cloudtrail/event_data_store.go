@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package cloudtrail
 
 import (
@@ -177,7 +180,7 @@ func ResourceEventDataStore() *schema.Resource {
 }
 
 func resourceEventDataStoreCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).CloudTrailConn()
+	conn := meta.(*conns.AWSClient).CloudTrailConn(ctx)
 
 	name := d.Get("name").(string)
 	input := &cloudtrail.CreateEventDataStoreInput{
@@ -186,7 +189,7 @@ func resourceEventDataStoreCreate(ctx context.Context, d *schema.ResourceData, m
 		MultiRegionEnabled:           aws.Bool(d.Get("multi_region_enabled").(bool)),
 		TerminationProtectionEnabled: aws.Bool(d.Get("termination_protection_enabled").(bool)),
 		RetentionPeriod:              aws.Int64(int64(d.Get("retention_period").(int))),
-		TagsList:                     GetTagsIn(ctx),
+		TagsList:                     getTagsIn(ctx),
 	}
 
 	if _, ok := d.GetOk("advanced_event_selector"); ok {
@@ -213,7 +216,7 @@ func resourceEventDataStoreCreate(ctx context.Context, d *schema.ResourceData, m
 }
 
 func resourceEventDataStoreRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).CloudTrailConn()
+	conn := meta.(*conns.AWSClient).CloudTrailConn(ctx)
 
 	eventDataStore, err := FindEventDataStoreByARN(ctx, conn, d.Id())
 
@@ -242,7 +245,7 @@ func resourceEventDataStoreRead(ctx context.Context, d *schema.ResourceData, met
 }
 
 func resourceEventDataStoreUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).CloudTrailConn()
+	conn := meta.(*conns.AWSClient).CloudTrailConn(ctx)
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		input := &cloudtrail.UpdateEventDataStoreInput{
@@ -288,7 +291,7 @@ func resourceEventDataStoreUpdate(ctx context.Context, d *schema.ResourceData, m
 }
 
 func resourceEventDataStoreDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).CloudTrailConn()
+	conn := meta.(*conns.AWSClient).CloudTrailConn(ctx)
 
 	log.Printf("[DEBUG] Deleting CloudTrail Event Data Store: %s", d.Id())
 	_, err := conn.DeleteEventDataStoreWithContext(ctx, &cloudtrail.DeleteEventDataStoreInput{

@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package servicecatalog
 
 import (
@@ -277,12 +280,12 @@ func refreshOutputsDiff(_ context.Context, diff *schema.ResourceDiff, meta inter
 
 func resourceProvisionedProductCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ServiceCatalogConn()
+	conn := meta.(*conns.AWSClient).ServiceCatalogConn(ctx)
 
 	input := &servicecatalog.ProvisionProductInput{
 		ProvisionToken:         aws.String(id.UniqueId()),
 		ProvisionedProductName: aws.String(d.Get("name").(string)),
-		Tags:                   GetTagsIn(ctx),
+		Tags:                   getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("accept_language"); ok {
@@ -374,7 +377,7 @@ func resourceProvisionedProductCreate(ctx context.Context, d *schema.ResourceDat
 
 func resourceProvisionedProductRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ServiceCatalogConn()
+	conn := meta.(*conns.AWSClient).ServiceCatalogConn(ctx)
 
 	// There are two API operations for getting information about provisioned products:
 	// 1. DescribeProvisionedProduct (used in WaitProvisionedProductReady) and
@@ -476,14 +479,14 @@ func resourceProvisionedProductRead(ctx context.Context, d *schema.ResourceData,
 
 	d.Set("path_id", recordOutput.RecordDetail.PathId)
 
-	SetTagsOut(ctx, Tags(recordKeyValueTags(ctx, recordOutput.RecordDetail.RecordTags)))
+	setTagsOut(ctx, Tags(recordKeyValueTags(ctx, recordOutput.RecordDetail.RecordTags)))
 
 	return diags
 }
 
 func resourceProvisionedProductUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ServiceCatalogConn()
+	conn := meta.(*conns.AWSClient).ServiceCatalogConn(ctx)
 
 	input := &servicecatalog.UpdateProvisionedProductInput{
 		UpdateToken:          aws.String(id.UniqueId()),
@@ -500,16 +503,21 @@ func resourceProvisionedProductUpdate(ctx context.Context, d *schema.ResourceDat
 		input.PathName = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("product_id"); ok {
-		input.ProductId = aws.String(v.(string))
-	} else if v, ok := d.GetOk("product_name"); ok {
+	// check product_name first. product_id is optional/computed and will always be
+	// set by the time update is called
+	if v, ok := d.GetOk("product_name"); ok {
 		input.ProductName = aws.String(v.(string))
+	} else if v, ok := d.GetOk("product_id"); ok {
+		input.ProductId = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("provisioning_artifact_id"); ok {
-		input.ProvisioningArtifactId = aws.String(v.(string))
-	} else if v, ok := d.GetOk("provisioning_artifact_name"); ok {
+	// check provisioning_artifact_name first. provisioning_artrifact_id is optional/computed
+	// and will always be set by the time update is called
+	// Reference: https://github.com/hashicorp/terraform-provider-aws/issues/26271
+	if v, ok := d.GetOk("provisioning_artifact_name"); ok {
 		input.ProvisioningArtifactName = aws.String(v.(string))
+	} else if v, ok := d.GetOk("provisioning_artifact_id"); ok {
+		input.ProvisioningArtifactId = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("provisioning_parameters"); ok && len(v.([]interface{})) > 0 {
@@ -521,7 +529,7 @@ func resourceProvisionedProductUpdate(ctx context.Context, d *schema.ResourceDat
 	}
 
 	if d.HasChanges("tags", "tags_all") {
-		input.Tags = GetTagsIn(ctx)
+		input.Tags = getTagsIn(ctx)
 	}
 
 	err := retry.RetryContext(ctx, d.Timeout(schema.TimeoutUpdate), func() *retry.RetryError {
@@ -555,7 +563,7 @@ func resourceProvisionedProductUpdate(ctx context.Context, d *schema.ResourceDat
 
 func resourceProvisionedProductDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ServiceCatalogConn()
+	conn := meta.(*conns.AWSClient).ServiceCatalogConn(ctx)
 
 	input := &servicecatalog.TerminateProvisionedProductInput{
 		TerminateToken:       aws.String(id.UniqueId()),
@@ -648,24 +656,24 @@ func expandProvisioningPreferences(tfMap map[string]interface{}) *servicecatalog
 
 	apiObject := &servicecatalog.ProvisioningPreferences{}
 
-	if v, ok := tfMap["account"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["accounts"].([]interface{}); ok && len(v) > 0 {
 		apiObject.StackSetAccounts = flex.ExpandStringList(v)
 	}
 
-	if v, ok := tfMap["failure_tolerance_count"].(int64); ok && v != 0 {
-		apiObject.StackSetFailureToleranceCount = aws.Int64(v)
+	if v, ok := tfMap["failure_tolerance_count"].(int); ok && v != 0 {
+		apiObject.StackSetFailureToleranceCount = aws.Int64(int64(v))
 	}
 
-	if v, ok := tfMap["failure_tolerance_percentage"].(int64); ok && v != 0 {
-		apiObject.StackSetFailureTolerancePercentage = aws.Int64(v)
+	if v, ok := tfMap["failure_tolerance_percentage"].(int); ok && v != 0 {
+		apiObject.StackSetFailureTolerancePercentage = aws.Int64(int64(v))
 	}
 
-	if v, ok := tfMap["max_concurrency_count"].(int64); ok && v != 0 {
-		apiObject.StackSetMaxConcurrencyCount = aws.Int64(v)
+	if v, ok := tfMap["max_concurrency_count"].(int); ok && v != 0 {
+		apiObject.StackSetMaxConcurrencyCount = aws.Int64(int64(v))
 	}
 
-	if v, ok := tfMap["max_concurrency_percentage"].(int64); ok && v != 0 {
-		apiObject.StackSetMaxConcurrencyPercentage = aws.Int64(v)
+	if v, ok := tfMap["max_concurrency_percentage"].(int); ok && v != 0 {
+		apiObject.StackSetMaxConcurrencyPercentage = aws.Int64(int64(v))
 	}
 
 	if v, ok := tfMap["regions"].([]interface{}); ok && len(v) > 0 {
@@ -730,24 +738,24 @@ func expandUpdateProvisioningPreferences(tfMap map[string]interface{}) *servicec
 
 	apiObject := &servicecatalog.UpdateProvisioningPreferences{}
 
-	if v, ok := tfMap["account"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["accounts"].([]interface{}); ok && len(v) > 0 {
 		apiObject.StackSetAccounts = flex.ExpandStringList(v)
 	}
 
-	if v, ok := tfMap["failure_tolerance_count"].(int64); ok && v != 0 {
-		apiObject.StackSetFailureToleranceCount = aws.Int64(v)
+	if v, ok := tfMap["failure_tolerance_count"].(int); ok && v != 0 {
+		apiObject.StackSetFailureToleranceCount = aws.Int64(int64(v))
 	}
 
-	if v, ok := tfMap["failure_tolerance_percentage"].(int64); ok && v != 0 {
-		apiObject.StackSetFailureTolerancePercentage = aws.Int64(v)
+	if v, ok := tfMap["failure_tolerance_percentage"].(int); ok && v != 0 {
+		apiObject.StackSetFailureTolerancePercentage = aws.Int64(int64(v))
 	}
 
-	if v, ok := tfMap["max_concurrency_count"].(int64); ok && v != 0 {
-		apiObject.StackSetMaxConcurrencyCount = aws.Int64(v)
+	if v, ok := tfMap["max_concurrency_count"].(int); ok && v != 0 {
+		apiObject.StackSetMaxConcurrencyCount = aws.Int64(int64(v))
 	}
 
-	if v, ok := tfMap["max_concurrency_percentage"].(int64); ok && v != 0 {
-		apiObject.StackSetMaxConcurrencyPercentage = aws.Int64(v)
+	if v, ok := tfMap["max_concurrency_percentage"].(int); ok && v != 0 {
+		apiObject.StackSetMaxConcurrencyPercentage = aws.Int64(int64(v))
 	}
 
 	if v, ok := tfMap["regions"].([]interface{}); ok && len(v) > 0 {

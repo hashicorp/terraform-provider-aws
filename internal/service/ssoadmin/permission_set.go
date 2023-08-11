@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ssoadmin
 
 import (
@@ -92,14 +95,14 @@ func ResourcePermissionSet() *schema.Resource {
 
 func resourcePermissionSetCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SSOAdminConn()
+	conn := meta.(*conns.AWSClient).SSOAdminConn(ctx)
 
 	instanceARN := d.Get("instance_arn").(string)
 	name := d.Get("name").(string)
 	input := &ssoadmin.CreatePermissionSetInput{
 		InstanceArn: aws.String(instanceARN),
 		Name:        aws.String(name),
-		Tags:        GetTagsIn(ctx),
+		Tags:        getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("description"); ok {
@@ -127,7 +130,7 @@ func resourcePermissionSetCreate(ctx context.Context, d *schema.ResourceData, me
 
 func resourcePermissionSetRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SSOAdminConn()
+	conn := meta.(*conns.AWSClient).SSOAdminConn(ctx)
 
 	arn, instanceARN, err := ParseResourceID(d.Id())
 
@@ -163,20 +166,20 @@ func resourcePermissionSetRead(ctx context.Context, d *schema.ResourceData, meta
 	d.Set("relay_state", permissionSet.RelayState)
 	d.Set("session_duration", permissionSet.SessionDuration)
 
-	tags, err := ListTags(ctx, conn, arn, instanceARN)
+	tags, err := listTags(ctx, conn, arn, instanceARN)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "listing tags for SSO Permission Set (%s): %s", arn, err)
 	}
 
-	SetTagsOut(ctx, Tags(tags))
+	setTagsOut(ctx, Tags(tags))
 
 	return diags
 }
 
 func resourcePermissionSetUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SSOAdminConn()
+	conn := meta.(*conns.AWSClient).SSOAdminConn(ctx)
 
 	arn, instanceARN, err := ParseResourceID(d.Id())
 
@@ -215,7 +218,7 @@ func resourcePermissionSetUpdate(ctx context.Context, d *schema.ResourceData, me
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
-		if err := UpdateTags(ctx, conn, arn, instanceARN, o, n); err != nil {
+		if err := updateTags(ctx, conn, arn, instanceARN, o, n); err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating tags: %s", err)
 		}
 	}
@@ -230,7 +233,7 @@ func resourcePermissionSetUpdate(ctx context.Context, d *schema.ResourceData, me
 
 func resourcePermissionSetDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SSOAdminConn()
+	conn := meta.(*conns.AWSClient).SSOAdminConn(ctx)
 
 	arn, instanceARN, err := ParseResourceID(d.Id())
 
@@ -293,16 +296,16 @@ func provisionPermissionSet(ctx context.Context, conn *ssoadmin.SSOAdmin, arn, i
 	}
 
 	if err != nil {
-		return fmt.Errorf("error provisioning SSO Permission Set (%s): %w", arn, err)
+		return fmt.Errorf("provisioning SSO Permission Set (%s): %w", arn, err)
 	}
 
 	if output == nil || output.PermissionSetProvisioningStatus == nil {
-		return fmt.Errorf("error provisioning SSO Permission Set (%s): empty output", arn)
+		return fmt.Errorf("provisioning SSO Permission Set (%s): empty output", arn)
 	}
 
 	_, err = waitPermissionSetProvisioned(ctx, conn, instanceArn, aws.StringValue(output.PermissionSetProvisioningStatus.RequestId))
 	if err != nil {
-		return fmt.Errorf("error waiting for SSO Permission Set (%s) to provision: %w", arn, err)
+		return fmt.Errorf("waiting for SSO Permission Set (%s) to provision: %w", arn, err)
 	}
 
 	return nil

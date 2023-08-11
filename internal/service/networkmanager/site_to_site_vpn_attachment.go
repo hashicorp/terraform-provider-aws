@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package networkmanager
 
 import (
@@ -98,13 +101,13 @@ func ResourceSiteToSiteVPNAttachment() *schema.Resource {
 }
 
 func resourceSiteToSiteVPNAttachmentCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).NetworkManagerConn()
+	conn := meta.(*conns.AWSClient).NetworkManagerConn(ctx)
 
 	coreNetworkID := d.Get("core_network_id").(string)
 	vpnConnectionARN := d.Get("vpn_connection_arn").(string)
 	input := &networkmanager.CreateSiteToSiteVpnAttachmentInput{
 		CoreNetworkId:    aws.String(coreNetworkID),
-		Tags:             GetTagsIn(ctx),
+		Tags:             getTagsIn(ctx),
 		VpnConnectionArn: aws.String(vpnConnectionARN),
 	}
 
@@ -124,7 +127,7 @@ func resourceSiteToSiteVPNAttachmentCreate(ctx context.Context, d *schema.Resour
 }
 
 func resourceSiteToSiteVPNAttachmentRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).NetworkManagerConn()
+	conn := meta.(*conns.AWSClient).NetworkManagerConn(ctx)
 
 	vpnAttachment, err := FindSiteToSiteVPNAttachmentByID(ctx, conn, d.Id())
 
@@ -157,7 +160,7 @@ func resourceSiteToSiteVPNAttachmentRead(ctx context.Context, d *schema.Resource
 	d.Set("state", a.State)
 	d.Set("vpn_connection_arn", a.ResourceArn)
 
-	SetTagsOut(ctx, a.Tags)
+	setTagsOut(ctx, a.Tags)
 
 	return nil
 }
@@ -168,7 +171,7 @@ func resourceSiteToSiteVPNAttachmentUpdate(ctx context.Context, d *schema.Resour
 }
 
 func resourceSiteToSiteVPNAttachmentDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).NetworkManagerConn()
+	conn := meta.(*conns.AWSClient).NetworkManagerConn(ctx)
 
 	// If ResourceAttachmentAccepter is used, then VPN Attachment state
 	// is never updated from StatePendingAttachmentAcceptance and the delete fails

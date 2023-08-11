@@ -1,14 +1,19 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package mwaa_test
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"testing"
 
+	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/mwaa"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfmwaa "github.com/hashicorp/terraform-provider-aws/internal/service/mwaa"
@@ -150,7 +155,7 @@ func TestAccMWAAEnvironment_airflowOptions(t *testing.T) {
 
 func TestAccMWAAEnvironment_log(t *testing.T) {
 	ctx := acctest.Context(t)
-	var environment mwaa.Environment
+	var environment1, environment2 mwaa.Environment
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_mwaa_environment.test"
 
@@ -163,7 +168,7 @@ func TestAccMWAAEnvironment_log(t *testing.T) {
 			{
 				Config: testAccEnvironmentConfig_logging(rName, "true", mwaa.LoggingLevelCritical),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEnvironmentExists(ctx, resourceName, &environment),
+					testAccCheckEnvironmentExists(ctx, resourceName, &environment1),
 					resource.TestCheckResourceAttr(resourceName, "logging_configuration.#", "1"),
 
 					resource.TestCheckResourceAttr(resourceName, "logging_configuration.0.dag_processing_logs.#", "1"),
@@ -200,7 +205,8 @@ func TestAccMWAAEnvironment_log(t *testing.T) {
 			{
 				Config: testAccEnvironmentConfig_logging(rName, "false", mwaa.LoggingLevelInfo),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEnvironmentExists(ctx, resourceName, &environment),
+					testAccCheckEnvironmentExists(ctx, resourceName, &environment2),
+					testAccCheckEnvironmentNotRecreated(&environment2, &environment1),
 					resource.TestCheckResourceAttr(resourceName, "logging_configuration.#", "1"),
 
 					resource.TestCheckResourceAttr(resourceName, "logging_configuration.0.dag_processing_logs.#", "1"),
@@ -311,7 +317,7 @@ func TestAccMWAAEnvironment_full(t *testing.T) {
 
 func TestAccMWAAEnvironment_pluginsS3ObjectVersion(t *testing.T) {
 	ctx := acctest.Context(t)
-	var environment mwaa.Environment
+	var environment1, environment2 mwaa.Environment
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_mwaa_environment.test"
 	s3ObjectResourceName := "aws_s3_object.plugins"
@@ -325,7 +331,7 @@ func TestAccMWAAEnvironment_pluginsS3ObjectVersion(t *testing.T) {
 			{
 				Config: testAccEnvironmentConfig_pluginsS3ObjectVersion(rName, "test"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEnvironmentExists(ctx, resourceName, &environment),
+					testAccCheckEnvironmentExists(ctx, resourceName, &environment1),
 					resource.TestCheckResourceAttrPair(resourceName, "plugins_s3_object_version", s3ObjectResourceName, "version_id"),
 				),
 			},
@@ -337,7 +343,8 @@ func TestAccMWAAEnvironment_pluginsS3ObjectVersion(t *testing.T) {
 			{
 				Config: testAccEnvironmentConfig_pluginsS3ObjectVersion(rName, "test-updated"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEnvironmentExists(ctx, resourceName, &environment),
+					testAccCheckEnvironmentExists(ctx, resourceName, &environment2),
+					testAccCheckEnvironmentNotRecreated(&environment2, &environment1),
 					resource.TestCheckResourceAttrPair(resourceName, "plugins_s3_object_version", s3ObjectResourceName, "version_id"),
 				),
 			},
@@ -345,6 +352,42 @@ func TestAccMWAAEnvironment_pluginsS3ObjectVersion(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccMWAAEnvironment_updateAirflowVersionMinor(t *testing.T) {
+	ctx := acctest.Context(t)
+	var environment1, environment2 mwaa.Environment
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_mwaa_environment.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, mwaa.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckEnvironmentDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccEnvironmentConfig_airflowVersion(rName, "2.4.3"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckEnvironmentExists(ctx, resourceName, &environment1),
+					resource.TestCheckResourceAttr(resourceName, "airflow_version", "2.4.3"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccEnvironmentConfig_airflowVersion(rName, "2.5.1"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckEnvironmentExists(ctx, resourceName, &environment2),
+					testAccCheckEnvironmentNotRecreated(&environment2, &environment1),
+					resource.TestCheckResourceAttr(resourceName, "airflow_version", "2.5.1"),
+				),
 			},
 		},
 	})
@@ -361,7 +404,7 @@ func testAccCheckEnvironmentExists(ctx context.Context, n string, v *mwaa.Enviro
 			return fmt.Errorf("No MWAA Environment ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).MWAAConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).MWAAConn(ctx)
 
 		output, err := tfmwaa.FindEnvironmentByName(ctx, conn, rs.Primary.ID)
 
@@ -377,7 +420,7 @@ func testAccCheckEnvironmentExists(ctx context.Context, n string, v *mwaa.Enviro
 
 func testAccCheckEnvironmentDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).MWAAConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).MWAAConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_mwaa_environment" {
@@ -395,6 +438,16 @@ func testAccCheckEnvironmentDestroy(ctx context.Context) resource.TestCheckFunc 
 			}
 
 			return fmt.Errorf("MWAA Environment %s still exists", rs.Primary.ID)
+		}
+
+		return nil
+	}
+}
+
+func testAccCheckEnvironmentNotRecreated(i, j *mwaa.Environment) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		if !i.CreatedAt.Equal(aws.TimeValue(j.CreatedAt)) {
+			return errors.New("MWAA Environment was recreated")
 		}
 
 		return nil
@@ -456,7 +509,7 @@ resource "aws_subnet" "private" {
 resource "aws_eip" "private" {
   count = 2
 
-  vpc = true
+  domain = "vpc"
 
   tags = {
     Name = %[1]q
@@ -832,4 +885,23 @@ resource "aws_s3_object" "plugins" {
   content = %q
 }
 `, rName, content))
+}
+
+func testAccEnvironmentConfig_airflowVersion(rName, airflowVersion string) string {
+	return acctest.ConfigCompose(testAccEnvironmentConfig_base(rName), fmt.Sprintf(`
+resource "aws_mwaa_environment" "test" {
+  dag_s3_path        = aws_s3_object.dags.key
+  execution_role_arn = aws_iam_role.test.arn
+  name               = %[1]q
+
+  network_configuration {
+    security_group_ids = [aws_security_group.test.id]
+    subnet_ids         = aws_subnet.private[*].id
+  }
+
+  source_bucket_arn = aws_s3_bucket.test.arn
+
+  airflow_version = %[2]q
+}
+`, rName, airflowVersion))
 }

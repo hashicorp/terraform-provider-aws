@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ce
 
 import (
@@ -78,13 +81,6 @@ func ResourceAnomalySubscription() *schema.Resource {
 					},
 				},
 			},
-			"threshold": {
-				Type:         schema.TypeFloat,
-				Optional:     true,
-				Computed:     true,
-				ValidateFunc: validation.FloatAtLeast(0.0),
-				Deprecated:   "use threshold_expression instead",
-			},
 			"threshold_expression": {
 				Type:     schema.TypeList,
 				MaxItems: 1,
@@ -101,7 +97,7 @@ func ResourceAnomalySubscription() *schema.Resource {
 }
 
 func resourceAnomalySubscriptionCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).CEConn()
+	conn := meta.(*conns.AWSClient).CEConn(ctx)
 
 	input := &costexplorer.CreateAnomalySubscriptionInput{
 		AnomalySubscription: &costexplorer.AnomalySubscription{
@@ -110,15 +106,11 @@ func resourceAnomalySubscriptionCreate(ctx context.Context, d *schema.ResourceDa
 			MonitorArnList:   aws.StringSlice(expandAnomalySubscriptionMonitorARNList(d.Get("monitor_arn_list").([]interface{}))),
 			Subscribers:      expandAnomalySubscriptionSubscribers(d.Get("subscriber").(*schema.Set).List()),
 		},
-		ResourceTags: GetTagsIn(ctx),
+		ResourceTags: getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("account_id"); ok {
 		input.AnomalySubscription.AccountId = aws.String(v.(string))
-	}
-
-	if v, ok := d.GetOk("threshold"); ok {
-		input.AnomalySubscription.Threshold = aws.Float64(v.(float64))
 	}
 
 	if v, ok := d.GetOk("threshold_expression"); ok {
@@ -141,7 +133,7 @@ func resourceAnomalySubscriptionCreate(ctx context.Context, d *schema.ResourceDa
 }
 
 func resourceAnomalySubscriptionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).CEConn()
+	conn := meta.(*conns.AWSClient).CEConn(ctx)
 
 	subscription, err := FindAnomalySubscriptionByARN(ctx, conn, d.Id())
 
@@ -160,7 +152,6 @@ func resourceAnomalySubscriptionRead(ctx context.Context, d *schema.ResourceData
 	d.Set("frequency", subscription.Frequency)
 	d.Set("monitor_arn_list", subscription.MonitorArnList)
 	d.Set("subscriber", flattenAnomalySubscriptionSubscribers(subscription.Subscribers))
-	d.Set("threshold", subscription.Threshold)
 	d.Set("name", subscription.SubscriptionName)
 
 	if err = d.Set("threshold_expression", []interface{}{flattenCostCategoryRuleExpression(subscription.ThresholdExpression)}); err != nil {
@@ -171,7 +162,7 @@ func resourceAnomalySubscriptionRead(ctx context.Context, d *schema.ResourceData
 }
 
 func resourceAnomalySubscriptionUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).CEConn()
+	conn := meta.(*conns.AWSClient).CEConn(ctx)
 
 	if d.HasChangesExcept("tags", "tags_All") {
 		input := &costexplorer.UpdateAnomalySubscriptionInput{
@@ -190,10 +181,6 @@ func resourceAnomalySubscriptionUpdate(ctx context.Context, d *schema.ResourceDa
 			input.Subscribers = expandAnomalySubscriptionSubscribers(d.Get("subscriber").(*schema.Set).List())
 		}
 
-		if d.HasChange("threshold") {
-			input.Threshold = aws.Float64(d.Get("threshold").(float64))
-		}
-
 		if d.HasChange("threshold_expression") {
 			input.ThresholdExpression = expandCostExpression(d.Get("threshold_expression").([]interface{})[0].(map[string]interface{}))
 		}
@@ -209,7 +196,7 @@ func resourceAnomalySubscriptionUpdate(ctx context.Context, d *schema.ResourceDa
 }
 
 func resourceAnomalySubscriptionDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).CEConn()
+	conn := meta.(*conns.AWSClient).CEConn(ctx)
 
 	_, err := conn.DeleteAnomalySubscriptionWithContext(ctx, &costexplorer.DeleteAnomalySubscriptionInput{SubscriptionArn: aws.String(d.Id())})
 

@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 //go:build windows
 // +build windows
 
@@ -26,10 +29,13 @@ func additionalNotesAboutCommand(path string) string {
 	notes += fmt.Sprintf("  Mode: %s\n", stat.Mode())
 
 	if elfFile, err := elf.Open(path); err == nil {
+		defer elfFile.Close()
 		notes += fmt.Sprintf("  ELF architecture: %s (current architecture: %s)\n", elfFile.Machine, runtime.GOARCH)
 	} else if machoFile, err := macho.Open(path); err == nil {
+		defer machoFile.Close()
 		notes += fmt.Sprintf("  MachO architecture: %s (current architecture: %s)\n", machoFile.Cpu, runtime.GOARCH)
 	} else if peFile, err := pe.Open(path); err == nil {
+		defer peFile.Close()
 		machine, ok := peTypes[peFile.Machine]
 		if !ok {
 			machine = "unknown"

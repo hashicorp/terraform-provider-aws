@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package gamelift_test
 
 import (
@@ -8,9 +11,9 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/gamelift"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfgamelift "github.com/hashicorp/terraform-provider-aws/internal/service/gamelift"
@@ -645,7 +648,7 @@ func testAccCheckFleetExists(ctx context.Context, n string, res *gamelift.FleetA
 			return fmt.Errorf("No GameLift Fleet ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).GameLiftConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).GameLiftConn(ctx)
 
 		fleet, err := tfgamelift.FindFleetByID(ctx, conn, rs.Primary.ID)
 		if err != nil {
@@ -664,7 +667,7 @@ func testAccCheckFleetExists(ctx context.Context, n string, res *gamelift.FleetA
 
 func testAccCheckFleetDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).GameLiftConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).GameLiftConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_gamelift_fleet" {

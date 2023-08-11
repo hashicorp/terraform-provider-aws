@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package tfprotov5
 
 import (
@@ -35,7 +38,7 @@ func NewDynamicValue(t tftypes.Type, v tftypes.Value) (DynamicValue, error) {
 
 // DynamicValue represents a nested encoding value that came from the protocol.
 // The only way providers should ever interact with it is by calling its
-// `Unmarshal` method to retrive a `tftypes.Value`. Although the type system
+// `Unmarshal` method to retrieve a `tftypes.Value`. Although the type system
 // allows for other interactions, they are explicitly not supported, and will
 // not be considered when evaluating for breaking changes. Treat this type as
 // an opaque value, and *only* call its `Unmarshal` method.

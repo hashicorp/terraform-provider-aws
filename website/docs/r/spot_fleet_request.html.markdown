@@ -11,6 +11,9 @@ description: |-
 Provides an EC2 Spot Fleet Request resource. This allows a fleet of Spot
 instances to be requested on the Spot market.
 
+~> **NOTE [AWS strongly discourages](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/spot-best-practices.html#which-spot-request-method-to-use) the use of the legacy APIs called by this resource.
+We recommend using the [EC2 Fleet](ec2_fleet.html) or [Auto Scaling Group](autoscaling_group.html) resources instead.
+
 ## Example Usage
 
 ### Using launch specifications
@@ -152,8 +155,11 @@ resource "aws_spot_fleet_request" "example" {
 ### Using multiple launch configurations
 
 ```terraform
-data "aws_subnet_ids" "example" {
-  vpc_id = var.vpc_id
+data "aws_subnets" "example" {
+  filter {
+    name   = "vpc-id"
+    values = [var.vpc_id]
+  }
 }
 
 resource "aws_launch_template" "foo" {
@@ -198,6 +204,7 @@ Most of these arguments directly correspond to the
   Spot instances on your behalf when you cancel its Spot fleet request using
 CancelSpotFleetRequests or when the Spot fleet request expires, if you set
 terminateInstancesWithExpiration.
+* `context` - (Optional) Reserved.
 * `replace_unhealthy_instances` - (Optional) Indicates whether Spot fleet should replace unhealthy instances. Default `false`.
 * `launch_specification` - (Optional) Used to define the launch configuration of the
   spot-fleet request. Can be specified multiple times to define different bids
@@ -393,9 +400,9 @@ This configuration block supports the following:
     * `min` - (Optional) Minimum.
     * `max` - (Optional) Maximum.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The Spot fleet request ID
 * `spot_request_state` - The state of the Spot fleet request.
@@ -410,8 +417,17 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Spot Fleet Requests can be imported using `id`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Spot Fleet Requests using `id`. For example:
 
+```terraform
+import {
+  to = aws_spot_fleet_request.fleet
+  id = "sfr-005e9ec8-5546-4c31-b317-31a62325411e"
+}
 ```
-$ terraform import aws_spot_fleet_request.fleet sfr-005e9ec8-5546-4c31-b317-31a62325411e
+
+Using `terraform import`, import Spot Fleet Requests using `id`. For example:
+
+```console
+% terraform import aws_spot_fleet_request.fleet sfr-005e9ec8-5546-4c31-b317-31a62325411e
 ```

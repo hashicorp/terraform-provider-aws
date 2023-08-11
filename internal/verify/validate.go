@@ -1,6 +1,10 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package verify
 
 import (
+	"encoding/json"
 	"fmt"
 	"net"
 	"regexp"
@@ -14,12 +18,17 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/types/timestamp"
 )
 
-var accountIDRegexp = regexp.MustCompile(`^(aws|aws-managed|third-party|\d{12})$`)
+var accountIDRegexp = regexp.MustCompile(`^(aws|aws-managed|third-party|\d{12}|cw.{10})$`)
 var partitionRegexp = regexp.MustCompile(`^aws(-[a-z]+)*$`)
 var regionRegexp = regexp.MustCompile(`^[a-z]{2}(-[a-z]+)+-\d$`)
+
+// validates all listed in https://gist.github.com/shortjared/4c1e3fe52bdfa47522cfe5b41e5d6f22
+var servicePrincipalRegexp = regexp.MustCompile(`^([a-z0-9-]+\.){1,4}(amazonaws|amazon)\.com$`)
 
 func Valid4ByteASN(v interface{}, k string) (ws []string, errors []error) {
 	value := v.(string)
@@ -131,26 +140,10 @@ func ValidAccountID(v interface{}, k string) (ws []string, errors []error) {
 	return
 }
 
-// ValidateCIDRBlock validates that the specified CIDR block is valid:
-// - The CIDR block parses to an IP address and network
-// - The CIDR block is the CIDR block for the network
-func ValidateCIDRBlock(cidr string) error {
-	_, ipnet, err := net.ParseCIDR(cidr)
-	if err != nil {
-		return fmt.Errorf("%q is not a valid CIDR block: %w", cidr, err)
-	}
-
-	if !CIDRBlocksEqual(cidr, ipnet.String()) {
-		return fmt.Errorf("%q is not a valid CIDR block; did you mean %q?", cidr, ipnet)
-	}
-
-	return nil
-}
-
 // ValidCIDRNetworkAddress ensures that the string value is a valid CIDR that
 // represents a network address - it adds an error otherwise
 func ValidCIDRNetworkAddress(v interface{}, k string) (ws []string, errors []error) {
-	if err := ValidateCIDRBlock(v.(string)); err != nil {
+	if err := types.ValidateCIDRBlock(v.(string)); err != nil {
 		errors = append(errors, err)
 		return
 	}
@@ -162,17 +155,42 @@ func ValidIAMPolicyJSON(v interface{}, k string) (ws []string, errors []error) {
 	// IAM Policy documents need to be valid JSON, and pass legacy parsing
 	value := v.(string)
 	if len(value) < 1 {
-		errors = append(errors, fmt.Errorf("%q contains an invalid JSON policy", k))
-		return
+		errors = append(errors, fmt.Errorf("%q is an empty string, which is not a valid JSON value", k))
+	} else if first := value[:1]; first != "{" {
+		switch value[:1] {
+		case " ", "\t", "\r", "\n":
+			errors = append(errors, fmt.Errorf("%q contains an invalid JSON policy: leading space characters are not allowed", k))
+		case `"`:
+			// There are some common mistakes that lead to strings appearing
+			// here instead of objects, so we'll try some heuristics to
+			// check for those so we might give more actionable feedback in
+			// these situations.
+			var hint string
+			var content string
+			var innerContent any
+			if err := json.Unmarshal([]byte(value), &content); err == nil {
+				if strings.HasSuffix(content, ".json") {
+					hint = " (have you passed a JSON-encoded filename instead of the content of that file?)"
+				} else if err := json.Unmarshal([]byte(content), &innerContent); err == nil {
+					hint = " (have you double-encoded your JSON data?)"
+				}
+			}
+			errors = append(errors, fmt.Errorf("%q contains an invalid JSON policy: contains a JSON-encoded string, not a JSON-encoded object%s", k, hint))
+		case `[`:
+			errors = append(errors, fmt.Errorf("%q contains an invalid JSON policy: contains a JSON array, not a JSON object", k))
+		default:
+			// Generic error for if we didn't find something more specific to say.
+			errors = append(errors, fmt.Errorf("%q contains an invalid JSON policy: not a JSON object", k))
+		}
+	} else if _, err := structure.NormalizeJsonString(v); err != nil {
+		errStr := err.Error()
+		if err, ok := errs.As[*json.SyntaxError](err); ok {
+			errStr = fmt.Sprintf("%s, at byte offset %d", errStr, err.Offset)
+		}
+		errors = append(errors, fmt.Errorf("%q contains an invalid JSON policy: %s", k, errStr))
 	}
-	if value[:1] != "{" {
-		errors = append(errors, fmt.Errorf("%q contains an invalid JSON policy", k))
-		return
-	}
-	if _, err := structure.NormalizeJsonString(v); err != nil {
-		errors = append(errors, fmt.Errorf("%q contains an invalid JSON: %s", k, err))
-	}
-	return
+
+	return //nolint:nakedret // Just a long function.
 }
 
 // ValidateIPv4CIDRBlock validates that the specified CIDR block is valid:
@@ -190,7 +208,7 @@ func ValidateIPv4CIDRBlock(cidr string) error {
 		return fmt.Errorf("%q is not a valid IPv4 CIDR block", cidr)
 	}
 
-	if !CIDRBlocksEqual(cidr, ipnet.String()) {
+	if !types.CIDRBlocksEqual(cidr, ipnet.String()) {
 		return fmt.Errorf("%q is not a valid IPv4 CIDR block; did you mean %q?", cidr, ipnet)
 	}
 
@@ -212,7 +230,7 @@ func ValidateIPv6CIDRBlock(cidr string) error {
 		return fmt.Errorf("%q is not a valid IPv6 CIDR block", cidr)
 	}
 
-	if !CIDRBlocksEqual(cidr, ipnet.String()) {
+	if !types.CIDRBlocksEqual(cidr, ipnet.String()) {
 		return fmt.Errorf("%q is not a valid IPv6 CIDR block; did you mean %q?", cidr, ipnet)
 	}
 
@@ -463,4 +481,22 @@ func ValidAnyDiag(validators ...schema.SchemaValidateDiagFunc) schema.SchemaVali
 		}
 		return results
 	}
+}
+
+func ValidServicePrincipal(v interface{}, k string) (ws []string, errors []error) {
+	value := v.(string)
+
+	if value == "" {
+		return ws, errors
+	}
+
+	if !IsServicePrincipal(value) {
+		errors = append(errors, fmt.Errorf("%q (%s) is an invalid Service Principal: invalid prefix value (expecting to match regular expression: %s)", k, value, servicePrincipalRegexp))
+	}
+
+	return ws, errors
+}
+
+func IsServicePrincipal(value string) (valid bool) {
+	return servicePrincipalRegexp.MatchString(value)
 }

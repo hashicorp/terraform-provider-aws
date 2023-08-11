@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package route53resolver
 
 import (
@@ -36,7 +39,7 @@ func DataSourceFirewallConfig() *schema.Resource {
 }
 
 func dataSourceFirewallConfigRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).Route53ResolverConn()
+	conn := meta.(*conns.AWSClient).Route53ResolverConn(ctx)
 
 	id := d.Get("resource_id").(string)
 	firewallConfig, err := findFirewallConfigByResourceID(ctx, conn, id)

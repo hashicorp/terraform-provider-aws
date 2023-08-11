@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ec2_test
 
 import (
@@ -7,9 +10,9 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
@@ -1132,7 +1135,6 @@ func TestAccVPCRoute_IPv4Update_target(t *testing.T) {
 	var route ec2.Route
 	resourceName := "aws_route.test"
 	vgwResourceName := "aws_vpn_gateway.test"
-	instanceResourceName := "aws_instance.test"
 	igwResourceName := "aws_internet_gateway.test"
 	eniResourceName := "aws_network_interface.test"
 	pcxResourceName := "aws_vpc_peering_connection.test"
@@ -1148,29 +1150,6 @@ func TestAccVPCRoute_IPv4Update_target(t *testing.T) {
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckRouteDestroy(ctx),
 		Steps: []resource.TestStep{
-			{
-				Config: testAccVPCRouteConfig_ipv4FlexiTarget(rName, destinationCidr, "instance_id", instanceResourceName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRouteExists(ctx, resourceName, &route),
-					resource.TestCheckResourceAttr(resourceName, "carrier_gateway_id", ""),
-					resource.TestCheckResourceAttr(resourceName, "core_network_arn", ""),
-					resource.TestCheckResourceAttr(resourceName, "destination_cidr_block", destinationCidr),
-					resource.TestCheckResourceAttr(resourceName, "destination_ipv6_cidr_block", ""),
-					resource.TestCheckResourceAttr(resourceName, "destination_prefix_list_id", ""),
-					resource.TestCheckResourceAttr(resourceName, "egress_only_gateway_id", ""),
-					resource.TestCheckResourceAttr(resourceName, "gateway_id", ""),
-					resource.TestCheckResourceAttrPair(resourceName, "instance_id", instanceResourceName, "id"),
-					acctest.CheckResourceAttrAccountID(resourceName, "instance_owner_id"),
-					resource.TestCheckResourceAttr(resourceName, "local_gateway_id", ""),
-					resource.TestCheckResourceAttr(resourceName, "nat_gateway_id", ""),
-					resource.TestCheckResourceAttrPair(resourceName, "network_interface_id", instanceResourceName, "primary_network_interface_id"),
-					resource.TestCheckResourceAttr(resourceName, "origin", ec2.RouteOriginCreateRoute),
-					resource.TestCheckResourceAttr(resourceName, "state", ec2.RouteStateActive),
-					resource.TestCheckResourceAttr(resourceName, "transit_gateway_id", ""),
-					resource.TestCheckResourceAttr(resourceName, "vpc_endpoint_id", ""),
-					resource.TestCheckResourceAttr(resourceName, "vpc_peering_connection_id", ""),
-				),
-			},
 			{
 				Config: testAccVPCRouteConfig_ipv4FlexiTarget(rName, destinationCidr, "gateway_id", vgwResourceName),
 				Check: resource.ComposeTestCheckFunc(
@@ -1352,7 +1331,6 @@ func TestAccVPCRoute_IPv6Update_target(t *testing.T) {
 	var route ec2.Route
 	resourceName := "aws_route.test"
 	vgwResourceName := "aws_vpn_gateway.test"
-	instanceResourceName := "aws_instance.test"
 	igwResourceName := "aws_internet_gateway.test"
 	eniResourceName := "aws_network_interface.test"
 	pcxResourceName := "aws_vpc_peering_connection.test"
@@ -1366,29 +1344,6 @@ func TestAccVPCRoute_IPv6Update_target(t *testing.T) {
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckRouteDestroy(ctx),
 		Steps: []resource.TestStep{
-			{
-				Config: testAccVPCRouteConfig_ipv6FlexiTarget(rName, destinationCidr, "instance_id", instanceResourceName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRouteExists(ctx, resourceName, &route),
-					resource.TestCheckResourceAttr(resourceName, "carrier_gateway_id", ""),
-					resource.TestCheckResourceAttr(resourceName, "core_network_arn", ""),
-					resource.TestCheckResourceAttr(resourceName, "destination_cidr_block", ""),
-					resource.TestCheckResourceAttr(resourceName, "destination_ipv6_cidr_block", destinationCidr),
-					resource.TestCheckResourceAttr(resourceName, "destination_prefix_list_id", ""),
-					resource.TestCheckResourceAttr(resourceName, "egress_only_gateway_id", ""),
-					resource.TestCheckResourceAttr(resourceName, "gateway_id", ""),
-					resource.TestCheckResourceAttrPair(resourceName, "instance_id", instanceResourceName, "id"),
-					acctest.CheckResourceAttrAccountID(resourceName, "instance_owner_id"),
-					resource.TestCheckResourceAttr(resourceName, "local_gateway_id", ""),
-					resource.TestCheckResourceAttr(resourceName, "nat_gateway_id", ""),
-					resource.TestCheckResourceAttrPair(resourceName, "network_interface_id", instanceResourceName, "primary_network_interface_id"),
-					resource.TestCheckResourceAttr(resourceName, "origin", ec2.RouteOriginCreateRoute),
-					resource.TestCheckResourceAttr(resourceName, "state", ec2.RouteStateActive),
-					resource.TestCheckResourceAttr(resourceName, "transit_gateway_id", ""),
-					resource.TestCheckResourceAttr(resourceName, "vpc_endpoint_id", ""),
-					resource.TestCheckResourceAttr(resourceName, "vpc_peering_connection_id", ""),
-				),
-			},
 			{
 				Config: testAccVPCRouteConfig_ipv6FlexiTarget(rName, destinationCidr, "gateway_id", vgwResourceName),
 				Check: resource.ComposeTestCheckFunc(
@@ -1652,6 +1607,68 @@ func TestAccVPCRoute_localRoute(t *testing.T) {
 				// Don't verify the state as the local route isn't actually in the pre-import state.
 				// Just running ImportState verifies that we can import a local route.
 				ImportStateVerify: false,
+			},
+		},
+	})
+}
+
+// https://github.com/hashicorp/terraform-provider-aws/issues/21350.
+func TestAccVPCRoute_localRouteUpdate(t *testing.T) {
+	ctx := acctest.Context(t)
+	var routeTable ec2.RouteTable
+	var vpc ec2.Vpc
+	resourceName := "aws_route.test"
+	rtResourceName := "aws_route_table.test"
+	vpcResourceName := "aws_vpc.test"
+	eniResourceName := "aws_network_interface.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRouteDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVPCRouteConfig_ipv4NoRoute(rName),
+				Check: resource.ComposeTestCheckFunc(
+					acctest.CheckVPCExists(ctx, vpcResourceName, &vpc),
+					testAccCheckRouteTableExists(ctx, rtResourceName, &routeTable),
+					testAccCheckRouteTableNumberOfRoutes(&routeTable, 1),
+				),
+			},
+			{
+				Config:       testAccVPCRouteConfig_ipv4Local(rName),
+				ResourceName: resourceName,
+				ImportState:  true,
+				ImportStateIdFunc: func(rt *ec2.RouteTable, v *ec2.Vpc) resource.ImportStateIdFunc {
+					return func(s *terraform.State) (string, error) {
+						return fmt.Sprintf("%s_%s", aws.StringValue(rt.RouteTableId), aws.StringValue(v.CidrBlock)), nil
+					}
+				}(&routeTable, &vpc),
+				ImportStatePersist: true,
+				// Don't verify the state as the local route isn't actually in the pre-import state.
+				// Just running ImportState verifies that we can import a local route.
+				ImportStateVerify: false,
+			},
+			{
+				Config: testAccVPCRouteConfig_ipv4LocalToNetworkInterface(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					acctest.CheckVPCExists(ctx, vpcResourceName, &vpc),
+					testAccCheckRouteTableExists(ctx, rtResourceName, &routeTable),
+					testAccCheckRouteTableNumberOfRoutes(&routeTable, 1),
+					resource.TestCheckResourceAttr(resourceName, "gateway_id", ""),
+					resource.TestCheckResourceAttrPair(resourceName, "network_interface_id", eniResourceName, "id"),
+				),
+			},
+			{
+				Config: testAccVPCRouteConfig_ipv4LocalRestore(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					acctest.CheckVPCExists(ctx, vpcResourceName, &vpc),
+					testAccCheckRouteTableExists(ctx, rtResourceName, &routeTable),
+					testAccCheckRouteTableNumberOfRoutes(&routeTable, 1),
+					resource.TestCheckResourceAttr(resourceName, "gateway_id", "local"),
+				),
 			},
 		},
 	})
@@ -2198,7 +2215,7 @@ func testAccCheckRouteExists(ctx context.Context, n string, v *ec2.Route) resour
 			return fmt.Errorf("No ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
 
 		var route *ec2.Route
 		var err error
@@ -2227,7 +2244,7 @@ func testAccCheckRouteDestroy(ctx context.Context) resource.TestCheckFunc {
 				continue
 			}
 
-			conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
+			conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
 
 			var err error
 			if v := rs.Primary.Attributes["destination_cidr_block"]; v != "" {
@@ -2446,7 +2463,7 @@ resource "aws_route_table" "test" {
 resource "aws_route" "test" {
   route_table_id              = aws_route_table.test.id
   destination_ipv6_cidr_block = %[2]q
-  instance_id                 = aws_instance.test.id
+  network_interface_id        = aws_instance.test.primary_network_interface_id
 }
 `, rName, destinationCidr))
 }
@@ -2774,7 +2791,7 @@ resource "aws_route_table" "test" {
 resource "aws_route" "test" {
   route_table_id         = aws_route_table.test.id
   destination_cidr_block = %[2]q
-  instance_id            = aws_instance.test.id
+  network_interface_id   = aws_instance.test.primary_network_interface_id
 }
 `, rName, destinationCidr))
 }
@@ -3141,7 +3158,7 @@ resource "aws_internet_gateway" "test" {
 }
 
 resource "aws_eip" "test" {
-  vpc = true
+  domain = "vpc"
 
   tags = {
     Name = %[1]q
@@ -3299,6 +3316,10 @@ func testAccVPCRouteConfig_resourceIPv4Endpoint(rName, destinationCidr string) s
 		fmt.Sprintf(`
 data "aws_caller_identity" "current" {}
 
+data "aws_iam_session_context" "current" {
+  arn = data.aws_caller_identity.current.arn
+}
+
 resource "aws_vpc" "test" {
   cidr_block = "10.10.10.0/25"
 
@@ -3328,7 +3349,7 @@ resource "aws_lb" "test" {
 
 resource "aws_vpc_endpoint_service" "test" {
   acceptance_required        = false
-  allowed_principals         = [data.aws_caller_identity.current.arn]
+  allowed_principals         = [data.aws_iam_session_context.current.issuer_arn]
   gateway_load_balancer_arns = [aws_lb.test.arn]
 
   tags = {
@@ -3369,6 +3390,10 @@ func testAccVPCRouteConfig_resourceIPv6Endpoint(rName, destinationIpv6Cidr strin
 		fmt.Sprintf(`
 data "aws_caller_identity" "current" {}
 
+data "aws_iam_session_context" "current" {
+  arn = data.aws_caller_identity.current.arn
+}
+
 resource "aws_vpc" "test" {
   cidr_block = "10.10.10.0/25"
 
@@ -3398,7 +3423,7 @@ resource "aws_lb" "test" {
 
 resource "aws_vpc_endpoint_service" "test" {
   acceptance_required        = false
-  allowed_principals         = [data.aws_caller_identity.current.arn]
+  allowed_principals         = [data.aws_iam_session_context.current.issuer_arn]
   gateway_load_balancer_arns = [aws_lb.test.arn]
 
   tags = {
@@ -3533,7 +3558,7 @@ resource "aws_vpc_peering_connection" "test" {
 }
 
 resource "aws_eip" "test" {
-  vpc = true
+  domain = "vpc"
 
   tags = {
     Name = %[1]q
@@ -3553,6 +3578,10 @@ resource "aws_nat_gateway" "test" {
 
 data "aws_caller_identity" "current" {}
 
+data "aws_iam_session_context" "current" {
+  arn = data.aws_caller_identity.current.arn
+}
+
 resource "aws_lb" "test" {
   load_balancer_type = "gateway"
   name               = %[1]q
@@ -3564,7 +3593,7 @@ resource "aws_lb" "test" {
 
 resource "aws_vpc_endpoint_service" "test" {
   acceptance_required        = false
-  allowed_principals         = [data.aws_caller_identity.current.arn]
+  allowed_principals         = [data.aws_iam_session_context.current.issuer_arn]
   gateway_load_balancer_arns = [aws_lb.test.arn]
 
   tags = {
@@ -3597,7 +3626,6 @@ resource "aws_route" "test" {
 
   egress_only_gateway_id    = (local.target_attr == "egress_only_gateway_id") ? local.target_value : null
   gateway_id                = (local.target_attr == "gateway_id") ? local.target_value : null
-  instance_id               = (local.target_attr == "instance_id") ? local.target_value : null
   local_gateway_id          = (local.target_attr == "local_gateway_id") ? local.target_value : null
   nat_gateway_id            = (local.target_attr == "nat_gateway_id") ? local.target_value : null
   network_interface_id      = (local.target_attr == "network_interface_id") ? local.target_value : null
@@ -3718,7 +3746,6 @@ resource "aws_route" "test" {
 
   egress_only_gateway_id    = (local.target_attr == "egress_only_gateway_id") ? local.target_value : null
   gateway_id                = (local.target_attr == "gateway_id") ? local.target_value : null
-  instance_id               = (local.target_attr == "instance_id") ? local.target_value : null
   local_gateway_id          = (local.target_attr == "local_gateway_id") ? local.target_value : null
   nat_gateway_id            = (local.target_attr == "nat_gateway_id") ? local.target_value : null
   network_interface_id      = (local.target_attr == "network_interface_id") ? local.target_value : null
@@ -3750,15 +3777,67 @@ resource "aws_route_table" "test" {
 }
 
 func testAccVPCRouteConfig_ipv4Local(rName string) string {
-	return acctest.ConfigCompose(
-		testAccVPCRouteConfig_ipv4NoRoute(rName),
-		`
+	return acctest.ConfigCompose(testAccVPCRouteConfig_ipv4NoRoute(rName), `
 resource "aws_route" "test" {
   route_table_id         = aws_route_table.test.id
   destination_cidr_block = aws_vpc.test.cidr_block
   gateway_id             = "local"
 }
 `)
+}
+
+func testAccVPCRouteConfig_ipv4LocalToNetworkInterface(rName string) string {
+	return acctest.ConfigCompose(testAccVPCRouteConfig_ipv4NoRoute(rName), fmt.Sprintf(`
+resource "aws_route" "test" {
+  route_table_id         = aws_route_table.test.id
+  destination_cidr_block = aws_vpc.test.cidr_block
+  network_interface_id   = aws_network_interface.test.id
+}
+
+resource "aws_subnet" "test" {
+  cidr_block = "10.1.1.0/24"
+  vpc_id     = aws_vpc.test.id
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_network_interface" "test" {
+  subnet_id = aws_subnet.test.id
+
+  tags = {
+    Name = %[1]q
+  }
+}
+`, rName))
+}
+
+func testAccVPCRouteConfig_ipv4LocalRestore(rName string) string {
+	return acctest.ConfigCompose(testAccVPCRouteConfig_ipv4NoRoute(rName), fmt.Sprintf(`
+resource "aws_route" "test" {
+  route_table_id         = aws_route_table.test.id
+  destination_cidr_block = aws_vpc.test.cidr_block
+  gateway_id             = "local"
+}
+
+resource "aws_subnet" "test" {
+  cidr_block = "10.1.1.0/24"
+  vpc_id     = aws_vpc.test.id
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_network_interface" "test" {
+  subnet_id = aws_subnet.test.id
+
+  tags = {
+    Name = %[1]q
+  }
+}
+`, rName))
 }
 
 func testAccVPCRouteConfig_prefixListInternetGateway(rName string) string {
@@ -3892,7 +3971,7 @@ resource "aws_route_table" "test" {
 resource "aws_route" "test" {
   route_table_id             = aws_route_table.test.id
   destination_prefix_list_id = aws_ec2_managed_prefix_list.test.id
-  instance_id                = aws_instance.test.id
+  network_interface_id       = aws_instance.test.primary_network_interface_id
 }
 `, rName))
 }
@@ -4100,7 +4179,7 @@ resource "aws_internet_gateway" "test" {
 }
 
 resource "aws_eip" "test" {
-  vpc = true
+  domain = "vpc"
 
   tags = {
     Name = %[1]q
