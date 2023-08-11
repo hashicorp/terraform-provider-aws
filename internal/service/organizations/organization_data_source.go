@@ -13,7 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
-	"github.com/hashicorp/terraform-provider-aws/internal/slices"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 )
 
 // @SDKDataSource("aws_organizations_organization")
@@ -181,7 +181,7 @@ func dataSourceOrganizationRead(ctx context.Context, d *schema.ResourceData, met
 	}
 
 	if isManagementAccount || isDelegatedAdministrator {
-		nonManagementAccounts := slices.Filter(accounts, func(v *organizations.Account) bool {
+		nonManagementAccounts := tfslices.Filter(accounts, func(v *organizations.Account) bool {
 			return aws.StringValue(v.Id) != managementAccountID
 		})
 

@@ -19,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
@@ -31,13 +32,14 @@ func ResourceOrganization() *schema.Resource {
 		ReadWithoutTimeout:   resourceOrganizationRead,
 		UpdateWithoutTimeout: resourceOrganizationUpdate,
 		DeleteWithoutTimeout: resourceOrganizationDelete,
+
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		CustomizeDiff: customdiff.Sequence(
 			customdiff.ForceNewIfChange("feature_set", func(_ context.Context, old, new, meta interface{}) bool {
-				// Only changes from ALL to CONSOLIDATED_BILLING for feature_set should force a new resource
+				// Only changes from ALL to CONSOLIDATED_BILLING for feature_set should force a new resource.
 				return old.(string) == organizations.OrganizationFeatureSetAll && new.(string) == organizations.OrganizationFeatureSetConsolidatedBilling
 			}),
 		),
@@ -239,91 +241,73 @@ func resourceOrganizationRead(ctx context.Context, d *schema.ResourceData, meta 
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).OrganizationsConn(ctx)
 
-	log.Printf("[INFO] Reading Organization: %s", d.Id())
-	org, err := conn.DescribeOrganizationWithContext(ctx, &organizations.DescribeOrganizationInput{})
+	org, err := FindOrganization(ctx, conn)
 
-	if tfawserr.ErrCodeEquals(err, organizations.ErrCodeAWSOrganizationsNotInUseException) {
+	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Organization does not exist, removing from state: %s", d.Id())
 		d.SetId("")
 		return diags
 	}
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "describing Organization: %s", err)
+		return sdkdiag.AppendErrorf(diags, "reading Organization: %s", err)
 	}
 
-	orgId := aws.StringValue(org.Organization.Id)
-	if orgId != d.Id() {
-		return sdkdiag.AppendErrorf(diags, "The current Organization ID (%s) does not match the one retrieved from API (%s)", d.Id(), orgId)
+	// Check that any Org ID specified for import matches the current Org ID.
+	if got, want := aws.StringValue(org.Id), d.Id(); got != want {
+		return sdkdiag.AppendErrorf(diags, "current Organization ID (%s) does not match (%s)", got, want)
 	}
 
-	log.Printf("[INFO] Listing Accounts for Organization: %s", d.Id())
-	var accounts []*organizations.Account
-	var nonMasterAccounts []*organizations.Account
-	err = conn.ListAccountsPagesWithContext(ctx, &organizations.ListAccountsInput{}, func(page *organizations.ListAccountsOutput, lastPage bool) bool {
-		for _, account := range page.Accounts {
-			if aws.StringValue(account.Id) != aws.StringValue(org.Organization.MasterAccountId) {
-				nonMasterAccounts = append(nonMasterAccounts, account)
-			}
+	accounts, err := findAccounts(ctx, conn)
 
-			accounts = append(accounts, account)
-		}
-
-		return !lastPage
-	})
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "listing AWS Organization (%s) accounts: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading Organization (%s) accounts: %s", d.Id(), err)
 	}
 
-	log.Printf("[INFO] Listing Roots for Organization: %s", d.Id())
-	var roots []*organizations.Root
-	err = conn.ListRootsPagesWithContext(ctx, &organizations.ListRootsInput{}, func(page *organizations.ListRootsOutput, lastPage bool) bool {
-		roots = append(roots, page.Roots...)
-		return !lastPage
+	managementAccountID := aws.StringValue(org.MasterAccountId)
+	nonManagementAccounts := tfslices.Filter(accounts, func(v *organizations.Account) bool {
+		return aws.StringValue(v.Id) != managementAccountID
 	})
+
+	roots, err := findRoots(ctx, conn)
+
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "listing AWS Organization (%s) roots: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading Organization (%s) roots: %s", d.Id(), err)
 	}
 
 	if err := d.Set("accounts", flattenAccounts(accounts)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting accounts: %s", err)
 	}
-
-	d.Set("arn", org.Organization.Arn)
-	d.Set("feature_set", org.Organization.FeatureSet)
-	d.Set("master_account_arn", org.Organization.MasterAccountArn)
-	d.Set("master_account_email", org.Organization.MasterAccountEmail)
-	d.Set("master_account_id", org.Organization.MasterAccountId)
-
-	if err := d.Set("non_master_accounts", flattenAccounts(nonMasterAccounts)); err != nil {
+	d.Set("arn", org.Arn)
+	d.Set("feature_set", org.FeatureSet)
+	d.Set("master_account_arn", org.MasterAccountArn)
+	d.Set("master_account_email", org.MasterAccountEmail)
+	d.Set("master_account_id", org.MasterAccountId)
+	if err := d.Set("non_master_accounts", flattenAccounts(nonManagementAccounts)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting non_master_accounts: %s", err)
 	}
-
 	if err := d.Set("roots", FlattenRoots(roots)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting roots: %s", err)
 	}
 
-	awsServiceAccessPrincipals := make([]string, 0)
+	var awsServiceAccessPrincipals []string
 
 	// ConstraintViolationException: The request failed because the organization does not have all features enabled. Please enable all features in your organization and then retry.
-	if aws.StringValue(org.Organization.FeatureSet) == organizations.OrganizationFeatureSetAll {
-		err = conn.ListAWSServiceAccessForOrganizationPagesWithContext(ctx, &organizations.ListAWSServiceAccessForOrganizationInput{}, func(page *organizations.ListAWSServiceAccessForOrganizationOutput, lastPage bool) bool {
-			for _, enabledServicePrincipal := range page.EnabledServicePrincipals {
-				awsServiceAccessPrincipals = append(awsServiceAccessPrincipals, aws.StringValue(enabledServicePrincipal.ServicePrincipal))
-			}
-			return !lastPage
-		})
+	if aws.StringValue(org.FeatureSet) == organizations.OrganizationFeatureSetAll {
+		enabledServicePrincipals, err := findEnabledServicePrincipals(ctx, conn)
 
 		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "listing AWS Service Access for Organization (%s): %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "reading Organization (%s) service principals: %s", d.Id(), err)
 		}
+
+		awsServiceAccessPrincipals = tfslices.ApplyToAll(enabledServicePrincipals, func(v *organizations.EnabledServicePrincipal) string {
+			return aws.StringValue(v.ServicePrincipal)
+		})
 	}
 
-	if err := d.Set("aws_service_access_principals", awsServiceAccessPrincipals); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting aws_service_access_principals: %s", err)
-	}
+	d.Set("aws_service_access_principals", awsServiceAccessPrincipals)
 
-	enabledPolicyTypes := make([]string, 0)
+	var enabledPolicyTypes []string
 
 	for _, policyType := range roots[0].PolicyTypes {
 		if aws.StringValue(policyType.Status) == organizations.PolicyTypeStatusEnabled {
@@ -331,9 +315,7 @@ func resourceOrganizationRead(ctx context.Context, d *schema.ResourceData, meta 
 		}
 	}
 
-	if err := d.Set("enabled_policy_types", enabledPolicyTypes); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting enabled_policy_types: %s", err)
-	}
+	d.Set("enabled_policy_types", enabledPolicyTypes)
 
 	return diags
 }
@@ -473,6 +455,48 @@ func findAccounts(ctx context.Context, conn *organizations.Organizations) ([]*or
 		}
 
 		output = append(output, page.Accounts...)
+
+		return !lastPage
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	return output, nil
+}
+
+func findEnabledServicePrincipals(ctx context.Context, conn *organizations.Organizations) ([]*organizations.EnabledServicePrincipal, error) {
+	input := &organizations.ListAWSServiceAccessForOrganizationInput{}
+	var output []*organizations.EnabledServicePrincipal
+
+	err := conn.ListAWSServiceAccessForOrganizationPagesWithContext(ctx, input, func(page *organizations.ListAWSServiceAccessForOrganizationOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		output = append(output, page.EnabledServicePrincipals...)
+
+		return !lastPage
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	return output, nil
+}
+
+func findRoots(ctx context.Context, conn *organizations.Organizations) ([]*organizations.Root, error) {
+	input := &organizations.ListRootsInput{}
+	var output []*organizations.Root
+
+	err := conn.ListRootsPagesWithContext(ctx, input, func(page *organizations.ListRootsOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		output = append(output, page.Roots...)
 
 		return !lastPage
 	})
