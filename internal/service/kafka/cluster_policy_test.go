@@ -3,7 +3,6 @@ package kafka_test
 import (
 	"context"
 	"errors"
-	"fmt"
 	"regexp"
 	"testing"
 
@@ -139,95 +138,27 @@ func testAccCheckClusterPolicyExists(ctx context.Context, name string, clusterpo
 }
 
 func testAccClusterPolicyConfig_basic(rName string) string {
-	return fmt.Sprintf(`
-	data "aws_caller_identity" "current" {}
-	
-	data "aws_partition" "current" {}
-	
-	data "aws_availability_zones" "available" {
-		state = "available"
-	  }
+	return acctest.ConfigCompose(testAccClusterConfig_basic(rName), `
+resource "aws_msk_cluster_policy" "test" {
+  cluster_arn = aws_msk_cluster.test.arn
 
-	resource "aws_msk_cluster" "test" {
-		cluster_name           = %[1]q
-		kafka_version          = "2.7.1"
-		number_of_broker_nodes = 3
-		broker_node_group_info {
-			client_subnets  = aws_subnet.client[*].id
-			instance_type   = "kafka.m5.large"
-			security_groups = [aws_security_group.client[0].id, aws_security_group.client[1].id]
-
-			connectivity_info {
-				vpc_connectivity {
-					client_authentication {
-						sasl {
-						  iam = true
-						}
-					}
-				}
-			}
-			
-			storage_info {
-				ebs_storage_info {
-			  		volume_size = 10
-					}
-		  		}
-			}
-
-			client_authentication {
-		  		sasl {
-					iam = true
-		  			}
-				}
-	  		}
-
-
-	resource "aws_vpc" "client" {
-		cidr_block = "10.0.0.0/16"
-		tags = {
-		  Name = %[1]q
-		}
-	}
-	
-	resource "aws_subnet" "client" {
-		count = 3
-		vpc_id            = aws_vpc.client.id
-		availability_zone = data.aws_availability_zones.available.names[count.index]
-		cidr_block        = cidrsubnet(aws_vpc.client.cidr_block, 8, count.index)
-		tags = {
-		  Name = %[1]q
-		}
-	}
-
-	resource "aws_security_group" "client" {
-		count = 2
-		name   = "%[1]s-${count.index}"
-		vpc_id = aws_vpc.client.id
-		tags = {
-		  Name = %[1]q
-		}
-	}
-
-	resource "aws_msk_cluster_policy" "test" {
-	  cluster_arn = aws_msk_cluster.test.arn
-	  policy = jsonencode({
-	    Version = "2012-10-17",
-	    Statement = [{
-	      Sid    = "testMskClusterPolicy"
-	      Effect = "Allow"
-		  Principal = {
-			"AWS" = "arn:${data.aws_partition.current.partition}:iam::${data.aws_caller_identity.current.account_id}:root"
-		  }
-	      Action = [
-			"kafka:Describe*",
-			"kafka:Get*",
-			"kafka:CreateVpcConnection",
-			"kafka:GetBootstrapBrokers",
-	      ]
-	      Resource = aws_msk_cluster.test.arn
-	    }]
-	  })
-	}
-
-`, rName)
+  policy = jsonencode({
+    Version = "2012-10-17",
+    Statement = [{
+      Sid    = "testMskClusterPolicy"
+      Effect = "Allow"
+      Principal = {
+        "AWS" = "arn:${data.aws_partition.current.partition}:iam::${data.aws_caller_identity.current.account_id}:root"
+      }
+      Action = [
+        "kafka:Describe*",
+        "kafka:Get*",
+        "kafka:CreateVpcConnection",
+        "kafka:GetBootstrapBrokers",
+      ]
+      Resource = aws_msk_cluster.test.arn
+    }]
+  })
+}
+`)
 }
