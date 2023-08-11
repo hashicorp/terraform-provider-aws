@@ -220,7 +220,7 @@ func FindDBClusterSnapshotByID(ctx context.Context, conn *rds.RDS, id string) (*
 	input := &rds.DescribeDBClusterSnapshotsInput{
 		DBClusterSnapshotIdentifier: aws.String(id),
 	}
-	output, err := findDBClusterSnapshot(ctx, conn, input)
+	output, err := findDBClusterSnapshot(ctx, conn, input, tfslices.PredicateTrue[*rds.DBClusterSnapshot]())
 
 	if err != nil {
 		return nil, err
@@ -236,8 +236,8 @@ func FindDBClusterSnapshotByID(ctx context.Context, conn *rds.RDS, id string) (*
 	return output, nil
 }
 
-func findDBClusterSnapshot(ctx context.Context, conn *rds.RDS, input *rds.DescribeDBClusterSnapshotsInput) (*rds.DBClusterSnapshot, error) {
-	output, err := findDBClusterSnapshots(ctx, conn, input, tfslices.PredicateTrue[*rds.DBClusterSnapshot]())
+func findDBClusterSnapshot(ctx context.Context, conn *rds.RDS, input *rds.DescribeDBClusterSnapshotsInput, filter tfslices.Predicate[*rds.DBClusterSnapshot]) (*rds.DBClusterSnapshot, error) {
+	output, err := findDBClusterSnapshots(ctx, conn, input, filter)
 
 	if err != nil {
 		return nil, err
