@@ -7,7 +7,6 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"regexp"
 	"strings"
 	"time"
 
@@ -93,17 +92,10 @@ func ResourceGlobalCluster() *schema.Resource {
 				Optional: true,
 			},
 			"global_cluster_identifier": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-				ValidateFunc: validation.All(
-					validation.StringMatch(
-						regexp.MustCompile(`^[a-zA-Z][a-zA-Z0-9-]+[a-zA-Z0-9]$`),
-						"global_cluster_identifier must begin with a letter; must contain only ASCII letters, "+
-							"digits, and hyphens; and must not end with a hyphen or contain two consecutive hyphens",
-					),
-					validation.StringDoesNotContainAny("--"), // this is required because regexp does not support lookaround
-				),
+				Type:         schema.TypeString,
+				Required:     true,
+				ForceNew:     true,
+				ValidateFunc: validIdentifier,
 			},
 			"global_cluster_members": {
 				Type:     schema.TypeSet,
