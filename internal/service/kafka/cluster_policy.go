@@ -102,6 +102,7 @@ func resourceClusterPolicyRead(ctx context.Context, d *schema.ResourceData, meta
 		return sdkdiag.AppendErrorf(diags, "reading MSK Cluster Policy (%s): %s", d.Id(), err)
 	}
 
+	d.Set("cluster_arn", d.Id())
 	d.Set("current_version", output.CurrentVersion)
 	if output.Policy != nil {
 		policyToSet, err := verify.PolicyToSet(d.Get("policy").(string), aws.ToString(output.Policy))
