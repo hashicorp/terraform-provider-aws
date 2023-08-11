@@ -45,27 +45,6 @@ func ResourceOrganization() *schema.Resource {
 		),
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"master_account_arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"master_account_email": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"master_account_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"aws_service_access_principals": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
 			"accounts": {
 				Type:     schema.TypeList,
 				Computed: true,
@@ -93,6 +72,41 @@ func ResourceOrganization() *schema.Resource {
 						},
 					},
 				},
+			},
+			"arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"aws_service_access_principals": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+			},
+			"enabled_policy_types": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				Elem: &schema.Schema{
+					Type:         schema.TypeString,
+					ValidateFunc: validation.StringInSlice(organizations.PolicyType_Values(), false),
+				},
+			},
+			"feature_set": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Default:      organizations.OrganizationFeatureSetAll,
+				ValidateFunc: validation.StringInSlice(organizations.OrganizationFeatureSet_Values(), true),
+			},
+			"master_account_arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"master_account_email": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"master_account_id": {
+				Type:     schema.TypeString,
+				Computed: true,
 			},
 			"non_master_accounts": {
 				Type:     schema.TypeList,
@@ -127,15 +141,15 @@ func ResourceOrganization() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
+						"arn": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
 						"id": {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
 						"name": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"arn": {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -158,20 +172,6 @@ func ResourceOrganization() *schema.Resource {
 					},
 				},
 			},
-			"enabled_policy_types": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Elem: &schema.Schema{
-					Type:         schema.TypeString,
-					ValidateFunc: validation.StringInSlice(organizations.PolicyType_Values(), false),
-				},
-			},
-			"feature_set": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Default:      organizations.OrganizationFeatureSetAll,
-				ValidateFunc: validation.StringInSlice(organizations.OrganizationFeatureSet_Values(), true),
-			},
 		},
 	}
 }
@@ -180,18 +180,17 @@ func resourceOrganizationCreate(ctx context.Context, d *schema.ResourceData, met
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).OrganizationsConn(ctx)
 
-	createOpts := &organizations.CreateOrganizationInput{
+	input := &organizations.CreateOrganizationInput{
 		FeatureSet: aws.String(d.Get("feature_set").(string)),
 	}
-	log.Printf("[DEBUG] Creating Organization: %#v", createOpts)
 
-	resp, err := conn.CreateOrganizationWithContext(ctx, createOpts)
+	output, err := conn.CreateOrganizationWithContext(ctx, input)
+
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating organization: %s", err)
 	}
 
-	org := resp.Organization
-	d.SetId(aws.StringValue(org.Id))
+	d.SetId(aws.StringValue(output.Organization.Id))
 
 	awsServiceAccessPrincipals := d.Get("aws_service_access_principals").(*schema.Set).List()
 	for _, principalRaw := range awsServiceAccessPrincipals {
