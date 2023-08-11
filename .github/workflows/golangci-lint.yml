@@ -59,7 +59,7 @@ jobs:
         uses: golangci/golangci-lint-action@639cd343e1d3b897ff35927a75193d57cfcba299 # v3.6.0
         with:
           version: "${{ steps.golangci-lint-version.outputs.version }}"
-          args: --config .ci/.golangci2.yml
+          args: --config .ci/.golangci2.yml --timeout 75m
         env:
           # Trigger garbage collection more frequently to reduce the likelihood
           # of OOM errors.
