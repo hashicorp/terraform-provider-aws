@@ -103,7 +103,7 @@ func testAccCheckClusterPolicyDestroy(ctx context.Context) resource.TestCheckFun
 				return nil
 			}
 			if err != nil {
-				return nil
+				return err
 			}
 
 			return create.Error(names.Kafka, create.ErrActionCheckingDestroyed, tfkafka.ResNameClusterPolicy, rs.Primary.ID, errors.New("not destroyed"))
