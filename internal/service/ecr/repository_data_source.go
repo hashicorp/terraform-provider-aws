@@ -143,7 +143,7 @@ func dataSourceRepositoryRead(ctx context.Context, d *schema.ResourceData, meta 
 		return sdkdiag.AppendErrorf(diags, "reading images for ECR Repository (%s): %s", d.Id(), err)
 	}
 
-	if len(imageDetails) > 1 {
+	if len(imageDetails) >= 1 {
 		slices.SortFunc(imageDetails, func(a, b *ecr.ImageDetail) bool {
 			return aws.TimeValue(a.ImagePushedAt).After(aws.TimeValue(b.ImagePushedAt))
 		})
