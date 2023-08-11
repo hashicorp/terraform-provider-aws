@@ -4,6 +4,11 @@ ENHANCEMENTS:
 
 * data-source/aws_ram_resource_share: Add `resource_arns` attribute ([#22591](https://github.com/hashicorp/terraform-provider-aws/issues/22591))
 
+BUG FIXES:
+
+* resource/aws_cloudwatch_event_rule: Fix arn based partner event bus rule ID parsing error ([#30293](https://github.com/hashicorp/terraform-provider-aws/issues/30293))
+* resource/aws_quicksight_analysis: raise limit for maximum allowed `visuals` blocks per sheet to 50 ([#32856](https://github.com/hashicorp/terraform-provider-aws/issues/32856))
+
 ## 5.12.0 (August 10, 2023)
 
 NOTES:
