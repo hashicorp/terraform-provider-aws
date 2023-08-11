@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ecrpublic_test
 
 import (
@@ -135,7 +138,7 @@ func TestAccECRPublicRepositoryPolicy_iam(t *testing.T) {
 
 func testAccCheckRepositoryPolicyDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ECRPublicConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ECRPublicConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_ecrpublic_repository_policy" {
@@ -170,7 +173,7 @@ func testAccCheckRepositoryPolicyExists(ctx context.Context, name string) resour
 			return fmt.Errorf("No ECR Public Repository Policy ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ECRPublicConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ECRPublicConn(ctx)
 
 		_, err := tfecrpublic.FindRepositoryPolicyByName(ctx, conn, rs.Primary.ID)
 

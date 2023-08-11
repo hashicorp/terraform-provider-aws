@@ -25,7 +25,7 @@ data "aws_ssm_parameter" "foo" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This data source supports the following arguments:
 
 * `name` - (Required) Name of the parameter.
 * `with_decryption` - (Optional) Whether to return decrypted `SecureString` value. Defaults to `true`.
@@ -36,4 +36,5 @@ In addition to all arguments above, the following attributes are exported:
 * `name` - Name of the parameter.
 * `type` - Type of the parameter. Valid types are `String`, `StringList` and `SecureString`.
 * `value` - Value of the parameter. This value is always marked as sensitive in the Terraform plan output, regardless of `type`. In Terraform CLI version 0.15 and later, this may require additional configuration handling for certain scenarios. For more information, see the [Terraform v0.15 Upgrade Guide](https://www.terraform.io/upgrade-guides/0-15.html#sensitive-output-values).
+* `insecure_value` - Value of the parameter. **Use caution:** This value is never marked as sensitive.
 * `version` - Version of the parameter.

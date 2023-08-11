@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ses_test
 
 import (
@@ -95,7 +98,7 @@ func testAccCheckDomainIdentityVerificationPassed(ctx context.Context, n string)
 		}
 
 		domain := rs.Primary.ID
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SESConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SESConn(ctx)
 
 		params := &ses.GetIdentityVerificationAttributesInput{
 			Identities: []*string{

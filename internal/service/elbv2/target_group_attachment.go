@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package elbv2
 
 import (
@@ -56,7 +59,7 @@ func ResourceTargetGroupAttachment() *schema.Resource {
 
 func resourceAttachmentCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ELBV2Conn()
+	conn := meta.(*conns.AWSClient).ELBV2Conn(ctx)
 
 	target := &elbv2.TargetDescription{
 		Id: aws.String(d.Get("target_id").(string)),
@@ -82,7 +85,7 @@ func resourceAttachmentCreate(ctx context.Context, d *schema.ResourceData, meta 
 		_, err := conn.RegisterTargetsWithContext(ctx, params)
 
 		if tfawserr.ErrCodeEquals(err, "InvalidTarget") {
-			return retry.RetryableError(fmt.Errorf("Error attaching instance to LB, retrying: %s", err))
+			return retry.RetryableError(fmt.Errorf("attaching instance to LB, retrying: %s", err))
 		}
 
 		if err != nil {
@@ -106,7 +109,7 @@ func resourceAttachmentCreate(ctx context.Context, d *schema.ResourceData, meta 
 
 func resourceAttachmentDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ELBV2Conn()
+	conn := meta.(*conns.AWSClient).ELBV2Conn(ctx)
 
 	target := &elbv2.TargetDescription{
 		Id: aws.String(d.Get("target_id").(string)),
@@ -137,7 +140,7 @@ func resourceAttachmentDelete(ctx context.Context, d *schema.ResourceData, meta 
 // target, so there is no work to do beyond ensuring that the target and group still exist.
 func resourceAttachmentRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ELBV2Conn()
+	conn := meta.(*conns.AWSClient).ELBV2Conn(ctx)
 
 	target := &elbv2.TargetDescription{
 		Id: aws.String(d.Get("target_id").(string)),

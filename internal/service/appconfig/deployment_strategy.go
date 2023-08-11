@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package appconfig
 
 import (
@@ -83,7 +86,7 @@ func ResourceDeploymentStrategy() *schema.Resource {
 
 func resourceDeploymentStrategyCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).AppConfigConn()
+	conn := meta.(*conns.AWSClient).AppConfigConn(ctx)
 
 	name := d.Get("name").(string)
 	input := &appconfig.CreateDeploymentStrategyInput{
@@ -92,7 +95,7 @@ func resourceDeploymentStrategyCreate(ctx context.Context, d *schema.ResourceDat
 		GrowthType:                  aws.String(d.Get("growth_type").(string)),
 		Name:                        aws.String(name),
 		ReplicateTo:                 aws.String(d.Get("replicate_to").(string)),
-		Tags:                        GetTagsIn(ctx),
+		Tags:                        getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("description"); ok {
@@ -116,7 +119,7 @@ func resourceDeploymentStrategyCreate(ctx context.Context, d *schema.ResourceDat
 
 func resourceDeploymentStrategyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).AppConfigConn()
+	conn := meta.(*conns.AWSClient).AppConfigConn(ctx)
 
 	input := &appconfig.GetDeploymentStrategyInput{
 		DeploymentStrategyId: aws.String(d.Id()),
@@ -160,7 +163,7 @@ func resourceDeploymentStrategyRead(ctx context.Context, d *schema.ResourceData,
 
 func resourceDeploymentStrategyUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).AppConfigConn()
+	conn := meta.(*conns.AWSClient).AppConfigConn(ctx)
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		updateInput := &appconfig.UpdateDeploymentStrategyInput{
@@ -199,7 +202,7 @@ func resourceDeploymentStrategyUpdate(ctx context.Context, d *schema.ResourceDat
 
 func resourceDeploymentStrategyDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).AppConfigConn()
+	conn := meta.(*conns.AWSClient).AppConfigConn(ctx)
 
 	input := &appconfig.DeleteDeploymentStrategyInput{
 		DeploymentStrategyId: aws.String(d.Id()),

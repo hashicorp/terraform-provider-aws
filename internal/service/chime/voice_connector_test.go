@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package chime_test
 
 import (
@@ -27,6 +30,7 @@ func TestAccChimeVoiceConnector_basic(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID)
+			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, chime.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -61,6 +65,7 @@ func TestAccChimeVoiceConnector_disappears(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID)
+			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, chime.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -89,6 +94,7 @@ func TestAccChimeVoiceConnector_update(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID)
+			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, chime.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -131,6 +137,7 @@ func TestAccChimeVoiceConnector_tags(t *testing.T) {
 			// Legacy chime resources are always created in us-east-1, and the ListTags operation
 			// can behave unexpectedly when configured with a different region.
 			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID)
+			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, chime.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -229,7 +236,7 @@ func testAccCheckVoiceConnectorExists(ctx context.Context, name string, vc *chim
 			return fmt.Errorf("no Chime voice connector ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ChimeConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ChimeConn(ctx)
 		input := &chime.GetVoiceConnectorInput{
 			VoiceConnectorId: aws.String(rs.Primary.ID),
 		}
@@ -250,7 +257,7 @@ func testAccCheckVoiceConnectorDestroy(ctx context.Context) resource.TestCheckFu
 			if rs.Type != "aws_chime_voice_connector" {
 				continue
 			}
-			conn := acctest.Provider.Meta().(*conns.AWSClient).ChimeConn()
+			conn := acctest.Provider.Meta().(*conns.AWSClient).ChimeConn(ctx)
 			input := &chime.GetVoiceConnectorInput{
 				VoiceConnectorId: aws.String(rs.Primary.ID),
 			}
@@ -263,5 +270,21 @@ func testAccCheckVoiceConnectorDestroy(ctx context.Context) resource.TestCheckFu
 			return nil
 		}
 		return nil
+	}
+}
+
+func testAccPreCheck(ctx context.Context, t *testing.T) {
+	conn := acctest.Provider.Meta().(*conns.AWSClient).ChimeConn(ctx)
+
+	input := &chime.ListVoiceConnectorsInput{}
+
+	_, err := conn.ListVoiceConnectorsWithContext(ctx, input)
+
+	if acctest.PreCheckSkipError(err) {
+		t.Skipf("skipping acceptance testing: %s", err)
+	}
+
+	if err != nil {
+		t.Fatalf("unexpected PreCheck error: %s", err)
 	}
 }

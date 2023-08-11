@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package mwaa
 
 import (
@@ -9,7 +12,9 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/mwaa"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	gversion "github.com/hashicorp/go-version"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -264,12 +269,30 @@ func ResourceEnvironment() *schema.Resource {
 			},
 		},
 
-		CustomizeDiff: verify.SetTagsDiff,
+		CustomizeDiff: customdiff.Sequence(
+			customdiff.ForceNewIf("airflow_version", func(ctx context.Context, d *schema.ResourceDiff, meta interface{}) bool {
+				o, n := d.GetChange("airflow_version")
+
+				if oldVersion, err := gversion.NewVersion(o.(string)); err == nil {
+					if newVersion, err := gversion.NewVersion(n.(string)); err == nil {
+						// https://docs.aws.amazon.com/mwaa/latest/userguide/airflow-versions.html#airflow-versions-upgrade:
+						// 	Amazon MWAA supports minor version upgrades.
+						// 	This means you can upgrade your environment from version x.4.z to x.5.z.
+						// 	However, you cannot upgrade your environment to a new major version of Apache Airflow.
+						// 	For example, upgrading from version 1.y.z to 2.y.z is not supported.
+						return oldVersion.Segments()[0] < newVersion.Segments()[0]
+					}
+				}
+
+				return false
+			}),
+			verify.SetTagsDiff,
+		),
 	}
 }
 
 func resourceEnvironmentCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).MWAAConn()
+	conn := meta.(*conns.AWSClient).MWAAConn(ctx)
 
 	name := d.Get("name").(string)
 	input := &mwaa.CreateEnvironmentInput{
@@ -278,7 +301,7 @@ func resourceEnvironmentCreate(ctx context.Context, d *schema.ResourceData, meta
 		Name:                 aws.String(name),
 		NetworkConfiguration: expandEnvironmentNetworkConfigurationCreate(d.Get("network_configuration").([]interface{})),
 		SourceBucketArn:      aws.String(d.Get("source_bucket_arn").(string)),
-		Tags:                 GetTagsIn(ctx),
+		Tags:                 getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("airflow_configuration_options"); ok {
@@ -346,7 +369,6 @@ func resourceEnvironmentCreate(ctx context.Context, d *schema.ResourceData, meta
 		input.WeeklyMaintenanceWindowStart = aws.String(v.(string))
 	}
 
-	log.Printf("[INFO] Creating MWAA Environment: %s", input)
 	/*
 		Execution roles created just before the MWAA Environment may result in ValidationExceptions
 		due to IAM permission propagation delays.
@@ -369,7 +391,7 @@ func resourceEnvironmentCreate(ctx context.Context, d *schema.ResourceData, meta
 }
 
 func resourceEnvironmentRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).MWAAConn()
+	conn := meta.(*conns.AWSClient).MWAAConn(ctx)
 
 	environment, err := FindEnvironmentByName(ctx, conn, d.Id())
 
@@ -417,13 +439,13 @@ func resourceEnvironmentRead(ctx context.Context, d *schema.ResourceData, meta i
 	d.Set("webserver_url", environment.WebserverUrl)
 	d.Set("weekly_maintenance_window_start", environment.WeeklyMaintenanceWindowStart)
 
-	SetTagsOut(ctx, environment.Tags)
+	setTagsOut(ctx, environment.Tags)
 
 	return nil
 }
 
 func resourceEnvironmentUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).MWAAConn()
+	conn := meta.(*conns.AWSClient).MWAAConn(ctx)
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		input := &mwaa.UpdateEnvironmentInput{
@@ -511,7 +533,6 @@ func resourceEnvironmentUpdate(ctx context.Context, d *schema.ResourceData, meta
 			input.WeeklyMaintenanceWindowStart = aws.String(d.Get("weekly_maintenance_window_start").(string))
 		}
 
-		log.Printf("[INFO] Updating MWAA Environment: %s", input)
 		_, err := conn.UpdateEnvironmentWithContext(ctx, input)
 
 		if err != nil {
@@ -527,7 +548,7 @@ func resourceEnvironmentUpdate(ctx context.Context, d *schema.ResourceData, meta
 }
 
 func resourceEnvironmentDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).MWAAConn()
+	conn := meta.(*conns.AWSClient).MWAAConn(ctx)
 
 	log.Printf("[INFO] Deleting MWAA Environment: %s", d.Id())
 	_, err := conn.DeleteEnvironmentWithContext(ctx, &mwaa.DeleteEnvironmentInput{
@@ -635,7 +656,7 @@ func waitEnvironmentCreated(ctx context.Context, conn *mwaa.MWAA, name string, t
 
 func waitEnvironmentUpdated(ctx context.Context, conn *mwaa.MWAA, name string, timeout time.Duration) (*mwaa.Environment, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending: []string{mwaa.EnvironmentStatusUpdating},
+		Pending: []string{mwaa.EnvironmentStatusUpdating, mwaa.EnvironmentStatusCreatingSnapshot},
 		Target:  []string{mwaa.EnvironmentStatusAvailable},
 		Refresh: statusEnvironment(ctx, conn, name),
 		Timeout: timeout,

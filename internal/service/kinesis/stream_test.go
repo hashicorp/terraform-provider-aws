@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package kinesis_test
 
 import (
@@ -600,7 +603,7 @@ func TestAccKinesisStream_failOnBadStreamCountAndStreamModeCombination(t *testin
 
 func testAccCheckStreamExists(ctx context.Context, n string, v *kinesis.StreamDescriptionSummary) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).KinesisConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).KinesisConn(ctx)
 
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -625,7 +628,7 @@ func testAccCheckStreamExists(ctx context.Context, n string, v *kinesis.StreamDe
 
 func testAccCheckStreamDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).KinesisConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).KinesisConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_kinesis_stream" {
@@ -651,7 +654,7 @@ func testAccCheckStreamDestroy(ctx context.Context) resource.TestCheckFunc {
 
 func testAccStreamRegisterStreamConsumer(ctx context.Context, stream *kinesis.StreamDescriptionSummary, rName string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).KinesisConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).KinesisConn(ctx)
 
 		if _, err := conn.RegisterStreamConsumerWithContext(ctx, &kinesis.RegisterStreamConsumerInput{
 			ConsumerName: aws.String(rName),

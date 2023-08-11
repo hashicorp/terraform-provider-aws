@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package logs
 
 import (
@@ -61,7 +64,7 @@ func resourceQueryDefinition() *schema.Resource {
 }
 
 func resourceQueryDefinitionPut(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).LogsConn()
+	conn := meta.(*conns.AWSClient).LogsConn(ctx)
 
 	name := d.Get("name").(string)
 	input := &cloudwatchlogs.PutQueryDefinitionInput{
@@ -91,7 +94,7 @@ func resourceQueryDefinitionPut(ctx context.Context, d *schema.ResourceData, met
 }
 
 func resourceQueryDefinitionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).LogsConn()
+	conn := meta.(*conns.AWSClient).LogsConn(ctx)
 
 	result, err := FindQueryDefinitionByTwoPartKey(ctx, conn, d.Get("name").(string), d.Id())
 
@@ -114,7 +117,7 @@ func resourceQueryDefinitionRead(ctx context.Context, d *schema.ResourceData, me
 }
 
 func resourceQueryDefinitionDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).LogsConn()
+	conn := meta.(*conns.AWSClient).LogsConn(ctx)
 
 	log.Printf("[INFO] Deleting CloudWatch Logs Query Definition: %s", d.Id())
 	_, err := conn.DeleteQueryDefinitionWithContext(ctx, &cloudwatchlogs.DeleteQueryDefinitionInput{

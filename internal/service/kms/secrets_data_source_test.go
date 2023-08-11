@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package kms_test
 
 import (
@@ -70,7 +73,7 @@ func TestAccKMSSecretsDataSource_asymmetric(t *testing.T) {
 
 func testAccSecretsEncryptDataSource(ctx context.Context, key *kms.KeyMetadata, plaintext string, encryptedPayload *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).KMSConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).KMSConn(ctx)
 
 		input := &kms.EncryptInput{
 			KeyId:     key.Arn,
@@ -94,7 +97,7 @@ func testAccSecretsEncryptDataSource(ctx context.Context, key *kms.KeyMetadata, 
 
 func testAccSecretsEncryptDataSourceAsymmetric(ctx context.Context, key *kms.KeyMetadata, plaintext string, encryptedPayload *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).KMSConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).KMSConn(ctx)
 
 		input := &kms.EncryptInput{
 			KeyId:               key.Arn,

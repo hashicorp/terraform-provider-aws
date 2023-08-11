@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package redshift_test
 
 import (
@@ -740,6 +743,8 @@ func TestAccRedshiftCluster_availabilityZoneRelocation(t *testing.T) {
 
 func TestAccRedshiftCluster_availabilityZoneRelocation_publiclyAccessible(t *testing.T) {
 	ctx := acctest.Context(t)
+	var v redshift.Cluster
+	resourceName := "aws_redshift_cluster.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -749,8 +754,12 @@ func TestAccRedshiftCluster_availabilityZoneRelocation_publiclyAccessible(t *tes
 		CheckDestroy:             testAccCheckClusterDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccClusterConfig_availabilityZoneRelocationPubliclyAccessible(rName),
-				ExpectError: regexp.MustCompile("`availability_zone_relocation_enabled` cannot be true when `publicly_accessible` is true"),
+				Config: testAccClusterConfig_availabilityZoneRelocationPubliclyAccessible(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusterExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "availability_zone_relocation_enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "publicly_accessible", "true"),
+				),
 			},
 		},
 	})
@@ -808,7 +817,7 @@ func TestAccRedshiftCluster_restoreFromSnapshot(t *testing.T) {
 
 func testAccCheckClusterDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_redshift_cluster" {
@@ -840,7 +849,7 @@ func testAccCheckClusterTestSnapshotDestroy(ctx context.Context, rName string) r
 			}
 
 			// Try and delete the snapshot before we check for the cluster not found
-			conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftConn()
+			conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftConn(ctx)
 
 			_, err := conn.DeleteClusterSnapshotWithContext(ctx, &redshift.DeleteClusterSnapshotInput{
 				SnapshotIdentifier: aws.String(rName),
@@ -878,7 +887,7 @@ func testAccCheckClusterExists(ctx context.Context, n string, v *redshift.Cluste
 			return fmt.Errorf("No Redshift Cluster ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftConn(ctx)
 
 		output, err := tfredshift.FindClusterByID(ctx, conn, rs.Primary.ID)
 

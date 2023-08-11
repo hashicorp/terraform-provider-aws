@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ssm_test
 
 import (
@@ -515,7 +518,7 @@ func testAccCheckMaintenanceWindowExists(ctx context.Context, n string, v *ssm.G
 			return fmt.Errorf("No SSM Maintenance Window ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SSMConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SSMConn(ctx)
 
 		output, err := tfssm.FindMaintenanceWindowByID(ctx, conn, rs.Primary.ID)
 
@@ -531,7 +534,7 @@ func testAccCheckMaintenanceWindowExists(ctx context.Context, n string, v *ssm.G
 
 func testAccCheckMaintenanceWindowDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SSMConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SSMConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_ssm_maintenance_window" {

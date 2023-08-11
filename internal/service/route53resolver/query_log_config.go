@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package route53resolver
 
 import (
@@ -66,14 +69,14 @@ func ResourceQueryLogConfig() *schema.Resource {
 }
 
 func resourceQueryLogConfigCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).Route53ResolverConn()
+	conn := meta.(*conns.AWSClient).Route53ResolverConn(ctx)
 
 	name := d.Get("name").(string)
 	input := &route53resolver.CreateResolverQueryLogConfigInput{
 		CreatorRequestId: aws.String(id.PrefixedUniqueId("tf-r53-resolver-query-log-config-")),
 		DestinationArn:   aws.String(d.Get("destination_arn").(string)),
 		Name:             aws.String(name),
-		Tags:             GetTagsIn(ctx),
+		Tags:             getTagsIn(ctx),
 	}
 
 	output, err := conn.CreateResolverQueryLogConfigWithContext(ctx, input)
@@ -92,7 +95,7 @@ func resourceQueryLogConfigCreate(ctx context.Context, d *schema.ResourceData, m
 }
 
 func resourceQueryLogConfigRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).Route53ResolverConn()
+	conn := meta.(*conns.AWSClient).Route53ResolverConn(ctx)
 
 	queryLogConfig, err := FindResolverQueryLogConfigByID(ctx, conn, d.Id())
 
@@ -122,7 +125,7 @@ func resourceQueryLogConfigUpdate(ctx context.Context, d *schema.ResourceData, m
 }
 
 func resourceQueryLogConfigDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).Route53ResolverConn()
+	conn := meta.(*conns.AWSClient).Route53ResolverConn(ctx)
 
 	log.Printf("[DEBUG] Deleting Route53 Resolver Query Log Config: %s", d.Id())
 	_, err := conn.DeleteResolverQueryLogConfigWithContext(ctx, &route53resolver.DeleteResolverQueryLogConfigInput{

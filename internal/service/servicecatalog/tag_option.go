@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package servicecatalog
 
 import (
@@ -58,7 +61,7 @@ func ResourceTagOption() *schema.Resource {
 
 func resourceTagOptionCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ServiceCatalogConn()
+	conn := meta.(*conns.AWSClient).ServiceCatalogConn(ctx)
 
 	input := &servicecatalog.CreateTagOptionInput{
 		Key:   aws.String(d.Get("key").(string)),
@@ -115,7 +118,7 @@ func resourceTagOptionCreate(ctx context.Context, d *schema.ResourceData, meta i
 
 func resourceTagOptionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ServiceCatalogConn()
+	conn := meta.(*conns.AWSClient).ServiceCatalogConn(ctx)
 
 	output, err := WaitTagOptionReady(ctx, conn, d.Id(), d.Timeout(schema.TimeoutRead))
 
@@ -143,7 +146,7 @@ func resourceTagOptionRead(ctx context.Context, d *schema.ResourceData, meta int
 
 func resourceTagOptionUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ServiceCatalogConn()
+	conn := meta.(*conns.AWSClient).ServiceCatalogConn(ctx)
 
 	input := &servicecatalog.UpdateTagOptionInput{
 		Id: aws.String(d.Id()),
@@ -187,7 +190,7 @@ func resourceTagOptionUpdate(ctx context.Context, d *schema.ResourceData, meta i
 
 func resourceTagOptionDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ServiceCatalogConn()
+	conn := meta.(*conns.AWSClient).ServiceCatalogConn(ctx)
 
 	input := &servicecatalog.DeleteTagOptionInput{
 		Id: aws.String(d.Id()),

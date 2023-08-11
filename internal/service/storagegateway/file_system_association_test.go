@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package storagegateway_test
 
 import (
@@ -273,7 +276,7 @@ func TestAccStorageGatewayFileSystemAssociation_Disappears_fsxFileSystem(t *test
 
 func testAccCheckFileSystemAssociationDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).StorageGatewayConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).StorageGatewayConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_storagegateway_file_system_association" {
@@ -304,7 +307,7 @@ func testAccCheckFileSystemAssociationExists(ctx context.Context, resourceName s
 			return fmt.Errorf("Not found: %s", resourceName)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).StorageGatewayConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).StorageGatewayConn(ctx)
 
 		output, err := tfstoragegateway.FindFileSystemAssociationByARN(ctx, conn, rs.Primary.ID)
 

@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ec2_test
 
 import (
@@ -231,7 +234,7 @@ func testAccCheckNetworkInsightsPathExists(ctx context.Context, n string) resour
 			return fmt.Errorf("No EC2 Network Insights Path ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
 
 		_, err := tfec2.FindNetworkInsightsPathByID(ctx, conn, rs.Primary.ID)
 
@@ -241,7 +244,7 @@ func testAccCheckNetworkInsightsPathExists(ctx context.Context, n string) resour
 
 func testAccCheckNetworkInsightsPathDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_ec2_network_insights_path" {

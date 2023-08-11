@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package cloudfront_test
 
 import (
@@ -1458,7 +1461,7 @@ func TestAccCloudFrontDistribution_preconditionFailed(t *testing.T) {
 
 func testAccCheckDistributionDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudFrontConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudFrontConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_cloudfront_distribution" {
@@ -1504,7 +1507,7 @@ func testAccCheckDistributionExists(ctx context.Context, resourceName string, di
 			return fmt.Errorf("Resource ID not found: %s", resourceName)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudFrontConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudFrontConn(ctx)
 
 		input := &cloudfront.GetDistributionInput{
 			Id: aws.String(rs.Primary.ID),
@@ -1524,7 +1527,7 @@ func testAccCheckDistributionExists(ctx context.Context, resourceName string, di
 
 func testAccCheckDistributionExistsAPIOnly(ctx context.Context, distribution *cloudfront.Distribution) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudFrontConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudFrontConn(ctx)
 
 		input := &cloudfront.GetDistributionInput{
 			Id: distribution.Id,
@@ -1588,7 +1591,7 @@ func testAccCheckDistributionDisabled(distribution *cloudfront.Distribution) res
 // This requires the CloudFront Distribution to previously be disabled and fetches latest ETag automatically.
 func testAccCheckDistributionDisappears(ctx context.Context, distribution *cloudfront.Distribution) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudFrontConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudFrontConn(ctx)
 
 		getDistributionInput := &cloudfront.GetDistributionInput{
 			Id: distribution.Id,
@@ -1698,7 +1701,28 @@ resource "aws_s3_bucket" "s3_bucket_origin" {
   bucket = "%[1]s.origin-bucket"
 }
 
+resource "aws_s3_bucket_public_access_block" "s3_bucket_origin" {
+  bucket = aws_s3_bucket.s3_bucket_origin.id
+
+  block_public_acls       = false
+  block_public_policy     = false
+  ignore_public_acls      = false
+  restrict_public_buckets = false
+}
+
+resource "aws_s3_bucket_ownership_controls" "s3_bucket_origin" {
+  bucket = aws_s3_bucket.s3_bucket_origin.id
+  rule {
+    object_ownership = "BucketOwnerPreferred"
+  }
+}
+
 resource "aws_s3_bucket_acl" "s3_bucket_origin_acl" {
+  depends_on = [
+    aws_s3_bucket_public_access_block.s3_bucket_origin,
+    aws_s3_bucket_ownership_controls.s3_bucket_origin,
+  ]
+
   bucket = aws_s3_bucket.s3_bucket_origin.id
   acl    = "public-read"
 }
@@ -1711,7 +1735,28 @@ resource "aws_s3_bucket" "s3_backup_bucket_origin" {
   bucket = "%[1]s.backup-bucket"
 }
 
+resource "aws_s3_bucket_public_access_block" "s3_backup_bucket_origin" {
+  bucket = aws_s3_bucket.s3_backup_bucket_origin.id
+
+  block_public_acls       = false
+  block_public_policy     = false
+  ignore_public_acls      = false
+  restrict_public_buckets = false
+}
+
+resource "aws_s3_bucket_ownership_controls" "s3_backup_bucket_origin" {
+  bucket = aws_s3_bucket.s3_backup_bucket_origin.id
+  rule {
+    object_ownership = "BucketOwnerPreferred"
+  }
+}
+
 resource "aws_s3_bucket_acl" "s3_backup_bucket_origin_acl" {
+  depends_on = [
+    aws_s3_bucket_public_access_block.s3_backup_bucket_origin,
+    aws_s3_bucket_ownership_controls.s3_backup_bucket_origin,
+  ]
+
   bucket = aws_s3_bucket.s3_backup_bucket_origin.id
   acl    = "public-read"
 }
@@ -1725,7 +1770,29 @@ resource "aws_s3_bucket" "s3_bucket_logs" {
   force_destroy = true
 }
 
+resource "aws_s3_bucket_public_access_block" "s3_bucket_logs" {
+  bucket = aws_s3_bucket.s3_bucket_logs.id
+
+  block_public_acls       = false
+  block_public_policy     = false
+  ignore_public_acls      = false
+  restrict_public_buckets = false
+}
+
+resource "aws_s3_bucket_ownership_controls" "s3_bucket_logs" {
+  bucket = aws_s3_bucket.s3_bucket_logs.id
+  rule {
+    object_ownership = "BucketOwnerPreferred"
+  }
+}
+
+
 resource "aws_s3_bucket_acl" "s3_bucket_logs_acl" {
+  depends_on = [
+    aws_s3_bucket_public_access_block.s3_bucket_logs,
+    aws_s3_bucket_ownership_controls.s3_bucket_logs,
+  ]
+
   bucket = aws_s3_bucket.s3_bucket_logs.id
   acl    = "public-read"
 }
@@ -1738,6 +1805,11 @@ func testAccDistributionConfig_s3(rName string) string {
 		logBucket(rName),
 		fmt.Sprintf(`
 resource "aws_cloudfront_distribution" "s3_distribution" {
+  depends_on = [
+    aws_s3_bucket_acl.s3_bucket_origin_acl,
+    aws_s3_bucket_acl.s3_bucket_logs_acl,
+  ]
+
   origin {
     domain_name = aws_s3_bucket.s3_bucket_origin.bucket_regional_domain_name
     origin_id   = "myS3Origin"
@@ -1895,6 +1967,8 @@ func testAccDistributionConfig_custom(rName string) string {
 		logBucket(rName),
 		fmt.Sprintf(`
 resource "aws_cloudfront_distribution" "custom_distribution" {
+  depends_on = [aws_s3_bucket_acl.s3_bucket_logs_acl]
+
   origin {
     domain_name = "www.example.com"
     origin_id   = "myCustomOrigin"
@@ -2036,6 +2110,8 @@ resource "aws_cloudfront_origin_request_policy" "test_policy" {
 }
 
 resource "aws_cloudfront_distribution" "custom_distribution" {
+  depends_on = [aws_s3_bucket_acl.s3_bucket_logs_acl]
+
   origin {
     domain_name = "www.example.com"
     origin_id   = "myCustomOrigin"
@@ -2170,6 +2246,8 @@ resource "aws_cloudfront_origin_request_policy" "test_policy" {
 }
 
 resource "aws_cloudfront_distribution" "custom_distribution" {
+  depends_on = [aws_s3_bucket_acl.s3_bucket_logs_acl]
+
   origin {
     domain_name = "www.example.com"
     origin_id   = "myCustomOrigin"
@@ -2245,6 +2323,11 @@ func testAccDistributionConfig_multiOrigin(rName string) string {
 		logBucket(rName),
 		fmt.Sprintf(`
 resource "aws_cloudfront_distribution" "multi_origin_distribution" {
+  depends_on = [
+    aws_s3_bucket_acl.s3_bucket_origin_acl,
+    aws_s3_bucket_acl.s3_bucket_logs_acl,
+  ]
+
   origin {
     domain_name = aws_s3_bucket.s3_bucket_origin.bucket_regional_domain_name
     origin_id   = "myS3Origin"
@@ -2966,6 +3049,11 @@ func testAccDistributionConfig_originGroups(rName string) string {
 		backupBucket(rName),
 		fmt.Sprintf(`
 resource "aws_cloudfront_distribution" "failover_distribution" {
+  depends_on = [
+    aws_s3_bucket_acl.s3_bucket_origin_acl,
+    aws_s3_bucket_acl.s3_backup_bucket_origin_acl,
+  ]
+
   origin {
     domain_name = aws_s3_bucket.s3_bucket_origin.bucket_regional_domain_name
     origin_id   = "primaryS3"
@@ -3990,6 +4078,8 @@ func testAccDistributionConfig_originItem(rName string, item string) string {
 data "aws_region" "current" {}
 
 resource "aws_cloudfront_distribution" "test" {
+  depends_on = [aws_s3_bucket_acl.s3_bucket_origin_acl]
+
   origin {
     domain_name = aws_s3_bucket.s3_bucket_origin.bucket_regional_domain_name
     origin_id   = "myOrigin"
@@ -4104,6 +4194,8 @@ resource "aws_cloudfront_origin_request_policy" "test_policy" {
 }
 
 resource "aws_cloudfront_distribution" "main" {
+  depends_on = [aws_s3_bucket_acl.s3_bucket_logs_acl]
+
   origin {
     domain_name = "www.example.com"
     origin_id   = "myCustomOrigin"
@@ -4238,6 +4330,8 @@ resource "aws_cloudfront_origin_request_policy" "test_policy" {
 }
 
 resource "aws_cloudfront_distribution" "main" {
+  depends_on = [aws_s3_bucket_acl.s3_bucket_logs_acl]
+
   origin {
     domain_name = "www.example.com"
     origin_id   = "myCustomOrigin"
@@ -4372,6 +4466,8 @@ resource "aws_cloudfront_origin_request_policy" "test_policy" {
 }
 
 resource "aws_cloudfront_distribution" "main" {
+  depends_on = [aws_s3_bucket_acl.s3_bucket_logs_acl]
+
   origin {
     domain_name = "www.example.com"
     origin_id   = "myCustomOrigin"
@@ -4446,6 +4542,11 @@ resource "aws_cloudfront_origin_access_control" "test" {
 }
 
 resource "aws_cloudfront_distribution" "test" {
+  depends_on = [
+    aws_s3_bucket_acl.s3_bucket_origin_acl,
+    aws_s3_bucket_acl.s3_bucket_logs_acl,
+  ]
+
   origin {
     domain_name = aws_s3_bucket.s3_bucket_origin.bucket_regional_domain_name
     origin_id   = "myS3Origin"

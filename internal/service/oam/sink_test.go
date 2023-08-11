@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package oam_test
 
 import (
@@ -147,7 +150,7 @@ func TestAccObservabilityAccessManagerSink_tags(t *testing.T) {
 
 func testAccCheckSinkDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ObservabilityAccessManagerClient()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ObservabilityAccessManagerClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_oam_sink" {
@@ -184,7 +187,7 @@ func testAccCheckSinkExists(ctx context.Context, name string, sink *oam.GetSinkO
 			return create.Error(names.ObservabilityAccessManager, create.ErrActionCheckingExistence, tfoam.ResNameSink, name, errors.New("not set"))
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ObservabilityAccessManagerClient()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ObservabilityAccessManagerClient(ctx)
 
 		resp, err := conn.GetSink(ctx, &oam.GetSinkInput{
 			Identifier: aws.String(rs.Primary.ID),
@@ -201,7 +204,7 @@ func testAccCheckSinkExists(ctx context.Context, name string, sink *oam.GetSinkO
 }
 
 func testAccPreCheck(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).ObservabilityAccessManagerClient()
+	conn := acctest.Provider.Meta().(*conns.AWSClient).ObservabilityAccessManagerClient(ctx)
 
 	input := &oam.ListSinksInput{}
 	_, err := conn.ListSinks(ctx, input)

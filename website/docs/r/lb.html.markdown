@@ -99,7 +99,7 @@ resource "aws_lb" "example" {
 
 ~> **NOTE:** Please note that one of either `subnets` or `subnet_mapping` is required.
 
-The following arguments are supported:
+This argument supports the following arguments:
 
 * `access_logs` - (Optional) An Access Logs block. Access Logs documented below.
 * `customer_owned_ipv4_pool` - (Optional) The ID of the customer owned ipv4 pool to use for this load balancer.
@@ -141,9 +141,9 @@ for load balancers of type `network` will force a recreation of the resource.
 * `ipv6_address` - (Optional) The IPv6 address. You associate IPv6 CIDR blocks with your VPC and choose the subnets where you launch both internet-facing and internal Application Load Balancers or Network Load Balancers.
 * `private_ipv4_address` - (Optional) The private IPv4 address for an internal load balancer.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - The ARN of the load balancer (matches `id`).
 * `arn_suffix` - The ARN suffix for use with CloudWatch Metrics.
@@ -163,8 +163,17 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-LBs can be imported using their ARN, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import LBs using their ARN. For example:
 
+```terraform
+import {
+  to = aws_lb.bar
+  id = "arn:aws:elasticloadbalancing:us-west-2:123456789012:loadbalancer/app/my-load-balancer/50dc6c495c0c9188"
+}
 ```
-$ terraform import aws_lb.bar arn:aws:elasticloadbalancing:us-west-2:123456789012:loadbalancer/app/my-load-balancer/50dc6c495c0c9188
+
+Using `terraform import`, import LBs using their ARN. For example:
+
+```console
+% terraform import aws_lb.bar arn:aws:elasticloadbalancing:us-west-2:123456789012:loadbalancer/app/my-load-balancer/50dc6c495c0c9188
 ```

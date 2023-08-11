@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package cloudfront_test
 
 import (
@@ -107,7 +110,7 @@ func TestAccCloudFrontFieldLevelEncryptionConfig_disappears(t *testing.T) {
 
 func testAccCheckFieldLevelEncryptionConfigDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudFrontConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudFrontConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_cloudfront_field_level_encryption_config" {
@@ -142,7 +145,7 @@ func testAccCheckFieldLevelEncryptionConfigExists(ctx context.Context, r string,
 			return fmt.Errorf("No CloudFront Field-level Encryption Config ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudFrontConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudFrontConn(ctx)
 
 		output, err := tfcloudfront.FindFieldLevelEncryptionConfigByID(ctx, conn, rs.Primary.ID)
 

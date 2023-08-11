@@ -1,8 +1,13 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package rds
 
 import (
 	"context"
+	"fmt"
 	"log"
+	"regexp"
 	"strings"
 	"time"
 
@@ -78,6 +83,12 @@ func ResourceClusterInstance() *schema.Resource {
 				Optional: true,
 				Default:  false,
 			},
+			"custom_iam_instance_profile": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.StringMatch(regexp.MustCompile(`^AWSRDSCustom.*$`), "must begin with AWSRDSCustom"),
+			},
 			"db_parameter_group_name": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -98,10 +109,13 @@ func ResourceClusterInstance() *schema.Resource {
 				Computed: true,
 			},
 			"engine": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validClusterEngine(),
+				Type:     schema.TypeString,
+				Required: true,
+				ForceNew: true,
+				ValidateFunc: validation.Any(
+					validation.StringMatch(regexp.MustCompile(fmt.Sprintf(`^%s.*$`, InstanceEngineCustomPrefix)), fmt.Sprintf("must begin with %s", InstanceEngineCustomPrefix)),
+					validation.StringInSlice(ClusterEngine_Values(), false),
+				),
 			},
 			"engine_version": {
 				Type:     schema.TypeString,
@@ -225,7 +239,7 @@ func ResourceClusterInstance() *schema.Resource {
 
 func resourceClusterInstanceCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).RDSConn()
+	conn := meta.(*conns.AWSClient).RDSConn(ctx)
 
 	clusterID := d.Get("cluster_identifier").(string)
 	var identifier string
@@ -247,7 +261,7 @@ func resourceClusterInstanceCreate(ctx context.Context, d *schema.ResourceData, 
 		Engine:                  aws.String(d.Get("engine").(string)),
 		PromotionTier:           aws.Int64(int64(d.Get("promotion_tier").(int))),
 		PubliclyAccessible:      aws.Bool(d.Get("publicly_accessible").(bool)),
-		Tags:                    GetTagsIn(ctx),
+		Tags:                    getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("availability_zone"); ok {
@@ -260,6 +274,10 @@ func resourceClusterInstanceCreate(ctx context.Context, d *schema.ResourceData, 
 
 	if v, ok := d.GetOk("db_subnet_group_name"); ok {
 		input.DBSubnetGroupName = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("custom_iam_instance_profile"); ok {
+		input.CustomIamInstanceProfile = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("engine_version"); ok {
@@ -344,7 +362,7 @@ func resourceClusterInstanceCreate(ctx context.Context, d *schema.ResourceData, 
 
 func resourceClusterInstanceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).RDSConn()
+	conn := meta.(*conns.AWSClient).RDSConn(ctx)
 
 	db, err := findDBInstanceByIDSDKv1(ctx, conn, d.Id())
 	if !d.IsNewResource() && tfresource.NotFound(err) {
@@ -388,6 +406,7 @@ func resourceClusterInstanceRead(ctx context.Context, d *schema.ResourceData, me
 	d.Set("ca_cert_identifier", db.CACertificateIdentifier)
 	d.Set("cluster_identifier", db.DBClusterIdentifier)
 	d.Set("copy_tags_to_snapshot", db.CopyTagsToSnapshot)
+	d.Set("custom_iam_instance_profile", db.CustomIamInstanceProfile)
 	if len(db.DBParameterGroups) > 0 && db.DBParameterGroups[0] != nil {
 		d.Set("db_parameter_group_name", db.DBParameterGroups[0].DBParameterGroupName)
 	}
@@ -413,13 +432,13 @@ func resourceClusterInstanceRead(ctx context.Context, d *schema.ResourceData, me
 
 	clusterSetResourceDataEngineVersionFromClusterInstance(d, db)
 
-	SetTagsOut(ctx, db.TagList)
+	setTagsOut(ctx, db.TagList)
 
 	return nil
 }
 
 func resourceClusterInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) (diags diag.Diagnostics) {
-	conn := meta.(*conns.AWSClient).RDSConn()
+	conn := meta.(*conns.AWSClient).RDSConn(ctx)
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		input := &rds.ModifyDBInstanceInput{
@@ -503,10 +522,16 @@ func resourceClusterInstanceUpdate(ctx context.Context, d *schema.ResourceData, 
 
 func resourceClusterInstanceDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).RDSConn()
+	conn := meta.(*conns.AWSClient).RDSConn(ctx)
 
 	input := &rds.DeleteDBInstanceInput{
 		DBInstanceIdentifier: aws.String(d.Id()),
+	}
+
+	// Automatically set skip_final_snapshot = true for RDS Custom instances
+	if strings.HasPrefix(d.Get("engine").(string), InstanceEngineCustomPrefix) {
+		log.Printf("[DEBUG] RDS Custom engine detected (%s) applying SkipFinalSnapshot: %s", d.Get("engine").(string), "true")
+		input.SkipFinalSnapshot = aws.Bool(true)
 	}
 
 	log.Printf("[DEBUG] Deleting RDS Cluster Instance: %s", d.Id())

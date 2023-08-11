@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package schemas
 
 import (
@@ -96,7 +99,7 @@ func ResourceSchema() *schema.Resource {
 
 func resourceSchemaCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SchemasConn()
+	conn := meta.(*conns.AWSClient).SchemasConn(ctx)
 
 	name := d.Get("name").(string)
 	registryName := d.Get("registry_name").(string)
@@ -104,7 +107,7 @@ func resourceSchemaCreate(ctx context.Context, d *schema.ResourceData, meta inte
 		Content:      aws.String(d.Get("content").(string)),
 		RegistryName: aws.String(registryName),
 		SchemaName:   aws.String(name),
-		Tags:         GetTagsIn(ctx),
+		Tags:         getTagsIn(ctx),
 		Type:         aws.String(d.Get("type").(string)),
 	}
 
@@ -128,7 +131,7 @@ func resourceSchemaCreate(ctx context.Context, d *schema.ResourceData, meta inte
 
 func resourceSchemaRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SchemasConn()
+	conn := meta.(*conns.AWSClient).SchemasConn(ctx)
 
 	name, registryName, err := SchemaParseResourceID(d.Id())
 
@@ -171,7 +174,7 @@ func resourceSchemaRead(ctx context.Context, d *schema.ResourceData, meta interf
 
 func resourceSchemaUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SchemasConn()
+	conn := meta.(*conns.AWSClient).SchemasConn(ctx)
 
 	if d.HasChanges("content", "description", "type") {
 		name, registryName, err := SchemaParseResourceID(d.Id())
@@ -207,7 +210,7 @@ func resourceSchemaUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 
 func resourceSchemaDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SchemasConn()
+	conn := meta.(*conns.AWSClient).SchemasConn(ctx)
 
 	name, registryName, err := SchemaParseResourceID(d.Id())
 

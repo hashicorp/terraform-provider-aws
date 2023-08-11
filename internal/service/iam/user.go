@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package iam
 
 import (
@@ -87,13 +90,13 @@ func ResourceUser() *schema.Resource {
 
 func resourceUserCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).IAMConn()
+	conn := meta.(*conns.AWSClient).IAMConn(ctx)
 
 	name := d.Get("name").(string)
 	path := d.Get("path").(string)
 	input := &iam.CreateUserInput{
 		Path:     aws.String(path),
-		Tags:     GetTagsIn(ctx),
+		Tags:     getTagsIn(ctx),
 		UserName: aws.String(name),
 	}
 
@@ -117,7 +120,7 @@ func resourceUserCreate(ctx context.Context, d *schema.ResourceData, meta interf
 	d.SetId(aws.StringValue(output.User.UserName))
 
 	// For partitions not supporting tag-on-create, attempt tag after create.
-	if tags := GetTagsIn(ctx); input.Tags == nil && len(tags) > 0 {
+	if tags := getTagsIn(ctx); input.Tags == nil && len(tags) > 0 {
 		err := userCreateTags(ctx, conn, d.Id(), tags)
 
 		// If default tags only, continue. Otherwise, error.
@@ -135,7 +138,7 @@ func resourceUserCreate(ctx context.Context, d *schema.ResourceData, meta interf
 
 func resourceUserRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).IAMConn()
+	conn := meta.(*conns.AWSClient).IAMConn(ctx)
 
 	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(ctx, propagationTimeout, func() (interface{}, error) {
 		return FindUserByName(ctx, conn, d.Id())
@@ -161,14 +164,14 @@ func resourceUserRead(ctx context.Context, d *schema.ResourceData, meta interfac
 	}
 	d.Set("unique_id", user.UserId)
 
-	SetTagsOut(ctx, user.Tags)
+	setTagsOut(ctx, user.Tags)
 
 	return diags
 }
 
 func resourceUserUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).IAMConn()
+	conn := meta.(*conns.AWSClient).IAMConn(ctx)
 
 	if d.HasChanges("name", "path") {
 		o, n := d.GetChange("name")
@@ -231,7 +234,7 @@ func resourceUserUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 
 func resourceUserDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).IAMConn()
+	conn := meta.(*conns.AWSClient).IAMConn(ctx)
 
 	// IAM Users must be removed from all groups before they can be deleted
 	if err := DeleteUserGroupMemberships(ctx, conn, d.Id()); err != nil {
@@ -322,7 +325,7 @@ func DeleteUserGroupMemberships(ctx context.Context, conn *iam.IAM, username str
 	}
 	err := conn.ListGroupsForUserPagesWithContext(ctx, listGroups, pageOfGroups)
 	if err != nil {
-		return fmt.Errorf("Error removing user %q from all groups: %s", username, err)
+		return fmt.Errorf("removing user %q from all groups: %s", username, err)
 	}
 	for _, g := range groups {
 		// use iam group membership func to remove user from all groups
@@ -350,7 +353,7 @@ func DeleteUserSSHKeys(ctx context.Context, conn *iam.IAM, username string) erro
 	}
 	err = conn.ListSSHPublicKeysPagesWithContext(ctx, listSSHPublicKeys, pageOfListSSHPublicKeys)
 	if err != nil {
-		return fmt.Errorf("Error removing public SSH keys of user %s: %w", username, err)
+		return fmt.Errorf("removing public SSH keys of user %s: %w", username, err)
 	}
 	for _, k := range publicKeys {
 		_, err := conn.DeleteSSHPublicKeyWithContext(ctx, &iam.DeleteSSHPublicKeyInput{
@@ -358,7 +361,7 @@ func DeleteUserSSHKeys(ctx context.Context, conn *iam.IAM, username string) erro
 			SSHPublicKeyId: aws.String(k),
 		})
 		if err != nil {
-			return fmt.Errorf("Error deleting public SSH key %s: %w", k, err)
+			return fmt.Errorf("deleting public SSH key %s: %w", k, err)
 		}
 	}
 
@@ -383,7 +386,7 @@ func DeleteUserVirtualMFADevices(ctx context.Context, conn *iam.IAM, username st
 	}
 	err = conn.ListVirtualMFADevicesPagesWithContext(ctx, listVirtualMFADevices, pageOfVirtualMFADevices)
 	if err != nil {
-		return fmt.Errorf("Error removing Virtual MFA devices of user %s: %w", username, err)
+		return fmt.Errorf("removing Virtual MFA devices of user %s: %w", username, err)
 	}
 	for _, m := range VirtualMFADevices {
 		_, err := conn.DeactivateMFADeviceWithContext(ctx, &iam.DeactivateMFADeviceInput{
@@ -391,13 +394,13 @@ func DeleteUserVirtualMFADevices(ctx context.Context, conn *iam.IAM, username st
 			SerialNumber: aws.String(m),
 		})
 		if err != nil {
-			return fmt.Errorf("Error deactivating Virtual MFA device %s: %w", m, err)
+			return fmt.Errorf("deactivating Virtual MFA device %s: %w", m, err)
 		}
 		_, err = conn.DeleteVirtualMFADeviceWithContext(ctx, &iam.DeleteVirtualMFADeviceInput{
 			SerialNumber: aws.String(m),
 		})
 		if err != nil {
-			return fmt.Errorf("Error deleting Virtual MFA device %s: %w", m, err)
+			return fmt.Errorf("deleting Virtual MFA device %s: %w", m, err)
 		}
 	}
 
@@ -419,7 +422,7 @@ func DeactivateUserMFADevices(ctx context.Context, conn *iam.IAM, username strin
 	}
 	err = conn.ListMFADevicesPagesWithContext(ctx, listMFADevices, pageOfMFADevices)
 	if err != nil {
-		return fmt.Errorf("Error removing MFA devices of user %s: %w", username, err)
+		return fmt.Errorf("removing MFA devices of user %s: %w", username, err)
 	}
 	for _, m := range MFADevices {
 		_, err := conn.DeactivateMFADeviceWithContext(ctx, &iam.DeactivateMFADeviceInput{
@@ -427,7 +430,7 @@ func DeactivateUserMFADevices(ctx context.Context, conn *iam.IAM, username strin
 			SerialNumber: aws.String(m),
 		})
 		if err != nil {
-			return fmt.Errorf("Error deactivating MFA device %s: %w", m, err)
+			return fmt.Errorf("deactivating MFA device %s: %w", m, err)
 		}
 	}
 
@@ -457,7 +460,7 @@ func DeleteUserLoginProfile(ctx context.Context, conn *iam.IAM, username string)
 		_, err = conn.DeleteLoginProfileWithContext(ctx, input)
 	}
 	if err != nil {
-		return fmt.Errorf("Error deleting Account Login Profile: %w", err)
+		return fmt.Errorf("deleting Account Login Profile: %w", err)
 	}
 
 	return nil
@@ -466,7 +469,7 @@ func DeleteUserLoginProfile(ctx context.Context, conn *iam.IAM, username string)
 func DeleteUserAccessKeys(ctx context.Context, conn *iam.IAM, username string) error {
 	accessKeys, err := FindAccessKeys(ctx, conn, username)
 	if err != nil && !tfresource.NotFound(err) {
-		return fmt.Errorf("error listing access keys for IAM User (%s): %w", username, err)
+		return fmt.Errorf("listing access keys for IAM User (%s): %w", username, err)
 	}
 	var errs *multierror.Error
 	for _, k := range accessKeys {
@@ -475,7 +478,7 @@ func DeleteUserAccessKeys(ctx context.Context, conn *iam.IAM, username string) e
 			AccessKeyId: k.AccessKeyId,
 		})
 		if err != nil {
-			errs = multierror.Append(errs, fmt.Errorf("error deleting Access Key (%s) from User (%s): %w", aws.StringValue(k.AccessKeyId), username, err))
+			errs = multierror.Append(errs, fmt.Errorf("deleting Access Key (%s) from User (%s): %w", aws.StringValue(k.AccessKeyId), username, err))
 		}
 	}
 
@@ -496,7 +499,7 @@ func deleteUserSigningCertificates(ctx context.Context, conn *iam.IAM, userName 
 			return !lastPage
 		})
 	if err != nil {
-		return fmt.Errorf("Error removing signing certificates of user %s: %w", userName, err)
+		return fmt.Errorf("removing signing certificates of user %s: %w", userName, err)
 	}
 
 	for _, c := range certificateIDList {
@@ -505,7 +508,7 @@ func deleteUserSigningCertificates(ctx context.Context, conn *iam.IAM, userName 
 			UserName:      aws.String(userName),
 		})
 		if err != nil {
-			return fmt.Errorf("Error deleting signing certificate %s: %w", c, err)
+			return fmt.Errorf("deleting signing certificate %s: %w", c, err)
 		}
 	}
 
@@ -519,7 +522,7 @@ func DeleteServiceSpecificCredentials(ctx context.Context, conn *iam.IAM, userna
 
 	output, err := conn.ListServiceSpecificCredentialsWithContext(ctx, input)
 	if err != nil {
-		return fmt.Errorf("Error listing Service Specific Credentials of user %s: %w", username, err)
+		return fmt.Errorf("listing Service Specific Credentials of user %s: %w", username, err)
 	}
 	for _, m := range output.ServiceSpecificCredentials {
 		_, err := conn.DeleteServiceSpecificCredentialWithContext(ctx, &iam.DeleteServiceSpecificCredentialInput{
@@ -527,7 +530,7 @@ func DeleteServiceSpecificCredentials(ctx context.Context, conn *iam.IAM, userna
 			ServiceSpecificCredentialId: m.ServiceSpecificCredentialId,
 		})
 		if err != nil {
-			return fmt.Errorf("Error deleting Service Specific Credentials %s: %w", m, err)
+			return fmt.Errorf("deleting Service Specific Credentials %s: %w", m, err)
 		}
 	}
 

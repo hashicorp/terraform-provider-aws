@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package servicediscovery_test
 
 import (
@@ -93,10 +96,17 @@ func TestAccServiceDiscoveryPublicDNSNamespace_description(t *testing.T) {
 		CheckDestroy:             testAccCheckPublicDNSNamespaceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccPublicDNSNamespaceConfig_description(rName, "test"),
+				Config: testAccPublicDNSNamespaceConfig_description(rName, "desc1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPublicDNSNamespaceExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "description", "test"),
+					resource.TestCheckResourceAttr(resourceName, "description", "desc1"),
+				),
+			},
+			{
+				Config: testAccPublicDNSNamespaceConfig_description(rName, "desc2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckPublicDNSNamespaceExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "description", "desc2"),
 				),
 			},
 		},
@@ -154,7 +164,7 @@ func TestAccServiceDiscoveryPublicDNSNamespace_tags(t *testing.T) {
 
 func testAccCheckPublicDNSNamespaceDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ServiceDiscoveryConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ServiceDiscoveryConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_service_discovery_public_dns_namespace" {
@@ -189,7 +199,7 @@ func testAccCheckPublicDNSNamespaceExists(ctx context.Context, n string) resourc
 			return fmt.Errorf("No Service Discovery Public DNS Namespace ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ServiceDiscoveryConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ServiceDiscoveryConn(ctx)
 
 		_, err := tfservicediscovery.FindNamespaceByID(ctx, conn, rs.Primary.ID)
 

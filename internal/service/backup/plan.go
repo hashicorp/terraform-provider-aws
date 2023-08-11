@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package backup
 
 import (
@@ -173,7 +176,7 @@ func ResourcePlan() *schema.Resource {
 
 func resourcePlanCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).BackupConn()
+	conn := meta.(*conns.AWSClient).BackupConn(ctx)
 
 	input := &backup.CreateBackupPlanInput{
 		BackupPlan: &backup.PlanInput{
@@ -181,7 +184,7 @@ func resourcePlanCreate(ctx context.Context, d *schema.ResourceData, meta interf
 			Rules:                  expandPlanRules(ctx, d.Get("rule").(*schema.Set)),
 			AdvancedBackupSettings: expandPlanAdvancedSettings(d.Get("advanced_backup_setting").(*schema.Set)),
 		},
-		BackupPlanTags: GetTagsIn(ctx),
+		BackupPlanTags: getTagsIn(ctx),
 	}
 
 	resp, err := conn.CreateBackupPlanWithContext(ctx, input)
@@ -196,7 +199,7 @@ func resourcePlanCreate(ctx context.Context, d *schema.ResourceData, meta interf
 
 func resourcePlanRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).BackupConn()
+	conn := meta.(*conns.AWSClient).BackupConn(ctx)
 
 	resp, err := conn.GetBackupPlanWithContext(ctx, &backup.GetBackupPlanInput{
 		BackupPlanId: aws.String(d.Id()),
@@ -229,7 +232,7 @@ func resourcePlanRead(ctx context.Context, d *schema.ResourceData, meta interfac
 
 func resourcePlanUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).BackupConn()
+	conn := meta.(*conns.AWSClient).BackupConn(ctx)
 
 	if d.HasChanges("rule", "advanced_backup_setting") {
 		input := &backup.UpdateBackupPlanInput{
@@ -253,7 +256,7 @@ func resourcePlanUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 
 func resourcePlanDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).BackupConn()
+	conn := meta.(*conns.AWSClient).BackupConn(ctx)
 
 	input := &backup.DeleteBackupPlanInput{
 		BackupPlanId: aws.String(d.Id()),

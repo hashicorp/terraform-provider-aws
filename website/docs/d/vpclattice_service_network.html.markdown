@@ -26,9 +26,9 @@ The following arguments are required:
 
 * `service_network_identifier` - (Required) Identifier of the network service.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This data source exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the Service Network.
 * `auth_type` - Authentication type for the service network. Either `NONE` or `AWS_IAM`.

@@ -3,12 +3,12 @@ subcategory: "Pinpoint"
 layout: "aws"
 page_title: "AWS: aws_pinpoint_sms_channel"
 description: |-
-  Provides a Pinpoint SMS Channel resource.
+  Use the `aws_pinpoint_sms_channel` resource to manage Pinpoint SMS Channels.
 ---
 
 # Resource: aws_pinpoint_sms_channel
 
-Provides a Pinpoint SMS Channel resource.
+Use the `aws_pinpoint_sms_channel` resource to manage Pinpoint SMS Channels.
 
 ## Example Usage
 
@@ -22,24 +22,33 @@ resource "aws_pinpoint_app" "app" {}
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
-* `application_id` - (Required) The application ID.
-* `enabled` - (Optional) Whether the channel is enabled or disabled. Defaults to `true`.
-* `sender_id` - (Optional) Sender identifier of your messages.
-* `short_code` - (Optional) The Short Code registered with the phone provider.
+* `application_id` - (Required) ID of the application.
+* `enabled` - (Optional) Whether the channel is enabled or disabled. By default, it is set to `true`.
+* `sender_id` - (Optional) Identifier of the sender for your messages.
+* `short_code` - (Optional) Short Code registered with the phone provider.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
-* `promotional_messages_per_second` - Promotional messages per second that can be sent.
-* `transactional_messages_per_second` - Transactional messages per second that can be sent.
+* `promotional_messages_per_second` - Maximum number of promotional messages that can be sent per second.
+* `transactional_messages_per_second` - Maximum number of transactional messages per second that can be sent.
 
 ## Import
 
-Pinpoint SMS Channel can be imported using the `application-id`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import the Pinpoint SMS Channel using the `application_id`. For example:
 
+```terraform
+import {
+  to = aws_pinpoint_sms_channel.sms
+  id = "application-id"
+}
 ```
-$ terraform import aws_pinpoint_sms_channel.sms application-id
+
+Using `terraform import`, import the Pinpoint SMS Channel using the `application_id`. For example:
+
+```console
+% terraform import aws_pinpoint_sms_channel.sms application-id
 ```

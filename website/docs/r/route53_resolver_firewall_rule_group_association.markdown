@@ -27,7 +27,7 @@ resource "aws_route53_resolver_firewall_rule_group_association" "example" {
 
 ## Argument Reference
 
-The following argument is supported:
+This resource supports the following arguments:
 
 * `name` - (Required) A name that lets you identify the rule group association, to manage and use it.
 * `firewall_rule_group_id` - (Required) The unique identifier of the firewall rule group.
@@ -36,9 +36,9 @@ The following argument is supported:
 * `vpc_id` - (Required) The unique identifier of the VPC that you want to associate with the rule group.
 * `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - The ARN (Amazon Resource Name) of the firewall rule group association.
 * `id` - The identifier for the association.
@@ -46,8 +46,17 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Route 53 Resolver DNS Firewall rule group associations can be imported using the Route 53 Resolver DNS Firewall rule group association ID, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Route 53 Resolver DNS Firewall rule group associations using the Route 53 Resolver DNS Firewall rule group association ID. For example:
 
+```terraform
+import {
+  to = aws_route53_resolver_firewall_rule_group_association.example
+  id = "rslvr-frgassoc-0123456789abcdef"
+}
 ```
-$ terraform import aws_route53_resolver_firewall_rule_group_association.example rslvr-frgassoc-0123456789abcdef
+
+Using `terraform import`, import Route 53 Resolver DNS Firewall rule group associations using the Route 53 Resolver DNS Firewall rule group association ID. For example:
+
+```console
+% terraform import aws_route53_resolver_firewall_rule_group_association.example rslvr-frgassoc-0123456789abcdef
 ```

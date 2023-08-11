@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package connect_test
 
 import (
@@ -246,7 +249,7 @@ func testAccCheckHoursOfOperationExists(ctx context.Context, resourceName string
 			return err
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ConnectConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ConnectConn(ctx)
 
 		params := &connect.DescribeHoursOfOperationInput{
 			HoursOfOperationId: aws.String(hoursOfOperationID),
@@ -271,7 +274,7 @@ func testAccCheckHoursOfOperationDestroy(ctx context.Context) resource.TestCheck
 				continue
 			}
 
-			conn := acctest.Provider.Meta().(*conns.AWSClient).ConnectConn()
+			conn := acctest.Provider.Meta().(*conns.AWSClient).ConnectConn(ctx)
 
 			instanceID, hoursOfOperationID, err := tfconnect.HoursOfOperationParseID(rs.Primary.ID)
 

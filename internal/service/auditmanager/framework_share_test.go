@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package auditmanager_test
 
 import (
@@ -168,7 +171,7 @@ func TestAccAuditManagerFrameworkShare_optional(t *testing.T) {
 
 func testAccCheckFrameworkShareDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AuditManagerClient()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AuditManagerClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_auditmanager_framework_share" {
@@ -202,7 +205,7 @@ func testAccCheckFrameworkShareExists(ctx context.Context, name string, framewor
 			return create.Error(names.AuditManager, create.ErrActionCheckingExistence, tfauditmanager.ResNameFrameworkShare, name, errors.New("not set"))
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AuditManagerClient()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AuditManagerClient(ctx)
 		resp, err := tfauditmanager.FindFrameworkShareByID(ctx, conn, rs.Primary.ID)
 		if err != nil {
 			return create.Error(names.AuditManager, create.ErrActionCheckingExistence, tfauditmanager.ResNameFrameworkShare, rs.Primary.ID, err)

@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package acm_test
 
 import (
@@ -241,7 +244,7 @@ func testAccCheckCertificateValidationExists(ctx context.Context, n string) reso
 			return fmt.Errorf("no ACM Certificate Validation ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ACMClient()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ACMClient(ctx)
 
 		_, err := tfacm.FindCertificateValidationByARN(ctx, conn, rs.Primary.Attributes["certificate_arn"])
 

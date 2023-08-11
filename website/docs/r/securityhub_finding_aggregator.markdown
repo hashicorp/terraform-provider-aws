@@ -58,21 +58,30 @@ resource "aws_securityhub_finding_aggregator" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 - `linking_mode` - (Required) Indicates whether to aggregate findings from all of the available Regions or from a specified list. The options are `ALL_REGIONS`, `ALL_REGIONS_EXCEPT_SPECIFIED` or `SPECIFIED_REGIONS`. When `ALL_REGIONS` or `ALL_REGIONS_EXCEPT_SPECIFIED` are used, Security Hub will automatically aggregate findings from new Regions as Security Hub supports them and you opt into them.
 - `specified_regions` - (Optional) List of regions to include or exclude (required if `linking_mode` is set to `ALL_REGIONS_EXCEPT_SPECIFIED` or `SPECIFIED_REGIONS`)
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 - `arn` - Amazon Resource Name (ARN) of the Security Hub finding aggregator.
 
 ## Import
 
-An existing Security Hub finding aggregator can be imported using the `arn`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import an existing Security Hub finding aggregator using the `arn`. For example:
 
+```terraform
+import {
+  to = aws_securityhub_finding_aggregator.example
+  id = "arn:aws:securityhub:eu-west-1:123456789098:finding-aggregator/abcd1234-abcd-1234-1234-abcdef123456"
+}
 ```
-$ terraform import aws_securityhub_finding_aggregator.example arn:aws:securityhub:eu-west-1:123456789098:finding-aggregator/abcd1234-abcd-1234-1234-abcdef123456
+
+Using `terraform import`, import an existing Security Hub finding aggregator using the `arn`. For example:
+
+```console
+% terraform import aws_securityhub_finding_aggregator.example arn:aws:securityhub:eu-west-1:123456789098:finding-aggregator/abcd1234-abcd-1234-1234-abcdef123456
 ```

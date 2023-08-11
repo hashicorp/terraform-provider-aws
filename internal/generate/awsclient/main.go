@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 //go:build generate
 // +build generate
 
@@ -5,7 +8,6 @@ package main
 
 import (
 	_ "embed"
-	"fmt"
 	"sort"
 
 	"github.com/hashicorp/terraform-provider-aws/internal/generate/common"
@@ -13,13 +15,11 @@ import (
 )
 
 type ServiceDatum struct {
-	SDKVersion          string
-	GoV1Package         string
-	GoV2Package         string
-	GoV2PackageOverride string
-	ProviderNameUpper   string
-	ClientTypeName      string
-	ProviderPackage     string
+	SDKVersion         string
+	GoV1Package        string
+	GoV1ClientTypeName string
+	GoV2Package        string
+	ProviderNameUpper  string
 }
 
 type TemplateData struct {
@@ -52,36 +52,33 @@ func main() {
 			continue
 		}
 
+		if l[names.ColNotImplemented] != "" {
+			continue
+		}
+
 		if l[names.ColProviderPackageActual] == "" && l[names.ColProviderPackageCorrect] == "" {
 			continue
 		}
 
+		s := ServiceDatum{
+			ProviderNameUpper: l[names.ColProviderNameUpper],
+			GoV1Package:       l[names.ColGoV1Package],
+			GoV2Package:       l[names.ColGoV2Package],
+		}
+
 		if l[names.ColClientSDKV1] != "" {
-			td.Services = append(td.Services, ServiceDatum{
-				ProviderNameUpper: l[names.ColProviderNameUpper],
-				SDKVersion:        "1",
-				GoV1Package:       l[names.ColGoV1Package],
-				GoV2Package:       l[names.ColGoV2Package],
-				ClientTypeName:    l[names.ColGoV1ClientTypeName],
-				ProviderPackage:   l[names.ColProviderPackageCorrect],
-			})
+			s.SDKVersion = "1"
+			s.GoV1ClientTypeName = l[names.ColGoV1ClientTypeName]
 		}
 		if l[names.ColClientSDKV2] != "" {
-			sd := ServiceDatum{
-				ProviderNameUpper: l[names.ColProviderNameUpper],
-				SDKVersion:        "2",
-				GoV1Package:       l[names.ColGoV1Package],
-				GoV2Package:       l[names.ColGoV2Package],
-				ClientTypeName:    "Client",
-				ProviderPackage:   l[names.ColProviderPackageCorrect],
-			}
 			if l[names.ColClientSDKV1] != "" {
-				// Use `sdkv2` instead of `v2` to prevent collisions with e.g., `elbv2`.
-				sd.GoV2PackageOverride = fmt.Sprintf("%s_sdkv2", l[names.ColGoV2Package])
-				sd.SDKVersion = "1,2"
+				s.SDKVersion = "1,2"
+			} else {
+				s.SDKVersion = "2"
 			}
-			td.Services = append(td.Services, sd)
 		}
+
+		td.Services = append(td.Services, s)
 	}
 
 	sort.SliceStable(td.Services, func(i, j int) bool {

@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package s3control
 
 import (
@@ -94,7 +97,7 @@ func dataSourceMultiRegionAccessPoint() *schema.Resource {
 }
 
 func dataSourceMultiRegionAccessPointBlockRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn, err := ConnForMRAP(meta.(*conns.AWSClient))
+	conn, err := ConnForMRAP(ctx, meta.(*conns.AWSClient))
 
 	if err != nil {
 		return diag.FromErr(err)

@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ec2
 
 import (
@@ -540,8 +543,14 @@ func ResourceInstance() *schema.Resource {
 						"http_endpoint": {
 							Type:         schema.TypeString,
 							Optional:     true,
-							Computed:     true,
+							Default:      ec2.InstanceMetadataEndpointStateEnabled,
 							ValidateFunc: validation.StringInSlice(ec2.InstanceMetadataEndpointState_Values(), false),
+						},
+						"http_protocol_ipv6": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							Default:      ec2.InstanceMetadataProtocolStateDisabled,
+							ValidateFunc: validation.StringInSlice(ec2.InstanceMetadataProtocolState_Values(), false),
 						},
 						"http_put_response_hop_limit": {
 							Type:         schema.TypeInt,
@@ -839,7 +848,7 @@ func ResourceInstance() *schema.Resource {
 				_, ok := diff.GetOk("launch_template")
 
 				if diff.Id() != "" && diff.HasChange("launch_template.0.version") && ok {
-					conn := meta.(*conns.AWSClient).EC2Conn()
+					conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 					stateVersion := diff.Get("launch_template.0.version")
 
@@ -918,7 +927,7 @@ func throughputDiffSuppressFunc(k, old, new string, d *schema.ResourceData) bool
 
 func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	instanceOpts, err := buildInstanceOpts(ctx, d, meta)
 	if err != nil {
@@ -967,7 +976,7 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 	}
 
 	log.Printf("[DEBUG] Creating EC2 Instance: %s", input)
-	outputRaw, err := tfresource.RetryWhen(ctx, propagationTimeout,
+	outputRaw, err := tfresource.RetryWhen(ctx, iamPropagationTimeout,
 		func() (interface{}, error) {
 			return conn.RunInstancesWithContext(ctx, input)
 		},
@@ -1053,7 +1062,7 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 
 func resourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	instance, err := FindInstanceByID(ctx, conn, d.Id())
 
@@ -1203,7 +1212,7 @@ func resourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta inte
 			networkInterfaces = append(networkInterfaces, ni)
 		}
 		if err := d.Set("network_interface", networkInterfaces); err != nil {
-			return sdkdiag.AppendErrorf(diags, "Error setting network_interfaces: %v", err)
+			return sdkdiag.AppendErrorf(diags, "setting network_interfaces: %v", err)
 		}
 
 		// Set primary network interface details
@@ -1241,7 +1250,7 @@ func resourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 
 	if err := d.Set("secondary_private_ips", secondaryPrivateIPs); err != nil {
-		return sdkdiag.AppendErrorf(diags, "Error setting private_ips for AWS Instance (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "setting private_ips for AWS Instance (%s): %s", d.Id(), err)
 	}
 
 	if err := d.Set("ipv6_addresses", ipv6Addresses); err != nil {
@@ -1258,7 +1267,7 @@ func resourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta inte
 		d.Set("monitoring", monitoringState == ec2.MonitoringStateEnabled || monitoringState == ec2.MonitoringStatePending)
 	}
 
-	SetTagsOut(ctx, instance.Tags)
+	setTagsOut(ctx, instance.Tags)
 
 	if _, ok := d.GetOk("volume_tags"); ok && !blockDeviceTagsDefined(d) {
 		volumeTags, err := readVolumeTags(ctx, conn, d.Id())
@@ -1441,7 +1450,7 @@ func resourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta inte
 
 func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	if d.HasChange("volume_tags") && !d.IsNewResource() {
 		volumeIds, err := getInstanceVolumeIDs(ctx, conn, d.Id())
@@ -1452,7 +1461,7 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta in
 		o, n := d.GetChange("volume_tags")
 
 		for _, volumeId := range volumeIds {
-			if err := UpdateTags(ctx, conn, volumeId, o, n); err != nil {
+			if err := updateTags(ctx, conn, volumeId, o, n); err != nil {
 				return sdkdiag.AppendErrorf(diags, "updating volume_tags (%s): %s", volumeId, err)
 			}
 		}
@@ -1504,7 +1513,7 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta in
 							return sdkdiag.AppendErrorf(diags, "updating EC2 Instance (%s): %s", d.Id(), err)
 						}
 					} else {
-						err := retry.RetryContext(ctx, propagationTimeout, func() *retry.RetryError {
+						err := retry.RetryContext(ctx, iamPropagationTimeout, func() *retry.RetryError {
 							_, err := conn.ReplaceIamInstanceProfileAssociationWithContext(ctx, input)
 							if err != nil {
 								if tfawserr.ErrMessageContains(err, "InvalidParameterValue", "Invalid IAM Instance Profile") {
@@ -1779,7 +1788,7 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta in
 			})
 		}
 		if mErr != nil {
-			return sdkdiag.AppendErrorf(diags, "Error updating Instance monitoring: %s", mErr)
+			return sdkdiag.AppendErrorf(diags, "updating Instance monitoring: %s", mErr)
 		}
 	}
 
@@ -1810,6 +1819,7 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta in
 
 				if tfMap["http_endpoint"].(string) == ec2.InstanceMetadataEndpointStateEnabled {
 					// These parameters are not allowed unless HttpEndpoint is enabled.
+					input.HttpProtocolIpv6 = aws.String(tfMap["http_protocol_ipv6"].(string))
 					input.HttpPutResponseHopLimit = aws.Int64(int64(tfMap["http_put_response_hop_limit"].(int)))
 					input.HttpTokens = aws.String(tfMap["http_tokens"].(string))
 					input.InstanceMetadataTags = aws.String(tfMap["instance_metadata_tags"].(string))
@@ -1922,7 +1932,7 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta in
 		if d.HasChange("root_block_device.0.tags") {
 			o, n := d.GetChange("root_block_device.0.tags")
 
-			if err := UpdateTags(ctx, conn, volumeID, o, n); err != nil {
+			if err := updateTags(ctx, conn, volumeID, o, n); err != nil {
 				return sdkdiag.AppendErrorf(diags, "updating tags for volume (%s): %s", volumeID, err)
 			}
 		}
@@ -1988,7 +1998,7 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta in
 
 func resourceInstanceDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	if err := disableInstanceAPITermination(ctx, conn, d.Id(), false); err != nil {
 		log.Printf("[WARN] attempting to terminate EC2 Instance (%s) despite error disabling API termination: %s", d.Id(), err)
@@ -2074,7 +2084,7 @@ func modifyInstanceAttributeWithStopStart(ctx context.Context, conn *ec2.EC2, in
 	}
 
 	// Reference: https://github.com/hashicorp/terraform-provider-aws/issues/16433.
-	_, err := tfresource.RetryWhenAWSErrMessageContains(ctx, propagationTimeout,
+	_, err := tfresource.RetryWhenAWSErrMessageContains(ctx, ec2PropagationTimeout,
 		func() (interface{}, error) {
 			return conn.StartInstancesWithContext(ctx, &ec2.StartInstancesInput{
 				InstanceIds: aws.StringSlice([]string{id}),
@@ -2153,7 +2163,7 @@ func associateInstanceProfile(ctx context.Context, d *schema.ResourceData, conn 
 			Name: aws.String(d.Get("iam_instance_profile").(string)),
 		},
 	}
-	err := retry.RetryContext(ctx, propagationTimeout, func() *retry.RetryError {
+	err := retry.RetryContext(ctx, iamPropagationTimeout, func() *retry.RetryError {
 		_, err := conn.AssociateIamInstanceProfileWithContext(ctx, input)
 		if err != nil {
 			if tfawserr.ErrMessageContains(err, "InvalidParameterValue", "Invalid IAM Instance Profile") {
@@ -2315,7 +2325,7 @@ func FetchRootDeviceName(ctx context.Context, conn *ec2.EC2, amiID string) (*str
 	}
 
 	if rootDeviceName == nil {
-		return nil, fmt.Errorf("Error finding Root Device Name for AMI (%s)", amiID)
+		return nil, fmt.Errorf("finding Root Device Name for AMI (%s)", amiID)
 	}
 
 	return rootDeviceName, nil
@@ -2431,7 +2441,7 @@ func readBlockDeviceMappingsFromConfig(ctx context.Context, d *schema.ResourceDa
 					} else {
 						// Enforce IOPs usage with a valid volume type
 						// Reference: https://github.com/hashicorp/terraform-provider-aws/issues/12667
-						return nil, fmt.Errorf("error creating resource: iops attribute not supported for ebs_block_device with volume_type %s", v)
+						return nil, fmt.Errorf("creating resource: iops attribute not supported for ebs_block_device with volume_type %s", v)
 					}
 				}
 				if throughput, ok := bd["throughput"].(int); ok && throughput > 0 {
@@ -2439,7 +2449,7 @@ func readBlockDeviceMappingsFromConfig(ctx context.Context, d *schema.ResourceDa
 					if ec2.VolumeTypeGp3 == strings.ToLower(v) {
 						ebs.Throughput = aws.Int64(int64(throughput))
 					} else {
-						return nil, fmt.Errorf("error creating resource: throughput attribute not supported for ebs_block_device with volume_type %s", v)
+						return nil, fmt.Errorf("creating resource: throughput attribute not supported for ebs_block_device with volume_type %s", v)
 					}
 				}
 			}
@@ -2506,7 +2516,7 @@ func readBlockDeviceMappingsFromConfig(ctx context.Context, d *schema.ResourceDa
 					} else {
 						// Enforce IOPs usage with a valid volume type
 						// Reference: https://github.com/hashicorp/terraform-provider-aws/issues/12667
-						return nil, fmt.Errorf("error creating resource: iops attribute not supported for root_block_device with volume_type %s", v)
+						return nil, fmt.Errorf("creating resource: iops attribute not supported for root_block_device with volume_type %s", v)
 					}
 				}
 				if throughput, ok := bd["throughput"].(int); ok && throughput > 0 {
@@ -2515,7 +2525,7 @@ func readBlockDeviceMappingsFromConfig(ctx context.Context, d *schema.ResourceDa
 						ebs.Throughput = aws.Int64(int64(throughput))
 					} else {
 						// Enforce throughput usage with a valid volume type
-						return nil, fmt.Errorf("error creating resource: throughput attribute not supported for root_block_device with volume_type %s", v)
+						return nil, fmt.Errorf("creating resource: throughput attribute not supported for root_block_device with volume_type %s", v)
 					}
 				}
 			}
@@ -2726,7 +2736,7 @@ type instanceOpts struct {
 }
 
 func buildInstanceOpts(ctx context.Context, d *schema.ResourceData, meta interface{}) (*instanceOpts, error) {
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	opts := &instanceOpts{
 		DisableAPITermination: aws.Bool(d.Get("disable_api_termination").(bool)),
@@ -2885,10 +2895,13 @@ func buildInstanceOpts(ctx context.Context, d *schema.ResourceData, meta interfa
 		}
 	}
 
+	_, assocPubIPA := d.GetOkExists("associate_public_ip_address")
+	_, privIP := d.GetOk("private_ip")
+	_, secPrivIP := d.GetOk("secondary_private_ips")
 	networkInterfaces, interfacesOk := d.GetOk("network_interface")
 
 	// If setting subnet and public address, OR manual network interfaces, populate those now.
-	if hasSubnet || interfacesOk {
+	if (hasSubnet && (assocPubIPA || privIP || secPrivIP)) || interfacesOk {
 		// Otherwise we're attaching (a) network interface(s)
 		opts.NetworkInterfaces = buildNetworkInterfaceOpts(d, groups, networkInterfaces)
 	} else {
@@ -3097,6 +3110,9 @@ func expandInstanceMetadataOptions(l []interface{}) *ec2.InstanceMetadataOptions
 
 	if m["http_endpoint"].(string) == ec2.InstanceMetadataEndpointStateEnabled {
 		// These parameters are not allowed unless HttpEndpoint is enabled
+		if v, ok := m["http_protocol_ipv6"].(string); ok && v != "" {
+			opts.HttpProtocolIpv6 = aws.String(v)
+		}
 
 		if v, ok := m["http_tokens"].(string); ok && v != "" {
 			opts.HttpTokens = aws.String(v)
@@ -3173,6 +3189,7 @@ func flattenInstanceMetadataOptions(opts *ec2.InstanceMetadataOptionsResponse) [
 
 	m := map[string]interface{}{
 		"http_endpoint":               aws.StringValue(opts.HttpEndpoint),
+		"http_protocol_ipv6":          aws.StringValue(opts.HttpProtocolIpv6),
 		"http_put_response_hop_limit": aws.Int64Value(opts.HttpPutResponseHopLimit),
 		"http_tokens":                 aws.StringValue(opts.HttpTokens),
 		"instance_metadata_tags":      aws.StringValue(opts.InstanceMetadataTags),

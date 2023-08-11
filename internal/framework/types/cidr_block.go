@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package types
 
 import (
@@ -11,7 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 	"github.com/hashicorp/terraform-plugin-go/tftypes"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	itypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 )
 
 type cidrBlockType uint8
@@ -54,7 +57,7 @@ func (t cidrBlockType) ValueFromTerraform(_ context.Context, in tftypes.Value) (
 		return nil, err
 	}
 
-	if err := verify.ValidateCIDRBlock(s); err != nil {
+	if err := itypes.ValidateCIDRBlock(s); err != nil {
 		return CIDRBlockUnknown(), nil //nolint: nilerr // Must not return validation errors
 	}
 
@@ -107,7 +110,7 @@ func (t cidrBlockType) Validate(ctx context.Context, in tftypes.Value, path path
 		return diags
 	}
 
-	if err := verify.ValidateCIDRBlock(value); err != nil {
+	if err := itypes.ValidateCIDRBlock(value); err != nil {
 		diags.AddAttributeError(
 			path,
 			"CIDRBlock Type Validation Error",

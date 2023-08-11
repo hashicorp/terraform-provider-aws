@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package {{ .ServicePackage }}
 
 {{- if .IncludeComments }}
@@ -62,7 +65,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+{{- if .IncludeTags }}
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+{{- end }}
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -81,9 +86,11 @@ import (
 
 // Function annotations are used for resource registration to the Provider. DO NOT EDIT.
 // @SDKResource("{{ .ProviderResourceName }}", name="{{ .HumanResourceName }}")
+{{- if .IncludeTags }}
 // Tagging annotations are used for "transparent tagging".
 // Change the "identifierAttribute" value to the name of the attribute used in ListTags and UpdateTags calls (e.g. "arn").
 // @Tags(identifierAttribute="id")
+{{- end }}
 func Resource{{ .Resource }}() *schema.Resource {
 	return &schema.Resource{
 		{{- if .IncludeComments }}
@@ -190,11 +197,14 @@ func Resource{{ .Resource }}() *schema.Resource {
 					},
 				},
 			},
+			{{- if .IncludeTags }}
 			names.AttrTags:    tftags.TagsSchema(), {{- if .IncludeComments }} // TIP: Many, but not all, resources have `tags` and `tags_all` attributes.{{- end }}
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
+			{{- end }}
 		},
-
+		{{- if .IncludeTags }}
 		CustomizeDiff: verify.SetTagsDiff,
+		{{- end }}
 	}
 }
 
@@ -222,7 +232,7 @@ func resource{{ .Resource }}Create(ctx context.Context, d *schema.ResourceData, 
 
 	// TIP: -- 1. Get a client connection to the relevant service
 	{{- end }}
-	conn := meta.(*conns.AWSClient).{{ .Service }}{{ if .AWSGoSDKV2 }}Client(){{ else }}Conn(){{ end }}
+	conn := meta.(*conns.AWSClient).{{ .Service }}{{ if .AWSGoSDKV2 }}Client(ctx){{ else }}Conn(ctx){{ end }}
 	{{ if .IncludeComments }}
 	// TIP: -- 2. Populate a create input structure
 	{{- end }}
@@ -239,7 +249,9 @@ func resource{{ .Resource }}Create(ctx context.Context, d *schema.ResourceData, 
 		// below. Many resources do include tags so this a reminder to include them
 		// where possible.
 		{{- end }}
-		Tags: GetTagsIn(ctx),
+		{{- if .IncludeTags }}
+		Tags: getTagsIn(ctx),
+		{{- end }}
 	}
 
 	if v, ok := d.GetOk("max_size"); ok {
@@ -311,7 +323,7 @@ func resource{{ .Resource }}Read(ctx context.Context, d *schema.ResourceData, me
 
 	// TIP: -- 1. Get a client connection to the relevant service
 	{{- end }}
-	conn := meta.(*conns.AWSClient).{{ .Service }}{{ if .AWSGoSDKV2 }}Client(){{ else }}Conn(){{ end }}
+	conn := meta.(*conns.AWSClient).{{ .Service }}{{ if .AWSGoSDKV2 }}Client(ctx){{ else }}Conn(ctx){{ end }}
 	{{ if .IncludeComments }}
 	// TIP: -- 2. Get the resource from AWS using an API Get, List, or Describe-
 	// type function, or, better yet, using a finder.
@@ -404,7 +416,7 @@ func resource{{ .Resource }}Update(ctx context.Context, d *schema.ResourceData, 
 
 	// TIP: -- 1. Get a client connection to the relevant service
 	{{- end }}
-	conn := meta.(*conns.AWSClient).{{ .Service }}{{ if .AWSGoSDKV2 }}Client(){{ else }}Conn(){{ end }}
+	conn := meta.(*conns.AWSClient).{{ .Service }}{{ if .AWSGoSDKV2 }}Client(ctx){{ else }}Conn(ctx){{ end }}
 	{{ if .IncludeComments }}
 	// TIP: -- 2. Populate a modify input structure and check for changes
 	//
@@ -478,7 +490,7 @@ func resource{{ .Resource }}Delete(ctx context.Context, d *schema.ResourceData, 
 
 	// TIP: -- 1. Get a client connection to the relevant service
 	{{- end }}
-	conn := meta.(*conns.AWSClient).{{ .Service }}{{ if .AWSGoSDKV2 }}Client(){{ else }}Conn(){{ end }}
+	conn := meta.(*conns.AWSClient).{{ .Service }}{{ if .AWSGoSDKV2 }}Client(ctx){{ else }}Conn(ctx){{ end }}
 	{{ if .IncludeComments }}
 	// TIP: -- 2. Populate a delete input structure
 	{{- end }}

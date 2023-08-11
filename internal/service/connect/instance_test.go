@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package connect_test
 
 import (
@@ -144,7 +147,7 @@ func testAccCheckInstanceExists(ctx context.Context, n string, v *connect.Instan
 			return fmt.Errorf("No Connect Instance ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ConnectConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ConnectConn(ctx)
 
 		output, err := tfconnect.FindInstanceByID(ctx, conn, rs.Primary.ID)
 
@@ -165,7 +168,7 @@ func testAccCheckInstanceDestroy(ctx context.Context) resource.TestCheckFunc {
 				continue
 			}
 
-			conn := acctest.Provider.Meta().(*conns.AWSClient).ConnectConn()
+			conn := acctest.Provider.Meta().(*conns.AWSClient).ConnectConn(ctx)
 
 			_, err := tfconnect.FindInstanceByID(ctx, conn, rs.Primary.ID)
 

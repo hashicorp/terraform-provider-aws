@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package logs_test
 
 import (
@@ -211,7 +214,7 @@ func TestAccLogsDataProtectionPolicy_policyDocument(t *testing.T) {
 
 func testAccCheckDataProtectionPolicyDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).LogsClient()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).LogsClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_cloudwatch_log_data_protection_policy" {
@@ -246,7 +249,7 @@ func testAccCheckDataProtectionPolicyExists(ctx context.Context, n string, v *cl
 			return fmt.Errorf("No CloudWatch Logs Data Protection Policy ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).LogsClient()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).LogsClient(ctx)
 
 		output, err := tflogs.FindDataProtectionPolicyByID(ctx, conn, rs.Primary.ID)
 

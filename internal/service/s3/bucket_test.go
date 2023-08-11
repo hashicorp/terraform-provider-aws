@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package s3_test
 
 import (
@@ -528,7 +531,7 @@ func TestAccS3Bucket_Tags_withSystemTags(t *testing.T) {
 			testAccCheckBucketDestroy(ctx),
 			func(s *terraform.State) error {
 				// Tear down CF stack.
-				conn := acctest.Provider.Meta().(*conns.AWSClient).CloudFormationConn()
+				conn := acctest.Provider.Meta().(*conns.AWSClient).CloudFormationConn(ctx)
 
 				requestToken := id.UniqueId()
 				req := &cloudformation.DeleteStackInput{
@@ -1797,7 +1800,7 @@ func TestAccS3Bucket_Security_corsUpdate(t *testing.T) {
 				return fmt.Errorf("Not found: %s", n)
 			}
 
-			conn := acctest.Provider.Meta().(*conns.AWSClient).S3Conn()
+			conn := acctest.Provider.Meta().(*conns.AWSClient).S3Conn(ctx)
 			_, err := conn.PutBucketCorsWithContext(ctx, &s3.PutBucketCorsInput{
 				Bucket: aws.String(rs.Primary.ID),
 				CORSConfiguration: &s3.CORSConfiguration{
@@ -1883,7 +1886,7 @@ func TestAccS3Bucket_Security_corsDelete(t *testing.T) {
 				return fmt.Errorf("Not found: %s", n)
 			}
 
-			conn := acctest.Provider.Meta().(*conns.AWSClient).S3Conn()
+			conn := acctest.Provider.Meta().(*conns.AWSClient).S3Conn(ctx)
 			_, err := conn.DeleteBucketCorsWithContext(ctx, &s3.DeleteBucketCorsInput{
 				Bucket: aws.String(rs.Primary.ID),
 			})
@@ -2547,7 +2550,7 @@ func testAccCheckBucketDestroy(ctx context.Context) resource.TestCheckFunc {
 
 func testAccCheckBucketDestroyWithProvider(ctx context.Context) acctest.TestCheckWithProviderFunc {
 	return func(s *terraform.State, provider *schema.Provider) error {
-		conn := provider.Meta().(*conns.AWSClient).S3Conn()
+		conn := provider.Meta().(*conns.AWSClient).S3Conn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_s3_bucket" {
@@ -2586,7 +2589,7 @@ func testAccCheckBucketExistsWithProvider(ctx context.Context, n string, provide
 			return fmt.Errorf("No S3 Bucket ID is set")
 		}
 
-		conn := providerF().Meta().(*conns.AWSClient).S3Conn()
+		conn := providerF().Meta().(*conns.AWSClient).S3Conn(ctx)
 
 		return tfs3.FindBucket(ctx, conn, rs.Primary.ID)
 	}
@@ -2595,7 +2598,7 @@ func testAccCheckBucketExistsWithProvider(ctx context.Context, n string, provide
 func testAccCheckBucketAddObjects(ctx context.Context, n string, keys ...string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs := s.RootModule().Resources[n]
-		conn := acctest.Provider.Meta().(*conns.AWSClient).S3ConnURICleaningDisabled()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).S3ConnURICleaningDisabled(ctx)
 
 		for _, key := range keys {
 			_, err := conn.PutObjectWithContext(ctx, &s3.PutObjectInput{
@@ -2615,7 +2618,7 @@ func testAccCheckBucketAddObjects(ctx context.Context, n string, keys ...string)
 func testAccCheckBucketAddObjectsWithLegalHold(ctx context.Context, n string, keys ...string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs := s.RootModule().Resources[n]
-		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Conn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Conn(ctx)
 
 		for _, key := range keys {
 			_, err := conn.PutObjectWithContext(ctx, &s3.PutObjectInput{
@@ -2636,7 +2639,7 @@ func testAccCheckBucketAddObjectsWithLegalHold(ctx context.Context, n string, ke
 // Create an S3 bucket via a CF stack so that it has system tags.
 func testAccCheckBucketCreateViaCloudFormation(ctx context.Context, n string, stackID *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudFormationConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudFormationConn(ctx)
 		stackName := sdkacctest.RandomWithPrefix("tf-acc-test-s3tags")
 		templateBody := fmt.Sprintf(`{
   "Resources": {
@@ -2679,7 +2682,7 @@ func testAccCheckBucketCreateViaCloudFormation(ctx context.Context, n string, st
 func testAccCheckBucketTagKeys(ctx context.Context, n string, keys ...string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs := s.RootModule().Resources[n]
-		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Conn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Conn(ctx)
 
 		got, err := tfs3.BucketListTags(ctx, conn, rs.Primary.Attributes["bucket"])
 		if err != nil {
@@ -2731,7 +2734,7 @@ func testAccCheckBucketWebsiteEndpoint(resourceName string, attributeName string
 func testAccCheckBucketUpdateTags(ctx context.Context, n string, oldTags, newTags map[string]string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs := s.RootModule().Resources[n]
-		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Conn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Conn(ctx)
 
 		return tfs3.BucketUpdateTags(ctx, conn, rs.Primary.Attributes["bucket"], oldTags, newTags)
 	}
@@ -2740,7 +2743,7 @@ func testAccCheckBucketUpdateTags(ctx context.Context, n string, oldTags, newTag
 func testAccCheckBucketCheckTags(ctx context.Context, n string, expectedTags map[string]string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs := s.RootModule().Resources[n]
-		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Conn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Conn(ctx)
 
 		got, err := tfs3.BucketListTags(ctx, conn, rs.Primary.Attributes["bucket"])
 		if err != nil {

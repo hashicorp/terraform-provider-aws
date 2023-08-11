@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package sagemaker
 
 import (
@@ -258,7 +261,7 @@ func ResourceModel() *schema.Resource {
 
 func resourceModelCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SageMakerConn()
+	conn := meta.(*conns.AWSClient).SageMakerConn(ctx)
 
 	var name string
 	if v, ok := d.GetOk("name"); ok {
@@ -269,7 +272,7 @@ func resourceModelCreate(ctx context.Context, d *schema.ResourceData, meta inter
 
 	createOpts := &sagemaker.CreateModelInput{
 		ModelName: aws.String(name),
-		Tags:      GetTagsIn(ctx),
+		Tags:      getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("primary_container"); ok {
@@ -324,7 +327,7 @@ func expandVPCConfigRequest(l []interface{}) *sagemaker.VpcConfig {
 
 func resourceModelRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SageMakerConn()
+	conn := meta.(*conns.AWSClient).SageMakerConn(ctx)
 
 	request := &sagemaker.DescribeModelInput{
 		ModelName: aws.String(d.Id()),
@@ -388,7 +391,7 @@ func resourceModelUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 
 func resourceModelDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SageMakerConn()
+	conn := meta.(*conns.AWSClient).SageMakerConn(ctx)
 
 	deleteOpts := &sagemaker.DeleteModelInput{
 		ModelName: aws.String(d.Id()),

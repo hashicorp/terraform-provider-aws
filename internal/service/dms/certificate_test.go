@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package dms_test
 
 import (
@@ -145,7 +148,7 @@ func testAccCheckCertificateDestroy(ctx context.Context) resource.TestCheckFunc 
 				continue
 			}
 
-			conn := acctest.Provider.Meta().(*conns.AWSClient).DMSConn()
+			conn := acctest.Provider.Meta().(*conns.AWSClient).DMSConn(ctx)
 
 			output, err := conn.DescribeCertificatesWithContext(ctx, &dms.DescribeCertificatesInput{
 				Filters: []*dms.Filter{
@@ -184,7 +187,7 @@ func testAccCertificateExists(ctx context.Context, n string) resource.TestCheckF
 			return fmt.Errorf("No ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DMSConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DMSConn(ctx)
 
 		output, err := conn.DescribeCertificatesWithContext(ctx, &dms.DescribeCertificatesInput{
 			Filters: []*dms.Filter{

@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package apigateway_test
 
 import (
@@ -112,7 +115,7 @@ func testAccCheckRestAPIPolicyExists(ctx context.Context, n string, res *apigate
 			return fmt.Errorf("No API Gateway ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayConn(ctx)
 
 		req := &apigateway.GetRestApiInput{
 			RestApiId: aws.String(rs.Primary.ID),
@@ -144,7 +147,7 @@ func testAccCheckRestAPIPolicyExists(ctx context.Context, n string, res *apigate
 
 func testAccCheckRestAPIPolicyDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_api_gateway_rest_api_policy" {

@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package cloudwatch
 
 import (
@@ -196,7 +199,7 @@ func ResourceMetricStream() *schema.Resource {
 }
 
 func resourceMetricStreamCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).CloudWatchConn()
+	conn := meta.(*conns.AWSClient).CloudWatchConn(ctx)
 
 	name := create.Name(d.Get("name").(string), d.Get("name_prefix").(string))
 	input := &cloudwatch.PutMetricStreamInput{
@@ -205,7 +208,7 @@ func resourceMetricStreamCreate(ctx context.Context, d *schema.ResourceData, met
 		Name:                         aws.String(name),
 		OutputFormat:                 aws.String(d.Get("output_format").(string)),
 		RoleArn:                      aws.String(d.Get("role_arn").(string)),
-		Tags:                         GetTagsIn(ctx),
+		Tags:                         getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("exclude_filter"); ok && v.(*schema.Set).Len() > 0 {
@@ -240,7 +243,7 @@ func resourceMetricStreamCreate(ctx context.Context, d *schema.ResourceData, met
 	}
 
 	// For partitions not supporting tag-on-create, attempt tag after create.
-	if tags := GetTagsIn(ctx); input.Tags == nil && len(tags) > 0 {
+	if tags := getTagsIn(ctx); input.Tags == nil && len(tags) > 0 {
 		err := createTags(ctx, conn, aws.StringValue(output.Arn), tags)
 
 		// If default tags only, continue. Otherwise, error.
@@ -257,7 +260,7 @@ func resourceMetricStreamCreate(ctx context.Context, d *schema.ResourceData, met
 }
 
 func resourceMetricStreamRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).CloudWatchConn()
+	conn := meta.(*conns.AWSClient).CloudWatchConn(ctx)
 
 	output, err := FindMetricStreamByName(ctx, conn, d.Id())
 
@@ -304,7 +307,7 @@ func resourceMetricStreamRead(ctx context.Context, d *schema.ResourceData, meta 
 }
 
 func resourceMetricStreamUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).CloudWatchConn()
+	conn := meta.(*conns.AWSClient).CloudWatchConn(ctx)
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		input := &cloudwatch.PutMetricStreamInput{
@@ -342,7 +345,7 @@ func resourceMetricStreamUpdate(ctx context.Context, d *schema.ResourceData, met
 }
 
 func resourceMetricStreamDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).CloudWatchConn()
+	conn := meta.(*conns.AWSClient).CloudWatchConn(ctx)
 
 	log.Printf("[INFO] Deleting CloudWatch Metric Stream: %s", d.Id())
 	_, err := conn.DeleteMetricStreamWithContext(ctx, &cloudwatch.DeleteMetricStreamInput{

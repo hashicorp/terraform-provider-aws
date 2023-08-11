@@ -33,19 +33,28 @@ resource "aws_iam_user_policy_attachment" "test-attach" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `user`        (Required) - The user the policy should be applied to
 * `policy_arn`  (Required) - The ARN of the policy you want to apply
 
-## Attributes Reference
+## Attribute Reference
 
-No additional attributes are exported.
+This resource exports no additional attributes.
 
 ## Import
 
-IAM user policy attachments can be imported using the user name and policy arn separated by `/`.
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import IAM user policy attachments using the user name and policy arn separated by `/`. For example:
 
+```terraform
+import {
+  to = aws_iam_user_policy_attachment.test-attach
+  id = "test-user/arn:aws:iam::xxxxxxxxxxxx:policy/test-policy"
+}
 ```
-$ terraform import aws_iam_user_policy_attachment.test-attach test-user/arn:aws:iam::xxxxxxxxxxxx:policy/test-policy
+
+Using `terraform import`, import IAM user policy attachments using the user name and policy arn separated by `/`. For example:
+
+```console
+% terraform import aws_iam_user_policy_attachment.test-attach test-user/arn:aws:iam::xxxxxxxxxxxx:policy/test-policy
 ```
