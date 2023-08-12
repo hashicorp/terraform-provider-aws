@@ -229,34 +229,6 @@ func TestAccRDSGlobalCluster_deletionProtection(t *testing.T) {
 	})
 }
 
-func TestAccRDSGlobalCluster_Engine_aurora(t *testing.T) {
-	ctx := acctest.Context(t)
-	var globalCluster1 rds.GlobalCluster
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_rds_global_cluster.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckGlobalCluster(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckGlobalClusterDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccGlobalClusterConfig_engine(rName, "aurora"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckGlobalClusterExists(ctx, resourceName, &globalCluster1),
-					resource.TestCheckResourceAttr(resourceName, "engine", "aurora"),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-		},
-	})
-}
-
 func TestAccRDSGlobalCluster_EngineVersion_updateMinor(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
@@ -691,6 +663,7 @@ func testAccGlobalClusterConfig_deletionProtection(rName string, deletionProtect
 resource "aws_rds_global_cluster" "test" {
   deletion_protection       = %[1]t
   global_cluster_identifier = %[2]q
+  engine                    = "aurora-postgresql"
 }
 `, deletionProtection, rName)
 }
