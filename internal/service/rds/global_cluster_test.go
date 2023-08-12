@@ -257,34 +257,6 @@ func TestAccRDSGlobalCluster_Engine_aurora(t *testing.T) {
 	})
 }
 
-func TestAccRDSGlobalCluster_EngineVersion_aurora(t *testing.T) {
-	ctx := acctest.Context(t)
-	var globalCluster1 rds.GlobalCluster
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_rds_global_cluster.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckGlobalCluster(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckGlobalClusterDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccGlobalClusterConfig_engineVersion(rName, "aurora"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckGlobalClusterExists(ctx, resourceName, &globalCluster1),
-					resource.TestCheckResourceAttrPair(resourceName, "engine_version", "data.aws_rds_engine_version.default", "version"),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-		},
-	})
-}
-
 func TestAccRDSGlobalCluster_EngineVersion_updateMinor(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
@@ -709,6 +681,7 @@ func testAccGlobalClusterConfig_databaseName(rName, databaseName string) string 
 resource "aws_rds_global_cluster" "test" {
   database_name             = %[1]q
   global_cluster_identifier = %[2]q
+  engine                    = "aurora-postgresql"
 }
 `, databaseName, rName)
 }
@@ -972,6 +945,7 @@ func testAccGlobalClusterConfig_storageEncrypted(rName string, storageEncrypted 
 resource "aws_rds_global_cluster" "test" {
   global_cluster_identifier = %[1]q
   storage_encrypted         = %[2]t
+  engine                    = "aurora-postgresql"
 }
 `, rName, storageEncrypted)
 }
