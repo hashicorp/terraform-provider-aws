@@ -117,7 +117,7 @@ func TestAccRDSGlobalCluster_basic(t *testing.T) {
 					acctest.CheckResourceAttrGlobalARN(resourceName, "arn", "rds", fmt.Sprintf("global-cluster:%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "database_name", ""),
 					resource.TestCheckResourceAttr(resourceName, "deletion_protection", "false"),
-					resource.TestCheckResourceAttrSet(resourceName, "engine"),
+					resource.TestCheckResourceAttr(resourceName, "engine", "aurora-postgresql"),
 					resource.TestCheckResourceAttrSet(resourceName, "engine_version"),
 					resource.TestCheckResourceAttr(resourceName, "global_cluster_identifier", rName),
 					resource.TestMatchResourceAttr(resourceName, "global_cluster_resource_id", regexp.MustCompile(`cluster-.+`)),
@@ -699,6 +699,7 @@ func testAccGlobalClusterConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_rds_global_cluster" "test" {
   global_cluster_identifier = %[1]q
+  engine                    = "aurora-postgresql"
 }
 `, rName)
 }
@@ -748,6 +749,7 @@ func testAccGlobalClusterConfig_forceDestroy(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_rds_global_cluster" "test" {
   global_cluster_identifier = %[1]q
+  engine                    = "aurora-postgresql"
   force_destroy             = true
 }
 `, rName)
