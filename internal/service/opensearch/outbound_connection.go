@@ -82,6 +82,12 @@ func ResourceOutboundConnection() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"accept_connection": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
+				ForceNew: true,
+			},
 		},
 	}
 }
@@ -112,6 +118,12 @@ func resourceOutboundConnectionCreate(ctx context.Context, d *schema.ResourceDat
 	err = outboundConnectionWaitUntilAvailable(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate))
 	if err != nil {
 		return diag.Errorf("waiting for Outbound Connection to become available: %s", err)
+	}
+
+	if d.Get("accept_connection").(bool) {
+		if err := inboundConnectionAccept(ctx, d, conn); err != nil {
+			return diag.Errorf("unable to accept Connection: %s", err)
+		}
 	}
 
 	return resourceOutboundConnectionRead(ctx, d, meta)
@@ -276,6 +288,27 @@ func outboundConnectionDomainInfoSchema() *schema.Schema {
 			},
 		},
 	}
+}
+
+func inboundConnectionAccept(ctx context.Context, d *schema.ResourceData, conn *opensearchservice.OpenSearchService) error {
+	// Create the Inbound Connection
+	acceptOpts := &opensearchservice.AcceptInboundConnectionInput{
+		ConnectionId: aws.String(d.Id()),
+	}
+
+	log.Printf("[DEBUG] Inbound Connection Accept options: %#v", acceptOpts)
+
+	_, err := conn.AcceptInboundConnectionWithContext(ctx, acceptOpts)
+	if err != nil {
+		return err
+	}
+
+	err = inboundConnectionWaitUntilActive(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate))
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func expandOutboundConnectionDomainInfo(vOptions []interface{}) *opensearchservice.DomainInformationContainer {

@@ -32,7 +32,6 @@ func TestAccOpenSearchOutboundConnection_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(ctx, "aws_opensearch_domain.domain_1", &domain),
 					testAccCheckDomainExists(ctx, "aws_opensearch_domain.domain_2", &domain),
-					resource.TestCheckResourceAttr(resourceName, "connection_properties.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "connection_status", "PENDING_ACCEPTANCE"),
 				),
 			},
@@ -59,11 +58,11 @@ func TestAccOpenSearchOutboundConnection_vpc(t *testing.T) {
 		CheckDestroy:             testAccCheckDomainDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccOutboundConnectionConfig_vpc(name),
+				Config: testAccOutboundConnectionConfig_vpcEndpoint(name),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(ctx, "aws_opensearch_domain.domain_1", &domain),
 					testAccCheckDomainExists(ctx, "aws_opensearch_domain.domain_2", &domain),
-					resource.TestCheckResourceAttr(resourceName, "connection_properties.#", "1"),
+					resource.TestCheckResourceAttrSet(resourceName, "connection_properties.0.endpoint"),
 				),
 			},
 			{
@@ -182,6 +181,7 @@ data "aws_region" "current" {}
 
 resource "aws_opensearch_outbound_connection" "test" {
   connection_alias = "%s"
+  connection_mode  = "DIRECT"
   
   connection_properties {
     cross_cluster_search {
@@ -204,7 +204,7 @@ resource "aws_opensearch_outbound_connection" "test" {
 `, name, pw, name, pw, name)
 }
 
-func testAccOutboundConnectionConfig_vpc(name string) string {
+func testAccOutboundConnectionConfig_vpcEndpoint(name string) string {
 	// Satisfy the pw requirements
 	pw := fmt.Sprintf("Aa1-%s", sdkacctest.RandString(10))
 
@@ -307,8 +307,9 @@ data "aws_caller_identity" "current" {}
 data "aws_region" "current" {}
 
 resource "aws_opensearch_outbound_connection" "test" {
-  connection_alias = %[1]q
-  connection_mode  = "VPC_ENDPOINT"
+  connection_alias  = %[1]q
+  connection_mode   = "VPC_ENDPOINT"
+  accept_connection = true
   
   local_domain_info {
     owner_id    = data.aws_caller_identity.current.account_id

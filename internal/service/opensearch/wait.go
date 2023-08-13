@@ -6,6 +6,7 @@ package opensearch
 import (
 	"context"
 	"fmt"
+	"log"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -153,6 +154,42 @@ func waitForDomainDelete(ctx context.Context, conn *opensearchservice.OpenSearch
 	}
 
 	_, err = stateConf.WaitForStateContext(ctx)
+
+	return err
+}
+
+func inboundConnectionWaitUntilActive(ctx context.Context, conn *opensearchservice.OpenSearchService, id string, timeout time.Duration) error {
+	log.Printf("[DEBUG] Waiting for Inbound Connection (%s) to become available.", id)
+	stateConf := &retry.StateChangeConf{
+		Pending: []string{
+			opensearchservice.InboundConnectionStatusCodeProvisioning,
+			opensearchservice.InboundConnectionStatusCodeApproved,
+		},
+		Target: []string{
+			opensearchservice.InboundConnectionStatusCodeActive,
+		},
+		Refresh: inboundConnectionRefreshState(ctx, conn, id),
+		Timeout: timeout,
+	}
+	if _, err := stateConf.WaitForStateContext(ctx); err != nil {
+		return fmt.Errorf("waiting for Inbound Connection (%s) to become available: %s", id, err)
+	}
+	return nil
+}
+
+func waitForInboundConnectionDeletion(ctx context.Context, conn *opensearchservice.OpenSearchService, id string, timeout time.Duration) error {
+	stateConf := &retry.StateChangeConf{
+		Pending: []string{
+			opensearchservice.InboundConnectionStatusCodeDeleting,
+		},
+		Target: []string{
+			opensearchservice.InboundConnectionStatusCodeDeleted,
+		},
+		Refresh: inboundConnectionRefreshState(ctx, conn, id),
+		Timeout: timeout,
+	}
+
+	_, err := stateConf.WaitForStateContext(ctx)
 
 	return err
 }
