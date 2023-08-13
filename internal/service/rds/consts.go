@@ -140,6 +140,20 @@ func ClusterEngine_Values() []string {
 }
 
 const (
+	GlobalClusterEngineAurora           = "aurora"
+	GlobalClusterEngineAuroraMySQL      = "aurora-mysql"
+	GlobalClusterEngineAuroraPostgreSQL = "aurora-postgresql"
+)
+
+func GlobalClusterEngine_Values() []string {
+	return []string{
+		GlobalClusterEngineAurora,
+		GlobalClusterEngineAuroraMySQL,
+		GlobalClusterEngineAuroraPostgreSQL,
+	}
+}
+
+const (
 	EngineModeGlobal        = "global"
 	EngineModeMultiMaster   = "multimaster"
 	EngineModeParallelQuery = "parallelquery"

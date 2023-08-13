@@ -246,14 +246,13 @@ func TestAccRDSGlobalCluster_EngineVersion_updateMinor(t *testing.T) {
 		CheckDestroy:             testAccCheckGlobalClusterDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				// Config: testAccGlobalClusterConfig_primaryEngineVersion(rName, "aurora", "5.6.mysql_aurora.1.22.2"),
 				Config: testAccGlobalClusterConfig_primaryEngineVersion(rName, "aurora-postgresql", "13.4"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGlobalClusterExists(ctx, resourceName, &globalCluster1),
+					resource.TestCheckResourceAttr(resourceName, "engine_version", "13.4"),
 				),
 			},
 			{
-				// Config: testAccGlobalClusterConfig_primaryEngineVersion(rName, "aurora", "5.6.mysql_aurora.1.23.2"),
 				Config: testAccGlobalClusterConfig_primaryEngineVersion(rName, "aurora-postgresql", "13.5"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGlobalClusterExists(ctx, resourceName, &globalCluster2),
@@ -287,17 +286,18 @@ func TestAccRDSGlobalCluster_EngineVersion_updateMajor(t *testing.T) {
 		CheckDestroy:             testAccCheckGlobalClusterDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGlobalClusterConfig_primaryEngineVersion(rName, "aurora", "5.6.mysql_aurora.1.23.4"),
+				Config: testAccGlobalClusterConfig_primaryEngineVersion(rName, "aurora-mysql", "5.7.mysql_aurora.2.12.0"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGlobalClusterExists(ctx, resourceName, &globalCluster1),
+					resource.TestCheckResourceAttr(resourceName, "engine_version", "5.7.mysql_aurora.2.12.0"),
 				),
 			},
 			{
-				Config: testAccGlobalClusterConfig_primaryEngineVersion(rName, "aurora-mysql", "5.7.mysql_aurora.2.11.1"),
+				Config: testAccGlobalClusterConfig_primaryEngineVersion(rName, "aurora-mysql", "8.0.mysql_aurora.3.02.3"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGlobalClusterExists(ctx, resourceName, &globalCluster2),
 					testAccCheckGlobalClusterNotRecreated(&globalCluster1, &globalCluster2),
-					resource.TestCheckResourceAttr(resourceName, "engine_version", "5.7.mysql_aurora.2.11.1"),
+					resource.TestCheckResourceAttr(resourceName, "engine_version", "8.0.mysql_aurora.3.02.3"),
 				),
 			},
 			{
