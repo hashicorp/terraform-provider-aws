@@ -670,15 +670,6 @@ resource "aws_rds_global_cluster" "test" {
 `, deletionProtection, rName)
 }
 
-func testAccGlobalClusterConfig_engine(rName, engine string) string {
-	return fmt.Sprintf(`
-resource "aws_rds_global_cluster" "test" {
-  engine                    = %[1]q
-  global_cluster_identifier = %[2]q
-}
-`, engine, rName)
-}
-
 func testAccGlobalClusterConfig_engineVersion(rName, engine string) string {
 	return fmt.Sprintf(`
 data "aws_rds_engine_version" "default" {
