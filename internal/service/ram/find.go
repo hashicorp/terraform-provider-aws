@@ -30,17 +30,6 @@ func FindResourceShareOwnerOtherAccountsByARN(ctx context.Context, conn *ram.RAM
 	return resourceShare(ctx, conn, listResourceSharesInput)
 }
 
-// FindResourceShareOwnerSelfByARN returns the resource share owned by own account corresponding to the specified ARN.
-// Returns nil if no configuration is found.
-func FindResourceShareOwnerSelfByARN(ctx context.Context, conn *ram.RAM, arn string) (*ram.ResourceShare, error) {
-	listResourceSharesInput := &ram.GetResourceSharesInput{
-		ResourceOwner:     aws.String(ram.ResourceOwnerSelf),
-		ResourceShareArns: aws.StringSlice([]string{arn}),
-	}
-
-	return resourceShare(ctx, conn, listResourceSharesInput)
-}
-
 // FindResourceShareInvitationByResourceShareARNAndStatus returns the resource share invitation corresponding to the specified resource share ARN.
 // Returns nil if no configuration is found.
 func FindResourceShareInvitationByResourceShareARNAndStatus(ctx context.Context, conn *ram.RAM, resourceShareArn, status string) (*ram.ResourceShareInvitation, error) {
