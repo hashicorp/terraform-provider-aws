@@ -186,7 +186,7 @@ func resourceBucketLoggingRead(ctx context.Context, d *schema.ResourceData, meta
 
 	loggingEnabled := outputRaw.(*s3.GetBucketLoggingOutput).LoggingEnabled
 
-	d.Set("bucket", d.Id())
+	d.Set("bucket", bucket)
 	d.Set("expected_bucket_owner", expectedBucketOwner)
 	d.Set("target_bucket", loggingEnabled.TargetBucket)
 	d.Set("target_prefix", loggingEnabled.TargetPrefix)
