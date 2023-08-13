@@ -239,9 +239,10 @@ func ResourceReplicationGroup() *schema.Resource {
 				Computed: true,
 			},
 			"replicas_per_node_group": {
-				Type:     schema.TypeInt,
-				Optional: true,
-				Computed: true,
+				Type:          schema.TypeInt,
+				Optional:      true,
+				Computed:      true,
+				ConflictsWith: []string{"node_group_configuration.0.replica_count"},
 			},
 			"replication_group_id": {
 				Type:         schema.TypeString,
@@ -335,6 +336,7 @@ func ResourceReplicationGroup() *schema.Resource {
 						"node_group_id": {
 							Type:         schema.TypeString,
 							Optional:     true,
+							Computed:     true,
 							ValidateFunc: validateNodeGroupID,
 						},
 						"primary_availability_zone": {
@@ -344,6 +346,11 @@ func ResourceReplicationGroup() *schema.Resource {
 						"primary_outpost_arn": {
 							Type:     schema.TypeString,
 							Optional: true,
+						},
+						"replica_count": {
+							Type:          schema.TypeInt,
+							Optional:      true,
+							ConflictsWith: []string{"replicas_per_node_group"},
 						},
 						"replica_availability_zones": {
 							Type:     schema.TypeSet,
@@ -358,7 +365,8 @@ func ResourceReplicationGroup() *schema.Resource {
 						"slots": {
 							Type:         schema.TypeString,
 							Optional:     true,
-							ValidateFunc: validNodeGroupSlots,
+							Computed:     true,
+							ValidateFunc: validNodeGroupSlotsFormat,
 						},
 					},
 				},
@@ -534,10 +542,9 @@ func resourceReplicationGroupCreate(ctx context.Context, d *schema.ResourceData,
 			nodeGroupConfiguration := expandNodeGroupConfiguration(v.(map[string]interface{}))
 			input.NodeGroupConfiguration = append(input.NodeGroupConfiguration, &nodeGroupConfiguration)
 		}
-
-		errMessages := validNodeGroupConfiguration(input.NumNodeGroups, input.NodeGroupConfiguration)
-		if len(errMessages) > 0 {
-			for _, e := range errMessages {
+		errors := validNodeGroupConfiguration(input.NumNodeGroups, input.NodeGroupConfiguration)
+		if len(errors) > 0 {
+			for _, e := range errors {
 				sdkdiag.AppendErrorf(diags, e)
 			}
 			return diags
