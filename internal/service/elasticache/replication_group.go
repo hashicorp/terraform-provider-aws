@@ -239,10 +239,9 @@ func ResourceReplicationGroup() *schema.Resource {
 				Computed: true,
 			},
 			"replicas_per_node_group": {
-				Type:          schema.TypeInt,
-				Optional:      true,
-				Computed:      true,
-				ConflictsWith: []string{"node_group_configuration.0.replica_count"},
+				Type:     schema.TypeInt,
+				Optional: true,
+				Computed: true,
 			},
 			"replication_group_id": {
 				Type:         schema.TypeString,
