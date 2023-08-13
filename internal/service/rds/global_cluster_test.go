@@ -328,17 +328,18 @@ func TestAccRDSGlobalCluster_EngineVersion_updateMinorMultiRegion(t *testing.T) 
 		CheckDestroy:             testAccCheckGlobalClusterDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGlobalClusterConfig_engineVersionUpgradeMultiRegion(rNameGlobal, rNamePrimary, rNameSecondary, "aurora-mysql", "5.7.mysql_aurora.2.07.5"),
+				Config: testAccGlobalClusterConfig_engineVersionUpgradeMultiRegion(rNameGlobal, rNamePrimary, rNameSecondary, "aurora-mysql", "8.0.mysql_aurora.3.03.0"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGlobalClusterExists(ctx, resourceName, &globalCluster1),
+					resource.TestCheckResourceAttr(resourceName, "engine_version", "8.0.mysql_aurora.3.03.0"),
 				),
 			},
 			{
-				Config: testAccGlobalClusterConfig_engineVersionUpgradeMultiRegion(rNameGlobal, rNamePrimary, rNameSecondary, "aurora-mysql", "5.7.mysql_aurora.2.07.7"),
+				Config: testAccGlobalClusterConfig_engineVersionUpgradeMultiRegion(rNameGlobal, rNamePrimary, rNameSecondary, "aurora-mysql", "8.0.mysql_aurora.3.03.1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGlobalClusterExists(ctx, resourceName, &globalCluster2),
 					testAccCheckGlobalClusterNotRecreated(&globalCluster1, &globalCluster2),
-					resource.TestCheckResourceAttr(resourceName, "engine_version", "5.7.mysql_aurora.2.07.7"),
+					resource.TestCheckResourceAttr(resourceName, "engine_version", "8.0.mysql_aurora.3.03.1"),
 				),
 			},
 		},
@@ -364,17 +365,18 @@ func TestAccRDSGlobalCluster_EngineVersion_updateMajorMultiRegion(t *testing.T) 
 		CheckDestroy:             testAccCheckGlobalClusterDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGlobalClusterConfig_engineVersionUpgradeMultiRegion(rNameGlobal, rNamePrimary, rNameSecondary, "aurora", "5.6.mysql_aurora.1.23.4"),
+				Config: testAccGlobalClusterConfig_engineVersionUpgradeMultiRegion(rNameGlobal, rNamePrimary, rNameSecondary, "aurora-mysql", "5.7.mysql_aurora.2.12.0"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGlobalClusterExists(ctx, resourceName, &globalCluster1),
+					resource.TestCheckResourceAttr(resourceName, "engine_version", "5.7.mysql_aurora.2.12.0"),
 				),
 			},
 			{
-				Config: testAccGlobalClusterConfig_engineVersionUpgradeMultiRegion(rNameGlobal, rNamePrimary, rNameSecondary, "aurora-mysql", "5.7.mysql_aurora.2.11.1"),
+				Config: testAccGlobalClusterConfig_engineVersionUpgradeMultiRegion(rNameGlobal, rNamePrimary, rNameSecondary, "aurora-mysql", "8.0.mysql_aurora.3.02.3"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGlobalClusterExists(ctx, resourceName, &globalCluster2),
 					testAccCheckGlobalClusterNotRecreated(&globalCluster1, &globalCluster2),
-					resource.TestCheckResourceAttr(resourceName, "engine_version", "5.7.mysql_aurora.2.11.1"),
+					resource.TestCheckResourceAttr(resourceName, "engine_version", "8.0.mysql_aurora.3.02.3"),
 				),
 			},
 		},
@@ -748,9 +750,7 @@ resource "aws_rds_cluster_instance" "test" {
 }
 
 func testAccGlobalClusterConfig_engineVersionUpgradeMultiRegion(rNameGlobal, rNamePrimary, rNameSecondary, engine, engineVersion string) string {
-	return acctest.ConfigCompose(
-		acctest.ConfigMultipleRegionProvider(2),
-		fmt.Sprintf(`
+	return acctest.ConfigCompose(acctest.ConfigMultipleRegionProvider(2), fmt.Sprintf(`
 data "aws_region" "current" {}
 
 data "aws_availability_zones" "alternate" {
@@ -773,12 +773,11 @@ resource "aws_rds_cluster" "primary" {
   allow_major_version_upgrade = true
   apply_immediately           = true
   cluster_identifier          = %[4]q
-  database_name               = "totoro"
   engine                      = aws_rds_global_cluster.test.engine
   engine_version              = aws_rds_global_cluster.test.engine_version
   global_cluster_identifier   = aws_rds_global_cluster.test.id
-  master_password             = "satsukimae"
-  master_username             = "maesatsuki"
+  master_password             = "avoid-plaintext-passwords"
+  master_username             = "tfacctest"
   skip_final_snapshot         = true
 
   lifecycle {
@@ -792,7 +791,7 @@ resource "aws_rds_cluster_instance" "primary" {
   engine             = aws_rds_cluster.primary.engine
   engine_version     = aws_rds_cluster.primary.engine_version
   identifier         = %[4]q
-  instance_class     = "db.r4.large"
+  instance_class     = "db.r5.large"
 }
 
 resource "aws_vpc" "alternate" {
@@ -849,7 +848,7 @@ resource "aws_rds_cluster_instance" "secondary" {
   engine             = aws_rds_cluster.secondary.engine
   engine_version     = aws_rds_cluster.secondary.engine_version
   identifier         = %[5]q
-  instance_class     = "db.r4.large"
+  instance_class     = "db.r5.large"
 }
 `, rNameGlobal, engine, engineVersion, rNamePrimary, rNameSecondary))
 }
