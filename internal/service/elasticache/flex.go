@@ -92,11 +92,11 @@ func expandNodeGroupConfiguration(v map[string]interface{}) elasticache.NodeGrou
 	if v, ok := v["primary_outpost_arn"].(string); ok && v != "" {
 		nodeGroupConfiguration.PrimaryOutpostArn = aws.String(v)
 	}
-	if raz := v["replica_availability_zones"].(*schema.Set); raz.Len() > 0 {
-		nodeGroupConfiguration.ReplicaAvailabilityZones = flex.ExpandStringSet(raz)
-	}
 	if v, ok := v["replica_count"].(int64); ok && v != 0 {
 		nodeGroupConfiguration.ReplicaCount = aws.Int64(v)
+	}
+	if raz := v["replica_availability_zones"].(*schema.Set); raz.Len() > 0 {
+		nodeGroupConfiguration.ReplicaAvailabilityZones = flex.ExpandStringSet(raz)
 	}
 	if roa := v["replica_outpost_arns"].(*schema.Set); roa.Len() > 0 {
 		nodeGroupConfiguration.ReplicaOutpostArns = flex.ExpandStringSet(roa)

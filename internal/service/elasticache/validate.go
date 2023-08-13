@@ -25,7 +25,7 @@ func validReplicationGroupAuthToken(v interface{}, k string) (ws []string, error
 	return
 }
 
-func validNodeGroupSlots(v interface{}, k string) (ws []string, errors []error) {
+func validNodeGroupSlotsFormat(v interface{}, k string) (ws []string, errors []error) {
 	value := v.(string)
 	if !regexp.MustCompile(`^\d+-\d+$`).MatchString(value) {
 		errors = append(errors, fmt.Errorf("%q contains wrong format for keyspace, must be startkey-endkey", k))
@@ -41,28 +41,51 @@ func validNodeGroupSlots(v interface{}, k string) (ws []string, errors []error) 
 		}
 	}
 	if intKeyspaces[0] > intKeyspaces[1] {
-		errors = append(errors, fmt.Errorf("%q contains wrong format for keyspace, endkey must be greater than startkey", k))
+		errors = append(errors, fmt.Errorf("%q contains wrong format for keyspace, startkey must not be greater than startkey", k))
 	}
 	return
 }
 
 func validNodeGroupConfiguration(numNodeGroups *int64, configs []*elasticache.NodeGroupConfiguration) (errorMessages []string) {
-	if numNodeGroups != nil && len(configs) != int(*numNodeGroups) {
+	if !validNumberOfNodeGroupConfiguration(numNodeGroups, configs) {
 		errorMessages = append(errorMessages, `number of "node_group_configuration" must be match with "num_node_groups"`)
 	}
 
-	numOccupiedKeySpaces := 0
-	for _, c := range configs {
-		keyspaces := strings.Split(*c.Slots, "-")
-		startKey, _ := strconv.Atoi(keyspaces[0])
-		endKey, _ := strconv.Atoi(keyspaces[1])
-		numOccupiedKeySpaces += endKey - startKey + 1
+	if !validReplicaCount(configs) {
+		errorMessages = append(errorMessages, `number of "replica_availability_zones" must be match with "replica_count"`)
 	}
-	if numOccupiedKeySpaces < 16384 {
-		errorMessages = append(errorMessages, `"slots" in all "node_group_configuration" must cover all 0-16383 keyspaces`)
-	} else if numOccupiedKeySpaces > 16384 {
-		errorMessages = append(errorMessages, `"slots" in all "node_group_configuration" must not contain intersecting keyspaces `)
+
+	if !validSlotsCoverage(configs) {
+		errorMessages = append(errorMessages, `"slots" must be specified for none or all covering 0-16383 keyspaces without intersections`)
 	}
 
 	return errorMessages
+}
+
+func validNumberOfNodeGroupConfiguration(numNodeGroups *int64, configs []*elasticache.NodeGroupConfiguration) bool {
+	return numNodeGroups == nil || len(configs) == int(*numNodeGroups)
+}
+
+func validReplicaCount(configs []*elasticache.NodeGroupConfiguration) bool {
+	for _, c := range configs {
+		if c.ReplicaCount != nil &&
+			c.ReplicaAvailabilityZones != nil &&
+			int(*c.ReplicaCount) != len(c.ReplicaAvailabilityZones) {
+			return false
+		}
+	}
+	return true
+}
+
+func validSlotsCoverage(configs []*elasticache.NodeGroupConfiguration) bool {
+	numOccupiedKeySpaces := 0
+	for _, c := range configs {
+		if c.Slots != nil {
+			keyspaces := strings.Split(*c.Slots, "-")
+			startKey, _ := strconv.Atoi(keyspaces[0])
+			endKey, _ := strconv.Atoi(keyspaces[1])
+			numOccupiedKeySpaces += endKey - startKey + 1
+		}
+	}
+	return numOccupiedKeySpaces == 16384 || numOccupiedKeySpaces == 0
 }
