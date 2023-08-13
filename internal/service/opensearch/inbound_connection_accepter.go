@@ -33,8 +33,8 @@ func ResourceInboundConnectionAccepter() *schema.Resource {
 		},
 
 		Timeouts: &schema.ResourceTimeout{
-			Create: schema.DefaultTimeout(1 * time.Minute),
-			Delete: schema.DefaultTimeout(1 * time.Minute),
+			Create: schema.DefaultTimeout(5 * time.Minute),
+			Delete: schema.DefaultTimeout(5 * time.Minute),
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -113,7 +113,7 @@ func resourceInboundConnectionDelete(ctx context.Context, d *schema.ResourceData
 	}
 
 	if err := waitForInboundConnectionDeletion(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
-		return diag.Errorf("waiting for VPC Peering Connection (%s) to be deleted: %s", d.Id(), err)
+		return diag.Errorf("waiting for Inbound Connection (%s) to be deleted: %s", d.Id(), err)
 	}
 
 	return nil

@@ -16,7 +16,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // @SDKResource("aws_opensearch_outbound_connection")
@@ -30,8 +32,8 @@ func ResourceOutboundConnection() *schema.Resource {
 		},
 
 		Timeouts: &schema.ResourceTimeout{
-			Create: schema.DefaultTimeout(1 * time.Minute),
-			Delete: schema.DefaultTimeout(1 * time.Minute),
+			Create: schema.DefaultTimeout(5 * time.Minute),
+			Delete: schema.DefaultTimeout(5 * time.Minute),
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -39,6 +41,42 @@ func ResourceOutboundConnection() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
+			},
+			"connection_mode": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.StringInSlice(opensearchservice.ConnectionMode_Values(), false),
+			},
+			"connection_properties": {
+				Type:     schema.TypeList,
+				Optional: true,
+				ForceNew: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"cross_cluster_search": {
+							Type:     schema.TypeList,
+							Optional: true,
+							ForceNew: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"skip_unavailable": {
+										Type:     schema.TypeString,
+										Optional: true,
+										ForceNew: true,
+									},
+								},
+							},
+						},
+						"endpoint": {
+							Type:             schema.TypeString,
+							Computed:         true,
+							DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
+						},
+					},
+				},
 			},
 			"local_domain_info":  outboundConnectionDomainInfoSchema(),
 			"remote_domain_info": outboundConnectionDomainInfoSchema(),
@@ -55,9 +93,11 @@ func resourceOutboundConnectionCreate(ctx context.Context, d *schema.ResourceDat
 
 	// Create the Outbound Connection
 	createOpts := &opensearchservice.CreateOutboundConnectionInput{
-		ConnectionAlias:  aws.String(d.Get("connection_alias").(string)),
-		LocalDomainInfo:  expandOutboundConnectionDomainInfo(d.Get("local_domain_info").([]interface{})),
-		RemoteDomainInfo: expandOutboundConnectionDomainInfo(d.Get("remote_domain_info").([]interface{})),
+		ConnectionAlias:      aws.String(d.Get("connection_alias").(string)),
+		ConnectionMode:       aws.String(d.Get("connection_mode").(string)),
+		ConnectionProperties: expandOutboundConnectionConnectionProperties(d.Get("connection_properties").([]interface{})),
+		LocalDomainInfo:      expandOutboundConnectionDomainInfo(d.Get("local_domain_info").([]interface{})),
+		RemoteDomainInfo:     expandOutboundConnectionDomainInfo(d.Get("remote_domain_info").([]interface{})),
 	}
 
 	log.Printf("[DEBUG] Outbound Connection Create options: %#v", createOpts)
@@ -98,6 +138,8 @@ func resourceOutboundConnectionRead(ctx context.Context, d *schema.ResourceData,
 	}
 
 	d.Set("connection_alias", ccsc.ConnectionAlias)
+	d.Set("connection_mode", ccsc.ConnectionMode)
+	d.Set("connection_properties", flattenOutboundConnectionConnectionProperties(ccsc.ConnectionProperties))
 	d.Set("remote_domain_info", flattenOutboundConnectionDomainInfo(ccsc.RemoteDomainInfo))
 	d.Set("local_domain_info", flattenOutboundConnectionDomainInfo(ccsc.LocalDomainInfo))
 	d.Set("connection_status", statusCode)
@@ -262,5 +304,48 @@ func flattenOutboundConnectionDomainInfo(domainInfo *opensearchservice.DomainInf
 		"owner_id":    aws.StringValue(domainInfo.AWSDomainInformation.OwnerId),
 		"domain_name": aws.StringValue(domainInfo.AWSDomainInformation.DomainName),
 		"region":      aws.StringValue(domainInfo.AWSDomainInformation.Region),
+	}}
+}
+
+func expandOutboundConnectionConnectionProperties(cProperties []interface{}) *opensearchservice.ConnectionProperties {
+	if len(cProperties) == 0 || cProperties[0] == nil {
+		return nil
+	}
+
+	mOptions := cProperties[0].(map[string]interface{})
+
+	return &opensearchservice.ConnectionProperties{
+		CrossClusterSearch: expandOutboundConnectionCrossClusterSearchConnectionProperties(mOptions["cross_cluster_search"].([]interface{})),
+	}
+}
+
+func flattenOutboundConnectionConnectionProperties(cProperties *opensearchservice.ConnectionProperties) []interface{} {
+	if cProperties == nil {
+		return nil
+	}
+	return []interface{}{map[string]interface{}{
+		"cross_cluster_search": flattenOutboundConnectionCrossClusterSearchConnectionProperties(cProperties.CrossClusterSearch),
+		"endpoint":             aws.StringValue(cProperties.Endpoint),
+	}}
+}
+
+func expandOutboundConnectionCrossClusterSearchConnectionProperties(cProperties []interface{}) *opensearchservice.CrossClusterSearchConnectionProperties {
+	if len(cProperties) == 0 || cProperties[0] == nil {
+		return nil
+	}
+
+	mOptions := cProperties[0].(map[string]interface{})
+
+	return &opensearchservice.CrossClusterSearchConnectionProperties{
+		SkipUnavailable: aws.String(mOptions["skip_unavailable"].(string)),
+	}
+}
+
+func flattenOutboundConnectionCrossClusterSearchConnectionProperties(cProperties *opensearchservice.CrossClusterSearchConnectionProperties) []interface{} {
+	if cProperties == nil {
+		return nil
+	}
+	return []interface{}{map[string]interface{}{
+		"skip_unavailable": aws.StringValue(cProperties.SkipUnavailable),
 	}}
 }
