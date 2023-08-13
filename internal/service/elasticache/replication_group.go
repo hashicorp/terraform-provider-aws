@@ -327,6 +327,43 @@ func ResourceReplicationGroup() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
+			"node_group_configuration": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"node_group_id": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							ValidateFunc: validateNodeGroupID,
+						},
+						"primary_availability_zone": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+						"primary_outpost_arn": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+						"replica_availability_zones": {
+							Type:     schema.TypeSet,
+							Optional: true,
+							Elem:     &schema.Schema{Type: schema.TypeString},
+						},
+						"replica_outpost_arns": {
+							Type:     schema.TypeSet,
+							Optional: true,
+							Elem:     &schema.Schema{Type: schema.TypeString},
+						},
+						"slots": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							ValidateFunc: validNodeGroupSlots,
+						},
+					},
+				},
+				RequiredWith: []string{"snapshot_arns"},
+			},
 		},
 
 		SchemaVersion: 1,
@@ -488,6 +525,23 @@ func resourceReplicationGroupCreate(ctx context.Context, d *schema.ResourceData,
 
 	if userGroupIds := d.Get("user_group_ids").(*schema.Set); userGroupIds.Len() > 0 {
 		input.UserGroupIds = flex.ExpandStringSet(userGroupIds)
+	}
+
+	if v, ok := d.GetOk("node_group_configuration"); ok {
+		input.NodeGroupConfiguration = []*elasticache.NodeGroupConfiguration{}
+		v := v.(*schema.Set).List()
+		for _, v := range v {
+			nodeGroupConfiguration := expandNodeGroupConfiguration(v.(map[string]interface{}))
+			input.NodeGroupConfiguration = append(input.NodeGroupConfiguration, &nodeGroupConfiguration)
+		}
+
+		errMessages := validNodeGroupConfiguration(input.NumNodeGroups, input.NodeGroupConfiguration)
+		if len(errMessages) > 0 {
+			for _, e := range errMessages {
+				sdkdiag.AppendErrorf(diags, e)
+			}
+			return diags
+		}
 	}
 
 	output, err := conn.CreateReplicationGroupWithContext(ctx, input)
@@ -1111,4 +1165,9 @@ var validateReplicationGroupID schema.SchemaValidateFunc = validation.All(
 	validation.StringMatch(regexp.MustCompile(`^[a-zA-Z]`), "must begin with a letter"),
 	validation.StringDoesNotMatch(regexp.MustCompile(`--`), "cannot contain two consecutive hyphens"),
 	validation.StringDoesNotMatch(regexp.MustCompile(`-$`), "cannot end with a hyphen"),
+)
+
+var validateNodeGroupID schema.SchemaValidateFunc = validation.All(
+	validation.StringLenBetween(1, 4),
+	validation.StringMatch(regexp.MustCompile(`^\d+$`), "must contain only numeric characters"),
 )

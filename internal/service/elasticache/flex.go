@@ -6,6 +6,8 @@ package elasticache
 import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/elasticache"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 )
 
 func flattenSecurityGroupIDs(securityGroups []*elasticache.SecurityGroupMembership) []string {
@@ -73,4 +75,38 @@ func expandLogDeliveryConfigurations(v map[string]interface{}) elasticache.LogDe
 	logDeliveryConfigurationRequest.DestinationDetails = &destinationDetails
 
 	return logDeliveryConfigurationRequest
+}
+
+func expandNodeGroupConfiguration(v map[string]interface{}) elasticache.NodeGroupConfiguration {
+	nodeGroupConfiguration := elasticache.NodeGroupConfiguration{}
+
+	if v, ok := v["node_group_id"].(string); ok && v != "" {
+		nodeGroupConfiguration.NodeGroupId = aws.String(v)
+	}
+	if v, ok := v["primary_availability_zone"].(string); ok && v != "" {
+		nodeGroupConfiguration.PrimaryAvailabilityZone = aws.String(v)
+	}
+	if v, ok := v["primary_outpost_arn"].(string); ok && v != "" {
+		nodeGroupConfiguration.PrimaryOutpostArn = aws.String(v)
+	}
+	if v, ok := v["primary_outpost_arn"].(string); ok && v != "" {
+		nodeGroupConfiguration.PrimaryOutpostArn = aws.String(v)
+	}
+	if raz := v["replica_availability_zones"].(*schema.Set); raz.Len() > 0 {
+		nodeGroupConfiguration.ReplicaAvailabilityZones = flex.ExpandStringSet(raz)
+	}
+	if v, ok := v["replica_count"].(int64); ok && v != 0 {
+		nodeGroupConfiguration.ReplicaCount = aws.Int64(v)
+	}
+	if roa := v["replica_outpost_arns"].(*schema.Set); roa.Len() > 0 {
+		nodeGroupConfiguration.ReplicaOutpostArns = flex.ExpandStringSet(roa)
+	}
+	if v, ok := v["replica_count"].(int64); ok && v != 0 {
+		nodeGroupConfiguration.ReplicaCount = aws.Int64(v)
+	}
+	if v, ok := v["slots"].(string); ok && v != "" {
+		nodeGroupConfiguration.Slots = aws.String(v)
+	}
+
+	return nodeGroupConfiguration
 }
