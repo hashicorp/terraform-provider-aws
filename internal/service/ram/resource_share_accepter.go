@@ -38,49 +38,42 @@ func ResourceResourceShareAccepter() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"share_arn": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: verify.ValidARN,
-			},
-
 			"invitation_arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
-			"share_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-
-			"status": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-
 			"receiver_account_id": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
-			"sender_account_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-
-			"share_name": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-
 			"resources": {
 				Type:     schema.TypeList,
 				Computed: true,
 				Elem: &schema.Schema{
 					Type: schema.TypeString,
 				},
+			},
+			"share_name": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"sender_account_id": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"share_arn": {
+				Type:         schema.TypeString,
+				Required:     true,
+				ForceNew:     true,
+				ValidateFunc: verify.ValidARN,
+			},
+			"share_id": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"status": {
+				Type:     schema.TypeString,
+				Computed: true,
 			},
 		},
 	}
