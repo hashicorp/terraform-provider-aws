@@ -18,7 +18,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // @SDKResource("aws_opensearch_outbound_connection")
@@ -51,7 +50,7 @@ func ResourceOutboundConnection() *schema.Resource {
 			"connection_properties": {
 				Type:     schema.TypeList,
 				Optional: true,
-				ForceNew: true,
+				Computed: true,
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
@@ -71,9 +70,8 @@ func ResourceOutboundConnection() *schema.Resource {
 							},
 						},
 						"endpoint": {
-							Type:             schema.TypeString,
-							Computed:         true,
-							DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
+							Type:     schema.TypeString,
+							Computed: true,
 						},
 					},
 				},
