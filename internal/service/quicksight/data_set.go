@@ -199,7 +199,7 @@ func ResourceDataSet() *schema.Resource {
 					},
 				},
 				"permissions": {
-					Type:     schema.TypeList,
+					Type:     schema.TypeSet,
 					Optional: true,
 					MinItems: 1,
 					MaxItems: 64,
