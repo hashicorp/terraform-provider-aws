@@ -9,6 +9,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/elasticache"
 )
 
@@ -63,14 +64,14 @@ func validNodeGroupConfiguration(numNodeGroups *int64, configs []*elasticache.No
 }
 
 func validNumberOfNodeGroupConfiguration(numNodeGroups *int64, configs []*elasticache.NodeGroupConfiguration) bool {
-	return numNodeGroups == nil || len(configs) == int(*numNodeGroups)
+	return numNodeGroups == nil || len(configs) == int(aws.Int64Value(numNodeGroups))
 }
 
 func validReplicaCount(configs []*elasticache.NodeGroupConfiguration) bool {
 	for _, c := range configs {
 		if c.ReplicaCount != nil &&
 			c.ReplicaAvailabilityZones != nil &&
-			int(*c.ReplicaCount) != len(c.ReplicaAvailabilityZones) {
+			int(aws.Int64Value(c.ReplicaCount)) != len(c.ReplicaAvailabilityZones) {
 			return false
 		}
 	}
