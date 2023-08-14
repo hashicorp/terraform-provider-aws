@@ -36,6 +36,7 @@ func TestAccS3BucketLogging_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketLoggingExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "bucket", rName),
+					resource.TestCheckResourceAttr(resourceName, "expected_bucket_owner", ""),
 					resource.TestCheckResourceAttrPair(resourceName, "target_bucket", "aws_s3_bucket.log_bucket", "bucket"),
 					resource.TestCheckResourceAttr(resourceName, "target_prefix", "log/"),
 					resource.TestCheckResourceAttr(resourceName, "target_grant.#", "0"),
@@ -76,7 +77,6 @@ func TestAccS3BucketLogging_disappears(t *testing.T) {
 func TestAccS3BucketLogging_update(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	targetBucketName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_s3_bucket_logging.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -92,29 +92,13 @@ func TestAccS3BucketLogging_update(t *testing.T) {
 				),
 			},
 			{
-				// Test updating "target_prefix"
-				Config: testAccBucketLoggingConfig_update(rName, rName, "tmp/"),
+				// Test updating "target_prefix".
+				Config: testAccBucketLoggingConfig_update(rName, "tmp/"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketLoggingExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "bucket", rName),
 					resource.TestCheckResourceAttrPair(resourceName, "target_bucket", "aws_s3_bucket.log_bucket", "bucket"),
 					resource.TestCheckResourceAttr(resourceName, "target_prefix", "tmp/"),
-					resource.TestCheckResourceAttr(resourceName, "target_grant.#", "0"),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-			{
-				// Test updating "target_bucket" and "target_prefix"
-				Config: testAccBucketLoggingConfig_update(rName, targetBucketName, "log/"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBucketLoggingExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "bucket", rName),
-					resource.TestCheckResourceAttrPair(resourceName, "target_bucket", "aws_s3_bucket.log_bucket", "bucket"),
-					resource.TestCheckResourceAttr(resourceName, "target_prefix", "log/"),
 					resource.TestCheckResourceAttr(resourceName, "target_grant.#", "0"),
 				),
 			},
@@ -374,6 +358,37 @@ func TestAccS3BucketLogging_migrate_loggingWithChange(t *testing.T) {
 	})
 }
 
+func TestAccS3BucketLogging_withExpectedBucketOwner(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_s3_bucket_logging.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, s3.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckBucketLoggingDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccBucketLoggingConfig_withExpectedBucketOwner(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckBucketLoggingExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "bucket", rName),
+					acctest.CheckResourceAttrAccountID(resourceName, "expected_bucket_owner"),
+					resource.TestCheckResourceAttrPair(resourceName, "target_bucket", "aws_s3_bucket.log_bucket", "bucket"),
+					resource.TestCheckResourceAttr(resourceName, "target_prefix", "log/"),
+					resource.TestCheckResourceAttr(resourceName, "target_grant.#", "0"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func testAccCheckBucketLoggingDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Conn(ctx)
@@ -464,7 +479,7 @@ func testAccCheckBucketLoggingTargetGrantGranteeURI(resourceName string) resourc
 	}
 }
 
-func testAccBucketLoggingConfig_basic(rName string) string {
+func testAccBucketLoggingConfig_base(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "log_bucket" {
   bucket = "%[1]s-log"
@@ -486,86 +501,39 @@ resource "aws_s3_bucket_acl" "log_bucket_acl" {
 
 resource "aws_s3_bucket" "test" {
   bucket = %[1]q
+
+  depends_on = [aws_s3_bucket_acl.log_bucket_acl]
+}
+`, rName)
 }
 
+func testAccBucketLoggingConfig_basic(rName string) string {
+	return acctest.ConfigCompose(testAccBucketLoggingConfig_base(rName), `
 resource "aws_s3_bucket_logging" "test" {
   bucket = aws_s3_bucket.test.id
 
   target_bucket = aws_s3_bucket.log_bucket.id
   target_prefix = "log/"
 }
-`, rName)
+`)
 }
 
-func testAccBucketLoggingConfig_update(rName, targetBucketName, targetPrefix string) string {
-	return fmt.Sprintf(`
-resource "aws_s3_bucket" "test" {
-  bucket = %[1]q
-}
-
-resource "aws_s3_bucket" "log_bucket" {
-  bucket = "%[2]s-log"
-}
-
-resource "aws_s3_bucket_ownership_controls" "log_bucket_ownership" {
-  bucket = aws_s3_bucket.log_bucket.id
-  rule {
-    object_ownership = "BucketOwnerPreferred"
-  }
-}
-
-resource "aws_s3_bucket_acl" "log_bucket_acl" {
-  depends_on = [aws_s3_bucket_ownership_controls.log_bucket_ownership]
-
-  bucket = aws_s3_bucket.log_bucket.id
-  acl    = "log-delivery-write"
-}
-
+func testAccBucketLoggingConfig_update(rName, targetPrefix string) string {
+	return acctest.ConfigCompose(testAccBucketLoggingConfig_base(rName), fmt.Sprintf(`
 resource "aws_s3_bucket_logging" "test" {
   bucket = aws_s3_bucket.test.id
 
   target_bucket = aws_s3_bucket.log_bucket.id
-  target_prefix = %[3]q
+  target_prefix = %[1]q
 }
-`, rName, targetBucketName, targetPrefix)
+`, targetPrefix))
 }
 
 func testAccBucketLoggingConfig_targetGrantByID(rName, permission string) string {
-	return fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccBucketLoggingConfig_base(rName), fmt.Sprintf(`
 data "aws_canonical_user_id" "current" {}
 
-resource "aws_s3_bucket" "log_bucket" {
-  bucket = "%[1]s-log"
-}
-
-resource "aws_s3_bucket_ownership_controls" "log_bucket_ownership" {
-  bucket = aws_s3_bucket.log_bucket.id
-  rule {
-    object_ownership = "BucketOwnerPreferred"
-  }
-}
-
-resource "aws_s3_bucket_acl" "log_bucket_acl" {
-  depends_on = [aws_s3_bucket_ownership_controls.log_bucket_ownership]
-
-  bucket = aws_s3_bucket.log_bucket.id
-  acl    = "log-delivery-write"
-}
-
-resource "aws_s3_bucket" "test" {
-  bucket = %[1]q
-}
-
-resource "aws_s3_bucket_ownership_controls" "test" {
-  bucket = aws_s3_bucket.test.id
-  rule {
-    object_ownership = "ObjectWriter"
-  }
-}
-
 resource "aws_s3_bucket_logging" "test" {
-  depends_on = [aws_s3_bucket_ownership_controls.test]
-
   bucket = aws_s3_bucket.test.id
 
   target_bucket = aws_s3_bucket.log_bucket.id
@@ -576,46 +544,15 @@ resource "aws_s3_bucket_logging" "test" {
       id   = data.aws_canonical_user_id.current.id
       type = "CanonicalUser"
     }
-    permission = %[2]q
+    permission = %[1]q
   }
 }
-`, rName, permission)
+`, permission))
 }
 
 func testAccBucketLoggingConfig_targetGrantByEmail(rName, email, permission string) string {
-	return fmt.Sprintf(`
-resource "aws_s3_bucket" "log_bucket" {
-  bucket = "%[1]s-log"
-}
-
-resource "aws_s3_bucket_ownership_controls" "log_bucket_ownership" {
-  bucket = aws_s3_bucket.log_bucket.id
-  rule {
-    object_ownership = "BucketOwnerPreferred"
-  }
-}
-
-resource "aws_s3_bucket_acl" "log_bucket_acl" {
-  depends_on = [aws_s3_bucket_ownership_controls.log_bucket_ownership]
-
-  bucket = aws_s3_bucket.log_bucket.id
-  acl    = "log-delivery-write"
-}
-
-resource "aws_s3_bucket" "test" {
-  bucket = %[1]q
-}
-
-resource "aws_s3_bucket_ownership_controls" "test" {
-  bucket = aws_s3_bucket.test.id
-  rule {
-    object_ownership = "BucketOwnerPreferred"
-  }
-}
-
+	return acctest.ConfigCompose(testAccBucketLoggingConfig_base(rName), fmt.Sprintf(`
 resource "aws_s3_bucket_logging" "test" {
-  depends_on = [aws_s3_bucket_ownership_controls.test]
-
   bucket = aws_s3_bucket.test.id
 
   target_bucket = aws_s3_bucket.log_bucket.id
@@ -623,51 +560,20 @@ resource "aws_s3_bucket_logging" "test" {
 
   target_grant {
     grantee {
-      email_address = %[2]q
+      email_address = %[1]q
       type          = "AmazonCustomerByEmail"
     }
-    permission = %[3]q
+    permission = %[2]q
   }
 }
-`, rName, email, permission)
+`, email, permission))
 }
 
 func testAccBucketLoggingConfig_targetGrantByGroup(rName, permission string) string {
-	return fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccBucketLoggingConfig_base(rName), fmt.Sprintf(`
 data "aws_partition" "current" {}
 
-resource "aws_s3_bucket" "log_bucket" {
-  bucket = "%[1]s-log"
-}
-
-resource "aws_s3_bucket_ownership_controls" "log_bucket_ownership" {
-  bucket = aws_s3_bucket.log_bucket.id
-  rule {
-    object_ownership = "ObjectWriter"
-  }
-}
-
-resource "aws_s3_bucket_acl" "log_bucket_acl" {
-  depends_on = [aws_s3_bucket_ownership_controls.log_bucket_ownership]
-
-  bucket = aws_s3_bucket.log_bucket.id
-  acl    = "log-delivery-write"
-}
-
-resource "aws_s3_bucket" "test" {
-  bucket = %[1]q
-}
-
-resource "aws_s3_bucket_ownership_controls" "test" {
-  bucket = aws_s3_bucket.test.id
-  rule {
-    object_ownership = "ObjectWriter"
-  }
-}
-
 resource "aws_s3_bucket_logging" "test" {
-  depends_on = [aws_s3_bucket_ownership_controls.test]
-
   bucket = aws_s3_bucket.test.id
 
   target_bucket = aws_s3_bucket.log_bucket.id
@@ -679,41 +585,34 @@ resource "aws_s3_bucket_logging" "test" {
       # Test with S3 log delivery group
       uri = "http://acs.${data.aws_partition.current.dns_suffix}/groups/s3/LogDelivery"
     }
-    permission = %[2]q
+    permission = %[1]q
   }
 }
-`, rName, permission)
+`, permission))
 }
 
 func testAccBucketLoggingConfig_migrate(rName, targetPrefix string) string {
-	return fmt.Sprintf(`
-resource "aws_s3_bucket" "log_bucket" {
-  bucket = "%[1]s-log"
-}
-
-resource "aws_s3_bucket_ownership_controls" "log_bucket_ownership" {
-  bucket = aws_s3_bucket.log_bucket.id
-  rule {
-    object_ownership = "BucketOwnerPreferred"
-  }
-}
-
-resource "aws_s3_bucket_acl" "log_bucket_acl" {
-  depends_on = [aws_s3_bucket_ownership_controls.log_bucket_ownership]
-
-  bucket = aws_s3_bucket.log_bucket.id
-  acl    = "log-delivery-write"
-}
-
-resource "aws_s3_bucket" "test" {
-  bucket = %[1]q
-}
-
+	return acctest.ConfigCompose(testAccBucketLoggingConfig_base(rName), fmt.Sprintf(`
 resource "aws_s3_bucket_logging" "test" {
   bucket = aws_s3_bucket.test.id
 
   target_bucket = aws_s3_bucket.log_bucket.id
-  target_prefix = %[2]q
+  target_prefix = %[1]q
 }
-`, rName, targetPrefix)
+`, targetPrefix))
+}
+
+func testAccBucketLoggingConfig_withExpectedBucketOwner(rName string) string {
+	return acctest.ConfigCompose(testAccBucketLoggingConfig_base(rName), `
+data "aws_caller_identity" "current" {}
+
+resource "aws_s3_bucket_logging" "test" {
+  bucket = aws_s3_bucket.test.id
+
+  expected_bucket_owner = data.aws_caller_identity.current.account_id
+
+  target_bucket = aws_s3_bucket.log_bucket.id
+  target_prefix = "log/"
+}
+`)
 }
