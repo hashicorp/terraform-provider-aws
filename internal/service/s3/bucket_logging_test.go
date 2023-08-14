@@ -36,6 +36,7 @@ func TestAccS3BucketLogging_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketLoggingExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "bucket", rName),
+					resource.TestCheckResourceAttr(resourceName, "expected_bucket_owner", ""),
 					resource.TestCheckResourceAttrPair(resourceName, "target_bucket", "aws_s3_bucket.log_bucket", "bucket"),
 					resource.TestCheckResourceAttr(resourceName, "target_prefix", "log/"),
 					resource.TestCheckResourceAttr(resourceName, "target_grant.#", "0"),
@@ -357,6 +358,37 @@ func TestAccS3BucketLogging_migrate_loggingWithChange(t *testing.T) {
 	})
 }
 
+func TestAccS3BucketLogging_withExpectedBucketOwner(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_s3_bucket_logging.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, s3.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckBucketLoggingDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccBucketLoggingConfig_withExpectedBucketOwner(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckBucketLoggingExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "bucket", rName),
+					acctest.CheckResourceAttrAccountID(resourceName, "expected_bucket_owner"),
+					resource.TestCheckResourceAttrPair(resourceName, "target_bucket", "aws_s3_bucket.log_bucket", "bucket"),
+					resource.TestCheckResourceAttr(resourceName, "target_prefix", "log/"),
+					resource.TestCheckResourceAttr(resourceName, "target_grant.#", "0"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func testAccCheckBucketLoggingDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Conn(ctx)
@@ -568,4 +600,19 @@ resource "aws_s3_bucket_logging" "test" {
   target_prefix = %[1]q
 }
 `, targetPrefix))
+}
+
+func testAccBucketLoggingConfig_withExpectedBucketOwner(rName string) string {
+	return acctest.ConfigCompose(testAccBucketLoggingConfig_base(rName), `
+data "aws_caller_identity" "current" {}
+
+resource "aws_s3_bucket_logging" "test" {
+  bucket = aws_s3_bucket.test.id
+
+  expected_bucket_owner = data.aws_caller_identity.current.account_id
+
+  target_bucket = aws_s3_bucket.log_bucket.id
+  target_prefix = "log/"
+}
+`)
 }
