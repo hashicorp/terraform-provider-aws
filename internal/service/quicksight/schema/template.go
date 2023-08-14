@@ -27,19 +27,7 @@ func TemplateDefinitionSchema() *schema.Schema {
 			Schema: map[string]*schema.Schema{
 				"data_set_configuration": dataSetConfigurationSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DataSetConfiguration.html
 				"analysis_defaults":      analysisDefaultSchema(),      // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_AnalysisDefaults.html
-				"calculated_fields": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_CalculatedField.html
-					Type:     schema.TypeList,
-					MinItems: 1,
-					MaxItems: 100,
-					Optional: true,
-					Elem: &schema.Resource{
-						Schema: map[string]*schema.Schema{
-							"data_set_identifier": stringSchema(true, validation.StringLenBetween(1, 2048)),
-							"expression":          stringSchema(true, validation.StringLenBetween(1, 4096)),
-							"name":                stringSchema(true, validation.StringLenBetween(1, 128)),
-						},
-					},
-				},
+				"calculated_fields":      calculatedFieldsSchema(),     // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_CalculatedField.html
 				"column_configurations": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ColumnConfiguration.html
 					Type:     schema.TypeList,
 					MinItems: 1,
@@ -172,6 +160,22 @@ func aggregationFunctionSchema(required bool) *schema.Schema {
 				"categorical_aggregation_function": stringSchema(false, validation.StringInSlice(quicksight.CategoricalAggregationFunction_Values(), false)),
 				"date_aggregation_function":        stringSchema(false, validation.StringInSlice(quicksight.DateAggregationFunction_Values(), false)),
 				"numerical_aggregation_function":   numericalAggregationFunctionSchema(false), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_NumericalAggregationFunction.html
+			},
+		},
+	}
+}
+
+func calculatedFieldsSchema() *schema.Schema {
+	return &schema.Schema{ // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_CalculatedField.html
+		Type:     schema.TypeList,
+		MinItems: 1,
+		MaxItems: 500,
+		Optional: true,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"data_set_identifier": stringSchema(true, validation.StringLenBetween(1, 2048)),
+				"expression":          stringSchema(true, validation.StringLenBetween(1, 32000)),
+				"name":                stringSchema(true, validation.StringLenBetween(1, 128)),
 			},
 		},
 	}
