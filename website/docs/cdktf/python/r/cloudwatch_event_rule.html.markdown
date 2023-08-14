@@ -63,7 +63,7 @@ data "aws_iam_policy_document" "sns_topic_policy" {
 This resource supports the following arguments:
 
 * `name` - (Optional) The name of the rule. If omitted, Terraform will assign a random, unique name. Conflicts with `name_prefix`.
-* `name_prefix` - (Optional) Creates a unique name beginning with the specified prefix. Conflicts with `name`.
+* `name_prefix` - (Optional) Creates a unique name beginning with the specified prefix. Conflicts with `name`. **Note**: Due to the length of the generated suffix, must be 38 characters or less.
 * `schedule_expression` - (Optional) The scheduling expression. For example, `cron(0 20 * * ? *)` or `rate(5 minutes)`. At least one of `schedule_expression` or `event_pattern` is required. Can only be used on the default event bus. For more information, refer to the AWS documentation [Schedule Expressions for Rules](https://docs.aws.amazon.com/AmazonCloudWatch/latest/events/ScheduledEvents.html).
 * `event_bus_name` - (Optional) The name or ARN of the event bus to associate with this rule.
   If you omit this, the `default` event bus is used.
@@ -100,4 +100,4 @@ Using `terraform import`, import EventBridge Rules using the `event_bus_name/rul
 % terraform import aws_cloudwatch_event_rule.console example-event-bus/capture-console-sign-in
 ```
 
-<!-- cache-key: cdktf-0.17.1 input-3d32beae7503c8dd41721cea50d793b0381d9ecaa43066ffef55c023c5d8046f -->
+<!-- cache-key: cdktf-0.17.1 input-1682a88e595c1129ead5e465869167f15b794aa7b9b39b0aef0d03a1bb04985b -->
