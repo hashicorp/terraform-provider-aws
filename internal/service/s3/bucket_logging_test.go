@@ -9,15 +9,14 @@ import (
 	"os"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/s3"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfs3 "github.com/hashicorp/terraform-provider-aws/internal/service/s3"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func TestAccS3BucketLogging_basic(t *testing.T) {
@@ -403,70 +402,40 @@ func testAccCheckBucketLoggingDestroy(ctx context.Context) resource.TestCheckFun
 				return err
 			}
 
-			input := &s3.GetBucketLoggingInput{
-				Bucket: aws.String(bucket),
-			}
+			_, err = tfs3.FindBucketLogging(ctx, conn, bucket, expectedBucketOwner)
 
-			if expectedBucketOwner != "" {
-				input.ExpectedBucketOwner = aws.String(expectedBucketOwner)
-			}
-
-			output, err := conn.GetBucketLoggingWithContext(ctx, input)
-
-			if tfawserr.ErrCodeEquals(err, s3.ErrCodeNoSuchBucket) {
+			if tfresource.NotFound(err) {
 				continue
 			}
 
 			if err != nil {
-				return fmt.Errorf("error getting S3 Bucket Logging (%s): %w", rs.Primary.ID, err)
+				return err
 			}
 
-			if output != nil && output.LoggingEnabled != nil {
-				return fmt.Errorf("S3 Bucket Logging (%s) still exists", rs.Primary.ID)
-			}
+			return fmt.Errorf("S3 Bucket Logging %s still exists", rs.Primary.ID)
 		}
 
 		return nil
 	}
 }
 
-func testAccCheckBucketLoggingExists(ctx context.Context, resourceName string) resource.TestCheckFunc {
+func testAccCheckBucketLoggingExists(ctx context.Context, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[resourceName]
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return fmt.Errorf("Not found: %s", resourceName)
+			return fmt.Errorf("Not found: %s", n)
 		}
-
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("Resource (%s) ID not set", resourceName)
-		}
-
-		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Conn(ctx)
 
 		bucket, expectedBucketOwner, err := tfs3.ParseResourceID(rs.Primary.ID)
 		if err != nil {
 			return err
 		}
 
-		input := &s3.GetBucketLoggingInput{
-			Bucket: aws.String(bucket),
-		}
+		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Conn(ctx)
 
-		if expectedBucketOwner != "" {
-			input.ExpectedBucketOwner = aws.String(expectedBucketOwner)
-		}
+		_, err = tfs3.FindBucketLogging(ctx, conn, bucket, expectedBucketOwner)
 
-		output, err := conn.GetBucketLoggingWithContext(ctx, input)
-
-		if err != nil {
-			return fmt.Errorf("error getting S3 Bucket Logging (%s): %w", rs.Primary.ID, err)
-		}
-
-		if output == nil || output.LoggingEnabled == nil {
-			return fmt.Errorf("S3 Bucket Logging (%s) not found", rs.Primary.ID)
-		}
-
-		return nil
+		return err
 	}
 }
 
