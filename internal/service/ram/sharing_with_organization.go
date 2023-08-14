@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ram
 
 import (
@@ -18,6 +21,7 @@ func ResourceSharingWithOrganization() *schema.Resource {
 		CreateWithoutTimeout: resourceSharingWithOrganizationCreate,
 		ReadWithoutTimeout:   schema.NoopContext,
 		DeleteWithoutTimeout: schema.NoopContext,
+
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
@@ -28,7 +32,7 @@ func ResourceSharingWithOrganization() *schema.Resource {
 
 func resourceSharingWithOrganizationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).RAMConn()
+	conn := meta.(*conns.AWSClient).RAMConn(ctx)
 
 	log.Print("[DEBUG] Enabling RAM sharing with organization")
 
