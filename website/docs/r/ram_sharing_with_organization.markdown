@@ -13,34 +13,32 @@ Manages Resource Access Manager (RAM) Resource Sharing with AWS Organizations. I
 ## Example Usage
 
 ```terraform
-data "aws_partition" "current" {}
-
-resource "aws_organizations_organization" "test" {
-  aws_service_access_principals = ["ram.${data.aws_partition.current.dns_suffix}"]
-  feature_set                   = "ALL"
-}
-
-resource "aws_ram_sharing_with_organization" "test" {
-  depends_on = [
-    aws_organizations_organization.test
-  ]
-}
+resource "aws_ram_sharing_with_organization" "example" {}
 ```
 
 ## Argument Reference
 
-The resource does not support any arguments.
+This resource does not support any arguments.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - AWS Account ID.
 
 ## Import
 
-An existing Resource Access Manager (RAM) Resource Sharing with an AWS Organization can be imported using the AWS account ID, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import the resource using the current AWS account ID. For example:
 
+```terraform
+import {
+  to = aws_ram_sharing_with_organization.example
+  id = "123456789012"
+}
 ```
-$ terraform import aws_ram_sharing_with_organization.example 123456789012
+
+Using `terraform import`, import the resource using the current AWS account ID. For example:
+
+```console
+% terraform import aws_ram_sharing_with_organization.example 123456789012
 ```
