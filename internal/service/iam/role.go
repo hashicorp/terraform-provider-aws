@@ -438,7 +438,7 @@ func resourceRoleUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 		remove := os.Difference(ns).List()
 		add := ns.Difference(os).List()
 
-		var policyNames []*string
+		var policyNames []string
 		for _, policy := range remove {
 			tfMap, ok := policy.(map[string]interface{})
 
@@ -447,7 +447,7 @@ func resourceRoleUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 			}
 
 			if v, ok := tfMap["name"].(string); ok && v != "" {
-				policyNames = append(policyNames, aws.String(tfMap["name"].(string)))
+				policyNames = append(policyNames, tfMap["name"].(string))
 			}
 		}
 		if err := deleteRoleInlinePolicies(ctx, conn, roleName, policyNames); err != nil {
@@ -537,13 +537,14 @@ func DeleteRole(ctx context.Context, conn *iam.IAM, roleName string, forceDetach
 	}
 
 	if forceDetach || hasInline {
-		inlinePolicies, err := readRolePolicyNames(ctx, conn, roleName)
+		inlinePolicies, err := findRolePolicyNames(ctx, conn, roleName)
+
 		if err != nil {
-			return err
+			return fmt.Errorf("reading IAM Role (%s) inline policies: %w", roleName, err)
 		}
 
 		if err := deleteRoleInlinePolicies(ctx, conn, roleName, inlinePolicies); err != nil {
-			return fmt.Errorf("unable to delete inline policies: %w", err)
+			return err
 		}
 	}
 
@@ -691,6 +692,40 @@ func findRoleAttachedPolicies(ctx context.Context, conn *iam.IAM, roleName strin
 	return output, nil
 }
 
+func findRolePolicyNames(ctx context.Context, conn *iam.IAM, roleName string) ([]string, error) {
+	input := &iam.ListRolePoliciesInput{
+		RoleName: aws.String(roleName),
+	}
+	var output []string
+
+	err := conn.ListRolePoliciesPagesWithContext(ctx, input, func(page *iam.ListRolePoliciesOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, v := range page.PolicyNames {
+			if v != nil {
+				output = append(output, aws.StringValue(v))
+			}
+		}
+
+		return !lastPage
+	})
+
+	if tfawserr.ErrCodeEquals(err, iam.ErrCodeNoSuchEntityException) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	return output, nil
+}
+
 func deleteRolePolicyAttachments(ctx context.Context, conn *iam.IAM, roleName string, policyARNs []string) error {
 	var errs []error
 
@@ -714,45 +749,31 @@ func deleteRolePolicyAttachments(ctx context.Context, conn *iam.IAM, roleName st
 	return errors.Join(errs...)
 }
 
-func readRolePolicyNames(ctx context.Context, conn *iam.IAM, roleName string) ([]*string, error) {
-	inlinePolicies := make([]*string, 0)
-	input := &iam.ListRolePoliciesInput{
-		RoleName: aws.String(roleName),
-	}
+func deleteRoleInlinePolicies(ctx context.Context, conn *iam.IAM, roleName string, policyNames []string) error {
+	var errs []error
 
-	err := conn.ListRolePoliciesPagesWithContext(ctx, input, func(page *iam.ListRolePoliciesOutput, lastPage bool) bool {
-		inlinePolicies = append(inlinePolicies, page.PolicyNames...)
-		return !lastPage
-	})
-
-	if err != nil && !tfawserr.ErrCodeEquals(err, iam.ErrCodeNoSuchEntityException) {
-		return nil, err
-	}
-
-	return inlinePolicies, nil
-}
-
-func deleteRoleInlinePolicies(ctx context.Context, conn *iam.IAM, roleName string, policyNames []*string) error {
-	for _, name := range policyNames {
-		if len(aws.StringValue(name)) == 0 {
+	for _, policyName := range policyNames {
+		if len(policyName) == 0 {
 			continue
 		}
 
 		input := &iam.DeleteRolePolicyInput{
-			PolicyName: name,
+			PolicyName: aws.String(policyName),
 			RoleName:   aws.String(roleName),
 		}
 
 		_, err := conn.DeleteRolePolicyWithContext(ctx, input)
+
 		if tfawserr.ErrCodeEquals(err, iam.ErrCodeNoSuchEntityException) {
-			return nil
+			continue
 		}
+
 		if err != nil {
-			return fmt.Errorf("removing inline policy (%s): %w", aws.StringValue(name), err)
+			errs = append(errs, fmt.Errorf("deleting IAM Role (%s) policy (%s): %w", roleName, policyName, err))
 		}
 	}
 
-	return nil
+	return errors.Join(errs...)
 }
 
 func flattenRoleInlinePolicy(apiObject *iam.PutRolePolicyInput) map[string]interface{} {
@@ -873,22 +894,24 @@ func addRoleManagedPolicies(ctx context.Context, roleName string, policies []*st
 func readRoleInlinePolicies(ctx context.Context, roleName string, meta interface{}) ([]*iam.PutRolePolicyInput, error) {
 	conn := meta.(*conns.AWSClient).IAMConn(ctx)
 
-	policyNames, err := readRolePolicyNames(ctx, conn, roleName)
+	policyNames, err := findRolePolicyNames(ctx, conn, roleName)
+
 	if err != nil {
 		return nil, err
 	}
 
 	var apiObjects []*iam.PutRolePolicyInput
 	for _, policyName := range policyNames {
-		policyResp, err := conn.GetRolePolicyWithContext(ctx, &iam.GetRolePolicyInput{
+		output, err := conn.GetRolePolicyWithContext(ctx, &iam.GetRolePolicyInput{
 			RoleName:   aws.String(roleName),
-			PolicyName: policyName,
+			PolicyName: aws.String(policyName),
 		})
+
 		if err != nil {
 			return nil, err
 		}
 
-		policy, err := url.QueryUnescape(*policyResp.PolicyDocument)
+		policy, err := url.QueryUnescape(aws.StringValue(output.PolicyDocument))
 		if err != nil {
 			return nil, err
 		}
@@ -901,7 +924,7 @@ func readRoleInlinePolicies(ctx context.Context, roleName string, meta interface
 		apiObject := &iam.PutRolePolicyInput{
 			RoleName:       aws.String(roleName),
 			PolicyDocument: aws.String(p),
-			PolicyName:     policyName,
+			PolicyName:     aws.String(policyName),
 		}
 
 		apiObjects = append(apiObjects, apiObject)
