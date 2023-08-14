@@ -27,6 +27,7 @@ func TestAccOrganizations_serial(t *testing.T) {
 	testCases := map[string]map[string]func(t *testing.T){
 		"Organization": {
 			"basic":                             testAccOrganization_basic,
+			"disappears":                        testAccOrganization_disappears,
 			"AwsServiceAccessPrincipals":        testAccOrganization_serviceAccessPrincipals,
 			"EnabledPolicyTypes":                testAccOrganization_EnabledPolicyTypes,
 			"FeatureSet_Basic":                  testAccOrganization_FeatureSet,
