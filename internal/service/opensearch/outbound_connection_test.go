@@ -186,7 +186,7 @@ resource "aws_opensearch_outbound_connection" "test" {
   connection_alias  = "%s"
   connection_mode   = "DIRECT"
   accept_connection = true
-  
+
   connection_properties {
     cross_cluster_search {
       skip_unavailable = "ENABLED"
