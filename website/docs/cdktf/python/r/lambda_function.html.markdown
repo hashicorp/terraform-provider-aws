@@ -353,7 +353,7 @@ Container image configuration values that override the values in the container i
 
 ### snap_start
 
-Snap start settings for low-latency startups. This feature is currently only supported for `java11` runtimes. Remove this block to delete the associated settings (rather than setting `apply_on = "None"`).
+Snap start settings for low-latency startups. This feature is currently only supported for `java11` and `java17` runtimes. Remove this block to delete the associated settings (rather than setting `apply_on = "None"`).
 
 * `apply_on` - (Required) Conditions where snap start is enabled. Valid values are `PublishedVersions`.
 
@@ -426,4 +426,4 @@ Using `terraform import`, import Lambda Functions using the `function_name`. For
 % terraform import aws_lambda_function.test_lambda my_test_lambda_function
 ```
 
-<!-- cache-key: cdktf-0.17.1 input-79ac028a200c0a4e041114db778b4f3d8fa977d9be90e832d4ccffb48358df45 -->
+<!-- cache-key: cdktf-0.17.1 input-4063c6ec7eb7c114a564493d213060c5dbe3c6b735e20add8d4ea6802b6c378d -->
