@@ -143,9 +143,13 @@ func testAccCheckRDSDBInstanceDestroy(ctx context.Context) resource.TestCheckFun
 
 func testAccRDSDBInstanceConfig_basic(rName, userName, password string) string {
 	return acctest.ConfigCompose(testAccStackConfig_basic(rName), fmt.Sprintf(`
+data "aws_rds_engine_version" "default" {
+  engine = "mysql"
+}
+
 data "aws_rds_orderable_db_instance" "test" {
-  engine         = "mysql"
-  engine_version = "8.0.25"
+  engine         = data.aws_rds_engine_version.default.engine
+  engine_version = data.aws_rds_engine_version.default.version
   license_model  = "general-public-license"
   storage_type   = "standard"
 
