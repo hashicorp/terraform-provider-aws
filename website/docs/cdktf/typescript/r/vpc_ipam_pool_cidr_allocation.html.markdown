@@ -48,7 +48,7 @@ class MyConvertedCode extends TerraformStack {
     /*This allows the Terraform resource name to match the original name. You can remove the call if you don't need them to match.*/
     awsVpcIpamPoolExample.overrideLogicalId("example");
     const awsVpcIpamPoolCidrExample = new VpcIpamPoolCidr(this, "example_3", {
-      cidr: "172.2.0.0/16",
+      cidr: "172.20.0.0/16",
       ipamPoolId: Token.asString(awsVpcIpamPoolExample.id),
     });
     /*This allows the Terraform resource name to match the original name. You can remove the call if you don't need them to match.*/
@@ -57,7 +57,7 @@ class MyConvertedCode extends TerraformStack {
       this,
       "example_4",
       {
-        cidr: "172.2.0.0/24",
+        cidr: "172.20.0.0/24",
         dependsOn: [awsVpcIpamPoolCidrExample],
         ipamPoolId: Token.asString(awsVpcIpamPoolExample.id),
       }
@@ -103,7 +103,7 @@ class MyConvertedCode extends TerraformStack {
     /*This allows the Terraform resource name to match the original name. You can remove the call if you don't need them to match.*/
     awsVpcIpamPoolExample.overrideLogicalId("example");
     const awsVpcIpamPoolCidrExample = new VpcIpamPoolCidr(this, "example_3", {
-      cidr: "172.2.0.0/16",
+      cidr: "172.20.0.0/16",
       ipamPoolId: Token.asString(awsVpcIpamPoolExample.id),
     });
     /*This allows the Terraform resource name to match the original name. You can remove the call if you don't need them to match.*/
@@ -113,7 +113,7 @@ class MyConvertedCode extends TerraformStack {
       "example_4",
       {
         dependsOn: [awsVpcIpamPoolCidrExample],
-        disallowedCidrs: ["172.2.0.0/28"],
+        disallowedCidrs: ["172.20.0.0/28"],
         ipamPoolId: Token.asString(awsVpcIpamPoolExample.id),
         netmaskLength: 28,
       }
@@ -166,4 +166,4 @@ Using `terraform import`, import IPAM allocations using the allocation `id` and 
 % terraform import aws_vpc_ipam_pool_cidr_allocation.example ipam-pool-alloc-0dc6d196509c049ba8b549ff99f639736_ipam-pool-07cfb559e0921fcbe
 ```
 
-<!-- cache-key: cdktf-0.17.1 input-b2a9c33daa63e727fac1199b01a56911b1a7fec8f4b3609f59193d7139a135f2 -->
+<!-- cache-key: cdktf-0.17.1 input-ddd73bf852bf7f559291762467aeca147a50810e7c21dd054f1b8efa8376bf13 -->

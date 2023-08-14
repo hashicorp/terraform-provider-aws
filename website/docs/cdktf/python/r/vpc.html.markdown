@@ -89,7 +89,7 @@ class MyConvertedCode(TerraformStack):
         # This allows the Terraform resource name to match the original name. You can remove the call if you don't need them to match.
         aws_vpc_ipam_pool_test.override_logical_id("test")
         aws_vpc_ipam_pool_cidr_test = VpcIpamPoolCidr(self, "test_3",
-            cidr="172.2.0.0/16",
+            cidr="172.20.0.0/16",
             ipam_pool_id=Token.as_string(aws_vpc_ipam_pool_test.id)
         )
         # This allows the Terraform resource name to match the original name. You can remove the call if you don't need them to match.
@@ -161,4 +161,4 @@ Using `terraform import`, import VPCs using the VPC `id`. For example:
 % terraform import aws_vpc.test_vpc vpc-a01106c2
 ```
 
-<!-- cache-key: cdktf-0.17.1 input-bdbbbdbd443bbea287835d57e606d2ce15e53190cb9ead466b3c3a9834151606 -->
+<!-- cache-key: cdktf-0.17.1 input-ae6df6e7b2fd061f8aef4637ee76c64d6bc7f7657d175ee9d2e9140d0df3c94b -->

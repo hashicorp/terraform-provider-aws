@@ -48,7 +48,7 @@ class MyConvertedCode extends TerraformStack {
     /*This allows the Terraform resource name to match the original name. You can remove the call if you don't need them to match.*/
     awsVpcIpamPoolExample.overrideLogicalId("example");
     const awsVpcIpamPoolCidrExample = new VpcIpamPoolCidr(this, "example_3", {
-      cidr: "172.2.0.0/16",
+      cidr: "172.20.0.0/16",
       ipamPoolId: Token.asString(awsVpcIpamPoolExample.id),
     });
     /*This allows the Terraform resource name to match the original name. You can remove the call if you don't need them to match.*/
@@ -85,4 +85,4 @@ This resource exports the following attributes in addition to the arguments abov
 * `cidr` - The previewed CIDR from the pool.
 * `id` - The ID of the preview.
 
-<!-- cache-key: cdktf-0.17.1 input-355888a7723eaf3ce4c1390e9fdc48d1b247c1ebe05fed71a6390303e49488f7 -->
+<!-- cache-key: cdktf-0.17.1 input-db4b1871b5157cc9d4a7fcfd29b8fc4970d630b294fcf9dd81f44145d3e4f936 -->
