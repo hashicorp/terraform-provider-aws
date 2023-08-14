@@ -143,8 +143,6 @@ Using `terraform import`, import Default VPC route tables using the `vpc_id`. Fo
 % terraform import aws_default_route_table.example vpc-33cc44dd
 ```
 
-[aws-route-tables]: http://docs.aws.amazon.com/AmazonVPC/latest/UserGuide/VPC_Route_Tables.html#Route_Replacing_Main_Table
-[tf-route-tables]: /docs/providers/aws/r/route_table.html
 [tf-main-route-table-association]: /docs/providers/aws/r/main_route_table_association.html
 
-<!-- cache-key: cdktf-0.17.1 input-4950eb083dfa0f673665803b9a314cfddfe087cd3fb3f8375ff42037c284d55e -->
+<!-- cache-key: cdktf-0.17.1 input-52890b2ce73c129b096972d97be8827bd1630df722976c50bc3863ebadce1093 -->
