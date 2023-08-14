@@ -62,6 +62,29 @@ func testAccOrganization_basic(t *testing.T) {
 	})
 }
 
+func testAccOrganization_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
+	var organization organizations.Organization
+	resourceName := "aws_organizations_organization.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckOrganizationsAccount(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, organizations.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckOrganizationDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccOrganizationConfig_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckOrganizationExists(ctx, resourceName, &organization),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tforganizations.ResourceOrganization(), resourceName),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
 func testAccOrganization_serviceAccessPrincipals(t *testing.T) {
 	ctx := acctest.Context(t)
 	var organization organizations.Organization
