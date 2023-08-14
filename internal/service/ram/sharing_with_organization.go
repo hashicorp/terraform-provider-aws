@@ -103,7 +103,7 @@ func resourceSharingWithOrganizationDelete(ctx context.Context, d *schema.Resour
 	}
 
 	if err := tfiam.DeleteServiceLinkedRole(ctx, meta.(*conns.AWSClient).IAMConn(ctx), sharingWithOrganizationRoleName); err != nil {
-		return sdkdiag.AppendErrorf(diags, "deleting IAM service-linked Role (%s): %s", sharingWithOrganizationRoleName, err)
+		return sdkdiag.AppendWarningf(diags, "deleting IAM service-linked Role (%s): %s", sharingWithOrganizationRoleName, err)
 	}
 
 	return diags
