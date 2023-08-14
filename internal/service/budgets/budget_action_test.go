@@ -149,6 +149,40 @@ func testAccCheckBudgetActionDestroy(ctx context.Context) resource.TestCheckFunc
 
 func testAccBudgetActionConfig_basic(rName string) string {
 	return fmt.Sprintf(`
+resource "aws_budgets_budget_action" "test" {
+  budget_name        = aws_budgets_budget.test.name
+  action_type        = "APPLY_IAM_POLICY"
+  approval_model     = "AUTOMATIC"
+  notification_type  = "ACTUAL"
+  execution_role_arn = aws_iam_role.test.arn
+
+  action_threshold {
+    action_threshold_type  = "ABSOLUTE_VALUE"
+    action_threshold_value = 100
+  }
+
+  definition {
+    iam_action_definition {
+      policy_arn = aws_iam_policy.test.arn
+      roles      = [aws_iam_role.test.name]
+    }
+  }
+
+  subscriber {
+    address           = "test@test.test"
+    subscription_type = "EMAIL"
+  }
+}
+
+resource "aws_budgets_budget" "test" {
+  name              = %[1]q
+  budget_type       = "USAGE"
+  limit_amount      = "1.0"
+  limit_unit        = "dollars"
+  time_period_start = "2006-01-02_15:04"
+  time_unit         = "MONTHLY"
+}
+
 resource "aws_iam_policy" "test" {
   name        = %[1]q
   description = "My test policy"
