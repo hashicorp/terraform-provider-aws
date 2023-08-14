@@ -32,7 +32,7 @@ class MyConvertedCode extends TerraformStack {
       computeCapacity: {
         desiredInstances: 1,
       },
-      imageName: "Amazon-AppStream2-Sample-Image-02-04-2019",
+      imageName: "Amazon-AppStream2-Sample-Image-03-11-2023",
       instanceType: "stream.standard.small",
       name: "NAME",
     });
@@ -88,4 +88,4 @@ Using `terraform import`, import AppStream Stack Fleet Association using the `fl
 % terraform import aws_appstream_fleet_stack_association.example fleetName/stackName
 ```
 
-<!-- cache-key: cdktf-0.17.1 input-97b368d8b4eec53ef9181968cbf3b83bece519a6b2cb60187356cc628b9da793 -->
+<!-- cache-key: cdktf-0.17.1 input-d02e772e58ab8d188d62ad200741c9e10f12ac34ac4daa8c08f2dbd2bfc87b0a -->

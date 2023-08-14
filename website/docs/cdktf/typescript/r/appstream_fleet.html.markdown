@@ -35,7 +35,7 @@ class MyConvertedCode extends TerraformStack {
       enableDefaultInternetAccess: false,
       fleetType: "ON_DEMAND",
       idleDisconnectTimeoutInSeconds: 60,
-      imageName: "Amazon-AppStream2-Sample-Image-02-04-2019",
+      imageName: "Amazon-AppStream2-Sample-Image-03-11-2023",
       instanceType: "stream.standard.large",
       maxUserDurationInSeconds: 600,
       name: "test-fleet",
@@ -128,4 +128,4 @@ Using `terraform import`, import `awsAppstreamFleet` using the id. For example:
 % terraform import aws_appstream_fleet.example fleetNameExample
 ```
 
-<!-- cache-key: cdktf-0.17.1 input-d3a28a7b146a4382aa262326fcf5f72b1709c8273a99318269ab11597ec8d0d2 -->
+<!-- cache-key: cdktf-0.17.1 input-73fdf63ad01b397b97d73714aee955eca2295534a2f89adc78fa6fd555eab144 -->
