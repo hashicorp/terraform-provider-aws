@@ -24,7 +24,7 @@ func ResourceSharingWithOrganization() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceSharingWithOrganizationCreate,
 		ReadWithoutTimeout:   resourceSharingWithOrganizationRead,
-		DeleteWithoutTimeout: schema.NoopContext,
+		DeleteWithoutTimeout: resourceSharingWithOrganizationDelete,
 
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
@@ -88,6 +88,22 @@ func resourceSharingWithOrganizationRead(ctx context.Context, d *schema.Resource
 		log.Printf("[WARN] Organization service principal (%s) not enabled, removing from state", servicePrincipalName)
 		d.SetId("")
 		return diags
+	}
+
+	return diags
+}
+
+func resourceSharingWithOrganizationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
+	// See https://docs.aws.amazon.com/ram/latest/userguide/security-disable-sharing-with-orgs.html.
+
+	if err := tforganizations.DisableServicePrincipal(ctx, meta.(*conns.AWSClient).OrganizationsConn(ctx), servicePrincipalName); err != nil {
+		return sdkdiag.AppendErrorf(diags, "disabling Organization service principal (%s): %s", servicePrincipalName, err)
+	}
+
+	if err := tfiam.DeleteServiceLinkedRole(ctx, meta.(*conns.AWSClient).IAMConn(ctx), sharingWithOrganizationRoleName); err != nil {
+		return sdkdiag.AppendErrorf(diags, "deleting IAM service-linked Role (%s): %s", sharingWithOrganizationRoleName, err)
 	}
 
 	return diags
