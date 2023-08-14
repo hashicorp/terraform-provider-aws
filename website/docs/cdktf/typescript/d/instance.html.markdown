@@ -108,6 +108,7 @@ interpolation.
     * `autoRecovery` - Automatic recovery behavior of the instance.
 * `metadataOptions` - Metadata options of the Instance.
     * `httpEndpoint` - State of the metadata service: `enabled`, `disabled`.
+    * `httpProtocolIpv6` - Whether the IPv6 endpoint for the instance metadata service is `enabled` or `disabled`
     * `httpTokens` - If session tokens are required: `optional`, `required`.
     * `httpPutResponseHopLimit` - Desired HTTP PUT response hop limit for instance metadata requests.
     * `instanceMetadataTags` - If access to instance tags is allowed from the metadata service: `enabled`, `disabled`.
@@ -152,4 +153,4 @@ interpolation.
 
 [1]: http://docs.aws.amazon.com/cli/latest/reference/ec2/describe-instances.html
 
-<!-- cache-key: cdktf-0.17.1 input-32bf49a07f9c1ecf77b8bb5290b7a9a6641ee2ab08eda86ab4018ead87605146 -->
+<!-- cache-key: cdktf-0.17.1 input-58a6dcf6b973aceef047b6a5f4da20044aa0391cf4a6935de6e8bdc7dc78ba4c -->
