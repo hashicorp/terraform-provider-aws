@@ -36,9 +36,10 @@ func TestAccOpenSearchOutboundConnection_basic(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"accept_connection"},
 			},
 		},
 	})
@@ -66,9 +67,10 @@ func TestAccOpenSearchOutboundConnection_vpc(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"accept_connection"},
 			},
 		},
 	})
@@ -182,6 +184,7 @@ data "aws_region" "current" {}
 resource "aws_opensearch_outbound_connection" "test" {
   connection_alias = "%s"
   connection_mode  = "DIRECT"
+  accept_connection = true
   
   connection_properties {
     cross_cluster_search {
