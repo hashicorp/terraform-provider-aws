@@ -316,31 +316,21 @@ func resourceOrganizationUpdate(ctx context.Context, d *schema.ResourceData, met
 	conn := meta.(*conns.AWSClient).OrganizationsConn(ctx)
 
 	if d.HasChange("aws_service_access_principals") {
-		oldRaw, newRaw := d.GetChange("aws_service_access_principals")
-		oldSet := oldRaw.(*schema.Set)
-		newSet := newRaw.(*schema.Set)
+		o, n := d.GetChange("aws_service_access_principals")
+		os, ns := o.(*schema.Set), n.(*schema.Set)
+		add, del := flex.ExpandStringValueSet(ns.Difference(os)), flex.ExpandStringValueSet(os.Difference(ns))
 
-		for _, disablePrincipalRaw := range oldSet.Difference(newSet).List() {
-			principal := disablePrincipalRaw.(string)
-			input := &organizations.DisableAWSServiceAccessInput{
-				ServicePrincipal: aws.String(principal),
-			}
-
-			log.Printf("[DEBUG] Disabling AWS Service Access in Organization: %s", input)
-			_, err := conn.DisableAWSServiceAccessWithContext(ctx, input)
-
-			if err != nil {
+		for _, principal := range del {
+			if err := DisableServicePrincipal(ctx, conn, principal); err != nil {
 				return sdkdiag.AppendErrorf(diags, "disabling AWS Service Access (%s) in Organization: %s", principal, err)
 			}
 		}
 
-		for _, enablePrincipalRaw := range newSet.Difference(oldSet).List() {
-			principal := enablePrincipalRaw.(string)
+		for _, principal := range add {
 			input := &organizations.EnableAWSServiceAccessInput{
 				ServicePrincipal: aws.String(principal),
 			}
 
-			log.Printf("[DEBUG] Enabling AWS Service Access in Organization: %s", input)
 			_, err := conn.EnableAWSServiceAccessWithContext(ctx, input)
 
 			if err != nil {
@@ -616,6 +606,17 @@ func waitDefaultRootPolicyTypeEnabled(ctx context.Context, conn *organizations.O
 	}
 
 	_, err := stateConf.WaitForStateContext(ctx)
+
+	return err
+}
+
+// DisableServicePrincipal is called from the service/ram package.
+func DisableServicePrincipal(ctx context.Context, conn *organizations.Organizations, servicePrincipal string) error {
+	input := &organizations.DisableAWSServiceAccessInput{
+		ServicePrincipal: aws.String(servicePrincipal),
+	}
+
+	_, err := conn.DisableAWSServiceAccessWithContext(ctx, input)
 
 	return err
 }
