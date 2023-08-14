@@ -508,10 +508,6 @@ func resourceRoleDelete(ctx context.Context, d *schema.ResourceData, meta interf
 
 	err := DeleteRole(ctx, conn, d.Id(), d.Get("force_detach_policies").(bool), hasInline, hasManaged)
 
-	if tfawserr.ErrCodeEquals(err, iam.ErrCodeNoSuchEntityException) {
-		return diags
-	}
-
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "deleting IAM Role (%s): %s", d.Id(), err)
 	}
@@ -548,22 +544,15 @@ func DeleteRole(ctx context.Context, conn *iam.IAM, roleName string, forceDetach
 		}
 	}
 
-	deleteRoleInput := &iam.DeleteRoleInput{
+	input := &iam.DeleteRoleInput{
 		RoleName: aws.String(roleName),
 	}
-	err := retry.RetryContext(ctx, propagationTimeout, func() *retry.RetryError {
-		_, err := conn.DeleteRoleWithContext(ctx, deleteRoleInput)
-		if err != nil {
-			if tfawserr.ErrCodeEquals(err, iam.ErrCodeDeleteConflictException) {
-				return retry.RetryableError(err)
-			}
+	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, propagationTimeout, func() (interface{}, error) {
+		return conn.DeleteRoleWithContext(ctx, input)
+	}, iam.ErrCodeDeleteConflictException)
 
-			return retry.NonRetryableError(err)
-		}
+	if tfawserr.ErrCodeEquals(err, iam.ErrCodeNoSuchEntityException) {
 		return nil
-	})
-	if tfresource.TimedOut(err) {
-		_, err = conn.DeleteRoleWithContext(ctx, deleteRoleInput)
 	}
 
 	return err
