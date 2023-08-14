@@ -185,7 +185,7 @@ func resourceOrganizationCreate(ctx context.Context, d *schema.ResourceData, met
 	output, err := conn.CreateOrganizationWithContext(ctx, input)
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating organization: %s", err)
+		return sdkdiag.AppendErrorf(diags, "creating Organization: %s", err)
 	}
 
 	d.SetId(aws.StringValue(output.Organization.Id))
@@ -199,7 +199,7 @@ func resourceOrganizationCreate(ctx context.Context, d *schema.ResourceData, met
 			_, err := conn.EnableAWSServiceAccessWithContext(ctx, input)
 
 			if err != nil {
-				return sdkdiag.AppendErrorf(diags, "enabling service principal (%s) in Organization (%s): %s", principal, d.Id(), err)
+				return sdkdiag.AppendErrorf(diags, "enabling AWS Service Access (%s) in Organization (%s): %s", principal, d.Id(), err)
 			}
 		}
 	}
@@ -211,16 +211,16 @@ func resourceOrganizationCreate(ctx context.Context, d *schema.ResourceData, met
 			return sdkdiag.AppendErrorf(diags, "reading Organization (%s) default root: %s", d.Id(), err)
 		}
 
+		defaultRootID := aws.StringValue(defaultRoot.Id)
+
 		for _, policyType := range flex.ExpandStringValueSet(v.(*schema.Set)) {
 			input := &organizations.EnablePolicyTypeInput{
 				PolicyType: aws.String(policyType),
-				RootId:     defaultRoot.Id,
+				RootId:     aws.String(defaultRootID),
 			}
 
-			_, err := conn.EnablePolicyTypeWithContext(ctx, input)
-
-			if err != nil {
-				return sdkdiag.AppendErrorf(diags, "enabling policy type (%s) in Organization (%s): %s", policyType, d.Id(), err)
+			if _, err := conn.EnablePolicyTypeWithContext(ctx, input); err != nil {
+				return sdkdiag.AppendErrorf(diags, "enabling policy type (%s) in Organization (%s) Root (%s): %s", policyType, d.Id(), defaultRootID, err)
 			}
 
 			if err := waitDefaultRootPolicyTypeEnabled(ctx, conn, policyType); err != nil {
@@ -322,7 +322,7 @@ func resourceOrganizationUpdate(ctx context.Context, d *schema.ResourceData, met
 
 		for _, principal := range del {
 			if err := DisableServicePrincipal(ctx, conn, principal); err != nil {
-				return sdkdiag.AppendErrorf(diags, "disabling AWS Service Access (%s) in Organization: %s", principal, err)
+				return sdkdiag.AppendErrorf(diags, "disabling AWS Service Access (%s) in Organization (%s): %s", principal, d.Id(), err)
 			}
 		}
 
@@ -334,7 +334,7 @@ func resourceOrganizationUpdate(ctx context.Context, d *schema.ResourceData, met
 			_, err := conn.EnableAWSServiceAccessWithContext(ctx, input)
 
 			if err != nil {
-				return sdkdiag.AppendErrorf(diags, "enabling AWS Service Access (%s) in Organization: %s", principal, err)
+				return sdkdiag.AppendErrorf(diags, "enabling AWS Service Access (%s) in Organization (%s): %s", principal, d.Id(), err)
 			}
 		}
 	}
@@ -342,17 +342,15 @@ func resourceOrganizationUpdate(ctx context.Context, d *schema.ResourceData, met
 	if d.HasChange("enabled_policy_types") {
 		defaultRootID := d.Get("roots.0.id").(string)
 		o, n := d.GetChange("enabled_policy_types")
-		oldSet := o.(*schema.Set)
-		newSet := n.(*schema.Set)
+		os, ns := o.(*schema.Set), n.(*schema.Set)
+		add, del := flex.ExpandStringValueSet(ns.Difference(os)), flex.ExpandStringValueSet(os.Difference(ns))
 
-		for _, v := range oldSet.Difference(newSet).List() {
-			policyType := v.(string)
+		for _, policyType := range del {
 			input := &organizations.DisablePolicyTypeInput{
 				PolicyType: aws.String(policyType),
 				RootId:     aws.String(defaultRootID),
 			}
 
-			log.Printf("[DEBUG] Disabling Policy Type in Organization: %s", input)
 			if _, err := conn.DisablePolicyTypeWithContext(ctx, input); err != nil {
 				return sdkdiag.AppendErrorf(diags, "disabling policy type (%s) in Organization (%s) Root (%s): %s", policyType, d.Id(), defaultRootID, err)
 			}
@@ -362,14 +360,12 @@ func resourceOrganizationUpdate(ctx context.Context, d *schema.ResourceData, met
 			}
 		}
 
-		for _, v := range newSet.Difference(oldSet).List() {
-			policyType := v.(string)
+		for _, policyType := range add {
 			input := &organizations.EnablePolicyTypeInput{
 				PolicyType: aws.String(policyType),
 				RootId:     aws.String(defaultRootID),
 			}
 
-			log.Printf("[DEBUG] Enabling Policy Type in Organization: %s", input)
 			if _, err := conn.EnablePolicyTypeWithContext(ctx, input); err != nil {
 				return sdkdiag.AppendErrorf(diags, "enabling policy type (%s) in Organization (%s) Root (%s): %s", policyType, d.Id(), defaultRootID, err)
 			}
