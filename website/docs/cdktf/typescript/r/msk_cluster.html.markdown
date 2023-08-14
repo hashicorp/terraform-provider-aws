@@ -236,10 +236,25 @@ This resource supports the following arguments:
 ### broker_node_group_info connectivity_info Argument Reference
 
 * `publicAccess` - (Optional) Access control settings for brokers. See below.
+* `vpcConnectivity` - (Optional) VPC connectivity access control for brokers. See below.
 
 ### connectivity_info public_access Argument Reference
 
-* `type` - (Optional) Public access type. Valida values: `disabled`, `serviceProvidedEips`.
+* `type` - (Optional) Public access type. Valid values: `disabled`, `serviceProvidedEips`.
+
+### connectivity_info vpc_connectivity Argument Reference
+
+* `clientAuthentication` - (Optional) Includes all client authentication information for VPC connectivity. See below.
+
+### vpc_connectivity client_authentication Argument Reference
+
+* `sasl` - (Optional) SASL authentication type details for VPC connectivity. See below.
+* `tls` - (Optional) Enables TLS authentication for VPC connectivity.
+
+### vpc_connectivity client_authentication sasl Argument Reference
+
+* `iam` - (Optional) Enables SASL/IAM authentication for VPC connectivity.
+* `scram` - (Optional) Enables SASL/SCRAM authentication for VPC connectivity.
 
 ### broker_node_group_info storage_info Argument Reference
 
@@ -334,6 +349,9 @@ This resource exports the following attributes in addition to the arguments abov
 * `bootstrapBrokersSaslIam` - One or more DNS names (or IP addresses) and SASL IAM port pairs. For example, `b1ExampleClusterNameAbcdeC2KafkaUsEast1AmazonawsCom:9098,b2ExampleClusterNameAbcdeC2KafkaUsEast1AmazonawsCom:9098,b3ExampleClusterNameAbcdeC2KafkaUsEast1AmazonawsCom:9098`. This attribute will have a value if `encryptionInfo0EncryptionInTransit0ClientBroker` is set to `tlsPlaintext` or `tls` and `clientAuthentication0Sasl0Iam` is set to `true`. The resource sorts the list alphabetically. AWS may not always return all endpoints so the values may not be stable across applies.
 * `bootstrapBrokersSaslScram` - One or more DNS names (or IP addresses) and SASL SCRAM port pairs. For example, `b1ExampleClusterNameAbcdeC2KafkaUsEast1AmazonawsCom:9096,b2ExampleClusterNameAbcdeC2KafkaUsEast1AmazonawsCom:9096,b3ExampleClusterNameAbcdeC2KafkaUsEast1AmazonawsCom:9096`. This attribute will have a value if `encryptionInfo0EncryptionInTransit0ClientBroker` is set to `tlsPlaintext` or `tls` and `clientAuthentication0Sasl0Scram` is set to `true`. The resource sorts the list alphabetically. AWS may not always return all endpoints so the values may not be stable across applies.
 * `bootstrapBrokersTls` - One or more DNS names (or IP addresses) and TLS port pairs. For example, `b1ExampleClusterNameAbcdeC2KafkaUsEast1AmazonawsCom:9094,b2ExampleClusterNameAbcdeC2KafkaUsEast1AmazonawsCom:9094,b3ExampleClusterNameAbcdeC2KafkaUsEast1AmazonawsCom:9094`. This attribute will have a value if `encryptionInfo0EncryptionInTransit0ClientBroker` is set to `tlsPlaintext` or `tls`. The resource sorts the list alphabetically. AWS may not always return all endpoints so the values may not be stable across applies.
+* `bootstrapBrokersVpcConnectivitySaslIam` - A string containing one or more DNS names (or IP addresses) and SASL IAM port pairs for VPC connectivity. AWS may not always return all endpoints so the values may not be stable across applies.
+* `bootstrapBrokersVpcConnectivitySaslScram` - A string containing one or more DNS names (or IP addresses) and SASL SCRAM port pairs for VPC connectivity. AWS may not always return all endpoints so the values may not be stable across applies.
+* `bootstrapBrokersVpcConnectivityTls` - A string containing one or more DNS names (or IP addresses) and TLS port pairs for VPC connectivity. AWS may not always return all endpoints so the values may not be stable across applies.
 * `currentVersion` - Current version of the MSK Cluster used for updates, e.g., `k13V1Ib3Viyzzh`
 * `encryptionInfo0EncryptionAtRestKmsKeyArn` - The ARN of the KMS key used for encryption at rest of the broker data volumes.
 * `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
@@ -372,4 +390,4 @@ Using `terraform import`, import MSK clusters using the cluster `arn`. For examp
 % terraform import aws_msk_cluster.example arn:aws:kafka:us-west-2:123456789012:cluster/example/279c0212-d057-4dba-9aa9-1c4e5a25bfc7-3
 ```
 
-<!-- cache-key: cdktf-0.17.1 input-c9ebc825390278b46b19e945f1e67962c9d1a131c11fa76c46587a19601b686c -->
+<!-- cache-key: cdktf-0.17.1 input-89248da292337bdb64584af34619ba0985f90ec6f20e792acdfdf9df0523e5fb -->

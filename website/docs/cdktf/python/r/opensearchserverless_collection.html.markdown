@@ -12,6 +12,10 @@ description: |-
 
 Terraform resource for managing an AWS OpenSearch Serverless Collection.
 
+~> **NOTE:** An `aws_opensearchserverless_collection` cannot be created without having an applicable [encryption security policy](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/opensearchserverless_security_policy). Use the [`depends_on`](https://developer.hashicorp.com/terraform/language/meta-arguments/depends_on) meta-argument to define this dependency.
+
+~> **NOTE:** An `aws_opensearchserverless_collection` is not accessible without configuring an applicable [network security policy](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/opensearchserverless_security_policy). Data cannot be accessed without configuring an applicable [data access policy](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/opensearchserverless_access_policy).
+
 ## Example Usage
 
 ### Basic Usage
@@ -61,7 +65,7 @@ The following arguments are optional:
 
 * `description` - (Optional) Description of the collection.
 * `tags` - (Optional) A map of tags to assign to the collection. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
-* `type` - (Optional) Type of collection. One of `SEARCH` or `TIMESERIES`.
+* `type` - (Optional) Type of collection. One of `SEARCH`, `TIMESERIES`, or `VECTORSEARCH`. Defaults to `TIMESERIES`.
 
 ## Attribute Reference
 
@@ -99,4 +103,4 @@ Using `terraform import`, import OpenSearchServerless Collection using the `id`.
 % terraform import aws_opensearchserverless_collection.example example
 ```
 
-<!-- cache-key: cdktf-0.17.1 input-85d1f524535e0996cefe2c02f108853812f7103cf58adeea14b6e3c3b8f6d159 -->
+<!-- cache-key: cdktf-0.17.1 input-475396311487557d22c5534382d5736d4e65c807a5cf88e21160ae601e59f980 -->

@@ -509,7 +509,7 @@ The `rulesSourceList` block supports the following arguments:
 
 The `statefulRule` block supports the following arguments:
 
-* `action` - (Required) Action to take with packets in a traffic flow when the flow matches the stateful rule criteria. For all actions, AWS Network Firewall performs the specified action and discontinues stateful inspection of the traffic flow. Valid values: `alert`, `drop` or `pass`.
+* `action` - (Required) Action to take with packets in a traffic flow when the flow matches the stateful rule criteria. For all actions, AWS Network Firewall performs the specified action and discontinues stateful inspection of the traffic flow. Valid values: `alert`, `drop`, `pass`, or `reject`.
 
 * `header` - (Required) A configuration block containing the stateful 5-tuple inspection criteria for the rule, used to inspect traffic flows. See [Header](#header) below for details.
 
@@ -677,4 +677,4 @@ Using `terraform import`, import Network Firewall Rule Groups using their `arn`.
 % terraform import aws_networkfirewall_rule_group.example arn:aws:network-firewall:us-west-1:123456789012:stateful-rulegroup/example
 ```
 
-<!-- cache-key: cdktf-0.17.1 input-ad963f56ae4ee068519f0a28ddb8a945038afbd4fc1b36e340f929b1ca0f6b90 -->
+<!-- cache-key: cdktf-0.17.1 input-ef93e2bf518258ff78b58b7d51462d1757a12fe5ecae8c6b421815590aa49874 -->
