@@ -183,8 +183,8 @@ data "aws_caller_identity" "current" {}
 data "aws_region" "current" {}
 
 resource "aws_opensearch_outbound_connection" "test" {
-  connection_alias = "%s"
-  connection_mode  = "DIRECT"
+  connection_alias  = "%s"
+  connection_mode   = "DIRECT"
   accept_connection = true
   
   connection_properties {
@@ -314,7 +314,7 @@ resource "aws_opensearch_outbound_connection" "test" {
   connection_alias  = %[1]q
   connection_mode   = "VPC_ENDPOINT"
   accept_connection = true
-  
+
   local_domain_info {
     owner_id    = data.aws_caller_identity.current.account_id
     region      = data.aws_region.current.name

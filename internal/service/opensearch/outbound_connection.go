@@ -304,11 +304,8 @@ func inboundConnectionAccept(ctx context.Context, d *schema.ResourceData, conn *
 	}
 
 	err = inboundConnectionWaitUntilActive(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate))
-	if err != nil {
-		return err
-	}
 
-	return nil
+	return err
 }
 
 func expandOutboundConnectionDomainInfo(vOptions []interface{}) *opensearchservice.DomainInformationContainer {
