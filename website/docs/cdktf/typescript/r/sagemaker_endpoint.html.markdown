@@ -51,8 +51,9 @@ This resource supports the following arguments:
 
 ### Deployment Config
 
-* `blueGreenUpdatePolicy` - (Required) Update policy for a blue/green deployment. If this update policy is specified, SageMaker creates a new fleet during the deployment while maintaining the old fleet. See [Blue Green Update Config](#blue-green-update-config).
+* `blueGreenUpdatePolicy` - (Optional) Update policy for a blue/green deployment. If this update policy is specified, SageMaker creates a new fleet during the deployment while maintaining the old fleet. SageMaker flips traffic to the new fleet according to the specified traffic routing configuration. Only one update policy should be used in the deployment configuration. If no update policy is specified, SageMaker uses a blue/green deployment strategy with all at once traffic shifting by default. See [Blue Green Update Config](#blue-green-update-config).
 * `autoRollbackConfiguration` - (Optional) Automatic rollback configuration for handling endpoint deployment failures and recovery. See [Auto Rollback Configuration](#auto-rollback-configuration).
+* `rollingUpdatePolicy` - (Optional) Specifies a rolling deployment strategy for updating a SageMaker endpoint. See [Rolling Update Policy](#rolling-update-policy).
 
 #### Blue Green Update Config
 
@@ -60,12 +61,29 @@ This resource supports the following arguments:
 * `maximumExecutionTimeoutInSeconds` - (Optional) Maximum execution timeout for the deployment. Note that the timeout value should be larger than the total waiting time specified in `terminationWaitInSeconds` and `waitIntervalInSeconds`. Valid values are between `600` and `14400`.
 * `terminationWaitInSeconds` - (Optional) Additional waiting time in seconds after the completion of an endpoint deployment before terminating the old endpoint fleet. Default is `0`. Valid values are between `0` and `3600`.
 
+#### Rolling Update Policy
+
+* `maximumBatchSize` - (Required) Batch size for each rolling step to provision capacity and turn on traffic on the new endpoint fleet, and terminate capacity on the old endpoint fleet. Value must be between 5% to 50% of the variant's total instance count. See [Maximum Batch Size](#maximum-batch-size).
+* `maximumExecutionTimeoutInSeconds` - (Optional) The time limit for the total deployment. Exceeding this limit causes a timeout. Valid values are between `600` and `14400`.
+* `rollbackMaximumBatchSize` - (Optional) Batch size for rollback to the old endpoint fleet. Each rolling step to provision capacity and turn on traffic on the old endpoint fleet, and terminate capacity on the new endpoint fleet. If this field is absent, the default value will be set to 100% of total capacity which means to bring up the whole capacity of the old fleet at once during rollback. See [Rollback Maximum Batch Size](#rollback-maximum-batch-size).
+* `waitIntervalInSeconds` - (Required) The length of the baking period, during which SageMaker monitors alarms for each batch on the new fleet. Valid values are between `0` and `3600`.
+
 ##### Traffic Routing Configuration
 
 * `type` - (Required) Traffic routing strategy type. Valid values are: `allAtOnce`, `canary`, and `linear`.
 * `waitIntervalInSeconds` - (Required) The waiting time (in seconds) between incremental steps to turn on traffic on the new endpoint fleet. Valid values are between `0` and `3600`.
 * `canarySize` - (Optional) Batch size for the first step to turn on traffic on the new endpoint fleet. Value must be less than or equal to 50% of the variant's total instance count. See [Canary Size](#canary-size).
 * `linearStepSize` - (Optional) Batch size for each step to turn on traffic on the new endpoint fleet. Value must be 10-50% of the variant's total instance count. See [Linear Step Size](#linear-step-size).
+
+###### Maximum Batch Size
+
+* `type` - (Required) Specifies the endpoint capacity type. Valid values are: `instanceCount`, or `capacityPercent`.
+* `value` - (Required) Defines the capacity size, either as a number of instances or a capacity percentage.
+
+###### Rollback Maximum Batch Size
+
+* `type` - (Required) Specifies the endpoint capacity type. Valid values are: `instanceCount`, or `capacityPercent`.
+* `value` - (Required) Defines the capacity size, either as a number of instances or a capacity percentage.
 
 ###### Canary Size
 
@@ -115,4 +133,4 @@ Using `terraform import`, import endpoints using the `name`. For example:
 % terraform import aws_sagemaker_endpoint.test_endpoint my-endpoint
 ```
 
-<!-- cache-key: cdktf-0.17.1 input-9282c5d4c96a9d971662bead9d7838c7d62977a0555720c0972d350615ce9f96 -->
+<!-- cache-key: cdktf-0.17.1 input-6f77eb68ca400c61f27b4fe0845a1a77a41772c28e3c6f22dc1c8cd4be29cc30 -->
