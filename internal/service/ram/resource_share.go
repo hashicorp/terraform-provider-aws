@@ -258,7 +258,7 @@ func findResourceShares(ctx context.Context, conn *ram.RAM, input *ram.GetResour
 		return !lastPage
 	})
 
-	if tfawserr.ErrCodeEquals(err, ram.ErrCodeUnknownResourceException) {
+	if tfawserr.ErrCodeEquals(err, ram.ErrCodeResourceArnNotFoundException, ram.ErrCodeUnknownResourceException) {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,

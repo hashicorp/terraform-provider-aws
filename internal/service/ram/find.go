@@ -19,17 +19,6 @@ const (
 	FindResourceShareTimeout = 1 * time.Minute
 )
 
-// FindResourceShareOwnerOtherAccountsByARN returns the resource share owned by other accounts corresponding to the specified ARN.
-// Returns nil if no configuration is found.
-func FindResourceShareOwnerOtherAccountsByARN(ctx context.Context, conn *ram.RAM, arn string) (*ram.ResourceShare, error) {
-	listResourceSharesInput := &ram.GetResourceSharesInput{
-		ResourceOwner:     aws.String(ram.ResourceOwnerOtherAccounts),
-		ResourceShareArns: aws.StringSlice([]string{arn}),
-	}
-
-	return resourceShare(ctx, conn, listResourceSharesInput)
-}
-
 // FindResourceShareInvitationByResourceShareARNAndStatus returns the resource share invitation corresponding to the specified resource share ARN.
 // Returns nil if no configuration is found.
 func FindResourceShareInvitationByResourceShareARNAndStatus(ctx context.Context, conn *ram.RAM, resourceShareArn, status string) (*ram.ResourceShareInvitation, error) {
