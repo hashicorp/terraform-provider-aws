@@ -144,8 +144,14 @@ func dataSourceRepositoryRead(ctx context.Context, d *schema.ResourceData, meta 
 	}
 
 	if len(imageDetails) >= 1 {
-		slices.SortFunc(imageDetails, func(a, b *ecr.ImageDetail) bool {
-			return aws.TimeValue(a.ImagePushedAt).After(aws.TimeValue(b.ImagePushedAt))
+		slices.SortFunc(imageDetails, func(a, b *ecr.ImageDetail) int {
+			if aws.TimeValue(a.ImagePushedAt).After(aws.TimeValue(b.ImagePushedAt)) {
+				return -1
+			}
+			if aws.TimeValue(a.ImagePushedAt).Before(aws.TimeValue(b.ImagePushedAt)) {
+				return 1
+			}
+			return 0
 		})
 
 		d.Set("most_recent_image_tags", aws.StringValueSlice(imageDetails[0].ImageTags))
