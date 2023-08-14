@@ -25,14 +25,11 @@ import { TerraformStack } from "cdktf";
  * See https://cdk.tf/provider-generation for more details.
  */
 import { DataAwsVpclatticeService } from "./.gen/providers/aws/data-aws-vpclattice-service";
-interface MyConfig {
-  serviceIdentifier: any;
-}
 class MyConvertedCode extends TerraformStack {
-  constructor(scope: Construct, name: string, config: MyConfig) {
+  constructor(scope: Construct, name: string) {
     super(scope, name);
     new DataAwsVpclatticeService(this, "example", {
-      serviceIdentifier: config.serviceIdentifier,
+      name: "example",
     });
   }
 }
@@ -41,9 +38,11 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
-The following arguments are required:
+The arguments of this data source act as filters for querying the available VPC lattice services.
+The given filters must match exactly one VPC lattice service whose data will be exported as attributes.
 
-* `serviceIdentifier` - (Required) ID or Amazon Resource Name (ARN) of the service network
+* `name` - (Optional) Service name.
+* `serviceIdentifier` - (Optional) ID or Amazon Resource Name (ARN) of the service network.
 
 ## Attribute Reference
 
@@ -58,4 +57,4 @@ This data source exports the following attributes in addition to the arguments a
 * `status` - Status of the service.
 * `tags` - List of tags associated with the service.
 
-<!-- cache-key: cdktf-0.17.1 input-42e3a18e3bfa9dab30cc3b42137c36ffe3286c713ec521450182df078db9c0e9 -->
+<!-- cache-key: cdktf-0.17.1 input-0edd5887655a4d38a4c0d516b7baeda9d106b74b76d54c530c53c9f70afd5224 -->
