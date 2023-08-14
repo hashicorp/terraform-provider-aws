@@ -44,6 +44,13 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `id` - The AWS account ID of the AWS Firewall Manager administrator account.
 
+## Timeouts
+
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
+
+- `create` - (Default `30M`)
+- `delete` - (Default `10M`)
+
 ## Import
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Firewall Manager administrator account association using the account ID. For example:
@@ -66,4 +73,4 @@ Using `terraform import`, import Firewall Manager administrator account associat
 % terraform import aws_fms_admin_account.example 123456789012
 ```
 
-<!-- cache-key: cdktf-0.17.1 input-de7ff929f125c257332e9ef84e4d1dea4173d2a9f29b90d854b4f941b92ba1f1 -->
+<!-- cache-key: cdktf-0.17.1 input-9887cf15245a4b734a6b9de0582fbcd635a6b8d70933e7656427281a76b59b6c -->

@@ -228,6 +228,7 @@ This argument supports the following arguments:
 * `jdbcTarget` (Optional) List of nested JBDC target arguments. See [JDBC Target](#jdbc-target) below.
 * `s3Target` (Optional) List nested Amazon S3 target arguments. See [S3 Target](#s3-target) below.
 * `mongodbTarget` (Optional) List nested MongoDB target arguments. See [MongoDB Target](#mongodb-target) below.
+* `hudiTarget` (Optional) List nested Hudi target arguments. See [Iceberg Target](#hudi-target) below.
 * `icebergTarget` (Optional) List nested Iceberg target arguments. See [Iceberg Target](#iceberg-target) below.
 * `schedule` (Optional) A cron expression used to specify the schedule. For more information, see [Time-Based Schedules for Jobs and Crawlers](https://docs.aws.amazon.com/glue/latest/dg/monitor-data-warehouse-schedule.html). For example, to run something every day at 12:15 UTC, you would specify: `cron(15 12 * * ? *)`.
 * `schemaChangePolicy` (Optional) Policy for the crawler's update and deletion behavior. See [Schema Change Policy](#schema-change-policy) below.
@@ -277,6 +278,13 @@ This argument supports the following arguments:
 * `connectionName` - (Required) The name of the connection to use to connect to the Amazon DocumentDB or MongoDB target.
 * `path` - (Required) The path of the Amazon DocumentDB or MongoDB target (database/collection).
 * `scanAll` - (Optional) Indicates whether to scan all the records, or to sample rows from the table. Scanning all the records can take a long time when the table is not a high throughput table. Default value is `true`.
+
+### Hudi Target
+
+* `connectionName` - (Optional) The name of the connection to use to connect to the Hudi target.
+* `paths` - (Required) One or more Amazon S3 paths that contains Hudi metadata folders as s3://bucket/prefix.
+* `exclusions` - (Optional) A list of glob patterns used to exclude from the crawl.
+* `maximumTraversalDepth` - (Required) The maximum depth of Amazon S3 paths that the crawler can traverse to discover the Hudi metadata folder in your Amazon S3 path. Used to limit the crawler run time. Valid values are between `1` and `20`.
 
 ### Iceberg Target
 
@@ -340,4 +348,4 @@ Using `terraform import`, import Glue Crawlers using `name`. For example:
 % terraform import aws_glue_crawler.MyJob MyJob
 ```
 
-<!-- cache-key: cdktf-0.17.1 input-bb5184ca5ac00fb7504932d5ccfaf8c88a2081d3844c0b88215ed46bca6fb8a2 -->
+<!-- cache-key: cdktf-0.17.1 input-0fe79636a772df56c0c70d645742fc1288237ce3dba667ec68c68bad3a10b2a6 -->

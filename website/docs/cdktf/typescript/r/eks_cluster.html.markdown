@@ -196,12 +196,14 @@ class MyConvertedCode extends TerraformStack {
       "example_2",
       {
         clientIdList: ["sts.amazonaws.com"],
-        thumbprintList: Token.asList(
-          propertyAccess(dataTlsCertificateExample.certificates, [
-            "*",
-            "sha1_fingerprint",
-          ])
-        ),
+        thumbprintList: [
+          Token.asString(
+            propertyAccess(dataTlsCertificateExample.certificates, [
+              "0",
+              "sha1_fingerprint",
+            ])
+          ),
+        ],
         url: Token.asString(dataTlsCertificateExample.url),
       }
     );
@@ -435,4 +437,4 @@ Using `terraform import`, import EKS Clusters using the `name`. For example:
 % terraform import aws_eks_cluster.my_cluster my_cluster
 ```
 
-<!-- cache-key: cdktf-0.17.1 input-6ab74ef4f068f57c42f5fa0865a75e557fcbb4c966abb18fce9421ed06067c98 -->
+<!-- cache-key: cdktf-0.17.1 input-6cb4e58d2d6459048ce11426d7c64e17bbcb1a488c1508bd0a076ea2e1feb536 -->
