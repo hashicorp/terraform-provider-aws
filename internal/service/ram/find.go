@@ -9,7 +9,6 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ram"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
@@ -89,44 +88,6 @@ func FindResourceShareInvitationByARN(ctx context.Context, conn *ram.RAM, arn st
 	}
 
 	return invitation, nil
-}
-
-func resourceShare(ctx context.Context, conn *ram.RAM, input *ram.GetResourceSharesInput) (*ram.ResourceShare, error) {
-	var shares *ram.GetResourceSharesOutput
-
-	// Retry for Ram resource share eventual consistency
-	err := retry.RetryContext(ctx, FindResourceShareTimeout, func() *retry.RetryError {
-		ss, err := conn.GetResourceSharesWithContext(ctx, input)
-		shares = ss
-
-		if tfawserr.ErrCodeEquals(err, ram.ErrCodeUnknownResourceException) {
-			return retry.RetryableError(err)
-		}
-
-		if err != nil {
-			return retry.NonRetryableError(err)
-		}
-
-		if len(shares.ResourceShares) == 0 {
-			return retry.RetryableError(&retry.NotFoundError{})
-		}
-
-		return nil
-	})
-
-	if tfresource.TimedOut(err) {
-		shares, err = conn.GetResourceSharesWithContext(ctx, input)
-	}
-
-	if err != nil {
-		return nil, err
-	}
-
-	if shares == nil || len(shares.ResourceShares) == 0 {
-		return nil, nil
-	}
-
-	return shares.ResourceShares[0], nil
 }
 
 func resourceShareInvitationByResourceShareARNAndStatus(ctx context.Context, conn *ram.RAM, resourceShareArn, status string) (*ram.ResourceShareInvitation, error) {
