@@ -13,13 +13,17 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	tfiam "github.com/hashicorp/terraform-provider-aws/internal/service/iam"
+	tforganizations "github.com/hashicorp/terraform-provider-aws/internal/service/organizations"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"golang.org/x/exp/slices"
 )
 
 // @SDKResource("aws_ram_sharing_with_organization")
 func ResourceSharingWithOrganization() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceSharingWithOrganizationCreate,
-		ReadWithoutTimeout:   schema.NoopContext,
+		ReadWithoutTimeout:   resourceSharingWithOrganizationRead,
 		DeleteWithoutTimeout: schema.NoopContext,
 
 		Importer: &schema.ResourceImporter{
@@ -30,23 +34,61 @@ func ResourceSharingWithOrganization() *schema.Resource {
 	}
 }
 
+const (
+	sharingWithOrganizationRoleName = "AWSServiceRoleForResourceAccessManager"
+	servicePrincipalName            = "ram.amazonaws.com"
+)
+
 func resourceSharingWithOrganizationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RAMConn(ctx)
 
-	log.Print("[DEBUG] Enabling RAM sharing with organization")
-
-	resp, err := conn.EnableSharingWithAwsOrganizationWithContext(ctx, &ram.EnableSharingWithAwsOrganizationInput{})
+	output, err := conn.EnableSharingWithAwsOrganizationWithContext(ctx, &ram.EnableSharingWithAwsOrganizationInput{})
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "Error enabling RAM sharing with organization: %s", err)
+		return sdkdiag.AppendErrorf(diags, "enabling RAM Sharing with Organization: %s", err)
 	}
 
-	if !aws.BoolValue(resp.ReturnValue) {
-		return sdkdiag.AppendErrorf(diags, "RAM sharing with organization is not enabled")
+	if !aws.BoolValue(output.ReturnValue) {
+		return sdkdiag.AppendErrorf(diags, "RAM Sharing with Organization failed")
 	}
 
 	d.SetId(meta.(*conns.AWSClient).AccountID)
+
+	return append(diags, resourceSharingWithOrganizationRead(ctx, d, meta)...)
+}
+
+func resourceSharingWithOrganizationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
+	// See https://docs.aws.amazon.com/ram/latest/userguide/getting-started-sharing.html#getting-started-sharing-orgs.
+	// Check for IAM role and Organizations trusted access.
+
+	_, err := tfiam.FindRoleByName(ctx, meta.(*conns.AWSClient).IAMConn(ctx), sharingWithOrganizationRoleName)
+
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] IAM Role (%s) not found, removing from state", sharingWithOrganizationRoleName)
+		d.SetId("")
+		return diags
+	}
+
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "reading IAM Role (%s): %s", sharingWithOrganizationRoleName, err)
+	}
+
+	servicePrincipalNames, err := tforganizations.FindEnabledServicePrincipalNames(ctx, meta.(*conns.AWSClient).OrganizationsConn(ctx))
+
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "reading Organization service principals: %s", err)
+	}
+
+	enabled := slices.Contains(servicePrincipalNames, servicePrincipalName)
+
+	if !d.IsNewResource() && !enabled {
+		log.Printf("[WARN] Organization service principal (%s) not enabled, removing from state", servicePrincipalName)
+		d.SetId("")
+		return diags
+	}
 
 	return diags
 }
