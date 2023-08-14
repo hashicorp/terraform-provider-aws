@@ -3,6 +3,7 @@
 FEATURES:
 
 * **New Resource:** `aws_msk_cluster_policy` ([#32848](https://github.com/hashicorp/terraform-provider-aws/issues/32848))
+* **New Resource:** `aws_ram_sharing_with_organization` ([#25433](https://github.com/hashicorp/terraform-provider-aws/issues/25433))
 
 ENHANCEMENTS:
 
