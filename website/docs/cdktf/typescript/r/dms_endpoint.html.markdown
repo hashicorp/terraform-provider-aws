@@ -60,7 +60,7 @@ The following arguments are required:
 
 * `endpointId` - (Required) Database endpoint identifier. Identifiers must contain from 1 to 255 alphanumeric characters or hyphens, begin with a letter, contain only ASCII letters, digits, and hyphens, not end with a hyphen, and not contain two consecutive hyphens.
 * `endpointType` - (Required) Type of endpoint. Valid values are `source`, `target`.
-* `engineName` - (Required) Type of engine for the endpoint. Valid values are `aurora`, `auroraPostgresql`, `azuredb`, `azureSqlManagedInstance`, `db2`, `db2Zos`, `docdb`, `dynamodb`, `elasticsearch`, `kafka`, `kinesis`, `mariadb`, `mongodb`, `mysql`, `opensearch`, `oracle`, `postgres`, `redshift`, `s3`, `sqlserver`, `sybase`. Please note that some of engine names are available only for `target` endpoint type (e.g. `redshift`).
+* `engineName` - (Required) Type of engine for the endpoint. Valid values are `aurora`, `auroraPostgresql`, `azuredb`, `azureSqlManagedInstance`, `babelfish`, `db2`, `db2Zos`, `docdb`, `dynamodb`, `elasticsearch`, `kafka`, `kinesis`, `mariadb`, `mongodb`, `mysql`, `opensearch`, `oracle`, `postgres`, `redshift`, `s3`, `sqlserver`, `sybase`. Please note that some of engine names are available only for `target` endpoint type (e.g. `redshift`).
 * `kmsKeyArn` - (Required when `engineName` is `mongodb`, cannot be set when `engineName` is `s3`, optional otherwise) ARN for the KMS key that will be used to encrypt the connection parameters. If you do not specify a value for `kmsKeyArn`, then AWS DMS will use your default encryption key. AWS KMS creates the default encryption key for your AWS account. Your AWS account has a different default encryption key for each AWS region. To encrypt an S3 target with a KMS Key, use the parameter `s3SettingsServerSideEncryptionKmsKeyId`. When `engineName` is `redshift`, `kmsKeyArn` is the KMS Key for the Redshift target and the parameter `redshiftSettingsServerSideEncryptionKmsKeyId` encrypts the S3 intermediate storage.
 
 The following arguments are optional:
@@ -243,4 +243,4 @@ Using `terraform import`, import endpoints using the `endpointId`. For example:
 % terraform import aws_dms_endpoint.test test-dms-endpoint-tf
 ```
 
-<!-- cache-key: cdktf-0.17.1 input-b26d56605c4e983c425ed003265226faae7ea5f8968149e0ff0266392ee83c82 -->
+<!-- cache-key: cdktf-0.17.1 input-dd77662537518abba52d580d2bc275446163c357ee26f394da488a830ef24ce5 -->
