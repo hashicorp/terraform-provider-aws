@@ -78,6 +78,7 @@ This argument supports the following arguments:
 * `ca_cert_identifier` - (Optional) Identifier of the CA certificate for the DB instance.
 * `cluster_identifier` - (Required, Forces new resource) Identifier of the [`aws_rds_cluster`](/docs/providers/aws/r/rds_cluster.html) in which to launch this instance.
 * `copy_tags_to_snapshot` – (Optional, boolean) Indicates whether to copy all of the user-defined tags from the DB instance to snapshots of the DB instance. Default `false`.
+* `custom_iam_instance_profile` - (Optional) Instance profile associated with the underlying Amazon EC2 instance of an RDS Custom DB instance.
 * `db_parameter_group_name` - (Optional) Name of the DB parameter group to associate with this instance.
 * `db_subnet_group_name` - (Required if `publicly_accessible = false`, Optional otherwise, Forces new resource) DB subnet group to associate with this DB instance. **NOTE:** This must match the `db_subnet_group_name` of the attached [`aws_rds_cluster`](/docs/providers/aws/r/rds_cluster.html).
 * `engine_version` - (Optional) Database engine version.
@@ -152,4 +153,4 @@ Using `terraform import`, import RDS Cluster Instances using the `identifier`. F
 % terraform import aws_rds_cluster_instance.prod_instance_1 aurora-cluster-instance-1
 ```
 
-<!-- cache-key: cdktf-0.17.1 input-639f43614cbe5e40096f233083d956b233238f067d42cb46fdfe35692c73d197 -->
+<!-- cache-key: cdktf-0.17.1 input-78df55554844c35c7b0301574cb78e36bb9d052650f72b31ee4ebbcccc0b9af7 -->
