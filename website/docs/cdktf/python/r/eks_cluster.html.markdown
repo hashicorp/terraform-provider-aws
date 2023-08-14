@@ -163,9 +163,11 @@ class MyConvertedCode(TerraformStack):
         data_tls_certificate_example.override_logical_id("example")
         aws_iam_openid_connect_provider_example = IamOpenidConnectProvider(self, "example_2",
             client_id_list=["sts.amazonaws.com"],
-            thumbprint_list=Token.as_list(
-                property_access(data_tls_certificate_example.certificates, ["*", "sha1_fingerprint"
-                ])),
+            thumbprint_list=[
+                Token.as_string(
+                    property_access(data_tls_certificate_example.certificates, ["0", "sha1_fingerprint"
+                    ]))
+            ],
             url=Token.as_string(data_tls_certificate_example.url)
         )
         # This allows the Terraform resource name to match the original name. You can remove the call if you don't need them to match.
@@ -375,4 +377,4 @@ Using `terraform import`, import EKS Clusters using the `name`. For example:
 % terraform import aws_eks_cluster.my_cluster my_cluster
 ```
 
-<!-- cache-key: cdktf-0.17.1 input-6ab74ef4f068f57c42f5fa0865a75e557fcbb4c966abb18fce9421ed06067c98 -->
+<!-- cache-key: cdktf-0.17.1 input-6cb4e58d2d6459048ce11426d7c64e17bbcb1a488c1508bd0a076ea2e1feb536 -->

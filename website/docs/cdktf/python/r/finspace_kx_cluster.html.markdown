@@ -26,7 +26,7 @@ from cdktf import Token, TerraformStack
 #
 from imports.aws.finspace_kx_cluster import FinspaceKxCluster
 class MyConvertedCode(TerraformStack):
-    def __init__(self, scope, name, *, cacheConfigurations):
+    def __init__(self, scope, name):
         super().__init__(scope, name)
         FinspaceKxCluster(self, "example",
             availability_zone_id="use1-az2",
@@ -50,8 +50,7 @@ class MyConvertedCode(TerraformStack):
                     "db_paths": "/"
                 }
                 ],
-                database_name=Token.as_string(aws_finspace_kx_database_example.name),
-                cache_configurations=cache_configurations
+                database_name=Token.as_string(aws_finspace_kx_database_example.name)
             )
             ],
             environment_id=Token.as_string(aws_finspace_kx_environment_example.id),
@@ -162,7 +161,7 @@ The savedown_storage_configuration block supports the following arguments:
 
 * `type` - (Required) Type of writeable storage space for temporarily storing your savedown data. The valid values are:
     * SDS01 - This type represents 3000 IOPS and io2 ebs volume type.
-* `size` - (Required) Size of temporary storage in bytes.
+* `size` - (Required) Size of temporary storage in gigabytes. Must be between 10 and 16000.
 
 ### vpc_configuration
 
@@ -210,4 +209,4 @@ Using `terraform import`, import an AWS FinSpace Kx Cluster using the `id` (envi
 % terraform import aws_finspace_kx_cluster.example n3ceo7wqxoxcti5tujqwzs,my-tf-kx-cluster
 ```
 
-<!-- cache-key: cdktf-0.17.1 input-c18bd03892afaf175cb311309980fd67e329a5b087620878b06fcbac0fa3af72 -->
+<!-- cache-key: cdktf-0.17.1 input-ba9e9b61695441ed5084a8e4f387258970bfe29d8d0cd1d2e3384bca3e7f1cee -->
