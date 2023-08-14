@@ -581,9 +581,11 @@ func deleteRoleInstanceProfiles(ctx context.Context, conn *iam.IAM, roleName str
 	resp, err := conn.ListInstanceProfilesForRoleWithContext(ctx, &iam.ListInstanceProfilesForRoleInput{
 		RoleName: aws.String(roleName),
 	})
+
 	if tfawserr.ErrCodeEquals(err, iam.ErrCodeNoSuchEntityException) {
 		return nil
 	}
+
 	if err != nil {
 		return err
 	}
@@ -638,6 +640,10 @@ func FindRoleByName(ctx context.Context, conn *iam.IAM, name string) (*iam.Role,
 		RoleName: aws.String(name),
 	}
 
+	return findRole(ctx, conn, input)
+}
+
+func findRole(ctx context.Context, conn *iam.IAM, input *iam.GetRoleInput) (*iam.Role, error) {
 	output, err := conn.GetRoleWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, iam.ErrCodeNoSuchEntityException) {
