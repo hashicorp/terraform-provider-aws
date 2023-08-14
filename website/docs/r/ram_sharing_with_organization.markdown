@@ -8,7 +8,9 @@ description: |-
 
 # Resource: aws_ram_sharing_with_organization
 
-Manages Resource Access Manager (RAM) Resource Sharing with AWS Organizations. If you enable sharing with your organization, you can share resources without using invitations.
+Manages Resource Access Manager (RAM) Resource Sharing with AWS Organizations. If you enable sharing with your organization, you can share resources without using invitations. Refer to the [AWS RAM user guide](https://docs.aws.amazon.com/ram/latest/userguide/getting-started-sharing.html#getting-started-sharing-orgs) for more details.
+
+~> **NOTE:** Use this resource to manage resource sharing within your organization, **not** the [`aws_organizations_organization`](organizations_organization.html) resource with `ram.amazonaws.com` configured in `aws_service_access_principals`.
 
 ## Example Usage
 
