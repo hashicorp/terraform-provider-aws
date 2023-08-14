@@ -61,6 +61,7 @@ This resource supports the following arguments:
 
 This resource exports the following attributes in addition to the arguments above:
 
+* `arn` - The ARN of the certificate
 * `certificateId` - The unique identifier for the AS2 certificate
 * `activeDate` - An date when the certificate becomes active
 * `inactiveDate` - An date when the certificate becomes inactive
@@ -87,4 +88,4 @@ Using `terraform import`, import Transfer AS2 Certificate using the `certificate
 % terraform import aws_transfer_certificate.example c-4221a88afd5f4362a
 ```
 
-<!-- cache-key: cdktf-0.17.1 input-759a83a52af7baa58eea48a401b9f2895b476c1d1e8a48481548f1a0715c8979 -->
+<!-- cache-key: cdktf-0.17.1 input-9e7f080d0a6c4946e22084c4f2ae3c03144eb7cd8a58f89d9fd2f1afa2ea612e -->

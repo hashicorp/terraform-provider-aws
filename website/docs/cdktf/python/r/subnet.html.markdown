@@ -58,11 +58,11 @@ class MyConvertedCode(TerraformStack):
     def __init__(self, scope, name):
         super().__init__(scope, name)
         secondary_cidr = VpcIpv4CidrBlockAssociation(self, "secondary_cidr",
-            cidr_block="172.2.0.0/16",
+            cidr_block="172.20.0.0/16",
             vpc_id=main.id
         )
         Subnet(self, "in_secondary_cidr",
-            cidr_block="172.2.0.0/24",
+            cidr_block="172.20.0.0/24",
             vpc_id=secondary_cidr.vpc_id
         )
 ```
@@ -130,4 +130,4 @@ Using `terraform import`, import subnets using the subnet `id`. For example:
 % terraform import aws_subnet.public_subnet subnet-9d4a7b6c
 ```
 
-<!-- cache-key: cdktf-0.17.1 input-76a0efad023fc86bbde8b105b84c33ca5ccbdf0813a96fdd75c9dd61db9082a4 -->
+<!-- cache-key: cdktf-0.17.1 input-800b4894a44d3fb10c7ed4e02828a98cc6bb1ba25ee4607e803d5cddf8afc2ed -->

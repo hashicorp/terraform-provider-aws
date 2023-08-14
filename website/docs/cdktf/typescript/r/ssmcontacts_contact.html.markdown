@@ -72,14 +72,14 @@ class MyConvertedCode extends TerraformStack {
 
 The following arguments are required:
 
-- `alias` - (Required) A unique and identifiable alias for the contact or escalation plan.
+- `alias` - (Required) A unique and identifiable alias for the contact or escalation plan. Must be between 1 and 255 characters, and may contain alphanumerics, underscores (`_`), and hyphens (`-`).
 
 - `type` - (Required) The type of contact engaged. A single contact is type PERSONAL and an escalation
   plan is type ESCALATION.
 
 The following arguments are optional:
 
-- `displayName` - (Optional) Full friendly name of the contact or escalation plan.
+- `displayName` - (Optional) Full friendly name of the contact or escalation plan. If set, must be between 1 and 255 characters, and may contain alphanumerics, underscores (`_`), hyphens (`-`), periods (`.`), and spaces.
 
 - `tags` - (Optional) Map of tags to assign to the resource.
 
@@ -113,4 +113,4 @@ Using `terraform import`, import SSM Contact using the `arn`. For example:
 % terraform import aws_ssmcontacts_contact.example {ARNValue}
 ```
 
-<!-- cache-key: cdktf-0.17.1 input-ff4ad08db5ce9fec44a05cbb961ebef8a26e7411bbe2f311feda0f278f23a495 -->
+<!-- cache-key: cdktf-0.17.1 input-2663536b417f222904b9f9c62ac959d51fabe5b14bf73e4c198bb18616b00366 -->
