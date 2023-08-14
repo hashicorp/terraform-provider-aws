@@ -4,7 +4,7 @@ go 1.20
 
 require (
 	github.com/ProtonMail/go-crypto v0.0.0-20230717121422-5aa5874ade95
-	github.com/aws/aws-sdk-go v1.44.322
+	github.com/aws/aws-sdk-go v1.44.323
 	github.com/aws/aws-sdk-go-v2 v1.20.1
 	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.13.8
 	github.com/aws/aws-sdk-go-v2/service/accessanalyzer v1.20.2
@@ -36,7 +36,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/lambda v1.39.2
 	github.com/aws/aws-sdk-go-v2/service/lightsail v1.28.2
 	github.com/aws/aws-sdk-go-v2/service/medialive v1.34.1
-	github.com/aws/aws-sdk-go-v2/service/mediapackage v1.22.2
+	github.com/aws/aws-sdk-go-v2/service/mediapackage v1.23.0
 	github.com/aws/aws-sdk-go-v2/service/oam v1.2.2
 	github.com/aws/aws-sdk-go-v2/service/opensearchserverless v1.4.2
 	github.com/aws/aws-sdk-go-v2/service/pipes v1.3.2
@@ -59,7 +59,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/timestreamwrite v1.18.2
 	github.com/aws/aws-sdk-go-v2/service/transcribe v1.28.2
 	github.com/aws/aws-sdk-go-v2/service/verifiedpermissions v1.1.2
-	github.com/aws/aws-sdk-go-v2/service/vpclattice v1.1.3
+	github.com/aws/aws-sdk-go-v2/service/vpclattice v1.1.4
 	github.com/aws/aws-sdk-go-v2/service/workspaces v1.29.2
 	github.com/aws/aws-sdk-go-v2/service/xray v1.17.2
 	github.com/beevik/etree v1.2.0
@@ -122,9 +122,11 @@ require (
 	github.com/aws/smithy-go v1.14.1 // indirect
 	github.com/bgentry/speakeasy v0.1.0 // indirect
 	github.com/boombuler/barcode v1.0.1 // indirect
+	github.com/bufbuild/protocompile v0.6.0 // indirect
 	github.com/cloudflare/circl v1.3.3 // indirect
 	github.com/evanphx/json-patch v0.5.2 // indirect
 	github.com/fatih/color v1.15.0 // indirect
+	github.com/frankban/quicktest v1.14.6 // indirect
 	github.com/go-git/go-git/v5 v5.8.1 // indirect
 	github.com/go-test/deep v1.1.0 // indirect
 	github.com/golang/protobuf v1.5.3 // indirect
@@ -166,7 +168,7 @@ require (
 	golang.org/x/sys v0.11.0 // indirect
 	golang.org/x/text v0.12.0 // indirect
 	google.golang.org/appengine v1.6.7 // indirect
-	google.golang.org/genproto/googleapis/rpc v0.0.0-20230803162519-f966b187b2e5 // indirect
+	google.golang.org/genproto/googleapis/rpc v0.0.0-20230807174057-1744710a1577 // indirect
 	google.golang.org/grpc v1.57.0 // indirect
 	google.golang.org/protobuf v1.31.0 // indirect
 	gopkg.in/check.v1 v1.0.0-20201130134442-10cb98267c6c // indirect
