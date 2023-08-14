@@ -504,7 +504,8 @@ This resource supports the following arguments:
 - `default_instance_warmup` - (Optional) Amount of time, in seconds, until a newly launched instance can contribute to the Amazon CloudWatch metrics. This delay lets an instance finish initializing before Amazon EC2 Auto Scaling aggregates instance metrics, resulting in more reliable usage data. Set this value equal to the amount of time that it takes for resource consumption to become stable after an instance reaches the InService state. (See [Set the default instance warmup for an Auto Scaling group](https://docs.aws.amazon.com/autoscaling/ec2/userguide/ec2-auto-scaling-default-instance-warmup.html))
 - `launch_configuration` - (Optional) Name of the launch configuration to use.
 - `launch_template` - (Optional) Nested argument with Launch template specification to use to launch instances. See [Launch Template](#launch_template) below for more details.
-- `mixed_instances_policy` (Optional) Configuration block containing settings to define launch targets for Auto Scaling groups. See [Mixed Instances Policy](#mixed_instances_policy) below for more details.
+- `mixed_instances_policy` - (Optional) Configuration block containing settings to define launch targets for Auto Scaling groups. See [Mixed Instances Policy](#mixed_instances_policy) below for more details.
+- `ignore_failed_scaling_activities` - (Optional) Whether to ignore failed [Auto Scaling scaling activities](https://docs.aws.amazon.com/autoscaling/ec2/userguide/as-verify-scaling-activity.html) while [waiting for capacity](#waiting-for-capacity). The default is `false` -- failed scaling activities cause errors to be returned.
 - `initial_lifecycle_hook` - (Optional) One or more
   [Lifecycle Hooks](http://docs.aws.amazon.com/autoscaling/latest/userguide/lifecycle-hooks.html)
   to attach to the Auto Scaling Group **before** instances are launched. The
@@ -523,19 +524,19 @@ This resource supports the following arguments:
   even if it's in the process of scaling a resource. Normally, Terraform
   drains all the instances before deleting the group. This bypasses that
   behavior and potentially leaves resources dangling.
-- `load_balancers` (Optional) List of elastic load balancer names to add to the autoscaling
+- `load_balancers` - (Optional) List of elastic load balancer names to add to the autoscaling
   group names. Only valid for classic load balancers. For ALBs, use `target_group_arns` instead. To remove all load balancer attachments an empty list should be specified.
-- `traffic_source` (Optional) Attaches one or more traffic sources to the specified Auto Scaling group.
-- `vpc_zone_identifier` (Optional) List of subnet IDs to launch resources in. Subnets automatically determine which availability zones the group will reside. Conflicts with `availability_zones`.
-- `target_group_arns` (Optional) Set of `aws_alb_target_group` ARNs, for use with Application or Network Load Balancing. To remove all target group attachments an empty list should be specified.
-- `termination_policies` (Optional) List of policies to decide how the instances in the Auto Scaling Group should be terminated. The allowed values are `OldestInstance`, `NewestInstance`, `OldestLaunchConfiguration`, `ClosestToNextInstanceHour`, `OldestLaunchTemplate`, `AllocationStrategy`, `Default`. Additionally, the ARN of a Lambda function can be specified for custom termination policies.
+- `traffic_source` - (Optional) Attaches one or more traffic sources to the specified Auto Scaling group.
+- `vpc_zone_identifier` - (Optional) List of subnet IDs to launch resources in. Subnets automatically determine which availability zones the group will reside. Conflicts with `availability_zones`.
+- `target_group_arns` - (Optional) Set of `aws_alb_target_group` ARNs, for use with Application or Network Load Balancing. To remove all target group attachments an empty list should be specified.
+- `termination_policies` - (Optional) List of policies to decide how the instances in the Auto Scaling Group should be terminated. The allowed values are `OldestInstance`, `NewestInstance`, `OldestLaunchConfiguration`, `ClosestToNextInstanceHour`, `OldestLaunchTemplate`, `AllocationStrategy`, `Default`. Additionally, the ARN of a Lambda function can be specified for custom termination policies.
 - `suspended_processes` - (Optional) List of processes to suspend for the Auto Scaling Group. The allowed values are `Launch`, `Terminate`, `HealthCheck`, `ReplaceUnhealthy`, `AZRebalance`, `AlarmNotification`, `ScheduledActions`, `AddToLoadBalancer`, `InstanceRefresh`.
   Note that if you suspend either the `Launch` or `Terminate` process types, it can prevent your Auto Scaling Group from functioning properly.
-- `tag` (Optional) Configuration block(s) containing resource tags. See [Tag](#tag) below for more details.
-- `placement_group` (Optional) Name of the placement group into which you'll launch your instances, if any.
+- `tag` - (Optional) Configuration block(s) containing resource tags. See [Tag](#tag) below for more details.
+- `placement_group` - (Optional) Name of the placement group into which you'll launch your instances, if any.
 - `metrics_granularity` - (Optional) Granularity to associate with the metrics to collect. The only valid value is `1Minute`. Default is `1Minute`.
 - `enabled_metrics` - (Optional) List of metrics to collect. The allowed values are defined by the [underlying AWS API](https://docs.aws.amazon.com/autoscaling/ec2/APIReference/API_EnableMetricsCollection.html).
-- `wait_for_capacity_timeout` (Default: "10m") Maximum
+- `wait_for_capacity_timeout` - (Optional, Default: "10m") Maximum
   [duration](https://golang.org/pkg/time/#ParseDuration) that Terraform should
   wait for ASG instances to be healthy before timing out. (See also [Waiting
   for Capacity](#waiting-for-capacity) below.) Setting this to "0" causes
@@ -549,13 +550,13 @@ This resource supports the following arguments:
   all attached load balancers on both create and update operations. (Takes
   precedence over `min_elb_capacity` behavior.)
   (See also [Waiting for Capacity](#waiting-for-capacity) below.)
-- `protect_from_scale_in` (Optional) Whether newly launched instances
+- `protect_from_scale_in` - (Optional) Whether newly launched instances
   are automatically protected from termination by Amazon EC2 Auto Scaling when
   scaling in. For more information about preventing instances from terminating
   on scale in, see [Using instance scale-in protection](https://docs.aws.amazon.com/autoscaling/ec2/userguide/ec2-auto-scaling-instance-protection.html)
   in the Amazon EC2 Auto Scaling User Guide.
-- `service_linked_role_arn` (Optional) ARN of the service-linked role that the ASG will use to call other AWS services
-- `max_instance_lifetime` (Optional) Maximum amount of time, in seconds, that an instance can be in service, values must be either equal to 0 or between 86400 and 31536000 seconds.
+- `service_linked_role_arn` - (Optional) ARN of the service-linked role that the ASG will use to call other AWS services
+- `max_instance_lifetime` - (Optional) Maximum amount of time, in seconds, that an instance can be in service, values must be either equal to 0 or between 86400 and 31536000 seconds.
 - `instance_refresh` - (Optional) If this block is configured, start an
   [Instance Refresh](https://docs.aws.amazon.com/autoscaling/ec2/userguide/asg-instance-refresh.html)
   when this Auto Scaling Group is updated. Defined [below](#instance_refresh).
@@ -908,4 +909,4 @@ Using `terraform import`, import Auto Scaling Groups using the `name`. For examp
 % terraform import aws_autoscaling_group.web web-asg
 ```
 
-<!-- cache-key: cdktf-0.17.1 input-fe2d10a70a7a028eb396827e70181bfe573c996e9a39e214384efe4410d9f028 -->
+<!-- cache-key: cdktf-0.17.1 input-495793f2fcbf80769a734fa05d61e81a075cfd40dcdb8130cfa9344cfff80074 -->
