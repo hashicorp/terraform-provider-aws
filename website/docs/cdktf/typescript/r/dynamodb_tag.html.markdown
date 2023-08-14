@@ -47,7 +47,7 @@ class MyConvertedCode extends TerraformStack {
     const dataAwsRegionReplica = new DataAwsRegion(this, "replica", {
       provider: replica,
     });
-    new DynamodbTable(this, "example", {
+    const example = new DynamodbTable(this, "example", {
       replica: [
         {
           regionName: Token.asString(dataAwsRegionReplica.name),
@@ -60,7 +60,7 @@ class MyConvertedCode extends TerraformStack {
       provider: replica,
       resourceArn: Token.asString(
         Fn.replace(
-          Token.asString(awsDynamodbTableTest.arn),
+          example.arn,
           Token.asString(current.name),
           Token.asString(dataAwsRegionReplica.name)
         )
@@ -108,4 +108,4 @@ Using `terraform import`, import `awsDynamodbTag` using the DynamoDB resource id
 % terraform import aws_dynamodb_tag.example arn:aws:dynamodb:us-east-1:123456789012:table/example,Name
 ```
 
-<!-- cache-key: cdktf-0.17.1 input-1c9c499c603fb6fe11a93a5f4358bd49825326abb17f4a2357fa9c3f7c70ac77 -->
+<!-- cache-key: cdktf-0.17.1 input-75e8bd469b3a6122cab5fe6f134e77c1f13bdbca2f2645fd979c4c90c7684f40 -->
