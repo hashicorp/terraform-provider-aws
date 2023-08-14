@@ -32,7 +32,7 @@ func TestAccOpenSearchOutboundConnection_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(ctx, "aws_opensearch_domain.domain_1", &domain),
 					testAccCheckDomainExists(ctx, "aws_opensearch_domain.domain_2", &domain),
-					resource.TestCheckResourceAttr(resourceName, "connection_status", "PENDING_ACCEPTANCE"),
+					resource.TestCheckResourceAttr(resourceName, "connection_status", "ACTIVE"),
 				),
 			},
 			{
@@ -64,6 +64,7 @@ func TestAccOpenSearchOutboundConnection_vpc(t *testing.T) {
 					testAccCheckDomainExists(ctx, "aws_opensearch_domain.domain_1", &domain),
 					testAccCheckDomainExists(ctx, "aws_opensearch_domain.domain_2", &domain),
 					resource.TestCheckResourceAttrSet(resourceName, "connection_properties.0.endpoint"),
+					resource.TestCheckResourceAttr(resourceName, "connection_status", "ACTIVE"),
 				),
 			},
 			{
