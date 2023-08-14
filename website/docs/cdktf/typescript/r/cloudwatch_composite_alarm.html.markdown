@@ -29,6 +29,11 @@ class MyConvertedCode extends TerraformStack {
   constructor(scope: Construct, name: string) {
     super(scope, name);
     new CloudwatchCompositeAlarm(this, "example", {
+      actionsSuppressor: {
+        alarm: "suppressor-alarm",
+        extensionPeriod: 10,
+        waitPeriod: 20,
+      },
       alarmActions: Token.asList(awsSnsTopicExample.arn),
       alarmDescription: "This is a composite alarm!",
       alarmName: "example-composite-alarm",
@@ -48,6 +53,10 @@ class MyConvertedCode extends TerraformStack {
 ## Argument Reference
 
 * `actionsEnabled` - (Optional, Forces new resource) Indicates whether actions should be executed during any changes to the alarm state of the composite alarm. Defaults to `true`.
+* `actionsSuppressor` - (Optional) Actions will be suppressed if the suppressor alarm is in the ALARM state.
+    * `alarm` - (Required) Can be an AlarmName or an Amazon Resource Name (ARN) from an existing alarm.
+    * `extensionPeriod` - (Required) The maximum time in seconds that the composite alarm waits after suppressor alarm goes out of the `alarm` state. After this time, the composite alarm performs its actions.
+    * `waitPeriod` - (Required) The maximum time in seconds that the composite alarm waits for the suppressor alarm to go into the `alarm` state. After this time, the composite alarm performs its actions.
 * `alarmActions` - (Optional) The set of actions to execute when this alarm transitions to the `alarm` state from any other state. Each action is specified as an ARN. Up to 5 actions are allowed.
 * `alarmDescription` - (Optional) The description for the composite alarm.
 * `alarmName` - (Required) The name for the composite alarm. This name must be unique within the region.
@@ -86,4 +95,4 @@ Using `terraform import`, import a CloudWatch Composite Alarm using the `alarmNa
 % terraform import aws_cloudwatch_composite_alarm.test my-alarm
 ```
 
-<!-- cache-key: cdktf-0.17.1 input-c5e0ea5ee414346db96fe8732f663fd3f39d0cb66bb7c52cdb048a371eceb57d -->
+<!-- cache-key: cdktf-0.17.1 input-bc5f81d668dc98cce89e801ef7bbb869b647ded82d35c20f03ae8298b2d50282 -->

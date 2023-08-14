@@ -566,6 +566,7 @@ The following arguments are optional:
 * `run_command_targets` - (Optional) Parameters used when you are using the rule to invoke Amazon EC2 Run Command. Documented below. A maximum of 5 are allowed.
 * `redshift_target` - (Optional) Parameters used when you are using the rule to invoke an Amazon Redshift Statement. Documented below. A maximum of 1 are allowed.
 * `retry_policy` - (Optional)  Parameters used when you are providing retry policies. Documented below. A maximum of 1 are allowed.
+* `sagemaker_pipeline_target` - (Optional) Parameters used when you are using the rule to invoke an Amazon SageMaker Pipeline. Documented below. A maximum of 1 are allowed.
 * `sqs_target` - (Optional) Parameters used when you are using the rule to invoke an Amazon SQS Queue. Documented below. A maximum of 1 are allowed.
 * `target_id` - (Optional) The unique target assignment ID. If missing, will generate a random, unique id.
 
@@ -661,6 +662,15 @@ For more information, see [Task Networking](https://docs.aws.amazon.com/AmazonEC
 
 * `message_group_id` - (Optional) The FIFO message group ID to use as the target.
 
+### sagemaker_pipeline_target
+
+* `pipeline_parameter_list` - (Optional) List of Parameter names and values for SageMaker Model Building Pipeline execution.
+
+#### pipeline_parameter_list
+
+* `name` - (Required) Name of parameter to start execution of a SageMaker Model Building Pipeline.
+* `value` - (Required) Value of parameter to start execution of a SageMaker Model Building Pipeline.
+
 ## Attribute Reference
 
 This resource exports no additional attributes.
@@ -684,4 +694,4 @@ Using `terraform import`, import EventBridge Targets using `event_bus_name/rule-
 % terraform import aws_cloudwatch_event_target.test-event-target rule-name/target-id
 ```
 
-<!-- cache-key: cdktf-0.17.1 input-eb76684df5d617c4902cbb0222be3542ff2fdf5fe9397c7b08cfbdf4e2681a04 -->
+<!-- cache-key: cdktf-0.17.1 input-40a8976a2bf86668328d249d38c1c5f1f73361e640bc0df35601885cac9945e3 -->

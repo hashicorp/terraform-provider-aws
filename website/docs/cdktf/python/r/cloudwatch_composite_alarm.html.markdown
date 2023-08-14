@@ -29,6 +29,11 @@ class MyConvertedCode(TerraformStack):
     def __init__(self, scope, name):
         super().__init__(scope, name)
         CloudwatchCompositeAlarm(self, "example",
+            actions_suppressor=CloudwatchCompositeAlarmActionsSuppressor(
+                alarm="suppressor-alarm",
+                extension_period=10,
+                wait_period=20
+            ),
             alarm_actions=Token.as_list(aws_sns_topic_example.arn),
             alarm_description="This is a composite alarm!",
             alarm_name="example-composite-alarm",
@@ -40,6 +45,10 @@ class MyConvertedCode(TerraformStack):
 ## Argument Reference
 
 * `actions_enabled` - (Optional, Forces new resource) Indicates whether actions should be executed during any changes to the alarm state of the composite alarm. Defaults to `true`.
+* `actions_suppressor` - (Optional) Actions will be suppressed if the suppressor alarm is in the ALARM state.
+    * `alarm` - (Required) Can be an AlarmName or an Amazon Resource Name (ARN) from an existing alarm.
+    * `extension_period` - (Required) The maximum time in seconds that the composite alarm waits after suppressor alarm goes out of the `ALARM` state. After this time, the composite alarm performs its actions.
+    * `wait_period` - (Required) The maximum time in seconds that the composite alarm waits for the suppressor alarm to go into the `ALARM` state. After this time, the composite alarm performs its actions.
 * `alarm_actions` - (Optional) The set of actions to execute when this alarm transitions to the `ALARM` state from any other state. Each action is specified as an ARN. Up to 5 actions are allowed.
 * `alarm_description` - (Optional) The description for the composite alarm.
 * `alarm_name` - (Required) The name for the composite alarm. This name must be unique within the region.
@@ -75,4 +84,4 @@ Using `terraform import`, import a CloudWatch Composite Alarm using the `alarm_n
 % terraform import aws_cloudwatch_composite_alarm.test my-alarm
 ```
 
-<!-- cache-key: cdktf-0.17.1 input-c5e0ea5ee414346db96fe8732f663fd3f39d0cb66bb7c52cdb048a371eceb57d -->
+<!-- cache-key: cdktf-0.17.1 input-bc5f81d668dc98cce89e801ef7bbb869b647ded82d35c20f03ae8298b2d50282 -->
