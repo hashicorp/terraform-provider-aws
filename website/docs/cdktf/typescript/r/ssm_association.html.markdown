@@ -148,7 +148,7 @@ This resource supports the following arguments:
 * `targets` - (Optional) A block containing the targets of the SSM association. Targets are documented below. AWS currently supports a maximum of 5 targets.
 * `complianceSeverity` - (Optional) The compliance severity for the association. Can be one of the following: `unspecified`, `low`, `medium`, `high` or `critical`
 * `maxConcurrency` - (Optional) The maximum number of targets allowed to run the association at the same time. You can specify a number, for example 10, or a percentage of the target set, for example 10%.
-* `maxErrors` - (Optional) The number of errors that are allowed before the system stops sending requests to run the association on additional targets. You can specify a number, for example 10, or a percentage of the target set, for example 10%.
+* `maxErrors` - (Optional) The number of errors that are allowed before the system stops sending requests to run the association on additional targets. You can specify a number, for example 10, or a percentage of the target set, for example 10%. If you specify a threshold of 3, the stop command is sent when the fourth error is returned. If you specify a threshold of 10% for 50 associations, the stop command is sent when the sixth error is returned.
 * `automationTargetParameterName` - (Optional) Specify the target for the association. This target is required for associations that use an `automation` document and target resources by using rate controls. This should be set to the SSM document `parameter` that will define how your automation will branch out.
 * `waitForSuccessTimeoutSeconds` - (Optional) The number of seconds to wait for the association status to be `success`. If `success` status is not reached within the given time, create opration will fail.
 
@@ -195,4 +195,4 @@ Using `terraform import`, import SSM associations using the `associationId`. For
 % terraform import aws_ssm_association.test-association 10abcdef-0abc-1234-5678-90abcdef123456
 ```
 
-<!-- cache-key: cdktf-0.17.1 input-46bcdc4f3c7301d60e7214ffdbbfa588ceaea17e95f05a8f00a503929b4e01bf -->
+<!-- cache-key: cdktf-0.17.1 input-d7c183a4ee538a086fe856322e2f64dc0a1010abbef9731310f78a9925262485 -->

@@ -69,7 +69,8 @@ This resource supports the following arguments:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `connector_id`  - The unique identifier for the AS2 profile
+* `arn` - The ARN of the connector.
+* `connector_id`  - The unique identifier for the AS2 profile.
 
 ## Import
 
@@ -90,4 +91,4 @@ Using `terraform import`, import Transfer AS2 Connector using the `connector_id`
 % terraform import aws_transfer_connector.example c-4221a88afd5f4362a
 ```
 
-<!-- cache-key: cdktf-0.17.1 input-1064e452440717de1a29321661f9ad76fbf836b6538139c807f819633a7b48db -->
+<!-- cache-key: cdktf-0.17.1 input-9dc7f43fb4fff2fff2b6d1b2ececedcc46941ca24a8dc65f35803f6d5f401de5 -->

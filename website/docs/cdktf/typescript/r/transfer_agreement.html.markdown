@@ -57,7 +57,8 @@ This resource supports the following arguments:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `agreementId`  - The unique identifier for the AS2 agreement
+* `agreementId`  - The unique identifier for the AS2 agreement.
+* `arn` - The ARN of the agreement.
 * `staus`  - The staus of the agreement which is either ACTIVE or INACTIVE.
 
 ## Import
@@ -82,4 +83,4 @@ Using `terraform import`, import Transfer AS2 Agreement using the `serverId/agre
 % terraform import aws_transfer_agreement.example s-4221a88afd5f4362a/a-4221a88afd5f4362a
 ```
 
-<!-- cache-key: cdktf-0.17.1 input-d41141663f049fb20f999e489ce146f22cebb79d8ed239187d98bb466afd9f0c -->
+<!-- cache-key: cdktf-0.17.1 input-68e33cbd7ad4965dddc102db9b300dde49f777c8ef6bfaa3845050362aa8992d -->

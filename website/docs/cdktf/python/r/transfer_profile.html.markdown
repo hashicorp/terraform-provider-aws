@@ -51,7 +51,8 @@ This resource supports the following arguments:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `profile_id`  - The unique identifier for the AS2 profile
+* `arn` - The ARN of the profile.
+* `profile_id`  - The unique identifier for the AS2 profile.
 
 ## Import
 
@@ -72,4 +73,4 @@ Using `terraform import`, import Transfer AS2 Profile using the `profile_id`. Fo
 % terraform import aws_transfer_profile.example p-4221a88afd5f4362a
 ```
 
-<!-- cache-key: cdktf-0.17.1 input-a3bac09f11778c7fd898ddde1a70f2b56310e9c0dc413ae84d3c94fa756ebe4e -->
+<!-- cache-key: cdktf-0.17.1 input-16bf118d7f42726eb3b4479223e202a1b8630bdd949a41b0aec899a9608267bf -->
