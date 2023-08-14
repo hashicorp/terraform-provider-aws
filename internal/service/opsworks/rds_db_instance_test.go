@@ -175,8 +175,8 @@ resource "aws_opsworks_rds_db_instance" "test" {
   stack_id = aws_opsworks_stack.test.id
 
   rds_db_instance_arn = aws_db_instance.test.arn
-  db_user             = %[1]q
-  db_password         = %[2]q
+  db_user             = %[2]q
+  db_password         = %[3]q
 }
-`, userName, password))
+`, rName, userName, password))
 }
