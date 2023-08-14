@@ -289,15 +289,11 @@ func resourceOrganizationRead(ctx context.Context, d *schema.ResourceData, meta 
 
 	// ConstraintViolationException: The request failed because the organization does not have all features enabled. Please enable all features in your organization and then retry.
 	if aws.StringValue(org.FeatureSet) == organizations.OrganizationFeatureSetAll {
-		enabledServicePrincipals, err := findEnabledServicePrincipals(ctx, conn)
+		awsServiceAccessPrincipals, err = FindEnabledServicePrincipalNames(ctx, conn)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "reading Organization (%s) service principals: %s", d.Id(), err)
 		}
-
-		awsServiceAccessPrincipals = tfslices.ApplyToAll(enabledServicePrincipals, func(v *organizations.EnabledServicePrincipal) string {
-			return aws.StringValue(v.ServicePrincipal)
-		})
 	}
 
 	d.Set("aws_service_access_principals", awsServiceAccessPrincipals)
@@ -460,6 +456,19 @@ func findAccounts(ctx context.Context, conn *organizations.Organizations) ([]*or
 	}
 
 	return output, nil
+}
+
+// FindEnabledServicePrincipalNames is called from the service/ram package.
+func FindEnabledServicePrincipalNames(ctx context.Context, conn *organizations.Organizations) ([]string, error) {
+	output, err := findEnabledServicePrincipals(ctx, conn)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfslices.ApplyToAll(output, func(v *organizations.EnabledServicePrincipal) string {
+		return aws.StringValue(v.ServicePrincipal)
+	}), nil
 }
 
 func findEnabledServicePrincipals(ctx context.Context, conn *organizations.Organizations) ([]*organizations.EnabledServicePrincipal, error) {
