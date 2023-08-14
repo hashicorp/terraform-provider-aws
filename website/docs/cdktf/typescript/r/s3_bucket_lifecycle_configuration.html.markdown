@@ -22,6 +22,10 @@ For more information see the Amazon S3 User Guide on [`Lifecycle Configuration E
 
 ~> **NOTE:** S3 Buckets only support a single lifecycle configuration. Declaring multiple `awsS3BucketLifecycleConfiguration` resources to the same S3 Bucket will cause a perpetual difference in configuration.
 
+~> **NOTE:** Lifecycle configurations may take some time to fully propagate to all AWS S3 systems.
+Running Terraform operations shortly after creating a lifecycle configuration may result in changes that affect configuration idempotence.
+See the Amazon S3 User Guide on [setting lifecycle configuration on a bucket](https://docs.aws.amazon.com/AmazonS3/latest/userguide/how-to-set-lifecycle-configuration-intro.html).
+
 ## Example Usage
 
 ### With neither a filter nor prefix specified
@@ -599,4 +603,4 @@ If the owner (account ID) of the source bucket differs from the account used to 
 % terraform import aws_s3_bucket_lifecycle_configuration.example bucket-name,123456789012
 ```
 
-<!-- cache-key: cdktf-0.17.1 input-09548c583710def75d4e6dd107acf8b35ebe71171c2d903153cf6e9f6610fc84 -->
+<!-- cache-key: cdktf-0.17.1 input-ce79846a5381bab37eb5912b72d3f0b6f183e5a2acb8240fe74355dc829ed9b5 -->

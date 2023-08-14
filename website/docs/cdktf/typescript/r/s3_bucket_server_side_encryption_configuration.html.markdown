@@ -12,6 +12,8 @@ description: |-
 
 Provides a S3 bucket server-side encryption configuration resource.
 
+~> **NOTE:** Destroying an `awsS3BucketServerSideEncryptionConfiguration` resource resets the bucket to [Amazon S3 bucket default encryption](https://docs.aws.amazon.com/AmazonS3/latest/userguide/default-encryption-faq.html).
+
 ## Example Usage
 
 ```typescript
@@ -70,7 +72,7 @@ The `rule` configuration block supports the following arguments:
 
 The `applyServerSideEncryptionByDefault` configuration block supports the following arguments:
 
-* `sseAlgorithm` - (Required) Server-side encryption algorithm to use. Valid values are `aes256` and `aws:kms`
+* `sseAlgorithm` - (Required) Server-side encryption algorithm to use. Valid values are `aes256`, `aws:kms`, and `aws:kms:dsse`
 * `kmsMasterKeyId` - (Optional) AWS KMS master key ID used for the SSE-KMS encryption. This can only be used when you set the value of `sseAlgorithm` as `aws:kms`. The default `aws/s3` AWS KMS master key is used if this element is absent while the `sseAlgorithm` is `aws:kms`.
 
 ## Attribute Reference
@@ -125,4 +127,4 @@ If the owner (account ID) of the source bucket differs from the account used to 
 % terraform import aws_s3_bucket_server_side_encryption_configuration.example bucket-name,123456789012
 ```
 
-<!-- cache-key: cdktf-0.17.1 input-f200d05bb5d517fe6ea306efdb69b56bced818f3af1fbb66cf1579a33f8a6f75 -->
+<!-- cache-key: cdktf-0.17.1 input-20fc65b1b77aa12edd3562b565214ad5b0b456226cc87c90a6ba2cfb792b9ea9 -->
