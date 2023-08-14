@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package backup_test
 
 import (
@@ -6,9 +9,9 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/backup"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfbackup "github.com/hashicorp/terraform-provider-aws/internal/service/backup"
@@ -312,7 +315,7 @@ func TestAccBackupReportPlan_disappears(t *testing.T) {
 }
 
 func testAccReportPlanPreCheck(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).BackupConn()
+	conn := acctest.Provider.Meta().(*conns.AWSClient).BackupConn(ctx)
 
 	_, err := conn.ListReportPlansWithContext(ctx, &backup.ListReportPlansInput{})
 
@@ -327,7 +330,7 @@ func testAccReportPlanPreCheck(ctx context.Context, t *testing.T) {
 
 func testAccCheckReportPlanDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).BackupConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).BackupConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_backup_report_plan" {
@@ -362,7 +365,7 @@ func testAccCheckReportPlanExists(ctx context.Context, n string, v *backup.Repor
 			return fmt.Errorf("No Backup Report Plan ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).BackupConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).BackupConn(ctx)
 
 		output, err := tfbackup.FindReportPlanByName(ctx, conn, rs.Primary.ID)
 

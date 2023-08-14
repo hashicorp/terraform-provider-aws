@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package configservice
 
 import (
@@ -7,11 +10,5 @@ import (
 )
 
 func validExecutionFrequency() schema.SchemaValidateFunc {
-	return validation.StringInSlice([]string{
-		configservice.MaximumExecutionFrequencyOneHour,
-		configservice.MaximumExecutionFrequencyThreeHours,
-		configservice.MaximumExecutionFrequencySixHours,
-		configservice.MaximumExecutionFrequencyTwelveHours,
-		configservice.MaximumExecutionFrequencyTwentyFourHours,
-	}, false)
+	return validation.StringInSlice(configservice.MaximumExecutionFrequency_Values(), false)
 }

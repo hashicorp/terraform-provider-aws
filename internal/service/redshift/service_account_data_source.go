@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package redshift
 
 import (
@@ -59,6 +62,8 @@ func DataSourceServiceAccount() *schema.Resource {
 				Computed: true,
 			},
 		},
+
+		DeprecationMessage: `The aws_redshift_service_account data source has been deprecated and will be removed in a future version. Use a service principal name instead of AWS account ID in any relevant IAM policy.`,
 	}
 }
 

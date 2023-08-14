@@ -1,9 +1,13 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package flex
 
 import (
 	"fmt"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -14,14 +18,41 @@ const (
 	ResourceIdSeparator = ","
 )
 
-// Takes the result of flatmap.Expand for an array of strings
-// and returns a []*string
+// ExpandStringList the result of flatmap.Expand for an array of strings
+// and returns a []*string. Empty strings are skipped.
 func ExpandStringList(configured []interface{}) []*string {
 	vs := make([]*string, 0, len(configured))
 	for _, v := range configured {
+		if v, ok := v.(string); ok && v != "" { // v != "" may not do anything since in []interface{}, empty string will be nil so !ok
+			vs = append(vs, aws.String(v))
+		}
+	}
+	return vs
+}
+
+// ExpandStringListEmpty the result of flatmap. Expand for an array of strings
+// and returns a []*string. Adds an empty element for every nil or uncastable.
+func ExpandStringListEmpty(configured []interface{}) []*string {
+	vs := make([]*string, 0, len(configured))
+	for _, v := range configured {
+		if v, ok := v.(string); ok { // empty string in config turns into nil in []interface{} so !ok
+			vs = append(vs, aws.String(v))
+		} else {
+			vs = append(vs, aws.String(""))
+		}
+	}
+	return vs
+}
+
+// Takes the result of flatmap.Expand for an array of strings
+// and returns a []*time.Time
+func ExpandStringTimeList(configured []interface{}, format string) []*time.Time {
+	vs := make([]*time.Time, 0, len(configured))
+	for _, v := range configured {
 		val, ok := v.(string)
 		if ok && val != "" {
-			vs = append(vs, aws.String(v.(string)))
+			t, _ := time.Parse(format, v.(string))
+			vs = append(vs, aws.Time(t))
 		}
 	}
 	return vs
@@ -54,7 +85,17 @@ func FlattenStringList(list []*string) []interface{} {
 	return vs
 }
 
-// Takes list of pointers to strings. Expand to an array
+// Takes list of pointers to time.Time. Expand to an array
+// of strings and returns a []interface{}
+func FlattenTimeStringList(list []*time.Time, format string) []interface{} {
+	vs := make([]interface{}, 0, len(list))
+	for _, v := range list {
+		vs = append(vs, v.Format(format))
+	}
+	return vs
+}
+
+// Takes list of strings. Expand to an array
 // of raw strings and returns a []interface{}
 // to keep compatibility w/ schema.NewSetschema.NewSet
 func FlattenStringValueList(list []string) []interface{} {
@@ -150,6 +191,16 @@ func ExpandInt64List(configured []interface{}) []*int64 {
 	return vs
 }
 
+// Takes the result of flatmap.Expand for an array of float64
+// and returns a []*float64
+func ExpandFloat64List(configured []interface{}) []*float64 {
+	vs := make([]*float64, 0, len(configured))
+	for _, v := range configured {
+		vs = append(vs, aws.Float64(v.(float64)))
+	}
+	return vs
+}
+
 // Takes list of pointers to int64s. Expand to an array
 // of raw ints and returns a []interface{}
 // to keep compatibility w/ schema.NewSet
@@ -157,6 +208,17 @@ func FlattenInt64List(list []*int64) []interface{} {
 	vs := make([]interface{}, 0, len(list))
 	for _, v := range list {
 		vs = append(vs, int(aws.Int64Value(v)))
+	}
+	return vs
+}
+
+// Takes list of pointers to float64s. Expand to an array
+// of raw floats and returns a []interface{}
+// to keep compatibility w/ schema.NewSet
+func FlattenFloat64List(list []*float64) []interface{} {
+	vs := make([]interface{}, 0, len(list))
+	for _, v := range list {
+		vs = append(vs, int(aws.Float64Value(v)))
 	}
 	return vs
 }
@@ -169,9 +231,9 @@ func PointersMapToStringList(pointers map[string]*string) map[string]interface{}
 	return list
 }
 
-// Takes a string of resource attributes separated by the ResourceIdSeparator constant and an expected number of Id Parts
+// Takes a string of resource attributes separated by the ResourceIdSeparator constant, an expected number of Id Parts, and a boolean specifying if empty parts are to be allowed
 // Returns a list of the resource attributes strings used to construct the unique Id or an error message if the resource id does not parse properly
-func ExpandResourceId(id string, partCount int) ([]string, error) {
+func ExpandResourceId(id string, partCount int, allowEmptyPart bool) ([]string, error) {
 	idParts := strings.Split(id, ResourceIdSeparator)
 
 	if len(idParts) <= 1 {
@@ -182,25 +244,26 @@ func ExpandResourceId(id string, partCount int) ([]string, error) {
 		return nil, fmt.Errorf("unexpected format for ID (%s), expected (%d) parts separated by (%s)", id, partCount, ResourceIdSeparator)
 	}
 
-	var emptyPart bool
-	emptyParts := make([]int, 0, partCount)
-	for index, part := range idParts {
-		if part == "" {
-			emptyPart = true
-			emptyParts = append(emptyParts, index)
+	if !allowEmptyPart {
+		var emptyPart bool
+		emptyParts := make([]int, 0, partCount)
+		for index, part := range idParts {
+			if part == "" {
+				emptyPart = true
+				emptyParts = append(emptyParts, index)
+			}
+		}
+
+		if emptyPart {
+			return nil, fmt.Errorf("unexpected format for ID (%[1]s), the following id parts indexes are blank (%v)", id, emptyParts)
 		}
 	}
-
-	if emptyPart {
-		return nil, fmt.Errorf("unexpected format for ID (%[1]s), the following id parts indexes are blank (%v)", id, emptyParts)
-	}
-
 	return idParts, nil
 }
 
-// Takes a list of the resource attributes as strings used to construct the unique Id and an expected number of Id Parts
+// Takes a list of the resource attributes as strings used to construct the unique Id, an expected number of Id Parts, and a boolean specifying if empty parts are to be allowed
 // Returns a string of resource attributes separated by the ResourceIdSeparator constant or an error message if the id parts do not parse properly
-func FlattenResourceId(idParts []string, partCount int) (string, error) {
+func FlattenResourceId(idParts []string, partCount int, allowEmptyPart bool) (string, error) {
 	if len(idParts) <= 1 {
 		return "", fmt.Errorf("unexpected format for ID parts (%v), expected more than one part", idParts)
 	}
@@ -209,17 +272,19 @@ func FlattenResourceId(idParts []string, partCount int) (string, error) {
 		return "", fmt.Errorf("unexpected format for ID parts (%v), expected (%d) parts", idParts, partCount)
 	}
 
-	var emptyPart bool
-	emptyParts := make([]int, 0, len(idParts))
-	for index, part := range idParts {
-		if part == "" {
-			emptyPart = true
-			emptyParts = append(emptyParts, index)
+	if !allowEmptyPart {
+		var emptyPart bool
+		emptyParts := make([]int, 0, len(idParts))
+		for index, part := range idParts {
+			if part == "" {
+				emptyPart = true
+				emptyParts = append(emptyParts, index)
+			}
 		}
-	}
 
-	if emptyPart {
-		return "", fmt.Errorf("unexpected format for ID parts (%v), the following id parts indexes are blank (%v)", idParts, emptyParts)
+		if emptyPart {
+			return "", fmt.Errorf("unexpected format for ID parts (%v), the following id parts indexes are blank (%v)", idParts, emptyParts)
+		}
 	}
 
 	return strings.Join(idParts, ResourceIdSeparator), nil
@@ -229,4 +294,29 @@ func FlattenResourceId(idParts []string, partCount int) (string, error) {
 // Only the string "true" is converted to true, all other values return false.
 func StringToBoolValue(v *string) bool {
 	return aws.StringValue(v) == strconv.FormatBool(true)
+}
+
+// Takes a string of resource attributes separated by the ResourceIdSeparator constant
+// returns the number of parts
+func ResourceIdPartCount(id string) int {
+	idParts := strings.Split(id, ResourceIdSeparator)
+	return len(idParts)
+}
+
+type Set[T comparable] []T
+
+// Difference find the elements in two sets that are not similar.
+func (s Set[T]) Difference(ns Set[T]) Set[T] {
+	m := make(map[T]struct{})
+	for _, v := range ns {
+		m[v] = struct{}{}
+	}
+
+	var result []T
+	for _, v := range s {
+		if _, ok := m[v]; !ok {
+			result = append(result, v)
+		}
+	}
+	return result
 }

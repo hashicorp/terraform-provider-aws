@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package controltower
 
 import (
@@ -32,7 +35,7 @@ func DataSourceControls() *schema.Resource {
 }
 
 func DataSourceControlsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ControlTowerConn()
+	conn := meta.(*conns.AWSClient).ControlTowerConn(ctx)
 
 	targetIdentifier := d.Get("target_identifier").(string)
 	input := &controltower.ListEnabledControlsInput{

@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package datasync_test
 
 import (
@@ -9,9 +12,9 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/datasync"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfdatasync "github.com/hashicorp/terraform-provider-aws/internal/service/datasync"
@@ -48,6 +51,7 @@ func TestAccDataSyncTask_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "options.0.gid", "INT_VALUE"),
 					resource.TestCheckResourceAttr(resourceName, "options.0.log_level", "OFF"),
 					resource.TestCheckResourceAttr(resourceName, "options.0.mtime", "PRESERVE"),
+					resource.TestCheckResourceAttr(resourceName, "options.0.object_tags", "PRESERVE"),
 					resource.TestCheckResourceAttr(resourceName, "options.0.overwrite_mode", "ALWAYS"),
 					resource.TestCheckResourceAttr(resourceName, "options.0.posix_permissions", "PRESERVE"),
 					resource.TestCheckResourceAttr(resourceName, "options.0.preserve_deleted_files", "PRESERVE"),
@@ -392,6 +396,44 @@ func TestAccDataSyncTask_DefaultSyncOptions_logLevel(t *testing.T) {
 					testAccCheckTaskNotRecreated(&task1, &task2),
 					resource.TestCheckResourceAttr(resourceName, "options.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "options.0.log_level", "BASIC"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccDataSyncTask_DefaultSyncOptions_objectTags(t *testing.T) {
+	ctx := acctest.Context(t)
+	var task1, task2 datasync.DescribeTaskOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_datasync_task.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, datasync.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTaskDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTaskConfig_defaultSyncOptionsObjectTags(rName, "NONE"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckTaskExists(ctx, resourceName, &task1),
+					resource.TestCheckResourceAttr(resourceName, "options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "options.0.object_tags", "NONE"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccTaskConfig_defaultSyncOptionsObjectTags(rName, "PRESERVE"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckTaskExists(ctx, resourceName, &task2),
+					testAccCheckTaskNotRecreated(&task1, &task2),
+					resource.TestCheckResourceAttr(resourceName, "options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "options.0.object_tags", "PRESERVE"),
 				),
 			},
 		},
@@ -806,7 +848,7 @@ func TestAccDataSyncTask_tags(t *testing.T) {
 
 func testAccCheckTaskDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DataSyncConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DataSyncConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_datasync_task" {
@@ -837,7 +879,7 @@ func testAccCheckTaskExists(ctx context.Context, resourceName string, task *data
 			return fmt.Errorf("Not found: %s", resourceName)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DataSyncConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DataSyncConn(ctx)
 
 		output, err := tfdatasync.FindTaskByARN(ctx, conn, rs.Primary.ID)
 
@@ -867,7 +909,7 @@ func testAccCheckTaskNotRecreated(i, j *datasync.DescribeTaskOutput) resource.Te
 }
 
 func testAccPreCheck(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).DataSyncConn()
+	conn := acctest.Provider.Meta().(*conns.AWSClient).DataSyncConn(ctx)
 
 	input := &datasync.ListTasksInput{
 		MaxResults: aws.Int64(1),
@@ -1232,6 +1274,23 @@ resource "aws_datasync_task" "test" {
   }
 }
 `, rName, logLevel))
+}
+
+func testAccTaskConfig_defaultSyncOptionsObjectTags(rName, objectTags string) string {
+	return acctest.ConfigCompose(
+		testAccTaskConfig_baseLocationS3(rName),
+		testAccTaskConfig_baseLocationNFS(rName),
+		fmt.Sprintf(`
+resource "aws_datasync_task" "test" {
+  destination_location_arn = aws_datasync_location_s3.test.arn
+  name                     = %[1]q
+  source_location_arn      = aws_datasync_location_nfs.test.arn
+
+  options {
+    object_tags = %[2]q
+  }
+}
+`, rName, objectTags))
 }
 
 func testAccTaskConfig_defaultSyncOptionsOverwriteMode(rName, overwriteMode string) string {

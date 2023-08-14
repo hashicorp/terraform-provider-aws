@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package elasticbeanstalk_test
 
 import (
@@ -11,9 +14,9 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/elasticbeanstalk"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfelasticbeanstalk "github.com/hashicorp/terraform-provider-aws/internal/service/elasticbeanstalk"
@@ -468,7 +471,7 @@ func TestAccElasticBeanstalkEnvironment_platformARN(t *testing.T) {
 
 func testAccCheckEnvironmentDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ElasticBeanstalkConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ElasticBeanstalkConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_elastic_beanstalk_environment" {
@@ -503,7 +506,7 @@ func testAccCheckEnvironmentExists(ctx context.Context, n string, v *elasticbean
 			return fmt.Errorf("No Elastic Beanstalk Environment ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ElasticBeanstalkConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ElasticBeanstalkConn(ctx)
 
 		output, err := tfelasticbeanstalk.FindEnvironmentByID(ctx, conn, rs.Primary.ID)
 
@@ -522,7 +525,7 @@ func testAccVerifyConfig(ctx context.Context, env *elasticbeanstalk.EnvironmentD
 		if env == nil {
 			return fmt.Errorf("Nil environment in testAccVerifyConfig")
 		}
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ElasticBeanstalkConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ElasticBeanstalkConn(ctx)
 
 		resp, err := conn.DescribeConfigurationSettingsWithContext(ctx, &elasticbeanstalk.DescribeConfigurationSettingsInput{
 			ApplicationName: env.ApplicationName,
@@ -571,7 +574,7 @@ func testAccVerifyConfig(ctx context.Context, env *elasticbeanstalk.EnvironmentD
 
 func testAccCheckEnvironmentConfigValue(ctx context.Context, n string, expectedValue string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ElasticBeanstalkConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ElasticBeanstalkConn(ctx)
 
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {

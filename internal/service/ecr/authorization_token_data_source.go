@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ecr
 
 import (
@@ -53,7 +56,7 @@ func DataSourceAuthorizationToken() *schema.Resource {
 
 func dataSourceAuthorizationTokenRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ECRConn()
+	conn := meta.(*conns.AWSClient).ECRConn(ctx)
 	params := &ecr.GetAuthorizationTokenInput{}
 	if v, ok := d.GetOk("registry_id"); ok {
 		params.RegistryIds = []*string{aws.String(v.(string))}

@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ec2
 
 import (
@@ -23,7 +26,7 @@ func DataSourceInstanceTypeOffering() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"filter": DataSourceFiltersSchema(),
+			"filter": CustomFiltersSchema(),
 			"instance_type": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -44,12 +47,12 @@ func DataSourceInstanceTypeOffering() *schema.Resource {
 
 func dataSourceInstanceTypeOfferingRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	input := &ec2.DescribeInstanceTypeOfferingsInput{}
 
 	if v, ok := d.GetOk("filter"); ok {
-		input.Filters = BuildFiltersDataSource(v.(*schema.Set))
+		input.Filters = BuildCustomFilterList(v.(*schema.Set))
 	}
 
 	if v, ok := d.GetOk("location_type"); ok {

@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package dms_test
 
 import (
@@ -7,9 +10,9 @@ import (
 	"testing"
 
 	dms "github.com/aws/aws-sdk-go/service/databasemigrationservice"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfdms "github.com/hashicorp/terraform-provider-aws/internal/service/dms"
@@ -141,7 +144,7 @@ func TestAccDMSEndpoint_Aurora_update(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "password", "tftest-new-password"),
 					resource.TestCheckResourceAttr(resourceName, "database_name", "tftest-new-database_name"),
 					resource.TestCheckResourceAttr(resourceName, "ssl_mode", "none"),
-					resource.TestMatchResourceAttr(resourceName, "extra_connection_attributes", regexp.MustCompile(`key=value;`)),
+					resource.TestMatchResourceAttr(resourceName, "extra_connection_attributes", regexp.MustCompile(`EventsPollInterval=40;`)),
 				),
 			},
 			{
@@ -237,7 +240,7 @@ func TestAccDMSEndpoint_AuroraPostgreSQL_update(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "password", "tftest-new-password"),
 					resource.TestCheckResourceAttr(resourceName, "database_name", "tftest-new-database_name"),
 					resource.TestCheckResourceAttr(resourceName, "ssl_mode", "require"),
-					resource.TestMatchResourceAttr(resourceName, "extra_connection_attributes", regexp.MustCompile(`key=value;`)),
+					resource.TestMatchResourceAttr(resourceName, "extra_connection_attributes", regexp.MustCompile(`ExecuteTimeout=1000;`)),
 				),
 			},
 			{
@@ -1009,7 +1012,7 @@ func TestAccDMSEndpoint_MariaDB_update(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "password", "tftest-new-password"),
 					resource.TestCheckResourceAttr(resourceName, "database_name", "tftest-new-database_name"),
 					resource.TestCheckResourceAttr(resourceName, "ssl_mode", "none"),
-					resource.TestMatchResourceAttr(resourceName, "extra_connection_attributes", regexp.MustCompile(`key=value;`)),
+					resource.TestMatchResourceAttr(resourceName, "extra_connection_attributes", regexp.MustCompile(`EventsPollInterval=30;`)),
 				),
 			},
 			{
@@ -1305,7 +1308,7 @@ func TestAccDMSEndpoint_PostgreSQL_update(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "password", "tftest-new-password"),
 					resource.TestCheckResourceAttr(resourceName, "database_name", "tftest-new-database_name"),
 					resource.TestCheckResourceAttr(resourceName, "ssl_mode", "require"),
-					resource.TestMatchResourceAttr(resourceName, "extra_connection_attributes", regexp.MustCompile(`key=value;`)),
+					resource.TestMatchResourceAttr(resourceName, "extra_connection_attributes", regexp.MustCompile(`HeartbeatFrequency=180;`)),
 				),
 			},
 			{
@@ -1425,7 +1428,47 @@ func TestAccDMSEndpoint_SQLServer_update(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "password", "tftest-new-password"),
 					resource.TestCheckResourceAttr(resourceName, "database_name", "tftest-new-database_name"),
 					resource.TestCheckResourceAttr(resourceName, "ssl_mode", "require"),
-					resource.TestMatchResourceAttr(resourceName, "extra_connection_attributes", regexp.MustCompile(`key=value;`)),
+					resource.TestMatchResourceAttr(resourceName, "extra_connection_attributes", regexp.MustCompile(`TlogAccessMode=PreferTlog;`)),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"password"},
+			},
+		},
+	})
+}
+
+func TestAccDMSEndpoint_babelfish(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName := "aws_dms_endpoint.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, dms.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckEndpointDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccEndpointConfig_babelfish(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckEndpointExists(ctx, resourceName),
+					resource.TestCheckResourceAttrSet(resourceName, "endpoint_arn"),
+				),
+			},
+			{
+				Config: testAccEndpointConfig_babelfishUpdate(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckEndpointExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "server_name", "tftest-new-server_name"),
+					resource.TestCheckResourceAttr(resourceName, "port", "27018"),
+					resource.TestCheckResourceAttr(resourceName, "username", "tftest-new-username"),
+					resource.TestCheckResourceAttr(resourceName, "password", "tftest-new-password"),
+					resource.TestCheckResourceAttr(resourceName, "database_name", "tftest-new-database_name"),
+					resource.TestCheckResourceAttr(resourceName, "ssl_mode", "require"),
 				),
 			},
 			{
@@ -1671,6 +1714,47 @@ func TestAccDMSEndpoint_db2_basic(t *testing.T) {
 	})
 }
 
+func TestAccDMSEndpoint_db2zOS_basic(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName := "aws_dms_endpoint.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, dms.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckEndpointDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccEndpointConfig_db2zOS(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckEndpointExists(ctx, resourceName),
+					resource.TestCheckResourceAttrSet(resourceName, "endpoint_arn"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"password"},
+			},
+			{
+				Config: testAccEndpointConfig_db2zOSUpdate(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckEndpointExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "database_name", "tf-test-dms-db-updated"),
+					resource.TestCheckResourceAttr(resourceName, "extra_connection_attributes", "extra"),
+					resource.TestCheckResourceAttr(resourceName, "password", "tftestupdate"),
+					resource.TestCheckResourceAttr(resourceName, "port", "27019"),
+					resource.TestCheckResourceAttr(resourceName, "ssl_mode", "none"),
+					resource.TestCheckResourceAttr(resourceName, "server_name", "tftestupdate"),
+					resource.TestCheckResourceAttr(resourceName, "username", "tftestupdate"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccDMSEndpoint_azureSQLManagedInstance(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_dms_endpoint.test"
@@ -1725,6 +1809,33 @@ func TestAccDMSEndpoint_db2_secretID(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEndpointConfig_db2SecretID(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckEndpointExists(ctx, resourceName),
+					resource.TestCheckResourceAttrSet(resourceName, "endpoint_arn"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccDMSEndpoint_db2zOS_secretID(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName := "aws_dms_endpoint.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, dms.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckEndpointDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccEndpointConfig_db2zOSSecretID(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckEndpointExists(ctx, resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "endpoint_arn"),
@@ -2008,7 +2119,7 @@ func testAccCheckResourceAttrRegionalHostname(resourceName, attributeName, servi
 
 func testAccCheckEndpointDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DMSConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DMSConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_dms_endpoint" {
@@ -2043,7 +2154,7 @@ func testAccCheckEndpointExists(ctx context.Context, n string) resource.TestChec
 			return fmt.Errorf("No DMS Endpoint ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DMSConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DMSConn(ctx)
 
 		_, err := tfdms.FindEndpointByID(ctx, conn, rs.Primary.ID)
 
@@ -2203,7 +2314,7 @@ resource "aws_dms_endpoint" "test" {
   password                    = "tftest-new-password"
   database_name               = "tftest-new-database_name"
   ssl_mode                    = "none"
-  extra_connection_attributes = "key=value;"
+  extra_connection_attributes = "EventsPollInterval=40;"
 
   tags = {
     Name   = %[1]q
@@ -2271,7 +2382,51 @@ resource "aws_dms_endpoint" "test" {
   password                    = "tftest-new-password"
   database_name               = "tftest-new-database_name"
   ssl_mode                    = "require"
-  extra_connection_attributes = "key=value;"
+  extra_connection_attributes = "ExecuteTimeout=1000;"
+
+  tags = {
+    Name   = %[1]q
+    Update = "updated"
+    Add    = "added"
+  }
+}
+`, rName)
+}
+
+func testAccEndpointConfig_babelfish(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_dms_endpoint" "test" {
+  endpoint_id   = %[1]q
+  endpoint_type = "target"
+  engine_name   = "babelfish"
+  server_name   = "tftest"
+  port          = 27017
+  username      = "tftest"
+  password      = "tftest"
+  database_name = "tftest"
+  ssl_mode      = "none"
+
+  tags = {
+    Name   = %[1]q
+    Update = "to-update"
+    Remove = "to-remove"
+  }
+}
+`, rName)
+}
+
+func testAccEndpointConfig_babelfishUpdate(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_dms_endpoint" "test" {
+  endpoint_id   = %[1]q
+  endpoint_type = "target"
+  engine_name   = "babelfish"
+  server_name   = "tftest-new-server_name"
+  port          = 27018
+  username      = "tftest-new-username"
+  password      = "tftest-new-password"
+  database_name = "tftest-new-database_name"
+  ssl_mode      = "require"
 
   tags = {
     Name   = %[1]q
@@ -3391,7 +3546,7 @@ resource "aws_dms_endpoint" "test" {
   password                    = "tftest-new-password"
   database_name               = "tftest-new-database_name"
   ssl_mode                    = "none"
-  extra_connection_attributes = "key=value;"
+  extra_connection_attributes = "EventsPollInterval=30;"
 
   tags = {
     Name   = %[1]q
@@ -3590,7 +3745,7 @@ resource "aws_dms_endpoint" "test" {
   password                    = "tftest-new-password"
   database_name               = "tftest-new-database_name"
   ssl_mode                    = "require"
-  extra_connection_attributes = "key=value;"
+  extra_connection_attributes = "HeartbeatFrequency=180;"
 
   tags = {
     Name   = %[1]q
@@ -3636,7 +3791,7 @@ resource "aws_dms_endpoint" "test" {
   password                    = "tftest-new-password"
   database_name               = "tftest-new-database_name"
   ssl_mode                    = "require"
-  extra_connection_attributes = "key=value;"
+  extra_connection_attributes = "TlogAccessMode=PreferTlog;"
 
   tags = {
     Name   = %[1]q
@@ -3836,6 +3991,76 @@ resource "aws_dms_endpoint" "test" {
   endpoint_id                 = %[1]q
   endpoint_type               = "source"
   engine_name                 = "db2"
+  extra_connection_attributes = "extra"
+  password                    = "tftestupdate"
+  port                        = 27019
+  server_name                 = "tftestupdate"
+  ssl_mode                    = "none"
+
+  tags = {
+    Name   = %[1]q
+    Update = "updated"
+    Add    = "added"
+  }
+
+  username = "tftestupdate"
+}
+`, rName)
+}
+
+func testAccEndpointConfig_db2zOS(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_dms_endpoint" "test" {
+  database_name               = "tf-test-dms-db"
+  endpoint_id                 = %[1]q
+  endpoint_type               = "source"
+  engine_name                 = "db2-zos"
+  extra_connection_attributes = ""
+  password                    = "tftest"
+  port                        = 27017
+  server_name                 = "tftest"
+  ssl_mode                    = "none"
+
+  tags = {
+    Name   = %[1]q
+    Update = "to-update"
+    Remove = "to-remove"
+  }
+
+  username = "tftest"
+}
+`, rName)
+}
+
+func testAccEndpointConfig_db2zOSSecretID(rName string) string {
+	return acctest.ConfigCompose(testAccEndpointConfig_secretBase(rName), fmt.Sprintf(`
+resource "aws_dms_endpoint" "test" {
+  endpoint_id                     = %[1]q
+  endpoint_type                   = "source"
+  engine_name                     = "db2-zos"
+  secrets_manager_access_role_arn = aws_iam_role.test.arn
+  secrets_manager_arn             = aws_secretsmanager_secret.test.id
+
+  database_name               = "tftest"
+  ssl_mode                    = "none"
+  extra_connection_attributes = ""
+
+  tags = {
+    Name   = %[1]q
+    Update = "to-update"
+    Remove = "to-remove"
+  }
+}
+`, rName))
+}
+
+func testAccEndpointConfig_db2zOSUpdate(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_dms_endpoint" "test" {
+  database_name               = "tf-test-dms-db-updated"
+  endpoint_id                 = %[1]q
+  endpoint_type               = "source"
+  engine_name                 = "db2-zos"
   extra_connection_attributes = "extra"
   password                    = "tftestupdate"
   port                        = 27019

@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ec2_test
 
 import (
@@ -8,9 +11,9 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/ec2"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/experimental/sync"
@@ -61,11 +64,9 @@ func TestAccClientVPNEndpoint_serial(t *testing.T) {
 			"disappearsEndpoint": testAccClientVPNAuthorizationRule_Disappears_endpoint,
 		},
 		"NetworkAssociation": {
-			"basic":                    testAccClientVPNNetworkAssociation_basic,
-			"multipleSubnets":          testAccClientVPNNetworkAssociation_multipleSubnets,
-			"disappears":               testAccClientVPNNetworkAssociation_disappears,
-			"securityGroups":           testAccClientVPNNetworkAssociation_securityGroups,
-			"securityGroupsOnEndpoint": testAccClientVPNNetworkAssociation_securityGroupsOnEndpoint,
+			"basic":           testAccClientVPNNetworkAssociation_basic,
+			"multipleSubnets": testAccClientVPNNetworkAssociation_multipleSubnets,
+			"disappears":      testAccClientVPNNetworkAssociation_disappears,
 		},
 		"Route": {
 			"basic":       testAccClientVPNRoute_basic,
@@ -129,7 +130,6 @@ func testAccClientVPNEndpoint_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "server_certificate_arn"),
 					resource.TestCheckResourceAttr(resourceName, "session_timeout_hours", "24"),
 					resource.TestCheckResourceAttr(resourceName, "split_tunnel", "false"),
-					resource.TestCheckResourceAttr(resourceName, "status", ec2.ClientVpnEndpointStatusCodePendingAssociate),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Name", rName),
 					resource.TestCheckResourceAttr(resourceName, "transport_protocol", "udp"),
@@ -725,7 +725,7 @@ func testAccPreCheckClientVPNSyncronize(t *testing.T) {
 
 func testAccCheckClientVPNEndpointDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_client_vpn_endpoint" {
@@ -759,7 +759,7 @@ func testAccCheckClientVPNEndpointExists(ctx context.Context, name string, v *ec
 			return fmt.Errorf("No EC2 Client VPN Endpoint ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
 
 		output, err := tfec2.FindClientVPNEndpointByID(ctx, conn, rs.Primary.ID)
 

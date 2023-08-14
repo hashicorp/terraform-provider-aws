@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package verify
 
 import (
@@ -16,12 +19,16 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/types/timestamp"
 )
 
 var accountIDRegexp = regexp.MustCompile(`^(aws|aws-managed|third-party|\d{12}|cw.{10})$`)
 var partitionRegexp = regexp.MustCompile(`^aws(-[a-z]+)*$`)
 var regionRegexp = regexp.MustCompile(`^[a-z]{2}(-[a-z]+)+-\d$`)
+
+// validates all listed in https://gist.github.com/shortjared/4c1e3fe52bdfa47522cfe5b41e5d6f22
+var servicePrincipalRegexp = regexp.MustCompile(`^([a-z0-9-]+\.){1,4}(amazonaws|amazon)\.com$`)
 
 func Valid4ByteASN(v interface{}, k string) (ws []string, errors []error) {
 	value := v.(string)
@@ -133,26 +140,10 @@ func ValidAccountID(v interface{}, k string) (ws []string, errors []error) {
 	return
 }
 
-// ValidateCIDRBlock validates that the specified CIDR block is valid:
-// - The CIDR block parses to an IP address and network
-// - The CIDR block is the CIDR block for the network
-func ValidateCIDRBlock(cidr string) error {
-	_, ipnet, err := net.ParseCIDR(cidr)
-	if err != nil {
-		return fmt.Errorf("%q is not a valid CIDR block: %w", cidr, err)
-	}
-
-	if !CIDRBlocksEqual(cidr, ipnet.String()) {
-		return fmt.Errorf("%q is not a valid CIDR block; did you mean %q?", cidr, ipnet)
-	}
-
-	return nil
-}
-
 // ValidCIDRNetworkAddress ensures that the string value is a valid CIDR that
 // represents a network address - it adds an error otherwise
 func ValidCIDRNetworkAddress(v interface{}, k string) (ws []string, errors []error) {
-	if err := ValidateCIDRBlock(v.(string)); err != nil {
+	if err := types.ValidateCIDRBlock(v.(string)); err != nil {
 		errors = append(errors, err)
 		return
 	}
@@ -217,7 +208,7 @@ func ValidateIPv4CIDRBlock(cidr string) error {
 		return fmt.Errorf("%q is not a valid IPv4 CIDR block", cidr)
 	}
 
-	if !CIDRBlocksEqual(cidr, ipnet.String()) {
+	if !types.CIDRBlocksEqual(cidr, ipnet.String()) {
 		return fmt.Errorf("%q is not a valid IPv4 CIDR block; did you mean %q?", cidr, ipnet)
 	}
 
@@ -239,7 +230,7 @@ func ValidateIPv6CIDRBlock(cidr string) error {
 		return fmt.Errorf("%q is not a valid IPv6 CIDR block", cidr)
 	}
 
-	if !CIDRBlocksEqual(cidr, ipnet.String()) {
+	if !types.CIDRBlocksEqual(cidr, ipnet.String()) {
 		return fmt.Errorf("%q is not a valid IPv6 CIDR block; did you mean %q?", cidr, ipnet)
 	}
 
@@ -490,4 +481,22 @@ func ValidAnyDiag(validators ...schema.SchemaValidateDiagFunc) schema.SchemaVali
 		}
 		return results
 	}
+}
+
+func ValidServicePrincipal(v interface{}, k string) (ws []string, errors []error) {
+	value := v.(string)
+
+	if value == "" {
+		return ws, errors
+	}
+
+	if !IsServicePrincipal(value) {
+		errors = append(errors, fmt.Errorf("%q (%s) is an invalid Service Principal: invalid prefix value (expecting to match regular expression: %s)", k, value, servicePrincipalRegexp))
+	}
+
+	return ws, errors
+}
+
+func IsServicePrincipal(value string) (valid bool) {
+	return servicePrincipalRegexp.MatchString(value)
 }

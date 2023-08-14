@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ssm_test
 
 import (
@@ -10,9 +13,9 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ssm"
 	"github.com/aws/aws-sdk-go-v2/service/ssm/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
@@ -332,7 +335,7 @@ func testAccSSMDefaultPatchBaseline_multiRegion(t *testing.T) {
 
 func testAccCheckDefaultPatchBaselineDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SSMClient()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SSMClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_ssm_default_patch_baseline" {
@@ -375,7 +378,7 @@ func testAccCheckDefaultPatchBaselineExists(ctx context.Context, name string, de
 			return create.Error(names.SSM, create.ErrActionCheckingExistence, tfssm.ResNameDefaultPatchBaseline, name, errors.New("not set"))
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SSMClient()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SSMClient(ctx)
 
 		resp, err := tfssm.FindDefaultPatchBaseline(ctx, conn, types.OperatingSystem(rs.Primary.ID))
 		if err != nil {

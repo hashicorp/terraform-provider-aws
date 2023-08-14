@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package neptune_test
 
 import (
@@ -10,9 +13,9 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/neptune"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfneptune "github.com/hashicorp/terraform-provider-aws/internal/service/neptune"
@@ -319,7 +322,7 @@ func testAccCheckGlobalClusterExists(ctx context.Context, n string, v *neptune.G
 			return fmt.Errorf("No Neptune Global Cluster ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).NeptuneConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).NeptuneConn(ctx)
 
 		output, err := tfneptune.FindGlobalClusterByID(ctx, conn, rs.Primary.ID)
 
@@ -335,7 +338,7 @@ func testAccCheckGlobalClusterExists(ctx context.Context, n string, v *neptune.G
 
 func testAccCheckGlobalClusterDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).NeptuneConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).NeptuneConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_neptune_global_cluster" {
@@ -380,7 +383,7 @@ func testAccCheckGlobalClusterRecreated(i, j *neptune.GlobalCluster) resource.Te
 }
 
 func testAccPreCheckGlobalCluster(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).NeptuneConn()
+	conn := acctest.Provider.Meta().(*conns.AWSClient).NeptuneConn(ctx)
 
 	input := &neptune.DescribeGlobalClustersInput{}
 

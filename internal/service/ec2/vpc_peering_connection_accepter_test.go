@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ec2_test
 
 import (
@@ -5,10 +8,10 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/ec2"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
@@ -331,7 +334,9 @@ resource "aws_vpc_peering_connection_accepter" "peer" {
 }
 
 func testAccVPCPeeringConnectionAccepterConfig_differentRegionDifferentAccount(rName string) string {
-	return acctest.ConfigCompose(testAccAlternateAccountAlternateRegionProviderConfig(), fmt.Sprintf(`
+	return acctest.ConfigCompose(
+		acctest.ConfigAlternateAccountAlternateRegionProvider(),
+		fmt.Sprintf(`
 resource "aws_vpc" "main" {
   cidr_block = "10.0.0.0/16"
 

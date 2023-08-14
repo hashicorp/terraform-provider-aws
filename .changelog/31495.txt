@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/aws_instance: Add `instance_market_options` configuration block and `instance_lifecycle` and `spot_instance_request_id` attributes
+```

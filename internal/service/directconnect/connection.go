@@ -1,9 +1,13 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package directconnect
 
 import (
 	"context"
 	"fmt"
 	"log"
+	"strconv"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
@@ -23,15 +27,8 @@ import (
 // @SDKResource("aws_dx_connection", name="Connection")
 // @Tags(identifierAttribute="arn")
 func ResourceConnection() *schema.Resource {
-	return &schema.Resource{
-		CreateWithoutTimeout: resourceConnectionCreate,
-		ReadWithoutTimeout:   resourceConnectionRead,
-		UpdateWithoutTimeout: resourceConnectionUpdate,
-		DeleteWithoutTimeout: resourceConnectionDelete,
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
-
+	// Resource with v0 schema (provider v5.0.1).
+	resourceV0 := &schema.Resource{
 		Schema: map[string]*schema.Schema{
 			"arn": {
 				Type:     schema.TypeString,
@@ -114,6 +111,126 @@ func ResourceConnection() *schema.Resource {
 				Computed: true,
 			},
 		},
+	}
+
+	return &schema.Resource{
+		CreateWithoutTimeout: resourceConnectionCreate,
+		ReadWithoutTimeout:   resourceConnectionRead,
+		UpdateWithoutTimeout: resourceConnectionUpdate,
+		DeleteWithoutTimeout: resourceConnectionDelete,
+
+		Importer: &schema.ResourceImporter{
+			StateContext: schema.ImportStatePassthroughContext,
+		},
+
+		SchemaVersion: 1,
+		StateUpgraders: []schema.StateUpgrader{
+			{
+				Type: resourceV0.CoreConfigSchema().ImpliedType(),
+				Upgrade: func(ctx context.Context, rawState map[string]interface{}, meta interface{}) (map[string]interface{}, error) {
+					// Convert vlan_id from string to int.
+					if v, ok := rawState["vlan_id"]; ok {
+						if v, ok := v.(string); ok {
+							if v == "" {
+								rawState["vlan_id"] = 0
+							} else {
+								if v, err := strconv.Atoi(v); err == nil {
+									rawState["vlan_id"] = v
+								} else {
+									return nil, err
+								}
+							}
+						}
+					}
+
+					return rawState, nil
+				},
+				Version: 0,
+			},
+		},
+
+		Schema: map[string]*schema.Schema{
+			"arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"aws_device": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"bandwidth": {
+				Type:         schema.TypeString,
+				Required:     true,
+				ForceNew:     true,
+				ValidateFunc: validConnectionBandWidth(),
+			},
+			// The MAC Security (MACsec) connection encryption mode.
+			"encryption_mode": {
+				Type:         schema.TypeString,
+				Computed:     true,
+				Optional:     true,
+				ValidateFunc: validation.StringInSlice([]string{"no_encrypt", "should_encrypt", "must_encrypt"}, false),
+			},
+			"has_logical_redundancy": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"jumbo_frame_capable": {
+				Type:     schema.TypeBool,
+				Computed: true,
+			},
+			"location": {
+				Type:     schema.TypeString,
+				Required: true,
+				ForceNew: true,
+			},
+			// Indicates whether the connection supports MAC Security (MACsec).
+			"macsec_capable": {
+				Type:     schema.TypeBool,
+				Computed: true,
+			},
+			// Enable or disable MAC Security (MACsec) on this connection.
+			"request_macsec": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
+				ForceNew: true,
+			},
+			"name": {
+				Type:     schema.TypeString,
+				Required: true,
+				ForceNew: true,
+			},
+			"owner_account_id": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"partner_name": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"port_encryption_status": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"provider_name": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+				ForceNew: true,
+			},
+			"skip_destroy": {
+				Type:     schema.TypeBool,
+				Default:  false,
+				Optional: true,
+			},
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
+			"vlan_id": {
+				Type:     schema.TypeInt,
+				Computed: true,
+			},
+		},
 
 		CustomizeDiff: verify.SetTagsDiff,
 	}
@@ -121,7 +238,7 @@ func ResourceConnection() *schema.Resource {
 
 func resourceConnectionCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DirectConnectConn()
+	conn := meta.(*conns.AWSClient).DirectConnectConn(ctx)
 
 	name := d.Get("name").(string)
 	input := &directconnect.CreateConnectionInput{
@@ -129,7 +246,7 @@ func resourceConnectionCreate(ctx context.Context, d *schema.ResourceData, meta 
 		ConnectionName: aws.String(name),
 		Location:       aws.String(d.Get("location").(string)),
 		RequestMACSec:  aws.Bool(d.Get("request_macsec").(bool)),
-		Tags:           GetTagsIn(ctx),
+		Tags:           getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("provider_name"); ok {
@@ -149,7 +266,7 @@ func resourceConnectionCreate(ctx context.Context, d *schema.ResourceData, meta 
 
 func resourceConnectionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DirectConnectConn()
+	conn := meta.(*conns.AWSClient).DirectConnectConn(ctx)
 
 	connection, err := FindConnectionByID(ctx, conn, d.Id())
 
@@ -196,7 +313,7 @@ func resourceConnectionRead(ctx context.Context, d *schema.ResourceData, meta in
 
 func resourceConnectionUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DirectConnectConn()
+	conn := meta.(*conns.AWSClient).DirectConnectConn(ctx)
 
 	if d.HasChange("encryption_mode") {
 		input := &directconnect.UpdateConnectionInput{
@@ -220,7 +337,7 @@ func resourceConnectionUpdate(ctx context.Context, d *schema.ResourceData, meta 
 
 func resourceConnectionDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DirectConnectConn()
+	conn := meta.(*conns.AWSClient).DirectConnectConn(ctx)
 
 	if _, ok := d.GetOk("skip_destroy"); ok {
 		return diags

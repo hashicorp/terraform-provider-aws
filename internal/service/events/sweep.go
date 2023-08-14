@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 //go:build sweep
 // +build sweep
 
@@ -11,8 +14,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/eventbridge"
 	"github.com/hashicorp/go-multierror"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
@@ -69,11 +71,11 @@ func init() {
 
 func sweepAPIDestination(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
 		return fmt.Errorf("Error getting client: %w", err)
 	}
-	conn := client.(*conns.AWSClient).EventsConn()
+	conn := client.EventsConn(ctx)
 
 	var sweeperErrs *multierror.Error
 
@@ -120,11 +122,11 @@ func sweepAPIDestination(region string) error {
 
 func sweepArchives(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
 		return fmt.Errorf("Error getting client: %w", err)
 	}
-	conn := client.(*conns.AWSClient).EventsConn()
+	conn := client.EventsConn(ctx)
 
 	input := &eventbridge.ListArchivesInput{}
 
@@ -171,11 +173,11 @@ func sweepArchives(region string) error {
 
 func sweepBuses(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
 		return fmt.Errorf("Error getting client: %w", err)
 	}
-	conn := client.(*conns.AWSClient).EventsConn()
+	conn := client.EventsConn(ctx)
 	var sweeperErrs *multierror.Error
 	sweepResources := make([]sweep.Sweepable, 0)
 
@@ -209,7 +211,7 @@ func sweepBuses(region string) error {
 		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error listing EventBridge event buses: %w", err))
 	}
 
-	if err := sweep.SweepOrchestratorWithContext(ctx, sweepResources); err != nil {
+	if err := sweep.SweepOrchestrator(ctx, sweepResources); err != nil {
 		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error sweeping EventBridge Event Buses: %w", err))
 	}
 
@@ -218,11 +220,11 @@ func sweepBuses(region string) error {
 
 func sweepConnection(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
 		return fmt.Errorf("Error getting client: %w", err)
 	}
-	conn := client.(*conns.AWSClient).EventsConn()
+	conn := client.EventsConn(ctx)
 
 	var sweeperErrs *multierror.Error
 
@@ -266,11 +268,11 @@ func sweepConnection(region string) error {
 
 func sweepPermissions(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
 		return fmt.Errorf("Error getting client: %w", err)
 	}
-	conn := client.(*conns.AWSClient).EventsConn()
+	conn := client.EventsConn(ctx)
 
 	output, err := conn.DescribeEventBusWithContext(ctx, &eventbridge.DescribeEventBusInput{})
 	if err != nil {
@@ -311,11 +313,11 @@ func sweepPermissions(region string) error {
 
 func sweepRules(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
-	conn := client.(*conns.AWSClient).EventsConn()
+	conn := client.EventsConn(ctx)
 	input := &eventbridge.ListEventBusesInput{}
 	var sweeperErrs *multierror.Error
 
@@ -381,11 +383,11 @@ func sweepRules(region string) error {
 
 func sweepTargets(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
-	conn := client.(*conns.AWSClient).EventsConn()
+	conn := client.EventsConn(ctx)
 	input := &eventbridge.ListEventBusesInput{}
 	var sweeperErrs *multierror.Error
 

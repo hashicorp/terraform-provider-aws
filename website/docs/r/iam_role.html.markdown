@@ -200,27 +200,30 @@ This configuration block supports the following:
 * `name` - (Required) Name of the role policy.
 * `policy` - (Required) Policy document as a JSON formatted string. For more information about building IAM policy documents with Terraform, see the [AWS IAM Policy Document Guide](https://learn.hashicorp.com/tutorials/terraform/aws-iam-policy).
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - Amazon Resource Name (ARN) specifying the role.
 * `create_date` - Creation date of the IAM role.
 * `id` - Name of the role.
 * `name` - Name of the role.
-* `role_last_used` - Contains information about the last time that an IAM role was used. See [`role_last_used`](#role_last_used) for details.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 * `unique_id` - Stable and unique string identifying the role.
 
-### role_last_used
-
-* `region` - The name of the AWS Region in which the role was last used.
-* `last_used_time` - The date and time, in RFC 3339 format, that the role was last used.
-
 ## Import
 
-IAM Roles can be imported using the `name`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import IAM Roles using the `name`. For example:
 
+```terraform
+import {
+  to = aws_iam_role.developer
+  id = "developer_name"
+}
 ```
-$ terraform import aws_iam_role.developer developer_name
+
+Using `terraform import`, import IAM Roles using the `name`. For example:
+
+```console
+% terraform import aws_iam_role.developer developer_name
 ```

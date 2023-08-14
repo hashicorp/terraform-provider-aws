@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package resourceexplorer2_test
 
 import (
@@ -7,9 +10,9 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/service/resourceexplorer2"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfresourceexplorer2 "github.com/hashicorp/terraform-provider-aws/internal/service/resourceexplorer2"
@@ -228,7 +231,7 @@ func testAccView_tags(t *testing.T) {
 
 func testAccCheckViewDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ResourceExplorer2Client()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ResourceExplorer2Client(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_resourceexplorer2_iview" {
@@ -262,7 +265,7 @@ func testAccCheckViewExists(ctx context.Context, n string, v *resourceexplorer2.
 			return fmt.Errorf("No Resource Explorer View ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ResourceExplorer2Client()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ResourceExplorer2Client(ctx)
 
 		output, err := tfresourceexplorer2.FindViewByARN(ctx, conn, rs.Primary.ID)
 

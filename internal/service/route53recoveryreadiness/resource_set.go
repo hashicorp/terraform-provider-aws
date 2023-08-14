@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package route53recoveryreadiness
 
 import (
@@ -149,7 +152,7 @@ func ResourceResourceSet() *schema.Resource {
 
 func resourceResourceSetCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).Route53RecoveryReadinessConn()
+	conn := meta.(*conns.AWSClient).Route53RecoveryReadinessConn(ctx)
 
 	name := d.Get("resource_set_name").(string)
 	input := &route53recoveryreadiness.CreateResourceSetInput{
@@ -166,7 +169,7 @@ func resourceResourceSetCreate(ctx context.Context, d *schema.ResourceData, meta
 
 	d.SetId(aws.StringValue(output.ResourceSetName))
 
-	if err := createTags(ctx, conn, aws.StringValue(output.ResourceSetArn), GetTagsIn(ctx)); err != nil {
+	if err := createTags(ctx, conn, aws.StringValue(output.ResourceSetArn), getTagsIn(ctx)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting Route53 Recovery Readiness Resource Set (%s) tags: %s", d.Id(), err)
 	}
 
@@ -175,7 +178,7 @@ func resourceResourceSetCreate(ctx context.Context, d *schema.ResourceData, meta
 
 func resourceResourceSetRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).Route53RecoveryReadinessConn()
+	conn := meta.(*conns.AWSClient).Route53RecoveryReadinessConn(ctx)
 
 	input := &route53recoveryreadiness.GetResourceSetInput{
 		ResourceSetName: aws.String(d.Id()),
@@ -205,7 +208,7 @@ func resourceResourceSetRead(ctx context.Context, d *schema.ResourceData, meta i
 
 func resourceResourceSetUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).Route53RecoveryReadinessConn()
+	conn := meta.(*conns.AWSClient).Route53RecoveryReadinessConn(ctx)
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		input := &route53recoveryreadiness.UpdateResourceSetInput{
@@ -226,7 +229,7 @@ func resourceResourceSetUpdate(ctx context.Context, d *schema.ResourceData, meta
 
 func resourceResourceSetDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).Route53RecoveryReadinessConn()
+	conn := meta.(*conns.AWSClient).Route53RecoveryReadinessConn(ctx)
 
 	log.Printf("[DEBUG] Deleting Route53 Recovery Readiness Resource Set: %s", d.Id())
 	_, err := conn.DeleteResourceSetWithContext(ctx, &route53recoveryreadiness.DeleteResourceSetInput{

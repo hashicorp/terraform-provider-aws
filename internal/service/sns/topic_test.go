@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package sns_test
 
 import (
@@ -8,9 +11,9 @@ import (
 
 	"github.com/aws/aws-sdk-go/service/sns"
 	awspolicy "github.com/hashicorp/awspolicyequivalence"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfsns "github.com/hashicorp/terraform-provider-aws/internal/service/sns"
@@ -549,7 +552,7 @@ func testAccCheckTopicHasPolicy(ctx context.Context, n string, expectedPolicyTex
 			return fmt.Errorf("No SNS Topic ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SNSConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SNSConn(ctx)
 
 		attributes, err := tfsns.FindTopicAttributesByARN(ctx, conn, rs.Primary.ID)
 
@@ -589,7 +592,7 @@ func testAccCheckTopicHasDeliveryPolicy(ctx context.Context, n string, expectedP
 			return fmt.Errorf("No SNS Topic ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SNSConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SNSConn(ctx)
 
 		attributes, err := tfsns.FindTopicAttributesByARN(ctx, conn, rs.Primary.ID)
 
@@ -616,7 +619,7 @@ func testAccCheckTopicHasDeliveryPolicy(ctx context.Context, n string, expectedP
 
 func testAccCheckTopicDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SNSConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SNSConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_sns_topic" {
@@ -651,7 +654,7 @@ func testAccCheckTopicExists(ctx context.Context, n string, v *map[string]string
 			return fmt.Errorf("No SNS Topic ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SNSConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SNSConn(ctx)
 
 		output, err := tfsns.GetTopicAttributesByARN(ctx, conn, rs.Primary.ID)
 

@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package comprehend_test
 
 import (
@@ -9,10 +12,10 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/comprehend"
 	"github.com/aws/aws-sdk-go-v2/service/comprehend/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfcomprehend "github.com/hashicorp/terraform-provider-aws/internal/service/comprehend"
@@ -914,7 +917,7 @@ func TestAccComprehendEntityRecognizer_DefaultTags_providerOnly(t *testing.T) {
 
 func testAccCheckEntityRecognizerDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ComprehendClient()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ComprehendClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_comprehend_entity_recognizer" {
@@ -962,7 +965,7 @@ func testAccCheckEntityRecognizerExists(ctx context.Context, name string, entity
 			return fmt.Errorf("No Comprehend Entity Recognizer is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ComprehendClient()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ComprehendClient(ctx)
 
 		resp, err := tfcomprehend.FindEntityRecognizerByID(ctx, conn, rs.Primary.ID)
 		if err != nil {
@@ -1010,7 +1013,7 @@ func testAccCheckEntityRecognizerPublishedVersions(ctx context.Context, name str
 			return fmt.Errorf("No Comprehend Entity Recognizer is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ComprehendClient()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ComprehendClient(ctx)
 
 		name, err := tfcomprehend.EntityRecognizerParseARN(rs.Primary.ID)
 		if err != nil {

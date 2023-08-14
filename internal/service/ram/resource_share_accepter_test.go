@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ram_test
 
 import (
@@ -9,9 +12,9 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ram"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfram "github.com/hashicorp/terraform-provider-aws/internal/service/ram"
@@ -124,7 +127,7 @@ func TestAccRAMResourceShareAccepter_resourceAssociation(t *testing.T) {
 
 func testAccCheckResourceShareAccepterDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).RAMConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).RAMConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_ram_resource_share_accepter" {
@@ -161,7 +164,7 @@ func testAccCheckResourceShareAccepterExists(ctx context.Context, name string) r
 			return fmt.Errorf("RAM resource share invitation not found: %s", name)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).RAMConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).RAMConn(ctx)
 
 		input := &ram.GetResourceSharesInput{
 			ResourceShareArns: []*string{aws.String(rs.Primary.Attributes["share_arn"])},

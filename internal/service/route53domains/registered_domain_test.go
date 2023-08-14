@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package route53domains_test
 
 import (
@@ -7,8 +10,8 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/service/route53domains"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -34,7 +37,7 @@ func TestAccRoute53Domains_serial(t *testing.T) {
 func testAccPreCheck(ctx context.Context, t *testing.T) {
 	acctest.PreCheckPartitionHasService(t, names.Route53DomainsEndpointID)
 
-	conn := acctest.Provider.Meta().(*conns.AWSClient).Route53DomainsClient()
+	conn := acctest.Provider.Meta().(*conns.AWSClient).Route53DomainsClient(ctx)
 
 	input := &route53domains.ListDomainsInput{}
 

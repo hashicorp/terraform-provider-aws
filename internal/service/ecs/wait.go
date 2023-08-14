@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ecs
 
 import (
@@ -123,41 +126,6 @@ func waitServiceActive(ctx context.Context, conn *ecs.ECS, id, cluster string, t
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if v, ok := outputRaw.(*ecs.Service); ok {
-		return v, err
-	}
-
-	return nil, err
-}
-
-func waitClusterAvailable(ctx context.Context, conn *ecs.ECS, arn string) (*ecs.Cluster, error) { //nolint:unparam
-	stateConf := &retry.StateChangeConf{
-		Pending: []string{clusterStatusProvisioning},
-		Target:  []string{clusterStatusActive},
-		Refresh: statusCluster(ctx, conn, arn),
-		Timeout: clusterAvailableTimeout,
-		Delay:   clusterAvailableDelay,
-	}
-
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
-
-	if v, ok := outputRaw.(*ecs.Cluster); ok {
-		return v, err
-	}
-
-	return nil, err
-}
-
-func waitClusterDeleted(ctx context.Context, conn *ecs.ECS, arn string) (*ecs.Cluster, error) {
-	stateConf := &retry.StateChangeConf{
-		Pending: []string{clusterStatusActive, clusterStatusDeprovisioning},
-		Target:  []string{},
-		Refresh: statusCluster(ctx, conn, arn),
-		Timeout: clusterDeleteTimeout,
-	}
-
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
-
-	if v, ok := outputRaw.(*ecs.Cluster); ok {
 		return v, err
 	}
 

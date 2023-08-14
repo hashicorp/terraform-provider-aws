@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package dms
 
 import (
@@ -567,12 +570,6 @@ func ResourceEndpoint() *schema.Resource {
 							Optional: true,
 							Default:  "",
 						},
-						"ignore_headers_row": {
-							Type:         schema.TypeInt,
-							Optional:     true,
-							ValidateFunc: validation.IntInSlice([]int{0, 1}),
-							Description:  "This setting has no effect, is deprecated, and will be removed in a future version",
-						},
 						"ignore_header_rows": {
 							Type:         schema.TypeInt,
 							Optional:     true,
@@ -697,14 +694,14 @@ func ResourceEndpoint() *schema.Resource {
 
 func resourceEndpointCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DMSConn()
+	conn := meta.(*conns.AWSClient).DMSConn(ctx)
 
 	endpointID := d.Get("endpoint_id").(string)
 	input := &dms.CreateEndpointInput{
 		EndpointIdentifier: aws.String(endpointID),
 		EndpointType:       aws.String(d.Get("endpoint_type").(string)),
 		EngineName:         aws.String(d.Get("engine_name").(string)),
-		Tags:               GetTagsIn(ctx),
+		Tags:               getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("certificate_arn"); ok {
@@ -868,7 +865,7 @@ func resourceEndpointCreate(ctx context.Context, d *schema.ResourceData, meta in
 		}
 
 		input.RedshiftSettings = settings
-	case engineNameSQLServer:
+	case engineNameSQLServer, engineNameBabelfish:
 		if _, ok := d.GetOk("secrets_manager_arn"); ok {
 			input.MicrosoftSQLServerSettings = &dms.MicrosoftSQLServerSettings{
 				SecretsManagerAccessRoleArn: aws.String(d.Get("secrets_manager_access_role_arn").(string)),
@@ -906,7 +903,7 @@ func resourceEndpointCreate(ctx context.Context, d *schema.ResourceData, meta in
 			// Set connection info in top-level namespace as well
 			expandTopLevelConnectionInfo(d, input)
 		}
-	case engineNameDB2:
+	case engineNameDB2, engineNameDB2zOS:
 		if _, ok := d.GetOk("secrets_manager_arn"); ok {
 			input.IBMDb2Settings = &dms.IBMDb2Settings{
 				SecretsManagerAccessRoleArn: aws.String(d.Get("secrets_manager_access_role_arn").(string)),
@@ -948,7 +945,7 @@ func resourceEndpointCreate(ctx context.Context, d *schema.ResourceData, meta in
 
 func resourceEndpointRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DMSConn()
+	conn := meta.(*conns.AWSClient).DMSConn(ctx)
 
 	endpoint, err := FindEndpointByID(ctx, conn, d.Id())
 
@@ -973,7 +970,7 @@ func resourceEndpointRead(ctx context.Context, d *schema.ResourceData, meta inte
 
 func resourceEndpointUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DMSConn()
+	conn := meta.(*conns.AWSClient).DMSConn(ctx)
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		input := &dms.ModifyEndpointInput{
@@ -1204,7 +1201,7 @@ func resourceEndpointUpdate(ctx context.Context, d *schema.ResourceData, meta in
 					}
 				}
 			}
-		case engineNameSQLServer:
+		case engineNameSQLServer, engineNameBabelfish:
 			if d.HasChanges(
 				"username", "password", "server_name", "port", "database_name", "secrets_manager_access_role_arn",
 				"secrets_manager_arn") {
@@ -1252,7 +1249,7 @@ func resourceEndpointUpdate(ctx context.Context, d *schema.ResourceData, meta in
 					expandTopLevelConnectionInfoModify(d, input)
 				}
 			}
-		case engineNameDB2:
+		case engineNameDB2, engineNameDB2zOS:
 			if d.HasChanges(
 				"username", "password", "server_name", "port", "database_name", "secrets_manager_access_role_arn",
 				"secrets_manager_arn") {
@@ -1315,7 +1312,7 @@ func resourceEndpointUpdate(ctx context.Context, d *schema.ResourceData, meta in
 
 func resourceEndpointDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DMSConn()
+	conn := meta.(*conns.AWSClient).DMSConn(ctx)
 
 	log.Printf("[DEBUG] Deleting DMS Endpoint: (%s)", d.Id())
 	_, err := conn.DeleteEndpointWithContext(ctx, &dms.DeleteEndpointInput{
@@ -1530,7 +1527,7 @@ func resourceEndpointSetState(d *schema.ResourceData, endpoint *dms.Endpoint) er
 		if err := d.Set("redshift_settings", flattenRedshiftSettings(endpoint.RedshiftSettings)); err != nil {
 			return fmt.Errorf("setting redshift_settings: %w", err)
 		}
-	case engineNameSQLServer:
+	case engineNameSQLServer, engineNameBabelfish:
 		if endpoint.MicrosoftSQLServerSettings != nil {
 			d.Set("username", endpoint.MicrosoftSQLServerSettings.Username)
 			d.Set("server_name", endpoint.MicrosoftSQLServerSettings.ServerName)
@@ -1552,7 +1549,7 @@ func resourceEndpointSetState(d *schema.ResourceData, endpoint *dms.Endpoint) er
 		} else {
 			flattenTopLevelConnectionInfo(d, endpoint)
 		}
-	case engineNameDB2:
+	case engineNameDB2, engineNameDB2zOS:
 		if endpoint.IBMDb2Settings != nil {
 			d.Set("username", endpoint.IBMDb2Settings.Username)
 			d.Set("server_name", endpoint.IBMDb2Settings.ServerName)
@@ -1565,7 +1562,7 @@ func resourceEndpointSetState(d *schema.ResourceData, endpoint *dms.Endpoint) er
 		}
 	case engineNameS3:
 		if err := d.Set("s3_settings", flattenS3Settings(endpoint.S3Settings)); err != nil {
-			return fmt.Errorf("Error setting s3_settings for DMS: %s", err)
+			return fmt.Errorf("setting s3_settings for DMS: %s", err)
 		}
 	default:
 		d.Set("database_name", endpoint.DatabaseName)

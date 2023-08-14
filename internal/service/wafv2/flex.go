@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package wafv2
 
 import (
@@ -65,6 +68,51 @@ func expandCaptchaConfig(l []interface{}) *wafv2.CaptchaConfig {
 			configuration.ImmunityTimeProperty = &wafv2.ImmunityTimeProperty{
 				ImmunityTime: aws.Int64(int64(v.(int))),
 			}
+		}
+	}
+
+	return configuration
+}
+
+func expandAssociationConfig(l []interface{}) *wafv2.AssociationConfig {
+	if len(l) == 0 || l[0] == nil {
+		return nil
+	}
+
+	configuration := &wafv2.AssociationConfig{}
+
+	m := l[0].(map[string]interface{})
+	if v, ok := m["request_body"]; ok {
+		inner := v.([]interface{})
+		if len(inner) == 0 || inner[0] == nil {
+			return configuration
+		}
+
+		m = inner[0].(map[string]interface{})
+		if len(m) > 0 {
+			configuration.RequestBody = make(map[string]*wafv2.RequestBodyAssociatedResourceTypeConfig)
+		}
+
+		if v, ok := m["cloudfront"]; ok {
+			inner = v.([]interface{})
+			configuration.RequestBody[wafv2.AssociatedResourceTypeCloudfront] = expandRequestBodyConfigItem(inner)
+		}
+	}
+
+	return configuration
+}
+
+func expandRequestBodyConfigItem(l []interface{}) *wafv2.RequestBodyAssociatedResourceTypeConfig {
+	configuration := &wafv2.RequestBodyAssociatedResourceTypeConfig{}
+
+	if len(l) == 0 || l[0] == nil {
+		return configuration
+	}
+
+	m := l[0].(map[string]interface{})
+	if v, ok := m["default_size_inspection_limit"]; ok {
+		if v != "" {
+			configuration.DefaultSizeInspectionLimit = aws.String(v.(string))
 		}
 	}
 
@@ -1016,7 +1064,6 @@ func expandManagedRuleGroupStatement(l []interface{}) *wafv2.ManagedRuleGroupSta
 
 	m := l[0].(map[string]interface{})
 	r := &wafv2.ManagedRuleGroupStatement{
-		ExcludedRules:       expandExcludedRules(m["excluded_rule"].([]interface{})),
 		Name:                aws.String(m["name"].(string)),
 		RuleActionOverrides: expandRuleActionOverrides(m["rule_action_override"].([]interface{})),
 		VendorName:          aws.String(m["vendor_name"].(string)),
@@ -1260,35 +1307,8 @@ func expandRuleGroupReferenceStatement(l []interface{}) *wafv2.RuleGroupReferenc
 	m := l[0].(map[string]interface{})
 
 	return &wafv2.RuleGroupReferenceStatement{
-		ARN:           aws.String(m["arn"].(string)),
-		ExcludedRules: expandExcludedRules(m["excluded_rule"].([]interface{})),
-	}
-}
-
-func expandExcludedRules(l []interface{}) []*wafv2.ExcludedRule {
-	if len(l) == 0 || l[0] == nil {
-		return nil
-	}
-
-	rules := make([]*wafv2.ExcludedRule, 0)
-
-	for _, rule := range l {
-		if rule == nil {
-			continue
-		}
-		rules = append(rules, expandExcludedRule(rule.(map[string]interface{})))
-	}
-
-	return rules
-}
-
-func expandExcludedRule(m map[string]interface{}) *wafv2.ExcludedRule {
-	if m == nil {
-		return nil
-	}
-
-	return &wafv2.ExcludedRule{
-		Name: aws.String(m["name"].(string)),
+		ARN:                 aws.String(m["arn"].(string)),
+		RuleActionOverrides: expandRuleActionOverrides(m["rule_action_override"].([]interface{})),
 	}
 }
 
@@ -1449,6 +1469,29 @@ func flattenCaptchaConfig(config *wafv2.CaptchaConfig) interface{} {
 	}
 
 	return []interface{}{m}
+}
+
+func flattenAssociationConfig(config *wafv2.AssociationConfig) interface{} {
+	associationConfig := []interface{}{}
+	if config == nil {
+		return associationConfig
+	}
+	if config.RequestBody == nil {
+		return associationConfig
+	}
+
+	cloudfrontRequestBodyConfig := config.RequestBody[wafv2.AssociatedResourceTypeCloudfront]
+	if cloudfrontRequestBodyConfig != nil {
+		associationConfig = append(associationConfig, map[string]interface{}{
+			"request_body": []map[string]interface{}{{
+				"cloudfront": []map[string]interface{}{{
+					"default_size_inspection_limit": aws.StringValue(cloudfrontRequestBodyConfig.DefaultSizeInspectionLimit),
+				}},
+			}},
+		})
+	}
+
+	return associationConfig
 }
 
 func flattenChallenge(a *wafv2.ChallengeAction) []interface{} {
@@ -2176,10 +2219,6 @@ func flattenManagedRuleGroupStatement(apiObject *wafv2.ManagedRuleGroupStatement
 
 	tfMap := map[string]interface{}{}
 
-	if apiObject.ExcludedRules != nil {
-		tfMap["excluded_rule"] = flattenExcludedRules(apiObject.ExcludedRules)
-	}
-
 	if apiObject.Name != nil {
 		tfMap["name"] = aws.StringValue(apiObject.Name)
 	}
@@ -2338,7 +2377,7 @@ func flattenBodyContains(apiObject *wafv2.ResponseInspectionBodyContains) []inte
 
 	m := map[string]interface{}{
 		"failure_strings": flex.FlattenStringSet(apiObject.FailureStrings),
-		"succeed_strings": flex.FlattenStringSet(apiObject.SuccessStrings),
+		"success_strings": flex.FlattenStringSet(apiObject.SuccessStrings),
 	}
 
 	return []interface{}{m}
@@ -2351,7 +2390,7 @@ func flattenHeader(apiObject *wafv2.ResponseInspectionHeader) []interface{} {
 
 	m := map[string]interface{}{
 		"failure_values": flex.FlattenStringSet(apiObject.FailureValues),
-		"succeed_values": flex.FlattenStringSet(apiObject.SuccessValues),
+		"success_values": flex.FlattenStringSet(apiObject.SuccessValues),
 	}
 
 	return []interface{}{m}
@@ -2365,7 +2404,7 @@ func flattenResponseInspectionJSON(apiObject *wafv2.ResponseInspectionJson) []in
 	m := map[string]interface{}{
 		"failure_values": flex.FlattenStringSet(apiObject.FailureValues),
 		"identifier":     aws.StringValue(apiObject.Identifier),
-		"succeed_values": flex.FlattenStringSet(apiObject.SuccessValues),
+		"success_values": flex.FlattenStringSet(apiObject.SuccessValues),
 	}
 
 	return []interface{}{m}
@@ -2410,28 +2449,20 @@ func flattenRateBasedStatement(apiObject *wafv2.RateBasedStatement) interface{} 
 	return []interface{}{tfMap}
 }
 
-func flattenRuleGroupReferenceStatement(r *wafv2.RuleGroupReferenceStatement) interface{} {
-	if r == nil {
+func flattenRuleGroupReferenceStatement(apiObject *wafv2.RuleGroupReferenceStatement) interface{} {
+	if apiObject == nil {
 		return []interface{}{}
 	}
 
-	m := map[string]interface{}{
-		"excluded_rule": flattenExcludedRules(r.ExcludedRules),
-		"arn":           aws.StringValue(r.ARN),
+	tfMap := map[string]interface{}{
+		"arn": aws.StringValue(apiObject.ARN),
 	}
 
-	return []interface{}{m}
-}
-
-func flattenExcludedRules(r []*wafv2.ExcludedRule) interface{} {
-	out := make([]map[string]interface{}, len(r))
-	for i, rule := range r {
-		m := make(map[string]interface{})
-		m["name"] = aws.StringValue(rule.Name)
-		out[i] = m
+	if apiObject.RuleActionOverrides != nil {
+		tfMap["rule_action_override"] = flattenRuleActionOverrides(apiObject.RuleActionOverrides)
 	}
 
-	return out
+	return []interface{}{tfMap}
 }
 
 func flattenRuleActionOverrides(r []*wafv2.RuleActionOverride) interface{} {

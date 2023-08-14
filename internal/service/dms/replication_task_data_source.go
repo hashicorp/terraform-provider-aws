@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package dms
 
 import (
@@ -76,7 +79,7 @@ const (
 )
 
 func dataSourceReplicationTaskRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).DMSConn()
+	conn := meta.(*conns.AWSClient).DMSConn(ctx)
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -105,7 +108,7 @@ func dataSourceReplicationTaskRead(ctx context.Context, d *schema.ResourceData, 
 
 	d.Set("replication_task_settings", settings)
 
-	tags, err := ListTags(ctx, conn, aws.StringValue(task.ReplicationTaskArn))
+	tags, err := listTags(ctx, conn, aws.StringValue(task.ReplicationTaskArn))
 	if err != nil {
 		return create.DiagError(names.DMS, create.ErrActionReading, DSNameReplicationTask, d.Id(), err)
 	}

@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package cognitoidp_test
 
 import (
@@ -9,9 +12,9 @@ import (
 
 	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
 	"github.com/aws/aws-sdk-go/service/pinpoint"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfcognitoidp "github.com/hashicorp/terraform-provider-aws/internal/service/cognitoidp"
@@ -1082,7 +1085,7 @@ func testAccUserPoolClientImportStateIDFunc(ctx context.Context, resourceName st
 			return "", errors.New("No Cognito User Pool Client ID set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CognitoIDPConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CognitoIDPConn(ctx)
 		userPoolId := rs.Primary.Attributes["user_pool_id"]
 		clientId := rs.Primary.ID
 
@@ -1098,7 +1101,7 @@ func testAccUserPoolClientImportStateIDFunc(ctx context.Context, resourceName st
 
 func testAccCheckUserPoolClientDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CognitoIDPConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CognitoIDPConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_cognito_user_pool_client" {
@@ -1130,7 +1133,7 @@ func testAccCheckUserPoolClientExists(ctx context.Context, name string, client *
 			return errors.New("No Cognito User Pool Client ID set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CognitoIDPConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CognitoIDPConn(ctx)
 
 		resp, err := tfcognitoidp.FindCognitoUserPoolClientByID(ctx, conn, rs.Primary.Attributes["user_pool_id"], rs.Primary.ID)
 		if err != nil {
@@ -1539,7 +1542,7 @@ resource "aws_cognito_user_pool_client" "test" {
 }
 
 func testAccPreCheckPinpointApp(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).PinpointConn()
+	conn := acctest.Provider.Meta().(*conns.AWSClient).PinpointConn(ctx)
 
 	input := &pinpoint.GetAppsInput{}
 

@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package logs_test
 
 import (
@@ -9,9 +12,9 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/cloudwatchlogs"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tflogs "github.com/hashicorp/terraform-provider-aws/internal/service/logs"
@@ -183,7 +186,7 @@ func testAccCheckQueryDefinitionExists(ctx context.Context, n string, v *cloudwa
 			return fmt.Errorf("No CloudWatch Logs Query Definition ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).LogsConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).LogsConn(ctx)
 
 		output, err := tflogs.FindQueryDefinitionByTwoPartKey(ctx, conn, rs.Primary.Attributes["name"], rs.Primary.ID)
 
@@ -199,7 +202,7 @@ func testAccCheckQueryDefinitionExists(ctx context.Context, n string, v *cloudwa
 
 func testAccCheckQueryDefinitionDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).LogsConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).LogsConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_cloudwatch_query_definition" {

@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package emr_test
 
 import (
@@ -7,9 +10,9 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/emr"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfemr "github.com/hashicorp/terraform-provider-aws/internal/service/emr"
@@ -325,7 +328,7 @@ func testAccCheckInstanceGroupExists(ctx context.Context, name string, ig *emr.I
 		}
 
 		meta := acctest.Provider.Meta()
-		conn := meta.(*conns.AWSClient).EMRConn()
+		conn := meta.(*conns.AWSClient).EMRConn(ctx)
 		group, err := tfemr.FetchInstanceGroup(ctx, conn, rs.Primary.Attributes["cluster_id"], rs.Primary.ID)
 		if err != nil {
 			return fmt.Errorf("EMR error: %v", err)

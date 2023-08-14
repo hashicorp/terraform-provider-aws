@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package route53
 
 import (
@@ -104,7 +107,7 @@ func ResourceKeySigningKey() *schema.Resource {
 
 func resourceKeySigningKeyCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).Route53Conn()
+	conn := meta.(*conns.AWSClient).Route53Conn(ctx)
 
 	hostedZoneID := d.Get("hosted_zone_id").(string)
 	name := d.Get("name").(string)
@@ -144,7 +147,7 @@ func resourceKeySigningKeyCreate(ctx context.Context, d *schema.ResourceData, me
 
 func resourceKeySigningKeyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).Route53Conn()
+	conn := meta.(*conns.AWSClient).Route53Conn(ctx)
 
 	hostedZoneID, name, err := KeySigningKeyParseResourceID(d.Id())
 
@@ -200,7 +203,7 @@ func resourceKeySigningKeyRead(ctx context.Context, d *schema.ResourceData, meta
 
 func resourceKeySigningKeyUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).Route53Conn()
+	conn := meta.(*conns.AWSClient).Route53Conn(ctx)
 
 	if d.HasChange("status") {
 		status := d.Get("status").(string)
@@ -254,7 +257,7 @@ func resourceKeySigningKeyUpdate(ctx context.Context, d *schema.ResourceData, me
 
 func resourceKeySigningKeyDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).Route53Conn()
+	conn := meta.(*conns.AWSClient).Route53Conn(ctx)
 
 	status := d.Get("status").(string)
 

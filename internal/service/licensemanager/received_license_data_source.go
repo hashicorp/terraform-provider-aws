@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package licensemanager
 
 import (
@@ -215,7 +218,7 @@ func DataSourceReceivedLicense() *schema.Resource {
 
 func dataSourceReceivedLicenseRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).LicenseManagerConn()
+	conn := meta.(*conns.AWSClient).LicenseManagerConn(ctx)
 
 	arn := d.Get("license_arn").(string)
 

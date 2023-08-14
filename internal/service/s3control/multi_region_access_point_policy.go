@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package s3control
 
 import (
@@ -83,7 +86,7 @@ func resourceMultiRegionAccessPointPolicy() *schema.Resource {
 }
 
 func resourceMultiRegionAccessPointPolicyCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn, err := ConnForMRAP(meta.(*conns.AWSClient))
+	conn, err := ConnForMRAP(ctx, meta.(*conns.AWSClient))
 
 	if err != nil {
 		return diag.FromErr(err)
@@ -122,7 +125,7 @@ func resourceMultiRegionAccessPointPolicyCreate(ctx context.Context, d *schema.R
 }
 
 func resourceMultiRegionAccessPointPolicyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn, err := ConnForMRAP(meta.(*conns.AWSClient))
+	conn, err := ConnForMRAP(ctx, meta.(*conns.AWSClient))
 
 	if err != nil {
 		return diag.FromErr(err)
@@ -174,7 +177,7 @@ func resourceMultiRegionAccessPointPolicyRead(ctx context.Context, d *schema.Res
 }
 
 func resourceMultiRegionAccessPointPolicyUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn, err := ConnForMRAP(meta.(*conns.AWSClient))
+	conn, err := ConnForMRAP(ctx, meta.(*conns.AWSClient))
 
 	if err != nil {
 		return diag.FromErr(err)

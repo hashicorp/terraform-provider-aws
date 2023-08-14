@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package cognitoidp
 
 import (
@@ -21,13 +24,13 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/setplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
-	fwstringplanmodifier "github.com/hashicorp/terraform-provider-aws/internal/framework/stringplanmodifier"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -305,9 +308,7 @@ func (r *resourceManagedUserPoolClient) Schema(ctx context.Context, request reso
 						"access_token": schema.StringAttribute{
 							Optional: true,
 							Computed: true,
-							PlanModifiers: []planmodifier.String{
-								fwstringplanmodifier.DefaultValue(cognitoidentityprovider.TimeUnitsTypeHours),
-							},
+							Default:  stringdefault.StaticString(cognitoidentityprovider.TimeUnitsTypeHours),
 							Validators: []validator.String{
 								stringvalidator.OneOf(cognitoidentityprovider.TimeUnitsType_Values()...),
 							},
@@ -315,9 +316,7 @@ func (r *resourceManagedUserPoolClient) Schema(ctx context.Context, request reso
 						"id_token": schema.StringAttribute{
 							Optional: true,
 							Computed: true,
-							PlanModifiers: []planmodifier.String{
-								fwstringplanmodifier.DefaultValue(cognitoidentityprovider.TimeUnitsTypeHours),
-							},
+							Default:  stringdefault.StaticString(cognitoidentityprovider.TimeUnitsTypeHours),
 							Validators: []validator.String{
 								stringvalidator.OneOf(cognitoidentityprovider.TimeUnitsType_Values()...),
 							},
@@ -325,9 +324,7 @@ func (r *resourceManagedUserPoolClient) Schema(ctx context.Context, request reso
 						"refresh_token": schema.StringAttribute{
 							Optional: true,
 							Computed: true,
-							PlanModifiers: []planmodifier.String{
-								fwstringplanmodifier.DefaultValue(cognitoidentityprovider.TimeUnitsTypeDays),
-							},
+							Default:  stringdefault.StaticString(cognitoidentityprovider.TimeUnitsTypeDays),
 							Validators: []validator.String{
 								stringvalidator.OneOf(cognitoidentityprovider.TimeUnitsType_Values()...),
 							},
@@ -342,7 +339,7 @@ func (r *resourceManagedUserPoolClient) Schema(ctx context.Context, request reso
 }
 
 func (r *resourceManagedUserPoolClient) Create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
-	conn := r.Meta().CognitoIDPConn()
+	conn := r.Meta().CognitoIDPConn(ctx)
 
 	var config resourceManagedUserPoolClientData
 	response.Diagnostics.Append(request.Config.Get(ctx, &config)...)
@@ -544,7 +541,7 @@ func (r *resourceManagedUserPoolClient) Read(ctx context.Context, request resour
 		return
 	}
 
-	conn := r.Meta().CognitoIDPConn()
+	conn := r.Meta().CognitoIDPConn(ctx)
 
 	poolClient, err := FindCognitoUserPoolClientByID(ctx, conn, state.UserPoolID.ValueString(), state.ID.ValueString())
 	if tfresource.NotFound(err) {
@@ -578,7 +575,7 @@ func (r *resourceManagedUserPoolClient) Read(ctx context.Context, request resour
 	state.RefreshTokenValidity = flex.Int64ToFramework(ctx, poolClient.RefreshTokenValidity)
 	state.SupportedIdentityProviders = flex.FlattenFrameworkStringSetLegacy(ctx, poolClient.SupportedIdentityProviders)
 	if state.TokenValidityUnits.IsNull() && isDefaultTokenValidityUnits(poolClient.TokenValidityUnits) {
-		attributeTypes := framework.AttributeTypesMust[tokenValidityUnits](ctx)
+		attributeTypes := flex.AttributeTypesMust[tokenValidityUnits](ctx)
 		elemType := types.ObjectType{AttrTypes: attributeTypes}
 		state.TokenValidityUnits = types.ListNull(elemType)
 	} else {
@@ -613,7 +610,7 @@ func (r *resourceManagedUserPoolClient) Update(ctx context.Context, request reso
 		return
 	}
 
-	conn := r.Meta().CognitoIDPConn()
+	conn := r.Meta().CognitoIDPConn(ctx)
 
 	params := plan.updateInput(ctx, &response.Diagnostics)
 	if response.Diagnostics.HasError() {
@@ -660,7 +657,7 @@ func (r *resourceManagedUserPoolClient) Update(ctx context.Context, request reso
 	config.RefreshTokenValidity = flex.Int64ToFramework(ctx, poolClient.RefreshTokenValidity)
 	config.SupportedIdentityProviders = flex.FlattenFrameworkStringSetLegacy(ctx, poolClient.SupportedIdentityProviders)
 	if !state.TokenValidityUnits.IsNull() && plan.TokenValidityUnits.IsNull() && isDefaultTokenValidityUnits(poolClient.TokenValidityUnits) {
-		attributeTypes := framework.AttributeTypesMust[tokenValidityUnits](ctx)
+		attributeTypes := flex.AttributeTypesMust[tokenValidityUnits](ctx)
 		elemType := types.ObjectType{AttrTypes: attributeTypes}
 		config.TokenValidityUnits = types.ListNull(elemType)
 	} else {
@@ -693,6 +690,7 @@ func (r *resourceManagedUserPoolClient) ImportState(ctx context.Context, request
 	parts := strings.Split(request.ID, "/")
 	if len(parts) != 2 {
 		response.Diagnostics.AddError("Resource Import Invalid ID", fmt.Sprintf("wrong format of import ID (%s), use: 'user-pool-id/client-id'", request.ID))
+		return
 	}
 	userPoolId := parts[0]
 	clientId := parts[1]

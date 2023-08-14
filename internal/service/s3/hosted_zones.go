@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package s3
 
 import (
@@ -20,6 +23,7 @@ var hostedZoneIDsMap = map[string]string{
 	endpoints.ApSoutheast3RegionID: "Z01846753K324LI26A3VV",
 	endpoints.ApSoutheast4RegionID: "Z0312387243XT5FE14WFO",
 	endpoints.CaCentral1RegionID:   "Z1QDHH18159H29",
+	endpoints.CnNorth1RegionID:     "Z5CN8UMXT92WN",
 	endpoints.CnNorthwest1RegionID: "Z282HJ1KT0DH03",
 	endpoints.EuCentral1RegionID:   "Z21DNDUVLTQW6Q",
 	endpoints.EuCentral2RegionID:   "Z030506016YDQGETNASS",
@@ -29,6 +33,7 @@ var hostedZoneIDsMap = map[string]string{
 	endpoints.EuWest1RegionID:      "Z1BKCTXD74EZPE",
 	endpoints.EuWest2RegionID:      "Z3GKZC51ZF0DB4",
 	endpoints.EuWest3RegionID:      "Z3R1K369G5AVDG",
+	endpoints.IlCentral1RegionID:   "Z09640613K4A3MN55U7GU",
 	endpoints.MeCentral1RegionID:   "Z06143092I8HRXZRUZROF",
 	endpoints.MeSouth1RegionID:     "Z1MPMWCPA7YB62",
 	endpoints.SaEast1RegionID:      "Z7KQH4QJS55SO",

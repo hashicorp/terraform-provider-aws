@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ec2
 
 import (
@@ -96,7 +99,7 @@ func ResourceKeyPair() *schema.Resource {
 
 func resourceKeyPairCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	keyName := create.Name(d.Get("key_name").(string), d.Get("key_name_prefix").(string))
 	input := &ec2.ImportKeyPairInput{
@@ -118,7 +121,7 @@ func resourceKeyPairCreate(ctx context.Context, d *schema.ResourceData, meta int
 
 func resourceKeyPairRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	keyPair, err := FindKeyPairByName(ctx, conn, d.Id())
 
@@ -146,7 +149,7 @@ func resourceKeyPairRead(ctx context.Context, d *schema.ResourceData, meta inter
 	d.Set("key_type", keyPair.KeyType)
 	d.Set("key_pair_id", keyPair.KeyPairId)
 
-	SetTagsOut(ctx, keyPair.Tags)
+	setTagsOut(ctx, keyPair.Tags)
 
 	return diags
 }
@@ -161,7 +164,7 @@ func resourceKeyPairUpdate(ctx context.Context, d *schema.ResourceData, meta int
 
 func resourceKeyPairDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	log.Printf("[DEBUG] Deleting EC2 Key Pair: %s", d.Id())
 	_, err := conn.DeleteKeyPairWithContext(ctx, &ec2.DeleteKeyPairInput{

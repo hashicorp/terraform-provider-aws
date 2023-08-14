@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package amp
 
 import (
@@ -72,10 +75,10 @@ func ResourceWorkspace() *schema.Resource {
 }
 
 func resourceWorkspaceCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).AMPConn()
+	conn := meta.(*conns.AWSClient).AMPConn(ctx)
 
 	input := &prometheusservice.CreateWorkspaceInput{
-		Tags: GetTagsIn(ctx),
+		Tags: getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("alias"); ok {
@@ -116,7 +119,7 @@ func resourceWorkspaceCreate(ctx context.Context, d *schema.ResourceData, meta i
 }
 
 func resourceWorkspaceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).AMPConn()
+	conn := meta.(*conns.AWSClient).AMPConn(ctx)
 
 	ws, err := FindWorkspaceByID(ctx, conn, d.Id())
 
@@ -151,7 +154,7 @@ func resourceWorkspaceRead(ctx context.Context, d *schema.ResourceData, meta int
 }
 
 func resourceWorkspaceUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).AMPConn()
+	conn := meta.(*conns.AWSClient).AMPConn(ctx)
 
 	if d.HasChange("alias") {
 		input := &prometheusservice.UpdateWorkspaceAliasInput{
@@ -220,7 +223,7 @@ func resourceWorkspaceUpdate(ctx context.Context, d *schema.ResourceData, meta i
 }
 
 func resourceWorkspaceDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).AMPConn()
+	conn := meta.(*conns.AWSClient).AMPConn(ctx)
 
 	log.Printf("[INFO] Deleting Prometheus Workspace: %s", d.Id())
 	_, err := conn.DeleteWorkspaceWithContext(ctx, &prometheusservice.DeleteWorkspaceInput{

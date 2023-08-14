@@ -122,7 +122,7 @@ resource "aws_iam_role_policy_attachment" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `balancing_strategy` - (Optional) Indicates how GameLift FleetIQ balances the use of Spot Instances and On-Demand Instances.
   Valid values: `SPOT_ONLY`, `SPOT_PREFERRED`, `ON_DEMAND_ONLY`. Defaults to `SPOT_PREFERRED`.
@@ -182,9 +182,9 @@ You can specify the template using either the template name or ID.
 * `name` - (Optional) A readable identifier for an existing EC2 launch template.
 * `version` - (Optional) The version of the EC2 launch template to use. If none is set, the default is the first version created.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The name of the GameLift Game Server Group.
 * `arn` - The ARN of the GameLift Game Server Group.
@@ -199,8 +199,17 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-GameLift Game Server Group can be imported using the `name`, e.g.
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import GameLift Game Server Group using the `name`. For example:
 
+```terraform
+import {
+  to = aws_gamelift_game_server_group.example
+  id = "example"
+}
 ```
-$ terraform import aws_gamelift_game_server_group.example example
+
+Using `terraform import`, import GameLift Game Server Group using the `name`. For example:
+
+```console
+% terraform import aws_gamelift_game_server_group.example example
 ```
