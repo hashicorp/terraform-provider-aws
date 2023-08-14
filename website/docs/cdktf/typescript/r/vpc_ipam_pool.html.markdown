@@ -80,7 +80,7 @@ class MyConvertedCode extends TerraformStack {
       ipamScopeId: example.privateDefaultScopeId,
     });
     new VpcIpamPoolCidr(this, "parent_test", {
-      cidr: "172.2.0.0/16",
+      cidr: "172.20.0.0/16",
       ipamPoolId: parent.id,
     });
     const child = new VpcIpamPool(this, "child", {
@@ -90,7 +90,7 @@ class MyConvertedCode extends TerraformStack {
       sourceIpamPoolId: parent.id,
     });
     new VpcIpamPoolCidr(this, "child_test", {
-      cidr: "172.2.0.0/24",
+      cidr: "172.20.0.0/24",
       ipamPoolId: child.id,
     });
   }
@@ -149,4 +149,4 @@ Using `terraform import`, import IPAMs using the IPAM pool `id`. For example:
 % terraform import aws_vpc_ipam_pool.example ipam-pool-0958f95207d978e1e
 ```
 
-<!-- cache-key: cdktf-0.17.1 input-33463fd998540cb1bb2d0c0e290c86659ee3e68757cdffecbcfa1ceab26cbcff -->
+<!-- cache-key: cdktf-0.17.1 input-b9340bd3375bf2193e4b206451c8af86918bbc16f3f51661ef310d88085a12de -->

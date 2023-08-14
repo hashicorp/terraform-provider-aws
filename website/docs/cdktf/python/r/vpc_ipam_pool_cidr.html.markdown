@@ -51,7 +51,7 @@ class MyConvertedCode(TerraformStack):
         # This allows the Terraform resource name to match the original name. You can remove the call if you don't need them to match.
         aws_vpc_ipam_pool_example.override_logical_id("example")
         aws_vpc_ipam_pool_cidr_example = VpcIpamPoolCidr(self, "example_3",
-            cidr="172.2.0.0/16",
+            cidr="172.20.0.0/16",
             ipam_pool_id=Token.as_string(aws_vpc_ipam_pool_example.id)
         )
         # This allows the Terraform resource name to match the original name. You can remove the call if you don't need them to match.
@@ -143,7 +143,7 @@ Using `terraform import`, import IPAMs using the `<cidr>_<ipam-pool-id>`. For ex
 **NOTE:** Do not use the IPAM Pool Cidr ID as this was introduced after the resource already existed.
 
 ```console
-% terraform import aws_vpc_ipam_pool_cidr.example 172.2.0.0/24_ipam-pool-0e634f5a1517cccdc
+% terraform import aws_vpc_ipam_pool_cidr.example 172.20.0.0/24_ipam-pool-0e634f5a1517cccdc
 ```
 
-<!-- cache-key: cdktf-0.17.1 input-194943783d1fa22b8b3d1c39eb7ae1bf9b2c30e8f1bed42c582a4b2bb80a453a -->
+<!-- cache-key: cdktf-0.17.1 input-5288bd0213533a9d30b8964349d28b549c9e8b5467bb3ec2fc047dc611c6ccf3 -->

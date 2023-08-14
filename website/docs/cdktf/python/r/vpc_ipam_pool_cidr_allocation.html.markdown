@@ -47,13 +47,13 @@ class MyConvertedCode(TerraformStack):
         # This allows the Terraform resource name to match the original name. You can remove the call if you don't need them to match.
         aws_vpc_ipam_pool_example.override_logical_id("example")
         aws_vpc_ipam_pool_cidr_example = VpcIpamPoolCidr(self, "example_3",
-            cidr="172.2.0.0/16",
+            cidr="172.20.0.0/16",
             ipam_pool_id=Token.as_string(aws_vpc_ipam_pool_example.id)
         )
         # This allows the Terraform resource name to match the original name. You can remove the call if you don't need them to match.
         aws_vpc_ipam_pool_cidr_example.override_logical_id("example")
         aws_vpc_ipam_pool_cidr_allocation_example = VpcIpamPoolCidrAllocation(self, "example_4",
-            cidr="172.2.0.0/24",
+            cidr="172.20.0.0/24",
             depends_on=[aws_vpc_ipam_pool_cidr_example],
             ipam_pool_id=Token.as_string(aws_vpc_ipam_pool_example.id)
         )
@@ -94,14 +94,14 @@ class MyConvertedCode(TerraformStack):
         # This allows the Terraform resource name to match the original name. You can remove the call if you don't need them to match.
         aws_vpc_ipam_pool_example.override_logical_id("example")
         aws_vpc_ipam_pool_cidr_example = VpcIpamPoolCidr(self, "example_3",
-            cidr="172.2.0.0/16",
+            cidr="172.20.0.0/16",
             ipam_pool_id=Token.as_string(aws_vpc_ipam_pool_example.id)
         )
         # This allows the Terraform resource name to match the original name. You can remove the call if you don't need them to match.
         aws_vpc_ipam_pool_cidr_example.override_logical_id("example")
         aws_vpc_ipam_pool_cidr_allocation_example = VpcIpamPoolCidrAllocation(self, "example_4",
             depends_on=[aws_vpc_ipam_pool_cidr_example],
-            disallowed_cidrs=["172.2.0.0/28"],
+            disallowed_cidrs=["172.20.0.0/28"],
             ipam_pool_id=Token.as_string(aws_vpc_ipam_pool_example.id),
             netmask_length=28
         )
@@ -147,4 +147,4 @@ Using `terraform import`, import IPAM allocations using the allocation `id` and 
 % terraform import aws_vpc_ipam_pool_cidr_allocation.example ipam-pool-alloc-0dc6d196509c049ba8b549ff99f639736_ipam-pool-07cfb559e0921fcbe
 ```
 
-<!-- cache-key: cdktf-0.17.1 input-b2a9c33daa63e727fac1199b01a56911b1a7fec8f4b3609f59193d7139a135f2 -->
+<!-- cache-key: cdktf-0.17.1 input-ddd73bf852bf7f559291762467aeca147a50810e7c21dd054f1b8efa8376bf13 -->

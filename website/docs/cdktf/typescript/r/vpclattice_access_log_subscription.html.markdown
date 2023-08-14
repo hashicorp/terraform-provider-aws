@@ -50,9 +50,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `id` - ID of the access log subscription.
 * `arn` - Amazon Resource Name (ARN) of the access log subscription.
-* `resourceIdentifier` - ID of the service network or service.
 * `resourceArn` - Amazon Resource Name (ARN) of the service network or service.
-* `destinationArn` - Amazon Resource Name (ARN) of the log destination.
 
 ## Import
 
@@ -76,4 +74,4 @@ Using `terraform import`, import VPC Lattice Access Log Subscription using the a
 % terraform import aws_vpclattice_access_log_subscription.example rft-8012925589
 ```
 
-<!-- cache-key: cdktf-0.17.1 input-74036cf1cff6d86fd670ae2e9b5207386359a931d9d10bd8c040fe2b61808b27 -->
+<!-- cache-key: cdktf-0.17.1 input-071e5e00ee8c7257836217b64dd4601a37eae349f38d2cca190da1ad40bc2a7d -->

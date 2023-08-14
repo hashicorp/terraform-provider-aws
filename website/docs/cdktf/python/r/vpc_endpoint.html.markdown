@@ -187,7 +187,7 @@ If no security groups are specified, the VPC's [default security group](https://
 ### dns_options
 
 * `dns_record_ip_type` - (Optional) The DNS records created for the endpoint. Valid values are `ipv4`, `dualstack`, `service-defined`, and `ipv6`.
-* `private_dns_only_for_inbound_resolver_endpoint` - (Optional) Indicates whether to enable private DNS only for inbound endpoints. This option is available only for services that support both gateway and interface endpoints. It routes traffic that originates from the VPC to the gateway endpoint and traffic that originates from on-premises to the interface endpoint. Can only be specified if `private_dns_enabled` is `true`.
+* `private_dns_only_for_inbound_resolver_endpoint` - (Optional) Indicates whether to enable private DNS only for inbound endpoints. This option is available only for services that support both gateway and interface endpoints. It routes traffic that originates from the VPC to the gateway endpoint and traffic that originates from on-premises to the interface endpoint. Default is `false`. Can only be specified if private_dns_enabled is `true`.
 
 ## Timeouts
 
@@ -236,4 +236,4 @@ Using `terraform import`, import VPC Endpoints using the VPC endpoint `id`. For 
 % terraform import aws_vpc_endpoint.endpoint1 vpce-3ecf2a57
 ```
 
-<!-- cache-key: cdktf-0.17.1 input-3f86bb22f437c387c1f7247a2a843a4aa8f400408ac66f18923ffefbca5b7948 -->
+<!-- cache-key: cdktf-0.17.1 input-f297fba86f49311b28d9ad61069addf2f69a6357bfa1356f16d2fce2023ca56d -->

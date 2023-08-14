@@ -34,7 +34,7 @@ class MyConvertedCode extends TerraformStack {
       cidrBlock: "10.0.0.0/16",
     });
     new VpcIpv4CidrBlockAssociation(this, "secondary_cidr", {
-      cidrBlock: "172.2.0.0/16",
+      cidrBlock: "172.20.0.0/16",
       vpcId: main.id,
     });
   }
@@ -86,4 +86,4 @@ Using `terraform import`, import `awsVpcIpv4CidrBlockAssociation` using the VPC 
 % terraform import aws_vpc_ipv4_cidr_block_association.example vpc-cidr-assoc-xxxxxxxx
 ```
 
-<!-- cache-key: cdktf-0.17.1 input-9bf83ab1dea464237a8dc248710458eeab7b61d78f8e94320ad8c9729d568053 -->
+<!-- cache-key: cdktf-0.17.1 input-e6e4470001cf2936d2999e896d3abef4818433b72b60c96368624c0b9f649444 -->
