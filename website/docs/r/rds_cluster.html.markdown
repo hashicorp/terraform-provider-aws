@@ -313,7 +313,7 @@ resource "aws_rds_cluster" "example-clone" {
 }
 ```
 
-* `source_cluster_identifier` - (Required) Identifier of the source database cluster from which to restore.
+* `source_cluster_identifier` - (Required) Identifier of the source database cluster from which to restore. When restoring from a cluster in another AWS account, the identifier is the ARN of that cluster.
 * `restore_type` - (Optional) Type of restore to be performed.
    Valid options are `full-copy` (default) and `copy-on-write`.
 * `use_latest_restorable_time` - (Optional) Set to true to restore the database cluster to the latest restorable backup time. Defaults to false. Conflicts with `restore_to_time`.
