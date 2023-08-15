@@ -6,8 +6,6 @@ package opensearch
 import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/opensearchservice"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 )
 
 func expandCognitoOptions(c []interface{}) *opensearchservice.CognitoOptions {
@@ -108,19 +106,6 @@ func expandEncryptAtRestOptions(m map[string]interface{}) *opensearchservice.Enc
 	}
 	if v, ok := m["kms_key_id"]; ok && v.(string) != "" {
 		options.KmsKeyId = aws.String(v.(string))
-	}
-
-	return &options
-}
-
-func expandVPCOptions(m map[string]interface{}) *opensearchservice.VPCOptions {
-	options := opensearchservice.VPCOptions{}
-
-	if v, ok := m["security_group_ids"]; ok {
-		options.SecurityGroupIds = flex.ExpandStringSet(v.(*schema.Set))
-	}
-	if v, ok := m["subnet_ids"]; ok {
-		options.SubnetIds = flex.ExpandStringSet(v.(*schema.Set))
 	}
 
 	return &options

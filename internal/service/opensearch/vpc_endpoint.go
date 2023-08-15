@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
@@ -27,7 +28,7 @@ func ResourceVPCEndpoint() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceVPCEndpointCreate,
 		ReadWithoutTimeout:   resourceVPCEndpointRead,
-		UpdateWithoutTimeout: resourceVPCEndpointPut,
+		UpdateWithoutTimeout: resourceVPCEndpointUpdate,
 		DeleteWithoutTimeout: resourceVPCEndpointDelete,
 
 		Importer: &schema.ResourceImporter{
@@ -132,36 +133,23 @@ func resourceVPCEndpointRead(ctx context.Context, d *schema.ResourceData, meta i
 	return diags
 }
 
-func resourceVPCEndpointPut(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceVPCEndpointUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).OpenSearchConn(ctx)
 
-	// Update the VPC Endpoint
 	input := &opensearchservice.UpdateVpcEndpointInput{
+		VpcOptions:    expandVPCOptions(d.Get("vpc_options").([]interface{})[0].(map[string]interface{})),
 		VpcEndpointId: aws.String(d.Id()),
 	}
-
-	if v, ok := d.GetOk("vpc_options"); ok {
-		options := v.([]interface{})
-		if options[0] == nil {
-			return sdkdiag.AppendErrorf(diags, "At least one field is expected inside vpc_options")
-		}
-
-		s := options[0].(map[string]interface{})
-		input.VpcOptions = expandVPCOptions(s)
-	}
-
-	log.Printf("[DEBUG] Updating vpc endpoint %s", input)
 
 	_, err := conn.UpdateVpcEndpointWithContext(ctx, input)
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "updating vpc endpoint (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "updating OpenSearch VPC Endpoint (%s): %s", d.Id(), err)
 	}
 
-	err = vpcEndpointWaitUntilUpdate(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate))
-	if err != nil {
-		return diag.Errorf("waiting for vpc endpoint to become active: %s", err)
+	if err := vpcEndpointWaitUntilUpdate(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for OpenSearch VPC Endpoint (%s) update: %s", d.Id(), err)
 	}
 
 	return append(diags, resourceVPCEndpointRead(ctx, d, meta)...)
@@ -342,6 +330,24 @@ func vpcEndpointWaitUntilUpdate(ctx context.Context, conn *opensearchservice.Ope
 		return fmt.Errorf("waiting for VPC Endpoint (%s) to become available: %s", id, err)
 	}
 	return nil
+}
+
+func expandVPCOptions(tfMap map[string]interface{}) *opensearchservice.VPCOptions {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &opensearchservice.VPCOptions{}
+
+	if v, ok := tfMap["security_group_ids"].(*schema.Set); ok && v.Len() > 0 {
+		apiObject.SecurityGroupIds = flex.ExpandStringSet(v)
+	}
+
+	if v, ok := tfMap["subnet_ids"].(*schema.Set); ok && v.Len() > 0 {
+		apiObject.SubnetIds = flex.ExpandStringSet(v)
+	}
+
+	return apiObject
 }
 
 func flattenVPCDerivedInfo(apiObject *opensearchservice.VPCDerivedInfo) map[string]interface{} {
