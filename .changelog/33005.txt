@@ -1,0 +1,4 @@
+```release-note:feature
+aws_imagebuilder_image_pipelines: Add configuration attributes for image scanning
+data-source/aws_imagebuilder_image_pipelines: Add image scanning attributes to data resource
+```
