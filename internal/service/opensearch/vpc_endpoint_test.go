@@ -14,12 +14,12 @@ import (
 	tfopensearch "github.com/hashicorp/terraform-provider-aws/internal/service/opensearch"
 )
 
-func TestAccOpenSearchVPCEndpointConnection_basic(t *testing.T) {
+func TestAccOpenSearchVPCEndpoint_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var domain opensearchservice.DomainStatus
 	ri := sdkacctest.RandString(10)
 	name := fmt.Sprintf("tf-test-%s", ri)
-	resourceName := "aws_opensearch_vpc_endpoint_connection.test"
+	resourceName := "aws_opensearch_vpc_endpoint.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -28,7 +28,7 @@ func TestAccOpenSearchVPCEndpointConnection_basic(t *testing.T) {
 		CheckDestroy:             testAccCheckDomainDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVPCEndpointConnectionConfig(name),
+				Config: testAccVPCEndpointConfig(name),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(ctx, "aws_opensearch_domain.domain_1", &domain),
 					resource.TestCheckResourceAttr(resourceName, "connection_status", "ACTIVE"),
@@ -43,12 +43,12 @@ func TestAccOpenSearchVPCEndpointConnection_basic(t *testing.T) {
 	})
 }
 
-func TestAccOpenSearchVPCEndpointConnection_update(t *testing.T) {
+func TestAccOpenSearchVPCEndpoint_update(t *testing.T) {
 	ctx := acctest.Context(t)
 	var domain opensearchservice.DomainStatus
 	ri := sdkacctest.RandString(10)
 	name := fmt.Sprintf("tf-test-%s", ri)
-	resourceName := "aws_opensearch_vpc_endpoint_connection.test"
+	resourceName := "aws_opensearch_vpc_endpoint.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -57,7 +57,7 @@ func TestAccOpenSearchVPCEndpointConnection_update(t *testing.T) {
 		CheckDestroy:             testAccCheckDomainDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVPCEndpointConnectionConfig(name),
+				Config: testAccVPCEndpointConfig(name),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(ctx, "aws_opensearch_domain.domain_1", &domain),
 					resource.TestCheckResourceAttr(resourceName, "vpc_options.0.security_group_ids.#", "1"),
@@ -65,7 +65,7 @@ func TestAccOpenSearchVPCEndpointConnection_update(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccVPCEndpointConnectionConfigUpdate(name),
+				Config: testAccVPCEndpointConfigUpdate(name),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(ctx, "aws_opensearch_domain.domain_1", &domain),
 					resource.TestCheckResourceAttr(resourceName, "vpc_options.0.security_group_ids.#", "2"),
@@ -81,12 +81,12 @@ func TestAccOpenSearchVPCEndpointConnection_update(t *testing.T) {
 	})
 }
 
-func TestAccOpenSearchVPCEndpointConnection_disappears(t *testing.T) {
+func TestAccOpenSearchVPCEndpoint_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var domain opensearchservice.DomainStatus
 	ri := sdkacctest.RandString(10)
 	name := fmt.Sprintf("tf-test-%s", ri)
-	resourceName := "aws_opensearch_vpc_endpoint_connection.test"
+	resourceName := "aws_opensearch_vpc_endpoint.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -95,7 +95,7 @@ func TestAccOpenSearchVPCEndpointConnection_disappears(t *testing.T) {
 		CheckDestroy:             testAccCheckDomainDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVPCEndpointConnectionConfig(name),
+				Config: testAccVPCEndpointConfig(name),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(ctx, "aws_opensearch_domain.domain_1", &domain),
 					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfopensearch.ResourceVPCEndpoint(), resourceName),
@@ -105,7 +105,7 @@ func TestAccOpenSearchVPCEndpointConnection_disappears(t *testing.T) {
 	})
 }
 
-func testAccVPCEndpointConnectionConfig(name string) string {
+func testAccVPCEndpointConfig(name string) string {
 	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "192.168.0.0/22"
@@ -163,7 +163,7 @@ resource "aws_opensearch_domain" "domain_1" {
   }
 }
 
-resource "aws_opensearch_vpc_endpoint_connection" "foo" {
+resource "aws_opensearch_vpc_endpoint" "foo" {
   domain_arn = aws_opensearch_domain.domain_1.arn
   vpc_options {
     security_group_ids = [aws_security_group.test.id]
@@ -173,7 +173,7 @@ resource "aws_opensearch_vpc_endpoint_connection" "foo" {
 `, name))
 }
 
-func testAccVPCEndpointConnectionConfigUpdate(name string) string {
+func testAccVPCEndpointConfigUpdate(name string) string {
 	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "192.168.0.0/22"
@@ -231,7 +231,7 @@ resource "aws_opensearch_domain" "domain_1" {
   }
 }
 
-resource "aws_opensearch_vpc_endpoint_connection" "foo" {
+resource "aws_opensearch_vpc_endpoint" "foo" {
   domain_arn = aws_opensearch_domain.domain_1.arn
   vpc_options {
     security_group_ids = [aws_security_group.test.id, aws_security_group.test2.id]

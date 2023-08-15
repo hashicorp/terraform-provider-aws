@@ -20,7 +20,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
-// @SDKResource("aws_opensearch_vpc_endpoint_connection")
+// @SDKResource("aws_opensearch_vpc_endpoint")
 func ResourceVPCEndpoint() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceVPCEndpointCreate,
@@ -113,7 +113,7 @@ func resourceVPCEndpointCreate(ctx context.Context, d *schema.ResourceData, meta
 	d.SetId(aws.StringValue(resp.VpcEndpoint.VpcEndpointId))
 	log.Printf("[INFO] open search vpc endpoint ID: %s", d.Id())
 
-	err = vpcEndpointConnectionWaitUntilActive(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate))
+	err = vpcEndpointWaitUntilActive(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate))
 	if err != nil {
 		return diag.Errorf("waiting for vpc endpoint to become active: %s", err)
 	}
@@ -124,20 +124,20 @@ func resourceVPCEndpointCreate(ctx context.Context, d *schema.ResourceData, meta
 func resourceVPCEndpointRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).OpenSearchConn(ctx)
 
-	endpointRaw, status, err := vpcEndpointConnectionRefreshState(ctx, conn, d.Id())()
+	endpointRaw, status, err := vpcEndpointRefreshState(ctx, conn, d.Id())()
 
 	if err != nil {
-		return diag.Errorf("reading vpc endpoint Connection: %s", err)
+		return diag.Errorf("reading vpc endpoint: %s", err)
 	}
 
 	endpoint := endpointRaw.(*opensearchservice.VpcEndpoint)
-	log.Printf("[DEBUG] vpc endpoint Connection response: %#v", endpoint)
+	log.Printf("[DEBUG] vpc endpoint response: %#v", endpoint)
 
 	d.Set("connection_status", status)
 	d.Set("domain_arn", endpoint.DomainArn)
 
 	if endpoint.VpcOptions == nil {
-		return diag.Errorf("reading vpc endpoint Connection vpc options ")
+		return diag.Errorf("reading vpc endpoint vpc options ")
 	}
 
 	d.Set("vpc_options", flattenVPCDerivedInfo(endpoint.VpcOptions))
@@ -163,15 +163,15 @@ func resourceVPCEndpointPut(ctx context.Context, d *schema.ResourceData, meta in
 		input.VpcOptions = expandVPCOptions(s)
 	}
 
-	log.Printf("[DEBUG] Updating vpc endpoint Connection %s", input)
+	log.Printf("[DEBUG] Updating vpc endpoint %s", input)
 
 	_, err := conn.UpdateVpcEndpointWithContext(ctx, input)
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "updating vpc endpoint Connection (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "updating vpc endpoint (%s): %s", d.Id(), err)
 	}
 
-	err = vpcEndpointConnectionWaitUntilUpdate(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate))
+	err = vpcEndpointWaitUntilUpdate(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate))
 	if err != nil {
 		return diag.Errorf("waiting for vpc endpoint to become active: %s", err)
 	}
@@ -192,13 +192,13 @@ func resourceVPCEndpointDelete(ctx context.Context, d *schema.ResourceData, meta
 	}
 
 	if err != nil {
-		return diag.Errorf("deleting vpc endpoint Connection (%s): %s", d.Id(), err)
+		return diag.Errorf("deleting vpc endpoint (%s): %s", d.Id(), err)
 	}
 
 	return nil
 }
 
-func vpcEndpointConnectionRefreshState(ctx context.Context, conn *opensearchservice.OpenSearchService, id string) retry.StateRefreshFunc {
+func vpcEndpointRefreshState(ctx context.Context, conn *opensearchservice.OpenSearchService, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		resp, err := conn.DescribeVpcEndpointsWithContext(ctx, &opensearchservice.DescribeVpcEndpointsInput{
 			VpcEndpointIds: []*string{aws.String(id)},
@@ -225,8 +225,8 @@ func vpcEndpointConnectionRefreshState(ctx context.Context, conn *opensearchserv
 	}
 }
 
-func vpcEndpointConnectionWaitUntilActive(ctx context.Context, conn *opensearchservice.OpenSearchService, id string, timeout time.Duration) error {
-	log.Printf("[DEBUG] Waiting for VPC Endpoint Connection (%s) to become available.", id)
+func vpcEndpointWaitUntilActive(ctx context.Context, conn *opensearchservice.OpenSearchService, id string, timeout time.Duration) error {
+	log.Printf("[DEBUG] Waiting for VPC Endpoint (%s) to become available.", id)
 	stateConf := &retry.StateChangeConf{
 		Pending: []string{
 			opensearchservice.VpcEndpointStatusCreating,
@@ -234,17 +234,17 @@ func vpcEndpointConnectionWaitUntilActive(ctx context.Context, conn *opensearchs
 		Target: []string{
 			opensearchservice.VpcEndpointStatusActive,
 		},
-		Refresh: vpcEndpointConnectionRefreshState(ctx, conn, id),
+		Refresh: vpcEndpointRefreshState(ctx, conn, id),
 		Timeout: timeout,
 	}
 	if _, err := stateConf.WaitForStateContext(ctx); err != nil {
-		return fmt.Errorf("waiting for VPC Endpoint  Connection (%s) to become available: %s", id, err)
+		return fmt.Errorf("waiting for VPC Endpoint (%s) to become available: %s", id, err)
 	}
 	return nil
 }
 
-func vpcEndpointConnectionWaitUntilUpdate(ctx context.Context, conn *opensearchservice.OpenSearchService, id string, timeout time.Duration) error {
-	log.Printf("[DEBUG] Waiting for VPC Endpoint Connection (%s) to become available.", id)
+func vpcEndpointWaitUntilUpdate(ctx context.Context, conn *opensearchservice.OpenSearchService, id string, timeout time.Duration) error {
+	log.Printf("[DEBUG] Waiting for VPC Endpoint (%s) to become available.", id)
 	stateConf := &retry.StateChangeConf{
 		Pending: []string{
 			opensearchservice.VpcEndpointStatusUpdating,
@@ -252,11 +252,11 @@ func vpcEndpointConnectionWaitUntilUpdate(ctx context.Context, conn *opensearchs
 		Target: []string{
 			opensearchservice.VpcEndpointStatusActive,
 		},
-		Refresh: vpcEndpointConnectionRefreshState(ctx, conn, id),
+		Refresh: vpcEndpointRefreshState(ctx, conn, id),
 		Timeout: timeout,
 	}
 	if _, err := stateConf.WaitForStateContext(ctx); err != nil {
-		return fmt.Errorf("waiting for VPC Endpoint  Connection (%s) to become available: %s", id, err)
+		return fmt.Errorf("waiting for VPC Endpoint (%s) to become available: %s", id, err)
 	}
 	return nil
 }

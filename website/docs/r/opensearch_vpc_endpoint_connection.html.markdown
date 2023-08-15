@@ -1,14 +1,14 @@
 ---
 subcategory: "OpenSearch"
 layout: "aws"
-page_title: "AWS: aws_opensearch_vpc_endpoint_connection"
+page_title: "AWS: aws_opensearch_vpc_endpoint"
 description: |-
-  Terraform resource for managing an AWS OpenSearch VPC Endpoint connection.
+  Terraform resource for managing an AWS OpenSearch VPC Endpoint.
 ---
 
-# Resource: aws_opensearch_vpc_endpoint_connection
+# Resource: aws_opensearch_vpc_endpoint
 
-Manages an [AWS Opensearch VPC Endpoint Connection](https://docs.aws.amazon.com/opensearch-service/latest/APIReference/API_CreateVpcEndpoint.html). Creates an Amazon OpenSearch Service-managed VPC endpoint..
+Manages an [AWS Opensearch VPC Endpoint](https://docs.aws.amazon.com/opensearch-service/latest/APIReference/API_CreateVpcEndpoint.html). Creates an Amazon OpenSearch Service-managed VPC endpoint..
 
 ## Example Usage
 
@@ -16,7 +16,7 @@ Manages an [AWS Opensearch VPC Endpoint Connection](https://docs.aws.amazon.com/
 
 ```terraform
 
-resource "aws_opensearch_vpc_endpoint_connection" "foo" {
+resource "aws_opensearch_vpc_endpoint" "foo" {
   domain_arn = aws_opensearch_domain.domain_1.arn
   vpc_options {
     security_group_ids = [aws_security_group.test.id, aws_security_group.test2.id]
@@ -47,15 +47,15 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-AWS Opensearch VPC Endpoint Connection imported by using the VPC Endpoint Connection ID `id`. For example:
+AWS Opensearch VPC Endpoint imported by using the VPC Endpoint Connection ID `id`. For example:
 
 ```terraform
 import {
-  to = aws_opensearch_vpc_endpoint_connection.foo
+  to = aws_opensearch_vpc_endpoint.foo
   id = "endpoint-id"
 }
 
-resource "aws_opensearch_vpc_endpoint_connection" "foo" {
+resource "aws_opensearch_vpc_endpoint" "foo" {
   name = "hashi"
   # (other resource arguments...)
 }
