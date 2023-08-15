@@ -53,7 +53,7 @@ VPC whose data will be exported as attributes.
 * `name` - (Required) The name of the filter. Filter names are case-sensitive.
 * `values` - (Required) The filter values. Filter values are case-sensitive.
 
-## Attributes Reference
+## Attribute Reference
 
 All of the argument attributes except `filter` blocks are also exported as
 result attributes. This data source will complete the data by populating

@@ -1368,7 +1368,7 @@ func flattenScrollBarOptions(apiObject *quicksight.ScrollBarOptions) []interface
 		tfMap["visibility"] = aws.StringValue(apiObject.Visibility)
 	}
 	if apiObject.VisibleRange != nil {
-		tfMap["visibile_range"] = flattenVisibleRangeOptions(apiObject.VisibleRange)
+		tfMap["visible_range"] = flattenVisibleRangeOptions(apiObject.VisibleRange)
 	}
 
 	return []interface{}{tfMap}

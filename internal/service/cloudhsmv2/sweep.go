@@ -67,7 +67,7 @@ func sweepClusters(region string) error {
 		return fmt.Errorf("error listing CloudHSMv2 Clusters (%s): %w", region, err)
 	}
 
-	err = sweep.SweepOrchestratorWithContext(ctx, sweepResources)
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
 
 	if err != nil {
 		return fmt.Errorf("error sweeping CloudHSMv2 Clusters (%s): %w", region, err)
@@ -117,7 +117,7 @@ func sweepHSMs(region string) error {
 		return fmt.Errorf("error listing CloudHSMv2 HSMs (%s): %w", region, err)
 	}
 
-	err = sweep.SweepOrchestratorWithContext(ctx, sweepResources)
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
 
 	if err != nil {
 		return fmt.Errorf("error sweeping CloudHSMv2 HSMs (%s): %w", region, err)

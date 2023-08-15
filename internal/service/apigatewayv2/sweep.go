@@ -80,7 +80,7 @@ func sweepAPIs(region string) error {
 		return fmt.Errorf("error listing API Gateway v2 APIs (%s): %w", region, err)
 	}
 
-	err = sweep.SweepOrchestratorWithContext(ctx, sweepResources)
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
 
 	if err != nil {
 		return fmt.Errorf("error sweeping API Gateway v2 APIs (%s): %w", region, err)
@@ -149,7 +149,7 @@ func sweepAPIMappings(region string) error {
 		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error listing API Gateway v2 Domain Names (%s): %w", region, err))
 	}
 
-	err = sweep.SweepOrchestratorWithContext(ctx, sweepResources)
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
 
 	if err != nil {
 		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error sweeping API Gateway v2 API Mappings (%s): %w", region, err))
@@ -193,7 +193,7 @@ func sweepDomainNames(region string) error {
 		return fmt.Errorf("error listing API Gateway v2 Domain Names (%s): %w", region, err)
 	}
 
-	err = sweep.SweepOrchestratorWithContext(ctx, sweepResources)
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
 
 	if err != nil {
 		return fmt.Errorf("error sweeping API Gateway v2 Domain Names (%s): %w", region, err)
@@ -237,7 +237,7 @@ func sweepVPCLinks(region string) error {
 		return fmt.Errorf("error listing API Gateway v2 VPC Links (%s): %w", region, err)
 	}
 
-	err = sweep.SweepOrchestratorWithContext(ctx, sweepResources)
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
 
 	if err != nil {
 		return fmt.Errorf("error sweeping API Gateway v2 VPC Links (%s): %w", region, err)

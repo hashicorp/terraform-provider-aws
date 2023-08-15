@@ -17,6 +17,7 @@ import (
 	"testing"
 	"time"
 
+	ec2types "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/aws/endpoints"
@@ -42,6 +43,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 	tfacmpca "github.com/hashicorp/terraform-provider-aws/internal/service/acmpca"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
+	tfiam "github.com/hashicorp/terraform-provider-aws/internal/service/iam"
 	tforganizations "github.com/hashicorp/terraform-provider-aws/internal/service/organizations"
 	tfsts "github.com/hashicorp/terraform-provider-aws/internal/service/sts"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -397,6 +399,27 @@ func MatchResourceAttrRegionalARN(resourceName, attributeName, arnService string
 			AccountID: AccountID(),
 			Partition: Partition(),
 			Region:    Region(),
+			Resource:  arnResourceRegexp.String(),
+			Service:   arnService,
+		}.String()
+
+		attributeMatch, err := regexp.Compile(arnRegexp)
+
+		if err != nil {
+			return fmt.Errorf("unable to compile ARN regexp (%s): %w", arnRegexp, err)
+		}
+
+		return resource.TestMatchResourceAttr(resourceName, attributeName, attributeMatch)(s)
+	}
+}
+
+// MatchResourceAttrRegionalARNRegion ensures the Terraform state regexp matches a formatted ARN with the specified region
+func MatchResourceAttrRegionalARNRegion(resourceName, attributeName, arnService, region string, arnResourceRegexp *regexp.Regexp) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		arnRegexp := arn.ARN{
+			AccountID: AccountID(),
+			Partition: Partition(),
+			Region:    region,
 			Resource:  arnResourceRegexp.String(),
 			Service:   arnService,
 		}.String()
@@ -978,15 +1001,10 @@ func PreCheckSSOAdminInstances(ctx context.Context, t *testing.T) {
 }
 
 func PreCheckHasIAMRole(ctx context.Context, t *testing.T, roleName string) {
-	conn := Provider.Meta().(*conns.AWSClient).IAMConn(ctx)
-	input := &iam.GetRoleInput{
-		RoleName: aws.String(roleName),
-	}
+	_, err := tfiam.FindRoleByName(ctx, Provider.Meta().(*conns.AWSClient).IAMConn(ctx), roleName)
 
-	_, err := conn.GetRoleWithContext(ctx, input)
-
-	if tfawserr.ErrCodeEquals(err, iam.ErrCodeNoSuchEntityException) {
-		t.Skipf("skipping acceptance test: required IAM role \"%s\" is not present", roleName)
+	if tfresource.NotFound(err) {
+		t.Skipf("skipping acceptance test: required IAM role %q not found", roleName)
 	}
 
 	if PreCheckSkipError(err) {
@@ -1502,6 +1520,10 @@ func PreCheckSkipError(err error) bool {
 		return true
 	}
 	if tfawserr.ErrMessageContains(err, "InvalidAction", "Unavailable Operation") {
+		return true
+	}
+	// ignore when not authorized to call API from account
+	if tfawserr.ErrCodeEquals(err, "ForbiddenException") {
 		return true
 	}
 	return false
@@ -2229,6 +2251,31 @@ func CheckVPCExists(ctx context.Context, n string, v *ec2.Vpc) resource.TestChec
 		conn := Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
 
 		output, err := tfec2.FindVPCByID(ctx, conn, rs.Primary.ID)
+
+		if err != nil {
+			return err
+		}
+
+		*v = *output
+
+		return nil
+	}
+}
+
+func CheckVPCExistsV2(ctx context.Context, n string, v *ec2types.Vpc) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[n]
+		if !ok {
+			return fmt.Errorf("not found: %s", n)
+		}
+
+		if rs.Primary.ID == "" {
+			return fmt.Errorf("no VPC ID is set")
+		}
+
+		conn := Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
+
+		output, err := tfec2.FindVPCByIDV2(ctx, conn, rs.Primary.ID)
 
 		if err != nil {
 			return err

@@ -22,7 +22,7 @@ import (
 
 const (
 	ResNameGlobalSettings            = "Global Settings"
-	globalSettingsPropagationTimeout = time.Second * 10
+	globalSettingsPropagationTimeout = 20 * time.Second
 )
 
 // @SDKResource("aws_chimesdkvoice_global_settings")
@@ -65,10 +65,12 @@ func resourceGlobalSettingsRead(ctx context.Context, d *schema.ResourceData, met
 	err := tfresource.Retry(ctx, globalSettingsPropagationTimeout, func() *retry.RetryError {
 		var getErr error
 		out, getErr = conn.GetGlobalSettingsWithContext(ctx, &chimesdkvoice.GetGlobalSettingsInput{})
+
 		if getErr != nil {
 			return retry.NonRetryableError(getErr)
 		}
-		if out.VoiceConnector == nil {
+
+		if out.VoiceConnector == nil || out.VoiceConnector.CdrBucket == nil {
 			return retry.RetryableError(tfresource.NewEmptyResultError(&chimesdkvoice.GetGlobalSettingsInput{}))
 		}
 

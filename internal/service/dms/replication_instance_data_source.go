@@ -27,14 +27,6 @@ func DataSourceReplicationInstance() *schema.Resource {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
-			"allow_major_version_upgrade": {
-				Type:     schema.TypeBool,
-				Computed: true,
-			},
-			"apply_immediately": {
-				Type:     schema.TypeBool,
-				Computed: true,
-			},
 			"auto_minor_version_upgrade": {
 				Type:     schema.TypeBool,
 				Computed: true,
@@ -129,6 +121,25 @@ func dataSourceReplicationInstanceRead(ctx context.Context, d *schema.ResourceDa
 	d.Set("replication_instance_arn", instance.ReplicationInstanceArn)
 	d.Set("replication_instance_class", instance.ReplicationInstanceClass)
 	d.Set("replication_instance_id", instance.ReplicationInstanceIdentifier)
+
+	if err := d.Set("replication_instance_private_ips", aws.StringValueSlice(instance.ReplicationInstancePrivateIpAddresses)); err != nil {
+		return create.DiagError(names.DMS, create.ErrActionReading, DSNameReplicationTask, d.Id(), err)
+	}
+
+	if err := d.Set("replication_instance_public_ips", aws.StringValueSlice(instance.ReplicationInstancePublicIpAddresses)); err != nil {
+		return create.DiagError(names.DMS, create.ErrActionReading, DSNameReplicationTask, d.Id(), err)
+	}
+
+	d.Set("replication_subnet_group_id", instance.ReplicationSubnetGroup.ReplicationSubnetGroupIdentifier)
+
+	vpc_security_group_ids := []string{}
+	for _, sg := range instance.VpcSecurityGroups {
+		vpc_security_group_ids = append(vpc_security_group_ids, aws.StringValue(sg.VpcSecurityGroupId))
+	}
+
+	if err := d.Set("vpc_security_group_ids", vpc_security_group_ids); err != nil {
+		return create.DiagError(names.DMS, create.ErrActionReading, DSNameReplicationTask, d.Id(), err)
+	}
 
 	tags, err := listTags(ctx, conn, aws.StringValue(instance.ReplicationInstanceArn))
 

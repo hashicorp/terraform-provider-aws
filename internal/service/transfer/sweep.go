@@ -68,7 +68,7 @@ func sweepServers(region string) error {
 		return fmt.Errorf("error listing Transfer Servers (%s): %w", region, err)
 	}
 
-	err = sweep.SweepOrchestratorWithContext(ctx, sweepResources)
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
 
 	if err != nil {
 		return fmt.Errorf("error sweeping Transfer Servers (%s): %w", region, err)
@@ -112,7 +112,7 @@ func sweepWorkflows(region string) error {
 		return fmt.Errorf("error listing Transfer Workflows (%s): %w", region, err)
 	}
 
-	err = sweep.SweepOrchestratorWithContext(ctx, sweepResources)
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
 
 	if err != nil {
 		return fmt.Errorf("error sweeping Transfer Workflows (%s): %w", region, err)

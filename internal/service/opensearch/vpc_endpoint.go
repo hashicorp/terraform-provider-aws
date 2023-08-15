@@ -27,6 +27,7 @@ func ResourceVPCEndpoint() *schema.Resource {
 		ReadWithoutTimeout:   resourceVPCEndpointRead,
 		UpdateWithoutTimeout: resourceVPCEndpointPut,
 		DeleteWithoutTimeout: resourceVPCEndpointDelete,
+
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
@@ -38,6 +39,10 @@ func ResourceVPCEndpoint() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
+			"connection_status": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"domain_arn": {
 				Type:         schema.TypeString,
 				Required:     true,
@@ -54,19 +59,16 @@ func ResourceVPCEndpoint() *schema.Resource {
 							Type:     schema.TypeSet,
 							Computed: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
-							Set:      schema.HashString,
 						},
 						"security_group_ids": {
 							Type:     schema.TypeSet,
 							Optional: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
-							Set:      schema.HashString,
 						},
 						"subnet_ids": {
 							Type:     schema.TypeSet,
 							Optional: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
-							Set:      schema.HashString,
 						},
 						"vpc_id": {
 							Type:     schema.TypeString,
@@ -74,10 +76,6 @@ func ResourceVPCEndpoint() *schema.Resource {
 						},
 					},
 				},
-			},
-			"connection_status": {
-				Type:     schema.TypeString,
-				Computed: true,
 			},
 		},
 	}

@@ -18,9 +18,6 @@ const (
 	clusterInvalidClusterStateFaultTimeout = 15 * time.Minute
 
 	clusterRelocationStatusResolvedTimeout = 1 * time.Minute
-
-	snapshotScheduleAssociationActivatedTimeout = 75 * time.Minute
-	snapshotScheduleAssociationDestroyedTimeout = 75 * time.Minute
 )
 
 func waitClusterCreated(ctx context.Context, conn *redshift.Redshift, id string, timeout time.Duration) (*redshift.Cluster, error) {
@@ -132,46 +129,6 @@ func waitClusterAquaApplied(ctx context.Context, conn *redshift.Redshift, id str
 	if output, ok := outputRaw.(*redshift.Cluster); ok {
 		tfresource.SetLastError(err, errors.New(aws.StringValue(output.ClusterStatus)))
 
-		return output, err
-	}
-
-	return nil, err
-}
-
-func WaitScheduleAssociationActive(ctx context.Context, conn *redshift.Redshift, id string) (*redshift.ClusterAssociatedToSchedule, error) {
-	stateConf := &retry.StateChangeConf{
-		Pending:    []string{redshift.ScheduleStateModifying},
-		Target:     []string{redshift.ScheduleStateActive},
-		Refresh:    statusScheduleAssociation(ctx, conn, id),
-		Timeout:    snapshotScheduleAssociationActivatedTimeout,
-		MinTimeout: 10 * time.Second,
-		Delay:      30 * time.Second,
-	}
-
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
-
-	if output, ok := outputRaw.(*redshift.ClusterAssociatedToSchedule); ok {
-		tfresource.SetLastError(err, errors.New(aws.StringValue(output.ScheduleAssociationState)))
-
-		return output, err
-	}
-
-	return nil, err
-}
-
-func waitScheduleAssociationDeleted(ctx context.Context, conn *redshift.Redshift, id string) (*redshift.ClusterAssociatedToSchedule, error) { //nolint:unparam
-	stateConf := &retry.StateChangeConf{
-		Pending:    []string{redshift.ScheduleStateModifying, redshift.ScheduleStateActive},
-		Target:     []string{},
-		Refresh:    statusScheduleAssociation(ctx, conn, id),
-		Timeout:    snapshotScheduleAssociationDestroyedTimeout,
-		MinTimeout: 10 * time.Second,
-	}
-
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
-
-	if output, ok := outputRaw.(*redshift.ClusterAssociatedToSchedule); ok {
-		tfresource.SetLastError(err, errors.New(aws.StringValue(output.ScheduleAssociationState)))
 		return output, err
 	}
 

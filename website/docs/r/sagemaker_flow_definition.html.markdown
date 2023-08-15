@@ -108,7 +108,7 @@ resource "aws_sagemaker_flow_definition" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `flow_definition_name` - (Required) The name of your flow definition.
 * `human_loop_config` - (Required)  An object containing information about the tasks the human reviewers will perform. See [Human Loop Config](#human-loop-config) details below.
@@ -157,9 +157,9 @@ The following arguments are supported:
 * `s3_output_path` - (Required) The Amazon S3 path where the object containing human output will be made available.
 * `kms_key_id` - (Optional) The Amazon Key Management Service (KMS) key ARN for server-side encryption.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - The Amazon Resource Name (ARN) assigned by AWS to this Flow Definition.
 * `id` - The name of the Flow Definition.
@@ -167,8 +167,17 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-SageMaker Flow Definitions can be imported using the `flow_definition_name`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import SageMaker Flow Definitions using the `flow_definition_name`. For example:
 
+```terraform
+import {
+  to = aws_sagemaker_flow_definition.example
+  id = "example"
+}
 ```
-$ terraform import aws_sagemaker_flow_definition.example example
+
+Using `terraform import`, import SageMaker Flow Definitions using the `flow_definition_name`. For example:
+
+```console
+% terraform import aws_sagemaker_flow_definition.example example
 ```

@@ -45,18 +45,27 @@ This resource exports the following attributes in addition to the arguments abov
 * `id` - The connection endpoint ID for connecting to the domain.
 * `connection_status` - The current status of the endpoint.
 
+## Timeouts
+
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
+
+* `create` - (Default `60m`)
+* `update` - (Default `60m`)
+* `delete` - (Default `90m`)
+
 ## Import
 
-AWS Opensearch VPC Endpoint imported by using the VPC Endpoint Connection ID `id`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import OpenSearch VPC endpoint connections using the `id`. For example:
 
 ```terraform
 import {
-  to = aws_opensearch_vpc_endpoint.foo
+  to = aws_opensearch_vpc_endpoint_connection.example
   id = "endpoint-id"
 }
+```
 
-resource "aws_opensearch_vpc_endpoint" "foo" {
-  name = "hashi"
-  # (other resource arguments...)
-}
+Using `terraform import`, import OpenSearch VPC endpoint connections using the `id`. For example:
+
+```console
+% terraform import aws_opensearch_vpc_endpoint_connection.example endpoint-id
 ```

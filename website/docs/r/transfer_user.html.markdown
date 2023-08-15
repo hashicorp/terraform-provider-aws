@@ -69,7 +69,7 @@ resource "aws_transfer_user" "foo" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `server_id` - (Required) The Server ID of the Transfer Server (e.g., `s-12345678`)
 * `user_name` - (Required) The name used for log in to your SFTP server.
@@ -101,9 +101,9 @@ home_directory_mappings {
 * `uid` - (Required) The POSIX user ID used for all EFS operations by this user.
 * `secondary_gids` - (Optional) The secondary POSIX group IDs used for all EFS operations by this user.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - Amazon Resource Name (ARN) of Transfer User
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
@@ -116,8 +116,17 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Transfer Users can be imported using the `server_id` and `user_name` separated by `/`.
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Transfer Users using the `server_id` and `user_name` separated by `/`. For example:
 
+```terraform
+import {
+  to = aws_transfer_user.bar
+  id = "s-12345678/test-username"
+}
 ```
-$ terraform import aws_transfer_user.bar s-12345678/test-username
+
+Using `terraform import`, import Transfer Users using the `server_id` and `user_name` separated by `/`. For example:
+
+```console
+% terraform import aws_transfer_user.bar s-12345678/test-username
 ```
