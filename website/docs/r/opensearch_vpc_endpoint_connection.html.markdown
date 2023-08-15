@@ -49,8 +49,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 AWS Opensearch VPC Endpoint Connection imported by using the VPC Endpoint Connection ID `id`. For example:
 
-```
-$ terraform
+```terraform
 import {
   to = aws_opensearch_vpc_endpoint_connection.foo
   id = "endpoint-id"
