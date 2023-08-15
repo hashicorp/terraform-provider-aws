@@ -1,0 +1,9 @@
+```release-note:bug
+resource/aws_quicksight_analysis: Covert `permissions` argument to set type, preventing persistent differences
+```
+```release-note:bug
+resource/aws_quicksight_dashboard: Covert `permissions` argument to set type, preventing persistent differences
+```
+```release-note:bug
+resource/aws_quicksight_template: Covert `permissions` argument to set type, preventing persistent differences
+```
