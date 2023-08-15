@@ -314,7 +314,7 @@ func TestAccImageBuilderImagePipeline_ImageScanning_imageScanningEnabledAdvanced
 		CheckDestroy:             testAccCheckImagePipelineDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccImagePipelineConfig_testsConfigurationScanningEnabledAdvanced(rName, []string {"a", "b"}),
+				Config: testAccImagePipelineConfig_testsConfigurationScanningEnabledAdvanced(rName, []string{"a", "b"}),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckImagePipelineExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "image_scanning_configuration.#", "1"),
@@ -330,7 +330,7 @@ func TestAccImageBuilderImagePipeline_ImageScanning_imageScanningEnabledAdvanced
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccImagePipelineConfig_testsConfigurationScanningEnabledAdvanced(rName, []string {"a", "c"}),
+				Config: testAccImagePipelineConfig_testsConfigurationScanningEnabledAdvanced(rName, []string{"a", "c"}),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckImagePipelineExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "image_scanning_configuration.#", "1"),
@@ -991,9 +991,9 @@ resource "aws_imagebuilder_image_pipeline" "test" {
 
 func testAccImagePipelineConfig_testsConfigurationScanningEnabledAdvanced(rName string, imageTags []string) string {
 	commaSepImageTags := ""
-	if len(imageTags) > 0  {
+	if len(imageTags) > 0 {
 		commaSepImageTags = "\"" + strings.Join(imageTags, "\", \"") + "\""
-	} 
+	}
 	return acctest.ConfigCompose(
 		testAccImagePipelineBaseConfig(rName),
 		fmt.Sprintf(`

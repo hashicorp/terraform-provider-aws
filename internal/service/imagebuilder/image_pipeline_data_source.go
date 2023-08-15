@@ -85,9 +85,9 @@ func DataSourceImagePipeline() *schema.Resource {
 									"container_tags": {
 										Type:     schema.TypeSet,
 										Optional: true,
-										Elem:  &schema.Schema{
+										Elem: &schema.Schema{
 											Type: schema.TypeString,
-										  },
+										},
 									},
 									"repository_name": {
 										Type:     schema.TypeString,
