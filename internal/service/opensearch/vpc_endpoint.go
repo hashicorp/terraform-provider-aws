@@ -167,23 +167,25 @@ func resourceVPCEndpointPut(ctx context.Context, d *schema.ResourceData, meta in
 }
 
 func resourceVPCEndpointDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).OpenSearchConn(ctx)
 
-	req := &opensearchservice.DeleteVpcEndpointInput{
+	log.Printf("[DEBUG] Deleting OpenSearch VPC Endpoint: %s", d.Id())
+	_, err := conn.DeleteVpcEndpointWithContext(ctx, &opensearchservice.DeleteVpcEndpointInput{
 		VpcEndpointId: aws.String(d.Id()),
-	}
+	})
 
-	_, err := conn.DeleteVpcEndpointWithContext(ctx, req)
-
-	if tfawserr.ErrCodeEquals(err, "ResourceNotFoundException") {
-		return nil
+	if tfawserr.ErrCodeEquals(err, opensearchservice.ErrCodeResourceNotFoundException) {
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("deleting vpc endpoint (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting OpenSearch VPC Endpoint (%s): %s", d.Id(), err)
 	}
 
-	return nil
+	// TODO: Wait for delete.
+
+	return diags
 }
 
 type vpcEndpointNotFoundError struct {
