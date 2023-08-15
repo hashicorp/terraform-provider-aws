@@ -116,7 +116,7 @@ func testAccDomain_kms(t *testing.T) {
 				Config: testAccDomainConfig_kms(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(ctx, resourceName, &domain),
-					resource.TestCheckResourceAttrPair(resourceName, "kms_key_id", "aws_kms_key.test", "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "kms_key_id", "aws_kms_key.test", "key_id"),
 				),
 			},
 			{
@@ -233,7 +233,7 @@ func testAccDomain_sharingSettings(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "default_user_settings.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.sharing_settings.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.sharing_settings.0.notebook_output_option", "Allowed"),
-					resource.TestCheckResourceAttrPair(resourceName, "default_user_settings.0.sharing_settings.0.s3_kms_key_id", "aws_kms_key.test", "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "default_user_settings.0.sharing_settings.0.s3_kms_key_id", "aws_kms_key.test", "key_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "default_user_settings.0.sharing_settings.0.s3_output_path"),
 				),
 			},
@@ -751,7 +751,7 @@ func testAccDomain_defaultUserSettingsUpdated(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "default_user_settings.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.sharing_settings.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.sharing_settings.0.notebook_output_option", "Allowed"),
-					resource.TestCheckResourceAttrPair(resourceName, "default_user_settings.0.sharing_settings.0.s3_kms_key_id", "aws_kms_key.test", "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "default_user_settings.0.sharing_settings.0.s3_kms_key_id", "aws_kms_key.test", "key_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "default_user_settings.0.sharing_settings.0.s3_output_path"),
 				),
 			},
@@ -954,7 +954,7 @@ resource "aws_sagemaker_domain" "test" {
   auth_mode   = "IAM"
   vpc_id      = aws_vpc.test.id
   subnet_ids  = aws_subnet.test[*].id
-  kms_key_id  = aws_kms_key.test.arn
+  kms_key_id  = aws_kms_key.test.key_id
 
   default_user_settings {
     execution_role = aws_iam_role.test.arn
@@ -1098,7 +1098,7 @@ resource "aws_sagemaker_domain" "test" {
 
     sharing_settings {
       notebook_output_option = "Allowed"
-      s3_kms_key_id          = aws_kms_key.test.arn
+      s3_kms_key_id          = aws_kms_key.test.key_id
       s3_output_path         = "s3://${aws_s3_bucket.test.bucket}/sharing"
     }
   }
