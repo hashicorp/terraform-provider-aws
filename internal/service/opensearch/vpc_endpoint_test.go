@@ -7,12 +7,91 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/opensearchservice"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	tfopensearch "github.com/hashicorp/terraform-provider-aws/internal/service/opensearch"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
+
+func TestVPCEndpointErrorsNotFound(t *testing.T) {
+	t.Parallel()
+
+	testCases := []struct {
+		name       string
+		apiObjects []*opensearchservice.VpcEndpointError
+		notFound   bool
+	}{
+		{
+			name: "nil input",
+		},
+		{
+			name:       "slice of nil input",
+			apiObjects: []*opensearchservice.VpcEndpointError{nil, nil},
+		},
+		{
+			name: "single SERVER_ERROR",
+			apiObjects: []*opensearchservice.VpcEndpointError{&opensearchservice.VpcEndpointError{
+				ErrorCode:     aws.String(opensearchservice.VpcEndpointErrorCodeServerError),
+				ErrorMessage:  aws.String("fail"),
+				VpcEndpointId: aws.String("aos-12345678"),
+			}},
+		},
+		{
+			name: "single ENDPOINT_NOT_FOUND",
+			apiObjects: []*opensearchservice.VpcEndpointError{&opensearchservice.VpcEndpointError{
+				ErrorCode:     aws.String(opensearchservice.VpcEndpointErrorCodeEndpointNotFound),
+				ErrorMessage:  aws.String("Endpoint does not exist"),
+				VpcEndpointId: aws.String("aos-12345678"),
+			}},
+			notFound: true,
+		},
+		{
+			name: "no ENDPOINT_NOT_FOUND in many",
+			apiObjects: []*opensearchservice.VpcEndpointError{
+				&opensearchservice.VpcEndpointError{
+					ErrorCode:     aws.String(opensearchservice.VpcEndpointErrorCodeServerError),
+					ErrorMessage:  aws.String("fail"),
+					VpcEndpointId: aws.String("aos-abcd0123"),
+				},
+				&opensearchservice.VpcEndpointError{
+					ErrorCode:     aws.String(opensearchservice.VpcEndpointErrorCodeServerError),
+					ErrorMessage:  aws.String("crash"),
+					VpcEndpointId: aws.String("aos-12345678"),
+				},
+			},
+		},
+		{
+			name: "single ENDPOINT_NOT_FOUND in many",
+			apiObjects: []*opensearchservice.VpcEndpointError{
+				&opensearchservice.VpcEndpointError{
+					ErrorCode:     aws.String(opensearchservice.VpcEndpointErrorCodeServerError),
+					ErrorMessage:  aws.String("fail"),
+					VpcEndpointId: aws.String("aos-abcd0123"),
+				},
+				&opensearchservice.VpcEndpointError{
+					ErrorCode:     aws.String(opensearchservice.VpcEndpointErrorCodeEndpointNotFound),
+					ErrorMessage:  aws.String("Endpoint does not exist"),
+					VpcEndpointId: aws.String("aos-12345678"),
+				},
+			},
+			notFound: true,
+		},
+	}
+
+	for _, testCase := range testCases {
+		testCase := testCase
+		t.Run(testCase.name, func(t *testing.T) {
+			t.Parallel()
+
+			if got, want := tfresource.NotFound(tfopensearch.VPCEndpointsError(testCase.apiObjects)), testCase.notFound; got != want {
+				t.Errorf("NotFound = %v, want %v", got, want)
+			}
+		})
+	}
+}
 
 func TestAccOpenSearchVPCEndpoint_basic(t *testing.T) {
 	ctx := acctest.Context(t)

@@ -5,6 +5,7 @@ package opensearch
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log"
 	"time"
@@ -17,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
@@ -163,6 +165,7 @@ func resourceVPCEndpointPut(ctx context.Context, d *schema.ResourceData, meta in
 
 	return append(diags, resourceVPCEndpointRead(ctx, d, meta)...)
 }
+
 func resourceVPCEndpointDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).OpenSearchConn(ctx)
 
@@ -181,6 +184,80 @@ func resourceVPCEndpointDelete(ctx context.Context, d *schema.ResourceData, meta
 	}
 
 	return nil
+}
+
+type vpcEndpointNotFoundError struct {
+	apiError error
+}
+
+func (e *vpcEndpointNotFoundError) Error() string {
+	if e.apiError != nil {
+		return e.apiError.Error()
+	}
+
+	return "VPC endpoint not found"
+}
+
+func (e *vpcEndpointNotFoundError) Is(err error) bool {
+	_, ok := err.(*vpcEndpointNotFoundError) //nolint:errorlint // Explicitly does *not* match down the error tree
+	return ok
+}
+
+func (e *vpcEndpointNotFoundError) As(target any) bool {
+	t, ok := target.(**retry.NotFoundError)
+	if !ok {
+		return false
+	}
+
+	*t = &retry.NotFoundError{
+		Message: e.Error(),
+	}
+
+	return true
+}
+
+func vpcEndpointError(apiObject *opensearchservice.VpcEndpointError) error {
+	if apiObject == nil {
+		return nil
+	}
+
+	errorCode := aws.StringValue(apiObject.ErrorCode)
+	innerError := fmt.Errorf("%s: %s", errorCode, aws.StringValue(apiObject.ErrorMessage))
+	err := fmt.Errorf("%s: %w", aws.StringValue(apiObject.VpcEndpointId), innerError)
+
+	if errorCode == opensearchservice.VpcEndpointErrorCodeEndpointNotFound {
+		err = &vpcEndpointNotFoundError{apiError: err}
+	}
+
+	return err
+}
+
+func vpcEndpointsError(apiObjects []*opensearchservice.VpcEndpointError) error {
+	var errs []error
+
+	for _, apiObject := range apiObjects {
+		errs = append(errs, vpcEndpointError(apiObject))
+	}
+
+	return errors.Join(errs...)
+}
+
+func findVPCEndpoints(ctx context.Context, conn *opensearchservice.OpenSearchService, input *opensearchservice.DescribeVpcEndpointsInput) ([]*opensearchservice.VpcEndpoint, error) {
+	output, err := conn.DescribeVpcEndpointsWithContext(ctx, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	if errs := output.VpcEndpointErrors; len(errs) > 0 {
+		return nil, vpcEndpointsError(errs)
+	}
+
+	return output.VpcEndpoints, nil
 }
 
 func vpcEndpointRefreshState(ctx context.Context, conn *opensearchservice.OpenSearchService, id string) retry.StateRefreshFunc {
