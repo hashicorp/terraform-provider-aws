@@ -51,9 +51,6 @@ func ResourceLoadBalancer() *schema.Resource {
 		},
 
 		CustomizeDiff: customdiff.Sequence(
-			// Adding security groups where none are currently present,
-			// removing all security groups, or subnet changes are ForceNew
-			// for Network Load Balancers
 			customizeDiffNLB,
 			verify.SetTagsDiff,
 		),
@@ -1040,21 +1037,12 @@ func customizeDiffNLB(_ context.Context, diff *schema.ResourceDiff, v interface{
 		return nil
 	}
 
-	// Get diff for subnets
-	oSn, nSn := diff.GetChange("subnets")
-	if oSn == nil {
-		oSn = new(schema.Set)
-	}
-	if nSn == nil {
-		nSn = new(schema.Set)
-	}
-	osSn := oSn.(*schema.Set)
-	nsSn := nSn.(*schema.Set)
-	removeSn := osSn.Difference(nsSn).List()
-	addSn := nsSn.Difference(osSn).List()
+	// Get diff for subnets.
+	o, n := diff.GetChange("subnets")
+	os, ns := o.(*schema.Set), n.(*schema.Set)
 
-	if len(removeSn) > 0 || len(addSn) > 0 {
-		if err := diff.SetNew("subnets", nSn); err != nil {
+	if add, del := ns.Difference(os).List(), os.Difference(ns).List(); len(del) > 0 || len(add) > 0 {
+		if err := diff.SetNew("subnets", ns); err != nil {
 			return err
 		}
 
@@ -1063,18 +1051,12 @@ func customizeDiffNLB(_ context.Context, diff *schema.ResourceDiff, v interface{
 		}
 	}
 
-	// Get diff for security groups
-	oSg, nSg := diff.GetChange("security_groups")
-	if oSg == nil {
-		oSg = new(schema.Set)
-	}
-	if nSg == nil {
-		nSg = new(schema.Set)
-	}
-	osSg := oSg.(*schema.Set)
-	nsSg := nSg.(*schema.Set)
-	if (osSg.Len() == 0 && nsSg.Len() > 0) || (nsSg.Len() == 0 && osSg.Len() > 0) {
-		if err := diff.SetNew("security_groups", nSg); err != nil {
+	// Get diff for security groups.
+	o, n = diff.GetChange("security_groups")
+	os, ns = o.(*schema.Set), n.(*schema.Set)
+
+	if (os.Len() == 0 && ns.Len() > 0) || (ns.Len() == 0 && os.Len() > 0) {
+		if err := diff.SetNew("security_groups", ns); err != nil {
 			return err
 		}
 
