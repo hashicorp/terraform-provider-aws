@@ -42,7 +42,8 @@ The following arguments are supported:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `id` - The connection endpoint ID for connecting to the domain.
+* `id` - The unique identifier of the endpoint.
+* `endpoint` - The connection endpoint ID for connecting to the domain.
 
 ## Timeouts
 

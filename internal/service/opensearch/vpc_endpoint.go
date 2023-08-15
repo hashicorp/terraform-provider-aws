@@ -48,6 +48,10 @@ func ResourceVPCEndpoint() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: verify.ValidARN,
 			},
+			"endpoint": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"vpc_options": {
 				Type:     schema.TypeList,
 				Required: true,
@@ -122,6 +126,7 @@ func resourceVPCEndpointRead(ctx context.Context, d *schema.ResourceData, meta i
 	}
 
 	d.Set("domain_arn", endpoint.DomainArn)
+	d.Set("endpoint", endpoint.Endpoint)
 	if endpoint.VpcOptions != nil {
 		if err := d.Set("vpc_options", []interface{}{flattenVPCDerivedInfo(endpoint.VpcOptions)}); err != nil {
 			return diag.Errorf("setting vpc_options: %s", err)
