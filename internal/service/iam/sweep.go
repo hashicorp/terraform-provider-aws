@@ -523,9 +523,7 @@ func sweepRoles(region string) error {
 		log.Printf("[DEBUG] Deleting IAM Role (%s)", roleName)
 
 		err := DeleteRole(ctx, conn, roleName, true, true, true)
-		if tfawserr.ErrCodeEquals(err, iam.ErrCodeNoSuchEntityException) {
-			continue
-		}
+
 		if tfawserr.ErrCodeContains(err, "AccessDenied") {
 			log.Printf("[WARN] Skipping IAM Role (%s): %s", roleName, err)
 			continue

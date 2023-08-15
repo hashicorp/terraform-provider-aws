@@ -679,8 +679,14 @@ func findEnvironmentErrorsByID(ctx context.Context, conn *elasticbeanstalk.Elast
 		return nil
 	}
 
-	slices.SortFunc(output, func(a, b *elasticbeanstalk.EventDescription) bool {
-		return a.EventDate.Before(aws.TimeValue(b.EventDate))
+	slices.SortFunc(output, func(a, b *elasticbeanstalk.EventDescription) int {
+		if a.EventDate.Before(aws.TimeValue(b.EventDate)) {
+			return -1
+		}
+		if a.EventDate.After(aws.TimeValue(b.EventDate)) {
+			return 1
+		}
+		return 0
 	})
 
 	var errors *multierror.Error

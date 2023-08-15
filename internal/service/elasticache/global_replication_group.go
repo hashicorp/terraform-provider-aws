@@ -670,8 +670,14 @@ func globalReplcationGroupNodeGroupIncrease(ctx context.Context, conn *elasticac
 }
 
 func globalReplicationGroupNodeGroupDecrease(ctx context.Context, conn *elasticache.ElastiCache, id string, requested int, nodeGroupIDs []string) error {
-	slices.SortFunc(nodeGroupIDs, func(a, b string) bool {
-		return globalReplicationGroupNodeNumber(a) < globalReplicationGroupNodeNumber(b)
+	slices.SortFunc(nodeGroupIDs, func(a, b string) int {
+		if globalReplicationGroupNodeNumber(a) < globalReplicationGroupNodeNumber(b) {
+			return -1
+		}
+		if globalReplicationGroupNodeNumber(a) > globalReplicationGroupNodeNumber(b) {
+			return 1
+		}
+		return 0
 	})
 	nodeGroupIDs = nodeGroupIDs[:requested]
 

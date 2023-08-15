@@ -176,7 +176,7 @@ This argument supports the following arguments:
 must contain only alphanumeric characters or hyphens, and must not begin or end with a hyphen. If not specified,
 Terraform will autogenerate a name beginning with `tfLb`.
 * `namePrefix` - (Optional) Creates a unique name beginning with the specified prefix. Conflicts with `name`.
-* `securityGroups` - (Optional) A list of security group IDs to assign to the LB. Only valid for Load Balancers of type `application` or `network`. For load balancers of type `network` security groups cannot be added if none are currently present, and cannot all be removed once added. If either of these conditions are met, this will force a recreation of the resource.
+* `securityGroups` - (Optional) A list of security group IDs to assign to the LB. Only valid for Load Balancers of type `application`.
 * `preserveHostHeader` - (Optional) Indicates whether the Application Load Balancer should preserve the Host header in the HTTP request and send it to the target without any change. Defaults to `false`.
 * `subnetMapping` - (Optional) A subnet mapping block as documented below.
 * `subnets` - (Optional) A list of subnet IDs to attach to the LB. Subnets
