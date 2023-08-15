@@ -2104,7 +2104,7 @@ resource "aws_lb" "test" {
 
   subnet_mapping {
     subnet_id    = aws_subnet.test[0].id
-    ipv6_address = cidrhost(cidrsubnet(aws_vpc.test.ipv6_cidr_block, 8, 16), 5)
+    ipv6_address = cidrhost(cidrsubnet(aws_vpc.test.ipv6_cidr_block, 8, 0), 5)
   }
 
   tags = {
