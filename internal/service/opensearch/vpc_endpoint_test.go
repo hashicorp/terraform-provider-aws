@@ -163,45 +163,50 @@ func TestAccOpenSearchVPCEndpoint_disappears(t *testing.T) {
 	})
 }
 
-/*
 func TestAccOpenSearchVPCEndpoint_update(t *testing.T) {
 	ctx := acctest.Context(t)
-	var domain opensearchservice.DomainStatus
-	ri := sdkacctest.RandString(10)
-	name := fmt.Sprintf("tf-test-%s", ri)
-	resourceName := "aws_opensearch_vpc_endpoint.foo"
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var v opensearchservice.VpcEndpoint
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	domainName := testAccRandomDomainName()
+	resourceName := "aws_opensearch_vpc_endpoint.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, opensearchservice.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDomainDestroy(ctx),
+		CheckDestroy:             testAccCheckVPCEndpointDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVPCEndpointConfig(name),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDomainExists(ctx, "aws_opensearch_domain.domain_1", &domain),
+				Config: testAccVPCEndpointConfig_basic(rName, domainName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckVPCEndpointExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttrSet(resourceName, "endpoint"),
+					resource.TestCheckResourceAttr(resourceName, "vpc_options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "vpc_options.0.availability_zones.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "vpc_options.0.security_group_ids.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "connection_status", "ACTIVE"),
+					resource.TestCheckResourceAttr(resourceName, "vpc_options.0.subnet_ids.#", "2"),
+					resource.TestCheckResourceAttrSet(resourceName, "vpc_options.0.vpc_id"),
 				),
 			},
 			{
-				Config: testAccVPCEndpointConfigUpdate(name),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDomainExists(ctx, "aws_opensearch_domain.domain_1", &domain),
+				Config: testAccVPCEndpointConfig_updated(rName, domainName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckVPCEndpointExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttrSet(resourceName, "endpoint"),
+					resource.TestCheckResourceAttr(resourceName, "vpc_options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "vpc_options.0.availability_zones.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "vpc_options.0.security_group_ids.#", "2"),
-					resource.TestCheckResourceAttr(resourceName, "connection_status", "ACTIVE"),
+					resource.TestCheckResourceAttr(resourceName, "vpc_options.0.subnet_ids.#", "2"),
+					resource.TestCheckResourceAttrSet(resourceName, "vpc_options.0.vpc_id"),
 				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
 			},
 		},
 	})
 }
-*/
 
 func testAccCheckVPCEndpointExists(ctx context.Context, n string, v *opensearchservice.VpcEndpoint) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
@@ -324,6 +329,19 @@ resource "aws_opensearch_vpc_endpoint" "test" {
 
   vpc_options {
     subnet_ids = aws_subnet.client[*].id
+  }
+}
+`)
+}
+
+func testAccVPCEndpointConfig_updated(rName, domainName string) string {
+	return acctest.ConfigCompose(testAccVPCEndpointConfig_base(rName, domainName), `
+resource "aws_opensearch_vpc_endpoint" "test" {
+  domain_arn = aws_opensearch_domain.test.arn
+
+  vpc_options {
+    subnet_ids         = aws_subnet.client[*].id
+    security_group_ids = aws_security_group.client[*].id
   }
 }
 `)
