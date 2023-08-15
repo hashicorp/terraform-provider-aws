@@ -51,31 +51,116 @@ If an AWS service must be created in a non-standard way, for example the service
 
 1. Add a file `internal/<service>/service_package.go` that contains an API client factory function, for example:
 
-```go
-package globalaccelerator
+=== "framework / aws-go-sdk-v2"
 
-import (
-	"context"
+    ```go
+    package globalaccelerator
+    
+    import (
+        "context"
+    
+        aws_sdkv1 "github.com/aws/aws-sdk-go/aws"
+        endpoints_sdkv1 "github.com/aws/aws-sdk-go/aws/endpoints"
+        session_sdkv1 "github.com/aws/aws-sdk-go/aws/session"
+        globalaccelerator_sdkv1 "github.com/aws/aws-sdk-go/service/globalaccelerator"
+    )
+    
+    // NewConn returns a new AWS SDK for Go v1 client for this service package's AWS API.
+    func (p *servicePackage) NewConn(ctx context.Context) (*globalaccelerator_sdkv1.GlobalAccelerator, error) {
+        sess := p.config["session"].(*session_sdkv1.Session)
+        config := &aws_sdkv1.Config{Endpoint: aws_sdkv1.String(p.config["endpoint"].(string))}
+    
+        // Force "global" services to correct Regions.
+        if p.config["partition"].(string) == endpoints_sdkv1.AwsPartitionID {
+            config.Region = aws_sdkv1.String(endpoints_sdkv1.UsWest2RegionID)
+        }
+    
+        return globalaccelerator_sdkv1.New(sess.Copy(config)), nil
+    }
+    ```
 
-	aws_sdkv1 "github.com/aws/aws-sdk-go/aws"
-	endpoints_sdkv1 "github.com/aws/aws-sdk-go/aws/endpoints"
-	session_sdkv1 "github.com/aws/aws-sdk-go/aws/session"
-	globalaccelerator_sdkv1 "github.com/aws/aws-sdk-go/service/globalaccelerator"
-)
+=== "framework / aws-go-sdk"
 
-// NewConn returns a new AWS SDK for Go v1 client for this service package's AWS API.
-func (p *servicePackage) NewConn(ctx context.Context) (*globalaccelerator_sdkv1.GlobalAccelerator, error) {
-	sess := p.config["session"].(*session_sdkv1.Session)
-	config := &aws_sdkv1.Config{Endpoint: aws_sdkv1.String(p.config["endpoint"].(string))}
+    ```go
+    package accessanalyzer
+    
+    import (
+        "context"
+  
+        aws_sdkv2 "github.com/aws/aws-sdk-go-v2/aws"
+        accessanalyzer_sdkv2 "github.com/aws/aws-sdk-go-v2/service/accessanalyzer"
+        "github.com/hashicorp/terraform-provider-aws/internal/conns"
+        "github.com/hashicorp/terraform-provider-aws/internal/types"
+        "github.com/hashicorp/terraform-provider-aws/names"
+    )
 
-	// Force "global" services to correct Regions.
-	if p.config["partition"].(string) == endpoints_sdkv1.AwsPartitionID {
-		config.Region = aws_sdkv1.String(endpoints_sdkv1.UsWest2RegionID)
-	}
+    // NewClient returns a new AWS SDK for Go v2 client for this service package's AWS API.
+    func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (*accessanalyzer_sdkv2.Client, error) {
+    cfg := *(config["aws_sdkv2_config"].(*aws_sdkv2.Config))
+    
+        return accessanalyzer_sdkv2.NewFromConfig(cfg, func(o *accessanalyzer_sdkv2.Options) {
+            if endpoint := config["endpoint"].(string); endpoint != "" {
+                o.EndpointResolver = accessanalyzer_sdkv2.EndpointResolverFromURL(endpoint)
+            }
+        }), nil
+    }
+    ```
 
-	return globalaccelerator_sdkv1.New(sess.Copy(config)), nil
-}
-```
+=== "sdk / aws-go-sdk-v2"
+
+    ```go
+    package globalaccelerator
+    
+    import (
+        "context"
+    
+        aws_sdkv1 "github.com/aws/aws-sdk-go/aws"
+        endpoints_sdkv1 "github.com/aws/aws-sdk-go/aws/endpoints"
+        session_sdkv1 "github.com/aws/aws-sdk-go/aws/session"
+        globalaccelerator_sdkv1 "github.com/aws/aws-sdk-go/service/globalaccelerator"
+    )
+    
+    // NewConn returns a new AWS SDK for Go v1 client for this service package's AWS API.
+    func (p *servicePackage) NewConn(ctx context.Context) (*globalaccelerator_sdkv1.GlobalAccelerator, error) {
+        sess := p.config["session"].(*session_sdkv1.Session)
+        config := &aws_sdkv1.Config{Endpoint: aws_sdkv1.String(p.config["endpoint"].(string))}
+    
+        // Force "global" services to correct Regions.
+        if p.config["partition"].(string) == endpoints_sdkv1.AwsPartitionID {
+            config.Region = aws_sdkv1.String(endpoints_sdkv1.UsWest2RegionID)
+        }
+    
+        return globalaccelerator_sdkv1.New(sess.Copy(config)), nil
+    }
+    ```
+
+=== "sdk / aws-go-sdk"
+
+    ```go
+    package globalaccelerator
+    
+    import (
+        "context"
+    
+        aws_sdkv1 "github.com/aws/aws-sdk-go/aws"
+        endpoints_sdkv1 "github.com/aws/aws-sdk-go/aws/endpoints"
+        session_sdkv1 "github.com/aws/aws-sdk-go/aws/session"
+        globalaccelerator_sdkv1 "github.com/aws/aws-sdk-go/service/globalaccelerator"
+    )
+    
+    // NewConn returns a new AWS SDK for Go v1 client for this service package's AWS API.
+    func (p *servicePackage) NewConn(ctx context.Context) (*globalaccelerator_sdkv1.GlobalAccelerator, error) {
+        sess := p.config["session"].(*session_sdkv1.Session)
+        config := &aws_sdkv1.Config{Endpoint: aws_sdkv1.String(p.config["endpoint"].(string))}
+    
+        // Force "global" services to correct Regions.
+        if p.config["partition"].(string) == endpoints_sdkv1.AwsPartitionID {
+            config.Region = aws_sdkv1.String(endpoints_sdkv1.UsWest2RegionID)
+        }
+    
+        return globalaccelerator_sdkv1.New(sess.Copy(config)), nil
+    }
+    ```
 
 ## Customizing a new Service Client
 
