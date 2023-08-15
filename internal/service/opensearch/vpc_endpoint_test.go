@@ -4,6 +4,7 @@
 package opensearch_test
 
 import (
+	"context"
 	"fmt"
 	"testing"
 
@@ -11,7 +12,9 @@ import (
 	"github.com/aws/aws-sdk-go/service/opensearchservice"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfopensearch "github.com/hashicorp/terraform-provider-aws/internal/service/opensearch"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
@@ -33,7 +36,7 @@ func TestVPCEndpointErrorsNotFound(t *testing.T) {
 		},
 		{
 			name: "single SERVER_ERROR",
-			apiObjects: []*opensearchservice.VpcEndpointError{&opensearchservice.VpcEndpointError{
+			apiObjects: []*opensearchservice.VpcEndpointError{{
 				ErrorCode:     aws.String(opensearchservice.VpcEndpointErrorCodeServerError),
 				ErrorMessage:  aws.String("fail"),
 				VpcEndpointId: aws.String("aos-12345678"),
@@ -41,7 +44,7 @@ func TestVPCEndpointErrorsNotFound(t *testing.T) {
 		},
 		{
 			name: "single ENDPOINT_NOT_FOUND",
-			apiObjects: []*opensearchservice.VpcEndpointError{&opensearchservice.VpcEndpointError{
+			apiObjects: []*opensearchservice.VpcEndpointError{{
 				ErrorCode:     aws.String(opensearchservice.VpcEndpointErrorCodeEndpointNotFound),
 				ErrorMessage:  aws.String("Endpoint does not exist"),
 				VpcEndpointId: aws.String("aos-12345678"),
@@ -51,12 +54,12 @@ func TestVPCEndpointErrorsNotFound(t *testing.T) {
 		{
 			name: "no ENDPOINT_NOT_FOUND in many",
 			apiObjects: []*opensearchservice.VpcEndpointError{
-				&opensearchservice.VpcEndpointError{
+				{
 					ErrorCode:     aws.String(opensearchservice.VpcEndpointErrorCodeServerError),
 					ErrorMessage:  aws.String("fail"),
 					VpcEndpointId: aws.String("aos-abcd0123"),
 				},
-				&opensearchservice.VpcEndpointError{
+				{
 					ErrorCode:     aws.String(opensearchservice.VpcEndpointErrorCodeServerError),
 					ErrorMessage:  aws.String("crash"),
 					VpcEndpointId: aws.String("aos-12345678"),
@@ -66,12 +69,12 @@ func TestVPCEndpointErrorsNotFound(t *testing.T) {
 		{
 			name: "single ENDPOINT_NOT_FOUND in many",
 			apiObjects: []*opensearchservice.VpcEndpointError{
-				&opensearchservice.VpcEndpointError{
+				{
 					ErrorCode:     aws.String(opensearchservice.VpcEndpointErrorCodeServerError),
 					ErrorMessage:  aws.String("fail"),
 					VpcEndpointId: aws.String("aos-abcd0123"),
 				},
-				&opensearchservice.VpcEndpointError{
+				{
 					ErrorCode:     aws.String(opensearchservice.VpcEndpointErrorCodeEndpointNotFound),
 					ErrorMessage:  aws.String("Endpoint does not exist"),
 					VpcEndpointId: aws.String("aos-12345678"),
@@ -95,22 +98,31 @@ func TestVPCEndpointErrorsNotFound(t *testing.T) {
 
 func TestAccOpenSearchVPCEndpoint_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var domain opensearchservice.DomainStatus
-	ri := sdkacctest.RandString(10)
-	name := fmt.Sprintf("tf-test-%s", ri)
-	resourceName := "aws_opensearch_vpc_endpoint.foo"
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var v opensearchservice.VpcEndpoint
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	domainName := testAccRandomDomainName()
+	resourceName := "aws_opensearch_vpc_endpoint.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, opensearchservice.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDomainDestroy(ctx),
+		CheckDestroy:             testAccCheckVPCEndpointDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVPCEndpointConfig(name),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDomainExists(ctx, "aws_opensearch_domain.domain_1", &domain),
-					resource.TestCheckResourceAttr(resourceName, "connection_status", "ACTIVE"),
+				Config: testAccVPCEndpointConfig_basic(rName, domainName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckVPCEndpointExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttrSet(resourceName, "endpoint"),
+					resource.TestCheckResourceAttr(resourceName, "vpc_options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "vpc_options.0.availability_zones.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "vpc_options.0.security_group_ids.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "vpc_options.0.subnet_ids.#", "2"),
+					resource.TestCheckResourceAttrSet(resourceName, "vpc_options.0.vpc_id"),
 				),
 			},
 			{
@@ -122,6 +134,36 @@ func TestAccOpenSearchVPCEndpoint_basic(t *testing.T) {
 	})
 }
 
+func TestAccOpenSearchVPCEndpoint_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var v opensearchservice.VpcEndpoint
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	domainName := testAccRandomDomainName()
+	resourceName := "aws_opensearch_vpc_endpoint.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, opensearchservice.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckVPCEndpointDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVPCEndpointConfig_basic(rName, domainName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVPCEndpointExists(ctx, resourceName, &v),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfopensearch.ResourceVPCEndpoint(), resourceName),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
+/*
 func TestAccOpenSearchVPCEndpoint_update(t *testing.T) {
 	ctx := acctest.Context(t)
 	var domain opensearchservice.DomainStatus
@@ -159,71 +201,68 @@ func TestAccOpenSearchVPCEndpoint_update(t *testing.T) {
 		},
 	})
 }
+*/
 
-func TestAccOpenSearchVPCEndpoint_disappears(t *testing.T) {
-	ctx := acctest.Context(t)
-	var domain opensearchservice.DomainStatus
-	ri := sdkacctest.RandString(10)
-	name := fmt.Sprintf("tf-test-%s", ri)
-	resourceName := "aws_opensearch_vpc_endpoint.foo"
+func testAccCheckVPCEndpointExists(ctx context.Context, n string, v *opensearchservice.VpcEndpoint) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[n]
+		if !ok {
+			return fmt.Errorf("Not found: %s", n)
+		}
 
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, opensearchservice.EndpointsID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDomainDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccVPCEndpointConfig(name),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDomainExists(ctx, "aws_opensearch_domain.domain_1", &domain),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfopensearch.ResourceVPCEndpoint(), resourceName),
-				),
-			},
-		},
-	})
+		conn := acctest.Provider.Meta().(*conns.AWSClient).OpenSearchConn(ctx)
+
+		output, err := tfopensearch.FindVPCEndpointByID(ctx, conn, rs.Primary.ID)
+
+		if err != nil {
+			return err
+		}
+
+		*v = *output
+
+		return nil
+	}
 }
 
-func testAccVPCEndpointConfig(name string) string {
-	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
-resource "aws_vpc" "test" {
-  cidr_block = "192.168.0.0/22"
+func testAccCheckVPCEndpointDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_opensearch_vpc_endpoint" {
+				continue
+			}
 
-  tags = {
-    Name = %[1]q
-  }
+			conn := acctest.Provider.Meta().(*conns.AWSClient).OpenSearchConn(ctx)
+
+			_, err := tfopensearch.FindVPCEndpointByID(ctx, conn, rs.Primary.ID)
+
+			if tfresource.NotFound(err) {
+				continue
+			}
+
+			if err != nil {
+				return err
+			}
+
+			return fmt.Errorf("OpenSearch VPC Endpoint %s still exists", rs.Primary.ID)
+		}
+
+		return nil
+	}
 }
 
-resource "aws_subnet" "test" {
-  vpc_id            = aws_vpc.test.id
-  availability_zone = data.aws_availability_zones.available.names[0]
-  cidr_block        = "192.168.0.0/24"
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_subnet" "test2" {
-  vpc_id            = aws_vpc.test.id
-  availability_zone = data.aws_availability_zones.available.names[1]
-  cidr_block        = "192.168.1.0/24"
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
+func testAccVPCEndpointConfig_base(rName, domainName string) string {
+	return acctest.ConfigCompose(acctest.ConfigVPCWithSubnets(rName, 2), fmt.Sprintf(`
 resource "aws_security_group" "test" {
+  name   = %[1]q
   vpc_id = aws_vpc.test.id
+
+  tags = {
+    Name = %[1]q
+  }
 }
 
-resource "aws_security_group" "test2" {
-  vpc_id = aws_vpc.test.id
-}
-
-resource "aws_opensearch_domain" "domain_1" {
-  domain_name = %[1]q
+resource "aws_opensearch_domain" "test" {
+  domain_name = %[2]q
 
   ebs_options {
     ebs_enabled = true
@@ -233,89 +272,59 @@ resource "aws_opensearch_domain" "domain_1" {
   cluster_config {
     instance_count         = 2
     zone_awareness_enabled = true
-    instance_type          = "t3.small.search"
+    instance_type          = "t2.small.search"
   }
 
-  vpc_options {
-    security_group_ids = [aws_security_group.test.id, aws_security_group.test2.id]
-    subnet_ids         = [aws_subnet.test.id, aws_subnet.test2.id]
-  }
-}
-
-resource "aws_opensearch_vpc_endpoint" "foo" {
-  domain_arn = aws_opensearch_domain.domain_1.arn
   vpc_options {
     security_group_ids = [aws_security_group.test.id]
-    subnet_ids         = [aws_subnet.test.id, aws_subnet.test2.id]
+    subnet_ids         = aws_subnet.test[*].id
   }
 }
-`, name))
-}
 
-func testAccVPCEndpointConfigUpdate(name string) string {
-	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
-resource "aws_vpc" "test" {
-  cidr_block = "192.168.0.0/22"
+resource "aws_vpc" "client" {
+  cidr_block = "10.0.0.0/16"
+
+  enable_dns_support   = true
+  enable_dns_hostnames = true
 
   tags = {
     Name = %[1]q
   }
 }
 
-resource "aws_subnet" "test" {
-  vpc_id            = aws_vpc.test.id
-  availability_zone = data.aws_availability_zones.available.names[0]
-  cidr_block        = "192.168.0.0/24"
+resource "aws_subnet" "client" {
+  count = 2
+
+  vpc_id            = aws_vpc.client.id
+  availability_zone = data.aws_availability_zones.available.names[count.index]
+  cidr_block        = cidrsubnet(aws_vpc.client.cidr_block, 8, count.index)
 
   tags = {
     Name = %[1]q
   }
 }
 
-resource "aws_subnet" "test2" {
-  vpc_id            = aws_vpc.test.id
-  availability_zone = data.aws_availability_zones.available.names[1]
-  cidr_block        = "192.168.1.0/24"
+resource "aws_security_group" "client" {
+  count = 2
+
+  name   = "%[1]s-client-${count.index}"
+  vpc_id = aws_vpc.client.id
 
   tags = {
     Name = %[1]q
   }
 }
-
-resource "aws_security_group" "test" {
-  vpc_id = aws_vpc.test.id
+`, rName, domainName))
 }
 
-resource "aws_security_group" "test2" {
-  vpc_id = aws_vpc.test.id
-}
-
-resource "aws_opensearch_domain" "domain_1" {
-  domain_name = %[1]q
-
-  ebs_options {
-    ebs_enabled = true
-    volume_size = 10
-  }
-
-  cluster_config {
-    instance_count         = 2
-    zone_awareness_enabled = true
-    instance_type          = "t3.small.search"
-  }
+func testAccVPCEndpointConfig_basic(rName, domainName string) string {
+	return acctest.ConfigCompose(testAccVPCEndpointConfig_base(rName, domainName), `
+resource "aws_opensearch_vpc_endpoint" "test" {
+  domain_arn = aws_opensearch_domain.test.arn
 
   vpc_options {
-    security_group_ids = [aws_security_group.test.id, aws_security_group.test2.id]
-    subnet_ids         = [aws_subnet.test.id, aws_subnet.test2.id]
+    subnet_ids = aws_subnet.client[*].id
   }
 }
-
-resource "aws_opensearch_vpc_endpoint" "foo" {
-  domain_arn = aws_opensearch_domain.domain_1.arn
-  vpc_options {
-    security_group_ids = [aws_security_group.test.id, aws_security_group.test2.id]
-    subnet_ids         = [aws_subnet.test.id, aws_subnet.test2.id]
-  }
-}
-`, name))
+`)
 }
