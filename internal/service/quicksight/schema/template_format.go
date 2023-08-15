@@ -232,7 +232,6 @@ func fontConfigurationSchema() *schema.Schema {
 				"font_decoration": stringSchema(false, validation.StringInSlice(quicksight.FontDecoration_Values(), false)),
 				"font_size": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_FontSize.html
 					Type:     schema.TypeList,
-					MinItems: 1,
 					MaxItems: 1,
 					Optional: true,
 					Elem: &schema.Resource{
@@ -244,7 +243,6 @@ func fontConfigurationSchema() *schema.Schema {
 				"font_style": stringSchema(false, validation.StringInSlice(quicksight.FontStyle_Values(), false)),
 				"font_weight": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_FontWeight.html
 					Type:     schema.TypeList,
-					MinItems: 1,
 					MaxItems: 1,
 					Optional: true,
 					Elem: &schema.Resource{
@@ -562,13 +560,13 @@ func expandFontConfiguration(tfList []interface{}) *quicksight.FontConfiguration
 
 	config := &quicksight.FontConfiguration{}
 
-	if v, ok := tfMap["font_color"].(string); ok {
+	if v, ok := tfMap["font_color"].(string); ok && v != "" {
 		config.FontColor = aws.String(v)
 	}
-	if v, ok := tfMap["font_decoration"].(string); ok {
+	if v, ok := tfMap["font_decoration"].(string); ok && v != "" {
 		config.FontDecoration = aws.String(v)
 	}
-	if v, ok := tfMap["font_style"].(string); ok {
+	if v, ok := tfMap["font_style"].(string); ok && v != "" {
 		config.FontStyle = aws.String(v)
 	}
 	if v, ok := tfMap["font_size"].([]interface{}); ok && len(v) > 0 {
