@@ -586,7 +586,7 @@ func TestAccELBV2LoadBalancer_NetworkLoadBalancer_updateCrossZone(t *testing.T) 
 					testAccCheckLoadBalancerExists(ctx, resourceName, &mid),
 					testAccCheckLoadBalancerAttribute(ctx, resourceName, "load_balancing.cross_zone.enabled", "false"),
 					resource.TestCheckResourceAttr(resourceName, "enable_cross_zone_load_balancing", "false"),
-					testAccChecklbARNs(&pre, &mid),
+					testAccCheckLoadBalancerNotRecreated(&pre, &mid),
 				),
 			},
 			{
@@ -595,7 +595,7 @@ func TestAccELBV2LoadBalancer_NetworkLoadBalancer_updateCrossZone(t *testing.T) 
 					testAccCheckLoadBalancerExists(ctx, resourceName, &post),
 					testAccCheckLoadBalancerAttribute(ctx, resourceName, "load_balancing.cross_zone.enabled", "true"),
 					resource.TestCheckResourceAttr(resourceName, "enable_cross_zone_load_balancing", "true"),
-					testAccChecklbARNs(&mid, &post),
+					testAccCheckLoadBalancerNotRecreated(&mid, &post),
 				),
 			},
 		},
@@ -632,7 +632,7 @@ func TestAccELBV2LoadBalancer_ApplicationLoadBalancer_updateHTTP2(t *testing.T) 
 					testAccCheckLoadBalancerExists(ctx, resourceName, &mid),
 					testAccCheckLoadBalancerAttribute(ctx, resourceName, "routing.http2.enabled", "true"),
 					resource.TestCheckResourceAttr(resourceName, "enable_http2", "true"),
-					testAccChecklbARNs(&pre, &mid),
+					testAccCheckLoadBalancerNotRecreated(&pre, &mid),
 				),
 			},
 			{
@@ -641,7 +641,7 @@ func TestAccELBV2LoadBalancer_ApplicationLoadBalancer_updateHTTP2(t *testing.T) 
 					testAccCheckLoadBalancerExists(ctx, resourceName, &post),
 					testAccCheckLoadBalancerAttribute(ctx, resourceName, "routing.http2.enabled", "false"),
 					resource.TestCheckResourceAttr(resourceName, "enable_http2", "false"),
-					testAccChecklbARNs(&mid, &post),
+					testAccCheckLoadBalancerNotRecreated(&mid, &post),
 				),
 			},
 		},
@@ -677,7 +677,7 @@ func TestAccELBV2LoadBalancer_ApplicationLoadBalancer_updateDropInvalidHeaderFie
 					testAccCheckLoadBalancerExists(ctx, "aws_lb.test", &mid),
 					testAccCheckLoadBalancerAttribute(ctx, "aws_lb.test", "routing.http.drop_invalid_header_fields.enabled", "true"),
 					resource.TestCheckResourceAttr("aws_lb.test", "drop_invalid_header_fields", "true"),
-					testAccChecklbARNs(&pre, &mid),
+					testAccCheckLoadBalancerNotRecreated(&pre, &mid),
 				),
 			},
 			{
@@ -686,7 +686,7 @@ func TestAccELBV2LoadBalancer_ApplicationLoadBalancer_updateDropInvalidHeaderFie
 					testAccCheckLoadBalancerExists(ctx, "aws_lb.test", &post),
 					testAccCheckLoadBalancerAttribute(ctx, "aws_lb.test", "routing.http.drop_invalid_header_fields.enabled", "false"),
 					resource.TestCheckResourceAttr("aws_lb.test", "drop_invalid_header_fields", "false"),
-					testAccChecklbARNs(&mid, &post),
+					testAccCheckLoadBalancerNotRecreated(&mid, &post),
 				),
 			},
 		},
@@ -722,7 +722,7 @@ func TestAccELBV2LoadBalancer_ApplicationLoadBalancer_updatePreserveHostHeader(t
 					testAccCheckLoadBalancerExists(ctx, "aws_lb.test", &mid),
 					testAccCheckLoadBalancerAttribute(ctx, "aws_lb.test", "routing.http.preserve_host_header.enabled", "true"),
 					resource.TestCheckResourceAttr("aws_lb.test", "preserve_host_header", "true"),
-					testAccChecklbARNs(&pre, &mid),
+					testAccCheckLoadBalancerNotRecreated(&pre, &mid),
 				),
 			},
 			{
@@ -731,7 +731,7 @@ func TestAccELBV2LoadBalancer_ApplicationLoadBalancer_updatePreserveHostHeader(t
 					testAccCheckLoadBalancerExists(ctx, "aws_lb.test", &post),
 					testAccCheckLoadBalancerAttribute(ctx, "aws_lb.test", "routing.http.preserve_host_header.enabled", "false"),
 					resource.TestCheckResourceAttr("aws_lb.test", "preserve_host_header", "false"),
-					testAccChecklbARNs(&mid, &post),
+					testAccCheckLoadBalancerNotRecreated(&mid, &post),
 				),
 			},
 		},
@@ -768,7 +768,7 @@ func TestAccELBV2LoadBalancer_ApplicationLoadBalancer_updateDeletionProtection(t
 					testAccCheckLoadBalancerExists(ctx, resourceName, &mid),
 					testAccCheckLoadBalancerAttribute(ctx, resourceName, "deletion_protection.enabled", "true"),
 					resource.TestCheckResourceAttr(resourceName, "enable_deletion_protection", "true"),
-					testAccChecklbARNs(&pre, &mid),
+					testAccCheckLoadBalancerNotRecreated(&pre, &mid),
 				),
 			},
 			{
@@ -777,7 +777,7 @@ func TestAccELBV2LoadBalancer_ApplicationLoadBalancer_updateDeletionProtection(t
 					testAccCheckLoadBalancerExists(ctx, resourceName, &post),
 					testAccCheckLoadBalancerAttribute(ctx, resourceName, "deletion_protection.enabled", "false"),
 					resource.TestCheckResourceAttr(resourceName, "enable_deletion_protection", "false"),
-					testAccChecklbARNs(&mid, &post),
+					testAccCheckLoadBalancerNotRecreated(&mid, &post),
 				),
 			},
 		},
@@ -817,7 +817,7 @@ func TestAccELBV2LoadBalancer_ApplicationLoadBalancer_updateWAFFailOpen(t *testi
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckLoadBalancerExists(ctx, resourceName, &mid),
 					resource.TestCheckResourceAttr(resourceName, "enable_waf_fail_open", "true"),
-					testAccChecklbARNs(&pre, &mid),
+					testAccCheckLoadBalancerNotRecreated(&pre, &mid),
 				),
 			},
 			{
@@ -830,7 +830,7 @@ func TestAccELBV2LoadBalancer_ApplicationLoadBalancer_updateWAFFailOpen(t *testi
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckLoadBalancerExists(ctx, resourceName, &post),
 					resource.TestCheckResourceAttr(resourceName, "enable_waf_fail_open", "false"),
-					testAccChecklbARNs(&mid, &post),
+					testAccCheckLoadBalancerNotRecreated(&mid, &post),
 				),
 			},
 		},
@@ -895,14 +895,14 @@ func TestAccELBV2LoadBalancer_ApplicationLoadBalancer_updatedSecurityGroups(t *t
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckLoadBalancerExists(ctx, resourceName, &post),
 					resource.TestCheckResourceAttr(resourceName, "security_groups.#", "2"),
-					testAccChecklbARNs(&pre, &post),
+					testAccCheckLoadBalancerNotRecreated(&pre, &post),
 				),
 			},
 		},
 	})
 }
 
-func TestAccELBV2LoadBalancer_updatedSubnets(t *testing.T) {
+func TestAccELBV2LoadBalancer_ApplicationLoadBalancer_updatedSubnets(t *testing.T) {
 	ctx := acctest.Context(t)
 	var pre, post elbv2.LoadBalancer
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -929,8 +929,8 @@ func TestAccELBV2LoadBalancer_updatedSubnets(t *testing.T) {
 				Config: testAccLoadBalancerConfig_updateSubnets(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckLoadBalancerExists(ctx, resourceName, &post),
+					testAccCheckLoadBalancerNotRecreated(&pre, &post),
 					resource.TestCheckResourceAttr(resourceName, "subnets.#", "3"),
-					testAccChecklbARNs(&pre, &post),
 				),
 			},
 		},
@@ -940,7 +940,7 @@ func TestAccELBV2LoadBalancer_updatedSubnets(t *testing.T) {
 // TestAccELBV2LoadBalancer_noSecurityGroup regression tests the issue in #8264,
 // where if an ALB is created without a security group, a default one
 // is assigned.
-func TestAccELBV2LoadBalancer_noSecurityGroup(t *testing.T) {
+func TestAccELBV2LoadBalancer_ApplicationLoadBalancer_noSecurityGroup(t *testing.T) {
 	ctx := acctest.Context(t)
 	var conf elbv2.LoadBalancer
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -953,7 +953,7 @@ func TestAccELBV2LoadBalancer_noSecurityGroup(t *testing.T) {
 		CheckDestroy:             testAccCheckLoadBalancerDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccLoadBalancerConfig_nosg(rName),
+				Config: testAccLoadBalancerConfig_albNoSecurityGroups(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckLoadBalancerExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
@@ -971,7 +971,7 @@ func TestAccELBV2LoadBalancer_noSecurityGroup(t *testing.T) {
 	})
 }
 
-func TestAccELBV2LoadBalancer_ALB_accessLogs(t *testing.T) {
+func TestAccELBV2LoadBalancer_ApplicationLoadBalancer_accessLogs(t *testing.T) {
 	ctx := acctest.Context(t)
 	var conf elbv2.LoadBalancer
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -1063,7 +1063,7 @@ func TestAccELBV2LoadBalancer_ALB_accessLogs(t *testing.T) {
 	})
 }
 
-func TestAccELBV2LoadBalancer_ALBAccessLogs_prefix(t *testing.T) {
+func TestAccELBV2LoadBalancer_ApplicationLoadBalancer_accessLogsPrefix(t *testing.T) {
 	ctx := acctest.Context(t)
 	var conf elbv2.LoadBalancer
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -1137,7 +1137,7 @@ func TestAccELBV2LoadBalancer_ALBAccessLogs_prefix(t *testing.T) {
 	})
 }
 
-func TestAccELBV2LoadBalancer_NLB_accessLogs(t *testing.T) {
+func TestAccELBV2LoadBalancer_NetworkLoadBalancer_accessLogs(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
@@ -1229,7 +1229,7 @@ func TestAccELBV2LoadBalancer_NLB_accessLogs(t *testing.T) {
 	})
 }
 
-func TestAccELBV2LoadBalancer_NLBAccessLogs_prefix(t *testing.T) {
+func TestAccELBV2LoadBalancer_NetworkLoadBalancer_accessLogsPrefix(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
@@ -1303,9 +1303,9 @@ func TestAccELBV2LoadBalancer_NLBAccessLogs_prefix(t *testing.T) {
 	})
 }
 
-func TestAccELBV2LoadBalancer_NetworkLoadBalancerSubnet_change(t *testing.T) {
+func TestAccELBV2LoadBalancer_NetworkLoadBalancer_updatedSecurityGroup(t *testing.T) {
 	ctx := acctest.Context(t)
-	var conf elbv2.LoadBalancer
+	var lb1, lb2, lb3, lb4 elbv2.LoadBalancer
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_lb.test"
 
@@ -1316,9 +1316,68 @@ func TestAccELBV2LoadBalancer_NetworkLoadBalancerSubnet_change(t *testing.T) {
 		CheckDestroy:             testAccCheckLoadBalancerDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccLoadBalancerConfig_nlbSubnets(rName),
+				Config: testAccLoadBalancerConfig_nlbNoSecurityGroups(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckLoadBalancerExists(ctx, resourceName, &conf),
+					testAccCheckLoadBalancerExists(ctx, resourceName, &lb1),
+					resource.TestCheckResourceAttr(resourceName, "enforce_security_group_inbound_rules_on_private_link_traffic", "on"),
+					resource.TestCheckResourceAttr(resourceName, "security_groups.#", "0"),
+				),
+			},
+			{
+				Config: testAccLoadBalancerConfig_nlbSecurityGroups(rName, 1, "off"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckLoadBalancerExists(ctx, resourceName, &lb2),
+					testAccCheckLoadBalancerRecreated(&lb2, &lb1),
+					resource.TestCheckResourceAttr(resourceName, "enforce_security_group_inbound_rules_on_private_link_traffic", "off"),
+					resource.TestCheckResourceAttr(resourceName, "security_groups.#", "1"),
+				),
+			},
+			{
+				Config: testAccLoadBalancerConfig_nlbSecurityGroups(rName, 2, "on"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckLoadBalancerExists(ctx, resourceName, &lb3),
+					testAccCheckLoadBalancerNotRecreated(&lb3, &lb2),
+					resource.TestCheckResourceAttr(resourceName, "enforce_security_group_inbound_rules_on_private_link_traffic", "on"),
+					resource.TestCheckResourceAttr(resourceName, "security_groups.#", "2"),
+				),
+			},
+			{
+				Config: testAccLoadBalancerConfig_nlbNoSecurityGroups(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckLoadBalancerExists(ctx, resourceName, &lb4),
+					testAccCheckLoadBalancerRecreated(&lb4, &lb3),
+					resource.TestCheckResourceAttr(resourceName, "enforce_security_group_inbound_rules_on_private_link_traffic", "on"),
+					resource.TestCheckResourceAttr(resourceName, "security_groups.#", "0"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccELBV2LoadBalancer_NetworkLoadBalancer_updatedSubnets(t *testing.T) {
+	ctx := acctest.Context(t)
+	var pre, post elbv2.LoadBalancer
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_lb.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, elbv2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckLoadBalancerDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccLoadBalancerConfig_nlbSubnets(rName, 2),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckLoadBalancerExists(ctx, resourceName, &pre),
+					resource.TestCheckResourceAttr(resourceName, "subnets.#", "2"),
+				),
+			},
+			{
+				Config: testAccLoadBalancerConfig_nlbSubnets(rName, 3),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckLoadBalancerExists(ctx, resourceName, &post),
+					testAccCheckLoadBalancerRecreated(&post, &pre),
 					resource.TestCheckResourceAttr(resourceName, "subnets.#", "3"),
 				),
 			},
@@ -1542,10 +1601,20 @@ func TestAccELBV2LoadBalancer_ALB_updateXffClientPort(t *testing.T) {
 	})
 }
 
-func testAccChecklbARNs(pre, post *elbv2.LoadBalancer) resource.TestCheckFunc {
+func testAccCheckLoadBalancerNotRecreated(i, j *elbv2.LoadBalancer) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		if aws.StringValue(pre.LoadBalancerArn) != aws.StringValue(post.LoadBalancerArn) {
-			return errors.New("LB has been recreated. ARNs are different")
+		if aws.StringValue(i.LoadBalancerArn) != aws.StringValue(j.LoadBalancerArn) {
+			return errors.New("ELBv2 Load Balancer was recreated")
+		}
+
+		return nil
+	}
+}
+
+func testAccCheckLoadBalancerRecreated(i, j *elbv2.LoadBalancer) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		if aws.StringValue(i.LoadBalancerArn) == aws.StringValue(j.LoadBalancerArn) {
+			return errors.New("ELBv2 Load Balancer was not recreated")
 		}
 
 		return nil
@@ -2963,7 +3032,7 @@ resource "aws_lb" "test" {
 `, rName))
 }
 
-func testAccLoadBalancerConfig_nosg(rName string) string {
+func testAccLoadBalancerConfig_albNoSecurityGroups(rName string) string {
 	return acctest.ConfigCompose(acctest.ConfigVPCWithSubnets(rName, 2), fmt.Sprintf(`
 resource "aws_lb" "test" {
   name     = %[1]q
@@ -3097,8 +3166,58 @@ resource "aws_lb" "test" {
 `, rName))
 }
 
-func testAccLoadBalancerConfig_nlbSubnets(rName string) string {
-	return acctest.ConfigCompose(acctest.ConfigVPCWithSubnets(rName, 3), fmt.Sprintf(`
+func testAccLoadBalancerConfig_nlbNoSecurityGroups(rName string) string {
+	return acctest.ConfigCompose(acctest.ConfigVPCWithSubnets(rName, 2), fmt.Sprintf(`
+resource "aws_lb" "test" {
+  internal           = true
+  load_balancer_type = "network"
+  name               = %[1]q
+  subnets            = aws_subnet.test[*].id
+}
+`, rName))
+}
+
+func testAccLoadBalancerConfig_nlbSecurityGroups(rName string, n int, enforceRules string) string {
+	return acctest.ConfigCompose(acctest.ConfigVPCWithSubnets(rName, 2), fmt.Sprintf(`
+resource "aws_security_group" "test" {
+  count = %[2]d
+
+  name   = "%[1]s-${count.index}"
+  vpc_id = aws_vpc.test.id
+
+  ingress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_lb" "test" {
+  internal           = true
+  load_balancer_type = "network"
+  name               = %[1]q
+  subnets            = aws_subnet.test[*].id
+  security_groups    = aws_security_group.test[*].id
+
+  enforce_security_group_inbound_rules_on_private_link_traffic = %[2q]
+}
+`, rName, n, enforceRules))
+}
+
+func testAccLoadBalancerConfig_nlbSubnets(rName string, subnetCount int) string {
+	return acctest.ConfigCompose(acctest.ConfigVPCWithSubnets(rName, subnetCount), fmt.Sprintf(`
 resource "aws_lb" "test" {
   name = %[1]q
 
