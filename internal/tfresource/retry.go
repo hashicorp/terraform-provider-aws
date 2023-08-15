@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	tfawserr_sdkv2 "github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 )
@@ -66,10 +67,32 @@ func RetryWhenAWSErrCodeEquals(ctx context.Context, timeout time.Duration, f fun
 	})
 }
 
+// RetryWhenAWSErrCodeEqualsV2 retries the specified function when it returns one of the specified AWS SDK for Go v2 error code.
+func RetryWhenAWSErrCodeEqualsV2(ctx context.Context, timeout time.Duration, f func() (interface{}, error), codes ...string) (interface{}, error) { // nosemgrep:ci.aws-in-func-name
+	return RetryWhen(ctx, timeout, f, func(err error) (bool, error) {
+		if tfawserr_sdkv2.ErrCodeEquals(err, codes...) {
+			return true, err
+		}
+
+		return false, err
+	})
+}
+
 // RetryWhenAWSErrMessageContains retries the specified function when it returns an AWS error containing the specified message.
 func RetryWhenAWSErrMessageContains(ctx context.Context, timeout time.Duration, f func() (interface{}, error), code, message string) (interface{}, error) { // nosemgrep:ci.aws-in-func-name
 	return RetryWhen(ctx, timeout, f, func(err error) (bool, error) {
 		if tfawserr.ErrMessageContains(err, code, message) {
+			return true, err
+		}
+
+		return false, err
+	})
+}
+
+// RetryWhenAWSErrMessageContainsV2 retries the specified function when it returns an AWS SDK for Go v2 error containing the specified message.
+func RetryWhenAWSErrMessageContainsV2(ctx context.Context, timeout time.Duration, f func() (interface{}, error), code, message string) (interface{}, error) { // nosemgrep:ci.aws-in-func-name
+	return RetryWhen(ctx, timeout, f, func(err error) (bool, error) {
+		if tfawserr_sdkv2.ErrMessageContains(err, code, message) {
 			return true, err
 		}
 

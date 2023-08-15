@@ -29,7 +29,11 @@ func TestAccTransferCertificate_basic(t *testing.T) {
 	certificate := acctest.TLSRSAX509LocallySignedCertificatePEM(t, caKey, caCertificate, key, domainWildcard)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, transfer.EndpointsID)
+			testAccPreCheck(ctx, t)
+		},
 		ErrorCheck:               acctest.ErrorCheck(t, transfer.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckCertificateDestroy(ctx),
@@ -39,6 +43,7 @@ func TestAccTransferCertificate_basic(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCertificateExists(ctx, resourceName, &conf),
 					acctest.CheckResourceAttrRFC3339(resourceName, "active_date"),
+					resource.TestCheckResourceAttrSet(resourceName, "arn"),
 					acctest.CheckResourceAttrRFC3339(resourceName, "inactive_date"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "usage", "SIGNING"),
@@ -62,7 +67,11 @@ func TestAccTransferCertificate_certificate(t *testing.T) {
 	caCertificate := acctest.TLSRSAX509SelfSignedCACertificatePEM(t, caKey)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, transfer.EndpointsID)
+			testAccPreCheck(ctx, t)
+		},
 		ErrorCheck:               acctest.ErrorCheck(t, transfer.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckCertificateDestroy(ctx),
@@ -99,7 +108,11 @@ func TestAccTransferCertificate_certificateChain(t *testing.T) {
 	certificate := acctest.TLSRSAX509LocallySignedCertificatePEM(t, caKey, caCertificate, key, domainWildcard)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, transfer.EndpointsID)
+			testAccPreCheck(ctx, t)
+		},
 		ErrorCheck:               acctest.ErrorCheck(t, transfer.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckCertificateDestroy(ctx),
@@ -132,7 +145,11 @@ func TestAccTransferCertificate_certificateKey(t *testing.T) {
 	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(t, key, acctest.RandomSubdomain())
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, transfer.EndpointsID)
+			testAccPreCheck(ctx, t)
+		},
 		ErrorCheck:               acctest.ErrorCheck(t, transfer.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckCertificateDestroy(ctx),
@@ -165,7 +182,11 @@ func TestAccTransferCertificate_disappears(t *testing.T) {
 	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(t, key, acctest.RandomSubdomain())
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, transfer.EndpointsID)
+			testAccPreCheck(ctx, t)
+		},
 		ErrorCheck:               acctest.ErrorCheck(t, transfer.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckCertificateDestroy(ctx),
@@ -190,7 +211,11 @@ func TestAccTransferCertificate_tags(t *testing.T) {
 	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(t, key, acctest.RandomSubdomain())
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, transfer.EndpointsID)
+			testAccPreCheck(ctx, t)
+		},
 		ErrorCheck:               acctest.ErrorCheck(t, transfer.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckCertificateDestroy(ctx),
@@ -238,7 +263,11 @@ func TestAccTransferCertificate_description(t *testing.T) {
 	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(t, key, acctest.RandomSubdomain())
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, transfer.EndpointsID)
+			testAccPreCheck(ctx, t)
+		},
 		ErrorCheck:               acctest.ErrorCheck(t, transfer.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckCertificateDestroy(ctx),

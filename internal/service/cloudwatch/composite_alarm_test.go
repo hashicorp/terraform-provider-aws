@@ -35,6 +35,7 @@ func TestAccCloudWatchCompositeAlarm_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCompositeAlarmExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "actions_enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "actions_suppressor.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "alarm_actions.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "alarm_description", ""),
 					resource.TestCheckResourceAttr(resourceName, "alarm_name", rName),
@@ -389,6 +390,36 @@ func TestAccCloudWatchCompositeAlarm_allActions(t *testing.T) {
 	})
 }
 
+func TestAccCloudWatchCompositeAlarm_actionsSuppressor(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_cloudwatch_composite_alarm.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, cloudwatch.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckCompositeAlarmDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCompositeAlarmConfig_actionSuppressor(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCompositeAlarmExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "actions_suppressor.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "actions_suppressor.0.alarm", fmt.Sprintf("%[1]s-0", rName)),
+					resource.TestCheckResourceAttr(resourceName, "actions_suppressor.0.extension_period", "10"),
+					resource.TestCheckResourceAttr(resourceName, "actions_suppressor.0.wait_period", "20"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func testAccCheckCompositeAlarmDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudWatchConn(ctx)
@@ -623,6 +654,29 @@ resource "aws_cloudwatch_composite_alarm" "test" {
   alarm_rule                = "ALARM(${aws_cloudwatch_metric_alarm.test[0].alarm_name})"
   insufficient_data_actions = [aws_sns_topic.test[1].arn]
   ok_actions                = [aws_sns_topic.test[2].arn]
+}
+`, rName))
+}
+
+func testAccCompositeAlarmConfig_actionSuppressor(rName string) string {
+	return acctest.ConfigCompose(testAccCompositeAlarmConfig_base(rName), fmt.Sprintf(`
+resource "aws_sns_topic" "test" {
+  count = 3
+  name  = "%[1]s-${count.index}"
+}
+
+resource "aws_cloudwatch_composite_alarm" "test" {
+  alarm_actions             = [aws_sns_topic.test[0].arn]
+  alarm_name                = %[1]q
+  alarm_rule                = "ALARM(${aws_cloudwatch_metric_alarm.test[0].alarm_name})"
+  insufficient_data_actions = [aws_sns_topic.test[1].arn]
+  ok_actions                = [aws_sns_topic.test[2].arn]
+
+  actions_suppressor {
+    alarm            = aws_cloudwatch_metric_alarm.test[0].alarm_name
+    extension_period = 10
+    wait_period      = 20
+  }
 }
 `, rName))
 }

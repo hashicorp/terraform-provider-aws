@@ -17,9 +17,6 @@ const (
 	ResourceShareInvitationStatusNotFound = "NotFound"
 	ResourceShareInvitationStatusUnknown  = "Unknown"
 
-	ResourceShareStatusNotFound = "NotFound"
-	ResourceShareStatusUnknown  = "Unknown"
-
 	PrincipalAssociationStatusNotFound = "NotFound"
 )
 
@@ -37,27 +34,6 @@ func StatusResourceShareInvitation(ctx context.Context, conn *ram.RAM, arn strin
 		}
 
 		return invitation, aws.StringValue(invitation.Status), nil
-	}
-}
-
-// StatusResourceShareOwnerSelf fetches the ResourceShare and its Status
-func StatusResourceShareOwnerSelf(ctx context.Context, conn *ram.RAM, arn string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-		share, err := FindResourceShareOwnerSelfByARN(ctx, conn, arn)
-
-		if tfawserr.ErrCodeEquals(err, ram.ErrCodeUnknownResourceException) {
-			return nil, ResourceShareStatusNotFound, nil
-		}
-
-		if err != nil {
-			return nil, ResourceShareStatusUnknown, err
-		}
-
-		if share == nil {
-			return nil, ResourceShareStatusNotFound, nil
-		}
-
-		return share, aws.StringValue(share.Status), nil
 	}
 }
 

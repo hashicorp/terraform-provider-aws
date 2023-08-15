@@ -73,9 +73,9 @@ The following arguments are optional:
 * `passwords` - (Optional) Specifies the passwords to use for authentication if `type` is set to `password`.
 * `type` - (Required) Specifies the authentication type. Possible options are: `password`, `no-password-required` or `iam`.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - The ARN of the created ElastiCache User.
 
@@ -89,8 +89,17 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-ElastiCache users can be imported using the `user_id`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import ElastiCache users using the `user_id`. For example:
 
+```terraform
+import {
+  to = aws_elasticache_user.my_user
+  id = "userId1"
+}
 ```
-$ terraform import aws_elasticache_user.my_user userId1
+
+Using `terraform import`, import ElastiCache users using the `user_id`. For example:
+
+```console
+% terraform import aws_elasticache_user.my_user userId1
 ```

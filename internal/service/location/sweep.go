@@ -85,7 +85,7 @@ func sweepGeofenceCollections(region string) error {
 		errs = multierror.Append(errs, fmt.Errorf("error listing Location Service Geofence Collection for %s: %w", region, err))
 	}
 
-	if err := sweep.SweepOrchestratorWithContext(ctx, sweepResources); err != nil {
+	if err := sweep.SweepOrchestrator(ctx, sweepResources); err != nil {
 		errs = multierror.Append(errs, fmt.Errorf("error sweeping Location Service Geofence Collection for %s: %w", region, err))
 	}
 
@@ -133,7 +133,7 @@ func sweepMaps(region string) error {
 		errs = multierror.Append(errs, fmt.Errorf("error listing Location Service Map for %s: %w", region, err))
 	}
 
-	if err := sweep.SweepOrchestratorWithContext(ctx, sweepResources); err != nil {
+	if err := sweep.SweepOrchestrator(ctx, sweepResources); err != nil {
 		errs = multierror.Append(errs, fmt.Errorf("error sweeping Location Service Map for %s: %w", region, err))
 	}
 
@@ -181,7 +181,7 @@ func sweepPlaceIndexes(region string) error {
 		errs = multierror.Append(errs, fmt.Errorf("error listing Location Service Place Index for %s: %w", region, err))
 	}
 
-	if err := sweep.SweepOrchestratorWithContext(ctx, sweepResources); err != nil {
+	if err := sweep.SweepOrchestrator(ctx, sweepResources); err != nil {
 		errs = multierror.Append(errs, fmt.Errorf("error sweeping Location Service Place Index for %s: %w", region, err))
 	}
 
@@ -229,7 +229,7 @@ func sweepRouteCalculators(region string) error {
 		errs = multierror.Append(errs, fmt.Errorf("error listing Location Service Route Calculator for %s: %w", region, err))
 	}
 
-	if err := sweep.SweepOrchestratorWithContext(ctx, sweepResources); err != nil {
+	if err := sweep.SweepOrchestrator(ctx, sweepResources); err != nil {
 		errs = multierror.Append(errs, fmt.Errorf("error sweeping Location Service Route Calculator for %s: %w", region, err))
 	}
 
@@ -277,7 +277,7 @@ func sweepTrackers(region string) error {
 		errs = multierror.Append(errs, fmt.Errorf("error listing Location Service Tracker for %s: %w", region, err))
 	}
 
-	if err := sweep.SweepOrchestratorWithContext(ctx, sweepResources); err != nil {
+	if err := sweep.SweepOrchestrator(ctx, sweepResources); err != nil {
 		errs = multierror.Append(errs, fmt.Errorf("error sweeping Location Service Tracker for %s: %w", region, err))
 	}
 
@@ -342,7 +342,7 @@ func sweepTrackerAssociations(region string) error {
 		errs = multierror.Append(errs, fmt.Errorf("error listing Location Service Tracker for %s: %w", region, err))
 	}
 
-	if err := sweep.SweepOrchestratorWithContext(ctx, sweepResources); err != nil {
+	if err := sweep.SweepOrchestrator(ctx, sweepResources); err != nil {
 		errs = multierror.Append(errs, fmt.Errorf("error sweeping Location Service Tracker Association for %s: %w", region, err))
 	}
 

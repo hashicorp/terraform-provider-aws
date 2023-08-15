@@ -1,4 +1,4 @@
-SWEEP               ?= us-west-2,us-east-1,us-east-2
+SWEEP               ?= us-west-2,us-east-1,us-east-2,us-west-1
 TEST                ?= ./...
 SWEEP_DIR           ?= ./internal/sweep
 PKG_NAME            ?= internal
@@ -189,6 +189,8 @@ importlint:
 
 lint: golangci-lint providerlint importlint
 
+lint-fix: testacc-lint-fix website-lint-fix docs-lint-fix
+
 providerlint:
 	@echo "==> Checking source code with providerlint..."
 	@providerlint \
@@ -320,6 +322,10 @@ sweep:
 	@echo "WARNING: This will destroy infrastructure. Use only in development accounts."
 	$(GO_VER) test $(SWEEP_DIR) -v -tags=sweep -sweep=$(SWEEP) $(SWEEPARGS) -timeout $(SWEEP_TIMEOUT)
 
+sweeper:
+	@echo "WARNING: This will destroy infrastructure. Use only in development accounts."
+	$(GO_VER) test $(SWEEP_DIR) -v -tags=sweep -sweep=$(SWEEP) SWEEPARGS=-sweep-allow-failures -timeout $(SWEEP_TIMEOUT)
+
 t: fmtcheck
 	TF_ACC=1 $(GO_VER) test ./$(PKG_NAME)/... -v -count $(TEST_COUNT) -parallel $(ACCTEST_PARALLELISM) $(RUNARGS) $(TESTARGS) -timeout $(ACCTEST_TIMEOUT)
 
@@ -429,6 +435,7 @@ yamllint:
 	golangci-lint \
 	importlint \
 	lint \
+	lint-fix \
 	providerlint \
 	sane \
 	sanity \

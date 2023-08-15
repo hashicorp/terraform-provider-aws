@@ -111,7 +111,7 @@ func TestAccELBV2LoadBalancer_NLB_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var conf elbv2.LoadBalancer
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_lb.lb_test"
+	resourceName := "aws_lb.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -284,7 +284,7 @@ func TestAccELBV2LoadBalancer_ALB_outpost(t *testing.T) {
 	ctx := acctest.Context(t)
 	var conf elbv2.LoadBalancer
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_lb.lb_test"
+	resourceName := "aws_lb.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckOutpostsOutposts(ctx, t) },
@@ -323,7 +323,7 @@ func TestAccELBV2LoadBalancer_ALB_outpost(t *testing.T) {
 func TestAccELBV2LoadBalancer_networkLoadBalancerEIP(t *testing.T) {
 	ctx := acctest.Context(t)
 	var conf elbv2.LoadBalancer
-	resourceName := "aws_lb.lb_test"
+	resourceName := "aws_lb.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -385,7 +385,7 @@ func TestAccELBV2LoadBalancer_backwardsCompatibility(t *testing.T) {
 	ctx := acctest.Context(t)
 	var conf elbv2.LoadBalancer
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_alb.lb_test"
+	resourceName := "aws_alb.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -421,7 +421,7 @@ func TestAccELBV2LoadBalancer_generatedName(t *testing.T) {
 	ctx := acctest.Context(t)
 	var conf elbv2.LoadBalancer
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_lb.lb_test"
+	resourceName := "aws_lb.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -444,7 +444,7 @@ func TestAccELBV2LoadBalancer_generatesNameForZeroValue(t *testing.T) {
 	ctx := acctest.Context(t)
 	var conf elbv2.LoadBalancer
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_lb.lb_test"
+	resourceName := "aws_lb.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -467,7 +467,7 @@ func TestAccELBV2LoadBalancer_namePrefix(t *testing.T) {
 	ctx := acctest.Context(t)
 	var conf elbv2.LoadBalancer
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_lb.lb_test"
+	resourceName := "aws_lb.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -483,6 +483,33 @@ func TestAccELBV2LoadBalancer_namePrefix(t *testing.T) {
 					resource.TestMatchResourceAttr(resourceName, "name",
 						regexp.MustCompile("^tf-lb-")),
 				),
+			},
+		},
+	})
+}
+
+func TestAccELBV2LoadBalancer_duplicateName(t *testing.T) {
+	ctx := acctest.Context(t)
+	var conf elbv2.LoadBalancer
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_lb.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, elbv2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckLoadBalancerDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccLoadBalancerConfig_duplicateName(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckLoadBalancerExists(ctx, resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+				),
+			},
+			{
+				Config:      testAccLoadBalancerConfig_duplicateNameUpdate(rName),
+				ExpectError: regexp.MustCompile(`already exists`),
 			},
 		},
 	})
@@ -533,7 +560,7 @@ func TestAccELBV2LoadBalancer_NetworkLoadBalancer_updateCrossZone(t *testing.T) 
 	ctx := acctest.Context(t)
 	var pre, mid, post elbv2.LoadBalancer
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_lb.lb_test"
+	resourceName := "aws_lb.test"
 
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
@@ -579,7 +606,7 @@ func TestAccELBV2LoadBalancer_ApplicationLoadBalancer_updateHTTP2(t *testing.T) 
 	ctx := acctest.Context(t)
 	var pre, mid, post elbv2.LoadBalancer
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_lb.lb_test"
+	resourceName := "aws_lb.test"
 
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
@@ -639,26 +666,26 @@ func TestAccELBV2LoadBalancer_ApplicationLoadBalancer_updateDropInvalidHeaderFie
 			{
 				Config: testAccLoadBalancerConfig_enableDropInvalidHeaderFields(rName, false),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckLoadBalancerExists(ctx, "aws_lb.lb_test", &pre),
-					testAccCheckLoadBalancerAttribute(ctx, "aws_lb.lb_test", "routing.http.drop_invalid_header_fields.enabled", "false"),
-					resource.TestCheckResourceAttr("aws_lb.lb_test", "drop_invalid_header_fields", "false"),
+					testAccCheckLoadBalancerExists(ctx, "aws_lb.test", &pre),
+					testAccCheckLoadBalancerAttribute(ctx, "aws_lb.test", "routing.http.drop_invalid_header_fields.enabled", "false"),
+					resource.TestCheckResourceAttr("aws_lb.test", "drop_invalid_header_fields", "false"),
 				),
 			},
 			{
 				Config: testAccLoadBalancerConfig_enableDropInvalidHeaderFields(rName, true),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckLoadBalancerExists(ctx, "aws_lb.lb_test", &mid),
-					testAccCheckLoadBalancerAttribute(ctx, "aws_lb.lb_test", "routing.http.drop_invalid_header_fields.enabled", "true"),
-					resource.TestCheckResourceAttr("aws_lb.lb_test", "drop_invalid_header_fields", "true"),
+					testAccCheckLoadBalancerExists(ctx, "aws_lb.test", &mid),
+					testAccCheckLoadBalancerAttribute(ctx, "aws_lb.test", "routing.http.drop_invalid_header_fields.enabled", "true"),
+					resource.TestCheckResourceAttr("aws_lb.test", "drop_invalid_header_fields", "true"),
 					testAccChecklbARNs(&pre, &mid),
 				),
 			},
 			{
 				Config: testAccLoadBalancerConfig_enableDropInvalidHeaderFields(rName, false),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckLoadBalancerExists(ctx, "aws_lb.lb_test", &post),
-					testAccCheckLoadBalancerAttribute(ctx, "aws_lb.lb_test", "routing.http.drop_invalid_header_fields.enabled", "false"),
-					resource.TestCheckResourceAttr("aws_lb.lb_test", "drop_invalid_header_fields", "false"),
+					testAccCheckLoadBalancerExists(ctx, "aws_lb.test", &post),
+					testAccCheckLoadBalancerAttribute(ctx, "aws_lb.test", "routing.http.drop_invalid_header_fields.enabled", "false"),
+					resource.TestCheckResourceAttr("aws_lb.test", "drop_invalid_header_fields", "false"),
 					testAccChecklbARNs(&mid, &post),
 				),
 			},
@@ -684,26 +711,26 @@ func TestAccELBV2LoadBalancer_ApplicationLoadBalancer_updatePreserveHostHeader(t
 			{
 				Config: testAccLoadBalancerConfig_enablePreserveHostHeader(rName, false),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckLoadBalancerExists(ctx, "aws_lb.lb_test", &pre),
-					testAccCheckLoadBalancerAttribute(ctx, "aws_lb.lb_test", "routing.http.preserve_host_header.enabled", "false"),
-					resource.TestCheckResourceAttr("aws_lb.lb_test", "preserve_host_header", "false"),
+					testAccCheckLoadBalancerExists(ctx, "aws_lb.test", &pre),
+					testAccCheckLoadBalancerAttribute(ctx, "aws_lb.test", "routing.http.preserve_host_header.enabled", "false"),
+					resource.TestCheckResourceAttr("aws_lb.test", "preserve_host_header", "false"),
 				),
 			},
 			{
 				Config: testAccLoadBalancerConfig_enablePreserveHostHeader(rName, true),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckLoadBalancerExists(ctx, "aws_lb.lb_test", &mid),
-					testAccCheckLoadBalancerAttribute(ctx, "aws_lb.lb_test", "routing.http.preserve_host_header.enabled", "true"),
-					resource.TestCheckResourceAttr("aws_lb.lb_test", "preserve_host_header", "true"),
+					testAccCheckLoadBalancerExists(ctx, "aws_lb.test", &mid),
+					testAccCheckLoadBalancerAttribute(ctx, "aws_lb.test", "routing.http.preserve_host_header.enabled", "true"),
+					resource.TestCheckResourceAttr("aws_lb.test", "preserve_host_header", "true"),
 					testAccChecklbARNs(&pre, &mid),
 				),
 			},
 			{
 				Config: testAccLoadBalancerConfig_enablePreserveHostHeader(rName, false),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckLoadBalancerExists(ctx, "aws_lb.lb_test", &post),
-					testAccCheckLoadBalancerAttribute(ctx, "aws_lb.lb_test", "routing.http.preserve_host_header.enabled", "false"),
-					resource.TestCheckResourceAttr("aws_lb.lb_test", "preserve_host_header", "false"),
+					testAccCheckLoadBalancerExists(ctx, "aws_lb.test", &post),
+					testAccCheckLoadBalancerAttribute(ctx, "aws_lb.test", "routing.http.preserve_host_header.enabled", "false"),
+					resource.TestCheckResourceAttr("aws_lb.test", "preserve_host_header", "false"),
 					testAccChecklbARNs(&mid, &post),
 				),
 			},
@@ -715,7 +742,7 @@ func TestAccELBV2LoadBalancer_ApplicationLoadBalancer_updateDeletionProtection(t
 	ctx := acctest.Context(t)
 	var pre, mid, post elbv2.LoadBalancer
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_lb.lb_test"
+	resourceName := "aws_lb.test"
 
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
@@ -761,7 +788,7 @@ func TestAccELBV2LoadBalancer_ApplicationLoadBalancer_updateWAFFailOpen(t *testi
 	ctx := acctest.Context(t)
 	var pre, mid, post elbv2.LoadBalancer
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_lb.lb_test"
+	resourceName := "aws_lb.test"
 
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
@@ -814,7 +841,7 @@ func TestAccELBV2LoadBalancer_updatedIPAddressType(t *testing.T) {
 	ctx := acctest.Context(t)
 	var pre, post elbv2.LoadBalancer
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_lb.lb_test"
+	resourceName := "aws_lb.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -1719,10 +1746,10 @@ resource "aws_lb" "test" {
 
 func testAccLoadBalancerConfig_ipAddressTypeUpdated(rName string) string {
 	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
-resource "aws_lb" "lb_test" {
+resource "aws_lb" "test" {
   name            = %[1]q
-  security_groups = [aws_security_group.alb_test.id]
-  subnets         = [aws_subnet.alb_test_1.id, aws_subnet.alb_test_2.id]
+  security_groups = [aws_security_group.test.id]
+  subnets         = [aws_subnet.test_1.id, aws_subnet.test_2.id]
 
   ip_address_type = "dualstack"
 
@@ -1735,7 +1762,7 @@ resource "aws_lb" "lb_test" {
 }
 
 resource "aws_lb_listener" "test" {
-  load_balancer_arn = aws_lb.lb_test.id
+  load_balancer_arn = aws_lb.test.id
   protocol          = "HTTP"
   port              = "80"
 
@@ -1749,7 +1776,7 @@ resource "aws_lb_target_group" "test" {
   name     = %[1]q
   port     = 80
   protocol = "HTTP"
-  vpc_id   = aws_vpc.alb_test.id
+  vpc_id   = aws_vpc.test.id
 
   deregistration_delay = 200
 
@@ -1771,10 +1798,10 @@ resource "aws_lb_target_group" "test" {
 }
 
 resource "aws_egress_only_internet_gateway" "igw" {
-  vpc_id = aws_vpc.alb_test.id
+  vpc_id = aws_vpc.test.id
 }
 
-resource "aws_vpc" "alb_test" {
+resource "aws_vpc" "test" {
   cidr_block                       = "10.0.0.0/16"
   assign_generated_ipv6_cidr_block = true
 
@@ -1784,37 +1811,37 @@ resource "aws_vpc" "alb_test" {
 }
 
 resource "aws_internet_gateway" "foo" {
-  vpc_id = aws_vpc.alb_test.id
+  vpc_id = aws_vpc.test.id
 }
 
-resource "aws_subnet" "alb_test_1" {
-  vpc_id                  = aws_vpc.alb_test.id
+resource "aws_subnet" "test_1" {
+  vpc_id                  = aws_vpc.test.id
   cidr_block              = "10.0.1.0/24"
   map_public_ip_on_launch = true
   availability_zone       = data.aws_availability_zones.available.names[0]
-  ipv6_cidr_block         = cidrsubnet(aws_vpc.alb_test.ipv6_cidr_block, 8, 1)
+  ipv6_cidr_block         = cidrsubnet(aws_vpc.test.ipv6_cidr_block, 8, 1)
 
   tags = {
     Name = %[1]q
   }
 }
 
-resource "aws_subnet" "alb_test_2" {
-  vpc_id                  = aws_vpc.alb_test.id
+resource "aws_subnet" "test_2" {
+  vpc_id                  = aws_vpc.test.id
   cidr_block              = "10.0.2.0/24"
   map_public_ip_on_launch = true
   availability_zone       = data.aws_availability_zones.available.names[1]
-  ipv6_cidr_block         = cidrsubnet(aws_vpc.alb_test.ipv6_cidr_block, 8, 2)
+  ipv6_cidr_block         = cidrsubnet(aws_vpc.test.ipv6_cidr_block, 8, 2)
 
   tags = {
     Name = %[1]q
   }
 }
 
-resource "aws_security_group" "alb_test" {
-  name        = "allow_all_alb_test"
+resource "aws_security_group" "test" {
+  name        = %[1]q
   description = "Used for ALB Testing"
-  vpc_id      = aws_vpc.alb_test.id
+  vpc_id      = aws_vpc.test.id
 
   ingress {
     from_port   = 0
@@ -1832,10 +1859,10 @@ resource "aws_security_group" "alb_test" {
 
 func testAccLoadBalancerConfig_ipAddressType(rName string) string {
 	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
-resource "aws_lb" "lb_test" {
+resource "aws_lb" "test" {
   name            = %[1]q
-  security_groups = [aws_security_group.alb_test.id]
-  subnets         = [aws_subnet.alb_test_1.id, aws_subnet.alb_test_2.id]
+  security_groups = [aws_security_group.test.id]
+  subnets         = [aws_subnet.test_1.id, aws_subnet.test_2.id]
 
   ip_address_type = "ipv4"
 
@@ -1848,7 +1875,7 @@ resource "aws_lb" "lb_test" {
 }
 
 resource "aws_lb_listener" "test" {
-  load_balancer_arn = aws_lb.lb_test.id
+  load_balancer_arn = aws_lb.test.id
   protocol          = "HTTP"
   port              = "80"
 
@@ -1862,7 +1889,7 @@ resource "aws_lb_target_group" "test" {
   name     = %[1]q
   port     = 80
   protocol = "HTTP"
-  vpc_id   = aws_vpc.alb_test.id
+  vpc_id   = aws_vpc.test.id
 
   deregistration_delay = 200
 
@@ -1884,10 +1911,10 @@ resource "aws_lb_target_group" "test" {
 }
 
 resource "aws_egress_only_internet_gateway" "igw" {
-  vpc_id = aws_vpc.alb_test.id
+  vpc_id = aws_vpc.test.id
 }
 
-resource "aws_vpc" "alb_test" {
+resource "aws_vpc" "test" {
   cidr_block                       = "10.0.0.0/16"
   assign_generated_ipv6_cidr_block = true
 
@@ -1897,37 +1924,37 @@ resource "aws_vpc" "alb_test" {
 }
 
 resource "aws_internet_gateway" "foo" {
-  vpc_id = aws_vpc.alb_test.id
+  vpc_id = aws_vpc.test.id
 }
 
-resource "aws_subnet" "alb_test_1" {
-  vpc_id                  = aws_vpc.alb_test.id
+resource "aws_subnet" "test_1" {
+  vpc_id                  = aws_vpc.test.id
   cidr_block              = "10.0.1.0/24"
   map_public_ip_on_launch = true
   availability_zone       = data.aws_availability_zones.available.names[0]
-  ipv6_cidr_block         = cidrsubnet(aws_vpc.alb_test.ipv6_cidr_block, 8, 1)
+  ipv6_cidr_block         = cidrsubnet(aws_vpc.test.ipv6_cidr_block, 8, 1)
 
   tags = {
     Name = %[1]q
   }
 }
 
-resource "aws_subnet" "alb_test_2" {
-  vpc_id                  = aws_vpc.alb_test.id
+resource "aws_subnet" "test_2" {
+  vpc_id                  = aws_vpc.test.id
   cidr_block              = "10.0.2.0/24"
   map_public_ip_on_launch = true
   availability_zone       = data.aws_availability_zones.available.names[1]
-  ipv6_cidr_block         = cidrsubnet(aws_vpc.alb_test.ipv6_cidr_block, 8, 2)
+  ipv6_cidr_block         = cidrsubnet(aws_vpc.test.ipv6_cidr_block, 8, 2)
 
   tags = {
     Name = %[1]q
   }
 }
 
-resource "aws_security_group" "alb_test" {
-  name        = "allow_all_alb_test"
+resource "aws_security_group" "test" {
+  name        = %[1]q
   description = "Used for ALB Testing"
-  vpc_id      = aws_vpc.alb_test.id
+  vpc_id      = aws_vpc.test.id
 
   ingress {
     from_port   = 0
@@ -1961,33 +1988,33 @@ data "aws_ec2_local_gateway_route_table" "test" {
 
 resource "aws_ec2_local_gateway_route_table_vpc_association" "test" {
   local_gateway_route_table_id = data.aws_ec2_local_gateway_route_table.test.id
-  vpc_id                       = aws_vpc.alb_test.id
+  vpc_id                       = aws_vpc.test.id
 }
 
 resource "aws_route_table" "test" {
-  vpc_id     = aws_vpc.alb_test.id
+  vpc_id     = aws_vpc.test.id
   depends_on = [aws_ec2_local_gateway_route_table_vpc_association.test]
 }
 
 resource "aws_route_table_association" "a" {
-  subnet_id      = aws_subnet.alb_test.id
+  subnet_id      = aws_subnet.test.id
   route_table_id = aws_route_table.test.id
 }
 
-resource "aws_lb" "lb_test" {
+resource "aws_lb" "test" {
   name                       = %[1]q
-  security_groups            = [aws_security_group.alb_test.id]
+  security_groups            = [aws_security_group.test.id]
   customer_owned_ipv4_pool   = tolist(data.aws_ec2_coip_pools.test.pool_ids)[0]
   idle_timeout               = 30
   enable_deletion_protection = false
-  subnets                    = [aws_subnet.alb_test.id]
+  subnets                    = [aws_subnet.test.id]
 
   tags = {
     Name = %[1]q
   }
 }
 
-resource "aws_vpc" "alb_test" {
+resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
 
   tags = {
@@ -1995,8 +2022,8 @@ resource "aws_vpc" "alb_test" {
   }
 }
 
-resource "aws_subnet" "alb_test" {
-  vpc_id            = aws_vpc.alb_test.id
+resource "aws_subnet" "test" {
+  vpc_id            = aws_vpc.test.id
   cidr_block        = "10.0.0.0/24"
   availability_zone = data.aws_outposts_outpost.test.availability_zone
   outpost_arn       = data.aws_outposts_outpost.test.arn
@@ -2006,10 +2033,10 @@ resource "aws_subnet" "alb_test" {
   }
 }
 
-resource "aws_security_group" "alb_test" {
-  name        = "allow_all_alb_test"
+resource "aws_security_group" "test" {
+  name        = %[1]q
   description = "Used for ALB Testing"
-  vpc_id      = aws_vpc.alb_test.id
+  vpc_id      = aws_vpc.test.id
 
   ingress {
     from_port   = 0
@@ -2034,11 +2061,11 @@ resource "aws_security_group" "alb_test" {
 
 func testAccLoadBalancerConfig_enableHTTP2(rName string, http2 bool) string {
 	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
-resource "aws_lb" "lb_test" {
+resource "aws_lb" "test" {
   name            = %[1]q
   internal        = true
-  security_groups = [aws_security_group.alb_test.id]
-  subnets         = aws_subnet.alb_test[*].id
+  security_groups = [aws_security_group.test.id]
+  subnets         = aws_subnet.test[*].id
 
   idle_timeout               = 30
   enable_deletion_protection = false
@@ -2055,7 +2082,7 @@ variable "subnets" {
   type    = list(string)
 }
 
-resource "aws_vpc" "alb_test" {
+resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
 
   tags = {
@@ -2063,22 +2090,22 @@ resource "aws_vpc" "alb_test" {
   }
 }
 
-resource "aws_subnet" "alb_test" {
+resource "aws_subnet" "test" {
   count                   = 2
-  vpc_id                  = aws_vpc.alb_test.id
+  vpc_id                  = aws_vpc.test.id
   cidr_block              = element(var.subnets, count.index)
   map_public_ip_on_launch = true
   availability_zone       = element(data.aws_availability_zones.available.names, count.index)
 
   tags = {
-    Name = "tf-acc-lb-basic-${count.index}"
+    Name = "%[1]s-${count.index}"
   }
 }
 
-resource "aws_security_group" "alb_test" {
-  name        = "allow_all_alb_test"
+resource "aws_security_group" "test" {
+  name        = %[1]q
   description = "Used for ALB Testing"
-  vpc_id      = aws_vpc.alb_test.id
+  vpc_id      = aws_vpc.test.id
 
   ingress {
     from_port   = 0
@@ -2103,11 +2130,11 @@ resource "aws_security_group" "alb_test" {
 
 func testAccLoadBalancerConfig_enableDropInvalidHeaderFields(rName string, dropInvalid bool) string {
 	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
-resource "aws_lb" "lb_test" {
+resource "aws_lb" "test" {
   name            = %[1]q
   internal        = true
-  security_groups = [aws_security_group.alb_test.id]
-  subnets         = aws_subnet.alb_test[*].id
+  security_groups = [aws_security_group.test.id]
+  subnets         = aws_subnet.test[*].id
 
   idle_timeout               = 30
   enable_deletion_protection = false
@@ -2124,7 +2151,7 @@ variable "subnets" {
   type    = list(string)
 }
 
-resource "aws_vpc" "alb_test" {
+resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
 
   tags = {
@@ -2132,22 +2159,22 @@ resource "aws_vpc" "alb_test" {
   }
 }
 
-resource "aws_subnet" "alb_test" {
+resource "aws_subnet" "test" {
   count                   = 2
-  vpc_id                  = aws_vpc.alb_test.id
+  vpc_id                  = aws_vpc.test.id
   cidr_block              = element(var.subnets, count.index)
   map_public_ip_on_launch = true
   availability_zone       = element(data.aws_availability_zones.available.names, count.index)
 
   tags = {
-    Name = "tf-acc-lb-basic-${count.index}"
+    Name = "%[1]s-${count.index}"
   }
 }
 
-resource "aws_security_group" "alb_test" {
-  name        = "allow_all_alb_test"
+resource "aws_security_group" "test" {
+  name        = %[1]q
   description = "Used for ALB Testing"
-  vpc_id      = aws_vpc.alb_test.id
+  vpc_id      = aws_vpc.test.id
 
   ingress {
     from_port   = 0
@@ -2172,11 +2199,11 @@ resource "aws_security_group" "alb_test" {
 
 func testAccLoadBalancerConfig_enablePreserveHostHeader(rName string, enablePreserveHostHeader bool) string {
 	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
-resource "aws_lb" "lb_test" {
+resource "aws_lb" "test" {
   name            = %[1]q
   internal        = true
-  security_groups = [aws_security_group.alb_test.id]
-  subnets         = aws_subnet.alb_test[*].id
+  security_groups = [aws_security_group.test.id]
+  subnets         = aws_subnet.test[*].id
 
   idle_timeout               = 30
   enable_deletion_protection = false
@@ -2193,7 +2220,7 @@ variable "subnets" {
   type    = list(string)
 }
 
-resource "aws_vpc" "alb_test" {
+resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
 
   tags = {
@@ -2201,22 +2228,22 @@ resource "aws_vpc" "alb_test" {
   }
 }
 
-resource "aws_subnet" "alb_test" {
+resource "aws_subnet" "test" {
   count                   = 2
-  vpc_id                  = aws_vpc.alb_test.id
+  vpc_id                  = aws_vpc.test.id
   cidr_block              = element(var.subnets, count.index)
   map_public_ip_on_launch = true
   availability_zone       = element(data.aws_availability_zones.available.names, count.index)
 
   tags = {
-    Name = "tf-acc-lb-basic-${count.index}"
+    Name = "%[1]s-${count.index}"
   }
 }
 
-resource "aws_security_group" "alb_test" {
-  name        = "allow_all_alb_test"
+resource "aws_security_group" "test" {
+  name        = %[1]q
   description = "Used for ALB Testing"
-  vpc_id      = aws_vpc.alb_test.id
+  vpc_id      = aws_vpc.test.id
 
   ingress {
     from_port   = 0
@@ -2241,11 +2268,11 @@ resource "aws_security_group" "alb_test" {
 
 func testAccLoadBalancerConfig_enableDeletionProtection(rName string, deletionProtection bool) string {
 	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
-resource "aws_lb" "lb_test" {
+resource "aws_lb" "test" {
   name            = %[1]q
   internal        = true
-  security_groups = [aws_security_group.alb_test.id]
-  subnets         = aws_subnet.alb_test[*].id
+  security_groups = [aws_security_group.test.id]
+  subnets         = aws_subnet.test[*].id
 
   idle_timeout               = 30
   enable_deletion_protection = %[2]t
@@ -2260,7 +2287,7 @@ variable "subnets" {
   type    = list(string)
 }
 
-resource "aws_vpc" "alb_test" {
+resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
 
   tags = {
@@ -2268,22 +2295,22 @@ resource "aws_vpc" "alb_test" {
   }
 }
 
-resource "aws_subnet" "alb_test" {
+resource "aws_subnet" "test" {
   count                   = 2
-  vpc_id                  = aws_vpc.alb_test.id
+  vpc_id                  = aws_vpc.test.id
   cidr_block              = element(var.subnets, count.index)
   map_public_ip_on_launch = true
   availability_zone       = element(data.aws_availability_zones.available.names, count.index)
 
   tags = {
-    Name = "tf-acc-lb-basic-${count.index}"
+    Name = "%[1]s-${count.index}"
   }
 }
 
-resource "aws_security_group" "alb_test" {
-  name        = "allow_all_alb_test"
+resource "aws_security_group" "test" {
+  name        = %[1]q
   description = "Used for ALB Testing"
-  vpc_id      = aws_vpc.alb_test.id
+  vpc_id      = aws_vpc.test.id
 
   ingress {
     from_port   = 0
@@ -2310,11 +2337,11 @@ func testAccLoadBalancerConfig_enableWAFFailOpen(rName string, wafFailOpen bool)
 	return acctest.ConfigCompose(
 		acctest.ConfigAvailableAZsNoOptIn(),
 		fmt.Sprintf(`
-resource "aws_lb" "lb_test" {
+resource "aws_lb" "test" {
   name            = %[1]q
   internal        = true
-  security_groups = [aws_security_group.alb_test.id]
-  subnets         = aws_subnet.alb_test[*].id
+  security_groups = [aws_security_group.test.id]
+  subnets         = aws_subnet.test[*].id
 
   idle_timeout               = 30
   enable_deletion_protection = false
@@ -2331,7 +2358,7 @@ variable "subnets" {
   type    = list(string)
 }
 
-resource "aws_vpc" "alb_test" {
+resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
 
   tags = {
@@ -2339,22 +2366,22 @@ resource "aws_vpc" "alb_test" {
   }
 }
 
-resource "aws_subnet" "alb_test" {
+resource "aws_subnet" "test" {
   count                   = 2
-  vpc_id                  = aws_vpc.alb_test.id
+  vpc_id                  = aws_vpc.test.id
   cidr_block              = element(var.subnets, count.index)
   map_public_ip_on_launch = true
   availability_zone       = element(data.aws_availability_zones.available.names, count.index)
 
   tags = {
-    Name = "tf-acc-lb-basic-${count.index}"
+    Name = "%[1]s-${count.index}"
   }
 }
 
-resource "aws_security_group" "alb_test" {
-  name        = "allow_all_alb_test"
+resource "aws_security_group" "test" {
+  name        = %[1]q
   description = "Used for ALB Testing"
-  vpc_id      = aws_vpc.alb_test.id
+  vpc_id      = aws_vpc.test.id
 
   ingress {
     from_port   = 0
@@ -2379,7 +2406,7 @@ resource "aws_security_group" "alb_test" {
 
 func testAccLoadBalancerConfig_nlb(rName string, cz bool) string {
 	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
-resource "aws_lb" "lb_test" {
+resource "aws_lb" "test" {
   name               = %[1]q
   internal           = true
   load_balancer_type = "network"
@@ -2388,7 +2415,7 @@ resource "aws_lb" "lb_test" {
   enable_cross_zone_load_balancing = %[2]t
 
   subnet_mapping {
-    subnet_id = aws_subnet.alb_test.id
+    subnet_id = aws_subnet.test.id
   }
 
   tags = {
@@ -2396,7 +2423,7 @@ resource "aws_lb" "lb_test" {
   }
 }
 
-resource "aws_vpc" "alb_test" {
+resource "aws_vpc" "test" {
   cidr_block = "10.10.0.0/16"
 
   tags = {
@@ -2404,8 +2431,8 @@ resource "aws_vpc" "alb_test" {
   }
 }
 
-resource "aws_subnet" "alb_test" {
-  vpc_id                  = aws_vpc.alb_test.id
+resource "aws_subnet" "test" {
+  vpc_id                  = aws_vpc.test.id
   cidr_block              = "10.10.0.0/21"
   map_public_ip_on_launch = true
   availability_zone       = data.aws_availability_zones.available.names[0]
@@ -2552,7 +2579,7 @@ resource "aws_subnet" "public" {
   vpc_id            = aws_vpc.main.id
 
   tags = {
-    Name = "tf-acc-lb-network-load-balancer-eip-${count.index}"
+    Name = "%[1]s-${count.index}"
   }
 }
 
@@ -2575,7 +2602,7 @@ resource "aws_route_table_association" "a" {
   route_table_id = aws_route_table.public.id
 }
 
-resource "aws_lb" "lb_test" {
+resource "aws_lb" "test" {
   name               = %[1]q
   load_balancer_type = "network"
 
@@ -2639,11 +2666,11 @@ resource "aws_subnet" "test" {
 
 func testAccLoadBalancerConfig_backwardsCompatibility(rName string) string {
 	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
-resource "aws_alb" "lb_test" {
+resource "aws_alb" "test" {
   name            = %[1]q
   internal        = true
-  security_groups = [aws_security_group.alb_test.id]
-  subnets         = aws_subnet.alb_test[*].id
+  security_groups = [aws_security_group.test.id]
+  subnets         = aws_subnet.test[*].id
 
   idle_timeout               = 30
   enable_deletion_protection = false
@@ -2658,7 +2685,7 @@ variable "subnets" {
   type    = list(string)
 }
 
-resource "aws_vpc" "alb_test" {
+resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
 
   tags = {
@@ -2666,22 +2693,22 @@ resource "aws_vpc" "alb_test" {
   }
 }
 
-resource "aws_subnet" "alb_test" {
+resource "aws_subnet" "test" {
   count                   = 2
-  vpc_id                  = aws_vpc.alb_test.id
+  vpc_id                  = aws_vpc.test.id
   cidr_block              = element(var.subnets, count.index)
   map_public_ip_on_launch = true
   availability_zone       = element(data.aws_availability_zones.available.names, count.index)
 
   tags = {
-    Name = "tf-acc-lb-bc-${count.index}"
+    Name = "%[1]s-${count.index}"
   }
 }
 
-resource "aws_security_group" "alb_test" {
-  name        = "allow_all_alb_test"
+resource "aws_security_group" "test" {
+  name        = %[1]q
   description = "Used for ALB Testing"
-  vpc_id      = aws_vpc.alb_test.id
+  vpc_id      = aws_vpc.test.id
 
   ingress {
     from_port   = 0
@@ -2708,10 +2735,10 @@ func testAccLoadBalancerConfig_generatedName(rName string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigAvailableAZsNoOptIn(),
 		fmt.Sprintf(`
-resource "aws_lb" "lb_test" {
+resource "aws_lb" "test" {
   internal        = true
-  security_groups = [aws_security_group.alb_test.id]
-  subnets         = aws_subnet.alb_test[*].id
+  security_groups = [aws_security_group.test.id]
+  subnets         = aws_subnet.test[*].id
 
   idle_timeout               = 30
   enable_deletion_protection = false
@@ -2726,7 +2753,7 @@ variable "subnets" {
   type    = list(string)
 }
 
-resource "aws_vpc" "alb_test" {
+resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
 
   tags = {
@@ -2735,16 +2762,16 @@ resource "aws_vpc" "alb_test" {
 }
 
 resource "aws_internet_gateway" "gw" {
-  vpc_id = aws_vpc.alb_test.id
+  vpc_id = aws_vpc.test.id
 
   tags = {
     Name = %[1]q
   }
 }
 
-resource "aws_subnet" "alb_test" {
+resource "aws_subnet" "test" {
   count                   = 2
-  vpc_id                  = aws_vpc.alb_test.id
+  vpc_id                  = aws_vpc.test.id
   cidr_block              = element(var.subnets, count.index)
   map_public_ip_on_launch = true
   availability_zone       = element(data.aws_availability_zones.available.names, count.index)
@@ -2754,10 +2781,10 @@ resource "aws_subnet" "alb_test" {
   }
 }
 
-resource "aws_security_group" "alb_test" {
-  name        = "allow_all_alb_test"
+resource "aws_security_group" "test" {
+  name        = %[1]q
   description = "Used for ALB Testing"
-  vpc_id      = aws_vpc.alb_test.id
+  vpc_id      = aws_vpc.test.id
 
   ingress {
     from_port   = 0
@@ -2784,11 +2811,11 @@ func testAccLoadBalancerConfig_zeroValueName(rName string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigAvailableAZsNoOptIn(),
 		fmt.Sprintf(`
-resource "aws_lb" "lb_test" {
+resource "aws_lb" "test" {
   name            = ""
   internal        = true
-  security_groups = [aws_security_group.alb_test.id]
-  subnets         = aws_subnet.alb_test[*].id
+  security_groups = [aws_security_group.test.id]
+  subnets         = aws_subnet.test[*].id
 
   idle_timeout               = 30
   enable_deletion_protection = false
@@ -2800,7 +2827,7 @@ resource "aws_lb" "lb_test" {
 
 # See https://github.com/hashicorp/terraform-provider-aws/issues/2498
 output "lb_name" {
-  value = aws_lb.lb_test.name
+  value = aws_lb.test.name
 }
 
 variable "subnets" {
@@ -2808,7 +2835,7 @@ variable "subnets" {
   type    = list(string)
 }
 
-resource "aws_vpc" "alb_test" {
+resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
 
   tags = {
@@ -2817,29 +2844,29 @@ resource "aws_vpc" "alb_test" {
 }
 
 resource "aws_internet_gateway" "gw" {
-  vpc_id = aws_vpc.alb_test.id
+  vpc_id = aws_vpc.test.id
 
   tags = {
     Name = %[1]q
   }
 }
 
-resource "aws_subnet" "alb_test" {
+resource "aws_subnet" "test" {
   count                   = 2
-  vpc_id                  = aws_vpc.alb_test.id
+  vpc_id                  = aws_vpc.test.id
   cidr_block              = element(var.subnets, count.index)
   map_public_ip_on_launch = true
   availability_zone       = element(data.aws_availability_zones.available.names, count.index)
 
   tags = {
-    Name = "tf-acc-lb-zero-value-name-${count.index}"
+    Name = "%[1]s-${count.index}"
   }
 }
 
-resource "aws_security_group" "alb_test" {
-  name        = "allow_all_alb_test"
+resource "aws_security_group" "test" {
+  name        = %[1]q
   description = "Used for ALB Testing"
-  vpc_id      = aws_vpc.alb_test.id
+  vpc_id      = aws_vpc.test.id
 
   ingress {
     from_port   = 0
@@ -2866,11 +2893,11 @@ func testAccLoadBalancerConfig_namePrefix(rName string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigAvailableAZsNoOptIn(),
 		fmt.Sprintf(`
-resource "aws_lb" "lb_test" {
+resource "aws_lb" "test" {
   name_prefix     = "tf-lb-"
   internal        = true
-  security_groups = [aws_security_group.alb_test.id]
-  subnets         = aws_subnet.alb_test[*].id
+  security_groups = [aws_security_group.test.id]
+  subnets         = aws_subnet.test[*].id
 
   idle_timeout               = 30
   enable_deletion_protection = false
@@ -2885,7 +2912,7 @@ variable "subnets" {
   type    = list(string)
 }
 
-resource "aws_vpc" "alb_test" {
+resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
 
   tags = {
@@ -2893,9 +2920,9 @@ resource "aws_vpc" "alb_test" {
   }
 }
 
-resource "aws_subnet" "alb_test" {
+resource "aws_subnet" "test" {
   count                   = 2
-  vpc_id                  = aws_vpc.alb_test.id
+  vpc_id                  = aws_vpc.test.id
   cidr_block              = element(var.subnets, count.index)
   map_public_ip_on_launch = true
   availability_zone       = element(data.aws_availability_zones.available.names, count.index)
@@ -2905,10 +2932,162 @@ resource "aws_subnet" "alb_test" {
   }
 }
 
-resource "aws_security_group" "alb_test" {
-  name        = "allow_all_alb_test"
+resource "aws_security_group" "test" {
+  name        = %[1]q
   description = "Used for ALB Testing"
-  vpc_id      = aws_vpc.alb_test.id
+  vpc_id      = aws_vpc.test.id
+
+  ingress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  tags = {
+    Name = %[1]q
+  }
+}
+`, rName))
+}
+
+func testAccLoadBalancerConfig_duplicateName(rName string) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigAvailableAZsNoOptIn(),
+		fmt.Sprintf(`
+resource "aws_lb" "test" {
+  name            = %[1]q
+  internal        = true
+  security_groups = [aws_security_group.test.id]
+  subnets         = aws_subnet.test[*].id
+
+  idle_timeout               = 30
+  enable_deletion_protection = false
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+variable "subnets" {
+  default = ["10.0.1.0/24", "10.0.2.0/24"]
+  type    = list(string)
+}
+
+resource "aws_vpc" "test" {
+  cidr_block = "10.0.0.0/16"
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_subnet" "test" {
+  count                   = 2
+  vpc_id                  = aws_vpc.test.id
+  cidr_block              = element(var.subnets, count.index)
+  map_public_ip_on_launch = true
+  availability_zone       = element(data.aws_availability_zones.available.names, count.index)
+
+  tags = {
+    Name = "%[1]s-${count.index}"
+  }
+}
+
+resource "aws_security_group" "test" {
+  name        = %[1]q
+  description = "Used for LB Testing"
+  vpc_id      = aws_vpc.test.id
+
+  ingress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  tags = {
+    Name = %[1]q
+  }
+}
+`, rName))
+}
+
+func testAccLoadBalancerConfig_duplicateNameUpdate(rName string) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigAvailableAZsNoOptIn(),
+		fmt.Sprintf(`
+resource "aws_lb" "test" {
+  name            = %[1]q
+  internal        = true
+  security_groups = [aws_security_group.test.id]
+  subnets         = aws_subnet.test[*].id
+
+  idle_timeout               = 30
+  enable_deletion_protection = false
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_lb" "test2" {
+  name            = %[1]q
+  internal        = true
+  security_groups = [aws_security_group.test.id]
+  subnets         = aws_subnet.test[*].id
+
+  idle_timeout               = 30
+  enable_deletion_protection = false
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+variable "subnets" {
+  default = ["10.0.1.0/24", "10.0.2.0/24"]
+  type    = list(string)
+}
+
+resource "aws_vpc" "test" {
+  cidr_block = "10.0.0.0/16"
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_subnet" "test" {
+  count                   = 2
+  vpc_id                  = aws_vpc.test.id
+  cidr_block              = element(var.subnets, count.index)
+  map_public_ip_on_launch = true
+  availability_zone       = element(data.aws_availability_zones.available.names, count.index)
+
+  tags = {
+    Name = "%[1]s-${count.index}"
+  }
+}
+
+resource "aws_security_group" "test" {
+  name        = %[1]q
+  description = "Used for LB Testing"
+  vpc_id      = aws_vpc.test.id
 
   ingress {
     from_port   = 0

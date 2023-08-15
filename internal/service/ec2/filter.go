@@ -6,6 +6,7 @@ package ec2
 import (
 	"sort"
 
+	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
 )
@@ -58,5 +59,35 @@ func NewFilter(name string, values []string) *ec2.Filter {
 	return &ec2.Filter{
 		Name:   aws.String(name),
 		Values: aws.StringSlice(values),
+	}
+}
+
+func buildAttributeFilterListV2(m map[string]string) []awstypes.Filter {
+	var filters []awstypes.Filter
+
+	// sort the filters by name to make the output deterministic
+	var names []string
+	for k := range m {
+		names = append(names, k)
+	}
+
+	sort.Strings(names)
+
+	for _, name := range names {
+		value := m[name]
+		if value == "" {
+			continue
+		}
+
+		filters = append(filters, newFilterV2(name, []string{value}))
+	}
+
+	return filters
+}
+
+func newFilterV2(name string, values []string) awstypes.Filter {
+	return awstypes.Filter{
+		Name:   aws.String(name),
+		Values: values,
 	}
 }

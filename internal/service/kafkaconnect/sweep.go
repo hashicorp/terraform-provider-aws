@@ -66,7 +66,7 @@ func sweepConnectors(region string) error {
 		return fmt.Errorf("error listing MSK Connect Connectors (%s): %w", region, err)
 	}
 
-	err = sweep.SweepOrchestratorWithContext(ctx, sweepResources)
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
 
 	if err != nil {
 		return fmt.Errorf("error sweeping MSK Connect Connectors (%s): %w", region, err)
@@ -110,7 +110,7 @@ func sweepCustomPlugins(region string) error {
 		return fmt.Errorf("error listing MSK Connect Custom Plugins (%s): %w", region, err)
 	}
 
-	err = sweep.SweepOrchestratorWithContext(ctx, sweepResources)
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
 
 	if err != nil {
 		return fmt.Errorf("error sweeping MSK Connect Custom Plugins (%s): %w", region, err)
