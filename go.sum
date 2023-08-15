@@ -214,8 +214,8 @@ github.com/hashicorp/aws-cloudformation-resource-schema-sdk-go v0.21.0 h1:IUypt/
 github.com/hashicorp/aws-cloudformation-resource-schema-sdk-go v0.21.0/go.mod h1:cdTE6F2pCKQobug+RqRaQp7Kz9hIEqiSvpPmb6E5G1w=
 github.com/hashicorp/aws-sdk-go-base/v2 v2.0.0-beta.33 h1:8ogYFA7VJSKIOvyODL2mJphWLYc87ZdoKR9Zg3UEAVM=
 github.com/hashicorp/aws-sdk-go-base/v2 v2.0.0-beta.33/go.mod h1:D8McAXJE4Ki5B4MYCicebCGfH8f5s3hNJc8ubR8x//4=
-github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2 v2.0.0-beta.34 h1:t2/JBep3k7Maetnw6N5e9PKWVKPHpWEJHYz5avmeKl0=
-github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2 v2.0.0-beta.34/go.mod h1:yfSdY7j8d/ifBnvktBI58gZH+tg6fQLqKAtZtGYMVBo=
+github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2 v2.0.0-beta.34.0.20230814235649-2c1764785bed h1:wJ8yNFibisQR8iNp07a6s2u6yJpUrTUHCWXydkHigm8=
+github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2 v2.0.0-beta.34.0.20230814235649-2c1764785bed/go.mod h1:/ryPZ8onEb4eXtSoHcazV5ghdrL6p039J5kQciBWzTc=
 github.com/hashicorp/awspolicyequivalence v1.6.0 h1:7aadmkalbc5ewStC6g3rljx1iNvP4QyAhg2KsHx8bU8=
 github.com/hashicorp/awspolicyequivalence v1.6.0/go.mod h1:9IOaIHx+a7C0NfUNk1A93M7kHd5rJ19aoUx37LZGC14=
 github.com/hashicorp/errwrap v1.0.0/go.mod h1:YH+1FKiLXxHSkmPseP+kNlulaMuP3n2brvKWEqk/Jc4=

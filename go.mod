@@ -174,3 +174,5 @@ require (
 	gopkg.in/check.v1 v1.0.0-20201130134442-10cb98267c6c // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
+
+replace github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2 => github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2 v2.0.0-beta.34.0.20230814235649-2c1764785bed

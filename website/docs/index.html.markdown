@@ -241,6 +241,7 @@ credential_process = custom-process --username jdoe
 |Retry Mode|`retry_mode`|`AWS_RETRY_MODE`|`retry_mode`|
 |Shared Config Files|`shared_config_files`|`AWS_CONFIG_FILE`|N/A|
 |Shared Credentials Files|`shared_credentials_files`|`AWS_SHARED_CREDENTIALS_FILE`|N/A|
+|S3 Use Regional Endpoint for `us-east-1`|N/A|`AWS_S3_US_EAST_1_REGIONAL_ENDPOINT`|`s3_us_east_1_regional_endpoint`|
 |Use DualStack Endpoints|`use_dualstack_endpoint`|`AWS_USE_DUALSTACK_ENDPOINT`|`use_dualstack_endpoint`|
 |Use FIPS Endpoints|`use_fips_endpoint`|`AWS_USE_FIPS_ENDPOINT`|`use_fips_endpoint`|
 
