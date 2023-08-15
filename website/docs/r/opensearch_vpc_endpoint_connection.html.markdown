@@ -40,7 +40,7 @@ The following arguments are supported:
 
 ## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The connection endpoint ID for connecting to the domain.
 * `connection_status` - The current status of the endpoint.
