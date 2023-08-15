@@ -1824,6 +1824,8 @@ resource "aws_lb" "test" {
   tags = {
     Name = %[1]q
   }
+
+  depends_on = [aws_egress_only_internet_gateway.test, aws_internet_gateway.test]
 }
 
 resource "aws_security_group" "test" {
@@ -1836,6 +1838,22 @@ resource "aws_security_group" "test" {
     protocol    = "-1"
     cidr_blocks = ["0.0.0.0/0"]
   }
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_egress_only_internet_gateway" "test" {
+  vpc_id = aws_vpc.test.id
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_internet_gateway" "test" {
+  vpc_id = aws_vpc.test.id
 
   tags = {
     Name = %[1]q
