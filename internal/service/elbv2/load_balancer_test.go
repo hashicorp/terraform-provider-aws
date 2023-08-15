@@ -501,14 +501,14 @@ func TestAccELBV2LoadBalancer_duplicateName(t *testing.T) {
 		CheckDestroy:             testAccCheckLoadBalancerDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccLoadBalancerConfig_duplicateName(rName),
+				Config: testAccLoadBalancerConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckLoadBalancerExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 				),
 			},
 			{
-				Config:      testAccLoadBalancerConfig_duplicateNameUpdate(rName),
+				Config:      testAccLoadBalancerConfig_duplicateName(rName),
 				ExpectError: regexp.MustCompile(`already exists`),
 			},
 		},
@@ -1816,7 +1816,7 @@ resource "aws_lb" "test" {
   security_groups = [aws_security_group.test.id]
   subnets         = aws_subnet.test[*].id
 
-  ip_address_type = "ipv4"
+  ip_address_type = %[2]q
 
   idle_timeout               = 30
   enable_deletion_protection = false
@@ -1868,6 +1868,10 @@ resource "aws_ec2_local_gateway_route_table_vpc_association" "test" {
 resource "aws_route_table" "test" {
   vpc_id     = aws_vpc.test.id
   depends_on = [aws_ec2_local_gateway_route_table_vpc_association.test]
+
+  tags = {
+    Name = %[1]q
+  }
 }
 
 resource "aws_route_table_association" "a" {
@@ -1934,7 +1938,7 @@ resource "aws_security_group" "test" {
 }
 
 func testAccLoadBalancerConfig_enableHTTP2(rName string, http2 bool) string {
-	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccLoadBalancerConfig_baseInternal(rName, 2), fmt.Sprintf(`
 resource "aws_lb" "test" {
   name            = %[1]q
   internal        = true
@@ -1950,60 +1954,11 @@ resource "aws_lb" "test" {
     Name = %[1]q
   }
 }
-
-variable "subnets" {
-  default = ["10.0.1.0/24", "10.0.2.0/24"]
-  type    = list(string)
-}
-
-resource "aws_vpc" "test" {
-  cidr_block = "10.0.0.0/16"
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_subnet" "test" {
-  count                   = 2
-  vpc_id                  = aws_vpc.test.id
-  cidr_block              = element(var.subnets, count.index)
-  map_public_ip_on_launch = true
-  availability_zone       = element(data.aws_availability_zones.available.names, count.index)
-
-  tags = {
-    Name = "%[1]s-${count.index}"
-  }
-}
-
-resource "aws_security_group" "test" {
-  name        = %[1]q
-  description = "Used for ALB Testing"
-  vpc_id      = aws_vpc.test.id
-
-  ingress {
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
-  egress {
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
-  tags = {
-    Name = %[1]q
-  }
-}
 `, rName, http2))
 }
 
 func testAccLoadBalancerConfig_enableDropInvalidHeaderFields(rName string, dropInvalid bool) string {
-	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccLoadBalancerConfig_baseInternal(rName, 2), fmt.Sprintf(`
 resource "aws_lb" "test" {
   name            = %[1]q
   internal        = true
@@ -2019,60 +1974,11 @@ resource "aws_lb" "test" {
     Name = %[1]q
   }
 }
-
-variable "subnets" {
-  default = ["10.0.1.0/24", "10.0.2.0/24"]
-  type    = list(string)
-}
-
-resource "aws_vpc" "test" {
-  cidr_block = "10.0.0.0/16"
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_subnet" "test" {
-  count                   = 2
-  vpc_id                  = aws_vpc.test.id
-  cidr_block              = element(var.subnets, count.index)
-  map_public_ip_on_launch = true
-  availability_zone       = element(data.aws_availability_zones.available.names, count.index)
-
-  tags = {
-    Name = "%[1]s-${count.index}"
-  }
-}
-
-resource "aws_security_group" "test" {
-  name        = %[1]q
-  description = "Used for ALB Testing"
-  vpc_id      = aws_vpc.test.id
-
-  ingress {
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
-  egress {
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
-  tags = {
-    Name = %[1]q
-  }
-}
 `, rName, dropInvalid))
 }
 
 func testAccLoadBalancerConfig_enablePreserveHostHeader(rName string, enablePreserveHostHeader bool) string {
-	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccLoadBalancerConfig_baseInternal(rName, 2), fmt.Sprintf(`
 resource "aws_lb" "test" {
   name            = %[1]q
   internal        = true
@@ -2088,60 +1994,11 @@ resource "aws_lb" "test" {
     Name = %[1]q
   }
 }
-
-variable "subnets" {
-  default = ["10.0.1.0/24", "10.0.2.0/24"]
-  type    = list(string)
-}
-
-resource "aws_vpc" "test" {
-  cidr_block = "10.0.0.0/16"
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_subnet" "test" {
-  count                   = 2
-  vpc_id                  = aws_vpc.test.id
-  cidr_block              = element(var.subnets, count.index)
-  map_public_ip_on_launch = true
-  availability_zone       = element(data.aws_availability_zones.available.names, count.index)
-
-  tags = {
-    Name = "%[1]s-${count.index}"
-  }
-}
-
-resource "aws_security_group" "test" {
-  name        = %[1]q
-  description = "Used for ALB Testing"
-  vpc_id      = aws_vpc.test.id
-
-  ingress {
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
-  egress {
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
-  tags = {
-    Name = %[1]q
-  }
-}
 `, rName, enablePreserveHostHeader))
 }
 
 func testAccLoadBalancerConfig_enableDeletionProtection(rName string, deletionProtection bool) string {
-	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccLoadBalancerConfig_baseInternal(rName, 2), fmt.Sprintf(`
 resource "aws_lb" "test" {
   name            = %[1]q
   internal        = true
@@ -2155,62 +2012,11 @@ resource "aws_lb" "test" {
     Name = %[1]q
   }
 }
-
-variable "subnets" {
-  default = ["10.0.1.0/24", "10.0.2.0/24"]
-  type    = list(string)
-}
-
-resource "aws_vpc" "test" {
-  cidr_block = "10.0.0.0/16"
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_subnet" "test" {
-  count                   = 2
-  vpc_id                  = aws_vpc.test.id
-  cidr_block              = element(var.subnets, count.index)
-  map_public_ip_on_launch = true
-  availability_zone       = element(data.aws_availability_zones.available.names, count.index)
-
-  tags = {
-    Name = "%[1]s-${count.index}"
-  }
-}
-
-resource "aws_security_group" "test" {
-  name        = %[1]q
-  description = "Used for ALB Testing"
-  vpc_id      = aws_vpc.test.id
-
-  ingress {
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
-  egress {
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
-  tags = {
-    Name = %[1]q
-  }
-}
 `, rName, deletionProtection))
 }
 
 func testAccLoadBalancerConfig_enableWAFFailOpen(rName string, wafFailOpen bool) string {
-	return acctest.ConfigCompose(
-		acctest.ConfigAvailableAZsNoOptIn(),
-		fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccLoadBalancerConfig_baseInternal(rName, 2), fmt.Sprintf(`
 resource "aws_lb" "test" {
   name            = %[1]q
   internal        = true
@@ -2226,60 +2032,11 @@ resource "aws_lb" "test" {
     Name = %[1]q
   }
 }
-
-variable "subnets" {
-  default = ["10.0.1.0/24", "10.0.2.0/24"]
-  type    = list(string)
-}
-
-resource "aws_vpc" "test" {
-  cidr_block = "10.0.0.0/16"
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_subnet" "test" {
-  count                   = 2
-  vpc_id                  = aws_vpc.test.id
-  cidr_block              = element(var.subnets, count.index)
-  map_public_ip_on_launch = true
-  availability_zone       = element(data.aws_availability_zones.available.names, count.index)
-
-  tags = {
-    Name = "%[1]s-${count.index}"
-  }
-}
-
-resource "aws_security_group" "test" {
-  name        = %[1]q
-  description = "Used for ALB Testing"
-  vpc_id      = aws_vpc.test.id
-
-  ingress {
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
-  egress {
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
-  tags = {
-    Name = %[1]q
-  }
-}
 `, rName, wafFailOpen))
 }
 
 func testAccLoadBalancerConfig_nlb(rName string, cz bool) string {
-	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
+	return acctest.ConfigCompose(acctest.ConfigVPCWithSubnets(rName, 1), fmt.Sprintf(`
 resource "aws_lb" "test" {
   name               = %[1]q
   internal           = true
@@ -2289,27 +2046,8 @@ resource "aws_lb" "test" {
   enable_cross_zone_load_balancing = %[2]t
 
   subnet_mapping {
-    subnet_id = aws_subnet.test.id
+    subnet_id = aws_subnet.test[0].id
   }
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_vpc" "test" {
-  cidr_block = "10.10.0.0/16"
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_subnet" "test" {
-  vpc_id                  = aws_vpc.test.id
-  cidr_block              = "10.10.0.0/21"
-  map_public_ip_on_launch = true
-  availability_zone       = data.aws_availability_zones.available.names[0]
 
   tags = {
     Name = %[1]q
@@ -2319,64 +2057,22 @@ resource "aws_subnet" "test" {
 }
 
 func testAccLoadBalancerConfig_typeGateway(rName string) string {
-	return acctest.ConfigCompose(
-		acctest.ConfigAvailableAZsNoOptIn(),
-		fmt.Sprintf(`
-resource "aws_vpc" "test" {
-  cidr_block = "10.10.10.0/25"
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_subnet" "test" {
-  availability_zone = data.aws_availability_zones.available.names[0]
-  cidr_block        = cidrsubnet(aws_vpc.test.cidr_block, 2, 0)
-  vpc_id            = aws_vpc.test.id
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
+	return acctest.ConfigCompose(acctest.ConfigVPCWithSubnets(rName, 1), fmt.Sprintf(`
 resource "aws_lb" "test" {
   load_balancer_type = "gateway"
   name               = %[1]q
 
   subnet_mapping {
-    subnet_id = aws_subnet.test.id
+    subnet_id = aws_subnet.test[0].id
   }
 }
 `, rName))
 }
 
 func testAccLoadBalancerConfig_ipv6(rName string) string {
-	return acctest.ConfigCompose(
-		acctest.ConfigAvailableAZsNoOptIn(),
-		fmt.Sprintf(`
-resource "aws_vpc" "test" {
-  assign_generated_ipv6_cidr_block = true
-  cidr_block                       = "10.10.10.0/25"
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_internet_gateway" "gw" {
+	return acctest.ConfigCompose(acctest.ConfigVPCWithSubnetsIPv6(rName, 1), fmt.Sprintf(`
+resource "aws_internet_gateway" "test" {
   vpc_id = aws_vpc.test.id
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_subnet" "test" {
-  availability_zone = data.aws_availability_zones.available.names[0]
-  cidr_block        = cidrsubnet(aws_vpc.test.cidr_block, 2, 0)
-  ipv6_cidr_block   = cidrsubnet(aws_vpc.test.ipv6_cidr_block, 8, 16)
-  vpc_id            = aws_vpc.test.id
 
   tags = {
     Name = %[1]q
@@ -2389,7 +2085,7 @@ resource "aws_lb" "test" {
   enable_deletion_protection = false
 
   subnet_mapping {
-    subnet_id    = aws_subnet.test.id
+    subnet_id    = aws_subnet.test[0].id
     ipv6_address = cidrhost(cidrsubnet(aws_vpc.test.ipv6_cidr_block, 8, 16), 5)
   }
 
@@ -2397,83 +2093,52 @@ resource "aws_lb" "test" {
     Name = %[1]q
   }
 
-  depends_on = [aws_internet_gateway.gw]
+  depends_on = [aws_internet_gateway.test]
 }
 `, rName))
 }
 
 func testAccLoadBalancerConfig_typeGatewayEnableCrossZoneBalancing(rName string, enableCrossZoneLoadBalancing bool) string {
-	return acctest.ConfigCompose(
-		acctest.ConfigAvailableAZsNoOptIn(),
-		fmt.Sprintf(`
-resource "aws_vpc" "test" {
-  cidr_block = "10.10.10.0/25"
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_subnet" "test" {
-  availability_zone = data.aws_availability_zones.available.names[0]
-  cidr_block        = cidrsubnet(aws_vpc.test.cidr_block, 2, 0)
-  vpc_id            = aws_vpc.test.id
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
+	return acctest.ConfigCompose(acctest.ConfigVPCWithSubnets(rName, 1), fmt.Sprintf(`
 resource "aws_lb" "test" {
   enable_cross_zone_load_balancing = %[2]t
   load_balancer_type               = "gateway"
   name                             = %[1]q
 
   subnet_mapping {
-    subnet_id = aws_subnet.test.id
+    subnet_id = aws_subnet.test[0].id
   }
 }
 `, rName, enableCrossZoneLoadBalancing))
 }
 
 func testAccLoadBalancerConfig_nlbEIP(rName string) string {
-	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
-resource "aws_vpc" "main" {
-  cidr_block = "10.10.0.0/16"
+	return acctest.ConfigCompose(acctest.ConfigVPCWithSubnets(rName, 2), fmt.Sprintf(`
+resource "aws_internet_gateway" "test" {
+  vpc_id = aws_vpc.test.id
 
   tags = {
     Name = %[1]q
   }
 }
 
-resource "aws_subnet" "public" {
-  count             = 2
-  availability_zone = data.aws_availability_zones.available.names[count.index]
-  cidr_block        = "10.10.${count.index}.0/24"
-  vpc_id            = aws_vpc.main.id
-
-  tags = {
-    Name = "%[1]s-${count.index}"
-  }
-}
-
-resource "aws_internet_gateway" "default" {
-  vpc_id = aws_vpc.main.id
-}
-
-resource "aws_route_table" "public" {
-  vpc_id = aws_vpc.main.id
+resource "aws_route_table" "test" {
+  vpc_id = aws_vpc.test.id
 
   route {
     cidr_block = "0.0.0.0/0"
-    gateway_id = aws_internet_gateway.default.id
+    gateway_id = aws_internet_gateway.test.id
+  }
+
+  tags = {
+    Name = %[1]q
   }
 }
 
-resource "aws_route_table_association" "a" {
+resource "aws_route_table_association" "test" {
   count          = 2
-  subnet_id      = aws_subnet.public[count.index].id
-  route_table_id = aws_route_table.public.id
+  subnet_id      = aws_subnet.test[count.index].id
+  route_table_id = aws_route_table.test.id
 }
 
 resource "aws_lb" "test" {
@@ -2481,20 +2146,24 @@ resource "aws_lb" "test" {
   load_balancer_type = "network"
 
   subnet_mapping {
-    subnet_id     = aws_subnet.public[0].id
-    allocation_id = aws_eip.lb[0].id
+    subnet_id     = aws_subnet.test[0].id
+    allocation_id = aws_eip.test[0].id
   }
 
   subnet_mapping {
-    subnet_id     = aws_subnet.public[1].id
-    allocation_id = aws_eip.lb[1].id
+    subnet_id     = aws_subnet.test[1].id
+    allocation_id = aws_eip.test[1].id
   }
 
-  depends_on = [aws_internet_gateway.default]
+  depends_on = [aws_internet_gateway.test]
 }
 
-resource "aws_eip" "lb" {
+resource "aws_eip" "test" {
   count = 2
+
+  tags = {
+    Name = %[1]q
+  }
 }
 `, rName))
 }
@@ -2539,7 +2208,7 @@ resource "aws_subnet" "test" {
 }
 
 func testAccLoadBalancerConfig_backwardsCompatibility(rName string) string {
-	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccLoadBalancerConfig_baseInternal(rName, 2), fmt.Sprintf(`
 resource "aws_alb" "test" {
   name            = %[1]q
   internal        = true
@@ -2553,62 +2222,11 @@ resource "aws_alb" "test" {
     Name = %[1]q
   }
 }
-
-variable "subnets" {
-  default = ["10.0.1.0/24", "10.0.2.0/24"]
-  type    = list(string)
-}
-
-resource "aws_vpc" "test" {
-  cidr_block = "10.0.0.0/16"
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_subnet" "test" {
-  count                   = 2
-  vpc_id                  = aws_vpc.test.id
-  cidr_block              = element(var.subnets, count.index)
-  map_public_ip_on_launch = true
-  availability_zone       = element(data.aws_availability_zones.available.names, count.index)
-
-  tags = {
-    Name = "%[1]s-${count.index}"
-  }
-}
-
-resource "aws_security_group" "test" {
-  name        = %[1]q
-  description = "Used for ALB Testing"
-  vpc_id      = aws_vpc.test.id
-
-  ingress {
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
-  egress {
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
-  tags = {
-    Name = %[1]q
-  }
-}
 `, rName))
 }
 
 func testAccLoadBalancerConfig_generatedName(rName string) string {
-	return acctest.ConfigCompose(
-		acctest.ConfigAvailableAZsNoOptIn(),
-		fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccLoadBalancerConfig_baseInternal(rName, 2), fmt.Sprintf(`
 resource "aws_lb" "test" {
   internal        = true
   security_groups = [aws_security_group.test.id]
@@ -2621,70 +2239,11 @@ resource "aws_lb" "test" {
     Name = %[1]q
   }
 }
-
-variable "subnets" {
-  default = ["10.0.1.0/24", "10.0.2.0/24"]
-  type    = list(string)
-}
-
-resource "aws_vpc" "test" {
-  cidr_block = "10.0.0.0/16"
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_internet_gateway" "gw" {
-  vpc_id = aws_vpc.test.id
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_subnet" "test" {
-  count                   = 2
-  vpc_id                  = aws_vpc.test.id
-  cidr_block              = element(var.subnets, count.index)
-  map_public_ip_on_launch = true
-  availability_zone       = element(data.aws_availability_zones.available.names, count.index)
-
-  tags = {
-    Name = "%[1]s-${count.index}"
-  }
-}
-
-resource "aws_security_group" "test" {
-  name        = %[1]q
-  description = "Used for ALB Testing"
-  vpc_id      = aws_vpc.test.id
-
-  ingress {
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
-  egress {
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
-  tags = {
-    Name = %[1]q
-  }
-}
 `, rName))
 }
 
 func testAccLoadBalancerConfig_zeroValueName(rName string) string {
-	return acctest.ConfigCompose(
-		acctest.ConfigAvailableAZsNoOptIn(),
-		fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccLoadBalancerConfig_baseInternal(rName, 2), fmt.Sprintf(`
 resource "aws_lb" "test" {
   name            = ""
   internal        = true
@@ -2703,70 +2262,11 @@ resource "aws_lb" "test" {
 output "lb_name" {
   value = aws_lb.test.name
 }
-
-variable "subnets" {
-  default = ["10.0.1.0/24", "10.0.2.0/24"]
-  type    = list(string)
-}
-
-resource "aws_vpc" "test" {
-  cidr_block = "10.0.0.0/16"
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_internet_gateway" "gw" {
-  vpc_id = aws_vpc.test.id
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_subnet" "test" {
-  count                   = 2
-  vpc_id                  = aws_vpc.test.id
-  cidr_block              = element(var.subnets, count.index)
-  map_public_ip_on_launch = true
-  availability_zone       = element(data.aws_availability_zones.available.names, count.index)
-
-  tags = {
-    Name = "%[1]s-${count.index}"
-  }
-}
-
-resource "aws_security_group" "test" {
-  name        = %[1]q
-  description = "Used for ALB Testing"
-  vpc_id      = aws_vpc.test.id
-
-  ingress {
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
-  egress {
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
-  tags = {
-    Name = %[1]q
-  }
-}
 `, rName))
 }
 
 func testAccLoadBalancerConfig_namePrefix(rName string) string {
-	return acctest.ConfigCompose(
-		acctest.ConfigAvailableAZsNoOptIn(),
-		fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccLoadBalancerConfig_baseInternal(rName, 2), fmt.Sprintf(`
 resource "aws_lb" "test" {
   name_prefix     = "tf-lb-"
   internal        = true
@@ -2780,145 +2280,11 @@ resource "aws_lb" "test" {
     Name = %[1]q
   }
 }
-
-variable "subnets" {
-  default = ["10.0.1.0/24", "10.0.2.0/24"]
-  type    = list(string)
-}
-
-resource "aws_vpc" "test" {
-  cidr_block = "10.0.0.0/16"
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_subnet" "test" {
-  count                   = 2
-  vpc_id                  = aws_vpc.test.id
-  cidr_block              = element(var.subnets, count.index)
-  map_public_ip_on_launch = true
-  availability_zone       = element(data.aws_availability_zones.available.names, count.index)
-
-  tags = {
-    Name = "%[1]s-${count.index}"
-  }
-}
-
-resource "aws_security_group" "test" {
-  name        = %[1]q
-  description = "Used for ALB Testing"
-  vpc_id      = aws_vpc.test.id
-
-  ingress {
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
-  egress {
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
-  tags = {
-    Name = %[1]q
-  }
-}
 `, rName))
 }
 
 func testAccLoadBalancerConfig_duplicateName(rName string) string {
-	return acctest.ConfigCompose(
-		acctest.ConfigAvailableAZsNoOptIn(),
-		fmt.Sprintf(`
-resource "aws_lb" "test" {
-  name            = %[1]q
-  internal        = true
-  security_groups = [aws_security_group.test.id]
-  subnets         = aws_subnet.test[*].id
-
-  idle_timeout               = 30
-  enable_deletion_protection = false
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-variable "subnets" {
-  default = ["10.0.1.0/24", "10.0.2.0/24"]
-  type    = list(string)
-}
-
-resource "aws_vpc" "test" {
-  cidr_block = "10.0.0.0/16"
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_subnet" "test" {
-  count                   = 2
-  vpc_id                  = aws_vpc.test.id
-  cidr_block              = element(var.subnets, count.index)
-  map_public_ip_on_launch = true
-  availability_zone       = element(data.aws_availability_zones.available.names, count.index)
-
-  tags = {
-    Name = "%[1]s-${count.index}"
-  }
-}
-
-resource "aws_security_group" "test" {
-  name        = %[1]q
-  description = "Used for LB Testing"
-  vpc_id      = aws_vpc.test.id
-
-  ingress {
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
-  egress {
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
-  tags = {
-    Name = %[1]q
-  }
-}
-`, rName))
-}
-
-func testAccLoadBalancerConfig_duplicateNameUpdate(rName string) string {
-	return acctest.ConfigCompose(
-		acctest.ConfigAvailableAZsNoOptIn(),
-		fmt.Sprintf(`
-resource "aws_lb" "test" {
-  name            = %[1]q
-  internal        = true
-  security_groups = [aws_security_group.test.id]
-  subnets         = aws_subnet.test[*].id
-
-  idle_timeout               = 30
-  enable_deletion_protection = false
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
+	return acctest.ConfigCompose(testAccLoadBalancerConfig_basic(rName), fmt.Sprintf(`
 resource "aws_lb" "test2" {
   name            = %[1]q
   internal        = true
@@ -2927,59 +2293,6 @@ resource "aws_lb" "test2" {
 
   idle_timeout               = 30
   enable_deletion_protection = false
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-variable "subnets" {
-  default = ["10.0.1.0/24", "10.0.2.0/24"]
-  type    = list(string)
-}
-
-resource "aws_vpc" "test" {
-  cidr_block = "10.0.0.0/16"
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_subnet" "test" {
-  count                   = 2
-  vpc_id                  = aws_vpc.test.id
-  cidr_block              = element(var.subnets, count.index)
-  map_public_ip_on_launch = true
-  availability_zone       = element(data.aws_availability_zones.available.names, count.index)
-
-  tags = {
-    Name = "%[1]s-${count.index}"
-  }
-}
-
-resource "aws_security_group" "test" {
-  name        = %[1]q
-  description = "Used for LB Testing"
-  vpc_id      = aws_vpc.test.id
-
-  ingress {
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
-  egress {
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
-  tags = {
-    Name = %[1]q
-  }
 }
 `, rName))
 }
