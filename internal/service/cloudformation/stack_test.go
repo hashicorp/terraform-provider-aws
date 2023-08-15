@@ -37,6 +37,11 @@ func TestAccCloudFormationStack_basic(t *testing.T) {
 					testAccCheckStackExists(ctx, resourceName, &stack),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckNoResourceAttr(resourceName, "on_failure"),
+					resource.TestCheckResourceAttr(resourceName, "outputs.%", "2"),
+					resource.TestCheckResourceAttrSet(resourceName, "outputs.DefaultSgId"),
+					resource.TestCheckResourceAttrSet(resourceName, "outputs.VpcID"),
+					resource.TestCheckResourceAttr(resourceName, "parameters.%", "0"),
+					resource.TestCheckNoResourceAttr(resourceName, "template_url"),
 				),
 			},
 			{
