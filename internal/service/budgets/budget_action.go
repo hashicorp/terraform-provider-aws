@@ -38,8 +38,9 @@ func ResourceBudgetAction() *schema.Resource {
 		},
 
 		Timeouts: &schema.ResourceTimeout{
-			Create: schema.DefaultTimeout(5 * time.Minute),
-			Update: schema.DefaultTimeout(5 * time.Minute),
+			Create: schema.DefaultTimeout(5 * time.Minute), // unneeded, but a breaking change to remove
+			Update: schema.DefaultTimeout(5 * time.Minute), // unneeded, but a breaking change to remove
+			Delete: schema.DefaultTimeout(5 * time.Minute),
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -253,10 +254,6 @@ func resourceBudgetActionCreate(ctx context.Context, d *schema.ResourceData, met
 
 	d.SetId(BudgetActionCreateResourceID(accountID, actionID, budgetName))
 
-	if _, err := waitActionAvailable(ctx, conn, accountID, actionID, budgetName, d.Timeout(schema.TimeoutCreate)); err != nil {
-		return diag.Errorf("waiting for Budget Action (%s) create: %s", d.Id(), err)
-	}
-
 	return resourceBudgetActionRead(ctx, d, meta)
 }
 
@@ -354,10 +351,6 @@ func resourceBudgetActionUpdate(ctx context.Context, d *schema.ResourceData, met
 		return diag.Errorf("updating Budget Action (%s): %s", d.Id(), err)
 	}
 
-	if _, err := waitActionAvailable(ctx, conn, accountID, actionID, budgetName, d.Timeout(schema.TimeoutUpdate)); err != nil {
-		return diag.Errorf("waiting for Budget Action (%s) update: %s", d.Id(), err)
-	}
-
 	return resourceBudgetActionRead(ctx, d, meta)
 }
 
@@ -371,11 +364,13 @@ func resourceBudgetActionDelete(ctx context.Context, d *schema.ResourceData, met
 	}
 
 	log.Printf("[DEBUG] Deleting Budget Action: %s", d.Id())
-	_, err = conn.DeleteBudgetActionWithContext(ctx, &budgets.DeleteBudgetActionInput{
-		AccountId:  aws.String(accountID),
-		ActionId:   aws.String(actionID),
-		BudgetName: aws.String(budgetName),
-	})
+	_, err = tfresource.RetryWhenAWSErrCodeEquals(ctx, d.Timeout(schema.TimeoutDelete), func() (any, error) {
+		return conn.DeleteBudgetActionWithContext(ctx, &budgets.DeleteBudgetActionInput{
+			AccountId:  aws.String(accountID),
+			ActionId:   aws.String(actionID),
+			BudgetName: aws.String(budgetName),
+		})
+	}, budgets.ErrCodeResourceLockedException)
 
 	if tfawserr.ErrCodeEquals(err, budgets.ErrCodeNotFoundException) {
 		return nil
@@ -452,30 +447,6 @@ func statusAction(ctx context.Context, conn *budgets.Budgets, accountID, actionI
 
 		return output, aws.StringValue(output.Status), nil
 	}
-}
-
-func waitActionAvailable(ctx context.Context, conn *budgets.Budgets, accountID, actionID, budgetName string, timeout time.Duration) (*budgets.Action, error) { //nolint:unparam
-	stateConf := &retry.StateChangeConf{
-		Pending: []string{
-			budgets.ActionStatusExecutionInProgress,
-			budgets.ActionStatusStandby,
-		},
-		Target: []string{
-			budgets.ActionStatusExecutionSuccess,
-			budgets.ActionStatusExecutionFailure,
-			budgets.ActionStatusPending,
-		},
-		Refresh: statusAction(ctx, conn, accountID, actionID, budgetName),
-		Timeout: timeout,
-	}
-
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
-
-	if v, ok := outputRaw.(*budgets.Action); ok {
-		return v, err
-	}
-
-	return nil, err
 }
 
 func expandBudgetActionActionThreshold(l []interface{}) *budgets.ActionThreshold {
