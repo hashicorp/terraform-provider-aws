@@ -694,7 +694,7 @@ func testAccCheckListenerDestroy(ctx context.Context) resource.TestCheckFunc {
 	}
 }
 
-func testAccListenerBaseConfig(rName string) string {
+func testAccListenerConfig_base(rName string) string {
 	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
@@ -743,7 +743,7 @@ resource "aws_security_group" "test" {
 }
 
 func testAccListenerConfig_basic(rName string) string {
-	return acctest.ConfigCompose(testAccListenerBaseConfig(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccListenerConfig_base(rName), fmt.Sprintf(`
 resource "aws_lb_listener" "test" {
   load_balancer_arn = aws_lb.test.id
   protocol          = "HTTP"
@@ -794,7 +794,7 @@ resource "aws_lb_target_group" "test" {
 }
 
 func testAccListenerConfig_forwardWeighted(rName, rName2 string) string {
-	return acctest.ConfigCompose(testAccListenerBaseConfig(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccListenerConfig_base(rName), fmt.Sprintf(`
 resource "aws_lb_listener" "test" {
   load_balancer_arn = aws_lb.test.id
   protocol          = "HTTP"
@@ -878,7 +878,7 @@ resource "aws_lb_target_group" "test2" {
 }
 
 func testAccListenerConfig_changeForwardWeightedStickiness(rName, rName2 string) string {
-	return acctest.ConfigCompose(testAccListenerBaseConfig(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccListenerConfig_base(rName), fmt.Sprintf(`
 resource "aws_lb_listener" "test" {
   load_balancer_arn = aws_lb.test.id
   protocol          = "HTTP"
@@ -967,7 +967,7 @@ resource "aws_lb_target_group" "test2" {
 }
 
 func testAccListenerConfig_changeForwardWeightedToBasic(rName, rName2 string) string {
-	return acctest.ConfigCompose(testAccListenerBaseConfig(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccListenerConfig_base(rName), fmt.Sprintf(`
 resource "aws_lb_listener" "test" {
   load_balancer_arn = aws_lb.test.id
   protocol          = "HTTP"
@@ -1040,7 +1040,7 @@ resource "aws_lb_target_group" "test2" {
 }
 
 func testAccListenerConfig_basicUdp(rName string) string {
-	return acctest.ConfigCompose(testAccListenerBaseConfig(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccListenerConfig_base(rName), fmt.Sprintf(`
 resource "aws_lb_listener" "test" {
   load_balancer_arn = aws_lb.test.id
   protocol          = "UDP"
@@ -1093,7 +1093,7 @@ resource "aws_internet_gateway" "test" {
 }
 
 func testAccListenerConfig_backwardsCompatibility(rName string) string {
-	return acctest.ConfigCompose(testAccListenerBaseConfig(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccListenerConfig_base(rName), fmt.Sprintf(`
 resource "aws_alb_listener" "test" {
   load_balancer_arn = aws_alb.test.id
   protocol          = "HTTP"
@@ -1144,7 +1144,7 @@ resource "aws_alb_target_group" "test" {
 }
 
 func testAccListenerConfig_https(rName, key, certificate string) string {
-	return acctest.ConfigCompose(testAccListenerBaseConfig(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccListenerConfig_base(rName), fmt.Sprintf(`
 resource "aws_lb_listener" "test" {
   load_balancer_arn = aws_lb.test.id
   protocol          = "HTTPS"
@@ -1269,7 +1269,7 @@ resource "aws_lb_listener" "test" {
 }
 
 func testAccListenerConfig_protocolTLS(rName, key, certificate string) string {
-	return acctest.ConfigCompose(testAccListenerBaseConfig(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccListenerConfig_base(rName), fmt.Sprintf(`
 resource "aws_acm_certificate" "test" {
   certificate_body = "%[2]s"
   private_key      = "%[3]s"
@@ -1326,7 +1326,7 @@ resource "aws_lb_listener" "test" {
 }
 
 func testAccListenerConfig_redirect(rName string) string {
-	return acctest.ConfigCompose(testAccListenerBaseConfig(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccListenerConfig_base(rName), fmt.Sprintf(`
 resource "aws_lb_listener" "test" {
   load_balancer_arn = aws_lb.test.id
   protocol          = "HTTP"
@@ -1360,7 +1360,7 @@ resource "aws_lb" "test" {
 }
 
 func testAccListenerConfig_fixedResponse(rName string) string {
-	return acctest.ConfigCompose(testAccListenerBaseConfig(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccListenerConfig_base(rName), fmt.Sprintf(`
 resource "aws_lb_listener" "test" {
   load_balancer_arn = aws_lb.test.id
   protocol          = "HTTP"
@@ -1394,7 +1394,7 @@ resource "aws_lb" "test" {
 }
 
 func testAccListenerConfig_cognito(rName, key, certificate string) string {
-	return acctest.ConfigCompose(testAccListenerBaseConfig(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccListenerConfig_base(rName), fmt.Sprintf(`
 resource "aws_lb" "test" {
   name                       = %[1]q
   internal                   = false
@@ -1498,7 +1498,7 @@ resource "aws_lb_listener" "test" {
 }
 
 func testAccListenerConfig_oidc(rName, key, certificate string) string {
-	return acctest.ConfigCompose(testAccListenerBaseConfig(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccListenerConfig_base(rName), fmt.Sprintf(`
 resource "aws_lb" "test" {
   name                       = %[1]q
   internal                   = false
@@ -1580,7 +1580,7 @@ resource "aws_lb_listener" "test" {
 }
 
 func testAccListenerConfig_defaultActionOrder(rName, key, certificate string) string {
-	return acctest.ConfigCompose(testAccListenerBaseConfig(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccListenerConfig_base(rName), fmt.Sprintf(`
 resource "aws_lb_listener" "test" {
   load_balancer_arn = aws_lb.test.id
   protocol          = "HTTPS"
@@ -1655,7 +1655,7 @@ resource "aws_lb_target_group" "test" {
 }
 
 func testAccListenerConfig_tags1(rName, tagKey1, tagValue1 string) string {
-	return acctest.ConfigCompose(testAccListenerBaseConfig(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccListenerConfig_base(rName), fmt.Sprintf(`
 resource "aws_lb_listener" "test" {
   load_balancer_arn = aws_lb.test.id
   protocol          = "HTTP"
@@ -1710,7 +1710,7 @@ resource "aws_lb_target_group" "test" {
 }
 
 func testAccListenerConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
-	return acctest.ConfigCompose(testAccListenerBaseConfig(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccListenerConfig_base(rName), fmt.Sprintf(`
 resource "aws_lb_listener" "test" {
   load_balancer_arn = aws_lb.test.id
   protocol          = "HTTP"
