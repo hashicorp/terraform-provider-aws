@@ -1841,7 +1841,7 @@ resource "aws_security_group" "test" {
     Name = %[1]q
   }
 }
-`, rName))
+`, rName, ipAddressType))
 }
 
 func testAccLoadBalancerConfig_outpost(rName string) string {
