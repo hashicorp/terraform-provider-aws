@@ -41,10 +41,6 @@ func ResourceVPCEndpoint() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"connection_status": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
 			"domain_arn": {
 				Type:         schema.TypeString,
 				Required:     true,
@@ -109,26 +105,31 @@ func resourceVPCEndpointCreate(ctx context.Context, d *schema.ResourceData, meta
 }
 
 func resourceVPCEndpointRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).OpenSearchConn(ctx)
 
-	endpointRaw, status, err := vpcEndpointRefreshState(ctx, conn, d.Id())()
+	endpoint, err := findVPCEndpointByID(ctx, conn, d.Id())
+
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] OpenSearch VPC Endpoint (%s) not found, removing from state", d.Id())
+		d.SetId("")
+		return diags
+	}
 
 	if err != nil {
-		return diag.Errorf("reading vpc endpoint: %s", err)
+		return sdkdiag.AppendErrorf(diags, "reading OpenSearch VPC Endpoint (%s): %s", d.Id(), err)
 	}
 
-	endpoint := endpointRaw.(*opensearchservice.VpcEndpoint)
-	log.Printf("[DEBUG] vpc endpoint response: %#v", endpoint)
-
-	d.Set("connection_status", status)
 	d.Set("domain_arn", endpoint.DomainArn)
-
-	if endpoint.VpcOptions == nil {
-		return diag.Errorf("reading vpc endpoint vpc options ")
+	if endpoint.VpcOptions != nil {
+		if err := d.Set("vpc_options", []interface{}{flattenVPCDerivedInfo(endpoint.VpcOptions)}); err != nil {
+			return diag.Errorf("setting vpc_options: %s", err)
+		}
+	} else {
+		d.Set("vpc_options", nil)
 	}
 
-	d.Set("vpc_options", flattenVPCDerivedInfo(endpoint.VpcOptions))
-	return nil
+	return diags
 }
 
 func resourceVPCEndpointPut(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
@@ -244,6 +245,24 @@ func vpcEndpointsError(apiObjects []*opensearchservice.VpcEndpointError) error {
 	return errors.Join(errs...)
 }
 
+func findVPCEndpointByID(ctx context.Context, conn *opensearchservice.OpenSearchService, id string) (*opensearchservice.VpcEndpoint, error) {
+	input := &opensearchservice.DescribeVpcEndpointsInput{
+		VpcEndpointIds: aws.StringSlice([]string{id}),
+	}
+
+	return findVPCEndpoint(ctx, conn, input)
+}
+
+func findVPCEndpoint(ctx context.Context, conn *opensearchservice.OpenSearchService, input *opensearchservice.DescribeVpcEndpointsInput) (*opensearchservice.VpcEndpoint, error) {
+	output, err := findVPCEndpoints(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSinglePtrResult(output)
+}
+
 func findVPCEndpoints(ctx context.Context, conn *opensearchservice.OpenSearchService, input *opensearchservice.DescribeVpcEndpointsInput) ([]*opensearchservice.VpcEndpoint, error) {
 	output, err := conn.DescribeVpcEndpointsWithContext(ctx, input)
 
@@ -323,4 +342,30 @@ func vpcEndpointWaitUntilUpdate(ctx context.Context, conn *opensearchservice.Ope
 		return fmt.Errorf("waiting for VPC Endpoint (%s) to become available: %s", id, err)
 	}
 	return nil
+}
+
+func flattenVPCDerivedInfo(apiObject *opensearchservice.VPCDerivedInfo) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.AvailabilityZones; v != nil {
+		tfMap["availability_zones"] = aws.StringValueSlice(v)
+	}
+
+	if v := apiObject.SecurityGroupIds; v != nil {
+		tfMap["security_group_ids"] = aws.StringValueSlice(v)
+	}
+
+	if v := apiObject.SubnetIds; v != nil {
+		tfMap["subnet_ids"] = aws.StringValueSlice(v)
+	}
+
+	if v := apiObject.VPCId; v != nil {
+		tfMap["vpc_id"] = aws.StringValue(v)
+	}
+
+	return tfMap
 }

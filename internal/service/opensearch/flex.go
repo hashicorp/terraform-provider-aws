@@ -215,22 +215,3 @@ func flattenSnapshotOptions(snapshotOptions *opensearchservice.SnapshotOptions) 
 
 	return []map[string]interface{}{m}
 }
-
-func flattenVPCDerivedInfo(o *opensearchservice.VPCDerivedInfo) []map[string]interface{} {
-	m := map[string]interface{}{}
-
-	if o.AvailabilityZones != nil {
-		m["availability_zones"] = flex.FlattenStringSet(o.AvailabilityZones)
-	}
-	if o.SecurityGroupIds != nil {
-		m["security_group_ids"] = flex.FlattenStringSet(o.SecurityGroupIds)
-	}
-	if o.SubnetIds != nil {
-		m["subnet_ids"] = flex.FlattenStringSet(o.SubnetIds)
-	}
-	if o.VPCId != nil {
-		m["vpc_id"] = aws.StringValue(o.VPCId)
-	}
-
-	return []map[string]interface{}{m}
-}

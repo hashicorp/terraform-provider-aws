@@ -8,7 +8,7 @@ description: |-
 
 # Resource: aws_opensearch_vpc_endpoint
 
-Manages an [AWS Opensearch VPC Endpoint](https://docs.aws.amazon.com/opensearch-service/latest/APIReference/API_CreateVpcEndpoint.html). Creates an Amazon OpenSearch Service-managed VPC endpoint..
+Manages an [AWS Opensearch VPC Endpoint](https://docs.aws.amazon.com/opensearch-service/latest/APIReference/API_CreateVpcEndpoint.html). Creates an Amazon OpenSearch Service-managed VPC endpoint.
 
 ## Example Usage
 
@@ -43,7 +43,6 @@ The following arguments are supported:
 This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The connection endpoint ID for connecting to the domain.
-* `connection_status` - The current status of the endpoint.
 
 ## Timeouts
 

@@ -5,5 +5,6 @@ package opensearch
 
 // Exports for use in tests only.
 var (
-	VPCEndpointsError = vpcEndpointsError
+	FindVPCEndpointByID = findVPCEndpointByID
+	VPCEndpointsError   = vpcEndpointsError
 )
