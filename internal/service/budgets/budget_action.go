@@ -438,22 +438,6 @@ func FindActionByThreePartKey(ctx context.Context, conn *budgets.Budgets, accoun
 	return output.Action, nil
 }
 
-func statusAction(ctx context.Context, conn *budgets.Budgets, accountID, actionID, budgetName string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-		output, err := FindActionByThreePartKey(ctx, conn, accountID, actionID, budgetName)
-
-		if tfresource.NotFound(err) {
-			return nil, "", nil
-		}
-
-		if err != nil {
-			return nil, "", err
-		}
-
-		return output, aws.StringValue(output.Status), nil
-	}
-}
-
 func expandBudgetActionActionThreshold(l []interface{}) *budgets.ActionThreshold {
 	if len(l) == 0 || l[0] == nil {
 		return nil
