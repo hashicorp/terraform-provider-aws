@@ -171,7 +171,6 @@ resource "aws_opensearch_vpc_endpoint_connection" "foo" {
   }
 }
 `, name))
-
 }
 
 func testAccVPCEndpointConnectionConfigUpdate(name string) string {

@@ -177,7 +177,6 @@ func resourceVPCEndpointPut(ctx context.Context, d *schema.ResourceData, meta in
 	}
 
 	return append(diags, resourceVPCEndpointRead(ctx, d, meta)...)
-
 }
 func resourceVPCEndpointDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).OpenSearchConn(ctx)
