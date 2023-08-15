@@ -19,7 +19,7 @@ func TestAccOpenSearchVPCEndpoint_basic(t *testing.T) {
 	var domain opensearchservice.DomainStatus
 	ri := sdkacctest.RandString(10)
 	name := fmt.Sprintf("tf-test-%s", ri)
-	resourceName := "aws_opensearch_vpc_endpoint.test"
+	resourceName := "aws_opensearch_vpc_endpoint.foo"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -48,7 +48,7 @@ func TestAccOpenSearchVPCEndpoint_update(t *testing.T) {
 	var domain opensearchservice.DomainStatus
 	ri := sdkacctest.RandString(10)
 	name := fmt.Sprintf("tf-test-%s", ri)
-	resourceName := "aws_opensearch_vpc_endpoint.test"
+	resourceName := "aws_opensearch_vpc_endpoint.foo"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -86,7 +86,7 @@ func TestAccOpenSearchVPCEndpoint_disappears(t *testing.T) {
 	var domain opensearchservice.DomainStatus
 	ri := sdkacctest.RandString(10)
 	name := fmt.Sprintf("tf-test-%s", ri)
-	resourceName := "aws_opensearch_vpc_endpoint.test"
+	resourceName := "aws_opensearch_vpc_endpoint.foo"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
