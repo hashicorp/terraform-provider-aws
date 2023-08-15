@@ -867,7 +867,7 @@ func TestAccELBV2LoadBalancer_updatedIPAddressType(t *testing.T) {
 	})
 }
 
-func TestAccELBV2LoadBalancer_updatedSecurityGroups(t *testing.T) {
+func TestAccELBV2LoadBalancer_ApplicationLoadBalancer_updatedSecurityGroups(t *testing.T) {
 	ctx := acctest.Context(t)
 	var pre, post elbv2.LoadBalancer
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -891,7 +891,7 @@ func TestAccELBV2LoadBalancer_updatedSecurityGroups(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccLoadBalancerConfig_updateSecurityGroups(rName),
+				Config: testAccLoadBalancerConfig_albUpdateSecurityGroups(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckLoadBalancerExists(ctx, resourceName, &post),
 					resource.TestCheckResourceAttr(resourceName, "security_groups.#", "2"),
@@ -3110,7 +3110,7 @@ resource "aws_security_group" "test" {
 `, rName))
 }
 
-func testAccLoadBalancerConfig_updateSecurityGroups(rName string) string {
+func testAccLoadBalancerConfig_albUpdateSecurityGroups(rName string) string {
 	return acctest.ConfigCompose(testAccLoadBalancerConfig_baseInternal(rName, 3), fmt.Sprintf(`
 resource "aws_lb" "test" {
   name            = %[1]q
