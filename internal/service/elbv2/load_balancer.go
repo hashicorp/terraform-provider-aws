@@ -208,9 +208,9 @@ func ResourceLoadBalancer() *schema.Resource {
 			},
 			"security_groups": {
 				Type:     schema.TypeSet,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-				Computed: true,
 				Optional: true,
+				Computed: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 			"subnet_mapping": {
 				Type:     schema.TypeSet,
@@ -1042,10 +1042,6 @@ func customizeDiffNLB(_ context.Context, diff *schema.ResourceDiff, v interface{
 	os, ns := o.(*schema.Set), n.(*schema.Set)
 
 	if add, del := ns.Difference(os).List(), os.Difference(ns).List(); len(del) > 0 || len(add) > 0 {
-		if err := diff.SetNew("subnets", ns); err != nil {
-			return err
-		}
-
 		if err := diff.ForceNew("subnets"); err != nil {
 			return err
 		}
@@ -1056,10 +1052,6 @@ func customizeDiffNLB(_ context.Context, diff *schema.ResourceDiff, v interface{
 	os, ns = o.(*schema.Set), n.(*schema.Set)
 
 	if (os.Len() == 0 && ns.Len() > 0) || (ns.Len() == 0 && os.Len() > 0) {
-		if err := diff.SetNew("security_groups", ns); err != nil {
-			return err
-		}
-
 		if err := diff.ForceNew("security_groups"); err != nil {
 			return err
 		}
