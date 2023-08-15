@@ -13,6 +13,7 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/feature/ec2/imds"
+	"github.com/aws/aws-sdk-go/aws/endpoints"
 	awsbase "github.com/hashicorp/aws-sdk-go-base/v2"
 	multierror "github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
@@ -157,6 +158,13 @@ func New(ctx context.Context) (*schema.Provider, error) {
 					"i.e., https://s3.amazonaws.com/BUCKET/KEY. By default, the S3 client will\n" +
 					"use virtual hosted bucket addressing when possible\n" +
 					"(https://BUCKET.s3.amazonaws.com/KEY). Specific to the Amazon S3 service.",
+			},
+			"s3_us_east_1_regional_endpoint": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Description: "Specifies whether S3 API calls in the `us-east-1` region use the legacy global endpoint or a regional endpoint. " +
+					"Valid values are `legacy` or `regional`. " +
+					"Can also be configured using the `AWS_S3_US_EAST_1_REGIONAL_ENDPOINT` environment variable or the `s3_us_east_1_regional_endpoint` shared config file parameter",
 			},
 			"secret_key": {
 				Type:     schema.TypeString,
@@ -476,6 +484,14 @@ func configure(ctx context.Context, provider *schema.Provider, d *schema.Resourc
 			return nil, sdkdiag.AppendFromErr(diags, err)
 		}
 		config.RetryMode = mode
+	}
+
+	if v, ok := d.Get("s3_us_east_1_regional_endpoint").(string); ok && v != "" {
+		endpoint, err := endpoints.GetS3UsEast1RegionalEndpoint(v)
+		if err != nil {
+			return nil, sdkdiag.AppendFromErr(diags, err)
+		}
+		config.S3UsEast1RegionalEndpoint = endpoint
 	}
 
 	if v, ok := d.GetOk("allowed_account_ids"); ok && v.(*schema.Set).Len() > 0 {

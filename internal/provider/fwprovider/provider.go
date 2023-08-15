@@ -95,6 +95,12 @@ func (p *fwprovider) Schema(ctx context.Context, req provider.SchemaRequest, res
 				Optional:    true,
 				Description: "Set this to true to enable the request to use path-style addressing,\ni.e., https://s3.amazonaws.com/BUCKET/KEY. By default, the S3 client will\nuse virtual hosted bucket addressing when possible\n(https://BUCKET.s3.amazonaws.com/KEY). Specific to the Amazon S3 service.",
 			},
+			"s3_us_east_1_regional_endpoint": schema.StringAttribute{
+				Optional: true,
+				Description: "Specifies whether S3 API calls in the `us-east-1` region use the legacy global endpoint or a regional endpoint. " +
+					"Valid values are `legacy` or `regional`. " +
+					"Can also be configured using the `AWS_S3_US_EAST_1_REGIONAL_ENDPOINT` environment variable or the `s3_us_east_1_regional_endpoint` shared config file parameter",
+			},
 			"secret_key": schema.StringAttribute{
 				Optional:    true,
 				Description: "The secret key for API operations. You can retrieve this\nfrom the 'Security & Credentials' section of the AWS console.",

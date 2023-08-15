@@ -241,7 +241,7 @@ credential_process = custom-process --username jdoe
 |Retry Mode|`retry_mode`|`AWS_RETRY_MODE`|`retry_mode`|
 |Shared Config Files|`shared_config_files`|`AWS_CONFIG_FILE`|N/A|
 |Shared Credentials Files|`shared_credentials_files`|`AWS_SHARED_CREDENTIALS_FILE`|N/A|
-|S3 Use Regional Endpoint for `us-east-1`|N/A|`AWS_S3_US_EAST_1_REGIONAL_ENDPOINT`|`s3_us_east_1_regional_endpoint`|
+|S3 Use Regional Endpoint for `us-east-1`|`s3_us_east_1_regional_endpoint`|`AWS_S3_US_EAST_1_REGIONAL_ENDPOINT`|`s3_us_east_1_regional_endpoint`|
 |Use DualStack Endpoints|`use_dualstack_endpoint`|`AWS_USE_DUALSTACK_ENDPOINT`|`use_dualstack_endpoint`|
 |Use FIPS Endpoints|`use_fips_endpoint`|`AWS_USE_FIPS_ENDPOINT`|`use_fips_endpoint`|
 
@@ -327,7 +327,13 @@ In addition to [generic `provider` arguments](https://www.terraform.io/docs/conf
 * `retry_mode` - (Optional) Specifies how retries are attempted.
   Valid values are `standard` and `adaptive`.
   Can also be configured using the `AWS_RETRY_MODE` environment variable or the shared config file parameter `retry_mode`.
-* `s3_use_path_style` - (Optional) Whether to enable the request to use path-style addressing, i.e., `https://s3.amazonaws.com/BUCKET/KEY`. By default, the S3 client will use virtual hosted bucket addressing, `https://BUCKET.s3.amazonaws.com/KEY`, when possible. Specific to the Amazon S3 service.
+* `s3_use_path_style` - (Optional) Whether to enable the request to use path-style addressing, i.e., `https://s3.amazonaws.com/BUCKET/KEY`.
+  By default, the S3 client will use virtual hosted bucket addressing, `https://BUCKET.s3.amazonaws.com/KEY`, when possible.
+  Specific to the Amazon S3 service.
+* `s3_us_east_1_regional_endpoint` - (Optional) Specifies whether S3 API calls in the `us-east-1` region use the legacy global endpoint or a regional endpoint.
+  Valid values are `legacy` or `regional`.
+  Can also be configured using the `AWS_S3_US_EAST_1_REGIONAL_ENDPOINT` environment variable or the `s3_us_east_1_regional_endpoint` shared config file parameter.
+  Specific to the Amazon S3 service.
 * `secret_key` - (Optional) AWS secret key. Can also be set with the `AWS_SECRET_ACCESS_KEY` environment variable, or via a shared configuration and credentials files if `profile` is used. See also `access_key`.
 * `shared_config_files` - (Optional) List of paths to AWS shared config files. If not set, the default is `[~/.aws/config]`. A single value can also be set with the `AWS_CONFIG_FILE` environment variable.
 * `shared_credentials_files` - (Optional) List of paths to the shared credentials file. If not set and a profile is used, the default value is `[~/.aws/credentials]`. A single value can also be set with the `AWS_SHARED_CREDENTIALS_FILE` environment variable.

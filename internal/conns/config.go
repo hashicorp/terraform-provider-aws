@@ -41,6 +41,7 @@ type Config struct {
 	Region                         string
 	RetryMode                      aws_sdkv2.RetryMode
 	S3UsePathStyle                 bool
+	S3UsEast1RegionalEndpoint      endpoints_sdkv1.S3UsEast1RegionalEndpoint
 	SecretKey                      string
 	SharedConfigFiles              []string
 	SharedCredentialsFiles         []string
@@ -204,6 +205,7 @@ func (c *Config) ConfigureProvider(ctx context.Context, client *AWSClient) (*AWS
 	client.conns = make(map[string]any, 0)
 	client.endpoints = c.Endpoints
 	client.s3UsePathStyle = c.S3UsePathStyle
+	client.s3UsEast1RegionalEndpoint = c.S3UsEast1RegionalEndpoint
 	client.stsRegion = c.STSRegion
 
 	return client, diags
