@@ -20,7 +20,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -189,6 +188,10 @@ func ResourceConfigRule() *schema.Resource {
 	}
 }
 
+const (
+	ResNameConfigRule = "Config Rule"
+)
+
 func resourceRulePutConfig(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ConfigServiceConn(ctx)
@@ -232,7 +235,7 @@ func resourceRulePutConfig(ctx context.Context, d *schema.ResourceData, meta int
 		_, err = conn.PutConfigRuleWithContext(ctx, &input)
 	}
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating AWSConfig rule: %s", err)
+		return append(diags, create.DiagError(names.ConfigService, create.ErrActionUpdating, ResNameConfigRule, name, err)...)
 	}
 
 	d.SetId(name)
@@ -250,6 +253,9 @@ func resourceConfigRuleRead(ctx context.Context, d *schema.ResourceData, meta in
 		log.Printf("[WARN] ConfigService Config Rule (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
+	}
+	if err != nil {
+		return append(diags, create.DiagError(names.ConfigService, create.ErrActionReading, ResNameConfigRule, d.Id(), err)...)
 	}
 
 	arn := aws.StringValue(rule.ConfigRuleArn)
@@ -293,11 +299,11 @@ func resourceConfigRuleDelete(ctx context.Context, d *schema.ResourceData, meta 
 		_, err = conn.DeleteConfigRuleWithContext(ctx, input)
 	}
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "Deleting Config Rule failed: %s", err)
+		return append(diags, create.DiagError(names.ConfigService, create.ErrActionDeleting, ResNameConfigRule, d.Id(), err)...)
 	}
 
 	if _, err := waitRuleDeleted(ctx, conn, d.Id()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "waiting for Config Service Rule (%s) to deleted: %s", d.Id(), err)
+		return append(diags, create.DiagError(names.ConfigService, create.ErrActionWaitingForDeletion, ResNameConfigRule, d.Id(), err)...)
 	}
 
 	return diags

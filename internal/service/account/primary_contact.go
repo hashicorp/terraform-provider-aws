@@ -76,7 +76,7 @@ func resourcePrimaryContact() *schema.Resource {
 			"phone_number": {
 				Type:         schema.TypeString,
 				Required:     true,
-				ValidateFunc: validation.StringMatch(regexp.MustCompile(`^[\s0-9()+-]+$`), "must be a valid phone number"),
+				ValidateFunc: validation.StringMatch(regexp.MustCompile(`^[+][\s0-9()-]+$`), "must be a valid phone number"),
 			},
 			"postal_code": {
 				Type:     schema.TypeString,

@@ -470,15 +470,15 @@ func newPolicySweeper(resource *schema.Resource, d *schema.ResourceData, client 
 }
 
 func (ps policySweeper) Delete(ctx context.Context, timeout time.Duration, optFns ...tfresource.OptionsFunc) error {
-	err := ps.sweepable.Delete(ctx, timeout, optFns...)
-
-	accessDenied := regexp.MustCompile(`AccessDenied: .+ with an explicit deny`)
-	if accessDenied.MatchString(err.Error()) {
-		log.Printf("[DEBUG] Skipping IAM Policy (%s): %s", ps.d.Id(), err)
-		return nil
+	if err := ps.sweepable.Delete(ctx, timeout, optFns...); err != nil {
+		accessDenied := regexp.MustCompile(`AccessDenied: .+ with an explicit deny`)
+		if accessDenied.MatchString(err.Error()) {
+			log.Printf("[DEBUG] Skipping IAM Policy (%s): %s", ps.d.Id(), err)
+			return nil
+		}
+		return err
 	}
-
-	return err
+	return nil
 }
 
 func sweepRoles(region string) error {
@@ -523,9 +523,7 @@ func sweepRoles(region string) error {
 		log.Printf("[DEBUG] Deleting IAM Role (%s)", roleName)
 
 		err := DeleteRole(ctx, conn, roleName, true, true, true)
-		if tfawserr.ErrCodeEquals(err, iam.ErrCodeNoSuchEntityException) {
-			continue
-		}
+
 		if tfawserr.ErrCodeContains(err, "AccessDenied") {
 			log.Printf("[WARN] Skipping IAM Role (%s): %s", roleName, err)
 			continue
@@ -944,8 +942,7 @@ func sweepVirtualMFADevice(region string) error {
 				continue
 			}
 
-			err := sdk.DeleteResource(ctx, r, d, client)
-			if err != nil {
+			if err := sdk.DeleteResource(ctx, r, d, client); err != nil {
 				if accessDenied.MatchString(err.Error()) {
 					log.Printf("[DEBUG] Skipping IAM Virtual MFA Device (%s): %s", serialNum, err)
 					continue

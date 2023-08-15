@@ -25,19 +25,7 @@ func DashboardDefinitionSchema() *schema.Schema {
 			Schema: map[string]*schema.Schema{
 				"data_set_identifiers_declarations": dataSetIdentifierDeclarationsSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DataSetIdentifierDeclaration.html
 				"analysis_defaults":                 analysisDefaultSchema(),               // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_AnalysisDefaults.html
-				"calculated_fields": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_CalculatedField.html
-					Type:     schema.TypeList,
-					MinItems: 1,
-					MaxItems: 500,
-					Optional: true,
-					Elem: &schema.Resource{
-						Schema: map[string]*schema.Schema{
-							"data_set_identifier": stringSchema(true, validation.StringLenBetween(1, 2048)),
-							"expression":          stringSchema(true, validation.StringLenBetween(1, 4096)),
-							"name":                stringSchema(true, validation.StringLenBetween(1, 128)),
-						},
-					},
-				},
+				"calculated_fields":                 calculatedFieldsSchema(),              // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_CalculatedField.html
 				"column_configurations": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ColumnConfiguration.html
 					Type:     schema.TypeList,
 					MinItems: 1,

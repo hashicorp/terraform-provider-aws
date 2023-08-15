@@ -36,20 +36,29 @@ resource "aws_securityhub_invite_accepter" "invitee" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `master_id` - (Required) The account ID of the master Security Hub account whose invitation you're accepting.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `invitation_id` - The ID of the invitation.
 
 ## Import
 
-Security Hub invite acceptance can be imported using the account ID, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Security Hub invite acceptance using the account ID. For example:
 
+```terraform
+import {
+  to = aws_securityhub_invite_accepter.example
+  id = "123456789012"
+}
 ```
-$ terraform import aws_securityhub_invite_accepter.example 123456789012
+
+Using `terraform import`, import Security Hub invite acceptance using the account ID. For example:
+
+```console
+% terraform import aws_securityhub_invite_accepter.example 123456789012
 ```

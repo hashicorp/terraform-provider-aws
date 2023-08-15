@@ -49,9 +49,9 @@ The following arguments are optional:
 * `description` - (Optional) Description of the configuration.
 * `tags` - (Optional) Map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the configuration.
 * `id` - Unique ID that Amazon MQ generates for the configuration.
@@ -60,8 +60,17 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-MQ Configurations can be imported using the configuration ID, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import MQ Configurations using the configuration ID. For example:
 
+```terraform
+import {
+  to = aws_mq_configuration.example
+  id = "c-0187d1eb-88c8-475a-9b79-16ef5a10c94f"
+}
 ```
-$ terraform import aws_mq_configuration.example c-0187d1eb-88c8-475a-9b79-16ef5a10c94f
+
+Using `terraform import`, import MQ Configurations using the configuration ID. For example:
+
+```console
+% terraform import aws_mq_configuration.example c-0187d1eb-88c8-475a-9b79-16ef5a10c94f
 ```

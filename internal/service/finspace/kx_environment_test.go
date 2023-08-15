@@ -22,7 +22,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccFinSpaceKxEnvironment_basic(t *testing.T) {
+func testAccKxEnvironment_basic(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -33,7 +33,7 @@ func TestAccFinSpaceKxEnvironment_basic(t *testing.T) {
 	resourceName := "aws_finspace_kx_environment.test"
 	kmsKeyResourceName := "aws_kms_key.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, finspace.ServiceID)
@@ -59,7 +59,7 @@ func TestAccFinSpaceKxEnvironment_basic(t *testing.T) {
 	})
 }
 
-func TestAccFinSpaceKxEnvironment_disappears(t *testing.T) {
+func testAccKxEnvironment_disappears(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -69,7 +69,7 @@ func TestAccFinSpaceKxEnvironment_disappears(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_finspace_kx_environment.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, finspace.ServiceID)
@@ -90,7 +90,7 @@ func TestAccFinSpaceKxEnvironment_disappears(t *testing.T) {
 	})
 }
 
-func TestAccFinSpaceKxEnvironment_updateName(t *testing.T) {
+func testAccKxEnvironment_updateName(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -101,7 +101,7 @@ func TestAccFinSpaceKxEnvironment_updateName(t *testing.T) {
 	rName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_finspace_kx_environment.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, finspace.ServiceID)
@@ -128,7 +128,7 @@ func TestAccFinSpaceKxEnvironment_updateName(t *testing.T) {
 	})
 }
 
-func TestAccFinSpaceKxEnvironment_description(t *testing.T) {
+func testAccKxEnvironment_description(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -138,7 +138,7 @@ func TestAccFinSpaceKxEnvironment_description(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_finspace_kx_environment.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, finspace.ServiceID)
@@ -165,7 +165,7 @@ func TestAccFinSpaceKxEnvironment_description(t *testing.T) {
 	})
 }
 
-func TestAccFinSpaceKxEnvironment_customDNS(t *testing.T) {
+func testAccKxEnvironment_customDNS(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -175,7 +175,7 @@ func TestAccFinSpaceKxEnvironment_customDNS(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_finspace_kx_environment.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, finspace.ServiceID)
@@ -208,7 +208,7 @@ func TestAccFinSpaceKxEnvironment_customDNS(t *testing.T) {
 	})
 }
 
-func TestAccFinSpaceKxEnvironment_transitGateway(t *testing.T) {
+func testAccKxEnvironment_transitGateway(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -218,7 +218,7 @@ func TestAccFinSpaceKxEnvironment_transitGateway(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_finspace_kx_environment.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, finspace.ServiceID)
@@ -240,7 +240,7 @@ func TestAccFinSpaceKxEnvironment_transitGateway(t *testing.T) {
 	})
 }
 
-func TestAccFinSpaceKxEnvironment_tags(t *testing.T) {
+func testAccKxEnvironment_tags(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -250,7 +250,7 @@ func TestAccFinSpaceKxEnvironment_tags(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_finspace_kx_environment.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, finspace.ServiceID)

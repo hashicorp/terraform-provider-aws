@@ -31,18 +31,20 @@ import (
 // Used by the aws_cloudfront_distribution Create and Update functions.
 func expandDistributionConfig(d *schema.ResourceData) *cloudfront.DistributionConfig {
 	distributionConfig := &cloudfront.DistributionConfig{
-		CacheBehaviors:       expandCacheBehaviors(d.Get("ordered_cache_behavior").([]interface{})),
-		CallerReference:      aws.String(id.UniqueId()),
-		Comment:              aws.String(d.Get("comment").(string)),
-		CustomErrorResponses: ExpandCustomErrorResponses(d.Get("custom_error_response").(*schema.Set)),
-		DefaultCacheBehavior: ExpandDefaultCacheBehavior(d.Get("default_cache_behavior").([]interface{})[0].(map[string]interface{})),
-		DefaultRootObject:    aws.String(d.Get("default_root_object").(string)),
-		Enabled:              aws.Bool(d.Get("enabled").(bool)),
-		IsIPV6Enabled:        aws.Bool(d.Get("is_ipv6_enabled").(bool)),
-		HttpVersion:          aws.String(d.Get("http_version").(string)),
-		Origins:              ExpandOrigins(d.Get("origin").(*schema.Set)),
-		PriceClass:           aws.String(d.Get("price_class").(string)),
-		WebACLId:             aws.String(d.Get("web_acl_id").(string)),
+		CacheBehaviors:               expandCacheBehaviors(d.Get("ordered_cache_behavior").([]interface{})),
+		CallerReference:              aws.String(id.UniqueId()),
+		Comment:                      aws.String(d.Get("comment").(string)),
+		ContinuousDeploymentPolicyId: aws.String(d.Get("continuous_deployment_policy_id").(string)),
+		CustomErrorResponses:         ExpandCustomErrorResponses(d.Get("custom_error_response").(*schema.Set)),
+		DefaultCacheBehavior:         ExpandDefaultCacheBehavior(d.Get("default_cache_behavior").([]interface{})[0].(map[string]interface{})),
+		DefaultRootObject:            aws.String(d.Get("default_root_object").(string)),
+		Enabled:                      aws.Bool(d.Get("enabled").(bool)),
+		IsIPV6Enabled:                aws.Bool(d.Get("is_ipv6_enabled").(bool)),
+		HttpVersion:                  aws.String(d.Get("http_version").(string)),
+		Origins:                      ExpandOrigins(d.Get("origin").(*schema.Set)),
+		PriceClass:                   aws.String(d.Get("price_class").(string)),
+		Staging:                      aws.Bool(d.Get("staging").(bool)),
+		WebACLId:                     aws.String(d.Get("web_acl_id").(string)),
 	}
 
 	// This sets CallerReference if it's still pending computation (ie: new resource)
@@ -102,7 +104,16 @@ func flattenDistributionConfig(d *schema.ResourceData, distributionConfig *cloud
 	}
 	d.Set("default_root_object", distributionConfig.DefaultRootObject)
 	d.Set("http_version", distributionConfig.HttpVersion)
+	d.Set("staging", distributionConfig.Staging)
 	d.Set("web_acl_id", distributionConfig.WebACLId)
+
+	if !aws.BoolValue(distributionConfig.Staging) {
+		// Only set this for production distributions. While staging distributions do
+		// return a value when their domain name is referenced in a continuous deployment
+		// policy, this attribute is optional (not optional/computed) to correctly
+		// trigger changes when a policy is removed from a production distribution.
+		d.Set("continuous_deployment_policy_id", distributionConfig.ContinuousDeploymentPolicyId)
+	}
 
 	if distributionConfig.CustomErrorResponses != nil {
 		err = d.Set("custom_error_response", FlattenCustomErrorResponses(distributionConfig.CustomErrorResponses))

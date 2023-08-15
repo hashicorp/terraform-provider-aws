@@ -37,19 +37,19 @@ resource "aws_globalaccelerator_custom_routing_listener" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `accelerator_arn` - (Required) The Amazon Resource Name (ARN) of a custom routing accelerator.
 * `port_range` - (Optional) The list of port ranges for the connections from clients to the accelerator. Fields documented below.
 
-**port_range** supports the following attributes:
+`port_range` supports the following arguments:
 
 * `from_port` - (Optional) The first port in the range of ports, inclusive.
 * `to_port` - (Optional) The last port in the range of ports, inclusive.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The Amazon Resource Name (ARN) of the custom routing listener.
 
@@ -63,8 +63,17 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Global Accelerator custom routing listeners can be imported using the `id`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Global Accelerator custom routing listeners using the `id`. For example:
 
+```terraform
+import {
+  to = aws_globalaccelerator_custom_routing_listener.example
+  id = "arn:aws:globalaccelerator::111111111111:accelerator/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx/listener/xxxxxxxx"
+}
 ```
-$ terraform import aws_globalaccelerator_custom_routing_listener.example arn:aws:globalaccelerator::111111111111:accelerator/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx/listener/xxxxxxxx
+
+Using `terraform import`, import Global Accelerator custom routing listeners using the `id`. For example:
+
+```console
+% terraform import aws_globalaccelerator_custom_routing_listener.example arn:aws:globalaccelerator::111111111111:accelerator/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx/listener/xxxxxxxx
 ```

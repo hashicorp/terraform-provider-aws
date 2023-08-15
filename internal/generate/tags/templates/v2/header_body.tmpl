@@ -10,7 +10,9 @@ import (
 	"time"
 	{{- end }}
 
+	{{ if not .SkipAWSImp }}
 	"github.com/aws/aws-sdk-go-v2/aws"
+	{{- end }}
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	{{- if .AWSService }}
 		{{- if not .SkipServiceImp }}
