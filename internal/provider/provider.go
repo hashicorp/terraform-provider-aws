@@ -162,7 +162,7 @@ func New(ctx context.Context) (*schema.Provider, error) {
 			"s3_us_east_1_regional_endpoint": {
 				Type:     schema.TypeString,
 				Optional: true,
-				Description: "Specifies whether S3 API calls in the `us-east-1` region use the legacy global endpoint or a regional endpoint. " +
+				Description: "Specifies whether S3 API calls in the `us-east-1` region use the legacy global endpoint or a regional endpoint. " + //lintignore:AWSAT003
 					"Valid values are `legacy` or `regional`. " +
 					"Can also be configured using the `AWS_S3_US_EAST_1_REGIONAL_ENDPOINT` environment variable or the `s3_us_east_1_regional_endpoint` shared config file parameter",
 			},
