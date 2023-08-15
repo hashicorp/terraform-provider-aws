@@ -18,7 +18,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
-	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
@@ -329,48 +328,4 @@ func waitVPCEndpointDeleted(ctx context.Context, conn *opensearchservice.OpenSea
 	_, err := stateConf.WaitForStateContext(ctx)
 
 	return err
-}
-
-func expandVPCOptions(tfMap map[string]interface{}) *opensearchservice.VPCOptions {
-	if tfMap == nil {
-		return nil
-	}
-
-	apiObject := &opensearchservice.VPCOptions{}
-
-	if v, ok := tfMap["security_group_ids"].(*schema.Set); ok && v.Len() > 0 {
-		apiObject.SecurityGroupIds = flex.ExpandStringSet(v)
-	}
-
-	if v, ok := tfMap["subnet_ids"].(*schema.Set); ok && v.Len() > 0 {
-		apiObject.SubnetIds = flex.ExpandStringSet(v)
-	}
-
-	return apiObject
-}
-
-func flattenVPCDerivedInfo(apiObject *opensearchservice.VPCDerivedInfo) map[string]interface{} {
-	if apiObject == nil {
-		return nil
-	}
-
-	tfMap := map[string]interface{}{}
-
-	if v := apiObject.AvailabilityZones; v != nil {
-		tfMap["availability_zones"] = aws.StringValueSlice(v)
-	}
-
-	if v := apiObject.SecurityGroupIds; v != nil {
-		tfMap["security_group_ids"] = aws.StringValueSlice(v)
-	}
-
-	if v := apiObject.SubnetIds; v != nil {
-		tfMap["subnet_ids"] = aws.StringValueSlice(v)
-	}
-
-	if v := apiObject.VPCId; v != nil {
-		tfMap["vpc_id"] = aws.StringValue(v)
-	}
-
-	return tfMap
 }
