@@ -850,14 +850,14 @@ func TestAccELBV2LoadBalancer_updatedIPAddressType(t *testing.T) {
 		CheckDestroy:             testAccCheckLoadBalancerDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccLoadBalancerConfig_ipAddressType(rName),
+				Config: testAccLoadBalancerConfig_ipAddressType(rName, "ipv4"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckLoadBalancerExists(ctx, resourceName, &pre),
 					resource.TestCheckResourceAttr(resourceName, "ip_address_type", "ipv4"),
 				),
 			},
 			{
-				Config: testAccLoadBalancerConfig_ipAddressTypeUpdated(rName),
+				Config: testAccLoadBalancerConfig_ipAddressType(rName, "dualstack"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckLoadBalancerExists(ctx, resourceName, &post),
 					resource.TestCheckResourceAttr(resourceName, "ip_address_type", "dualstack"),
@@ -1744,125 +1744,12 @@ resource "aws_lb" "test" {
 `, rName, tagKey1, tagValue1, tagKey2, tagValue2))
 }
 
-func testAccLoadBalancerConfig_ipAddressTypeUpdated(rName string) string {
-	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
+func testAccLoadBalancerConfig_ipAddressType(rName, ipAddressType string) string {
+	return acctest.ConfigCompose(acctest.ConfigVPCWithSubnetsIPv6(rName, 2), fmt.Sprintf(`
 resource "aws_lb" "test" {
   name            = %[1]q
   security_groups = [aws_security_group.test.id]
-  subnets         = [aws_subnet.test_1.id, aws_subnet.test_2.id]
-
-  ip_address_type = "dualstack"
-
-  idle_timeout               = 30
-  enable_deletion_protection = false
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_lb_listener" "test" {
-  load_balancer_arn = aws_lb.test.id
-  protocol          = "HTTP"
-  port              = "80"
-
-  default_action {
-    target_group_arn = aws_lb_target_group.test.id
-    type             = "forward"
-  }
-}
-
-resource "aws_lb_target_group" "test" {
-  name     = %[1]q
-  port     = 80
-  protocol = "HTTP"
-  vpc_id   = aws_vpc.test.id
-
-  deregistration_delay = 200
-
-  stickiness {
-    type            = "lb_cookie"
-    cookie_duration = 10000
-  }
-
-  health_check {
-    path                = "/health2"
-    interval            = 30
-    port                = 8082
-    protocol            = "HTTPS"
-    timeout             = 4
-    healthy_threshold   = 4
-    unhealthy_threshold = 4
-    matcher             = "200"
-  }
-}
-
-resource "aws_egress_only_internet_gateway" "igw" {
-  vpc_id = aws_vpc.test.id
-}
-
-resource "aws_vpc" "test" {
-  cidr_block                       = "10.0.0.0/16"
-  assign_generated_ipv6_cidr_block = true
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_internet_gateway" "foo" {
-  vpc_id = aws_vpc.test.id
-}
-
-resource "aws_subnet" "test_1" {
-  vpc_id                  = aws_vpc.test.id
-  cidr_block              = "10.0.1.0/24"
-  map_public_ip_on_launch = true
-  availability_zone       = data.aws_availability_zones.available.names[0]
-  ipv6_cidr_block         = cidrsubnet(aws_vpc.test.ipv6_cidr_block, 8, 1)
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_subnet" "test_2" {
-  vpc_id                  = aws_vpc.test.id
-  cidr_block              = "10.0.2.0/24"
-  map_public_ip_on_launch = true
-  availability_zone       = data.aws_availability_zones.available.names[1]
-  ipv6_cidr_block         = cidrsubnet(aws_vpc.test.ipv6_cidr_block, 8, 2)
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_security_group" "test" {
-  name        = %[1]q
-  description = "Used for ALB Testing"
-  vpc_id      = aws_vpc.test.id
-
-  ingress {
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
-  tags = {
-    Name = %[1]q
-  }
-}
-`, rName))
-}
-
-func testAccLoadBalancerConfig_ipAddressType(rName string) string {
-	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
-resource "aws_lb" "test" {
-  name            = %[1]q
-  security_groups = [aws_security_group.test.id]
-  subnets         = [aws_subnet.test_1.id, aws_subnet.test_2.id]
+  subnets         = aws_subnet.test[*].id
 
   ip_address_type = "ipv4"
 
@@ -1874,87 +1761,9 @@ resource "aws_lb" "test" {
   }
 }
 
-resource "aws_lb_listener" "test" {
-  load_balancer_arn = aws_lb.test.id
-  protocol          = "HTTP"
-  port              = "80"
-
-  default_action {
-    target_group_arn = aws_lb_target_group.test.id
-    type             = "forward"
-  }
-}
-
-resource "aws_lb_target_group" "test" {
-  name     = %[1]q
-  port     = 80
-  protocol = "HTTP"
-  vpc_id   = aws_vpc.test.id
-
-  deregistration_delay = 200
-
-  stickiness {
-    type            = "lb_cookie"
-    cookie_duration = 10000
-  }
-
-  health_check {
-    path                = "/health2"
-    interval            = 30
-    port                = 8082
-    protocol            = "HTTPS"
-    timeout             = 4
-    healthy_threshold   = 4
-    unhealthy_threshold = 4
-    matcher             = "200"
-  }
-}
-
-resource "aws_egress_only_internet_gateway" "igw" {
-  vpc_id = aws_vpc.test.id
-}
-
-resource "aws_vpc" "test" {
-  cidr_block                       = "10.0.0.0/16"
-  assign_generated_ipv6_cidr_block = true
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_internet_gateway" "foo" {
-  vpc_id = aws_vpc.test.id
-}
-
-resource "aws_subnet" "test_1" {
-  vpc_id                  = aws_vpc.test.id
-  cidr_block              = "10.0.1.0/24"
-  map_public_ip_on_launch = true
-  availability_zone       = data.aws_availability_zones.available.names[0]
-  ipv6_cidr_block         = cidrsubnet(aws_vpc.test.ipv6_cidr_block, 8, 1)
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_subnet" "test_2" {
-  vpc_id                  = aws_vpc.test.id
-  cidr_block              = "10.0.2.0/24"
-  map_public_ip_on_launch = true
-  availability_zone       = data.aws_availability_zones.available.names[1]
-  ipv6_cidr_block         = cidrsubnet(aws_vpc.test.ipv6_cidr_block, 8, 2)
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
 resource "aws_security_group" "test" {
-  name        = %[1]q
-  description = "Used for ALB Testing"
-  vpc_id      = aws_vpc.test.id
+  name   = %[1]q
+  vpc_id = aws_vpc.test.id
 
   ingress {
     from_port   = 0
