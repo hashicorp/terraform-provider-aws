@@ -280,7 +280,7 @@ resource "aws_instance" "test" {
 resource "aws_route" "instance" {
   route_table_id         = aws_route_table.test.id
   destination_cidr_block = "10.0.1.0/24"
-  instance_id            = aws_instance.test.id
+  network_interface_id   = aws_instance.test.primary_network_interface_id
 }
 
 data "aws_route" "by_peering_connection_id" {

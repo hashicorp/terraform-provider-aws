@@ -26,9 +26,9 @@ The following arguments are required:
 
 * `id` - (Required) The unique identifier of the security configuration.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This data source exports the following attributes in addition to the arguments above:
 
 * `config_version` - The version of the security configuration.
 * `created_date` - The date the configuration was created.

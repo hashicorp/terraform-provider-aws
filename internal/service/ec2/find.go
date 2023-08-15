@@ -4597,7 +4597,7 @@ func FindTransitGatewayPrefixListReferenceByTwoPartKey(ctx context.Context, conn
 	return output, nil
 }
 
-func FindTransitGatewayRoute(ctx context.Context, conn *ec2.EC2, transitGatewayRouteTableID, destination string) (*ec2.TransitGatewayRoute, error) {
+func FindTransitGatewayStaticRoute(ctx context.Context, conn *ec2.EC2, transitGatewayRouteTableID, destination string) (*ec2.TransitGatewayRoute, error) {
 	input := &ec2.SearchTransitGatewayRoutesInput{
 		Filters: BuildAttributeFilterList(map[string]string{
 			"type": ec2.TransitGatewayRouteTypeStatic,
@@ -4605,24 +4605,13 @@ func FindTransitGatewayRoute(ctx context.Context, conn *ec2.EC2, transitGatewayR
 		TransitGatewayRouteTableId: aws.String(transitGatewayRouteTableID),
 	}
 
-	output, err := conn.SearchTransitGatewayRoutesWithContext(ctx, input)
-
-	if tfawserr.ErrCodeEquals(err, errCodeInvalidRouteTableIDNotFound) {
-		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
-		}
-	}
+	output, err := FindTransitGatewayRoutes(ctx, conn, input)
 
 	if err != nil {
 		return nil, err
 	}
 
-	if output == nil || len(output.Routes) == 0 {
-		return nil, tfresource.NewEmptyResultError(input)
-	}
-
-	for _, route := range output.Routes {
+	for _, route := range output {
 		if route == nil {
 			continue
 		}
@@ -4642,6 +4631,27 @@ func FindTransitGatewayRoute(ctx context.Context, conn *ec2.EC2, transitGatewayR
 	}
 
 	return nil, &retry.NotFoundError{}
+}
+
+func FindTransitGatewayRoutes(ctx context.Context, conn *ec2.EC2, input *ec2.SearchTransitGatewayRoutesInput) ([]*ec2.TransitGatewayRoute, error) {
+	output, err := conn.SearchTransitGatewayRoutesWithContext(ctx, input)
+
+	if tfawserr.ErrCodeEquals(err, errCodeInvalidRouteTableIDNotFound) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || len(output.Routes) == 0 {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output.Routes, err
 }
 
 func FindTransitGatewayPolicyTable(ctx context.Context, conn *ec2.EC2, input *ec2.DescribeTransitGatewayPolicyTablesInput) (*ec2.TransitGatewayPolicyTable, error) {
@@ -6451,6 +6461,38 @@ func FindNATGatewayByID(ctx context.Context, conn *ec2.EC2, id string) (*ec2.Nat
 	}
 
 	return output, nil
+}
+
+func FindNATGatewayAddressByNATGatewayIDAndAllocationID(ctx context.Context, conn *ec2.EC2, natGatewayID, allocationID string) (*ec2.NatGatewayAddress, error) {
+	output, err := FindNATGatewayByID(ctx, conn, natGatewayID)
+
+	if err != nil {
+		return nil, err
+	}
+
+	for _, v := range output.NatGatewayAddresses {
+		if aws.StringValue(v.AllocationId) == allocationID {
+			return v, nil
+		}
+	}
+
+	return nil, &retry.NotFoundError{}
+}
+
+func FindNATGatewayAddressByNATGatewayIDAndPrivateIP(ctx context.Context, conn *ec2.EC2, natGatewayID, privateIP string) (*ec2.NatGatewayAddress, error) {
+	output, err := FindNATGatewayByID(ctx, conn, natGatewayID)
+
+	if err != nil {
+		return nil, err
+	}
+
+	for _, v := range output.NatGatewayAddresses {
+		if aws.StringValue(v.PrivateIp) == privateIP {
+			return v, nil
+		}
+	}
+
+	return nil, &retry.NotFoundError{}
 }
 
 func FindPlacementGroupByName(ctx context.Context, conn *ec2.EC2, name string) (*ec2.PlacementGroup, error) {

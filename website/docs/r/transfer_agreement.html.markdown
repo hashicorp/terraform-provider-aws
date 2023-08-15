@@ -27,7 +27,7 @@ resource "aws_transfer_agreement" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `access_role` - (Required) The IAM Role which provides read and write access to the parent directory of the file location mentioned in the StartFileTransfer request.
 * `base_directory` - (Required) The landing directory for the files transferred by using the AS2 protocol.
@@ -37,17 +37,27 @@ The following arguments are supported:
 * `server_id` - (Required) The unique server identifier for the server instance. This is the specific server the agreement uses.
 * `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
-* `agreement_id`  - The unique identifier for the AS2 agreement
+* `agreement_id`  - The unique identifier for the AS2 agreement.
+* `arn` - The ARN of the agreement.
 * `staus`  - The staus of the agreement which is either ACTIVE or INACTIVE.
 
 ## Import
 
-Transfer AS2 Agreement can be imported using the `server_id/agreement_id`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Transfer AS2 Agreement using the `server_id/agreement_id`. For example:
 
+```terraform
+import {
+  to = aws_transfer_agreement.example
+  id = "s-4221a88afd5f4362a/a-4221a88afd5f4362a"
+}
 ```
-$ terraform import aws_transfer_agreement.example s-4221a88afd5f4362a/a-4221a88afd5f4362a
+
+Using `terraform import`, import Transfer AS2 Agreement using the `server_id/agreement_id`. For example:
+
+```console
+% terraform import aws_transfer_agreement.example s-4221a88afd5f4362a/a-4221a88afd5f4362a
 ```

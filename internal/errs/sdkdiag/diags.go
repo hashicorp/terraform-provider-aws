@@ -24,7 +24,7 @@ func Warnings(diags diag.Diagnostics) diag.Diagnostics {
 	return tfslices.Filter(diags, severityFilter(diag.Warning))
 }
 
-func severityFilter(s diag.Severity) tfslices.FilterFunc[diag.Diagnostic] {
+func severityFilter(s diag.Severity) tfslices.Predicate[diag.Diagnostic] {
 	return func(d diag.Diagnostic) bool {
 		return d.Severity == s
 	}

@@ -10,9 +10,7 @@ import (
 	"regexp"
 	"testing"
 
-	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/vpclattice"
-	"github.com/aws/aws-sdk-go-v2/service/vpclattice/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -20,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	tfvpclattice "github.com/hashicorp/terraform-provider-aws/internal/service/vpclattice"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -176,18 +175,17 @@ func testAccCheckServiceDestroy(ctx context.Context) resource.TestCheckFunc {
 				continue
 			}
 
-			_, err := conn.GetService(ctx, &vpclattice.GetServiceInput{
-				ServiceIdentifier: aws.String(rs.Primary.ID),
-			})
+			_, err := tfvpclattice.FindServiceByID(ctx, conn, rs.Primary.ID)
+
+			if tfresource.NotFound(err) {
+				continue
+			}
+
 			if err != nil {
-				var nfe *types.ResourceNotFoundException
-				if errors.As(err, &nfe) {
-					return nil
-				}
 				return err
 			}
 
-			return create.Error(names.VPCLattice, create.ErrActionCheckingDestroyed, tfvpclattice.ResNameService, rs.Primary.ID, errors.New("not destroyed"))
+			return fmt.Errorf("VPC Lattice Service %s still exists", rs.Primary.ID)
 		}
 
 		return nil
@@ -206,12 +204,10 @@ func testAccCheckServiceExists(ctx context.Context, name string, service *vpclat
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).VPCLatticeClient(ctx)
-		resp, err := conn.GetService(ctx, &vpclattice.GetServiceInput{
-			ServiceIdentifier: aws.String(rs.Primary.ID),
-		})
+		resp, err := tfvpclattice.FindServiceByID(ctx, conn, rs.Primary.ID)
 
 		if err != nil {
-			return create.Error(names.VPCLattice, create.ErrActionCheckingExistence, tfvpclattice.ResNameService, rs.Primary.ID, err)
+			return err
 		}
 
 		*service = *resp

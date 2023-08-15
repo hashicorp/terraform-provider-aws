@@ -61,8 +61,8 @@ export AWS_DEFAULT_REGION=us-gov-west-1
 Tests can then be run by specifying a regular expression defining the tests to
 run and the package in which the tests are defined:
 
-```sh
-$ make testacc TESTS=TestAccCloudWatchDashboard_updateName PKG=cloudwatch
+```console
+% make testacc TESTS=TestAccCloudWatchDashboard_updateName PKG=cloudwatch
 ==> Checking that code complies with gofmt requirements...
 TF_ACC=1 go test ./internal/service/cloudwatch/... -v -count 1 -parallel 20 -run=TestAccCloudWatchDashboard_updateName -timeout 180m
 === RUN   TestAccCloudWatchDashboard_updateName
@@ -78,8 +78,8 @@ write the regular expression. For example, to run all tests of the
 `aws_cloudwatch_dashboard` resource rather than just the updateName test, you
 can start testing like this:
 
-```sh
-$ make testacc TESTS=TestAccCloudWatchDashboard PKG=cloudwatch
+```console
+% make testacc TESTS=TestAccCloudWatchDashboard PKG=cloudwatch
 ==> Checking that code complies with gofmt requirements...
 TF_ACC=1 go test ./internal/service/cloudwatch/... -v -count 1 -parallel 20 -run=TestAccCloudWatchDashboard -timeout 180m
 === RUN   TestAccCloudWatchDashboard_basic

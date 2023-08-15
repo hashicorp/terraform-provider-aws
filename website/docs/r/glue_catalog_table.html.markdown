@@ -175,17 +175,26 @@ To add an index to an existing table, see the [`glue_partition_index` resource](
 * `database_name` - (Required) Name of the catalog database that contains the target table.
 * `name` - (Required) Name of the target table.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - The ARN of the Glue Table.
 * `id` - Catalog ID, Database name and of the name table.
 
 ## Import
 
-Glue Tables can be imported with their catalog ID (usually AWS account ID), database name, and table name, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Glue Tables using the catalog ID (usually AWS account ID), database name, and table name. For example:
 
+```terraform
+import {
+  to = aws_glue_catalog_table.MyTable
+  id = "123456789012:MyDatabase:MyTable"
+}
 ```
-$ terraform import aws_glue_catalog_table.MyTable 123456789012:MyDatabase:MyTable
+
+Using `terraform import`, import Glue Tables using the catalog ID (usually AWS account ID), database name, and table name. For example:
+
+```console
+% terraform import aws_glue_catalog_table.MyTable 123456789012:MyDatabase:MyTable
 ```

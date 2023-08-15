@@ -1160,7 +1160,7 @@ func expandInputAttachmentInputSettings(tfList []interface{}) *types.InputSettin
 	if v, ok := m["audio_selector"].([]interface{}); ok && len(v) > 0 {
 		out.AudioSelectors = expandInputAttachmentInputSettingsAudioSelectors(v)
 	}
-	if v, ok := m["audio_selector"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := m["caption_selector"].([]interface{}); ok && len(v) > 0 {
 		out.CaptionSelectors = expandInputAttachmentInputSettingsCaptionSelectors(v)
 	}
 	if v, ok := m["deblock_filter"].(string); ok && v != "" {

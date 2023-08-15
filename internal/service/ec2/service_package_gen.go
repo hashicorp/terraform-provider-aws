@@ -237,6 +237,10 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 			TypeName: "aws_ec2_transit_gateway_route_table_propagations",
 		},
 		{
+			Factory:  DataSourceTransitGatewayRouteTableRoutes,
+			TypeName: "aws_ec2_transit_gateway_route_table_routes",
+		},
+		{
 			Factory:  DataSourceTransitGatewayRouteTables,
 			TypeName: "aws_ec2_transit_gateway_route_tables",
 		},
@@ -335,6 +339,8 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 		{
 			Factory:  DataSourceVPC,
 			TypeName: "aws_vpc",
+			Name:     "VPC",
+			Tags:     &types.ServicePackageResourceTags{},
 		},
 		{
 			Factory:  DataSourceVPCDHCPOptions,

@@ -57,7 +57,7 @@ func sweepReportDefinitions(region string) error {
 		return fmt.Errorf("error listing Cost And Usage Report Definitions (%s): %w", region, err)
 	}
 
-	err = sweep.SweepOrchestratorWithContext(ctx, sweepResources)
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
 
 	if err != nil {
 		return fmt.Errorf("error sweeping Cost And Usage Report Definitions (%s): %w", region, err)
