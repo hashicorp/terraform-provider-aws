@@ -3162,18 +3162,7 @@ resource "aws_lb" "test" {
 `, rName))
 }
 
-func testAccLoadBalancerConfig_nlbNoSecurityGroups(rName string) string {
-	return acctest.ConfigCompose(acctest.ConfigVPCWithSubnets(rName, 2), fmt.Sprintf(`
-resource "aws_lb" "test" {
-  internal           = true
-  load_balancer_type = "network"
-  name               = %[1]q
-  subnets            = aws_subnet.test[*].id
-}
-`, rName))
-}
-
-func testAccLoadBalancerConfig_nlbSecurityGroups(rName string, n int) string {
+func testAccLoadBalancerConfig_baseNLBSecurityGroups(rName string, n int) string {
 	return acctest.ConfigCompose(acctest.ConfigVPCWithSubnets(rName, 2), fmt.Sprintf(`
 resource "aws_security_group" "test" {
   count = %[2]d
@@ -3199,13 +3188,28 @@ resource "aws_security_group" "test" {
     Name = %[1]q
   }
 }
+`, rName, n))
+}
 
+func testAccLoadBalancerConfig_nlbNoSecurityGroups(rName string) string {
+	return acctest.ConfigCompose(testAccLoadBalancerConfig_baseNLBSecurityGroups(rName, 3), fmt.Sprintf(`
 resource "aws_lb" "test" {
   internal           = true
   load_balancer_type = "network"
   name               = %[1]q
   subnets            = aws_subnet.test[*].id
-  security_groups    = aws_security_group.test[*].id
+}
+`, rName))
+}
+
+func testAccLoadBalancerConfig_nlbSecurityGroups(rName string, n int) string {
+	return acctest.ConfigCompose(testAccLoadBalancerConfig_baseNLBSecurityGroups(rName, 3), fmt.Sprintf(`
+resource "aws_lb" "test" {
+  internal           = true
+  load_balancer_type = "network"
+  name               = %[1]q
+  subnets            = aws_subnet.test[*].id
+  security_groups    = slice(aws_security_group.test[*].id, 0, %[2]d)
 }
 `, rName, n))
 }
