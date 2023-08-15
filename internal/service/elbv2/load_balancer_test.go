@@ -1316,7 +1316,7 @@ func TestAccELBV2LoadBalancer_NetworkLoadBalancer_updateSecurityGroups(t *testin
 		CheckDestroy:             testAccCheckLoadBalancerDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccLoadBalancerConfig_nlbNoSecurityGroups(rName),
+				Config: testAccLoadBalancerConfig_nlbSecurityGroups(rName, 0),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckLoadBalancerExists(ctx, resourceName, &lb1),
 					resource.TestCheckResourceAttr(resourceName, "security_groups.#", "0"),
@@ -1339,7 +1339,7 @@ func TestAccELBV2LoadBalancer_NetworkLoadBalancer_updateSecurityGroups(t *testin
 				),
 			},
 			{
-				Config: testAccLoadBalancerConfig_nlbNoSecurityGroups(rName),
+				Config: testAccLoadBalancerConfig_nlbSecurityGroups(rName, 0),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckLoadBalancerExists(ctx, resourceName, &lb4),
 					testAccCheckLoadBalancerRecreated(&lb4, &lb3),
@@ -3162,10 +3162,10 @@ resource "aws_lb" "test" {
 `, rName))
 }
 
-func testAccLoadBalancerConfig_baseNLBSecurityGroups(rName string, n int) string {
+func testAccLoadBalancerConfig_nlbSecurityGroups(rName string, n int) string {
 	return acctest.ConfigCompose(acctest.ConfigVPCWithSubnets(rName, 2), fmt.Sprintf(`
 resource "aws_security_group" "test" {
-  count = %[2]d
+  count = 3
 
   name   = "%[1]s-${count.index}"
   vpc_id = aws_vpc.test.id
@@ -3188,22 +3188,7 @@ resource "aws_security_group" "test" {
     Name = %[1]q
   }
 }
-`, rName, n))
-}
 
-func testAccLoadBalancerConfig_nlbNoSecurityGroups(rName string) string {
-	return acctest.ConfigCompose(testAccLoadBalancerConfig_baseNLBSecurityGroups(rName, 3), fmt.Sprintf(`
-resource "aws_lb" "test" {
-  internal           = true
-  load_balancer_type = "network"
-  name               = %[1]q
-  subnets            = aws_subnet.test[*].id
-}
-`, rName))
-}
-
-func testAccLoadBalancerConfig_nlbSecurityGroups(rName string, n int) string {
-	return acctest.ConfigCompose(testAccLoadBalancerConfig_baseNLBSecurityGroups(rName, 3), fmt.Sprintf(`
 resource "aws_lb" "test" {
   internal           = true
   load_balancer_type = "network"
