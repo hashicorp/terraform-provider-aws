@@ -512,9 +512,8 @@ func ResourceDomain() *schema.Resource {
 										ValidateFunc: validation.StringInSlice(sagemaker.NotebookOutputOption_Values(), false),
 									},
 									"s3_kms_key_id": {
-										Type:         schema.TypeString,
-										Optional:     true,
-										ValidateFunc: verify.ValidARN,
+										Type:     schema.TypeString,
+										Optional: true,
 									},
 									"s3_output_path": {
 										Type:     schema.TypeString,
@@ -650,10 +649,9 @@ func ResourceDomain() *schema.Resource {
 				Computed: true,
 			},
 			"kms_key_id": {
-				Type:         schema.TypeString,
-				ForceNew:     true,
-				Optional:     true,
-				ValidateFunc: verify.ValidARN,
+				Type:     schema.TypeString,
+				ForceNew: true,
+				Optional: true,
 			},
 			"retention_policy": {
 				Type:     schema.TypeList,

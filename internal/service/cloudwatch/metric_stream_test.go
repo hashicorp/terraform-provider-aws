@@ -575,7 +575,8 @@ EOF
 }
 
 resource "aws_s3_bucket" "bucket" {
-  bucket = %[1]q
+  bucket        = %[1]q
+  force_destroy = true
 }
 
 resource "aws_iam_role" "firehose_to_s3" {

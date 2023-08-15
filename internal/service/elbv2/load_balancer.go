@@ -316,6 +316,19 @@ func resourceLoadBalancerCreate(ctx context.Context, d *schema.ResourceData, met
 	} else {
 		name = id.PrefixedUniqueId("tf-lb-")
 	}
+
+	exist, err := FindLoadBalancer(ctx, conn, &elbv2.DescribeLoadBalancersInput{
+		Names: aws.StringSlice([]string{name}),
+	})
+
+	if err != nil && !tfresource.NotFound(err) {
+		return sdkdiag.AppendErrorf(diags, "reading ELBv2 Load Balancer (%s): %s", name, err)
+	}
+
+	if exist != nil {
+		return sdkdiag.AppendErrorf(diags, "ELBv2 Target Group (%s) already exists", name)
+	}
+
 	d.Set("name", name)
 
 	lbType := d.Get("load_balancer_type").(string)

@@ -40,6 +40,7 @@ func testAccGroupImportStep(n string) resource.TestStep {
 		ImportStateVerify: true,
 		ImportStateVerifyIgnore: []string{
 			"force_delete",
+			"ignore_failed_scaling_activities",
 			"initial_lifecycle_hook",
 			"tag",
 			"tags",
@@ -797,8 +798,26 @@ func TestAccAutoScalingGroup_withScalingActivityErrorIncorrectInstanceArchitectu
 		CheckDestroy:             testAccCheckGroupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccGroupConfig_withPotentialScalingActivityError(rName, "t4g.micro", 1),
+				Config:      testAccGroupConfig_withPotentialScalingActivityError(rName, "t4g.micro", 1, "null"),
 				ExpectError: regexp.MustCompile(`The architecture 'arm64' of the specified instance type does not match the architecture 'x86_64' of the specified AMI`),
+			},
+		},
+	})
+}
+
+func TestAccAutoScalingGroup_withScalingActivityErrorIncorrectInstanceArchitecture_IgnoreFailedScalingActivities(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, autoscaling.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckGroupDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccGroupConfig_withPotentialScalingActivityError(rName, "t4g.micro", 1, "true"),
+				ExpectError: regexp.MustCompile(`timeout while waiting for state to become 'ok'`),
 			},
 		},
 	})
@@ -817,17 +836,17 @@ func TestAccAutoScalingGroup_withScalingActivityErrorIncorrectInstanceArchitectu
 		CheckDestroy:             testAccCheckGroupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGroupConfig_withPotentialScalingActivityError(rName, "t2.micro", 1),
+				Config: testAccGroupConfig_withPotentialScalingActivityError(rName, "t2.micro", 1, "null"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckGroupExists(ctx, resourceName, &group),
 				),
 			},
 			{
-				Config:      testAccGroupConfig_withPotentialScalingActivityError(rName, "t4g.micro", 2),
+				Config:      testAccGroupConfig_withPotentialScalingActivityError(rName, "t4g.micro", 2, "null"),
 				ExpectError: regexp.MustCompile(`The architecture 'arm64' of the specified instance type does not match the architecture 'x86_64' of the specified AMI`),
 			},
 			{
-				Config: testAccGroupConfig_withPotentialScalingActivityError(rName, "t2.micro", 3),
+				Config: testAccGroupConfig_withPotentialScalingActivityError(rName, "t2.micro", 3, "null"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckGroupExists(ctx, resourceName, &group),
 				),
@@ -4629,7 +4648,7 @@ resource "aws_autoscaling_group" "test" {
 `, rName))
 }
 
-func testAccGroupConfig_withPotentialScalingActivityError(rName, instanceType string, instanceCount int) string {
+func testAccGroupConfig_withPotentialScalingActivityError(rName, instanceType string, instanceCount int, ignoreFailedScalingActivities string) string {
 	return acctest.ConfigCompose(testAccGroupConfig_launchConfigurationBase(rName, instanceType), fmt.Sprintf(`
 resource "aws_autoscaling_group" "test" {
   availability_zones        = [data.aws_availability_zones.available.names[0]]
@@ -4644,6 +4663,8 @@ resource "aws_autoscaling_group" "test" {
   wait_for_capacity_timeout = "2m"
   launch_configuration      = aws_launch_configuration.test.name
 
+  ignore_failed_scaling_activities = %[3]s
+
   instance_refresh {
     strategy = "Rolling"
   }
@@ -4654,7 +4675,7 @@ resource "aws_autoscaling_group" "test" {
     propagate_at_launch = true
   }
 }
-`, rName, instanceCount))
+`, rName, instanceCount, ignoreFailedScalingActivities))
 }
 
 func testAccGroupConfig_serviceLinkedRoleARN(rName string) string {

@@ -4,7 +4,6 @@ archives:
       - 'none*'
     format: zip
     name_template: '{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}'
-    rlcp: true
 before:
   hooks:
     - 'go mod download'

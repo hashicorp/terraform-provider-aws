@@ -1238,9 +1238,8 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 			output := outputRaw.(*rds.RestoreDBInstanceFromDBSnapshotOutput)
 			resourceID = aws.StringValue(output.DBInstance.DbiResourceId)
 		}
-	} else if v, ok := d.GetOk("restore_to_point_in_time"); ok {
+	} else if v, ok := d.GetOk("restore_to_point_in_time"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 		tfMap := v.([]interface{})[0].(map[string]interface{})
-
 		input := &rds.RestoreDBInstanceToPointInTimeInput{
 			AutoMinorVersionUpgrade:    aws.Bool(d.Get("auto_minor_version_upgrade").(bool)),
 			CopyTagsToSnapshot:         aws.Bool(d.Get("copy_tags_to_snapshot").(bool)),
@@ -2383,7 +2382,7 @@ func findDBInstanceByIDSDKv1(ctx context.Context, conn *rds.RDS, id string) (*rd
 		input.DBInstanceIdentifier = aws.String(id)
 	}
 
-	output, err := findDBInstanceSDKv1(ctx, conn, input)
+	output, err := findDBInstanceSDKv1(ctx, conn, input, tfslices.PredicateTrue[*rds.DBInstance]())
 
 	// in case a DB has an *identifier* starting with "db-""
 	if idLooksLikeDbiResourceId && tfresource.NotFound(err) {
@@ -2391,7 +2390,7 @@ func findDBInstanceByIDSDKv1(ctx context.Context, conn *rds.RDS, id string) (*rd
 			DBInstanceIdentifier: aws.String(id),
 		}
 
-		output, err = findDBInstanceSDKv1(ctx, conn, input)
+		output, err = findDBInstanceSDKv1(ctx, conn, input, tfslices.PredicateTrue[*rds.DBInstance]())
 	}
 
 	if err != nil {
@@ -2401,8 +2400,8 @@ func findDBInstanceByIDSDKv1(ctx context.Context, conn *rds.RDS, id string) (*rd
 	return output, nil
 }
 
-func findDBInstanceSDKv1(ctx context.Context, conn *rds.RDS, input *rds.DescribeDBInstancesInput) (*rds.DBInstance, error) {
-	output, err := findDBInstancesSDKv1(ctx, conn, input, tfslices.PredicateTrue[*rds.DBInstance]())
+func findDBInstanceSDKv1(ctx context.Context, conn *rds.RDS, input *rds.DescribeDBInstancesInput, filter tfslices.Predicate[*rds.DBInstance]) (*rds.DBInstance, error) {
+	output, err := findDBInstancesSDKv1(ctx, conn, input, filter)
 
 	if err != nil {
 		return nil, err
