@@ -1,3 +1,0 @@
-```release-note:IsNewResource
-resource/aws_opensearch_vpc_endpoint_connection: added a new resource to create vpc endpoint connection for an aws opensearch domain
-```
