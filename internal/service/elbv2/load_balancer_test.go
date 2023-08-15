@@ -837,7 +837,7 @@ func TestAccELBV2LoadBalancer_ApplicationLoadBalancer_updateWAFFailOpen(t *testi
 	})
 }
 
-func TestAccELBV2LoadBalancer_updatedIPAddressType(t *testing.T) {
+func TestAccELBV2LoadBalancer_updateIPAddressType(t *testing.T) {
 	ctx := acctest.Context(t)
 	var pre, post elbv2.LoadBalancer
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -902,7 +902,7 @@ func TestAccELBV2LoadBalancer_ApplicationLoadBalancer_updatedSecurityGroups(t *t
 	})
 }
 
-func TestAccELBV2LoadBalancer_ApplicationLoadBalancer_updatedSubnets(t *testing.T) {
+func TestAccELBV2LoadBalancer_ApplicationLoadBalancer_updateSubnets(t *testing.T) {
 	ctx := acctest.Context(t)
 	var pre, post elbv2.LoadBalancer
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -1303,7 +1303,7 @@ func TestAccELBV2LoadBalancer_NetworkLoadBalancer_accessLogsPrefix(t *testing.T)
 	})
 }
 
-func TestAccELBV2LoadBalancer_NetworkLoadBalancer_updatedSecurityGroup(t *testing.T) {
+func TestAccELBV2LoadBalancer_NetworkLoadBalancer_updateSecurityGroups(t *testing.T) {
 	ctx := acctest.Context(t)
 	var lb1, lb2, lb3, lb4 elbv2.LoadBalancer
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -1319,25 +1319,22 @@ func TestAccELBV2LoadBalancer_NetworkLoadBalancer_updatedSecurityGroup(t *testin
 				Config: testAccLoadBalancerConfig_nlbNoSecurityGroups(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckLoadBalancerExists(ctx, resourceName, &lb1),
-					resource.TestCheckResourceAttr(resourceName, "enforce_security_group_inbound_rules_on_private_link_traffic", "on"),
 					resource.TestCheckResourceAttr(resourceName, "security_groups.#", "0"),
 				),
 			},
 			{
-				Config: testAccLoadBalancerConfig_nlbSecurityGroups(rName, 1, "off"),
+				Config: testAccLoadBalancerConfig_nlbSecurityGroups(rName, 1),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckLoadBalancerExists(ctx, resourceName, &lb2),
 					testAccCheckLoadBalancerRecreated(&lb2, &lb1),
-					resource.TestCheckResourceAttr(resourceName, "enforce_security_group_inbound_rules_on_private_link_traffic", "off"),
 					resource.TestCheckResourceAttr(resourceName, "security_groups.#", "1"),
 				),
 			},
 			{
-				Config: testAccLoadBalancerConfig_nlbSecurityGroups(rName, 2, "on"),
+				Config: testAccLoadBalancerConfig_nlbSecurityGroups(rName, 2),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckLoadBalancerExists(ctx, resourceName, &lb3),
 					testAccCheckLoadBalancerNotRecreated(&lb3, &lb2),
-					resource.TestCheckResourceAttr(resourceName, "enforce_security_group_inbound_rules_on_private_link_traffic", "on"),
 					resource.TestCheckResourceAttr(resourceName, "security_groups.#", "2"),
 				),
 			},
@@ -1346,7 +1343,6 @@ func TestAccELBV2LoadBalancer_NetworkLoadBalancer_updatedSecurityGroup(t *testin
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckLoadBalancerExists(ctx, resourceName, &lb4),
 					testAccCheckLoadBalancerRecreated(&lb4, &lb3),
-					resource.TestCheckResourceAttr(resourceName, "enforce_security_group_inbound_rules_on_private_link_traffic", "on"),
 					resource.TestCheckResourceAttr(resourceName, "security_groups.#", "0"),
 				),
 			},
@@ -1354,7 +1350,7 @@ func TestAccELBV2LoadBalancer_NetworkLoadBalancer_updatedSecurityGroup(t *testin
 	})
 }
 
-func TestAccELBV2LoadBalancer_NetworkLoadBalancer_updatedSubnets(t *testing.T) {
+func TestAccELBV2LoadBalancer_NetworkLoadBalancer_updateSubnets(t *testing.T) {
 	ctx := acctest.Context(t)
 	var pre, post elbv2.LoadBalancer
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -3177,7 +3173,7 @@ resource "aws_lb" "test" {
 `, rName))
 }
 
-func testAccLoadBalancerConfig_nlbSecurityGroups(rName string, n int, enforceRules string) string {
+func testAccLoadBalancerConfig_nlbSecurityGroups(rName string, n int) string {
 	return acctest.ConfigCompose(acctest.ConfigVPCWithSubnets(rName, 2), fmt.Sprintf(`
 resource "aws_security_group" "test" {
   count = %[2]d
@@ -3210,10 +3206,8 @@ resource "aws_lb" "test" {
   name               = %[1]q
   subnets            = aws_subnet.test[*].id
   security_groups    = aws_security_group.test[*].id
-
-  enforce_security_group_inbound_rules_on_private_link_traffic = %[2q]
 }
-`, rName, n, enforceRules))
+`, rName, n))
 }
 
 func testAccLoadBalancerConfig_nlbSubnets(rName string, subnetCount int) string {
