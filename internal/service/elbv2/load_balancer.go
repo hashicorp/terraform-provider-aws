@@ -160,6 +160,12 @@ func ResourceLoadBalancer() *schema.Resource {
 				Default:          false,
 				DiffSuppressFunc: suppressIfLBTypeNot(elbv2.LoadBalancerTypeEnumApplication),
 			},
+			"enforce_security_group_inbound_rules_on_private_link_traffic": {
+				Type:             schema.TypeString,
+				Optional:         true,
+				Default:          elbv2.EnforceSecurityGroupInboundRulesOnPrivateLinkTrafficEnumOn,
+				DiffSuppressFunc: suppressIfLBTypeNot(elbv2.LoadBalancerTypeEnumNetwork),
+			},
 			"idle_timeout": {
 				Type:             schema.TypeInt,
 				Optional:         true,
@@ -457,7 +463,8 @@ func resourceLoadBalancerUpdate(ctx context.Context, d *schema.ResourceData, met
 		}
 	}
 
-	switch d.Get("load_balancer_type").(string) {
+	lbType := d.Get("load_balancer_type").(string)
+	switch lbType {
 	case elbv2.LoadBalancerTypeEnumApplication:
 		if d.HasChange("idle_timeout") || d.IsNewResource() {
 			attributes = append(attributes, &elbv2.LoadBalancerAttribute{
@@ -575,15 +582,19 @@ func resourceLoadBalancerUpdate(ctx context.Context, d *schema.ResourceData, met
 	}
 
 	if d.HasChange("security_groups") {
-		sgs := flex.ExpandStringSet(d.Get("security_groups").(*schema.Set))
-
-		params := &elbv2.SetSecurityGroupsInput{
+		input := &elbv2.SetSecurityGroupsInput{
 			LoadBalancerArn: aws.String(d.Id()),
-			SecurityGroups:  sgs,
+			SecurityGroups:  flex.ExpandStringSet(d.Get("security_groups").(*schema.Set)),
 		}
-		_, err := conn.SetSecurityGroupsWithContext(ctx, params)
+
+		if lbType == elbv2.LoadBalancerTypeEnumNetwork {
+			input.EnforceSecurityGroupInboundRulesOnPrivateLinkTraffic = aws.String(d.Get("enforce_security_group_inbound_rules_on_private_link_traffic").(string))
+		}
+
+		_, err := conn.SetSecurityGroupsWithContext(ctx, input)
+
 		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "failure Setting LB Security Groups: %s", err)
+			return sdkdiag.AppendErrorf(diags, "setting ELBv2 Load Balancer (%s) security groups: %s", d.Id(), err)
 		}
 	}
 
@@ -918,6 +929,7 @@ func flattenResource(ctx context.Context, d *schema.ResourceData, meta interface
 	d.Set("arn_suffix", SuffixFromARN(lb.LoadBalancerArn))
 	d.Set("customer_owned_ipv4_pool", lb.CustomerOwnedIpv4Pool)
 	d.Set("dns_name", lb.DNSName)
+	d.Set("enforce_security_group_inbound_rules_on_private_link_traffic", lb.EnforceSecurityGroupInboundRulesOnPrivateLinkTraffic)
 	d.Set("internal", aws.StringValue(lb.Scheme) == elbv2.LoadBalancerSchemeEnumInternal)
 	d.Set("ip_address_type", lb.IpAddressType)
 	d.Set("load_balancer_type", lb.Type)
