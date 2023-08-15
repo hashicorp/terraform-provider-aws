@@ -51,7 +51,7 @@ func ResourceVPCEndpoint() *schema.Resource {
 			},
 			"vpc_options": {
 				Type:     schema.TypeList,
-				Optional: true,
+				Required: true,
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
@@ -63,11 +63,12 @@ func ResourceVPCEndpoint() *schema.Resource {
 						"security_group_ids": {
 							Type:     schema.TypeSet,
 							Optional: true,
+							Computed: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
 						},
 						"subnet_ids": {
 							Type:     schema.TypeSet,
-							Optional: true,
+							Required: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
 						},
 						"vpc_id": {
@@ -85,35 +86,21 @@ func resourceVPCEndpointCreate(ctx context.Context, d *schema.ResourceData, meta
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).OpenSearchConn(ctx)
 
-	// Create the VPC Endpoint
 	input := &opensearchservice.CreateVpcEndpointInput{
-		DomainArn: aws.String(d.Get("domain_arn").(string)),
+		DomainArn:  aws.String(d.Get("domain_arn").(string)),
+		VpcOptions: expandVPCOptions(d.Get("vpc_options").([]interface{})[0].(map[string]interface{})),
 	}
 
-	if v, ok := d.GetOk("vpc_options"); ok {
-		options := v.([]interface{})
-		if options[0] == nil {
-			return sdkdiag.AppendErrorf(diags, "At least one field is expected inside vpc_options")
-		}
+	output, err := conn.CreateVpcEndpointWithContext(ctx, input)
 
-		s := options[0].(map[string]interface{})
-		input.VpcOptions = expandVPCOptions(s)
-	}
-
-	log.Printf("[DEBUG] Create VPC Endpoint options: %#v", input)
-
-	resp, err := conn.CreateVpcEndpointWithContext(ctx, input)
 	if err != nil {
-		return diag.Errorf("creating vpc endpoint : %s", err)
+		return sdkdiag.AppendErrorf(diags, "creating OpenSearch VPC Endpoint: %s", err)
 	}
 
-	// Get the ID and store it
-	d.SetId(aws.StringValue(resp.VpcEndpoint.VpcEndpointId))
-	log.Printf("[INFO] open search vpc endpoint ID: %s", d.Id())
+	d.SetId(aws.StringValue(output.VpcEndpoint.VpcEndpointId))
 
-	err = vpcEndpointWaitUntilActive(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate))
-	if err != nil {
-		return diag.Errorf("waiting for vpc endpoint to become active: %s", err)
+	if err := vpcEndpointWaitUntilActive(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for OpenSearch VPC Endpoint (%s) create: %s", d.Id(), err)
 	}
 
 	return append(diags, resourceVPCEndpointRead(ctx, d, meta)...)

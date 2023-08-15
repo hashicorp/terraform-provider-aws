@@ -31,12 +31,12 @@ resource "aws_opensearch_vpc_endpoint" "foo" {
 The following arguments are supported:
 
 * `domain_arn` - (Required, Forces new resource) Specifies the Amazon Resource Name (ARN) of the domain to create the endpoint for
-* `vpc_options` - (Optional) Options to specify the subnets and security groups for the endpoint.
+* `vpc_options` - (Required) Options to specify the subnets and security groups for the endpoint.
 
 ### vpc_options
 
 * `security_group_ids` - (Optional) The list of security group IDs associated with the VPC endpoints for the domain. If you do not provide a security group ID, OpenSearch Service uses the default security group for the VPC.
-* `subnet_ids` - (Optional) A list of subnet IDs associated with the VPC endpoints for the domain. If your domain uses multiple Availability Zones, you need to provide two subnet IDs, one per zone. Otherwise, provide only one.
+* `subnet_ids` - (Required) A list of subnet IDs associated with the VPC endpoints for the domain. If your domain uses multiple Availability Zones, you need to provide two subnet IDs, one per zone. Otherwise, provide only one.
 
 ## Attribute Reference
 
