@@ -20,8 +20,8 @@ github.com/apparentlymart/go-textseg/v13 v13.0.0/go.mod h1:ZK2fH7c4NqDTLtiYLvIkE
 github.com/armon/go-radix v0.0.0-20180808171621-7fddfc383310/go.mod h1:ufUuZ+zHj4x4TnLV4JWEpy2hxWSpsRywHrMgIH9cCH8=
 github.com/armon/go-radix v1.0.0 h1:F4z6KzEeeQIMeLFa97iZU6vupzoecKdU5TX24SNppXI=
 github.com/armon/go-radix v1.0.0/go.mod h1:ufUuZ+zHj4x4TnLV4JWEpy2hxWSpsRywHrMgIH9cCH8=
-github.com/aws/aws-sdk-go v1.44.323 h1:97/dn93DWrN1VfhAWQ2tV+xuE6oO/LO9rSsEsuC4PLU=
-github.com/aws/aws-sdk-go v1.44.323/go.mod h1:aVsgQcEevwlmQ7qHE9I3h+dtQgpqhFB+i8Phjh7fkwI=
+github.com/aws/aws-sdk-go v1.44.324 h1:/uja9PtgeeqrZCPOJTenjMLNpciIMuzaRKooq+erG4A=
+github.com/aws/aws-sdk-go v1.44.324/go.mod h1:aVsgQcEevwlmQ7qHE9I3h+dtQgpqhFB+i8Phjh7fkwI=
 github.com/aws/aws-sdk-go-v2 v1.20.1 h1:rZBf5DWr7YGrnlTK4kgDQGn1ltqOg5orCYb/UhOFZkg=
 github.com/aws/aws-sdk-go-v2 v1.20.1/go.mod h1:NU06lETsFm8fUC6ZjhgDpVBcGZTFQ6XM+LZWZxMI4ac=
 github.com/aws/aws-sdk-go-v2/aws/protocol/eventstream v1.4.12 h1:lN6L3LrYHeZ6xCxaIYtoWCx4GMLk4nRknsh29OMSqHY=
@@ -64,8 +64,8 @@ github.com/aws/aws-sdk-go-v2/service/directoryservice v1.18.2 h1:u9OVndyndiGvcY8
 github.com/aws/aws-sdk-go-v2/service/directoryservice v1.18.2/go.mod h1:eXYoTXyid7luRCSsoRRdrz9FrpiTpIdOb6pzuwtJSiQ=
 github.com/aws/aws-sdk-go-v2/service/docdbelastic v1.2.2 h1:fMvNX/NzdIfkVoXJlAF1albAmEp+W/F56h1rR62ZW4s=
 github.com/aws/aws-sdk-go-v2/service/docdbelastic v1.2.2/go.mod h1:dDB3BcW6SkdPbfuZ/VjkfIawi8Xy26au/2Lm6uSE6Cw=
-github.com/aws/aws-sdk-go-v2/service/ec2 v1.111.0 h1:zWbe9PwEF8R4F8NixpDt4uIGDKnRdvUQmjMYmef/SRw=
-github.com/aws/aws-sdk-go-v2/service/ec2 v1.111.0/go.mod h1:Ie0Kp61cLk223argiS+t8vO29SpbFIphzlPflIvYcv0=
+github.com/aws/aws-sdk-go-v2/service/ec2 v1.112.0 h1:8I4NQ9BfrQATHzXKtBuu+jBdOVd2mBANqhbMOXfSIdA=
+github.com/aws/aws-sdk-go-v2/service/ec2 v1.112.0/go.mod h1:Ie0Kp61cLk223argiS+t8vO29SpbFIphzlPflIvYcv0=
 github.com/aws/aws-sdk-go-v2/service/emrserverless v1.10.2 h1:y89kSuEew6WmP9NrfGAvw2zRDJpwkgqOwM8P1OalFJs=
 github.com/aws/aws-sdk-go-v2/service/emrserverless v1.10.2/go.mod h1:+qlGDQzSH9zd4sq0v5U5OmyICuIGOGDYiUBTKNO4tFM=
 github.com/aws/aws-sdk-go-v2/service/finspace v1.11.2 h1:gZ2+BU9Y0ZYB/X/Wp1AltJHJ/lRrlyvOX8msHdk6wvI=
@@ -80,8 +80,8 @@ github.com/aws/aws-sdk-go-v2/service/iam v1.22.2 h1:DPFxx/6Zwes/MiadlDteVqDKov7y
 github.com/aws/aws-sdk-go-v2/service/iam v1.22.2/go.mod h1:cQTMNdo/Z5t1DDRsUnx0a2j6cPnytMBidUYZw2zks28=
 github.com/aws/aws-sdk-go-v2/service/identitystore v1.17.3 h1:ukBnFXNXKKg0KezOsFeURPB2bbvxPIWpF9fhherKU4c=
 github.com/aws/aws-sdk-go-v2/service/identitystore v1.17.3/go.mod h1:vmRjTLRMHwshNJ+0d5ZDJWSP+ccgQDlXVv49y5E1bL0=
-github.com/aws/aws-sdk-go-v2/service/inspector2 v1.16.2 h1:b70xfedGDjurhIF4AaGYR/XaMXSJ1/qkWjWRdyI+PJs=
-github.com/aws/aws-sdk-go-v2/service/inspector2 v1.16.2/go.mod h1:i1e9WcicnJtVT/+3FZlAJvrgprQmydTf3Wexb8aiEpU=
+github.com/aws/aws-sdk-go-v2/service/inspector2 v1.16.3 h1:PkNLjIuqWkflB/1Tcg4dt35TUaIG3wFEPFvMWXh13H0=
+github.com/aws/aws-sdk-go-v2/service/inspector2 v1.16.3/go.mod h1:i1e9WcicnJtVT/+3FZlAJvrgprQmydTf3Wexb8aiEpU=
 github.com/aws/aws-sdk-go-v2/service/internal/endpoint-discovery v1.7.32 h1:ltFklFRb78MNetqtmqZ/6Tc6i76QRMXxDe0LXYl/jd8=
 github.com/aws/aws-sdk-go-v2/service/internal/endpoint-discovery v1.7.32/go.mod h1:jBlPRKTAedLFuhO71Wm5dgN9x+/pJ6TtwfQmq7RLvNk=
 github.com/aws/aws-sdk-go-v2/service/internal/presigned-url v1.9.32 h1:dGAseBFEYxth10V23b5e2mAS+tX7oVbfYHD6dnDdAsg=
@@ -112,8 +112,8 @@ github.com/aws/aws-sdk-go-v2/service/opensearchserverless v1.4.2 h1:T9WwWZRNwUR1
 github.com/aws/aws-sdk-go-v2/service/opensearchserverless v1.4.2/go.mod h1:j5XCW3TCqKPSY1QWccBPfcMTJiYuGkoGmYhoKIRxcx4=
 github.com/aws/aws-sdk-go-v2/service/pipes v1.3.2 h1:L9easaXXyfi3ogxpYazglDXSNe+IWJlu+Kh10UHbmyE=
 github.com/aws/aws-sdk-go-v2/service/pipes v1.3.2/go.mod h1:923ETMtbc011lV6HC+7piBxomAQkLucA0kllrZumkEw=
-github.com/aws/aws-sdk-go-v2/service/pricing v1.21.2 h1:dDPZLIoI0JeJx0F/7xckb8uZnqBsTMH/KuneLy5QMCI=
-github.com/aws/aws-sdk-go-v2/service/pricing v1.21.2/go.mod h1:mj3CZ3lGoxqzlGEUM3UejlP28tiJQRG0viU1r0j6vbk=
+github.com/aws/aws-sdk-go-v2/service/pricing v1.21.3 h1:UmBNpXcb2uYBqqw4wExUsYV4YvsXobcmvjrlY4z0ehk=
+github.com/aws/aws-sdk-go-v2/service/pricing v1.21.3/go.mod h1:mj3CZ3lGoxqzlGEUM3UejlP28tiJQRG0viU1r0j6vbk=
 github.com/aws/aws-sdk-go-v2/service/qldb v1.16.2 h1:JgUdCjgxJEg4JqZe9TV+00MqMBe2L4hDdKtFdz+h9Q8=
 github.com/aws/aws-sdk-go-v2/service/qldb v1.16.2/go.mod h1:y2EgoSZVa1a7nu/6wnh6oQeAxe2DzaGM8793h4GCLnc=
 github.com/aws/aws-sdk-go-v2/service/rbin v1.9.2 h1:8e6iQ63Ch6rKg4jm5vr3VE+KU5suKS6DYmyTkxj6muE=
@@ -124,8 +124,8 @@ github.com/aws/aws-sdk-go-v2/service/resourceexplorer2 v1.3.2 h1:cozSqO7CAbxmqc/
 github.com/aws/aws-sdk-go-v2/service/resourceexplorer2 v1.3.2/go.mod h1:0u103p65Vj6wfSHgcpzikwJ9hh0NI/o3ddDroVvf/bo=
 github.com/aws/aws-sdk-go-v2/service/rolesanywhere v1.3.2 h1:t3moicqkhbSrhQt45Am73ZuurC8qI3mrpJt5SEFyHdM=
 github.com/aws/aws-sdk-go-v2/service/rolesanywhere v1.3.2/go.mod h1:dQLqT0YnczdPh2aGqZePgtoUF3AU3So9FJpqImYM2Ic=
-github.com/aws/aws-sdk-go-v2/service/route53domains v1.16.2 h1:+QM69OrWCsp5A6g1oQyC4Rbl9U9F0/xBvugb1N0Ha/U=
-github.com/aws/aws-sdk-go-v2/service/route53domains v1.16.2/go.mod h1:sVEjwdvFyw2UY9cvFeeWgVq4y2QEILPcmRF2glyTshM=
+github.com/aws/aws-sdk-go-v2/service/route53domains v1.17.0 h1:CtkkL7+ts1PdCSVy2JlCqN6pnWA/fzH6vjxDKC5jr4Y=
+github.com/aws/aws-sdk-go-v2/service/route53domains v1.17.0/go.mod h1:sVEjwdvFyw2UY9cvFeeWgVq4y2QEILPcmRF2glyTshM=
 github.com/aws/aws-sdk-go-v2/service/s3control v1.32.2 h1:klsQ5vcjCQYC6Rm/lnOYeT9u0DjfJJyf52crbjaksMs=
 github.com/aws/aws-sdk-go-v2/service/s3control v1.32.2/go.mod h1:PQkRJMAbGwB1SuQJGl8utT6FshpCJlejPZSTrrI3KAg=
 github.com/aws/aws-sdk-go-v2/service/scheduler v1.2.2 h1:c4s/zMoywQk9ck5Zm5F3puZys5k/m6/29t1qqnZ6nTY=

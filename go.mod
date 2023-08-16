@@ -4,7 +4,7 @@ go 1.20
 
 require (
 	github.com/ProtonMail/go-crypto v0.0.0-20230717121422-5aa5874ade95
-	github.com/aws/aws-sdk-go v1.44.323
+	github.com/aws/aws-sdk-go v1.44.324
 	github.com/aws/aws-sdk-go-v2 v1.20.1
 	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.13.8
 	github.com/aws/aws-sdk-go-v2/service/accessanalyzer v1.20.2
@@ -20,14 +20,14 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/computeoptimizer v1.25.2
 	github.com/aws/aws-sdk-go-v2/service/directoryservice v1.18.2
 	github.com/aws/aws-sdk-go-v2/service/docdbelastic v1.2.2
-	github.com/aws/aws-sdk-go-v2/service/ec2 v1.111.0
+	github.com/aws/aws-sdk-go-v2/service/ec2 v1.112.0
 	github.com/aws/aws-sdk-go-v2/service/emrserverless v1.10.2
 	github.com/aws/aws-sdk-go-v2/service/finspace v1.11.2
 	github.com/aws/aws-sdk-go-v2/service/fis v1.15.2
 	github.com/aws/aws-sdk-go-v2/service/glacier v1.15.2
 	github.com/aws/aws-sdk-go-v2/service/healthlake v1.17.2
 	github.com/aws/aws-sdk-go-v2/service/identitystore v1.17.3
-	github.com/aws/aws-sdk-go-v2/service/inspector2 v1.16.2
+	github.com/aws/aws-sdk-go-v2/service/inspector2 v1.16.3
 	github.com/aws/aws-sdk-go-v2/service/internetmonitor v1.5.1
 	github.com/aws/aws-sdk-go-v2/service/ivschat v1.5.2
 	github.com/aws/aws-sdk-go-v2/service/kafka v1.22.2
@@ -40,13 +40,13 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/oam v1.2.2
 	github.com/aws/aws-sdk-go-v2/service/opensearchserverless v1.4.2
 	github.com/aws/aws-sdk-go-v2/service/pipes v1.3.2
-	github.com/aws/aws-sdk-go-v2/service/pricing v1.21.2
+	github.com/aws/aws-sdk-go-v2/service/pricing v1.21.3
 	github.com/aws/aws-sdk-go-v2/service/qldb v1.16.2
 	github.com/aws/aws-sdk-go-v2/service/rbin v1.9.2
 	github.com/aws/aws-sdk-go-v2/service/rds v1.50.1
 	github.com/aws/aws-sdk-go-v2/service/resourceexplorer2 v1.3.2
 	github.com/aws/aws-sdk-go-v2/service/rolesanywhere v1.3.2
-	github.com/aws/aws-sdk-go-v2/service/route53domains v1.16.2
+	github.com/aws/aws-sdk-go-v2/service/route53domains v1.17.0
 	github.com/aws/aws-sdk-go-v2/service/s3control v1.32.2
 	github.com/aws/aws-sdk-go-v2/service/scheduler v1.2.2
 	github.com/aws/aws-sdk-go-v2/service/securitylake v1.6.2
