@@ -167,7 +167,7 @@ func aggregationFunctionSchema(required bool) *schema.Schema {
 
 func calculatedFieldsSchema() *schema.Schema {
 	return &schema.Schema{ // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_CalculatedField.html
-		Type:     schema.TypeList,
+		Type:     schema.TypeSet,
 		MinItems: 1,
 		MaxItems: 500,
 		Optional: true,
@@ -479,8 +479,8 @@ func ExpandTemplateDefinition(tfList []interface{}) *quicksight.TemplateVersionD
 	if v, ok := tfMap["analysis_defaults"].([]interface{}); ok && len(v) > 0 {
 		definition.AnalysisDefaults = expandAnalysisDefaults(v)
 	}
-	if v, ok := tfMap["calculated_fields"].([]interface{}); ok && len(v) > 0 {
-		definition.CalculatedFields = expandCalculatedFields(v)
+	if v, ok := tfMap["calculated_fields"].(*schema.Set); ok && v.Len() > 0 {
+		definition.CalculatedFields = expandCalculatedFields(v.List())
 	}
 	if v, ok := tfMap["column_configurations"].([]interface{}); ok && len(v) > 0 {
 		definition.ColumnConfigurations = expandColumnConfigurations(v)

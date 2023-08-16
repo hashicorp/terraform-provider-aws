@@ -346,8 +346,8 @@ func ExpandDashboardDefinition(tfList []interface{}) *quicksight.DashboardVersio
 	if v, ok := tfMap["analysis_defaults"].([]interface{}); ok && len(v) > 0 {
 		definition.AnalysisDefaults = expandAnalysisDefaults(v)
 	}
-	if v, ok := tfMap["calculated_fields"].([]interface{}); ok && len(v) > 0 {
-		definition.CalculatedFields = expandCalculatedFields(v)
+	if v, ok := tfMap["calculated_fields"].(*schema.Set); ok && v.Len() > 0 {
+		definition.CalculatedFields = expandCalculatedFields(v.List())
 	}
 	if v, ok := tfMap["column_configurations"].([]interface{}); ok && len(v) > 0 {
 		definition.ColumnConfigurations = expandColumnConfigurations(v)
