@@ -429,13 +429,13 @@ func expandImageScanningConfiguration(tfMap map[string]interface{}) *imagebuilde
 	}
 
 	if v, ok := tfMap["ecr_configuration"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		apiObject.EcrConfiguration = expandEcrConfiguration(v[0].(map[string]interface{}))
+		apiObject.EcrConfiguration = expandECRConfiguration(v[0].(map[string]interface{}))
 	}
 
 	return apiObject
 }
 
-func expandEcrConfiguration(tfMap map[string]interface{}) *imagebuilder.EcrConfiguration {
+func expandECRConfiguration(tfMap map[string]interface{}) *imagebuilder.EcrConfiguration {
 	if tfMap == nil {
 		return nil
 	}
@@ -505,13 +505,13 @@ func flattenImageScanningConfiguration(apiObject *imagebuilder.ImageScanningConf
 	}
 
 	if v := apiObject.EcrConfiguration; v != nil {
-		tfMap["ecr_configuration"] = []interface{}{flattenEcrConfiguration(v)}
+		tfMap["ecr_configuration"] = []interface{}{flattenECRConfiguration(v)}
 	}
 
 	return tfMap
 }
 
-func flattenEcrConfiguration(apiObject *imagebuilder.EcrConfiguration) map[string]interface{} {
+func flattenECRConfiguration(apiObject *imagebuilder.EcrConfiguration) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}
