@@ -65,36 +65,32 @@ func DataSourceImagePipeline() *schema.Resource {
 			},
 			"image_scanning_configuration": {
 				Type:     schema.TypeList,
-				Optional: true,
 				Computed: true,
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"image_scanning_enabled": {
-							Type:     schema.TypeBool,
-							Optional: true,
-							Default:  false,
-						},
 						"ecr_configuration": {
 							Type:     schema.TypeList,
-							Optional: true,
 							Computed: true,
-							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"container_tags": {
 										Type:     schema.TypeSet,
-										Optional: true,
+										Computed: true,
 										Elem: &schema.Schema{
 											Type: schema.TypeString,
 										},
 									},
 									"repository_name": {
 										Type:     schema.TypeString,
-										Optional: true,
+										Computed: true,
 									},
 								},
 							},
+						},
+						"image_scanning_enabled": {
+							Type:     schema.TypeBool,
+							Computed: true,
 						},
 					},
 				},
@@ -185,23 +181,19 @@ func dataSourceImagePipelineRead(ctx context.Context, d *schema.ResourceData, me
 	d.Set("distribution_configuration_arn", imagePipeline.DistributionConfigurationArn)
 	d.Set("enhanced_image_metadata_enabled", imagePipeline.EnhancedImageMetadataEnabled)
 	d.Set("image_recipe_arn", imagePipeline.ImageRecipeArn)
-
-	if imagePipeline.ImageTestsConfiguration != nil {
-		d.Set("image_tests_configuration", []interface{}{flattenImageTestsConfiguration(imagePipeline.ImageTestsConfiguration)})
-	} else {
-		d.Set("image_tests_configuration", nil)
-	}
-
 	if imagePipeline.ImageScanningConfiguration != nil {
 		d.Set("image_scanning_configuration", []interface{}{flattenImageScanningConfiguration(imagePipeline.ImageScanningConfiguration)})
 	} else {
 		d.Set("image_scanning_configuration", nil)
 	}
-
+	if imagePipeline.ImageTestsConfiguration != nil {
+		d.Set("image_tests_configuration", []interface{}{flattenImageTestsConfiguration(imagePipeline.ImageTestsConfiguration)})
+	} else {
+		d.Set("image_tests_configuration", nil)
+	}
 	d.Set("infrastructure_configuration_arn", imagePipeline.InfrastructureConfigurationArn)
 	d.Set("name", imagePipeline.Name)
 	d.Set("platform", imagePipeline.Platform)
-
 	if imagePipeline.Schedule != nil {
 		d.Set("schedule", []interface{}{flattenSchedule(imagePipeline.Schedule)})
 	} else {
