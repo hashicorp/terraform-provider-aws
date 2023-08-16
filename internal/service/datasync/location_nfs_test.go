@@ -313,103 +313,12 @@ func testAccCheckLocationNFSNotRecreated(i, j *datasync.DescribeLocationNfsOutpu
 }
 
 func testAccLocationNFSConfig_base(rName string) string {
-	return fmt.Sprintf(`
-data "aws_ami" "aws-thinstaller" {
-  most_recent = true
-  owners      = ["amazon"]
-
-  filter {
-    name   = "name"
-    values = ["aws-thinstaller-*"]
-  }
-}
-
-resource "aws_vpc" "test" {
-  cidr_block = "10.0.0.0/16"
-
-  tags = {
-    Name = "tf-acc-test-datasync-location-nfs"
-  }
-}
-
-resource "aws_subnet" "test" {
-  cidr_block = "10.0.0.0/24"
-  vpc_id     = aws_vpc.test.id
-
-  tags = {
-    Name = "tf-acc-test-datasync-location-nfs"
-  }
-}
-
-resource "aws_internet_gateway" "test" {
-  vpc_id = aws_vpc.test.id
-
-  tags = {
-    Name = "tf-acc-test-datasync-location-nfs"
-  }
-}
-
-resource "aws_route_table" "test" {
-  vpc_id = aws_vpc.test.id
-
-  route {
-    cidr_block = "0.0.0.0/0"
-    gateway_id = aws_internet_gateway.test.id
-  }
-
-  tags = {
-    Name = "tf-acc-test-datasync-location-nfs"
-  }
-}
-
-resource "aws_route_table_association" "test" {
-  subnet_id      = aws_subnet.test.id
-  route_table_id = aws_route_table.test.id
-}
-
-resource "aws_security_group" "test" {
-  vpc_id = aws_vpc.test.id
-
-  egress {
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
-  ingress {
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
-  tags = {
-    Name = "tf-acc-test-datasync-location-nfs"
-  }
-}
-
-resource "aws_instance" "test" {
-  depends_on = [aws_internet_gateway.test]
-
-  ami                         = data.aws_ami.aws-thinstaller.id
-  associate_public_ip_address = true
-
-  # Default instance type from sync.sh
-  instance_type          = "c5.2xlarge"
-  vpc_security_group_ids = [aws_security_group.test.id]
-  subnet_id              = aws_subnet.test.id
-
-  tags = {
-    Name = "tf-acc-test-datasync-location-nfs"
-  }
-}
-
+	return acctest.ConfigCompose(testAccAgentAgentConfig_base(rName), fmt.Sprintf(`
 resource "aws_datasync_agent" "test" {
   ip_address = aws_instance.test.public_ip
   name       = %[1]q
 }
-`, rName)
+`, rName))
 }
 
 func testAccLocationNFSConfig_basic(rName string) string {
@@ -447,22 +356,22 @@ func testAccLocationNFSConfig_agentARNsMultiple(rName string) string {
 resource "aws_instance" "test2" {
   depends_on = [aws_internet_gateway.test]
 
-  ami                         = data.aws_ami.aws-thinstaller.id
+  ami                         = data.aws_ssm_parameter.aws_service_datasync_ami.value
   associate_public_ip_address = true
 
   # Default instance type from sync.sh
   instance_type          = "c5.2xlarge"
   vpc_security_group_ids = [aws_security_group.test.id]
-  subnet_id              = aws_subnet.test.id
+  subnet_id              = aws_subnet.test[0].id
 
   tags = {
-    Name = "tf-acc-test-datasync-location-nfs"
+    Name = %[1]q
   }
 }
 
 resource "aws_datasync_agent" "test2" {
   ip_address = aws_instance.test2.public_ip
-  name       = "%[1]s2"
+  name       = "%[1]s-2"
 }
 
 resource "aws_datasync_location_nfs" "test" {
