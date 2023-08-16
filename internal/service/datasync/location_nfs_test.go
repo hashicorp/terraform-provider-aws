@@ -312,7 +312,7 @@ func testAccCheckLocationNFSNotRecreated(i, j *datasync.DescribeLocationNfsOutpu
 	}
 }
 
-func testAccLocationNFSBaseConfig(rName string) string {
+func testAccLocationNFSConfig_base(rName string) string {
 	return fmt.Sprintf(`
 data "aws_ami" "aws-thinstaller" {
   most_recent = true
@@ -407,13 +407,13 @@ resource "aws_instance" "test" {
 
 resource "aws_datasync_agent" "test" {
   ip_address = aws_instance.test.public_ip
-  name       = %q
+  name       = %[1]q
 }
 `, rName)
 }
 
 func testAccLocationNFSConfig_basic(rName string) string {
-	return testAccLocationNFSBaseConfig(rName) + `
+	return acctest.ConfigCompose(testAccLocationNFSConfig_base(rName), `
 resource "aws_datasync_location_nfs" "test" {
   server_hostname = "example.com"
   subdirectory    = "/"
@@ -422,11 +422,11 @@ resource "aws_datasync_location_nfs" "test" {
     agent_arns = [aws_datasync_agent.test.arn]
   }
 }
-`
+`)
 }
 
 func testAccLocationNFSConfig_mountOptions(rName, option string) string {
-	return testAccLocationNFSBaseConfig(rName) + fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccLocationNFSConfig_base(rName), fmt.Sprintf(`
 resource "aws_datasync_location_nfs" "test" {
   server_hostname = "example.com"
   subdirectory    = "/"
@@ -439,11 +439,11 @@ resource "aws_datasync_location_nfs" "test" {
     version = %[1]q
   }
 }
-`, option)
+`, option))
 }
 
 func testAccLocationNFSConfig_agentARNsMultiple(rName string) string {
-	return testAccLocationNFSBaseConfig(rName) + fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccLocationNFSConfig_base(rName), fmt.Sprintf(`
 resource "aws_instance" "test2" {
   depends_on = [aws_internet_gateway.test]
 
@@ -462,7 +462,7 @@ resource "aws_instance" "test2" {
 
 resource "aws_datasync_agent" "test2" {
   ip_address = aws_instance.test2.public_ip
-  name       = "%s2"
+  name       = "%[1]s2"
 }
 
 resource "aws_datasync_location_nfs" "test" {
@@ -476,24 +476,24 @@ resource "aws_datasync_location_nfs" "test" {
     ]
   }
 }
-`, rName)
+`, rName))
 }
 
 func testAccLocationNFSConfig_subdirectory(rName, subdirectory string) string {
-	return testAccLocationNFSBaseConfig(rName) + fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccLocationNFSConfig_base(rName), fmt.Sprintf(`
 resource "aws_datasync_location_nfs" "test" {
   server_hostname = "example.com"
-  subdirectory    = %q
+  subdirectory    = %[1]q
 
   on_prem_config {
     agent_arns = [aws_datasync_agent.test.arn]
   }
 }
-`, subdirectory)
+`, subdirectory))
 }
 
 func testAccLocationNFSConfig_tags1(rName, key1, value1 string) string {
-	return testAccLocationNFSBaseConfig(rName) + fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccLocationNFSConfig_base(rName), fmt.Sprintf(`
 resource "aws_datasync_location_nfs" "test" {
   server_hostname = "example.com"
   subdirectory    = "/"
@@ -503,14 +503,14 @@ resource "aws_datasync_location_nfs" "test" {
   }
 
   tags = {
-    %q = %q
+    %[1]q = %[2]q
   }
 }
-`, key1, value1)
+`, key1, value1))
 }
 
 func testAccLocationNFSConfig_tags2(rName, key1, value1, key2, value2 string) string {
-	return testAccLocationNFSBaseConfig(rName) + fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccLocationNFSConfig_base(rName), fmt.Sprintf(`
 resource "aws_datasync_location_nfs" "test" {
   server_hostname = "example.com"
   subdirectory    = "/"
@@ -520,9 +520,9 @@ resource "aws_datasync_location_nfs" "test" {
   }
 
   tags = {
-    %q = %q
-    %q = %q
+    %[1]q = %[2]q
+    %[3]q = %[4]q
   }
 }
-`, key1, value1, key2, value2)
+`, key1, value1, key2, value2))
 }
