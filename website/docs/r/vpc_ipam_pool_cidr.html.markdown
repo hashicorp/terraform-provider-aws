@@ -36,7 +36,7 @@ resource "aws_vpc_ipam_pool" "example" {
 
 resource "aws_vpc_ipam_pool_cidr" "example" {
   ipam_pool_id = aws_vpc_ipam_pool.example.id
-  cidr         = "172.2.0.0/16"
+  cidr         = "172.20.0.0/16"
 }
 ```
 
@@ -100,7 +100,7 @@ In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashico
 ```terraform
 import {
   to = aws_vpc_ipam_pool_cidr.example
-  id = "172.2.0.0/24_ipam-pool-0e634f5a1517cccdc"
+  id = "172.20.0.0/24_ipam-pool-0e634f5a1517cccdc"
 }
 ```
 
@@ -109,5 +109,5 @@ Using `terraform import`, import IPAMs using the `<cidr>_<ipam-pool-id>`. For ex
 **NOTE:** Do not use the IPAM Pool Cidr ID as this was introduced after the resource already existed.
 
 ```console
-% terraform import aws_vpc_ipam_pool_cidr.example 172.2.0.0/24_ipam-pool-0e634f5a1517cccdc
+% terraform import aws_vpc_ipam_pool_cidr.example 172.20.0.0/24_ipam-pool-0e634f5a1517cccdc
 ```

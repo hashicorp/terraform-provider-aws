@@ -147,11 +147,11 @@ func TestAccS3ControlAccessPoint_policy(t *testing.T) {
       "Sid": "",
       "Effect": "Allow",
       "Principal": {
-        "AWS": "*"
+        "AWS": "arn:%[1]s:iam::%[3]s:root"
       },
       "Action": "s3:GetObjectTagging",
       "Resource": [
-        "arn:%s:s3:%s:%s:accesspoint/%s/object/*"
+        "arn:%[1]s:s3:%[2]s:%[3]s:accesspoint/%[4]s/object/*"
       ]
     }
   ]
@@ -165,14 +165,14 @@ func TestAccS3ControlAccessPoint_policy(t *testing.T) {
       "Sid": "",
       "Effect": "Allow",
       "Principal": {
-        "AWS": "*"
+        "AWS": "arn:%[1]s:iam::%[3]s:root"
       },
       "Action": [
         "s3:GetObjectLegalHold",
         "s3:GetObjectRetention"
       ],
       "Resource": [
-        "arn:%s:s3:%s:%s:accesspoint/%s/object/*"
+        "arn:%[1]s:s3:%[2]s:%[3]s:accesspoint/%[4]s/object/*"
       ]
     }
   ]
@@ -193,7 +193,7 @@ func TestAccS3ControlAccessPoint_policy(t *testing.T) {
 					acctest.CheckResourceAttrAccountID(resourceName, "account_id"),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "s3", fmt.Sprintf("accesspoint/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "bucket", rName),
-					resource.TestCheckResourceAttr(resourceName, "has_public_access_policy", "true"),
+					resource.TestCheckResourceAttr(resourceName, "has_public_access_policy", "false"),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "network_origin", "Internet"),
 					resource.TestCheckResourceAttr(resourceName, "public_access_block_configuration.#", "1"),
@@ -220,7 +220,6 @@ func TestAccS3ControlAccessPoint_policy(t *testing.T) {
 				Config: testAccAccessPointConfig_noPolicy(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAccessPointExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "has_public_access_policy", "false"),
 					resource.TestCheckResourceAttr(resourceName, "policy", ""),
 				),
 			},
@@ -495,7 +494,7 @@ data "aws_iam_policy_document" "test" {
 
     principals {
       type        = "AWS"
-      identifiers = ["*"]
+      identifiers = ["arn:${data.aws_partition.current.partition}:iam::${data.aws_caller_identity.current.account_id}:root"]
     }
   }
 }
@@ -540,7 +539,7 @@ data "aws_iam_policy_document" "test" {
 
     principals {
       type        = "AWS"
-      identifiers = ["*"]
+      identifiers = ["arn:${data.aws_partition.current.partition}:iam::${data.aws_caller_identity.current.account_id}:root"]
     }
   }
 }

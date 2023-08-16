@@ -52,7 +52,7 @@ The `filter` configuration block supports the following arguments:
 
 ## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This data source exports the following attributes in addition to the arguments above:
 
 * `localGatewayVirtualInterfaceIds` - Set of EC2 Local Gateway Virtual Interface identifiers.
 
@@ -62,4 +62,4 @@ In addition to all arguments above, the following attributes are exported:
 
 - `read` - (Default `20M`)
 
-<!-- cache-key: cdktf-0.17.1 input-540e4780997710333dc225582410f2a266ebddd6e5fe16521de29c067a33a32d -->
+<!-- cache-key: cdktf-0.17.1 input-5e2411b5d41b817a4357d5f458ca79618899e731412cbe0aaf57de8040137661 -->

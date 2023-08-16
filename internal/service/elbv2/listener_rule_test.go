@@ -605,11 +605,11 @@ func TestAccELBV2ListenerRule_priority(t *testing.T) {
 			},
 			{
 				Config:      testAccListenerRuleConfig_priority50001(rName),
-				ExpectError: regexp.MustCompile(`creating LB Listener Rule: ValidationError`),
+				ExpectError: regexp.MustCompile(`creating ELBv2 Listener Rule: ValidationError`),
 			},
 			{
 				Config:      testAccListenerRuleConfig_priorityInUse(rName),
-				ExpectError: regexp.MustCompile(`creating LB Listener Rule: PriorityInUse`),
+				ExpectError: regexp.MustCompile(`creating ELBv2 Listener Rule: PriorityInUse`),
 			},
 		},
 	})

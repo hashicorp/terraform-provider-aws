@@ -27,7 +27,7 @@ const (
 	errCodeObjectLockConfigurationNotFound           = "ObjectLockConfigurationNotFound"
 	errCodeOperationAborted                          = "OperationAborted"
 	ErrCodeReplicationConfigurationNotFound          = "ReplicationConfigurationNotFoundError"
-	ErrCodeServerSideEncryptionConfigurationNotFound = "ServerSideEncryptionConfigurationNotFoundError"
+	errCodeServerSideEncryptionConfigurationNotFound = "ServerSideEncryptionConfigurationNotFoundError"
 	errCodeUnsupportedArgument                       = "UnsupportedArgument"
 	// errCodeXNotImplemented is returned from Third Party S3 implementations
 	// and so far has been noticed with calls to GetBucketWebsite.

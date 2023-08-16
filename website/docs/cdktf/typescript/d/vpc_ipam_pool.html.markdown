@@ -72,7 +72,7 @@ VPC whose data will be exported as attributes.
 * `name` - (Required) The name of the filter. Filter names are case-sensitive.
 * `values` - (Required) The filter values. Filter values are case-sensitive.
 
-## Attributes Reference
+## Attribute Reference
 
 All of the argument attributes except `filter` blocks are also exported as
 result attributes. This data source will complete the data by populating
@@ -103,4 +103,4 @@ The following attribute is additionally exported:
 
 - `read` - (Default `20M`)
 
-<!-- cache-key: cdktf-0.17.1 input-fd769beb6b4c79ea1995879ebd6be7b3562a7f2d270918aade91e247d0c19ac1 -->
+<!-- cache-key: cdktf-0.17.1 input-14e0ec5a45dd1fac68d4e842a7b8f6c07c038a22e839fecb94a749a7d96d7a4e -->

@@ -63,11 +63,11 @@ class MyConvertedCode extends TerraformStack {
 * `kubernetesVersion` – (Required) Version of the EKS Cluster. Must be between 1-100 characters in length. Must begin with an alphanumeric character, and must only contain alphanumeric characters, dashes and underscores (`^[0-9A-Za-z][A-Za-z0-9\-_]+$`).
 * `mostRecent` - (Optional) Determines if the most recent or default version of the addon should be returned.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This data source exports the following attributes in addition to the arguments above:
 
 * `id` - Name of the add-on
 * `version` - Version of the EKS add-on.
 
-<!-- cache-key: cdktf-0.17.1 input-cfc1fa1ced28844384ef1de769165916c62f2c49200cee0a6e459feec2c96760 -->
+<!-- cache-key: cdktf-0.17.1 input-6bea559fed867c091f7f8ce8ca24a017cb6af1e256023fe4160201c7d3a8800c -->

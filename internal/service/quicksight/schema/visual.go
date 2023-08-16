@@ -22,7 +22,7 @@ func visualsSchema() *schema.Schema {
 	return &schema.Schema{ // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_SheetControlLayout.html
 		Type:     schema.TypeList,
 		MinItems: 1,
-		MaxItems: 30,
+		MaxItems: 50,
 		Optional: true,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{

@@ -40,12 +40,14 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 			Name:     "Resource Policy",
 		},
 		{
-			Factory:  DataSourceService,
+			Factory:  dataSourceService,
 			TypeName: "aws_vpclattice_service",
+			Tags:     &types.ServicePackageResourceTags{},
 		},
 		{
-			Factory:  DataSourceServiceNetwork,
+			Factory:  dataSourceServiceNetwork,
 			TypeName: "aws_vpclattice_service_network",
+			Tags:     &types.ServicePackageResourceTags{},
 		},
 	}
 }
@@ -86,7 +88,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			Name:     "Resource Policy",
 		},
 		{
-			Factory:  ResourceService,
+			Factory:  resourceService,
 			TypeName: "aws_vpclattice_service",
 			Name:     "Service",
 			Tags: &types.ServicePackageResourceTags{
@@ -94,9 +96,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceServiceNetwork,
+			Factory:  resourceServiceNetwork,
 			TypeName: "aws_vpclattice_service_network",
-			Name:     "ServiceNetwork",
+			Name:     "Service Network",
 			Tags: &types.ServicePackageResourceTags{
 				IdentifierAttribute: "arn",
 			},

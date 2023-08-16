@@ -85,7 +85,7 @@ which take the following arguments:
 * `values` - (Required) Set of values that are accepted for the given field.
   A VPC will be selected if any one of the given values matches.
 
-## Attributes Reference
+## Attribute Reference
 
 All of the argument attributes except `filter` blocks are also exported as
 result attributes. This data source will complete the data by populating
@@ -117,4 +117,4 @@ The following attribute is additionally exported:
 
 - `read` - (Default `20M`)
 
-<!-- cache-key: cdktf-0.17.1 input-c19a9fede45c716465283e9142f13817adc6894e25bd87ed6c36905c91308de6 -->
+<!-- cache-key: cdktf-0.17.1 input-8f39db2d83eed4fb37599ca81ea8bafc32c666cbedeb2b7236ecabe2e981a42e -->

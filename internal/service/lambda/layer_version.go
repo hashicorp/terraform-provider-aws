@@ -126,7 +126,6 @@ func ResourceLayerVersion() *schema.Resource {
 			"source_code_hash": {
 				Type:     schema.TypeString,
 				Optional: true,
-				ForceNew: true,
 				Computed: true,
 			},
 			"source_code_size": {

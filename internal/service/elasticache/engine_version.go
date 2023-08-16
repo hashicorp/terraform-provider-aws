@@ -48,7 +48,7 @@ func validRedisVersionString(v interface{}, k string) (ws []string, errors []err
 	value := v.(string)
 
 	if !redisVersionRegexp.MatchString(value) {
-		errors = append(errors, fmt.Errorf("%s: Redis versions must match <major>.<minor> when using version 6 or higher, or <major>.<minor>.<patch>", k))
+		errors = append(errors, fmt.Errorf("%s: %s is invalid. For Redis v6 or higher, use <major>.<minor>. For Redis v5 or lower, use <major>.<minor>.<patch>.", k, value))
 	}
 
 	return

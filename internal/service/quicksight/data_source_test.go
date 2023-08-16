@@ -435,6 +435,26 @@ resource "aws_quicksight_user" "test" {
 `, rName, acctest.DefaultEmailAddress)
 }
 
+func testAccDataSource_UserConfigMultiple(rName string, count int) string {
+	return fmt.Sprintf(`
+data "aws_caller_identity" "current" {}
+
+resource "aws_quicksight_user" "test" {
+  count = %[3]d
+
+  aws_account_id = data.aws_caller_identity.current.account_id
+  user_name      = "%[1]s-${count.index}"
+  email          = %[2]q
+  identity_type  = "QUICKSIGHT"
+  user_role      = "AUTHOR"
+
+  lifecycle {
+    create_before_destroy = true
+  }
+}
+`, rName, acctest.DefaultEmailAddress, count)
+}
+
 func testAccDataSourceConfig_permissions(rId, rName string) string {
 	return acctest.ConfigCompose(
 		testAccBaseDataSourceConfig(rName),

@@ -43,6 +43,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 	tfacmpca "github.com/hashicorp/terraform-provider-aws/internal/service/acmpca"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
+	tfiam "github.com/hashicorp/terraform-provider-aws/internal/service/iam"
 	tforganizations "github.com/hashicorp/terraform-provider-aws/internal/service/organizations"
 	tfsts "github.com/hashicorp/terraform-provider-aws/internal/service/sts"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -1000,15 +1001,10 @@ func PreCheckSSOAdminInstances(ctx context.Context, t *testing.T) {
 }
 
 func PreCheckHasIAMRole(ctx context.Context, t *testing.T, roleName string) {
-	conn := Provider.Meta().(*conns.AWSClient).IAMConn(ctx)
-	input := &iam.GetRoleInput{
-		RoleName: aws.String(roleName),
-	}
+	_, err := tfiam.FindRoleByName(ctx, Provider.Meta().(*conns.AWSClient).IAMConn(ctx), roleName)
 
-	_, err := conn.GetRoleWithContext(ctx, input)
-
-	if tfawserr.ErrCodeEquals(err, iam.ErrCodeNoSuchEntityException) {
-		t.Skipf("skipping acceptance test: required IAM role \"%s\" is not present", roleName)
+	if tfresource.NotFound(err) {
+		t.Skipf("skipping acceptance test: required IAM role %q not found", roleName)
 	}
 
 	if PreCheckSkipError(err) {
@@ -1524,6 +1520,10 @@ func PreCheckSkipError(err error) bool {
 		return true
 	}
 	if tfawserr.ErrMessageContains(err, "InvalidAction", "Unavailable Operation") {
+		return true
+	}
+	// ignore when not authorized to call API from account
+	if tfawserr.ErrCodeEquals(err, "ForbiddenException") {
 		return true
 	}
 	return false

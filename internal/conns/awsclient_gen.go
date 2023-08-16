@@ -12,6 +12,7 @@ import (
 	cleanrooms_sdkv2 "github.com/aws/aws-sdk-go-v2/service/cleanrooms"
 	cloudcontrol_sdkv2 "github.com/aws/aws-sdk-go-v2/service/cloudcontrol"
 	cloudwatchlogs_sdkv2 "github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs"
+	codecatalyst_sdkv2 "github.com/aws/aws-sdk-go-v2/service/codecatalyst"
 	comprehend_sdkv2 "github.com/aws/aws-sdk-go-v2/service/comprehend"
 	computeoptimizer_sdkv2 "github.com/aws/aws-sdk-go-v2/service/computeoptimizer"
 	directoryservice_sdkv2 "github.com/aws/aws-sdk-go-v2/service/directoryservice"
@@ -26,6 +27,7 @@ import (
 	inspector2_sdkv2 "github.com/aws/aws-sdk-go-v2/service/inspector2"
 	internetmonitor_sdkv2 "github.com/aws/aws-sdk-go-v2/service/internetmonitor"
 	ivschat_sdkv2 "github.com/aws/aws-sdk-go-v2/service/ivschat"
+	kafka_sdkv2 "github.com/aws/aws-sdk-go-v2/service/kafka"
 	kendra_sdkv2 "github.com/aws/aws-sdk-go-v2/service/kendra"
 	keyspaces_sdkv2 "github.com/aws/aws-sdk-go-v2/service/keyspaces"
 	lambda_sdkv2 "github.com/aws/aws-sdk-go-v2/service/lambda"
@@ -382,6 +384,10 @@ func (c *AWSClient) CodeBuildConn(ctx context.Context) *codebuild_sdkv1.CodeBuil
 	return errs.Must(conn[*codebuild_sdkv1.CodeBuild](ctx, c, names.CodeBuild))
 }
 
+func (c *AWSClient) CodeCatalystClient(ctx context.Context) *codecatalyst_sdkv2.Client {
+	return errs.Must(client[*codecatalyst_sdkv2.Client](ctx, c, names.CodeCatalyst))
+}
+
 func (c *AWSClient) CodeCommitConn(ctx context.Context) *codecommit_sdkv1.CodeCommit {
 	return errs.Must(conn[*codecommit_sdkv1.CodeCommit](ctx, c, names.CodeCommit))
 }
@@ -664,6 +670,10 @@ func (c *AWSClient) KMSConn(ctx context.Context) *kms_sdkv1.KMS {
 
 func (c *AWSClient) KafkaConn(ctx context.Context) *kafka_sdkv1.Kafka {
 	return errs.Must(conn[*kafka_sdkv1.Kafka](ctx, c, names.Kafka))
+}
+
+func (c *AWSClient) KafkaClient(ctx context.Context) *kafka_sdkv2.Client {
+	return errs.Must(client[*kafka_sdkv2.Client](ctx, c, names.Kafka))
 }
 
 func (c *AWSClient) KafkaConnectConn(ctx context.Context) *kafkaconnect_sdkv1.KafkaConnect {

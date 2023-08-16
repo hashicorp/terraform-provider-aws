@@ -5,7 +5,9 @@ package rds
 
 import (
 	"context"
+	"fmt"
 	"log"
+	"regexp"
 	"strings"
 	"time"
 
@@ -81,6 +83,12 @@ func ResourceClusterInstance() *schema.Resource {
 				Optional: true,
 				Default:  false,
 			},
+			"custom_iam_instance_profile": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.StringMatch(regexp.MustCompile(`^AWSRDSCustom.*$`), "must begin with AWSRDSCustom"),
+			},
 			"db_parameter_group_name": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -101,10 +109,13 @@ func ResourceClusterInstance() *schema.Resource {
 				Computed: true,
 			},
 			"engine": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validClusterEngine(),
+				Type:     schema.TypeString,
+				Required: true,
+				ForceNew: true,
+				ValidateFunc: validation.Any(
+					validation.StringMatch(regexp.MustCompile(fmt.Sprintf(`^%s.*$`, InstanceEngineCustomPrefix)), fmt.Sprintf("must begin with %s", InstanceEngineCustomPrefix)),
+					validation.StringInSlice(ClusterEngine_Values(), false),
+				),
 			},
 			"engine_version": {
 				Type:     schema.TypeString,
@@ -265,6 +276,10 @@ func resourceClusterInstanceCreate(ctx context.Context, d *schema.ResourceData, 
 		input.DBSubnetGroupName = aws.String(v.(string))
 	}
 
+	if v, ok := d.GetOk("custom_iam_instance_profile"); ok {
+		input.CustomIamInstanceProfile = aws.String(v.(string))
+	}
+
 	if v, ok := d.GetOk("engine_version"); ok {
 		input.EngineVersion = aws.String(v.(string))
 	}
@@ -391,6 +406,7 @@ func resourceClusterInstanceRead(ctx context.Context, d *schema.ResourceData, me
 	d.Set("ca_cert_identifier", db.CACertificateIdentifier)
 	d.Set("cluster_identifier", db.DBClusterIdentifier)
 	d.Set("copy_tags_to_snapshot", db.CopyTagsToSnapshot)
+	d.Set("custom_iam_instance_profile", db.CustomIamInstanceProfile)
 	if len(db.DBParameterGroups) > 0 && db.DBParameterGroups[0] != nil {
 		d.Set("db_parameter_group_name", db.DBParameterGroups[0].DBParameterGroupName)
 	}
@@ -510,6 +526,12 @@ func resourceClusterInstanceDelete(ctx context.Context, d *schema.ResourceData, 
 
 	input := &rds.DeleteDBInstanceInput{
 		DBInstanceIdentifier: aws.String(d.Id()),
+	}
+
+	// Automatically set skip_final_snapshot = true for RDS Custom instances
+	if strings.HasPrefix(d.Get("engine").(string), InstanceEngineCustomPrefix) {
+		log.Printf("[DEBUG] RDS Custom engine detected (%s) applying SkipFinalSnapshot: %s", d.Get("engine").(string), "true")
+		input.SkipFinalSnapshot = aws.Bool(true)
 	}
 
 	log.Printf("[DEBUG] Deleting RDS Cluster Instance: %s", d.Id())

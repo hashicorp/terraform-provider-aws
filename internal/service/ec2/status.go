@@ -796,9 +796,9 @@ func StatusTransitGatewayPrefixListReferenceState(ctx context.Context, conn *ec2
 	}
 }
 
-func StatusTransitGatewayRouteState(ctx context.Context, conn *ec2.EC2, transitGatewayRouteTableID, destination string) retry.StateRefreshFunc {
+func StatusTransitGatewayStaticRouteState(ctx context.Context, conn *ec2.EC2, transitGatewayRouteTableID, destination string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := FindTransitGatewayRoute(ctx, conn, transitGatewayRouteTableID, destination)
+		output, err := FindTransitGatewayStaticRoute(ctx, conn, transitGatewayRouteTableID, destination)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil
