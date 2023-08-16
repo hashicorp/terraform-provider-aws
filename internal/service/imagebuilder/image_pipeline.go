@@ -92,11 +92,6 @@ func ResourceImagePipeline() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"image_scanning_enabled": {
-							Type:     schema.TypeBool,
-							Optional: true,
-							Default:  false,
-						},
 						"ecr_configuration": {
 							Type:     schema.TypeList,
 							Optional: true,
@@ -117,6 +112,11 @@ func ResourceImagePipeline() *schema.Resource {
 									},
 								},
 							},
+						},
+						"image_scanning_enabled": {
+							Type:     schema.TypeBool,
+							Optional: true,
+							Default:  false,
 						},
 					},
 				},
@@ -225,7 +225,7 @@ func resourceImagePipelineCreate(ctx context.Context, d *schema.ResourceData, me
 		input.ImageRecipeArn = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("image_scanning_configuration"); ok {
+	if v, ok := d.GetOk("image_scanning_configuration"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 		input.ImageScanningConfiguration = expandImageScanningConfiguration(v.([]interface{})[0].(map[string]interface{}))
 	}
 
@@ -300,29 +300,24 @@ func resourceImagePipelineRead(ctx context.Context, d *schema.ResourceData, meta
 	d.Set("distribution_configuration_arn", imagePipeline.DistributionConfigurationArn)
 	d.Set("enhanced_image_metadata_enabled", imagePipeline.EnhancedImageMetadataEnabled)
 	d.Set("image_recipe_arn", imagePipeline.ImageRecipeArn)
-
 	if imagePipeline.ImageScanningConfiguration != nil {
 		d.Set("image_scanning_configuration", []interface{}{flattenImageScanningConfiguration(imagePipeline.ImageScanningConfiguration)})
 	} else {
 		d.Set("image_scanning_configuration", nil)
 	}
-
 	if imagePipeline.ImageTestsConfiguration != nil {
 		d.Set("image_tests_configuration", []interface{}{flattenImageTestsConfiguration(imagePipeline.ImageTestsConfiguration)})
 	} else {
 		d.Set("image_tests_configuration", nil)
 	}
-
 	d.Set("infrastructure_configuration_arn", imagePipeline.InfrastructureConfigurationArn)
 	d.Set("name", imagePipeline.Name)
 	d.Set("platform", imagePipeline.Platform)
-
 	if imagePipeline.Schedule != nil {
 		d.Set("schedule", []interface{}{flattenSchedule(imagePipeline.Schedule)})
 	} else {
 		d.Set("schedule", nil)
 	}
-
 	d.Set("status", imagePipeline.Status)
 
 	setTagsOut(ctx, imagePipeline.Tags)
