@@ -15,7 +15,6 @@ import (
 	"github.com/aws/aws-sdk-go/service/quicksight"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -134,10 +133,7 @@ func ResourceDashboard() *schema.Resource {
 			}
 		},
 
-		CustomizeDiff: customdiff.All(
-			refreshOutputsDiff,
-			verify.SetTagsDiff,
-		),
+		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
@@ -417,14 +413,4 @@ func createDashboardId(awsAccountID, dashboardId string) string {
 func extractVersionFromARN(arn string) *int64 {
 	version, _ := strconv.Atoi(arn[strings.LastIndex(arn, "/")+1:])
 	return aws.Int64(int64(version))
-}
-
-func refreshOutputsDiff(_ context.Context, diff *schema.ResourceDiff, meta interface{}) error {
-	if diff.HasChanges("name", "definition", "source_entity", "theme_arn", "version_description", "parameters", "dashboard_publish_options") {
-		if err := diff.SetNewComputed("version_number"); err != nil {
-			return err
-		}
-	}
-
-	return nil
 }
