@@ -23,8 +23,13 @@ import (
 // The resource's data structure is walked and exported fields that
 // have a corresponding field in the API data structure (and a suitable
 // target data type) are copied.
-func Expand(ctx context.Context, tfObject, apiObject any) diag.Diagnostics {
+func Expand(ctx context.Context, tfObject, apiObject any, optFns ...AutoFlexOptionsFunc) diag.Diagnostics {
 	var diags diag.Diagnostics
+	expander := &autoExpander{}
+
+	for _, optFn := range optFns {
+		optFn(expander)
+	}
 
 	diags.Append(walkStructFields(ctx, tfObject, apiObject, expandVisitor{})...)
 	if diags.HasError() {
@@ -41,8 +46,13 @@ func Expand(ctx context.Context, tfObject, apiObject any) diag.Diagnostics {
 // The API data structure's fields are walked and exported fields that
 // have a corresponding field in the resource's data structure (and a
 // suitable target data type) are copied.
-func Flatten(ctx context.Context, apiObject, tfObject any) diag.Diagnostics {
+func Flatten(ctx context.Context, apiObject, tfObject any, optFns ...AutoFlexOptionsFunc) diag.Diagnostics {
 	var diags diag.Diagnostics
+	flattener := &autoFlattener{}
+
+	for _, optFn := range optFns {
+		optFn(flattener)
+	}
 
 	diags.Append(walkStructFields(ctx, apiObject, tfObject, flattenVisitor{})...)
 	if diags.HasError() {
@@ -58,6 +68,14 @@ type autoFlexer interface {
 	setLegacyMode(bool)
 }
 
+type withLegacyMode struct {
+	legacyMode bool
+}
+
+func (w *withLegacyMode) setLegacyMode(v bool) {
+	w.legacyMode = v
+}
+
 // AutoFlexOptionsFunc is a type alias for an autoFlexer functional option.
 type AutoFlexOptionsFunc func(autoFlexer)
 
@@ -69,6 +87,14 @@ func AutoFlexIsLegacyMode(v bool) AutoFlexOptionsFunc {
 	return func(a autoFlexer) {
 		a.setLegacyMode(v)
 	}
+}
+
+type autoExpander struct {
+	withLegacyMode
+}
+
+type autoFlattener struct {
+	withLegacyMode
 }
 
 // walkStructFields traverses `from` calling `visitor` for each exported field.
