@@ -27,7 +27,7 @@ func TestAccImageBuilderImagePipelineDataSource_arn(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccImagePipelineDataSourceConfig_arn(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, "arn", resourceName, "arn"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "container_recipe_arn", resourceName, "container_recipe_arn"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "date_created", resourceName, "date_created"),
@@ -38,6 +38,7 @@ func TestAccImageBuilderImagePipelineDataSource_arn(t *testing.T) {
 					resource.TestCheckResourceAttrPair(dataSourceName, "distribution_configuration_arn", resourceName, "distribution_configuration_arn"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "enhanced_image_metadata_enabled", resourceName, "enhanced_image_metadata_enabled"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "image_recipe_arn", resourceName, "image_recipe_arn"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "image_scanning_configuration.#", resourceName, "image_scanning_configuration.#"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "image_tests_configuration.#", resourceName, "image_tests_configuration.#"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "infrastructure_configuration_arn", resourceName, "infrastructure_configuration_arn"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "name", resourceName, "name"),
@@ -65,21 +66,17 @@ func TestAccImageBuilderImagePipelineDataSource_containerRecipeARN(t *testing.T)
 		Steps: []resource.TestStep{
 			{
 				Config: testAccImagePipelineDataSourceConfig_containerRecipeARN(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, "arn", resourceName, "arn"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "container_recipe_arn", resourceName, "container_recipe_arn"),
-					resource.TestCheckResourceAttr(resourceName, "image_scanning_configuration.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "image_scanning_configuration.0.image_scanning_enabled", "true"),
-					resource.TestCheckResourceAttr(resourceName, "image_scanning_configuration.0.ecr_configuration.0.repository_name", rName),
-					resource.TestCheckTypeSetElemAttr(resourceName, "image_scanning_configuration.0.ecr_configuration.0.container_tags.*", "b"),
-					resource.TestCheckTypeSetElemAttr(resourceName, "image_scanning_configuration.0.ecr_configuration.0.container_tags.*", "a"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "image_scanning_configuration.#", resourceName, "image_scanning_configuration.#"),
 				),
 			},
 		},
 	})
 }
 
-func testAccImagePipelineBaseDataSourceConfig(rName string) string {
+func testAccImagePipelineDataSourceConfig_base(rName string) string {
 	return fmt.Sprintf(`
 data "aws_region" "current" {}
 
@@ -133,9 +130,7 @@ resource "aws_imagebuilder_infrastructure_configuration" "test" {
 }
 
 func testAccImagePipelineDataSourceConfig_arn(rName string) string {
-	return acctest.ConfigCompose(
-		testAccImagePipelineBaseDataSourceConfig(rName),
-		fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccImagePipelineDataSourceConfig_base(rName), fmt.Sprintf(`
 resource "aws_imagebuilder_image_recipe" "test" {
   component {
     component_arn = aws_imagebuilder_component.test.arn
@@ -159,9 +154,7 @@ data "aws_imagebuilder_image_pipeline" "test" {
 }
 
 func testAccImagePipelineDataSourceConfig_containerRecipeARN(rName string) string {
-	return acctest.ConfigCompose(
-		testAccImagePipelineBaseDataSourceConfig(rName),
-		fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccImagePipelineDataSourceConfig_base(rName), fmt.Sprintf(`
 resource "aws_ecr_repository" "test" {
   name = %[1]q
 }
