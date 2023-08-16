@@ -29,7 +29,7 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePackageSDKResource {
 	return []*types.ServicePackageSDKResource{
 		{
-			Factory:  ResourceNotificationRule,
+			Factory:  resourceNotificationRule,
 			TypeName: "aws_codestarnotifications_notification_rule",
 			Name:     "Notification Rule",
 			Tags: &types.ServicePackageResourceTags{
