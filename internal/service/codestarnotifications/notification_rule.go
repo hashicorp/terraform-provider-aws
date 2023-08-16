@@ -38,6 +38,7 @@ func ResourceNotificationRule() *schema.Resource {
 		ReadWithoutTimeout:   resourceNotificationRuleRead,
 		UpdateWithoutTimeout: resourceNotificationRuleUpdate,
 		DeleteWithoutTimeout: resourceNotificationRuleDelete,
+
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
@@ -207,6 +208,52 @@ func resourceNotificationRuleRead(ctx context.Context, d *schema.ResourceData, m
 	return diags
 }
 
+func resourceNotificationRuleUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).CodeStarNotificationsConn(ctx)
+
+	input := &codestarnotifications.UpdateNotificationRuleInput{
+		Arn:          aws.String(d.Id()),
+		DetailType:   aws.String(d.Get("detail_type").(string)),
+		EventTypeIds: flex.ExpandStringSet(d.Get("event_type_ids").(*schema.Set)),
+		Name:         aws.String(d.Get("name").(string)),
+		Status:       aws.String(d.Get("status").(string)),
+		Targets:      expandNotificationRuleTargets(d.Get("target").(*schema.Set).List()),
+	}
+
+	if _, err := conn.UpdateNotificationRuleWithContext(ctx, input); err != nil {
+		return sdkdiag.AppendErrorf(diags, "updating CodeStar Notification Rule (%s): %s", d.Id(), err)
+	}
+
+	if d.HasChange("target") {
+		o, n := d.GetChange("target")
+		if err := cleanupNotificationRuleTargets(ctx, conn, o.(*schema.Set), n.(*schema.Set)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating CodeStar Notification Rule (%s): cleaning targets: %s", d.Id(), err)
+		}
+	}
+
+	return append(diags, resourceNotificationRuleRead(ctx, d, meta)...)
+}
+
+func resourceNotificationRuleDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).CodeStarNotificationsConn(ctx)
+
+	_, err := conn.DeleteNotificationRuleWithContext(ctx, &codestarnotifications.DeleteNotificationRuleInput{
+		Arn: aws.String(d.Id()),
+	})
+
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "deleting CodeStar Notification Rule: %s", err)
+	}
+
+	if err = cleanupNotificationRuleTargets(ctx, conn, d.Get("target").(*schema.Set), nil); err != nil {
+		return sdkdiag.AppendErrorf(diags, "deleting CodeStar notification targets: %s", err)
+	}
+
+	return diags
+}
+
 const notificationRuleErrorSubscribed = "The target cannot be deleted because it is subscribed to one or more notification rules."
 
 // cleanupNotificationRuleTargets tries to remove unused notification targets. AWS API does not
@@ -259,50 +306,4 @@ func cleanupNotificationRuleTargets(ctx context.Context, conn *codestarnotificat
 	}
 
 	return nil
-}
-
-func resourceNotificationRuleUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CodeStarNotificationsConn(ctx)
-
-	input := &codestarnotifications.UpdateNotificationRuleInput{
-		Arn:          aws.String(d.Id()),
-		DetailType:   aws.String(d.Get("detail_type").(string)),
-		EventTypeIds: flex.ExpandStringSet(d.Get("event_type_ids").(*schema.Set)),
-		Name:         aws.String(d.Get("name").(string)),
-		Status:       aws.String(d.Get("status").(string)),
-		Targets:      expandNotificationRuleTargets(d.Get("target").(*schema.Set).List()),
-	}
-
-	if _, err := conn.UpdateNotificationRuleWithContext(ctx, input); err != nil {
-		return sdkdiag.AppendErrorf(diags, "updating CodeStar Notification Rule (%s): %s", d.Id(), err)
-	}
-
-	if d.HasChange("target") {
-		o, n := d.GetChange("target")
-		if err := cleanupNotificationRuleTargets(ctx, conn, o.(*schema.Set), n.(*schema.Set)); err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating CodeStar Notification Rule (%s): cleaning targets: %s", d.Id(), err)
-		}
-	}
-
-	return append(diags, resourceNotificationRuleRead(ctx, d, meta)...)
-}
-
-func resourceNotificationRuleDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CodeStarNotificationsConn(ctx)
-
-	_, err := conn.DeleteNotificationRuleWithContext(ctx, &codestarnotifications.DeleteNotificationRuleInput{
-		Arn: aws.String(d.Id()),
-	})
-
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "deleting CodeStar Notification Rule: %s", err)
-	}
-
-	if err = cleanupNotificationRuleTargets(ctx, conn, d.Get("target").(*schema.Set), nil); err != nil {
-		return sdkdiag.AppendErrorf(diags, "deleting CodeStar notification targets: %s", err)
-	}
-
-	return diags
 }
