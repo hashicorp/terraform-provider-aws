@@ -755,7 +755,7 @@ resource "aws_imagebuilder_image_recipe" "test" {
 resource "aws_ecr_repository" "test" {
   name                 = %[1]q
   image_tag_mutability = "MUTABLE"
-  
+
   image_scanning_configuration {
     scan_on_push = false
   }
@@ -763,7 +763,7 @@ resource "aws_ecr_repository" "test" {
 
 resource "aws_imagebuilder_container_recipe" "test" {
   component {
-	component_arn = aws_imagebuilder_component.test.arn
+    component_arn = aws_imagebuilder_component.test.arn
   }
 
   target_repository {
@@ -771,17 +771,17 @@ resource "aws_imagebuilder_container_recipe" "test" {
     service         = "ECR"
   }
 
-  dockerfile_template_data=<<EOF
+  dockerfile_template_data = <<EOF
   FROM {{{ imagebuilder:parentImage }}}
   {{{ imagebuilder:environments }}}
   {{{ imagebuilder:components }}}
   EOF
 
-  container_type = "DOCKER"
-  name         = %[1]q
+  container_type    = "DOCKER"
+  name              = %[1]q
   parent_image      = "amazonlinux:latest"
   working_directory = "/tmp"
-  version      = "1.0.0"
+  version           = "1.0.0"
 }
 
 resource "aws_imagebuilder_infrastructure_configuration" "test" {
@@ -1004,10 +1004,11 @@ resource "aws_imagebuilder_image_pipeline" "test" {
 
   image_scanning_configuration {
     image_scanning_enabled = true
-	ecr_configuration {
-		container_tags = [%[2]s]
-		repository_name = aws_ecr_repository.test.name
-	}
+
+    ecr_configuration {
+      container_tags  = [%[2]s]
+      repository_name = aws_ecr_repository.test.name
+    }
   }
 }
 `, rName, commaSepImageTags))

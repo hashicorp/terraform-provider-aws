@@ -195,10 +195,11 @@ resource "aws_imagebuilder_image_pipeline" "test" {
 
   image_scanning_configuration {
     image_scanning_enabled = true
-	ecr_configuration {
-		container_tags = ["a", "b"]
-		repository_name = aws_ecr_repository.test.name
-	}
+
+    ecr_configuration {
+      container_tags  = ["a", "b"]
+      repository_name = aws_ecr_repository.test.name
+    }
   }
 }
 
