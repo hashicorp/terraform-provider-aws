@@ -387,7 +387,13 @@ func (visitor expandVisitor) listOfString(ctx context.Context, vFrom basetypes.L
 			//
 			// types.List(OfString) -> []string.
 			//
-			vTo.Set(reflect.ValueOf(ExpandFrameworkStringValueList(ctx, vFrom)))
+			var to []string
+			diags.Append(vFrom.ElementsAs(ctx, &to, false)...)
+			if diags.HasError() {
+				return diags
+			}
+
+			vTo.Set(reflect.ValueOf(to))
 			return diags
 
 		case reflect.Ptr:
@@ -396,7 +402,13 @@ func (visitor expandVisitor) listOfString(ctx context.Context, vFrom basetypes.L
 				//
 				// types.List(OfString) -> []*string.
 				//
-				vTo.Set(reflect.ValueOf(ExpandFrameworkStringList(ctx, vFrom)))
+				var to []*string
+				diags.Append(vFrom.ElementsAs(ctx, &to, false)...)
+				if diags.HasError() {
+					return diags
+				}
+
+				vTo.Set(reflect.ValueOf(to))
 				return diags
 			}
 		}
