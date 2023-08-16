@@ -937,13 +937,24 @@ func (visitor flattenVisitor) slice(ctx context.Context, vFrom reflect.Value, tT
 				return diags
 			}
 
-			v, d := tTo.ValueFromSet(ctx, FlattenFrameworkStringValueSet(ctx, vFrom.Interface().([]string)))
+			from := vFrom.Interface().([]string)
+			elements := make([]attr.Value, len(from))
+			for i, v := range from {
+				elements[i] = types.StringValue(v)
+			}
+			set, d := types.SetValue(types.StringType, elements)
 			diags.Append(d...)
 			if diags.HasError() {
 				return diags
 			}
 
-			vTo.Set(reflect.ValueOf(v))
+			to, d := tTo.ValueFromSet(ctx, set)
+			diags.Append(d...)
+			if diags.HasError() {
+				return diags
+			}
+
+			vTo.Set(reflect.ValueOf(to))
 			return diags
 		}
 
@@ -989,13 +1000,24 @@ func (visitor flattenVisitor) slice(ctx context.Context, vFrom reflect.Value, tT
 					return diags
 				}
 
-				v, d := tTo.ValueFromSet(ctx, FlattenFrameworkStringSet(ctx, vFrom.Interface().([]*string)))
+				from := vFrom.Interface().([]*string)
+				elements := make([]attr.Value, len(from))
+				for i, v := range from {
+					elements[i] = types.StringValue(aws.ToString(v))
+				}
+				set, d := types.SetValue(types.StringType, elements)
 				diags.Append(d...)
 				if diags.HasError() {
 					return diags
 				}
 
-				vTo.Set(reflect.ValueOf(v))
+				to, d := tTo.ValueFromSet(ctx, set)
+				diags.Append(d...)
+				if diags.HasError() {
+					return diags
+				}
+
+				vTo.Set(reflect.ValueOf(to))
 				return diags
 			}
 
