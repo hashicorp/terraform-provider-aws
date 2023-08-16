@@ -8,7 +8,6 @@ import (
 	"fmt"
 	"reflect"
 
-	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -976,7 +975,7 @@ func (visitor flattenVisitor) slice(ctx context.Context, vFrom reflect.Value, tT
 				from := vFrom.Interface().([]*string)
 				elements := make([]attr.Value, len(from))
 				for i, v := range from {
-					elements[i] = types.StringValue(aws.ToString(v))
+					elements[i] = types.StringPointerValue(v)
 				}
 				list, d := types.ListValue(types.StringType, elements)
 				diags.Append(d...)
@@ -1005,7 +1004,7 @@ func (visitor flattenVisitor) slice(ctx context.Context, vFrom reflect.Value, tT
 				from := vFrom.Interface().([]*string)
 				elements := make([]attr.Value, len(from))
 				for i, v := range from {
-					elements[i] = types.StringValue(aws.ToString(v))
+					elements[i] = types.StringPointerValue(v)
 				}
 				set, d := types.SetValue(types.StringType, elements)
 				diags.Append(d...)
@@ -1106,7 +1105,7 @@ func (visitor flattenVisitor) map_(ctx context.Context, vFrom reflect.Value, tTo
 					from := vFrom.Interface().(map[string]*string)
 					elements := make(map[string]attr.Value, len(from))
 					for k, v := range from {
-						elements[k] = types.StringValue(aws.ToString(v))
+						elements[k] = types.StringPointerValue(v)
 					}
 					map_, d := types.MapValue(types.StringType, elements)
 					diags.Append(d...)
