@@ -30,7 +30,7 @@ func Expand(ctx context.Context, tfObject, apiObject any, optFns ...AutoFlexOpti
 		optFn(expander)
 	}
 
-	diags.Append(walkStructFields(ctx, tfObject, apiObject, expandVisitor{})...)
+	diags.Append(walkStructFields(ctx, tfObject, apiObject, expander)...)
 	if diags.HasError() {
 		diags.AddError("AutoFlEx", fmt.Sprintf("Expand[%T, %T]", tfObject, apiObject))
 		return diags
@@ -53,7 +53,7 @@ func Flatten(ctx context.Context, apiObject, tfObject any, optFns ...AutoFlexOpt
 		optFn(flattener)
 	}
 
-	diags.Append(walkStructFields(ctx, apiObject, tfObject, flattenVisitor{})...)
+	diags.Append(walkStructFields(ctx, apiObject, tfObject, flattener)...)
 	if diags.HasError() {
 		diags.AddError("AutoFlEx", fmt.Sprintf("Flatten[%T, %T]", apiObject, tfObject))
 		return diags
@@ -63,7 +63,9 @@ func Flatten(ctx context.Context, apiObject, tfObject any, optFns ...AutoFlexOpt
 }
 
 // autoFlexer is the interface implemented by an auto-flattener or expander.
-type autoFlexer interface{}
+type autoFlexer interface {
+	copy(context.Context, reflect.Value, reflect.Value) diag.Diagnostics
+}
 
 // AutoFlexOptionsFunc is a type alias for an autoFlexer functional option.
 type AutoFlexOptionsFunc func(autoFlexer)
@@ -72,8 +74,8 @@ type autoExpander struct{}
 
 type autoFlattener struct{}
 
-// walkStructFields traverses `from` calling `visitor` for each exported field.
-func walkStructFields(ctx context.Context, from any, to any, visitor fieldVisitor) diag.Diagnostics {
+// walkStructFields traverses `from` calling `flexer` for each exported field.
+func walkStructFields(ctx context.Context, from any, to any, flexer autoFlexer) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	valFrom, valTo := reflect.ValueOf(from), reflect.ValueOf(to)
@@ -112,9 +114,9 @@ func walkStructFields(ctx context.Context, from any, to any, visitor fieldVisito
 		if !toFieldVal.CanSet() {
 			continue // Corresponding field value can't be changed.
 		}
-		diags.Append(visitor.visit(ctx, fieldName, valFrom.Field(i), toFieldVal)...)
+		diags.Append(flexer.copy(ctx, valFrom.Field(i), toFieldVal)...)
 		if diags.HasError() {
-			diags.AddError("AutoFlEx", fmt.Sprintf("visit (%s)", fieldName))
+			diags.AddError("AutoFlEx", fmt.Sprintf("copy (%s)", fieldName))
 			return diags
 		}
 	}
@@ -122,14 +124,8 @@ func walkStructFields(ctx context.Context, from any, to any, visitor fieldVisito
 	return diags
 }
 
-type fieldVisitor interface {
-	visit(context.Context, string, reflect.Value, reflect.Value) diag.Diagnostics
-}
-
-type expandVisitor struct{}
-
-// visit copies a single Plugin Framework structure field value to its AWS API equivalent.
-func (visitor expandVisitor) visit(ctx context.Context, fieldName string, valFrom, vTo reflect.Value) diag.Diagnostics {
+// copy copies a single Plugin Framework value to its AWS API equivalent.
+func (expander autoExpander) copy(ctx context.Context, valFrom, vTo reflect.Value) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	vFrom, ok := valFrom.Interface().(attr.Value)
@@ -146,32 +142,32 @@ func (visitor expandVisitor) visit(ctx context.Context, fieldName string, valFro
 	switch vFrom := vFrom.(type) {
 	// Primitive types.
 	case basetypes.BoolValuable:
-		diags.Append(visitor.bool(ctx, vFrom, vTo)...)
+		diags.Append(expander.bool(ctx, vFrom, vTo)...)
 		return diags
 
 	case basetypes.Float64Valuable:
-		diags.Append(visitor.float64(ctx, vFrom, vTo)...)
+		diags.Append(expander.float64(ctx, vFrom, vTo)...)
 		return diags
 
 	case basetypes.Int64Valuable:
-		diags.Append(visitor.int64(ctx, vFrom, vTo)...)
+		diags.Append(expander.int64(ctx, vFrom, vTo)...)
 		return diags
 
 	case basetypes.StringValuable:
-		diags.Append(visitor.string(ctx, vFrom, vTo)...)
+		diags.Append(expander.string(ctx, vFrom, vTo)...)
 		return diags
 
 	// Aggregate types.
 	case basetypes.ListValuable:
-		diags.Append(visitor.list(ctx, vFrom, vTo)...)
+		diags.Append(expander.list(ctx, vFrom, vTo)...)
 		return diags
 
 	case basetypes.MapValuable:
-		diags.Append(visitor.map_(ctx, vFrom, vTo)...)
+		diags.Append(expander.map_(ctx, vFrom, vTo)...)
 		return diags
 
 	case basetypes.SetValuable:
-		diags.Append(visitor.set(ctx, vFrom, vTo)...)
+		diags.Append(expander.set(ctx, vFrom, vTo)...)
 		return diags
 	}
 
@@ -184,7 +180,7 @@ func (visitor expandVisitor) visit(ctx context.Context, fieldName string, valFro
 }
 
 // bool copies a Plugin Framework Bool(ish) value to a compatible AWS API field.
-func (visitor expandVisitor) bool(ctx context.Context, vFrom basetypes.BoolValuable, vTo reflect.Value) diag.Diagnostics {
+func (expander autoExpander) bool(ctx context.Context, vFrom basetypes.BoolValuable, vTo reflect.Value) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	v, d := vFrom.ToBoolValue(ctx)
@@ -221,7 +217,7 @@ func (visitor expandVisitor) bool(ctx context.Context, vFrom basetypes.BoolValua
 }
 
 // float64 copies a Plugin Framework Float64(ish) value to a compatible AWS API field.
-func (visitor expandVisitor) float64(ctx context.Context, vFrom basetypes.Float64Valuable, vTo reflect.Value) diag.Diagnostics {
+func (expander autoExpander) float64(ctx context.Context, vFrom basetypes.Float64Valuable, vTo reflect.Value) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	v, d := vFrom.ToFloat64Value(ctx)
@@ -266,7 +262,7 @@ func (visitor expandVisitor) float64(ctx context.Context, vFrom basetypes.Float6
 }
 
 // int64 copies a Plugin Framework Int64(ish) value to a compatible AWS API field.
-func (visitor expandVisitor) int64(ctx context.Context, vFrom basetypes.Int64Valuable, vTo reflect.Value) diag.Diagnostics {
+func (expander autoExpander) int64(ctx context.Context, vFrom basetypes.Int64Valuable, vTo reflect.Value) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	v, d := vFrom.ToInt64Value(ctx)
@@ -311,7 +307,7 @@ func (visitor expandVisitor) int64(ctx context.Context, vFrom basetypes.Int64Val
 }
 
 // string copies a Plugin Framework String(ish) value to a compatible AWS API field.
-func (visitor expandVisitor) string(ctx context.Context, vFrom basetypes.StringValuable, vTo reflect.Value) diag.Diagnostics {
+func (expander autoExpander) string(ctx context.Context, vFrom basetypes.StringValuable, vTo reflect.Value) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	v, d := vFrom.ToStringValue(ctx)
@@ -348,7 +344,7 @@ func (visitor expandVisitor) string(ctx context.Context, vFrom basetypes.StringV
 }
 
 // list copies a Plugin Framework List(ish) value to a compatible AWS API field.
-func (visitor expandVisitor) list(ctx context.Context, vFrom basetypes.ListValuable, vTo reflect.Value) diag.Diagnostics {
+func (expander autoExpander) list(ctx context.Context, vFrom basetypes.ListValuable, vTo reflect.Value) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	v, d := vFrom.ToListValue(ctx)
@@ -359,12 +355,12 @@ func (visitor expandVisitor) list(ctx context.Context, vFrom basetypes.ListValua
 
 	switch v.ElementType(ctx).(type) {
 	case basetypes.StringTypable:
-		diags.Append(visitor.listOfString(ctx, v, vTo)...)
+		diags.Append(expander.listOfString(ctx, v, vTo)...)
 		return diags
 
 	case basetypes.ObjectTypable:
 		if vFrom, ok := vFrom.(fwtypes.NestedObjectValue); ok {
-			diags.Append(visitor.nestedObject(ctx, vFrom, vTo)...)
+			diags.Append(expander.nestedObject(ctx, vFrom, vTo)...)
 			return diags
 		}
 	}
@@ -378,7 +374,7 @@ func (visitor expandVisitor) list(ctx context.Context, vFrom basetypes.ListValua
 }
 
 // listOfString copies a Plugin Framework ListOfString(ish) value to a compatible AWS API field.
-func (visitor expandVisitor) listOfString(ctx context.Context, vFrom basetypes.ListValue, vTo reflect.Value) diag.Diagnostics { //nolint:unparam
+func (expander autoExpander) listOfString(ctx context.Context, vFrom basetypes.ListValue, vTo reflect.Value) diag.Diagnostics { //nolint:unparam
 	var diags diag.Diagnostics
 
 	switch vTo.Kind() {
@@ -424,7 +420,7 @@ func (visitor expandVisitor) listOfString(ctx context.Context, vFrom basetypes.L
 }
 
 // map_ copies a Plugin Framework Map(ish) value to a compatible AWS API field.
-func (visitor expandVisitor) map_(ctx context.Context, vFrom basetypes.MapValuable, vTo reflect.Value) diag.Diagnostics {
+func (expander autoExpander) map_(ctx context.Context, vFrom basetypes.MapValuable, vTo reflect.Value) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	v, d := vFrom.ToMapValue(ctx)
@@ -435,7 +431,7 @@ func (visitor expandVisitor) map_(ctx context.Context, vFrom basetypes.MapValuab
 
 	switch v.ElementType(ctx).(type) {
 	case basetypes.StringTypable:
-		diags.Append(visitor.mapOfString(ctx, v, vTo)...)
+		diags.Append(expander.mapOfString(ctx, v, vTo)...)
 		return diags
 	}
 
@@ -448,7 +444,7 @@ func (visitor expandVisitor) map_(ctx context.Context, vFrom basetypes.MapValuab
 }
 
 // mapOfString copies a Plugin Framework MapOfString(ish) value to a compatible AWS API field.
-func (visitor expandVisitor) mapOfString(ctx context.Context, vFrom basetypes.MapValue, vTo reflect.Value) diag.Diagnostics { //nolint:unparam
+func (expander autoExpander) mapOfString(ctx context.Context, vFrom basetypes.MapValue, vTo reflect.Value) diag.Diagnostics { //nolint:unparam
 	var diags diag.Diagnostics
 
 	switch vTo.Kind() {
@@ -497,7 +493,7 @@ func (visitor expandVisitor) mapOfString(ctx context.Context, vFrom basetypes.Ma
 }
 
 // set copies a Plugin Framework Set(ish) value to a compatible AWS API field.
-func (visitor expandVisitor) set(ctx context.Context, vFrom basetypes.SetValuable, vTo reflect.Value) diag.Diagnostics {
+func (expander autoExpander) set(ctx context.Context, vFrom basetypes.SetValuable, vTo reflect.Value) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	v, d := vFrom.ToSetValue(ctx)
@@ -508,12 +504,12 @@ func (visitor expandVisitor) set(ctx context.Context, vFrom basetypes.SetValuabl
 
 	switch v.ElementType(ctx).(type) {
 	case basetypes.StringTypable:
-		diags.Append(visitor.setOfString(ctx, v, vTo)...)
+		diags.Append(expander.setOfString(ctx, v, vTo)...)
 		return diags
 
 	case basetypes.ObjectTypable:
 		if vFrom, ok := vFrom.(fwtypes.NestedObjectValue); ok {
-			diags.Append(visitor.nestedObject(ctx, vFrom, vTo)...)
+			diags.Append(expander.nestedObject(ctx, vFrom, vTo)...)
 			return diags
 		}
 	}
@@ -527,7 +523,7 @@ func (visitor expandVisitor) set(ctx context.Context, vFrom basetypes.SetValuabl
 }
 
 // setOfString copies a Plugin Framework SetOfString(ish) value to a compatible AWS API field.
-func (visitor expandVisitor) setOfString(ctx context.Context, vFrom basetypes.SetValue, vTo reflect.Value) diag.Diagnostics { //nolint:unparam
+func (expander autoExpander) setOfString(ctx context.Context, vFrom basetypes.SetValue, vTo reflect.Value) diag.Diagnostics { //nolint:unparam
 	var diags diag.Diagnostics
 
 	switch vTo.Kind() {
@@ -573,7 +569,7 @@ func (visitor expandVisitor) setOfString(ctx context.Context, vFrom basetypes.Se
 }
 
 // nestedObject copies a Plugin Framework NestedObjectValue value to a compatible AWS API field.
-func (visitor expandVisitor) nestedObject(ctx context.Context, vFrom fwtypes.NestedObjectValue, vTo reflect.Value) diag.Diagnostics {
+func (expander autoExpander) nestedObject(ctx context.Context, vFrom fwtypes.NestedObjectValue, vTo reflect.Value) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	switch tTo := vTo.Type(); vTo.Kind() {
@@ -583,7 +579,7 @@ func (visitor expandVisitor) nestedObject(ctx context.Context, vFrom fwtypes.Nes
 			//
 			// types.List(OfObject) -> *struct.
 			//
-			diags.Append(visitor.nestedObjectToStruct(ctx, vFrom, tElem, vTo)...)
+			diags.Append(expander.nestedObjectToStruct(ctx, vFrom, tElem, vTo)...)
 			return diags
 		}
 
@@ -593,7 +589,7 @@ func (visitor expandVisitor) nestedObject(ctx context.Context, vFrom fwtypes.Nes
 			//
 			// types.List(OfObject) -> []struct.
 			//
-			diags.Append(visitor.nestedObjectToSlice(ctx, vFrom, tTo, tElem, vTo)...)
+			diags.Append(expander.nestedObjectToSlice(ctx, vFrom, tTo, tElem, vTo)...)
 			return diags
 
 		case reflect.Ptr:
@@ -602,7 +598,7 @@ func (visitor expandVisitor) nestedObject(ctx context.Context, vFrom fwtypes.Nes
 				//
 				// types.List(OfObject) -> []*struct.
 				//
-				diags.Append(visitor.nestedObjectToSlice(ctx, vFrom, tTo, tElem, vTo)...)
+				diags.Append(expander.nestedObjectToSlice(ctx, vFrom, tTo, tElem, vTo)...)
 				return diags
 			}
 		}
@@ -613,7 +609,7 @@ func (visitor expandVisitor) nestedObject(ctx context.Context, vFrom fwtypes.Nes
 }
 
 // nestedObjectToStruct copies a Plugin Framework NestedObjectValue to a compatible AWS API (*)struct field.
-func (visitor expandVisitor) nestedObjectToStruct(ctx context.Context, vFrom fwtypes.NestedObjectValue, tStruct reflect.Type, vTo reflect.Value) diag.Diagnostics {
+func (expander autoExpander) nestedObjectToStruct(ctx context.Context, vFrom fwtypes.NestedObjectValue, tStruct reflect.Type, vTo reflect.Value) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	// Get the nested Object as a pointer.
@@ -625,7 +621,7 @@ func (visitor expandVisitor) nestedObjectToStruct(ctx context.Context, vFrom fwt
 
 	// Create a new target structure and walk its fields.
 	to := reflect.New(tStruct)
-	diags.Append(walkStructFields(ctx, from, to.Interface(), visitor)...)
+	diags.Append(walkStructFields(ctx, from, to.Interface(), expander)...)
 	if diags.HasError() {
 		return diags
 	}
@@ -641,7 +637,7 @@ func (visitor expandVisitor) nestedObjectToStruct(ctx context.Context, vFrom fwt
 }
 
 // nestedObjectToSlice copies a Plugin Framework NestedObjectValue to a compatible AWS API [](*)struct field.
-func (visitor expandVisitor) nestedObjectToSlice(ctx context.Context, vFrom fwtypes.NestedObjectValue, tSlice, tElem reflect.Type, vTo reflect.Value) diag.Diagnostics {
+func (expander autoExpander) nestedObjectToSlice(ctx context.Context, vFrom fwtypes.NestedObjectValue, tSlice, tElem reflect.Type, vTo reflect.Value) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	// Get the nested Objects as a slice.
@@ -658,7 +654,7 @@ func (visitor expandVisitor) nestedObjectToSlice(ctx context.Context, vFrom fwty
 	for i := 0; i < n; i++ {
 		// Create a new target structure and walk its fields.
 		target := reflect.New(tElem)
-		diags.Append(walkStructFields(ctx, f.Index(i).Interface(), target.Interface(), visitor)...)
+		diags.Append(walkStructFields(ctx, f.Index(i).Interface(), target.Interface(), expander)...)
 		if diags.HasError() {
 			return diags
 		}
@@ -676,9 +672,8 @@ func (visitor expandVisitor) nestedObjectToSlice(ctx context.Context, vFrom fwty
 	return diags
 }
 
-type flattenVisitor struct{}
-
-func (visitor flattenVisitor) visit(ctx context.Context, fieldName string, vFrom, vTo reflect.Value) diag.Diagnostics {
+// copy copies a single AWS API value to its Plugin Framework equivalent.
+func (flattener autoFlattener) copy(ctx context.Context, vFrom, vTo reflect.Value) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	valTo, ok := vTo.Interface().(attr.Value)
@@ -690,31 +685,31 @@ func (visitor flattenVisitor) visit(ctx context.Context, fieldName string, vFrom
 	tTo := valTo.Type(ctx)
 	switch vFrom.Kind() {
 	case reflect.Bool:
-		diags.Append(visitor.bool(ctx, vFrom, tTo, vTo)...)
+		diags.Append(flattener.bool(ctx, vFrom, tTo, vTo)...)
 		return diags
 
 	case reflect.Float32, reflect.Float64:
-		diags.Append(visitor.float(ctx, vFrom, tTo, vTo)...)
+		diags.Append(flattener.float(ctx, vFrom, tTo, vTo)...)
 		return diags
 
 	case reflect.Int32, reflect.Int64:
-		diags.Append(visitor.int(ctx, vFrom, tTo, vTo)...)
+		diags.Append(flattener.int(ctx, vFrom, tTo, vTo)...)
 		return diags
 
 	case reflect.String:
-		diags.Append(visitor.string(ctx, vFrom, tTo, vTo)...)
+		diags.Append(flattener.string(ctx, vFrom, tTo, vTo)...)
 		return diags
 
 	case reflect.Ptr:
-		diags.Append(visitor.ptr(ctx, vFrom, tTo, vTo)...)
+		diags.Append(flattener.ptr(ctx, vFrom, tTo, vTo)...)
 		return diags
 
 	case reflect.Slice:
-		diags.Append(visitor.slice(ctx, vFrom, tTo, vTo)...)
+		diags.Append(flattener.slice(ctx, vFrom, tTo, vTo)...)
 		return diags
 
 	case reflect.Map:
-		diags.Append(visitor.map_(ctx, vFrom, tTo, vTo)...)
+		diags.Append(flattener.map_(ctx, vFrom, tTo, vTo)...)
 		return diags
 	}
 
@@ -727,7 +722,7 @@ func (visitor flattenVisitor) visit(ctx context.Context, fieldName string, vFrom
 }
 
 // bool copies an AWS API bool value to a compatible Plugin Framework field.
-func (visitor flattenVisitor) bool(ctx context.Context, vFrom reflect.Value, tTo attr.Type, vTo reflect.Value) diag.Diagnostics {
+func (flattener autoFlattener) bool(ctx context.Context, vFrom reflect.Value, tTo attr.Type, vTo reflect.Value) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	switch tTo := tTo.(type) {
@@ -754,7 +749,7 @@ func (visitor flattenVisitor) bool(ctx context.Context, vFrom reflect.Value, tTo
 }
 
 // float copies an AWS API float value to a compatible Plugin Framework field.
-func (visitor flattenVisitor) float(ctx context.Context, vFrom reflect.Value, tTo attr.Type, vTo reflect.Value) diag.Diagnostics {
+func (flattener autoFlattener) float(ctx context.Context, vFrom reflect.Value, tTo attr.Type, vTo reflect.Value) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	switch tTo := tTo.(type) {
@@ -781,7 +776,7 @@ func (visitor flattenVisitor) float(ctx context.Context, vFrom reflect.Value, tT
 }
 
 // int copies an AWS API int value to a compatible Plugin Framework field.
-func (visitor flattenVisitor) int(ctx context.Context, vFrom reflect.Value, tTo attr.Type, vTo reflect.Value) diag.Diagnostics {
+func (flattener autoFlattener) int(ctx context.Context, vFrom reflect.Value, tTo attr.Type, vTo reflect.Value) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	switch tTo := tTo.(type) {
@@ -808,7 +803,7 @@ func (visitor flattenVisitor) int(ctx context.Context, vFrom reflect.Value, tTo 
 }
 
 // string copies an AWS API string value to a compatible Plugin Framework field.
-func (visitor flattenVisitor) string(ctx context.Context, vFrom reflect.Value, tTo attr.Type, vTo reflect.Value) diag.Diagnostics {
+func (flattener autoFlattener) string(ctx context.Context, vFrom reflect.Value, tTo attr.Type, vTo reflect.Value) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	switch tTo := tTo.(type) {
@@ -835,7 +830,7 @@ func (visitor flattenVisitor) string(ctx context.Context, vFrom reflect.Value, t
 }
 
 // ptr copies an AWS API pointer value to a compatible Plugin Framework field.
-func (visitor flattenVisitor) ptr(ctx context.Context, vFrom reflect.Value, tTo attr.Type, vTo reflect.Value) diag.Diagnostics {
+func (flattener autoFlattener) ptr(ctx context.Context, vFrom reflect.Value, tTo attr.Type, vTo reflect.Value) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	switch vElem := vFrom.Elem(); vFrom.Type().Elem().Kind() {
@@ -845,7 +840,7 @@ func (visitor flattenVisitor) ptr(ctx context.Context, vFrom reflect.Value, tTo 
 			return diags
 		}
 
-		diags.Append(visitor.bool(ctx, vElem, tTo, vTo)...)
+		diags.Append(flattener.bool(ctx, vElem, tTo, vTo)...)
 		return diags
 
 	case reflect.Float32, reflect.Float64:
@@ -854,7 +849,7 @@ func (visitor flattenVisitor) ptr(ctx context.Context, vFrom reflect.Value, tTo 
 			return diags
 		}
 
-		diags.Append(visitor.float(ctx, vElem, tTo, vTo)...)
+		diags.Append(flattener.float(ctx, vElem, tTo, vTo)...)
 		return diags
 
 	case reflect.Int32, reflect.Int64:
@@ -863,7 +858,7 @@ func (visitor flattenVisitor) ptr(ctx context.Context, vFrom reflect.Value, tTo 
 			return diags
 		}
 
-		diags.Append(visitor.int(ctx, vElem, tTo, vTo)...)
+		diags.Append(flattener.int(ctx, vElem, tTo, vTo)...)
 		return diags
 
 	case reflect.String:
@@ -872,7 +867,7 @@ func (visitor flattenVisitor) ptr(ctx context.Context, vFrom reflect.Value, tTo 
 			return diags
 		}
 
-		diags.Append(visitor.string(ctx, vElem, tTo, vTo)...)
+		diags.Append(flattener.string(ctx, vElem, tTo, vTo)...)
 		return diags
 
 	case reflect.Struct:
@@ -880,7 +875,7 @@ func (visitor flattenVisitor) ptr(ctx context.Context, vFrom reflect.Value, tTo 
 			//
 			// *struct -> types.List(OfObject).
 			//
-			diags.Append(visitor.ptrToStructNestedObject(ctx, vFrom, tTo, vTo)...)
+			diags.Append(flattener.ptrToStructNestedObject(ctx, vFrom, tTo, vTo)...)
 			return diags
 		}
 	}
@@ -894,7 +889,7 @@ func (visitor flattenVisitor) ptr(ctx context.Context, vFrom reflect.Value, tTo 
 }
 
 // slice copies an AWS API slice value to a compatible Plugin Framework field.
-func (visitor flattenVisitor) slice(ctx context.Context, vFrom reflect.Value, tTo attr.Type, vTo reflect.Value) diag.Diagnostics {
+func (flattener autoFlattener) slice(ctx context.Context, vFrom reflect.Value, tTo attr.Type, vTo reflect.Value) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	switch tSliceElem := vFrom.Type().Elem(); tSliceElem.Kind() {
@@ -1027,7 +1022,7 @@ func (visitor flattenVisitor) slice(ctx context.Context, vFrom reflect.Value, tT
 				//
 				// []*struct -> types.List(OfObject).
 				//
-				diags.Append(visitor.sliceOfStructNestedObject(ctx, vFrom, tTo, vTo)...)
+				diags.Append(flattener.sliceOfStructNestedObject(ctx, vFrom, tTo, vTo)...)
 				return diags
 			}
 		}
@@ -1037,7 +1032,7 @@ func (visitor flattenVisitor) slice(ctx context.Context, vFrom reflect.Value, tT
 			//
 			// []struct -> types.List(OfObject).
 			//
-			diags.Append(visitor.sliceOfStructNestedObject(ctx, vFrom, tTo, vTo)...)
+			diags.Append(flattener.sliceOfStructNestedObject(ctx, vFrom, tTo, vTo)...)
 			return diags
 		}
 	}
@@ -1051,7 +1046,7 @@ func (visitor flattenVisitor) slice(ctx context.Context, vFrom reflect.Value, tT
 }
 
 // map_ copies an AWS API map value to a compatible Plugin Framework field.
-func (visitor flattenVisitor) map_(ctx context.Context, vFrom reflect.Value, tTo attr.Type, vTo reflect.Value) diag.Diagnostics {
+func (flattener autoFlattener) map_(ctx context.Context, vFrom reflect.Value, tTo attr.Type, vTo reflect.Value) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	switch tMapKey := vFrom.Type().Key(); tMapKey.Kind() {
@@ -1135,7 +1130,7 @@ func (visitor flattenVisitor) map_(ctx context.Context, vFrom reflect.Value, tTo
 }
 
 // ptrToStructNestedObject copies an AWS API *struct value to a compatible Plugin Framework NestedObjectValue field.
-func (visitor flattenVisitor) ptrToStructNestedObject(ctx context.Context, vFrom reflect.Value, tTo fwtypes.NestedObjectType, vTo reflect.Value) diag.Diagnostics {
+func (flattener autoFlattener) ptrToStructNestedObject(ctx context.Context, vFrom reflect.Value, tTo fwtypes.NestedObjectType, vTo reflect.Value) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	if vFrom.IsNil() {
@@ -1156,7 +1151,7 @@ func (visitor flattenVisitor) ptrToStructNestedObject(ctx context.Context, vFrom
 		return diags
 	}
 
-	diags.Append(walkStructFields(ctx, vFrom.Elem().Interface(), to, visitor)...)
+	diags.Append(walkStructFields(ctx, vFrom.Elem().Interface(), to, flattener)...)
 	if diags.HasError() {
 		return diags
 	}
@@ -1173,7 +1168,7 @@ func (visitor flattenVisitor) ptrToStructNestedObject(ctx context.Context, vFrom
 }
 
 // sliceOfStructNestedObject copies an AWS API []struct value to a compatible Plugin Framework NestedObjectValue field.
-func (visitor flattenVisitor) sliceOfStructNestedObject(ctx context.Context, vFrom reflect.Value, tTo fwtypes.NestedObjectType, vTo reflect.Value) diag.Diagnostics {
+func (flattener autoFlattener) sliceOfStructNestedObject(ctx context.Context, vFrom reflect.Value, tTo fwtypes.NestedObjectType, vTo reflect.Value) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	if vFrom.IsNil() {
@@ -1203,7 +1198,7 @@ func (visitor flattenVisitor) sliceOfStructNestedObject(ctx context.Context, vFr
 			return diags
 		}
 
-		diags.Append(walkStructFields(ctx, vFrom.Index(i).Interface(), target, visitor)...)
+		diags.Append(walkStructFields(ctx, vFrom.Index(i).Interface(), target, flattener)...)
 		if diags.HasError() {
 			return diags
 		}
