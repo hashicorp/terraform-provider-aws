@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfdatasync "github.com/hashicorp/terraform-provider-aws/internal/service/datasync"
 )
 
 func TestAccDataSyncLocationNFS_basic(t *testing.T) {
@@ -109,7 +110,7 @@ func TestAccDataSyncLocationNFS_disappears(t *testing.T) {
 				Config: testAccLocationNFSConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLocationNFSExists(ctx, resourceName, &locationNfs1),
-					testAccCheckLocationNFSDisappears(ctx, &locationNfs1),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfdatasync.ResourceLocationNFS(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -288,24 +289,10 @@ func testAccCheckLocationNFSExists(ctx context.Context, resourceName string, loc
 	}
 }
 
-func testAccCheckLocationNFSDisappears(ctx context.Context, location *datasync.DescribeLocationNfsOutput) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DataSyncConn(ctx)
-
-		input := &datasync.DeleteLocationInput{
-			LocationArn: location.LocationArn,
-		}
-
-		_, err := conn.DeleteLocationWithContext(ctx, input)
-
-		return err
-	}
-}
-
 func testAccCheckLocationNFSNotRecreated(i, j *datasync.DescribeLocationNfsOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		if !aws.TimeValue(i.CreationTime).Equal(aws.TimeValue(j.CreationTime)) {
-			return errors.New("DataSync Location Nfs was recreated")
+			return errors.New("DataSync Location NFS was recreated")
 		}
 
 		return nil
