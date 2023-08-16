@@ -194,12 +194,12 @@ func (visitor expandVisitor) bool(ctx context.Context, vFrom basetypes.BoolValua
 		return diags
 	}
 
-	switch vFrom := v.ValueBool(); vTo.Kind() {
+	switch vTo.Kind() {
 	case reflect.Bool:
 		//
 		// types.Bool -> bool.
 		//
-		vTo.SetBool(vFrom)
+		vTo.SetBool(v.ValueBool())
 		return diags
 
 	case reflect.Ptr:
@@ -208,7 +208,7 @@ func (visitor expandVisitor) bool(ctx context.Context, vFrom basetypes.BoolValua
 			//
 			// types.Bool -> *bool.
 			//
-			vTo.Set(reflect.ValueOf(aws.Bool(vFrom)))
+			vTo.Set(reflect.ValueOf(v.ValueBoolPointer()))
 			return diags
 		}
 	}
@@ -231,12 +231,12 @@ func (visitor expandVisitor) float64(ctx context.Context, vFrom basetypes.Float6
 		return diags
 	}
 
-	switch vFrom := v.ValueFloat64(); vTo.Kind() {
+	switch vTo.Kind() {
 	case reflect.Float32, reflect.Float64:
 		//
 		// types.Float32/types.Float64 -> float32/float64.
 		//
-		vTo.SetFloat(vFrom)
+		vTo.SetFloat(v.ValueFloat64())
 		return diags
 
 	case reflect.Ptr:
@@ -245,14 +245,15 @@ func (visitor expandVisitor) float64(ctx context.Context, vFrom basetypes.Float6
 			//
 			// types.Float32/types.Float64 -> *float32.
 			//
-			vTo.Set(reflect.ValueOf(aws.Float32(float32(vFrom))))
+			to := float32(v.ValueFloat64())
+			vTo.Set(reflect.ValueOf(&to))
 			return diags
 
 		case reflect.Float64:
 			//
 			// types.Float32/types.Float64 -> *float64.
 			//
-			vTo.Set(reflect.ValueOf(aws.Float64(vFrom)))
+			vTo.Set(reflect.ValueOf(v.ValueFloat64Pointer()))
 			return diags
 		}
 	}
@@ -275,12 +276,12 @@ func (visitor expandVisitor) int64(ctx context.Context, vFrom basetypes.Int64Val
 		return diags
 	}
 
-	switch vFrom := v.ValueInt64(); vTo.Kind() {
+	switch vTo.Kind() {
 	case reflect.Int32, reflect.Int64:
 		//
 		// types.Int32/types.Int64 -> int32/int64.
 		//
-		vTo.SetInt(vFrom)
+		vTo.SetInt(v.ValueInt64())
 		return diags
 
 	case reflect.Ptr:
@@ -289,14 +290,15 @@ func (visitor expandVisitor) int64(ctx context.Context, vFrom basetypes.Int64Val
 			//
 			// types.Int32/types.Int64 -> *int32.
 			//
-			vTo.Set(reflect.ValueOf(aws.Int32(int32(vFrom))))
+			to := int32(v.ValueInt64())
+			vTo.Set(reflect.ValueOf(&to))
 			return diags
 
 		case reflect.Int64:
 			//
 			// types.Int32/types.Int64 -> *int64.
 			//
-			vTo.Set(reflect.ValueOf(aws.Int64(vFrom)))
+			vTo.Set(reflect.ValueOf(v.ValueInt64Pointer()))
 			return diags
 		}
 	}
@@ -319,12 +321,12 @@ func (visitor expandVisitor) string(ctx context.Context, vFrom basetypes.StringV
 		return diags
 	}
 
-	switch vFrom := v.ValueString(); vTo.Kind() {
+	switch vTo.Kind() {
 	case reflect.String:
 		//
 		// types.String -> string.
 		//
-		vTo.SetString(vFrom)
+		vTo.SetString(v.ValueString())
 		return diags
 
 	case reflect.Ptr:
@@ -333,7 +335,7 @@ func (visitor expandVisitor) string(ctx context.Context, vFrom basetypes.StringV
 			//
 			// types.String -> *string.
 			//
-			vTo.Set(reflect.ValueOf(aws.String(vFrom)))
+			vTo.Set(reflect.ValueOf(v.ValueStringPointer()))
 			return diags
 		}
 	}
