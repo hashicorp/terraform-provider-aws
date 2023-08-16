@@ -980,7 +980,7 @@ func testAccImagePipelineConfig_testsConfigurationScanningEnabledAdvanced(rName 
 
 	return acctest.ConfigCompose(testAccImagePipelineConfig_base(rName), fmt.Sprintf(`
 resource "aws_imagebuilder_image_pipeline" "test" {
-  container_recipe_arn                 = aws_imagebuilder_container_recipe.test.arn
+  container_recipe_arn             = aws_imagebuilder_container_recipe.test.arn
   infrastructure_configuration_arn = aws_imagebuilder_infrastructure_configuration.test.arn
   name                             = %[1]q
 
