@@ -6,6 +6,7 @@ package transfer_test
 import (
 	"context"
 	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/YakDriver/regexache"
@@ -292,6 +293,32 @@ func testAccUser_homeDirectoryMappings(t *testing.T) {
 					testAccCheckUserExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "home_directory_mappings.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "home_directory_type", "PATH"),
+				),
+			},
+		},
+	})
+}
+
+func testAccUser_PolicySize_exceeded(t *testing.T) {
+	ctx := acctest.Context(t)
+	var conf transfer.DescribedUser
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_transfer_user.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.TransferServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckUserDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccUserConfig_long_policy(rName, 2048),
+				ExpectError: regexache.MustCompile("Cannot exceed quota for PolicySize: 2048"),
+			},
+			{
+				Config: testAccUserConfig_long_policy(rName, 2048-1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckUserExists(ctx, resourceName, &conf),
 				),
 			},
 		},
@@ -757,4 +784,34 @@ resource "aws_transfer_user" "test" {
   }
 }
 `, rName))
+}
+
+func testAccUserConfig_long_policy(rName string, size int) string {
+	consumedLength := 96
+	longSid := strings.Repeat("a", size-consumedLength)
+	return acctest.ConfigCompose(testAccUserConfig_base(rName), fmt.Sprintf(`
+data "aws_iam_policy_document" "test" {
+  statement {
+    sid = %[2]q
+    actions = [
+      "s3:*",
+    ]
+    resources = [
+      "*"
+    ]
+  }
+}
+
+resource "aws_transfer_user" "test" {
+  server_id      = aws_transfer_server.test.id
+  user_name      = "tftestuser2"
+  role           = aws_iam_role.test.arn
+  policy         = data.aws_iam_policy_document.test.json
+  home_directory = "/home/tftestuser2"
+
+  tags = {
+    Name = %[1]q
+  }
+}
+`, rName, longSid))
 }

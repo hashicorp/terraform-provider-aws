@@ -6,6 +6,7 @@ package iam_test
 import (
 	"context"
 	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/YakDriver/regexache"
@@ -214,6 +215,35 @@ func TestAccIAMRolePolicy_unknownsInPolicy(t *testing.T) {
 				Config: testAccRolePolicyConfig_unknowns(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRolePolicyExists(ctx, resourceName, &rolePolicy),
+				),
+			},
+		},
+	})
+}
+
+func TestAccIAMRolePolicy_PolicySize_exceeded(t *testing.T) {
+	ctx := acctest.Context(t)
+	var rolePolicy1 string
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_iam_role_policy.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.IAMServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRolePolicyDestroy(ctx),
+		Steps: []resource.TestStep{
+			// Create a policy exceeding the quota
+			{
+				Config:      testAccRolePolicyConfig_long_policy(rName, 10240),
+				ExpectError: regexache.MustCompile("Cannot exceed quota for PolicySize: 10240"),
+			},
+			// Create a valid policy just under the limit
+			{
+				Config: testAccRolePolicyConfig_long_policy(rName, 10240-1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRolePolicyExists(ctx, resourceName, &rolePolicy1),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
 				),
 			},
 		},
@@ -619,4 +649,43 @@ resource "aws_iam_role_policy" "test" {
   })
 }
 `, rName)
+}
+
+func testAccRolePolicyConfig_long_policy(rName string, size int) string {
+	consumedLength := 107
+	longSid := strings.Repeat("a", size-consumedLength)
+	return fmt.Sprintf(`
+resource "aws_iam_role" "test" {
+  name = %[1]q
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Sid    = ""
+      Effect = "Allow"
+      Principal = {
+        Service = "firehose.amazonaws.com"
+      }
+      Action = "sts:AssumeRole"
+    }]
+  })
+}
+
+resource "aws_iam_role_policy" "test" {
+  name = %[1]q
+  role = aws_iam_role.test.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Sid    = %[2]q
+      Effect = "Allow"
+      Action = [
+        "ec2:Describe*"
+      ]
+      Resource = "*"
+    }]
+  })
+}
+`, rName, longSid)
 }

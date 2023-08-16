@@ -52,7 +52,8 @@ func resourceVaultLock() *schema.Resource {
 				ForceNew:              true,
 				DiffSuppressFunc:      verify.SuppressEquivalentPolicyDiffs,
 				DiffSuppressOnRefresh: true,
-				ValidateFunc:          verify.ValidIAMPolicyJSON,
+				// 20KB. Refer https://docs.aws.amazon.com/amazonglacier/latest/dev/api-SetVaultAccessPolicy.html
+				ValidateFunc: verify.ValidIAMPolicyJSON(20480),
 				StateFunc: func(v interface{}) string {
 					json, _ := structure.NormalizeJsonString(v)
 					return json

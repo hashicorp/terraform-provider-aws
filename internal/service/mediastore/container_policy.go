@@ -41,7 +41,7 @@ func ResourceContainerPolicy() *schema.Resource {
 			"policy": {
 				Type:             schema.TypeString,
 				Required:         true,
-				ValidateFunc:     verify.ValidIAMPolicyJSON,
+				ValidateFunc:     verify.ValidIAMPolicyJSON(8192),
 				DiffSuppressFunc: verify.SuppressEquivalentPolicyDiffs,
 				StateFunc: func(v interface{}) string {
 					json, _ := structure.NormalizeJsonString(v)
