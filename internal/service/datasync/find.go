@@ -162,3 +162,28 @@ func FindLocationObjectStorageByARN(ctx context.Context, conn *datasync.DataSync
 
 	return output, nil
 }
+
+func FindLocationNFSByARN(ctx context.Context, conn *datasync.DataSync, arn string) (*datasync.DescribeLocationNfsOutput, error) {
+	input := &datasync.DescribeLocationNfsInput{
+		LocationArn: aws.String(arn),
+	}
+
+	output, err := conn.DescribeLocationNfsWithContext(ctx, input)
+
+	if tfawserr.ErrMessageContains(err, datasync.ErrCodeInvalidRequestException, "not found") {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output, nil
+}

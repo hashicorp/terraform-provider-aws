@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -123,8 +124,8 @@ func resourceLocationNFSCreate(ctx context.Context, d *schema.ResourceData, meta
 		input.MountOptions = expandNFSMountOptions(v.([]interface{}))
 	}
 
-	log.Printf("[DEBUG] Creating DataSync Location NFS: %s", input)
 	output, err := conn.CreateLocationNfsWithContext(ctx, input)
+
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating DataSync Location NFS: %s", err)
 	}
@@ -138,15 +139,10 @@ func resourceLocationNFSRead(ctx context.Context, d *schema.ResourceData, meta i
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DataSyncConn(ctx)
 
-	input := &datasync.DescribeLocationNfsInput{
-		LocationArn: aws.String(d.Id()),
-	}
+	output, err := FindLocationNFSByARN(ctx, conn, d.Id())
 
-	log.Printf("[DEBUG] Reading DataSync Location NFS: %s", input)
-	output, err := conn.DescribeLocationNfsWithContext(ctx, input)
-
-	if tfawserr.ErrMessageContains(err, "InvalidRequestException", "not found") {
-		log.Printf("[WARN] DataSync Location NFS %q not found - removing from state", d.Id())
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] DataSync Location NFS (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
 	}
@@ -155,24 +151,22 @@ func resourceLocationNFSRead(ctx context.Context, d *schema.ResourceData, meta i
 		return sdkdiag.AppendErrorf(diags, "reading DataSync Location NFS (%s): %s", d.Id(), err)
 	}
 
-	subdirectory, err := subdirectoryFromLocationURI(aws.StringValue(output.LocationUri))
+	uri := aws.StringValue(output.LocationUri)
+	subdirectory, err := subdirectoryFromLocationURI(uri)
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading DataSync Location NFS (%s): %s", d.Id(), err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	d.Set("arn", output.LocationArn)
-
-	if err := d.Set("on_prem_config", flattenOnPremConfig(output.OnPremConfig)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting on_prem_config: %s", err)
-	}
-
 	if err := d.Set("mount_options", flattenNFSMountOptions(output.MountOptions)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting mount_options: %s", err)
 	}
-
+	if err := d.Set("on_prem_config", flattenOnPremConfig(output.OnPremConfig)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting on_prem_config: %s", err)
+	}
 	d.Set("subdirectory", subdirectory)
-	d.Set("uri", output.LocationUri)
+	d.Set("uri", uri)
 
 	return diags
 }
@@ -193,6 +187,7 @@ func resourceLocationNFSUpdate(ctx context.Context, d *schema.ResourceData, meta
 		}
 
 		_, err := conn.UpdateLocationNfsWithContext(ctx, input)
+
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating DataSync Location NFS (%s): %s", d.Id(), err)
 		}
@@ -205,14 +200,12 @@ func resourceLocationNFSDelete(ctx context.Context, d *schema.ResourceData, meta
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DataSyncConn(ctx)
 
-	input := &datasync.DeleteLocationInput{
+	log.Printf("[DEBUG] Deleting DataSync Location NFS: %s", d.Id())
+	_, err := conn.DeleteLocationWithContext(ctx, &datasync.DeleteLocationInput{
 		LocationArn: aws.String(d.Id()),
-	}
+	})
 
-	log.Printf("[DEBUG] Deleting DataSync Location NFS: %s", input)
-	_, err := conn.DeleteLocationWithContext(ctx, input)
-
-	if tfawserr.ErrMessageContains(err, "InvalidRequestException", "not found") {
+	if tfawserr.ErrMessageContains(err, datasync.ErrCodeInvalidRequestException, "not found") {
 		return diags
 	}
 

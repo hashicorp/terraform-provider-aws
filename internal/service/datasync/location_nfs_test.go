@@ -12,13 +12,13 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/datasync"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfdatasync "github.com/hashicorp/terraform-provider-aws/internal/service/datasync"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func TestAccDataSyncLocationNFS_basic(t *testing.T) {
@@ -242,48 +242,39 @@ func testAccCheckLocationNFSDestroy(ctx context.Context) resource.TestCheckFunc 
 				continue
 			}
 
-			input := &datasync.DescribeLocationNfsInput{
-				LocationArn: aws.String(rs.Primary.ID),
-			}
+			_, err := tfdatasync.FindLocationNFSByARN(ctx, conn, rs.Primary.ID)
 
-			_, err := conn.DescribeLocationNfsWithContext(ctx, input)
-
-			if tfawserr.ErrMessageContains(err, "InvalidRequestException", "not found") {
-				return nil
+			if tfresource.NotFound(err) {
+				continue
 			}
 
 			if err != nil {
 				return err
 			}
+
+			return fmt.Errorf("DataSync Location NFS %s still exists", rs.Primary.ID)
 		}
 
 		return nil
 	}
 }
 
-func testAccCheckLocationNFSExists(ctx context.Context, resourceName string, locationNfs *datasync.DescribeLocationNfsOutput) resource.TestCheckFunc {
+func testAccCheckLocationNFSExists(ctx context.Context, n string, v *datasync.DescribeLocationNfsOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[resourceName]
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return fmt.Errorf("Not found: %s", resourceName)
+			return fmt.Errorf("Not found: %s", n)
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).DataSyncConn(ctx)
-		input := &datasync.DescribeLocationNfsInput{
-			LocationArn: aws.String(rs.Primary.ID),
-		}
 
-		output, err := conn.DescribeLocationNfsWithContext(ctx, input)
+		output, err := tfdatasync.FindLocationNFSByARN(ctx, conn, rs.Primary.ID)
 
 		if err != nil {
 			return err
 		}
 
-		if output == nil {
-			return fmt.Errorf("Location %q does not exist", rs.Primary.ID)
-		}
-
-		*locationNfs = *output
+		*v = *output
 
 		return nil
 	}
