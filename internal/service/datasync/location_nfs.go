@@ -30,6 +30,7 @@ func ResourceLocationNFS() *schema.Resource {
 		ReadWithoutTimeout:   resourceLocationNFSRead,
 		UpdateWithoutTimeout: resourceLocationNFSUpdate,
 		DeleteWithoutTimeout: resourceLocationNFSDelete,
+
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
@@ -38,6 +39,23 @@ func ResourceLocationNFS() *schema.Resource {
 			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
+			},
+			"mount_options": {
+				Type:             schema.TypeList,
+				Optional:         true,
+				MaxItems:         1,
+				DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"version": {
+							Type:         schema.TypeString,
+							Default:      datasync.NfsVersionAutomatic,
+							Optional:     true,
+							ForceNew:     true,
+							ValidateFunc: validation.StringInSlice(datasync.NfsVersion_Values(), false),
+						},
+					},
+				},
 			},
 			"on_prem_config": {
 				Type:     schema.TypeList,
@@ -53,23 +71,6 @@ func ResourceLocationNFS() *schema.Resource {
 								Type:         schema.TypeString,
 								ValidateFunc: verify.ValidARN,
 							},
-						},
-					},
-				},
-			},
-			"mount_options": {
-				Type:             schema.TypeList,
-				Optional:         true,
-				MaxItems:         1,
-				DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"version": {
-							Type:         schema.TypeString,
-							Default:      datasync.NfsVersionAutomatic,
-							Optional:     true,
-							ForceNew:     true,
-							ValidateFunc: validation.StringInSlice(datasync.NfsVersion_Values(), false),
 						},
 					},
 				},
