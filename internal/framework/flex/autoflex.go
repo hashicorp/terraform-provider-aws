@@ -64,38 +64,14 @@ func Flatten(ctx context.Context, apiObject, tfObject any, optFns ...AutoFlexOpt
 }
 
 // autoFlexer is the interface implemented by an auto-flattener or expander.
-type autoFlexer interface {
-	setLegacyMode(bool)
-}
-
-type withLegacyMode struct {
-	legacyMode bool
-}
-
-func (w *withLegacyMode) setLegacyMode(v bool) {
-	w.legacyMode = v
-}
+type autoFlexer interface{}
 
 // AutoFlexOptionsFunc is a type alias for an autoFlexer functional option.
 type AutoFlexOptionsFunc func(autoFlexer)
 
-// AutoFlexIsLegacyMode is a helper function to construct functional options
-// that set an autoFlexer's legacy mode flag.
-// If multiple autoFlexIsLegacyMode calls are made, the last call overrides
-// the previous calls' values.
-func AutoFlexIsLegacyMode(v bool) AutoFlexOptionsFunc {
-	return func(a autoFlexer) {
-		a.setLegacyMode(v)
-	}
-}
+type autoExpander struct{}
 
-type autoExpander struct {
-	withLegacyMode
-}
-
-type autoFlattener struct {
-	withLegacyMode
-}
+type autoFlattener struct{}
 
 // walkStructFields traverses `from` calling `visitor` for each exported field.
 func walkStructFields(ctx context.Context, from any, to any, visitor fieldVisitor) diag.Diagnostics {
