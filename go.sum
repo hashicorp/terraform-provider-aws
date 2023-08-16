@@ -56,6 +56,8 @@ github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs v1.23.2 h1:FzF8Q0qJRhuLF3KXM
 github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs v1.23.2/go.mod h1:ihj+YT3eXh0lRMHPo5Gc2+G7LQM7SBYwo7H8Pt15P9o=
 github.com/aws/aws-sdk-go-v2/service/codecatalyst v1.5.2 h1:cQT0wZR943rvgkMUkRdeWYz/mNoJOFHwn0s5quBQcF8=
 github.com/aws/aws-sdk-go-v2/service/codecatalyst v1.5.2/go.mod h1:Nu86cRkmc2mZSmHdYg9rvciQxRqBXzQva7hl7w1nFjc=
+github.com/aws/aws-sdk-go-v2/service/codestarnotifications v1.15.2 h1:1R5Bj59ZDpaESEWkLMtoFDJV3lQ0aHMvl5E/scXXMvk=
+github.com/aws/aws-sdk-go-v2/service/codestarnotifications v1.15.2/go.mod h1:dHaJLDTfMF0tWEcqST+hLVZxgzp4m66gt3zLsb8kIrw=
 github.com/aws/aws-sdk-go-v2/service/comprehend v1.25.2 h1:Dmf0o49JQrsstSFhBMEeAlMUJFXPp3llZDhcc8sOb6I=
 github.com/aws/aws-sdk-go-v2/service/comprehend v1.25.2/go.mod h1:USgC4dYoIiDTEkY7VZ/fBFbPa/L4983GqnvPDzSd0HY=
 github.com/aws/aws-sdk-go-v2/service/computeoptimizer v1.25.2 h1:stQRHuF24Uhn7wezVOpo1+NLQiJsyGarqp4TRwiYjUs=
