@@ -1067,13 +1067,24 @@ func (visitor flattenVisitor) map_(ctx context.Context, vFrom reflect.Value, tTo
 					return diags
 				}
 
-				v, d := tTo.ValueFromMap(ctx, FlattenFrameworkStringValueMap(ctx, vFrom.Interface().(map[string]string)))
+				from := vFrom.Interface().(map[string]string)
+				elements := make(map[string]attr.Value, len(from))
+				for k, v := range from {
+					elements[k] = types.StringValue(v)
+				}
+				map_, d := types.MapValue(types.StringType, elements)
 				diags.Append(d...)
 				if diags.HasError() {
 					return diags
 				}
 
-				vTo.Set(reflect.ValueOf(v))
+				to, d := tTo.ValueFromMap(ctx, map_)
+				diags.Append(d...)
+				if diags.HasError() {
+					return diags
+				}
+
+				vTo.Set(reflect.ValueOf(to))
 				return diags
 			}
 
@@ -1090,13 +1101,24 @@ func (visitor flattenVisitor) map_(ctx context.Context, vFrom reflect.Value, tTo
 						return diags
 					}
 
-					v, d := tTo.ValueFromMap(ctx, FlattenFrameworkStringMap(ctx, vFrom.Interface().(map[string]*string)))
+					from := vFrom.Interface().(map[string]*string)
+					elements := make(map[string]attr.Value, len(from))
+					for k, v := range from {
+						elements[k] = types.StringValue(aws.ToString(v))
+					}
+					map_, d := types.MapValue(types.StringType, elements)
 					diags.Append(d...)
 					if diags.HasError() {
 						return diags
 					}
 
-					vTo.Set(reflect.ValueOf(v))
+					to, d := tTo.ValueFromMap(ctx, map_)
+					diags.Append(d...)
+					if diags.HasError() {
+						return diags
+					}
+
+					vTo.Set(reflect.ValueOf(to))
 					return diags
 				}
 			}
