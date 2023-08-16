@@ -27,6 +27,7 @@ import (
 	inspector2_sdkv2 "github.com/aws/aws-sdk-go-v2/service/inspector2"
 	internetmonitor_sdkv2 "github.com/aws/aws-sdk-go-v2/service/internetmonitor"
 	ivschat_sdkv2 "github.com/aws/aws-sdk-go-v2/service/ivschat"
+	kafka_sdkv2 "github.com/aws/aws-sdk-go-v2/service/kafka"
 	kendra_sdkv2 "github.com/aws/aws-sdk-go-v2/service/kendra"
 	keyspaces_sdkv2 "github.com/aws/aws-sdk-go-v2/service/keyspaces"
 	lambda_sdkv2 "github.com/aws/aws-sdk-go-v2/service/lambda"
@@ -669,6 +670,10 @@ func (c *AWSClient) KMSConn(ctx context.Context) *kms_sdkv1.KMS {
 
 func (c *AWSClient) KafkaConn(ctx context.Context) *kafka_sdkv1.Kafka {
 	return errs.Must(conn[*kafka_sdkv1.Kafka](ctx, c, names.Kafka))
+}
+
+func (c *AWSClient) KafkaClient(ctx context.Context) *kafka_sdkv2.Client {
+	return errs.Must(client[*kafka_sdkv2.Client](ctx, c, names.Kafka))
 }
 
 func (c *AWSClient) KafkaConnectConn(ctx context.Context) *kafkaconnect_sdkv1.KafkaConnect {

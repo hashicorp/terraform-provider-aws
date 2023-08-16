@@ -127,7 +127,7 @@ func testAccOrganizationConformancePack_excludedAccounts(t *testing.T) {
 	})
 }
 
-func testAccOrganizationConformancePack_forceNew(t *testing.T) {
+func testAccOrganizationConformancePack_updateName(t *testing.T) {
 	ctx := acctest.Context(t)
 	var before, after configservice.OrganizationConformancePack
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -144,6 +144,7 @@ func testAccOrganizationConformancePack_forceNew(t *testing.T) {
 				Config: testAccOrganizationConformancePackConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOrganizationConformancePackExists(ctx, resourceName, &before),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
 				),
 			},
 			{
@@ -650,7 +651,6 @@ resource "aws_s3_bucket" "test" {
   bucket        = %q
   force_destroy = true
 }
-
 `, rName, bName))
 }
 

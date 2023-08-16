@@ -58,6 +58,10 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			Factory:  ResourceOutboundConnection,
 			TypeName: "aws_opensearch_outbound_connection",
 		},
+		{
+			Factory:  ResourceVPCEndpoint,
+			TypeName: "aws_opensearch_vpc_endpoint",
+		},
 	}
 }
 

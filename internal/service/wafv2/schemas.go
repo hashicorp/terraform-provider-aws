@@ -1091,10 +1091,11 @@ func actionToUseSchema() *schema.Schema {
 		MaxItems: 1,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				"allow":   allowConfigSchema(),
-				"block":   blockConfigSchema(),
-				"captcha": captchaConfigSchema(),
-				"count":   countConfigSchema(),
+				"allow":     allowConfigSchema(),
+				"block":     blockConfigSchema(),
+				"captcha":   captchaConfigSchema(),
+				"challenge": challengeConfigSchema(),
+				"count":     countConfigSchema(),
 			},
 		},
 	}

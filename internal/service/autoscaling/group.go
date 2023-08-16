@@ -5,6 +5,7 @@ package autoscaling
 
 import ( // nosemgrep:ci.semgrep.aws.multiple-service-imports
 	"context"
+	"errors"
 	"fmt"
 	"log"
 	"regexp"
@@ -18,7 +19,6 @@ import ( // nosemgrep:ci.semgrep.aws.multiple-service-imports
 	"github.com/aws/aws-sdk-go/service/elbv2"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/go-cty/cty"
-	multierror "github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
@@ -51,6 +51,15 @@ func ResourceGroup() *schema.Resource {
 		Timeouts: &schema.ResourceTimeout{
 			Update: schema.DefaultTimeout(10 * time.Minute),
 			Delete: schema.DefaultTimeout(10 * time.Minute),
+		},
+
+		SchemaVersion: 1,
+		StateUpgraders: []schema.StateUpgrader{
+			{
+				Type:    resourceGroupV0().CoreConfigSchema().ImpliedType(),
+				Upgrade: GroupStateUpgradeV0,
+				Version: 0,
+			},
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -116,6 +125,11 @@ func ResourceGroup() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
+			},
+			"ignore_failed_scaling_activities": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
 			},
 			"initial_lifecycle_hook": {
 				Type:     schema.TypeSet,
@@ -1032,7 +1046,7 @@ func resourceGroupCreate(ctx context.Context, d *schema.ResourceData, meta inter
 				return nil
 			}
 
-			if err := waitGroupCapacitySatisfied(ctx, conn, meta.(*conns.AWSClient).ELBConn(ctx), meta.(*conns.AWSClient).ELBV2Conn(ctx), d.Id(), f, startTime, timeout); err != nil {
+			if err := waitGroupCapacitySatisfied(ctx, conn, meta.(*conns.AWSClient).ELBConn(ctx), meta.(*conns.AWSClient).ELBV2Conn(ctx), d.Id(), f, startTime, d.Get("ignore_failed_scaling_activities").(bool), timeout); err != nil {
 				return sdkdiag.AppendErrorf(diags, "waiting for Auto Scaling Group (%s) capacity satisfied: %s", d.Id(), err)
 			}
 		}
@@ -1524,7 +1538,7 @@ func resourceGroupUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 					return nil
 				}
 
-				if err := waitGroupCapacitySatisfied(ctx, conn, meta.(*conns.AWSClient).ELBConn(ctx), meta.(*conns.AWSClient).ELBV2Conn(ctx), d.Id(), f, startTime, timeout); err != nil {
+				if err := waitGroupCapacitySatisfied(ctx, conn, meta.(*conns.AWSClient).ELBConn(ctx), meta.(*conns.AWSClient).ELBV2Conn(ctx), d.Id(), f, startTime, d.Get("ignore_failed_scaling_activities").(bool), timeout); err != nil {
 					return sdkdiag.AppendErrorf(diags, "waiting for Auto Scaling Group (%s) capacity satisfied: %s", d.Id(), err)
 				}
 			}
@@ -2162,31 +2176,33 @@ func findWarmPool(ctx context.Context, conn *autoscaling.AutoScaling, name strin
 	return output, nil
 }
 
-func statusGroupCapacity(ctx context.Context, conn *autoscaling.AutoScaling, elbconn *elb.ELB, elbv2conn *elbv2.ELBV2, name string, startTime time.Time, cb func(int, int) error) retry.StateRefreshFunc {
+func statusGroupCapacity(ctx context.Context, conn *autoscaling.AutoScaling, elbconn *elb.ELB, elbv2conn *elbv2.ELBV2, name string, cb func(int, int) error, startTime time.Time, ignoreFailedScalingActivities bool) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		// Check for fatal error in activity logs.
-		scalingActivities, err := findScalingActivitiesByName(ctx, conn, name, startTime)
+		if !ignoreFailedScalingActivities {
+			// Check for fatal error in activity logs.
+			scalingActivities, err := findScalingActivitiesByName(ctx, conn, name, startTime)
 
-		if err != nil {
-			return nil, "", fmt.Errorf("reading scaling activities: %w", err)
-		}
-
-		var errors *multierror.Error
-
-		for _, v := range scalingActivities {
-			if statusCode := aws.StringValue(v.StatusCode); statusCode == autoscaling.ScalingActivityStatusCodeFailed && aws.Int64Value(v.Progress) == 100 {
-				if strings.Contains(aws.StringValue(v.StatusMessage), "Invalid IAM Instance Profile") {
-					// the activity will likely be retried
-					continue
-				}
-				errors = multierror.Append(errors, fmt.Errorf("Scaling activity (%s): %s: %s", aws.StringValue(v.ActivityId), statusCode, aws.StringValue(v.StatusMessage)))
+			if err != nil {
+				return nil, "", fmt.Errorf("reading scaling activities: %w", err)
 			}
-		}
 
-		err = errors.ErrorOrNil()
+			var errs []error
 
-		if err != nil {
-			return nil, "", err
+			for _, v := range scalingActivities {
+				if statusCode := aws.StringValue(v.StatusCode); statusCode == autoscaling.ScalingActivityStatusCodeFailed && aws.Int64Value(v.Progress) == 100 {
+					if strings.Contains(aws.StringValue(v.StatusMessage), "Invalid IAM Instance Profile") {
+						// the activity will likely be retried
+						continue
+					}
+					errs = append(errs, fmt.Errorf("scaling activity (%s): %s: %s", aws.StringValue(v.ActivityId), statusCode, aws.StringValue(v.StatusMessage)))
+				}
+			}
+
+			err = errors.Join(errs...)
+
+			if err != nil {
+				return nil, "", err
+			}
 		}
 
 		g, err := FindGroupByName(ctx, conn, name)
@@ -2415,10 +2431,10 @@ func statusWarmPoolInstanceCount(ctx context.Context, conn *autoscaling.AutoScal
 	}
 }
 
-func waitGroupCapacitySatisfied(ctx context.Context, conn *autoscaling.AutoScaling, elbconn *elb.ELB, elbv2conn *elbv2.ELBV2, name string, cb func(int, int) error, startTime time.Time, timeout time.Duration) error {
+func waitGroupCapacitySatisfied(ctx context.Context, conn *autoscaling.AutoScaling, elbconn *elb.ELB, elbv2conn *elbv2.ELBV2, name string, cb func(int, int) error, startTime time.Time, ignoreFailedScalingActivities bool, timeout time.Duration) error {
 	stateConf := &retry.StateChangeConf{
 		Target:  []string{"ok"},
-		Refresh: statusGroupCapacity(ctx, conn, elbconn, elbv2conn, name, startTime, cb),
+		Refresh: statusGroupCapacity(ctx, conn, elbconn, elbv2conn, name, cb, startTime, ignoreFailedScalingActivities),
 		Timeout: timeout,
 	}
 
