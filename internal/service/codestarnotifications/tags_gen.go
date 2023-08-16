@@ -5,9 +5,9 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/codestarnotifications"
-	"github.com/aws/aws-sdk-go/service/codestarnotifications/codestarnotificationsiface"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/codestarnotifications"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/codestarnotifications/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/types"
@@ -17,12 +17,12 @@ import (
 // listTags lists codestarnotifications service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func listTags(ctx context.Context, conn codestarnotificationsiface.CodeStarNotificationsAPI, identifier string) (tftags.KeyValueTags, error) {
+func listTags(ctx context.Context, conn *codestarnotifications.Client, identifier string) (tftags.KeyValueTags, error) {
 	input := &codestarnotifications.ListTagsForResourceInput{
 		Arn: aws.String(identifier),
 	}
 
-	output, err := conn.ListTagsForResourceWithContext(ctx, input)
+	output, err := conn.ListTagsForResource(ctx, input)
 
 	if err != nil {
 		return tftags.New(ctx, nil), err
@@ -34,7 +34,7 @@ func listTags(ctx context.Context, conn codestarnotificationsiface.CodeStarNotif
 // ListTags lists codestarnotifications service tags and set them in Context.
 // It is called from outside this package.
 func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier string) error {
-	tags, err := listTags(ctx, meta.(*conns.AWSClient).CodeStarNotificationsConn(ctx), identifier)
+	tags, err := listTags(ctx, meta.(*conns.AWSClient).CodeStarNotificationsClient(ctx), identifier)
 
 	if err != nil {
 		return err
@@ -81,7 +81,7 @@ func setTagsOut(ctx context.Context, tags map[string]*string) {
 // updateTags updates codestarnotifications service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func updateTags(ctx context.Context, conn codestarnotificationsiface.CodeStarNotificationsAPI, identifier string, oldTagsMap, newTagsMap any) error {
+func updateTags(ctx context.Context, conn *codestarnotifications.Client, identifier string, oldTagsMap, newTagsMap any) error {
 	oldTags := tftags.New(ctx, oldTagsMap)
 	newTags := tftags.New(ctx, newTagsMap)
 
@@ -90,10 +90,10 @@ func updateTags(ctx context.Context, conn codestarnotificationsiface.CodeStarNot
 	if len(removedTags) > 0 {
 		input := &codestarnotifications.UntagResourceInput{
 			Arn:     aws.String(identifier),
-			TagKeys: aws.StringSlice(removedTags.Keys()),
+			TagKeys: removedTags.Keys(),
 		}
 
-		_, err := conn.UntagResourceWithContext(ctx, input)
+		_, err := conn.UntagResource(ctx, input)
 
 		if err != nil {
 			return fmt.Errorf("untagging resource (%s): %w", identifier, err)
@@ -108,7 +108,7 @@ func updateTags(ctx context.Context, conn codestarnotificationsiface.CodeStarNot
 			Tags: Tags(updatedTags),
 		}
 
-		_, err := conn.TagResourceWithContext(ctx, input)
+		_, err := conn.TagResource(ctx, input)
 
 		if err != nil {
 			return fmt.Errorf("tagging resource (%s): %w", identifier, err)
@@ -121,5 +121,5 @@ func updateTags(ctx context.Context, conn codestarnotificationsiface.CodeStarNot
 // UpdateTags updates codestarnotifications service tags.
 // It is called from outside this package.
 func (p *servicePackage) UpdateTags(ctx context.Context, meta any, identifier string, oldTags, newTags any) error {
-	return updateTags(ctx, meta.(*conns.AWSClient).CodeStarNotificationsConn(ctx), identifier, oldTags, newTags)
+	return updateTags(ctx, meta.(*conns.AWSClient).CodeStarNotificationsClient(ctx), identifier, oldTags, newTags)
 }
