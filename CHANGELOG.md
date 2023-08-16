@@ -13,6 +13,7 @@ ENHANCEMENTS:
 * resource/aws_rds_cluster: Add `db_system_id` argument to support RDS Custom engine types ([#32846](https://github.com/hashicorp/terraform-provider-aws/issues/32846))
 * resource/aws_rds_cluster_instance: Add `custom_iam_instance_profile` argument to allow RDS Custom users to specify an IAM Instance Profile for the RDS Cluster Instance ([#32846](https://github.com/hashicorp/terraform-provider-aws/issues/32846))
 * resource/aws_rds_cluster_instance: Update `engine` plan-time validation to allow for RDS Custom engine types ([#32846](https://github.com/hashicorp/terraform-provider-aws/issues/32846))
+* resource/aws_opensearch_domain: Add cluster configuration function "multi az deployment with standby" ([#31373]https://github.com/hashicorp/terraform-provider-aws/issues/31373)
 
 BUG FIXES:
 

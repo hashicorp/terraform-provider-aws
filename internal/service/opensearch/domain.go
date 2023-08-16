@@ -305,6 +305,10 @@ func ResourceDomain() *schema.Resource {
 							Type:     schema.TypeBool,
 							Optional: true,
 						},
+						"multi_az_with_standby_enabled": {
+							Type:     schema.TypeBool,
+							Optional: true,
+						},
 					},
 				},
 			},
@@ -1205,6 +1209,7 @@ func expandClusterConfig(m map[string]interface{}) *opensearchservice.ClusterCon
 	if v, ok := m["instance_count"]; ok {
 		config.InstanceCount = aws.Int64(int64(v.(int)))
 	}
+
 	if v, ok := m["instance_type"]; ok {
 		config.InstanceType = aws.String(v.(string))
 	}
@@ -1237,6 +1242,10 @@ func expandClusterConfig(m map[string]interface{}) *opensearchservice.ClusterCon
 				config.WarmType = aws.String(v.(string))
 			}
 		}
+	}
+
+	if v, ok := m["multi_az_with_standby_enabled"]; ok {
+		config.MultiAZWithStandbyEnabled = aws.Bool(v.(bool))
 	}
 
 	return &config
@@ -1306,6 +1315,9 @@ func flattenClusterConfig(c *opensearchservice.ClusterConfig) []map[string]inter
 	}
 	if c.WarmType != nil {
 		m["warm_type"] = aws.StringValue(c.WarmType)
+	}
+	if c.MultiAZWithStandbyEnabled != nil {
+		m["multi_az_with_standby_enabled"] = aws.BoolValue(c.MultiAZWithStandbyEnabled)
 	}
 
 	return []map[string]interface{}{m}

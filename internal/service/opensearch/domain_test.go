@@ -502,6 +502,42 @@ func TestAccOpenSearchDomain_Cluster_update(t *testing.T) {
 		}})
 }
 
+func TestAccOpenSearchDomain_Cluster_multiAzWithStandbyEnabled(t *testing.T) {
+	ctx := acctest.Context(t)
+	var domain opensearchservice.DomainStatus
+	rName := testAccRandomDomainName()
+	resourceName := "aws_opensearch_domain.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, opensearchservice.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDomainDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDomainConfig_multiAzWithStandbyEnabled(rName, true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDomainExists(ctx, resourceName, &domain),
+					resource.TestCheckResourceAttr(resourceName, "cluster_config.0.multi_az_with_standby_enabled", "true"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateId:     rName,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccDomainConfig_multiAzWithStandbyEnabled(rName, false),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDomainExists(ctx, resourceName, &domain),
+					resource.TestCheckResourceAttr(resourceName, "cluster_config.0.multi_az_with_standby_enabled", "false"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccOpenSearchDomain_duplicate(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
@@ -2356,6 +2392,41 @@ resource "aws_opensearch_domain" "test" {
   }
 }
 `, rName, enabled)
+}
+
+func testAccDomainConfig_multiAzWithStandbyEnabled(rName string, enableStandby bool) string {
+	return fmt.Sprintf(`
+resource "aws_opensearch_domain" "test" {
+  domain_name = %[1]q
+
+  domain_endpoint_options {
+    enforce_https       = true
+    tls_security_policy = "Policy-Min-TLS-1-0-2019-07"
+  }
+
+  ebs_options {
+    ebs_enabled = true
+    volume_size = 10
+  }
+
+  auto_tune_options {
+    desired_state 		= "ENABLED"
+    rollback_on_disable = "NO_ROLLBACK"
+  }
+
+  cluster_config {
+    instance_count         			= 3
+    instance_type          			= "m6g.large.search"
+    zone_awareness_enabled 			= true
+	zone_awareness_config {
+	  availability_zone_count 		= 3
+	}
+	dedicated_master_enabled 		= true
+    dedicated_master_type    		= "m6g.large.search" 
+	multi_az_with_standby_enabled 	=  %[2]t
+  }
+}
+`, rName, enableStandby)
 }
 
 func testAccDomainConfig_clusterUpdate(rName string, instanceInt, snapshotInt int) string {
