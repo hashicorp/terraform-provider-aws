@@ -4,7 +4,7 @@ go 1.20
 
 require (
 	github.com/ProtonMail/go-crypto v0.0.0-20230717121422-5aa5874ade95
-	github.com/aws/aws-sdk-go v1.44.324
+	github.com/aws/aws-sdk-go v1.44.325
 	github.com/aws/aws-sdk-go-v2 v1.20.1
 	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.13.8
 	github.com/aws/aws-sdk-go-v2/service/accessanalyzer v1.20.2
