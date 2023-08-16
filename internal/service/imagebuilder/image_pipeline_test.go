@@ -35,7 +35,7 @@ func TestAccImageBuilderImagePipeline_basic(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccImagePipelineConfig_name(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckImagePipelineExists(ctx, resourceName),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "imagebuilder", fmt.Sprintf("image-pipeline/%s", rName)),
 					acctest.CheckResourceAttrRFC3339(resourceName, "date_created"),
@@ -47,7 +47,6 @@ func TestAccImageBuilderImagePipeline_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "enhanced_image_metadata_enabled", "true"),
 					resource.TestCheckResourceAttrPair(resourceName, "image_recipe_arn", imageRecipeResourceName, "arn"),
 					resource.TestCheckResourceAttr(resourceName, "image_scanning_configuration.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "image_tests_configuration.0.timeout_minutes", "720"),
 					resource.TestCheckResourceAttr(resourceName, "image_tests_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "image_tests_configuration.0.image_tests_enabled", "true"),
 					resource.TestCheckResourceAttr(resourceName, "image_tests_configuration.0.timeout_minutes", "720"),
@@ -696,7 +695,7 @@ func testAccCheckImagePipelineExists(ctx context.Context, resourceName string) r
 	}
 }
 
-func testAccImagePipelineBaseConfig(rName string) string {
+func testAccImagePipelineConfig_base(rName string) string {
 	return fmt.Sprintf(`
 data "aws_region" "current" {}
 
@@ -792,9 +791,7 @@ resource "aws_imagebuilder_infrastructure_configuration" "test" {
 }
 
 func testAccImagePipelineConfig_description(rName string, description string) string {
-	return acctest.ConfigCompose(
-		testAccImagePipelineBaseConfig(rName),
-		fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccImagePipelineConfig_base(rName), fmt.Sprintf(`
 resource "aws_imagebuilder_image_pipeline" "test" {
   description                      = %[2]q
   image_recipe_arn                 = aws_imagebuilder_image_recipe.test.arn
@@ -805,9 +802,7 @@ resource "aws_imagebuilder_image_pipeline" "test" {
 }
 
 func testAccImagePipelineConfig_distributionConfigurationARN1(rName string) string {
-	return acctest.ConfigCompose(
-		testAccImagePipelineBaseConfig(rName),
-		fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccImagePipelineConfig_base(rName), fmt.Sprintf(`
 resource "aws_imagebuilder_distribution_configuration" "test" {
   name = "%[1]s-1"
 
@@ -834,9 +829,7 @@ resource "aws_imagebuilder_image_pipeline" "test" {
 }
 
 func testAccImagePipelineConfig_distributionConfigurationARN2(rName string) string {
-	return acctest.ConfigCompose(
-		testAccImagePipelineBaseConfig(rName),
-		fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccImagePipelineConfig_base(rName), fmt.Sprintf(`
 resource "aws_imagebuilder_distribution_configuration" "test" {
   name = "%[1]s-2"
 
@@ -863,9 +856,7 @@ resource "aws_imagebuilder_image_pipeline" "test" {
 }
 
 func testAccImagePipelineConfig_enhancedMetadataEnabled(rName string, enhancedImageMetadataEnabled bool) string {
-	return acctest.ConfigCompose(
-		testAccImagePipelineBaseConfig(rName),
-		fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccImagePipelineConfig_base(rName), fmt.Sprintf(`
 resource "aws_imagebuilder_image_pipeline" "test" {
   enhanced_image_metadata_enabled  = %[2]t
   image_recipe_arn                 = aws_imagebuilder_image_recipe.test.arn
@@ -876,9 +867,7 @@ resource "aws_imagebuilder_image_pipeline" "test" {
 }
 
 func testAccImagePipelineConfig_recipeARN2(rName string) string {
-	return acctest.ConfigCompose(
-		testAccImagePipelineBaseConfig(rName),
-		fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccImagePipelineConfig_base(rName), fmt.Sprintf(`
 resource "aws_imagebuilder_image_recipe" "test2" {
   component {
     component_arn = aws_imagebuilder_component.test.arn
@@ -898,9 +887,7 @@ resource "aws_imagebuilder_image_pipeline" "test" {
 }
 
 func testAccImagePipelineConfig_containerRecipeARN1(rName string) string {
-	return acctest.ConfigCompose(
-		testAccImagePipelineBaseConfig(rName),
-		fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccImagePipelineConfig_base(rName), fmt.Sprintf(`
 resource "aws_ecr_repository" "test" {
   name = %[1]q
 }
@@ -936,9 +923,7 @@ resource "aws_imagebuilder_image_pipeline" "test" {
 }
 
 func testAccImagePipelineConfig_containerRecipeARN2(rName string) string {
-	return acctest.ConfigCompose(
-		testAccImagePipelineBaseConfig(rName),
-		fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccImagePipelineConfig_base(rName), fmt.Sprintf(`
 resource "aws_ecr_repository" "test" {
   name = %[1]q
 }
@@ -974,9 +959,7 @@ resource "aws_imagebuilder_image_pipeline" "test" {
 }
 
 func testAccImagePipelineConfig_testsConfigurationScanningEnabled(rName string, imageScanningEnabled bool) string {
-	return acctest.ConfigCompose(
-		testAccImagePipelineBaseConfig(rName),
-		fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccImagePipelineConfig_base(rName), fmt.Sprintf(`
 resource "aws_imagebuilder_image_pipeline" "test" {
   image_recipe_arn                 = aws_imagebuilder_image_recipe.test.arn
   infrastructure_configuration_arn = aws_imagebuilder_infrastructure_configuration.test.arn
@@ -994,9 +977,8 @@ func testAccImagePipelineConfig_testsConfigurationScanningEnabledAdvanced(rName 
 	if len(imageTags) > 0 {
 		commaSepImageTags = "\"" + strings.Join(imageTags, "\", \"") + "\""
 	}
-	return acctest.ConfigCompose(
-		testAccImagePipelineBaseConfig(rName),
-		fmt.Sprintf(`
+
+	return acctest.ConfigCompose(testAccImagePipelineConfig_base(rName), fmt.Sprintf(`
 resource "aws_imagebuilder_image_pipeline" "test" {
   container_recipe_arn                 = aws_imagebuilder_container_recipe.test.arn
   infrastructure_configuration_arn = aws_imagebuilder_infrastructure_configuration.test.arn
@@ -1015,9 +997,7 @@ resource "aws_imagebuilder_image_pipeline" "test" {
 }
 
 func testAccImagePipelineConfig_testsConfigurationTestsEnabled(rName string, imageTestsEnabled bool) string {
-	return acctest.ConfigCompose(
-		testAccImagePipelineBaseConfig(rName),
-		fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccImagePipelineConfig_base(rName), fmt.Sprintf(`
 resource "aws_imagebuilder_image_pipeline" "test" {
   image_recipe_arn                 = aws_imagebuilder_image_recipe.test.arn
   infrastructure_configuration_arn = aws_imagebuilder_infrastructure_configuration.test.arn
@@ -1031,9 +1011,7 @@ resource "aws_imagebuilder_image_pipeline" "test" {
 }
 
 func testAccImagePipelineConfig_testsConfigurationTimeoutMinutes(rName string, timeoutMinutes int) string {
-	return acctest.ConfigCompose(
-		testAccImagePipelineBaseConfig(rName),
-		fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccImagePipelineConfig_base(rName), fmt.Sprintf(`
 resource "aws_imagebuilder_image_pipeline" "test" {
   image_recipe_arn                 = aws_imagebuilder_image_recipe.test.arn
   infrastructure_configuration_arn = aws_imagebuilder_infrastructure_configuration.test.arn
@@ -1047,9 +1025,7 @@ resource "aws_imagebuilder_image_pipeline" "test" {
 }
 
 func testAccImagePipelineConfig_infrastructureConfigurationARN2(rName string) string {
-	return acctest.ConfigCompose(
-		testAccImagePipelineBaseConfig(rName),
-		fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccImagePipelineConfig_base(rName), fmt.Sprintf(`
 resource "aws_imagebuilder_infrastructure_configuration" "test2" {
   instance_profile_name = aws_iam_instance_profile.test.name
   name                  = "%[1]s-2"
@@ -1064,9 +1040,7 @@ resource "aws_imagebuilder_image_pipeline" "test" {
 }
 
 func testAccImagePipelineConfig_name(rName string) string {
-	return acctest.ConfigCompose(
-		testAccImagePipelineBaseConfig(rName),
-		fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccImagePipelineConfig_base(rName), fmt.Sprintf(`
 resource "aws_imagebuilder_image_pipeline" "test" {
   image_recipe_arn                 = aws_imagebuilder_image_recipe.test.arn
   infrastructure_configuration_arn = aws_imagebuilder_infrastructure_configuration.test.arn
@@ -1076,9 +1050,7 @@ resource "aws_imagebuilder_image_pipeline" "test" {
 }
 
 func testAccImagePipelineConfig_scheduleExecutionStartCondition(rName string, pipelineExecutionStartCondition string) string {
-	return acctest.ConfigCompose(
-		testAccImagePipelineBaseConfig(rName),
-		fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccImagePipelineConfig_base(rName), fmt.Sprintf(`
 resource "aws_imagebuilder_image_pipeline" "test" {
   image_recipe_arn                 = aws_imagebuilder_image_recipe.test.arn
   infrastructure_configuration_arn = aws_imagebuilder_infrastructure_configuration.test.arn
@@ -1093,9 +1065,7 @@ resource "aws_imagebuilder_image_pipeline" "test" {
 }
 
 func testAccImagePipelineConfig_scheduleExpression(rName string, scheduleExpression string) string {
-	return acctest.ConfigCompose(
-		testAccImagePipelineBaseConfig(rName),
-		fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccImagePipelineConfig_base(rName), fmt.Sprintf(`
 resource "aws_imagebuilder_image_pipeline" "test" {
   image_recipe_arn                 = aws_imagebuilder_image_recipe.test.arn
   infrastructure_configuration_arn = aws_imagebuilder_infrastructure_configuration.test.arn
@@ -1109,9 +1079,7 @@ resource "aws_imagebuilder_image_pipeline" "test" {
 }
 
 func testAccImagePipelineConfig_scheduleTimezone(rName string, scheduleExpression string, timezone string) string {
-	return acctest.ConfigCompose(
-		testAccImagePipelineBaseConfig(rName),
-		fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccImagePipelineConfig_base(rName), fmt.Sprintf(`
 resource "aws_imagebuilder_image_pipeline" "test" {
   image_recipe_arn                 = aws_imagebuilder_image_recipe.test.arn
   infrastructure_configuration_arn = aws_imagebuilder_infrastructure_configuration.test.arn
@@ -1125,9 +1093,7 @@ resource "aws_imagebuilder_image_pipeline" "test" {
 `, rName, scheduleExpression, timezone))
 }
 func testAccImagePipelineConfig_status(rName string, status string) string {
-	return acctest.ConfigCompose(
-		testAccImagePipelineBaseConfig(rName),
-		fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccImagePipelineConfig_base(rName), fmt.Sprintf(`
 resource "aws_imagebuilder_image_pipeline" "test" {
   image_recipe_arn                 = aws_imagebuilder_image_recipe.test.arn
   infrastructure_configuration_arn = aws_imagebuilder_infrastructure_configuration.test.arn
@@ -1138,9 +1104,7 @@ resource "aws_imagebuilder_image_pipeline" "test" {
 }
 
 func testAccImagePipelineConfig_tags1(rName string, tagKey1 string, tagValue1 string) string {
-	return acctest.ConfigCompose(
-		testAccImagePipelineBaseConfig(rName),
-		fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccImagePipelineConfig_base(rName), fmt.Sprintf(`
 resource "aws_imagebuilder_image_pipeline" "test" {
   image_recipe_arn                 = aws_imagebuilder_image_recipe.test.arn
   infrastructure_configuration_arn = aws_imagebuilder_infrastructure_configuration.test.arn
@@ -1154,9 +1118,7 @@ resource "aws_imagebuilder_image_pipeline" "test" {
 }
 
 func testAccImagePipelineConfig_tags2(rName string, tagKey1 string, tagValue1 string, tagKey2 string, tagValue2 string) string {
-	return acctest.ConfigCompose(
-		testAccImagePipelineBaseConfig(rName),
-		fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccImagePipelineConfig_base(rName), fmt.Sprintf(`
 resource "aws_imagebuilder_image_pipeline" "test" {
   image_recipe_arn                 = aws_imagebuilder_image_recipe.test.arn
   infrastructure_configuration_arn = aws_imagebuilder_infrastructure_configuration.test.arn
