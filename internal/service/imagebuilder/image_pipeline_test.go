@@ -888,32 +888,6 @@ resource "aws_imagebuilder_image_pipeline" "test" {
 
 func testAccImagePipelineConfig_containerRecipeARN1(rName string) string {
 	return acctest.ConfigCompose(testAccImagePipelineConfig_base(rName), fmt.Sprintf(`
-resource "aws_ecr_repository" "test" {
-  name = %[1]q
-}
-
-resource "aws_imagebuilder_container_recipe" "test" {
-  component {
-    component_arn = aws_imagebuilder_component.test.arn
-  }
-
-  dockerfile_template_data = <<EOF
-FROM {{{ imagebuilder:parentImage }}}
-{{{ imagebuilder:environments }}}
-{{{ imagebuilder:components }}}
-EOF
-
-  name           = %[1]q
-  container_type = "DOCKER"
-  parent_image   = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.name}:aws:image/amazon-linux-x86-latest/x.x.x"
-  version        = "1.0.0"
-
-  target_repository {
-    repository_name = aws_ecr_repository.test.name
-    service         = "ECR"
-  }
-}
-
 resource "aws_imagebuilder_image_pipeline" "test" {
   container_recipe_arn             = aws_imagebuilder_container_recipe.test.arn
   infrastructure_configuration_arn = aws_imagebuilder_infrastructure_configuration.test.arn
@@ -924,10 +898,6 @@ resource "aws_imagebuilder_image_pipeline" "test" {
 
 func testAccImagePipelineConfig_containerRecipeARN2(rName string) string {
 	return acctest.ConfigCompose(testAccImagePipelineConfig_base(rName), fmt.Sprintf(`
-resource "aws_ecr_repository" "test" {
-  name = %[1]q
-}
-
 resource "aws_imagebuilder_container_recipe" "test2" {
   component {
     component_arn = aws_imagebuilder_component.test.arn
