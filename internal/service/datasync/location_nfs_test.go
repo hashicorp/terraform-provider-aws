@@ -334,13 +334,11 @@ func testAccLocationNFSConfig_agentARNsMultiple(rName string) string {
 resource "aws_instance" "test2" {
   depends_on = [aws_internet_gateway.test]
 
-  ami                         = data.aws_ssm_parameter.aws_service_datasync_ami.value
+  ami                         = aws_instance.test.ami
   associate_public_ip_address = true
-
-  # Default instance type from sync.sh
-  instance_type          = "c5.2xlarge"
-  vpc_security_group_ids = [aws_security_group.test.id]
-  subnet_id              = aws_subnet.test[0].id
+  instance_type               = aws_instance.test.instance_type
+  vpc_security_group_ids      = [aws_security_group.test.id]
+  subnet_id                   = aws_subnet.test[0].id
 
   tags = {
     Name = %[1]q
