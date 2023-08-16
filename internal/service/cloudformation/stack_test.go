@@ -49,6 +49,10 @@ func TestAccCloudFormationStack_basic(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
+			{
+				Config:   testAccStackConfig_basic(rName),
+				PlanOnly: true,
+			},
 		},
 	})
 }
@@ -296,6 +300,7 @@ func TestAccCloudFormationStack_withParams(t *testing.T) {
 					testAccCheckStackExists(ctx, resourceName, &stack),
 					resource.TestCheckResourceAttr(resourceName, "parameters.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "parameters.VpcCIDR", vpcCidrInitial),
+					resource.TestCheckResourceAttr(resourceName, "outputs.%", "0"),
 				),
 			},
 			{
@@ -310,6 +315,7 @@ func TestAccCloudFormationStack_withParams(t *testing.T) {
 					testAccCheckStackExists(ctx, resourceName, &stack),
 					resource.TestCheckResourceAttr(resourceName, "parameters.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "parameters.VpcCIDR", vpcCidrUpdated),
+					resource.TestCheckResourceAttr(resourceName, "outputs.%", "0"),
 				),
 			},
 		},
@@ -488,6 +494,7 @@ func TestAccCloudFormationStack_outputsUpdated(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "parameters.DataIn", "in1"),
 					resource.TestCheckResourceAttr(resourceName, "outputs.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "outputs.DataOut", "pre-in1-post"),
+					resource.TestCheckOutput("stack_DataOut", "pre-in1-post"),
 				),
 			},
 			{
@@ -498,7 +505,53 @@ func TestAccCloudFormationStack_outputsUpdated(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "parameters.DataIn", "in2"),
 					resource.TestCheckResourceAttr(resourceName, "outputs.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "outputs.DataOut", "pre-in2-post"),
+					resource.TestCheckOutput("stack_DataOut", "pre-in2-post"),
 				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"parameters"},
+			},
+		},
+	})
+}
+
+func TestAccCloudFormationStack_templateUpdate(t *testing.T) {
+	ctx := acctest.Context(t)
+	var stack cloudformation.Stack
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_cloudformation_stack.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, cloudformation.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckStackDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccStackConfig_templateUpdate(rName, "out1", "value1"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckStackExists(ctx, resourceName, &stack),
+					resource.TestCheckResourceAttr(resourceName, "outputs.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "outputs.out1", "value1"),
+					resource.TestCheckOutput("stack_output", "out1:value1"),
+				),
+			},
+			{
+				Config: testAccStackConfig_templateUpdate(rName, "out2", "value2"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckStackExists(ctx, resourceName, &stack),
+					resource.TestCheckResourceAttr(resourceName, "outputs.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "outputs.out2", "value2"),
+					resource.TestCheckOutput("stack_output", "out2:value2"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -1114,5 +1167,54 @@ STACK
     DataIn = %[2]q
   }
 }
+
+output "stack_DataOut" {
+  value = aws_cloudformation_stack.test.outputs["DataOut"]
+}
 `, rName, dataIn)
+}
+
+func testAccStackConfig_templateUpdate(rName, name, value string) string {
+	return fmt.Sprintf(`
+resource "aws_cloudformation_stack" "test" {
+  name = %[1]q
+
+  template_body = jsonencode(
+    merge(
+      jsondecode(local.template),
+      { "Outputs" = local.outputs },
+    )
+  )
+}
+
+locals {
+  template = <<STACK
+{
+  "AWSTemplateFormatVersion": "2010-09-09",
+  "Description": "AWS CloudFormation template that returns a constant value",
+  "Conditions": {
+	  "NeverTrue": {"Fn::Equals": ["true","false"]}
+  },
+  "Resources": {
+	  "nullRes": {
+		  "Type": "Custom::NullResource",
+		  "Condition": "NeverTrue",
+		  "Properties": {
+			  "ServiceToken": ""
+		  }
+	  }
+  }
+}
+STACK
+  outputs = {
+    %[2]s = {
+      Value = %[3]q
+    }
+  }
+}
+
+output "stack_output" {
+  value = format("%%s:%%s", %[2]q, aws_cloudformation_stack.test.outputs[%[2]q])
+}
+`, rName, name, value)
 }
