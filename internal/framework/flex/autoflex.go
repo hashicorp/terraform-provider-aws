@@ -459,7 +459,13 @@ func (visitor expandVisitor) mapOfString(ctx context.Context, vFrom basetypes.Ma
 				//
 				// types.Map(OfString) -> map[string]string.
 				//
-				vTo.Set(reflect.ValueOf(ExpandFrameworkStringValueMap(ctx, vFrom)))
+				var to map[string]string
+				diags.Append(vFrom.ElementsAs(ctx, &to, false)...)
+				if diags.HasError() {
+					return diags
+				}
+
+				vTo.Set(reflect.ValueOf(to))
 				return diags
 
 			case reflect.Ptr:
@@ -468,7 +474,13 @@ func (visitor expandVisitor) mapOfString(ctx context.Context, vFrom basetypes.Ma
 					//
 					// types.Map(OfString) -> map[string]*string.
 					//
-					vTo.Set(reflect.ValueOf(ExpandFrameworkStringMap(ctx, vFrom)))
+					var to map[string]*string
+					diags.Append(vFrom.ElementsAs(ctx, &to, false)...)
+					if diags.HasError() {
+						return diags
+					}
+
+					vTo.Set(reflect.ValueOf(to))
 					return diags
 				}
 			}
