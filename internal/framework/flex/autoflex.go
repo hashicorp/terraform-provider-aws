@@ -908,13 +908,24 @@ func (visitor flattenVisitor) slice(ctx context.Context, vFrom reflect.Value, tT
 				return diags
 			}
 
-			v, d := tTo.ValueFromList(ctx, FlattenFrameworkStringValueList(ctx, vFrom.Interface().([]string)))
+			from := vFrom.Interface().([]string)
+			elements := make([]attr.Value, len(from))
+			for i, v := range from {
+				elements[i] = types.StringValue(v)
+			}
+			list, d := types.ListValue(types.StringType, elements)
 			diags.Append(d...)
 			if diags.HasError() {
 				return diags
 			}
 
-			vTo.Set(reflect.ValueOf(v))
+			to, d := tTo.ValueFromList(ctx, list)
+			diags.Append(d...)
+			if diags.HasError() {
+				return diags
+			}
+
+			vTo.Set(reflect.ValueOf(to))
 			return diags
 
 		case basetypes.SetTypable:
@@ -949,13 +960,24 @@ func (visitor flattenVisitor) slice(ctx context.Context, vFrom reflect.Value, tT
 					return diags
 				}
 
-				v, d := tTo.ValueFromList(ctx, FlattenFrameworkStringList(ctx, vFrom.Interface().([]*string)))
+				from := vFrom.Interface().([]*string)
+				elements := make([]attr.Value, len(from))
+				for i, v := range from {
+					elements[i] = types.StringValue(aws.ToString(v))
+				}
+				list, d := types.ListValue(types.StringType, elements)
 				diags.Append(d...)
 				if diags.HasError() {
 					return diags
 				}
 
-				vTo.Set(reflect.ValueOf(v))
+				to, d := tTo.ValueFromList(ctx, list)
+				diags.Append(d...)
+				if diags.HasError() {
+					return diags
+				}
+
+				vTo.Set(reflect.ValueOf(to))
 				return diags
 
 			case basetypes.SetTypable:
