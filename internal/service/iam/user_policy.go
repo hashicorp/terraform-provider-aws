@@ -25,6 +25,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+const userPolicyMaxSize = 2048
+
 // @SDKResource("aws_iam_user_policy", name="User Policy")
 func resourceUserPolicy() *schema.Resource {
 	return &schema.Resource{
@@ -55,7 +57,7 @@ func resourceUserPolicy() *schema.Resource {
 			names.AttrPolicy: {
 				Type:                  schema.TypeString,
 				Required:              true,
-				ValidateFunc:          verify.ValidIAMPolicyJSON,
+				ValidateFunc:          verify.ValidIAMPolicyJSON(userPolicyMaxSize),
 				DiffSuppressFunc:      verify.SuppressEquivalentPolicyDiffs,
 				DiffSuppressOnRefresh: true,
 				StateFunc: func(v interface{}) string {
