@@ -281,6 +281,7 @@ func sweepOntapVolume(region string) error {
 			r := ResourceOntapVolume()
 			d := r.Data(nil)
 			d.SetId(aws.StringValue(v.VolumeId))
+			d.Set("skip_final_backup", true)
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
