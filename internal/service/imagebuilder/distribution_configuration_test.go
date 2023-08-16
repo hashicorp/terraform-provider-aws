@@ -26,6 +26,7 @@ func init() {
 func testAccErrorCheckSkip(t *testing.T) resource.ErrorCheckFunc {
 	return acctest.ErrorCheckSkipMessagesContaining(t,
 		"You have reached the maximum allowed number of license configurations created in one day",
+		"Amazon Inspector is not enabled",
 	)
 }
 
