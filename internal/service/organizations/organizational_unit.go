@@ -128,12 +128,9 @@ func resourceOrganizationalUnitRead(ctx context.Context, d *schema.ResourceData,
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).OrganizationsConn(ctx)
 
-	describeOpts := &organizations.DescribeOrganizationalUnitInput{
-		OrganizationalUnitId: aws.String(d.Id()),
-	}
-	resp, err := conn.DescribeOrganizationalUnitWithContext(ctx, describeOpts)
+	ou, err := findOrganizationalUnitByID(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, organizations.ErrCodeOrganizationalUnitNotFoundException) {
+	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Organizations Organizational Unit (%s) does not exist, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -141,21 +138,6 @@ func resourceOrganizationalUnitRead(ctx context.Context, d *schema.ResourceData,
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading Organizations Organizational Unit (%s): %s", d.Id(), err)
-	}
-
-	if resp == nil {
-		return sdkdiag.AppendErrorf(diags, "reading Organizations Organizational Unit (%s): empty response", d.Id())
-	}
-
-	ou := resp.OrganizationalUnit
-	if ou == nil {
-		if d.IsNewResource() {
-			return sdkdiag.AppendErrorf(diags, "reading Organizations Organizational Unit (%s): not found after creation", d.Id())
-		}
-
-		log.Printf("[WARN] Organizations Organizational Unit (%s) does not exist, removing from state", d.Id())
-		d.SetId("")
-		return diags
 	}
 
 	parentId, err := resourceOrganizationalUnitGetParentID(ctx, conn, d.Id())
@@ -228,6 +210,35 @@ func resourceOrganizationalUnitDelete(ctx context.Context, d *schema.ResourceDat
 	}
 
 	return diags
+}
+
+func findOrganizationalUnitByID(ctx context.Context, conn *organizations.Organizations, id string) (*organizations.OrganizationalUnit, error) {
+	input := &organizations.DescribeOrganizationalUnitInput{
+		OrganizationalUnitId: aws.String(id),
+	}
+
+	return findOrganizationalUnit(ctx, conn, input)
+}
+
+func findOrganizationalUnit(ctx context.Context, conn *organizations.Organizations, input *organizations.DescribeOrganizationalUnitInput) (*organizations.OrganizationalUnit, error) {
+	output, err := conn.DescribeOrganizationalUnitWithContext(ctx, input)
+
+	if tfawserr.ErrCodeEquals(err, organizations.ErrCodeAWSOrganizationsNotInUseException, organizations.ErrCodeOrganizationalUnitNotFoundException) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || output.OrganizationalUnit == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output.OrganizationalUnit, nil
 }
 
 func resourceOrganizationalUnitGetParentID(ctx context.Context, conn *organizations.Organizations, childId string) (string, error) {
