@@ -300,6 +300,20 @@ func resourceSubnetUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 		}
 	}
 
+	// If we're disabling IPv6 assignment for new ENIs, do that before modifying the IPv6 CIDR block.
+	if d.HasChange("assign_ipv6_address_on_creation") && !d.Get("assign_ipv6_address_on_creation").(bool) {
+		if err := modifySubnetAssignIPv6AddressOnCreation(ctx, conn, d.Id(), false); err != nil {
+			return sdkdiag.AppendFromErr(diags, err)
+		}
+	}
+
+	// If we're enabling dns64 and resource_name_dns_aaaa_record_on_launch, do that after modifying the IPv6 CIDR block.
+	if d.HasChange("ipv6_cidr_block") {
+		if err := modifySubnetIPv6CIDRBlockAssociation(ctx, conn, d.Id(), d.Get("ipv6_cidr_block_association_id").(string), d.Get("ipv6_cidr_block").(string)); err != nil {
+			return sdkdiag.AppendFromErr(diags, err)
+		}
+	}
+
 	if d.HasChange("enable_dns64") {
 		if err := modifySubnetEnableDNS64(ctx, conn, d.Id(), d.Get("enable_dns64").(bool)); err != nil {
 			return sdkdiag.AppendFromErr(diags, err)
@@ -332,19 +346,6 @@ func resourceSubnetUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 
 	if d.HasChange("private_dns_hostname_type_on_launch") {
 		if err := modifySubnetPrivateDNSHostnameTypeOnLaunch(ctx, conn, d.Id(), d.Get("private_dns_hostname_type_on_launch").(string)); err != nil {
-			return sdkdiag.AppendFromErr(diags, err)
-		}
-	}
-
-	// If we're disabling IPv6 assignment for new ENIs, do that before modifying the IPv6 CIDR block.
-	if d.HasChange("assign_ipv6_address_on_creation") && !d.Get("assign_ipv6_address_on_creation").(bool) {
-		if err := modifySubnetAssignIPv6AddressOnCreation(ctx, conn, d.Id(), false); err != nil {
-			return sdkdiag.AppendFromErr(diags, err)
-		}
-	}
-
-	if d.HasChange("ipv6_cidr_block") {
-		if err := modifySubnetIPv6CIDRBlockAssociation(ctx, conn, d.Id(), d.Get("ipv6_cidr_block_association_id").(string), d.Get("ipv6_cidr_block").(string)); err != nil {
 			return sdkdiag.AppendFromErr(diags, err)
 		}
 	}

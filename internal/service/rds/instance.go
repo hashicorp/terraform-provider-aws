@@ -30,6 +30,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -1237,9 +1238,8 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 			output := outputRaw.(*rds.RestoreDBInstanceFromDBSnapshotOutput)
 			resourceID = aws.StringValue(output.DBInstance.DbiResourceId)
 		}
-	} else if v, ok := d.GetOk("restore_to_point_in_time"); ok {
+	} else if v, ok := d.GetOk("restore_to_point_in_time"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 		tfMap := v.([]interface{})[0].(map[string]interface{})
-
 		input := &rds.RestoreDBInstanceToPointInTimeInput{
 			AutoMinorVersionUpgrade:    aws.Bool(d.Get("auto_minor_version_upgrade").(bool)),
 			CopyTagsToSnapshot:         aws.Bool(d.Get("copy_tags_to_snapshot").(bool)),
@@ -2368,9 +2368,10 @@ func parseDBInstanceARN(s string) (dbInstanceARN, error) {
 // "db-BE6UI2KLPQP3OVDYD74ZEV6NUM" rather than a DB identifier. However, in some cases only
 // the identifier is available, and can be used.
 func findDBInstanceByIDSDKv1(ctx context.Context, conn *rds.RDS, id string) (*rds.DBInstance, error) {
+	idLooksLikeDbiResourceId := regexp.MustCompile(`^db-[a-zA-Z0-9]{2,255}$`).MatchString(id)
 	input := &rds.DescribeDBInstancesInput{}
 
-	if regexp.MustCompile(`^db-[a-zA-Z0-9]{2,255}$`).MatchString(id) {
+	if idLooksLikeDbiResourceId {
 		input.Filters = []*rds.Filter{
 			{
 				Name:   aws.String("dbi-resource-id"),
@@ -2381,15 +2382,50 @@ func findDBInstanceByIDSDKv1(ctx context.Context, conn *rds.RDS, id string) (*rd
 		input.DBInstanceIdentifier = aws.String(id)
 	}
 
-	output, err := conn.DescribeDBInstancesWithContext(ctx, input)
+	output, err := findDBInstanceSDKv1(ctx, conn, input, tfslices.PredicateTrue[*rds.DBInstance]())
 
 	// in case a DB has an *identifier* starting with "db-""
-	if regexp.MustCompile(`^db-[a-zA-Z0-9]{2,255}$`).MatchString(id) && (output == nil || len(output.DBInstances) == 0) {
-		input = &rds.DescribeDBInstancesInput{
+	if idLooksLikeDbiResourceId && tfresource.NotFound(err) {
+		input := &rds.DescribeDBInstancesInput{
 			DBInstanceIdentifier: aws.String(id),
 		}
-		output, err = conn.DescribeDBInstancesWithContext(ctx, input)
+
+		output, err = findDBInstanceSDKv1(ctx, conn, input, tfslices.PredicateTrue[*rds.DBInstance]())
 	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	return output, nil
+}
+
+func findDBInstanceSDKv1(ctx context.Context, conn *rds.RDS, input *rds.DescribeDBInstancesInput, filter tfslices.Predicate[*rds.DBInstance]) (*rds.DBInstance, error) {
+	output, err := findDBInstancesSDKv1(ctx, conn, input, filter)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSinglePtrResult(output)
+}
+
+func findDBInstancesSDKv1(ctx context.Context, conn *rds.RDS, input *rds.DescribeDBInstancesInput, filter tfslices.Predicate[*rds.DBInstance]) ([]*rds.DBInstance, error) {
+	var output []*rds.DBInstance
+
+	err := conn.DescribeDBInstancesPagesWithContext(ctx, input, func(page *rds.DescribeDBInstancesOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, v := range page.DBInstances {
+			if v != nil && filter(v) {
+				output = append(output, v)
+			}
+		}
+
+		return !lastPage
+	})
 
 	if tfawserr.ErrCodeEquals(err, rds.ErrCodeDBInstanceNotFoundFault) {
 		return nil, &retry.NotFoundError{
@@ -2402,11 +2438,7 @@ func findDBInstanceByIDSDKv1(ctx context.Context, conn *rds.RDS, id string) (*rd
 		return nil, err
 	}
 
-	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
-	}
-
-	return tfresource.AssertSinglePtrResult(output.DBInstances)
+	return output, nil
 }
 
 // findDBInstanceByIDSDKv2 in general should be called with a DbiResourceId of the form

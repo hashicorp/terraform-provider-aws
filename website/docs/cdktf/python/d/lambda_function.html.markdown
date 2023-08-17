@@ -38,14 +38,14 @@ class MyConvertedCode(TerraformStack):
 
 ## Argument Reference
 
-The following arguments are supported:
+This data source supports the following arguments:
 
 * `function_name` - (Required) Name of the lambda function.
 * `qualifier` - (Optional) Alias name or version number of the lambda functionE.g., `$LATEST`, `my-alias`, or `1`. When not included: the data source resolves to the most recent published version; if no published version exists: it resolves to the most recent unpublished version.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This data source exports the following attributes in addition to the arguments above:
 
 * `architectures` - Instruction set architecture for the Lambda function.
 * `arn` - Unqualified (no `:QUALIFIER` or `:VERSION` suffix) ARN identifying your Lambda Function. See also `qualified_arn`.
@@ -76,4 +76,4 @@ In addition to all arguments above, the following attributes are exported:
 * `version` - The version of the Lambda function returned. If `qualifier` is not set, this will resolve to the most recent published version. If no published version of the function exists, `version` will resolve to `$LATEST`.
 * `vpc_config` - VPC configuration associated with your Lambda function.
 
-<!-- cache-key: cdktf-0.17.1 input-c8c5926cecd15d7108bdeacb2ab83bc3712ae4ccd7a075e405c560ab9cf03774 -->
+<!-- cache-key: cdktf-0.17.1 input-aa23743032adbbcb3971ecbe81f2b393d5995f92cb64512014ac1d8c97a94023 -->

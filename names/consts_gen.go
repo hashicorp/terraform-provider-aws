@@ -42,6 +42,7 @@ const (
 	CloudWatch                   = "cloudwatch"
 	CodeArtifact                 = "codeartifact"
 	CodeBuild                    = "codebuild"
+	CodeCatalyst                 = "codecatalyst"
 	CodeCommit                   = "codecommit"
 	CodeGuruReviewer             = "codegurureviewer"
 	CodePipeline                 = "codepipeline"

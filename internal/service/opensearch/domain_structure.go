@@ -212,11 +212,11 @@ func expandWindowStartTime(tfMap map[string]interface{}) *opensearchservice.Wind
 
 	apiObject := &opensearchservice.WindowStartTime{}
 
-	if v, ok := tfMap["hours"].(int); ok && v != 0 {
+	if v, ok := tfMap["hours"].(int); ok {
 		apiObject.Hours = aws.Int64(int64(v))
 	}
 
-	if v, ok := tfMap["minutes"].(int); ok && v != 0 {
+	if v, ok := tfMap["minutes"].(int); ok {
 		apiObject.Minutes = aws.Int64(int64(v))
 	}
 

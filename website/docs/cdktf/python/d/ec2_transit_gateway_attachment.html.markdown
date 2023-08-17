@@ -40,7 +40,7 @@ class MyConvertedCode(TerraformStack):
 
 ## Argument Reference
 
-The following arguments are supported:
+This data source supports the following arguments:
 
 * `filter` - (Optional) One or more configuration blocks containing name-values filters. Detailed below.
 * `transit_gateway_attachment_id` - (Optional) ID of the attachment.
@@ -52,7 +52,7 @@ The following arguments are supported:
 
 ## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This data source exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the attachment.
 * `association_state` - The state of the association (see [the underlying AWS API](https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_TransitGatewayAttachmentAssociation.html) for valid values).
@@ -65,4 +65,4 @@ In addition to all arguments above, the following attributes are exported:
 * `transit_gateway_id` - ID of the transit gateway.
 * `transit_gateway_owner_id` - The ID of the AWS account that owns the transit gateway.
 
-<!-- cache-key: cdktf-0.17.1 input-1d6871537e0fdef0517b26c6418ac11cc1adeef6a7e98b29bb413da70c0a8517 -->
+<!-- cache-key: cdktf-0.17.1 input-855174ba9f5d7c6a547c955bd66cf3e3934a1b368d1480c66e0d166837fd5797 -->

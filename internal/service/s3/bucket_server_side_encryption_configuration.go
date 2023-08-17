@@ -11,6 +11,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -81,14 +82,12 @@ func resourceBucketServerSideEncryptionConfigurationCreate(ctx context.Context, 
 
 	bucket := d.Get("bucket").(string)
 	expectedBucketOwner := d.Get("expected_bucket_owner").(string)
-
 	input := &s3.PutBucketEncryptionInput{
 		Bucket: aws.String(bucket),
 		ServerSideEncryptionConfiguration: &s3.ServerSideEncryptionConfiguration{
 			Rules: expandBucketServerSideEncryptionConfigurationRules(d.Get("rule").(*schema.Set).List()),
 		},
 	}
-
 	if expectedBucketOwner != "" {
 		input.ExpectedBucketOwner = aws.String(expectedBucketOwner)
 	}
@@ -102,10 +101,18 @@ func resourceBucketServerSideEncryptionConfigurationCreate(ctx context.Context, 
 	)
 
 	if err != nil {
-		return diag.Errorf("creating S3 bucket (%s) server-side encryption configuration: %s", bucket, err)
+		return diag.Errorf("creating S3 Bucket (%s) Server-side Encryption Configuration: %s", bucket, err)
 	}
 
 	d.SetId(CreateResourceID(bucket, expectedBucketOwner))
+
+	_, err = tfresource.RetryWhenNotFound(ctx, propagationTimeout, func() (interface{}, error) {
+		return FindBucketServerSideEncryptionConfiguration(ctx, conn, bucket, expectedBucketOwner)
+	})
+
+	if err != nil {
+		return diag.Errorf("waiting for S3 Bucket Server-side Encryption Configuration (%s) create: %s", d.Id(), err)
+	}
 
 	return resourceBucketServerSideEncryptionConfigurationRead(ctx, d, meta)
 }
@@ -118,43 +125,17 @@ func resourceBucketServerSideEncryptionConfigurationRead(ctx context.Context, d 
 		return diag.FromErr(err)
 	}
 
-	input := &s3.GetBucketEncryptionInput{
-		Bucket: aws.String(bucket),
-	}
+	sse, err := FindBucketServerSideEncryptionConfiguration(ctx, conn, bucket, expectedBucketOwner)
 
-	if expectedBucketOwner != "" {
-		input.ExpectedBucketOwner = aws.String(expectedBucketOwner)
-	}
-
-	resp, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, propagationTimeout,
-		func() (interface{}, error) {
-			return conn.GetBucketEncryptionWithContext(ctx, input)
-		},
-		s3.ErrCodeNoSuchBucket,
-		ErrCodeServerSideEncryptionConfigurationNotFound,
-	)
-
-	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, s3.ErrCodeNoSuchBucket, ErrCodeServerSideEncryptionConfigurationNotFound) {
-		log.Printf("[WARN] S3 Bucket Server-Side Encryption Configuration (%s) not found, removing from state", d.Id())
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] S3 Bucket Server-side Encryption Configuration (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}
 
 	if err != nil {
-		return diag.Errorf("reading S3 bucket server-side encryption configuration (%s): %s", d.Id(), err)
+		return diag.Errorf("reading S3 Bucket Server-side Encryption Configuration (%s): %s", d.Id(), err)
 	}
-
-	output, ok := resp.(*s3.GetBucketEncryptionOutput)
-	if !ok || output.ServerSideEncryptionConfiguration == nil {
-		if d.IsNewResource() {
-			return diag.Errorf("reading S3 bucket server-side encryption configuration (%s): empty output", d.Id())
-		}
-		log.Printf("[WARN] S3 Bucket Server-Side Encryption Configuration (%s) not found, removing from state", d.Id())
-		d.SetId("")
-		return nil
-	}
-
-	sse := output.ServerSideEncryptionConfiguration
 
 	d.Set("bucket", bucket)
 	d.Set("expected_bucket_owner", expectedBucketOwner)
@@ -179,7 +160,6 @@ func resourceBucketServerSideEncryptionConfigurationUpdate(ctx context.Context, 
 			Rules: expandBucketServerSideEncryptionConfigurationRules(d.Get("rule").(*schema.Set).List()),
 		},
 	}
-
 	if expectedBucketOwner != "" {
 		input.ExpectedBucketOwner = aws.String(expectedBucketOwner)
 	}
@@ -193,7 +173,7 @@ func resourceBucketServerSideEncryptionConfigurationUpdate(ctx context.Context, 
 	)
 
 	if err != nil {
-		return diag.Errorf("updating S3 bucket (%s) server-side encryption configuration: %s", d.Id(), err)
+		return diag.Errorf("updating S3 Bucket Server-side Encryption Configuration (%s): %s", d.Id(), err)
 	}
 
 	return resourceBucketServerSideEncryptionConfigurationRead(ctx, d, meta)
@@ -210,22 +190,49 @@ func resourceBucketServerSideEncryptionConfigurationDelete(ctx context.Context, 
 	input := &s3.DeleteBucketEncryptionInput{
 		Bucket: aws.String(bucket),
 	}
-
 	if expectedBucketOwner != "" {
 		input.ExpectedBucketOwner = aws.String(expectedBucketOwner)
 	}
 
 	_, err = conn.DeleteBucketEncryptionWithContext(ctx, input)
 
-	if tfawserr.ErrCodeEquals(err, s3.ErrCodeNoSuchBucket, ErrCodeServerSideEncryptionConfigurationNotFound) {
+	if tfawserr.ErrCodeEquals(err, s3.ErrCodeNoSuchBucket, errCodeServerSideEncryptionConfigurationNotFound) {
 		return nil
 	}
 
 	if err != nil {
-		return diag.Errorf("deleting S3 bucket server-side encryption configuration (%s): %s", d.Id(), err)
+		return diag.Errorf("deleting S3 Bucket Server-side Encryption Configuration (%s): %s", d.Id(), err)
 	}
 
 	return nil
+}
+
+func FindBucketServerSideEncryptionConfiguration(ctx context.Context, conn *s3.S3, bucketName, expectedBucketOwner string) (*s3.ServerSideEncryptionConfiguration, error) {
+	input := &s3.GetBucketEncryptionInput{
+		Bucket: aws.String(bucketName),
+	}
+	if expectedBucketOwner != "" {
+		input.ExpectedBucketOwner = aws.String(expectedBucketOwner)
+	}
+
+	output, err := conn.GetBucketEncryptionWithContext(ctx, input)
+
+	if tfawserr.ErrCodeEquals(err, s3.ErrCodeNoSuchBucket, errCodeServerSideEncryptionConfigurationNotFound) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || output.ServerSideEncryptionConfiguration == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output.ServerSideEncryptionConfiguration, nil
 }
 
 func expandBucketServerSideEncryptionConfigurationRuleApplyServerSideEncryptionByDefault(l []interface{}) *s3.ServerSideEncryptionByDefault {

@@ -101,14 +101,14 @@ The given filters must match exactly one VPC endpoint service whose data will be
 
 ### filter Configuration Block
 
-The following arguments are supported by the `filter` configuration block:
+The `filter` configuration block supports the following arguments:
 
 * `name` - (Required) Name of the filter field. Valid values can be found in the [EC2 DescribeVpcEndpointServices API Reference](https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_DescribeVpcEndpointServices.html).
 * `values` - (Required) Set of values that are accepted for the given filter field. Results will be selected if any given value matches.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This data source exports the following attributes in addition to the arguments above:
 
 * `acceptance_required` - Whether or not VPC endpoint connection requests to the service must be accepted by the service owner - `true` or `false`.
 * `arn` - ARN of the VPC endpoint service.
@@ -128,4 +128,4 @@ In addition to all arguments above, the following attributes are exported:
 
 - `read` - (Default `20m`)
 
-<!-- cache-key: cdktf-0.17.1 input-a2e45e39663cbb60ee3950a650948c0a37437ce1aa46c360fa62ec421df63580 -->
+<!-- cache-key: cdktf-0.17.1 input-07124556ae240c2c16fc954fbeb348321b8ac1e928a8e3cc7a640d672a6dfb99 -->

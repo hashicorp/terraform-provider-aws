@@ -32,9 +32,9 @@ class MyConvertedCode extends TerraformStack {
 
 ```
 
-## Attributes Reference
+## Attribute Reference
 
-The following attributes are exported:
+This data source exports the following attributes in addition to the arguments above:
 
 * `enabled` - Whether or not serial console access is enabled. Returns as `true` or `false`.
 * `id` - Region of serial console access.
@@ -45,4 +45,4 @@ The following attributes are exported:
 
 - `read` - (Default `20M`)
 
-<!-- cache-key: cdktf-0.17.1 input-fd8b4f696d0f003aee2404884112394191a210b2ad4bf6aac54e22a791bee4ed -->
+<!-- cache-key: cdktf-0.17.1 input-7d21124aaffd09332def089cd0e6c69fdfa0c5c94678ee766395bb6fc343430d -->

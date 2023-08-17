@@ -285,6 +285,7 @@ func (p *fwprovider) Configure(ctx context.Context, request provider.ConfigureRe
 // The data source type name is determined by the DataSource implementing
 // the Metadata method. All data sources must have unique names.
 func (p *fwprovider) DataSources(ctx context.Context) []func() datasource.DataSource {
+	var errs *multierror.Error
 	var dataSources []func() datasource.DataSource
 
 	for n, sp := range p.Primary.Meta().(*conns.AWSClient).ServicePackages {
@@ -303,6 +304,10 @@ func (p *fwprovider) DataSources(ctx context.Context) []func() datasource.DataSo
 				continue
 			}
 
+			metadataResponse := datasource.MetadataResponse{}
+			inner.Metadata(ctx, datasource.MetadataRequest{}, &metadataResponse)
+			typeName := metadataResponse.TypeName
+
 			// bootstrapContext is run on all wrapped methods before any interceptors.
 			bootstrapContext := func(ctx context.Context, meta *conns.AWSClient) context.Context {
 				ctx = conns.NewDataSourceContext(ctx, servicePackageName, v.Name)
@@ -312,11 +317,37 @@ func (p *fwprovider) DataSources(ctx context.Context) []func() datasource.DataSo
 
 				return ctx
 			}
+			interceptors := dataSourceInterceptors{}
+
+			if v.Tags != nil {
+				// The data source has opted in to transparent tagging.
+				// Ensure that the schema look OK.
+				schemaResponse := datasource.SchemaResponse{}
+				inner.Schema(ctx, datasource.SchemaRequest{}, &schemaResponse)
+
+				if v, ok := schemaResponse.Schema.Attributes[names.AttrTags]; ok {
+					if !v.IsComputed() {
+						errs = multierror.Append(errs, fmt.Errorf("`%s` attribute must be Computed: %s", names.AttrTags, typeName))
+						continue
+					}
+				} else {
+					errs = multierror.Append(errs, fmt.Errorf("no `%s` attribute defined in schema: %s", names.AttrTags, typeName))
+					continue
+				}
+
+				interceptors = append(interceptors, tagsDataSourceInterceptor{tags: v.Tags})
+			}
 
 			dataSources = append(dataSources, func() datasource.DataSource {
-				return newWrappedDataSource(bootstrapContext, inner)
+				return newWrappedDataSource(bootstrapContext, inner, interceptors)
 			})
 		}
+	}
+
+	if err := errs.ErrorOrNil(); err != nil {
+		tflog.Warn(ctx, "registering data sources", map[string]interface{}{
+			"error": err.Error(),
+		})
 	}
 
 	return dataSources
@@ -383,7 +414,7 @@ func (p *fwprovider) Resources(ctx context.Context) []func() resource.Resource {
 					continue
 				}
 
-				interceptors = append(interceptors, tagsInterceptor{tags: v.Tags})
+				interceptors = append(interceptors, tagsResourceInterceptor{tags: v.Tags})
 			}
 
 			resources = append(resources, func() resource.Resource {

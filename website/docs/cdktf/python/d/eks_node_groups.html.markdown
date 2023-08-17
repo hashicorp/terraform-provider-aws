@@ -49,9 +49,11 @@ class MyConvertedCode(TerraformStack):
 
 * `cluster_name` - (Required) Name of the cluster.
 
-## Attributes Reference
+## Attribute Reference
+
+This data source exports the following attributes in addition to the arguments above:
 
 * `id` - Cluster name.
 * `names` - Set of all node group names in an EKS Cluster.
 
-<!-- cache-key: cdktf-0.17.1 input-67e4c28097db0a006e86f916ccac086093759cae927ef1de592203bbfe16be3a -->
+<!-- cache-key: cdktf-0.17.1 input-247b947784562fdc28bdbed2be700b3594988bb4a6202ca8641a02a2b58e0633 -->

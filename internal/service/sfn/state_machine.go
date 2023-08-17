@@ -200,7 +200,6 @@ func resourceStateMachineCreate(ctx context.Context, d *schema.ResourceData, met
 
 	arn := aws.StringValue(outputRaw.(*sfn.CreateStateMachineOutput).StateMachineArn)
 	d.SetId(arn)
-	d.Set("state_machine_version_arn", outputRaw.(*sfn.CreateStateMachineOutput).StateMachineVersionArn)
 
 	return resourceStateMachineRead(ctx, d, meta)
 }
@@ -228,7 +227,6 @@ func resourceStateMachineRead(ctx context.Context, d *schema.ResourceData, meta 
 	}
 	d.Set("definition", output.Definition)
 	d.Set("description", output.Description)
-
 	if output.LoggingConfiguration != nil {
 		if err := d.Set("logging_configuration", []interface{}{flattenLoggingConfiguration(output.LoggingConfiguration)}); err != nil {
 			return diag.Errorf("setting logging_configuration: %s", err)
@@ -238,6 +236,7 @@ func resourceStateMachineRead(ctx context.Context, d *schema.ResourceData, meta 
 	}
 	d.Set("name", output.Name)
 	d.Set("name_prefix", create.NamePrefixFromName(aws.StringValue(output.Name)))
+	d.Set("publish", d.Get("publish").(bool))
 	d.Set("role_arn", output.RoleArn)
 	d.Set("revision_id", output.RevisionId)
 	d.Set("status", output.Status)
@@ -249,6 +248,23 @@ func resourceStateMachineRead(ctx context.Context, d *schema.ResourceData, meta 
 		d.Set("tracing_configuration", nil)
 	}
 	d.Set("type", output.Type)
+
+	input := &sfn.ListStateMachineVersionsInput{
+		StateMachineArn: aws.String(d.Id()),
+	}
+	listVersionsOutput, err := conn.ListStateMachineVersionsWithContext(ctx, input)
+
+	if err != nil {
+		return diag.Errorf("listing Step Functions State Machine (%s) Versions: %s", d.Id(), err)
+	}
+
+	// The results are sorted in descending order of the version creation time.
+	// https://docs.aws.amazon.com/step-functions/latest/apireference/API_ListStateMachineVersions.html
+	if len(listVersionsOutput.StateMachineVersions) > 0 {
+		d.Set("state_machine_version_arn", listVersionsOutput.StateMachineVersions[0].StateMachineVersionArn)
+	} else {
+		d.Set("state_machine_version_arn", nil)
+	}
 
 	return nil
 }
@@ -281,7 +297,7 @@ func resourceStateMachineUpdate(ctx context.Context, d *schema.ResourceData, met
 			}
 		}
 
-		out, err := conn.UpdateStateMachineWithContext(ctx, input)
+		_, err := conn.UpdateStateMachineWithContext(ctx, input)
 
 		if err != nil {
 			return diag.Errorf("updating Step Functions State Machine (%s): %s", d.Id(), err)
@@ -310,8 +326,6 @@ func resourceStateMachineUpdate(ctx context.Context, d *schema.ResourceData, met
 		if err != nil {
 			return diag.Errorf("waiting for Step Functions State Machine (%s) update: %s", d.Id(), err)
 		}
-
-		d.Set("state_machine_version_arn", out.StateMachineVersionArn)
 	}
 
 	return resourceStateMachineRead(ctx, d, meta)

@@ -865,7 +865,7 @@ func resourceEndpointCreate(ctx context.Context, d *schema.ResourceData, meta in
 		}
 
 		input.RedshiftSettings = settings
-	case engineNameSQLServer:
+	case engineNameSQLServer, engineNameBabelfish:
 		if _, ok := d.GetOk("secrets_manager_arn"); ok {
 			input.MicrosoftSQLServerSettings = &dms.MicrosoftSQLServerSettings{
 				SecretsManagerAccessRoleArn: aws.String(d.Get("secrets_manager_access_role_arn").(string)),
@@ -1201,7 +1201,7 @@ func resourceEndpointUpdate(ctx context.Context, d *schema.ResourceData, meta in
 					}
 				}
 			}
-		case engineNameSQLServer:
+		case engineNameSQLServer, engineNameBabelfish:
 			if d.HasChanges(
 				"username", "password", "server_name", "port", "database_name", "secrets_manager_access_role_arn",
 				"secrets_manager_arn") {
@@ -1527,7 +1527,7 @@ func resourceEndpointSetState(d *schema.ResourceData, endpoint *dms.Endpoint) er
 		if err := d.Set("redshift_settings", flattenRedshiftSettings(endpoint.RedshiftSettings)); err != nil {
 			return fmt.Errorf("setting redshift_settings: %w", err)
 		}
-	case engineNameSQLServer:
+	case engineNameSQLServer, engineNameBabelfish:
 		if endpoint.MicrosoftSQLServerSettings != nil {
 			d.Set("username", endpoint.MicrosoftSQLServerSettings.Username)
 			d.Set("server_name", endpoint.MicrosoftSQLServerSettings.ServerName)

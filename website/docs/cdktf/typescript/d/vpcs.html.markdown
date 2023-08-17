@@ -122,7 +122,9 @@ which take the following arguments:
 * `values` - (Required) Set of values that are accepted for the given field.
   A VPC will be selected if any one of the given values matches.
 
-## Attributes Reference
+## Attribute Reference
+
+This data source exports the following attributes in addition to the arguments above:
 
 * `id` - AWS Region.
 * `ids` - List of all the VPC Ids found.
@@ -133,4 +135,4 @@ which take the following arguments:
 
 - `read` - (Default `20M`)
 
-<!-- cache-key: cdktf-0.17.1 input-687ada60877a2dfb24fa8a249b22b8e82d18f129ba461fdc39ac72a207ca4fe6 -->
+<!-- cache-key: cdktf-0.17.1 input-be6a21066a3ec54cb0732f1d95589ca403b257a294348dbb989f92e860fb3744 -->

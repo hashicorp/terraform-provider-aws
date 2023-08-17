@@ -36,7 +36,7 @@ class MyConvertedCode(TerraformStack):
 
 ## Argument Reference
 
-The following arguments are supported:
+This data source supports the following arguments:
 
 * `transit_gateway_id` - (Optional) Identifier of the EC2 Transit Gateway.
 * `dx_gateway_id` - (Optional) Identifier of the Direct Connect Gateway.
@@ -45,14 +45,14 @@ The following arguments are supported:
 
 ### filter Configuration Block
 
-The following arguments are supported by the `filter` configuration block:
+The `filter` configuration block supports the following arguments:
 
 * `name` - (Required) Name of the filter field. Valid values can be found in the [EC2 DescribeTransitGatewayAttachments API Reference](https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_DescribeTransitGatewayAttachments.html).
 * `values` - (Required) Set of values that are accepted for the given filter field. Results will be selected if any given value matches.
 
 ## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This data source exports the following attributes in addition to the arguments above:
 
 * `id` - EC2 Transit Gateway Attachment identifier
 * `tags` - Key-value tags for the EC2 Transit Gateway Attachment
@@ -63,4 +63,4 @@ In addition to all arguments above, the following attributes are exported:
 
 - `read` - (Default `20m`)
 
-<!-- cache-key: cdktf-0.17.1 input-24342787a3ce635e686cc7f106a91787a880dd41a77e294e579c6c74e8174823 -->
+<!-- cache-key: cdktf-0.17.1 input-b7236cdedf33b2a2beaa76c047f8a0d2b5a1cc86432e1675ff18f61961098d3d -->

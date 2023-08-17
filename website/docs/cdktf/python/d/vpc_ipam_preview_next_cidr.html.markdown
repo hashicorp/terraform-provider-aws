@@ -50,15 +50,15 @@ class MyConvertedCode(TerraformStack):
 
 ## Argument Reference
 
-The following arguments are supported:
+This data source supports the following arguments:
 
 * `disallowed_cidrs` - (Optional) Exclude a particular CIDR range from being returned by the pool.
 * `ipam_pool_id` - (Required) ID of the pool to which you want to assign a CIDR.
 * `netmask_length` - (Optional) Netmask length of the CIDR you would like to preview from the IPAM pool.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This data source exports the following attributes in addition to the arguments above:
 
 * `cidr` - Previewed CIDR from the pool.
 * `id` - ID of the preview.
@@ -69,4 +69,4 @@ In addition to all arguments above, the following attributes are exported:
 
 - `read` - (Default `20m`)
 
-<!-- cache-key: cdktf-0.17.1 input-3bf66fe2ef22b7e7b07074b1b1d47857e73db5589e4a3ad5fb868ca237c5fb05 -->
+<!-- cache-key: cdktf-0.17.1 input-dd816317496f53d47089ea622a6d2495e074267b1372edce322e33a4007d026b -->
