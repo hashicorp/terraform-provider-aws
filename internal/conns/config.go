@@ -13,6 +13,7 @@ import (
 	awsbase "github.com/hashicorp/aws-sdk-go-base/v2"
 	awsbasev1 "github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2"
 	basediag "github.com/hashicorp/aws-sdk-go-base/v2/diag"
+	"github.com/hashicorp/aws-sdk-go-base/v2/logging"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
@@ -60,6 +61,8 @@ type Config struct {
 func (c *Config) ConfigureProvider(ctx context.Context, client *AWSClient) (*AWSClient, diag.Diagnostics) {
 	var diags diag.Diagnostics
 
+	ctx, logger := logging.NewTfLogger(ctx)
+
 	awsbaseConfig := awsbase.Config{
 		AccessKey:                     c.AccessKey,
 		APNInfo:                       StdUserAgentProducts(c.TerraformVersion),
@@ -71,6 +74,7 @@ func (c *Config) ConfigureProvider(ctx context.Context, client *AWSClient) (*AWS
 		Insecure:                      c.Insecure,
 		HTTPClient:                    client.HTTPClient(),
 		HTTPProxy:                     c.HTTPProxy,
+		Logger:                        logger,
 		MaxRetries:                    c.MaxRetries,
 		Profile:                       c.Profile,
 		Region:                        c.Region,
