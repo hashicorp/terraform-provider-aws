@@ -17,13 +17,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
-
-	// tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
-
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_cognito_identity_pool", name="Pool")
+// @Tags(identifierAttribute="arn")
 func DataSourcePool() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourcePoolRead,
@@ -100,7 +99,7 @@ func DataSourcePool() *schema.Resource {
 				},
 			},
 
-			// "tags": tftags.TagsSchemaComputed(), // TIP: Many, but not all, data sources have `tags` attributes.
+			"tags": tftags.TagsSchemaComputed(), // TIP: Many, but not all, data sources have `tags` attributes.
 		},
 	}
 }

@@ -29,6 +29,9 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 			Factory:  DataSourcePool,
 			TypeName: "aws_cognito_identity_pool",
 			Name:     "Pool",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
 		},
 	}
 }

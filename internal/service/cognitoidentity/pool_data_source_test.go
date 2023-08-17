@@ -186,6 +186,41 @@ func TestAccCognitoIdentityPooDataSource_supportedLoginProviders(t *testing.T) {
 	})
 }
 
+func TestAccCognitoIdentityPoolDataSource_tags(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var ip cognitoidentity.IdentityPool
+	name := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	dataSourceName := "data.aws_cognito_identity_pool.test"
+	resourceName := "aws_cognito_identity_pool.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, cognitoidentity.EndpointsID)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, cognitoidentity.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckPoolDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccPoolDataSourceConfig_tags(name, "key1", "value1"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckPoolExists(ctx, resourceName, &ip),
+					resource.TestCheckResourceAttrPair(dataSourceName, "arn", resourceName, "arn"),
+					resource.TestCheckResourceAttr(dataSourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(dataSourceName, "tags.key1", "value1"),
+				),
+			},
+		},
+	})
+}
+
 func testAccPoolDataSourceConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 	resource "aws_cognito_identity_pool" "test" {
@@ -228,5 +263,13 @@ func testAccPoolDataSourceConfig_supportedLoginProviders(name string) string {
 	data "aws_cognito_identity_pool" "test" {
 		identity_pool_name = aws_cognito_identity_pool.test.identity_pool_name
 	}
+`))
+}
+
+func testAccPoolDataSourceConfig_tags(name, tagKey1, tagValue1 string) string {
+	return acctest.ConfigCompose(testAccPoolConfig_tags1(name, tagKey1, tagValue1), fmt.Sprintf(`
+data "aws_cognito_identity_pool" "test" {
+	identity_pool_name = aws_cognito_identity_pool.test.identity_pool_name
+}
 `))
 }
