@@ -739,20 +739,20 @@ func resourceDataSourceUpdate(ctx context.Context, d *schema.ResourceData, meta 
 			Name:         aws.String(d.Get("name").(string)),
 		}
 
-		if d.HasChange("credentials") {
-			params.Credentials = expandDataSourceCredentials(d.Get("credentials").([]interface{}))
+		if v, ok := d.GetOk("parameters"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+			params.DataSourceParameters = expandDataSourceParameters(v.([]interface{}))
 		}
 
-		if d.HasChange("parameters") {
-			params.DataSourceParameters = expandDataSourceParameters(d.Get("parameters").([]interface{}))
+		if v, ok := d.GetOk("credentials"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+			params.Credentials = expandDataSourceCredentials(v.([]interface{}))
 		}
 
-		if d.HasChange("ssl_properties") {
-			params.SslProperties = expandDataSourceSSLProperties(d.Get("ssl_properties").([]interface{}))
+		if v, ok := d.GetOk("ssl_properties"); ok && len(v.([]interface{})) != 0 && v.([]interface{})[0] != nil {
+			params.SslProperties = expandDataSourceSSLProperties(v.([]interface{}))
 		}
 
-		if d.HasChange("vpc_connection_properties") {
-			params.VpcConnectionProperties = expandDataSourceVPCConnectionProperties(d.Get("vpc_connection_properties").([]interface{}))
+		if v, ok := d.GetOk("vpc_connection_properties"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+			params.VpcConnectionProperties = expandDataSourceVPCConnectionProperties(v.([]interface{}))
 		}
 
 		_, err = conn.UpdateDataSourceWithContext(ctx, params)
