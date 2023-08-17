@@ -96,7 +96,7 @@ func autoFlexConvert(ctx context.Context, from, to any, flexer autoFlexer) diag.
 }
 
 // autoFlexValues returns the underlying `reflect.Value`s of `from` and `to`.
-func autoFlexValues(ctx context.Context, from, to any) (reflect.Value, reflect.Value, diag.Diagnostics) {
+func autoFlexValues(_ context.Context, from, to any) (reflect.Value, reflect.Value, diag.Diagnostics) {
 	var diags diag.Diagnostics
 
 	valFrom, valTo := reflect.ValueOf(from), reflect.ValueOf(to)
