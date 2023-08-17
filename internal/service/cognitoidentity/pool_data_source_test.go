@@ -235,41 +235,41 @@ func testAccPoolDataSourceConfig_basic(rName string) string {
 }
 
 func testAccPoolDataSourceConfig_openidConnectProviderARNs(rName string) string {
-	return acctest.ConfigCompose(testAccPoolConfig_openidConnectProviderARNs(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccPoolConfig_openidConnectProviderARNs(rName), `
 data "aws_cognito_identity_pool" "test" {
 	identity_pool_name = aws_cognito_identity_pool.test.identity_pool_name
 }
-`))
+`)
 }
 
 func testAccPoolDataSourceConfig_identityProviders(rName string) string {
-	return acctest.ConfigCompose(testAccPoolConfig_identityProviders(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccPoolConfig_identityProviders(rName), `
 data "aws_cognito_identity_pool" "test" {
 	identity_pool_name = aws_cognito_identity_pool.test.identity_pool_name
 }
-`))
+`)
 }
 
 func testAccPoolDataSourceConfig_samlProviderARNs(name, idpEntityId string) string {
-	return acctest.ConfigCompose(testAccPoolConfig_samlProviderARNs(name, idpEntityId), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccPoolConfig_samlProviderARNs(name, idpEntityId), `
 	data "aws_cognito_identity_pool" "test" {
 		identity_pool_name = aws_cognito_identity_pool.test.identity_pool_name
 	}
-`))
+`)
 }
 
 func testAccPoolDataSourceConfig_supportedLoginProviders(name string) string {
-	return acctest.ConfigCompose(testAccPoolConfig_supportedLoginProviders(name), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccPoolConfig_supportedLoginProviders(name), `
 	data "aws_cognito_identity_pool" "test" {
 		identity_pool_name = aws_cognito_identity_pool.test.identity_pool_name
 	}
-`))
+`)
 }
 
 func testAccPoolDataSourceConfig_tags(name, tagKey1, tagValue1 string) string {
-	return acctest.ConfigCompose(testAccPoolConfig_tags1(name, tagKey1, tagValue1), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccPoolConfig_tags1(name, tagKey1, tagValue1), `
 data "aws_cognito_identity_pool" "test" {
 	identity_pool_name = aws_cognito_identity_pool.test.identity_pool_name
 }
-`))
+`)
 }
