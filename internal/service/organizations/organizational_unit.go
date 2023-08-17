@@ -32,6 +32,7 @@ func ResourceOrganizationalUnit() *schema.Resource {
 		ReadWithoutTimeout:   resourceOrganizationalUnitRead,
 		UpdateWithoutTimeout: resourceOrganizationalUnitUpdate,
 		DeleteWithoutTimeout: resourceOrganizationalUnitDelete,
+
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
@@ -71,9 +72,9 @@ func ResourceOrganizationalUnit() *schema.Resource {
 				ValidateFunc: validation.StringLenBetween(1, 128),
 			},
 			"parent_id": {
-				ForceNew:     true,
 				Type:         schema.TypeString,
 				Required:     true,
+				ForceNew:     true,
 				ValidateFunc: validation.StringMatch(regexp.MustCompile("^(r-[0-9a-z]{4,32})|(ou-[0-9a-z]{4,32}-[a-z0-9]{8,32})$"), "see https://docs.aws.amazon.com/organizations/latest/APIReference/API_CreateOrganizationalUnit.html#organizations-CreateOrganizationalUnit-request-ParentId"),
 			},
 			names.AttrTags:    tftags.TagsSchema(),
@@ -124,34 +125,24 @@ func resourceOrganizationalUnitRead(ctx context.Context, d *schema.ResourceData,
 		return sdkdiag.AppendErrorf(diags, "reading Organizations Organizational Unit (%s): %s", d.Id(), err)
 	}
 
-	parentId, err := resourceOrganizationalUnitGetParentID(ctx, conn, d.Id())
+	parentAccountID, err := findParentAccountID(ctx, conn, d.Id())
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "listing Organizations Organizational Unit (%s) parents: %s", d.Id(), err)
 	}
 
-	var accounts []*organizations.Account
-	input := &organizations.ListAccountsForParentInput{
-		ParentId: aws.String(d.Id()),
-	}
-
-	err = conn.ListAccountsForParentPagesWithContext(ctx, input, func(page *organizations.ListAccountsForParentOutput, lastPage bool) bool {
-		accounts = append(accounts, page.Accounts...)
-
-		return !lastPage
-	})
+	accounts, err := findAccountsForParent(ctx, conn, d.Id())
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "listing Organizations Organizational Unit (%s) accounts: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "listing Organizations Accounts for parent (%s): %s", d.Id(), err)
 	}
 
 	if err := d.Set("accounts", flattenOrganizationalUnitAccounts(accounts)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting accounts: %s", err)
 	}
-
 	d.Set("arn", ou.Arn)
 	d.Set("name", ou.Name)
-	d.Set("parent_id", parentId)
+	d.Set("parent_id", parentAccountID)
 
 	return diags
 }
@@ -223,36 +214,6 @@ func findOrganizationalUnit(ctx context.Context, conn *organizations.Organizatio
 	}
 
 	return output.OrganizationalUnit, nil
-}
-
-func resourceOrganizationalUnitGetParentID(ctx context.Context, conn *organizations.Organizations, childId string) (string, error) {
-	input := &organizations.ListParentsInput{
-		ChildId: aws.String(childId),
-	}
-	var parents []*organizations.Parent
-
-	err := conn.ListParentsPagesWithContext(ctx, input, func(page *organizations.ListParentsOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
-		}
-
-		parents = append(parents, page.Parents...)
-
-		return !lastPage
-	})
-
-	if err != nil {
-		return "", err
-	}
-
-	if len(parents) == 0 {
-		return "", nil
-	}
-
-	// assume there is only a single parent
-	// https://docs.aws.amazon.com/organizations/latest/APIReference/API_ListParents.html
-	parent := parents[0]
-	return aws.StringValue(parent.Id), nil
 }
 
 func flattenOrganizationalUnitAccounts(accounts []*organizations.Account) []map[string]interface{} {
