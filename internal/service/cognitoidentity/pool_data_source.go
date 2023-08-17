@@ -15,6 +15,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 
 	// tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 
@@ -130,26 +132,57 @@ func dataSourcePoolRead(ctx context.Context, d *schema.ResourceData, meta interf
 	}
 	d.Set("arn", arn.String())
 	d.Set("identity_pool_name", ip.IdentityPoolName)
+	d.Set("allow_unauthenticated_identities", ip.AllowUnauthenticatedIdentities)
+	d.Set("allow_classic_flow", ip.AllowClassicFlow)
+	d.Set("developer_provider_name", ip.DeveloperProviderName)
+
+	setTagsOut(ctx, ip.IdentityPoolTags)
+
+	if err := d.Set("cognito_identity_providers", flattenIdentityProviders(ip.CognitoIdentityProviders)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting cognito_identity_providers error: %s", err)
+	}
+
+	if err := d.Set("openid_connect_provider_arns", flex.FlattenStringList(ip.OpenIdConnectProviderARNs)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting openid_connect_provider_arns error: %s", err)
+	}
+
+	if err := d.Set("saml_provider_arns", flex.FlattenStringList(ip.SamlProviderARNs)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting saml_provider_arns error: %s", err)
+	}
+
+	if err := d.Set("supported_login_providers", aws.StringValueMap(ip.SupportedLoginProviders)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting supported_login_providers error: %s", err)
+	}
 
 	return diags
 }
 
 func findPoolByName(ctx context.Context, conn *cognitoidentity.CognitoIdentity, name string) (*cognitoidentity.IdentityPool, error) {
 	var poolID string
-
-	pools, err := conn.ListIdentityPoolsWithContext(ctx, &cognitoidentity.ListIdentityPoolsInput{
+	input := &cognitoidentity.ListIdentityPoolsInput{
 		MaxResults: aws.Int64(ListPoolMaxResults),
-	})
-	if err != nil {
-		return nil, err
 	}
 
-	for _, p := range pools.IdentityPools {
-		if aws.StringValue(p.IdentityPoolName) == name {
-			poolID = aws.StringValue(p.IdentityPoolId)
-		} else {
-			return nil, fmt.Errorf("no identity pool found with name %q", name)
+	err := conn.ListIdentityPoolsPagesWithContext(ctx, input, func(page *cognitoidentity.ListIdentityPoolsOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
 		}
+
+		for _, p := range page.IdentityPools {
+			if p == nil {
+				continue
+			}
+			if aws.StringValue(p.IdentityPoolName) == name {
+				poolID = aws.StringValue(p.IdentityPoolId)
+				return false
+			}
+		}
+
+		return !lastPage
+	})
+
+	if err != nil {
+		return nil, err
 	}
 
 	pool, err := conn.DescribeIdentityPoolWithContext(ctx, &cognitoidentity.DescribeIdentityPoolInput{
@@ -159,6 +192,9 @@ func findPoolByName(ctx context.Context, conn *cognitoidentity.CognitoIdentity, 
 		return nil, err
 	}
 
-	return pool, nil
+	if poolID == "" {
+		return nil, fmt.Errorf("no identity pool found with name %q", name)
+	}
 
+	return pool, nil
 }

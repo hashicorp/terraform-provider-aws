@@ -20,8 +20,8 @@ func TestAccCognitoIdentityPoolDataSource_basic(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	// var ip cognitoidentity.IdentityPool
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	var ip cognitoidentity.IdentityPool
+	name := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	dataSourceName := "data.aws_cognito_identity_pool.test"
 	resourceName := "aws_cognito_identity_pool.test"
 
@@ -36,22 +36,151 @@ func TestAccCognitoIdentityPoolDataSource_basic(t *testing.T) {
 		CheckDestroy:             testAccCheckPoolDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccPoolDataSourceConfig_basic(rName),
+				Config: testAccPoolDataSourceConfig_basic(name),
 				Check: resource.ComposeTestCheckFunc(
+					testAccCheckPoolExists(ctx, resourceName, &ip),
 					resource.TestCheckResourceAttrPair(dataSourceName, "arn", resourceName, "arn"),
-
-					// testAccCheckPoolExists(ctx, dataSourceName, &ip),
-					// resource.TestCheckResourceAttrPair(dataSourceName, "address_family", resourceName, "address_family"),
-					// resource.TestCheckResourceAttr(dataSourceName, "auto_minor_version_upgrade", "false"),
-					// resource.TestCheckResourceAttrSet(dataSourceName, "maintenance_window_start_time.0.day_of_week"),
-					// resource.TestCheckTypeSetElemNestedAttrs(dataSourceName, "user.*", map[string]string{
-					// 	"console_access": "false",
-					// 	"groups.#":       "0",
-					// 	"username":       "Test",
-					// 	"password":       "TestTest1234",
-					// }),
-					// acctest.MatchResourceAttrRegionalARN(dataSourceName, "arn", "cognitoidentity", regexp.MustCompile(`pool:+.`)),
+					resource.TestCheckResourceAttrPair(dataSourceName, "developer_provider_name", resourceName, "developer_provider_name"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "allow_unauthenticated_identities", resourceName, "allow_unauthenticated_identities"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "allow_classic_flow", resourceName, "allow_classic_flow"),
 				),
+			},
+		},
+	})
+}
+
+func TestAccCognitoIdentityPoolDataSource_openidConnectProviderARNs(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var ip cognitoidentity.IdentityPool
+	name := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	dataSourceName := "data.aws_cognito_identity_pool.test"
+	resourceName := "aws_cognito_identity_pool.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, cognitoidentity.EndpointsID)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, cognitoidentity.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckPoolDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccPoolDataSourceConfig_openidConnectProviderARNs(name),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckPoolExists(ctx, resourceName, &ip),
+					resource.TestCheckResourceAttrPair(dataSourceName, "openid_connect_provider_arns", resourceName, "openid_connect_provider_arns"),
+					resource.TestCheckResourceAttr(dataSourceName, "openid_connect_provider_arns.#", "1"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccCognitoIdentityPoolDataSource_cognitoIdentityProviders(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	name := sdkacctest.RandString(10)
+	var ip cognitoidentity.IdentityPool
+	dataSourceName := "data.aws_cognito_identity_pool.test"
+	resourceName := "aws_cognito_identity_pool.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, cognitoidentity.EndpointsID)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, cognitoidentity.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckPoolDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccPoolDataSourceConfig_identityProviders(name),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckPoolExists(ctx, resourceName, &ip),
+					resource.TestCheckResourceAttrPair(dataSourceName, "arn", resourceName, "arn"),
+					resource.TestCheckResourceAttr(dataSourceName, "cognito_identity_providers.#", "2"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccCognitoIdentityPoolDataSource_samlProviderARNs(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	name := sdkacctest.RandString(10)
+	idpEntityId := fmt.Sprintf("https://%s", acctest.RandomDomainName())
+	var ip cognitoidentity.IdentityPool
+	dataSourceName := "data.aws_cognito_identity_pool.test"
+	resourceName := "aws_cognito_identity_pool.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, cognitoidentity.EndpointsID)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, cognitoidentity.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckPoolDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccPoolDataSourceConfig_samlProviderARNs(name, idpEntityId),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckPoolExists(ctx, resourceName, &ip),
+					resource.TestCheckResourceAttrPair(dataSourceName, "arn", resourceName, "arn"),
+					resource.TestCheckResourceAttr(dataSourceName, "saml_provider_arns.#", "1"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "saml_provider_arns.0", "aws_iam_saml_provider.default", "arn")),
+			},
+		},
+	})
+}
+
+func TestAccCognitoIdentityPooDataSource_supportedLoginProviders(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	name := sdkacctest.RandString(10)
+	var ip cognitoidentity.IdentityPool
+	dataSourceName := "data.aws_cognito_identity_pool.test"
+	resourceName := "aws_cognito_identity_pool.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, cognitoidentity.EndpointsID)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, cognitoidentity.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckPoolDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccPoolDataSourceConfig_supportedLoginProviders(name),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckPoolExists(ctx, resourceName, &ip),
+					resource.TestCheckResourceAttrPair(dataSourceName, "arn", resourceName, "arn"),
+					resource.TestCheckResourceAttr(dataSourceName, "supported_login_providers.%", "1"),
+					resource.TestCheckResourceAttr(dataSourceName, "supported_login_providers.graph.facebook.com", "7346241598935555")),
 			},
 		},
 	})
@@ -59,13 +188,45 @@ func TestAccCognitoIdentityPoolDataSource_basic(t *testing.T) {
 
 func testAccPoolDataSourceConfig_basic(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_cognito_identity_pool" "test" {
-	identity_pool_name               = "%s"
-	allow_unauthenticated_identities = false
+	resource "aws_cognito_identity_pool" "test" {
+		identity_pool_name               = "%s"
+		allow_unauthenticated_identities = false
+	}
+
+	data "aws_cognito_identity_pool" "test" {
+		identity_pool_name = aws_cognito_identity_pool.test.identity_pool_name
+	}
+	`, rName)
 }
 
+func testAccPoolDataSourceConfig_openidConnectProviderARNs(rName string) string {
+	return acctest.ConfigCompose(testAccPoolConfig_openidConnectProviderARNs(rName), fmt.Sprintf(`
 data "aws_cognito_identity_pool" "test" {
 	identity_pool_name = aws_cognito_identity_pool.test.identity_pool_name
 }
-`, rName)
+`))
+}
+
+func testAccPoolDataSourceConfig_identityProviders(rName string) string {
+	return acctest.ConfigCompose(testAccPoolConfig_identityProviders(rName), fmt.Sprintf(`
+data "aws_cognito_identity_pool" "test" {
+	identity_pool_name = aws_cognito_identity_pool.test.identity_pool_name
+}
+`))
+}
+
+func testAccPoolDataSourceConfig_samlProviderARNs(name, idpEntityId string) string {
+	return acctest.ConfigCompose(testAccPoolConfig_samlProviderARNs(name, idpEntityId), fmt.Sprintf(`
+	data "aws_cognito_identity_pool" "test" {
+		identity_pool_name = aws_cognito_identity_pool.test.identity_pool_name
+	}
+`))
+}
+
+func testAccPoolDataSourceConfig_supportedLoginProviders(name string) string {
+	return acctest.ConfigCompose(testAccPoolConfig_supportedLoginProviders(name), fmt.Sprintf(`
+	data "aws_cognito_identity_pool" "test" {
+		identity_pool_name = aws_cognito_identity_pool.test.identity_pool_name
+	}
+`))
 }
