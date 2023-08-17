@@ -240,16 +240,16 @@ func testAccLocationFSxOntapImportStateID(resourceName string) resource.ImportSt
 func testAccLocationFSxOntapFileSystemConfig_basic() string {
 	return acctest.ConfigCompose(testAccFSxOntapFileSystemBaseConfig(), fmt.Sprintf(`
 resource "aws_datasync_location_fsx_ontap_file_system" "test" {
-	security_group_arns = [aws_security_group.test.arn]
-	storage_virtual_machine_arn = aws_fsx_ontap_storage_virtual_machine.test.arn
+  security_group_arns         = [aws_security_group.test.arn]
+  storage_virtual_machine_arn = aws_fsx_ontap_storage_virtual_machine.test.arn
 
-	protocol {
-		nfs {
-			mount_options {
-				version = "NFS3"
-			}
-		}
-	}
+  protocol {
+    nfs {
+      mount_options {
+        version = "NFS3"
+      }
+    }
+  }
 }
 `))
 }
@@ -257,17 +257,17 @@ resource "aws_datasync_location_fsx_ontap_file_system" "test" {
 func testAccLocationFSxOntapFileSystemConfig_subdirectory(subdirectory string) string {
 	return acctest.ConfigCompose(testAccFSxOntapFileSystemBaseConfig(), fmt.Sprintf(`
 resource "aws_datasync_location_fsx_ontap_file_system" "test" {
-	security_group_arns = [aws_security_group.test.arn]
-	storage_virtual_machine_arn = aws_fsx_ontap_storage_virtual_machine.test.arn
-  subdirectory        = %[1]q
+  security_group_arns         = [aws_security_group.test.arn]
+  storage_virtual_machine_arn = aws_fsx_ontap_storage_virtual_machine.test.arn
+  subdirectory                = %[1]q
 
-	protocol {
-		nfs {
-			mount_options {
-				version = "NFS3"
-			}
-		}
-	}
+  protocol {
+    nfs {
+      mount_options {
+        version = "NFS3"
+      }
+    }
+  }
 }
 `, subdirectory))
 }
@@ -275,20 +275,20 @@ resource "aws_datasync_location_fsx_ontap_file_system" "test" {
 func testAccLocationFSxOntapFileSystemConfig_tags1(key1, value1 string) string {
 	return acctest.ConfigCompose(testAccFSxOntapFileSystemBaseConfig(), fmt.Sprintf(`
 resource "aws_datasync_location_fsx_ontap_file_system" "test" {
-  security_group_arns = [aws_security_group.test.arn]
-	storage_virtual_machine_arn = aws_fsx_ontap_storage_virtual_machine.test.arn
+  security_group_arns         = [aws_security_group.test.arn]
+  storage_virtual_machine_arn = aws_fsx_ontap_storage_virtual_machine.test.arn
 
   tags = {
     %[1]q = %[2]q
   }
 
-	protocol {
-		nfs {
-			mount_options {
-				version = "NFS3"
-			}
-		}
-	}
+  protocol {
+    nfs {
+      mount_options {
+        version = "NFS3"
+      }
+    }
+  }
 }
 `, key1, value1))
 }
@@ -296,69 +296,69 @@ resource "aws_datasync_location_fsx_ontap_file_system" "test" {
 func testAccLocationFSxOntapFileSystemConfig_tags2(key1, value1, key2, value2 string) string {
 	return acctest.ConfigCompose(testAccFSxOntapFileSystemBaseConfig(), fmt.Sprintf(`
 resource "aws_datasync_location_fsx_ontap_file_system" "test" {
-  security_group_arns = [aws_security_group.test.arn]
-	storage_virtual_machine_arn = aws_fsx_ontap_storage_virtual_machine.test.arn
+  security_group_arns         = [aws_security_group.test.arn]
+  storage_virtual_machine_arn = aws_fsx_ontap_storage_virtual_machine.test.arn
 
   tags = {
     %[1]q = %[2]q
     %[3]q = %[4]q
   }
 
-	protocol {
-		nfs {
-			mount_options {
-				version = "NFS3"
-			}
-		}
-	}
+  protocol {
+    nfs {
+      mount_options {
+        version = "NFS3"
+      }
+    }
+  }
 }
 `, key1, value1, key2, value2))
 }
 
 func testAccFSxOntapFileSystemBaseConfig() string {
 	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), `
-	data "aws_partition" "current" {}
+data "aws_partition" "current" {}
 
-	resource "aws_vpc" "test" {
-		cidr_block = "10.0.0.0/16"
-	}
+resource "aws_vpc" "test" {
+  cidr_block = "10.0.0.0/16"
+}
 
-	resource "aws_subnet" "test" {
-		vpc_id            = aws_vpc.test.id
-		cidr_block        = "10.0.1.0/24"
-		availability_zone = data.aws_availability_zones.available.names[0]
-	}
+resource "aws_subnet" "test" {
+  vpc_id            = aws_vpc.test.id
+  cidr_block        = "10.0.1.0/24"
+  availability_zone = data.aws_availability_zones.available.names[0]
+}
 
-	resource "aws_security_group" "test" {
-		description = "security group for FSx testing"
-		vpc_id      = aws_vpc.test.id
+resource "aws_security_group" "test" {
+  description = "security group for FSx testing"
+  vpc_id      = aws_vpc.test.id
 
-		ingress {
-			cidr_blocks = [aws_vpc.test.cidr_block]
-			from_port   = 0
-			protocol    = -1
-			to_port     = 0
-		}
+  ingress {
+    cidr_blocks = [aws_vpc.test.cidr_block]
+    from_port   = 0
+    protocol    = -1
+    to_port     = 0
+  }
 
-		egress {
-			cidr_blocks = ["0.0.0.0/0"]
-			from_port   = 0
-			protocol    = "-1"
-			to_port     = 0
-		}
-	}
+  egress {
+    cidr_blocks = ["0.0.0.0/0"]
+    from_port   = 0
+    protocol    = "-1"
+    to_port     = 0
+  }
+}
 
-	resource "aws_fsx_ontap_file_system" "test" {
-		storage_capacity    = 1024
-		subnet_ids          = [aws_subnet.test.id]
-		deployment_type     = "SINGLE_AZ_1"
-		throughput_capacity = 512
-		preferred_subnet_id = aws_subnet.test.id
-	}
+resource "aws_fsx_ontap_file_system" "test" {
+  storage_capacity    = 1024
+  subnet_ids          = [aws_subnet.test.id]
+  deployment_type     = "SINGLE_AZ_1"
+  throughput_capacity = 512
+  preferred_subnet_id = aws_subnet.test.id
+}
 
-	resource "aws_fsx_ontap_storage_virtual_machine" "test" {
-		file_system_id = aws_fsx_ontap_file_system.test.id
-  	name           = "test"
-	}
+resource "aws_fsx_ontap_storage_virtual_machine" "test" {
+  file_system_id = aws_fsx_ontap_file_system.test.id
+  name           = "test"
+}
 `)
 }
