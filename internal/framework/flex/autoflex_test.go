@@ -125,6 +125,7 @@ func TestGenericExpand(t *testing.T) {
 
 	ctx := context.Background()
 	testString := "test"
+	testStringResult := "a"
 	testCases := []struct {
 		TestName   string
 		Source     any
@@ -153,6 +154,12 @@ func TestGenericExpand(t *testing.T) {
 			Source:   TestFlex00{},
 			Target:   &testString,
 			WantErr:  true,
+		},
+		{
+			TestName:   "types.String to string",
+			Source:     types.StringValue("a"),
+			Target:     &testString,
+			WantTarget: &testStringResult,
 		},
 		{
 			TestName:   "empty struct Source and Target",
