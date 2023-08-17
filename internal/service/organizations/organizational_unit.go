@@ -88,38 +88,22 @@ func resourceOrganizationalUnitCreate(ctx context.Context, d *schema.ResourceDat
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).OrganizationsConn(ctx)
 
-	// Create the organizational unit
-	createOpts := &organizations.CreateOrganizationalUnitInput{
-		Name:     aws.String(d.Get("name").(string)),
+	name := d.Get("name").(string)
+	input := &organizations.CreateOrganizationalUnitInput{
+		Name:     aws.String(name),
 		ParentId: aws.String(d.Get("parent_id").(string)),
 		Tags:     getTagsIn(ctx),
 	}
 
-	var err error
-	var resp *organizations.CreateOrganizationalUnitOutput
-	err = retry.RetryContext(ctx, 4*time.Minute, func() *retry.RetryError {
-		resp, err = conn.CreateOrganizationalUnitWithContext(ctx, createOpts)
-
-		if tfawserr.ErrCodeEquals(err, organizations.ErrCodeFinalizingOrganizationException) {
-			return retry.RetryableError(err)
-		}
-
-		if err != nil {
-			return retry.NonRetryableError(err)
-		}
-
-		return nil
-	})
-	if tfresource.TimedOut(err) {
-		resp, err = conn.CreateOrganizationalUnitWithContext(ctx, createOpts)
-	}
+	outputRaw, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, 4*time.Minute, func() (interface{}, error) {
+		return conn.CreateOrganizationalUnitWithContext(ctx, input)
+	}, organizations.ErrCodeFinalizingOrganizationException)
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating Organizations Organizational Unit: %s", err)
+		return sdkdiag.AppendErrorf(diags, "creating Organizations Organizational Unit (%s): %s", name, err)
 	}
 
-	// Store the ID
-	d.SetId(aws.StringValue(resp.OrganizationalUnit.Id))
+	d.SetId(aws.StringValue(outputRaw.(*organizations.CreateOrganizationalUnitOutput).OrganizationalUnit.Id))
 
 	return append(diags, resourceOrganizationalUnitRead(ctx, d, meta)...)
 }
