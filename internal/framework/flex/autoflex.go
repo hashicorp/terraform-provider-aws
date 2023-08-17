@@ -203,7 +203,7 @@ func (expander autoExpander) convert(ctx context.Context, valFrom, vTo reflect.V
 	return diags
 }
 
-// bool copies a Plugin Framework Bool(ish) value to a compatible AWS API field.
+// bool copies a Plugin Framework Bool(ish) value to a compatible AWS API value.
 func (expander autoExpander) bool(ctx context.Context, vFrom basetypes.BoolValuable, vTo reflect.Value) diag.Diagnostics {
 	var diags diag.Diagnostics
 
@@ -240,7 +240,7 @@ func (expander autoExpander) bool(ctx context.Context, vFrom basetypes.BoolValua
 	return diags
 }
 
-// float64 copies a Plugin Framework Float64(ish) value to a compatible AWS API field.
+// float64 copies a Plugin Framework Float64(ish) value to a compatible AWS API value.
 func (expander autoExpander) float64(ctx context.Context, vFrom basetypes.Float64Valuable, vTo reflect.Value) diag.Diagnostics {
 	var diags diag.Diagnostics
 
@@ -285,7 +285,7 @@ func (expander autoExpander) float64(ctx context.Context, vFrom basetypes.Float6
 	return diags
 }
 
-// int64 copies a Plugin Framework Int64(ish) value to a compatible AWS API field.
+// int64 copies a Plugin Framework Int64(ish) value to a compatible AWS API value.
 func (expander autoExpander) int64(ctx context.Context, vFrom basetypes.Int64Valuable, vTo reflect.Value) diag.Diagnostics {
 	var diags diag.Diagnostics
 
@@ -330,7 +330,7 @@ func (expander autoExpander) int64(ctx context.Context, vFrom basetypes.Int64Val
 	return diags
 }
 
-// string copies a Plugin Framework String(ish) value to a compatible AWS API field.
+// string copies a Plugin Framework String(ish) value to a compatible AWS API value.
 func (expander autoExpander) string(ctx context.Context, vFrom basetypes.StringValuable, vTo reflect.Value) diag.Diagnostics {
 	var diags diag.Diagnostics
 
@@ -367,7 +367,7 @@ func (expander autoExpander) string(ctx context.Context, vFrom basetypes.StringV
 	return diags
 }
 
-// list copies a Plugin Framework List(ish) value to a compatible AWS API field.
+// list copies a Plugin Framework List(ish) value to a compatible AWS API value.
 func (expander autoExpander) list(ctx context.Context, vFrom basetypes.ListValuable, vTo reflect.Value) diag.Diagnostics {
 	var diags diag.Diagnostics
 
@@ -397,7 +397,7 @@ func (expander autoExpander) list(ctx context.Context, vFrom basetypes.ListValua
 	return diags
 }
 
-// listOfString copies a Plugin Framework ListOfString(ish) value to a compatible AWS API field.
+// listOfString copies a Plugin Framework ListOfString(ish) value to a compatible AWS API value.
 func (expander autoExpander) listOfString(ctx context.Context, vFrom basetypes.ListValue, vTo reflect.Value) diag.Diagnostics {
 	var diags diag.Diagnostics
 
@@ -443,7 +443,7 @@ func (expander autoExpander) listOfString(ctx context.Context, vFrom basetypes.L
 	return diags
 }
 
-// map_ copies a Plugin Framework Map(ish) value to a compatible AWS API field.
+// map_ copies a Plugin Framework Map(ish) value to a compatible AWS API value.
 func (expander autoExpander) map_(ctx context.Context, vFrom basetypes.MapValuable, vTo reflect.Value) diag.Diagnostics {
 	var diags diag.Diagnostics
 
@@ -467,7 +467,7 @@ func (expander autoExpander) map_(ctx context.Context, vFrom basetypes.MapValuab
 	return diags
 }
 
-// mapOfString copies a Plugin Framework MapOfString(ish) value to a compatible AWS API field.
+// mapOfString copies a Plugin Framework MapOfString(ish) value to a compatible AWS API value.
 func (expander autoExpander) mapOfString(ctx context.Context, vFrom basetypes.MapValue, vTo reflect.Value) diag.Diagnostics {
 	var diags diag.Diagnostics
 
@@ -516,7 +516,7 @@ func (expander autoExpander) mapOfString(ctx context.Context, vFrom basetypes.Ma
 	return diags
 }
 
-// set copies a Plugin Framework Set(ish) value to a compatible AWS API field.
+// set copies a Plugin Framework Set(ish) value to a compatible AWS API value.
 func (expander autoExpander) set(ctx context.Context, vFrom basetypes.SetValuable, vTo reflect.Value) diag.Diagnostics {
 	var diags diag.Diagnostics
 
@@ -546,7 +546,7 @@ func (expander autoExpander) set(ctx context.Context, vFrom basetypes.SetValuabl
 	return diags
 }
 
-// setOfString copies a Plugin Framework SetOfString(ish) value to a compatible AWS API field.
+// setOfString copies a Plugin Framework SetOfString(ish) value to a compatible AWS API value.
 func (expander autoExpander) setOfString(ctx context.Context, vFrom basetypes.SetValue, vTo reflect.Value) diag.Diagnostics {
 	var diags diag.Diagnostics
 
@@ -592,7 +592,7 @@ func (expander autoExpander) setOfString(ctx context.Context, vFrom basetypes.Se
 	return diags
 }
 
-// nestedObject copies a Plugin Framework NestedObjectValue value to a compatible AWS API field.
+// nestedObject copies a Plugin Framework NestedObjectValue value to a compatible AWS API value.
 func (expander autoExpander) nestedObject(ctx context.Context, vFrom fwtypes.NestedObjectValue, vTo reflect.Value) diag.Diagnostics {
 	var diags diag.Diagnostics
 
@@ -632,7 +632,7 @@ func (expander autoExpander) nestedObject(ctx context.Context, vFrom fwtypes.Nes
 	return diags
 }
 
-// nestedObjectToStruct copies a Plugin Framework NestedObjectValue to a compatible AWS API (*)struct field.
+// nestedObjectToStruct copies a Plugin Framework NestedObjectValue to a compatible AWS API (*)struct value.
 func (expander autoExpander) nestedObjectToStruct(ctx context.Context, vFrom fwtypes.NestedObjectValue, tStruct reflect.Type, vTo reflect.Value) diag.Diagnostics {
 	var diags diag.Diagnostics
 
@@ -660,7 +660,7 @@ func (expander autoExpander) nestedObjectToStruct(ctx context.Context, vFrom fwt
 	return diags
 }
 
-// nestedObjectToSlice copies a Plugin Framework NestedObjectValue to a compatible AWS API [](*)struct field.
+// nestedObjectToSlice copies a Plugin Framework NestedObjectValue to a compatible AWS API [](*)struct value.
 func (expander autoExpander) nestedObjectToSlice(ctx context.Context, vFrom fwtypes.NestedObjectValue, tSlice, tElem reflect.Type, vTo reflect.Value) diag.Diagnostics {
 	var diags diag.Diagnostics
 
@@ -745,7 +745,7 @@ func (flattener autoFlattener) convert(ctx context.Context, vFrom, vTo reflect.V
 	return diags
 }
 
-// bool copies an AWS API bool value to a compatible Plugin Framework field.
+// bool copies an AWS API bool value to a compatible Plugin Framework value.
 func (flattener autoFlattener) bool(ctx context.Context, vFrom reflect.Value, tTo attr.Type, vTo reflect.Value) diag.Diagnostics {
 	var diags diag.Diagnostics
 
@@ -772,7 +772,7 @@ func (flattener autoFlattener) bool(ctx context.Context, vFrom reflect.Value, tT
 	return diags
 }
 
-// float copies an AWS API float value to a compatible Plugin Framework field.
+// float copies an AWS API float value to a compatible Plugin Framework value.
 func (flattener autoFlattener) float(ctx context.Context, vFrom reflect.Value, tTo attr.Type, vTo reflect.Value) diag.Diagnostics {
 	var diags diag.Diagnostics
 
@@ -799,7 +799,7 @@ func (flattener autoFlattener) float(ctx context.Context, vFrom reflect.Value, t
 	return diags
 }
 
-// int copies an AWS API int value to a compatible Plugin Framework field.
+// int copies an AWS API int value to a compatible Plugin Framework value.
 func (flattener autoFlattener) int(ctx context.Context, vFrom reflect.Value, tTo attr.Type, vTo reflect.Value) diag.Diagnostics {
 	var diags diag.Diagnostics
 
@@ -826,7 +826,7 @@ func (flattener autoFlattener) int(ctx context.Context, vFrom reflect.Value, tTo
 	return diags
 }
 
-// string copies an AWS API string value to a compatible Plugin Framework field.
+// string copies an AWS API string value to a compatible Plugin Framework value.
 func (flattener autoFlattener) string(ctx context.Context, vFrom reflect.Value, tTo attr.Type, vTo reflect.Value) diag.Diagnostics {
 	var diags diag.Diagnostics
 
@@ -853,7 +853,7 @@ func (flattener autoFlattener) string(ctx context.Context, vFrom reflect.Value, 
 	return diags
 }
 
-// ptr copies an AWS API pointer value to a compatible Plugin Framework field.
+// ptr copies an AWS API pointer value to a compatible Plugin Framework value.
 func (flattener autoFlattener) ptr(ctx context.Context, vFrom reflect.Value, tTo attr.Type, vTo reflect.Value) diag.Diagnostics {
 	var diags diag.Diagnostics
 
@@ -912,7 +912,7 @@ func (flattener autoFlattener) ptr(ctx context.Context, vFrom reflect.Value, tTo
 	return diags
 }
 
-// slice copies an AWS API slice value to a compatible Plugin Framework field.
+// slice copies an AWS API slice value to a compatible Plugin Framework value.
 func (flattener autoFlattener) slice(ctx context.Context, vFrom reflect.Value, tTo attr.Type, vTo reflect.Value) diag.Diagnostics {
 	var diags diag.Diagnostics
 
@@ -1069,7 +1069,7 @@ func (flattener autoFlattener) slice(ctx context.Context, vFrom reflect.Value, t
 	return diags
 }
 
-// map_ copies an AWS API map value to a compatible Plugin Framework field.
+// map_ copies an AWS API map value to a compatible Plugin Framework value.
 func (flattener autoFlattener) map_(ctx context.Context, vFrom reflect.Value, tTo attr.Type, vTo reflect.Value) diag.Diagnostics {
 	var diags diag.Diagnostics
 
@@ -1153,7 +1153,7 @@ func (flattener autoFlattener) map_(ctx context.Context, vFrom reflect.Value, tT
 	return diags
 }
 
-// ptrToStructNestedObject copies an AWS API *struct value to a compatible Plugin Framework NestedObjectValue field.
+// ptrToStructNestedObject copies an AWS API *struct value to a compatible Plugin Framework NestedObjectValue value.
 func (flattener autoFlattener) ptrToStructNestedObject(ctx context.Context, vFrom reflect.Value, tTo fwtypes.NestedObjectType, vTo reflect.Value) diag.Diagnostics {
 	var diags diag.Diagnostics
 
@@ -1191,7 +1191,7 @@ func (flattener autoFlattener) ptrToStructNestedObject(ctx context.Context, vFro
 	return diags
 }
 
-// sliceOfStructNestedObject copies an AWS API []struct value to a compatible Plugin Framework NestedObjectValue field.
+// sliceOfStructNestedObject copies an AWS API []struct value to a compatible Plugin Framework NestedObjectValue value.
 func (flattener autoFlattener) sliceOfStructNestedObject(ctx context.Context, vFrom reflect.Value, tTo fwtypes.NestedObjectType, vTo reflect.Value) diag.Diagnostics {
 	var diags diag.Diagnostics
 
