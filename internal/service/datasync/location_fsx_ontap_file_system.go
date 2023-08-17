@@ -81,11 +81,13 @@ func ResourceLocationFSxOntapFileSystem() *schema.Resource {
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
 												"version": {
-													Type:         schema.TypeString,
-													Default:      datasync.NfsVersionNfs3,
-													Optional:     true,
-													ForceNew:     true,
-													ValidateFunc: validation.StringInSlice(FSxOntapNfsVersion_Values(), false),
+													Type:     schema.TypeString,
+													Default:  datasync.NfsVersionNfs3,
+													Optional: true,
+													ForceNew: true,
+													ValidateFunc: validation.StringInSlice([]string{
+														datasync.NfsVersionNfs3,
+													}, false),
 												},
 											},
 										},
@@ -115,11 +117,16 @@ func ResourceLocationFSxOntapFileSystem() *schema.Resource {
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
 												"version": {
-													Type:         schema.TypeString,
-													Default:      datasync.SmbVersionAutomatic,
-													Optional:     true,
-													ForceNew:     true,
-													ValidateFunc: validation.StringInSlice(FSxOntapSmbVersion_Values(), false),
+													Type:     schema.TypeString,
+													Default:  datasync.SmbVersionAutomatic,
+													Optional: true,
+													ForceNew: true,
+													ValidateFunc: validation.StringInSlice([]string{
+														datasync.SmbVersionAutomatic,
+														datasync.SmbVersionSmb2,
+														datasync.SmbVersionSmb3,
+														datasync.SmbVersionSmb20,
+													}, false),
 												},
 											},
 										},
@@ -288,19 +295,4 @@ func resourceLocationFSxOntapFileSystemDelete(ctx context.Context, d *schema.Res
 	}
 
 	return diags
-}
-
-func FSxOntapNfsVersion_Values() []string {
-	return []string{
-		datasync.NfsVersionNfs3,
-	}
-}
-
-func FSxOntapSmbVersion_Values() []string {
-	return []string{
-		datasync.SmbVersionAutomatic,
-		datasync.SmbVersionSmb2,
-		datasync.SmbVersionSmb3,
-		datasync.SmbVersionSmb20,
-	}
 }
