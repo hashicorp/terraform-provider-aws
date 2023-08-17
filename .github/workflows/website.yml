@@ -60,9 +60,12 @@ jobs:
           use-verbose-mode: "yes"
           config-file: ".ci/.markdownlinkcheck.json"
           folder-path: "website/docs"
+          # Don't check CDKTF translated guides, e.g. website/docs/cdktf/typescript/guides/version-4-upgrade.html.md.
+          max-depth: 2
           file-extension: ".md"
-          base-branch: "main"
-          check-modified-files-only: "yes"
+          # Checking only modified files in the PR does not respect 'mex-depth'.
+          # base-branch: "main"
+          # check-modified-files-only: "yes"
 
   markdown-lint:
     runs-on: ubuntu-latest
@@ -71,6 +74,8 @@ jobs:
       - uses: avto-dev/markdown-lint@04d43ee9191307b50935a753da3b775ab695eceb # v1.5.0
         with:
           args: "website/docs"
+          # Ignore CDKTF translated guides.
+          ignore: "website/docs/cdktf/*/guides/*"
 
   misspell:
     runs-on: ubuntu-latest
