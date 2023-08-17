@@ -69,9 +69,9 @@ The following arguments are optional:
 
 * `version` - (Optional) SMB version that you want DataSync to use for mounting your SMB share. Valid values: `AUTOMATIC`, `SMB3`, `SMB2` `SMB2_0`. Default: `AUTOMATIC`
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the DataSync Location for the FSx Ontap File System.
 * `fsx_filesystem_arn` - ARN of the FSx Ontap File System.
@@ -79,8 +79,17 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-DataSync Location FSx Ontap File System can be imported using the `DataSync-ARN#FSx-ontap-svm-ARN`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_datasync_location_fsx_ontap_file_system` using the `DataSync-ARN#FSx-ontap-svm-ARN`. For example:
 
+```terraform
+import {
+  to = aws_datasync_location_fsx_ontap_file_system.example
+  id = "arn:aws:datasync:us-west-2:123456789012:location/loc-12345678901234567#arn:aws:fsx:us-west-2:123456789012:storage-virtual-machine/svm-12345678abcdef123"
+}
 ```
-$ terraform import aws_datasync_location_fsx_ontap_file_system.example arn:aws:datasync:us-west-2:123456789012:location/loc-12345678901234567#arn:aws:fsx:us-west-2:123456789012:storage-virtual-machine/svm-12345678abcdef123
+
+Using `terraform import`, import `aws_datasync_location_fsx_ontap_file_system` using the `DataSync-ARN#FSx-ontap-svm-ARN`. For example:
+
+```console
+% terraform import aws_datasync_location_fsx_ontap_file_system.example arn:aws:datasync:us-west-2:123456789012:location/loc-12345678901234567#arn:aws:fsx:us-west-2:123456789012:storage-virtual-machine/svm-12345678abcdef123
 ```
