@@ -76,8 +76,8 @@ class Service(name: String, spec: ServiceSpec) {
 
             failureConditions {
                 failOnText {
-                    conditionType = BuildFailureOnText.ConditionType.CONTAINS
-                    pattern = "build canceled"
+                    conditionType = BuildFailureOnText.ConditionType.REGEXP
+                    pattern = """(?i)build canceled"""
                     failureMessage = "build canceled when agent unregistered"
                     reverse = false
                     stopBuildOnFailure = true

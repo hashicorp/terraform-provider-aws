@@ -4,7 +4,7 @@ go 1.20
 
 require (
 	github.com/ProtonMail/go-crypto v0.0.0-20230717121422-5aa5874ade95
-	github.com/aws/aws-sdk-go v1.44.324
+	github.com/aws/aws-sdk-go v1.44.325
 	github.com/aws/aws-sdk-go-v2 v1.20.1
 	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.13.8
 	github.com/aws/aws-sdk-go-v2/service/accessanalyzer v1.20.2
@@ -16,6 +16,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/cloudcontrol v1.12.2
 	github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs v1.23.2
 	github.com/aws/aws-sdk-go-v2/service/codecatalyst v1.5.2
+	github.com/aws/aws-sdk-go-v2/service/codestarnotifications v1.15.2
 	github.com/aws/aws-sdk-go-v2/service/comprehend v1.25.2
 	github.com/aws/aws-sdk-go-v2/service/computeoptimizer v1.25.2
 	github.com/aws/aws-sdk-go-v2/service/directoryservice v1.18.2
