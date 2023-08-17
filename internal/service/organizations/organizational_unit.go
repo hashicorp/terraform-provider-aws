@@ -161,12 +161,13 @@ func resourceOrganizationalUnitUpdate(ctx context.Context, d *schema.ResourceDat
 	conn := meta.(*conns.AWSClient).OrganizationsConn(ctx)
 
 	if d.HasChange("name") {
-		updateOpts := &organizations.UpdateOrganizationalUnitInput{
+		input := &organizations.UpdateOrganizationalUnitInput{
 			Name:                 aws.String(d.Get("name").(string)),
 			OrganizationalUnitId: aws.String(d.Id()),
 		}
 
-		_, err := conn.UpdateOrganizationalUnitWithContext(ctx, updateOpts)
+		_, err := conn.UpdateOrganizationalUnitWithContext(ctx, input)
+
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating Organizations Organizational Unit (%s): %s", d.Id(), err)
 		}
