@@ -71,6 +71,8 @@ jobs:
       - uses: avto-dev/markdown-lint@04d43ee9191307b50935a753da3b775ab695eceb # v1.5.0
         with:
           args: "website/docs"
+          # Ignore CDKTF translated guides.
+          ignore: "website/docs/cdktf/*/guides/*"
 
   misspell:
     runs-on: ubuntu-latest
