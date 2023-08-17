@@ -104,7 +104,8 @@ func DataSourcePool() *schema.Resource {
 }
 
 const (
-	DSNamePool = "Pool Data Source"
+	DSNamePool         = "Pool Data Source"
+	ListPoolMaxResults = 20
 )
 
 func dataSourcePoolRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
@@ -136,7 +137,9 @@ func dataSourcePoolRead(ctx context.Context, d *schema.ResourceData, meta interf
 func findPoolByName(ctx context.Context, conn *cognitoidentity.CognitoIdentity, name string) (*cognitoidentity.IdentityPool, error) {
 	var poolID string
 
-	pools, err := conn.ListIdentityPoolsWithContext(ctx, &cognitoidentity.ListIdentityPoolsInput{})
+	pools, err := conn.ListIdentityPoolsWithContext(ctx, &cognitoidentity.ListIdentityPoolsInput{
+		MaxResults: aws.Int64(ListPoolMaxResults),
+	})
 	if err != nil {
 		return nil, err
 	}

@@ -65,7 +65,7 @@ resource "aws_cognito_identity_pool" "test" {
 }
 
 data "aws_cognito_identity_pool" "test" {
-	identity_pool_name = aws_cognito_identity_pool.test.name
+	identity_pool_name = aws_cognito_identity_pool.test.identity_pool_name
 }
 `, rName)
 }
