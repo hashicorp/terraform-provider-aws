@@ -64,7 +64,7 @@ func Flatten(ctx context.Context, apiObject, tfObject any, optFns ...AutoFlexOpt
 
 // autoFlexer is the interface implemented by an auto-flattener or expander.
 type autoFlexer interface {
-	copy(context.Context, reflect.Value, reflect.Value) diag.Diagnostics
+	convert(context.Context, reflect.Value, reflect.Value) diag.Diagnostics
 }
 
 // AutoFlexOptionsFunc is a type alias for an autoFlexer functional option.
@@ -73,6 +73,13 @@ type AutoFlexOptionsFunc func(autoFlexer)
 type autoExpander struct{}
 
 type autoFlattener struct{}
+
+// autoFlexConvert converts `from` to `to` using the specified auto-flexer.
+func autoFlexConvert(ctx context.Context, from any, to any, flexer autoFlexer) diag.Diagnostics {
+	var diags diag.Diagnostics
+
+	return diags
+}
 
 // walkStructFields traverses `from` calling `flexer` for each exported field.
 func walkStructFields(ctx context.Context, from any, to any, flexer autoFlexer) diag.Diagnostics {
@@ -114,9 +121,9 @@ func walkStructFields(ctx context.Context, from any, to any, flexer autoFlexer) 
 		if !toFieldVal.CanSet() {
 			continue // Corresponding field value can't be changed.
 		}
-		diags.Append(flexer.copy(ctx, valFrom.Field(i), toFieldVal)...)
+		diags.Append(flexer.convert(ctx, valFrom.Field(i), toFieldVal)...)
 		if diags.HasError() {
-			diags.AddError("AutoFlEx", fmt.Sprintf("copy (%s)", fieldName))
+			diags.AddError("AutoFlEx", fmt.Sprintf("convert (%s)", fieldName))
 			return diags
 		}
 	}
@@ -124,8 +131,8 @@ func walkStructFields(ctx context.Context, from any, to any, flexer autoFlexer) 
 	return diags
 }
 
-// copy copies a single Plugin Framework value to its AWS API equivalent.
-func (expander autoExpander) copy(ctx context.Context, valFrom, vTo reflect.Value) diag.Diagnostics {
+// convert converts a single Plugin Framework value to its AWS API equivalent.
+func (expander autoExpander) convert(ctx context.Context, valFrom, vTo reflect.Value) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	vFrom, ok := valFrom.Interface().(attr.Value)
@@ -672,8 +679,8 @@ func (expander autoExpander) nestedObjectToSlice(ctx context.Context, vFrom fwty
 	return diags
 }
 
-// copy copies a single AWS API value to its Plugin Framework equivalent.
-func (flattener autoFlattener) copy(ctx context.Context, vFrom, vTo reflect.Value) diag.Diagnostics {
+// convert converts a single AWS API value to its Plugin Framework equivalent.
+func (flattener autoFlattener) convert(ctx context.Context, vFrom, vTo reflect.Value) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	valTo, ok := vTo.Interface().(attr.Value)
