@@ -208,10 +208,12 @@ type TemplateData struct {
 	FmtPkg           bool
 	HelperSchemaPkg  bool
 	InternalTypesPkg bool
+	LoggingPkg       bool
 	NamesPkg         bool
 	SkipAWSImp       bool
 	SkipServiceImp   bool
 	SkipTypesImp     bool
+	TfLogPkg         bool
 	TfResourcePkg    bool
 	TimePkg          bool
 
@@ -298,10 +300,12 @@ func main() {
 		FmtPkg:           *updateTags,
 		HelperSchemaPkg:  awsPkg == "autoscaling",
 		InternalTypesPkg: (*listTags && *listTagsFunc == defaultListTagsFunc) || *serviceTagsMap || *serviceTagsSlice,
+		LoggingPkg:       *updateTags,
 		NamesPkg:         *updateTags && !*skipNamesImp,
 		SkipAWSImp:       *skipAWSImp,
 		SkipServiceImp:   *skipServiceImp,
 		SkipTypesImp:     *skipTypesImp,
+		TfLogPkg:         *updateTags,
 		TfResourcePkg:    (*getTag || *waitForPropagation),
 		TimePkg:          *waitForPropagation,
 
