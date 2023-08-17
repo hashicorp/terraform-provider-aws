@@ -30,7 +30,7 @@ func Expand(ctx context.Context, tfObject, apiObject any, optFns ...AutoFlexOpti
 		optFn(expander)
 	}
 
-	diags.Append(walkStructFields(ctx, tfObject, apiObject, expander)...)
+	diags.Append(autoFlexConvert(ctx, tfObject, apiObject, expander)...)
 	if diags.HasError() {
 		diags.AddError("AutoFlEx", fmt.Sprintf("Expand[%T, %T]", tfObject, apiObject))
 		return diags
@@ -53,7 +53,7 @@ func Flatten(ctx context.Context, apiObject, tfObject any, optFns ...AutoFlexOpt
 		optFn(flattener)
 	}
 
-	diags.Append(walkStructFields(ctx, apiObject, tfObject, flattener)...)
+	diags.Append(autoFlexConvert(ctx, apiObject, tfObject, flattener)...)
 	if diags.HasError() {
 		diags.AddError("AutoFlEx", fmt.Sprintf("Flatten[%T, %T]", apiObject, tfObject))
 		return diags
@@ -75,14 +75,28 @@ type autoExpander struct{}
 type autoFlattener struct{}
 
 // autoFlexConvert converts `from` to `to` using the specified auto-flexer.
-func autoFlexConvert(ctx context.Context, from any, to any, flexer autoFlexer) diag.Diagnostics {
+func autoFlexConvert(ctx context.Context, from, to any, flexer autoFlexer) diag.Diagnostics {
 	var diags diag.Diagnostics
 
+	valFrom, valTo, d := autoFlexValues(ctx, from, to)
+	diags.Append(d...)
+	if diags.HasError() {
+		return diags
+	}
+
+	// Top-level struct to struct conversion.
+	if typFrom, typTo := valFrom.Type(), valTo.Type(); typFrom.Kind() == reflect.Struct && typTo.Kind() == reflect.Struct {
+		diags.Append(autoFlexConvertStruct(ctx, from, to, flexer)...)
+		return diags
+	}
+
+	// Anything else.
+	diags.Append(flexer.convert(ctx, valFrom, valTo)...)
 	return diags
 }
 
-// walkStructFields traverses `from` calling `flexer` for each exported field.
-func walkStructFields(ctx context.Context, from any, to any, flexer autoFlexer) diag.Diagnostics {
+// autoFlexValues returns the underlying `reflect.Value`s of `from` and `to`.
+func autoFlexValues(ctx context.Context, from, to any) (reflect.Value, reflect.Value, diag.Diagnostics) {
 	var diags diag.Diagnostics
 
 	valFrom, valTo := reflect.ValueOf(from), reflect.ValueOf(to)
@@ -91,21 +105,24 @@ func walkStructFields(ctx context.Context, from any, to any, flexer autoFlexer) 
 	}
 	if kind := valTo.Kind(); kind != reflect.Ptr {
 		diags.AddError("AutoFlEx", fmt.Sprintf("target (%T): %s, want pointer", to, kind))
-		return diags
+		return reflect.Value{}, reflect.Value{}, diags
 	}
 	valTo = valTo.Elem()
 
-	typFrom, typTo := valFrom.Type(), valTo.Type()
-	if typFrom.Kind() != reflect.Struct {
-		diags.AddError("AutoFlEx", fmt.Sprintf("source: %s, want struct", typFrom))
-		return diags
-	}
-	if typTo.Kind() != reflect.Struct {
-		diags.AddError("AutoFlEx", fmt.Sprintf("target: %s, want struct", typTo))
+	return valFrom, valTo, diags
+}
+
+// autoFlexConvertStruct traverses struct `from` calling `flexer` for each exported field.
+func autoFlexConvertStruct(ctx context.Context, from any, to any, flexer autoFlexer) diag.Diagnostics {
+	var diags diag.Diagnostics
+
+	valFrom, valTo, d := autoFlexValues(ctx, from, to)
+	diags.Append(d...)
+	if diags.HasError() {
 		return diags
 	}
 
-	for i := 0; i < typFrom.NumField(); i++ {
+	for i, typFrom := 0, valFrom.Type(); i < typFrom.NumField(); i++ {
 		field := typFrom.Field(i)
 		if field.PkgPath != "" {
 			continue // Skip unexported fields.
@@ -628,7 +645,7 @@ func (expander autoExpander) nestedObjectToStruct(ctx context.Context, vFrom fwt
 
 	// Create a new target structure and walk its fields.
 	to := reflect.New(tStruct)
-	diags.Append(walkStructFields(ctx, from, to.Interface(), expander)...)
+	diags.Append(autoFlexConvertStruct(ctx, from, to.Interface(), expander)...)
 	if diags.HasError() {
 		return diags
 	}
@@ -661,7 +678,7 @@ func (expander autoExpander) nestedObjectToSlice(ctx context.Context, vFrom fwty
 	for i := 0; i < n; i++ {
 		// Create a new target structure and walk its fields.
 		target := reflect.New(tElem)
-		diags.Append(walkStructFields(ctx, f.Index(i).Interface(), target.Interface(), expander)...)
+		diags.Append(autoFlexConvertStruct(ctx, f.Index(i).Interface(), target.Interface(), expander)...)
 		if diags.HasError() {
 			return diags
 		}
@@ -1158,7 +1175,7 @@ func (flattener autoFlattener) ptrToStructNestedObject(ctx context.Context, vFro
 		return diags
 	}
 
-	diags.Append(walkStructFields(ctx, vFrom.Elem().Interface(), to, flattener)...)
+	diags.Append(autoFlexConvertStruct(ctx, vFrom.Elem().Interface(), to, flattener)...)
 	if diags.HasError() {
 		return diags
 	}
@@ -1205,7 +1222,7 @@ func (flattener autoFlattener) sliceOfStructNestedObject(ctx context.Context, vF
 			return diags
 		}
 
-		diags.Append(walkStructFields(ctx, vFrom.Index(i).Interface(), target, flattener)...)
+		diags.Append(autoFlexConvertStruct(ctx, vFrom.Index(i).Interface(), target, flattener)...)
 		if diags.HasError() {
 			return diags
 		}
