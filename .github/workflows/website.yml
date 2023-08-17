@@ -61,10 +61,10 @@ jobs:
           config-file: ".ci/.markdownlinkcheck.json"
           folder-path: "website/docs"
           # Don't check CDKTF translated guides, e.g. website/docs/cdktf/typescript/guides/version-4-upgrade.html.md.
-          max-depth: "2"
+          max-depth: 2
           file-extension: ".md"
           base-branch: "main"
-          check-modified-files-only: "yes"
+          # check-modified-files-only: "yes"
 
   markdown-lint:
     runs-on: ubuntu-latest
