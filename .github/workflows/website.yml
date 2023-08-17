@@ -63,7 +63,8 @@ jobs:
           # Don't check CDKTF translated guides, e.g. website/docs/cdktf/typescript/guides/version-4-upgrade.html.md.
           max-depth: 2
           file-extension: ".md"
-          base-branch: "main"
+          # Checking only modified files in the PR does not respect 'mex-depth'.
+          # base-branch: "main"
           # check-modified-files-only: "yes"
 
   markdown-lint:
