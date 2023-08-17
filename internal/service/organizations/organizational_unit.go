@@ -180,11 +180,10 @@ func resourceOrganizationalUnitDelete(ctx context.Context, d *schema.ResourceDat
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).OrganizationsConn(ctx)
 
-	input := &organizations.DeleteOrganizationalUnitInput{
+	log.Printf("[DEBUG] Deleting Organizations Organizational Unit: %s", d.Id())
+	_, err := conn.DeleteOrganizationalUnitWithContext(ctx, &organizations.DeleteOrganizationalUnitInput{
 		OrganizationalUnitId: aws.String(d.Id()),
-	}
-
-	_, err := conn.DeleteOrganizationalUnitWithContext(ctx, input)
+	})
 
 	if tfawserr.ErrCodeEquals(err, organizations.ErrCodeOrganizationalUnitNotFoundException) {
 		return diags
