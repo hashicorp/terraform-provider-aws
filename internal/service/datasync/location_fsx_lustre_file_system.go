@@ -112,10 +112,10 @@ func resourceLocationFSxLustreFileSystemCreate(ctx context.Context, d *schema.Re
 		input.Subdirectory = aws.String(v.(string))
 	}
 
-	log.Printf("[DEBUG] Creating DataSync Location Fsx Lustre File System: %#v", input)
 	output, err := conn.CreateLocationFsxLustreWithContext(ctx, input)
+
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating DataSync Location Fsx Lustre File System: %s", err)
+		return sdkdiag.AppendErrorf(diags, "creating DataSync Location FSx for Lustre File System: %s", err)
 	}
 
 	d.SetId(aws.StringValue(output.LocationArn))
@@ -130,32 +130,26 @@ func resourceLocationFSxLustreFileSystemRead(ctx context.Context, d *schema.Reso
 	output, err := FindLocationFSxLustreByARN(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
-		log.Printf("[WARN] DataSync Location Fsx Lustre (%s) not found, removing from state", d.Id())
+		log.Printf("[WARN] DataSync Location FSx for Lustre File System (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
 	}
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading DataSync Location Fsx Lustre (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading DataSync Location FSx for Lustre File System (%s): %s", d.Id(), err)
 	}
 
-	subdirectory, err := subdirectoryFromLocationURI(aws.StringValue(output.LocationUri))
-
+	uri := aws.StringValue(output.LocationUri)
+	subdirectory, err := subdirectoryFromLocationURI(uri)
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading DataSync Location Fsx Lustre (%s): %s", d.Id(), err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	d.Set("arn", output.LocationArn)
+	d.Set("creation_time", output.CreationTime.Format(time.RFC3339))
+	d.Set("security_group_arns", aws.StringValueSlice(output.SecurityGroupArns))
 	d.Set("subdirectory", subdirectory)
 	d.Set("uri", output.LocationUri)
-
-	if err := d.Set("security_group_arns", flex.FlattenStringSet(output.SecurityGroupArns)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting security_group_arns: %s", err)
-	}
-
-	if err := d.Set("creation_time", output.CreationTime.Format(time.RFC3339)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting creation_time: %s", err)
-	}
 
 	return diags
 }
@@ -172,19 +166,17 @@ func resourceLocationFSxLustreFileSystemDelete(ctx context.Context, d *schema.Re
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DataSyncConn(ctx)
 
-	input := &datasync.DeleteLocationInput{
+	log.Printf("[DEBUG] Deleting DataSync Location FSx for Lustre File System: %s", d.Id())
+	_, err := conn.DeleteLocationWithContext(ctx, &datasync.DeleteLocationInput{
 		LocationArn: aws.String(d.Id()),
-	}
-
-	log.Printf("[DEBUG] Deleting DataSync Location Fsx Lustre File System: %#v", input)
-	_, err := conn.DeleteLocationWithContext(ctx, input)
+	})
 
 	if tfawserr.ErrMessageContains(err, datasync.ErrCodeInvalidRequestException, "not found") {
 		return diags
 	}
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "deleting DataSync Location Fsx Lustre (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting DataSync Location FSx for Lustre File System (%s): %s", d.Id(), err)
 	}
 
 	return diags
