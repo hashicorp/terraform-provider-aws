@@ -23,7 +23,7 @@ EventBridge Pipes are very configurable, and may require IAM permissions to work
 ```terraform
 data "aws_caller_identity" "main" {}
 
-resource "aws_iam_role" "test" {
+resource "aws_iam_role" "example" {
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
     Statement = {
@@ -42,7 +42,7 @@ resource "aws_iam_role" "test" {
 }
 
 resource "aws_iam_role_policy" "source" {
-  role = aws_iam_role.test.id
+  role = aws_iam_role.example.id
   policy = jsonencode({
     Version = "2012-10-17"
     Statement = [
@@ -64,7 +64,7 @@ resource "aws_iam_role_policy" "source" {
 resource "aws_sqs_queue" "source" {}
 
 resource "aws_iam_role_policy" "target" {
-  role = aws_iam_role.test.id
+  role = aws_iam_role.example.id
   policy = jsonencode({
     Version = "2012-10-17"
     Statement = [
@@ -86,7 +86,7 @@ resource "aws_sqs_queue" "target" {}
 resource "aws_pipes_pipe" "example" {
   depends_on = [aws_iam_role_policy.source, aws_iam_role_policy.target]
   name       = "example-pipe"
-  role_arn   = aws_iam_role.test.arn
+  role_arn   = aws_iam_role.example.arn
   source     = aws_sqs_queue.source.arn
   target     = aws_sqs_queue.target.arn
 }
@@ -97,7 +97,7 @@ resource "aws_pipes_pipe" "example" {
 ```terraform
 resource "aws_pipes_pipe" "example" {
   name     = "example-pipe"
-  role_arn = aws_iam_role.test.arn
+  role_arn = aws_iam_role.example.arn
   source   = aws_sqs_queue.source.arn
   target   = aws_sqs_queue.target.arn
 
