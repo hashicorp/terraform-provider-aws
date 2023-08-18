@@ -5,6 +5,7 @@ package organizations
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"time"
 
@@ -32,7 +33,7 @@ func ResourceOrganization() *schema.Resource {
 		DeleteWithoutTimeout: resourceOrganizationDelete,
 
 		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
+			StateContext: resourceOrganizationImport,
 		},
 
 		CustomizeDiff: customdiff.Sequence(
@@ -248,11 +249,6 @@ func resourceOrganizationRead(ctx context.Context, d *schema.ResourceData, meta 
 		return sdkdiag.AppendErrorf(diags, "reading Organization: %s", err)
 	}
 
-	// Check that any Org ID specified for import matches the current Org ID.
-	if got, want := aws.StringValue(org.Id), d.Id(); got != want {
-		return sdkdiag.AppendErrorf(diags, "current Organization ID (%s) does not match (%s)", got, want)
-	}
-
 	accounts, err := findAccounts(ctx, conn)
 
 	if err != nil {
@@ -397,6 +393,23 @@ func resourceOrganizationDelete(ctx context.Context, d *schema.ResourceData, met
 	}
 
 	return diags
+}
+
+func resourceOrganizationImport(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+	conn := meta.(*conns.AWSClient).OrganizationsConn(ctx)
+
+	org, err := FindOrganization(ctx, conn)
+
+	if err != nil {
+		return nil, err
+	}
+
+	// Check that any Org ID specified for import matches the current Org ID.
+	if got, want := aws.StringValue(org.Id), d.Id(); got != want {
+		return nil, fmt.Errorf("current Organization ID (%s) does not match (%s)", got, want)
+	}
+
+	return []*schema.ResourceData{d}, nil
 }
 
 // FindOrganization is called from the acctest package and so can't be made private and exported as "test-only".
