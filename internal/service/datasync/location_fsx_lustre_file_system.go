@@ -26,7 +26,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_datasync_location_fsx_lustre_file_system", name="Location FSx Lustre File System")
+// @SDKResource("aws_datasync_location_fsx_lustre_file_system", name="Location FSx for Lustre File System")
 // @Tags(identifierAttribute="id")
 func ResourceLocationFSxLustreFileSystem() *schema.Resource {
 	return &schema.Resource{
@@ -34,6 +34,7 @@ func ResourceLocationFSxLustreFileSystem() *schema.Resource {
 		ReadWithoutTimeout:   resourceLocationFSxLustreFileSystemRead,
 		UpdateWithoutTimeout: resourceLocationFSxLustreFileSystemUpdate,
 		DeleteWithoutTimeout: resourceLocationFSxLustreFileSystemDelete,
+
 		Importer: &schema.ResourceImporter{
 			StateContext: func(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 				idParts := strings.Split(d.Id(), "#")
@@ -53,6 +54,10 @@ func ResourceLocationFSxLustreFileSystem() *schema.Resource {
 
 		Schema: map[string]*schema.Schema{
 			"arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"creation_time": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -83,10 +88,6 @@ func ResourceLocationFSxLustreFileSystem() *schema.Resource {
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			"uri": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"creation_time": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},

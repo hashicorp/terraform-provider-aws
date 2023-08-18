@@ -48,7 +48,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  ResourceLocationFSxLustreFileSystem,
 			TypeName: "aws_datasync_location_fsx_lustre_file_system",
-			Name:     "Location FSx Lustre File System",
+			Name:     "Location FSx for Lustre File System",
 			Tags: &types.ServicePackageResourceTags{
 				IdentifierAttribute: "id",
 			},
