@@ -100,21 +100,19 @@ func testAccAccount_full(t *testing.T) {
 		CheckDestroy:             testAccCheckAccountDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAccountConfig_basic,
+				Config: testAccAccountConfig_full(true, "STANDARD_CONTROL"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAccountExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "enable_default_standards", "true"),
-					resource.TestCheckResourceAttr(resourceName, "control_finding_generator", "SECURITY_CONTROL"),
 					resource.TestCheckResourceAttr(resourceName, "auto_enable_controls", "true"),
+					resource.TestCheckResourceAttr(resourceName, "control_finding_generator", "STANDARD_CONTROL"),
 				),
 			},
 			{
-				Config: testAccAccountConfig_full,
+				Config: testAccAccountConfig_full(false, "SECURITY_CONTROL"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAccountExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "enable_default_standards", "false"),
-					resource.TestCheckResourceAttr(resourceName, "control_finding_generator", "STANDARD_CONTROL"),
 					resource.TestCheckResourceAttr(resourceName, "auto_enable_controls", "false"),
+					resource.TestCheckResourceAttr(resourceName, "control_finding_generator", "SECURITY_CONTROL"),
 				),
 			},
 		},
@@ -141,6 +139,40 @@ func testAccAccount_migrateV0(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAccountExists(ctx, resourceName),
 					resource.TestCheckNoResourceAttr(resourceName, "enable_default_standards"),
+				),
+			},
+			{
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				Config:                   testAccAccountConfig_basic,
+				PlanOnly:                 true,
+			},
+		},
+	})
+}
+
+// https://github.com/hashicorp/terraform-provider-aws/issues/33039 et al.
+func testAccAccount_removeControlFindingGeneratorDefaultValue(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName := "aws_securityhub_account.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:   acctest.ErrorCheck(t, securityhub.EndpointsID),
+		CheckDestroy: testAccCheckAccountDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"aws": {
+						Source:            "hashicorp/aws",
+						VersionConstraint: "5.13.0",
+					},
+				},
+				Config: testAccAccountConfig_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAccountExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "enable_default_standards", "true"),
+					resource.TestCheckResourceAttr(resourceName, "control_finding_generator", "SECURITY_CONTROL"),
+					resource.TestCheckResourceAttr(resourceName, "auto_enable_controls", "true"),
 				),
 			},
 			{
@@ -207,10 +239,12 @@ resource "aws_securityhub_account" "test" {
 }
 `
 
-const testAccAccountConfig_full = `
+func testAccAccountConfig_full(autoEnableControls bool, controlFindingGenerator string) string {
+	return fmt.Sprintf(`
 resource "aws_securityhub_account" "test" {
   enable_default_standards  = false
-  control_finding_generator = "STANDARD_CONTROL"
-  auto_enable_controls      = false
+  control_finding_generator = %[2]q
+  auto_enable_controls      = %[1]t
 }
-`
+`, autoEnableControls, controlFindingGenerator)
+}
