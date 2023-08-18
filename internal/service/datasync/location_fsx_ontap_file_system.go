@@ -54,6 +54,10 @@ func ResourceLocationFSxOntapFileSystem() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"creation_time": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"fsx_filesystem_arn": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -177,10 +181,6 @@ func ResourceLocationFSxOntapFileSystem() *schema.Resource {
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			"uri": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"creation_time": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
