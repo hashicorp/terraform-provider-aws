@@ -486,6 +486,46 @@ resource "aws_kinesis_firehose_delivery_stream" "test" {
 }
 ```
 
+### Opensearch Serverless Destination
+
+```terraform
+resource "aws_opensearchserverless_collection" "test_collection" {
+  name = "firehose-osserverless-test"
+}
+
+resource "aws_kinesis_firehose_delivery_stream" "test_stream" {
+  name        = "terraform-kinesis-firehose-test-stream"
+  destination = "opensearchserverless"
+
+  opensearchserverless_configuration {
+    collection_endpoint = aws_opensearchserverless_collection.test_collection.collection_endpoint
+    role_arn            = aws_iam_role.firehose_role.arn
+    index_name          = "test"
+
+    s3_configuration {
+      role_arn           = aws_iam_role.firehose_role.arn
+      bucket_arn         = aws_s3_bucket.bucket.arn
+      buffering_size     = 10
+      buffering_interval = 400
+      compression_format = "GZIP"
+    }
+
+    processing_configuration {
+      enabled = "true"
+
+      processors {
+        type = "Lambda"
+
+        parameters {
+          parameter_name  = "LambdaArn"
+          parameter_value = "${aws_lambda_function.lambda_processor.arn}:$LATEST"
+        }
+      }
+    }
+  }
+}
+```
+
 ### Splunk Destination
 
 ```terraform
@@ -561,7 +601,7 @@ This resource supports the following arguments:
 * `kinesis_source_configuration` - (Optional) Allows the ability to specify the kinesis stream that is used as the source of the firehose delivery stream.
 * `server_side_encryption` - (Optional) Encrypt at rest options.
 Server-side encryption should not be enabled when a kinesis stream is configured as the source of the firehose delivery stream.
-* `destination` – (Required) This is the destination to where the data is delivered. The only options are `s3` (Deprecated, use `extended_s3` instead), `extended_s3`, `redshift`, `elasticsearch`, `splunk`, `http_endpoint` and `opensearch`.
+* `destination` – (Required) This is the destination to where the data is delivered. The only options are `s3` (Deprecated, use `extended_s3` instead), `extended_s3`, `redshift`, `elasticsearch`, `splunk`, `http_endpoint`, `opensearch` and `opensearchserverless`.
 is redshift). More details are given below.
 * `extended_s3_configuration` - (Optional, only Required when `destination` is `extended_s3`) Enhanced configuration options for the s3 destination. More details are given below.
 * `redshift_configuration` - (Optional) Configuration options if redshift is the destination.
@@ -569,6 +609,7 @@ Using `redshift_configuration` requires the user to also specify a
 `s3_configuration` block. More details are given below.
 * `elasticsearch_configuration` - (Optional) Configuration options if elasticsearch is the destination. More details are given below.
 * `opensearch_configuration` - (Optional) Configuration options if opensearch is the destination. More details are given below.
+* `opensearchserverless_configuration` - (Optional) Configuration options if opensearchserverless is the destination. More details are given below.
 * `splunk_configuration` - (Optional) Configuration options if splunk is the destination. More details are given below.
 * `http_endpoint_configuration` - (Optional) Configuration options if http_endpoint is the destination. requires the user to also specify a `s3_configuration` block.  More details are given below.
 
@@ -639,6 +680,20 @@ The `opensearch_configuration` object supports the following:
 * `type_name` - (Optional) The Elasticsearch type name with maximum length of 100 characters. Types are deprecated in OpenSearch_1.1. TypeName must be empty.
 * `cloudwatch_logging_options` - (Optional) The CloudWatch Logging Options for the delivery stream. More details are given below
 * `vpc_config` - (Optional) The VPC configuration for the delivery stream to connect to OpenSearch associated with the VPC. More details are given below
+* `processing_configuration` - (Optional) The data processing configuration.  More details are given below.
+
+The `opensearchserverless_configuration` object supports the following:
+
+* `buffering_interval` - (Optional) Buffer incoming data for the specified period of time, in seconds between 60 to 900, before delivering it to the destination.  The default value is 300s.
+* `buffering_size` - (Optional) Buffer incoming data to the specified size, in MBs between 1 to 100, before delivering it to the destination.  The default value is 5MB.
+* `collection_endpoint` - (Required) The endpoint to use when communicating with the collection in the Serverless offering for Amazon OpenSearch Service.
+* `index_name` - (Required) The Serverless offering for Amazon OpenSearch Service index name.
+* `retry_duration` - (Optional) After an initial failure to deliver to the Serverless offering for Amazon OpenSearch Service, the total amount of time, in seconds between 0 to 7200, during which Kinesis Data Firehose retries delivery (including the first attempt).  After this time has elapsed, the failed documents are written to Amazon S3.  The default value is 300s.  There will be no retry if the value is 0.
+* `role_arn` - (Required) The Amazon Resource Name (ARN) of the IAM role to be assumed by Kinesis Data Firehose for calling the Serverless offering for Amazon OpenSearch Service Configuration API and for indexing documents.  The pattern needs to be `arn:.*`.
+* `s3_configuration` - (Required) The S3 Configuration. See [s3_configuration](#s3-configuration) for more details.
+* `s3_backup_mode` - (Optional) Defines how documents should be delivered to Amazon S3.  Valid values are `FailedDocumentsOnly` and `AllDocuments`.  Default value is `FailedDocumentsOnly`.
+* `cloudwatch_logging_options` - (Optional) The CloudWatch Logging Options for the delivery stream. More details are given below
+* `vpc_config` - (Optional) The VPC configuration for the delivery stream to connect to OpenSearch Serverless associated with the VPC. More details are given below
 * `processing_configuration` - (Optional) The data processing configuration.  More details are given below.
 
 The `splunk_configuration` objects supports the following:
