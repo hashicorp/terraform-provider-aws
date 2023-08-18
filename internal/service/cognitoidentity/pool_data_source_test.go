@@ -224,12 +224,12 @@ func TestAccCognitoIdentityPoolDataSource_tags(t *testing.T) {
 func testAccPoolDataSourceConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_cognito_identity_pool" "test" {
-	identity_pool_name               = "%s"
-	allow_unauthenticated_identities = false
+  identity_pool_name               = "%s"
+  allow_unauthenticated_identities = false
 }
 
 data "aws_cognito_identity_pool" "test" {
-	identity_pool_name = aws_cognito_identity_pool.test.identity_pool_name
+  identity_pool_name = aws_cognito_identity_pool.test.identity_pool_name
 }
 	`, rName)
 }
@@ -237,7 +237,7 @@ data "aws_cognito_identity_pool" "test" {
 func testAccPoolDataSourceConfig_openidConnectProviderARNs(rName string) string {
 	return acctest.ConfigCompose(testAccPoolConfig_openidConnectProviderARNs(rName), `
 data "aws_cognito_identity_pool" "test" {
-	identity_pool_name = aws_cognito_identity_pool.test.identity_pool_name
+  identity_pool_name = aws_cognito_identity_pool.test.identity_pool_name
 }
 `)
 }
@@ -245,7 +245,7 @@ data "aws_cognito_identity_pool" "test" {
 func testAccPoolDataSourceConfig_identityProviders(rName string) string {
 	return acctest.ConfigCompose(testAccPoolConfig_identityProviders(rName), `
 data "aws_cognito_identity_pool" "test" {
-	identity_pool_name = aws_cognito_identity_pool.test.identity_pool_name
+  identity_pool_name = aws_cognito_identity_pool.test.identity_pool_name
 }
 `)
 }
@@ -253,7 +253,7 @@ data "aws_cognito_identity_pool" "test" {
 func testAccPoolDataSourceConfig_samlProviderARNs(name, idpEntityId string) string {
 	return acctest.ConfigCompose(testAccPoolConfig_samlProviderARNs(name, idpEntityId), `
 data "aws_cognito_identity_pool" "test" {
-	identity_pool_name = aws_cognito_identity_pool.test.identity_pool_name
+  identity_pool_name = aws_cognito_identity_pool.test.identity_pool_name
 }
 `)
 }
@@ -261,7 +261,7 @@ data "aws_cognito_identity_pool" "test" {
 func testAccPoolDataSourceConfig_supportedLoginProviders(name string) string {
 	return acctest.ConfigCompose(testAccPoolConfig_supportedLoginProviders(name), `
 data "aws_cognito_identity_pool" "test" {
-	identity_pool_name = aws_cognito_identity_pool.test.identity_pool_name
+  identity_pool_name = aws_cognito_identity_pool.test.identity_pool_name
 }
 `)
 }
@@ -269,7 +269,7 @@ data "aws_cognito_identity_pool" "test" {
 func testAccPoolDataSourceConfig_tags(name, tagKey1, tagValue1 string) string {
 	return acctest.ConfigCompose(testAccPoolConfig_tags1(name, tagKey1, tagValue1), `
 data "aws_cognito_identity_pool" "test" {
-	identity_pool_name = aws_cognito_identity_pool.test.identity_pool_name
+  identity_pool_name = aws_cognito_identity_pool.test.identity_pool_name
 }
 `)
 }
