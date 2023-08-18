@@ -86,7 +86,7 @@ resource "aws_sqs_queue" "target" {}
 resource "aws_pipes_pipe" "example" {
   depends_on = [aws_iam_role_policy.source, aws_iam_role_policy.target]
   name       = "example-pipe"
-  role_arn   = aws_iam_role.example.arn
+  role_arn   = aws_iam_role.test.arn
   source     = aws_sqs_queue.source.arn
   target     = aws_sqs_queue.target.arn
 }
@@ -97,23 +97,25 @@ resource "aws_pipes_pipe" "example" {
 ```terraform
 resource "aws_pipes_pipe" "example" {
   name     = "example-pipe"
-  role_arn = aws_iam_role.example.arn
+  role_arn = aws_iam_role.test.arn
   source   = aws_sqs_queue.source.arn
   target   = aws_sqs_queue.target.arn
 
   enrichment = aws_cloudwatch_event_api_destination.example.arn
 
   enrichment_parameters {
-    http_parameters = {
-      "example-header"        = "example-value"
-      "second-example-header" = "second-example-value"
-    }
+    http_parameters {
+      path_parameter_values = ["example-path-param"]
 
-    path_parameter_values = ["example-path-param"]
+      header_parameters = {
+        "example-header"        = "example-value"
+        "second-example-header" = "second-example-value"
+      }
 
-    query_string_parameters = {
-      "example-query-string"        = "example-value"
-      "second-example-query-string" = "second-example-value"
+      query_string_parameters = {
+        "example-query-string"        = "example-value"
+        "second-example-query-string" = "second-example-value"
+      }
     }
   }
 }
