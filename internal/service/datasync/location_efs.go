@@ -30,20 +30,21 @@ func ResourceLocationEFS() *schema.Resource {
 		ReadWithoutTimeout:   resourceLocationEFSRead,
 		UpdateWithoutTimeout: resourceLocationEFSUpdate,
 		DeleteWithoutTimeout: resourceLocationEFSDelete,
+
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
 			"access_point_arn": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
 				ValidateFunc: verify.ValidARN,
+			},
+			"arn": {
+				Type:     schema.TypeString,
+				Computed: true,
 			},
 			"ec2_config": {
 				Type:     schema.TypeList,
