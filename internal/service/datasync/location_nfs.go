@@ -153,7 +153,6 @@ func resourceLocationNFSRead(ctx context.Context, d *schema.ResourceData, meta i
 
 	uri := aws.StringValue(output.LocationUri)
 	subdirectory, err := subdirectoryFromLocationURI(uri)
-
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}

@@ -234,8 +234,8 @@ func resourceLocationFSxOntapFileSystemRead(ctx context.Context, d *schema.Resou
 		return sdkdiag.AppendErrorf(diags, "reading DataSync Location FSx for NetApp ONTAP File System (%s): %s", d.Id(), err)
 	}
 
-	subdirectory, err := subdirectoryFromLocationURI(aws.StringValue(output.LocationUri))
-
+	uri := aws.StringValue(output.LocationUri)
+	subdirectory, err := subdirectoryFromLocationURI(uri)
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
@@ -249,7 +249,7 @@ func resourceLocationFSxOntapFileSystemRead(ctx context.Context, d *schema.Resou
 	d.Set("security_group_arns", aws.StringValueSlice(output.SecurityGroupArns))
 	d.Set("storage_virtual_machine_arn", output.StorageVirtualMachineArn)
 	d.Set("subdirectory", subdirectory)
-	d.Set("uri", output.LocationUri)
+	d.Set("uri", uri)
 
 	return diags
 }

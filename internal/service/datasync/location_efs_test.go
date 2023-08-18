@@ -12,13 +12,13 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/datasync"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfdatasync "github.com/hashicorp/terraform-provider-aws/internal/service/datasync"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func TestAccDataSyncLocationEFS_basic(t *testing.T) {
@@ -201,48 +201,39 @@ func testAccCheckLocationEFSDestroy(ctx context.Context) resource.TestCheckFunc 
 				continue
 			}
 
-			input := &datasync.DescribeLocationEfsInput{
-				LocationArn: aws.String(rs.Primary.ID),
-			}
+			_, err := tfdatasync.FindLocationEFSByARN(ctx, conn, rs.Primary.ID)
 
-			_, err := conn.DescribeLocationEfsWithContext(ctx, input)
-
-			if tfawserr.ErrMessageContains(err, "InvalidRequestException", "not found") {
-				return nil
+			if tfresource.NotFound(err) {
+				continue
 			}
 
 			if err != nil {
 				return err
 			}
+
+			return fmt.Errorf("DataSync Location EFS %s still exists", rs.Primary.ID)
 		}
 
 		return nil
 	}
 }
 
-func testAccCheckLocationEFSExists(ctx context.Context, resourceName string, locationEfs *datasync.DescribeLocationEfsOutput) resource.TestCheckFunc {
+func testAccCheckLocationEFSExists(ctx context.Context, n string, v *datasync.DescribeLocationEfsOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[resourceName]
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return fmt.Errorf("Not found: %s", resourceName)
+			return fmt.Errorf("Not found: %s", n)
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).DataSyncConn(ctx)
-		input := &datasync.DescribeLocationEfsInput{
-			LocationArn: aws.String(rs.Primary.ID),
-		}
 
-		output, err := conn.DescribeLocationEfsWithContext(ctx, input)
+		output, err := tfdatasync.FindLocationEFSByARN(ctx, conn, rs.Primary.ID)
 
 		if err != nil {
 			return err
 		}
 
-		if output == nil {
-			return fmt.Errorf("Location %q does not exist", rs.Primary.ID)
-		}
-
-		*locationEfs = *output
+		*v = *output
 
 		return nil
 	}
@@ -258,7 +249,7 @@ func testAccCheckLocationEFSNotRecreated(i, j *datasync.DescribeLocationEfsOutpu
 	}
 }
 
-func testAccLocationEFSBaseConfig(rName string) string {
+func testAccLocationEFSConfig_base(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
@@ -299,7 +290,7 @@ resource "aws_efs_mount_target" "test" {
 }
 
 func testAccLocationEFSConfig_basic(rName string) string {
-	return acctest.ConfigCompose(testAccLocationEFSBaseConfig(rName), `
+	return acctest.ConfigCompose(testAccLocationEFSConfig_base(rName), `
 resource "aws_datasync_location_efs" "test" {
   efs_file_system_arn = aws_efs_mount_target.test.file_system_arn
 
@@ -312,7 +303,7 @@ resource "aws_datasync_location_efs" "test" {
 }
 
 func testAccLocationEFSConfig_subdirectory(rName, subdirectory string) string {
-	return acctest.ConfigCompose(testAccLocationEFSBaseConfig(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccLocationEFSConfig_base(rName), fmt.Sprintf(`
 resource "aws_datasync_location_efs" "test" {
   efs_file_system_arn = aws_efs_mount_target.test.file_system_arn
   subdirectory        = %[1]q
@@ -326,7 +317,7 @@ resource "aws_datasync_location_efs" "test" {
 }
 
 func testAccLocationEFSConfig_tags1(rName, key1, value1 string) string {
-	return acctest.ConfigCompose(testAccLocationEFSBaseConfig(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccLocationEFSConfig_base(rName), fmt.Sprintf(`
 resource "aws_datasync_location_efs" "test" {
   efs_file_system_arn = aws_efs_mount_target.test.file_system_arn
 
@@ -343,7 +334,7 @@ resource "aws_datasync_location_efs" "test" {
 }
 
 func testAccLocationEFSConfig_tags2(rName, key1, value1, key2, value2 string) string {
-	return acctest.ConfigCompose(testAccLocationEFSBaseConfig(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccLocationEFSConfig_base(rName), fmt.Sprintf(`
 resource "aws_datasync_location_efs" "test" {
   efs_file_system_arn = aws_efs_mount_target.test.file_system_arn
 
@@ -361,7 +352,7 @@ resource "aws_datasync_location_efs" "test" {
 }
 
 func testAccLocationEFSConfig_accessPointARN(rName string) string {
-	return acctest.ConfigCompose(testAccLocationEFSBaseConfig(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccLocationEFSConfig_base(rName), fmt.Sprintf(`
 resource "aws_efs_access_point" "test" {
   file_system_id = aws_efs_file_system.test.id
 
