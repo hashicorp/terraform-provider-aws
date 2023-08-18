@@ -182,7 +182,7 @@ func testAccCheckLocationFSxOntapDestroy(ctx context.Context) resource.TestCheck
 				continue
 			}
 
-			_, err := tfdatasync.FindFSxONTAPLocationByARN(ctx, conn, rs.Primary.ID)
+			_, err := tfdatasync.FindLocationFSxONTAPByARN(ctx, conn, rs.Primary.ID)
 
 			if tfresource.NotFound(err) {
 				continue
@@ -208,7 +208,7 @@ func testAccCheckLocationFSxOntapExists(ctx context.Context, n string, v *datasy
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).DataSyncConn(ctx)
 
-		output, err := tfdatasync.FindFSxONTAPLocationByARN(ctx, conn, rs.Primary.ID)
+		output, err := tfdatasync.FindLocationFSxONTAPByARN(ctx, conn, rs.Primary.ID)
 
 		if err != nil {
 			return err
