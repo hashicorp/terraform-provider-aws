@@ -176,7 +176,7 @@ func testAccCheckLocationFSxLustreDestroy(ctx context.Context) resource.TestChec
 				continue
 			}
 
-			_, err := tfdatasync.FindFSxLustreLocationByARN(ctx, conn, rs.Primary.ID)
+			_, err := tfdatasync.FindLocationFSxLustreByARN(ctx, conn, rs.Primary.ID)
 
 			if tfresource.NotFound(err) {
 				continue
@@ -201,7 +201,7 @@ func testAccCheckLocationFSxLustreExists(ctx context.Context, resourceName strin
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).DataSyncConn(ctx)
-		output, err := tfdatasync.FindFSxLustreLocationByARN(ctx, conn, rs.Primary.ID)
+		output, err := tfdatasync.FindLocationFSxLustreByARN(ctx, conn, rs.Primary.ID)
 
 		if err != nil {
 			return err

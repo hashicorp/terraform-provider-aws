@@ -14,6 +14,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/datasync"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -125,7 +126,7 @@ func resourceLocationFSxLustreFileSystemRead(ctx context.Context, d *schema.Reso
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DataSyncConn(ctx)
 
-	output, err := FindFSxLustreLocationByARN(ctx, conn, d.Id())
+	output, err := FindLocationFSxLustreByARN(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] DataSync Location Fsx Lustre (%s) not found, removing from state", d.Id())
@@ -186,4 +187,29 @@ func resourceLocationFSxLustreFileSystemDelete(ctx context.Context, d *schema.Re
 	}
 
 	return diags
+}
+
+func FindLocationFSxLustreByARN(ctx context.Context, conn *datasync.DataSync, arn string) (*datasync.DescribeLocationFsxLustreOutput, error) {
+	input := &datasync.DescribeLocationFsxLustreInput{
+		LocationArn: aws.String(arn),
+	}
+
+	output, err := conn.DescribeLocationFsxLustreWithContext(ctx, input)
+
+	if tfawserr.ErrMessageContains(err, datasync.ErrCodeInvalidRequestException, "not found") {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output, nil
 }
