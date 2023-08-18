@@ -104,7 +104,6 @@ func resourceAccountCreate(ctx context.Context, d *schema.ResourceData, meta int
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating Security Hub Account (%s): %s", d.Id(), err)
 		}
-
 	}
 
 	return append(diags, resourceAccountRead(ctx, d, meta)...)
@@ -147,10 +146,8 @@ func resourceAccountUpdate(ctx context.Context, d *schema.ResourceData, meta int
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SecurityHubConn(ctx)
 
-	input := &securityhub.UpdateSecurityHubConfigurationInput{}
-
-	if d.HasChange("auto_enable_controls") {
-		input.AutoEnableControls = aws.Bool(d.Get("auto_enable_controls").(bool))
+	input := &securityhub.UpdateSecurityHubConfigurationInput{
+		AutoEnableControls: aws.Bool(d.Get("auto_enable_controls").(bool)),
 	}
 
 	if d.HasChange("control_finding_generator") {
