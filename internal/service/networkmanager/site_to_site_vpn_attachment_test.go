@@ -228,11 +228,15 @@ resource "aws_networkmanager_global_network" "test" {
 
 resource "aws_networkmanager_core_network" "test" {
   global_network_id = aws_networkmanager_global_network.test.id
-  policy_document   = data.aws_networkmanager_core_network_policy_document.test.json
 
   tags = {
     Name = %[1]q
   }
+}
+
+resource "aws_networkmanager_core_network_policy_attachment" "test" {
+  core_network_id = aws_networkmanager_core_network.test.id
+  policy_document = data.aws_networkmanager_core_network_policy_document.test.json
 }
 
 data "aws_networkmanager_core_network_policy_document" "test" {
@@ -281,7 +285,7 @@ data "aws_networkmanager_core_network_policy_document" "test" {
 func testAccSiteToSiteVPNAttachmentConfig_basic(rName string, bgpASN int, vpnIP string) string {
 	return acctest.ConfigCompose(testAccSiteToSiteVPNAttachmentConfig_base(rName, bgpASN, vpnIP), `
 resource "aws_networkmanager_site_to_site_vpn_attachment" "test" {
-  core_network_id    = aws_networkmanager_core_network.test.id
+  core_network_id    = aws_networkmanager_core_network_policy_attachment.test.core_network_id
   vpn_connection_arn = aws_vpn_connection.test.arn
 
   tags = {
@@ -299,7 +303,7 @@ resource "aws_networkmanager_attachment_accepter" "test" {
 func testAccSiteToSiteVPNAttachmentConfig_tags1(rName, vpnIP, tagKey1, tagValue1 string, bgpASN int) string {
 	return acctest.ConfigCompose(testAccSiteToSiteVPNAttachmentConfig_base(rName, bgpASN, vpnIP), fmt.Sprintf(`
 resource "aws_networkmanager_site_to_site_vpn_attachment" "test" {
-  core_network_id    = aws_networkmanager_core_network.test.id
+  core_network_id    = aws_networkmanager_core_network_policy_attachment.test.core_network_id
   vpn_connection_arn = aws_vpn_connection.test.arn
 
   tags = {
@@ -317,7 +321,7 @@ resource "aws_networkmanager_attachment_accepter" "test" {
 func testAccSiteToSiteVPNAttachmentConfig_tags2(rName, vpnIP, tagKey1, tagValue1, tagKey2, tagValue2 string, bgpASN int) string {
 	return acctest.ConfigCompose(testAccSiteToSiteVPNAttachmentConfig_base(rName, bgpASN, vpnIP), fmt.Sprintf(`
 resource "aws_networkmanager_site_to_site_vpn_attachment" "test" {
-  core_network_id    = aws_networkmanager_core_network.test.id
+  core_network_id    = aws_networkmanager_core_network_policy_attachment.test.core_network_id
   vpn_connection_arn = aws_vpn_connection.test.arn
 
   tags = {
