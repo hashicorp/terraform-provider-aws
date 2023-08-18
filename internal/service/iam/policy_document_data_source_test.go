@@ -1409,12 +1409,8 @@ func testAccPolicyDocumentConditionWithBoolValueExpectedJSON() string {
                     "aws:ResourceTag/SpecialTag": "false"
                 },
                 "StringLike": {
-                    "aws:ResourceAccount": [
-                        "123456"
-                    ],
-                    "aws:PrincipalArn": [
-						"arn:%[1]s:iam::*:role/AWSAFTExecution"
-					]
+                    "aws:ResourceAccount": "123456",
+                    "aws:PrincipalArn": "arn:%[1]s:iam::*:role/AWSAFTExecution"
                 }
             }
         }
