@@ -1,4 +1,9 @@
 ## 5.14.0 (Unreleased)
+
+BUG FIXES:
+
+* resource/aws_organizations_organization: Fix `current Organization ID (o-xxxxxxxxxx) does not match` errors on resource Read ([#33091](https://github.com/hashicorp/terraform-provider-aws/issues/33091))
+
 ## 5.13.0 (August 18, 2023)
 
 FEATURES:
