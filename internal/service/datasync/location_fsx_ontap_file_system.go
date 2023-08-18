@@ -26,7 +26,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_datasync_location_fsx_ontap_file_system", name="Location FSx Ontap File System")
+// @SDKResource("aws_datasync_location_fsx_ontap_file_system", name="Location FSx for NetApp ONTAP File System")
 // @Tags(identifierAttribute="id")
 func ResourceLocationFSxOntapFileSystem() *schema.Resource {
 	return &schema.Resource{
@@ -34,6 +34,7 @@ func ResourceLocationFSxOntapFileSystem() *schema.Resource {
 		ReadWithoutTimeout:   resourceLocationFSxOntapFileSystemRead,
 		UpdateWithoutTimeout: resourceLocationFSxOntapFileSystemUpdate,
 		DeleteWithoutTimeout: resourceLocationFSxOntapFileSystemDelete,
+
 		Importer: &schema.ResourceImporter{
 			StateContext: func(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 				idParts := strings.Split(d.Id(), "#")

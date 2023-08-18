@@ -54,17 +54,17 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceLocationFSxOpenZFSFileSystem,
-			TypeName: "aws_datasync_location_fsx_openzfs_file_system",
-			Name:     "Location OpenZFS File System",
+			Factory:  ResourceLocationFSxOntapFileSystem,
+			TypeName: "aws_datasync_location_fsx_ontap_file_system",
+			Name:     "Location FSx for NetApp ONTAP File System",
 			Tags: &types.ServicePackageResourceTags{
 				IdentifierAttribute: "id",
 			},
 		},
 		{
-			Factory:  ResourceLocationFSxOntapFileSystem,
-			TypeName: "aws_datasync_location_fsx_ontap_file_system",
-			Name:     "Location FSx Ontap File System",
+			Factory:  ResourceLocationFSxOpenZFSFileSystem,
+			TypeName: "aws_datasync_location_fsx_openzfs_file_system",
+			Name:     "Location OpenZFS File System",
 			Tags: &types.ServicePackageResourceTags{
 				IdentifierAttribute: "id",
 			},
