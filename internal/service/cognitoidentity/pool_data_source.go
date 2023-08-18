@@ -120,7 +120,7 @@ func dataSourcePoolRead(ctx context.Context, d *schema.ResourceData, meta interf
 		return append(diags, create.DiagError(names.CognitoIdentity, create.ErrActionReading, DSNamePool, name, err)...)
 	}
 
-	d.SetId(*ip.IdentityPoolId)
+	d.SetId(aws.StringValue(ip.IdentityPoolId))
 
 	arn := arn.ARN{
 		Partition: meta.(*conns.AWSClient).Partition,
