@@ -94,8 +94,20 @@ func resourceAccountCreate(ctx context.Context, d *schema.ResourceData, meta int
 
 	d.SetId(meta.(*conns.AWSClient).AccountID)
 
-	// auto_enable_controls has to be done from the update API
-	return append(diags, resourceAccountUpdate(ctx, d, meta)...)
+	if autoEnableControls := d.Get("auto_enable_controls").(bool); !autoEnableControls {
+		input := &securityhub.UpdateSecurityHubConfigurationInput{
+			AutoEnableControls: aws.Bool(autoEnableControls),
+		}
+
+		_, err := conn.UpdateSecurityHubConfigurationWithContext(ctx, input)
+
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating Security Hub Account (%s): %s", d.Id(), err)
+		}
+
+	}
+
+	return append(diags, resourceAccountRead(ctx, d, meta)...)
 }
 
 func resourceAccountRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
@@ -135,9 +147,14 @@ func resourceAccountUpdate(ctx context.Context, d *schema.ResourceData, meta int
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SecurityHubConn(ctx)
 
-	input := &securityhub.UpdateSecurityHubConfigurationInput{
-		ControlFindingGenerator: aws.String(d.Get("control_finding_generator").(string)),
-		AutoEnableControls:      aws.Bool(d.Get("auto_enable_controls").(bool)),
+	input := &securityhub.UpdateSecurityHubConfigurationInput{}
+
+	if d.HasChange("auto_enable_controls") {
+		input.AutoEnableControls = aws.Bool(d.Get("auto_enable_controls").(bool))
+	}
+
+	if d.HasChange("control_finding_generator") {
+		input.ControlFindingGenerator = aws.String(d.Get("control_finding_generator").(string))
 	}
 
 	_, err := conn.UpdateSecurityHubConfigurationWithContext(ctx, input)
