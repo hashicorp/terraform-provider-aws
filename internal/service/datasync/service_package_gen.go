@@ -72,7 +72,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  ResourceLocationFSxWindowsFileSystem,
 			TypeName: "aws_datasync_location_fsx_windows_file_system",
-			Name:     "Location FSx Windows File System",
+			Name:     "Location FSx for Windows File Server File System",
 			Tags: &types.ServicePackageResourceTags{
 				IdentifierAttribute: "id",
 			},
