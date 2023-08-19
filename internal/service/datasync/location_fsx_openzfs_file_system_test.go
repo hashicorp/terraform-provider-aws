@@ -176,7 +176,7 @@ func testAccCheckLocationFSxOpenZFSDestroy(ctx context.Context) resource.TestChe
 				continue
 			}
 
-			_, err := tfdatasync.FindFSxOpenZFSLocationByARN(ctx, conn, rs.Primary.ID)
+			_, err := tfdatasync.FindLocationFSxOpenZFSByARN(ctx, conn, rs.Primary.ID)
 
 			if tfresource.NotFound(err) {
 				continue
@@ -201,7 +201,7 @@ func testAccCheckLocationFSxOpenZFSExists(ctx context.Context, resourceName stri
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).DataSyncConn(ctx)
-		output, err := tfdatasync.FindFSxOpenZFSLocationByARN(ctx, conn, rs.Primary.ID)
+		output, err := tfdatasync.FindLocationFSxOpenZFSByARN(ctx, conn, rs.Primary.ID)
 
 		if err != nil {
 			return err
