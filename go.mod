@@ -175,3 +175,145 @@ require (
 	gopkg.in/check.v1 v1.0.0-20201130134442-10cb98267c6c // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
+
+replace github.com/aws/aws-sdk-go-v2 => /Users/mkandyli/Documents/trebucket/awsSdkGoV2
+
+replace github.com/aws/aws-sdk-go-v2/aws/protocol/eventstream => /Users/mkandyli/Documents/trebucket/awsSdkGoV2/aws/protocol/eventstream
+
+replace github.com/aws/aws-sdk-go-v2/config => /Users/mkandyli/Documents/trebucket/awsSdkGoV2/config
+
+replace github.com/aws/aws-sdk-go-v2/credentials => /Users/mkandyli/Documents/trebucket/awsSdkGoV2/credentials
+
+replace github.com/aws/aws-sdk-go-v2/feature/ec2/imds => /Users/mkandyli/Documents/trebucket/awsSdkGoV2/feature/ec2/imds
+
+replace github.com/aws/aws-sdk-go-v2/internal/configsources => /Users/mkandyli/Documents/trebucket/awsSdkGoV2/internal/configsources
+
+replace github.com/aws/aws-sdk-go-v2/internal/endpoints/v2 => /Users/mkandyli/Documents/trebucket/awsSdkGoV2/internal/endpoints/v2
+
+replace github.com/aws/aws-sdk-go-v2/internal/ini => /Users/mkandyli/Documents/trebucket/awsSdkGoV2/internal/ini
+
+replace github.com/aws/aws-sdk-go-v2/service/accessanalyzer => /Users/mkandyli/Documents/trebucket/awsSdkGoV2/service/accessanalyzer
+
+replace github.com/aws/aws-sdk-go-v2/service/account => /Users/mkandyli/Documents/trebucket/awsSdkGoV2/service/account
+
+replace github.com/aws/aws-sdk-go-v2/service/acm => /Users/mkandyli/Documents/trebucket/awsSdkGoV2/service/acm
+
+replace github.com/aws/aws-sdk-go-v2/service/appconfig => /Users/mkandyli/Documents/trebucket/awsSdkGoV2/service/appconfig
+
+replace github.com/aws/aws-sdk-go-v2/service/auditmanager => /Users/mkandyli/Documents/trebucket/awsSdkGoV2/service/auditmanager
+
+replace github.com/aws/aws-sdk-go-v2/service/cleanrooms => /Users/mkandyli/Documents/trebucket/awsSdkGoV2/service/cleanrooms
+
+replace github.com/aws/aws-sdk-go-v2/service/cloudcontrol => /Users/mkandyli/Documents/trebucket/awsSdkGoV2/service/cloudcontrol
+
+replace github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs => /Users/mkandyli/Documents/trebucket/awsSdkGoV2/service/cloudwatchlogs
+
+replace github.com/aws/aws-sdk-go-v2/service/codecatalyst => /Users/mkandyli/Documents/trebucket/awsSdkGoV2/service/codecatalyst
+
+replace github.com/aws/aws-sdk-go-v2/service/codestarnotifications => /Users/mkandyli/Documents/trebucket/awsSdkGoV2/service/codestarnotifications
+
+replace github.com/aws/aws-sdk-go-v2/service/comprehend => /Users/mkandyli/Documents/trebucket/awsSdkGoV2/service/comprehend
+
+replace github.com/aws/aws-sdk-go-v2/service/computeoptimizer => /Users/mkandyli/Documents/trebucket/awsSdkGoV2/service/computeoptimizer
+
+replace github.com/aws/aws-sdk-go-v2/service/directoryservice => /Users/mkandyli/Documents/trebucket/awsSdkGoV2/service/directoryservice
+
+replace github.com/aws/aws-sdk-go-v2/service/docdbelastic => /Users/mkandyli/Documents/trebucket/awsSdkGoV2/service/docdbelastic
+
+replace github.com/aws/aws-sdk-go-v2/service/ec2 => /Users/mkandyli/Documents/trebucket/awsSdkGoV2/service/ec2
+
+replace github.com/aws/aws-sdk-go-v2/service/emrserverless => /Users/mkandyli/Documents/trebucket/awsSdkGoV2/service/emrserverless
+
+replace github.com/aws/aws-sdk-go-v2/service/finspace => /Users/mkandyli/Documents/trebucket/awsSdkGoV2/service/finspace
+
+replace github.com/aws/aws-sdk-go-v2/service/fis => /Users/mkandyli/Documents/trebucket/awsSdkGoV2/service/fis
+
+replace github.com/aws/aws-sdk-go-v2/service/glacier => /Users/mkandyli/Documents/trebucket/awsSdkGoV2/service/glacier
+
+replace github.com/aws/aws-sdk-go-v2/service/healthlake => /Users/mkandyli/Documents/trebucket/awsSdkGoV2/service/healthlake
+
+replace github.com/aws/aws-sdk-go-v2/service/iam => /Users/mkandyli/Documents/trebucket/awsSdkGoV2/service/iam
+
+replace github.com/aws/aws-sdk-go-v2/service/identitystore => /Users/mkandyli/Documents/trebucket/awsSdkGoV2/service/identitystore
+
+replace github.com/aws/aws-sdk-go-v2/service/inspector2 => /Users/mkandyli/Documents/trebucket/awsSdkGoV2/service/inspector2
+
+replace github.com/aws/aws-sdk-go-v2/service/internal/endpoint-discovery => /Users/mkandyli/Documents/trebucket/awsSdkGoV2/service/internal/endpoint-discovery
+
+replace github.com/aws/aws-sdk-go-v2/service/internal/presigned-url => /Users/mkandyli/Documents/trebucket/awsSdkGoV2/service/internal/presigned-url
+
+replace github.com/aws/aws-sdk-go-v2/service/internal/s3shared => /Users/mkandyli/Documents/trebucket/awsSdkGoV2/service/internal/s3shared
+
+replace github.com/aws/aws-sdk-go-v2/service/internetmonitor => /Users/mkandyli/Documents/trebucket/awsSdkGoV2/service/internetmonitor
+
+replace github.com/aws/aws-sdk-go-v2/service/ivschat => /Users/mkandyli/Documents/trebucket/awsSdkGoV2/service/ivschat
+
+replace github.com/aws/aws-sdk-go-v2/service/kafka => /Users/mkandyli/Documents/trebucket/awsSdkGoV2/service/kafka
+
+replace github.com/aws/aws-sdk-go-v2/service/kendra => /Users/mkandyli/Documents/trebucket/awsSdkGoV2/service/kendra
+
+replace github.com/aws/aws-sdk-go-v2/service/keyspaces => /Users/mkandyli/Documents/trebucket/awsSdkGoV2/service/keyspaces
+
+replace github.com/aws/aws-sdk-go-v2/service/lambda => /Users/mkandyli/Documents/trebucket/awsSdkGoV2/service/lambda
+
+replace github.com/aws/aws-sdk-go-v2/service/lightsail => /Users/mkandyli/Documents/trebucket/awsSdkGoV2/service/lightsail
+
+replace github.com/aws/aws-sdk-go-v2/service/medialive => /Users/mkandyli/Documents/trebucket/awsSdkGoV2/service/medialive
+
+replace github.com/aws/aws-sdk-go-v2/service/mediapackage => /Users/mkandyli/Documents/trebucket/awsSdkGoV2/service/mediapackage
+
+replace github.com/aws/aws-sdk-go-v2/service/oam => /Users/mkandyli/Documents/trebucket/awsSdkGoV2/service/oam
+
+replace github.com/aws/aws-sdk-go-v2/service/opensearchserverless => /Users/mkandyli/Documents/trebucket/awsSdkGoV2/service/opensearchserverless
+
+replace github.com/aws/aws-sdk-go-v2/service/pipes => /Users/mkandyli/Documents/trebucket/awsSdkGoV2/service/pipes
+
+replace github.com/aws/aws-sdk-go-v2/service/pricing => /Users/mkandyli/Documents/trebucket/awsSdkGoV2/service/pricing
+
+replace github.com/aws/aws-sdk-go-v2/service/qldb => /Users/mkandyli/Documents/trebucket/awsSdkGoV2/service/qldb
+
+replace github.com/aws/aws-sdk-go-v2/service/rbin => /Users/mkandyli/Documents/trebucket/awsSdkGoV2/service/rbin
+
+replace github.com/aws/aws-sdk-go-v2/service/rds => /Users/mkandyli/Documents/trebucket/awsSdkGoV2/service/rds
+
+replace github.com/aws/aws-sdk-go-v2/service/resourceexplorer2 => /Users/mkandyli/Documents/trebucket/awsSdkGoV2/service/resourceexplorer2
+
+replace github.com/aws/aws-sdk-go-v2/service/rolesanywhere => /Users/mkandyli/Documents/trebucket/awsSdkGoV2/service/rolesanywhere
+
+replace github.com/aws/aws-sdk-go-v2/service/route53domains => /Users/mkandyli/Documents/trebucket/awsSdkGoV2/service/route53domains
+
+replace github.com/aws/aws-sdk-go-v2/service/s3control => /Users/mkandyli/Documents/trebucket/awsSdkGoV2/service/s3control
+
+replace github.com/aws/aws-sdk-go-v2/service/scheduler => /Users/mkandyli/Documents/trebucket/awsSdkGoV2/service/scheduler
+
+replace github.com/aws/aws-sdk-go-v2/service/securitylake => /Users/mkandyli/Documents/trebucket/awsSdkGoV2/service/securitylake
+
+replace github.com/aws/aws-sdk-go-v2/service/sesv2 => /Users/mkandyli/Documents/trebucket/awsSdkGoV2/service/sesv2
+
+replace github.com/aws/aws-sdk-go-v2/service/signer => /Users/mkandyli/Documents/trebucket/awsSdkGoV2/service/signer
+
+replace github.com/aws/aws-sdk-go-v2/service/ssm => /Users/mkandyli/Documents/trebucket/awsSdkGoV2/service/ssm
+
+replace github.com/aws/aws-sdk-go-v2/service/ssmcontacts => /Users/mkandyli/Documents/trebucket/awsSdkGoV2/service/ssmcontacts
+
+replace github.com/aws/aws-sdk-go-v2/service/ssmincidents => /Users/mkandyli/Documents/trebucket/awsSdkGoV2/service/ssmincidents
+
+replace github.com/aws/aws-sdk-go-v2/service/sso => /Users/mkandyli/Documents/trebucket/awsSdkGoV2/service/sso
+
+replace github.com/aws/aws-sdk-go-v2/service/ssooidc => /Users/mkandyli/Documents/trebucket/awsSdkGoV2/service/ssooidc
+
+replace github.com/aws/aws-sdk-go-v2/service/sts => /Users/mkandyli/Documents/trebucket/awsSdkGoV2/service/sts
+
+replace github.com/aws/aws-sdk-go-v2/service/swf => /Users/mkandyli/Documents/trebucket/awsSdkGoV2/service/swf
+
+replace github.com/aws/aws-sdk-go-v2/service/timestreamwrite => /Users/mkandyli/Documents/trebucket/awsSdkGoV2/service/timestreamwrite
+
+replace github.com/aws/aws-sdk-go-v2/service/transcribe => /Users/mkandyli/Documents/trebucket/awsSdkGoV2/service/transcribe
+
+replace github.com/aws/aws-sdk-go-v2/service/verifiedpermissions => /Users/mkandyli/Documents/trebucket/awsSdkGoV2/service/verifiedpermissions
+
+replace github.com/aws/aws-sdk-go-v2/service/vpclattice => /Users/mkandyli/Documents/trebucket/awsSdkGoV2/service/vpclattice
+
+replace github.com/aws/aws-sdk-go-v2/service/workspaces => /Users/mkandyli/Documents/trebucket/awsSdkGoV2/service/workspaces
+
+replace github.com/aws/aws-sdk-go-v2/service/xray => /Users/mkandyli/Documents/trebucket/awsSdkGoV2/service/xray
