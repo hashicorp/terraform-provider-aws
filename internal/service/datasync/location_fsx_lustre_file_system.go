@@ -147,6 +147,7 @@ func resourceLocationFSxLustreFileSystemRead(ctx context.Context, d *schema.Reso
 
 	d.Set("arn", output.LocationArn)
 	d.Set("creation_time", output.CreationTime.Format(time.RFC3339))
+	d.Set("fsx_filesystem_arn", d.Get("fsx_filesystem_arn"))
 	d.Set("security_group_arns", aws.StringValueSlice(output.SecurityGroupArns))
 	d.Set("subdirectory", subdirectory)
 	d.Set("uri", output.LocationUri)
