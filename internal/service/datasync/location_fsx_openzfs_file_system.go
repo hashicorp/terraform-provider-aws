@@ -33,6 +33,7 @@ func ResourceLocationFSxOpenZFSFileSystem() *schema.Resource {
 		ReadWithoutTimeout:   resourceLocationFSxOpenZFSFileSystemRead,
 		UpdateWithoutTimeout: resourceLocationFSxOpenZFSFileSystemUpdate,
 		DeleteWithoutTimeout: resourceLocationFSxOpenZFSFileSystemDelete,
+
 		Importer: &schema.ResourceImporter{
 			StateContext: func(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 				idParts := strings.Split(d.Id(), "#")
@@ -52,6 +53,10 @@ func ResourceLocationFSxOpenZFSFileSystem() *schema.Resource {
 
 		Schema: map[string]*schema.Schema{
 			"arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"creation_time": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -119,10 +124,6 @@ func ResourceLocationFSxOpenZFSFileSystem() *schema.Resource {
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			"uri": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"creation_time": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
