@@ -31,15 +31,12 @@ func ResourceLocationHDFS() *schema.Resource {
 		ReadWithoutTimeout:   resourceLocationHDFSRead,
 		UpdateWithoutTimeout: resourceLocationHDFSUpdate,
 		DeleteWithoutTimeout: resourceLocationHDFSDelete,
+
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
 			"agent_arns": {
 				Type:     schema.TypeSet,
 				Required: true,
@@ -48,10 +45,23 @@ func ResourceLocationHDFS() *schema.Resource {
 					ValidateFunc: verify.ValidARN,
 				},
 			},
+			"arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"authentication_type": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: validation.StringInSlice(datasync.HdfsAuthenticationType_Values(), false),
+			},
+			"block_size": {
+				Type:     schema.TypeInt,
+				Optional: true,
+				Default:  128 * 1024 * 1024, // 128 MiB
+				ValidateFunc: validation.All(
+					validation.IntDivisibleBy(512),
+					validation.IntBetween(1048576, 1073741824),
+				),
 			},
 			"kerberos_keytab": {
 				Type:     schema.TypeString,
@@ -70,21 +80,6 @@ func ResourceLocationHDFS() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: validation.StringLenBetween(1, 255),
-			},
-			"block_size": {
-				Type:     schema.TypeInt,
-				Optional: true,
-				Default:  128 * 1024 * 1024, // 128 MiB
-				ValidateFunc: validation.All(
-					validation.IntDivisibleBy(512),
-					validation.IntBetween(1048576, 1073741824),
-				),
-			},
-			"replication_factor": {
-				Type:         schema.TypeInt,
-				Optional:     true,
-				Default:      3,
-				ValidateFunc: validation.IntBetween(1, 512),
 			},
 			"name_node": {
 				Type:     schema.TypeSet,
@@ -123,6 +118,12 @@ func ResourceLocationHDFS() *schema.Resource {
 						},
 					},
 				},
+			},
+			"replication_factor": {
+				Type:         schema.TypeInt,
+				Optional:     true,
+				Default:      3,
+				ValidateFunc: validation.IntBetween(1, 512),
 			},
 			"simple_user": {
 				Type:         schema.TypeString,
