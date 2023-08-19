@@ -28,12 +28,12 @@ import (
 
 // @SDKResource("aws_datasync_location_fsx_ontap_file_system", name="Location FSx for NetApp ONTAP File System")
 // @Tags(identifierAttribute="id")
-func ResourceLocationFSxOntapFileSystem() *schema.Resource {
+func ResourceLocationFSxONTAPFileSystem() *schema.Resource {
 	return &schema.Resource{
-		CreateWithoutTimeout: resourceLocationFSxOntapFileSystemCreate,
-		ReadWithoutTimeout:   resourceLocationFSxOntapFileSystemRead,
-		UpdateWithoutTimeout: resourceLocationFSxOntapFileSystemUpdate,
-		DeleteWithoutTimeout: resourceLocationFSxOntapFileSystemDelete,
+		CreateWithoutTimeout: resourceLocationFSxONTAPFileSystemCreate,
+		ReadWithoutTimeout:   resourceLocationFSxONTAPFileSystemRead,
+		UpdateWithoutTimeout: resourceLocationFSxONTAPFileSystemUpdate,
+		DeleteWithoutTimeout: resourceLocationFSxONTAPFileSystemDelete,
 
 		Importer: &schema.ResourceImporter{
 			StateContext: func(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
@@ -193,7 +193,7 @@ func ResourceLocationFSxOntapFileSystem() *schema.Resource {
 	}
 }
 
-func resourceLocationFSxOntapFileSystemCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceLocationFSxONTAPFileSystemCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DataSyncConn(ctx)
 
@@ -216,10 +216,10 @@ func resourceLocationFSxOntapFileSystemCreate(ctx context.Context, d *schema.Res
 
 	d.SetId(aws.StringValue(output.LocationArn))
 
-	return append(diags, resourceLocationFSxOntapFileSystemRead(ctx, d, meta)...)
+	return append(diags, resourceLocationFSxONTAPFileSystemRead(ctx, d, meta)...)
 }
 
-func resourceLocationFSxOntapFileSystemRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceLocationFSxONTAPFileSystemRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DataSyncConn(ctx)
 
@@ -255,15 +255,15 @@ func resourceLocationFSxOntapFileSystemRead(ctx context.Context, d *schema.Resou
 	return diags
 }
 
-func resourceLocationFSxOntapFileSystemUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceLocationFSxONTAPFileSystemUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	// Tags only.
 
-	return append(diags, resourceLocationFSxOntapFileSystemRead(ctx, d, meta)...)
+	return append(diags, resourceLocationFSxONTAPFileSystemRead(ctx, d, meta)...)
 }
 
-func resourceLocationFSxOntapFileSystemDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceLocationFSxONTAPFileSystemDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DataSyncConn(ctx)
 

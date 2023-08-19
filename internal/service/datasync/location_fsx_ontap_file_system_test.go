@@ -20,10 +20,10 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func TestAccDataSyncLocationFSxOntapFileSystem_basic(t *testing.T) {
+func TestAccDataSyncLocationFSxONTAPFileSystem_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	var locationFsxOntap1 datasync.DescribeLocationFsxOntapOutput
+	var v datasync.DescribeLocationFsxOntapOutput
 	resourceName := "aws_datasync_location_fsx_ontap_file_system.test"
 	fsResourceName := "aws_fsx_ontap_file_system.test"
 	svmResourceName := "aws_fsx_ontap_storage_virtual_machine.test"
@@ -36,12 +36,12 @@ func TestAccDataSyncLocationFSxOntapFileSystem_basic(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, datasync.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckLocationFSxOntapDestroy(ctx),
+		CheckDestroy:             testAccCheckLocationFSxONTAPDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccLocationFSxOntapFileSystemConfig_basic(rName),
+				Config: testAccLocationFSxONTAPFileSystemConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckLocationFSxOntapExists(ctx, resourceName, &locationFsxOntap1),
+					testAccCheckLocationFSxONTAPExists(ctx, resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "datasync", regexp.MustCompile(`location/loc-.+`)),
 					resource.TestCheckResourceAttrSet(resourceName, "creation_time"),
 					resource.TestCheckResourceAttrPair(resourceName, "fsx_filesystem_arn", fsResourceName, "arn"),
@@ -55,16 +55,16 @@ func TestAccDataSyncLocationFSxOntapFileSystem_basic(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
-				ImportStateIdFunc: testAccLocationFSxOntapImportStateID(resourceName),
+				ImportStateIdFunc: testAccLocationFSxONTAPImportStateID(resourceName),
 			},
 		},
 	})
 }
 
-func TestAccDataSyncLocationFSxOntapFileSystem_disappears(t *testing.T) {
+func TestAccDataSyncLocationFSxONTAPFileSystem_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	var locationFsxOntap1 datasync.DescribeLocationFsxOntapOutput
+	var v datasync.DescribeLocationFsxOntapOutput
 	resourceName := "aws_datasync_location_fsx_ontap_file_system.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -75,13 +75,13 @@ func TestAccDataSyncLocationFSxOntapFileSystem_disappears(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, datasync.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckLocationFSxOntapDestroy(ctx),
+		CheckDestroy:             testAccCheckLocationFSxONTAPDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccLocationFSxOntapFileSystemConfig_basic(rName),
+				Config: testAccLocationFSxONTAPFileSystemConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckLocationFSxOntapExists(ctx, resourceName, &locationFsxOntap1),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfdatasync.ResourceLocationFSxOntapFileSystem(), resourceName),
+					testAccCheckLocationFSxONTAPExists(ctx, resourceName, &v),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfdatasync.ResourceLocationFSxONTAPFileSystem(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -89,10 +89,10 @@ func TestAccDataSyncLocationFSxOntapFileSystem_disappears(t *testing.T) {
 	})
 }
 
-func TestAccDataSyncLocationFSxOntapFileSystem_subdirectory(t *testing.T) {
+func TestAccDataSyncLocationFSxONTAPFileSystem_subdirectory(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	var locationFsxOntap1 datasync.DescribeLocationFsxOntapOutput
+	var v datasync.DescribeLocationFsxOntapOutput
 	resourceName := "aws_datasync_location_fsx_ontap_file_system.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -103,12 +103,12 @@ func TestAccDataSyncLocationFSxOntapFileSystem_subdirectory(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, datasync.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckLocationFSxOntapDestroy(ctx),
+		CheckDestroy:             testAccCheckLocationFSxONTAPDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccLocationFSxOntapFileSystemConfig_subdirectory(rName, "/subdirectory1/"),
+				Config: testAccLocationFSxONTAPFileSystemConfig_subdirectory(rName, "/subdirectory1/"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckLocationFSxOntapExists(ctx, resourceName, &locationFsxOntap1),
+					testAccCheckLocationFSxONTAPExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "subdirectory", "/subdirectory1/"),
 				),
 			},
@@ -116,16 +116,16 @@ func TestAccDataSyncLocationFSxOntapFileSystem_subdirectory(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
-				ImportStateIdFunc: testAccLocationFSxOntapImportStateID(resourceName),
+				ImportStateIdFunc: testAccLocationFSxONTAPImportStateID(resourceName),
 			},
 		},
 	})
 }
 
-func TestAccDataSyncLocationFSxOntapFileSystem_tags(t *testing.T) {
+func TestAccDataSyncLocationFSxONTAPFileSystem_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	var locationFsxOntap1 datasync.DescribeLocationFsxOntapOutput
+	var v datasync.DescribeLocationFsxOntapOutput
 	resourceName := "aws_datasync_location_fsx_ontap_file_system.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -136,12 +136,12 @@ func TestAccDataSyncLocationFSxOntapFileSystem_tags(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, datasync.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckLocationFSxOntapDestroy(ctx),
+		CheckDestroy:             testAccCheckLocationFSxONTAPDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccLocationFSxOntapFileSystemConfig_tags1(rName, "key1", "value1"),
+				Config: testAccLocationFSxONTAPFileSystemConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckLocationFSxOntapExists(ctx, resourceName, &locationFsxOntap1),
+					testAccCheckLocationFSxONTAPExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
@@ -150,21 +150,21 @@ func TestAccDataSyncLocationFSxOntapFileSystem_tags(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
-				ImportStateIdFunc: testAccLocationFSxOntapImportStateID(resourceName),
+				ImportStateIdFunc: testAccLocationFSxONTAPImportStateID(resourceName),
 			},
 			{
-				Config: testAccLocationFSxOntapFileSystemConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccLocationFSxONTAPFileSystemConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckLocationFSxOntapExists(ctx, resourceName, &locationFsxOntap1),
+					testAccCheckLocationFSxONTAPExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
 			{
-				Config: testAccLocationFSxOntapFileSystemConfig_tags1(rName, "key1", "value1"),
+				Config: testAccLocationFSxONTAPFileSystemConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckLocationFSxOntapExists(ctx, resourceName, &locationFsxOntap1),
+					testAccCheckLocationFSxONTAPExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
@@ -173,7 +173,7 @@ func TestAccDataSyncLocationFSxOntapFileSystem_tags(t *testing.T) {
 	})
 }
 
-func testAccCheckLocationFSxOntapDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckLocationFSxONTAPDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).DataSyncConn(ctx)
 
@@ -199,7 +199,7 @@ func testAccCheckLocationFSxOntapDestroy(ctx context.Context) resource.TestCheck
 	}
 }
 
-func testAccCheckLocationFSxOntapExists(ctx context.Context, n string, v *datasync.DescribeLocationFsxOntapOutput) resource.TestCheckFunc {
+func testAccCheckLocationFSxONTAPExists(ctx context.Context, n string, v *datasync.DescribeLocationFsxOntapOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -220,7 +220,7 @@ func testAccCheckLocationFSxOntapExists(ctx context.Context, n string, v *datasy
 	}
 }
 
-func testAccLocationFSxOntapImportStateID(n string) resource.ImportStateIdFunc {
+func testAccLocationFSxONTAPImportStateID(n string) resource.ImportStateIdFunc {
 	return func(s *terraform.State) (string, error) {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -271,7 +271,7 @@ resource "aws_fsx_ontap_storage_virtual_machine" "test" {
 `, rName))
 }
 
-func testAccLocationFSxOntapFileSystemConfig_basic(rName string) string {
+func testAccLocationFSxONTAPFileSystemConfig_basic(rName string) string {
 	return acctest.ConfigCompose(testAccFSxOntapFileSystemConfig_base(rName), `
 resource "aws_datasync_location_fsx_ontap_file_system" "test" {
   security_group_arns         = [aws_security_group.test.arn]
@@ -288,7 +288,7 @@ resource "aws_datasync_location_fsx_ontap_file_system" "test" {
 `)
 }
 
-func testAccLocationFSxOntapFileSystemConfig_subdirectory(rName, subdirectory string) string {
+func testAccLocationFSxONTAPFileSystemConfig_subdirectory(rName, subdirectory string) string {
 	return acctest.ConfigCompose(testAccFSxOntapFileSystemConfig_base(rName), fmt.Sprintf(`
 resource "aws_datasync_location_fsx_ontap_file_system" "test" {
   security_group_arns         = [aws_security_group.test.arn]
@@ -306,7 +306,7 @@ resource "aws_datasync_location_fsx_ontap_file_system" "test" {
 `, subdirectory))
 }
 
-func testAccLocationFSxOntapFileSystemConfig_tags1(rName, key1, value1 string) string {
+func testAccLocationFSxONTAPFileSystemConfig_tags1(rName, key1, value1 string) string {
 	return acctest.ConfigCompose(testAccFSxOntapFileSystemConfig_base(rName), fmt.Sprintf(`
 resource "aws_datasync_location_fsx_ontap_file_system" "test" {
   security_group_arns         = [aws_security_group.test.arn]
@@ -327,7 +327,7 @@ resource "aws_datasync_location_fsx_ontap_file_system" "test" {
 `, key1, value1))
 }
 
-func testAccLocationFSxOntapFileSystemConfig_tags2(rName, key1, value1, key2, value2 string) string {
+func testAccLocationFSxONTAPFileSystemConfig_tags2(rName, key1, value1, key2, value2 string) string {
 	return acctest.ConfigCompose(testAccFSxOntapFileSystemConfig_base(rName), fmt.Sprintf(`
 resource "aws_datasync_location_fsx_ontap_file_system" "test" {
   security_group_arns         = [aws_security_group.test.arn]
