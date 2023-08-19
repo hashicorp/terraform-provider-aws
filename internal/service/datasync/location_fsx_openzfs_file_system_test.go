@@ -40,11 +40,11 @@ func TestAccDataSyncLocationFSxOpenZFSFileSystem_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLocationFSxOpenZFSExists(ctx, resourceName, &locationFsxOpenZfs1),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "datasync", regexp.MustCompile(`location/loc-.+`)),
+					resource.TestCheckResourceAttrSet(resourceName, "creation_time"),
 					resource.TestCheckResourceAttrPair(resourceName, "fsx_filesystem_arn", fsResourceName, "arn"),
 					resource.TestCheckResourceAttr(resourceName, "subdirectory", "/fsx/"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					resource.TestMatchResourceAttr(resourceName, "uri", regexp.MustCompile(`^fsxz://.+/`)),
-					resource.TestCheckResourceAttrSet(resourceName, "creation_time"),
 				),
 			},
 			{
@@ -76,7 +76,6 @@ func TestAccDataSyncLocationFSxOpenZFSFileSystem_disappears(t *testing.T) {
 				Config: testAccLocationFSxOpenZFSFileSystemConfig_basic(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLocationFSxOpenZFSExists(ctx, resourceName, &locationFsxOpenZfs1),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfdatasync.ResourceLocationFSxOpenZFSFileSystem(), resourceName),
 					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfdatasync.ResourceLocationFSxOpenZFSFileSystem(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -186,32 +185,29 @@ func testAccCheckLocationFSxOpenZFSDestroy(ctx context.Context) resource.TestChe
 				return err
 			}
 
-			return fmt.Errorf("DataSync Task %s still exists", rs.Primary.ID)
+			return fmt.Errorf("DataSync Location FSx for OpenZFS File System %s still exists", rs.Primary.ID)
 		}
 
 		return nil
 	}
 }
 
-func testAccCheckLocationFSxOpenZFSExists(ctx context.Context, resourceName string, locationFsxOpenZfs *datasync.DescribeLocationFsxOpenZfsOutput) resource.TestCheckFunc {
+func testAccCheckLocationFSxOpenZFSExists(ctx context.Context, n string, v *datasync.DescribeLocationFsxOpenZfsOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[resourceName]
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return fmt.Errorf("Not found: %s", resourceName)
+			return fmt.Errorf("Not found: %s", n)
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).DataSyncConn(ctx)
+
 		output, err := tfdatasync.FindLocationFSxOpenZFSByARN(ctx, conn, rs.Primary.ID)
 
 		if err != nil {
 			return err
 		}
 
-		if output == nil {
-			return fmt.Errorf("Location %q does not exist", rs.Primary.ID)
-		}
-
-		*locationFsxOpenZfs = *output
+		*v = *output
 
 		return nil
 	}

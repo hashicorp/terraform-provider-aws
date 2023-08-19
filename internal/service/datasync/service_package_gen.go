@@ -64,7 +64,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  ResourceLocationFSxOpenZFSFileSystem,
 			TypeName: "aws_datasync_location_fsx_openzfs_file_system",
-			Name:     "Location OpenZFS File System",
+			Name:     "Location FSx for OpenZFS File System",
 			Tags: &types.ServicePackageResourceTags{
 				IdentifierAttribute: "id",
 			},

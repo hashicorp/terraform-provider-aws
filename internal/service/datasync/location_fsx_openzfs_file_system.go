@@ -26,7 +26,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_datasync_location_fsx_openzfs_file_system", name="Location OpenZFS File System")
+// @SDKResource("aws_datasync_location_fsx_openzfs_file_system", name="Location FSx for OpenZFS File System")
 // @Tags(identifierAttribute="id")
 func ResourceLocationFSxOpenZFSFileSystem() *schema.Resource {
 	return &schema.Resource{
@@ -138,9 +138,8 @@ func resourceLocationFSxOpenZFSFileSystemCreate(ctx context.Context, d *schema.R
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DataSyncConn(ctx)
 
-	fsxArn := d.Get("fsx_filesystem_arn").(string)
 	input := &datasync.CreateLocationFsxOpenZfsInput{
-		FsxFilesystemArn:  aws.String(fsxArn),
+		FsxFilesystemArn:  aws.String(d.Get("fsx_filesystem_arn").(string)),
 		Protocol:          expandProtocol(d.Get("protocol").([]interface{})),
 		SecurityGroupArns: flex.ExpandStringSet(d.Get("security_group_arns").(*schema.Set)),
 		Tags:              getTagsIn(ctx),
@@ -150,10 +149,10 @@ func resourceLocationFSxOpenZFSFileSystemCreate(ctx context.Context, d *schema.R
 		input.Subdirectory = aws.String(v.(string))
 	}
 
-	log.Printf("[DEBUG] Creating DataSync Location Fsx OpenZfs File System: %#v", input)
 	output, err := conn.CreateLocationFsxOpenZfsWithContext(ctx, input)
+
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating DataSync Location Fsx OpenZfs File System: %s", err)
+		return sdkdiag.AppendErrorf(diags, "creating DataSync Location FSx for OpenZFS File System: %s", err)
 	}
 
 	d.SetId(aws.StringValue(output.LocationArn))
@@ -168,36 +167,30 @@ func resourceLocationFSxOpenZFSFileSystemRead(ctx context.Context, d *schema.Res
 	output, err := FindLocationFSxOpenZFSByARN(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
-		log.Printf("[WARN] DataSync Location Fsx OpenZfs (%s) not found, removing from state", d.Id())
+		log.Printf("[WARN] DataSync Location FSx for OpenZFS File System (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
 	}
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading DataSync Location Fsx OpenZfs (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading DataSync Location FSx for OpenZFS File System (%s): %s", d.Id(), err)
 	}
 
-	subdirectory, err := subdirectoryFromLocationURI(aws.StringValue(output.LocationUri))
-
+	uri := aws.StringValue(output.LocationUri)
+	subdirectory, err := subdirectoryFromLocationURI(uri)
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading DataSync Location Fsx OpenZfs (%s): %s", d.Id(), err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	d.Set("arn", output.LocationArn)
-	d.Set("subdirectory", subdirectory)
-	d.Set("uri", output.LocationUri)
-
-	if err := d.Set("security_group_arns", flex.FlattenStringSet(output.SecurityGroupArns)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting security_group_arns: %s", err)
-	}
-
-	if err := d.Set("creation_time", output.CreationTime.Format(time.RFC3339)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting creation_time: %s", err)
-	}
-
+	d.Set("creation_time", output.CreationTime.Format(time.RFC3339))
+	d.Set("fsx_filesystem_arn", d.Get("fsx_filesystem_arn"))
 	if err := d.Set("protocol", flattenProtocol(output.Protocol)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting protocol: %s", err)
 	}
+	d.Set("security_group_arns", aws.StringValueSlice(output.SecurityGroupArns))
+	d.Set("subdirectory", subdirectory)
+	d.Set("uri", uri)
 
 	return diags
 }
@@ -214,19 +207,17 @@ func resourceLocationFSxOpenZFSFileSystemDelete(ctx context.Context, d *schema.R
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DataSyncConn(ctx)
 
-	input := &datasync.DeleteLocationInput{
+	log.Printf("[DEBUG] Deleting DataSync Location FSx for OpenZFS File System: %s", d.Id())
+	_, err := conn.DeleteLocationWithContext(ctx, &datasync.DeleteLocationInput{
 		LocationArn: aws.String(d.Id()),
-	}
-
-	log.Printf("[DEBUG] Deleting DataSync Location Fsx OpenZfs File System: %#v", input)
-	_, err := conn.DeleteLocationWithContext(ctx, input)
+	})
 
 	if tfawserr.ErrMessageContains(err, datasync.ErrCodeInvalidRequestException, "not found") {
 		return diags
 	}
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "deleting DataSync Location Fsx OpenZfs (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting DataSync Location FSx for OpenZFS File System (%s): %s", d.Id(), err)
 	}
 
 	return diags
