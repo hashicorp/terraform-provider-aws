@@ -32,6 +32,7 @@ func ResourceLocationFSxWindowsFileSystem() *schema.Resource {
 		ReadWithoutTimeout:   resourceLocationFSxWindowsFileSystemRead,
 		UpdateWithoutTimeout: resourceLocationFSxWindowsFileSystemUpdate,
 		DeleteWithoutTimeout: resourceLocationFSxWindowsFileSystemDelete,
+
 		Importer: &schema.ResourceImporter{
 			StateContext: func(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 				idParts := strings.Split(d.Id(), "#")
@@ -54,6 +55,16 @@ func ResourceLocationFSxWindowsFileSystem() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"creation_time": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"domain": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.StringLenBetween(1, 253),
+			},
 			"fsx_filesystem_arn": {
 				Type:         schema.TypeString,
 				Required:     true,
@@ -66,18 +77,6 @@ func ResourceLocationFSxWindowsFileSystem() *schema.Resource {
 				ForceNew:     true,
 				Sensitive:    true,
 				ValidateFunc: validation.StringLenBetween(1, 104),
-			},
-			"user": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringLenBetween(1, 104),
-			},
-			"domain": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringLenBetween(1, 253),
 			},
 			"security_group_arns": {
 				Type:     schema.TypeSet,
@@ -103,9 +102,11 @@ func ResourceLocationFSxWindowsFileSystem() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"creation_time": {
-				Type:     schema.TypeString,
-				Computed: true,
+			"user": {
+				Type:         schema.TypeString,
+				Required:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.StringLenBetween(1, 104),
 			},
 		},
 
