@@ -427,41 +427,151 @@ func findReplicatorByARN(ctx context.Context, conn *kafka.Client, arn string) (*
 	return out, nil
 }
 
-// func flattenVpcConfigV2(apiObject types.VpcConfig) map[string]interface{} { // nosemgrep:ci.caps5-in-func-name
-// 	if apiObject == nil {
-// 		return nil
-// 	}
+func flattenReplicationInfoList(apiObject *types.ReplicationInfo) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
 
-// 	tfMap := map[string]interface{}{}
+	tfMap := map[string]interface{}{}
 
-// 	if v := apiObject.SecurityGroupIds; v != nil {
-// 		tfMap["security_group_ids"] = aws.StringValueSlice(v)
-// 	}
+	if v := apiObject.SourceKafkaClusterArn; v !=nil {
+		tfMap["source_kafka_cluster_arn"] = aws.ToString(v)
+	}
 
-// 	if v := apiObject.SubnetIds; v != nil {
-// 		tfMap["subnet_ids"] = aws.StringValueSlice(v)
-// 	}
+	if v := apiObject.TargetKafkaClusterArn; v != nil {
+		tfMap["target_kafka_cluster_arn"] = aws.ToString(v)
+	}
 
-// 	return tfMap
-// }
+	if v:= apiObject.TargetCompressionType; v != nil {
+		tfMap["target_compression_type"] = types.TargetCompressionType(v[0])
+	}
 
-// func flattenVpcConfigsV2(apiObjects []*kafka.VpcConfig) []interface{} { // nosemgrep:ci.caps5-in-func-name
-// 	if len(apiObjects) == 0 {
-// 		return nil
-// 	}
 
-// 	var tfList []interface{}
+	return tfMap
+}
 
-// 	for _, apiObject := range apiObjects {
-// 		if apiObject == nil {
-// 			continue
-// 		}
 
-// 		tfList = append(tfList, flattenVpcConfig(apiObject))
-// 	}
+func flattenConsumerGroupReplication(apiObject  *types.ConsumerGroupReplication) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
 
-// 	return tfList
-// }
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.ConsumerGroupsToReplicate; v != nil {
+		tfMap["consumer_groups_to_replicate"] = flex.FlattenStringValueSet(v)
+	}
+
+	if v := apiObject.ConsumerGroupsToExclude; v != nil {
+		tfMap["consumer_groups_to_exclude"] = flex.FlattenStringValueSet(v)
+	}
+
+	if apiObject.SynchroniseConsumerGroupOffsets {
+		tfMap["synchronise_consumer_group_offsets"] = apiObject.SynchroniseConsumerGroupOffsets
+	}
+
+	if apiObject.DetectAndCopyNewConsumerGroups {
+		tfMap["detect_and_copy_new_consumer_groups"] = apiObject.DetectAndCopyNewConsumerGroups
+	}
+	
+	return tfMap
+}
+
+func flattenTopicReplication(apiObject *types.TopicReplication) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.TopicsToReplicate; v != nil {
+		tfMap["topics_to_replicate"] = flex.FlattenStringValueSet(v)
+	}
+
+	if v := apiObject.TopicsToExclude; v != nil {
+		tfMap["topics_to_exclude"] = flex.FlattenStringValueSet(v)
+	}
+
+	if apiObject.CopyTopicConfigurations {
+		tfMap["copy_topic_configurations"] = apiObject.CopyTopicConfigurations
+	}
+
+	if apiObject.CopyAccessControlListsForTopics {
+		tfMap["copy_access_control_lists_for_topics"] = apiObject.CopyAccessControlListsForTopics
+	}
+
+	if apiObject.DetectAndCopyNewTopics {
+		tfMap["detect_and_copy_new_topics"] = apiObject.CopyAccessControlListsForTopics
+	}
+
+	return tfMap
+}
+
+func flattenKafkaClusters(apiObjects []*types.KafkaCluster) []interface{} {
+	if len(apiObjects) == 0 {
+		return nil
+	}
+
+	var tfList []interface{}
+
+	for _, apiObject := range apiObjects {
+		if apiObject == nil {
+			continue
+		}
+
+		tfList = append(tfList, flattenKafkaCluster(apiObject))
+	}
+
+	return tfList
+}
+
+func flattenKafkaCluster(apiObject *types.KafkaCluster) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.AmazonMskCluster; v != nil {
+		tfMap["amazon_msk_cluster"] = flattenMskCluster(v)
+	}
+
+	if v := apiObject.VpcConfig; v != nil {
+		tfMap["vpc_config"] = flattenKafkaClusterClientVpcConfig(v)
+	}
+
+	return tfMap
+}
+
+func flattenKafkaClusterClientVpcConfig(apiObject *types.KafkaClusterClientVpcConfig) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.SecurityGroupIds; v != nil {
+		tfMap["security_group_ids"] = flex.FlattenStringValueSet(v)
+	}
+
+	if v := apiObject.SubnetIds; v != nil {
+		tfMap["subnet_ids"] = flex.FlattenStringValueSet(v)
+	}
+
+	return tfMap
+}
+
+func flattenMskCluster(apiObject *types.AmazonMskCluster) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+	
+	tfMap := map[string]interface{}{
+		"msk_cluster_arn": apiObject.MskClusterArn,
+	}
+
+	return tfMap
+}
 
 func expandReplicationInfoList(tfList []interface{}) []types.ReplicationInfo {
 	if len(tfList) == 0 {
@@ -523,11 +633,11 @@ func expandConsumerGroupReplication(tfMap map[string]interface{}) *types.Consume
 	}
 
 	if v, ok := tfMap["synchronise_consumer_group_offsets"].(bool); ok {
-		apiObject.SynchroniseConsumerGroupOffsets = v
+		apiObject.SynchroniseConsumerGroupOffsets = aws.ToBool(v)
 	}
 
 	if v, ok := tfMap["detect_and_copy_new_consumer_groups"].(bool); ok {
-		apiObject.DetectAndCopyNewConsumerGroups = v
+		apiObject.DetectAndCopyNewConsumerGroups = aws.ToBool(v)
 	}
 
 	return apiObject
@@ -545,15 +655,15 @@ func expandTopicReplication(tfMap map[string]interface{}) *types.TopicReplicatio
 	}
 
 	if v, ok := tfMap["copy_topic_configurations"].(bool); ok {
-		apiObject.CopyTopicConfigurations = v
+		apiObject.CopyTopicConfigurations = aws.ToBool(v)
 	}
 
 	if v, ok := tfMap["copy_access_control_lists_for_topics"].(bool); ok {
-		apiObject.CopyAccessControlListsForTopics = v
+		apiObject.CopyAccessControlListsForTopics = aws.ToBool(v)
 	}
 
 	if v, ok := tfMap["detect_and_copy_new_topics"].(bool); ok {
-		apiObject.DetectAndCopyNewTopics = v
+		apiObject.DetectAndCopyNewTopics = aws.ToBool(v)
 	}
 
 	return apiObject
