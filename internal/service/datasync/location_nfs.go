@@ -175,7 +175,7 @@ func resourceLocationNFSUpdate(ctx context.Context, d *schema.ResourceData, meta
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DataSyncConn(ctx)
 
-	if d.HasChangesExcept("tags_all", "tags") {
+	if d.HasChangesExcept("tags", "tags_all") {
 		input := &datasync.UpdateLocationNfsInput{
 			LocationArn:  aws.String(d.Id()),
 			OnPremConfig: expandOnPremConfig(d.Get("on_prem_config").([]interface{})),

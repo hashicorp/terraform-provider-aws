@@ -259,7 +259,7 @@ func resourceLocationHDFSUpdate(ctx context.Context, d *schema.ResourceData, met
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DataSyncConn(ctx)
 
-	if d.HasChangesExcept("tags_all", "tags") {
+	if d.HasChangesExcept("tags", "tags_all") {
 		input := &datasync.UpdateLocationHdfsInput{
 			LocationArn: aws.String(d.Id()),
 		}
