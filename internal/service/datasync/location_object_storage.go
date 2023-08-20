@@ -114,22 +114,14 @@ func resourceLocationObjectStorageCreate(ctx context.Context, d *schema.Resource
 
 	input := &datasync.CreateLocationObjectStorageInput{
 		AgentArns:      flex.ExpandStringSet(d.Get("agent_arns").(*schema.Set)),
-		Subdirectory:   aws.String(d.Get("subdirectory").(string)),
 		BucketName:     aws.String(d.Get("bucket_name").(string)),
 		ServerHostname: aws.String(d.Get("server_hostname").(string)),
+		Subdirectory:   aws.String(d.Get("subdirectory").(string)),
 		Tags:           getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("access_key"); ok {
 		input.AccessKey = aws.String(v.(string))
-	}
-
-	if v, ok := d.GetOk("server_protocol"); ok {
-		input.ServerProtocol = aws.String(v.(string))
-	}
-
-	if v, ok := d.GetOk("server_port"); ok {
-		input.ServerPort = aws.Int64(int64(v.(int)))
 	}
 
 	if v, ok := d.GetOk("secret_key"); ok {
@@ -138,6 +130,14 @@ func resourceLocationObjectStorageCreate(ctx context.Context, d *schema.Resource
 
 	if v, ok := d.GetOk("server_certificate"); ok {
 		input.ServerCertificate = []byte(v.(string))
+	}
+
+	if v, ok := d.GetOk("server_port"); ok {
+		input.ServerPort = aws.Int64(int64(v.(int)))
+	}
+
+	if v, ok := d.GetOk("server_protocol"); ok {
+		input.ServerProtocol = aws.String(v.(string))
 	}
 
 	output, err := conn.CreateLocationObjectStorageWithContext(ctx, input)
@@ -169,7 +169,6 @@ func resourceLocationObjectStorageRead(ctx context.Context, d *schema.ResourceDa
 
 	uri := aws.StringValue(output.LocationUri)
 	hostname, bucketName, subdirectory, err := decodeObjectStorageURI(uri)
-
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
@@ -235,12 +234,10 @@ func resourceLocationObjectStorageDelete(ctx context.Context, d *schema.Resource
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DataSyncConn(ctx)
 
-	input := &datasync.DeleteLocationInput{
-		LocationArn: aws.String(d.Id()),
-	}
-
 	log.Printf("[DEBUG] Deleting DataSync Location Object Storage: %s", d.Id())
-	_, err := conn.DeleteLocationWithContext(ctx, input)
+	_, err := conn.DeleteLocationWithContext(ctx, &datasync.DeleteLocationInput{
+		LocationArn: aws.String(d.Id()),
+	})
 
 	if tfawserr.ErrMessageContains(err, datasync.ErrCodeInvalidRequestException, "not found") {
 		return diags
