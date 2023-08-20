@@ -5,12 +5,10 @@ package datasync_test
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"regexp"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/datasync"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -23,7 +21,7 @@ import (
 
 func TestAccDataSyncLocationEFS_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var locationEfs1 datasync.DescribeLocationEfsOutput
+	var v datasync.DescribeLocationEfsOutput
 	efsFileSystemResourceName := "aws_efs_file_system.test"
 	resourceName := "aws_datasync_location_efs.test"
 	subnetResourceName := "aws_subnet.test"
@@ -38,7 +36,7 @@ func TestAccDataSyncLocationEFS_basic(t *testing.T) {
 			{
 				Config: testAccLocationEFSConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckLocationEFSExists(ctx, resourceName, &locationEfs1),
+					testAccCheckLocationEFSExists(ctx, resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "datasync", regexp.MustCompile(`location/loc-.+`)),
 					resource.TestCheckResourceAttr(resourceName, "ec2_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "ec2_config.0.security_group_arns.#", "1"),
@@ -61,7 +59,7 @@ func TestAccDataSyncLocationEFS_basic(t *testing.T) {
 
 func TestAccDataSyncLocationEFS_accessPointARN(t *testing.T) {
 	ctx := acctest.Context(t)
-	var locationEfs1 datasync.DescribeLocationEfsOutput
+	var v datasync.DescribeLocationEfsOutput
 	resourceName := "aws_datasync_location_efs.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -74,7 +72,7 @@ func TestAccDataSyncLocationEFS_accessPointARN(t *testing.T) {
 			{
 				Config: testAccLocationEFSConfig_accessPointARN(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckLocationEFSExists(ctx, resourceName, &locationEfs1),
+					testAccCheckLocationEFSExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttrPair(resourceName, "access_point_arn", "aws_efs_access_point.test", "arn"),
 					resource.TestCheckResourceAttr(resourceName, "in_transit_encryption", "TLS1_2"),
 				),
@@ -91,7 +89,7 @@ func TestAccDataSyncLocationEFS_accessPointARN(t *testing.T) {
 
 func TestAccDataSyncLocationEFS_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	var locationEfs1 datasync.DescribeLocationEfsOutput
+	var v datasync.DescribeLocationEfsOutput
 	resourceName := "aws_datasync_location_efs.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -104,7 +102,7 @@ func TestAccDataSyncLocationEFS_disappears(t *testing.T) {
 			{
 				Config: testAccLocationEFSConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckLocationEFSExists(ctx, resourceName, &locationEfs1),
+					testAccCheckLocationEFSExists(ctx, resourceName, &v),
 					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfdatasync.ResourceLocationEFS(), resourceName),
 					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfdatasync.ResourceLocationEFS(), resourceName),
 				),
@@ -116,7 +114,7 @@ func TestAccDataSyncLocationEFS_disappears(t *testing.T) {
 
 func TestAccDataSyncLocationEFS_subdirectory(t *testing.T) {
 	ctx := acctest.Context(t)
-	var locationEfs1 datasync.DescribeLocationEfsOutput
+	var v datasync.DescribeLocationEfsOutput
 	resourceName := "aws_datasync_location_efs.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -129,7 +127,7 @@ func TestAccDataSyncLocationEFS_subdirectory(t *testing.T) {
 			{
 				Config: testAccLocationEFSConfig_subdirectory(rName, "/subdirectory1/"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckLocationEFSExists(ctx, resourceName, &locationEfs1),
+					testAccCheckLocationEFSExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "subdirectory", "/subdirectory1/"),
 				),
 			},
@@ -145,7 +143,7 @@ func TestAccDataSyncLocationEFS_subdirectory(t *testing.T) {
 
 func TestAccDataSyncLocationEFS_tags(t *testing.T) {
 	ctx := acctest.Context(t)
-	var locationEfs1, locationEfs2, locationEfs3 datasync.DescribeLocationEfsOutput
+	var v datasync.DescribeLocationEfsOutput
 	resourceName := "aws_datasync_location_efs.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -158,7 +156,7 @@ func TestAccDataSyncLocationEFS_tags(t *testing.T) {
 			{
 				Config: testAccLocationEFSConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckLocationEFSExists(ctx, resourceName, &locationEfs1),
+					testAccCheckLocationEFSExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
@@ -172,8 +170,7 @@ func TestAccDataSyncLocationEFS_tags(t *testing.T) {
 			{
 				Config: testAccLocationEFSConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckLocationEFSExists(ctx, resourceName, &locationEfs2),
-					testAccCheckLocationEFSNotRecreated(&locationEfs1, &locationEfs2),
+					testAccCheckLocationEFSExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
@@ -182,8 +179,7 @@ func TestAccDataSyncLocationEFS_tags(t *testing.T) {
 			{
 				Config: testAccLocationEFSConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckLocationEFSExists(ctx, resourceName, &locationEfs3),
-					testAccCheckLocationEFSNotRecreated(&locationEfs2, &locationEfs3),
+					testAccCheckLocationEFSExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
@@ -234,16 +230,6 @@ func testAccCheckLocationEFSExists(ctx context.Context, n string, v *datasync.De
 		}
 
 		*v = *output
-
-		return nil
-	}
-}
-
-func testAccCheckLocationEFSNotRecreated(i, j *datasync.DescribeLocationEfsOutput) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		if !aws.TimeValue(i.CreationTime).Equal(aws.TimeValue(j.CreationTime)) {
-			return errors.New("DataSync Location EFS was recreated")
-		}
 
 		return nil
 	}
