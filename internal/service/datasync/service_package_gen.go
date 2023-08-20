@@ -38,6 +38,14 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
+			Factory:  ResourceLocationAzureBlob,
+			TypeName: "aws_datasync_location_azure_blob",
+			Name:     "Location Microsoft Azure Blob Storage",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "id",
+			},
+		},
+		{
 			Factory:  ResourceLocationEFS,
 			TypeName: "aws_datasync_location_efs",
 			Name:     "Location EFS",
