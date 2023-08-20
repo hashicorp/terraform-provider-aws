@@ -32,15 +32,12 @@ func ResourceLocationS3() *schema.Resource {
 		ReadWithoutTimeout:   resourceLocationS3Read,
 		UpdateWithoutTimeout: resourceLocationS3Update,
 		DeleteWithoutTimeout: resourceLocationS3Delete,
+
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
 			"agent_arns": {
 				Type:     schema.TypeSet,
 				Optional: true,
@@ -49,6 +46,10 @@ func ResourceLocationS3() *schema.Resource {
 					Type:         schema.TypeString,
 					ValidateFunc: verify.ValidARN,
 				},
+			},
+			"arn": {
+				Type:     schema.TypeString,
+				Computed: true,
 			},
 			"s3_bucket_arn": {
 				Type:         schema.TypeString,
