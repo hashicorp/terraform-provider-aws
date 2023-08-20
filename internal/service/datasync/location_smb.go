@@ -29,15 +29,12 @@ func ResourceLocationSMB() *schema.Resource {
 		ReadWithoutTimeout:   resourceLocationSMBRead,
 		UpdateWithoutTimeout: resourceLocationSMBUpdate,
 		DeleteWithoutTimeout: resourceLocationSMBDelete,
+
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
 			"agent_arns": {
 				Type:     schema.TypeSet,
 				Required: true,
@@ -45,6 +42,10 @@ func ResourceLocationSMB() *schema.Resource {
 					Type:         schema.TypeString,
 					ValidateFunc: verify.ValidARN,
 				},
+			},
+			"arn": {
+				Type:     schema.TypeString,
+				Computed: true,
 			},
 			"domain": {
 				Type:         schema.TypeString,
