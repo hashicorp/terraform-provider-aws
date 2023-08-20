@@ -12,6 +12,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/datasync"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -158,15 +159,10 @@ func resourceLocationS3Read(ctx context.Context, d *schema.ResourceData, meta in
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DataSyncConn(ctx)
 
-	input := &datasync.DescribeLocationS3Input{
-		LocationArn: aws.String(d.Id()),
-	}
+	output, err := FindLocationS3ByARN(ctx, conn, d.Id())
 
-	log.Printf("[DEBUG] Reading DataSync Location S3: %s", input)
-	output, err := conn.DescribeLocationS3WithContext(ctx, input)
-
-	if tfawserr.ErrMessageContains(err, "InvalidRequestException", "not found") {
-		log.Printf("[WARN] DataSync Location S3 %q not found - removing from state", d.Id())
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] DataSync Location S3 (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
 	}
@@ -175,20 +171,20 @@ func resourceLocationS3Read(ctx context.Context, d *schema.ResourceData, meta in
 		return sdkdiag.AppendErrorf(diags, "reading DataSync Location S3 (%s): %s", d.Id(), err)
 	}
 
+	uri := aws.StringValue(output.LocationUri)
 	subdirectory, err := subdirectoryFromLocationURI(aws.StringValue(output.LocationUri))
-
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading DataSync Location S3 (%s): %s", d.Id(), err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	d.Set("agent_arns", flex.FlattenStringSet(output.AgentArns))
+	d.Set("agent_arns", aws.StringValueSlice(output.AgentArns))
 	d.Set("arn", output.LocationArn)
 	if err := d.Set("s3_config", flattenS3Config(output.S3Config)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting s3_config: %s", err)
 	}
 	d.Set("s3_storage_class", output.S3StorageClass)
 	d.Set("subdirectory", subdirectory)
-	d.Set("uri", output.LocationUri)
+	d.Set("uri", uri)
 
 	return diags
 }
@@ -205,14 +201,12 @@ func resourceLocationS3Delete(ctx context.Context, d *schema.ResourceData, meta 
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DataSyncConn(ctx)
 
-	input := &datasync.DeleteLocationInput{
+	log.Printf("[DEBUG] Deleting DataSync Location S3: %s", d.Id())
+	_, err := conn.DeleteLocationWithContext(ctx, &datasync.DeleteLocationInput{
 		LocationArn: aws.String(d.Id()),
-	}
+	})
 
-	log.Printf("[DEBUG] Deleting DataSync Location S3: %s", input)
-	_, err := conn.DeleteLocationWithContext(ctx, input)
-
-	if tfawserr.ErrMessageContains(err, "InvalidRequestException", "not found") {
+	if tfawserr.ErrMessageContains(err, datasync.ErrCodeInvalidRequestException, "not found") {
 		return diags
 	}
 
@@ -221,6 +215,31 @@ func resourceLocationS3Delete(ctx context.Context, d *schema.ResourceData, meta 
 	}
 
 	return diags
+}
+
+func FindLocationS3ByARN(ctx context.Context, conn *datasync.DataSync, arn string) (*datasync.DescribeLocationS3Output, error) {
+	input := &datasync.DescribeLocationS3Input{
+		LocationArn: aws.String(arn),
+	}
+
+	output, err := conn.DescribeLocationS3WithContext(ctx, input)
+
+	if tfawserr.ErrMessageContains(err, datasync.ErrCodeInvalidRequestException, "not found") {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output, nil
 }
 
 func flattenS3Config(s3Config *datasync.S3Config) []interface{} {
