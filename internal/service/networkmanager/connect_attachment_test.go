@@ -247,11 +247,15 @@ resource "aws_networkmanager_global_network" "test" {
 
 resource "aws_networkmanager_core_network" "test" {
   global_network_id = aws_networkmanager_global_network.test.id
-  policy_document   = data.aws_networkmanager_core_network_policy_document.test.json
 
   tags = {
     Name = %[1]q
   }
+}
+
+resource "aws_networkmanager_core_network_policy_attachment" "test" {
+  core_network_id = aws_networkmanager_core_network.test.id
+  policy_document = data.aws_networkmanager_core_network_policy_document.test.json
 }
 
 data "aws_networkmanager_core_network_policy_document" "test" {
@@ -297,7 +301,7 @@ func testAccConnectAttachmentConfig_basic(rName string) string {
 	return acctest.ConfigCompose(testAccConnectAttachmentConfig_base(rName), `
 resource "aws_networkmanager_vpc_attachment" "test" {
   subnet_arns     = aws_subnet.test[*].arn
-  core_network_id = aws_networkmanager_core_network.test.id
+  core_network_id = aws_networkmanager_core_network_policy_attachment.test.core_network_id
   vpc_arn         = aws_vpc.test.arn
   tags = {
     segment = "shared"
@@ -335,7 +339,7 @@ func testAccConnectAttachmentConfig_basic_NoDependsOn(rName string) string {
 	return acctest.ConfigCompose(testAccConnectAttachmentConfig_base(rName), `
 resource "aws_networkmanager_vpc_attachment" "test" {
   subnet_arns     = aws_subnet.test[*].arn
-  core_network_id = aws_networkmanager_core_network.test.id
+  core_network_id = aws_networkmanager_core_network_policy_attachment.test.core_network_id
   vpc_arn         = aws_vpc.test.arn
   tags = {
     segment = "shared"
@@ -370,7 +374,7 @@ func testAccConnectAttachmentConfig_tags1(rName, tagKey1, tagValue1 string) stri
 	return acctest.ConfigCompose(testAccConnectAttachmentConfig_base(rName), fmt.Sprintf(`
 resource "aws_networkmanager_vpc_attachment" "test" {
   subnet_arns     = [aws_subnet.test[0].arn]
-  core_network_id = aws_networkmanager_core_network.test.id
+  core_network_id = aws_networkmanager_core_network_policy_attachment.test.core_network_id
   vpc_arn         = aws_vpc.test.arn
   tags = {
     segment = "shared"
@@ -408,7 +412,7 @@ func testAccConnectAttachmentConfig_tags2(rName, tagKey1, tagValue1, tagKey2, ta
 	return acctest.ConfigCompose(testAccConnectAttachmentConfig_base(rName), fmt.Sprintf(`
 resource "aws_networkmanager_vpc_attachment" "test" {
   subnet_arns     = [aws_subnet.test[0].arn]
-  core_network_id = aws_networkmanager_core_network.test.id
+  core_network_id = aws_networkmanager_core_network_policy_attachment.test.core_network_id
   vpc_arn         = aws_vpc.test.arn
   tags = {
     segment = "shared"
