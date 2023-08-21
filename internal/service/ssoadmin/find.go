@@ -13,41 +13,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-// FindAccountAssignment returns the account assigned to a permission set within a specified SSO instance.
-// Returns an error if no account assignment is found.
-func FindAccountAssignment(ctx context.Context, conn *ssoadmin.SSOAdmin, principalId, principalType, accountId, permissionSetArn, instanceArn string) (*ssoadmin.AccountAssignment, error) {
-	input := &ssoadmin.ListAccountAssignmentsInput{
-		AccountId:        aws.String(accountId),
-		InstanceArn:      aws.String(instanceArn),
-		PermissionSetArn: aws.String(permissionSetArn),
-	}
-
-	var accountAssignment *ssoadmin.AccountAssignment
-	err := conn.ListAccountAssignmentsPagesWithContext(ctx, input, func(page *ssoadmin.ListAccountAssignmentsOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
-		}
-
-		for _, a := range page.AccountAssignments {
-			if a == nil {
-				continue
-			}
-
-			if aws.StringValue(a.PrincipalType) != principalType {
-				continue
-			}
-			if aws.StringValue(a.PrincipalId) == principalId {
-				accountAssignment = a
-				return false
-			}
-		}
-
-		return !lastPage
-	})
-
-	return accountAssignment, err
-}
-
 // FindManagedPolicy returns the managed policy attached to a permission set within a specified SSO instance.
 // Returns an error if no managed policy is found.
 func FindManagedPolicy(ctx context.Context, conn *ssoadmin.SSOAdmin, managedPolicyArn, permissionSetArn, instanceArn string) (*ssoadmin.AttachedManagedPolicy, error) {

@@ -9,11 +9,13 @@ import (
 	"log"
 	"regexp"
 	"strings"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ssoadmin"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -39,14 +41,12 @@ func ResourceAccountAssignment() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: verify.ValidARN,
 			},
-
 			"permission_set_arn": {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
 				ValidateFunc: verify.ValidARN,
 			},
-
 			"principal_id": {
 				Type:     schema.TypeString,
 				Required: true,
@@ -56,21 +56,18 @@ func ResourceAccountAssignment() *schema.Resource {
 					validation.StringMatch(regexp.MustCompile(`^([0-9a-f]{10}-|)[A-Fa-f0-9]{8}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{12}$`), "must match ([0-9a-f]{10}-|)[A-Fa-f0-9]{8}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{12}"),
 				),
 			},
-
 			"principal_type": {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
 				ValidateFunc: validation.StringInSlice(ssoadmin.PrincipalType_Values(), false),
 			},
-
 			"target_id": {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
 				ValidateFunc: verify.ValidAccountID,
 			},
-
 			"target_type": {
 				Type:         schema.TypeString,
 				Optional:     true,
@@ -235,4 +232,129 @@ func ParseAccountAssignmentID(id string) ([]string, error) {
 		return nil, fmt.Errorf("unexpected format for ID (%q), expected PRINCIPAL_ID,PRINCIPAL_TYPE,TARGET_ID,TARGET_TYPE,PERMISSION_SET_ARN,INSTANCE_ARN", id)
 	}
 	return idParts, nil
+}
+
+// FindAccountAssignment returns the account assigned to a permission set within a specified SSO instance.
+// Returns an error if no account assignment is found.
+func FindAccountAssignment(ctx context.Context, conn *ssoadmin.SSOAdmin, principalId, principalType, accountId, permissionSetArn, instanceArn string) (*ssoadmin.AccountAssignment, error) {
+	input := &ssoadmin.ListAccountAssignmentsInput{
+		AccountId:        aws.String(accountId),
+		InstanceArn:      aws.String(instanceArn),
+		PermissionSetArn: aws.String(permissionSetArn),
+	}
+
+	var accountAssignment *ssoadmin.AccountAssignment
+	err := conn.ListAccountAssignmentsPagesWithContext(ctx, input, func(page *ssoadmin.ListAccountAssignmentsOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, a := range page.AccountAssignments {
+			if a == nil {
+				continue
+			}
+
+			if aws.StringValue(a.PrincipalType) != principalType {
+				continue
+			}
+			if aws.StringValue(a.PrincipalId) == principalId {
+				accountAssignment = a
+				return false
+			}
+		}
+
+		return !lastPage
+	})
+
+	return accountAssignment, err
+}
+
+const (
+	accountAssignmentStatusUnknown  = "Unknown"
+	accountAssignmentStatusNotFound = "NotFound"
+)
+
+func statusAccountAssignmentCreation(ctx context.Context, conn *ssoadmin.SSOAdmin, instanceArn, requestID string) retry.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		input := &ssoadmin.DescribeAccountAssignmentCreationStatusInput{
+			AccountAssignmentCreationRequestId: aws.String(requestID),
+			InstanceArn:                        aws.String(instanceArn),
+		}
+
+		resp, err := conn.DescribeAccountAssignmentCreationStatusWithContext(ctx, input)
+
+		if err != nil {
+			return nil, accountAssignmentStatusUnknown, err
+		}
+
+		if resp == nil || resp.AccountAssignmentCreationStatus == nil {
+			return nil, accountAssignmentStatusNotFound, nil
+		}
+
+		return resp.AccountAssignmentCreationStatus, aws.StringValue(resp.AccountAssignmentCreationStatus.Status), nil
+	}
+}
+
+func statusAccountAssignmentDeletion(ctx context.Context, conn *ssoadmin.SSOAdmin, instanceArn, requestID string) retry.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		input := &ssoadmin.DescribeAccountAssignmentDeletionStatusInput{
+			AccountAssignmentDeletionRequestId: aws.String(requestID),
+			InstanceArn:                        aws.String(instanceArn),
+		}
+
+		resp, err := conn.DescribeAccountAssignmentDeletionStatusWithContext(ctx, input)
+
+		if err != nil {
+			return nil, accountAssignmentStatusUnknown, err
+		}
+
+		if resp == nil || resp.AccountAssignmentDeletionStatus == nil {
+			return nil, accountAssignmentStatusNotFound, nil
+		}
+
+		return resp.AccountAssignmentDeletionStatus, aws.StringValue(resp.AccountAssignmentDeletionStatus.Status), nil
+	}
+}
+
+const (
+	accountAssignmentCreateTimeout = 5 * time.Minute
+	accountAssignmentDeleteTimeout = 5 * time.Minute
+	accountAssignmentDelay         = 10 * time.Second
+	accountAssignmentMinTimeout    = 5 * time.Second
+)
+
+func waitAccountAssignmentCreated(ctx context.Context, conn *ssoadmin.SSOAdmin, instanceArn, requestID string) (*ssoadmin.AccountAssignmentOperationStatus, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending:    []string{ssoadmin.StatusValuesInProgress},
+		Target:     []string{ssoadmin.StatusValuesSucceeded},
+		Refresh:    statusAccountAssignmentCreation(ctx, conn, instanceArn, requestID),
+		Timeout:    accountAssignmentCreateTimeout,
+		Delay:      accountAssignmentDelay,
+		MinTimeout: accountAssignmentMinTimeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+	if v, ok := outputRaw.(*ssoadmin.AccountAssignmentOperationStatus); ok {
+		return v, err
+	}
+
+	return nil, err
+}
+
+func waitAccountAssignmentDeleted(ctx context.Context, conn *ssoadmin.SSOAdmin, instanceArn, requestID string) (*ssoadmin.AccountAssignmentOperationStatus, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending:    []string{ssoadmin.StatusValuesInProgress},
+		Target:     []string{ssoadmin.StatusValuesSucceeded},
+		Refresh:    statusAccountAssignmentDeletion(ctx, conn, instanceArn, requestID),
+		Timeout:    accountAssignmentDeleteTimeout,
+		Delay:      accountAssignmentDelay,
+		MinTimeout: accountAssignmentMinTimeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+	if v, ok := outputRaw.(*ssoadmin.AccountAssignmentOperationStatus); ok {
+		return v, err
+	}
+
+	return nil, err
 }

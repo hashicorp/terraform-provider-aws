@@ -12,53 +12,9 @@ import (
 )
 
 const (
-	accountAssignmentStatusUnknown          = "Unknown"
-	accountAssignmentStatusNotFound         = "NotFound"
 	permissionSetProvisioningStatusUnknown  = "Unknown"
 	permissionSetProvisioningStatusNotFound = "NotFound"
 )
-
-func statusAccountAssignmentCreation(ctx context.Context, conn *ssoadmin.SSOAdmin, instanceArn, requestID string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-		input := &ssoadmin.DescribeAccountAssignmentCreationStatusInput{
-			AccountAssignmentCreationRequestId: aws.String(requestID),
-			InstanceArn:                        aws.String(instanceArn),
-		}
-
-		resp, err := conn.DescribeAccountAssignmentCreationStatusWithContext(ctx, input)
-
-		if err != nil {
-			return nil, accountAssignmentStatusUnknown, err
-		}
-
-		if resp == nil || resp.AccountAssignmentCreationStatus == nil {
-			return nil, accountAssignmentStatusNotFound, nil
-		}
-
-		return resp.AccountAssignmentCreationStatus, aws.StringValue(resp.AccountAssignmentCreationStatus.Status), nil
-	}
-}
-
-func statusAccountAssignmentDeletion(ctx context.Context, conn *ssoadmin.SSOAdmin, instanceArn, requestID string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-		input := &ssoadmin.DescribeAccountAssignmentDeletionStatusInput{
-			AccountAssignmentDeletionRequestId: aws.String(requestID),
-			InstanceArn:                        aws.String(instanceArn),
-		}
-
-		resp, err := conn.DescribeAccountAssignmentDeletionStatusWithContext(ctx, input)
-
-		if err != nil {
-			return nil, accountAssignmentStatusUnknown, err
-		}
-
-		if resp == nil || resp.AccountAssignmentDeletionStatus == nil {
-			return nil, accountAssignmentStatusNotFound, nil
-		}
-
-		return resp.AccountAssignmentDeletionStatus, aws.StringValue(resp.AccountAssignmentDeletionStatus.Status), nil
-	}
-}
 
 func statusPermissionSetProvisioning(ctx context.Context, conn *ssoadmin.SSOAdmin, instanceArn, requestID string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
