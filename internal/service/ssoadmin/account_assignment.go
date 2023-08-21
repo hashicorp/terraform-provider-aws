@@ -37,6 +37,11 @@ func ResourceAccountAssignment() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
+		Timeouts: &schema.ResourceTimeout{
+			Create: schema.DefaultTimeout(5 * time.Minute),
+			Delete: schema.DefaultTimeout(5 * time.Minute),
+		},
+
 		Schema: map[string]*schema.Schema{
 			"instance_arn": {
 				Type:         schema.TypeString,
@@ -116,7 +121,7 @@ func resourceAccountAssignmentCreate(ctx context.Context, d *schema.ResourceData
 		return sdkdiag.AppendErrorf(diags, "creating SSO Account Assignment for %s (%s): %s", principalType, principalID, err)
 	}
 
-	if _, err := waitAccountAssignmentCreated(ctx, conn, instanceARN, aws.StringValue(output.AccountAssignmentCreationStatus.RequestId)); err != nil {
+	if _, err := waitAccountAssignmentCreated(ctx, conn, instanceARN, aws.StringValue(output.AccountAssignmentCreationStatus.RequestId), d.Timeout(schema.TimeoutCreate)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for SSO Account Assignment for %s (%s) create: %s", principalType, principalID, err)
 	}
 
@@ -198,7 +203,7 @@ func resourceAccountAssignmentDelete(ctx context.Context, d *schema.ResourceData
 		return sdkdiag.AppendErrorf(diags, "deleting SSO Account Assignment for Principal (%s): %s", principalID, err)
 	}
 
-	if _, err := waitAccountAssignmentDeleted(ctx, conn, instanceARN, aws.StringValue(output.AccountAssignmentDeletionStatus.RequestId)); err != nil {
+	if _, err := waitAccountAssignmentDeleted(ctx, conn, instanceARN, aws.StringValue(output.AccountAssignmentDeletionStatus.RequestId), d.Timeout(schema.TimeoutDelete)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for SSO Account Assignment for Principal (%s) delete: %s", principalID, err)
 	}
 
@@ -352,17 +357,12 @@ func statusAccountAssignmentDeletion(ctx context.Context, conn *ssoadmin.SSOAdmi
 	}
 }
 
-const (
-	accountAssignmentCreateTimeout = 5 * time.Minute
-	accountAssignmentDeleteTimeout = 5 * time.Minute
-)
-
-func waitAccountAssignmentCreated(ctx context.Context, conn *ssoadmin.SSOAdmin, instanceARN, requestID string) (*ssoadmin.AccountAssignmentOperationStatus, error) {
+func waitAccountAssignmentCreated(ctx context.Context, conn *ssoadmin.SSOAdmin, instanceARN, requestID string, timeout time.Duration) (*ssoadmin.AccountAssignmentOperationStatus, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending:    []string{ssoadmin.StatusValuesInProgress},
 		Target:     []string{ssoadmin.StatusValuesSucceeded},
 		Refresh:    statusAccountAssignmentCreation(ctx, conn, instanceARN, requestID),
-		Timeout:    accountAssignmentCreateTimeout,
+		Timeout:    timeout,
 		Delay:      10 * time.Second,
 		MinTimeout: 5 * time.Second,
 	}
@@ -378,12 +378,12 @@ func waitAccountAssignmentCreated(ctx context.Context, conn *ssoadmin.SSOAdmin, 
 	return nil, err
 }
 
-func waitAccountAssignmentDeleted(ctx context.Context, conn *ssoadmin.SSOAdmin, instanceArn, requestID string) (*ssoadmin.AccountAssignmentOperationStatus, error) {
+func waitAccountAssignmentDeleted(ctx context.Context, conn *ssoadmin.SSOAdmin, instanceArn, requestID string, timeout time.Duration) (*ssoadmin.AccountAssignmentOperationStatus, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending:    []string{ssoadmin.StatusValuesInProgress},
 		Target:     []string{ssoadmin.StatusValuesSucceeded},
 		Refresh:    statusAccountAssignmentDeletion(ctx, conn, instanceArn, requestID),
-		Timeout:    accountAssignmentDeleteTimeout,
+		Timeout:    timeout,
 		Delay:      10 * time.Second,
 		MinTimeout: 5 * time.Second,
 	}
