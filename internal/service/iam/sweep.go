@@ -64,7 +64,7 @@ func init() {
 			"aws_cognito_user_pool",
 			"aws_config_configuration_aggregator",
 			"aws_config_configuration_recorder",
-			"aws_datasync_location_s3",
+			"aws_datasync_location",
 			"aws_dax_cluster",
 			"aws_db_instance",
 			"aws_db_option_group",

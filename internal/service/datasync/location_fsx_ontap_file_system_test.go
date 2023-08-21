@@ -20,12 +20,13 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func TestAccDataSyncLocationFSxOpenZFSFileSystem_basic(t *testing.T) {
+func TestAccDataSyncLocationFSxONTAPFileSystem_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	var v datasync.DescribeLocationFsxOpenZfsOutput
-	resourceName := "aws_datasync_location_fsx_openzfs_file_system.test"
-	fsResourceName := "aws_fsx_openzfs_file_system.test"
+	var v datasync.DescribeLocationFsxOntapOutput
+	resourceName := "aws_datasync_location_fsx_ontap_file_system.test"
+	fsResourceName := "aws_fsx_ontap_file_system.test"
+	svmResourceName := "aws_fsx_ontap_storage_virtual_machine.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
@@ -35,35 +36,36 @@ func TestAccDataSyncLocationFSxOpenZFSFileSystem_basic(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, datasync.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckLocationFSxOpenZFSDestroy(ctx),
+		CheckDestroy:             testAccCheckLocationFSxONTAPDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccLocationFSxOpenZFSFileSystemConfig_basic(rName),
+				Config: testAccLocationFSxONTAPFileSystemConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckLocationFSxOpenZFSExists(ctx, resourceName, &v),
+					testAccCheckLocationFSxONTAPExists(ctx, resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "datasync", regexp.MustCompile(`location/loc-.+`)),
 					resource.TestCheckResourceAttrSet(resourceName, "creation_time"),
 					resource.TestCheckResourceAttrPair(resourceName, "fsx_filesystem_arn", fsResourceName, "arn"),
-					resource.TestCheckResourceAttr(resourceName, "subdirectory", "/fsx/"),
+					resource.TestCheckResourceAttr(resourceName, "subdirectory", "/"),
+					resource.TestCheckResourceAttrPair(resourceName, "storage_virtual_machine_arn", svmResourceName, "arn"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-					resource.TestMatchResourceAttr(resourceName, "uri", regexp.MustCompile(`^fsxz://.+/`)),
+					resource.TestMatchResourceAttr(resourceName, "uri", regexp.MustCompile(`^fsxn-(nfs|smb)://.+/`)),
 				),
 			},
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
-				ImportStateIdFunc: testAccLocationFSxOpenZFSImportStateID(resourceName),
+				ImportStateIdFunc: testAccLocationFSxONTAPImportStateID(resourceName),
 			},
 		},
 	})
 }
 
-func TestAccDataSyncLocationFSxOpenZFSFileSystem_disappears(t *testing.T) {
+func TestAccDataSyncLocationFSxONTAPFileSystem_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	var v datasync.DescribeLocationFsxOpenZfsOutput
-	resourceName := "aws_datasync_location_fsx_openzfs_file_system.test"
+	var v datasync.DescribeLocationFsxOntapOutput
+	resourceName := "aws_datasync_location_fsx_ontap_file_system.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
@@ -73,13 +75,13 @@ func TestAccDataSyncLocationFSxOpenZFSFileSystem_disappears(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, datasync.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckLocationFSxOpenZFSDestroy(ctx),
+		CheckDestroy:             testAccCheckLocationFSxONTAPDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccLocationFSxOpenZFSFileSystemConfig_basic(rName),
+				Config: testAccLocationFSxONTAPFileSystemConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckLocationFSxOpenZFSExists(ctx, resourceName, &v),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfdatasync.ResourceLocationFSxOpenZFSFileSystem(), resourceName),
+					testAccCheckLocationFSxONTAPExists(ctx, resourceName, &v),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfdatasync.ResourceLocationFSxONTAPFileSystem(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -87,11 +89,11 @@ func TestAccDataSyncLocationFSxOpenZFSFileSystem_disappears(t *testing.T) {
 	})
 }
 
-func TestAccDataSyncLocationFSxOpenZFSFileSystem_subdirectory(t *testing.T) {
+func TestAccDataSyncLocationFSxONTAPFileSystem_subdirectory(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	var v datasync.DescribeLocationFsxOpenZfsOutput
-	resourceName := "aws_datasync_location_fsx_openzfs_file_system.test"
+	var v datasync.DescribeLocationFsxOntapOutput
+	resourceName := "aws_datasync_location_fsx_ontap_file_system.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
@@ -101,30 +103,30 @@ func TestAccDataSyncLocationFSxOpenZFSFileSystem_subdirectory(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, datasync.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckLocationFSxOpenZFSDestroy(ctx),
+		CheckDestroy:             testAccCheckLocationFSxONTAPDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccLocationFSxOpenZFSFileSystemConfig_subdirectory(rName, "/fsx/subdirectory1/"),
+				Config: testAccLocationFSxONTAPFileSystemConfig_subdirectory(rName, "/subdirectory1/"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckLocationFSxOpenZFSExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "subdirectory", "/fsx/subdirectory1/"),
+					testAccCheckLocationFSxONTAPExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "subdirectory", "/subdirectory1/"),
 				),
 			},
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
-				ImportStateIdFunc: testAccLocationFSxOpenZFSImportStateID(resourceName),
+				ImportStateIdFunc: testAccLocationFSxONTAPImportStateID(resourceName),
 			},
 		},
 	})
 }
 
-func TestAccDataSyncLocationFSxOpenZFSFileSystem_tags(t *testing.T) {
+func TestAccDataSyncLocationFSxONTAPFileSystem_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	var v datasync.DescribeLocationFsxOpenZfsOutput
-	resourceName := "aws_datasync_location_fsx_openzfs_file_system.test"
+	var v datasync.DescribeLocationFsxOntapOutput
+	resourceName := "aws_datasync_location_fsx_ontap_file_system.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
@@ -134,12 +136,12 @@ func TestAccDataSyncLocationFSxOpenZFSFileSystem_tags(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, datasync.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckLocationFSxOpenZFSDestroy(ctx),
+		CheckDestroy:             testAccCheckLocationFSxONTAPDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccLocationFSxOpenZFSFileSystemConfig_tags1(rName, "key1", "value1"),
+				Config: testAccLocationFSxONTAPFileSystemConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckLocationFSxOpenZFSExists(ctx, resourceName, &v),
+					testAccCheckLocationFSxONTAPExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
@@ -148,21 +150,21 @@ func TestAccDataSyncLocationFSxOpenZFSFileSystem_tags(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
-				ImportStateIdFunc: testAccLocationFSxOpenZFSImportStateID(resourceName),
+				ImportStateIdFunc: testAccLocationFSxONTAPImportStateID(resourceName),
 			},
 			{
-				Config: testAccLocationFSxOpenZFSFileSystemConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccLocationFSxONTAPFileSystemConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckLocationFSxOpenZFSExists(ctx, resourceName, &v),
+					testAccCheckLocationFSxONTAPExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
 			{
-				Config: testAccLocationFSxOpenZFSFileSystemConfig_tags1(rName, "key1", "value1"),
+				Config: testAccLocationFSxONTAPFileSystemConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckLocationFSxOpenZFSExists(ctx, resourceName, &v),
+					testAccCheckLocationFSxONTAPExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
@@ -171,16 +173,16 @@ func TestAccDataSyncLocationFSxOpenZFSFileSystem_tags(t *testing.T) {
 	})
 }
 
-func testAccCheckLocationFSxOpenZFSDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckLocationFSxONTAPDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).DataSyncConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
-			if rs.Type != "aws_datasync_location_fsx_openzfs_file_system" {
+			if rs.Type != "aws_datasync_location_fsx_ontap_file_system" {
 				continue
 			}
 
-			_, err := tfdatasync.FindLocationFSxOpenZFSByARN(ctx, conn, rs.Primary.ID)
+			_, err := tfdatasync.FindLocationFSxONTAPByARN(ctx, conn, rs.Primary.ID)
 
 			if tfresource.NotFound(err) {
 				continue
@@ -190,14 +192,14 @@ func testAccCheckLocationFSxOpenZFSDestroy(ctx context.Context) resource.TestChe
 				return err
 			}
 
-			return fmt.Errorf("DataSync Location FSx for OpenZFS File System %s still exists", rs.Primary.ID)
+			return fmt.Errorf("DataSync Location FSx for NetApp ONTAP File System %s still exists", rs.Primary.ID)
 		}
 
 		return nil
 	}
 }
 
-func testAccCheckLocationFSxOpenZFSExists(ctx context.Context, n string, v *datasync.DescribeLocationFsxOpenZfsOutput) resource.TestCheckFunc {
+func testAccCheckLocationFSxONTAPExists(ctx context.Context, n string, v *datasync.DescribeLocationFsxOntapOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -206,7 +208,7 @@ func testAccCheckLocationFSxOpenZFSExists(ctx context.Context, n string, v *data
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).DataSyncConn(ctx)
 
-		output, err := tfdatasync.FindLocationFSxOpenZFSByARN(ctx, conn, rs.Primary.ID)
+		output, err := tfdatasync.FindLocationFSxONTAPByARN(ctx, conn, rs.Primary.ID)
 
 		if err != nil {
 			return err
@@ -218,18 +220,18 @@ func testAccCheckLocationFSxOpenZFSExists(ctx context.Context, n string, v *data
 	}
 }
 
-func testAccLocationFSxOpenZFSImportStateID(resourceName string) resource.ImportStateIdFunc {
+func testAccLocationFSxONTAPImportStateID(n string) resource.ImportStateIdFunc {
 	return func(s *terraform.State) (string, error) {
-		rs, ok := s.RootModule().Resources[resourceName]
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return "", fmt.Errorf("Not found: %s", resourceName)
+			return "", fmt.Errorf("Not found: %s", n)
 		}
 
 		return fmt.Sprintf("%s#%s", rs.Primary.ID, rs.Primary.Attributes["fsx_filesystem_arn"]), nil
 	}
 }
 
-func testAccFSxOpenZfsFileSystemConfig_base(rName string) string {
+func testAccFSxOntapFileSystemConfig_base(rName string) string {
 	return acctest.ConfigCompose(acctest.ConfigVPCWithSubnets(rName, 1), fmt.Sprintf(`
 resource "aws_security_group" "test" {
   name   = %[1]q
@@ -254,25 +256,31 @@ resource "aws_security_group" "test" {
   }
 }
 
-resource "aws_fsx_openzfs_file_system" "test" {
-  storage_capacity    = 64
-  subnet_ids          = [aws_subnet.test.id]
+resource "aws_fsx_ontap_file_system" "test" {
+  storage_capacity    = 1024
+  subnet_ids          = aws_subnet.test[*].id
   deployment_type     = "SINGLE_AZ_1"
-  throughput_capacity = 64
+  throughput_capacity = 512
+  preferred_subnet_id = aws_subnet.test[0].id
+}
+
+resource "aws_fsx_ontap_storage_virtual_machine" "test" {
+  file_system_id = aws_fsx_ontap_file_system.test.id
+  name           = %[1]q
 }
 `, rName))
 }
 
-func testAccLocationFSxOpenZFSFileSystemConfig_basic(rName string) string {
-	return acctest.ConfigCompose(testAccFSxOpenZfsFileSystemConfig_base(rName), `
-resource "aws_datasync_location_fsx_openzfs_file_system" "test" {
-  fsx_filesystem_arn  = aws_fsx_openzfs_file_system.test.arn
-  security_group_arns = [aws_security_group.test.arn]
+func testAccLocationFSxONTAPFileSystemConfig_basic(rName string) string {
+	return acctest.ConfigCompose(testAccFSxOntapFileSystemConfig_base(rName), `
+resource "aws_datasync_location_fsx_ontap_file_system" "test" {
+  security_group_arns         = [aws_security_group.test.arn]
+  storage_virtual_machine_arn = aws_fsx_ontap_storage_virtual_machine.test.arn
 
   protocol {
     nfs {
       mount_options {
-        version = "AUTOMATIC"
+        version = "NFS3"
       }
     }
   }
@@ -280,17 +288,17 @@ resource "aws_datasync_location_fsx_openzfs_file_system" "test" {
 `)
 }
 
-func testAccLocationFSxOpenZFSFileSystemConfig_subdirectory(rName, subdirectory string) string {
-	return acctest.ConfigCompose(testAccFSxOpenZfsFileSystemConfig_base(rName), fmt.Sprintf(`
-resource "aws_datasync_location_fsx_openzfs_file_system" "test" {
-  fsx_filesystem_arn  = aws_fsx_openzfs_file_system.test.arn
-  security_group_arns = [aws_security_group.test.arn]
-  subdirectory        = %[1]q
+func testAccLocationFSxONTAPFileSystemConfig_subdirectory(rName, subdirectory string) string {
+	return acctest.ConfigCompose(testAccFSxOntapFileSystemConfig_base(rName), fmt.Sprintf(`
+resource "aws_datasync_location_fsx_ontap_file_system" "test" {
+  security_group_arns         = [aws_security_group.test.arn]
+  storage_virtual_machine_arn = aws_fsx_ontap_storage_virtual_machine.test.arn
+  subdirectory                = %[1]q
 
   protocol {
     nfs {
       mount_options {
-        version = "AUTOMATIC"
+        version = "NFS3"
       }
     }
   }
@@ -298,44 +306,44 @@ resource "aws_datasync_location_fsx_openzfs_file_system" "test" {
 `, subdirectory))
 }
 
-func testAccLocationFSxOpenZFSFileSystemConfig_tags1(rName, key1, value1 string) string {
-	return acctest.ConfigCompose(testAccFSxOpenZfsFileSystemConfig_base(rName), fmt.Sprintf(`
-resource "aws_datasync_location_fsx_openzfs_file_system" "test" {
-  fsx_filesystem_arn  = aws_fsx_openzfs_file_system.test.arn
-  security_group_arns = [aws_security_group.test.arn]
+func testAccLocationFSxONTAPFileSystemConfig_tags1(rName, key1, value1 string) string {
+	return acctest.ConfigCompose(testAccFSxOntapFileSystemConfig_base(rName), fmt.Sprintf(`
+resource "aws_datasync_location_fsx_ontap_file_system" "test" {
+  security_group_arns         = [aws_security_group.test.arn]
+  storage_virtual_machine_arn = aws_fsx_ontap_storage_virtual_machine.test.arn
+
+  tags = {
+    %[1]q = %[2]q
+  }
 
   protocol {
     nfs {
       mount_options {
-        version = "AUTOMATIC"
+        version = "NFS3"
       }
     }
-  }
-
-  tags = {
-    %[1]q = %[2]q
   }
 }
 `, key1, value1))
 }
 
-func testAccLocationFSxOpenZFSFileSystemConfig_tags2(rName, key1, value1, key2, value2 string) string {
-	return acctest.ConfigCompose(testAccFSxOpenZfsFileSystemConfig_base(rName), fmt.Sprintf(`
-resource "aws_datasync_location_fsx_openzfs_file_system" "test" {
-  fsx_filesystem_arn  = aws_fsx_openzfs_file_system.test.arn
-  security_group_arns = [aws_security_group.test.arn]
-
-  protocol {
-    nfs {
-      mount_options {
-        version = "AUTOMATIC"
-      }
-    }
-  }
+func testAccLocationFSxONTAPFileSystemConfig_tags2(rName, key1, value1, key2, value2 string) string {
+	return acctest.ConfigCompose(testAccFSxOntapFileSystemConfig_base(rName), fmt.Sprintf(`
+resource "aws_datasync_location_fsx_ontap_file_system" "test" {
+  security_group_arns         = [aws_security_group.test.arn]
+  storage_virtual_machine_arn = aws_fsx_ontap_storage_virtual_machine.test.arn
 
   tags = {
     %[1]q = %[2]q
     %[3]q = %[4]q
+  }
+
+  protocol {
+    nfs {
+      mount_options {
+        version = "NFS3"
+      }
+    }
   }
 }
 `, key1, value1, key2, value2))

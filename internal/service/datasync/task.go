@@ -344,7 +344,9 @@ func resourceTaskUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 			input.Schedule = expandTaskSchedule(d.Get("schedule").([]interface{}))
 		}
 
-		if _, err := conn.UpdateTaskWithContext(ctx, input); err != nil {
+		_, err := conn.UpdateTaskWithContext(ctx, input)
+
+		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating DataSync Task (%s): %s", d.Id(), err)
 		}
 	}
@@ -356,12 +358,10 @@ func resourceTaskDelete(ctx context.Context, d *schema.ResourceData, meta interf
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DataSyncConn(ctx)
 
-	input := &datasync.DeleteTaskInput{
+	log.Printf("[DEBUG] Deleting DataSync Task: %s", d.Id())
+	_, err := conn.DeleteTaskWithContext(ctx, &datasync.DeleteTaskInput{
 		TaskArn: aws.String(d.Id()),
-	}
-
-	log.Printf("[DEBUG] Deleting DataSync Task: %s", input)
-	_, err := conn.DeleteTaskWithContext(ctx, input)
+	})
 
 	if tfawserr.ErrMessageContains(err, datasync.ErrCodeInvalidRequestException, "not found") {
 		return diags
@@ -372,6 +372,31 @@ func resourceTaskDelete(ctx context.Context, d *schema.ResourceData, meta interf
 	}
 
 	return diags
+}
+
+func FindTaskByARN(ctx context.Context, conn *datasync.DataSync, arn string) (*datasync.DescribeTaskOutput, error) {
+	input := &datasync.DescribeTaskInput{
+		TaskArn: aws.String(arn),
+	}
+
+	output, err := conn.DescribeTaskWithContext(ctx, input)
+
+	if tfawserr.ErrMessageContains(err, datasync.ErrCodeInvalidRequestException, "not found") {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output, nil
 }
 
 func statusTask(ctx context.Context, conn *datasync.DataSync, arn string) retry.StateRefreshFunc {
