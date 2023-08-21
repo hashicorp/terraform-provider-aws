@@ -12,6 +12,7 @@ ENHANCEMENTS:
 BUG FIXES:
 
 * resource/aws_route53_zone: Skip disabling DNS SEC in unsupported partitions ([#33103](https://github.com/hashicorp/terraform-provider-aws/issues/33103))
+* resource/aws_securityhub_account: Remove default value (`SECURITY_CONTROL`) for `control_finding_generator` argument and mark as Computed ([#33095](https://github.com/hashicorp/terraform-provider-aws/issues/33095))
 
 ## 5.13.1 (August 18, 2023)
 
