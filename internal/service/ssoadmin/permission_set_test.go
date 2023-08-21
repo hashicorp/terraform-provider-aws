@@ -408,7 +408,7 @@ func testAccPermissionSetConfig_tags1(rName, tagKey1, tagValue1 string) string {
 data "aws_ssoadmin_instances" "test" {}
 
 resource "aws_ssoadmin_permission_set" "test" {
-  name         = %q
+  name         = %[1]q
   instance_arn = tolist(data.aws_ssoadmin_instances.test.arns)[0]
 
   tags = {
@@ -423,7 +423,7 @@ func testAccPermissionSetConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagVal
 data "aws_ssoadmin_instances" "test" {}
 
 resource "aws_ssoadmin_permission_set" "test" {
-  name         = %q
+  name         = %[1]q
   instance_arn = tolist(data.aws_ssoadmin_instances.test.arns)[0]
 
   tags = {
