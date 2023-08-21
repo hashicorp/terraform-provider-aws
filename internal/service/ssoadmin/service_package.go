@@ -16,8 +16,10 @@ import (
 func (p *servicePackage) CustomizeConn(ctx context.Context, conn *ssoadmin_sdkv1.SSOAdmin) (*ssoadmin_sdkv1.SSOAdmin, error) {
 	// Reference: https://github.com/hashicorp/terraform-provider-aws/issues/19215.
 	conn.Handlers.Retry.PushBack(func(r *request_sdkv1.Request) {
-		if r.Operation.Name == "AttachManagedPolicyToPermissionSet" || r.Operation.Name == "DetachManagedPolicyFromPermissionSet" {
-			if tfawserr.ErrCodeEquals(r.Error, ssoadmin_sdkv1.ErrCodeConflictException) {
+		switch err := r.Error; r.Operation.Name {
+		case "AttachCustomerManagedPolicyReferenceToPermissionSet", "DetachCustomerManagedPolicyReferenceFromPermissionSet",
+			"AttachManagedPolicyToPermissionSet", "DetachManagedPolicyFromPermissionSet":
+			if tfawserr.ErrCodeEquals(err, ssoadmin_sdkv1.ErrCodeConflictException) {
 				r.Retryable = aws_sdkv1.Bool(true)
 			}
 		}
