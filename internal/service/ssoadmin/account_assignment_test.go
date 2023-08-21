@@ -179,7 +179,7 @@ func testAccCheckAccountAssignmentExists(ctx context.Context, n string) resource
 	}
 }
 
-func testAccAccountAssignmentBaseConfig(rName string) string {
+func testAccAccountAssignmentConfig_base(rName string) string {
 	return fmt.Sprintf(`
 data "aws_ssoadmin_instances" "test" {}
 
@@ -193,14 +193,12 @@ resource "aws_ssoadmin_permission_set" "test" {
 }
 
 func testAccAccountAssignmentConfig_basicGroup(groupName, rName string) string {
-	return acctest.ConfigCompose(
-		testAccAccountAssignmentBaseConfig(rName),
-		fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccAccountAssignmentConfig_base(rName), fmt.Sprintf(`
 data "aws_identitystore_group" "test" {
   identity_store_id = tolist(data.aws_ssoadmin_instances.test.identity_store_ids)[0]
   filter {
     attribute_path  = "DisplayName"
-    attribute_value = %q
+    attribute_value = %[1]q
   }
 }
 
@@ -216,14 +214,12 @@ resource "aws_ssoadmin_account_assignment" "test" {
 }
 
 func testAccAccountAssignmentConfig_basicUser(userName, rName string) string {
-	return acctest.ConfigCompose(
-		testAccAccountAssignmentBaseConfig(rName),
-		fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccAccountAssignmentConfig_base(rName), fmt.Sprintf(`
 data "aws_identitystore_user" "test" {
   identity_store_id = tolist(data.aws_ssoadmin_instances.test.identity_store_ids)[0]
   filter {
     attribute_path  = "UserName"
-    attribute_value = %q
+    attribute_value = %[1]q
   }
 }
 
