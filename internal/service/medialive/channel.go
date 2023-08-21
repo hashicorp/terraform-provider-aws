@@ -1315,8 +1315,8 @@ func expandInputAttachmentInputSettingsAudioSelectorsSelectorSettingsAudioTrackS
 	m := tfList[0].(map[string]interface{})
 
 	var out types.AudioTrackSelection
-	if v, ok := m["tracks"].([]interface{}); ok && len(v) > 0 {
-		out.Tracks = expandInputAttachmentInputSettingsAudioSelectorsSelectorSettingsAudioTrackSelectionTracks(v)
+	if v, ok := m["tracks"].(*schema.Set); ok && v.Len() > 0 {
+		out.Tracks = expandInputAttachmentInputSettingsAudioSelectorsSelectorSettingsAudioTrackSelectionTracks(v.List())
 	}
 	if v, ok := m["dolby_e_decode"].([]interface{}); ok && len(v) > 0 {
 		out.DolbyEDecode = expandInputAttachmentInputSettingsAudioSelectorsSelectorSettingsAudioTrackSelectionDolbyEDecode(v)
