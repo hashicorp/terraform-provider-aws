@@ -5,6 +5,7 @@ package ssoadmin
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log"
 	"regexp"
@@ -272,24 +273,45 @@ const (
 	accountAssignmentStatusNotFound = "NotFound"
 )
 
-func statusAccountAssignmentCreation(ctx context.Context, conn *ssoadmin.SSOAdmin, instanceArn, requestID string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-		input := &ssoadmin.DescribeAccountAssignmentCreationStatusInput{
-			AccountAssignmentCreationRequestId: aws.String(requestID),
-			InstanceArn:                        aws.String(instanceArn),
-		}
+func findAccountAssignmentCreationStatus(ctx context.Context, conn *ssoadmin.SSOAdmin, instanceARN, requestID string) (*ssoadmin.AccountAssignmentOperationStatus, error) {
+	input := &ssoadmin.DescribeAccountAssignmentCreationStatusInput{
+		AccountAssignmentCreationRequestId: aws.String(requestID),
+		InstanceArn:                        aws.String(instanceARN),
+	}
 
-		resp, err := conn.DescribeAccountAssignmentCreationStatusWithContext(ctx, input)
+	output, err := conn.DescribeAccountAssignmentCreationStatusWithContext(ctx, input)
+
+	if tfawserr.ErrCodeEquals(err, ssoadmin.ErrCodeResourceNotFoundException) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || output.AccountAssignmentCreationStatus == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output.AccountAssignmentCreationStatus, nil
+}
+
+func statusAccountAssignmentCreation(ctx context.Context, conn *ssoadmin.SSOAdmin, instanceARN, requestID string) retry.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := findAccountAssignmentCreationStatus(ctx, conn, instanceARN, requestID)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
 
 		if err != nil {
-			return nil, accountAssignmentStatusUnknown, err
+			return nil, "", err
 		}
 
-		if resp == nil || resp.AccountAssignmentCreationStatus == nil {
-			return nil, accountAssignmentStatusNotFound, nil
-		}
-
-		return resp.AccountAssignmentCreationStatus, aws.StringValue(resp.AccountAssignmentCreationStatus.Status), nil
+		return output, aws.StringValue(output.Status), nil
 	}
 }
 
@@ -317,23 +339,24 @@ func statusAccountAssignmentDeletion(ctx context.Context, conn *ssoadmin.SSOAdmi
 const (
 	accountAssignmentCreateTimeout = 5 * time.Minute
 	accountAssignmentDeleteTimeout = 5 * time.Minute
-	accountAssignmentDelay         = 10 * time.Second
-	accountAssignmentMinTimeout    = 5 * time.Second
 )
 
-func waitAccountAssignmentCreated(ctx context.Context, conn *ssoadmin.SSOAdmin, instanceArn, requestID string) (*ssoadmin.AccountAssignmentOperationStatus, error) {
+func waitAccountAssignmentCreated(ctx context.Context, conn *ssoadmin.SSOAdmin, instanceARN, requestID string) (*ssoadmin.AccountAssignmentOperationStatus, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending:    []string{ssoadmin.StatusValuesInProgress},
 		Target:     []string{ssoadmin.StatusValuesSucceeded},
-		Refresh:    statusAccountAssignmentCreation(ctx, conn, instanceArn, requestID),
+		Refresh:    statusAccountAssignmentCreation(ctx, conn, instanceARN, requestID),
 		Timeout:    accountAssignmentCreateTimeout,
-		Delay:      accountAssignmentDelay,
-		MinTimeout: accountAssignmentMinTimeout,
+		Delay:      10 * time.Second,
+		MinTimeout: 5 * time.Second,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
-	if v, ok := outputRaw.(*ssoadmin.AccountAssignmentOperationStatus); ok {
-		return v, err
+
+	if output, ok := outputRaw.(*ssoadmin.AccountAssignmentOperationStatus); ok {
+		tfresource.SetLastError(err, errors.New(aws.StringValue(output.FailureReason)))
+
+		return output, err
 	}
 
 	return nil, err
@@ -345,8 +368,8 @@ func waitAccountAssignmentDeleted(ctx context.Context, conn *ssoadmin.SSOAdmin, 
 		Target:     []string{ssoadmin.StatusValuesSucceeded},
 		Refresh:    statusAccountAssignmentDeletion(ctx, conn, instanceArn, requestID),
 		Timeout:    accountAssignmentDeleteTimeout,
-		Delay:      accountAssignmentDelay,
-		MinTimeout: accountAssignmentMinTimeout,
+		Delay:      10 * time.Second,
+		MinTimeout: 5 * time.Second,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)

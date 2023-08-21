@@ -11,13 +11,13 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/ssoadmin"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfssoadmin "github.com/hashicorp/terraform-provider-aws/internal/service/ssoadmin"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func TestAccSSOAdminAccountAssignment_Basic_group(t *testing.T) {
@@ -126,72 +126,56 @@ func testAccCheckAccountAssignmentDestroy(ctx context.Context) resource.TestChec
 			}
 
 			idParts, err := tfssoadmin.ParseAccountAssignmentID(rs.Primary.ID)
-
 			if err != nil {
-				return fmt.Errorf("error parsing SSO Account Assignment ID (%s): %w", rs.Primary.ID, err)
+				return err
 			}
 
 			principalID := idParts[0]
 			principalType := idParts[1]
 			targetID := idParts[2]
-			permissionSetArn := idParts[4]
-			instanceArn := idParts[5]
+			permissionSetARN := idParts[4]
+			instanceARN := idParts[5]
 
-			accountAssignment, err := tfssoadmin.FindAccountAssignment(ctx, conn, principalID, principalType, targetID, permissionSetArn, instanceArn)
+			_, err = tfssoadmin.FindAccountAssignment(ctx, conn, principalID, principalType, targetID, permissionSetARN, instanceARN)
 
-			if tfawserr.ErrCodeEquals(err, ssoadmin.ErrCodeResourceNotFoundException) {
+			if tfresource.NotFound(err) {
 				continue
 			}
 
 			if err != nil {
-				return fmt.Errorf("error reading SSO Account Assignment for Principal (%s): %w", principalID, err)
+				return err
 			}
 
-			if accountAssignment != nil {
-				return fmt.Errorf("SSO Account Assignment for Principal (%s) still exists", principalID)
-			}
+			return fmt.Errorf("SSO Account Assignment for Principal (%s) still exists", principalID)
 		}
 
 		return nil
 	}
 }
 
-func testAccCheckAccountAssignmentExists(ctx context.Context, resourceName string) resource.TestCheckFunc {
+func testAccCheckAccountAssignmentExists(ctx context.Context, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[resourceName]
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return fmt.Errorf("Not found: %s", resourceName)
-		}
-
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("Resource (%s) ID not set", resourceName)
+			return fmt.Errorf("Not found: %s", n)
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).SSOAdminConn(ctx)
 
 		idParts, err := tfssoadmin.ParseAccountAssignmentID(rs.Primary.ID)
-
 		if err != nil {
-			return fmt.Errorf("error parsing SSO Account Assignment ID (%s): %w", rs.Primary.ID, err)
+			return err
 		}
 
 		principalID := idParts[0]
 		principalType := idParts[1]
 		targetID := idParts[2]
-		permissionSetArn := idParts[4]
-		instanceArn := idParts[5]
+		permissionSetARN := idParts[4]
+		instanceARN := idParts[5]
 
-		accountAssignment, err := tfssoadmin.FindAccountAssignment(ctx, conn, principalID, principalType, targetID, permissionSetArn, instanceArn)
+		_, err = tfssoadmin.FindAccountAssignment(ctx, conn, principalID, principalType, targetID, permissionSetARN, instanceARN)
 
-		if err != nil {
-			return err
-		}
-
-		if accountAssignment == nil {
-			return fmt.Errorf("Account Assignment for Principal (%s) not found", principalID)
-		}
-
-		return nil
+		return err
 	}
 }
 
