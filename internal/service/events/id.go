@@ -11,7 +11,7 @@ import (
 
 var (
 	eventBusARNPattern     = regexp.MustCompile(`^arn:aws[\w-]*:events:[a-z]{2}-[a-z]+-[\w-]+:[0-9]{12}:event-bus\/[\.\-_A-Za-z0-9]+$`)
-	partnerEventBusPattern = regexp.MustCompile(`^aws\.partner(/[\.\-_A-Za-z0-9]+){2,}$`)
+	partnerEventBusPattern = regexp.MustCompile(`^(?:arn:aws[\w-]*:events:[a-z]{2}-[a-z]+-[\w-]+:[0-9]{12}:event-bus\/)?aws\.partner(/[\.\-_A-Za-z0-9]+){2,}$`)
 )
 
 const permissionResourceIDSeparator = "/"
@@ -79,8 +79,10 @@ func RuleParseResourceID(id string) (string, string, error) {
 
 // Terraform resource IDs for Targets are not parseable as the separator used ("-") is also a valid character in both the rule name and the target ID.
 
-const targetResourceIDSeparator = "-"
-const targetImportIDSeparator = "/"
+const (
+	targetResourceIDSeparator = "-"
+	targetImportIDSeparator   = "/"
+)
 
 func TargetCreateResourceID(eventBusName, ruleName, targetID string) string {
 	var parts []string

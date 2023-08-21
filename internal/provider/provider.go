@@ -13,6 +13,7 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/feature/ec2/imds"
+	"github.com/aws/aws-sdk-go/aws/endpoints"
 	awsbase "github.com/hashicorp/aws-sdk-go-base/v2"
 	multierror "github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
@@ -20,6 +21,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/types/nullable"
@@ -157,6 +159,13 @@ func New(ctx context.Context) (*schema.Provider, error) {
 					"use virtual hosted bucket addressing when possible\n" +
 					"(https://BUCKET.s3.amazonaws.com/KEY). Specific to the Amazon S3 service.",
 			},
+			"s3_us_east_1_regional_endpoint": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Description: "Specifies whether S3 API calls in the `us-east-1` region use the legacy global endpoint or a regional endpoint. " + //lintignore:AWSAT003
+					"Valid values are `legacy` or `regional`. " +
+					"Can also be configured using the `AWS_S3_US_EAST_1_REGIONAL_ENDPOINT` environment variable or the `s3_us_east_1_regional_endpoint` shared config file parameter",
+			},
 			"secret_key": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -269,6 +278,31 @@ func New(ctx context.Context) (*schema.Provider, error) {
 				return ctx
 			}
 			interceptors := interceptorItems{}
+
+			if v.Tags != nil {
+				schema := r.SchemaMap()
+
+				// The data source has opted in to transparent tagging.
+				// Ensure that the schema look OK.
+				if v, ok := schema[names.AttrTags]; ok {
+					if !v.Computed {
+						errs = multierror.Append(errs, fmt.Errorf("`%s` attribute must be Computed: %s", names.AttrTags, typeName))
+						continue
+					}
+				} else {
+					errs = multierror.Append(errs, fmt.Errorf("no `%s` attribute defined in schema: %s", names.AttrTags, typeName))
+					continue
+				}
+
+				interceptors = append(interceptors, interceptorItem{
+					when: Before | After,
+					why:  Read,
+					interceptor: tagsDataSourceInterceptor{
+						tags: v.Tags,
+					},
+				})
+			}
+
 			ds := &wrappedDataSource{
 				bootstrapContext: bootstrapContext,
 				interceptors:     interceptors,
@@ -348,7 +382,7 @@ func New(ctx context.Context) (*schema.Provider, error) {
 				interceptors = append(interceptors, interceptorItem{
 					when: Before | After | Finally,
 					why:  Create | Read | Update,
-					interceptor: tagsInterceptor{
+					interceptor: tagsResourceInterceptor{
 						tags:       v.Tags,
 						updateFunc: tagsUpdateFunc,
 						readFunc:   tagsReadFunc,
@@ -412,6 +446,8 @@ func New(ctx context.Context) (*schema.Provider, error) {
 
 // configure ensures that the provider is fully configured.
 func configure(ctx context.Context, provider *schema.Provider, d *schema.ResourceData) (*conns.AWSClient, diag.Diagnostics) {
+	var diags diag.Diagnostics
+
 	terraformVersion := provider.TerraformVersion
 	if terraformVersion == "" {
 		// Terraform 0.12 introduced this field to the protocol
@@ -445,9 +481,17 @@ func configure(ctx context.Context, provider *schema.Provider, d *schema.Resourc
 	if v, ok := d.Get("retry_mode").(string); ok && v != "" {
 		mode, err := aws.ParseRetryMode(v)
 		if err != nil {
-			return nil, diag.FromErr(err)
+			return nil, sdkdiag.AppendFromErr(diags, err)
 		}
 		config.RetryMode = mode
+	}
+
+	if v, ok := d.Get("s3_us_east_1_regional_endpoint").(string); ok && v != "" {
+		endpoint, err := endpoints.GetS3UsEast1RegionalEndpoint(v)
+		if err != nil {
+			return nil, sdkdiag.AppendFromErr(diags, err)
+		}
+		config.S3UsEast1RegionalEndpoint = endpoint
 	}
 
 	if v, ok := d.GetOk("allowed_account_ids"); ok && v.(*schema.Set).Len() > 0 {
@@ -480,7 +524,7 @@ func configure(ctx context.Context, provider *schema.Provider, d *schema.Resourc
 		endpoints, err := expandEndpoints(ctx, v.(*schema.Set).List())
 
 		if err != nil {
-			return nil, diag.FromErr(err)
+			return nil, sdkdiag.AppendFromErr(diags, err)
 		}
 
 		config.Endpoints = endpoints
@@ -520,7 +564,8 @@ func configure(ctx context.Context, provider *schema.Provider, d *schema.Resourc
 	} else {
 		meta = new(conns.AWSClient)
 	}
-	meta, diags := config.ConfigureProvider(ctx, meta)
+	meta, ds := config.ConfigureProvider(ctx, meta)
+	diags = append(diags, ds...)
 
 	if diags.HasError() {
 		return nil, diags

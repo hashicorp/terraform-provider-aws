@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -83,6 +84,42 @@ func ResourceImagePipeline() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: validation.StringMatch(regexp.MustCompile(`^arn:aws[^:]*:imagebuilder:[^:]+:(?:\d{12}|aws):image-recipe/[a-z0-9-_]+/\d+\.\d+\.\d+$`), "valid image recipe ARN must be provided"),
 				ExactlyOneOf: []string{"container_recipe_arn", "image_recipe_arn"},
+			},
+			"image_scanning_configuration": {
+				Type:     schema.TypeList,
+				Optional: true,
+				Computed: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"ecr_configuration": {
+							Type:     schema.TypeList,
+							Optional: true,
+							Computed: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"container_tags": {
+										Type:     schema.TypeSet,
+										Optional: true,
+										Elem: &schema.Schema{
+											Type: schema.TypeString,
+										},
+									},
+									"repository_name": {
+										Type:     schema.TypeString,
+										Optional: true,
+									},
+								},
+							},
+						},
+						"image_scanning_enabled": {
+							Type:     schema.TypeBool,
+							Optional: true,
+							Default:  false,
+						},
+					},
+				},
 			},
 			"image_tests_configuration": {
 				Type:     schema.TypeList,
@@ -188,6 +225,10 @@ func resourceImagePipelineCreate(ctx context.Context, d *schema.ResourceData, me
 		input.ImageRecipeArn = aws.String(v.(string))
 	}
 
+	if v, ok := d.GetOk("image_scanning_configuration"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		input.ImageScanningConfiguration = expandImageScanningConfiguration(v.([]interface{})[0].(map[string]interface{}))
+	}
+
 	if v, ok := d.GetOk("image_tests_configuration"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 		input.ImageTestsConfiguration = expandImageTestConfiguration(v.([]interface{})[0].(map[string]interface{}))
 	}
@@ -259,23 +300,24 @@ func resourceImagePipelineRead(ctx context.Context, d *schema.ResourceData, meta
 	d.Set("distribution_configuration_arn", imagePipeline.DistributionConfigurationArn)
 	d.Set("enhanced_image_metadata_enabled", imagePipeline.EnhancedImageMetadataEnabled)
 	d.Set("image_recipe_arn", imagePipeline.ImageRecipeArn)
-
+	if imagePipeline.ImageScanningConfiguration != nil {
+		d.Set("image_scanning_configuration", []interface{}{flattenImageScanningConfiguration(imagePipeline.ImageScanningConfiguration)})
+	} else {
+		d.Set("image_scanning_configuration", nil)
+	}
 	if imagePipeline.ImageTestsConfiguration != nil {
 		d.Set("image_tests_configuration", []interface{}{flattenImageTestsConfiguration(imagePipeline.ImageTestsConfiguration)})
 	} else {
 		d.Set("image_tests_configuration", nil)
 	}
-
 	d.Set("infrastructure_configuration_arn", imagePipeline.InfrastructureConfigurationArn)
 	d.Set("name", imagePipeline.Name)
 	d.Set("platform", imagePipeline.Platform)
-
 	if imagePipeline.Schedule != nil {
 		d.Set("schedule", []interface{}{flattenSchedule(imagePipeline.Schedule)})
 	} else {
 		d.Set("schedule", nil)
 	}
-
 	d.Set("status", imagePipeline.Status)
 
 	setTagsOut(ctx, imagePipeline.Tags)
@@ -291,6 +333,7 @@ func resourceImagePipelineUpdate(ctx context.Context, d *schema.ResourceData, me
 		"description",
 		"distribution_configuration_arn",
 		"enhanced_image_metadata_enabled",
+		"image_scanning_configuration",
 		"image_tests_configuration",
 		"infrastructure_configuration_arn",
 		"schedule",
@@ -316,6 +359,10 @@ func resourceImagePipelineUpdate(ctx context.Context, d *schema.ResourceData, me
 
 		if v, ok := d.GetOk("image_recipe_arn"); ok {
 			input.ImageRecipeArn = aws.String(v.(string))
+		}
+
+		if v, ok := d.GetOk("image_scanning_configuration"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+			input.ImageScanningConfiguration = expandImageScanningConfiguration(v.([]interface{})[0].(map[string]interface{}))
 		}
 
 		if v, ok := d.GetOk("image_tests_configuration"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
@@ -365,6 +412,42 @@ func resourceImagePipelineDelete(ctx context.Context, d *schema.ResourceData, me
 	return diags
 }
 
+func expandImageScanningConfiguration(tfMap map[string]interface{}) *imagebuilder.ImageScanningConfiguration {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &imagebuilder.ImageScanningConfiguration{}
+
+	if v, ok := tfMap["image_scanning_enabled"].(bool); ok {
+		apiObject.ImageScanningEnabled = aws.Bool(v)
+	}
+
+	if v, ok := tfMap["ecr_configuration"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+		apiObject.EcrConfiguration = expandECRConfiguration(v[0].(map[string]interface{}))
+	}
+
+	return apiObject
+}
+
+func expandECRConfiguration(tfMap map[string]interface{}) *imagebuilder.EcrConfiguration {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &imagebuilder.EcrConfiguration{}
+
+	if v, ok := tfMap["container_tags"].(*schema.Set); ok {
+		apiObject.ContainerTags = flex.ExpandStringSet(v)
+	}
+
+	if v, ok := tfMap["repository_name"].(string); ok {
+		apiObject.RepositoryName = aws.String(v)
+	}
+
+	return apiObject
+}
+
 func expandImageTestConfiguration(tfMap map[string]interface{}) *imagebuilder.ImageTestsConfiguration {
 	if tfMap == nil {
 		return nil
@@ -403,6 +486,42 @@ func expandPipelineSchedule(tfMap map[string]interface{}) *imagebuilder.Schedule
 	}
 
 	return apiObject
+}
+
+func flattenImageScanningConfiguration(apiObject *imagebuilder.ImageScanningConfiguration) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.ImageScanningEnabled; v != nil {
+		tfMap["image_scanning_enabled"] = aws.BoolValue(v)
+	}
+
+	if v := apiObject.EcrConfiguration; v != nil {
+		tfMap["ecr_configuration"] = []interface{}{flattenECRConfiguration(v)}
+	}
+
+	return tfMap
+}
+
+func flattenECRConfiguration(apiObject *imagebuilder.EcrConfiguration) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.RepositoryName; v != nil {
+		tfMap["repository_name"] = aws.StringValue(v)
+	}
+
+	if v := apiObject.ContainerTags; v != nil {
+		tfMap["container_tags"] = aws.StringValueSlice(v)
+	}
+
+	return tfMap
 }
 
 func flattenImageTestsConfiguration(apiObject *imagebuilder.ImageTestsConfiguration) map[string]interface{} {

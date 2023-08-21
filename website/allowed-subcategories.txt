@@ -43,6 +43,7 @@ CloudWatch RUM
 CloudWatch Synthetics
 CodeArtifact
 CodeBuild
+CodeCatalyst
 CodeCommit
 CodeDeploy
 CodeGuru Reviewer

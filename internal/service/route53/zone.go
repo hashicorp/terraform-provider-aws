@@ -445,7 +445,8 @@ func dnsSECStatus(ctx context.Context, conn *route53.Route53, hostedZoneID strin
 		output, err = conn.GetDNSSECWithContext(ctx, input)
 	}
 
-	if tfawserr.ErrMessageContains(err, route53.ErrCodeInvalidArgument, "Operation is unsupported for private") {
+	if tfawserr.ErrMessageContains(err, route53.ErrCodeInvalidArgument, "Operation is unsupported for private") ||
+		tfawserr.ErrMessageContains(err, "AccessDenied", "The operation GetDNSSEC is not available for the current AWS account") {
 		return "NOT_SIGNING", nil
 	}
 

@@ -128,13 +128,13 @@ func TestAccIAMUserLoginProfile_keybase(t *testing.T) {
 		CheckDestroy:             testAccCheckUserLoginProfileDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccUserLoginProfileConfig_required(rName, "keybase:terraformacctest"),
+				Config: testAccUserLoginProfileConfig_keybase(rName, "keybase:terraformacctest"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserLoginProfileExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttrSet(resourceName, "encrypted_password"),
 					resource.TestCheckResourceAttrSet(resourceName, "key_fingerprint"),
 					resource.TestCheckResourceAttr(resourceName, "password_length", "20"),
-					resource.TestCheckResourceAttr(resourceName, "pgp_key", "keybase:terraformacctest\n"),
+					resource.TestCheckResourceAttr(resourceName, "pgp_key", "keybase:terraformacctest"),
 				),
 			},
 			{
@@ -164,7 +164,7 @@ func TestAccIAMUserLoginProfile_keybaseDoesntExist(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				// We own this account but it doesn't have any key associated with it
-				Config:      testAccUserLoginProfileConfig_required(rName, "keybase:terraform_nope"),
+				Config:      testAccUserLoginProfileConfig_keybase(rName, "keybase:terraform_nope"),
 				ExpectError: regexp.MustCompile(`retrieving Public Key`),
 			},
 		},
@@ -462,6 +462,16 @@ resource "aws_iam_user_login_profile" "test" {
 EOF
 }
 `, pgpKey))
+}
+
+func testAccUserLoginProfileConfig_keybase(rName, keyname string) string {
+	return acctest.ConfigCompose(testAccUserLoginProfileConfig_base(rName), fmt.Sprintf(`
+resource "aws_iam_user_login_profile" "test" {
+  user = aws_iam_user.test.name
+
+  pgp_key = %[1]q
+}
+`, keyname))
 }
 
 func testAccUserLoginProfileConfig_noGPG(rName string) string {

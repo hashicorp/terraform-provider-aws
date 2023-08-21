@@ -21,6 +21,16 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+func init() {
+	acctest.RegisterServiceErrorCheckFunc(ram.EndpointsID, testAccErrorCheckSkip)
+}
+
+func testAccErrorCheckSkip(t *testing.T) resource.ErrorCheckFunc {
+	return acctest.ErrorCheckSkipMessagesContaining(t,
+		"this resource is not necessary",
+	)
+}
+
 func TestAccRAMResourceShareAccepter_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_ram_resource_share_accepter.test"
