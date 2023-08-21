@@ -88,8 +88,8 @@ func resourceManagedPolicyAttachmentCreate(ctx context.Context, d *schema.Resour
 	d.SetId(fmt.Sprintf("%s,%s,%s", managedPolicyARN, permissionSetARN, instanceARN))
 
 	// Provision ALL accounts after attaching the managed policy.
-	if err := provisionPermissionSet(ctx, conn, permissionSetARN, instanceARN); err != nil {
-		return sdkdiag.AppendErrorf(diags, "provisioning SSO Permission Set (%s): %s", permissionSetARN, err)
+	if err := provisionPermissionSet(ctx, conn, permissionSetARN, instanceARN, d.Timeout(schema.TimeoutCreate)); err != nil {
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	return append(diags, resourceManagedPolicyAttachmentRead(ctx, d, meta)...)
@@ -150,8 +150,8 @@ func resourceManagedPolicyAttachmentDelete(ctx context.Context, d *schema.Resour
 	}
 
 	// Provision ALL accounts after detaching the managed policy.
-	if err := provisionPermissionSet(ctx, conn, permissionSetARN, instanceARN); err != nil {
-		return sdkdiag.AppendErrorf(diags, "provisioning SSO Permission Set (%s): %s", permissionSetARN, err)
+	if err := provisionPermissionSet(ctx, conn, permissionSetARN, instanceARN, d.Timeout(schema.TimeoutDelete)); err != nil {
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	return diags

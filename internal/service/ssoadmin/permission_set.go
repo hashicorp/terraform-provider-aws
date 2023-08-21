@@ -5,6 +5,7 @@ package ssoadmin
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log"
 	"regexp"
@@ -211,8 +212,8 @@ func resourcePermissionSetUpdate(ctx context.Context, d *schema.ResourceData, me
 		}
 
 		// Re-provision ALL accounts after making the above changes
-		if err := provisionPermissionSet(ctx, conn, permissionSetARN, instanceARN); err != nil {
-			return sdkdiag.AppendErrorf(diags, "provisioning SSO Permission Set (%s): %s", permissionSetARN, err)
+		if err := provisionPermissionSet(ctx, conn, permissionSetARN, instanceARN, d.Timeout(schema.TimeoutUpdate)); err != nil {
+			return sdkdiag.AppendFromErr(diags, err)
 		}
 	}
 
@@ -286,93 +287,84 @@ func FindPermissionSet(ctx context.Context, conn *ssoadmin.SSOAdmin, permissionS
 	return output.PermissionSet, nil
 }
 
-func provisionPermissionSet(ctx context.Context, conn *ssoadmin.SSOAdmin, arn, instanceArn string) error {
+func provisionPermissionSet(ctx context.Context, conn *ssoadmin.SSOAdmin, permissionSetARN, instanceARN string, timeout time.Duration) error {
 	input := &ssoadmin.ProvisionPermissionSetInput{
-		InstanceArn:      aws.String(instanceArn),
-		PermissionSetArn: aws.String(arn),
+		InstanceArn:      aws.String(instanceARN),
+		PermissionSetArn: aws.String(permissionSetARN),
 		TargetType:       aws.String(ssoadmin.ProvisionTargetTypeAllProvisionedAccounts),
 	}
 
-	var output *ssoadmin.ProvisionPermissionSetOutput
-	err := retry.RetryContext(ctx, permissionSetProvisionTimeout, func() *retry.RetryError {
-		var err error
-		output, err = conn.ProvisionPermissionSetWithContext(ctx, input)
-
-		if err != nil {
-			if tfawserr.ErrCodeEquals(err, ssoadmin.ErrCodeConflictException) {
-				return retry.RetryableError(err)
-			}
-			if tfawserr.ErrCodeEquals(err, ssoadmin.ErrCodeThrottlingException) {
-				return retry.RetryableError(err)
-			}
-			return retry.NonRetryableError(err)
-		}
-
-		return nil
-	})
-
-	if tfresource.TimedOut(err) {
-		output, err = conn.ProvisionPermissionSetWithContext(ctx, input)
-	}
+	output, err := conn.ProvisionPermissionSetWithContext(ctx, input)
 
 	if err != nil {
-		return fmt.Errorf("provisioning SSO Permission Set (%s): %w", arn, err)
+		return fmt.Errorf("provisioning SSO Permission Set (%s): %w", permissionSetARN, err)
 	}
 
-	if output == nil || output.PermissionSetProvisioningStatus == nil {
-		return fmt.Errorf("provisioning SSO Permission Set (%s): empty output", arn)
-	}
-
-	_, err = waitPermissionSetProvisioned(ctx, conn, instanceArn, aws.StringValue(output.PermissionSetProvisioningStatus.RequestId))
-	if err != nil {
-		return fmt.Errorf("waiting for SSO Permission Set (%s) to provision: %w", arn, err)
+	if _, err := waitPermissionSetProvisioned(ctx, conn, instanceARN, aws.StringValue(output.PermissionSetProvisioningStatus.RequestId), timeout); err != nil {
+		return fmt.Errorf("waiting for SSO Permission Set (%s) provision: %w", permissionSetARN, err)
 	}
 
 	return nil
 }
 
-const (
-	permissionSetProvisioningStatusUnknown  = "Unknown"
-	permissionSetProvisioningStatusNotFound = "NotFound"
-)
+func findPermissionSetProvisioningStatus(ctx context.Context, conn *ssoadmin.SSOAdmin, instanceARN, requestID string) (*ssoadmin.PermissionSetProvisioningStatus, error) {
+	input := &ssoadmin.DescribePermissionSetProvisioningStatusInput{
+		InstanceArn:                     aws.String(instanceARN),
+		ProvisionPermissionSetRequestId: aws.String(requestID),
+	}
 
-func statusPermissionSetProvisioning(ctx context.Context, conn *ssoadmin.SSOAdmin, instanceArn, requestID string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-		input := &ssoadmin.DescribePermissionSetProvisioningStatusInput{
-			InstanceArn:                     aws.String(instanceArn),
-			ProvisionPermissionSetRequestId: aws.String(requestID),
+	output, err := conn.DescribePermissionSetProvisioningStatusWithContext(ctx, input)
+
+	if tfawserr.ErrCodeEquals(err, ssoadmin.ErrCodeResourceNotFoundException) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
 		}
+	}
 
-		resp, err := conn.DescribePermissionSetProvisioningStatusWithContext(ctx, input)
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || output.PermissionSetProvisioningStatus == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output.PermissionSetProvisioningStatus, nil
+}
+
+func statusPermissionSetProvisioning(ctx context.Context, conn *ssoadmin.SSOAdmin, instanceARN, requestID string) retry.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := findPermissionSetProvisioningStatus(ctx, conn, instanceARN, requestID)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
 
 		if err != nil {
-			return nil, permissionSetProvisioningStatusUnknown, err
+			return nil, "", err
 		}
 
-		if resp == nil || resp.PermissionSetProvisioningStatus == nil {
-			return nil, permissionSetProvisioningStatusNotFound, nil
-		}
-
-		return resp.PermissionSetProvisioningStatus, aws.StringValue(resp.PermissionSetProvisioningStatus.Status), nil
+		return output, aws.StringValue(output.Status), nil
 	}
 }
 
-const (
-	permissionSetProvisioningRetryDelay = 5 * time.Second
-	permissionSetProvisionTimeout       = 10 * time.Minute
-)
-
-func waitPermissionSetProvisioned(ctx context.Context, conn *ssoadmin.SSOAdmin, instanceArn, requestID string) (*ssoadmin.PermissionSetProvisioningStatus, error) {
+func waitPermissionSetProvisioned(ctx context.Context, conn *ssoadmin.SSOAdmin, instanceARN, requestID string, timeout time.Duration) (*ssoadmin.PermissionSetProvisioningStatus, error) {
 	stateConf := retry.StateChangeConf{
-		Delay:   permissionSetProvisioningRetryDelay,
 		Pending: []string{ssoadmin.StatusValuesInProgress},
 		Target:  []string{ssoadmin.StatusValuesSucceeded},
-		Refresh: statusPermissionSetProvisioning(ctx, conn, instanceArn, requestID),
-		Timeout: permissionSetProvisionTimeout,
+		Refresh: statusPermissionSetProvisioning(ctx, conn, instanceARN, requestID),
+		Timeout: timeout,
+		Delay:   5 * time.Second,
 	}
+
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
-	if v, ok := outputRaw.(*ssoadmin.PermissionSetProvisioningStatus); ok {
-		return v, err
+
+	if output, ok := outputRaw.(*ssoadmin.PermissionSetProvisioningStatus); ok {
+		tfresource.SetLastError(err, errors.New(aws.StringValue(output.FailureReason)))
+
+		return output, err
 	}
+
 	return nil, err
 }

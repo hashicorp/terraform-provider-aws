@@ -19,8 +19,9 @@ func (p *servicePackage) CustomizeConn(ctx context.Context, conn *ssoadmin_sdkv1
 		switch err := r.Error; r.Operation.Name {
 		case "AttachCustomerManagedPolicyReferenceToPermissionSet", "DetachCustomerManagedPolicyReferenceFromPermissionSet",
 			"AttachManagedPolicyToPermissionSet", "DetachManagedPolicyFromPermissionSet",
-			"PutPermissionsBoundaryToPermissionSet", "DeletePermissionsBoundaryFromPermissionSet":
-			if tfawserr.ErrCodeEquals(err, ssoadmin_sdkv1.ErrCodeConflictException) {
+			"PutPermissionsBoundaryToPermissionSet", "DeletePermissionsBoundaryFromPermissionSet",
+			"ProvisionPermissionSet":
+			if tfawserr.ErrCodeEquals(err, ssoadmin_sdkv1.ErrCodeConflictException, ssoadmin_sdkv1.ErrCodeThrottlingException) {
 				r.Retryable = aws_sdkv1.Bool(true)
 			}
 		}

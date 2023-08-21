@@ -119,8 +119,8 @@ func resourcePermissionsBoundaryAttachmentCreate(ctx context.Context, d *schema.
 	d.SetId(id)
 
 	// After the policy has been attached to the permission set, provision in all accounts that use this permission set.
-	if err := provisionPermissionSet(ctx, conn, permissionSetARN, instanceARN); err != nil {
-		return sdkdiag.AppendErrorf(diags, "provisioning SSO Permission Set (%s): %s", permissionSetARN, err)
+	if err := provisionPermissionSet(ctx, conn, permissionSetARN, instanceARN, d.Timeout(schema.TimeoutCreate)); err != nil {
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	return append(diags, resourcePermissionsBoundaryAttachmentRead(ctx, d, meta)...)
@@ -181,8 +181,8 @@ func resourcePermissionsBoundaryAttachmentDelete(ctx context.Context, d *schema.
 	}
 
 	// After the policy has been detached from the permission set, provision in all accounts that use this permission set.
-	if err := provisionPermissionSet(ctx, conn, permissionSetARN, instanceARN); err != nil {
-		return sdkdiag.AppendErrorf(diags, "provisioning SSO Permission Set (%s): %s", permissionSetARN, err)
+	if err := provisionPermissionSet(ctx, conn, permissionSetARN, instanceARN, d.Timeout(schema.TimeoutDelete)); err != nil {
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	return diags

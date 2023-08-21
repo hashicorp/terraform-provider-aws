@@ -93,8 +93,8 @@ func resourcePermissionSetInlinePolicyPut(ctx context.Context, d *schema.Resourc
 	d.SetId(fmt.Sprintf("%s,%s", permissionSetARN, instanceARN))
 
 	// (Re)provision ALL accounts after making the above changes.
-	if err := provisionPermissionSet(ctx, conn, permissionSetARN, instanceARN); err != nil {
-		return sdkdiag.AppendErrorf(diags, "provisioning SSO Permission Set (%s): %s", permissionSetARN, err)
+	if err := provisionPermissionSet(ctx, conn, permissionSetARN, instanceARN, d.Timeout(schema.TimeoutCreate)); err != nil {
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	return append(diags, resourcePermissionSetInlinePolicyRead(ctx, d, meta)...)
@@ -158,8 +158,8 @@ func resourcePermissionSetInlinePolicyDelete(ctx context.Context, d *schema.Reso
 	}
 
 	// (Re)provision ALL accounts after making the above changes.
-	if err := provisionPermissionSet(ctx, conn, permissionSetARN, instanceARN); err != nil {
-		return sdkdiag.AppendErrorf(diags, "provisioning SSO Permission Set (%s): %s", permissionSetARN, err)
+	if err := provisionPermissionSet(ctx, conn, permissionSetARN, instanceARN, d.Timeout(schema.TimeoutDelete)); err != nil {
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	return diags
