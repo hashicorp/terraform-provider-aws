@@ -110,7 +110,7 @@ func TestAccKafkaClusterPolicy_update(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckClusterPolicyExists(ctx, resourceName, &clusterpolicy),
 					resource.TestCheckResourceAttrSet(resourceName, "current_version"),
-					resource.TestMatchResourceAttr(resourceName, "policy", regexp.MustCompile(`"kafka:CreateVpcConnection","ec2:CreateTags"`)),
+					resource.TestMatchResourceAttr(resourceName, "policy", regexp.MustCompile(`"kafka:DescribeCluster","kafka:DescribeClusterV2"`)),
 				),
 			},
 		},
@@ -211,11 +211,10 @@ resource "aws_msk_cluster_policy" "test" {
         "AWS" = "arn:${data.aws_partition.current.partition}:iam::${data.aws_caller_identity.current.account_id}:root"
       }
       Action = [
-        "kafka:Describe*",
-        "kafka:Get*",
         "kafka:CreateVpcConnection",
-        "ec2:CreateTags",
-        "ec2:CreateVPCEndpoint"
+        "kafka:GetBootstrapBrokers",
+        "kafka:DescribeCluster",
+        "kafka:DescribeClusterV2",
       ]
       Resource = aws_msk_cluster.test.arn
     }]
