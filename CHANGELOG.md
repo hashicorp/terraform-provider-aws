@@ -1,4 +1,16 @@
 ## 5.14.0 (Unreleased)
+
+BUG FIXES:
+
+* resource/aws_route53_zone: Skip disabling DNS SEC in unsupported partitions ([#33103](https://github.com/hashicorp/terraform-provider-aws/issues/33103))
+
+## 5.13.1 (August 18, 2023)
+
+BUG FIXES:
+
+* resource/aws_lambda_layer_version: Change `source_code_hash` back to [ForceNew](https://developer.hashicorp.com/terraform/plugin/sdkv2/schemas/schema-behaviors#forcenew). This fixes `doesn't support update` errors ([#33097](https://github.com/hashicorp/terraform-provider-aws/issues/33097))
+* resource/aws_organizations_organization: Fix `current Organization ID (o-xxxxxxxxxx) does not match` errors on resource Read ([#33091](https://github.com/hashicorp/terraform-provider-aws/issues/33091))
+
 ## 5.13.0 (August 18, 2023)
 
 FEATURES:
