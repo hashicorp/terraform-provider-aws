@@ -110,7 +110,7 @@ func TestAccKafkaClusterPolicy_update(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckClusterPolicyExists(ctx, resourceName, &clusterpolicy),
 					resource.TestCheckResourceAttrSet(resourceName, "current_version"),
-					resource.TestMatchResourceAttr(resourceName, "policy", regexp.MustCompile(`"kafka:List\*","kafka:CreateVpcConnection"`)),
+					resource.TestMatchResourceAttr(resourceName, "policy", regexp.MustCompile(`"kafka:CreateVpcConnection","ec2:CreateTags"`)),
 				),
 			},
 		},
@@ -213,8 +213,9 @@ resource "aws_msk_cluster_policy" "test" {
       Action = [
         "kafka:Describe*",
         "kafka:Get*",
-        "kafka:List*",
         "kafka:CreateVpcConnection",
+        "ec2:CreateTags",
+        "ec2:CreateVPCEndpoint"
       ]
       Resource = aws_msk_cluster.test.arn
     }]
