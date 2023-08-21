@@ -268,11 +268,6 @@ func findAccountAssignments(ctx context.Context, conn *ssoadmin.SSOAdmin, input 
 	return output, nil
 }
 
-const (
-	accountAssignmentStatusUnknown  = "Unknown"
-	accountAssignmentStatusNotFound = "NotFound"
-)
-
 func findAccountAssignmentCreationStatus(ctx context.Context, conn *ssoadmin.SSOAdmin, instanceARN, requestID string) (*ssoadmin.AccountAssignmentOperationStatus, error) {
 	input := &ssoadmin.DescribeAccountAssignmentCreationStatusInput{
 		AccountAssignmentCreationRequestId: aws.String(requestID),
@@ -315,24 +310,45 @@ func statusAccountAssignmentCreation(ctx context.Context, conn *ssoadmin.SSOAdmi
 	}
 }
 
-func statusAccountAssignmentDeletion(ctx context.Context, conn *ssoadmin.SSOAdmin, instanceArn, requestID string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-		input := &ssoadmin.DescribeAccountAssignmentDeletionStatusInput{
-			AccountAssignmentDeletionRequestId: aws.String(requestID),
-			InstanceArn:                        aws.String(instanceArn),
-		}
+func findAccountAssignmentDeletionStatus(ctx context.Context, conn *ssoadmin.SSOAdmin, instanceARN, requestID string) (*ssoadmin.AccountAssignmentOperationStatus, error) {
+	input := &ssoadmin.DescribeAccountAssignmentDeletionStatusInput{
+		AccountAssignmentDeletionRequestId: aws.String(requestID),
+		InstanceArn:                        aws.String(instanceARN),
+	}
 
-		resp, err := conn.DescribeAccountAssignmentDeletionStatusWithContext(ctx, input)
+	output, err := conn.DescribeAccountAssignmentDeletionStatusWithContext(ctx, input)
+
+	if tfawserr.ErrCodeEquals(err, ssoadmin.ErrCodeResourceNotFoundException) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || output.AccountAssignmentDeletionStatus == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output.AccountAssignmentDeletionStatus, nil
+}
+
+func statusAccountAssignmentDeletion(ctx context.Context, conn *ssoadmin.SSOAdmin, instanceARN, requestID string) retry.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := findAccountAssignmentDeletionStatus(ctx, conn, instanceARN, requestID)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
 
 		if err != nil {
-			return nil, accountAssignmentStatusUnknown, err
+			return nil, "", err
 		}
 
-		if resp == nil || resp.AccountAssignmentDeletionStatus == nil {
-			return nil, accountAssignmentStatusNotFound, nil
-		}
-
-		return resp.AccountAssignmentDeletionStatus, aws.StringValue(resp.AccountAssignmentDeletionStatus.Status), nil
+		return output, aws.StringValue(output.Status), nil
 	}
 }
 
@@ -373,8 +389,11 @@ func waitAccountAssignmentDeleted(ctx context.Context, conn *ssoadmin.SSOAdmin, 
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
-	if v, ok := outputRaw.(*ssoadmin.AccountAssignmentOperationStatus); ok {
-		return v, err
+
+	if output, ok := outputRaw.(*ssoadmin.AccountAssignmentOperationStatus); ok {
+		tfresource.SetLastError(err, errors.New(aws.StringValue(output.FailureReason)))
+
+		return output, err
 	}
 
 	return nil, err
