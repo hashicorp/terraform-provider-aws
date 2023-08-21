@@ -20,6 +20,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
@@ -82,27 +84,25 @@ func resourceAccountAssignmentCreate(ctx context.Context, d *schema.ResourceData
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SSOAdminConn(ctx)
 
-	instanceArn := d.Get("instance_arn").(string)
-	permissionSetArn := d.Get("permission_set_arn").(string)
+	instanceARN := d.Get("instance_arn").(string)
+	permissionSetARN := d.Get("permission_set_arn").(string)
 	principalID := d.Get("principal_id").(string)
 	principalType := d.Get("principal_type").(string)
 	targetID := d.Get("target_id").(string)
 	targetType := d.Get("target_type").(string)
 
-	// We need to check if the assignment exists before creating it
-	// since the AWS SSO API doesn't prevent us from creating duplicates
-	accountAssignment, err := FindAccountAssignment(ctx, conn, principalID, principalType, targetID, permissionSetArn, instanceArn)
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "listing SSO Account Assignments for AccountId (%s) PermissionSet (%s): %s", targetID, permissionSetArn, err)
-	}
+	// We need to check if the assignment exists before creating it since the AWS SSO API doesn't prevent us from creating duplicates.
+	_, err := FindAccountAssignment(ctx, conn, principalID, principalType, targetID, permissionSetARN, instanceARN)
 
-	if accountAssignment != nil {
+	if err == nil {
 		return sdkdiag.AppendErrorf(diags, "creating SSO Account Assignment for %s (%s): already exists", principalType, principalID)
+	} else if !tfresource.NotFound(err) {
+		return sdkdiag.AppendErrorf(diags, "listing SSO Account Assignments for Account ID (%s) Permission Set (%s): %s", targetID, permissionSetARN, err)
 	}
 
 	input := &ssoadmin.CreateAccountAssignmentInput{
-		InstanceArn:      aws.String(instanceArn),
-		PermissionSetArn: aws.String(permissionSetArn),
+		InstanceArn:      aws.String(instanceARN),
+		PermissionSetArn: aws.String(permissionSetARN),
 		PrincipalId:      aws.String(principalID),
 		PrincipalType:    aws.String(principalType),
 		TargetId:         aws.String(targetID),
@@ -110,22 +110,16 @@ func resourceAccountAssignmentCreate(ctx context.Context, d *schema.ResourceData
 	}
 
 	output, err := conn.CreateAccountAssignmentWithContext(ctx, input)
+
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating SSO Account Assignment for %s (%s): %s", principalType, principalID, err)
 	}
 
-	if output == nil || output.AccountAssignmentCreationStatus == nil {
-		return sdkdiag.AppendErrorf(diags, "creating SSO Account Assignment for %s (%s): empty output", principalType, principalID)
+	if _, err := waitAccountAssignmentCreated(ctx, conn, instanceARN, aws.StringValue(output.AccountAssignmentCreationStatus.RequestId)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for SSO Account Assignment for %s (%s) create: %s", principalType, principalID, err)
 	}
 
-	status := output.AccountAssignmentCreationStatus
-
-	_, err = waitAccountAssignmentCreated(ctx, conn, instanceArn, aws.StringValue(status.RequestId))
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "waiting for SSO Account Assignment for %s (%s) to be created: %s", principalType, principalID, err)
-	}
-
-	d.SetId(fmt.Sprintf("%s,%s,%s,%s,%s,%s", principalID, principalType, targetID, targetType, permissionSetArn, instanceArn))
+	d.SetId(fmt.Sprintf("%s,%s,%s,%s,%s,%s", principalID, principalType, targetID, targetType, permissionSetARN, instanceARN))
 
 	return append(diags, resourceAccountAssignmentRead(ctx, d, meta)...)
 }
@@ -136,19 +130,19 @@ func resourceAccountAssignmentRead(ctx context.Context, d *schema.ResourceData, 
 
 	idParts, err := ParseAccountAssignmentID(d.Id())
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "parsing SSO Account Assignment ID: %s", err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	principalID := idParts[0]
 	principalType := idParts[1]
 	targetID := idParts[2]
 	targetType := idParts[3]
-	permissionSetArn := idParts[4]
-	instanceArn := idParts[5]
+	permissionSetARN := idParts[4]
+	instanceARN := idParts[5]
 
-	accountAssignment, err := FindAccountAssignment(ctx, conn, principalID, principalType, targetID, permissionSetArn, instanceArn)
+	accountAssignment, err := FindAccountAssignment(ctx, conn, principalID, principalType, targetID, permissionSetARN, instanceARN)
 
-	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, ssoadmin.ErrCodeResourceNotFoundException) {
+	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] SSO Account Assignment for Principal (%s) not found, removing from state", principalID)
 		d.SetId("")
 		return diags
@@ -158,17 +152,7 @@ func resourceAccountAssignmentRead(ctx context.Context, d *schema.ResourceData, 
 		return sdkdiag.AppendErrorf(diags, "reading SSO Account Assignment for Principal (%s): %s", principalID, err)
 	}
 
-	if accountAssignment == nil {
-		if d.IsNewResource() {
-			return sdkdiag.AppendErrorf(diags, "reading SSO Account Assignment for Principal (%s): not found", principalID)
-		}
-
-		log.Printf("[WARN] SSO Account Assignment for Principal (%s) not found, removing from state", principalID)
-		d.SetId("")
-		return diags
-	}
-
-	d.Set("instance_arn", instanceArn)
+	d.Set("instance_arn", instanceARN)
 	d.Set("permission_set_arn", accountAssignment.PermissionSetArn)
 	d.Set("principal_id", accountAssignment.PrincipalId)
 	d.Set("principal_type", accountAssignment.PrincipalType)
@@ -184,42 +168,37 @@ func resourceAccountAssignmentDelete(ctx context.Context, d *schema.ResourceData
 
 	idParts, err := ParseAccountAssignmentID(d.Id())
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "parsing SSO Account Assignment ID: %s", err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	principalID := idParts[0]
 	principalType := idParts[1]
 	targetID := idParts[2]
 	targetType := idParts[3]
-	permissionSetArn := idParts[4]
-	instanceArn := idParts[5]
+	permissionSetARN := idParts[4]
+	instanceARN := idParts[5]
 
 	input := &ssoadmin.DeleteAccountAssignmentInput{
+		InstanceArn:      aws.String(instanceARN),
+		PermissionSetArn: aws.String(permissionSetARN),
 		PrincipalId:      aws.String(principalID),
-		InstanceArn:      aws.String(instanceArn),
-		PermissionSetArn: aws.String(permissionSetArn),
+		PrincipalType:    aws.String(principalType),
 		TargetType:       aws.String(targetType),
 		TargetId:         aws.String(targetID),
-		PrincipalType:    aws.String(principalType),
 	}
 
 	output, err := conn.DeleteAccountAssignmentWithContext(ctx, input)
+
+	if tfawserr.ErrCodeEquals(err, ssoadmin.ErrCodeResourceNotFoundException) {
+		return diags
+	}
+
 	if err != nil {
-		if tfawserr.ErrCodeEquals(err, ssoadmin.ErrCodeResourceNotFoundException) {
-			return diags
-		}
 		return sdkdiag.AppendErrorf(diags, "deleting SSO Account Assignment for Principal (%s): %s", principalID, err)
 	}
 
-	if output == nil || output.AccountAssignmentDeletionStatus == nil {
-		return sdkdiag.AppendErrorf(diags, "deleting SSO Account Assignment for Principal (%s): empty output", principalID)
-	}
-
-	status := output.AccountAssignmentDeletionStatus
-
-	_, err = waitAccountAssignmentDeleted(ctx, conn, instanceArn, aws.StringValue(status.RequestId))
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "waiting for SSO Account Assignment for Principal (%s) to be deleted: %s", principalID, err)
+	if _, err := waitAccountAssignmentDeleted(ctx, conn, instanceARN, aws.StringValue(output.AccountAssignmentDeletionStatus.RequestId)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for SSO Account Assignment for Principal (%s) delete: %s", principalID, err)
 	}
 
 	return diags
@@ -234,39 +213,58 @@ func ParseAccountAssignmentID(id string) ([]string, error) {
 	return idParts, nil
 }
 
-// FindAccountAssignment returns the account assigned to a permission set within a specified SSO instance.
-// Returns an error if no account assignment is found.
-func FindAccountAssignment(ctx context.Context, conn *ssoadmin.SSOAdmin, principalId, principalType, accountId, permissionSetArn, instanceArn string) (*ssoadmin.AccountAssignment, error) {
+func FindAccountAssignment(ctx context.Context, conn *ssoadmin.SSOAdmin, principalID, principalType, accountID, permissionSetARN, instanceARN string) (*ssoadmin.AccountAssignment, error) {
 	input := &ssoadmin.ListAccountAssignmentsInput{
-		AccountId:        aws.String(accountId),
-		InstanceArn:      aws.String(instanceArn),
-		PermissionSetArn: aws.String(permissionSetArn),
+		AccountId:        aws.String(accountID),
+		InstanceArn:      aws.String(instanceARN),
+		PermissionSetArn: aws.String(permissionSetARN),
+	}
+	filter := func(a *ssoadmin.AccountAssignment) bool {
+		return aws.StringValue(a.PrincipalId) == principalID && aws.StringValue(a.PrincipalType) == principalType
 	}
 
-	var accountAssignment *ssoadmin.AccountAssignment
+	return findAccountAssignment(ctx, conn, input, filter)
+}
+
+func findAccountAssignment(ctx context.Context, conn *ssoadmin.SSOAdmin, input *ssoadmin.ListAccountAssignmentsInput, filter tfslices.Predicate[*ssoadmin.AccountAssignment]) (*ssoadmin.AccountAssignment, error) {
+	output, err := findAccountAssignments(ctx, conn, input, filter)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSinglePtrResult(output)
+}
+
+func findAccountAssignments(ctx context.Context, conn *ssoadmin.SSOAdmin, input *ssoadmin.ListAccountAssignmentsInput, filter tfslices.Predicate[*ssoadmin.AccountAssignment]) ([]*ssoadmin.AccountAssignment, error) {
+	var output []*ssoadmin.AccountAssignment
+
 	err := conn.ListAccountAssignmentsPagesWithContext(ctx, input, func(page *ssoadmin.ListAccountAssignmentsOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
 
-		for _, a := range page.AccountAssignments {
-			if a == nil {
-				continue
-			}
-
-			if aws.StringValue(a.PrincipalType) != principalType {
-				continue
-			}
-			if aws.StringValue(a.PrincipalId) == principalId {
-				accountAssignment = a
-				return false
+		for _, v := range page.AccountAssignments {
+			if v != nil && filter(v) {
+				output = append(output, v)
 			}
 		}
 
 		return !lastPage
 	})
 
-	return accountAssignment, err
+	if tfawserr.ErrCodeEquals(err, ssoadmin.ErrCodeResourceNotFoundException) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	return output, nil
 }
 
 const (
