@@ -8,6 +8,12 @@ FEATURES:
 ENHANCEMENTS:
 
 * resource/aws_medialive_channel: Updates schemas for `selector_settings` for `audio_selector` and `selector_settings` for `caption_selector` ([#32714](https://github.com/hashicorp/terraform-provider-aws/issues/32714))
+* resource/aws_ssoadmin_account_assignment: Add configurable timeouts ([#33121](https://github.com/hashicorp/terraform-provider-aws/issues/33121))
+* resource/aws_ssoadmin_customer_managed_policy_attachment: Add configurable timeouts ([#33121](https://github.com/hashicorp/terraform-provider-aws/issues/33121))
+* resource/aws_ssoadmin_managed_policy_attachment: Add configurable timeouts ([#33121](https://github.com/hashicorp/terraform-provider-aws/issues/33121))
+* resource/aws_ssoadmin_permission_set: Add configurable timeouts ([#33121](https://github.com/hashicorp/terraform-provider-aws/issues/33121))
+* resource/aws_ssoadmin_permission_set_inline_policy: Add configurable timeouts ([#33121](https://github.com/hashicorp/terraform-provider-aws/issues/33121))
+* resource/aws_ssoadmin_permissions_boundary_attachment: Add configurable timeouts ([#33121](https://github.com/hashicorp/terraform-provider-aws/issues/33121))
 
 BUG FIXES:
 
