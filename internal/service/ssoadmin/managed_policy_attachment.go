@@ -73,13 +73,23 @@ func resourceManagedPolicyAttachmentCreate(ctx context.Context, d *schema.Resour
 	instanceARN := d.Get("instance_arn").(string)
 	managedPolicyARN := d.Get("managed_policy_arn").(string)
 	permissionSetARN := d.Get("permission_set_arn").(string)
+
+	// Check for duplicates.
+	_, err := FindManagedPolicy(ctx, conn, managedPolicyARN, permissionSetARN, instanceARN)
+
+	if err == nil {
+		return sdkdiag.AppendErrorf(diags, "attaching Managed Policy (%s) to SSO Permission Set (%s): already attached", managedPolicyARN, permissionSetARN)
+	} else if !tfresource.NotFound(err) {
+		return sdkdiag.AppendErrorf(diags, "reading SSO Managed Policy (%s) Attachment (%s): %s", managedPolicyARN, permissionSetARN, err)
+	}
+
 	input := &ssoadmin.AttachManagedPolicyToPermissionSetInput{
 		InstanceArn:      aws.String(instanceARN),
 		ManagedPolicyArn: aws.String(managedPolicyARN),
 		PermissionSetArn: aws.String(permissionSetARN),
 	}
 
-	_, err := conn.AttachManagedPolicyToPermissionSetWithContext(ctx, input)
+	_, err = conn.AttachManagedPolicyToPermissionSetWithContext(ctx, input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "attaching Managed Policy (%s) to SSO Permission Set (%s): %s", managedPolicyARN, permissionSetARN, err)
