@@ -1,4 +1,9 @@
 ## 5.14.0 (Unreleased)
+
+BUG FIXES:
+
+* resource/aws_route53_zone: Skip disabling DNS SEC in unsupported partitions ([#33103](https://github.com/hashicorp/terraform-provider-aws/issues/33103))
+
 ## 5.13.1 (August 18, 2023)
 
 BUG FIXES:
