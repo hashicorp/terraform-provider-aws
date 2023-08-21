@@ -379,6 +379,7 @@ This argument supports the following arguments:
 * `copyTagsToSnapshot` – (Optional, boolean) Copy all Cluster `tags` to snapshots. Default is `false`.
 * `databaseName` - (Optional) Name for an automatically created database on cluster creation. There are different naming restrictions per database engine: [RDS Naming Constraints][5]
 * `dbClusterInstanceClass` - (Optional) (Required for Multi-AZ DB cluster) The compute and memory capacity of each DB instance in the Multi-AZ DB cluster, for example db.m6g.xlarge. Not all DB instance classes are available in all AWS Regions, or for all database engines. For the full list of DB instance classes and availability for your engine, see [DB instance class](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/Concepts.DBInstanceClass.html) in the Amazon RDS User Guide.
+* `dbClusterParameterGroupName` - (Optional) A cluster parameter group to associate with the cluster.
 * `dbInstanceParameterGroupName` - (Optional) Instance parameter group to associate with all instances of the DB cluster. The `dbInstanceParameterGroupName` parameter is only valid in combination with the `allowMajorVersionUpgrade` parameter.
 * `dbSubnetGroupName` - (Optional) DB subnet group to associate with this DB instance. **NOTE:** This must match the `dbSubnetGroupName` specified on every [`awsRdsClusterInstance`](/docs/providers/aws/r/rds_cluster_instance.html) in the cluster.
 * `dbSystemId` - (Optional) For use with RDS Custom.
@@ -648,4 +649,4 @@ Using `terraform import`, import RDS Clusters using the `clusterIdentifier`. For
 % terraform import aws_rds_cluster.aurora_cluster aurora-prod-cluster
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-e1d11adfd323e9f1a34b38514354d322e26ab116a565decb5ad4b57e3cd5b734 -->
+<!-- cache-key: cdktf-0.18.0 input-0425a7b5583c1d65909da41b44fe0067f2ee9b71510d010d915386842c1f02ad -->
