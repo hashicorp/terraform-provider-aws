@@ -170,7 +170,6 @@ func testAccCheckPermissionsBoundaryAttachmentDestroy(ctx context.Context) resou
 			}
 
 			permissionSetARN, instanceARN, err := tfssoadmin.PermissionsBoundaryAttachmentParseResourceID(rs.Primary.ID)
-
 			if err != nil {
 				return err
 			}
@@ -199,12 +198,7 @@ func testAccCheckPermissionsBoundaryAttachmentExists(ctx context.Context, n stri
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No SSO Permissions Boundary Attachment ID is set")
-		}
-
 		permissionSetARN, instanceARN, err := tfssoadmin.PermissionsBoundaryAttachmentParseResourceID(rs.Primary.ID)
-
 		if err != nil {
 			return err
 		}
