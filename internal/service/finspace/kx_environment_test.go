@@ -240,7 +240,7 @@ func TestAccFinSpaceKxEnvironment_transitGateway(t *testing.T) {
 	})
 }
 
-func TestAccFinSpaceKxEnvironment_attachmentNetworkAclConfiguration(t *testing.T) {
+func TestAccFinSpaceKxEnvironment_attachmentNetworkACLConfiguration(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -260,7 +260,7 @@ func TestAccFinSpaceKxEnvironment_attachmentNetworkAclConfiguration(t *testing.T
 		CheckDestroy:             testAccCheckKxEnvironmentDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccKxEnvironmentConfig_attachmentNetworkAclConfig(rName, "100.64.0.0/26"),
+				Config: testAccKxEnvironmentConfig_attachmentNetworkACLConfig(rName, "100.64.0.0/26"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKxEnvironmentExists(ctx, resourceName, &kxenvironment),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "transit_gateway_configuration.*", map[string]string{
@@ -276,7 +276,7 @@ func TestAccFinSpaceKxEnvironment_attachmentNetworkAclConfiguration(t *testing.T
 				),
 			},
 			{
-				Config: testAccKxEnvironmentConfig_attachmentNetworkAclConfig2(rName, "100.64.0.0/26"),
+				Config: testAccKxEnvironmentConfig_attachmentNetworkACLConfig2(rName, "100.64.0.0/26"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKxEnvironmentExists(ctx, resourceName, &kxenvironment),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "transit_gateway_configuration.*", map[string]string{
@@ -298,7 +298,7 @@ func TestAccFinSpaceKxEnvironment_attachmentNetworkAclConfiguration(t *testing.T
 				),
 			},
 			{
-				Config: testAccKxEnvironmentConfig_attachmentNetworkAclConfig(rName, "100.64.0.0/26"),
+				Config: testAccKxEnvironmentConfig_attachmentNetworkACLConfig(rName, "100.64.0.0/26"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKxEnvironmentExists(ctx, resourceName, &kxenvironment),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "transit_gateway_configuration.*", map[string]string{
@@ -472,7 +472,7 @@ resource "aws_finspace_kx_environment" "test" {
 `, rName, cidr))
 }
 
-func testAccKxEnvironmentConfig_attachmentNetworkAclConfig(rName, cidr string) string {
+func testAccKxEnvironmentConfig_attachmentNetworkACLConfig(rName, cidr string) string {
 	return acctest.ConfigCompose(
 		testAccKxEnvironmentConfigBase(),
 		fmt.Sprintf(`
@@ -506,7 +506,7 @@ resource "aws_finspace_kx_environment" "test" {
 `, rName, cidr))
 }
 
-func testAccKxEnvironmentConfig_attachmentNetworkAclConfig2(rName, cidr string) string {
+func testAccKxEnvironmentConfig_attachmentNetworkACLConfig2(rName, cidr string) string {
 	return acctest.ConfigCompose(
 		testAccKxEnvironmentConfigBase(),
 		fmt.Sprintf(`

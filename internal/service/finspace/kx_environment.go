@@ -563,13 +563,13 @@ func expandTransitGatewayConfiguration(tfList []interface{}) *types.TransitGatew
 	}
 
 	if v, ok := tfMap["attachment_network_acl_configuration"]; ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		a.AttachmentNetworkAclConfiguration = expandAttachmentNetworkAclConfigurations(v.([]interface{}))
+		a.AttachmentNetworkAclConfiguration = expandAttachmentNetworkACLConfigurations(v.([]interface{}))
 	}
 
 	return a
 }
 
-func expandAttachmentNetworkAclConfigurations(tfList []interface{}) []types.NetworkACLEntry {
+func expandAttachmentNetworkACLConfigurations(tfList []interface{}) []types.NetworkACLEntry {
 	if len(tfList) == 0 {
 		return nil
 	}
@@ -583,7 +583,7 @@ func expandAttachmentNetworkAclConfigurations(tfList []interface{}) []types.Netw
 			continue
 		}
 
-		a := expandAttachmentNetworkAclConfiguration(m)
+		a := expandAttachmentNetworkACLConfiguration(m)
 
 		if a == nil {
 			continue
@@ -594,7 +594,7 @@ func expandAttachmentNetworkAclConfigurations(tfList []interface{}) []types.Netw
 	return s
 }
 
-func expandAttachmentNetworkAclConfiguration(tfMap map[string]interface{}) *types.NetworkACLEntry {
+func expandAttachmentNetworkACLConfiguration(tfMap map[string]interface{}) *types.NetworkACLEntry {
 	if tfMap == nil {
 		return nil
 	}
@@ -728,13 +728,13 @@ func flattenTransitGatewayConfiguration(apiObject *types.TransitGatewayConfigura
 	}
 
 	if v := apiObject.AttachmentNetworkAclConfiguration; v != nil {
-		m["attachment_network_acl_configuration"] = flattenAttachmentNetworkAclConfigurations(v)
+		m["attachment_network_acl_configuration"] = flattenAttachmentNetworkACLConfigurations(v)
 	}
 
 	return []interface{}{m}
 }
 
-func flattenAttachmentNetworkAclConfigurations(apiObjects []types.NetworkACLEntry) []interface{} {
+func flattenAttachmentNetworkACLConfigurations(apiObjects []types.NetworkACLEntry) []interface{} {
 	if len(apiObjects) == 0 {
 		return nil
 	}
@@ -742,13 +742,13 @@ func flattenAttachmentNetworkAclConfigurations(apiObjects []types.NetworkACLEntr
 	var l []interface{}
 
 	for _, apiObject := range apiObjects {
-		l = append(l, flattenAttachmentNetworkAclConfiguration(&apiObject))
+		l = append(l, flattenAttachmentNetworkACLConfiguration(&apiObject))
 	}
 
 	return l
 }
 
-func flattenAttachmentNetworkAclConfiguration(apiObject *types.NetworkACLEntry) map[string]interface{} {
+func flattenAttachmentNetworkACLConfiguration(apiObject *types.NetworkACLEntry) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}
