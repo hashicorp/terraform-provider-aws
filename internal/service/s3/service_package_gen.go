@@ -21,9 +21,6 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 		{
 			Factory: newResourceDirectoryBucket,
 			Name:    "Directory Bucket",
-			Tags: &types.ServicePackageResourceTags{
-				IdentifierAttribute: "id",
-			},
 		},
 	}
 }
