@@ -7,9 +7,9 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/neptune"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
@@ -72,7 +72,7 @@ func TestAccNeptuneClusterParameterGroup_namePrefix(t *testing.T) {
 				Config: testAccClusterParameterGroupConfig_namePrefixEmpty,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterParameterGroupExists(ctx, resourceName, &v),
-					resource.TestMatchResourceAttr(resourceName, "name", regexp.MustCompile("^tf-test-")),
+					resource.TestMatchResourceAttr(resourceName, "name", regexache.MustCompile("^tf-test-")),
 				),
 			},
 			{

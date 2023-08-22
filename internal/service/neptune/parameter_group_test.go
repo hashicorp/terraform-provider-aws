@@ -6,9 +6,9 @@ package neptune_test
 import (
 	"context"
 	"fmt"
-	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/neptune"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
@@ -115,7 +115,7 @@ func TestAccNeptuneParameterGroup_parameter(t *testing.T) {
 			// This test should be updated with a dynamic parameter when available
 			{
 				Config:      testAccParameterGroupConfig_basic(rName, "neptune_query_timeout", "25", "immediate"),
-				ExpectError: regexp.MustCompile(`cannot use immediate apply method for static parameter`),
+				ExpectError: regexache.MustCompile(`cannot use immediate apply method for static parameter`),
 			},
 			// Test removing the configuration
 			{
