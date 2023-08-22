@@ -101,8 +101,8 @@ The transit_gateway_configuration block supports the following arguments:
 
 ### attachment_network_acl_configuration
 
-The network access control list (ACL) is an optional layer of security for your VPC that acts as a firewall for controlling traffic in and out of one or more subnets. 
-The entry is a set of numbered ingress and egress rules that determine whether a packet should be allowed in or out of a subnet associated with the ACL. 
+The network access control list (ACL) is an optional layer of security for your VPC that acts as a firewall for controlling traffic in and out of one or more subnets.
+The entry is a set of numbered ingress and egress rules that determine whether a packet should be allowed in or out of a subnet associated with the ACL.
 We process the entries in the ACL according to the rule numbers, in ascending order. The attachment_network_acl_configuration block supports the following arguments:
 
 * `rule_number` - (Required) Rule number for the entry. All the network ACL entries are processed in ascending order by rule number.
@@ -113,12 +113,14 @@ We process the entries in the ACL according to the rule numbers, in ascending or
 * `icmpTypeCode` - (Optional) Defines the ICMP protocol that consists of the ICMP type and code.
 
 ### port_range
+
 The range of ports the rule applies to (between 0 and 65535). The port_range block supports the following arguments:
 
 * `from` - (Required) First port in the range.
 * `to` - (Required) Last port in the range.
 
 ### icmpTypeCode
+
 Defines the ICMP protocol that consists of the ICMP type and code.The icmpTypeCode block supports the following arguments:
 
 * `code` - (Required) ICMP code. A value of -1 means all codes for the specified ICMP type.
