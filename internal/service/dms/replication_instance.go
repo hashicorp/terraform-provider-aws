@@ -193,19 +193,8 @@ func resourceReplicationInstanceCreate(ctx context.Context, d *schema.ResourceDa
 
 	d.SetId(replicationInstanceID)
 
-	stateConf := &retry.StateChangeConf{
-		Pending:    []string{"creating", "modifying"},
-		Target:     []string{"available"},
-		Refresh:    resourceReplicationInstanceStateRefreshFunc(ctx, conn, d.Id()),
-		Timeout:    d.Timeout(schema.TimeoutCreate),
-		MinTimeout: 10 * time.Second,
-		Delay:      30 * time.Second, // Wait 30 secs before starting
-	}
-
-	// Wait, catching any errors
-	_, err = stateConf.WaitForStateContext(ctx)
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "waiting for DMS Replication Instance (%s) creation: %s", d.Id(), err)
+	if _, err := waitReplicationInstanceCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for DMS Replication Instance (%s) create: %s", d.Id(), err)
 	}
 
 	return append(diags, resourceReplicationInstanceRead(ctx, d, meta)...)
@@ -452,6 +441,25 @@ func statusReplicationInstance(ctx context.Context, conn *dms.DatabaseMigrationS
 
 		return output, aws.StringValue(output.ReplicationInstanceStatus), nil
 	}
+}
+
+func waitReplicationInstanceCreated(ctx context.Context, conn *dms.DatabaseMigrationService, id string, timeout time.Duration) (*dms.ReplicationInstance, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending:    []string{replicationInstanceStatusCreating, replicationInstanceStatusModifying},
+		Target:     []string{replicationInstanceStatusAvailable},
+		Refresh:    statusReplicationInstance(ctx, conn, id),
+		Timeout:    timeout,
+		MinTimeout: 10 * time.Second,
+		Delay:      30 * time.Second, // Wait 30 secs before starting
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*dms.ReplicationInstance); ok {
+		return output, err
+	}
+
+	return nil, err
 }
 
 func waitReplicationInstanceDeleted(ctx context.Context, conn *dms.DatabaseMigrationService, id string, timeout time.Duration) (*dms.ReplicationInstance, error) {
