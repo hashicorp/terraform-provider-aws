@@ -13,6 +13,7 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go/service/batch"
+	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
@@ -38,6 +39,10 @@ func newResourceJobQueue(_ context.Context) (resource.ResourceWithConfigure, err
 	r := resourceJobQueue{}
 	r.SetMigratedFromPluginSDK(true)
 
+	r.SetDefaultCreateTimeout(10 * time.Minute)
+	r.SetDefaultUpdateTimeout(10 * time.Minute)
+	r.SetDefaultDeleteTimeout(10 * time.Minute)
+
 	return &r, nil
 }
 
@@ -47,6 +52,7 @@ const (
 
 type resourceJobQueue struct {
 	framework.ResourceWithConfigure
+	framework.WithTimeouts
 }
 
 func (r *resourceJobQueue) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
@@ -94,6 +100,14 @@ func (r *resourceJobQueue) Schema(ctx context.Context, request resource.SchemaRe
 		},
 	}
 
+	s.Blocks = map[string]schema.Block{
+		"timeouts": timeouts.Block(ctx, timeouts.Opts{
+			Create: true,
+			Update: true,
+			Delete: true,
+		}),
+	}
+
 	response.Schema = s
 }
 
@@ -134,7 +148,8 @@ func (r *resourceJobQueue) Create(ctx context.Context, request resource.CreateRe
 	state := data
 	state.ID = flex.StringToFramework(ctx, output.JobQueueArn)
 
-	out, err := waitJobQueueCreated(ctx, conn, data.Name.ValueString(), 10*time.Minute)
+	createTimeout := r.CreateTimeout(ctx, data.Timeouts)
+	out, err := waitJobQueueCreated(ctx, conn, data.Name.ValueString(), createTimeout)
 
 	if err != nil {
 		response.Diagnostics.AddError(
@@ -162,7 +177,7 @@ func (r *resourceJobQueue) Read(ctx context.Context, request resource.ReadReques
 
 	if err != nil {
 		response.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.Batch, create.ErrActionUpdating, ResNameJobQueue, data.Name.ValueString(), nil),
+			create.ProblemStandardMessage(names.Batch, create.ErrActionUpdating, ResNameJobQueue, data.Name.ValueString(), err),
 			err.Error(),
 		)
 		return
@@ -242,7 +257,8 @@ func (r *resourceJobQueue) Update(ctx context.Context, request resource.UpdateRe
 			return
 		}
 
-		out, err := waitJobQueueUpdated(ctx, conn, plan.ID.ValueString(), 10*time.Minute)
+		updateTimeout := r.UpdateTimeout(ctx, plan.Timeouts)
+		out, err := waitJobQueueUpdated(ctx, conn, plan.ID.ValueString(), updateTimeout)
 
 		if err != nil {
 			response.Diagnostics.AddError(
@@ -268,7 +284,8 @@ func (r *resourceJobQueue) Delete(ctx context.Context, request resource.DeleteRe
 		return
 	}
 
-	err := disableJobQueue(ctx, data.ID.ValueString(), conn)
+	deleteTimeout := r.DeleteTimeout(ctx, data.Timeouts)
+	err := disableJobQueue(ctx, conn, data.ID.ValueString(), deleteTimeout)
 
 	if err != nil {
 		response.Diagnostics.AddError(
@@ -290,7 +307,7 @@ func (r *resourceJobQueue) Delete(ctx context.Context, request resource.DeleteRe
 		return
 	}
 
-	_, err = waitJobQueueDeleted(ctx, conn, data.ID.ValueString(), 10*time.Minute)
+	_, err = waitJobQueueDeleted(ctx, conn, data.ID.ValueString(), deleteTimeout)
 
 	if err != nil {
 		response.Diagnostics.AddError(
@@ -309,8 +326,8 @@ func (r *resourceJobQueue) ModifyPlan(ctx context.Context, request resource.Modi
 	r.SetTagsAll(ctx, request, response)
 }
 
-func (r *resourceJobQueue) UpgradeState(context.Context) map[int64]resource.StateUpgrader {
-	schemaV0 := jobQueueSchema0()
+func (r *resourceJobQueue) UpgradeState(ctx context.Context) map[int64]resource.StateUpgrader {
+	schemaV0 := jobQueueSchema0(ctx)
 
 	return map[int64]resource.StateUpgrader{
 		0: {
@@ -321,15 +338,16 @@ func (r *resourceJobQueue) UpgradeState(context.Context) map[int64]resource.Stat
 }
 
 type resourceJobQueueData struct {
-	ARN                 types.String `tfsdk:"arn"`
-	ComputeEnvironments types.List   `tfsdk:"compute_environments"`
-	ID                  types.String `tfsdk:"id"`
-	Name                types.String `tfsdk:"name"`
-	Priority            types.Int64  `tfsdk:"priority"`
-	SchedulingPolicyARN fwtypes.ARN  `tfsdk:"scheduling_policy_arn"`
-	State               types.String `tfsdk:"state"`
-	Tags                types.Map    `tfsdk:"tags"`
-	TagsAll             types.Map    `tfsdk:"tags_all"`
+	ARN                 types.String   `tfsdk:"arn"`
+	ComputeEnvironments types.List     `tfsdk:"compute_environments"`
+	ID                  types.String   `tfsdk:"id"`
+	Name                types.String   `tfsdk:"name"`
+	Priority            types.Int64    `tfsdk:"priority"`
+	SchedulingPolicyARN fwtypes.ARN    `tfsdk:"scheduling_policy_arn"`
+	State               types.String   `tfsdk:"state"`
+	Tags                types.Map      `tfsdk:"tags"`
+	TagsAll             types.Map      `tfsdk:"tags_all"`
+	Timeouts            timeouts.Value `tfsdk:"timeouts"`
 }
 
 func (r *resourceJobQueueData) refreshFromOutput(ctx context.Context, out *batch.JobQueueDetail) diag.Diagnostics {
@@ -390,9 +408,9 @@ func findJobQueueByName(ctx context.Context, conn *batch.Batch, sn string) (*bat
 	return nil, nil
 }
 
-func disableJobQueue(ctx context.Context, jobQueue string, conn *batch.Batch) error {
+func disableJobQueue(ctx context.Context, conn *batch.Batch, id string, timeout time.Duration) error {
 	_, err := conn.UpdateJobQueueWithContext(ctx, &batch.UpdateJobQueueInput{
-		JobQueue: aws.String(jobQueue),
+		JobQueue: aws.String(id),
 		State:    aws.String(batch.JQStateDisabled),
 	})
 	if err != nil {
@@ -402,8 +420,8 @@ func disableJobQueue(ctx context.Context, jobQueue string, conn *batch.Batch) er
 	stateChangeConf := &retry.StateChangeConf{
 		Pending:    []string{batch.JQStatusUpdating},
 		Target:     []string{batch.JQStatusValid},
-		Refresh:    jobQueueRefreshStatusFunc(ctx, conn, jobQueue),
-		Timeout:    10 * time.Minute,
+		Refresh:    jobQueueRefreshStatusFunc(ctx, conn, id),
+		Timeout:    timeout,
 		Delay:      10 * time.Second,
 		MinTimeout: 3 * time.Second,
 	}
@@ -476,9 +494,9 @@ func jobQueueRefreshStatusFunc(ctx context.Context, conn *batch.Batch, sn string
 		}
 
 		if ce == nil {
-			return nil, batch.JQStatusDeleted, nil
+			return 42, batch.JQStatusDeleted, nil
 		}
 
-		return ce, aws.ToString(ce.Status), nil
+		return ce, *ce.Status, nil
 	}
 }
