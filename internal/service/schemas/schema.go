@@ -6,9 +6,9 @@ package schemas
 import (
 	"context"
 	"log"
-	"regexp"
 	"time"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/schemas"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
@@ -64,7 +64,7 @@ func ResourceSchema() *schema.Resource {
 				ForceNew: true,
 				ValidateFunc: validation.All(
 					validation.StringLenBetween(1, 385),
-					validation.StringMatch(regexp.MustCompile(`^[\.\-_A-Za-z@]+`), ""),
+					validation.StringMatch(regexache.MustCompile(`^[\.\-_A-Za-z@]+`), ""),
 				),
 			},
 
