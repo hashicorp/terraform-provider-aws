@@ -337,13 +337,10 @@ func resourceReplicationInstanceDelete(ctx context.Context, d *schema.ResourceDa
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DMSConn(ctx)
 
-	request := &dms.DeleteReplicationInstanceInput{
+	log.Printf("[DEBUG] Deleting DMS Replication Instance: %s", d.Id())
+	_, err := conn.DeleteReplicationInstanceWithContext(ctx, &dms.DeleteReplicationInstanceInput{
 		ReplicationInstanceArn: aws.String(d.Get("replication_instance_arn").(string)),
-	}
-
-	log.Printf("[DEBUG] DMS delete replication instance: %#v", request)
-
-	_, err := conn.DeleteReplicationInstanceWithContext(ctx, request)
+	})
 
 	if tfawserr.ErrCodeEquals(err, dms.ErrCodeResourceNotFoundFault) {
 		return diags
@@ -353,19 +350,8 @@ func resourceReplicationInstanceDelete(ctx context.Context, d *schema.ResourceDa
 		return sdkdiag.AppendErrorf(diags, "deleting DMS Replication Instance (%s): %s", d.Id(), err)
 	}
 
-	stateConf := &retry.StateChangeConf{
-		Pending:    []string{"deleting"},
-		Target:     []string{},
-		Refresh:    resourceReplicationInstanceStateRefreshFunc(ctx, conn, d.Id()),
-		Timeout:    d.Timeout(schema.TimeoutDelete),
-		MinTimeout: 10 * time.Second,
-		Delay:      30 * time.Second, // Wait 30 secs before starting
-	}
-
-	// Wait, catching any errors
-	_, err = stateConf.WaitForStateContext(ctx)
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "waiting for DMS Replication Instance (%s) deletion: %s", d.Id(), err)
+	if _, err := waitReplicationInstanceDeleted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for DMS Replication Instance (%s) delete: %s", d.Id(), err)
 	}
 
 	return diags
@@ -450,4 +436,39 @@ func findReplicationInstances(ctx context.Context, conn *dms.DatabaseMigrationSe
 	}
 
 	return output, nil
+}
+
+func statusReplicationInstance(ctx context.Context, conn *dms.DatabaseMigrationService, id string) retry.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := FindReplicationInstanceByID(ctx, conn, id)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, aws.StringValue(output.ReplicationInstanceStatus), nil
+	}
+}
+
+func waitReplicationInstanceDeleted(ctx context.Context, conn *dms.DatabaseMigrationService, id string, timeout time.Duration) (*dms.ReplicationInstance, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending:    []string{replicationInstanceStatusDeleting},
+		Target:     []string{},
+		Refresh:    statusReplicationInstance(ctx, conn, id),
+		Timeout:    timeout,
+		MinTimeout: 10 * time.Second,
+		Delay:      30 * time.Second, // Wait 30 secs before starting
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*dms.ReplicationInstance); ok {
+		return output, err
+	}
+
+	return nil, err
 }

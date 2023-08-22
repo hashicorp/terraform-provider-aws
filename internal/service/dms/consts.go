@@ -6,6 +6,12 @@ package dms
 const (
 	endpointStatusDeleting = "deleting"
 
+	replicationInstanceStatusAvailable = "available"
+	replicationInstanceStatusCreating  = "creating"
+	replicationInstanceStatusDeleting  = "deleting"
+	replicationInstanceStatusModifying = "modifying"
+	replicationInstanceStatusUpgrading = "upgrading"
+
 	replicationTaskStatusCreating  = "creating"
 	replicationTaskStatusDeleting  = "deleting"
 	replicationTaskStatusFailed    = "failed"
