@@ -22,7 +22,7 @@ resource "aws_vpc" "main" {
 
 resource "aws_vpc_ipv4_cidr_block_association" "secondary_cidr" {
   vpc_id     = aws_vpc.main.id
-  cidr_block = "172.2.0.0/16"
+  cidr_block = "172.20.0.0/16"
 }
 ```
 
@@ -50,8 +50,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-`aws_vpc_ipv4_cidr_block_association` can be imported by using the VPC CIDR Association ID, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_vpc_ipv4_cidr_block_association` using the VPC CIDR Association ID. For example:
 
+```terraform
+import {
+  to = aws_vpc_ipv4_cidr_block_association.example
+  id = "vpc-cidr-assoc-xxxxxxxx"
+}
 ```
-$ terraform import aws_vpc_ipv4_cidr_block_association.example vpc-cidr-assoc-xxxxxxxx
+
+Using `terraform import`, import `aws_vpc_ipv4_cidr_block_association` using the VPC CIDR Association ID. For example:
+
+```console
+% terraform import aws_vpc_ipv4_cidr_block_association.example vpc-cidr-assoc-xxxxxxxx
 ```

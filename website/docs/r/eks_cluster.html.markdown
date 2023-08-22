@@ -122,7 +122,7 @@ data "tls_certificate" "example" {
 
 resource "aws_iam_openid_connect_provider" "example" {
   client_id_list  = ["sts.amazonaws.com"]
-  thumbprint_list = data.tls_certificate.example.certificates[*].sha1_fingerprint
+  thumbprint_list = [data.tls_certificate.example.certificates[0].sha1_fingerprint]
   url             = data.tls_certificate.example.url
 }
 
@@ -296,8 +296,17 @@ Note that the `update` timeout is used separately for both `version` and `vpc_co
 
 ## Import
 
-Import EKS Clusters using the `name`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import EKS Clusters using the `name`. For example:
 
+```terraform
+import {
+  to = aws_eks_cluster.my_cluster
+  id = "my_cluster"
+}
 ```
-$ terraform import aws_eks_cluster.my_cluster my_cluster
+
+Using `terraform import`, import EKS Clusters using the `name`. For example:
+
+```console
+% terraform import aws_eks_cluster.my_cluster my_cluster
 ```

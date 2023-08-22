@@ -39,8 +39,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-DHCP associations can be imported by providing the VPC ID associated with the options:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import DHCP associations using the VPC ID associated with the options. For example:
 
+```terraform
+import {
+  to = aws_vpc_dhcp_options_association.imported
+  id = "vpc-0f001273ec18911b1"
+}
 ```
-$ terraform import aws_vpc_dhcp_options_association.imported vpc-0f001273ec18911b1
+
+Using `terraform import`, import DHCP associations using the VPC ID associated with the options. For example:
+
+```console
+% terraform import aws_vpc_dhcp_options_association.imported vpc-0f001273ec18911b1
 ```

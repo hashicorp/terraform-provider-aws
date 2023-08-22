@@ -56,8 +56,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import SSO Account Assignments using the `instance_arn`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import SSO Account Assignments using the `instance_arn`. For example:
 
+```terraform
+import {
+  to = aws_ssoadmin_instance_access_control_attributes.example
+  id = "arn:aws:sso:::instance/ssoins-0123456789abcdef"
+}
 ```
-$ terraform import aws_ssoadmin_instance_access_control_attributes.example arn:aws:sso:::instance/ssoins-0123456789abcdef
+
+Using `terraform import`, import SSO Account Assignments using the `instance_arn`. For example:
+
+```console
+% terraform import aws_ssoadmin_instance_access_control_attributes.example arn:aws:sso:::instance/ssoins-0123456789abcdef
 ```

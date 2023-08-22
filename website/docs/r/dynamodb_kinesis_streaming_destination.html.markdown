@@ -51,8 +51,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import DynamoDB Kinesis Streaming Destinations using the `table_name` and `stream_arn` separated by `,`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import DynamoDB Kinesis Streaming Destinations using the `table_name` and `stream_arn` separated by `,`. For example:
 
+```terraform
+import {
+  to = aws_dynamodb_kinesis_streaming_destination.example
+  id = "example,arn:aws:kinesis:us-east-1:111122223333:exampleStreamName"
+}
 ```
-$ terraform import aws_dynamodb_kinesis_streaming_destination.example example,arn:aws:kinesis:us-east-1:111122223333:exampleStreamName
+
+Using `terraform import`, import DynamoDB Kinesis Streaming Destinations using the `table_name` and `stream_arn` separated by `,`. For example:
+
+```console
+% terraform import aws_dynamodb_kinesis_streaming_destination.example example,arn:aws:kinesis:us-east-1:111122223333:exampleStreamName
 ```

@@ -319,7 +319,7 @@ Container image configuration values that override the values in the container i
 
 ### snap_start
 
-Snap start settings for low-latency startups. This feature is currently only supported for `java11` runtimes. Remove this block to delete the associated settings (rather than setting `apply_on = "None"`).
+Snap start settings for low-latency startups. This feature is currently only supported for `java11` and `java17` runtimes. Remove this block to delete the associated settings (rather than setting `apply_on = "None"`).
 
 * `apply_on` - (Required) Conditions where snap start is enabled. Valid values are `PublishedVersions`.
 
@@ -375,8 +375,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import Lambda Functions using the `function_name`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Lambda Functions using the `function_name`. For example:
 
+```terraform
+import {
+  to = aws_lambda_function.test_lambda
+  id = "my_test_lambda_function"
+}
 ```
-$ terraform import aws_lambda_function.test_lambda my_test_lambda_function
+
+Using `terraform import`, import Lambda Functions using the `function_name`. For example:
+
+```console
+% terraform import aws_lambda_function.test_lambda my_test_lambda_function
 ```

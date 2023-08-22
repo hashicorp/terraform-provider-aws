@@ -79,8 +79,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import SNS platform applications using the ARN. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import SNS platform applications using the ARN. For example:
 
+```terraform
+import {
+  to = aws_sns_platform_application.gcm_application
+  id = "arn:aws:sns:us-west-2:0123456789012:app/GCM/gcm_application"
+}
 ```
-$ terraform import aws_sns_platform_application.gcm_application arn:aws:sns:us-west-2:0123456789012:app/GCM/gcm_application
+
+Using `terraform import`, import SNS platform applications using the ARN. For example:
+
+```console
+% terraform import aws_sns_platform_application.gcm_application arn:aws:sns:us-west-2:0123456789012:app/GCM/gcm_application
 ```

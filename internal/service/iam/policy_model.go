@@ -177,17 +177,27 @@ func (cs IAMPolicyStatementConditionSet) MarshalJSON() ([]byte, error) {
 		if _, ok := raw[c.Test]; !ok {
 			raw[c.Test] = map[string]interface{}{}
 		}
+		if _, ok := raw[c.Test][c.Variable]; !ok {
+			raw[c.Test][c.Variable] = []string{}
+		}
 		switch i := c.Values.(type) {
 		case []string:
-			if _, ok := raw[c.Test][c.Variable]; !ok {
-				raw[c.Test][c.Variable] = make([]string, 0, len(i))
-			}
 			// order matters with values so not sorting here
 			raw[c.Test][c.Variable] = append(raw[c.Test][c.Variable].([]string), i...)
 		case string:
-			raw[c.Test][c.Variable] = i
+			raw[c.Test][c.Variable] = append(raw[c.Test][c.Variable].([]string), i)
 		default:
 			return nil, fmt.Errorf("Unsupported data type for IAMPolicyStatementConditionSet: %s", i)
+		}
+	}
+
+	// flatten entries with a single item to match AWS IAM syntax
+	for k1 := range raw {
+		for k2 := range raw[k1] {
+			items := raw[k1][k2].([]string)
+			if len(items) == 1 {
+				raw[k1][k2] = items[0]
+			}
 		}
 	}
 

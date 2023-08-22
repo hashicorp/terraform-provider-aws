@@ -39,20 +39,6 @@ func ExpandFrameworkStringValueSet(ctx context.Context, set types.Set) Set[strin
 	return vs
 }
 
-func ExpandFrameworkStringValueMap(ctx context.Context, set types.Map) map[string]string {
-	if set.IsNull() || set.IsUnknown() {
-		return nil
-	}
-
-	var m map[string]string
-
-	if set.ElementsAs(ctx, &m, false).HasError() {
-		return nil
-	}
-
-	return m
-}
-
 // FlattenFrameworkStringSet converts a slice of string pointers to a framework Set value.
 //
 // A nil slice is converted to a null Set.

@@ -50,8 +50,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import ElastiCache user groups using the `user_group_id`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import ElastiCache user groups using the `user_group_id`. For example:
 
+```terraform
+import {
+  to = aws_elasticache_user_group.my_user_group
+  id = "userGoupId1"
+}
 ```
-$ terraform import aws_elasticache_user_group.my_user_group userGoupId1
+
+Using `terraform import`, import ElastiCache user groups using the `user_group_id`. For example:
+
+```console
+% terraform import aws_elasticache_user_group.my_user_group userGoupId1
 ```

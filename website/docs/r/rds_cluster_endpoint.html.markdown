@@ -99,10 +99,19 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import RDS Clusters Endpoint using the `cluster_endpoint_identifier`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import RDS Clusters Endpoint using the `cluster_endpoint_identifier`. For example:
 
+```terraform
+import {
+  to = aws_rds_cluster_endpoint.custom_reader
+  id = "aurora-prod-cluster-custom-reader"
+}
 ```
-$ terraform import aws_rds_cluster_endpoint.custom_reader aurora-prod-cluster-custom-reader
+
+Using `terraform import`, import RDS Clusters Endpoint using the `cluster_endpoint_identifier`. For example:
+
+```console
+% terraform import aws_rds_cluster_endpoint.custom_reader aurora-prod-cluster-custom-reader
 ```
 
 [1]: https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/Aurora.Overview.Endpoints.html#Aurora.Endpoints.Cluster

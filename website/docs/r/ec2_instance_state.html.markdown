@@ -73,8 +73,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-`aws_ec2_instance_state` can be imported by using the `instance_id` attribute, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_ec2_instance_state` using the `instance_id` attribute. For example:
 
+```terraform
+import {
+  to = aws_ec2_instance_state.test
+  id = "i-02cae6557dfcf2f96"
+}
 ```
-$ terraform import aws_ec2_instance_state.test i-02cae6557dfcf2f96
+
+Using `terraform import`, import `aws_ec2_instance_state` using the `instance_id` attribute. For example:
+
+```console
+% terraform import aws_ec2_instance_state.test i-02cae6557dfcf2f96
 ```

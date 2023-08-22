@@ -81,10 +81,19 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-`aws_imagebuilder_components` resources can be imported by using the Amazon Resource Name (ARN), e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_imagebuilder_components` resources using the Amazon Resource Name (ARN). For example:
 
+```terraform
+import {
+  to = aws_imagebuilder_component.example
+  id = "arn:aws:imagebuilder:us-east-1:123456789012:component/example/1.0.0/1"
+}
 ```
-$ terraform import aws_imagebuilder_component.example arn:aws:imagebuilder:us-east-1:123456789012:component/example/1.0.0/1
+
+Using `terraform import`, import `aws_imagebuilder_components` resources using the Amazon Resource Name (ARN). For example:
+
+```console
+% terraform import aws_imagebuilder_component.example arn:aws:imagebuilder:us-east-1:123456789012:component/example/1.0.0/1
 ```
 
 Certain resource arguments, such as `uri`, cannot be read via the API and imported into Terraform. Terraform will display a difference for these arguments the first run after import if declared in the Terraform configuration for an imported resource.

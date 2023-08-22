@@ -36,8 +36,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import Config aggregate authorizations using `account_id:region`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Config aggregate authorizations using `account_id:region`. For example:
 
+```terraform
+import {
+  to = aws_config_aggregate_authorization.example
+  id = "123456789012:us-east-1"
+}
 ```
-$ terraform import aws_config_aggregate_authorization.example 123456789012:us-east-1
+
+Using `terraform import`, import Config aggregate authorizations using `account_id:region`. For example:
+
+```console
+% terraform import aws_config_aggregate_authorization.example 123456789012:us-east-1
 ```

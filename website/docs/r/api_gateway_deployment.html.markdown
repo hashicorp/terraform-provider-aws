@@ -151,10 +151,19 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import `aws_api_gateway_deployment` using `REST-API-ID/DEPLOYMENT-ID`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_api_gateway_deployment` using `REST-API-ID/DEPLOYMENT-ID`. For example:
 
+```terraform
+import {
+  to = aws_api_gateway_deployment.example
+  id = "aabbccddee/1122334"
+}
 ```
-$ terraform import aws_api_gateway_deployment.example aabbccddee/1122334
+
+Using `terraform import`, import `aws_api_gateway_deployment` using `REST-API-ID/DEPLOYMENT-ID`. For example:
+
+```console
+% terraform import aws_api_gateway_deployment.example aabbccddee/1122334
 ```
 
 The `stage_name`, `stage_description`, and `variables` arguments cannot be imported. Use the [`aws_api_gateway_stage` resource](api_gateway_stage.html) to import and manage stages.

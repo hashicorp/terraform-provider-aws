@@ -188,8 +188,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import WAF Regional Web ACL Association using their `web_acl_id:resource_arn`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import WAF Regional Web ACL Association using their `web_acl_id:resource_arn`. For example:
 
+```terraform
+import {
+  to = aws_wafregional_web_acl_association.foo
+  id = "web_acl_id:resource_arn"
+}
 ```
-$ terraform import aws_wafregional_web_acl_association.foo web_acl_id:resource_arn
+
+Using `terraform import`, import WAF Regional Web ACL Association using their `web_acl_id:resource_arn`. For example:
+
+```console
+% terraform import aws_wafregional_web_acl_association.foo web_acl_id:resource_arn
 ```

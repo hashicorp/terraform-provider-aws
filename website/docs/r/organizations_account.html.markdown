@@ -50,13 +50,22 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-The AWS member account can be imported by using the `account_id`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import the AWS member account using the `account_id`. For example:
 
-```
-$ terraform import aws_organizations_account.my_account 111111111111
+```terraform
+import {
+  to = aws_organizations_account.my_account
+  id = "111111111111"
+}
 ```
 
-Certain resource arguments, like `role_name`, do not have an Organizations API method for reading the information after account creation. If the argument is set in the Terraform configuration on an imported resource, Terraform will always show a difference. To workaround this behavior, either omit the argument from the Terraform configuration or use [`ignore_changes`](https://www.terraform.io/docs/configuration/meta-arguments/lifecycle.html#ignore_changes) to hide the difference, e.g.,
+Using `terraform import`, import the AWS member account using the `account_id`. For example:
+
+```console
+% terraform import aws_organizations_account.my_account 111111111111
+```
+
+Certain resource arguments, like `role_name`, do not have an Organizations API method for reading the information after account creation. If the argument is set in the Terraform configuration on an imported resource, Terraform will always show a difference. To workaround this behavior, either omit the argument from the Terraform configuration or use [`ignore_changes`](https://www.terraform.io/docs/configuration/meta-arguments/lifecycle.html#ignore_changes) to hide the difference. For example:
 
 ```terraform
 resource "aws_organizations_account" "account" {

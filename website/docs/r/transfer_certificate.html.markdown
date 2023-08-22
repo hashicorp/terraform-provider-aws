@@ -39,14 +39,24 @@ This resource supports the following arguments:
 
 This resource exports the following attributes in addition to the arguments above:
 
+* `arn` - The ARN of the certificate
 * `certificate_id` - The unique identifier for the AS2 certificate
 * `active_date` - An date when the certificate becomes active
 * `inactive_date` - An date when the certificate becomes inactive
 
 ## Import
 
-Import Transfer AS2 Certificate using the `certificate_id`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Transfer AS2 Certificate using the `certificate_id`. For example:
 
+```terraform
+import {
+  to = aws_transfer_certificate.example
+  id = "c-4221a88afd5f4362a"
+}
 ```
-$ terraform import aws_transfer_certificate.example c-4221a88afd5f4362a
+
+Using `terraform import`, import Transfer AS2 Certificate using the `certificate_id`. For example:
+
+```console
+% terraform import aws_transfer_certificate.example c-4221a88afd5f4362a
 ```

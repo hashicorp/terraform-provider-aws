@@ -119,7 +119,7 @@ This argument supports the following arguments:
 must contain only alphanumeric characters or hyphens, and must not begin or end with a hyphen. If not specified,
 Terraform will autogenerate a name beginning with `tf-lb`.
 * `name_prefix` - (Optional) Creates a unique name beginning with the specified prefix. Conflicts with `name`.
-* `security_groups` - (Optional) A list of security group IDs to assign to the LB. Only valid for Load Balancers of type `application`.
+* `security_groups` - (Optional) A list of security group IDs to assign to the LB. Only valid for Load Balancers of type `application` or `network`. For load balancers of type `network` security groups cannot be added if none are currently present, and cannot all be removed once added. If either of these conditions are met, this will force a recreation of the resource.
 * `preserve_host_header` - (Optional) Indicates whether the Application Load Balancer should preserve the Host header in the HTTP request and send it to the target without any change. Defaults to `false`.
 * `subnet_mapping` - (Optional) A subnet mapping block as documented below.
 * `subnets` - (Optional) A list of subnet IDs to attach to the LB. Subnets
@@ -163,8 +163,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import LBs using their ARN. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import LBs using their ARN. For example:
 
+```terraform
+import {
+  to = aws_lb.bar
+  id = "arn:aws:elasticloadbalancing:us-west-2:123456789012:loadbalancer/app/my-load-balancer/50dc6c495c0c9188"
+}
 ```
-$ terraform import aws_lb.bar arn:aws:elasticloadbalancing:us-west-2:123456789012:loadbalancer/app/my-load-balancer/50dc6c495c0c9188
+
+Using `terraform import`, import LBs using their ARN. For example:
+
+```console
+% terraform import aws_lb.bar arn:aws:elasticloadbalancing:us-west-2:123456789012:loadbalancer/app/my-load-balancer/50dc6c495c0c9188
 ```

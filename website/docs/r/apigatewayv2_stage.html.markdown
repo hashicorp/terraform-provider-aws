@@ -84,10 +84,19 @@ See the [Amazon API Gateway Developer Guide](https://docs.aws.amazon.com/apigate
 
 ## Import
 
-`aws_apigatewayv2_stage` can be imported by using the API identifier and stage name, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_apigatewayv2_stage` using the API identifier and stage name. For example:
 
+```terraform
+import {
+  to = aws_apigatewayv2_stage.example
+  id = "aabbccddee/example-stage"
+}
 ```
-$ terraform import aws_apigatewayv2_stage.example aabbccddee/example-stage
+
+Using `terraform import`, import `aws_apigatewayv2_stage` using the API identifier and stage name. For example:
+
+```console
+% terraform import aws_apigatewayv2_stage.example aabbccddee/example-stage
 ```
 
 -> **Note:** The API Gateway managed stage created as part of [_quick_create_](https://docs.aws.amazon.com/apigateway/latest/developerguide/api-gateway-basic-concept.html#apigateway-definition-quick-create) cannot be imported.

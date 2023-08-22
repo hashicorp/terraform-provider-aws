@@ -79,7 +79,7 @@ This resource supports the following arguments:
 
 * `api_id` - (Required) API ID for the GraphQL API for the data source.
 * `name` - (Required) User-supplied name for the data source.
-* `type` - (Required) Type of the Data Source. Valid values: `AWS_LAMBDA`, `AMAZON_DYNAMODB`, `AMAZON_ELASTICSEARCH`, `HTTP`, `NONE`, `RELATIONAL_DATABASE`, `AMAZON_EVENTBRIDGE`.
+* `type` - (Required) Type of the Data Source. Valid values: `AWS_LAMBDA`, `AMAZON_DYNAMODB`, `AMAZON_ELASTICSEARCH`, `HTTP`, `NONE`, `RELATIONAL_DATABASE`, `AMAZON_EVENTBRIDGE`, `AMAZON_OPENSEARCH_SERVICE`.
 * `description` - (Optional) Description of the data source.
 * `dynamodb_config` - (Optional) DynamoDB settings. See [DynamoDB Config](#dynamodb-config)
 * `elasticsearch_config` - (Optional) Amazon Elasticsearch settings. See [ElasticSearch Config](#elasticsearch-config)
@@ -178,8 +178,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import `aws_appsync_datasource` using the `api_id`, a hyphen, and `name`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_appsync_datasource` using the `api_id`, a hyphen, and `name`. For example:
 
+```terraform
+import {
+  to = aws_appsync_datasource.example
+  id = "abcdef123456-example"
+}
 ```
-$ terraform import aws_appsync_datasource.example abcdef123456-example
+
+Using `terraform import`, import `aws_appsync_datasource` using the `api_id`, a hyphen, and `name`. For example:
+
+```console
+% terraform import aws_appsync_datasource.example abcdef123456-example
 ```

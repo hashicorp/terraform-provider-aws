@@ -32,8 +32,17 @@ This resource exports no additional attributes.
 
 ## Import
 
-Default EBS encryption state can be imported, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import the default EBS encryption state. For example:
 
+```terraform
+import {
+  to = aws_ebs_encryption_by_default.example
+  id = "default"
+}
 ```
-$ terraform import aws_ebs_encryption_by_default.example default
+
+Using `terraform import`, import the default EBS encryption state. For example:
+
+```console
+% terraform import aws_ebs_encryption_by_default.example default
 ```

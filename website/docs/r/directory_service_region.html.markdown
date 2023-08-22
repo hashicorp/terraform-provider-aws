@@ -148,8 +148,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import Replicated Regions using directory ID,Region name. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Replicated Regions using directory ID,Region name. For example:
 
+```terraform
+import {
+  to = aws_directory_service_region.example
+  id = "d-9267651497,us-east-2"
+}
 ```
-$ terraform import aws_directory_service_region.example d-9267651497,us-east-2
+
+Using `terraform import`, import Replicated Regions using directory ID,Region name. For example:
+
+```console
+% terraform import aws_directory_service_region.example d-9267651497,us-east-2
 ```

@@ -54,8 +54,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-`aws_datasync_location_smb` can be imported by using the Amazon Resource Name (ARN), e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_datasync_location_smb` using the Amazon Resource Name (ARN). For example:
 
+```terraform
+import {
+  to = aws_datasync_location_smb.example
+  id = "arn:aws:datasync:us-east-1:123456789012:location/loc-12345678901234567"
+}
 ```
-$ terraform import aws_datasync_location_smb.example arn:aws:datasync:us-east-1:123456789012:location/loc-12345678901234567
+
+Using `terraform import`, import `aws_datasync_location_smb` using the Amazon Resource Name (ARN). For example:
+
+```console
+% terraform import aws_datasync_location_smb.example arn:aws:datasync:us-east-1:123456789012:location/loc-12345678901234567
 ```

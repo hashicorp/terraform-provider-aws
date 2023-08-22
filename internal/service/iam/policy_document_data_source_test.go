@@ -74,6 +74,25 @@ func TestAccIAMPolicyDocumentDataSource_multipleConditionKeys(t *testing.T) {
 	})
 }
 
+func TestAccIAMPolicyDocumentDataSource_duplicateConditionKeys(t *testing.T) {
+	ctx := acctest.Context(t)
+	dataSourceName := "data.aws_iam_policy_document.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, iam.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccPolicyDocumentDataSourceConfig_duplicateConditionKeys,
+				Check: resource.ComposeTestCheckFunc(
+					acctest.CheckResourceAttrEquivalentJSON(dataSourceName, "json", testAccPolicyDocumentConfig_duplicateConditionKeys_ExpectedJSON),
+				),
+			},
+		},
+	})
+}
+
 func TestAccIAMPolicyDocumentDataSource_conditionWithBoolValue(t *testing.T) {
 	ctx := acctest.Context(t)
 	resource.ParallelTest(t, resource.TestCase{
@@ -655,6 +674,57 @@ var testAccPolicyDocumentConfig_multipleConditionKeys_ExpectedJSON = `{
         "StringEquals": {
           "s3:x-amz-acl": "bucket-owner-full-control",
           "aws:SourceArn": "some-other-value"
+        }
+      }
+    }
+  ]
+}
+`
+
+const testAccPolicyDocumentDataSourceConfig_duplicateConditionKeys = `
+data "aws_iam_policy_document" "test" {
+  statement {
+    sid = "DuplicateConditionTest"
+
+    effect = "Allow"
+
+    principals {
+      type        = "Service"
+      identifiers = ["cloudtrail.amazonaws.com"]
+    }
+
+    actions = ["s3:PutObject"]
+
+    resources = ["*"]
+
+    condition {
+      test     = "StringEquals"
+      variable = "s3:prefix"
+      values   = ["one/", "two/"]
+    }
+    condition {
+      test     = "StringEquals"
+      variable = "s3:prefix"
+      values   = ["three/"]
+    }
+  }
+}
+`
+
+const testAccPolicyDocumentConfig_duplicateConditionKeys_ExpectedJSON = `{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "DuplicateConditionTest",
+      "Effect": "Allow",
+      "Action": "s3:PutObject",
+      "Resource": "*",
+      "Principal": {
+        "Service": "cloudtrail.amazonaws.com"
+      },
+      "Condition": {
+        "StringEquals": {
+          "s3:prefix": ["one/", "two/", "three/"]
         }
       }
     }
@@ -1409,12 +1479,8 @@ func testAccPolicyDocumentConditionWithBoolValueExpectedJSON() string {
                     "aws:ResourceTag/SpecialTag": "false"
                 },
                 "StringLike": {
-                    "aws:ResourceAccount": [
-                        "123456"
-                    ],
-                    "aws:PrincipalArn": [
-						"arn:%[1]s:iam::*:role/AWSAFTExecution"
-					]
+                    "aws:ResourceAccount": "123456",
+                    "aws:PrincipalArn": "arn:%[1]s:iam::*:role/AWSAFTExecution"
                 }
             }
         }

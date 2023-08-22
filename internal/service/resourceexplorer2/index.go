@@ -161,9 +161,9 @@ func (r *resourceIndex) Read(ctx context.Context, request resource.ReadRequest, 
 		return
 	}
 
-	if err := flex.Flatten(ctx, output, &data); err != nil {
-		response.Diagnostics.AddError("flattening data", err.Error())
+	response.Diagnostics.Append(flex.Flatten(ctx, output, &data)...)
 
+	if response.Diagnostics.HasError() {
 		return
 	}
 

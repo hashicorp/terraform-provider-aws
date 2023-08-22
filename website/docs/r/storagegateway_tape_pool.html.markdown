@@ -38,8 +38,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-`aws_storagegateway_tape_pool` can be imported by using the volume Amazon Resource Name (ARN), e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_storagegateway_tape_pool` using the volume Amazon Resource Name (ARN). For example:
 
+```terraform
+import {
+  to = aws_storagegateway_tape_pool.example
+  id = "arn:aws:storagegateway:us-east-1:123456789012:tapepool/pool-12345678"
+}
 ```
-$ terraform import aws_storagegateway_tape_pool.example arn:aws:storagegateway:us-east-1:123456789012:tapepool/pool-12345678
+
+Using `terraform import`, import `aws_storagegateway_tape_pool` using the volume Amazon Resource Name (ARN). For example:
+
+```console
+% terraform import aws_storagegateway_tape_pool.example arn:aws:storagegateway:us-east-1:123456789012:tapepool/pool-12345678
 ```

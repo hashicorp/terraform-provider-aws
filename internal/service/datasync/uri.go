@@ -11,7 +11,7 @@ import (
 )
 
 var (
-	locationURIPattern                      = regexp.MustCompile(`^(efs|hdfs|nfs|s3|smb|fsx[a-z0-9]+)://(.+)$`)
+	locationURIPattern                      = regexp.MustCompile(`^(azure-blob|efs|fsx[a-z0-9-]+|hdfs|nfs|s3|smb)://(.+)$`)
 	locationURIGlobalIDAndSubdirPattern     = regexp.MustCompile(`^([a-zA-Z0-9.\-]+)(?::\d{0,5})?(/.*)$`)
 	s3OutpostsAccessPointARNResourcePattern = regexp.MustCompile(`^outpost/.*/accesspoint/.*?(/.*)$`)
 )

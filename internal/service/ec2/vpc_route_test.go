@@ -3316,6 +3316,10 @@ func testAccVPCRouteConfig_resourceIPv4Endpoint(rName, destinationCidr string) s
 		fmt.Sprintf(`
 data "aws_caller_identity" "current" {}
 
+data "aws_iam_session_context" "current" {
+  arn = data.aws_caller_identity.current.arn
+}
+
 resource "aws_vpc" "test" {
   cidr_block = "10.10.10.0/25"
 
@@ -3345,7 +3349,7 @@ resource "aws_lb" "test" {
 
 resource "aws_vpc_endpoint_service" "test" {
   acceptance_required        = false
-  allowed_principals         = [data.aws_caller_identity.current.arn]
+  allowed_principals         = [data.aws_iam_session_context.current.issuer_arn]
   gateway_load_balancer_arns = [aws_lb.test.arn]
 
   tags = {
@@ -3386,6 +3390,10 @@ func testAccVPCRouteConfig_resourceIPv6Endpoint(rName, destinationIpv6Cidr strin
 		fmt.Sprintf(`
 data "aws_caller_identity" "current" {}
 
+data "aws_iam_session_context" "current" {
+  arn = data.aws_caller_identity.current.arn
+}
+
 resource "aws_vpc" "test" {
   cidr_block = "10.10.10.0/25"
 
@@ -3415,7 +3423,7 @@ resource "aws_lb" "test" {
 
 resource "aws_vpc_endpoint_service" "test" {
   acceptance_required        = false
-  allowed_principals         = [data.aws_caller_identity.current.arn]
+  allowed_principals         = [data.aws_iam_session_context.current.issuer_arn]
   gateway_load_balancer_arns = [aws_lb.test.arn]
 
   tags = {
@@ -3570,6 +3578,10 @@ resource "aws_nat_gateway" "test" {
 
 data "aws_caller_identity" "current" {}
 
+data "aws_iam_session_context" "current" {
+  arn = data.aws_caller_identity.current.arn
+}
+
 resource "aws_lb" "test" {
   load_balancer_type = "gateway"
   name               = %[1]q
@@ -3581,7 +3593,7 @@ resource "aws_lb" "test" {
 
 resource "aws_vpc_endpoint_service" "test" {
   acceptance_required        = false
-  allowed_principals         = [data.aws_caller_identity.current.arn]
+  allowed_principals         = [data.aws_iam_session_context.current.issuer_arn]
   gateway_load_balancer_arns = [aws_lb.test.arn]
 
   tags = {

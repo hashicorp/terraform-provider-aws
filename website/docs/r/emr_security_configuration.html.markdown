@@ -56,8 +56,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import EMR Security Configurations using the `name`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import EMR Security Configurations using the `name`. For example:
 
+```terraform
+import {
+  to = aws_emr_security_configuration.sc
+  id = "example-sc-name"
+}
 ```
-$ terraform import aws_emr_security_configuration.sc example-sc-name
+
+Using `terraform import`, import EMR Security Configurations using the `name`. For example:
+
+```console
+% terraform import aws_emr_security_configuration.sc example-sc-name
 ```

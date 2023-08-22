@@ -52,10 +52,21 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-~> *NOTE* This resource does not require explicit import and will assume management of an existing service quota on Terraform resource creation.
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_servicequotas_service_quota` using the service code and quota code, separated by a front slash (`/`). For example:
 
-`aws_servicequotas_service_quota` can be imported by using the service code and quota code, separated by a front slash (`/`), e.g.,
+~> **NOTE:** This resource does not require explicit import and will assume management of an existing service quota on Terraform resource creation.
 
+```terraform
+import {
+  to = aws_servicequotas_service_quota.example
+  id = "vpc/L-F678F1CE"
+}
 ```
-$ terraform import aws_servicequotas_service_quota.example vpc/L-F678F1CE
+
+Using `terraform import`, import `aws_servicequotas_service_quota` using the service code and quota code, separated by a front slash (`/`). For example:
+
+~> **NOTE:** This resource does not require explicit import and will assume management of an existing service quota on Terraform resource creation.
+
+```console
+% terraform import aws_servicequotas_service_quota.example vpc/L-F678F1CE
 ```

@@ -61,8 +61,17 @@ This resource exports no additional attributes.
 
 ## Import
 
-Import Cognito Identity Pool Roles Attachment using the Identity Pool ID and provider name. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Cognito Identity Pool Roles Attachment using the Identity Pool ID and provider name. For example:
 
+```terraform
+import {
+  to = aws_cognito_identity_pool_provider_principal_tag.example
+  id = "us-west-2_abc123:CorpAD"
+}
 ```
-$ terraform import aws_cognito_identity_pool_provider_principal_tag.example us-west-2_abc123:CorpAD
+
+Using `terraform import`, import Cognito Identity Pool Roles Attachment using the Identity Pool ID and provider name. For example:
+
+```console
+% terraform import aws_cognito_identity_pool_provider_principal_tag.example us-west-2_abc123:CorpAD
 ```

@@ -127,8 +127,17 @@ to fulfill TargetSpotCapacity. This provisioned capacity might be less than or g
 
 ## Import
 
-Import EMR Instance Fleet using the EMR Cluster identifier and Instance Fleet identifier separated by a forward slash (`/`). For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import EMR Instance Fleet using the EMR Cluster identifier and Instance Fleet identifier separated by a forward slash (`/`). For example:
+
+```terraform
+import {
+  to = aws_emr_instance_fleet.example
+  id = "j-123456ABCDEF/if-15EK4O09RZLNR"
+}
+```
+
+Using `terraform import`, import EMR Instance Fleet using the EMR Cluster identifier and Instance Fleet identifier separated by a forward slash (`/`). For example:
 
 ```console
-$ terraform import aws_emr_instance_fleet.example j-123456ABCDEF/if-15EK4O09RZLNR
+% terraform import aws_emr_instance_fleet.example j-123456ABCDEF/if-15EK4O09RZLNR
 ```

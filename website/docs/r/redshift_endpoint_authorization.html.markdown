@@ -40,8 +40,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import Redshift endpoint authorization using the `id`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Redshift endpoint authorization using the `id`. For example:
 
+```terraform
+import {
+  to = aws_redshift_endpoint_authorization.example
+  id = "01234567910:cluster-example-id"
+}
 ```
-$ terraform import aws_redshift_endpoint_authorization.example 01234567910:cluster-example-id
+
+Using `terraform import`, import Redshift endpoint authorization using the `id`. For example:
+
+```console
+% terraform import aws_redshift_endpoint_authorization.example 01234567910:cluster-example-id
 ```

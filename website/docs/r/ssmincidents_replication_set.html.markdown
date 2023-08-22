@@ -132,8 +132,17 @@ In addition to the preceding arguments, the `region` configuration block exports
 
 ## Import
 
-Use the following command to import an Incident Manager replication set:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import an Incident Manager replication. For example:
 
+```terraform
+import {
+  to = aws_ssmincidents_replication_set.replicationSetName
+  id = "import"
+}
 ```
-$ terraform import aws_ssmincidents_replication_set.replicationSetName import
+
+Using `terraform import`, import an Incident Manager replication. For example:
+
+```console
+% terraform import aws_ssmincidents_replication_set.replicationSetName import
 ```

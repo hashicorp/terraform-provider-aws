@@ -95,8 +95,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import SESv2 (Simple Email V2) Email Identity using the `email_identity`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import SESv2 (Simple Email V2) Email Identity using the `email_identity`. For example:
 
+```terraform
+import {
+  to = aws_sesv2_email_identity.example
+  id = "example.com"
+}
 ```
-$ terraform import aws_sesv2_email_identity.example example.com
+
+Using `terraform import`, import SESv2 (Simple Email V2) Email Identity using the `email_identity`. For example:
+
+```console
+% terraform import aws_sesv2_email_identity.example example.com
 ```

@@ -171,8 +171,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-`aws_ec2_transit_gateway_multicast_domain` can be imported by using the EC2 Transit Gateway Multicast Domain identifier, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_ec2_transit_gateway_multicast_domain` using the EC2 Transit Gateway Multicast Domain identifier. For example:
 
+```terraform
+import {
+  to = aws_ec2_transit_gateway_multicast_domain.example
+  id = "tgw-mcast-domain-12345"
+}
 ```
-terraform import aws_ec2_transit_gateway_multicast_domain.example tgw-mcast-domain-12345
+
+Using `terraform import`, import `aws_ec2_transit_gateway_multicast_domain` using the EC2 Transit Gateway Multicast Domain identifier. For example:
+
+```console
+% terraform import aws_ec2_transit_gateway_multicast_domain.example tgw-mcast-domain-12345
 ```

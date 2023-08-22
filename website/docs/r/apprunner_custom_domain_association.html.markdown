@@ -48,9 +48,17 @@ The configuration block consists of the following arguments:
 
 ## Import
 
-App Runner Custom Domain Associations can be imported by using the `domain_name` and `service_arn` separated by a comma (`,`), e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import App Runner Custom Domain Associations using the `domain_name` and `service_arn` separated by a comma (`,`). For example:
 
+```terraform
+import {
+  to = aws_apprunner_custom_domain_association.example
+  id = "example.com,arn:aws:apprunner:us-east-1:123456789012:service/example-app/8fe1e10304f84fd2b0df550fe98a71fa"
+}
 ```
-$ terraform import aws_apprunner_custom_domain_association.example example.com,arn:aws:apprunner:us-east-1:123456789012:service/example-
-app/8fe1e10304f84fd2b0df550fe98a71fa
+
+Using `terraform import`, import App Runner Custom Domain Associations using the `domain_name` and `service_arn` separated by a comma (`,`). For example:
+
+```console
+% terraform import aws_apprunner_custom_domain_association.example example.com,arn:aws:apprunner:us-east-1:123456789012:service/example-app/8fe1e10304f84fd2b0df550fe98a71fa
 ```

@@ -94,7 +94,7 @@ This resource supports the following arguments:
 * `targets` - (Optional) A block containing the targets of the SSM association. Targets are documented below. AWS currently supports a maximum of 5 targets.
 * `compliance_severity` - (Optional) The compliance severity for the association. Can be one of the following: `UNSPECIFIED`, `LOW`, `MEDIUM`, `HIGH` or `CRITICAL`
 * `max_concurrency` - (Optional) The maximum number of targets allowed to run the association at the same time. You can specify a number, for example 10, or a percentage of the target set, for example 10%.
-* `max_errors` - (Optional) The number of errors that are allowed before the system stops sending requests to run the association on additional targets. You can specify a number, for example 10, or a percentage of the target set, for example 10%.
+* `max_errors` - (Optional) The number of errors that are allowed before the system stops sending requests to run the association on additional targets. You can specify a number, for example 10, or a percentage of the target set, for example 10%. If you specify a threshold of 3, the stop command is sent when the fourth error is returned. If you specify a threshold of 10% for 50 associations, the stop command is sent when the sixth error is returned.
 * `automation_target_parameter_name` - (Optional) Specify the target for the association. This target is required for associations that use an `Automation` document and target resources by using rate controls. This should be set to the SSM document `parameter` that will define how your automation will branch out.
 * `wait_for_success_timeout_seconds` - (Optional) The number of seconds to wait for the association status to be `Success`. If `Success` status is not reached within the given time, create opration will fail.
 
@@ -121,8 +121,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import SSM associations using the `association_id`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import SSM associations using the `association_id`. For example:
 
+```terraform
+import {
+  to = aws_ssm_association.test-association
+  id = "10abcdef-0abc-1234-5678-90abcdef123456"
+}
 ```
-$ terraform import aws_ssm_association.test-association 10abcdef-0abc-1234-5678-90abcdef123456
+
+Using `terraform import`, import SSM associations using the `association_id`. For example:
+
+```console
+% terraform import aws_ssm_association.test-association 10abcdef-0abc-1234-5678-90abcdef123456
 ```

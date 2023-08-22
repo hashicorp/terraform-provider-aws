@@ -46,8 +46,17 @@ This resource exports no additional attributes.
 
 ## Import
 
-Import Redshift Snapshot Schedule Association using the `<cluster-identifier>/<schedule-identifier>`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Redshift Snapshot Schedule Association using the `<cluster-identifier>/<schedule-identifier>`. For example:
 
+```terraform
+import {
+  to = aws_redshift_snapshot_schedule_association.default
+  id = "tf-redshift-cluster/tf-redshift-snapshot-schedule"
+}
 ```
-$ terraform import aws_redshift_snapshot_schedule_association.default tf-redshift-cluster/tf-redshift-snapshot-schedule
+
+Using `terraform import`, import Redshift Snapshot Schedule Association using the `<cluster-identifier>/<schedule-identifier>`. For example:
+
+```console
+% terraform import aws_redshift_snapshot_schedule_association.default tf-redshift-cluster/tf-redshift-snapshot-schedule
 ```

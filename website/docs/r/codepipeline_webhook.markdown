@@ -138,8 +138,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-CodePipeline Webhooks can be imported by their ARN, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import CodePipeline Webhooks using their ARN. For example:
 
+```terraform
+import {
+  to = aws_codepipeline_webhook.example
+  id = "arn:aws:codepipeline:us-west-2:123456789012:webhook:example"
+}
 ```
-$ terraform import aws_codepipeline_webhook.example arn:aws:codepipeline:us-west-2:123456789012:webhook:example
+
+Using `terraform import`, import CodePipeline Webhooks using their ARN. For example:
+
+```console
+% terraform import aws_codepipeline_webhook.example arn:aws:codepipeline:us-west-2:123456789012:webhook:example
 ```

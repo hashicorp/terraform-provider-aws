@@ -45,7 +45,7 @@ The following arguments are required:
 
 * `endpoint_id` - (Required) Database endpoint identifier. Identifiers must contain from 1 to 255 alphanumeric characters or hyphens, begin with a letter, contain only ASCII letters, digits, and hyphens, not end with a hyphen, and not contain two consecutive hyphens.
 * `endpoint_type` - (Required) Type of endpoint. Valid values are `source`, `target`.
-* `engine_name` - (Required) Type of engine for the endpoint. Valid values are `aurora`, `aurora-postgresql`, `azuredb`, `azure-sql-managed-instance`, `db2`, `db2-zos`, `docdb`, `dynamodb`, `elasticsearch`, `kafka`, `kinesis`, `mariadb`, `mongodb`, `mysql`, `opensearch`, `oracle`, `postgres`, `redshift`, `s3`, `sqlserver`, `sybase`. Please note that some of engine names are available only for `target` endpoint type (e.g. `redshift`).
+* `engine_name` - (Required) Type of engine for the endpoint. Valid values are `aurora`, `aurora-postgresql`, `azuredb`, `azure-sql-managed-instance`, `babelfish`, `db2`, `db2-zos`, `docdb`, `dynamodb`, `elasticsearch`, `kafka`, `kinesis`, `mariadb`, `mongodb`, `mysql`, `opensearch`, `oracle`, `postgres`, `redshift`, `s3`, `sqlserver`, `sybase`. Please note that some of engine names are available only for `target` endpoint type (e.g. `redshift`).
 * `kms_key_arn` - (Required when `engine_name` is `mongodb`, cannot be set when `engine_name` is `s3`, optional otherwise) ARN for the KMS key that will be used to encrypt the connection parameters. If you do not specify a value for `kms_key_arn`, then AWS DMS will use your default encryption key. AWS KMS creates the default encryption key for your AWS account. Your AWS account has a different default encryption key for each AWS region. To encrypt an S3 target with a KMS Key, use the parameter `s3_settings.server_side_encryption_kms_key_id`. When `engine_name` is `redshift`, `kms_key_arn` is the KMS Key for the Redshift target and the parameter `redshift_settings.server_side_encryption_kms_key_id` encrypts the S3 intermediate storage.
 
 The following arguments are optional:
@@ -208,8 +208,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import Endpoints using the `endpoint_id`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import endpoints using the `endpoint_id`. For example:
 
+```terraform
+import {
+  to = aws_dms_endpoint.test
+  id = "test-dms-endpoint-tf"
+}
 ```
-$ terraform import aws_dms_endpoint.test test-dms-endpoint-tf
+
+Using `terraform import`, import endpoints using the `endpoint_id`. For example:
+
+```console
+% terraform import aws_dms_endpoint.test test-dms-endpoint-tf
 ```

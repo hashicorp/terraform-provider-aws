@@ -232,15 +232,24 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-`aws_rds_global_cluster` can be imported by using the RDS Global Cluster identifier, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_rds_global_cluster` using the RDS Global Cluster identifier. For example:
 
+```terraform
+import {
+  to = aws_rds_global_cluster.example
+  id = "example"
+}
 ```
-$ terraform import aws_rds_global_cluster.example example
+
+Using `terraform import`, import `aws_rds_global_cluster` using the RDS Global Cluster identifier. For example:
+
+```console
+% terraform import aws_rds_global_cluster.example example
 ```
 
 Certain resource arguments, like `force_destroy`, only exist within Terraform. If the argument is set in the Terraform configuration on an imported resource, Terraform will show a difference on the first plan after import to update the state value. This change is safe to apply immediately so the state matches the desired configuration.
 
-Certain resource arguments, like `source_db_cluster_identifier`, do not have an API method for reading the information after creation. If the argument is set in the Terraform configuration on an imported resource, Terraform will always show a difference. To workaround this behavior, either omit the argument from the Terraform configuration or use [`ignore_changes`](https://www.terraform.io/docs/configuration/meta-arguments/lifecycle.html#ignore_changes) to hide the difference, e.g.,
+Certain resource arguments, like `source_db_cluster_identifier`, do not have an API method for reading the information after creation. If the argument is set in the Terraform configuration on an imported resource, Terraform will always show a difference. To workaround this behavior, either omit the argument from the Terraform configuration or use [`ignore_changes`](https://www.terraform.io/docs/configuration/meta-arguments/lifecycle.html#ignore_changes) to hide the difference. For example:
 
 ```terraform
 resource "aws_rds_global_cluster" "example" {

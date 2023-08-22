@@ -72,8 +72,17 @@ This resource exports no additional attributes.
 
 ## Import
 
-Import Cognito User Groups using the `user_pool_id`/`name` attributes concatenated. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Cognito User Groups using the `user_pool_id`/`name` attributes concatenated. For example:
 
+```terraform
+import {
+  to = aws_cognito_user_group.group
+  id = "us-east-1_vG78M4goG/user-group"
+}
 ```
-$ terraform import aws_cognito_user_group.group us-east-1_vG78M4goG/user-group
+
+Using `terraform import`, import Cognito User Groups using the `user_pool_id`/`name` attributes concatenated. For example:
+
+```console
+% terraform import aws_cognito_user_group.group us-east-1_vG78M4goG/user-group
 ```

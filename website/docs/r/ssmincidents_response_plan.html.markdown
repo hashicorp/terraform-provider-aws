@@ -156,8 +156,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-To import an Incident Manager response plan, specify the response plan ARN. You can find the response plan ARN in the AWS Management Console. Use the following command to run the import operation:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import an Incident Manager response plan using the response plan ARN. You can find the response plan ARN in the AWS Management Console. For example:
 
+```terraform
+import {
+  to = aws_ssmincidents_response_plan.responsePlanName
+  id = "ARNValue"
+}
 ```
-$ terraform import aws_ssmincidents_response_plan.responsePlanName ARNValue
+
+Using `terraform import`, import an Incident Manager response plan using the response plan ARN. You can find the response plan ARN in the AWS Management Console. For example:
+
+```console
+% terraform import aws_ssmincidents_response_plan.responsePlanName ARNValue
 ```

@@ -62,8 +62,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import {{ .HumanFriendlyService }} {{ .HumanResourceName }} using the `example_id_arg`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import {{ .HumanFriendlyService }} {{ .HumanResourceName }} using the `example_id_arg`. For example:
 
+```terraform
+import {
+  to = aws_{{ .ServicePackage }}_{{ .ResourceSnake }}.example
+  id = "{{ .ResourceSnake }}-id-12345678"
+}
 ```
-$ terraform import aws_{{ .ServicePackage }}_{{ .ResourceSnake }}.example rft-8012925589
+
+Using `terraform import`, import {{ .HumanFriendlyService }} {{ .HumanResourceName }} using the `example_id_arg`. For example:
+
+```console
+% terraform import aws_{{ .ServicePackage }}_{{ .ResourceSnake }}.example {{ .ResourceSnake }}-id-12345678
 ```

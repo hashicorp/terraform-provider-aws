@@ -45,8 +45,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Route53 Recovery Readiness cells can be imported via the cell name, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Route53 Recovery Readiness cells using the cell name. For example:
 
+```terraform
+import {
+  to = aws_route53recoveryreadiness_cell.us-west-2-failover-cell
+  id = "us-west-2-failover-cell"
+}
 ```
-$ terraform import aws_route53recoveryreadiness_cell.us-west-2-failover-cell us-west-2-failover-cell
+
+Using `terraform import`, import Route53 Recovery Readiness cells using the cell name. For example:
+
+```console
+% terraform import aws_route53recoveryreadiness_cell.us-west-2-failover-cell us-west-2-failover-cell
 ```

@@ -181,8 +181,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-`aws_acmpca_certificate_authority` can be imported by using the certificate authority ARN, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_acmpca_certificate_authority` using the certificate authority ARN. For example:
 
+```terraform
+import {
+  to = aws_acmpca_certificate_authority.example
+  id = "arn:aws:acm-pca:us-east-1:123456789012:certificate-authority/12345678-1234-1234-1234-123456789012"
+}
 ```
-$ terraform import aws_acmpca_certificate_authority.example arn:aws:acm-pca:us-east-1:123456789012:certificate-authority/12345678-1234-1234-1234-123456789012
+
+Using `terraform import`, import `aws_acmpca_certificate_authority` using the certificate authority ARN. For example:
+
+```console
+% terraform import aws_acmpca_certificate_authority.example arn:aws:acm-pca:us-east-1:123456789012:certificate-authority/12345678-1234-1234-1234-123456789012
 ```

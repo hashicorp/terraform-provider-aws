@@ -147,8 +147,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import an AWS FinSpace Kx Environment using the `id`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import an AWS FinSpace Kx Environment using the `id`. For example:
 
+```terraform
+import {
+  to = aws_finspace_kx_environment.example
+  id = "n3ceo7wqxoxcti5tujqwzs"
+}
 ```
-$ terraform import aws_finspace_kx_environment.example n3ceo7wqxoxcti5tujqwzs
+
+Using `terraform import`, import an AWS FinSpace Kx Environment using the `id`. For example:
+
+```console
+% terraform import aws_finspace_kx_environment.example n3ceo7wqxoxcti5tujqwzs
 ```

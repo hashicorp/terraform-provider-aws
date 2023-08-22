@@ -61,8 +61,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-`aws_api_gateway_rest_api_policy` can be imported by using the REST API ID, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_api_gateway_rest_api_policy` using the REST API ID. For example:
 
+```terraform
+import {
+  to = aws_api_gateway_rest_api_policy.example
+  id = "12345abcde"
+}
 ```
-$ terraform import aws_api_gateway_rest_api_policy.example 12345abcde
+
+Using `terraform import`, import `aws_api_gateway_rest_api_policy` using the REST API ID. For example:
+
+```console
+% terraform import aws_api_gateway_rest_api_policy.example 12345abcde
 ```

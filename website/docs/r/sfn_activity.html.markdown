@@ -36,8 +36,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import Activities using the `arn`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import activities using the `arn`. For example:
 
+```terraform
+import {
+  to = aws_sfn_activity.foo
+  id = "arn:aws:states:eu-west-1:123456789098:activity:bar"
+}
 ```
-$ terraform import aws_sfn_activity.foo arn:aws:states:eu-west-1:123456789098:activity:bar
+
+Using `terraform import`, import activities using the `arn`. For example:
+
+```console
+% terraform import aws_sfn_activity.foo arn:aws:states:eu-west-1:123456789098:activity:bar
 ```

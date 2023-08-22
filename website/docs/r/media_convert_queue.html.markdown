@@ -47,8 +47,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Media Convert Queue can be imported via the queue name, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Media Convert Queue using the queue name. For example:
 
+```terraform
+import {
+  to = aws_media_convert_queue.test
+  id = "tf-test-queue"
+}
 ```
-$ terraform import aws_media_convert_queue.test tf-test-queue
+
+Using `terraform import`, import Media Convert Queue using the queue name. For example:
+
+```console
+% terraform import aws_media_convert_queue.test tf-test-queue
 ```

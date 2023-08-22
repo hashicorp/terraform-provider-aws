@@ -22,7 +22,7 @@ func visualsSchema() *schema.Schema {
 	return &schema.Schema{ // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_SheetControlLayout.html
 		Type:     schema.TypeList,
 		MinItems: 1,
-		MaxItems: 30,
+		MaxItems: 50,
 		Optional: true,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
@@ -1476,7 +1476,7 @@ func flattenDataLabelOptions(apiObject *quicksight.DataLabelOptions) []interface
 		tfMap["label_font_configuration"] = flattenFontConfiguration(apiObject.LabelFontConfiguration)
 	}
 	if apiObject.MeasureLabelVisibility != nil {
-		tfMap["measure_visibility"] = aws.StringValue(apiObject.MeasureLabelVisibility)
+		tfMap["measure_label_visibility"] = aws.StringValue(apiObject.MeasureLabelVisibility)
 	}
 	if apiObject.Overlap != nil {
 		tfMap["overlap"] = aws.StringValue(apiObject.Overlap)

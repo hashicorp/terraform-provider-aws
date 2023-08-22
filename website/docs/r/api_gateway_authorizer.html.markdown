@@ -24,13 +24,13 @@ resource "aws_api_gateway_rest_api" "demo" {
   name = "auth-demo"
 }
 
-data "aws_iam_role_policy_document" "invocation_assume_role" {
+data "aws_iam_policy_document" "invocation_assume_role" {
   statement {
     effect = "Allow"
 
     principals {
-      type       = "Service"
-      identifier = ["apigateway.amazonaws.com"]
+      type        = "Service"
+      identifiers = ["apigateway.amazonaws.com"]
     }
 
     actions = ["sts:AssumeRole"]
@@ -40,7 +40,7 @@ data "aws_iam_role_policy_document" "invocation_assume_role" {
 resource "aws_iam_role" "invocation_role" {
   name               = "api_gateway_auth_invocation"
   path               = "/"
-  assume_role_policy = data.aws_iam_role_policy_document.invocation_assume_role.json
+  assume_role_policy = data.aws_iam_policy_document.invocation_assume_role.json
 }
 
 data "aws_iam_policy_document" "invocation_policy" {
@@ -108,8 +108,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import AWS API Gateway Authorizer using the `REST-API-ID/AUTHORIZER-ID`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import AWS API Gateway Authorizer using the `REST-API-ID/AUTHORIZER-ID`. For example:
 
-```sh
-$ terraform import aws_api_gateway_authorizer.authorizer 12345abcde/example
+```terraform
+import {
+  to = aws_api_gateway_authorizer.authorizer
+  id = "12345abcde/example"
+}
+```
+
+Using `terraform import`, import AWS API Gateway Authorizer using the `REST-API-ID/AUTHORIZER-ID`. For example:
+
+```console
+% terraform import aws_api_gateway_authorizer.authorizer 12345abcde/example
 ```

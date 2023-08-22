@@ -41,8 +41,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Inspector Classic Assessment Targets can be imported via their Amazon Resource Name (ARN), e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Inspector Classic Assessment Targets using their Amazon Resource Name (ARN). For example:
 
-```sh
-$ terraform import aws_inspector_assessment_target.example arn:aws:inspector:us-east-1:123456789012:target/0-xxxxxxx
+```terraform
+import {
+  to = aws_inspector_assessment_target.example
+  id = "arn:aws:inspector:us-east-1:123456789012:target/0-xxxxxxx"
+}
+```
+
+Using `terraform import`, import Inspector Classic Assessment Targets using their Amazon Resource Name (ARN). For example:
+
+```console
+% terraform import aws_inspector_assessment_target.example arn:aws:inspector:us-east-1:123456789012:target/0-xxxxxxx
 ```

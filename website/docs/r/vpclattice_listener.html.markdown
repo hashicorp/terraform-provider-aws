@@ -164,8 +164,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-VPC Lattice Listener can be imported by using the `listener_id` of the listener and the `id` of the VPC Lattice service combined with a `/` character, e.g.:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import VPC Lattice Listener using the `listener_id` of the listener and the `id` of the VPC Lattice service combined with a `/` character. For example:
 
+```terraform
+import {
+  to = aws_vpclattice_listener.example
+  id = "svc-1a2b3c4d/listener-987654321"
+}
 ```
-$ terraform import aws_vpclattice_listener.example svc-1a2b3c4d/listener-987654321
+
+Using `terraform import`, import VPC Lattice Listener using the `listener_id` of the listener and the `id` of the VPC Lattice service combined with a `/` character. For example:
+
+```console
+% terraform import aws_vpclattice_listener.example svc-1a2b3c4d/listener-987654321
 ```

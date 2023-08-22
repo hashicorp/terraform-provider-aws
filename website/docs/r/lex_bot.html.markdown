@@ -135,8 +135,17 @@ failure_reason response element.
 
 ## Import
 
-Import Bots using their name.
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import bots using their name. For example:
 
+```terraform
+import {
+  to = aws_lex_bot.order_flowers_bot
+  id = "OrderFlowers"
+}
 ```
-$ terraform import aws_lex_bot.order_flowers_bot OrderFlowers
+
+Using `terraform import`, import bots using their name. For example:
+
+```console
+% terraform import aws_lex_bot.order_flowers_bot OrderFlowers
 ```

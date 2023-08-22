@@ -36,8 +36,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-`aws_ec2_local_gateway_route` can be imported by using the EC2 Local Gateway Route Table identifier and destination CIDR block separated by underscores (`_`), e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_ec2_local_gateway_route` using the EC2 Local Gateway Route Table identifier and destination CIDR block separated by underscores (`_`). For example:
 
+```terraform
+import {
+  to = aws_ec2_local_gateway_route.example
+  id = "lgw-rtb-12345678_172.16.0.0/16"
+}
 ```
-$ terraform import aws_ec2_local_gateway_route.example lgw-rtb-12345678_172.16.0.0/16
+
+Using `terraform import`, import `aws_ec2_local_gateway_route` using the EC2 Local Gateway Route Table identifier and destination CIDR block separated by underscores (`_`). For example:
+
+```console
+% terraform import aws_ec2_local_gateway_route.example lgw-rtb-12345678_172.16.0.0/16
 ```

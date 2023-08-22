@@ -100,8 +100,17 @@ any cleanup task during the destroying process.
 
 ## Import
 
-Import DocumentDB Clusters using the `cluster_identifier`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import DocumentDB Clusters using the `cluster_identifier`. For example:
 
+```terraform
+import {
+  to = aws_docdb_cluster.docdb_cluster
+  id = "docdb-prod-cluster"
+}
 ```
-$ terraform import aws_docdb_cluster.docdb_cluster docdb-prod-cluster
+
+Using `terraform import`, import DocumentDB Clusters using the `cluster_identifier`. For example:
+
+```console
+% terraform import aws_docdb_cluster.docdb_cluster docdb-prod-cluster
 ```

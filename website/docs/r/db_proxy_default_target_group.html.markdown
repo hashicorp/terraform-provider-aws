@@ -83,8 +83,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import DB proxy default target groups using the `db_proxy_name`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import DB proxy default target groups using the `db_proxy_name`. For example:
 
+```terraform
+import {
+  to = aws_db_proxy_default_target_group.example
+  id = "example"
+}
 ```
-$ terraform import aws_db_proxy_default_target_group.example example
+
+Using `terraform import`, import DB proxy default target groups using the `db_proxy_name`. For example:
+
+```console
+% terraform import aws_db_proxy_default_target_group.example example
 ```

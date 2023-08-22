@@ -35,8 +35,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import QuickSight Group using the aws account id, namespace and group name separated by `/`.
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import QuickSight Group using the aws account id, namespace and group name separated by `/`. For example:
 
+```terraform
+import {
+  to = aws_quicksight_group.example
+  id = "123456789123/default/tf-example"
+}
 ```
-$ terraform import aws_quicksight_group.example 123456789123/default/tf-example
+
+Using `terraform import`, import QuickSight Group using the aws account id, namespace and group name separated by `/`. For example:
+
+```console
+% terraform import aws_quicksight_group.example 123456789123/default/tf-example
 ```

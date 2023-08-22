@@ -52,5 +52,19 @@ This data source exports the following attributes in addition to the arguments a
 
 ## Import
 
-The terraform import function will read in certificate body, certificate chain (if it exists), id, name, path, and arn.
-It will not retrieve the private key which is not available through the AWS API.
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import an IAM server certificate using `name`. For example:
+
+```terraform
+import {
+  to = aws_iam_server_certificate.example
+  id = "example"
+}
+```
+
+Using `terraform import`, import an IAM server certificate using `name`. For example:
+
+```console
+% terraform import aws_iam_server_certificate.example example
+```
+
+Import will read in the certificate body, certificate chain (if it exists), ID, name, path, and ARN. It will not retrieve the private key which is not available through the AWS API.

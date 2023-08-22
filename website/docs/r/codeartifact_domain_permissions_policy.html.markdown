@@ -59,8 +59,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import CodeArtifact Domain Permissions Policies using the CodeArtifact Domain ARN. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import CodeArtifact Domain Permissions Policies using the CodeArtifact Domain ARN. For example:
 
+```terraform
+import {
+  to = aws_codeartifact_domain_permissions_policy.example
+  id = "arn:aws:codeartifact:us-west-2:012345678912:domain/tf-acc-test-1928056699409417367"
+}
 ```
-$ terraform import aws_codeartifact_domain_permissions_policy.example arn:aws:codeartifact:us-west-2:012345678912:domain/tf-acc-test-1928056699409417367
+
+Using `terraform import`, import CodeArtifact Domain Permissions Policies using the CodeArtifact Domain ARN. For example:
+
+```console
+% terraform import aws_codeartifact_domain_permissions_policy.example arn:aws:codeartifact:us-west-2:012345678912:domain/tf-acc-test-1928056699409417367
 ```

@@ -159,8 +159,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import Lightsail Instances using their name. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Lightsail Instances using their name. For example:
 
+```terraform
+import {
+  to = aws_lightsail_instance.gitlab_test
+  id = "custom_gitlab"
+}
 ```
-$ terraform import aws_lightsail_instance.gitlab_test 'custom_gitlab'
+
+Using `terraform import`, import Lightsail Instances using their name. For example:
+
+```console
+% terraform import aws_lightsail_instance.gitlab_test 'custom_gitlab'
 ```

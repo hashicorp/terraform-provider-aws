@@ -207,6 +207,7 @@ Defaults to true.
   Must be greater than `0` if the database is used as a source for a [Read Replica][instance-replication],
   uses [low-downtime updates](#low-downtime-updates),
   or will use [RDS Blue/Green deployments][blue-green].
+* `backup_target` - (Optional, Forces new resource) Specifies where automated backups and manual snapshots are stored. Possible values are `region` (default) and `outposts`. See [Working with Amazon RDS on AWS Outposts](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/rds-on-outposts.html) for more information.
 * `backup_window` - (Optional) The daily time range (in UTC) during which automated backups are created if they are enabled.
   Example: "09:46-10:16". Must not overlap with `maintenance_window`.
 * `blue_green_update` - (Optional) Enables low-downtime updates using [RDS Blue/Green deployments][blue-green].
@@ -238,10 +239,8 @@ when this DB instance is deleted. Must be provided if `skip_final_snapshot` is
 set to `false`. The value must begin with a letter, only contain alphanumeric characters and hyphens, and not end with a hyphen or contain two consecutive hyphens. Must not be provided when deleting a read replica.
 * `iam_database_authentication_enabled` - (Optional) Specifies whether mappings of AWS Identity and Access Management (IAM) accounts to database
 accounts is enabled.
-* `identifier` - (Optional, Forces new resource) The name of the RDS instance,
-if omitted, Terraform will assign a random, unique identifier. Required if `restore_to_point_in_time` is specified.
-* `identifier_prefix` - (Optional, Forces new resource) Creates a unique
-identifier beginning with the specified prefix. Conflicts with `identifier`.
+* `identifier` - (Optional) The name of the RDS instance, if omitted, Terraform will assign a random, unique identifier. Required if `restore_to_point_in_time` is specified.
+* `identifier_prefix` - (Optional) Creates a unique identifier beginning with the specified prefix. Conflicts with `identifier`.
 * `instance_class` - (Required) The instance type of the RDS instance.
 * `iops` - (Optional) The amount of provisioned IOPS. Setting this implies a
 storage_type of "io1". Can only be set when `storage_type` is `"io1"` or `"gp3"`.
@@ -442,8 +441,17 @@ The `master_user_secret` configuration block supports the following attributes:
 
 ## Import
 
-Import DB Instances using the `identifier`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import DB Instances using the `identifier`. For example:
 
+```terraform
+import {
+  to = aws_db_instance.default
+  id = "mydb-rds-instance"
+}
 ```
-$ terraform import aws_db_instance.default mydb-rds-instance
+
+Using `terraform import`, import DB Instances using the `identifier`. For example:
+
+```console
+% terraform import aws_db_instance.default mydb-rds-instance
 ```

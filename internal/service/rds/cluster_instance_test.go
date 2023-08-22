@@ -47,6 +47,7 @@ func TestAccRDSClusterInstance_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "availability_zone"),
 					resource.TestCheckResourceAttr(resourceName, "cluster_identifier", rName),
 					resource.TestCheckResourceAttr(resourceName, "copy_tags_to_snapshot", "false"),
+					resource.TestCheckResourceAttr(resourceName, "custom_iam_instance_profile", ""),
 					resource.TestCheckResourceAttrSet(resourceName, "dbi_resource_id"),
 					resource.TestCheckResourceAttr(resourceName, "engine", "aurora-mysql"),
 					resource.TestCheckResourceAttrSet(resourceName, "engine_version"),
@@ -1303,6 +1304,9 @@ func testAccClusterInstanceConfig_kmsKey(rName string) string {
 		acctest.ConfigAvailableAZsNoOptIn(),
 		testAccClusterInstanceConfig_orderableEngineBase("aurora-mysql", false),
 		fmt.Sprintf(`
+data "aws_caller_identity" "current" {}
+data "aws_partition" "current" {}
+
 resource "aws_kms_key" "test" {
   description = %[1]q
 
@@ -1315,7 +1319,7 @@ resource "aws_kms_key" "test" {
       "Sid": "Enable IAM User Permissions",
       "Effect": "Allow",
       "Principal": {
-        "AWS": "*"
+        "AWS": "arn:${data.aws_partition.current.partition}:iam::${data.aws_caller_identity.current.account_id}:root"
       },
       "Action": "kms:*",
       "Resource": "*"
