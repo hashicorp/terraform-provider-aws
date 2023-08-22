@@ -495,7 +495,7 @@ resource "aws_finspace_kx_environment" "test" {
       port_range {
         from = 53
         to   = 53
-   	  }
+      }
       icmp_type_code {
         type = -1
         code = -1
@@ -522,33 +522,33 @@ resource "aws_finspace_kx_environment" "test" {
     transit_gateway_id  = aws_ec2_transit_gateway.test.id
     routable_cidr_space = %[2]q
     attachment_network_acl_configuration {
-	  rule_number = 1
-	  protocol    = "6"
-	  rule_action = "allow"
-	  cidr_block  = "0.0.0.0/0"
-	  port_range {
-		from = 53
-		to   = 53
-	  }
-	  icmp_type_code {
-		type = -1
-		code = -1
-	  }
-	}
-	attachment_network_acl_configuration {
-	  rule_number = 20
-	  protocol    = "4"
-	  rule_action = "allow"
-	  cidr_block  = "0.0.0.0/0"
-	  port_range {
-		from = 51
-		to   = 51
-	  }
-	  icmp_type_code {
-		type = -1
-		code = -1
-	  }
-	}
+      rule_number = 1
+      protocol    = "6"
+      rule_action = "allow"
+      cidr_block  = "0.0.0.0/0"
+      port_range {
+        from = 53
+        to   = 53
+      }
+      icmp_type_code {
+        type = -1
+        code = -1
+      }
+    }
+    attachment_network_acl_configuration {
+      rule_number = 20
+      protocol    = "4"
+      rule_action = "allow"
+      cidr_block  = "0.0.0.0/0"
+      port_range {
+        from = 51
+        to   = 51
+      }
+      icmp_type_code {
+        type = -1
+        code = -1
+      }
+    }
   }
 }
 `, rName, cidr))
