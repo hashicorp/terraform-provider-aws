@@ -424,35 +424,6 @@ func TestAccDMSReplicationInstance_replicationInstanceClass(t *testing.T) {
 	})
 }
 
-func TestAccDMSReplicationInstance_replicationSubnetGroupID(t *testing.T) {
-	ctx := acctest.Context(t)
-	dmsReplicationSubnetGroupResourceName := "aws_dms_replication_subnet_group.test"
-	resourceName := "aws_dms_replication_instance.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, dms.EndpointsID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckReplicationInstanceDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccReplicationInstanceConfig_subnetGroupID(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckReplicationInstanceExists(ctx, resourceName),
-					resource.TestCheckResourceAttrPair(resourceName, "replication_subnet_group_id", dmsReplicationSubnetGroupResourceName, "replication_subnet_group_id"),
-				),
-			},
-			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"apply_immediately"},
-			},
-		},
-	})
-}
-
 func TestAccDMSReplicationInstance_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_dms_replication_instance.test"
@@ -625,8 +596,8 @@ func testAccReplicationInstanceEngineVersionsPreCheck(t *testing.T) []string {
 
 // Ideally we'd like to be able to leverage the "default" replication subnet group.
 // However, it may not exist or may include deleted subnets.
-func testAccReplicationSubnetGroupConfig_base(rName string) string {
-	return acctest.ConfigCompose(acctest.ConfigVPCWithSubnets(rName, 3), fmt.Sprintf(`
+func testAccReplicationInstanceConfig_base(rName string) string {
+	return acctest.ConfigCompose(acctest.ConfigVPCWithSubnets(rName, 2), fmt.Sprintf(`
 resource "aws_dms_replication_subnet_group" "test" {
   replication_subnet_group_id          = %[1]q
   replication_subnet_group_description = "testing"
@@ -636,54 +607,45 @@ resource "aws_dms_replication_subnet_group" "test" {
 }
 
 func testAccReplicationInstanceConfig_allocatedStorage(rName string, allocatedStorage int) string {
-	return fmt.Sprintf(`
-data "aws_partition" "current" {
-}
+	return acctest.ConfigCompose(testAccReplicationInstanceConfig_base(rName), fmt.Sprintf(`
+data "aws_partition" "current" {}
 
 resource "aws_dms_replication_instance" "test" {
-  allocated_storage          = %d
-  apply_immediately          = true
-  replication_instance_class = data.aws_partition.current.partition == "aws" ? "dms.t2.micro" : "dms.c4.large"
-  replication_instance_id    = %q
+  allocated_storage           = %[2]d
+  apply_immediately           = true
+  replication_instance_class  = data.aws_partition.current.partition == "aws" ? "dms.t2.micro" : "dms.c4.large"
+  replication_instance_id     = %[1]q
+  replication_subnet_group_id = aws_dms_replication_subnet_group.test.id
 }
-`, allocatedStorage, rName)
+`, rName, allocatedStorage))
 }
 
 func testAccReplicationInstanceConfig_autoMinorVersionUpgrade(rName string, autoMinorVersionUpgrade bool) string {
-	return fmt.Sprintf(`
-data "aws_partition" "current" {
-}
+	return acctest.ConfigCompose(testAccReplicationInstanceConfig_base(rName), fmt.Sprintf(`
+data "aws_partition" "current" {}
 
 resource "aws_dms_replication_instance" "test" {
-  apply_immediately          = true
-  auto_minor_version_upgrade = %t
-  replication_instance_class = data.aws_partition.current.partition == "aws" ? "dms.t2.micro" : "dms.c4.large"
-  replication_instance_id    = %q
+  apply_immediately           = true
+  auto_minor_version_upgrade  = %[2]t
+  replication_instance_class  = data.aws_partition.current.partition == "aws" ? "dms.t2.micro" : "dms.c4.large"
+  replication_instance_id     = %[1]q
+  replication_subnet_group_id = aws_dms_replication_subnet_group.test.id
 }
-`, autoMinorVersionUpgrade, rName)
+`, rName, autoMinorVersionUpgrade))
 }
 
 func testAccReplicationInstanceConfig_availabilityZone(rName string) string {
-	return fmt.Sprintf(`
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
-data "aws_partition" "current" {
-}
+	return acctest.ConfigCompose(testAccReplicationInstanceConfig_base(rName), fmt.Sprintf(`
+data "aws_partition" "current" {}
 
 resource "aws_dms_replication_instance" "test" {
-  apply_immediately          = true
-  availability_zone          = data.aws_availability_zones.available.names[0]
-  replication_instance_class = data.aws_partition.current.partition == "aws" ? "dms.t2.micro" : "dms.c4.large"
-  replication_instance_id    = %q
+  apply_immediately           = true
+  availability_zone           = data.aws_availability_zones.available.names[0]
+  replication_instance_class  = data.aws_partition.current.partition == "aws" ? "dms.t2.micro" : "dms.c4.large"
+  replication_instance_id     = %[1]q
+  replication_subnet_group_id = aws_dms_replication_subnet_group.test.id
 }
-`, rName)
+`, rName))
 }
 
 /*
@@ -708,67 +670,67 @@ resource "aws_dms_replication_instance" "test" {
 */
 
 func testAccReplicationInstanceConfig_kmsKeyARN(rName string) string {
-	return fmt.Sprintf(`
-data "aws_partition" "current" {
-}
+	return acctest.ConfigCompose(testAccReplicationInstanceConfig_base(rName), fmt.Sprintf(`
+data "aws_partition" "current" {}
 
 resource "aws_kms_key" "test" {
   deletion_window_in_days = 7
 }
 
 resource "aws_dms_replication_instance" "test" {
-  apply_immediately          = true
-  kms_key_arn                = aws_kms_key.test.arn
-  replication_instance_class = data.aws_partition.current.partition == "aws" ? "dms.t2.micro" : "dms.c4.large"
-  replication_instance_id    = %q
+  apply_immediately           = true
+  kms_key_arn                 = aws_kms_key.test.arn
+  replication_instance_class  = data.aws_partition.current.partition == "aws" ? "dms.t2.micro" : "dms.c4.large"
+  replication_instance_id     = %[1]q
+  replication_subnet_group_id = aws_dms_replication_subnet_group.test.id
 }
-`, rName)
+`, rName))
 }
 
 func testAccReplicationInstanceConfig_multiAz(rName string, multiAz bool) string {
-	return fmt.Sprintf(`
-data "aws_partition" "current" {
-}
+	return acctest.ConfigCompose(testAccReplicationInstanceConfig_base(rName), fmt.Sprintf(`
+data "aws_partition" "current" {}
 
 resource "aws_dms_replication_instance" "test" {
-  apply_immediately          = true
-  multi_az                   = %t
-  replication_instance_class = data.aws_partition.current.partition == "aws" ? "dms.t2.micro" : "dms.c4.large"
-  replication_instance_id    = %q
+  apply_immediately           = true
+  multi_az                    = %[2]t
+  replication_instance_class  = data.aws_partition.current.partition == "aws" ? "dms.t2.micro" : "dms.c4.large"
+  replication_instance_id     = %[1]q
+  replication_subnet_group_id = aws_dms_replication_subnet_group.test.id
 }
-`, multiAz, rName)
+`, rName, multiAz))
 }
 
 func testAccReplicationInstanceConfig_preferredMaintenanceWindow(rName, preferredMaintenanceWindow string) string {
-	return fmt.Sprintf(`
-data "aws_partition" "current" {
-}
+	return acctest.ConfigCompose(testAccReplicationInstanceConfig_base(rName), fmt.Sprintf(`
+data "aws_partition" "current" {}
 
 resource "aws_dms_replication_instance" "test" {
   apply_immediately            = true
-  preferred_maintenance_window = %q
+  preferred_maintenance_window = %[2]q
   replication_instance_class   = data.aws_partition.current.partition == "aws" ? "dms.t2.micro" : "dms.c4.large"
-  replication_instance_id      = %q
+  replication_instance_id      = %[1]q
+  replication_subnet_group_id  = aws_dms_replication_subnet_group.test.id
 }
-`, preferredMaintenanceWindow, rName)
+`, rName, preferredMaintenanceWindow))
 }
 
 func testAccReplicationInstanceConfig_publiclyAccessible(rName string, publiclyAccessible bool) string {
-	return fmt.Sprintf(`
-data "aws_partition" "current" {
-}
+	return acctest.ConfigCompose(testAccReplicationInstanceConfig_base(rName), fmt.Sprintf(`
+data "aws_partition" "current" {}
 
 resource "aws_dms_replication_instance" "test" {
-  apply_immediately          = true
-  publicly_accessible        = %t
-  replication_instance_class = data.aws_partition.current.partition == "aws" ? "dms.t2.micro" : "dms.c4.large"
-  replication_instance_id    = %q
+  apply_immediately           = true
+  publicly_accessible         = %[2]t
+  replication_instance_class  = data.aws_partition.current.partition == "aws" ? "dms.t2.micro" : "dms.c4.large"
+  replication_instance_id     = %[1]q
+  replication_subnet_group_id = aws_dms_replication_subnet_group.test.id
 }
-`, publiclyAccessible, rName)
+`, rName, publiclyAccessible))
 }
 
 func testAccReplicationInstanceConfig_class(rName, replicationInstanceClass string) string {
-	return acctest.ConfigCompose(testAccReplicationSubnetGroupConfig_base(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccReplicationInstanceConfig_base(rName), fmt.Sprintf(`
 resource "aws_dms_replication_instance" "test" {
   apply_immediately           = true
   replication_instance_class  = %[1]q
@@ -778,139 +740,60 @@ resource "aws_dms_replication_instance" "test" {
 `, replicationInstanceClass, rName))
 }
 
-func testAccReplicationInstanceConfig_subnetGroupID(rName string) string {
-	return fmt.Sprintf(`
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
-data "aws_partition" "current" {
-}
-
-resource "aws_vpc" "test" {
-  cidr_block = "10.1.0.0/16"
-
-  tags = {
-    Name = %q
-  }
-}
-
-resource "aws_subnet" "test" {
-  count = 2
-
-  availability_zone = data.aws_availability_zones.available.names[count.index]
-  cidr_block        = "10.1.${count.index}.0/24"
-  vpc_id            = aws_vpc.test.id
-
-  tags = {
-    Name = aws_vpc.test.tags["Name"]
-  }
-}
-
-resource "aws_dms_replication_subnet_group" "test" {
-  replication_subnet_group_description = %q
-  replication_subnet_group_id          = %q
-  subnet_ids                           = aws_subnet.test[*].id
-}
+func testAccReplicationInstanceConfig_tags1(rName, key1, value1 string) string {
+	return acctest.ConfigCompose(testAccReplicationInstanceConfig_base(rName), fmt.Sprintf(`
+data "aws_partition" "current" {}
 
 resource "aws_dms_replication_instance" "test" {
   apply_immediately           = true
   replication_instance_class  = data.aws_partition.current.partition == "aws" ? "dms.t2.micro" : "dms.c4.large"
-  replication_instance_id     = %q
-  replication_subnet_group_id = aws_dms_replication_subnet_group.test.replication_subnet_group_id
-}
-`, rName, rName, rName, rName)
-}
-
-func testAccReplicationInstanceConfig_tags1(rName, key1, value1 string) string {
-	return fmt.Sprintf(`
-data "aws_partition" "current" {}
-
-resource "aws_dms_replication_instance" "test" {
-  apply_immediately          = true
-  replication_instance_class = data.aws_partition.current.partition == "aws" ? "dms.t2.micro" : "dms.c4.large"
-  replication_instance_id    = %[1]q
+  replication_instance_id     = %[1]q
+  replication_subnet_group_id = aws_dms_replication_subnet_group.test.id
 
   tags = {
     %[2]q = %[3]q
   }
 }
-`, rName, key1, value1)
+`, rName, key1, value1))
 }
 
 func testAccReplicationInstanceConfig_tags2(rName, key1, value1, key2, value2 string) string {
-	return fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccReplicationInstanceConfig_base(rName), fmt.Sprintf(`
 data "aws_partition" "current" {}
 
 resource "aws_dms_replication_instance" "test" {
-  apply_immediately          = true
-  replication_instance_class = data.aws_partition.current.partition == "aws" ? "dms.t2.micro" : "dms.c4.large"
-  replication_instance_id    = %[1]q
+  apply_immediately           = true
+  replication_instance_class  = data.aws_partition.current.partition == "aws" ? "dms.t2.micro" : "dms.c4.large"
+  replication_instance_id     = %[1]q
+  replication_subnet_group_id = aws_dms_replication_subnet_group.test.id
 
   tags = {
     %[2]q = %[3]q
     %[4]q = %[5]q
   }
 }
-`, rName, key1, value1, key2, value2)
+`, rName, key1, value1, key2, value2))
 }
 
 func testAccReplicationInstanceConfig_vpcSecurityGroupIDs(rName string) string {
-	return fmt.Sprintf(`
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
-data "aws_partition" "current" {
-}
-
-resource "aws_vpc" "test" {
-  cidr_block = "10.1.0.0/16"
-
-  tags = {
-    Name = %q
-  }
-}
+	return acctest.ConfigCompose(testAccReplicationInstanceConfig_base(rName), fmt.Sprintf(`
+data "aws_partition" "current" {}
 
 resource "aws_security_group" "test" {
-  name   = aws_vpc.test.tags["Name"]
+  name   = %[1]q
   vpc_id = aws_vpc.test.id
-}
-
-resource "aws_subnet" "test" {
-  count = 2
-
-  availability_zone = data.aws_availability_zones.available.names[count.index]
-  cidr_block        = "10.1.${count.index}.0/24"
-  vpc_id            = aws_vpc.test.id
 
   tags = {
-    Name = aws_vpc.test.tags["Name"]
+    Name = %[1]q
   }
-}
-
-resource "aws_dms_replication_subnet_group" "test" {
-  replication_subnet_group_description = %q
-  replication_subnet_group_id          = %q
-  subnet_ids                           = aws_subnet.test[*].id
 }
 
 resource "aws_dms_replication_instance" "test" {
   apply_immediately           = true
   replication_instance_class  = data.aws_partition.current.partition == "aws" ? "dms.t2.micro" : "dms.c4.large"
-  replication_instance_id     = %q
+  replication_instance_id     = %[1]q
   replication_subnet_group_id = aws_dms_replication_subnet_group.test.replication_subnet_group_id
   vpc_security_group_ids      = [aws_security_group.test.id]
 }
-`, rName, rName, rName, rName)
+`, rName))
 }
