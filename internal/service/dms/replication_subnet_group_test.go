@@ -20,7 +20,7 @@ import (
 
 func TestAccDMSReplicationSubnetGroup_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	resourceName := "aws_dms_replication_subnet_group.dms_replication_subnet_group"
+	resourceName := "aws_dms_replication_subnet_group.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -59,7 +59,7 @@ func TestAccDMSReplicationSubnetGroup_basic(t *testing.T) {
 
 func TestAccDMSReplicationSubnetGroup_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	resourceName := "aws_dms_replication_subnet_group.dms_replication_subnet_group"
+	resourceName := "aws_dms_replication_subnet_group.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -82,7 +82,7 @@ func TestAccDMSReplicationSubnetGroup_disappears(t *testing.T) {
 
 func TestAccDMSReplicationSubnetGroup_tags(t *testing.T) {
 	ctx := acctest.Context(t)
-	resourceName := "aws_dms_replication_subnet_group.dms_replication_subnet_group"
+	resourceName := "aws_dms_replication_subnet_group.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -168,7 +168,7 @@ func testAccCheckReplicationSubnetGroupDestroy(ctx context.Context) resource.Tes
 
 func testAccReplicationSubnetGroupConfig_basic(rName, description string) string {
 	return acctest.ConfigCompose(acctest.ConfigVPCWithSubnets(rName, 3), fmt.Sprintf(`
-resource "aws_dms_replication_subnet_group" "dms_replication_subnet_group" {
+resource "aws_dms_replication_subnet_group" "test" {
   replication_subnet_group_id          = %[1]q
   replication_subnet_group_description = %[2]q
   subnet_ids                           = aws_subnet.test[*].id
@@ -178,7 +178,7 @@ resource "aws_dms_replication_subnet_group" "dms_replication_subnet_group" {
 
 func testAccReplicationSubnetGroupConfig_tags1(rName, tagKey1, tagValue1 string) string {
 	return acctest.ConfigCompose(acctest.ConfigVPCWithSubnets(rName, 3), fmt.Sprintf(`
-resource "aws_dms_replication_subnet_group" "dms_replication_subnet_group" {
+resource "aws_dms_replication_subnet_group" "test" {
   replication_subnet_group_id          = %[1]q
   replication_subnet_group_description = "testing"
   subnet_ids                           = aws_subnet.test[*].id
@@ -192,7 +192,7 @@ resource "aws_dms_replication_subnet_group" "dms_replication_subnet_group" {
 
 func testAccReplicationSubnetGroupConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return acctest.ConfigCompose(acctest.ConfigVPCWithSubnets(rName, 3), fmt.Sprintf(`
-resource "aws_dms_replication_subnet_group" "dms_replication_subnet_group" {
+resource "aws_dms_replication_subnet_group" "test" {
   replication_subnet_group_id          = %[1]q
   replication_subnet_group_description = "testing"
   subnet_ids                           = aws_subnet.test[*].id
