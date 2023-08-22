@@ -5,9 +5,9 @@ package iam_test
 
 import (
 	"fmt"
-	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws/endpoints"
 	"github.com/aws/aws-sdk-go/service/iam"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -189,7 +189,7 @@ func TestAccIAMPolicyDocumentDataSource_sourceListConflicting(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccPolicyDocumentDataSourceConfig_listConflicting,
-				ExpectError: regexp.MustCompile(`duplicate Sid (.*?)`),
+				ExpectError: regexache.MustCompile(`duplicate Sid (.*?)`),
 			},
 		},
 	})
@@ -280,7 +280,7 @@ func TestAccIAMPolicyDocumentDataSource_duplicateSid(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccPolicyDocumentDataSourceConfig_duplicateSid,
-				ExpectError: regexp.MustCompile(`duplicate Sid`),
+				ExpectError: regexache.MustCompile(`duplicate Sid`),
 			},
 			{
 				Config: testAccPolicyDocumentDataSourceConfig_duplicateBlankSid,
@@ -303,7 +303,7 @@ func TestAccIAMPolicyDocumentDataSource_sourcePolicyValidJSON(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccPolicyDocumentDataSourceConfig_invalidJSON,
-				ExpectError: regexp.MustCompile(`"source_policy_documents.0" contains an invalid JSON: unexpected end of JSON input`),
+				ExpectError: regexache.MustCompile(`"source_policy_documents.0" contains an invalid JSON: unexpected end of JSON input`),
 			},
 			{
 				Config: testAccPolicyDocumentDataSourceConfig_emptyString,
@@ -326,7 +326,7 @@ func TestAccIAMPolicyDocumentDataSource_overridePolicyDocumentValidJSON(t *testi
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccPolicyDocumentDataSourceConfig_overridePolicyDocument_invalidJSON,
-				ExpectError: regexp.MustCompile(`"override_policy_documents.0" contains an invalid JSON: unexpected end of JSON input`),
+				ExpectError: regexache.MustCompile(`"override_policy_documents.0" contains an invalid JSON: unexpected end of JSON input`),
 			},
 			{
 				Config: testAccPolicyDocumentDataSourceConfig_overridePolicyDocument_emptyString,
@@ -408,23 +408,23 @@ func TestAccIAMPolicyDocumentDataSource_version20081017(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccPolicyDocumentDataSourceConfig_version20081017ConversionCondition,
-				ExpectError: regexp.MustCompile(`found \&\{ sequence in \(.+\), which is not supported in document version 2008-10-17`),
+				ExpectError: regexache.MustCompile(`found \&\{ sequence in \(.+\), which is not supported in document version 2008-10-17`),
 			},
 			{
 				Config:      testAccPolicyDocumentDataSourceConfig_version20081017ConversionNotPrincipals,
-				ExpectError: regexp.MustCompile(`found \&\{ sequence in \(.+\), which is not supported in document version 2008-10-17`),
+				ExpectError: regexache.MustCompile(`found \&\{ sequence in \(.+\), which is not supported in document version 2008-10-17`),
 			},
 			{
 				Config:      testAccPolicyDocumentDataSourceConfig_version20081017ConversionNotRe,
-				ExpectError: regexp.MustCompile(`found \&\{ sequence in \(.+\), which is not supported in document version 2008-10-17`),
+				ExpectError: regexache.MustCompile(`found \&\{ sequence in \(.+\), which is not supported in document version 2008-10-17`),
 			},
 			{
 				Config:      testAccPolicyDocumentDataSourceConfig_version20081017ConversionPrincipal,
-				ExpectError: regexp.MustCompile(`found \&\{ sequence in \(.+\), which is not supported in document version 2008-10-17`),
+				ExpectError: regexache.MustCompile(`found \&\{ sequence in \(.+\), which is not supported in document version 2008-10-17`),
 			},
 			{
 				Config:      testAccPolicyDocumentDataSourceConfig_version20081017ConversionRe,
-				ExpectError: regexp.MustCompile(`found \&\{ sequence in \(.+\), which is not supported in document version 2008-10-17`),
+				ExpectError: regexache.MustCompile(`found \&\{ sequence in \(.+\), which is not supported in document version 2008-10-17`),
 			},
 			{
 				Config: testAccPolicyDocumentDataSourceConfig_version20081017,
