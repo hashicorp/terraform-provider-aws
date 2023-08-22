@@ -133,7 +133,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/macie2"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/mediaconnect"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/mediaconvert"
-	"github.com/hashicorp/terraform-provider-aws/internal/service/medialive"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/mediapackage"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/mediastore"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/memorydb"
@@ -342,7 +341,6 @@ func servicePackages(ctx context.Context) []conns.ServicePackage {
 		macie2.ServicePackage(ctx),
 		mediaconnect.ServicePackage(ctx),
 		mediaconvert.ServicePackage(ctx),
-		medialive.ServicePackage(ctx),
 		mediapackage.ServicePackage(ctx),
 		mediastore.ServicePackage(ctx),
 		memorydb.ServicePackage(ctx),
