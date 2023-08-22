@@ -70,7 +70,7 @@ func TestAccBatchJobQueue_disappears(t *testing.T) {
 				Config: testAccJobQueueConfig_state(rName, batch.JQStateEnabled),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckJobQueueExists(ctx, resourceName, &jobQueue1),
-					testAccCheckJobQueueDisappears(ctx, &jobQueue1),
+					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfbatch.ResourceJobQueueFW, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -305,20 +305,6 @@ func testAccCheckJobQueueDestroy(ctx context.Context) resource.TestCheckFunc {
 			return nil
 		}
 		return nil
-	}
-}
-
-func testAccCheckJobQueueDisappears(ctx context.Context, jobQueue *batch.JobQueueDetail) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).BatchConn(ctx)
-		name := aws.StringValue(jobQueue.JobQueueName)
-
-		err := tfbatch.DisableJobQueue(ctx, name, conn)
-		if err != nil {
-			return fmt.Errorf("error disabling Batch Job Queue (%s): %s", name, err)
-		}
-
-		return tfbatch.DeleteJobQueue(ctx, name, conn)
 	}
 }
 
