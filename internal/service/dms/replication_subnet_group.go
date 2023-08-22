@@ -16,7 +16,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
@@ -71,10 +70,6 @@ func ResourceReplicationSubnetGroup() *schema.Resource {
 		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
-
-const (
-	ResNameReplicationSubnetGroup = "Replication Subnet Group"
-)
 
 func resourceReplicationSubnetGroupCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
@@ -142,22 +137,23 @@ func resourceReplicationSubnetGroupUpdate(ctx context.Context, d *schema.Resourc
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DMSConn(ctx)
 
-	// Updates to subnet groups are only valid when sending SubnetIds even if there are no
-	// changes to SubnetIds.
-	request := &dms.ModifyReplicationSubnetGroupInput{
-		ReplicationSubnetGroupIdentifier: aws.String(d.Get("replication_subnet_group_id").(string)),
-		SubnetIds:                        flex.ExpandStringSet(d.Get("subnet_ids").(*schema.Set)),
-	}
+	if d.HasChangesExcept("tags", "tags_all") {
+		// Updates to subnet groups are only valid when sending SubnetIds even if there are no
+		// changes to SubnetIds.
+		input := &dms.ModifyReplicationSubnetGroupInput{
+			ReplicationSubnetGroupIdentifier: aws.String(d.Get("replication_subnet_group_id").(string)),
+			SubnetIds:                        flex.ExpandStringSet(d.Get("subnet_ids").(*schema.Set)),
+		}
 
-	if d.HasChange("replication_subnet_group_description") {
-		request.ReplicationSubnetGroupDescription = aws.String(d.Get("replication_subnet_group_description").(string))
-	}
+		if d.HasChange("replication_subnet_group_description") {
+			input.ReplicationSubnetGroupDescription = aws.String(d.Get("replication_subnet_group_description").(string))
+		}
 
-	log.Println("[DEBUG] DMS update replication subnet group:", request)
+		_, err := conn.ModifyReplicationSubnetGroupWithContext(ctx, input)
 
-	_, err := conn.ModifyReplicationSubnetGroupWithContext(ctx, request)
-	if err != nil {
-		return create.DiagError(names.DMS, create.ErrActionUpdating, ResNameReplicationSubnetGroup, d.Id(), err)
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating DMS Replication Subnet Group (%s): %s", d.Id(), err)
+		}
 	}
 
 	return append(diags, resourceReplicationSubnetGroupRead(ctx, d, meta)...)
