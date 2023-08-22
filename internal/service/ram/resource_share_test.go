@@ -6,9 +6,9 @@ package ram_test
 import (
 	"context"
 	"fmt"
-	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/service/ram"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -35,7 +35,7 @@ func TestAccRAMResourceShare_basic(t *testing.T) {
 				Config: testAccResourceShareConfig_name(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckResourceShareExists(ctx, resourceName, &resourceShare),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "ram", regexp.MustCompile(`resource-share/.+`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "ram", regexache.MustCompile(`resource-share/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "allow_external_principals", "false"),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "permission_arns.#", "0"),
@@ -67,7 +67,7 @@ func TestAccRAMResourceShare_permission(t *testing.T) {
 				Config: testAccResourceShareConfig_namePermission(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckResourceShareExists(ctx, resourceName, &resourceShare),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "ram", regexp.MustCompile(`resource-share/.+`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "ram", regexache.MustCompile(`resource-share/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "allow_external_principals", "false"),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "permission_arns.#", "1"),
