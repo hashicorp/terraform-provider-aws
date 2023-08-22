@@ -33,21 +33,24 @@ func TestAccDMSReplicationInstance_basic(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccReplicationInstanceConfig_class(rName, replicationInstanceClass),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckReplicationInstanceExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "allocated_storage", "100"),
+					resource.TestCheckResourceAttr(resourceName, "auto_minor_version_upgrade", "false"),
 					resource.TestCheckResourceAttrSet(resourceName, "availability_zone"),
 					resource.TestCheckResourceAttrSet(resourceName, "engine_version"),
 					resource.TestCheckResourceAttrSet(resourceName, "kms_key_arn"),
 					resource.TestCheckResourceAttr(resourceName, "multi_az", "false"),
 					resource.TestCheckResourceAttrSet(resourceName, "preferred_maintenance_window"),
 					resource.TestCheckResourceAttr(resourceName, "publicly_accessible", "false"),
-					resource.TestCheckResourceAttr(resourceName, "replication_instance_private_ips.#", "1"),
-					// ARN resource is its own unique identifier
 					resource.TestCheckResourceAttrSet(resourceName, "replication_instance_arn"),
 					resource.TestCheckResourceAttr(resourceName, "replication_instance_class", replicationInstanceClass),
 					resource.TestCheckResourceAttr(resourceName, "replication_instance_id", rName),
+					resource.TestCheckResourceAttr(resourceName, "replication_instance_private_ips.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "replication_instance_public_ips.#", "1"),
+					resource.TestCheckResourceAttrSet(resourceName, "replication_subnet_group_id"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "vpc_security_group_ids.#", "1"),
 				),
 			},
 			{
@@ -55,6 +58,31 @@ func TestAccDMSReplicationInstance_basic(t *testing.T) {
 				ImportState:             true,
 				ImportStateVerify:       true,
 				ImportStateVerifyIgnore: []string{"apply_immediately"},
+			},
+		},
+	})
+}
+
+func TestAccDMSReplicationInstance_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
+	// NOTE: Using larger dms.c4.large here for AWS GovCloud (US) support
+	replicationInstanceClass := "dms.c4.large"
+	resourceName := "aws_dms_replication_instance.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, dms.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckReplicationInstanceDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccReplicationInstanceConfig_class(rName, replicationInstanceClass),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckReplicationInstanceExists(ctx, resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfdms.ResourceReplicationInstance(), resourceName),
+				),
+				ExpectNonEmptyPlan: true,
 			},
 		},
 	})
@@ -437,7 +465,7 @@ func TestAccDMSReplicationInstance_tags(t *testing.T) {
 		CheckDestroy:             testAccCheckReplicationInstanceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccReplicationInstanceConfig_tagsOne(rName, "key1", "value1"),
+				Config: testAccReplicationInstanceConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckReplicationInstanceExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -451,7 +479,7 @@ func TestAccDMSReplicationInstance_tags(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"apply_immediately"},
 			},
 			{
-				Config: testAccReplicationInstanceConfig_tagsTwo(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccReplicationInstanceConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckReplicationInstanceExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
@@ -460,7 +488,7 @@ func TestAccDMSReplicationInstance_tags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccReplicationInstanceConfig_tagsOne(rName, "key2", "value2"),
+				Config: testAccReplicationInstanceConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckReplicationInstanceExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -498,8 +526,6 @@ func TestAccDMSReplicationInstance_vpcSecurityGroupIDs(t *testing.T) {
 		},
 	})
 }
-
-// TODo _disappears
 
 func testAccCheckReplicationInstanceExists(ctx context.Context, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
@@ -596,6 +622,18 @@ func testAccReplicationInstanceEngineVersionsPreCheck(t *testing.T) []string {
 
 **
 */
+
+// Ideally we'd like to be able to leverage the "default" replication subnet group.
+// However, it may not exist or may include deleted subnets.
+func testAccReplicationSubnetGroupConfig_base(rName string) string {
+	return acctest.ConfigCompose(acctest.ConfigVPCWithSubnets(rName, 3), fmt.Sprintf(`
+resource "aws_dms_replication_subnet_group" "test" {
+  replication_subnet_group_id          = %[1]q
+  replication_subnet_group_description = "testing"
+  subnet_ids                           = aws_subnet.test[*].id
+}
+`, rName))
+}
 
 func testAccReplicationInstanceConfig_allocatedStorage(rName string, allocatedStorage int) string {
 	return fmt.Sprintf(`
@@ -730,13 +768,14 @@ resource "aws_dms_replication_instance" "test" {
 }
 
 func testAccReplicationInstanceConfig_class(rName, replicationInstanceClass string) string {
-	return fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccReplicationSubnetGroupConfig_base(rName), fmt.Sprintf(`
 resource "aws_dms_replication_instance" "test" {
-  apply_immediately          = true
-  replication_instance_class = %q
-  replication_instance_id    = %q
+  apply_immediately           = true
+  replication_instance_class  = %[1]q
+  replication_instance_id     = %[2]q
+  replication_subnet_group_id = aws_dms_replication_subnet_group.test.id
 }
-`, replicationInstanceClass, rName)
+`, replicationInstanceClass, rName))
 }
 
 func testAccReplicationInstanceConfig_subnetGroupID(rName string) string {
@@ -788,34 +827,34 @@ resource "aws_dms_replication_instance" "test" {
 `, rName, rName, rName, rName)
 }
 
-func testAccReplicationInstanceConfig_tagsOne(rName, key1, value1 string) string {
+func testAccReplicationInstanceConfig_tags1(rName, key1, value1 string) string {
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
 
 resource "aws_dms_replication_instance" "test" {
   apply_immediately          = true
   replication_instance_class = data.aws_partition.current.partition == "aws" ? "dms.t2.micro" : "dms.c4.large"
-  replication_instance_id    = %q
+  replication_instance_id    = %[1]q
 
   tags = {
-    %q = %q
+    %[2]q = %[3]q
   }
 }
 `, rName, key1, value1)
 }
 
-func testAccReplicationInstanceConfig_tagsTwo(rName, key1, value1, key2, value2 string) string {
+func testAccReplicationInstanceConfig_tags2(rName, key1, value1, key2, value2 string) string {
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
 
 resource "aws_dms_replication_instance" "test" {
   apply_immediately          = true
   replication_instance_class = data.aws_partition.current.partition == "aws" ? "dms.t2.micro" : "dms.c4.large"
-  replication_instance_id    = %q
+  replication_instance_id    = %[1]q
 
   tags = {
-    %q = %q
-    %q = %q
+    %[2]q = %[3]q
+    %[4]q = %[5]q
   }
 }
 `, rName, key1, value1, key2, value2)
