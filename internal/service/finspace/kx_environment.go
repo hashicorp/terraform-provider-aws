@@ -575,16 +575,13 @@ func expandAttachmentNetworkACLConfigurations(tfList []interface{}) []types.Netw
 	}
 
 	var s []types.NetworkACLEntry
-
 	for _, r := range tfList {
 		m, ok := r.(map[string]interface{})
-
 		if !ok {
 			continue
 		}
 
 		a := expandAttachmentNetworkACLConfiguration(m)
-
 		if a == nil {
 			continue
 		}
@@ -600,27 +597,21 @@ func expandAttachmentNetworkACLConfiguration(tfMap map[string]interface{}) *type
 	}
 
 	a := &types.NetworkACLEntry{}
-
-	if v, ok := tfMap["rule_number"].(int); ok && v >= 1 && v <= 32766 {
+	if v, ok := tfMap["rule_number"].(int); ok && v > 0 {
 		a.RuleNumber = int32(v)
 	}
-
 	if v, ok := tfMap["protocol"].(string); ok && v != "" {
 		a.Protocol = &v
 	}
-
 	if v, ok := tfMap["rule_action"].(string); ok && v != "" {
 		a.RuleAction = types.RuleAction(v)
 	}
-
 	if v, ok := tfMap["cidr_block"].(string); ok && v != "" {
 		a.CidrBlock = &v
 	}
-
 	if v, ok := tfMap["port_range"]; ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 		a.PortRange = expandPortRange(v.([]interface{}))
 	}
-
 	if v, ok := tfMap["icmp_type_code"]; ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 		a.IcmpTypeCode = expandIcmpTypeCode(v.([]interface{}))
 	}
@@ -632,40 +623,24 @@ func expandPortRange(tfList []interface{}) *types.PortRange {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
-
 	tfMap := tfList[0].(map[string]interface{})
 
-	a := &types.PortRange{}
-
-	if v, ok := tfMap["from"].(int); ok && v >= 0 && v <= 100 {
-		a.From = int32(v)
+	return &types.PortRange{
+		From: int32(tfMap["from"].(int)),
+		To:   int32(tfMap["to"].(int)),
 	}
-
-	if v, ok := tfMap["to"].(int); ok && v >= 0 && v <= 100 {
-		a.To = int32(v)
-	}
-
-	return a
 }
 
 func expandIcmpTypeCode(tfList []interface{}) *types.IcmpTypeCode {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
-
 	tfMap := tfList[0].(map[string]interface{})
 
-	a := &types.IcmpTypeCode{}
-
-	if v, ok := tfMap["type"].(int); ok {
-		a.Type = int32(v)
+	return &types.IcmpTypeCode{
+		Code: int32(tfMap["code"].(int)),
+		Type: int32(tfMap["type"].(int)),
 	}
-
-	if v, ok := tfMap["code"].(int); ok {
-		a.Code = int32(v)
-	}
-
-	return a
 }
 
 func expandCustomDNSConfiguration(tfMap map[string]interface{}) *types.CustomDNSServer {
@@ -753,28 +728,16 @@ func flattenAttachmentNetworkACLConfiguration(apiObject *types.NetworkACLEntry) 
 		return nil
 	}
 
-	m := map[string]interface{}{}
-
-	if v := apiObject.RuleNumber; v >= 1 && v <= 32766 {
-		m["rule_number"] = v
-	}
-
-	if v := apiObject.Protocol; aws.ToString(v) != "" {
-		m["protocol"] = aws.ToString(v)
-	}
-
-	if v := apiObject.RuleAction; v != "" {
-		m["rule_action"] = v
-	}
-
-	if v := apiObject.CidrBlock; aws.ToString(v) != "" {
-		m["cidr_block"] = aws.ToString(v)
+	m := map[string]interface{}{
+		"cidr_block":  aws.ToString(apiObject.CidrBlock),
+		"protocol":    aws.ToString(apiObject.Protocol),
+		"rule_action": apiObject.RuleAction,
+		"rule_number": apiObject.RuleNumber,
 	}
 
 	if v := apiObject.PortRange; v != nil {
 		m["port_range"] = flattenPortRange(v)
 	}
-
 	if v := apiObject.IcmpTypeCode; v != nil {
 		m["icmp_type_code"] = flattenIcmpTypeCode(v)
 	}
@@ -787,14 +750,9 @@ func flattenPortRange(apiObject *types.PortRange) []interface{} {
 		return nil
 	}
 
-	m := map[string]interface{}{}
-
-	if v := apiObject.From; v >= 0 && v <= 100 {
-		m["from"] = v
-	}
-
-	if v := apiObject.To; v >= 0 && v <= 100 {
-		m["to"] = v
+	m := map[string]interface{}{
+		"from": apiObject.From,
+		"to":   apiObject.To,
 	}
 
 	return []interface{}{m}
@@ -805,11 +763,10 @@ func flattenIcmpTypeCode(apiObject *types.IcmpTypeCode) []interface{} {
 		return nil
 	}
 
-	m := map[string]interface{}{}
-
-	m["type"] = apiObject.Type
-
-	m["code"] = apiObject.Code
+	m := map[string]interface{}{
+		"type": apiObject.Type,
+		"code": apiObject.Code,
+	}
 
 	return []interface{}{m}
 }
