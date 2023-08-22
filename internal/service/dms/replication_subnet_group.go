@@ -7,14 +7,12 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	dms "github.com/aws/aws-sdk-go/service/databasemigrationservice"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
@@ -34,12 +32,6 @@ func ResourceReplicationSubnetGroup() *schema.Resource {
 		ReadWithoutTimeout:   resourceReplicationSubnetGroupRead,
 		UpdateWithoutTimeout: resourceReplicationSubnetGroupUpdate,
 		DeleteWithoutTimeout: resourceReplicationSubnetGroupDelete,
-
-		Timeouts: &schema.ResourceTimeout{
-			Create: schema.DefaultTimeout(15 * time.Minute),
-			Update: schema.DefaultTimeout(15 * time.Minute),
-			Delete: schema.DefaultTimeout(15 * time.Minute),
-		},
 
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
@@ -62,10 +54,9 @@ func ResourceReplicationSubnetGroup() *schema.Resource {
 			},
 			"subnet_ids": {
 				Type:     schema.TypeSet,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-				Set:      schema.HashString,
 				MinItems: 2,
 				Required: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
@@ -87,42 +78,24 @@ func resourceReplicationSubnetGroupCreate(ctx context.Context, d *schema.Resourc
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DMSConn(ctx)
 
-	request := &dms.CreateReplicationSubnetGroupInput{
-		ReplicationSubnetGroupIdentifier:  aws.String(d.Get("replication_subnet_group_id").(string)),
+	replicationSubnetGroupID := d.Get("replication_subnet_group_id").(string)
+	input := &dms.CreateReplicationSubnetGroupInput{
 		ReplicationSubnetGroupDescription: aws.String(d.Get("replication_subnet_group_description").(string)),
+		ReplicationSubnetGroupIdentifier:  aws.String(replicationSubnetGroupID),
 		SubnetIds:                         flex.ExpandStringSet(d.Get("subnet_ids").(*schema.Set)),
 		Tags:                              getTagsIn(ctx),
 	}
 
-	log.Println("[DEBUG] DMS create replication subnet group:", request)
-
-	err := retry.RetryContext(ctx, propagationTimeout, func() *retry.RetryError {
-		_, err := conn.CreateReplicationSubnetGroupWithContext(ctx, request)
-
-		if tfawserr.ErrCodeEquals(err, dms.ErrCodeAccessDeniedFault) {
-			return retry.RetryableError(err)
-		}
-
-		if err != nil {
-			return retry.NonRetryableError(err)
-		}
-
-		return nil
-	})
-
-	if tfresource.TimedOut(err) {
-		_, err = conn.CreateReplicationSubnetGroupWithContext(ctx, request)
-
-		if err != nil {
-			return create.DiagError(names.DMS, create.ErrActionCreating, ResNameReplicationSubnetGroup, d.Get("replication_subnet_group_id").(string), err)
-		}
-	}
+	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, propagationTimeout, func() (interface{}, error) {
+		return conn.CreateReplicationSubnetGroupWithContext(ctx, input)
+	}, dms.ErrCodeAccessDeniedFault)
 
 	if err != nil {
-		return create.DiagError(names.DMS, create.ErrActionCreating, ResNameReplicationSubnetGroup, d.Get("replication_subnet_group_id").(string), err)
+		return sdkdiag.AppendErrorf(diags, "creating DMS Replication Subnet Group (%s): %s", replicationSubnetGroupID, err)
 	}
 
-	d.SetId(d.Get("replication_subnet_group_id").(string))
+	d.SetId(replicationSubnetGroupID)
+
 	return append(diags, resourceReplicationSubnetGroupRead(ctx, d, meta)...)
 }
 
