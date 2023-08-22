@@ -85,6 +85,38 @@ func TestAccS3Object_empty(t *testing.T) {
 	})
 }
 
+func TestAccS3Object_upgradeFromV4(t *testing.T) {
+	ctx := acctest.Context(t)
+	var obj s3.GetObjectOutput
+	resourceName := "aws_s3_object.object"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:   acctest.ErrorCheck(t, s3.EndpointsID),
+		CheckDestroy: testAccCheckObjectDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"aws": {
+						Source:            "hashicorp/aws",
+						VersionConstraint: "4.67.0",
+					},
+				},
+				Config: testAccObjectConfig_empty(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckObjectExists(ctx, resourceName, &obj),
+				),
+			},
+			{
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				Config:                   testAccObjectConfig_empty(rName),
+				PlanOnly:                 true,
+			},
+		},
+	})
+}
+
 func TestAccS3Object_source(t *testing.T) {
 	ctx := acctest.Context(t)
 	var obj s3.GetObjectOutput

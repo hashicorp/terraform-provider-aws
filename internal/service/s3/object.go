@@ -60,6 +60,7 @@ func ResourceObject() *schema.Resource {
 			"acl": {
 				Type:         schema.TypeString,
 				Optional:     true,
+				Computed:     true,
 				ValidateFunc: validation.StringInSlice(s3.ObjectCannedACL_Values(), false),
 			},
 			"bucket": {
