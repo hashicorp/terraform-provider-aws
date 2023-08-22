@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -210,16 +211,17 @@ func resourceReplicationSubnetGroupDelete(ctx context.Context, d *schema.Resourc
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DMSConn(ctx)
 
-	request := &dms.DeleteReplicationSubnetGroupInput{
-		ReplicationSubnetGroupIdentifier: aws.String(d.Get("replication_subnet_group_id").(string)),
+	log.Printf("[DEBUG] Deleting DMS Replication Subnet Group: %s", d.Id())
+	_, err := conn.DeleteReplicationSubnetGroupWithContext(ctx, &dms.DeleteReplicationSubnetGroupInput{
+		ReplicationSubnetGroupIdentifier: aws.String(d.Id()),
+	})
+
+	if tfawserr.ErrCodeEquals(err, dms.ErrCodeResourceNotFoundFault) {
+		return diags
 	}
 
-	log.Printf("[DEBUG] DMS delete replication subnet group: %#v", request)
-
-	_, err := conn.DeleteReplicationSubnetGroupWithContext(ctx, request)
-
 	if err != nil {
-		return create.DiagError(names.DMS, create.ErrActionDeleting, ResNameReplicationSubnetGroup, d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting DMS Replication Subnet Group (%s): %s", d.Id(), err)
 	}
 
 	return diags
