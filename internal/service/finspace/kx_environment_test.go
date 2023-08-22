@@ -266,10 +266,50 @@ func TestAccFinSpaceKxEnvironment_attachmentNetworkAclConfiguration(t *testing.T
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "transit_gateway_configuration.*", map[string]string{
 						"routable_cidr_space": "100.64.0.0/26",
 					}),
-					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "transit_gateway_configuration.attachment_network_acl_configuration.*", map[string]string{
+					resource.TestCheckResourceAttr(resourceName, "transit_gateway_configuration.0.attachment_network_acl_configuration.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "transit_gateway_configuration.0.attachment_network_acl_configuration.*", map[string]string{
 						"protocol":    "6",
 						"rule_action": "allow",
 						"cidr_block":  "0.0.0.0/0",
+						"rule_number": "1",
+					}),
+				),
+			},
+			{
+				Config: testAccKxEnvironmentConfig_attachmentNetworkAclConfig2(rName, "100.64.0.0/26"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckKxEnvironmentExists(ctx, resourceName, &kxenvironment),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "transit_gateway_configuration.*", map[string]string{
+						"routable_cidr_space": "100.64.0.0/26",
+					}),
+					resource.TestCheckResourceAttr(resourceName, "transit_gateway_configuration.0.attachment_network_acl_configuration.#", "2"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "transit_gateway_configuration.0.attachment_network_acl_configuration.*", map[string]string{
+						"protocol":    "6",
+						"rule_action": "allow",
+						"cidr_block":  "0.0.0.0/0",
+						"rule_number": "1",
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "transit_gateway_configuration.0.attachment_network_acl_configuration.*", map[string]string{
+						"protocol":    "4",
+						"rule_action": "allow",
+						"cidr_block":  "0.0.0.0/0",
+						"rule_number": "20",
+					}),
+				),
+			},
+			{
+				Config: testAccKxEnvironmentConfig_attachmentNetworkAclConfig(rName, "100.64.0.0/26"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckKxEnvironmentExists(ctx, resourceName, &kxenvironment),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "transit_gateway_configuration.*", map[string]string{
+						"routable_cidr_space": "100.64.0.0/26",
+					}),
+					resource.TestCheckResourceAttr(resourceName, "transit_gateway_configuration.0.attachment_network_acl_configuration.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "transit_gateway_configuration.0.attachment_network_acl_configuration.*", map[string]string{
+						"protocol":    "6",
+						"rule_action": "allow",
+						"cidr_block":  "0.0.0.0/0",
+						"rule_number": "1",
 					}),
 				),
 			},
@@ -456,23 +496,63 @@ resource "aws_finspace_kx_environment" "test" {
         from = 53
         to   = 53
    	  }
+      icmp_type_code {
+        type = -1
+        code = -1
+      }
     }
   }
 }
 `, rName, cidr))
 }
 
-/*
-   cidr_block  = "0.0.0.0/0"
-   port_range {
-     from = 53
-     to   = 53
-   }
-   icmp_type_code {
-     type = -1
-     code = -1
-   }
-*/
+func testAccKxEnvironmentConfig_attachmentNetworkAclConfig2(rName, cidr string) string {
+	return acctest.ConfigCompose(
+		testAccKxEnvironmentConfigBase(),
+		fmt.Sprintf(`
+resource "aws_ec2_transit_gateway" "test" {
+  description = "test"
+}
+
+resource "aws_finspace_kx_environment" "test" {
+  name       = %[1]q
+  kms_key_id = aws_kms_key.test.arn
+
+  transit_gateway_configuration {
+    transit_gateway_id  = aws_ec2_transit_gateway.test.id
+    routable_cidr_space = %[2]q
+    attachment_network_acl_configuration {
+	  rule_number = 1
+	  protocol    = "6"
+	  rule_action = "allow"
+	  cidr_block  = "0.0.0.0/0"
+	  port_range {
+		from = 53
+		to   = 53
+	  }
+	  icmp_type_code {
+		type = -1
+		code = -1
+	  }
+	}
+	attachment_network_acl_configuration {
+	  rule_number = 20
+	  protocol    = "4"
+	  rule_action = "allow"
+	  cidr_block  = "0.0.0.0/0"
+	  port_range {
+		from = 51
+		to   = 51
+	  }
+	  icmp_type_code {
+		type = -1
+		code = -1
+	  }
+	}
+  }
+}
+`, rName, cidr))
+}
 
 func testAccKxEnvironmentConfig_dnsConfig(rName, serverName, serverIP string) string {
 	return acctest.ConfigCompose(
