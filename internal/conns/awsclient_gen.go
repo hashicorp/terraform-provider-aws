@@ -32,6 +32,7 @@ import (
 	kendra_sdkv2 "github.com/aws/aws-sdk-go-v2/service/kendra"
 	keyspaces_sdkv2 "github.com/aws/aws-sdk-go-v2/service/keyspaces"
 	lambda_sdkv2 "github.com/aws/aws-sdk-go-v2/service/lambda"
+	lexmodelsv2_sdkv2 "github.com/aws/aws-sdk-go-v2/service/lexmodelsv2"
 	lightsail_sdkv2 "github.com/aws/aws-sdk-go-v2/service/lightsail"
 	medialive_sdkv2 "github.com/aws/aws-sdk-go-v2/service/medialive"
 	mediapackage_sdkv2 "github.com/aws/aws-sdk-go-v2/service/mediapackage"
@@ -718,6 +719,10 @@ func (c *AWSClient) LambdaClient(ctx context.Context) *lambda_sdkv2.Client {
 
 func (c *AWSClient) LexModelsConn(ctx context.Context) *lexmodelbuildingservice_sdkv1.LexModelBuildingService {
 	return errs.Must(conn[*lexmodelbuildingservice_sdkv1.LexModelBuildingService](ctx, c, names.LexModels))
+}
+
+func (c *AWSClient) LexModelsV2Client(ctx context.Context) *lexmodelsv2_sdkv2.Client {
+	return errs.Must(client[*lexmodelsv2_sdkv2.Client](ctx, c, names.LexModelsV2))
 }
 
 func (c *AWSClient) LicenseManagerConn(ctx context.Context) *licensemanager_sdkv1.LicenseManager {
