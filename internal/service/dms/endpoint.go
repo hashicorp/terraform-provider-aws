@@ -7,10 +7,10 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"regexp"
 	"strings"
 	"time"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	dms "github.com/aws/aws-sdk-go/service/databasemigrationservice"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
@@ -2235,7 +2235,7 @@ func extraConnectionAttributesToSet(extra string) *schema.Set {
 		// normalize key, from camelCase to snake_case,
 		// and value where hyphens maybe used in a config
 		// but the API returns with underscores
-		matchAllCap := regexp.MustCompile("([a-z])([A-Z])")
+		matchAllCap := regexache.MustCompile("([a-z])([A-Z])")
 		key := matchAllCap.ReplaceAllString(k, "${1}_${2}")
 		normalizedVal := strings.Replace(strings.ToLower(v), "-", "_", -1)
 
