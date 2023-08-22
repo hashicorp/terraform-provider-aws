@@ -196,7 +196,7 @@ func (e *vpcEndpointNotFoundError) Error() string {
 }
 
 func (e *vpcEndpointNotFoundError) Is(err error) bool {
-	_, ok := err.(*vpcEndpointNotFoundError) //nolint:errorlint // Explicitly does *not* match down the error tree
+	_, ok := err.(*vpcEndpointNotFoundError)
 	return ok
 }
 
