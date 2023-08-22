@@ -1,5 +1,9 @@
 ## 5.14.0 (Unreleased)
 
+NOTES:
+
+* data-source/aws_iam_policy_document: In some cases, `statement.*.condition` blocks with the same `test` and `variable` arguments were incorrectly handled by the provider. Since this results in unexpected IAM Policies being submitted to AWS, we have updated the logic to merge `values` lists in this case. This may cause existing IAM Policy documents to report a difference. However, those policies are likely not what was originally intended. ([#33093](https://github.com/hashicorp/terraform-provider-aws/issues/33093))
+
 FEATURES:
 
 * **New Resource:** `aws_datasync_location_azure_blob` ([#32632](https://github.com/hashicorp/terraform-provider-aws/issues/32632))
@@ -17,9 +21,13 @@ ENHANCEMENTS:
 
 BUG FIXES:
 
+* data-source/aws_iam_policy_document: Fix inconsistent handling of `condition` blocks with duplicated `test` and `variable` arguments ([#33093](https://github.com/hashicorp/terraform-provider-aws/issues/33093))
 * resource/aws_msk_cluster_policy: Fix `Current cluster policy version needed for Update` errors ([#33118](https://github.com/hashicorp/terraform-provider-aws/issues/33118))
+* resource/aws_quicksight_analysis: Change `definition.*.parameter_declarations` to a set type, preventing persistent differences ([#33120](https://github.com/hashicorp/terraform-provider-aws/issues/33120))
 * resource/aws_quicksight_analysis: Fixed a bug that caused errors related to the `word_orientation` argument when using word cloud visuals. ([#33122](https://github.com/hashicorp/terraform-provider-aws/issues/33122))
+* resource/aws_quicksight_dashboard: Change `definition.*.parameter_declarations` to a set type, preventing persistent differences ([#33120](https://github.com/hashicorp/terraform-provider-aws/issues/33120))
 * resource/aws_quicksight_dashboard: Fixed a bug that caused errors related to the `word_orientation` argument when using word cloud visuals. ([#33122](https://github.com/hashicorp/terraform-provider-aws/issues/33122))
+* resource/aws_quicksight_template: Change `definition.*.parameter_declarations` to a set type, preventing persistent differences ([#33120](https://github.com/hashicorp/terraform-provider-aws/issues/33120))
 * resource/aws_quicksight_template: Fixed a bug that caused errors related to the `word_orientation` argument when using word cloud visuals. ([#33122](https://github.com/hashicorp/terraform-provider-aws/issues/33122))
 * resource/aws_route53_zone: Skip disabling DNS SEC in unsupported partitions ([#33103](https://github.com/hashicorp/terraform-provider-aws/issues/33103))
 * resource/aws_securityhub_account: Remove default value (`SECURITY_CONTROL`) for `control_finding_generator` argument and mark as Computed ([#33095](https://github.com/hashicorp/terraform-provider-aws/issues/33095))
