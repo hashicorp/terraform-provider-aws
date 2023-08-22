@@ -7,9 +7,9 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/service/costexplorer"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -39,7 +39,7 @@ func TestAccCEAnomalyMonitor_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAnomalyMonitorExists(ctx, resourceName, &monitor),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					acctest.MatchResourceAttrGlobalARN(resourceName, "arn", "ce", regexp.MustCompile(`anomalymonitor/.+`)),
+					acctest.MatchResourceAttrGlobalARN(resourceName, "arn", "ce", regexache.MustCompile(`anomalymonitor/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "monitor_type", "CUSTOM"),
 					resource.TestCheckResourceAttrSet(resourceName, "monitor_specification"),
 				),
