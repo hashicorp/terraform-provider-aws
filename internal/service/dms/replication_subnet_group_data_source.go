@@ -9,12 +9,13 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
+	dms "github.com/aws/aws-sdk-go/service/databasemigrationservice"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_dms_replication_subnet_group")
@@ -41,36 +42,32 @@ func DataSourceReplicationSubnetGroup() *schema.Resource {
 			},
 			"subnet_ids": {
 				Type:     schema.TypeSet,
-				Elem:     &schema.Schema{Type: schema.TypeString},
 				Computed: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
+			"tags": tftags.TagsSchemaComputed(),
 			"vpc_id": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"tags": tftags.TagsSchemaComputed(),
 		},
 	}
 }
 
-const (
-	DSNameReplicationSubnetGroup = "Replication Subnet Group Data Source"
-)
-
 func dataSourceReplicationSubnetGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DMSConn(ctx)
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	subnetID := d.Get("replication_subnet_group_id").(string)
+	replicationSubnetGroupID := d.Get("replication_subnet_group_id").(string)
+	group, err := FindReplicationSubnetGroupByID(ctx, conn, replicationSubnetGroupID)
 
-	out, err := FindReplicationSubnetGroupByID(ctx, conn, subnetID)
 	if err != nil {
-		return create.DiagError(names.DMS, create.ErrActionReading, DSNameReplicationSubnetGroup, d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading DMS Replication Subnet Group (%s): %s", replicationSubnetGroupID, err)
 	}
 
-	d.SetId(aws.StringValue(out.ReplicationSubnetGroupIdentifier))
-
+	d.SetId(aws.StringValue(group.ReplicationSubnetGroupIdentifier))
 	arn := arn.ARN{
 		Partition: meta.(*conns.AWSClient).Partition,
 		Service:   "dms",
@@ -79,27 +76,26 @@ func dataSourceReplicationSubnetGroupRead(ctx context.Context, d *schema.Resourc
 		Resource:  fmt.Sprintf("subgrp:%s", d.Id()),
 	}.String()
 	d.Set("replication_subnet_group_arn", arn)
-
-	d.Set("replication_subnet_group_description", out.ReplicationSubnetGroupDescription)
-	d.Set("replication_subnet_group_id", out.ReplicationSubnetGroupIdentifier)
-	d.Set("vpc_id", out.VpcId)
-
-	subnetIDs := []string{}
-	for _, subnet := range out.Subnets {
-		subnetIDs = append(subnetIDs, aws.StringValue(subnet.SubnetIdentifier))
-	}
+	d.Set("replication_subnet_group_description", group.ReplicationSubnetGroupDescription)
+	d.Set("replication_subnet_group_id", group.ReplicationSubnetGroupIdentifier)
+	subnetIDs := tfslices.ApplyToAll(group.Subnets, func(sn *dms.Subnet) string {
+		return aws.StringValue(sn.SubnetIdentifier)
+	})
 	d.Set("subnet_ids", subnetIDs)
+	d.Set("vpc_id", group.VpcId)
 
 	tags, err := listTags(ctx, conn, arn)
+
 	if err != nil {
-		return create.DiagError(names.DMS, create.ErrActionReading, DSNameReplicationSubnetGroup, d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "listing tags for DMS Replication Subnet Group (%s): %s", arn, err)
 	}
 
 	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return create.DiagError(names.DMS, create.ErrActionSetting, DSNameReplicationSubnetGroup, d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
-	return nil
+
+	return diags
 }
