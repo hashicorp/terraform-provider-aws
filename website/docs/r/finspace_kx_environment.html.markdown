@@ -26,7 +26,7 @@ resource "aws_finspace_kx_environment" "example" {
 }
 ```
 
-### With Network Setup
+### With Transit Gateway Configuration
 
 ```terraform
 resource "aws_kms_key" "example" {
@@ -46,7 +46,35 @@ resource "aws_finspace_kx_environment" "example_env" {
   transit_gateway_configuration {
     transit_gateway_id  = aws_ec2_transit_gateway.example.id
     routable_cidr_space = "100.64.0.0/26"
-    # Network ACL is optional but shown as example
+  }
+
+  custom_dns_configuration {
+    custom_dns_server_name = "example.finspace.amazonaws.com"
+    custom_dns_server_ip   = "10.0.0.76"
+  }
+}
+```
+
+### With Transit Gateway Attachment Network ACL Configuration
+
+```terraform
+resource "aws_kms_key" "example" {
+  description             = "Sample KMS Key"
+  deletion_window_in_days = 7
+}
+
+resource "aws_ec2_transit_gateway" "example" {
+  description = "example"
+}
+
+resource "aws_finspace_kx_environment" "example_env" {
+  name        = "my-tf-kx-environment"
+  description = "Environment description"
+  kms_key_id  = aws_kms_key.example.arn
+
+  transit_gateway_configuration {
+    transit_gateway_id  = aws_ec2_transit_gateway.example.id
+    routable_cidr_space = "100.64.0.0/26"
     attachment_network_acl_configuration {
       rule_number = 1
       protocol    = "6"
@@ -101,30 +129,30 @@ The transit_gateway_configuration block supports the following arguments:
 
 ### attachment_network_acl_configuration
 
-The network access control list (ACL) is an optional layer of security for your VPC that acts as a firewall for controlling traffic in and out of one or more subnets.
+The network access control list (ACL) is an optional layer of security for VPCs that acts as a firewall for controlling traffic in and out of one or more subnets.
 The entry is a set of numbered ingress and egress rules that determine whether a packet should be allowed in or out of a subnet associated with the ACL.
-We process the entries in the ACL according to the rule numbers, in ascending order. The attachment_network_acl_configuration block supports the following arguments:
+Entries in the ACL are processed according to the rule numbers, in ascending order. The `attachment_network_acl_configuration` block supports the following arguments:
 
-* `rule_number` - (Required) Rule number for the entry. All the network ACL entries are processed in ascending order by rule number.
-* `protocol` - (Required) Protocol number. A value of 1 means all the protocols
+* `cidr_block` - (Required) The IPv4 network range to allow or deny, in CIDR notation. The specified CIDR block is modified to its canonical form. For example, `100.68.0.18/18` will be converted to `100.68.0.0/18`.
+* `protocol` - (Required) Protocol number. A value of `1` means all the protocols.
 * `rule_action` - (Required) Indicates whether to `allow` or `deny` the traffic that matches the rule.
-* `cidr_block` - (Required) The IPv4 network range to allow or deny, in CIDR notation. For example, `172.16.0.0/24`. We modify the specified CIDR block to its canonical form. For example, if you specify `100.68.0.18/18`, we modify it to `100.68.0.0/18`.
+* `rule_number` - (Required) Rule number for the entry. All the network ACL entries are processed in ascending order by rule number.
+* `icmp_type_code` - (Optional) Defines the ICMP protocol that consists of the ICMP type and code. Defined below.
 * `port_range` - (Optional) Range of ports the rule applies to. Defined below.
-* `icmpTypeCode` - (Optional) Defines the ICMP protocol that consists of the ICMP type and code.
 
 ### port_range
 
-The range of ports the rule applies to (between 0 and 65535). The port_range block supports the following arguments:
+The range of ports the rule applies to (between `0` and `65535`). The `port_range` block supports the following arguments:
 
 * `from` - (Required) First port in the range.
 * `to` - (Required) Last port in the range.
 
-### icmpTypeCode
+### icmp_type_code
 
-Defines the ICMP protocol that consists of the ICMP type and code.The icmpTypeCode block supports the following arguments:
+Defines the ICMP protocol that consists of the ICMP type and code. The `icmp_type_code` block supports the following arguments:
 
-* `code` - (Required) ICMP code. A value of -1 means all codes for the specified ICMP type.
-* `type` - (Required) ICMP type. A value of -1 means all types.
+* `code` - (Required) ICMP code. A value of `-1` means all codes for the specified ICMP type.
+* `type` - (Required) ICMP type. A value of `-1` means all types.
 
 ## Attribute Reference
 
