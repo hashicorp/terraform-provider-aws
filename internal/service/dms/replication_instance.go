@@ -18,7 +18,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -45,8 +47,8 @@ func ResourceReplicationInstance() *schema.Resource {
 		Schema: map[string]*schema.Schema{
 			"allocated_storage": {
 				Type:         schema.TypeInt,
-				Computed:     true,
 				Optional:     true,
+				Computed:     true,
 				ValidateFunc: validation.IntBetween(5, 6144),
 			},
 			"allow_major_version_upgrade": {
@@ -59,13 +61,13 @@ func ResourceReplicationInstance() *schema.Resource {
 			},
 			"auto_minor_version_upgrade": {
 				Type:     schema.TypeBool,
-				Computed: true,
 				Optional: true,
+				Computed: true,
 			},
 			"availability_zone": {
 				Type:     schema.TypeString,
-				Computed: true,
 				Optional: true,
+				Computed: true,
 				ForceNew: true,
 			},
 			"engine_version": {
@@ -75,26 +77,26 @@ func ResourceReplicationInstance() *schema.Resource {
 			},
 			"kms_key_arn": {
 				Type:         schema.TypeString,
-				Computed:     true,
 				Optional:     true,
+				Computed:     true,
 				ForceNew:     true,
 				ValidateFunc: verify.ValidARN,
 			},
 			"multi_az": {
 				Type:     schema.TypeBool,
-				Computed: true,
 				Optional: true,
+				Computed: true,
 			},
 			"preferred_maintenance_window": {
 				Type:         schema.TypeString,
-				Computed:     true,
 				Optional:     true,
+				Computed:     true,
 				ValidateFunc: verify.ValidOnceAWeekWindowFormat,
 			},
 			"publicly_accessible": {
 				Type:     schema.TypeBool,
-				Computed: true,
 				Optional: true,
+				Computed: true,
 				ForceNew: true,
 			},
 			"replication_instance_arn": {
@@ -115,28 +117,27 @@ func ResourceReplicationInstance() *schema.Resource {
 			},
 			"replication_instance_private_ips": {
 				Type:     schema.TypeList,
-				Elem:     &schema.Schema{Type: schema.TypeString},
 				Computed: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 			"replication_instance_public_ips": {
 				Type:     schema.TypeList,
-				Elem:     &schema.Schema{Type: schema.TypeString},
 				Computed: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 			"replication_subnet_group_id": {
 				Type:     schema.TypeString,
-				Computed: true,
 				Optional: true,
+				Computed: true,
 				ForceNew: true,
 			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			"vpc_security_group_ids": {
 				Type:     schema.TypeSet,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-				Set:      schema.HashString,
-				Computed: true,
 				Optional: true,
+				Computed: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 		},
 
@@ -148,12 +149,13 @@ func resourceReplicationInstanceCreate(ctx context.Context, d *schema.ResourceDa
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DMSConn(ctx)
 
-	request := &dms.CreateReplicationInstanceInput{
+	replicationInstanceID := d.Get("replication_instance_id").(string)
+	input := &dms.CreateReplicationInstanceInput{
 		AutoMinorVersionUpgrade:       aws.Bool(d.Get("auto_minor_version_upgrade").(bool)),
 		PubliclyAccessible:            aws.Bool(d.Get("publicly_accessible").(bool)),
 		MultiAZ:                       aws.Bool(d.Get("multi_az").(bool)),
 		ReplicationInstanceClass:      aws.String(d.Get("replication_instance_class").(string)),
-		ReplicationInstanceIdentifier: aws.String(d.Get("replication_instance_id").(string)),
+		ReplicationInstanceIdentifier: aws.String(replicationInstanceID),
 		Tags:                          getTagsIn(ctx),
 	}
 
@@ -162,35 +164,34 @@ func resourceReplicationInstanceCreate(ctx context.Context, d *schema.ResourceDa
 	// to set the default value. See GitHub Issue #5694 https://github.com/hashicorp/terraform/issues/5694
 
 	if v, ok := d.GetOk("allocated_storage"); ok {
-		request.AllocatedStorage = aws.Int64(int64(v.(int)))
+		input.AllocatedStorage = aws.Int64(int64(v.(int)))
 	}
 	if v, ok := d.GetOk("availability_zone"); ok {
-		request.AvailabilityZone = aws.String(v.(string))
+		input.AvailabilityZone = aws.String(v.(string))
 	}
 	if v, ok := d.GetOk("engine_version"); ok {
-		request.EngineVersion = aws.String(v.(string))
+		input.EngineVersion = aws.String(v.(string))
 	}
 	if v, ok := d.GetOk("kms_key_arn"); ok {
-		request.KmsKeyId = aws.String(v.(string))
+		input.KmsKeyId = aws.String(v.(string))
 	}
 	if v, ok := d.GetOk("preferred_maintenance_window"); ok {
-		request.PreferredMaintenanceWindow = aws.String(v.(string))
+		input.PreferredMaintenanceWindow = aws.String(v.(string))
 	}
 	if v, ok := d.GetOk("replication_subnet_group_id"); ok {
-		request.ReplicationSubnetGroupIdentifier = aws.String(v.(string))
+		input.ReplicationSubnetGroupIdentifier = aws.String(v.(string))
 	}
 	if v, ok := d.GetOk("vpc_security_group_ids"); ok {
-		request.VpcSecurityGroupIds = flex.ExpandStringSet(v.(*schema.Set))
+		input.VpcSecurityGroupIds = flex.ExpandStringSet(v.(*schema.Set))
 	}
 
-	log.Println("[DEBUG] DMS create replication instance:", request)
+	_, err := conn.CreateReplicationInstanceWithContext(ctx, input)
 
-	_, err := conn.CreateReplicationInstanceWithContext(ctx, request)
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating DMS Replication Instance: %s", err)
+		return sdkdiag.AppendErrorf(diags, "creating DMS Replication Instance (%s): %s", replicationInstanceID, err)
 	}
 
-	d.SetId(d.Get("replication_instance_id").(string))
+	d.SetId(replicationInstanceID)
 
 	stateConf := &retry.StateChangeConf{
 		Pending:    []string{"creating", "modifying"},
@@ -214,32 +215,17 @@ func resourceReplicationInstanceRead(ctx context.Context, d *schema.ResourceData
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DMSConn(ctx)
 
-	response, err := conn.DescribeReplicationInstancesWithContext(ctx, &dms.DescribeReplicationInstancesInput{
-		Filters: []*dms.Filter{
-			{
-				Name:   aws.String("replication-instance-id"),
-				Values: []*string{aws.String(d.Id())}, // Must use d.Id() to work with import.
-			},
-		},
-	})
+	instance, err := FindReplicationInstanceByID(ctx, conn, d.Id())
 
-	if tfawserr.ErrCodeEquals(err, dms.ErrCodeResourceNotFoundFault) {
+	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] DMS Replication Instance (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return diags
+		return nil
 	}
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "describing DMS Replication Instance (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading DMS Replication Instance (%s): %s", d.Id(), err)
 	}
-
-	if response == nil || len(response.ReplicationInstances) == 0 || response.ReplicationInstances[0] == nil {
-		log.Printf("[WARN] DMS Replication Instance (%s) not found, removing from state", d.Id())
-		d.SetId("")
-		return diags
-	}
-
-	instance := response.ReplicationInstances[0]
 
 	d.Set("allocated_storage", instance.AllocatedStorage)
 	d.Set("auto_minor_version_upgrade", instance.AutoMinorVersionUpgrade)
@@ -252,25 +238,13 @@ func resourceReplicationInstanceRead(ctx context.Context, d *schema.ResourceData
 	d.Set("replication_instance_arn", instance.ReplicationInstanceArn)
 	d.Set("replication_instance_class", instance.ReplicationInstanceClass)
 	d.Set("replication_instance_id", instance.ReplicationInstanceIdentifier)
-
-	if err := d.Set("replication_instance_private_ips", aws.StringValueSlice(instance.ReplicationInstancePrivateIpAddresses)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting replication_instance_private_ips: %s", err)
-	}
-
-	if err := d.Set("replication_instance_public_ips", aws.StringValueSlice(instance.ReplicationInstancePublicIpAddresses)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting replication_instance_private_ips: %s", err)
-	}
-
+	d.Set("replication_instance_private_ips", aws.StringValueSlice(instance.ReplicationInstancePrivateIpAddresses))
+	d.Set("replication_instance_public_ips", aws.StringValueSlice(instance.ReplicationInstancePublicIpAddresses))
 	d.Set("replication_subnet_group_id", instance.ReplicationSubnetGroup.ReplicationSubnetGroupIdentifier)
-
-	vpc_security_group_ids := []string{}
-	for _, sg := range instance.VpcSecurityGroups {
-		vpc_security_group_ids = append(vpc_security_group_ids, aws.StringValue(sg.VpcSecurityGroupId))
-	}
-
-	if err := d.Set("vpc_security_group_ids", vpc_security_group_ids); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting vpc_security_group_ids: %s", err)
-	}
+	vpcSecurityGroupIDs := tfslices.ApplyToAll(instance.VpcSecurityGroups, func(sg *dms.VpcSecurityGroupMembership) string {
+		return aws.StringValue(sg.VpcSecurityGroupId)
+	})
+	d.Set("vpc_security_group_ids", vpcSecurityGroupIDs)
 
 	return diags
 }
@@ -422,4 +396,58 @@ func resourceReplicationInstanceStateRefreshFunc(ctx context.Context, conn *dms.
 
 		return v, aws.StringValue(v.ReplicationInstances[0].ReplicationInstanceStatus), nil
 	}
+}
+
+func FindReplicationInstanceByID(ctx context.Context, conn *dms.DatabaseMigrationService, id string) (*dms.ReplicationInstance, error) {
+	input := &dms.DescribeReplicationInstancesInput{
+		Filters: []*dms.Filter{
+			{
+				Name:   aws.String("replication-instance-id"),
+				Values: aws.StringSlice([]string{id}),
+			},
+		},
+	}
+
+	return findReplicationInstance(ctx, conn, input)
+}
+
+func findReplicationInstance(ctx context.Context, conn *dms.DatabaseMigrationService, input *dms.DescribeReplicationInstancesInput) (*dms.ReplicationInstance, error) {
+	output, err := findReplicationInstances(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSinglePtrResult(output)
+}
+
+func findReplicationInstances(ctx context.Context, conn *dms.DatabaseMigrationService, input *dms.DescribeReplicationInstancesInput) ([]*dms.ReplicationInstance, error) {
+	var output []*dms.ReplicationInstance
+
+	err := conn.DescribeReplicationInstancesPagesWithContext(ctx, input, func(page *dms.DescribeReplicationInstancesOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, v := range page.ReplicationInstances {
+			if v != nil {
+				output = append(output, v)
+			}
+		}
+
+		return !lastPage
+	})
+
+	if tfawserr.ErrCodeEquals(err, dms.ErrCodeResourceNotFoundFault) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	return output, nil
 }

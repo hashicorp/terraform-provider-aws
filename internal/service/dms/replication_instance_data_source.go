@@ -7,13 +7,11 @@ import (
 	"context"
 
 	"github.com/aws/aws-sdk-go/aws"
-	dms "github.com/aws/aws-sdk-go/service/databasemigrationservice"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -155,25 +153,4 @@ func dataSourceReplicationInstanceRead(ctx context.Context, d *schema.ResourceDa
 	}
 
 	return nil
-}
-
-func FindReplicationInstanceByID(ctx context.Context, conn *dms.DatabaseMigrationService, id string) (*dms.ReplicationInstance, error) {
-	input := &dms.DescribeReplicationInstancesInput{
-		Filters: []*dms.Filter{
-			{
-				Name:   aws.String("replication-instance-id"),
-				Values: []*string{aws.String(id)},
-			},
-		},
-	}
-	response, err := conn.DescribeReplicationInstancesWithContext(ctx, input)
-	if err != nil {
-		return nil, err
-	}
-
-	if response == nil || len(response.ReplicationInstances) == 0 || response.ReplicationInstances[0] == nil {
-		return nil, tfresource.NewEmptyResultError(input)
-	}
-
-	return response.ReplicationInstances[0], nil
 }
