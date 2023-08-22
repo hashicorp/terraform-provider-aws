@@ -1,0 +1,119 @@
+---
+subcategory: "QuickSight"
+layout: "aws"
+page_title: "AWS: aws_quicksight_theme"
+description: |-
+  Use this data source to fetch information about a QuickSight Theme.
+---
+
+# Data Source: aws_quicksight_theme
+
+Terraform data source for managing an AWS QuickSight Theme.
+
+## Example Usage
+
+### Basic Usage
+
+```terraform
+data "aws_quicksight_theme" "example" {
+  theme_id = "example"
+}
+```
+
+## Argument Reference
+
+The following arguments are required:
+
+* `theme_id` - Identifier of the theme.
+
+The following arguments are optional:
+
+* `aws_account_id` - AWS account ID.
+
+## Attribute Reference
+
+This data source exports the following attributes in addition to the arguments above:
+
+* `arn` - ARN of the theme.
+* `base_theme_id` - The ID of the theme that a custom theme will inherit from. All themes inherit from one of the starting themes defined by Amazon QuickSight.
+* `configuration` - The theme configuration, which contains the theme display properties. See [configuration](#configuration).
+* `created_time` - The time that the theme was created.
+* `id` - A comma-delimited string joining AWS account ID and theme ID.
+* `last_updated_time` - The time that the theme was last updated.
+* `name` - Display name of the theme.
+* `permissions` - A set of resource permissions on the theme. See [permissions](#permissions).
+* `status` - The theme creation status.
+* `tags` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
+* `version_description` - A description of the current theme version being created/updated.
+* `version_number` - The version number of the theme version.
+
+### permissions
+
+* `actions` - List of IAM actions to grant or revoke permissions on.
+* `principal` - ARN of the principal. See the [ResourcePermission documentation](https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ResourcePermission.html) for the applicable ARN values.
+
+### configuration
+
+* `data_color_palette` - Color properties that apply to chart data colors. See [data_color_palette](#data_color_palette).
+* `sheet` - Display options related to sheets. See [sheet](#sheet).
+* `typography` - Determines the typography options. See [typography](#typography).
+* `ui_color_palette` - Color properties that apply to the UI and to charts, excluding the colors that apply to data. See [ui_color_palette](#ui_color_palette).
+
+### data_color_palette
+
+* `colors` - List of hexadecimal codes for the colors. Minimum of 8 items and maximum of 20 items.
+* `empty_fill_color` - The hexadecimal code of a color that applies to charts where a lack of data is highlighted.
+* `min_max_gradient` - The minimum and maximum hexadecimal codes that describe a color gradient. List of exactly 2 items.
+
+### sheet
+
+* `tile` - The display options for tiles. See [tile](#tile).
+* `tile_layout` - The layout options for tiles. See [tile_layout](#tile_layout).
+
+### tile
+
+* `border` - The border around a tile. See [border](#border).
+
+### border
+
+* `show` - The option to enable display of borders for visuals.
+
+### tile_layout
+
+* `gutter` - The gutter settings that apply between tiles. See [gutter](#gutter).
+* `margin` - The margin settings that apply around the outside edge of sheets. See [margin](#margin).
+
+### gutter
+
+* `show` - This Boolean value controls whether to display a gutter space between sheet tiles.
+
+### margin
+
+* `show` - This Boolean value controls whether to display sheet margins.
+
+### typography
+
+* `font_families` - Determines the list of font families. Maximum number of 5 items. See [font_families](#font_families).
+
+### font_families
+
+* `font_family` - Font family name.
+
+### ui_color_palette
+
+* `accent` - Color (hexadecimal) that applies to selected states and buttons.
+* `accent_foreground` - Color (hexadecimal) that applies to any text or other elements that appear over the accent color.
+* `danger` - Color (hexadecimal) that applies to error messages.
+* `danger_foreground` - Color (hexadecimal) that applies to any text or other elements that appear over the error color.
+* `dimension` - Color (hexadecimal) that applies to the names of fields that are identified as dimensions.
+* `dimension_foreground` - Color (hexadecimal) that applies to any text or other elements that appear over the dimension color.
+* `measure` - Color (hexadecimal) that applies to the names of fields that are identified as measures.
+* `measure_foreground` - Color (hexadecimal) that applies to any text or other elements that appear over the measure color.
+* `primary_background` - Color (hexadecimal) that applies to visuals and other high emphasis UI.
+* `primary_foreground` - Color (hexadecimal) of text and other foreground elements that appear over the primary background regions, such as grid lines, borders, table banding, icons, and so on.
+* `secondary_background` - Color (hexadecimal) that applies to the sheet background and sheet controls.
+* `secondary_foreground` - Color (hexadecimal) that applies to any sheet title, sheet control text, or UI that appears over the secondary background.
+* `success` - Color (hexadecimal) that applies to success messages, for example the check mark for a successful download.
+* `success_foreground` - Color (hexadecimal) that applies to any text or other elements that appear over the success color.
+* `warning` - Color (hexadecimal) that applies to warning and informational messages.
+* `warning_foreground` - Color (hexadecimal) that applies to any text or other elements that appear over the warning color.

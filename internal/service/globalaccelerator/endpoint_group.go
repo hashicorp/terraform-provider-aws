@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package globalaccelerator
 
 import (
@@ -137,7 +140,7 @@ func ResourceEndpointGroup() *schema.Resource {
 }
 
 func resourceEndpointGroupCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).GlobalAcceleratorConn()
+	conn := meta.(*conns.AWSClient).GlobalAcceleratorConn(ctx)
 
 	input := &globalaccelerator.CreateEndpointGroupInput{
 		EndpointGroupRegion: aws.String(meta.(*conns.AWSClient).Region),
@@ -203,7 +206,7 @@ func resourceEndpointGroupCreate(ctx context.Context, d *schema.ResourceData, me
 }
 
 func resourceEndpointGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).GlobalAcceleratorConn()
+	conn := meta.(*conns.AWSClient).GlobalAcceleratorConn(ctx)
 
 	endpointGroup, err := FindEndpointGroupByARN(ctx, conn, d.Id())
 
@@ -243,7 +246,7 @@ func resourceEndpointGroupRead(ctx context.Context, d *schema.ResourceData, meta
 }
 
 func resourceEndpointGroupUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).GlobalAcceleratorConn()
+	conn := meta.(*conns.AWSClient).GlobalAcceleratorConn(ctx)
 
 	input := &globalaccelerator.UpdateEndpointGroupInput{
 		EndpointGroupArn: aws.String(d.Id()),
@@ -305,7 +308,7 @@ func resourceEndpointGroupUpdate(ctx context.Context, d *schema.ResourceData, me
 }
 
 func resourceEndpointGroupDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).GlobalAcceleratorConn()
+	conn := meta.(*conns.AWSClient).GlobalAcceleratorConn(ctx)
 
 	log.Printf("[DEBUG] Deleting Global Accelerator Endpoint Group: %s", d.Id())
 	_, err := conn.DeleteEndpointGroupWithContext(ctx, &globalaccelerator.DeleteEndpointGroupInput{
@@ -377,7 +380,7 @@ func expandEndpointConfiguration(tfMap map[string]interface{}) *globalaccelerato
 		apiObject.EndpointId = aws.String(v)
 	}
 
-	if v, ok := tfMap["weight"].(int); ok && v != 0 {
+	if v, ok := tfMap["weight"].(int); ok {
 		apiObject.Weight = aws.Int64(int64(v))
 	}
 

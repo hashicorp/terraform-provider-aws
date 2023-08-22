@@ -57,9 +57,9 @@ The following arguments are optional:
 
 * `force` - (Optional) Whether to request a forced stop when `state` is `stopped`. Otherwise (_i.e._, `state` is `running`), ignored. When an instance is forced to stop, it does not flush file system caches or file system metadata, and you must subsequently perform file system check and repair. Not recommended for Windows instances. Defaults to `false`.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - ID of the instance (matches `instance_id`).
 
@@ -73,8 +73,17 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-`aws_ec2_instance_state` can be imported by using the `instance_id` attribute, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_ec2_instance_state` using the `instance_id` attribute. For example:
 
+```terraform
+import {
+  to = aws_ec2_instance_state.test
+  id = "i-02cae6557dfcf2f96"
+}
 ```
-$ terraform import aws_ec2_instance_state.test i-02cae6557dfcf2f96
+
+Using `terraform import`, import `aws_ec2_instance_state` using the `instance_id` attribute. For example:
+
+```console
+% terraform import aws_ec2_instance_state.test i-02cae6557dfcf2f96
 ```

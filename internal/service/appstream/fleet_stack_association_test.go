@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package appstream_test
 
 import (
@@ -79,7 +82,7 @@ func testAccCheckFleetStackAssociationExists(ctx context.Context, resourceName s
 			return fmt.Errorf("not found: %s", resourceName)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AppStreamConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AppStreamConn(ctx)
 
 		fleetName, stackName, err := tfappstream.DecodeStackFleetID(rs.Primary.ID)
 		if err != nil {
@@ -98,7 +101,7 @@ func testAccCheckFleetStackAssociationExists(ctx context.Context, resourceName s
 
 func testAccCheckFleetStackAssociationDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AppStreamConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AppStreamConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_appstream_fleet_stack_association" {
@@ -128,11 +131,11 @@ func testAccCheckFleetStackAssociationDestroy(ctx context.Context) resource.Test
 }
 
 func testAccFleetStackAssociationConfig_basic(name string) string {
-	// "Amazon-AppStream2-Sample-Image-02-04-2019" is not available in GovCloud
+	// "Amazon-AppStream2-Sample-Image-03-11-2023" is not available in GovCloud
 	return fmt.Sprintf(`
 resource "aws_appstream_fleet" "test" {
   name          = %[1]q
-  image_name    = "Amazon-AppStream2-Sample-Image-02-04-2019"
+  image_name    = "Amazon-AppStream2-Sample-Image-03-11-2023"
   instance_type = "stream.standard.small"
 
   compute_capacity {

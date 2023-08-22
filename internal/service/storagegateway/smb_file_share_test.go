@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package storagegateway_test
 
 import (
@@ -232,6 +235,38 @@ func TestAccStorageGatewaySMBFileShare_defaultStorageClass(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccStorageGatewaySMBFileShare_encryptedUpdate(t *testing.T) {
+	ctx := acctest.Context(t)
+	var smbFileShare storagegateway.SMBFileShareInfo
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_storagegateway_smb_file_share.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, storagegateway.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckSMBFileShareDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSMBFileShareConfig_encryptedUpdate(rName, false),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSMBFileShareExists(ctx, resourceName, &smbFileShare),
+					resource.TestCheckResourceAttr(resourceName, "read_only", "false"),
+					resource.TestCheckResourceAttr(resourceName, "kms_encrypted", "true"),
+				),
+			},
+			{
+				Config: testAccSMBFileShareConfig_encryptedUpdate(rName, true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSMBFileShareExists(ctx, resourceName, &smbFileShare),
+					resource.TestCheckResourceAttr(resourceName, "read_only", "true"),
+					resource.TestCheckResourceAttr(resourceName, "kms_encrypted", "true"),
+				),
 			},
 		},
 	})
@@ -911,7 +946,7 @@ func TestAccStorageGatewaySMBFileShare_adminUserList(t *testing.T) {
 
 func testAccCheckSMBFileShareDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).StorageGatewayConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).StorageGatewayConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_storagegateway_smb_file_share" {
@@ -942,7 +977,7 @@ func testAccCheckSMBFileShareExists(ctx context.Context, resourceName string, sm
 			return fmt.Errorf("Not found: %s", resourceName)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).StorageGatewayConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).StorageGatewayConn(ctx)
 
 		output, err := tfstoragegateway.FindSMBFileShareByARN(ctx, conn, rs.Primary.ID)
 
@@ -1115,6 +1150,26 @@ resource "aws_storagegateway_smb_file_share" "test" {
   role_arn              = aws_iam_role.test.arn
 }
 `, defaultStorageClass))
+}
+
+func testAccSMBFileShareConfig_encryptedUpdate(rName string, readOnly bool) string {
+	return acctest.ConfigCompose(testAcc_SMBFileShare_GuestAccessBase(rName), fmt.Sprintf(`
+resource "aws_kms_key" "test" {
+  deletion_window_in_days = 7
+  description             = "Terraform Acceptance Testing"
+}
+
+resource "aws_storagegateway_smb_file_share" "test" {
+  # Use GuestAccess to simplify testing
+  authentication = "GuestAccess"
+  gateway_arn    = aws_storagegateway_gateway.test.arn
+  kms_encrypted  = true
+  kms_key_arn    = aws_kms_key.test.arn
+  location_arn   = aws_s3_bucket.test.arn
+  role_arn       = aws_iam_role.test.arn
+  read_only      = %[1]t
+}
+`, readOnly))
 }
 
 func testAccSMBFileShareConfig_name(rName, fileShareName string) string {

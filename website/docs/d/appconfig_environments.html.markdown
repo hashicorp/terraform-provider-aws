@@ -27,8 +27,8 @@ The following arguments are required:
 
 * `application_id` - (Required) ID of the AppConfig Application.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This data source exports the following attributes in addition to the arguments above:
 
 * `environment_ids` - Set of Environment IDs associated with this AppConfig Application.

@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package emrcontainers
 
 import (
@@ -254,13 +257,13 @@ func ResourceJobTemplate() *schema.Resource {
 }
 
 func resourceJobTemplateCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).EMRContainersConn()
+	conn := meta.(*conns.AWSClient).EMRContainersConn(ctx)
 
 	name := d.Get("name").(string)
 	input := &emrcontainers.CreateJobTemplateInput{
 		ClientToken: aws.String(id.UniqueId()),
 		Name:        aws.String(name),
-		Tags:        GetTagsIn(ctx),
+		Tags:        getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("job_template_data"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
@@ -283,7 +286,7 @@ func resourceJobTemplateCreate(ctx context.Context, d *schema.ResourceData, meta
 }
 
 func resourceJobTemplateRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).EMRContainersConn()
+	conn := meta.(*conns.AWSClient).EMRContainersConn(ctx)
 
 	vc, err := FindJobTemplateByID(ctx, conn, d.Id())
 
@@ -308,7 +311,7 @@ func resourceJobTemplateRead(ctx context.Context, d *schema.ResourceData, meta i
 	d.Set("name", vc.Name)
 	d.Set("kms_key_arn", vc.KmsKeyArn)
 
-	SetTagsOut(ctx, vc.Tags)
+	setTagsOut(ctx, vc.Tags)
 
 	return nil
 }
@@ -319,7 +322,7 @@ func resourceJobTemplateRead(ctx context.Context, d *schema.ResourceData, meta i
 // }
 
 func resourceJobTemplateDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).EMRContainersConn()
+	conn := meta.(*conns.AWSClient).EMRContainersConn(ctx)
 
 	log.Printf("[INFO] Deleting EMR Containers Job Template: %s", d.Id())
 	_, err := conn.DeleteJobTemplateWithContext(ctx, &emrcontainers.DeleteJobTemplateInput{

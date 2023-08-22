@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package waf
 
 import (
@@ -44,7 +47,7 @@ func (t *WafRetryer) RetryWithToken(ctx context.Context, f withTokenFunc) (inter
 		tokenOut, err = t.Connection.GetChangeToken(&waf.GetChangeTokenInput{})
 
 		if err != nil {
-			return nil, fmt.Errorf("error getting WAF change token: %w", err)
+			return nil, fmt.Errorf("getting WAF change token: %w", err)
 		}
 
 		out, err = f(tokenOut.ChangeToken)

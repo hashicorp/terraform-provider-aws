@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package elasticache
 
 import (
@@ -139,6 +142,42 @@ func TestValidRedisVersionString(t *testing.T) {
 			version: "6.y",
 			valid:   false,
 		},
+		{
+			version: "7.0",
+			valid:   true,
+		},
+		{
+			version: "7.2",
+			valid:   true,
+		},
+		{
+			version: "7.x",
+			valid:   false,
+		},
+		{
+			version: "7.2.x",
+			valid:   false,
+		},
+		{
+			version: "7.5.0",
+			valid:   false,
+		},
+		{
+			version: "7.5.",
+			valid:   false,
+		},
+		{
+			version: "7.",
+			valid:   false,
+		},
+		{
+			version: "7",
+			valid:   false,
+		},
+		{
+			version: "7.y",
+			valid:   false,
+		},
 	}
 
 	for _, testcase := range testcases {
@@ -191,6 +230,11 @@ func TestValidateClusterEngineVersion(t *testing.T) {
 			version: "6.0",
 			valid:   false,
 		},
+		{
+			engine:  "",
+			version: "7.0",
+			valid:   false,
+		},
 
 		{
 			engine:  engineMemcached,
@@ -207,6 +251,11 @@ func TestValidateClusterEngineVersion(t *testing.T) {
 			version: "6.0",
 			valid:   false,
 		},
+		{
+			engine:  engineMemcached,
+			version: "7.0",
+			valid:   false,
+		},
 
 		{
 			engine:  engineRedis,
@@ -221,6 +270,11 @@ func TestValidateClusterEngineVersion(t *testing.T) {
 		{
 			engine:  engineRedis,
 			version: "6.0",
+			valid:   true,
+		},
+		{
+			engine:  engineRedis,
+			version: "7.0",
 			valid:   true,
 		},
 	}
@@ -277,17 +331,17 @@ func TestCustomizeDiffEngineVersionIsDowngrade(t *testing.T) {
 			expected: false,
 		},
 
-		// "upgrade major 6.x": {
-		// 	old:            "5.0.6",
-		// 	new:            "6.x",
-		// 	expectForceNew: false,
-		// },
+		"upgrade major 6.x": {
+			old:      "5.0.6",
+			new:      "6.x",
+			expected: false,
+		},
 
-		// "upgrade major 6.digit": {
-		// 	old:            "5.0.6",
-		// 	new:            "6.0",
-		// 	expectForceNew: false,
-		// },
+		"upgrade major 6.digit": {
+			old:      "5.0.6",
+			new:      "6.0",
+			expected: false,
+		},
 
 		"downgrade minor versions": {
 			old:      "1.3.5",
@@ -319,15 +373,15 @@ func TestCustomizeDiffEngineVersionIsDowngrade(t *testing.T) {
 			expected: false,
 		},
 
-		"downgrade from major 7.x to 6.x": {
-			old:      "7.x",
+		"downgrade from major 7.digit to 6.x": {
+			old:      "7.2",
 			new:      "6.x",
 			expected: true,
 		},
 
-		"downgrade from major 7.digit to 6.x": {
+		"downgrade from major 7.digit to 6.digit": {
 			old:      "7.2",
-			new:      "6.x",
+			new:      "6.2",
 			expected: true,
 		},
 	}
@@ -419,17 +473,23 @@ func TestCustomizeDiffEngineVersionForceNewOnDowngrade(t *testing.T) {
 			expectForceNew: false,
 		},
 
-		// "upgrade major 6.x": {
-		// 	old:            "5.0.6",
-		// 	new:            "6.x",
-		// 	expectForceNew: false,
-		// },
+		"upgrade major 6.x": {
+			old:            "5.0.6",
+			new:            "6.x",
+			expectForceNew: false,
+		},
 
-		// "upgrade major 6.digit": {
-		// 	old:            "5.0.6",
-		// 	new:            "6.0",
-		// 	expectForceNew: false,
-		// },
+		"upgrade major 6.digit": {
+			old:            "5.0.6",
+			new:            "6.0",
+			expectForceNew: false,
+		},
+
+		"upgrade major 7.digit": {
+			old:            "6.x",
+			new:            "7.0",
+			expectForceNew: false,
+		},
 
 		"downgrade minor versions": {
 			old:            "1.3.5",
@@ -461,15 +521,21 @@ func TestCustomizeDiffEngineVersionForceNewOnDowngrade(t *testing.T) {
 			expectForceNew: false,
 		},
 
-		"downgrade from major 7.x to 6.x": {
-			old:            "7.x",
+		"downgrade from major 7.digit to 6.x": {
+			old:            "7.2",
 			new:            "6.x",
 			expectForceNew: true,
 		},
 
-		"downgrade from major 7.digit to 6.x": {
+		"downgrade from major 7.digit to 6.digit": {
 			old:            "7.2",
-			new:            "6.x",
+			new:            "6.2",
+			expectForceNew: true,
+		},
+
+		"downgrade major 7.digit": {
+			old:            "7.2",
+			new:            "7.0",
 			expectForceNew: true,
 		},
 	}
@@ -530,7 +596,16 @@ func TestNormalizeEngineVersion(t *testing.T) {
 			valid:      true,
 		},
 		{
+			version:    "7.2",
+			normalized: "7.2.0",
+			valid:      true,
+		},
+		{
 			version: "5.x",
+			valid:   false,
+		},
+		{
+			version: "7.x",
 			valid:   false,
 		},
 	}

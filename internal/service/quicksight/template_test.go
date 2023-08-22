@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package quicksight_test
 
 import (
@@ -314,7 +317,7 @@ func TestAccQuickSightTemplate_update(t *testing.T) {
 
 func testAccCheckTemplateDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).QuickSightConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).QuickSightConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_quicksight_template" {
@@ -349,7 +352,7 @@ func testAccCheckTemplateExists(ctx context.Context, name string, template *quic
 			return create.Error(names.QuickSight, create.ErrActionCheckingExistence, tfquicksight.ResNameTemplate, name, errors.New("not set"))
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).QuickSightConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).QuickSightConn(ctx)
 		output, err := tfquicksight.FindTemplateByID(ctx, conn, rs.Primary.ID)
 
 		if err != nil {
@@ -611,6 +614,12 @@ resource "aws_quicksight_template" "test" {
               header_style {
                 background_color = "#99CCFF"
                 height           = 20
+                font_configuration {
+                  font_color = "#212121"
+                  font_size {
+                    relative = "LARGE"
+                  }
+                }
               }
             }
             sort_configuration {

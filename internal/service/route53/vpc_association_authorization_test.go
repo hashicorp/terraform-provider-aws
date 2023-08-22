@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package route53_test
 
 import (
@@ -33,6 +36,7 @@ func TestAccRoute53VPCAssociationAuthorization_basic(t *testing.T) {
 				Config: testAccVPCAssociationAuthorizationConfig_basic(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVPCAssociationAuthorizationExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "vpc_region", acctest.Region()),
 				),
 			},
 			{
@@ -99,9 +103,39 @@ func TestAccRoute53VPCAssociationAuthorization_concurrent(t *testing.T) {
 	})
 }
 
+func TestAccRoute53VPCAssociationAuthorization_crossRegion(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName := "aws_route53_vpc_association_authorization.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckAlternateAccount(t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, route53.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+		CheckDestroy:             testAccCheckVPCAssociationAuthorizationDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVPCAssociationAuthorizationConfig_crossRegion(),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVPCAssociationAuthorizationExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "vpc_region", acctest.AlternateRegion()),
+				),
+			},
+			{
+				Config:            testAccVPCAssociationAuthorizationConfig_crossRegion(),
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func testAccCheckVPCAssociationAuthorizationDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).Route53Conn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).Route53Conn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_route53_vpc_association_authorization" {
@@ -151,7 +185,7 @@ func testAccCheckVPCAssociationAuthorizationExists(ctx context.Context, n string
 			return err
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).Route53Conn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).Route53Conn(ctx)
 
 		req := route53.ListVPCAssociationAuthorizationsInput{
 			HostedZoneId: aws.String(zone_id),
@@ -182,7 +216,7 @@ resource "aws_route53_vpc_association_authorization" "test" {
 
 resource "aws_vpc" "alternate" {
   provider             = "awsalternate"
-  cidr_block           = "10.7.0.0/16"
+  cidr_block           = cidrsubnet("10.0.0.0/8", 8, 1)
   enable_dns_hostnames = true
   enable_dns_support   = true
 }
@@ -196,7 +230,7 @@ resource "aws_route53_zone" "test" {
 }
 
 resource "aws_vpc" "test" {
-  cidr_block           = "10.6.0.0/16"
+  cidr_block           = cidrsubnet("10.0.0.0/8", 8, 0)
   enable_dns_hostnames = true
   enable_dns_support   = true
 }
@@ -252,6 +286,43 @@ resource "aws_vpc" "alternate" {
 resource "aws_vpc" "third" {
   provider             = "awsthird"
   cidr_block           = cidrsubnet("10.0.0.0/8", 8, 2)
+  enable_dns_hostnames = true
+  enable_dns_support   = true
+}
+`)
+}
+
+func testAccVPCAssociationAuthorizationConfig_crossRegion() string {
+	return acctest.ConfigCompose(
+		acctest.ConfigAlternateAccountAlternateRegionProvider(), `
+resource "aws_route53_vpc_association_authorization" "test" {
+  zone_id    = aws_route53_zone.test.id
+  vpc_id     = aws_vpc.alternate.id
+  vpc_region = data.aws_region.alternate.name
+}
+
+resource "aws_vpc" "alternate" {
+  provider = "awsalternate"
+
+  cidr_block           = cidrsubnet("10.0.0.0/8", 8, 1)
+  enable_dns_hostnames = true
+  enable_dns_support   = true
+}
+
+data "aws_region" "alternate" {
+  provider = "awsalternate"
+}
+
+resource "aws_route53_zone" "test" {
+  name = "example.com"
+
+  vpc {
+    vpc_id = aws_vpc.test.id
+  }
+}
+
+resource "aws_vpc" "test" {
+  cidr_block           = cidrsubnet("10.0.0.0/8", 8, 0)
   enable_dns_hostnames = true
   enable_dns_support   = true
 }

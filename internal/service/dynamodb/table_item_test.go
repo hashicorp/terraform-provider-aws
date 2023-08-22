@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package dynamodb_test
 
 import (
@@ -435,7 +438,7 @@ func TestAccDynamoDBTableItem_mapOutOfBandUpdate(t *testing.T) {
 			},
 			{
 				PreConfig: func() {
-					conn := acctest.Provider.Meta().(*conns.AWSClient).DynamoDBConn()
+					conn := acctest.Provider.Meta().(*conns.AWSClient).DynamoDBConn(ctx)
 
 					attributes, err := tfdynamodb.ExpandTableItemAttributes(newItem)
 					if err != nil {
@@ -472,7 +475,7 @@ func TestAccDynamoDBTableItem_mapOutOfBandUpdate(t *testing.T) {
 
 func testAccCheckTableItemDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DynamoDBConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DynamoDBConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_dynamodb_table_item" {
@@ -515,7 +518,7 @@ func testAccCheckTableItemExists(ctx context.Context, n string, item *dynamodb.G
 			return fmt.Errorf("No DynamoDB table item ID specified!")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DynamoDBConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DynamoDBConn(ctx)
 
 		attrs := rs.Primary.Attributes
 		attributes, err := tfdynamodb.ExpandTableItemAttributes(attrs["item"])
@@ -539,7 +542,7 @@ func testAccCheckTableItemExists(ctx context.Context, n string, item *dynamodb.G
 
 func testAccCheckTableItemCount(ctx context.Context, tableName string, count int64) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DynamoDBConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DynamoDBConn(ctx)
 		out, err := conn.ScanWithContext(ctx, &dynamodb.ScanInput{
 			ConsistentRead: aws.Bool(true),
 			TableName:      aws.String(tableName),

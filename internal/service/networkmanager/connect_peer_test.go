@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package networkmanager_test
 
 import (
@@ -163,7 +166,7 @@ func testAccCheckConnectPeerExists(ctx context.Context, n string, v *networkmana
 		if rs.Primary.ID == "" {
 			return fmt.Errorf("No Network Manager Connect Peer ID is set")
 		}
-		conn := acctest.Provider.Meta().(*conns.AWSClient).NetworkManagerConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).NetworkManagerConn(ctx)
 
 		output, err := tfnetworkmanager.FindConnectPeerByID(ctx, conn, rs.Primary.ID)
 
@@ -179,7 +182,7 @@ func testAccCheckConnectPeerExists(ctx context.Context, n string, v *networkmana
 
 func testAccCheckConnectPeerDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).NetworkManagerConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).NetworkManagerConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_networkmanager_connect_peer" {
@@ -235,10 +238,15 @@ resource "aws_networkmanager_global_network" "test" {
 
 resource "aws_networkmanager_core_network" "test" {
   global_network_id = aws_networkmanager_global_network.test.id
-  policy_document   = data.aws_networkmanager_core_network_policy_document.test.json
+
   tags = {
     Name = %[1]q
   }
+}
+
+resource "aws_networkmanager_core_network_policy_attachment" "test" {
+  core_network_id = aws_networkmanager_core_network.test.id
+  policy_document = data.aws_networkmanager_core_network_policy_document.test.json
 }
 
 data "aws_networkmanager_core_network_policy_document" "test" {
@@ -281,7 +289,7 @@ data "aws_networkmanager_core_network_policy_document" "test" {
 
 resource "aws_networkmanager_vpc_attachment" "test" {
   subnet_arns     = aws_subnet.test[*].arn
-  core_network_id = aws_networkmanager_core_network.test.id
+  core_network_id = aws_networkmanager_core_network_policy_attachment.test.core_network_id
   vpc_arn         = aws_vpc.test.arn
   tags = {
     segment = "shared"

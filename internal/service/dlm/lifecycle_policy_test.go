@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package dlm_test
 
 import (
@@ -522,7 +525,7 @@ func TestAccDLMLifecyclePolicy_disappears(t *testing.T) {
 
 func testAccCheckLifecyclePolicyDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DLMConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DLMConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_dlm_lifecycle_policy" {
@@ -559,7 +562,7 @@ func checkLifecyclePolicyExists(ctx context.Context, name string) resource.TestC
 			return fmt.Errorf("Not found: %s", name)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DLMConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DLMConn(ctx)
 
 		input := dlm.GetLifecyclePolicyInput{
 			PolicyId: aws.String(rs.Primary.ID),
@@ -576,7 +579,7 @@ func checkLifecyclePolicyExists(ctx context.Context, name string) resource.TestC
 }
 
 func testAccPreCheck(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).DLMConn()
+	conn := acctest.Provider.Meta().(*conns.AWSClient).DLMConn(ctx)
 
 	input := &dlm.GetLifecyclePoliciesInput{}
 

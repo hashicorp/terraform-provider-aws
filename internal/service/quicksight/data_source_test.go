@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package quicksight_test
 
 import (
@@ -202,7 +205,7 @@ func testAccCheckDataSourceExists(ctx context.Context, resourceName string, data
 			return err
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).QuickSightConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).QuickSightConn(ctx)
 
 		input := &quicksight.DescribeDataSourceInput{
 			AwsAccountId: aws.String(awsAccountID),
@@ -227,7 +230,7 @@ func testAccCheckDataSourceExists(ctx context.Context, resourceName string, data
 
 func testAccCheckDataSourceDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).QuickSightConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).QuickSightConn(ctx)
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_quicksight_data_source" {
 				continue
@@ -430,6 +433,26 @@ resource "aws_quicksight_user" "test" {
   }
 }
 `, rName, acctest.DefaultEmailAddress)
+}
+
+func testAccDataSource_UserConfigMultiple(rName string, count int) string {
+	return fmt.Sprintf(`
+data "aws_caller_identity" "current" {}
+
+resource "aws_quicksight_user" "test" {
+  count = %[3]d
+
+  aws_account_id = data.aws_caller_identity.current.account_id
+  user_name      = "%[1]s-${count.index}"
+  email          = %[2]q
+  identity_type  = "QUICKSIGHT"
+  user_role      = "AUTHOR"
+
+  lifecycle {
+    create_before_destroy = true
+  }
+}
+`, rName, acctest.DefaultEmailAddress, count)
 }
 
 func testAccDataSourceConfig_permissions(rId, rName string) string {

@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package apigatewayv2
 
 import (
@@ -55,7 +58,7 @@ func WaitVPCLinkAvailable(ctx context.Context, conn *apigatewayv2.ApiGatewayV2, 
 	return nil, err
 }
 
-// WaitVPCLinkAvailable waits for a VPC Link to return Deleted
+// WaitVPCLinkDeleted waits for a VPC Link to return Deleted
 func WaitVPCLinkDeleted(ctx context.Context, conn *apigatewayv2.ApiGatewayV2, vpcLinkId string) (*apigatewayv2.GetVpcLinkOutput, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending: []string{apigatewayv2.VpcLinkStatusDeleting},

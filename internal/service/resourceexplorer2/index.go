@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package resourceexplorer2
 
 import (
@@ -9,7 +12,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/resourceexplorer2"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/resourceexplorer2/types"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
-	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
@@ -20,8 +22,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
-	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
+	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -40,6 +42,7 @@ func newResourceIndex(context.Context) (resource.ResourceWithConfigure, error) {
 
 type resourceIndex struct {
 	framework.ResourceWithConfigure
+	framework.WithImportByID
 	framework.WithTimeouts
 }
 
@@ -80,11 +83,11 @@ func (r *resourceIndex) Create(ctx context.Context, request resource.CreateReque
 		return
 	}
 
-	conn := r.Meta().ResourceExplorer2Client()
+	conn := r.Meta().ResourceExplorer2Client(ctx)
 
 	input := &resourceexplorer2.CreateIndexInput{
 		ClientToken: aws.String(id.UniqueId()),
-		Tags:        GetTagsIn(ctx),
+		Tags:        getTagsIn(ctx),
 	}
 
 	output, err := conn.CreateIndex(ctx, input)
@@ -127,7 +130,7 @@ func (r *resourceIndex) Create(ctx context.Context, request resource.CreateReque
 	}
 
 	// Set values for unknowns.
-	data.ARN = types.StringValue(arn)
+	data.Arn = types.StringValue(arn)
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
@@ -141,7 +144,7 @@ func (r *resourceIndex) Read(ctx context.Context, request resource.ReadRequest, 
 		return
 	}
 
-	conn := r.Meta().ResourceExplorer2Client()
+	conn := r.Meta().ResourceExplorer2Client(ctx)
 
 	output, err := findIndex(ctx, conn)
 
@@ -158,10 +161,13 @@ func (r *resourceIndex) Read(ctx context.Context, request resource.ReadRequest, 
 		return
 	}
 
-	data.ARN = flex.StringToFramework(ctx, output.Arn)
-	data.Type = flex.StringValueToFramework(ctx, output.Type)
+	response.Diagnostics.Append(flex.Flatten(ctx, output, &data)...)
 
-	SetTagsOut(ctx, output.Tags)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
+	setTagsOut(ctx, output.Tags)
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
@@ -182,7 +188,7 @@ func (r *resourceIndex) Update(ctx context.Context, request resource.UpdateReque
 	}
 
 	if !new.Type.Equal(old.Type) {
-		conn := r.Meta().ResourceExplorer2Client()
+		conn := r.Meta().ResourceExplorer2Client(ctx)
 
 		input := &resourceexplorer2.UpdateIndexTypeInput{
 			Arn:  flex.StringFromFramework(ctx, new.ID),
@@ -217,7 +223,7 @@ func (r *resourceIndex) Delete(ctx context.Context, request resource.DeleteReque
 		return
 	}
 
-	conn := r.Meta().ResourceExplorer2Client()
+	conn := r.Meta().ResourceExplorer2Client(ctx)
 
 	tflog.Debug(ctx, "deleting Resource Explorer Index", map[string]interface{}{
 		"id": data.ID.ValueString(),
@@ -240,16 +246,13 @@ func (r *resourceIndex) Delete(ctx context.Context, request resource.DeleteReque
 	}
 }
 
-func (r *resourceIndex) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root("id"), request, response)
-}
-
 func (r *resourceIndex) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
 	r.SetTagsAll(ctx, request, response)
 }
 
+// See https://docs.aws.amazon.com/resource-explorer/latest/apireference/API_Index.html.
 type resourceIndexData struct {
-	ARN      types.String   `tfsdk:"arn"`
+	Arn      types.String   `tfsdk:"arn"`
 	ID       types.String   `tfsdk:"id"`
 	Tags     types.Map      `tfsdk:"tags"`
 	TagsAll  types.Map      `tfsdk:"tags_all"`

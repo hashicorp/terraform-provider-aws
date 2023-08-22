@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package elasticache
 
 import (
@@ -268,7 +271,7 @@ func paramGroupNameRequiresMajorVersionUpgrade(diff changeDiffer) error {
 }
 
 func resourceGlobalReplicationGroupCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ElastiCacheConn()
+	conn := meta.(*conns.AWSClient).ElastiCacheConn(ctx)
 
 	id := d.Get("global_replication_group_id_suffix").(string)
 	input := &elasticache.CreateGlobalReplicationGroupInput{
@@ -381,7 +384,7 @@ func resourceGlobalReplicationGroupCreate(ctx context.Context, d *schema.Resourc
 }
 
 func resourceGlobalReplicationGroupRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ElastiCacheConn()
+	conn := meta.(*conns.AWSClient).ElastiCacheConn(ctx)
 
 	globalReplicationGroup, err := FindGlobalReplicationGroupByID(ctx, conn, d.Id())
 	if !d.IsNewResource() && tfresource.NotFound(err) {
@@ -427,7 +430,7 @@ func resourceGlobalReplicationGroupRead(ctx context.Context, d *schema.ResourceD
 type globalReplicationGroupUpdater func(input *elasticache.ModifyGlobalReplicationGroupInput)
 
 func resourceGlobalReplicationGroupUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ElastiCacheConn()
+	conn := meta.(*conns.AWSClient).ElastiCacheConn(ctx)
 
 	// Only one field can be changed per request
 	if d.HasChange("cache_node_type") {
@@ -551,7 +554,7 @@ func updateGlobalReplicationGroup(ctx context.Context, conn *elasticache.ElastiC
 }
 
 func resourceGlobalReplicationGroupDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ElastiCacheConn()
+	conn := meta.(*conns.AWSClient).ElastiCacheConn(ctx)
 
 	// Using Update timeout because the Global Replication Group could be in the middle of an update operation
 	err := deleteGlobalReplicationGroup(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate), d.Timeout(schema.TimeoutDelete))
@@ -667,8 +670,14 @@ func globalReplcationGroupNodeGroupIncrease(ctx context.Context, conn *elasticac
 }
 
 func globalReplicationGroupNodeGroupDecrease(ctx context.Context, conn *elasticache.ElastiCache, id string, requested int, nodeGroupIDs []string) error {
-	slices.SortFunc(nodeGroupIDs, func(a, b string) bool {
-		return globalReplicationGroupNodeNumber(a) < globalReplicationGroupNodeNumber(b)
+	slices.SortFunc(nodeGroupIDs, func(a, b string) int {
+		if globalReplicationGroupNodeNumber(a) < globalReplicationGroupNodeNumber(b) {
+			return -1
+		}
+		if globalReplicationGroupNodeNumber(a) > globalReplicationGroupNodeNumber(b) {
+			return 1
+		}
+		return 0
 	})
 	nodeGroupIDs = nodeGroupIDs[:requested]
 

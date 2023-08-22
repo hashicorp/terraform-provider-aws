@@ -50,7 +50,7 @@ resource "aws_ec2_managed_prefix_list" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `address_family` - (Required, Forces new resource) Address family (`IPv4` or `IPv6`) of this prefix list.
 * `entry` - (Optional) Configuration block for prefix list entry. Detailed below. Different entries may have overlapping CIDR blocks, but a particular CIDR should not be duplicated.
@@ -63,9 +63,9 @@ The following arguments are supported:
 * `cidr` - (Required) CIDR block of this entry.
 * `description` - (Optional) Description of this entry. Due to API limitations, updating only the description of an existing entry requires temporarily removing and re-adding the entry.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the prefix list.
 * `id` - ID of the prefix list.
@@ -75,8 +75,17 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Prefix Lists can be imported using the `id`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Prefix Lists using the `id`. For example:
 
+```terraform
+import {
+  to = aws_ec2_managed_prefix_list.default
+  id = "pl-0570a1d2d725c16be"
+}
 ```
-$ terraform import aws_ec2_managed_prefix_list.default pl-0570a1d2d725c16be
+
+Using `terraform import`, import Prefix Lists using the `id`. For example:
+
+```console
+% terraform import aws_ec2_managed_prefix_list.default pl-0570a1d2d725c16be
 ```

@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package sagemaker_test
 
 import (
@@ -120,7 +123,7 @@ func TestAccSageMakerStudioLifecycleConfig_disappears(t *testing.T) {
 
 func testAccCheckStudioLifecycleDestroyConfig(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SageMakerConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SageMakerConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_sagemaker_studio_lifecycle_config" {
@@ -155,7 +158,7 @@ func testAccCheckStudioLifecycleExistsConfig(ctx context.Context, n string, conf
 			return fmt.Errorf("No SageMaker Studio Lifecycle Config ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SageMakerConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SageMakerConn(ctx)
 
 		output, err := tfsagemaker.FindStudioLifecycleConfigByName(ctx, conn, rs.Primary.ID)
 

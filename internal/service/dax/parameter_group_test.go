@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package dax_test
 
 import (
@@ -51,7 +54,7 @@ func TestAccDAXParameterGroup_basic(t *testing.T) {
 
 func testAccCheckParameterGroupDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DAXConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DAXConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_dax_parameter_group" {
@@ -79,7 +82,7 @@ func testAccCheckParameterGroupExists(ctx context.Context, name string) resource
 			return fmt.Errorf("Not found: %s", name)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DAXConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DAXConn(ctx)
 
 		_, err := conn.DescribeParameterGroupsWithContext(ctx, &dax.DescribeParameterGroupsInput{
 			ParameterGroupNames: []*string{aws.String(rs.Primary.ID)},

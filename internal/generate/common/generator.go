@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package common
 
 import (
@@ -99,7 +102,10 @@ func (d *fileDestination) WriteTemplate(templateName, templateBody string, templ
 }
 
 func parseTemplate(templateName, templateBody string, templateData any) ([]byte, error) {
-	tmpl, err := template.New(templateName).Parse(templateBody)
+	funcMap := template.FuncMap{
+		"Title": strings.Title,
+	}
+	tmpl, err := template.New(templateName).Funcs(funcMap).Parse(templateBody)
 
 	if err != nil {
 		return nil, fmt.Errorf("parsing function template: %w", err)

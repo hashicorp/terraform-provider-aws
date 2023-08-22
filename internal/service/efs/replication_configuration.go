@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package efs
 
 import (
@@ -97,7 +100,7 @@ func ResourceReplicationConfiguration() *schema.Resource {
 
 func resourceReplicationConfigurationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EFSConn()
+	conn := meta.(*conns.AWSClient).EFSConn(ctx)
 
 	fsID := d.Get("source_file_system_id").(string)
 	input := &efs.CreateReplicationConfigurationInput{
@@ -125,7 +128,7 @@ func resourceReplicationConfigurationCreate(ctx context.Context, d *schema.Resou
 
 func resourceReplicationConfigurationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EFSConn()
+	conn := meta.(*conns.AWSClient).EFSConn(ctx)
 
 	replication, err := FindReplicationConfigurationByID(ctx, conn, d.Id())
 
@@ -165,7 +168,7 @@ func resourceReplicationConfigurationRead(ctx context.Context, d *schema.Resourc
 
 func resourceReplicationConfigurationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EFSConn()
+	conn := meta.(*conns.AWSClient).EFSConn(ctx)
 
 	// Deletion of the replication configuration must be done from the
 	// Region in which the destination file system is located.

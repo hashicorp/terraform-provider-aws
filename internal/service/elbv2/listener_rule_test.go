@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package elbv2_test
 
 import (
@@ -602,11 +605,11 @@ func TestAccELBV2ListenerRule_priority(t *testing.T) {
 			},
 			{
 				Config:      testAccListenerRuleConfig_priority50001(rName),
-				ExpectError: regexp.MustCompile(`creating LB Listener Rule: ValidationError`),
+				ExpectError: regexp.MustCompile(`creating ELBv2 Listener Rule: ValidationError`),
 			},
 			{
 				Config:      testAccListenerRuleConfig_priorityInUse(rName),
-				ExpectError: regexp.MustCompile(`creating LB Listener Rule: PriorityInUse`),
+				ExpectError: regexp.MustCompile(`creating ELBv2 Listener Rule: PriorityInUse`),
 			},
 		},
 	})
@@ -1359,7 +1362,7 @@ func testAccCheckListenerRuleActionOrderDisappears(ctx context.Context, rule *el
 			return fmt.Errorf("Unable to find action order %d from actions: %#v", actionOrderToDelete, rule.Actions)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ELBV2Conn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ELBV2Conn(ctx)
 
 		input := &elbv2.ModifyRuleInput{
 			Actions: newActions,
@@ -1403,7 +1406,7 @@ func testAccCheckListenerRuleExists(ctx context.Context, n string, res *elbv2.Ru
 			return errors.New("No Listener Rule ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ELBV2Conn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ELBV2Conn(ctx)
 
 		describe, err := conn.DescribeRulesWithContext(ctx, &elbv2.DescribeRulesInput{
 			RuleArns: []*string{aws.String(rs.Primary.ID)},
@@ -1425,7 +1428,7 @@ func testAccCheckListenerRuleExists(ctx context.Context, n string, res *elbv2.Ru
 
 func testAccCheckListenerRuleDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ELBV2Conn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ELBV2Conn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_lb_listener_rule" && rs.Type != "aws_alb_listener_rule" {

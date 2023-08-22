@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package redshift
 
 import (
@@ -70,22 +73,6 @@ func statusClusterAqua(ctx context.Context, conn *redshift.Redshift, id string) 
 		}
 
 		return output, aws.StringValue(output.AquaConfiguration.AquaStatus), nil
-	}
-}
-
-func statusScheduleAssociation(ctx context.Context, conn *redshift.Redshift, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-		_, output, err := FindScheduleAssociationById(ctx, conn, id)
-
-		if tfresource.NotFound(err) {
-			return nil, "", nil
-		}
-
-		if err != nil {
-			return nil, "", err
-		}
-
-		return output, aws.StringValue(output.ScheduleAssociationState), nil
 	}
 }
 

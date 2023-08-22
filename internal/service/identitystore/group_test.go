@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package identitystore_test
 
 import (
@@ -82,7 +85,7 @@ func TestAccIdentityStoreGroup_disappears(t *testing.T) {
 
 func testAccCheckGroupDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).IdentityStoreClient()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).IdentityStoreClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_identitystore_group" {
@@ -116,7 +119,7 @@ func testAccCheckGroupExists(ctx context.Context, n string, v *identitystore.Des
 			return create.Error(names.IdentityStore, create.ErrActionCheckingExistence, tfidentitystore.ResNameGroup, n, errors.New("not set"))
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).IdentityStoreClient()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).IdentityStoreClient(ctx)
 
 		output, err := tfidentitystore.FindGroupByTwoPartKey(ctx, conn, rs.Primary.Attributes["identity_store_id"], rs.Primary.Attributes["group_id"])
 

@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ssoadmin_test
 
 import (
@@ -159,7 +162,7 @@ func TestAccSSOAdminPermissionsBoundaryAttachment_managedPolicyAndCustomerManage
 
 func testAccCheckPermissionsBoundaryAttachmentDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SSOAdminConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SSOAdminConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_ssoadmin_permissions_boundary_attachment" {
@@ -167,7 +170,6 @@ func testAccCheckPermissionsBoundaryAttachmentDestroy(ctx context.Context) resou
 			}
 
 			permissionSetARN, instanceARN, err := tfssoadmin.PermissionsBoundaryAttachmentParseResourceID(rs.Primary.ID)
-
 			if err != nil {
 				return err
 			}
@@ -196,17 +198,12 @@ func testAccCheckPermissionsBoundaryAttachmentExists(ctx context.Context, n stri
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No SSO Permissions Boundary Attachment ID is set")
-		}
-
 		permissionSetARN, instanceARN, err := tfssoadmin.PermissionsBoundaryAttachmentParseResourceID(rs.Primary.ID)
-
 		if err != nil {
 			return err
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SSOAdminConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SSOAdminConn(ctx)
 
 		_, err = tfssoadmin.FindPermissionsBoundary(ctx, conn, permissionSetARN, instanceARN)
 

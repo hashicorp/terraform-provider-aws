@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ec2_test
 
 import (
@@ -55,7 +58,7 @@ func TestAccVPCEndpointConnectionNotification_basic(t *testing.T) {
 
 func testAccCheckVPCEndpointConnectionNotificationDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_vpc_endpoint_connection_notification" {
@@ -90,7 +93,7 @@ func testAccCheckVPCEndpointConnectionNotificationExists(ctx context.Context, n 
 			return fmt.Errorf("No EC2 VPC Endpoint Connection Notification ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
 
 		_, err := tfec2.FindVPCConnectionNotificationByID(ctx, conn, rs.Primary.ID)
 

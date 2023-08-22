@@ -41,9 +41,9 @@ The following arguments are optional:
 * `comment` - (Optional) Comment.
 * `publish` - (Optional) Whether to publish creation/change as Live CloudFront Function Version. Defaults to `true`.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - Amazon Resource Name (ARN) identifying your CloudFront Function.
 * `etag` - ETag hash of the function. This is the value for the `DEVELOPMENT` stage of the function.
@@ -52,8 +52,17 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-CloudFront Functions can be imported using the `name`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import CloudFront Functions using the `name`. For example:
 
+```terraform
+import {
+  to = aws_cloudfront_function.test
+  id = "my_test_function"
+}
 ```
-$ terraform import aws_cloudfront_function.test my_test_function
+
+Using `terraform import`, import CloudFront Functions using the `name`. For example:
+
+```console
+% terraform import aws_cloudfront_function.test my_test_function
 ```

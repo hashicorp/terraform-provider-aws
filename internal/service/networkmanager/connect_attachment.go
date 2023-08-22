@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package networkmanager
 
 import (
@@ -127,7 +130,7 @@ func ResourceConnectAttachment() *schema.Resource {
 }
 
 func resourceConnectAttachmentCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).NetworkManagerConn()
+	conn := meta.(*conns.AWSClient).NetworkManagerConn(ctx)
 
 	coreNetworkID := d.Get("core_network_id").(string)
 	edgeLocation := d.Get("edge_location").(string)
@@ -141,7 +144,7 @@ func resourceConnectAttachmentCreate(ctx context.Context, d *schema.ResourceData
 		CoreNetworkId:         aws.String(coreNetworkID),
 		EdgeLocation:          aws.String(edgeLocation),
 		Options:               options,
-		Tags:                  GetTagsIn(ctx),
+		Tags:                  getTagsIn(ctx),
 		TransportAttachmentId: aws.String(transportAttachmentID),
 	}
 
@@ -188,7 +191,7 @@ func resourceConnectAttachmentCreate(ctx context.Context, d *schema.ResourceData
 }
 
 func resourceConnectAttachmentRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).NetworkManagerConn()
+	conn := meta.(*conns.AWSClient).NetworkManagerConn(ctx)
 
 	connectAttachment, err := FindConnectAttachmentByID(ctx, conn, d.Id())
 
@@ -229,7 +232,7 @@ func resourceConnectAttachmentRead(ctx context.Context, d *schema.ResourceData, 
 	d.Set("state", a.State)
 	d.Set("transport_attachment_id", connectAttachment.TransportAttachmentId)
 
-	SetTagsOut(ctx, a.Tags)
+	setTagsOut(ctx, a.Tags)
 
 	return nil
 }
@@ -240,7 +243,7 @@ func resourceConnectAttachmentUpdate(ctx context.Context, d *schema.ResourceData
 }
 
 func resourceConnectAttachmentDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).NetworkManagerConn()
+	conn := meta.(*conns.AWSClient).NetworkManagerConn(ctx)
 
 	// If ResourceAttachmentAccepter is used, then Connect Attachment state
 	// is never updated from StatePendingAttachmentAcceptance and the delete fails

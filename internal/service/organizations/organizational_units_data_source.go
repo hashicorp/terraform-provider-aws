@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package organizations
 
 import (
@@ -17,10 +20,6 @@ func DataSourceOrganizationalUnits() *schema.Resource {
 		ReadWithoutTimeout: dataSourceOrganizationalUnitsRead,
 
 		Schema: map[string]*schema.Schema{
-			"parent_id": {
-				Type:     schema.TypeString,
-				Required: true,
-			},
 			"children": {
 				Type:     schema.TypeList,
 				Computed: true,
@@ -41,31 +40,34 @@ func DataSourceOrganizationalUnits() *schema.Resource {
 					},
 				},
 			},
+			"parent_id": {
+				Type:     schema.TypeString,
+				Required: true,
+			},
 		},
 	}
 }
 
 func dataSourceOrganizationalUnitsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).OrganizationsConn()
+	conn := meta.(*conns.AWSClient).OrganizationsConn(ctx)
 
 	parentID := d.Get("parent_id").(string)
-	children, err := findOUsForParent(ctx, conn, parentID)
+	children, err := findOrganizationalUnitsForParent(ctx, conn, parentID)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "listing Organizations Organization Units for parent (%s): %s", parentID, err)
 	}
 
 	d.SetId(parentID)
-
-	if err := d.Set("children", FlattenOrganizationalUnits(children)); err != nil {
+	if err := d.Set("children", flattenOrganizationalUnits(children)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting children: %s", err)
 	}
 
 	return diags
 }
 
-func findOUsForParent(ctx context.Context, conn *organizations.Organizations, id string) ([]*organizations.OrganizationalUnit, error) {
+func findOrganizationalUnitsForParent(ctx context.Context, conn *organizations.Organizations, id string) ([]*organizations.OrganizationalUnit, error) {
 	input := &organizations.ListOrganizationalUnitsForParentInput{
 		ParentId: aws.String(id),
 	}
@@ -84,10 +86,11 @@ func findOUsForParent(ctx context.Context, conn *organizations.Organizations, id
 	return output, nil
 }
 
-func FlattenOrganizationalUnits(ous []*organizations.OrganizationalUnit) []map[string]interface{} {
+func flattenOrganizationalUnits(ous []*organizations.OrganizationalUnit) []map[string]interface{} {
 	if len(ous) == 0 {
 		return nil
 	}
+
 	var result []map[string]interface{}
 	for _, ou := range ous {
 		result = append(result, map[string]interface{}{

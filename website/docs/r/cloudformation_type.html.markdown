@@ -33,7 +33,7 @@ resource "aws_cloudformation_type" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `execution_role_arn` - (Optional) Amazon Resource Name (ARN) of the IAM Role for CloudFormation to assume when invoking the extension. If your extension calls AWS APIs in any of its handlers, you must create an IAM execution role that includes the necessary permissions to call those AWS APIs, and provision that execution role in your account. When CloudFormation needs to invoke the extension handler, CloudFormation assumes this execution role to create a temporary session token, which it then passes to the extension handler, thereby supplying your extension with the appropriate credentials.
 * `logging_config` - (Optional) Configuration block containing logging configuration.
@@ -43,14 +43,14 @@ The following arguments are supported:
 
 ### logging_config
 
-The following arguments are supported in the `logging_config` configuration block:
+The `logging_config` configuration block supports the following arguments:
 
 * `log_group_name` - (Required) Name of the CloudWatch Log Group where CloudFormation sends error logging information when invoking the type's handlers.
 * `log_role_arn` - (Required) Amazon Resource Name (ARN) of the IAM Role CloudFormation assumes when sending error logging information to CloudWatch Logs.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - (Optional) Amazon Resource Name (ARN) of the CloudFormation Type version. See also `type_arn`.
 * `default_version_id` - Identifier of the CloudFormation Type default version.
@@ -67,8 +67,17 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-`aws_cloudformation_type` can be imported with their type version Amazon Resource Name (ARN), e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_cloudformation_type` using the type version Amazon Resource Name (ARN). For example:
 
+```terraform
+import {
+  to = aws_cloudformation_type.example
+  id = "arn:aws:cloudformation:us-east-1:123456789012:type/resource/ExampleCompany-ExampleService-ExampleType/1"
+}
 ```
-terraform import aws_cloudformation_type.example arn:aws:cloudformation:us-east-1:123456789012:type/resource/ExampleCompany-ExampleService-ExampleType/1
+
+Using `terraform import`, import `aws_cloudformation_type` using the type version Amazon Resource Name (ARN). For example:
+
+```console
+% terraform import aws_cloudformation_type.example arn:aws:cloudformation:us-east-1:123456789012:type/resource/ExampleCompany-ExampleService-ExampleType/1
 ```

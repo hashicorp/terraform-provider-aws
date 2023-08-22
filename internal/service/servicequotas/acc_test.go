@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package servicequotas_test
 
 import (
@@ -26,7 +29,7 @@ const (
 )
 
 func testAccPreCheck(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).ServiceQuotasConn()
+	conn := acctest.Provider.Meta().(*conns.AWSClient).ServiceQuotasConn(ctx)
 
 	input := &servicequotas.ListServicesInput{}
 
@@ -43,7 +46,7 @@ func testAccPreCheck(ctx context.Context, t *testing.T) {
 
 // nosemgrep:ci.servicequotas-in-func-name
 func preCheckServiceQuotaSet(ctx context.Context, serviceCode, quotaCode string, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).ServiceQuotasConn()
+	conn := acctest.Provider.Meta().(*conns.AWSClient).ServiceQuotasConn(ctx)
 
 	input := &servicequotas.GetServiceQuotaInput{
 		QuotaCode:   aws.String(quotaCode),
@@ -60,7 +63,7 @@ func preCheckServiceQuotaSet(ctx context.Context, serviceCode, quotaCode string,
 }
 
 func preCheckServiceQuotaUnset(ctx context.Context, serviceCode, quotaCode string, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).ServiceQuotasConn()
+	conn := acctest.Provider.Meta().(*conns.AWSClient).ServiceQuotasConn(ctx)
 
 	input := &servicequotas.GetServiceQuotaInput{
 		QuotaCode:   aws.String(quotaCode),
@@ -77,7 +80,7 @@ func preCheckServiceQuotaUnset(ctx context.Context, serviceCode, quotaCode strin
 }
 
 func preCheckServiceQuotaHasUsageMetric(ctx context.Context, serviceCode, quotaCode string, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).ServiceQuotasConn()
+	conn := acctest.Provider.Meta().(*conns.AWSClient).ServiceQuotasConn(ctx)
 
 	input := &servicequotas.GetAWSDefaultServiceQuotaInput{
 		QuotaCode:   aws.String(quotaCode),

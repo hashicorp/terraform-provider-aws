@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package apigateway_test
 
 import (
@@ -130,7 +133,7 @@ func testAccCheckClientCertificateExists(ctx context.Context, n string, v *apiga
 			return fmt.Errorf("No API Gateway Client Certificate ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayConn(ctx)
 
 		output, err := tfapigateway.FindClientCertificateByID(ctx, conn, rs.Primary.ID)
 
@@ -146,7 +149,7 @@ func testAccCheckClientCertificateExists(ctx context.Context, n string, v *apiga
 
 func testAccCheckClientCertificateDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_api_gateway_client_certificate" {

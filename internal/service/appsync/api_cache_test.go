@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package appsync_test
 
 import (
@@ -71,7 +74,7 @@ func testAccAPICache_disappears(t *testing.T) {
 
 func testAccCheckAPICacheDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AppSyncConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AppSyncConn(ctx)
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_appsync_api_cache" {
 				continue
@@ -98,7 +101,7 @@ func testAccCheckAPICacheExists(ctx context.Context, resourceName string, apiCac
 			return fmt.Errorf("Appsync Api Cache Not found in state: %s", resourceName)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AppSyncConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AppSyncConn(ctx)
 		cache, err := tfappsync.FindAPICacheByID(ctx, conn, rs.Primary.ID)
 		if err != nil {
 			return err

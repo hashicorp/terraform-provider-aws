@@ -8,16 +8,18 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/codeartifact"
 	"github.com/aws/aws-sdk-go/service/codeartifact/codeartifactiface"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/logging"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// ListTags lists codeartifact service tags.
+// listTags lists codeartifact service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func ListTags(ctx context.Context, conn codeartifactiface.CodeArtifactAPI, identifier string) (tftags.KeyValueTags, error) {
+func listTags(ctx context.Context, conn codeartifactiface.CodeArtifactAPI, identifier string) (tftags.KeyValueTags, error) {
 	input := &codeartifact.ListTagsForResourceInput{
 		ResourceArn: aws.String(identifier),
 	}
@@ -34,7 +36,7 @@ func ListTags(ctx context.Context, conn codeartifactiface.CodeArtifactAPI, ident
 // ListTags lists codeartifact service tags and set them in Context.
 // It is called from outside this package.
 func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier string) error {
-	tags, err := ListTags(ctx, meta.(*conns.AWSClient).CodeArtifactConn(), identifier)
+	tags, err := listTags(ctx, meta.(*conns.AWSClient).CodeArtifactConn(ctx), identifier)
 
 	if err != nil {
 		return err
@@ -76,9 +78,9 @@ func KeyValueTags(ctx context.Context, tags []*codeartifact.Tag) tftags.KeyValue
 	return tftags.New(ctx, m)
 }
 
-// GetTagsIn returns codeartifact service tags from Context.
+// getTagsIn returns codeartifact service tags from Context.
 // nil is returned if there are no input tags.
-func GetTagsIn(ctx context.Context) []*codeartifact.Tag {
+func getTagsIn(ctx context.Context) []*codeartifact.Tag {
 	if inContext, ok := tftags.FromContext(ctx); ok {
 		if tags := Tags(inContext.TagsIn.UnwrapOrDefault()); len(tags) > 0 {
 			return tags
@@ -88,19 +90,21 @@ func GetTagsIn(ctx context.Context) []*codeartifact.Tag {
 	return nil
 }
 
-// SetTagsOut sets codeartifact service tags in Context.
-func SetTagsOut(ctx context.Context, tags []*codeartifact.Tag) {
+// setTagsOut sets codeartifact service tags in Context.
+func setTagsOut(ctx context.Context, tags []*codeartifact.Tag) {
 	if inContext, ok := tftags.FromContext(ctx); ok {
 		inContext.TagsOut = types.Some(KeyValueTags(ctx, tags))
 	}
 }
 
-// UpdateTags updates codeartifact service tags.
+// updateTags updates codeartifact service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func UpdateTags(ctx context.Context, conn codeartifactiface.CodeArtifactAPI, identifier string, oldTagsMap, newTagsMap any) error {
+func updateTags(ctx context.Context, conn codeartifactiface.CodeArtifactAPI, identifier string, oldTagsMap, newTagsMap any) error {
 	oldTags := tftags.New(ctx, oldTagsMap)
 	newTags := tftags.New(ctx, newTagsMap)
+
+	ctx = tflog.SetField(ctx, logging.KeyResourceId, identifier)
 
 	removedTags := oldTags.Removed(newTags)
 	removedTags = removedTags.IgnoreSystem(names.CodeArtifact)
@@ -138,5 +142,5 @@ func UpdateTags(ctx context.Context, conn codeartifactiface.CodeArtifactAPI, ide
 // UpdateTags updates codeartifact service tags.
 // It is called from outside this package.
 func (p *servicePackage) UpdateTags(ctx context.Context, meta any, identifier string, oldTags, newTags any) error {
-	return UpdateTags(ctx, meta.(*conns.AWSClient).CodeArtifactConn(), identifier, oldTags, newTags)
+	return updateTags(ctx, meta.(*conns.AWSClient).CodeArtifactConn(ctx), identifier, oldTags, newTags)
 }

@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ram_test
 
 import (
@@ -6,7 +9,6 @@ import (
 	"regexp"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ram"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -14,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfram "github.com/hashicorp/terraform-provider-aws/internal/service/ram"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func TestAccRAMResourceShare_basic(t *testing.T) {
@@ -221,27 +224,19 @@ func TestAccRAMResourceShare_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckResourceShareExists(ctx context.Context, resourceName string, v *ram.ResourceShare) resource.TestCheckFunc {
+func testAccCheckResourceShareExists(ctx context.Context, n string, v *ram.ResourceShare) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).RAMConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).RAMConn(ctx)
 
-		rs, ok := s.RootModule().Resources[resourceName]
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return fmt.Errorf("Not found: %s", resourceName)
-		}
-
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No ID is set")
+			return fmt.Errorf("Not found: %s", n)
 		}
 
 		output, err := tfram.FindResourceShareOwnerSelfByARN(ctx, conn, rs.Primary.ID)
 
 		if err != nil {
 			return err
-		}
-
-		if aws.StringValue(output.Status) != ram.ResourceShareStatusActive {
-			return fmt.Errorf("RAM resource share (%s) delet(ing|ed)", rs.Primary.ID)
 		}
 
 		*v = *output
@@ -252,22 +247,24 @@ func testAccCheckResourceShareExists(ctx context.Context, resourceName string, v
 
 func testAccCheckResourceShareDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).RAMConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).RAMConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_ram_resource_share" {
 				continue
 			}
 
-			resourceShare, err := tfram.FindResourceShareOwnerSelfByARN(ctx, conn, rs.Primary.ID)
+			_, err := tfram.FindResourceShareOwnerSelfByARN(ctx, conn, rs.Primary.ID)
+
+			if tfresource.NotFound(err) {
+				continue
+			}
 
 			if err != nil {
 				return err
 			}
 
-			if aws.StringValue(resourceShare.Status) != ram.ResourceShareStatusDeleted {
-				return fmt.Errorf("RAM resource share (%s) still exists", rs.Primary.ID)
-			}
+			return fmt.Errorf("RAM Resource Share %s still exists", rs.Primary.ID)
 		}
 
 		return nil

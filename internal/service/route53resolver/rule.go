@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package route53resolver
 
 import (
@@ -108,13 +111,13 @@ func ResourceRule() *schema.Resource {
 }
 
 func resourceRuleCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).Route53ResolverConn()
+	conn := meta.(*conns.AWSClient).Route53ResolverConn(ctx)
 
 	input := &route53resolver.CreateResolverRuleInput{
 		CreatorRequestId: aws.String(id.PrefixedUniqueId("tf-r53-resolver-rule-")),
 		DomainName:       aws.String(d.Get("domain_name").(string)),
 		RuleType:         aws.String(d.Get("rule_type").(string)),
-		Tags:             GetTagsIn(ctx),
+		Tags:             getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("name"); ok {
@@ -145,7 +148,7 @@ func resourceRuleCreate(ctx context.Context, d *schema.ResourceData, meta interf
 }
 
 func resourceRuleRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).Route53ResolverConn()
+	conn := meta.(*conns.AWSClient).Route53ResolverConn(ctx)
 
 	rule, err := FindResolverRuleByID(ctx, conn, d.Id())
 
@@ -177,7 +180,7 @@ func resourceRuleRead(ctx context.Context, d *schema.ResourceData, meta interfac
 }
 
 func resourceRuleUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).Route53ResolverConn()
+	conn := meta.(*conns.AWSClient).Route53ResolverConn(ctx)
 
 	if d.HasChanges("name", "resolver_endpoint_id", "target_ip") {
 		input := &route53resolver.UpdateResolverRuleInput{
@@ -212,7 +215,7 @@ func resourceRuleUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 }
 
 func resourceRuleDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).Route53ResolverConn()
+	conn := meta.(*conns.AWSClient).Route53ResolverConn(ctx)
 
 	log.Printf("[DEBUG] Deleting Route53 Resolver Rule: %s", d.Id())
 	_, err := conn.DeleteResolverRuleWithContext(ctx, &route53resolver.DeleteResolverRuleInput{

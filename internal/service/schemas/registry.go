@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package schemas
 
 import (
@@ -62,12 +65,12 @@ func ResourceRegistry() *schema.Resource {
 
 func resourceRegistryCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SchemasConn()
+	conn := meta.(*conns.AWSClient).SchemasConn(ctx)
 
 	name := d.Get("name").(string)
 	input := &schemas.CreateRegistryInput{
 		RegistryName: aws.String(name),
-		Tags:         GetTagsIn(ctx),
+		Tags:         getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("description"); ok {
@@ -88,7 +91,7 @@ func resourceRegistryCreate(ctx context.Context, d *schema.ResourceData, meta in
 
 func resourceRegistryRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SchemasConn()
+	conn := meta.(*conns.AWSClient).SchemasConn(ctx)
 
 	output, err := FindRegistryByName(ctx, conn, d.Id())
 
@@ -111,7 +114,7 @@ func resourceRegistryRead(ctx context.Context, d *schema.ResourceData, meta inte
 
 func resourceRegistryUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SchemasConn()
+	conn := meta.(*conns.AWSClient).SchemasConn(ctx)
 
 	if d.HasChanges("description") {
 		input := &schemas.UpdateRegistryInput{
@@ -132,7 +135,7 @@ func resourceRegistryUpdate(ctx context.Context, d *schema.ResourceData, meta in
 
 func resourceRegistryDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SchemasConn()
+	conn := meta.(*conns.AWSClient).SchemasConn(ctx)
 
 	log.Printf("[INFO] Deleting EventBridge Schemas Registry (%s)", d.Id())
 	_, err := conn.DeleteRegistryWithContext(ctx, &schemas.DeleteRegistryInput{

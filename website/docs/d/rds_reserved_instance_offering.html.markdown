@@ -24,7 +24,7 @@ data "aws_rds_reserved_instance_offering" "test" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This data source supports the following arguments:
 
 * `db_instance_class` - (Required) DB instance class for the reserved DB instance.
 * `duration` - (Required) Duration of the reservation in years or seconds. Valid values are `1`, `3`, `31536000`, `94608000`
@@ -34,7 +34,7 @@ The following arguments are supported:
 
 ## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This data source exports the following attributes in addition to the arguments above:
 
 * `id` - Unique identifier for the reservation. Same as `offering_id`.
 * `currency_code` - Currency code for the reserved DB instance.

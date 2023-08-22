@@ -20,6 +20,10 @@ For more information see the Amazon S3 User Guide on [`Lifecycle Configuration E
 
 ~> **NOTE:** S3 Buckets only support a single lifecycle configuration. Declaring multiple `aws_s3_bucket_lifecycle_configuration` resources to the same S3 Bucket will cause a perpetual difference in configuration.
 
+~> **NOTE:** Lifecycle configurations may take some time to fully propagate to all AWS S3 systems.
+Running Terraform operations shortly after creating a lifecycle configuration may result in changes that affect configuration idempotence.
+See the Amazon S3 User Guide on [setting lifecycle configuration on a bucket](https://docs.aws.amazon.com/AmazonS3/latest/userguide/how-to-set-lifecycle-configuration-intro.html).
+
 ## Example Usage
 
 ### With neither a filter nor prefix specified
@@ -356,7 +360,7 @@ resource "aws_s3_bucket_lifecycle_configuration" "versioning-bucket-config" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `bucket` - (Required) Name of the source S3 bucket you want Amazon S3 to monitor.
 * `expected_bucket_owner` - (Optional) Account ID of the expected bucket owner. If the bucket is owned by a different account, the request will fail with an HTTP 403 (Access Denied) error.
@@ -450,26 +454,44 @@ The `tag` configuration block supports the following arguments:
 * `key` - (Required) Name of the object key.
 * `value` - (Required) Value of the tag.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The `bucket` or `bucket` and `expected_bucket_owner` separated by a comma (`,`) if the latter is provided.
 
 ## Import
 
-S3 bucket lifecycle configuration can be imported in one of two ways.
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import S3 bucket lifecycle configuration using the `bucket` or using the `bucket` and `expected_bucket_owner` separated by a comma (`,`). For example:
 
-If the owner (account ID) of the source bucket is the same account used to configure the Terraform AWS Provider,
-the S3 bucket lifecycle configuration resource should be imported using the `bucket` e.g.,
+If the owner (account ID) of the source bucket is the same account used to configure the Terraform AWS Provider, import using the `bucket`:
 
-```sh
-$ terraform import aws_s3_bucket_lifecycle_configuration.example bucket-name
+```terraform
+import {
+  to = aws_s3_bucket_lifecycle_configuration.example
+  id = "bucket-name"
+}
 ```
 
-If the owner (account ID) of the source bucket differs from the account used to configure the Terraform AWS Provider,
-the S3 bucket lifecycle configuration resource should be imported using the `bucket` and `expected_bucket_owner` separated by a comma (`,`) e.g.,
+If the owner (account ID) of the source bucket differs from the account used to configure the Terraform AWS Provider, import using the `bucket` and `expected_bucket_owner` separated by a comma (`,`):
 
+```terraform
+import {
+  to = aws_s3_bucket_lifecycle_configuration.example
+  id = "bucket-name,123456789012"
+}
 ```
-$ terraform import aws_s3_bucket_lifecycle_configuration.example bucket-name,123456789012
+
+**Using `terraform import` to import** S3 bucket lifecycle configuration using the `bucket` or using the `bucket` and `expected_bucket_owner` separated by a comma (`,`). For example:
+
+If the owner (account ID) of the source bucket is the same account used to configure the Terraform AWS Provider, import using the `bucket`:
+
+```console
+% terraform import aws_s3_bucket_lifecycle_configuration.example bucket-name
+```
+
+If the owner (account ID) of the source bucket differs from the account used to configure the Terraform AWS Provider, import using the `bucket` and `expected_bucket_owner` separated by a comma (`,`):
+
+```console
+% terraform import aws_s3_bucket_lifecycle_configuration.example bucket-name,123456789012
 ```

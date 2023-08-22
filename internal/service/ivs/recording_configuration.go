@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ivs
 
 import (
@@ -121,11 +124,11 @@ const (
 )
 
 func resourceRecordingConfigurationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).IVSConn()
+	conn := meta.(*conns.AWSClient).IVSConn(ctx)
 
 	in := &ivs.CreateRecordingConfigurationInput{
 		DestinationConfiguration: expandDestinationConfiguration(d.Get("destination_configuration").([]interface{})),
-		Tags:                     GetTagsIn(ctx),
+		Tags:                     getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("name"); ok {
@@ -163,7 +166,7 @@ func resourceRecordingConfigurationCreate(ctx context.Context, d *schema.Resourc
 }
 
 func resourceRecordingConfigurationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).IVSConn()
+	conn := meta.(*conns.AWSClient).IVSConn(ctx)
 
 	out, err := FindRecordingConfigurationByID(ctx, conn, d.Id())
 
@@ -195,7 +198,7 @@ func resourceRecordingConfigurationRead(ctx context.Context, d *schema.ResourceD
 }
 
 func resourceRecordingConfigurationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).IVSConn()
+	conn := meta.(*conns.AWSClient).IVSConn(ctx)
 
 	log.Printf("[INFO] Deleting IVS RecordingConfiguration %s", d.Id())
 

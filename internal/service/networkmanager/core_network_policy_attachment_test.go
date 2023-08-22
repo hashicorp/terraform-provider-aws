@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package networkmanager_test
 
 import (
@@ -167,7 +170,7 @@ func testAccCheckCoreNetworkPolicyAttachmentExists(ctx context.Context, n string
 			return fmt.Errorf("No Network Manager Core Network ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).NetworkManagerConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).NetworkManagerConn(ctx)
 
 		// pass in latestPolicyVersionId to get the latest version id by default
 		const latestPolicyVersionId = -1
