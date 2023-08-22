@@ -242,80 +242,51 @@ func resourceReplicationInstanceUpdate(ctx context.Context, d *schema.ResourceDa
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DMSConn(ctx)
 
-	request := &dms.ModifyReplicationInstanceInput{
-		ApplyImmediately:       aws.Bool(d.Get("apply_immediately").(bool)),
-		ReplicationInstanceArn: aws.String(d.Get("replication_instance_arn").(string)),
-	}
-	hasChanges := false
-
-	if d.HasChange("auto_minor_version_upgrade") {
-		request.AutoMinorVersionUpgrade = aws.Bool(d.Get("auto_minor_version_upgrade").(bool))
-		hasChanges = true
-	}
-
-	if d.HasChange("allocated_storage") {
-		if v, ok := d.GetOk("allocated_storage"); ok {
-			request.AllocatedStorage = aws.Int64(int64(v.(int)))
-			hasChanges = true
-		}
-	}
-
-	if v, ok := d.GetOk("allow_major_version_upgrade"); ok {
-		request.AllowMajorVersionUpgrade = aws.Bool(v.(bool))
+	if d.HasChangesExcept("tags", "tags_all", "allow_major_version_upgrade") {
 		// Having allowing_major_version_upgrade by itself should not trigger ModifyReplicationInstance
 		// as it results in InvalidParameterCombination: No modifications were requested
-	}
-
-	if d.HasChange("engine_version") {
-		if v, ok := d.GetOk("engine_version"); ok {
-			request.EngineVersion = aws.String(v.(string))
-			hasChanges = true
+		input := &dms.ModifyReplicationInstanceInput{
+			AllowMajorVersionUpgrade: aws.Bool(d.Get("allow_major_version_upgrade").(bool)),
+			ApplyImmediately:         aws.Bool(d.Get("apply_immediately").(bool)),
+			ReplicationInstanceArn:   aws.String(d.Get("replication_instance_arn").(string)),
 		}
-	}
 
-	if d.HasChange("multi_az") {
-		request.MultiAZ = aws.Bool(d.Get("multi_az").(bool))
-		hasChanges = true
-	}
-
-	if d.HasChange("preferred_maintenance_window") {
-		if v, ok := d.GetOk("preferred_maintenance_window"); ok {
-			request.PreferredMaintenanceWindow = aws.String(v.(string))
-			hasChanges = true
+		if d.HasChange("allocated_storage") {
+			input.AllocatedStorage = aws.Int64(int64(d.Get("allocated_storage").(int)))
 		}
-	}
 
-	if d.HasChange("replication_instance_class") {
-		request.ReplicationInstanceClass = aws.String(d.Get("replication_instance_class").(string))
-		hasChanges = true
-	}
-
-	if d.HasChange("vpc_security_group_ids") {
-		if v, ok := d.GetOk("vpc_security_group_ids"); ok {
-			request.VpcSecurityGroupIds = flex.ExpandStringSet(v.(*schema.Set))
-			hasChanges = true
+		if d.HasChange("auto_minor_version_upgrade") {
+			input.AutoMinorVersionUpgrade = aws.Bool(d.Get("auto_minor_version_upgrade").(bool))
 		}
-	}
 
-	if hasChanges {
-		_, err := conn.ModifyReplicationInstanceWithContext(ctx, request)
+		if d.HasChange("engine_version") {
+			input.EngineVersion = aws.String(d.Get("engine_version").(string))
+		}
+
+		if d.HasChange("multi_az") {
+			input.MultiAZ = aws.Bool(d.Get("multi_az").(bool))
+		}
+
+		if d.HasChange("preferred_maintenance_window") {
+			input.PreferredMaintenanceWindow = aws.String(d.Get("preferred_maintenance_window").(string))
+		}
+
+		if d.HasChange("replication_instance_class") {
+			input.ReplicationInstanceClass = aws.String(d.Get("replication_instance_class").(string))
+		}
+
+		if d.HasChange("vpc_security_group_ids") {
+			input.VpcSecurityGroupIds = flex.ExpandStringSet(d.Get("vpc_security_group_ids").(*schema.Set))
+		}
+
+		_, err := conn.ModifyReplicationInstanceWithContext(ctx, input)
+
 		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "modifying DMS Replication Instance (%s): %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "updating DMS Replication Instance (%s): %s", d.Id(), err)
 		}
 
-		stateConf := &retry.StateChangeConf{
-			Pending:    []string{"modifying", "upgrading"},
-			Target:     []string{"available"},
-			Refresh:    resourceReplicationInstanceStateRefreshFunc(ctx, conn, d.Id()),
-			Timeout:    d.Timeout(schema.TimeoutUpdate),
-			MinTimeout: 10 * time.Second,
-			Delay:      30 * time.Second, // Wait 30 secs before starting
-		}
-
-		// Wait, catching any errors
-		_, err = stateConf.WaitForStateContext(ctx)
-		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "waiting for DMS Replication Instance (%s) modification: %s", d.Id(), err)
+		if _, err := waitReplicationInstanceUpdated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "waiting for DMS Replication Instance (%s) update: %s", d.Id(), err)
 		}
 	}
 
@@ -344,33 +315,6 @@ func resourceReplicationInstanceDelete(ctx context.Context, d *schema.ResourceDa
 	}
 
 	return diags
-}
-
-func resourceReplicationInstanceStateRefreshFunc(ctx context.Context, conn *dms.DatabaseMigrationService, replicationInstanceID string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-		v, err := conn.DescribeReplicationInstancesWithContext(ctx, &dms.DescribeReplicationInstancesInput{
-			Filters: []*dms.Filter{
-				{
-					Name:   aws.String("replication-instance-id"),
-					Values: []*string{aws.String(replicationInstanceID)},
-				},
-			},
-		})
-
-		if tfawserr.ErrCodeEquals(err, dms.ErrCodeResourceNotFoundFault) {
-			return nil, "", nil
-		}
-
-		if err != nil {
-			return nil, "", err
-		}
-
-		if v == nil || len(v.ReplicationInstances) == 0 || v.ReplicationInstances[0] == nil {
-			return nil, "", nil
-		}
-
-		return v, aws.StringValue(v.ReplicationInstances[0].ReplicationInstanceStatus), nil
-	}
 }
 
 func FindReplicationInstanceByID(ctx context.Context, conn *dms.DatabaseMigrationService, id string) (*dms.ReplicationInstance, error) {
@@ -446,6 +390,25 @@ func statusReplicationInstance(ctx context.Context, conn *dms.DatabaseMigrationS
 func waitReplicationInstanceCreated(ctx context.Context, conn *dms.DatabaseMigrationService, id string, timeout time.Duration) (*dms.ReplicationInstance, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending:    []string{replicationInstanceStatusCreating, replicationInstanceStatusModifying},
+		Target:     []string{replicationInstanceStatusAvailable},
+		Refresh:    statusReplicationInstance(ctx, conn, id),
+		Timeout:    timeout,
+		MinTimeout: 10 * time.Second,
+		Delay:      30 * time.Second, // Wait 30 secs before starting
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*dms.ReplicationInstance); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitReplicationInstanceUpdated(ctx context.Context, conn *dms.DatabaseMigrationService, id string, timeout time.Duration) (*dms.ReplicationInstance, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending:    []string{replicationInstanceStatusModifying, replicationInstanceStatusUpgrading},
 		Target:     []string{replicationInstanceStatusAvailable},
 		Refresh:    statusReplicationInstance(ctx, conn, id),
 		Timeout:    timeout,
