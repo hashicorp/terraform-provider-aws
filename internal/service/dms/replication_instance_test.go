@@ -719,12 +719,22 @@ func testAccReplicationInstanceConfig_publiclyAccessible(rName string, publiclyA
 	return acctest.ConfigCompose(testAccReplicationInstanceConfig_base(rName), fmt.Sprintf(`
 data "aws_partition" "current" {}
 
+resource "aws_internet_gateway" "test" {
+  vpc_id = aws_vpc.test.id
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
 resource "aws_dms_replication_instance" "test" {
   apply_immediately           = true
   publicly_accessible         = %[2]t
   replication_instance_class  = data.aws_partition.current.partition == "aws" ? "dms.t2.micro" : "dms.c4.large"
   replication_instance_id     = %[1]q
   replication_subnet_group_id = aws_dms_replication_subnet_group.test.id
+
+  depends_on = [aws_internet_gateway.test]
 }
 `, rName, publiclyAccessible))
 }
