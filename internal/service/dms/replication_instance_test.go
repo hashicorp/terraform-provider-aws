@@ -8,19 +8,18 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
 	dms "github.com/aws/aws-sdk-go/service/databasemigrationservice"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfdms "github.com/hashicorp/terraform-provider-aws/internal/service/dms"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func TestAccDMSReplicationInstance_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-
 	// NOTE: Using larger dms.c4.large here for AWS GovCloud (US) support
 	replicationInstanceClass := "dms.c4.large"
 	resourceName := "aws_dms_replication_instance.test"
@@ -361,7 +360,6 @@ func TestAccDMSReplicationInstance_publiclyAccessible(t *testing.T) {
 
 func TestAccDMSReplicationInstance_replicationInstanceClass(t *testing.T) {
 	ctx := acctest.Context(t)
-
 	// NOTE: Using larger dms.c4.(x)?large here for AWS GovCloud (US) support
 	replicationInstanceClass1 := "dms.c4.large"
 	replicationInstanceClass2 := "dms.c4.xlarge"
@@ -501,6 +499,8 @@ func TestAccDMSReplicationInstance_vpcSecurityGroupIDs(t *testing.T) {
 	})
 }
 
+// TODo _disappears
+
 func testAccCheckReplicationInstanceExists(ctx context.Context, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -508,27 +508,11 @@ func testAccCheckReplicationInstanceExists(ctx context.Context, n string) resour
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No ID is set")
-		}
 		conn := acctest.Provider.Meta().(*conns.AWSClient).DMSConn(ctx)
-		resp, err := conn.DescribeReplicationInstancesWithContext(ctx, &dms.DescribeReplicationInstancesInput{
-			Filters: []*dms.Filter{
-				{
-					Name:   aws.String("replication-instance-id"),
-					Values: []*string{aws.String(rs.Primary.ID)},
-				},
-			},
-		})
 
-		if err != nil {
-			return fmt.Errorf("DMS replication instance error: %v", err)
-		}
-		if resp == nil || len(resp.ReplicationInstances) == 0 {
-			return fmt.Errorf("DMS replication instance not found")
-		}
+		_, err := tfdms.FindReplicationInstanceByID(ctx, conn, rs.Primary.ID)
 
-		return nil
+		return err
 	}
 }
 
@@ -541,16 +525,9 @@ func testAccCheckReplicationInstanceDestroy(ctx context.Context) resource.TestCh
 
 			conn := acctest.Provider.Meta().(*conns.AWSClient).DMSConn(ctx)
 
-			resp, err := conn.DescribeReplicationInstancesWithContext(ctx, &dms.DescribeReplicationInstancesInput{
-				Filters: []*dms.Filter{
-					{
-						Name:   aws.String("replication-instance-id"),
-						Values: []*string{aws.String(rs.Primary.ID)},
-					},
-				},
-			})
+			_, err := tfdms.FindReplicationInstanceByID(ctx, conn, rs.Primary.ID)
 
-			if tfawserr.ErrCodeEquals(err, dms.ErrCodeResourceNotFoundFault) {
+			if tfresource.NotFound(err) {
 				continue
 			}
 
@@ -558,13 +535,7 @@ func testAccCheckReplicationInstanceDestroy(ctx context.Context) resource.TestCh
 				return err
 			}
 
-			if resp != nil {
-				for _, replicationInstance := range resp.ReplicationInstances {
-					if aws.StringValue(replicationInstance.ReplicationInstanceIdentifier) == rs.Primary.ID {
-						return fmt.Errorf("DMS Replication Instance (%s) still exists", rs.Primary.ID)
-					}
-				}
-			}
+			return fmt.Errorf("DMS Replication Instance %s still exists", rs.Primary.ID)
 		}
 
 		return nil
