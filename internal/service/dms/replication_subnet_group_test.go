@@ -37,6 +37,7 @@ func TestAccDMSReplicationSubnetGroup_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "replication_subnet_group_description", "desc1"),
 					resource.TestCheckResourceAttr(resourceName, "replication_subnet_group_id", rName),
 					resource.TestCheckResourceAttr(resourceName, "subnet_ids.#", "3"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					resource.TestCheckResourceAttrSet(resourceName, "vpc_id"),
 				),
 			},
@@ -51,6 +52,29 @@ func TestAccDMSReplicationSubnetGroup_basic(t *testing.T) {
 					testAccCheckReplicationSubnetGroupExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "replication_subnet_group_description", "desc2"),
 				),
+			},
+		},
+	})
+}
+
+func TestAccDMSReplicationSubnetGroup_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName := "aws_dms_replication_subnet_group.dms_replication_subnet_group"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, dms.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckReplicationSubnetGroupDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccReplicationSubnetGroupConfig_basic(rName, "desc1"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckReplicationSubnetGroupExists(ctx, resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfdms.ResourceReplicationSubnetGroup(), resourceName),
+				),
+				ExpectNonEmptyPlan: true,
 			},
 		},
 	})
