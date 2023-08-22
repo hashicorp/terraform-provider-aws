@@ -159,12 +159,12 @@ func ResourceKxEnvironment() *schema.Resource {
 												"from": {
 													Type:         schema.TypeInt,
 													Required:     true,
-													ValidateFunc: validation.IntBetween(1, 100),
+													ValidateFunc: validation.IsPortNumber,
 												},
 												"to": {
 													Type:         schema.TypeInt,
 													Required:     true,
-													ValidateFunc: validation.IntBetween(1, 100),
+													ValidateFunc: validation.IsPortNumber,
 												},
 											},
 										},
