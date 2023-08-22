@@ -6,9 +6,9 @@ package kms_test
 import (
 	"context"
 	"fmt"
-	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/kms"
 	awspolicy "github.com/hashicorp/awspolicyequivalence"
@@ -210,7 +210,7 @@ func TestAccKMSKey_Policy_bypass(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccKeyConfig_policyBypass(rName, false),
-				ExpectError: regexp.MustCompile(`The new key policy will not allow you to update the key policy in the future`),
+				ExpectError: regexache.MustCompile(`The new key policy will not allow you to update the key policy in the future`),
 			},
 			{
 				Config: testAccKeyConfig_policyBypass(rName, true),

@@ -5,8 +5,8 @@ package kms
 
 import (
 	"fmt"
-	"regexp"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -18,9 +18,9 @@ const (
 )
 
 var (
-	aliasNameRegex     = regexp.MustCompile(`^` + aliasNameRegexPattern + `$`)
-	keyIdRegex         = regexp.MustCompile(`^` + verify.UUIDRegexPattern + `|` + multiRegionKeyIdPattern + `$`)
-	keyIdResourceRegex = regexp.MustCompile(`^key/(` + verify.UUIDRegexPattern + `|` + multiRegionKeyIdPattern + `)$`)
+	aliasNameRegex     = regexache.MustCompile(`^` + aliasNameRegexPattern + `$`)
+	keyIdRegex         = regexache.MustCompile(`^` + verify.UUIDRegexPattern + `|` + multiRegionKeyIdPattern + `$`)
+	keyIdResourceRegex = regexache.MustCompile(`^key/(` + verify.UUIDRegexPattern + `|` + multiRegionKeyIdPattern + `)$`)
 )
 
 func validGrantName(v interface{}, k string) (ws []string, es []error) {
@@ -30,7 +30,7 @@ func validGrantName(v interface{}, k string) (ws []string, es []error) {
 		es = append(es, fmt.Errorf("%s can not be greater than 256 characters", k))
 	}
 
-	if !regexp.MustCompile(`^[a-zA-Z0-9:/_-]+$`).MatchString(value) {
+	if !regexache.MustCompile(`^[a-zA-Z0-9:/_-]+$`).MatchString(value) {
 		es = append(es, fmt.Errorf("%s must only contain [a-zA-Z0-9:/_-]", k))
 	}
 
@@ -50,7 +50,7 @@ func validNameForDataSource(v interface{}, k string) (ws []string, es []error) {
 func validNameForResource(v interface{}, k string) (ws []string, es []error) {
 	value := v.(string)
 
-	if regexp.MustCompile(`^(alias/aws/)`).MatchString(value) {
+	if regexache.MustCompile(`^(alias/aws/)`).MatchString(value) {
 		es = append(es, fmt.Errorf("%q cannot begin with reserved AWS CMK prefix 'alias/aws/'", k))
 	}
 
