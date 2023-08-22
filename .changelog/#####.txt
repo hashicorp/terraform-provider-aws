@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_s3_object: Mark `acl` as Computed. This suppresses the diffs shown when migrating resources with no configured `acl` attribute value from v4.67.0 (or earlier)
+```
