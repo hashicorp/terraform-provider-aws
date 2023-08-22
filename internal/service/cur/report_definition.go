@@ -7,8 +7,8 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"regexp"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	cur "github.com/aws/aws-sdk-go/service/costandusagereportservice"
@@ -42,7 +42,7 @@ func ResourceReportDefinition() *schema.Resource {
 				ForceNew: true,
 				ValidateFunc: validation.All(
 					validation.StringLenBetween(1, 256),
-					validation.StringMatch(regexp.MustCompile(`[0-9A-Za-z!\-_.*\'()]+`), "The name must be unique, is case sensitive, and can't include spaces."),
+					validation.StringMatch(regexache.MustCompile(`[0-9A-Za-z!\-_.*\'()]+`), "The name must be unique, is case sensitive, and can't include spaces."),
 				),
 			},
 			"time_unit": {
