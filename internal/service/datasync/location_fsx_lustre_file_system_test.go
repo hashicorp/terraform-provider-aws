@@ -6,9 +6,9 @@ package datasync_test
 import (
 	"context"
 	"fmt"
-	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/service/datasync"
 	"github.com/aws/aws-sdk-go/service/fsx"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
@@ -41,11 +41,11 @@ func TestAccDataSyncLocationFSxLustreFileSystem_basic(t *testing.T) {
 				Config: testAccLocationFSxLustreFileSystemConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLocationFSxLustreExists(ctx, resourceName, &locationFsxLustre1),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "datasync", regexp.MustCompile(`location/loc-.+`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "datasync", regexache.MustCompile(`location/loc-.+`)),
 					resource.TestCheckResourceAttrPair(resourceName, "fsx_filesystem_arn", fsResourceName, "arn"),
 					resource.TestCheckResourceAttr(resourceName, "subdirectory", "/"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-					resource.TestMatchResourceAttr(resourceName, "uri", regexp.MustCompile(`^fsxl://.+/`)),
+					resource.TestMatchResourceAttr(resourceName, "uri", regexache.MustCompile(`^fsxl://.+/`)),
 					resource.TestCheckResourceAttrSet(resourceName, "creation_time"),
 				),
 			},

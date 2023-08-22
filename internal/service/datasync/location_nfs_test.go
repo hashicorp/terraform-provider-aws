@@ -6,9 +6,9 @@ package datasync_test
 import (
 	"context"
 	"fmt"
-	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/service/datasync"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -35,7 +35,7 @@ func TestAccDataSyncLocationNFS_basic(t *testing.T) {
 				Config: testAccLocationNFSConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLocationNFSExists(ctx, resourceName, &v),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "datasync", regexp.MustCompile(`location/loc-.+`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "datasync", regexache.MustCompile(`location/loc-.+`)),
 					resource.TestCheckResourceAttr(resourceName, "on_prem_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "on_prem_config.0.agent_arns.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "mount_options.#", "1"),
@@ -43,7 +43,7 @@ func TestAccDataSyncLocationNFS_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "server_hostname", "example.com"),
 					resource.TestCheckResourceAttr(resourceName, "subdirectory", "/"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-					resource.TestMatchResourceAttr(resourceName, "uri", regexp.MustCompile(`^nfs://.+/`)),
+					resource.TestMatchResourceAttr(resourceName, "uri", regexache.MustCompile(`^nfs://.+/`)),
 				),
 			},
 			{

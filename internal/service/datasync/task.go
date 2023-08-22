@@ -7,9 +7,9 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"regexp"
 	"time"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/datasync"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
@@ -207,7 +207,7 @@ func ResourceTask() *schema.Resource {
 							Required: true,
 							ValidateFunc: validation.All(
 								validation.StringLenBetween(1, 256),
-								validation.StringMatch(regexp.MustCompile(`^[a-zA-Z0-9\ \_\*\?\,\|\^\-\/\#\s\(\)\+]*$`),
+								validation.StringMatch(regexache.MustCompile(`^[a-zA-Z0-9\ \_\*\?\,\|\^\-\/\#\s\(\)\+]*$`),
 									"Schedule expressions must have the following syntax: rate(<number>\\\\s?(minutes?|hours?|days?)), cron(<cron_expression>) or at(yyyy-MM-dd'T'HH:mm:ss)."),
 							),
 						},
