@@ -119,36 +119,33 @@ func ResourceKxEnvironment() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"transit_gateway_id": {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: validation.StringLenBetween(1, 32),
-						},
-						"routable_cidr_space": {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: validation.IsCIDR,
-						},
 						"attachment_network_acl_configuration": {
 							Type:     schema.TypeList,
 							Optional: true,
 							MaxItems: 100,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"rule_number": {
-										Type:         schema.TypeInt,
-										Required:     true,
-										ValidateFunc: validation.IntBetween(1, 32766),
-									},
-									"protocol": {
+									"cidr_block": {
 										Type:         schema.TypeString,
 										Required:     true,
-										ValidateFunc: validation.StringLenBetween(1, 5),
+										ValidateFunc: validation.IsCIDR,
 									},
-									"rule_action": {
-										Type:             schema.TypeString,
-										Required:         true,
-										ValidateDiagFunc: enum.Validate[types.RuleAction](),
+									"icmp_type_code": {
+										Type:     schema.TypeList,
+										Optional: true,
+										MaxItems: 1,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"type": {
+													Type:     schema.TypeInt,
+													Required: true,
+												},
+												"code": {
+													Type:     schema.TypeInt,
+													Required: true,
+												},
+											},
+										},
 									},
 									"port_range": {
 										Type:     schema.TypeList,
@@ -169,30 +166,33 @@ func ResourceKxEnvironment() *schema.Resource {
 											},
 										},
 									},
-									"icmp_type_code": {
-										Type:     schema.TypeList,
-										Optional: true,
-										MaxItems: 1,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"type": {
-													Type:     schema.TypeInt,
-													Required: true,
-												},
-												"code": {
-													Type:     schema.TypeInt,
-													Required: true,
-												},
-											},
-										},
-									},
-									"cidr_block": {
+									"protocol": {
 										Type:         schema.TypeString,
 										Required:     true,
-										ValidateFunc: validation.IsCIDR,
+										ValidateFunc: validation.StringLenBetween(1, 5),
+									},
+									"rule_action": {
+										Type:             schema.TypeString,
+										Required:         true,
+										ValidateDiagFunc: enum.Validate[types.RuleAction](),
+									},
+									"rule_number": {
+										Type:         schema.TypeInt,
+										Required:     true,
+										ValidateFunc: validation.IntBetween(1, 32766),
 									},
 								},
 							},
+						},
+						"routable_cidr_space": {
+							Type:         schema.TypeString,
+							Required:     true,
+							ValidateFunc: validation.IsCIDR,
+						},
+						"transit_gateway_id": {
+							Type:         schema.TypeString,
+							Required:     true,
+							ValidateFunc: validation.StringLenBetween(1, 32),
 						},
 					},
 				},
