@@ -12,10 +12,10 @@ import (
 	"log"
 	"net/http"
 	"os"
-	"regexp"
 	"strings"
 	"time"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/aws/aws-sdk-go/service/s3/s3manager"
@@ -360,7 +360,7 @@ func resourceObjectDelete(ctx context.Context, d *schema.ResourceData, meta inte
 	// We are effectively ignoring all leading '/'s in the key name and
 	// treating multiple '/'s as a single '/' as aws.Config.DisableRestProtocolURICleaning is false
 	key = strings.TrimLeft(key, "/")
-	key = regexp.MustCompile(`/+`).ReplaceAllString(key, "/")
+	key = regexache.MustCompile(`/+`).ReplaceAllString(key, "/")
 
 	var err error
 	if _, ok := d.GetOk("version_id"); ok {
