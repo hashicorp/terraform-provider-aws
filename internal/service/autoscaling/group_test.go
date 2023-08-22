@@ -7,9 +7,9 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/autoscaling"
 	"github.com/aws/aws-sdk-go/service/elbv2"
@@ -66,7 +66,7 @@ func TestAccAutoScalingGroup_basic(t *testing.T) {
 				Config: testAccGroupConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckGroupExists(ctx, resourceName, &group),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "autoscaling", regexp.MustCompile(fmt.Sprintf(`autoScalingGroup:.+:autoScalingGroupName/%s`, rName))),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "autoscaling", regexache.MustCompile(fmt.Sprintf(`autoScalingGroup:.+:autoScalingGroupName/%s`, rName))),
 					resource.TestCheckResourceAttr(resourceName, "availability_zones.#", "1"),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "availability_zones.*", "data.aws_availability_zones.available", "names.0"),
 					resource.TestCheckResourceAttr(resourceName, "capacity_rebalance", "false"),
@@ -293,7 +293,7 @@ func TestAccAutoScalingGroup_simple(t *testing.T) {
 				Config: testAccGroupConfig_simple(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckGroupExists(ctx, resourceName, &group),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "autoscaling", regexp.MustCompile(fmt.Sprintf(`autoScalingGroup:.+:autoScalingGroupName/%s`, rName))),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "autoscaling", regexache.MustCompile(fmt.Sprintf(`autoScalingGroup:.+:autoScalingGroupName/%s`, rName))),
 					resource.TestCheckResourceAttr(resourceName, "availability_zones.#", "1"),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "availability_zones.*", "data.aws_availability_zones.available", "names.0"),
 					resource.TestCheckResourceAttr(resourceName, "capacity_rebalance", "false"),
@@ -344,7 +344,7 @@ func TestAccAutoScalingGroup_simple(t *testing.T) {
 				Config: testAccGroupConfig_simpleUpdated(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckGroupExists(ctx, resourceName, &group),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "autoscaling", regexp.MustCompile(fmt.Sprintf(`autoScalingGroup:.+:autoScalingGroupName/%s`, rName))),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "autoscaling", regexache.MustCompile(fmt.Sprintf(`autoScalingGroup:.+:autoScalingGroupName/%s`, rName))),
 					resource.TestCheckResourceAttr(resourceName, "availability_zones.#", "1"),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "availability_zones.*", "data.aws_availability_zones.available", "names.0"),
 					resource.TestCheckResourceAttr(resourceName, "capacity_rebalance", "false"),
@@ -781,7 +781,7 @@ func TestAccAutoScalingGroup_withScalingActivityErrorPlacementGroupNotSupportedO
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccGroupConfig_withScalingActivityErrorPlacementGroupNotSupportedOnInstanceType(rName),
-				ExpectError: regexp.MustCompile(`Cluster placement groups are not supported by the .* instance type. Specify a supported instance type or change the placement group strategy`),
+				ExpectError: regexache.MustCompile(`Cluster placement groups are not supported by the .* instance type. Specify a supported instance type or change the placement group strategy`),
 			},
 		},
 	})
@@ -799,7 +799,7 @@ func TestAccAutoScalingGroup_withScalingActivityErrorIncorrectInstanceArchitectu
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccGroupConfig_withPotentialScalingActivityError(rName, "t4g.micro", 1, "null"),
-				ExpectError: regexp.MustCompile(`The architecture 'arm64' of the specified instance type does not match the architecture 'x86_64' of the specified AMI`),
+				ExpectError: regexache.MustCompile(`The architecture 'arm64' of the specified instance type does not match the architecture 'x86_64' of the specified AMI`),
 			},
 		},
 	})
@@ -817,7 +817,7 @@ func TestAccAutoScalingGroup_withScalingActivityErrorIncorrectInstanceArchitectu
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccGroupConfig_withPotentialScalingActivityError(rName, "t4g.micro", 1, "true"),
-				ExpectError: regexp.MustCompile(`timeout while waiting for state to become 'ok'`),
+				ExpectError: regexache.MustCompile(`timeout while waiting for state to become 'ok'`),
 			},
 		},
 	})
@@ -843,7 +843,7 @@ func TestAccAutoScalingGroup_withScalingActivityErrorIncorrectInstanceArchitectu
 			},
 			{
 				Config:      testAccGroupConfig_withPotentialScalingActivityError(rName, "t4g.micro", 2, "null"),
-				ExpectError: regexp.MustCompile(`The architecture 'arm64' of the specified instance type does not match the architecture 'x86_64' of the specified AMI`),
+				ExpectError: regexache.MustCompile(`The architecture 'arm64' of the specified instance type does not match the architecture 'x86_64' of the specified AMI`),
 			},
 			{
 				Config: testAccGroupConfig_withPotentialScalingActivityError(rName, "t2.micro", 3, "null"),
