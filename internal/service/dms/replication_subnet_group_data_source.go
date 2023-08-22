@@ -9,13 +9,11 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
-	dms "github.com/aws/aws-sdk-go/service/databasemigrationservice"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -104,26 +102,4 @@ func dataSourceReplicationSubnetGroupRead(ctx context.Context, d *schema.Resourc
 		return create.DiagError(names.DMS, create.ErrActionSetting, DSNameReplicationSubnetGroup, d.Id(), err)
 	}
 	return nil
-}
-
-func FindReplicationSubnetGroupByID(ctx context.Context, conn *dms.DatabaseMigrationService, id string) (*dms.ReplicationSubnetGroup, error) {
-	input := &dms.DescribeReplicationSubnetGroupsInput{
-		Filters: []*dms.Filter{
-			{
-				Name:   aws.String("replication-subnet-group-id"),
-				Values: []*string{aws.String(id)},
-			},
-		},
-	}
-	response, err := conn.DescribeReplicationSubnetGroupsWithContext(ctx, input)
-
-	if err != nil {
-		return nil, err
-	}
-
-	if response == nil || len(response.ReplicationSubnetGroups) == 0 || response.ReplicationSubnetGroups[0] == nil {
-		return nil, tfresource.NewEmptyResultError(input)
-	}
-
-	return response.ReplicationSubnetGroups[0], nil
 }
