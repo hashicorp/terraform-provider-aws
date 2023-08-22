@@ -321,3 +321,11 @@ replace github.com/aws/aws-sdk-go-v2/service/vpclattice => /Users/ewbankkit/Down
 replace github.com/aws/aws-sdk-go-v2/service/workspaces => /Users/ewbankkit/Downloads/aws-sdk-go-v2/service/workspaces
 
 replace github.com/aws/aws-sdk-go-v2/service/xray => /Users/ewbankkit/Downloads/aws-sdk-go-v2/service/xray
+
+replace github.com/aws/aws-sdk-go-v2/internal/v4a => /Users/ewbankkit/Downloads/aws-sdk-go-v2/internal/v4a
+
+replace github.com/aws/aws-sdk-go-v2/service/internal/accept-encoding => /Users/ewbankkit/Downloads/aws-sdk-go-v2/service/internal/accept-encoding
+
+replace github.com/aws/aws-sdk-go-v2/service/internal/checksum => /Users/ewbankkit/Downloads/aws-sdk-go-v2/service/internal/checksum
+
+replace github.com/aws/aws-sdk-go-v2/service/s3 => /Users/ewbankkit/Downloads/aws-sdk-go-v2/service/s3
