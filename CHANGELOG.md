@@ -11,6 +11,9 @@ FEATURES:
 
 ENHANCEMENTS:
 
+* data-source/aws_dms_endpoint: Fix crash when specified endpoint not found ([#33158](https://github.com/hashicorp/terraform-provider-aws/issues/33158))
+* data-source/aws_dms_replication_instance: Add `network_type` attribute ([#33158](https://github.com/hashicorp/terraform-provider-aws/issues/33158))
+* resource/aws_dms_replication_instance: Add `network_type` argument ([#33158](https://github.com/hashicorp/terraform-provider-aws/issues/33158))
 * resource/aws_finspace_kx_environment: Add `transit_gateway_configuration.*.attachment_network_acl_configuration` argument. ([#33123](https://github.com/hashicorp/terraform-provider-aws/issues/33123))
 * resource/aws_medialive_channel: Updates schemas for `selector_settings` for `audio_selector` and `selector_settings` for `caption_selector` ([#32714](https://github.com/hashicorp/terraform-provider-aws/issues/32714))
 * resource/aws_ssoadmin_account_assignment: Add configurable timeouts ([#33121](https://github.com/hashicorp/terraform-provider-aws/issues/33121))
