@@ -37,7 +37,8 @@ func {{ .ListTagsFunc }}(ctx context.Context, conn {{ .ClientType }}, identifier
 
 		return !lastPage
 	})
-{{- else }}
+{{ else }}
+
 	output, err := conn.{{ .ListTagsOp }}WithContext(ctx, input)
 {{- end }}
 
@@ -61,7 +62,7 @@ func {{ .ListTagsFunc }}(ctx context.Context, conn {{ .ClientType }}, identifier
 		return tftags.New(ctx, nil), err
 	}
 
-{{- if .ListTagsOpPaginated }}
+{{ if .ListTagsOpPaginated }}
 	return {{ .KeyValueTagsFunc }}(ctx, output{{ if .TagTypeIDElem }}, identifier{{ if .TagResTypeElem }}, resourceType{{ end }}{{ end }}), nil
 {{- else }}
 	return {{ .KeyValueTagsFunc }}(ctx, output.{{ .ListTagsOutTagsElem }}{{ if .TagTypeIDElem }}, identifier{{ if .TagResTypeElem }}, resourceType{{ end }}{{ end }}), nil
