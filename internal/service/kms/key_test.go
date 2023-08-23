@@ -1153,6 +1153,7 @@ resource "aws_kms_key" "test" {
 }
 
 func testAccKeyConfig_ignoreTags(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+	// lintignore:AT004
 	return fmt.Sprintf(`
 provider "aws" {
   default_tags {
