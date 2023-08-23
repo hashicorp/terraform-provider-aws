@@ -10,9 +10,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_dms_endpoint")
@@ -494,11 +493,8 @@ func DataSourceEndpoint() *schema.Resource {
 	}
 }
 
-const (
-	DSNameEndpoint = "Endpoint Data Source"
-)
-
 func dataSourceEndpointRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DMSConn(ctx)
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
@@ -507,12 +503,13 @@ func dataSourceEndpointRead(ctx context.Context, d *schema.ResourceData, meta in
 	out, err := FindEndpointByID(ctx, conn, endptID)
 
 	if err != nil {
-		create.DiagError(names.DMS, create.ErrActionReading, DSNameEndpoint, d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading DMS Endpoint (%s): %s", endptID, err)
 	}
 
 	d.SetId(aws.StringValue(out.EndpointIdentifier))
 	d.Set("endpoint_id", out.EndpointIdentifier)
-	d.Set("endpoint_arn", out.EndpointArn)
+	arn := aws.StringValue(out.EndpointArn)
+	d.Set("endpoint_arn", arn)
 	d.Set("endpoint_type", out.EndpointType)
 	d.Set("database_name", out.DatabaseName)
 	d.Set("engine_name", out.EngineName)
@@ -521,22 +518,21 @@ func dataSourceEndpointRead(ctx context.Context, d *schema.ResourceData, meta in
 	d.Set("ssl_mode", out.SslMode)
 	d.Set("username", out.Username)
 
-	err = resourceEndpointSetState(d, out)
-	if err != nil {
-		create.DiagError(names.DMS, create.ErrActionReading, DSNameEndpoint, d.Id(), err)
+	if err := resourceEndpointSetState(d, out); err != nil {
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	tags, err := listTags(ctx, conn, aws.StringValue(out.EndpointArn))
+	tags, err := listTags(ctx, conn, arn)
 	if err != nil {
-		return create.DiagError(names.DMS, create.ErrActionReading, DSNameEndpoint, d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "listing tags for DMS Endpoint (%s): %s", arn, err)
 	}
 
 	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return create.DiagError(names.DMS, create.ErrActionSetting, DSNameEndpoint, d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 
-	return nil
+	return diags
 }

@@ -960,10 +960,8 @@ func resourceEndpointRead(ctx context.Context, d *schema.ResourceData, meta inte
 		return sdkdiag.AppendErrorf(diags, "reading DMS Endpoint (%s): %s", d.Id(), err)
 	}
 
-	err = resourceEndpointSetState(d, endpoint)
-
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading DMS Endpoint (%s): %s", d.Id(), err)
+	if err := resourceEndpointSetState(d, endpoint); err != nil {
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	return diags
