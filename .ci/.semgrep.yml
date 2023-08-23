@@ -406,8 +406,9 @@ rules:
       exclude:
         - .ci/providerlint/vendor/
     patterns:
-      - pattern: 'regexp.MustCompile(...)'
+      - pattern: 'regexp.MustCompile($X)'
     severity: WARNING
+    fix: "regexache.MustCompile($X)"
 
   - id: domain-names
     languages: [go]
