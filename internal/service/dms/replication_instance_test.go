@@ -322,6 +322,41 @@ func TestAccDMSReplicationInstance_multiAz(t *testing.T) {
 	})
 }
 
+func TestAccDMSReplicationInstance_networkType(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName := "aws_dms_replication_instance.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, dms.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckReplicationInstanceDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccReplicationInstanceConfig_networkType(rName, "IPV4"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckReplicationInstanceExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "network_type", "IPV4"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"apply_immediately"},
+			},
+			{
+				Config: testAccReplicationInstanceConfig_networkType(rName, "DUAL"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckReplicationInstanceExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "network_type", "IPV4"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccDMSReplicationInstance_preferredMaintenanceWindow(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_dms_replication_instance.test"
@@ -699,6 +734,26 @@ resource "aws_dms_replication_instance" "test" {
   replication_subnet_group_id = aws_dms_replication_subnet_group.test.id
 }
 `, rName, multiAz))
+}
+
+func testAccReplicationInstanceConfig_networkType(rName, networkType string) string {
+	return acctest.ConfigCompose(acctest.ConfigVPCWithSubnetsIPv6(rName, 2), fmt.Sprintf(`
+data "aws_partition" "current" {}
+
+resource "aws_dms_replication_subnet_group" "test" {
+  replication_subnet_group_id          = %[1]q
+  replication_subnet_group_description = "testing"
+  subnet_ids                           = aws_subnet.test[*].id
+}
+
+resource "aws_dms_replication_instance" "test" {
+  apply_immediately           = true
+  network_type                = %[2]q
+  replication_instance_class  = data.aws_partition.current.partition == "aws" ? "dms.t2.micro" : "dms.c4.large"
+  replication_instance_id     = %[1]q
+  replication_subnet_group_id = aws_dms_replication_subnet_group.test.id
+}
+`, rName, networkType))
 }
 
 func testAccReplicationInstanceConfig_preferredMaintenanceWindow(rName, preferredMaintenanceWindow string) string {

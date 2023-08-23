@@ -87,6 +87,11 @@ func ResourceReplicationInstance() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
+			"network_type": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ValidateFunc: validation.StringInSlice(networkType_Values(), false),
+			},
 			"preferred_maintenance_window": {
 				Type:         schema.TypeString,
 				Optional:     true,
@@ -175,6 +180,9 @@ func resourceReplicationInstanceCreate(ctx context.Context, d *schema.ResourceDa
 	if v, ok := d.GetOk("kms_key_arn"); ok {
 		input.KmsKeyId = aws.String(v.(string))
 	}
+	if v, ok := d.GetOk("network_type"); ok {
+		input.NetworkType = aws.String(v.(string))
+	}
 	if v, ok := d.GetOk("preferred_maintenance_window"); ok {
 		input.PreferredMaintenanceWindow = aws.String(v.(string))
 	}
@@ -222,6 +230,7 @@ func resourceReplicationInstanceRead(ctx context.Context, d *schema.ResourceData
 	d.Set("engine_version", instance.EngineVersion)
 	d.Set("kms_key_arn", instance.KmsKeyId)
 	d.Set("multi_az", instance.MultiAZ)
+	d.Set("network_type", instance.NetworkType)
 	d.Set("preferred_maintenance_window", instance.PreferredMaintenanceWindow)
 	d.Set("publicly_accessible", instance.PubliclyAccessible)
 	d.Set("replication_instance_arn", instance.ReplicationInstanceArn)
@@ -265,6 +274,10 @@ func resourceReplicationInstanceUpdate(ctx context.Context, d *schema.ResourceDa
 
 		if d.HasChange("multi_az") {
 			input.MultiAZ = aws.Bool(d.Get("multi_az").(bool))
+		}
+
+		if d.HasChange("network_type") {
+			input.NetworkType = aws.String(d.Get("network_type").(string))
 		}
 
 		if d.HasChange("preferred_maintenance_window") {

@@ -131,3 +131,15 @@ func encryptionMode_Values() []string {
 		encryptionModeSseS3,
 	}
 }
+
+const (
+	networkTypeDual = "DUAL"
+	networkTypeIPv4 = "IPV4"
+)
+
+func networkType_Values() []string {
+	return []string{
+		networkTypeDual,
+		networkTypeIPv4,
+	}
+}
