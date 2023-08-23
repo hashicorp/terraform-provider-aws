@@ -31,12 +31,12 @@ func DataSourceEndpoint() *schema.Resource {
 			},
 			"elasticsearch_settings": {
 				Type:     schema.TypeList,
-				Optional: true,
+				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"endpoint_uri": {
 							Type:     schema.TypeString,
-							Required: true,
+							Computed: true,
 						},
 						"error_retry_duration": {
 							Type:     schema.TypeInt,
@@ -48,7 +48,7 @@ func DataSourceEndpoint() *schema.Resource {
 						},
 						"service_access_role_arn": {
 							Type:     schema.TypeString,
-							Required: true,
+							Computed: true,
 						},
 					},
 				},
@@ -71,16 +71,16 @@ func DataSourceEndpoint() *schema.Resource {
 			},
 			"extra_connection_attributes": {
 				Type:     schema.TypeString,
-				Optional: true,
+				Computed: true,
 			},
 			"kafka_settings": {
 				Type:     schema.TypeList,
-				Optional: true,
+				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"broker": {
 							Type:     schema.TypeString,
-							Required: true,
+							Computed: true,
 						},
 						"include_control_details": {
 							Type:     schema.TypeBool,
@@ -203,7 +203,7 @@ func DataSourceEndpoint() *schema.Resource {
 			},
 			"mongodb_settings": {
 				Type:     schema.TypeList,
-				Optional: true,
+				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"auth_mechanism": {
@@ -504,14 +504,13 @@ func dataSourceEndpointRead(ctx context.Context, d *schema.ResourceData, meta in
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	endptID := d.Get("endpoint_id").(string)
-
 	out, err := FindEndpointByID(ctx, conn, endptID)
+
 	if err != nil {
 		create.DiagError(names.DMS, create.ErrActionReading, DSNameEndpoint, d.Id(), err)
 	}
 
 	d.SetId(aws.StringValue(out.EndpointIdentifier))
-
 	d.Set("endpoint_id", out.EndpointIdentifier)
 	d.Set("endpoint_arn", out.EndpointArn)
 	d.Set("endpoint_type", out.EndpointType)
