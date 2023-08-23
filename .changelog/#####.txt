@@ -5,3 +5,7 @@ resource/aws_ec2_network_insights_analysis: Fix `setting forward_path_components
 ```release-note:enhancement
 resource/aws_ec2_network_insights_path: Add `destination_arn` and `source_arn` attributes
 ```
+
+```release-note:enhancement
+data-source/aws_ec2_network_insights_path: Add `destination_arn` and `source_arn` attributes
+```
