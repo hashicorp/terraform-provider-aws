@@ -19005,6 +19005,9 @@ var awsPartition = partition{
 					Deprecated: boxedTrue,
 				},
 				endpointKey{
+					Region: "il-central-1",
+				}: endpoint{},
+				endpointKey{
 					Region: "me-central-1",
 				}: endpoint{},
 				endpointKey{
@@ -22533,6 +22536,9 @@ var awsPartition = partition{
 				}: endpoint{},
 				endpointKey{
 					Region: "eu-west-2",
+				}: endpoint{},
+				endpointKey{
+					Region: "il-central-1",
 				}: endpoint{},
 				endpointKey{
 					Region: "rekognition-fips.ca-central-1",
@@ -27941,6 +27947,9 @@ var awsPartition = partition{
 				}: endpoint{},
 				endpointKey{
 					Region: "eu-west-3",
+				}: endpoint{},
+				endpointKey{
+					Region: "il-central-1",
 				}: endpoint{},
 				endpointKey{
 					Region: "me-central-1",
