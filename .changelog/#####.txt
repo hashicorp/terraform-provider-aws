@@ -9,3 +9,7 @@ resource/aws_ec2_network_insights_path: Add `destination_arn` and `source_arn` a
 ```release-note:enhancement
 data-source/aws_ec2_network_insights_path: Add `destination_arn` and `source_arn` attributes
 ```
+
+```release-note:bug
+resource/aws_ec2_network_insights_path: Avoid recreating resource when passing an ARN as `source` or `destination`
+```

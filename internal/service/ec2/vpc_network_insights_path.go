@@ -6,6 +6,7 @@ package ec2
 import (
 	"context"
 	"log"
+	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
@@ -43,9 +44,10 @@ func ResourceNetworkInsightsPath() *schema.Resource {
 				Computed: true,
 			},
 			"destination": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
+				Type:             schema.TypeString,
+				Required:         true,
+				ForceNew:         true,
+				DiffSuppressFunc: suppressEquivalentIDOrARN,
 			},
 			"destination_ip": {
 				Type:     schema.TypeString,
@@ -64,9 +66,10 @@ func ResourceNetworkInsightsPath() *schema.Resource {
 				ValidateFunc: validation.StringInSlice(ec2.Protocol_Values(), false),
 			},
 			"source": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
+				Type:             schema.TypeString,
+				Required:         true,
+				ForceNew:         true,
+				DiffSuppressFunc: suppressEquivalentIDOrARN,
 			},
 			"source_arn": {
 				Type:     schema.TypeString,
@@ -170,4 +173,17 @@ func resourceNetworkInsightsPathDelete(ctx context.Context, d *schema.ResourceDa
 	}
 
 	return nil
+}
+
+// idFromIDOrARN return a resource ID from an ID or ARN.
+func idFromIDOrARN(idOrARN string) string {
+	// e.g. "eni-02ae120b80627a68f" or
+	// "arn:aws:ec2:ap-southeast-2:123456789012:network-interface/eni-02ae120b80627a68f".
+	return idOrARN[strings.LastIndex(idOrARN, "/")+1:]
+}
+
+// suppressEquivalentIDOrARN provides custom difference suppression
+// for strings that represent equal resource IDs or ARNs.
+func suppressEquivalentIDOrARN(_, old, new string, _ *schema.ResourceData) bool {
+	return idFromIDOrARN(old) == idFromIDOrARN(new)
 }
