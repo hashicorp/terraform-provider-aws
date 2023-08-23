@@ -5,9 +5,9 @@ go 1.20
 require (
 	github.com/ProtonMail/go-crypto v0.0.0-20230717121422-5aa5874ade95
 	github.com/YakDriver/regexache v0.7.0
-	github.com/aws/aws-sdk-go v1.44.328
+	github.com/aws/aws-sdk-go v1.44.329
 	github.com/aws/aws-sdk-go-v2 v1.21.0
-	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.13.10
+	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.13.11
 	github.com/aws/aws-sdk-go-v2/service/accessanalyzer v1.20.5
 	github.com/aws/aws-sdk-go-v2/service/account v1.11.5
 	github.com/aws/aws-sdk-go-v2/service/acm v1.18.5
@@ -45,7 +45,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/pricing v1.21.6
 	github.com/aws/aws-sdk-go-v2/service/qldb v1.16.5
 	github.com/aws/aws-sdk-go-v2/service/rbin v1.9.5
-	github.com/aws/aws-sdk-go-v2/service/rds v1.51.0
+	github.com/aws/aws-sdk-go-v2/service/rds v1.52.0
 	github.com/aws/aws-sdk-go-v2/service/resourceexplorer2 v1.3.5
 	github.com/aws/aws-sdk-go-v2/service/rolesanywhere v1.3.5
 	github.com/aws/aws-sdk-go-v2/service/route53domains v1.17.3
@@ -60,7 +60,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/swf v1.17.3
 	github.com/aws/aws-sdk-go-v2/service/timestreamwrite v1.18.5
 	github.com/aws/aws-sdk-go-v2/service/transcribe v1.28.5
-	github.com/aws/aws-sdk-go-v2/service/verifiedpermissions v1.1.5
+	github.com/aws/aws-sdk-go-v2/service/verifiedpermissions v1.2.0
 	github.com/aws/aws-sdk-go-v2/service/vpclattice v1.1.7
 	github.com/aws/aws-sdk-go-v2/service/workspaces v1.29.5
 	github.com/aws/aws-sdk-go-v2/service/xray v1.17.5
