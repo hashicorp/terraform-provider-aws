@@ -17,6 +17,10 @@ func {{ .WaitTagsPropagatedFunc }}(ctx context.Context, conn {{ .ClientType }}, 
 			return false, err
 		}
 
+		if inContext, ok := tftags.FromContext(ctx); ok {
+			output = output.IgnoreConfig(inContext.IgnoreConfig)
+		}
+
 		return output.Equal(tags), nil
 	}
 	opts := tfresource.WaitOpts{
