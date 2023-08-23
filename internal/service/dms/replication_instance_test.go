@@ -612,11 +612,11 @@ func testAccReplicationInstanceConfig_engineVersion(rName, engineVersion string)
 data "aws_partition" "current" {}
 
 resource "aws_dms_replication_instance" "test" {
-  apply_immediately            = true
-  allow_major_version_upgrade  = true
-  engine_version               = %[2]q
-  replication_instance_class   = data.aws_partition.current.partition == "aws" ? "dms.t2.micro" : "dms.c4.large"
-  replication_instance_id      = %[1]q
+  apply_immediately           = true
+  allow_major_version_upgrade = true
+  engine_version              = %[2]q
+  replication_instance_class  = data.aws_partition.current.partition == "aws" ? "dms.t2.micro" : "dms.c4.large"
+  replication_instance_id     = %[1]q
   replication_subnet_group_id = aws_dms_replication_subnet_group.test.id
 }
 `, rName, engineVersion))
