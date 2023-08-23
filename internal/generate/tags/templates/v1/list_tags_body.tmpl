@@ -61,7 +61,7 @@ func {{ .ListTagsFunc }}(ctx context.Context, conn {{ .ClientType }}, identifier
 		return tftags.New(ctx, nil), err
 	}
 
-{{- if not .ListTagsOpPaginated }}
+{{ if not .ListTagsOpPaginated }}
 	tags := output.{{ .ListTagsOutTagsElem }}
 {{- end }}
 
