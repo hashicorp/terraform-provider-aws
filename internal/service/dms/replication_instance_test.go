@@ -195,62 +195,40 @@ func TestAccDMSReplicationInstance_availabilityZone(t *testing.T) {
 	})
 }
 
-/*
-** Temporarily commented out: "replication_instance_test.go:186: Test validation error: TestStep 1/3 validation error: TestStep missing Config or ImportState".
-
 func TestAccDMSReplicationInstance_engineVersion(t *testing.T) {
+	ctx := acctest.Context(t)
 	resourceName := "aws_dms_replication_instance.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
-	// This acceptance test is designed to test engine version upgrades.
-	// Over time, DMS replication instance engine versions are deprecated
-	// so they will eventually error on resource creation, e.g.
-	//   InvalidParameterValueException: No replication engine found with version: 2.4.2
-	// During the PreCheck, we will find candidate engine versions from the
-	// orderable replication instances and generate the TestStep.
-	// We prefer this method over creating a plural data source that
-	// seems impractical for real world usage.
-	testSteps := []resource.TestStep{
-		{},
-		{},
-		{
-			ResourceName:            resourceName,
-			ImportState:             true,
-			ImportStateVerify:       true,
-			ImportStateVerifyIgnore: []string{"allow_major_version_upgrade", "apply_immediately"},
-		},
-	}
-
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck: func() {
-			acctest.PreCheck(ctx, t)
-
-			engineVersions := testAccReplicationInstanceEngineVersionsPreCheck(t)
-
-			testSteps[0] = resource.TestStep{
-				Config: testAccReplicationInstanceConfig_engineVersion(rName, engineVersions[0]),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, dms.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckReplicationInstanceDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccReplicationInstanceConfig_engineVersion(rName, "3.4.7"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckReplicationInstanceExists(resourceName),
-					resource.TestCheckResourceAttr(resourceName, "engine_version", engineVersions[0]),
+					testAccCheckReplicationInstanceExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "engine_version", "3.4.7"),
 				),
-			}
-			testSteps[1] = resource.TestStep{
-				Config: testAccReplicationInstanceConfig_engineVersion(rName, engineVersions[1]),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"allow_major_version_upgrade", "apply_immediately"},
+			},
+			{
+				Config: testAccReplicationInstanceConfig_engineVersion(rName, "3.5.1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckReplicationInstanceExists(resourceName),
-					resource.TestCheckResourceAttr(resourceName, "engine_version", engineVersions[1]),
+					testAccCheckReplicationInstanceExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "engine_version", "3.5.1"),
 				),
-			}
+			},
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, dms.EndpointsID),
-		ProtoV5ProviderFactories:acctest.ProtoV5ProviderFactories,
-		CheckDestroy:      testAccCheckReplicationInstanceDestroy,
-		Steps:             testSteps,
 	})
 }
-
-**
-*/
 
 func TestAccDMSReplicationInstance_kmsKeyARN(t *testing.T) {
 	ctx := acctest.Context(t)
@@ -575,61 +553,6 @@ func testAccCheckReplicationInstanceDestroy(ctx context.Context) resource.TestCh
 	}
 }
 
-/*
-**
-
-// Ensure at least two engine versions of the replication instance class are available
-func testAccReplicationInstanceEngineVersionsPreCheck(t *testing.T) []string {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).DMSConn(ctx)
-
-	// Gather all orderable DMS replication instances of the instance class
-	// used in the acceptance testing. Not currently available as an input
-	// parameter to the describe API call.
-	var orderableReplicationInstances []*dms.OrderableReplicationInstance
-	input := &dms.DescribeOrderableReplicationInstancesInput{}
-	// NOTE: Using larger dms.c4.large here for AWS GovCloud (US) support
-	replicationInstanceClass := "dms.c4.large"
-
-	err := conn.DescribeOrderableReplicationInstancesPages(input, func(output *dms.DescribeOrderableReplicationInstancesOutput, lastPage bool) bool {
-		for _, orderableReplicationInstance := range output.OrderableReplicationInstances {
-			if orderableReplicationInstance == nil {
-				continue
-			}
-
-			if aws.StringValue(orderableReplicationInstance.ReplicationInstanceClass) == replicationInstanceClass {
-				orderableReplicationInstances = append(orderableReplicationInstances, orderableReplicationInstance)
-			}
-		}
-
-		return !lastPage
-	})
-
-	if err != nil {
-		t.Fatalf("error describing DMS orderable replication instances: %s", err)
-	}
-
-	// Ensure we have enough
-	if len(orderableReplicationInstances) < 2 {
-		t.Fatalf("found (%d) DMS orderable replication instances for instance class (%s), need at least 2", len(orderableReplicationInstances), replicationInstanceClass)
-	}
-
-	// Sort them ascending
-	sort.Slice(orderableReplicationInstances, func(i, j int) bool {
-		return verify.SemVerLessThan(aws.StringValue(orderableReplicationInstances[i].EngineVersion), aws.StringValue(orderableReplicationInstances[j].EngineVersion))
-	})
-
-	engineVersions := make([]string, len(orderableReplicationInstances))
-
-	for i, orderableReplicationInstance := range orderableReplicationInstances {
-		engineVersions[i] = aws.StringValue(orderableReplicationInstance.EngineVersion)
-	}
-
-	return engineVersions
-}
-
-**
-*/
-
 // Ideally we'd like to be able to leverage the "default" replication subnet group.
 // However, it may not exist or may include deleted subnets.
 func testAccReplicationInstanceConfig_base(rName string) string {
@@ -684,26 +607,20 @@ resource "aws_dms_replication_instance" "test" {
 `, rName))
 }
 
-/*
-**
-
 func testAccReplicationInstanceConfig_engineVersion(rName, engineVersion string) string {
-	return fmt.Sprintf(`
-data "aws_partition" "current" {
-}
+	return acctest.ConfigCompose(testAccReplicationInstanceConfig_base(rName), fmt.Sprintf(`
+data "aws_partition" "current" {}
 
 resource "aws_dms_replication_instance" "test" {
-  apply_immediately           = true
-  allow_major_version_upgrade = true
-  engine_version              = %q
-  replication_instance_class  = data.aws_partition.current.partition == "aws" ? "dms.t2.micro" : "dms.c4.large"
-  replication_instance_id     = %q
+  apply_immediately            = true
+  allow_major_version_upgrade  = true
+  engine_version               = %[2]q
+  replication_instance_class   = data.aws_partition.current.partition == "aws" ? "dms.t2.micro" : "dms.c4.large"
+  replication_instance_id      = %[1]q
+  replication_subnet_group_id = aws_dms_replication_subnet_group.test.id
 }
-`, engineVersion, rName)
+`, rName, engineVersion))
 }
-
-**
-*/
 
 func testAccReplicationInstanceConfig_kmsKeyARN(rName string) string {
 	return acctest.ConfigCompose(testAccReplicationInstanceConfig_base(rName), fmt.Sprintf(`
