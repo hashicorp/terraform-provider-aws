@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_ec2_network_insights_analysis: Fix `setting forward_path_components: Invalid address to set` errors
+```
