@@ -786,7 +786,7 @@ func flattenDateTimeDefaultValues(apiObject *quicksight.DateTimeDefaultValues) [
 	if apiObject.RollingDate != nil {
 		tfMap["rolling_date"] = flattenRollingDateConfiguration(apiObject.RollingDate)
 	}
-	if apiObject.StaticValues != nil {
+	if len(apiObject.StaticValues) > 0 {
 		tfMap["static_values"] = flex.FlattenTimeStringList(apiObject.StaticValues, time.RFC3339)
 	}
 
@@ -859,7 +859,7 @@ func flattenDecimalDefaultValues(apiObject *quicksight.DecimalDefaultValues) []i
 	if apiObject.DynamicValue != nil {
 		tfMap["dynamic_value"] = flattenDynamicDefaultValue(apiObject.DynamicValue)
 	}
-	if apiObject.StaticValues != nil {
+	if len(apiObject.StaticValues) > 0 {
 		tfMap["static_values"] = flex.FlattenFloat64List(apiObject.StaticValues)
 	}
 
@@ -913,7 +913,7 @@ func flattenIntegerDefaultValues(apiObject *quicksight.IntegerDefaultValues) []i
 	if apiObject.DynamicValue != nil {
 		tfMap["dynamic_value"] = flattenDynamicDefaultValue(apiObject.DynamicValue)
 	}
-	if apiObject.StaticValues != nil {
+	if len(apiObject.StaticValues) > 0 {
 		tfMap["static_values"] = flex.FlattenInt64List(apiObject.StaticValues)
 	}
 
@@ -967,7 +967,7 @@ func flattenStringDefaultValues(apiObject *quicksight.StringDefaultValues) []int
 	if apiObject.DynamicValue != nil {
 		tfMap["dynamic_value"] = flattenDynamicDefaultValue(apiObject.DynamicValue)
 	}
-	if apiObject.StaticValues != nil {
+	if len(apiObject.StaticValues) > 0 {
 		tfMap["static_values"] = flex.FlattenStringList(apiObject.StaticValues)
 	}
 
