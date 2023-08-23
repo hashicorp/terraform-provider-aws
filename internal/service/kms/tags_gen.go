@@ -27,16 +27,16 @@ func listTags(ctx context.Context, conn kmsiface.KMSAPI, identifier string) (tft
 	input := &kms.ListResourceTagsInput{
 		KeyId: aws.String(identifier),
 	}
-	var tags []*kms.Tag
+	var output []*kms.Tag
 
 	err := conn.ListResourceTagsPagesWithContext(ctx, input, func(page *kms.ListResourceTagsOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
 
-		for _, tag := range page.Tags {
-			if tag != nil {
-				tags = append(tags, tag)
+		for _, v := range page.Tags {
+			if v != nil {
+				output = append(output, v)
 			}
 		}
 
@@ -54,7 +54,7 @@ func listTags(ctx context.Context, conn kmsiface.KMSAPI, identifier string) (tft
 		return tftags.New(ctx, nil), err
 	}
 
-	return KeyValueTags(ctx, tags), nil
+	return KeyValueTags(ctx, output), nil
 }
 
 // ListTags lists kms service tags and set them in Context.
