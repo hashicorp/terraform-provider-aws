@@ -397,6 +397,18 @@ rules:
               fmt.Println(...)
     severity: WARNING
 
+  - id: calling-regexp.MustCompile-directly
+    languages: [go]
+    message: Do not call `regexp.MustCompile` directly, use `regexache.MustCompile` instead
+    paths:
+      include:
+        - internal/
+      exclude:
+        - .ci/providerlint/vendor/
+    patterns:
+      - pattern: 'regexp.MustCompile(...)'
+    severity: WARNING
+
   - id: domain-names
     languages: [go]
     message: Domain names should be in the namespaces defined in RFC 6761 (https://datatracker.ietf.org/doc/html/rfc6761) as reserved for testing
