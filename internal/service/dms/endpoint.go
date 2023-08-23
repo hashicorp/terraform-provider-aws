@@ -2314,7 +2314,35 @@ func FindEndpointByID(ctx context.Context, conn *dms.DatabaseMigrationService, i
 		},
 	}
 
-	output, err := conn.DescribeEndpointsWithContext(ctx, input)
+	return findEndpoint(ctx, conn, input)
+}
+
+func findEndpoint(ctx context.Context, conn *dms.DatabaseMigrationService, input *dms.DescribeEndpointsInput) (*dms.Endpoint, error) {
+	output, err := findEndpoints(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSinglePtrResult(output)
+}
+
+func findEndpoints(ctx context.Context, conn *dms.DatabaseMigrationService, input *dms.DescribeEndpointsInput) ([]*dms.Endpoint, error) {
+	var output []*dms.Endpoint
+
+	err := conn.DescribeEndpointsPagesWithContext(ctx, input, func(page *dms.DescribeEndpointsOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, v := range page.Endpoints {
+			if v != nil {
+				output = append(output, v)
+			}
+		}
+
+		return !lastPage
+	})
 
 	if tfawserr.ErrCodeEquals(err, dms.ErrCodeResourceNotFoundFault) {
 		return nil, &retry.NotFoundError{
@@ -2327,15 +2355,7 @@ func FindEndpointByID(ctx context.Context, conn *dms.DatabaseMigrationService, i
 		return nil, err
 	}
 
-	if output == nil || len(output.Endpoints) == 0 || output.Endpoints[0] == nil {
-		return nil, tfresource.NewEmptyResultError(input)
-	}
-
-	if count := len(output.Endpoints); count > 1 {
-		return nil, tfresource.NewTooManyResultsError(count, input)
-	}
-
-	return output.Endpoints[0], nil
+	return output, nil
 }
 
 func statusEndpoint(ctx context.Context, conn *dms.DatabaseMigrationService, id string) retry.StateRefreshFunc {
