@@ -111,14 +111,13 @@ func resourceLicenseConfigurationCreate(ctx context.Context, d *schema.ResourceD
 		input.LicenseRules = flex.ExpandStringList(v.([]interface{}))
 	}
 
-	log.Printf("[DEBUG] Creating License Manager License Configuration: %s", input)
-	resp, err := conn.CreateLicenseConfigurationWithContext(ctx, input)
+	output, err := conn.CreateLicenseConfigurationWithContext(ctx, input)
 
 	if err != nil {
 		return diag.Errorf("creating License Manager License Configuration (%s): %s", name, err)
 	}
 
-	d.SetId(aws.StringValue(resp.LicenseConfigurationArn))
+	d.SetId(aws.StringValue(output.LicenseConfigurationArn))
 
 	return resourceLicenseConfigurationRead(ctx, d, meta)
 }
@@ -167,7 +166,6 @@ func resourceLicenseConfigurationUpdate(ctx context.Context, d *schema.ResourceD
 			input.LicenseCount = aws.Int64(int64(v.(int)))
 		}
 
-		log.Printf("[DEBUG] Updating License Manager License Configuration: %s", input)
 		_, err := conn.UpdateLicenseConfigurationWithContext(ctx, input)
 
 		if err != nil {
@@ -186,7 +184,7 @@ func resourceLicenseConfigurationDelete(ctx context.Context, d *schema.ResourceD
 		LicenseConfigurationArn: aws.String(d.Id()),
 	})
 
-	if tfawserr.ErrCodeEquals(err, licensemanager.ErrCodeInvalidParameterValueException) {
+	if tfawserr.ErrMessageContains(err, licensemanager.ErrCodeInvalidParameterValueException, "Invalid license configuration ARN") {
 		return nil
 	}
 
@@ -204,7 +202,7 @@ func FindLicenseConfigurationByARN(ctx context.Context, conn *licensemanager.Lic
 
 	output, err := conn.GetLicenseConfigurationWithContext(ctx, input)
 
-	if tfawserr.ErrCodeEquals(err, licensemanager.ErrCodeInvalidParameterValueException) {
+	if tfawserr.ErrMessageContains(err, licensemanager.ErrCodeInvalidParameterValueException, "Invalid license configuration ARN") {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
