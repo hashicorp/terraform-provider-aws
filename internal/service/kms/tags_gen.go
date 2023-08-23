@@ -181,6 +181,10 @@ func waitTagsPropagated(ctx context.Context, conn kmsiface.KMSAPI, id string, ta
 			return false, err
 		}
 
+		if inContext, ok := tftags.FromContext(ctx); ok {
+			output = output.IgnoreConfig(inContext.IgnoreConfig)
+		}
+
 		return output.Equal(tags), nil
 	}
 	opts := tfresource.WaitOpts{
