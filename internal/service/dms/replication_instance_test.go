@@ -41,6 +41,7 @@ func TestAccDMSReplicationInstance_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "engine_version"),
 					resource.TestCheckResourceAttrSet(resourceName, "kms_key_arn"),
 					resource.TestCheckResourceAttr(resourceName, "multi_az", "false"),
+					resource.TestCheckResourceAttr(resourceName, "network_type", "IPV4"),
 					resource.TestCheckResourceAttrSet(resourceName, "preferred_maintenance_window"),
 					resource.TestCheckResourceAttr(resourceName, "publicly_accessible", "false"),
 					resource.TestCheckResourceAttrSet(resourceName, "replication_instance_arn"),

@@ -90,6 +90,7 @@ func ResourceReplicationInstance() *schema.Resource {
 			"network_type": {
 				Type:         schema.TypeString,
 				Optional:     true,
+				Computed:     true,
 				ValidateFunc: validation.StringInSlice(networkType_Values(), false),
 			},
 			"preferred_maintenance_window": {
