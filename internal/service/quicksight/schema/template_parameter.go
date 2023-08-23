@@ -1,9 +1,12 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package schema
 
 import (
-	"regexp"
 	"time"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/quicksight"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -25,7 +28,7 @@ func dateTimeParameterDeclarationSchema() *schema.Schema {
 					Required: true,
 					ValidateFunc: validation.All(
 						validation.StringLenBetween(1, 2048),
-						validation.StringMatch(regexp.MustCompile(`^[a-zA-Z0-9]+$`), ""),
+						validation.StringMatch(regexache.MustCompile(`^[a-zA-Z0-9]+$`), ""),
 					),
 				},
 				"default_values": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DateTimeDefaultValues.html
@@ -85,7 +88,7 @@ func decimalParameterDeclarationSchema() *schema.Schema {
 					Required: true,
 					ValidateFunc: validation.All(
 						validation.StringLenBetween(1, 2048),
-						validation.StringMatch(regexp.MustCompile(`^[a-zA-Z0-9]+$`), ""),
+						validation.StringMatch(regexache.MustCompile(`^[a-zA-Z0-9]+$`), ""),
 					),
 				},
 				"parameter_value_type": stringSchema(true, validation.StringInSlice(quicksight.ParameterValueType_Values(), false)),
@@ -142,7 +145,7 @@ func integerParameterDeclarationSchema() *schema.Schema {
 					Required: true,
 					ValidateFunc: validation.All(
 						validation.StringLenBetween(1, 2048),
-						validation.StringMatch(regexp.MustCompile(`^[a-zA-Z0-9]+$`), ""),
+						validation.StringMatch(regexache.MustCompile(`^[a-zA-Z0-9]+$`), ""),
 					),
 				},
 				"parameter_value_type": stringSchema(true, validation.StringInSlice(quicksight.ParameterValueType_Values(), false)),
@@ -199,7 +202,7 @@ func stringParameterDeclarationSchema() *schema.Schema {
 					Required: true,
 					ValidateFunc: validation.All(
 						validation.StringLenBetween(1, 2048),
-						validation.StringMatch(regexp.MustCompile(`^[a-zA-Z0-9]+$`), ""),
+						validation.StringMatch(regexache.MustCompile(`^[a-zA-Z0-9]+$`), ""),
 					),
 				},
 				"parameter_value_type": stringSchema(true, validation.StringInSlice(quicksight.ParameterValueType_Values(), false)),
@@ -405,7 +408,7 @@ func parameterNameSchema(required bool) *schema.Schema {
 		Optional: !required,
 		ValidateFunc: validation.All(
 			validation.StringLenBetween(1, 2048),
-			validation.StringMatch(regexp.MustCompile(`^[a-zA-Z0-9]+$`), ""),
+			validation.StringMatch(regexache.MustCompile(`^[a-zA-Z0-9]+$`), ""),
 		),
 	}
 }
@@ -551,7 +554,7 @@ func expandDecimalValueWhenUnsetConfiguration(tfList []interface{}) *quicksight.
 
 	config := &quicksight.DecimalValueWhenUnsetConfiguration{}
 
-	if v, ok := tfMap["custom_value"].(float64); ok {
+	if v, ok := tfMap["custom_value"].(float64); ok && v != 0.0 {
 		config.CustomValue = aws.Float64(v)
 	}
 	if v, ok := tfMap["value_when_unset_option"].(string); ok && v != "" {
@@ -623,7 +626,7 @@ func expandIntegerValueWhenUnsetConfiguration(tfList []interface{}) *quicksight.
 
 	config := &quicksight.IntegerValueWhenUnsetConfiguration{}
 
-	if v, ok := tfMap["custom_value"].(int); ok {
+	if v, ok := tfMap["custom_value"].(int); ok && v != 0 {
 		config.CustomValue = aws.Int64(int64(v))
 	}
 	if v, ok := tfMap["value_when_unset_option"].(string); ok && v != "" {
@@ -695,7 +698,7 @@ func expandStringValueWhenUnsetConfiguration(tfList []interface{}) *quicksight.S
 
 	config := &quicksight.StringValueWhenUnsetConfiguration{}
 
-	if v, ok := tfMap["custom_value"].(string); ok {
+	if v, ok := tfMap["custom_value"].(string); ok && v != "" {
 		config.CustomValue = aws.String(v)
 	}
 	if v, ok := tfMap["value_when_unset_option"].(string); ok && v != "" {

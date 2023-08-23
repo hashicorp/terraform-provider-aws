@@ -30,8 +30,8 @@ data "aws_emr_release_labels" "example" {
 * `application` - (Optional) Optional release label application filter. For example, `Spark@2.1.0` or `Spark`.
 * `prefix` - (Optional) Optional release label version prefix filter. For example, `emr-5`.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This data source exports the following attributes in addition to the arguments above:
 
 * `release_labels` - Returned release labels.

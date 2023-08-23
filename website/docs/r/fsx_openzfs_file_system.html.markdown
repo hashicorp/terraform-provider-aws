@@ -24,7 +24,7 @@ resource "aws_fsx_openzfs_file_system" "test" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `deployment_type` - (Required) - The filesystem deployment type. Valid values: `SINGLE_AZ_1` and `SINGLE_AZ_2`.
 * `storage_capacity` - (Required) The storage capacity (GiB) of the file system. Valid values between `64` and `524288`.
@@ -72,9 +72,9 @@ The following arguments are supported:
 * `storage_capacity_quota_gib` - (Required) - The amount of storage that the user or group can use in gibibytes (GiB). Valid values between `0` and `2147483647`
 * `type` - (Required) - A value that specifies whether the quota applies to a user or group. Valid values are `USER` or `GROUP`.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - Amazon Resource Name of the file system.
 * `dns_name` - DNS name for the file system, e.g., `fs-12345678.fsx.us-west-2.amazonaws.com`
@@ -95,13 +95,22 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-FSx File Systems can be imported using the `id`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import FSx File Systems using the `id`. For example:
 
-```
-$ terraform import aws_fsx_openzfs_file_system.example fs-543ab12b1ca672f33
+```terraform
+import {
+  to = aws_fsx_openzfs_file_system.example
+  id = "fs-543ab12b1ca672f33"
+}
 ```
 
-Certain resource arguments, like `security_group_ids`, do not have a FSx API method for reading the information after creation. If the argument is set in the Terraform configuration on an imported resource, Terraform will always show a difference. To workaround this behavior, either omit the argument from the Terraform configuration or use [`ignore_changes`](https://www.terraform.io/docs/configuration/meta-arguments/lifecycle.html#ignore_changes) to hide the difference, e.g.,
+Using `terraform import`, import FSx File Systems using the `id`. For example:
+
+```console
+% terraform import aws_fsx_openzfs_file_system.example fs-543ab12b1ca672f33
+```
+
+Certain resource arguments, like `security_group_ids`, do not have a FSx API method for reading the information after creation. If the argument is set in the Terraform configuration on an imported resource, Terraform will always show a difference. To workaround this behavior, either omit the argument from the Terraform configuration or use [`ignore_changes`](https://www.terraform.io/docs/configuration/meta-arguments/lifecycle.html#ignore_changes) to hide the difference. For example:
 
 ```terraform
 resource "aws_fsx_openzfs_file_system" "example" {

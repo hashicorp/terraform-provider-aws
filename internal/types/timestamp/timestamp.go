@@ -1,10 +1,14 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package timestamp
 
 import (
 	"fmt"
-	"regexp"
 	"strings"
 	"time"
+
+	"github.com/YakDriver/regexache"
 )
 
 // Timestamp is a timestamp string type
@@ -24,7 +28,7 @@ func (t Timestamp) ValidateOnceADayWindowFormat() error {
 	validTimeFormat := "([0-1][0-9]|2[0-3]):([0-5][0-9])"
 	validTimeFormatConsolidated := "^(" + validTimeFormat + "-" + validTimeFormat + "|)$"
 
-	if !regexp.MustCompile(validTimeFormatConsolidated).MatchString(t.String()) {
+	if !regexache.MustCompile(validTimeFormatConsolidated).MatchString(t.String()) {
 		return fmt.Errorf("(%s) must satisfy the format of \"hh24:mi-hh24:mi\"", t.String())
 	}
 
@@ -38,7 +42,7 @@ func (t Timestamp) ValidateOnceAWeekWindowFormat() error {
 	validTimeFormatConsolidated := "^(" + validTimeFormat + "-" + validTimeFormat + "|)$"
 
 	val := strings.ToLower(t.String())
-	if !regexp.MustCompile(validTimeFormatConsolidated).MatchString(val) {
+	if !regexache.MustCompile(validTimeFormatConsolidated).MatchString(val) {
 		return fmt.Errorf("(%s) must satisfy the format of \"ddd:hh24:mi-ddd:hh24:mi\"", val)
 	}
 

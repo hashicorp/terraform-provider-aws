@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ssmcontacts_test
 
 import (
@@ -558,7 +561,7 @@ func testAccCheckPlanExists(ctx context.Context, name string) resource.TestCheck
 			return create.Error(names.SSMContacts, create.ErrActionCheckingExistence, tfssmcontacts.ResNamePlan, name, errors.New("not set"))
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SSMContactsClient()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SSMContactsClient(ctx)
 
 		output, err := conn.GetContact(ctx, &ssmcontacts.GetContactInput{
 			ContactId: aws.String(rs.Primary.ID),
@@ -574,7 +577,7 @@ func testAccCheckPlanExists(ctx context.Context, name string) resource.TestCheck
 
 func testAccCheckPlanDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SSMContactsClient()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SSMContactsClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_ssmcontacts_plan" {

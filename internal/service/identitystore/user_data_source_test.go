@@ -1,10 +1,13 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package identitystore_test
 
 import (
 	"fmt"
-	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/service/identitystore"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -117,7 +120,7 @@ func TestAccIdentityStoreUserDataSource_nonExistent(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccUserDataSourceConfig_nonExistent,
-				ExpectError: regexp.MustCompile(`no Identity Store User found matching criteria`),
+				ExpectError: regexache.MustCompile(`no Identity Store User found matching criteria`),
 			},
 		},
 	})
@@ -133,7 +136,7 @@ func TestAccIdentityStoreUserDataSource_externalIDConflictsWithUniqueAttribute(t
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccUserDataSourceConfig_externalIDConflictsWithUniqueAttribute,
-				ExpectError: regexp.MustCompile(`Invalid combination of arguments`),
+				ExpectError: regexache.MustCompile(`Invalid combination of arguments`),
 			},
 		},
 	})
@@ -152,7 +155,7 @@ func TestAccIdentityStoreUserDataSource_userIDConflictsWithExternalID(t *testing
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccUserDataSourceConfig_userIDConflictsWithUniqueAttribute(name, email),
-				ExpectError: regexp.MustCompile(`Invalid combination of arguments`),
+				ExpectError: regexache.MustCompile(`Invalid combination of arguments`),
 			},
 		},
 	})

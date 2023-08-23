@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package vpclattice
 
 import (
@@ -68,7 +71,7 @@ const (
 )
 
 func resourceAuthPolicyPut(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).VPCLatticeClient()
+	conn := meta.(*conns.AWSClient).VPCLatticeClient(ctx)
 	resourceId := d.Get("resource_identifier").(string)
 
 	policy, err := structure.NormalizeJsonString(d.Get("policy").(string))
@@ -94,7 +97,7 @@ func resourceAuthPolicyPut(ctx context.Context, d *schema.ResourceData, meta int
 }
 
 func resourceAuthPolicyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).VPCLatticeClient()
+	conn := meta.(*conns.AWSClient).VPCLatticeClient(ctx)
 	resourceId := d.Id()
 
 	log.Printf("[DEBUG] Reading VPCLattice Auth Policy for resource: %s", resourceId)
@@ -128,7 +131,7 @@ func resourceAuthPolicyRead(ctx context.Context, d *schema.ResourceData, meta in
 }
 
 func resourceAuthPolicyDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).VPCLatticeClient()
+	conn := meta.(*conns.AWSClient).VPCLatticeClient(ctx)
 
 	log.Printf("[INFO] Deleting VPCLattice AuthPolicy: %s", d.Id())
 	_, err := conn.DeleteAuthPolicy(ctx, &vpclattice.DeleteAuthPolicyInput{

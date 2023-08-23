@@ -1,13 +1,16 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package wafv2
 
 import (
 	"context"
 	"fmt"
 	"log"
-	"regexp"
 	"strings"
 	"time"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/wafv2"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
@@ -54,112 +57,115 @@ func ResourceWebACL() *schema.Resource {
 			},
 		},
 
-		Schema: map[string]*schema.Schema{
-			"arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"capacity": {
-				Type:     schema.TypeInt,
-				Computed: true,
-			},
-			"captcha_config":       outerCaptchaConfigSchema(),
-			"custom_response_body": customResponseBodySchema(),
-			"default_action": {
-				Type:     schema.TypeList,
-				Required: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"allow": allowConfigSchema(),
-						"block": blockConfigSchema(),
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"arn": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"association_config": associationConfigSchema(),
+				"capacity": {
+					Type:     schema.TypeInt,
+					Computed: true,
+				},
+				"captcha_config":       outerCaptchaConfigSchema(),
+				"custom_response_body": customResponseBodySchema(),
+				"default_action": {
+					Type:     schema.TypeList,
+					Required: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"allow": allowConfigSchema(),
+							"block": blockConfigSchema(),
+						},
 					},
 				},
-			},
-			"description": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validation.StringLenBetween(1, 256),
-			},
-			"lock_token": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"name": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-				ValidateFunc: validation.All(
-					validation.StringLenBetween(1, 128),
-					validation.StringMatch(regexp.MustCompile(`^[a-zA-Z0-9-_]+$`), "must contain only alphanumeric hyphen and underscore characters"),
-				),
-			},
-			"rule": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"action": {
-							Type:     schema.TypeList,
-							Optional: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"allow":     allowConfigSchema(),
-									"block":     blockConfigSchema(),
-									"captcha":   captchaConfigSchema(),
-									"challenge": challengeConfigSchema(),
-									"count":     countConfigSchema(),
-								},
-							},
-						},
-						"captcha_config": outerCaptchaConfigSchema(),
-						"name": {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: validation.StringLenBetween(1, 128),
-						},
-						"override_action": {
-							Type:     schema.TypeList,
-							Optional: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"count": emptySchema(),
-									"none":  emptySchema(),
-								},
-							},
-						},
-						"priority": {
-							Type:     schema.TypeInt,
-							Required: true,
-						},
-						"rule_label":        ruleLabelsSchema(),
-						"statement":         webACLRootStatementSchema(webACLRootStatementSchemaLevel),
-						"visibility_config": visibilityConfigSchema(),
-					},
+				"description": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ValidateFunc: validation.StringLenBetween(1, 256),
 				},
-			},
-			"scope": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringInSlice(wafv2.Scope_Values(), false),
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			"token_domains": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Elem: &schema.Schema{
-					Type: schema.TypeString,
+				"lock_token": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"name": {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
 					ValidateFunc: validation.All(
-						validation.StringLenBetween(1, 253),
-						validation.StringMatch(regexp.MustCompile(`^[\w\.\-/]+$`), "must contain only alphanumeric, hyphen, dot, underscore and forward-slash characters"),
+						validation.StringLenBetween(1, 128),
+						validation.StringMatch(regexache.MustCompile(`^[a-zA-Z0-9-_]+$`), "must contain only alphanumeric hyphen and underscore characters"),
 					),
 				},
-			},
-			"visibility_config": visibilityConfigSchema(),
+				"rule": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"action": {
+								Type:     schema.TypeList,
+								Optional: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"allow":     allowConfigSchema(),
+										"block":     blockConfigSchema(),
+										"captcha":   captchaConfigSchema(),
+										"challenge": challengeConfigSchema(),
+										"count":     countConfigSchema(),
+									},
+								},
+							},
+							"captcha_config": outerCaptchaConfigSchema(),
+							"name": {
+								Type:         schema.TypeString,
+								Required:     true,
+								ValidateFunc: validation.StringLenBetween(1, 128),
+							},
+							"override_action": {
+								Type:     schema.TypeList,
+								Optional: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"count": emptySchema(),
+										"none":  emptySchema(),
+									},
+								},
+							},
+							"priority": {
+								Type:     schema.TypeInt,
+								Required: true,
+							},
+							"rule_label":        ruleLabelsSchema(),
+							"statement":         webACLRootStatementSchema(webACLRootStatementSchemaLevel),
+							"visibility_config": visibilityConfigSchema(),
+						},
+					},
+				},
+				"scope": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: validation.StringInSlice(wafv2.Scope_Values(), false),
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				"token_domains": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					Elem: &schema.Schema{
+						Type: schema.TypeString,
+						ValidateFunc: validation.All(
+							validation.StringLenBetween(1, 253),
+							validation.StringMatch(regexache.MustCompile(`^[\w\.\-/]+$`), "must contain only alphanumeric, hyphen, dot, underscore and forward-slash characters"),
+						),
+					},
+				},
+				"visibility_config": visibilityConfigSchema(),
+			}
 		},
 
 		CustomizeDiff: verify.SetTagsDiff,
@@ -167,17 +173,18 @@ func ResourceWebACL() *schema.Resource {
 }
 
 func resourceWebACLCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).WAFV2Conn()
+	conn := meta.(*conns.AWSClient).WAFV2Conn(ctx)
 
 	name := d.Get("name").(string)
 	input := &wafv2.CreateWebACLInput{
-		CaptchaConfig:    expandCaptchaConfig(d.Get("captcha_config").([]interface{})),
-		DefaultAction:    expandDefaultAction(d.Get("default_action").([]interface{})),
-		Name:             aws.String(name),
-		Rules:            expandWebACLRules(d.Get("rule").(*schema.Set).List()),
-		Scope:            aws.String(d.Get("scope").(string)),
-		Tags:             GetTagsIn(ctx),
-		VisibilityConfig: expandVisibilityConfig(d.Get("visibility_config").([]interface{})),
+		AssociationConfig: expandAssociationConfig(d.Get("association_config").([]interface{})),
+		CaptchaConfig:     expandCaptchaConfig(d.Get("captcha_config").([]interface{})),
+		DefaultAction:     expandDefaultAction(d.Get("default_action").([]interface{})),
+		Name:              aws.String(name),
+		Rules:             expandWebACLRules(d.Get("rule").(*schema.Set).List()),
+		Scope:             aws.String(d.Get("scope").(string)),
+		Tags:              getTagsIn(ctx),
+		VisibilityConfig:  expandVisibilityConfig(d.Get("visibility_config").([]interface{})),
 	}
 
 	if v, ok := d.GetOk("custom_response_body"); ok && v.(*schema.Set).Len() > 0 {
@@ -208,7 +215,7 @@ func resourceWebACLCreate(ctx context.Context, d *schema.ResourceData, meta inte
 }
 
 func resourceWebACLRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).WAFV2Conn()
+	conn := meta.(*conns.AWSClient).WAFV2Conn(ctx)
 
 	output, err := FindWebACLByThreePartKey(ctx, conn, d.Id(), d.Get("name").(string), d.Get("scope").(string))
 
@@ -226,6 +233,9 @@ func resourceWebACLRead(ctx context.Context, d *schema.ResourceData, meta interf
 	arn := aws.StringValue(webACL.ARN)
 	d.Set("arn", arn)
 	d.Set("capacity", webACL.Capacity)
+	if err := d.Set("association_config", flattenAssociationConfig(webACL.AssociationConfig)); err != nil {
+		return diag.Errorf("setting association_config: %s", err)
+	}
 	if err := d.Set("captcha_config", flattenCaptchaConfig(webACL.CaptchaConfig)); err != nil {
 		return diag.Errorf("setting captcha_config: %s", err)
 	}
@@ -251,18 +261,19 @@ func resourceWebACLRead(ctx context.Context, d *schema.ResourceData, meta interf
 }
 
 func resourceWebACLUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).WAFV2Conn()
+	conn := meta.(*conns.AWSClient).WAFV2Conn(ctx)
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		input := &wafv2.UpdateWebACLInput{
-			CaptchaConfig:    expandCaptchaConfig(d.Get("captcha_config").([]interface{})),
-			DefaultAction:    expandDefaultAction(d.Get("default_action").([]interface{})),
-			Id:               aws.String(d.Id()),
-			LockToken:        aws.String(d.Get("lock_token").(string)),
-			Name:             aws.String(d.Get("name").(string)),
-			Rules:            expandWebACLRules(d.Get("rule").(*schema.Set).List()),
-			Scope:            aws.String(d.Get("scope").(string)),
-			VisibilityConfig: expandVisibilityConfig(d.Get("visibility_config").([]interface{})),
+			AssociationConfig: expandAssociationConfig(d.Get("association_config").([]interface{})),
+			CaptchaConfig:     expandCaptchaConfig(d.Get("captcha_config").([]interface{})),
+			DefaultAction:     expandDefaultAction(d.Get("default_action").([]interface{})),
+			Id:                aws.String(d.Id()),
+			LockToken:         aws.String(d.Get("lock_token").(string)),
+			Name:              aws.String(d.Get("name").(string)),
+			Rules:             expandWebACLRules(d.Get("rule").(*schema.Set).List()),
+			Scope:             aws.String(d.Get("scope").(string)),
+			VisibilityConfig:  expandVisibilityConfig(d.Get("visibility_config").([]interface{})),
 		}
 
 		if v, ok := d.GetOk("custom_response_body"); ok && v.(*schema.Set).Len() > 0 {
@@ -294,7 +305,7 @@ func resourceWebACLUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 }
 
 func resourceWebACLDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).WAFV2Conn()
+	conn := meta.(*conns.AWSClient).WAFV2Conn(ctx)
 
 	input := &wafv2.DeleteWebACLInput{
 		Id:        aws.String(d.Id()),
@@ -355,7 +366,7 @@ func filterWebACLRules(rules, configRules []*wafv2.Rule) []*wafv2.Rule {
 	var fr []*wafv2.Rule
 	pattern := `^ShieldMitigationRuleGroup_\d{12}_[0-9A-Fa-f]{8}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{12}_.*`
 	for _, r := range rules {
-		if regexp.MustCompile(pattern).MatchString(aws.StringValue(r.Name)) {
+		if regexache.MustCompile(pattern).MatchString(aws.StringValue(r.Name)) {
 			filter := true
 			for _, cr := range configRules {
 				if aws.StringValue(cr.Name) == aws.StringValue(r.Name) {

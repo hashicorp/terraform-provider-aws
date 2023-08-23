@@ -1,0 +1,24 @@
+rules:
+  - id: avoid-diag_FromErr
+    fix: sdkdiag.AppendFromErr(diags, $ERR)
+    languages: [go]
+    message: Prefer `sdkdiag.AppendFromErr` to `diag.FromErr`
+    paths:
+      exclude:
+        - internal/service
+    patterns:
+      - pattern: diag.FromErr($ERR)
+    severity: WARNING
+
+  - id: avoid-diag_Errorf
+    fix-regex:
+      regex: diag\.Errorf\((.*)\)
+      replacement: sdkdiag.AppendErrorf(diags, \1)
+    languages: [go]
+    message: Prefer `sdkdiag.AppendErrorf` to `diag.Errorf`
+    paths:
+      exclude:
+        - internal/service
+    patterns:
+      - pattern: diag.Errorf(...)
+    severity: WARNING

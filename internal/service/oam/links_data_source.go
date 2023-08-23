@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package oam
 
 import (
@@ -32,7 +35,7 @@ const (
 )
 
 func dataSourceLinksRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ObservabilityAccessManagerClient()
+	conn := meta.(*conns.AWSClient).ObservabilityAccessManagerClient(ctx)
 	listLinksInput := &oam.ListLinksInput{}
 
 	paginator := oam.NewListLinksPaginator(conn, listLinksInput)

@@ -1,12 +1,15 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package lakeformation
 
 import (
 	"context"
 	"fmt"
 	"log"
-	"regexp"
 	"strings"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/lakeformation"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
@@ -64,7 +67,7 @@ func ResourceLFTag() *schema.Resource {
 
 func resourceLFTagCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).LakeFormationConn()
+	conn := meta.(*conns.AWSClient).LakeFormationConn(ctx)
 
 	tagKey := d.Get("key").(string)
 	tagValues := d.Get("values").(*schema.Set)
@@ -113,7 +116,7 @@ func resourceLFTagCreate(ctx context.Context, d *schema.ResourceData, meta inter
 
 func resourceLFTagRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).LakeFormationConn()
+	conn := meta.(*conns.AWSClient).LakeFormationConn(ctx)
 
 	catalogID, tagKey, err := ReadLFTagID(d.Id())
 	if err != nil {
@@ -147,7 +150,7 @@ func resourceLFTagRead(ctx context.Context, d *schema.ResourceData, meta interfa
 
 func resourceLFTagUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).LakeFormationConn()
+	conn := meta.(*conns.AWSClient).LakeFormationConn(ctx)
 
 	catalogID, tagKey, err := ReadLFTagID(d.Id())
 	if err != nil {
@@ -204,7 +207,7 @@ func resourceLFTagUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 
 func resourceLFTagDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).LakeFormationConn()
+	conn := meta.(*conns.AWSClient).LakeFormationConn(ctx)
 
 	catalogID, tagKey, err := ReadLFTagID(d.Id())
 	if err != nil {
@@ -237,7 +240,7 @@ func ReadLFTagID(id string) (string, string, error) {
 func validateLFTagValues() schema.SchemaValidateFunc {
 	return validation.All(
 		validation.StringLenBetween(1, 255),
-		validation.StringMatch(regexp.MustCompile(`^([\p{L}\p{Z}\p{N}_.:\*\/=+\-@%]*)$`), ""),
+		validation.StringMatch(regexache.MustCompile(`^([\p{L}\p{Z}\p{N}_.:\*\/=+\-@%]*)$`), ""),
 	)
 }
 

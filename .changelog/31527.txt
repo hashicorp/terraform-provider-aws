@@ -1,0 +1,15 @@
+```release-note:new-resource
+aws_autoscaling_traffic_source_attachment
+```
+
+```release-note:enhancement
+resource/aws_autoscaling_group: Add `traffic_source` configuration block
+```
+
+```release-note:enhancement
+data-source/aws_autoscaling_group: Add `traffic_source` attribute
+```
+
+```release-note:note
+resource/aws_autoscaling_group: The `load_balancers` and `target_group_arns` attributes have been changed to `Computed`. This means that omitting this argument is interpreted as ignoring any existing load balancer or target group attachments. To remove all load balancer or target group attachments an empty list should be specified.
+```

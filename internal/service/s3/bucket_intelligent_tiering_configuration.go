@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package s3
 
 import (
@@ -91,7 +94,7 @@ func ResourceBucketIntelligentTieringConfiguration() *schema.Resource {
 
 func resourceBucketIntelligentTieringConfigurationPut(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).S3Conn()
+	conn := meta.(*conns.AWSClient).S3Conn(ctx)
 
 	bucketName := d.Get("bucket").(string)
 	configurationName := d.Get("name").(string)
@@ -131,7 +134,7 @@ func resourceBucketIntelligentTieringConfigurationPut(ctx context.Context, d *sc
 
 func resourceBucketIntelligentTieringConfigurationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).S3Conn()
+	conn := meta.(*conns.AWSClient).S3Conn(ctx)
 
 	bucketName, configurationName, err := BucketIntelligentTieringConfigurationParseResourceID(d.Id())
 
@@ -170,7 +173,7 @@ func resourceBucketIntelligentTieringConfigurationRead(ctx context.Context, d *s
 
 func resourceBucketIntelligentTieringConfigurationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).S3Conn()
+	conn := meta.(*conns.AWSClient).S3Conn(ctx)
 
 	bucketName, configurationName, err := BucketIntelligentTieringConfigurationParseResourceID(d.Id())
 

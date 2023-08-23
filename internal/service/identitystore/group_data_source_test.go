@@ -1,11 +1,14 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package identitystore_test
 
 import (
 	"context"
 	"fmt"
-	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/service/identitystore"
 	"github.com/aws/aws-sdk-go/service/ssoadmin"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
@@ -55,7 +58,7 @@ func TestAccIdentityStoreGroupDataSource_externalIDConflictsWithUniqueAttribute(
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccGroupDataSourceConfig_externalIDConflictsWithUniqueAttribute,
-				ExpectError: regexp.MustCompile(`Invalid combination of arguments`),
+				ExpectError: regexache.MustCompile(`Invalid combination of arguments`),
 			},
 		},
 	})
@@ -76,7 +79,7 @@ func TestAccIdentityStoreGroupDataSource_groupIDConflictsWithUniqueAttribute(t *
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccGroupDataSourceConfig_groupIDConflictsWithUniqueAttribute(name),
-				ExpectError: regexp.MustCompile(`Invalid combination of arguments`),
+				ExpectError: regexache.MustCompile(`Invalid combination of arguments`),
 			},
 		},
 	})
@@ -97,7 +100,7 @@ func TestAccIdentityStoreGroupDataSource_groupIDConflictsWithExternalID(t *testi
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccGroupDataSourceConfig_groupIDConflictsWithExternalID(name),
-				ExpectError: regexp.MustCompile(`Invalid combination of arguments`),
+				ExpectError: regexache.MustCompile(`Invalid combination of arguments`),
 			},
 		},
 	})
@@ -194,7 +197,7 @@ data "aws_identitystore_group" "test" {
 }
 
 func testAccPreCheckSSOAdminInstances(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).SSOAdminConn()
+	conn := acctest.Provider.Meta().(*conns.AWSClient).SSOAdminConn(ctx)
 
 	var instances []*ssoadmin.InstanceMetadata
 	err := conn.ListInstancesPagesWithContext(ctx, &ssoadmin.ListInstancesInput{}, func(page *ssoadmin.ListInstancesOutput, lastPage bool) bool {

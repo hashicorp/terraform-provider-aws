@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package quicksight
 
 import (
@@ -23,8 +26,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
-	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
+	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -112,7 +115,7 @@ func (r *resourceIAMPolicyAssignment) Schema(ctx context.Context, req resource.S
 }
 
 func (r *resourceIAMPolicyAssignment) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-	conn := r.Meta().QuickSightConn()
+	conn := r.Meta().QuickSightConn(ctx)
 
 	var plan resourceIAMPolicyAssignmentData
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
@@ -177,7 +180,7 @@ func (r *resourceIAMPolicyAssignment) Create(ctx context.Context, req resource.C
 }
 
 func (r *resourceIAMPolicyAssignment) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
-	conn := r.Meta().QuickSightConn()
+	conn := r.Meta().QuickSightConn(ctx)
 
 	var state resourceIAMPolicyAssignmentData
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
@@ -223,7 +226,7 @@ func (r *resourceIAMPolicyAssignment) Read(ctx context.Context, req resource.Rea
 }
 
 func (r *resourceIAMPolicyAssignment) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	conn := r.Meta().QuickSightConn()
+	conn := r.Meta().QuickSightConn(ctx)
 
 	var plan, state resourceIAMPolicyAssignmentData
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
@@ -276,7 +279,7 @@ func (r *resourceIAMPolicyAssignment) Update(ctx context.Context, req resource.U
 }
 
 func (r *resourceIAMPolicyAssignment) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
-	conn := r.Meta().QuickSightConn()
+	conn := r.Meta().QuickSightConn(ctx)
 
 	var state resourceIAMPolicyAssignmentData
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)

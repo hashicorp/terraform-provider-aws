@@ -5,24 +5,26 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/swf"
-	"github.com/aws/aws-sdk-go/service/swf/swfiface"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/swf"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/swf/types"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/logging"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// ListTags lists swf service tags.
+// listTags lists swf service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func ListTags(ctx context.Context, conn swfiface.SWFAPI, identifier string) (tftags.KeyValueTags, error) {
+func listTags(ctx context.Context, conn *swf.Client, identifier string) (tftags.KeyValueTags, error) {
 	input := &swf.ListTagsForResourceInput{
 		ResourceArn: aws.String(identifier),
 	}
 
-	output, err := conn.ListTagsForResourceWithContext(ctx, input)
+	output, err := conn.ListTagsForResource(ctx, input)
 
 	if err != nil {
 		return tftags.New(ctx, nil), err
@@ -34,7 +36,7 @@ func ListTags(ctx context.Context, conn swfiface.SWFAPI, identifier string) (tft
 // ListTags lists swf service tags and set them in Context.
 // It is called from outside this package.
 func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier string) error {
-	tags, err := ListTags(ctx, meta.(*conns.AWSClient).SWFConn(), identifier)
+	tags, err := listTags(ctx, meta.(*conns.AWSClient).SWFClient(ctx), identifier)
 
 	if err != nil {
 		return err
@@ -50,11 +52,11 @@ func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier stri
 // []*SERVICE.Tag handling
 
 // Tags returns swf service tags.
-func Tags(tags tftags.KeyValueTags) []*swf.ResourceTag {
-	result := make([]*swf.ResourceTag, 0, len(tags))
+func Tags(tags tftags.KeyValueTags) []awstypes.ResourceTag {
+	result := make([]awstypes.ResourceTag, 0, len(tags))
 
 	for k, v := range tags.Map() {
-		tag := &swf.ResourceTag{
+		tag := awstypes.ResourceTag{
 			Key:   aws.String(k),
 			Value: aws.String(v),
 		}
@@ -66,19 +68,19 @@ func Tags(tags tftags.KeyValueTags) []*swf.ResourceTag {
 }
 
 // KeyValueTags creates tftags.KeyValueTags from swf service tags.
-func KeyValueTags(ctx context.Context, tags []*swf.ResourceTag) tftags.KeyValueTags {
+func KeyValueTags(ctx context.Context, tags []awstypes.ResourceTag) tftags.KeyValueTags {
 	m := make(map[string]*string, len(tags))
 
 	for _, tag := range tags {
-		m[aws.StringValue(tag.Key)] = tag.Value
+		m[aws.ToString(tag.Key)] = tag.Value
 	}
 
 	return tftags.New(ctx, m)
 }
 
-// GetTagsIn returns swf service tags from Context.
+// getTagsIn returns swf service tags from Context.
 // nil is returned if there are no input tags.
-func GetTagsIn(ctx context.Context) []*swf.ResourceTag {
+func getTagsIn(ctx context.Context) []awstypes.ResourceTag {
 	if inContext, ok := tftags.FromContext(ctx); ok {
 		if tags := Tags(inContext.TagsIn.UnwrapOrDefault()); len(tags) > 0 {
 			return tags
@@ -88,29 +90,31 @@ func GetTagsIn(ctx context.Context) []*swf.ResourceTag {
 	return nil
 }
 
-// SetTagsOut sets swf service tags in Context.
-func SetTagsOut(ctx context.Context, tags []*swf.ResourceTag) {
+// setTagsOut sets swf service tags in Context.
+func setTagsOut(ctx context.Context, tags []awstypes.ResourceTag) {
 	if inContext, ok := tftags.FromContext(ctx); ok {
 		inContext.TagsOut = types.Some(KeyValueTags(ctx, tags))
 	}
 }
 
-// UpdateTags updates swf service tags.
+// updateTags updates swf service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func UpdateTags(ctx context.Context, conn swfiface.SWFAPI, identifier string, oldTagsMap, newTagsMap any) error {
+func updateTags(ctx context.Context, conn *swf.Client, identifier string, oldTagsMap, newTagsMap any) error {
 	oldTags := tftags.New(ctx, oldTagsMap)
 	newTags := tftags.New(ctx, newTagsMap)
+
+	ctx = tflog.SetField(ctx, logging.KeyResourceId, identifier)
 
 	removedTags := oldTags.Removed(newTags)
 	removedTags = removedTags.IgnoreSystem(names.SWF)
 	if len(removedTags) > 0 {
 		input := &swf.UntagResourceInput{
 			ResourceArn: aws.String(identifier),
-			TagKeys:     aws.StringSlice(removedTags.Keys()),
+			TagKeys:     removedTags.Keys(),
 		}
 
-		_, err := conn.UntagResourceWithContext(ctx, input)
+		_, err := conn.UntagResource(ctx, input)
 
 		if err != nil {
 			return fmt.Errorf("untagging resource (%s): %w", identifier, err)
@@ -125,7 +129,7 @@ func UpdateTags(ctx context.Context, conn swfiface.SWFAPI, identifier string, ol
 			Tags:        Tags(updatedTags),
 		}
 
-		_, err := conn.TagResourceWithContext(ctx, input)
+		_, err := conn.TagResource(ctx, input)
 
 		if err != nil {
 			return fmt.Errorf("tagging resource (%s): %w", identifier, err)
@@ -138,5 +142,5 @@ func UpdateTags(ctx context.Context, conn swfiface.SWFAPI, identifier string, ol
 // UpdateTags updates swf service tags.
 // It is called from outside this package.
 func (p *servicePackage) UpdateTags(ctx context.Context, meta any, identifier string, oldTags, newTags any) error {
-	return UpdateTags(ctx, meta.(*conns.AWSClient).SWFConn(), identifier, oldTags, newTags)
+	return updateTags(ctx, meta.(*conns.AWSClient).SWFClient(ctx), identifier, oldTags, newTags)
 }

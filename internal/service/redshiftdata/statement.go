@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package redshiftdata
 
 import (
@@ -102,7 +105,7 @@ func ResourceStatement() *schema.Resource {
 
 func resourceStatementCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).RedshiftDataConn()
+	conn := meta.(*conns.AWSClient).RedshiftDataConn(ctx)
 
 	input := &redshiftdataapiservice.ExecuteStatementInput{
 		Database:  aws.String(d.Get("database").(string)),
@@ -151,7 +154,7 @@ func resourceStatementCreate(ctx context.Context, d *schema.ResourceData, meta i
 
 func resourceStatementRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).RedshiftDataConn()
+	conn := meta.(*conns.AWSClient).RedshiftDataConn(ctx)
 
 	sub, err := FindStatementByID(ctx, conn, d.Id())
 

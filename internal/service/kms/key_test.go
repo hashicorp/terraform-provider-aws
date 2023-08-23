@@ -1,11 +1,14 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package kms_test
 
 import (
 	"context"
 	"fmt"
-	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/kms"
 	awspolicy "github.com/hashicorp/awspolicyequivalence"
@@ -44,6 +47,13 @@ func TestAccKMSKey_basic(t *testing.T) {
 				ImportState:             true,
 				ImportStateVerify:       true,
 				ImportStateVerifyIgnore: []string{"deletion_window_in_days", "bypass_policy_lockout_safety_check"},
+			},
+			{
+				// Set deletion window to 7 days
+				Config: testAccKeyConfig_basicDeletionWindow(),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckKeyExists(ctx, resourceName, &key),
+				),
 			},
 		},
 	})
@@ -200,7 +210,7 @@ func TestAccKMSKey_Policy_bypass(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccKeyConfig_policyBypass(rName, false),
-				ExpectError: regexp.MustCompile(`The new key policy will not allow you to update the key policy in the future`),
+				ExpectError: regexache.MustCompile(`The new key policy will not allow you to update the key policy in the future`),
 			},
 			{
 				Config: testAccKeyConfig_policyBypass(rName, true),
@@ -489,6 +499,19 @@ func TestAccKMSKey_tags(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
+			{
+				Config: testAccKeyConfig_tags0(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckKeyExists(ctx, resourceName, &key),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"deletion_window_in_days", "bypass_policy_lockout_safety_check"},
+			},
 		},
 	})
 }
@@ -504,7 +527,7 @@ func testAccCheckKeyHasPolicy(ctx context.Context, name string, expectedPolicyTe
 			return fmt.Errorf("No KMS Key ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).KMSConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).KMSConn(ctx)
 
 		out, err := conn.GetKeyPolicyWithContext(ctx, &kms.GetKeyPolicyInput{
 			KeyId:      aws.String(rs.Primary.ID),
@@ -531,7 +554,7 @@ func testAccCheckKeyHasPolicy(ctx context.Context, name string, expectedPolicyTe
 
 func testAccCheckKeyDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).KMSConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).KMSConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_kms_key" {
@@ -566,7 +589,7 @@ func testAccCheckKeyExists(ctx context.Context, name string, key *kms.KeyMetadat
 			return fmt.Errorf("No KMS Key ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).KMSConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).KMSConn(ctx)
 
 		outputRaw, err := tfresource.RetryWhenNotFound(ctx, tfkms.PropagationTimeout, func() (interface{}, error) {
 			return tfkms.FindKeyByID(ctx, conn, rs.Primary.ID)
@@ -585,6 +608,14 @@ func testAccCheckKeyExists(ctx context.Context, name string, key *kms.KeyMetadat
 func testAccKeyConfig_basic() string {
 	return `
 resource "aws_kms_key" "test" {}
+`
+}
+
+func testAccKeyConfig_basicDeletionWindow() string {
+	return `
+resource "aws_kms_key" "test" {
+  deletion_window_in_days = 7
+}
 `
 }
 
@@ -1028,7 +1059,8 @@ resource "aws_kms_key" "test" {
 func testAccKeyConfig_tags1(rName, tagKey1, tagValue1 string) string {
 	return fmt.Sprintf(`
 resource "aws_kms_key" "test" {
-  description = %[1]q
+  description             = %[1]q
+  deletion_window_in_days = 7
 
   tags = {
     %[2]q = %[3]q
@@ -1040,7 +1072,8 @@ resource "aws_kms_key" "test" {
 func testAccKeyConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return fmt.Sprintf(`
 resource "aws_kms_key" "test" {
-  description = %[1]q
+  description             = %[1]q
+  deletion_window_in_days = 7
 
   tags = {
     %[2]q = %[3]q
@@ -1048,4 +1081,13 @@ resource "aws_kms_key" "test" {
   }
 }
 `, rName, tagKey1, tagValue1, tagKey2, tagValue2)
+}
+
+func testAccKeyConfig_tags0(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_kms_key" "test" {
+  description             = %[1]q
+  deletion_window_in_days = 7
+}
+`, rName)
 }

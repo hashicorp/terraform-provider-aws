@@ -1,12 +1,15 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package codestarconnections_test
 
 import (
 	"context"
 	"errors"
 	"fmt"
-	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/service/codestarconnections"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -36,8 +39,8 @@ func TestAccCodeStarConnectionsConnection_basic(t *testing.T) {
 				Config: testAccConnectionConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckConnectionExists(ctx, resourceName, &v),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "id", "codestar-connections", regexp.MustCompile("connection/.+")),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "codestar-connections", regexp.MustCompile("connection/.+")),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "id", "codestar-connections", regexache.MustCompile("connection/.+")),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "codestar-connections", regexache.MustCompile("connection/.+")),
 					resource.TestCheckResourceAttr(resourceName, "provider_type", codestarconnections.ProviderTypeBitbucket),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "connection_status", codestarconnections.ConnectionStatusPending),
@@ -71,9 +74,9 @@ func TestAccCodeStarConnectionsConnection_hostARN(t *testing.T) {
 				Config: testAccConnectionConfig_hostARN(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckConnectionExists(ctx, resourceName, &v),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "id", "codestar-connections", regexp.MustCompile("connection/.+")),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "codestar-connections", regexp.MustCompile("connection/.+")),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "host_arn", "codestar-connections", regexp.MustCompile("host/.+")),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "id", "codestar-connections", regexache.MustCompile("connection/.+")),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "codestar-connections", regexache.MustCompile("connection/.+")),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "host_arn", "codestar-connections", regexache.MustCompile("host/.+")),
 					resource.TestCheckResourceAttr(resourceName, "provider_type", codestarconnections.ProviderTypeGitHubEnterpriseServer),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "connection_status", codestarconnections.ConnectionStatusPending),
@@ -175,7 +178,7 @@ func testAccCheckConnectionExists(ctx context.Context, n string, v *codestarconn
 			return errors.New("No CodeStar Connections Connection ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CodeStarConnectionsConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CodeStarConnectionsConn(ctx)
 
 		output, err := tfcodestarconnections.FindConnectionByARN(ctx, conn, rs.Primary.ID)
 
@@ -191,7 +194,7 @@ func testAccCheckConnectionExists(ctx context.Context, n string, v *codestarconn
 
 func testAccCheckConnectionDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CodeStarConnectionsConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CodeStarConnectionsConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_codestarconnections_connection" {

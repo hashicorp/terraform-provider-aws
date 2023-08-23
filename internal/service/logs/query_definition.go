@@ -1,11 +1,14 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package logs
 
 import (
 	"context"
 	"fmt"
 	"log"
-	"regexp"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/cloudwatchlogs"
@@ -37,7 +40,7 @@ func resourceQueryDefinition() *schema.Resource {
 				Required: true,
 				ValidateFunc: validation.All(
 					validation.StringLenBetween(1, 255),
-					validation.StringMatch(regexp.MustCompile(`^([^:*\/]+\/?)*[^:*\/]+$`), "cannot contain a colon or asterisk and cannot start or end with a slash"),
+					validation.StringMatch(regexache.MustCompile(`^([^:*\/]+\/?)*[^:*\/]+$`), "cannot contain a colon or asterisk and cannot start or end with a slash"),
 				),
 			},
 			"log_group_names": {
@@ -61,7 +64,7 @@ func resourceQueryDefinition() *schema.Resource {
 }
 
 func resourceQueryDefinitionPut(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).LogsConn()
+	conn := meta.(*conns.AWSClient).LogsConn(ctx)
 
 	name := d.Get("name").(string)
 	input := &cloudwatchlogs.PutQueryDefinitionInput{
@@ -91,7 +94,7 @@ func resourceQueryDefinitionPut(ctx context.Context, d *schema.ResourceData, met
 }
 
 func resourceQueryDefinitionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).LogsConn()
+	conn := meta.(*conns.AWSClient).LogsConn(ctx)
 
 	result, err := FindQueryDefinitionByTwoPartKey(ctx, conn, d.Get("name").(string), d.Id())
 
@@ -114,7 +117,7 @@ func resourceQueryDefinitionRead(ctx context.Context, d *schema.ResourceData, me
 }
 
 func resourceQueryDefinitionDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).LogsConn()
+	conn := meta.(*conns.AWSClient).LogsConn(ctx)
 
 	log.Printf("[INFO] Deleting CloudWatch Logs Query Definition: %s", d.Id())
 	_, err := conn.DeleteQueryDefinitionWithContext(ctx, &cloudwatchlogs.DeleteQueryDefinitionInput{
@@ -142,7 +145,7 @@ func resourceQueryDefinitionImport(ctx context.Context, d *schema.ResourceData, 
 		return nil, fmt.Errorf("unexpected format for ID (%s), expected a CloudWatch query definition ARN", d.Id())
 	}
 
-	matcher := regexp.MustCompile("^query-definition:(" + verify.UUIDRegexPattern + ")$")
+	matcher := regexache.MustCompile("^query-definition:(" + verify.UUIDRegexPattern + ")$")
 	matches := matcher.FindStringSubmatch(arn.Resource)
 	if len(matches) != 2 {
 		return nil, fmt.Errorf("unexpected format for ID (%s), expected a CloudWatch query definition ARN", d.Id())

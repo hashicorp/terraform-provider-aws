@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package guardduty
 
 import (
@@ -131,7 +134,7 @@ func ResourceFilter() *schema.Resource {
 
 func resourceFilterCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).GuardDutyConn()
+	conn := meta.(*conns.AWSClient).GuardDutyConn(ctx)
 
 	input := guardduty.CreateFilterInput{
 		Action:      aws.String(d.Get("action").(string)),
@@ -139,7 +142,7 @@ func resourceFilterCreate(ctx context.Context, d *schema.ResourceData, meta inte
 		DetectorId:  aws.String(d.Get("detector_id").(string)),
 		Name:        aws.String(d.Get("name").(string)),
 		Rank:        aws.Int64(int64(d.Get("rank").(int))),
-		Tags:        GetTagsIn(ctx),
+		Tags:        getTagsIn(ctx),
 	}
 
 	var err error
@@ -161,7 +164,7 @@ func resourceFilterCreate(ctx context.Context, d *schema.ResourceData, meta inte
 
 func resourceFilterRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).GuardDutyConn()
+	conn := meta.(*conns.AWSClient).GuardDutyConn(ctx)
 
 	var detectorID, name string
 	var err error
@@ -214,7 +217,7 @@ func resourceFilterRead(ctx context.Context, d *schema.ResourceData, meta interf
 	d.Set("detector_id", detectorID)
 	d.Set("rank", filter.Rank)
 
-	SetTagsOut(ctx, filter.Tags)
+	setTagsOut(ctx, filter.Tags)
 
 	d.SetId(filterCreateID(detectorID, name))
 
@@ -223,7 +226,7 @@ func resourceFilterRead(ctx context.Context, d *schema.ResourceData, meta interf
 
 func resourceFilterUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).GuardDutyConn()
+	conn := meta.(*conns.AWSClient).GuardDutyConn(ctx)
 
 	if d.HasChanges("action", "description", "finding_criteria", "rank") {
 		input := guardduty.UpdateFilterInput{
@@ -251,7 +254,7 @@ func resourceFilterUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 
 func resourceFilterDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).GuardDutyConn()
+	conn := meta.(*conns.AWSClient).GuardDutyConn(ctx)
 
 	detectorId := d.Get("detector_id").(string)
 	name := d.Get("name").(string)

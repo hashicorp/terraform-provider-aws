@@ -1,12 +1,15 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package lambda_test
 
 import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/service/lambda"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -304,7 +307,7 @@ func TestAccLambdaPermission_statementIDDuplicate(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccPermissionConfig_statementIDDuplicate(rName),
-				ExpectError: regexp.MustCompile(`ResourceConflictException`),
+				ExpectError: regexache.MustCompile(`ResourceConflictException`),
 			},
 		},
 	})
@@ -715,7 +718,7 @@ func testAccCheckPermissionExists(ctx context.Context, n string, v *tflambda.Pol
 			return fmt.Errorf("No Lambda Permission ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).LambdaConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).LambdaConn(ctx)
 
 		output, err := tflambda.FindPolicyStatementByTwoPartKey(ctx, conn, rs.Primary.Attributes["function_name"], rs.Primary.ID, rs.Primary.Attributes["qualifier"])
 
@@ -731,7 +734,7 @@ func testAccCheckPermissionExists(ctx context.Context, n string, v *tflambda.Pol
 
 func testAccCheckPermissionDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).LambdaConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).LambdaConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_lambda_permission" {
@@ -950,12 +953,7 @@ resource "aws_lambda_permission" "test" {
 }
 
 resource "aws_s3_bucket" "test" {
-  bucket = "%s"
-}
-
-resource "aws_s3_bucket_acl" "test" {
-  bucket = aws_s3_bucket.test.id
-  acl    = "private"
+  bucket = %[1]q
 }
 `, rName))
 }

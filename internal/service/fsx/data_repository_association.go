@@ -1,11 +1,14 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package fsx
 
 import (
 	"context"
 	"log"
-	"regexp"
 	"time"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/fsx"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
@@ -61,7 +64,7 @@ func ResourceDataRepositoryAssociation() *schema.Resource {
 				Required: true,
 				ValidateFunc: validation.All(
 					validation.StringLenBetween(3, 900),
-					validation.StringMatch(regexp.MustCompile(`^s3://`), "must begin with s3://"),
+					validation.StringMatch(regexache.MustCompile(`^s3://`), "must begin with s3://"),
 				),
 			},
 			"file_system_id": {
@@ -70,7 +73,7 @@ func ResourceDataRepositoryAssociation() *schema.Resource {
 				Required: true,
 				ValidateFunc: validation.All(
 					validation.StringLenBetween(11, 21),
-					validation.StringMatch(regexp.MustCompile(`^fs-[0-9a-f]*`), "must begin with fs-"),
+					validation.StringMatch(regexache.MustCompile(`^fs-[0-9a-f]*`), "must begin with fs-"),
 				),
 			},
 			"file_system_path": {
@@ -79,7 +82,7 @@ func ResourceDataRepositoryAssociation() *schema.Resource {
 				Required: true,
 				ValidateFunc: validation.All(
 					validation.StringLenBetween(1, 4096),
-					validation.StringMatch(regexp.MustCompile(`^/.*`), "path must begin with /"),
+					validation.StringMatch(regexache.MustCompile(`^/.*`), "path must begin with /"),
 				),
 			},
 			"imported_file_chunk_size": {
@@ -156,14 +159,14 @@ func ResourceDataRepositoryAssociation() *schema.Resource {
 
 func resourceDataRepositoryAssociationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).FSxConn()
+	conn := meta.(*conns.AWSClient).FSxConn(ctx)
 
 	input := &fsx.CreateDataRepositoryAssociationInput{
 		ClientRequestToken: aws.String(id.UniqueId()),
 		DataRepositoryPath: aws.String(d.Get("data_repository_path").(string)),
 		FileSystemId:       aws.String(d.Get("file_system_id").(string)),
 		FileSystemPath:     aws.String(d.Get("file_system_path").(string)),
-		Tags:               GetTagsIn(ctx),
+		Tags:               getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("batch_import_meta_data_on_create"); ok {
@@ -195,7 +198,7 @@ func resourceDataRepositoryAssociationCreate(ctx context.Context, d *schema.Reso
 
 func resourceDataRepositoryAssociationUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).FSxConn()
+	conn := meta.(*conns.AWSClient).FSxConn(ctx)
 
 	if d.HasChangesExcept("tags_all", "tags") {
 		input := &fsx.UpdateDataRepositoryAssociationInput{
@@ -226,7 +229,7 @@ func resourceDataRepositoryAssociationUpdate(ctx context.Context, d *schema.Reso
 
 func resourceDataRepositoryAssociationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).FSxConn()
+	conn := meta.(*conns.AWSClient).FSxConn(ctx)
 
 	association, err := FindDataRepositoryAssociationByID(ctx, conn, d.Id())
 	if !d.IsNewResource() && tfresource.NotFound(err) {
@@ -249,14 +252,14 @@ func resourceDataRepositoryAssociationRead(ctx context.Context, d *schema.Resour
 		return sdkdiag.AppendErrorf(diags, "setting s3 data repository configuration: %s", err)
 	}
 
-	SetTagsOut(ctx, association.Tags)
+	setTagsOut(ctx, association.Tags)
 
 	return diags
 }
 
 func resourceDataRepositoryAssociationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).FSxConn()
+	conn := meta.(*conns.AWSClient).FSxConn(ctx)
 
 	request := &fsx.DeleteDataRepositoryAssociationInput{
 		ClientRequestToken:     aws.String(id.UniqueId()),

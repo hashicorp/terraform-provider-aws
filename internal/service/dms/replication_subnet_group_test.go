@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package dms_test
 
 import (
@@ -69,7 +72,7 @@ func checkReplicationSubnetGroupExistsProviders(ctx context.Context, n string, p
 				continue
 			}
 
-			conn := provider.Meta().(*conns.AWSClient).DMSConn()
+			conn := provider.Meta().(*conns.AWSClient).DMSConn(ctx)
 			_, err := conn.DescribeReplicationSubnetGroupsWithContext(ctx, &dms.DescribeReplicationSubnetGroupsInput{
 				Filters: []*dms.Filter{
 					{

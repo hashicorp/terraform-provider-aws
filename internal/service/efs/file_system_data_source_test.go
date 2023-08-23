@@ -1,10 +1,13 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package efs_test
 
 import (
 	"fmt"
-	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/service/efs"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -36,7 +39,7 @@ func TestAccEFSFileSystemDataSource_id(t *testing.T) {
 					resource.TestCheckResourceAttrPair(dataSourceName, "provisioned_throughput_in_mibps", resourceName, "provisioned_throughput_in_mibps"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "throughput_mode", resourceName, "throughput_mode"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "lifecycle_policy", resourceName, "lifecycle_policy"),
-					resource.TestMatchResourceAttr(dataSourceName, "size_in_bytes", regexp.MustCompile(`^\d+$`)),
+					resource.TestMatchResourceAttr(dataSourceName, "size_in_bytes", regexache.MustCompile(`^\d+$`)),
 				),
 			},
 		},
@@ -67,7 +70,7 @@ func TestAccEFSFileSystemDataSource_tags(t *testing.T) {
 					resource.TestCheckResourceAttrPair(dataSourceName, "provisioned_throughput_in_mibps", resourceName, "provisioned_throughput_in_mibps"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "throughput_mode", resourceName, "throughput_mode"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "lifecycle_policy", resourceName, "lifecycle_policy"),
-					resource.TestMatchResourceAttr(dataSourceName, "size_in_bytes", regexp.MustCompile(`^\d+$`)),
+					resource.TestMatchResourceAttr(dataSourceName, "size_in_bytes", regexache.MustCompile(`^\d+$`)),
 				),
 			},
 		},
@@ -98,7 +101,7 @@ func TestAccEFSFileSystemDataSource_name(t *testing.T) {
 					resource.TestCheckResourceAttrPair(dataSourceName, "provisioned_throughput_in_mibps", resourceName, "provisioned_throughput_in_mibps"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "throughput_mode", resourceName, "throughput_mode"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "lifecycle_policy", resourceName, "lifecycle_policy"),
-					resource.TestMatchResourceAttr(dataSourceName, "size_in_bytes", regexp.MustCompile(`^\d+$`)),
+					resource.TestMatchResourceAttr(dataSourceName, "size_in_bytes", regexache.MustCompile(`^\d+$`)),
 				),
 			},
 		},
@@ -127,21 +130,6 @@ func TestAccEFSFileSystemDataSource_availabilityZone(t *testing.T) {
 	})
 }
 
-func TestAccEFSFileSystemDataSource_nonExistent_fileSystemID(t *testing.T) {
-	ctx := acctest.Context(t)
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, efs.EndpointsID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		Steps: []resource.TestStep{
-			{
-				Config:      testAccFileSystemDataSourceConfig_idNonExistent,
-				ExpectError: regexp.MustCompile(`error reading EFS FileSystem`),
-			},
-		},
-	})
-}
-
 func TestAccEFSFileSystemDataSource_nonExistent_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 	var desc efs.FileSystemDescription
@@ -161,7 +149,7 @@ func TestAccEFSFileSystemDataSource_nonExistent_tags(t *testing.T) {
 			},
 			{
 				Config:      testAccFileSystemDataSourceConfig_tagsNonExistent(rName),
-				ExpectError: regexp.MustCompile(`Search returned 0 results`),
+				ExpectError: regexache.MustCompile(`Search returned 0 results`),
 			},
 		},
 	})
@@ -208,12 +196,6 @@ resource "aws_efs_file_system" "test" {
 }
 `, rName)
 }
-
-const testAccFileSystemDataSourceConfig_idNonExistent = `
-data "aws_efs_file_system" "test" {
-  file_system_id = "fs-nonexistent"
-}
-`
 
 func testAccFileSystemDataSourceConfig_tagsNonExistent(rName string) string {
 	return acctest.ConfigCompose(

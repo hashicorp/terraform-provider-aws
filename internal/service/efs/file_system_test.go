@@ -1,11 +1,14 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package efs_test
 
 import (
 	"context"
 	"fmt"
-	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/service/efs"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -31,9 +34,9 @@ func TestAccEFSFileSystem_basic(t *testing.T) {
 				Config: testAccFileSystemConfig_basic,
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckFileSystem(ctx, resourceName, &desc),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "elasticfilesystem", regexp.MustCompile(`file-system/fs-.+`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "elasticfilesystem", regexache.MustCompile(`file-system/fs-.+`)),
 					resource.TestCheckResourceAttrSet(resourceName, "creation_token"),
-					acctest.MatchResourceAttrRegionalHostname(resourceName, "dns_name", "efs", regexp.MustCompile(`fs-[^.]+`)),
+					acctest.MatchResourceAttrRegionalHostname(resourceName, "dns_name", "efs", regexache.MustCompile(`fs-[^.]+`)),
 					resource.TestCheckResourceAttr(resourceName, "encrypted", "false"),
 					resource.TestCheckResourceAttr(resourceName, "lifecycle_policy.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "number_of_mount_targets", "0"),
@@ -240,7 +243,7 @@ func TestAccEFSFileSystem_kmsWithoutEncryption(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccFileSystemConfig_kmsKey(rName, false),
-				ExpectError: regexp.MustCompile(`encrypted must be set to true when kms_key_id is specified`),
+				ExpectError: regexache.MustCompile(`encrypted must be set to true when kms_key_id is specified`),
 			},
 		},
 	})
@@ -334,7 +337,7 @@ func TestAccEFSFileSystem_lifecyclePolicy(t *testing.T) {
 					"transition_to_ia",
 					"invalid_value",
 				),
-				ExpectError: regexp.MustCompile(`got invalid_value`),
+				ExpectError: regexache.MustCompile(`got invalid_value`),
 			},
 			{
 				Config: testAccFileSystemConfig_lifecyclePolicy(
@@ -390,7 +393,7 @@ func TestAccEFSFileSystem_lifecyclePolicy(t *testing.T) {
 
 func testAccCheckFileSystemDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EFSConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EFSConn(ctx)
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_efs_file_system" {
 				continue
@@ -423,7 +426,7 @@ func testAccCheckFileSystem(ctx context.Context, n string, v *efs.FileSystemDesc
 			return fmt.Errorf("No EFS file system ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EFSConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EFSConn(ctx)
 
 		output, err := tfefs.FindFileSystemByID(ctx, conn, rs.Primary.ID)
 

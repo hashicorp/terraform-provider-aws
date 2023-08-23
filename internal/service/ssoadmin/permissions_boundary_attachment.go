@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ssoadmin
 
 import (
@@ -11,16 +14,13 @@ import (
 	"github.com/aws/aws-sdk-go/service/ssoadmin"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
-)
-
-const (
-	permissionsBoundaryAttachmentTimeout = 5 * time.Minute
 )
 
 // @SDKResource("aws_ssoadmin_permissions_boundary_attachment")
@@ -32,6 +32,11 @@ func ResourcePermissionsBoundaryAttachment() *schema.Resource {
 
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
+		},
+
+		Timeouts: &schema.ResourceTimeout{
+			Create: schema.DefaultTimeout(10 * time.Minute),
+			Delete: schema.DefaultTimeout(10 * time.Minute),
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -93,22 +98,19 @@ func ResourcePermissionsBoundaryAttachment() *schema.Resource {
 
 func resourcePermissionsBoundaryAttachmentCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SSOAdminConn()
+	conn := meta.(*conns.AWSClient).SSOAdminConn(ctx)
 
 	tfMap := d.Get("permissions_boundary").([]interface{})[0].(map[string]interface{})
 	instanceARN := d.Get("instance_arn").(string)
 	permissionSetARN := d.Get("permission_set_arn").(string)
 	id := PermissionsBoundaryAttachmentCreateResourceID(permissionSetARN, instanceARN)
 	input := &ssoadmin.PutPermissionsBoundaryToPermissionSetInput{
-		PermissionsBoundary: expandPermissionsBoundary(tfMap),
 		InstanceArn:         aws.String(instanceARN),
 		PermissionSetArn:    aws.String(permissionSetARN),
+		PermissionsBoundary: expandPermissionsBoundary(tfMap),
 	}
 
-	log.Printf("[INFO] Attaching permissions boundary to permission set: %s", input)
-	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, permissionsBoundaryAttachmentTimeout, func() (interface{}, error) {
-		return conn.PutPermissionsBoundaryToPermissionSetWithContext(ctx, input)
-	}, ssoadmin.ErrCodeConflictException, ssoadmin.ErrCodeThrottlingException)
+	_, err := conn.PutPermissionsBoundaryToPermissionSetWithContext(ctx, input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating SSO Permissions Boundary Attachment (%s): %s", id, err)
@@ -117,8 +119,8 @@ func resourcePermissionsBoundaryAttachmentCreate(ctx context.Context, d *schema.
 	d.SetId(id)
 
 	// After the policy has been attached to the permission set, provision in all accounts that use this permission set.
-	if err := provisionPermissionSet(ctx, conn, permissionSetARN, instanceARN); err != nil {
-		return sdkdiag.AppendErrorf(diags, "provisioning SSO Permission Set (%s): %s", permissionSetARN, err)
+	if err := provisionPermissionSet(ctx, conn, permissionSetARN, instanceARN, d.Timeout(schema.TimeoutCreate)); err != nil {
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	return append(diags, resourcePermissionsBoundaryAttachmentRead(ctx, d, meta)...)
@@ -126,12 +128,11 @@ func resourcePermissionsBoundaryAttachmentCreate(ctx context.Context, d *schema.
 
 func resourcePermissionsBoundaryAttachmentRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SSOAdminConn()
+	conn := meta.(*conns.AWSClient).SSOAdminConn(ctx)
 
 	permissionSetARN, instanceARN, err := PermissionsBoundaryAttachmentParseResourceID(d.Id())
-
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading SSO Permissions Boundary Attachment (%s): %s", d.Id(), err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	policy, err := FindPermissionsBoundary(ctx, conn, permissionSetARN, instanceARN)
@@ -146,23 +147,22 @@ func resourcePermissionsBoundaryAttachmentRead(ctx context.Context, d *schema.Re
 		return sdkdiag.AppendErrorf(diags, "reading SSO Permissions Boundary Attachment (%s): %s", d.Id(), err)
 	}
 
+	d.Set("instance_arn", instanceARN)
+	d.Set("permission_set_arn", permissionSetARN)
 	if err := d.Set("permissions_boundary", []interface{}{flattenPermissionsBoundary(policy)}); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting permissions_boundary: %s", err)
 	}
-	d.Set("instance_arn", instanceARN)
-	d.Set("permission_set_arn", permissionSetARN)
 
 	return diags
 }
 
 func resourcePermissionsBoundaryAttachmentDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SSOAdminConn()
+	conn := meta.(*conns.AWSClient).SSOAdminConn(ctx)
 
 	permissionSetARN, instanceARN, err := PermissionsBoundaryAttachmentParseResourceID(d.Id())
-
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "deleting SSO Permissions Boundary Attachment (%s): %s", d.Id(), err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	input := &ssoadmin.DeletePermissionsBoundaryFromPermissionSetInput{
@@ -170,10 +170,7 @@ func resourcePermissionsBoundaryAttachmentDelete(ctx context.Context, d *schema.
 		PermissionSetArn: aws.String(permissionSetARN),
 	}
 
-	log.Printf("[INFO] Detaching permissions boundary from permission set: %s", input)
-	_, err = tfresource.RetryWhenAWSErrCodeEquals(ctx, permissionsBoundaryAttachmentTimeout, func() (interface{}, error) {
-		return conn.DeletePermissionsBoundaryFromPermissionSetWithContext(ctx, input)
-	}, ssoadmin.ErrCodeConflictException, ssoadmin.ErrCodeThrottlingException)
+	_, err = conn.DeletePermissionsBoundaryFromPermissionSetWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, ssoadmin.ErrCodeResourceNotFoundException) {
 		return diags
@@ -184,8 +181,8 @@ func resourcePermissionsBoundaryAttachmentDelete(ctx context.Context, d *schema.
 	}
 
 	// After the policy has been detached from the permission set, provision in all accounts that use this permission set.
-	if err := provisionPermissionSet(ctx, conn, permissionSetARN, instanceARN); err != nil {
-		return sdkdiag.AppendErrorf(diags, "provisioning SSO Permission Set (%s): %s", permissionSetARN, err)
+	if err := provisionPermissionSet(ctx, conn, permissionSetARN, instanceARN, d.Timeout(schema.TimeoutDelete)); err != nil {
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	return diags
@@ -208,6 +205,32 @@ func PermissionsBoundaryAttachmentParseResourceID(id string) (string, string, er
 	}
 
 	return "", "", fmt.Errorf("unexpected format for ID (%[1]s), expected PERMISSION_SET_ARN%[2]sINSTANCE_ARN", id, permissionsBoundaryAttachmentIDSeparator)
+}
+
+func FindPermissionsBoundary(ctx context.Context, conn *ssoadmin.SSOAdmin, permissionSetARN, instanceARN string) (*ssoadmin.PermissionsBoundary, error) {
+	input := &ssoadmin.GetPermissionsBoundaryForPermissionSetInput{
+		InstanceArn:      aws.String(instanceARN),
+		PermissionSetArn: aws.String(permissionSetARN),
+	}
+
+	output, err := conn.GetPermissionsBoundaryForPermissionSetWithContext(ctx, input)
+
+	if tfawserr.ErrCodeEquals(err, ssoadmin.ErrCodeResourceNotFoundException) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || output.PermissionsBoundary == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output.PermissionsBoundary, nil
 }
 
 func expandPermissionsBoundary(tfMap map[string]interface{}) *ssoadmin.PermissionsBoundary {

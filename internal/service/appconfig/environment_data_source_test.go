@@ -1,10 +1,13 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package appconfig_test
 
 import (
 	"fmt"
-	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/service/appconfig"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -30,10 +33,10 @@ func TestAccAppConfigEnvironmentDataSource_basic(t *testing.T) {
 			{
 				Config: testAccEnvironmentDataSourceConfig_basic(appName, rName),
 				Check: resource.ComposeTestCheckFunc(
-					acctest.MatchResourceAttrRegionalARN(dataSourceName, "arn", "appconfig", regexp.MustCompile(`application/([a-z\d]{4,7})/environment/+.`)),
+					acctest.MatchResourceAttrRegionalARN(dataSourceName, "arn", "appconfig", regexache.MustCompile(`application/([a-z\d]{4,7})/environment/+.`)),
 					resource.TestCheckResourceAttrPair(dataSourceName, "application_id", appResourceName, "id"),
 					resource.TestCheckResourceAttr(dataSourceName, "description", "Example AppConfig Environment"),
-					resource.TestMatchResourceAttr(dataSourceName, "environment_id", regexp.MustCompile(`[a-z\d]{4,7}`)),
+					resource.TestMatchResourceAttr(dataSourceName, "environment_id", regexache.MustCompile(`[a-z\d]{4,7}`)),
 					resource.TestCheckResourceAttr(dataSourceName, "monitor.#", "1"),
 					resource.TestCheckTypeSetElemAttrPair(dataSourceName, "monitor.*.alarm_arn", "aws_cloudwatch_metric_alarm.test", "arn"),
 					resource.TestCheckTypeSetElemAttrPair(dataSourceName, "monitor.*.alarm_role_arn", "aws_iam_role.test", "arn"),

@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package eks_test
 
 import (
@@ -23,7 +26,7 @@ func TestAccEKSClustersDataSource_basic(t *testing.T) {
 			{
 				Config: testAccClustersDataSourceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					acctest.CheckResourceAttrGreaterThanValue(dataSourceResourceName, "names.#", "0"),
+					acctest.CheckResourceAttrGreaterThanValue(dataSourceResourceName, "names.#", 0),
 				),
 			},
 		},
