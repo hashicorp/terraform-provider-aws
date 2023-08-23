@@ -6,9 +6,9 @@ package datasync_test
 import (
 	"context"
 	"fmt"
-	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/service/datasync"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -35,7 +35,7 @@ func TestAccDataSyncLocationHDFS_basic(t *testing.T) {
 				Config: testAccLocationHDFSConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLocationHDFSExists(ctx, resourceName, &v),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "datasync", regexp.MustCompile(`location/loc-.+`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "datasync", regexache.MustCompile(`location/loc-.+`)),
 					resource.TestCheckResourceAttr(resourceName, "agent_arns.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "name_node.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "name_node.*", map[string]string{
@@ -46,7 +46,7 @@ func TestAccDataSyncLocationHDFS_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "block_size", "134217728"),
 					resource.TestCheckResourceAttr(resourceName, "replication_factor", "3"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-					resource.TestMatchResourceAttr(resourceName, "uri", regexp.MustCompile(`^hdfs://.+/`)),
+					resource.TestMatchResourceAttr(resourceName, "uri", regexache.MustCompile(`^hdfs://.+/`)),
 				),
 			},
 			{

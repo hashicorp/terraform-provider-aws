@@ -7,10 +7,10 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"regexp"
 	"strings"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/service/vpclattice"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -91,7 +91,7 @@ func TestAccVPCLatticeAccessLogSubscription_basic(t *testing.T) {
 				Config: testAccAccessLogSubscriptionConfig_basicS3(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAccessLogSubscriptionExists(ctx, resourceName, &accesslogsubscription),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", names.VPCLatticeEndpointID, regexp.MustCompile(`accesslogsubscription/.+$`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", names.VPCLatticeEndpointID, regexache.MustCompile(`accesslogsubscription/.+$`)),
 					resource.TestCheckResourceAttrPair(resourceName, "destination_arn", s3BucketResourceName, "arn"),
 					resource.TestCheckResourceAttrPair(resourceName, "resource_arn", serviceNetworkResourceName, "arn"),
 					resource.TestCheckResourceAttrPair(resourceName, "resource_identifier", serviceNetworkResourceName, "id"),

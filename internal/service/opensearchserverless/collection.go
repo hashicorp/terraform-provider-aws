@@ -6,9 +6,9 @@ package opensearchserverless
 import (
 	"context"
 	"errors"
-	"regexp"
 	"time"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/opensearchserverless"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/opensearchserverless/types"
@@ -106,7 +106,7 @@ func (r *resourceCollection) Schema(ctx context.Context, req resource.SchemaRequ
 				},
 				Validators: []validator.String{
 					stringvalidator.LengthBetween(3, 32),
-					stringvalidator.RegexMatches(regexp.MustCompile(`^[a-z][a-z0-9-]+$`),
+					stringvalidator.RegexMatches(regexache.MustCompile(`^[a-z][a-z0-9-]+$`),
 						`must start with any lower case letter and can can include any lower case letter, number, or "-"`),
 				},
 			},

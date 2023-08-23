@@ -6,9 +6,9 @@ package fsx
 import (
 	"context"
 	"log"
-	"regexp"
 	"time"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/fsx"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
@@ -64,7 +64,7 @@ func ResourceDataRepositoryAssociation() *schema.Resource {
 				Required: true,
 				ValidateFunc: validation.All(
 					validation.StringLenBetween(3, 900),
-					validation.StringMatch(regexp.MustCompile(`^s3://`), "must begin with s3://"),
+					validation.StringMatch(regexache.MustCompile(`^s3://`), "must begin with s3://"),
 				),
 			},
 			"file_system_id": {
@@ -73,7 +73,7 @@ func ResourceDataRepositoryAssociation() *schema.Resource {
 				Required: true,
 				ValidateFunc: validation.All(
 					validation.StringLenBetween(11, 21),
-					validation.StringMatch(regexp.MustCompile(`^fs-[0-9a-f]*`), "must begin with fs-"),
+					validation.StringMatch(regexache.MustCompile(`^fs-[0-9a-f]*`), "must begin with fs-"),
 				),
 			},
 			"file_system_path": {
@@ -82,7 +82,7 @@ func ResourceDataRepositoryAssociation() *schema.Resource {
 				Required: true,
 				ValidateFunc: validation.All(
 					validation.StringLenBetween(1, 4096),
-					validation.StringMatch(regexp.MustCompile(`^/.*`), "path must begin with /"),
+					validation.StringMatch(regexache.MustCompile(`^/.*`), "path must begin with /"),
 				),
 			},
 			"imported_file_chunk_size": {

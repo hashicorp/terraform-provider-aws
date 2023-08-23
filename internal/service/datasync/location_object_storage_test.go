@@ -6,9 +6,9 @@ package datasync_test
 import (
 	"context"
 	"fmt"
-	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/service/datasync"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -38,7 +38,7 @@ func TestAccDataSyncLocationObjectStorage_basic(t *testing.T) {
 					testAccCheckLocationObjectStorageExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "access_key", ""),
 					resource.TestCheckResourceAttr(resourceName, "agent_arns.#", "1"),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "datasync", regexp.MustCompile(`location/loc-.+`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "datasync", regexache.MustCompile(`location/loc-.+`)),
 					resource.TestCheckResourceAttr(resourceName, "bucket_name", rName),
 					resource.TestCheckNoResourceAttr(resourceName, "secret_key"),
 					resource.TestCheckResourceAttr(resourceName, "server_certificate", ""),

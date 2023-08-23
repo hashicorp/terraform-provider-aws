@@ -6,10 +6,10 @@ package iam
 import (
 	"encoding/json"
 	"fmt"
-	"regexp"
 	"sort"
 	"strconv"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/jmespath/go-jmespath"
 )
@@ -293,7 +293,7 @@ func isValidPolicyAWSPrincipal(principal string) bool { // nosemgrep:ci.aws-in-f
 	if arn.IsARN(principal) {
 		return true
 	}
-	if regexp.MustCompile(`^\d{12}$`).MatchString(principal) {
+	if regexache.MustCompile(`^\d{12}$`).MatchString(principal) {
 		return true
 	}
 	return false

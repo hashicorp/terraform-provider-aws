@@ -7,9 +7,9 @@ import (
 	//"errors"
 	"context"
 	"fmt"
-	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/service/neptune"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -37,7 +37,7 @@ func TestAccNeptuneClusterEndpoint_basic(t *testing.T) {
 				Config: testAccClusterEndpointConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterEndpointExists(ctx, resourceName, &dbCluster),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "rds", regexp.MustCompile(`cluster-endpoint:.+`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "rds", regexache.MustCompile(`cluster-endpoint:.+`)),
 					resource.TestCheckResourceAttr(resourceName, "endpoint_type", "READER"),
 					resource.TestCheckResourceAttr(resourceName, "cluster_endpoint_identifier", rName),
 					resource.TestCheckResourceAttrPair(resourceName, "cluster_identifier", "aws_neptune_cluster.test", "cluster_identifier"),

@@ -5,8 +5,9 @@ package storagegateway
 
 import (
 	"fmt"
-	"regexp"
 	"strconv"
+
+	"github.com/YakDriver/regexache"
 )
 
 func valid4ByteASN(v interface{}, k string) (ws []string, errors []error) {
@@ -26,7 +27,7 @@ func valid4ByteASN(v interface{}, k string) (ws []string, errors []error) {
 
 func validLinuxFileMode(v interface{}, k string) (ws []string, errors []error) {
 	value := v.(string)
-	if !regexp.MustCompile(`^[0-7]{4}$`).MatchString(value) {
+	if !regexache.MustCompile(`^[0-7]{4}$`).MatchString(value) {
 		errors = append(errors, fmt.Errorf(
 			"only valid linux mode is allowed in %q", k))
 	}

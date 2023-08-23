@@ -6,9 +6,9 @@ package iam_test
 import (
 	"context"
 	"fmt"
-	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/service/iam"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -167,7 +167,7 @@ func TestAccIAMPolicy_namePrefix(t *testing.T) {
 				Config: testAccPolicyConfig_namePrefix(acctest.ResourcePrefix),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPolicyExists(ctx, resourceName, &out),
-					resource.TestMatchResourceAttr(resourceName, "name", regexp.MustCompile(fmt.Sprintf("^%s", acctest.ResourcePrefix))),
+					resource.TestMatchResourceAttr(resourceName, "name", regexache.MustCompile(fmt.Sprintf("^%s", acctest.ResourcePrefix))),
 				),
 			},
 			{
@@ -224,7 +224,7 @@ func TestAccIAMPolicy_policy(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccPolicyConfig_basic(rName, "not-json"),
-				ExpectError: regexp.MustCompile("invalid JSON"),
+				ExpectError: regexache.MustCompile("invalid JSON"),
 			},
 			{
 				Config: testAccPolicyConfig_basic(rName, policy1),

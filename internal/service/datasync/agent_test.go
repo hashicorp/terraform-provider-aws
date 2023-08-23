@@ -7,9 +7,9 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/datasync"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
@@ -37,7 +37,7 @@ func TestAccDataSyncAgent_basic(t *testing.T) {
 				Config: testAccAgentConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAgentExists(ctx, resourceName, &agent1),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "datasync", regexp.MustCompile(`agent/agent-.+`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "datasync", regexache.MustCompile(`agent/agent-.+`)),
 					resource.TestCheckResourceAttr(resourceName, "name", ""),
 					resource.TestCheckResourceAttr(resourceName, "private_link_endpoint", ""),
 					resource.TestCheckResourceAttr(resourceName, "security_group_arns.#", "0"),

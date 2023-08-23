@@ -6,10 +6,10 @@ package fsx_test
 import (
 	"context"
 	"fmt"
-	"regexp"
 	"strings"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/endpoints"
 	"github.com/aws/aws-sdk-go/service/fsx"
@@ -44,10 +44,10 @@ func TestAccFSxDataRepositoryAssociation_basic(t *testing.T) {
 				Config: testAccDataRepositoryAssociationConfig_fileSystemPath(bucketName, fileSystemPath),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDataRepositoryAssociationExists(ctx, resourceName, &association),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "fsx", regexp.MustCompile(`association/fs-.+/dra-.+`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "fsx", regexache.MustCompile(`association/fs-.+/dra-.+`)),
 					resource.TestCheckResourceAttr(resourceName, "batch_import_meta_data_on_create", "false"),
 					resource.TestCheckResourceAttr(resourceName, "data_repository_path", bucketPath),
-					resource.TestMatchResourceAttr(resourceName, "file_system_id", regexp.MustCompile(`fs-.+`)),
+					resource.TestMatchResourceAttr(resourceName, "file_system_id", regexache.MustCompile(`fs-.+`)),
 					resource.TestCheckResourceAttr(resourceName, "file_system_path", fileSystemPath),
 					resource.TestCheckResourceAttrSet(resourceName, "imported_file_chunk_size"),
 				),

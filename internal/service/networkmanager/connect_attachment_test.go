@@ -6,9 +6,9 @@ package networkmanager_test
 import (
 	"context"
 	"fmt"
-	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/service/networkmanager"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -35,7 +35,7 @@ func TestAccNetworkManagerConnectAttachment_basic(t *testing.T) {
 				Config: testAccConnectAttachmentConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckConnectAttachmentExists(ctx, resourceName, &v),
-					acctest.MatchResourceAttrGlobalARN(resourceName, "arn", "networkmanager", regexp.MustCompile(`attachment/.+`)),
+					acctest.MatchResourceAttrGlobalARN(resourceName, "arn", "networkmanager", regexache.MustCompile(`attachment/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "attachment_type", "CONNECT"),
 					resource.TestCheckResourceAttrSet(resourceName, "core_network_id"),
 					resource.TestCheckResourceAttr(resourceName, "edge_location", acctest.Region()),
@@ -70,7 +70,7 @@ func TestAccNetworkManagerConnectAttachment_basic_NoDependsOn(t *testing.T) {
 				Config: testAccConnectAttachmentConfig_basic_NoDependsOn(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckConnectAttachmentExists(ctx, resourceName, &v),
-					acctest.MatchResourceAttrGlobalARN(resourceName, "arn", "networkmanager", regexp.MustCompile(`attachment/.+`)),
+					acctest.MatchResourceAttrGlobalARN(resourceName, "arn", "networkmanager", regexache.MustCompile(`attachment/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "attachment_type", "CONNECT"),
 					resource.TestCheckResourceAttrSet(resourceName, "core_network_id"),
 					resource.TestCheckResourceAttr(resourceName, "edge_location", acctest.Region()),

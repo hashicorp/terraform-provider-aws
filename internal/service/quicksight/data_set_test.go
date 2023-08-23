@@ -10,6 +10,7 @@ import (
 	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/quicksight"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
@@ -279,7 +280,7 @@ func TestAccQuickSightDataSet_permissions(t *testing.T) {
 					testAccCheckDataSetExists(ctx, resourceName, &dataSet),
 					resource.TestCheckResourceAttr(resourceName, "permissions.#", "1"),
 					resource.TestMatchTypeSetElemNestedAttrs(resourceName, "permissions.*", map[string]*regexp.Regexp{
-						"principal": regexp.MustCompile(fmt.Sprintf(`user/default/%s`, rName)),
+						"principal": regexache.MustCompile(fmt.Sprintf(`user/default/%s`, rName)),
 					}),
 					resource.TestCheckTypeSetElemAttr(resourceName, "permissions.*.actions.*", "quicksight:DescribeDataSet"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "permissions.*.actions.*", "quicksight:DescribeDataSetPermissions"),
@@ -299,7 +300,7 @@ func TestAccQuickSightDataSet_permissions(t *testing.T) {
 					testAccCheckDataSetExists(ctx, resourceName, &dataSet),
 					resource.TestCheckResourceAttr(resourceName, "permissions.#", "1"),
 					resource.TestMatchTypeSetElemNestedAttrs(resourceName, "permissions.*", map[string]*regexp.Regexp{
-						"principal": regexp.MustCompile(fmt.Sprintf(`user/default/%s`, rName)),
+						"principal": regexache.MustCompile(fmt.Sprintf(`user/default/%s`, rName)),
 					}),
 					resource.TestCheckTypeSetElemAttr(resourceName, "permissions.*.actions.*", "quicksight:DescribeDataSet"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "permissions.*.actions.*", "quicksight:DescribeDataSetPermissions"),
@@ -348,7 +349,7 @@ func TestAccQuickSightDataSet_permissionsMultiple(t *testing.T) {
 					testAccCheckDataSetExists(ctx, resourceName, &dataSet),
 					resource.TestCheckResourceAttr(resourceName, "permissions.#", "3"),
 					resource.TestMatchTypeSetElemNestedAttrs(resourceName, "permissions.*", map[string]*regexp.Regexp{
-						"principal": regexp.MustCompile(fmt.Sprintf(`user/default/%s`, rName)),
+						"principal": regexache.MustCompile(fmt.Sprintf(`user/default/%s`, rName)),
 					}),
 					resource.TestCheckTypeSetElemAttr(resourceName, "permissions.*.actions.*", "quicksight:DescribeDataSet"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "permissions.*.actions.*", "quicksight:DescribeDataSetPermissions"),

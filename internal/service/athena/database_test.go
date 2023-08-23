@@ -6,9 +6,9 @@ package athena_test
 import (
 	"context"
 	"fmt"
-	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/athena"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
@@ -187,7 +187,7 @@ func TestAccAthenaDatabase_nameCantHaveUppercase(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccDatabaseConfig_basic(rName, dbName, false),
-				ExpectError: regexp.MustCompile(`must be lowercase letters, numbers, or underscore \('_'\)`),
+				ExpectError: regexache.MustCompile(`must be lowercase letters, numbers, or underscore \('_'\)`),
 			},
 		},
 	})

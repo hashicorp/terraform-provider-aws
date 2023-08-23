@@ -10,10 +10,10 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"regexp"
 	"strings"
 	"time"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/request"
 	"github.com/aws/aws-sdk-go/service/s3"
@@ -243,7 +243,7 @@ func bucketNameFilter(bucket *s3.Bucket) (bool, error) {
 }
 
 var (
-	defaultNameRegexp = regexp.MustCompile(fmt.Sprintf(`^%s\d+$`, id.UniqueIdPrefix))
+	defaultNameRegexp = regexache.MustCompile(fmt.Sprintf(`^%s\d+$`, id.UniqueIdPrefix))
 )
 
 func bucketRegionFilter(ctx context.Context, conn *s3.S3, region string) bucketFilter {

@@ -6,9 +6,9 @@ package ec2_test
 import (
 	"context"
 	"fmt"
-	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/endpoints"
 	"github.com/aws/aws-sdk-go/service/ec2"
@@ -155,7 +155,7 @@ func testAccDefaultVPC_Existing_assignGeneratedIPv6CIDRBlock(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "force_destroy", "false"),
 					resource.TestCheckResourceAttr(resourceName, "instance_tenancy", "default"),
 					resource.TestCheckResourceAttrSet(resourceName, "ipv6_association_id"),
-					resource.TestMatchResourceAttr(resourceName, "ipv6_cidr_block", regexp.MustCompile(`/56$`)),
+					resource.TestMatchResourceAttr(resourceName, "ipv6_cidr_block", regexache.MustCompile(`/56$`)),
 					resource.TestCheckResourceAttr(resourceName, "ipv6_cidr_block_network_border_group", acctest.Region()),
 					resource.TestCheckResourceAttr(resourceName, "ipv6_ipam_pool_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "ipv6_netmask_length", "0"),
@@ -277,7 +277,7 @@ func testAccDefaultVPC_NotFound_assignGeneratedIPv6CIDRBlock(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "force_destroy", "false"),
 					resource.TestCheckResourceAttr(resourceName, "instance_tenancy", "default"),
 					resource.TestCheckResourceAttrSet(resourceName, "ipv6_association_id"),
-					resource.TestMatchResourceAttr(resourceName, "ipv6_cidr_block", regexp.MustCompile(`/56$`)),
+					resource.TestMatchResourceAttr(resourceName, "ipv6_cidr_block", regexache.MustCompile(`/56$`)),
 					resource.TestCheckResourceAttr(resourceName, "ipv6_cidr_block_network_border_group", acctest.Region()),
 					resource.TestCheckResourceAttr(resourceName, "ipv6_ipam_pool_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "ipv6_netmask_length", "0"),
@@ -353,7 +353,7 @@ func testAccDefaultVPC_NotFound_assignGeneratedIPv6CIDRBlockAdoption(t *testing.
 					resource.TestCheckResourceAttr(resourceName, "force_destroy", "false"),
 					resource.TestCheckResourceAttr(resourceName, "instance_tenancy", "default"),
 					resource.TestCheckResourceAttrSet(resourceName, "ipv6_association_id"),
-					resource.TestMatchResourceAttr(resourceName, "ipv6_cidr_block", regexp.MustCompile(`/56$`)),
+					resource.TestMatchResourceAttr(resourceName, "ipv6_cidr_block", regexache.MustCompile(`/56$`)),
 					resource.TestCheckResourceAttr(resourceName, "ipv6_cidr_block_network_border_group", acctest.Region()),
 					resource.TestCheckResourceAttr(resourceName, "ipv6_ipam_pool_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "ipv6_netmask_length", "0"),
@@ -395,7 +395,7 @@ func testAccDefaultVPC_NotFound_assignGeneratedIPv6CIDRBlockAdoption(t *testing.
 					resource.TestCheckResourceAttr(resourceName, "force_destroy", "false"),
 					resource.TestCheckResourceAttr(resourceName, "instance_tenancy", "default"),
 					resource.TestCheckResourceAttrSet(resourceName, "ipv6_association_id"),
-					resource.TestMatchResourceAttr(resourceName, "ipv6_cidr_block", regexp.MustCompile(`/56$`)),
+					resource.TestMatchResourceAttr(resourceName, "ipv6_cidr_block", regexache.MustCompile(`/56$`)),
 					resource.TestCheckResourceAttr(resourceName, "ipv6_cidr_block_network_border_group", acctest.Region()),
 					resource.TestCheckResourceAttr(resourceName, "ipv6_ipam_pool_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "ipv6_netmask_length", "0"),

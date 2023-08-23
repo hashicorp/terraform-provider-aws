@@ -7,9 +7,9 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/service/codestarconnections"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -39,8 +39,8 @@ func TestAccCodeStarConnectionsHost_basic(t *testing.T) {
 				Config: testAccHostConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckHostExists(ctx, resourceName, &v),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "id", "codestar-connections", regexp.MustCompile("host/.+")),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "codestar-connections", regexp.MustCompile("host/.+")),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "id", "codestar-connections", regexache.MustCompile("host/.+")),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "codestar-connections", regexache.MustCompile("host/.+")),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "provider_endpoint", "https://example.com"),
 					resource.TestCheckResourceAttr(resourceName, "provider_type", codestarconnections.ProviderTypeGitHubEnterpriseServer),
@@ -101,8 +101,8 @@ func TestAccCodeStarConnectionsHost_vpc(t *testing.T) {
 				Config: testAccHostConfig_vpc(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckHostExists(ctx, resourceName, &v),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "id", "codestar-connections", regexp.MustCompile("host/.+")),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "codestar-connections", regexp.MustCompile("host/.+")),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "id", "codestar-connections", regexache.MustCompile("host/.+")),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "codestar-connections", regexache.MustCompile("host/.+")),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "provider_endpoint", "https://example.com"),
 					resource.TestCheckResourceAttr(resourceName, "provider_type", codestarconnections.ProviderTypeGitHubEnterpriseServer),

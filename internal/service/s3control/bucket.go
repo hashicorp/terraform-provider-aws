@@ -7,10 +7,10 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"regexp"
 	"strings"
 	"time"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/s3control"
@@ -55,9 +55,9 @@ func resourceBucket() *schema.Resource {
 				ForceNew: true,
 				ValidateFunc: validation.All(
 					validation.StringLenBetween(3, 63),
-					validation.StringMatch(regexp.MustCompile(`^[a-z0-9.-]+$`), "must contain only lowercase letters, numbers, periods, and hyphens"),
-					validation.StringMatch(regexp.MustCompile(`^[a-z0-9]`), "must begin with lowercase letter or number"),
-					validation.StringMatch(regexp.MustCompile(`[a-z0-9]$`), "must end with lowercase letter or number"),
+					validation.StringMatch(regexache.MustCompile(`^[a-z0-9.-]+$`), "must contain only lowercase letters, numbers, periods, and hyphens"),
+					validation.StringMatch(regexache.MustCompile(`^[a-z0-9]`), "must begin with lowercase letter or number"),
+					validation.StringMatch(regexache.MustCompile(`[a-z0-9]$`), "must end with lowercase letter or number"),
 				),
 			},
 			"creation_date": {

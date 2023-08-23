@@ -15,10 +15,10 @@ import (
 	"io"
 	"io/fs"
 	"os"
-	"regexp"
 	"sort"
 	"strings"
 
+	"github.com/YakDriver/regexache"
 	"github.com/hashicorp/terraform-provider-aws/internal/generate/common"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -279,7 +279,7 @@ func breakUpBigFile(g *common.Generator, filename, header string) error {
 	var cfile string
 	passedChunk := false
 
-	re := regexp.MustCompile(`^  - id: `)
+	re := regexache.MustCompile(`^  - id: `)
 
 	for scanner.Scan() {
 		if l%(lines/semgrepConfigChunks) == 0 {

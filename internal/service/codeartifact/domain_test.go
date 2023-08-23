@@ -6,9 +6,9 @@ package codeartifact_test
 import (
 	"context"
 	"fmt"
-	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/codeartifact"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
@@ -70,7 +70,7 @@ func testAccDomain_defaultEncryptionKey(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(ctx, resourceName),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "codeartifact", fmt.Sprintf("domain/%s", rName)),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "encryption_key", "kms", regexp.MustCompile(`key/.+`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "encryption_key", "kms", regexache.MustCompile(`key/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "domain", rName),
 					resource.TestCheckResourceAttr(resourceName, "asset_size_bytes", "0"),
 					resource.TestCheckResourceAttr(resourceName, "repository_count", "0"),

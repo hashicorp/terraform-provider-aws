@@ -5,9 +5,9 @@ package kms_test
 
 import (
 	"fmt"
-	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/service/kms"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -35,14 +35,14 @@ func TestAccKMSReplicaKey_basic(t *testing.T) {
 				Config: testAccReplicaKeyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKeyExists(ctx, resourceName, &key),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "kms", regexp.MustCompile(`key/.+`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "kms", regexache.MustCompile(`key/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "bypass_policy_lockout_safety_check", "false"),
 					resource.TestCheckResourceAttr(resourceName, "deletion_window_in_days", "30"),
 					resource.TestCheckResourceAttr(resourceName, "description", ""),
 					resource.TestCheckResourceAttr(resourceName, "enabled", "true"),
 					resource.TestCheckResourceAttr(resourceName, "key_rotation_enabled", "false"),
 					resource.TestCheckResourceAttr(resourceName, "key_spec", "SYMMETRIC_DEFAULT"),
-					resource.TestMatchResourceAttr(resourceName, "policy", regexp.MustCompile(`Enable IAM User Permissions`)),
+					resource.TestMatchResourceAttr(resourceName, "policy", regexache.MustCompile(`Enable IAM User Permissions`)),
 					resource.TestCheckResourceAttrPair(resourceName, "primary_key_arn", primaryKeyResourceName, "arn"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),

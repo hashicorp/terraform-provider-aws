@@ -8,6 +8,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
@@ -112,7 +113,7 @@ func TestValidTypeStringNullableFloat(t *testing.T) {
 		},
 		{
 			val:         "threeve",
-			expectedErr: regexp.MustCompile(`cannot parse`),
+			expectedErr: regexache.MustCompile(`cannot parse`),
 		},
 	}
 

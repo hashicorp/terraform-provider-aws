@@ -6,9 +6,9 @@ package ssoadmin_test
 import (
 	"context"
 	"fmt"
-	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/service/ssoadmin"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -37,8 +37,8 @@ func TestAccSSOAdminPermissionSetInlinePolicy_basic(t *testing.T) {
 					testAccCheckPermissionSetInlinePolicyExists(ctx, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "instance_arn", permissionSetResourceName, "instance_arn"),
 					resource.TestCheckResourceAttrPair(resourceName, "permission_set_arn", permissionSetResourceName, "arn"),
-					resource.TestMatchResourceAttr(resourceName, "inline_policy", regexp.MustCompile("s3:ListAllMyBuckets")),
-					resource.TestMatchResourceAttr(resourceName, "inline_policy", regexp.MustCompile("s3:GetBucketLocation")),
+					resource.TestMatchResourceAttr(resourceName, "inline_policy", regexache.MustCompile("s3:ListAllMyBuckets")),
+					resource.TestMatchResourceAttr(resourceName, "inline_policy", regexache.MustCompile("s3:GetBucketLocation")),
 				),
 			},
 			{
@@ -71,7 +71,7 @@ func TestAccSSOAdminPermissionSetInlinePolicy_update(t *testing.T) {
 				Config: testAccPermissionSetInlinePolicyConfig_update(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPermissionSetInlinePolicyExists(ctx, resourceName),
-					resource.TestMatchResourceAttr(resourceName, "inline_policy", regexp.MustCompile("s3:ListAllMyBuckets")),
+					resource.TestMatchResourceAttr(resourceName, "inline_policy", regexache.MustCompile("s3:ListAllMyBuckets")),
 				),
 			},
 			{
