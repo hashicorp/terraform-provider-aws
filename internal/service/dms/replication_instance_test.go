@@ -351,7 +351,7 @@ func TestAccDMSReplicationInstance_networkType(t *testing.T) {
 				Config: testAccReplicationInstanceConfig_networkType(rName, "DUAL"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckReplicationInstanceExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "network_type", "IPV4"),
+					resource.TestCheckResourceAttr(resourceName, "network_type", "DUAL"),
 				),
 			},
 		},
