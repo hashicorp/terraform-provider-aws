@@ -177,7 +177,7 @@ func (tags KeyValueTags) IgnoreServerlessApplicationRepository() KeyValueTags {
 	return result
 }
 
-// IgnoreAWS returns non-system tag keys.
+// IgnoreSystem returns non-system tag keys.
 // The ignored keys vary on the specified service.
 func (tags KeyValueTags) IgnoreSystem(serviceName string) KeyValueTags {
 	switch serviceName {
