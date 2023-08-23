@@ -38,6 +38,10 @@ func ResourceNetworkInsightsPath() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"destination_arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"destination": {
 				Type:     schema.TypeString,
 				Required: true,
@@ -63,6 +67,10 @@ func ResourceNetworkInsightsPath() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
+			},
+			"source_arn": {
+				Type:     schema.TypeString,
+				Computed: true,
 			},
 			"source_ip": {
 				Type:     schema.TypeString,
@@ -99,7 +107,6 @@ func resourceNetworkInsightsPathCreate(ctx context.Context, d *schema.ResourceDa
 		input.SourceIp = aws.String(v.(string))
 	}
 
-	log.Printf("[DEBUG] Creating EC2 Network Insights Path: %s", input)
 	output, err := conn.CreateNetworkInsightsPathWithContext(ctx, input)
 
 	if err != nil {
@@ -128,10 +135,12 @@ func resourceNetworkInsightsPathRead(ctx context.Context, d *schema.ResourceData
 
 	d.Set("arn", nip.NetworkInsightsPathArn)
 	d.Set("destination", nip.Destination)
+	d.Set("destination_arn", nip.DestinationArn)
 	d.Set("destination_ip", nip.DestinationIp)
 	d.Set("destination_port", nip.DestinationPort)
 	d.Set("protocol", nip.Protocol)
 	d.Set("source", nip.Source)
+	d.Set("source_arn", nip.SourceArn)
 	d.Set("source_ip", nip.SourceIp)
 
 	setTagsOut(ctx, nip.Tags)

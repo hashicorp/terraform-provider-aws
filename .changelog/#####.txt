@@ -1,3 +1,7 @@
 ```release-note:bug
 resource/aws_ec2_network_insights_analysis: Fix `setting forward_path_components: Invalid address to set` errors
 ```
+
+```release-note:enhancement
+resource/aws_ec2_network_insights_path: Add `destination_arn` and `source_arn` attributes
+```
