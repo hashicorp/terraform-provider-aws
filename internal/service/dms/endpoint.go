@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -2301,4 +2302,67 @@ func flattenTopLevelConnectionInfo(d *schema.ResourceData, endpoint *dms.Endpoin
 	d.Set("server_name", endpoint.ServerName)
 	d.Set("port", endpoint.Port)
 	d.Set("database_name", endpoint.DatabaseName)
+}
+
+func FindEndpointByID(ctx context.Context, conn *dms.DatabaseMigrationService, id string) (*dms.Endpoint, error) {
+	input := &dms.DescribeEndpointsInput{
+		Filters: []*dms.Filter{
+			{
+				Name:   aws.String("endpoint-id"),
+				Values: aws.StringSlice([]string{id}),
+			},
+		},
+	}
+
+	output, err := conn.DescribeEndpointsWithContext(ctx, input)
+
+	if tfawserr.ErrCodeEquals(err, dms.ErrCodeResourceNotFoundFault) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || len(output.Endpoints) == 0 || output.Endpoints[0] == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	if count := len(output.Endpoints); count > 1 {
+		return nil, tfresource.NewTooManyResultsError(count, input)
+	}
+
+	return output.Endpoints[0], nil
+}
+
+func statusEndpoint(ctx context.Context, conn *dms.DatabaseMigrationService, id string) retry.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := FindEndpointByID(ctx, conn, id)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, aws.StringValue(output.Status), nil
+	}
+}
+
+func waitEndpointDeleted(ctx context.Context, conn *dms.DatabaseMigrationService, id string, timeout time.Duration) error {
+	stateConf := &retry.StateChangeConf{
+		Pending: []string{endpointStatusDeleting},
+		Target:  []string{},
+		Refresh: statusEndpoint(ctx, conn, id),
+		Timeout: timeout,
+	}
+
+	_, err := stateConf.WaitForStateContext(ctx)
+
+	return err
 }
