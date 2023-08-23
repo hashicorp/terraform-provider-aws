@@ -22,16 +22,16 @@ func {{ .ListTagsFunc }}(ctx context.Context, conn {{ .ClientType }}, identifier
 		{{- end }}
 	}
 {{- if .ListTagsOpPaginated }}
-	var tags []*{{ .TagPackage }}.{{ .TagType }}
+	var output []*{{ .TagPackage }}.{{ .TagType }}
 
 	err := conn.{{ .ListTagsOp }}PagesWithContext(ctx, input, func(page *{{ .TagPackage  }}.{{ .ListTagsOp }}Output, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
 
-		for _, tag := range page.{{ .ListTagsOutTagsElem }} {
-			if tag != nil {
-				tags = append(tags, tag)
+		for _, v := range page.{{ .ListTagsOutTagsElem }} {
+			if v != nil {
+				output = append(output, v)
 			}
 		}
 
@@ -61,11 +61,11 @@ func {{ .ListTagsFunc }}(ctx context.Context, conn {{ .ClientType }}, identifier
 		return tftags.New(ctx, nil), err
 	}
 
-{{ if not .ListTagsOpPaginated }}
-	tags := output.{{ .ListTagsOutTagsElem }}
+{{- if .ListTagsOpPaginated }}
+	return {{ .KeyValueTagsFunc }}(ctx, output{{ if .TagTypeIDElem }}, identifier{{ if .TagResTypeElem }}, resourceType{{ end }}{{ end }}), nil
+{{- else }}
+	return {{ .KeyValueTagsFunc }}(ctx, output.{{ .ListTagsOutTagsElem }}{{ if .TagTypeIDElem }}, identifier{{ if .TagResTypeElem }}, resourceType{{ end }}{{ end }}), nil
 {{- end }}
-
-	return {{ .KeyValueTagsFunc }}(ctx, tags{{ if .TagTypeIDElem }}, identifier{{ if .TagResTypeElem }}, resourceType{{ end }}{{ end }}), nil
 }
 
 {{- if .IsDefaultListTags }}
