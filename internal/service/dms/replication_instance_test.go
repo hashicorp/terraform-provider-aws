@@ -32,7 +32,7 @@ func TestAccDMSReplicationInstance_basic(t *testing.T) {
 		CheckDestroy:             testAccCheckReplicationInstanceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccReplicationInstanceConfig_class(rName, replicationInstanceClass),
+				Config: testAccReplicationInstanceConfig_replicationInstanceClass(rName, replicationInstanceClass),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckReplicationInstanceExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "allocated_storage", "100"),
@@ -77,7 +77,7 @@ func TestAccDMSReplicationInstance_disappears(t *testing.T) {
 		CheckDestroy:             testAccCheckReplicationInstanceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccReplicationInstanceConfig_class(rName, replicationInstanceClass),
+				Config: testAccReplicationInstanceConfig_replicationInstanceClass(rName, replicationInstanceClass),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckReplicationInstanceExists(ctx, resourceName),
 					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfdms.ResourceReplicationInstance(), resourceName),
@@ -436,7 +436,7 @@ func TestAccDMSReplicationInstance_replicationInstanceClass(t *testing.T) {
 		CheckDestroy:             testAccCheckReplicationInstanceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccReplicationInstanceConfig_class(rName, replicationInstanceClass1),
+				Config: testAccReplicationInstanceConfig_replicationInstanceClass(rName, replicationInstanceClass1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckReplicationInstanceExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "replication_instance_class", replicationInstanceClass1),
@@ -449,7 +449,7 @@ func TestAccDMSReplicationInstance_replicationInstanceClass(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"apply_immediately"},
 			},
 			{
-				Config: testAccReplicationInstanceConfig_class(rName, replicationInstanceClass2),
+				Config: testAccReplicationInstanceConfig_replicationInstanceClass(rName, replicationInstanceClass2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckReplicationInstanceExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "replication_instance_class", replicationInstanceClass2),
@@ -794,7 +794,7 @@ resource "aws_dms_replication_instance" "test" {
 `, rName, publiclyAccessible))
 }
 
-func testAccReplicationInstanceConfig_class(rName, replicationInstanceClass string) string {
+func testAccReplicationInstanceConfig_replicationInstanceClass(rName, replicationInstanceClass string) string {
 	return acctest.ConfigCompose(testAccReplicationInstanceConfig_base(rName), fmt.Sprintf(`
 resource "aws_dms_replication_instance" "test" {
   apply_immediately           = true

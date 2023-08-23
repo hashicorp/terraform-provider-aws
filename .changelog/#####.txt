@@ -1,3 +1,7 @@
 ```release-note:enhancement
 resource/aws_dms_replication_instance: Add `network_type` argument
 ```
+
+```release-note:enhancement
+data-source/aws_dms_replication_instance: Add `network_type` attribute
+```
