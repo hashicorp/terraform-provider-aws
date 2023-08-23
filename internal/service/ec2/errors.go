@@ -13,6 +13,7 @@ import (
 )
 
 const (
+	errCodeAnalysisExistsForNetworkInsightsPath              = "AnalysisExistsForNetworkInsightsPath"
 	errCodeAuthFailure                                       = "AuthFailure"
 	errCodeClientInvalidHostIDNotFound                       = "Client.InvalidHostID.NotFound"
 	errCodeConcurrentMutationLimitExceeded                   = "ConcurrentMutationLimitExceeded"
