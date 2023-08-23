@@ -285,9 +285,10 @@ func testAccAccountAssignmentConfig_withCustomerPolicy(userName, policyPath, pol
 resource "aws_ssoadmin_customer_managed_policy_attachment" "test" {
   instance_arn       = aws_ssoadmin_permission_set.test.instance_arn
   permission_set_arn = aws_ssoadmin_permission_set.test.arn
+
   customer_managed_policy_reference {
-    name = %q
-    path = %q
+    name = %[1]q
+    path = %[2]q
   }
 }
 `, policyName, policyPath))
