@@ -17,6 +17,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/YakDriver/regexache"
 	ec2types "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
@@ -362,7 +363,7 @@ func CheckResourceAttrNameFromPrefix(resourceName string, attributeName string, 
 
 // Regexp for "<start-of-string>terraform-<26 lowercase hex digits><additional suffix><end-of-string>".
 func resourceUniqueIDPrefixPlusAdditionalSuffixRegexp(prefix, suffix string) *regexp.Regexp {
-	return regexp.MustCompile(fmt.Sprintf("^%s[[:xdigit:]]{%d}%s$", prefix, id.UniqueIDSuffixLength, suffix))
+	return regexache.MustCompile(fmt.Sprintf("^%s[[:xdigit:]]{%d}%s$", prefix, id.UniqueIDSuffixLength, suffix))
 }
 
 // CheckResourceAttrNameWithSuffixFromPrefix verifies that the state attribute value matches name with suffix generated from given prefix
@@ -388,7 +389,7 @@ func CheckResourceAttrNameWithSuffixGenerated(resourceName string, attributeName
 // MatchResourceAttrAccountID ensures the Terraform state regexp matches an account ID
 func MatchResourceAttrAccountID(resourceName, attributeName string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		return resource.TestMatchResourceAttr(resourceName, attributeName, regexp.MustCompile(`^\d{12}$`))(s)
+		return resource.TestMatchResourceAttr(resourceName, attributeName, regexache.MustCompile(`^\d{12}$`))(s)
 	}
 }
 
@@ -606,7 +607,7 @@ func MatchResourceAttrGlobalARNNoAccount(resourceName, attributeName, arnService
 // CheckResourceAttrRFC3339 ensures the Terraform state matches a RFC3339 value
 // This TestCheckFunc will likely be moved to the Terraform Plugin SDK in the future.
 func CheckResourceAttrRFC3339(resourceName, attributeName string) resource.TestCheckFunc {
-	return resource.TestMatchResourceAttr(resourceName, attributeName, regexp.MustCompile(RFC3339RegexPattern))
+	return resource.TestMatchResourceAttr(resourceName, attributeName, regexache.MustCompile(RFC3339RegexPattern))
 }
 
 // CheckResourceAttrEquivalentJSON is a TestCheckFunc that compares a JSON value with an expected value. Both JSON
@@ -2483,9 +2484,9 @@ func modulePrimaryInstanceState(ms *terraform.ModuleState, name string) (*terraf
 }
 
 func ExpectErrorAttrAtLeastOneOf(attrs ...string) *regexp.Regexp {
-	return regexp.MustCompile(fmt.Sprintf("one of\\s+`%s`\\s+must be specified", strings.Join(attrs, ",")))
+	return regexache.MustCompile(fmt.Sprintf("one of\\s+`%s`\\s+must be specified", strings.Join(attrs, ",")))
 }
 
 func ExpectErrorAttrMinItems(attr string, expected, actual int) *regexp.Regexp {
-	return regexp.MustCompile(fmt.Sprintf(`Attribute %s requires %d\s+item minimum, but config has only %d declared`, attr, expected, actual))
+	return regexache.MustCompile(fmt.Sprintf(`Attribute %s requires %d\s+item minimum, but config has only %d declared`, attr, expected, actual))
 }

@@ -6,9 +6,9 @@ package ssm_test
 import (
 	"context"
 	"fmt"
-	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ssm"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
@@ -35,7 +35,7 @@ func TestAccSSMAssociation_basic(t *testing.T) {
 				Config: testAccAssociationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAssociationExists(ctx, resourceName),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "ssm", regexp.MustCompile(`association/.+`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "ssm", regexache.MustCompile(`association/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "apply_only_at_cron_interval", "false"),
 					resource.TestCheckResourceAttrPair(resourceName, "instance_id", "aws_instance.test", "id"),
 					resource.TestCheckResourceAttr(resourceName, "output_location.#", "0"),

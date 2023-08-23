@@ -6,9 +6,9 @@ package chime_test
 import (
 	"context"
 	"fmt"
-	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/chime"
 	"github.com/aws/aws-sdk-go/service/chimesdkvoice"
@@ -110,7 +110,7 @@ func TestAccChimeVoiceConnectorStreaming_update(t *testing.T) {
 					acctest.MatchResourceAttrRegionalARN(resourceName,
 						"media_insights_configuration.0.configuration_arn",
 						"chime",
-						regexp.MustCompile(fmt.Sprintf(`media-insights-pipeline-configuration/test-config-%s`, name)),
+						regexache.MustCompile(fmt.Sprintf(`media-insights-pipeline-configuration/test-config-%s`, name)),
 					),
 				),
 			},

@@ -6,9 +6,9 @@ package storagegateway_test
 import (
 	"context"
 	"fmt"
-	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/service/storagegateway"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -129,7 +129,7 @@ func TestAccStorageGatewayUploadBuffer_diskPath(t *testing.T) {
 				Config: testAccUploadBufferConfig_diskPath(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUploadBufferExists(ctx, resourceName),
-					resource.TestMatchResourceAttr(resourceName, "disk_id", regexp.MustCompile(`.+`)),
+					resource.TestMatchResourceAttr(resourceName, "disk_id", regexache.MustCompile(`.+`)),
 					resource.TestCheckResourceAttrPair(resourceName, "disk_path", localDiskDataSourceName, "disk_path"),
 					resource.TestCheckResourceAttrPair(resourceName, "gateway_arn", gatewayResourceName, "arn"),
 				),

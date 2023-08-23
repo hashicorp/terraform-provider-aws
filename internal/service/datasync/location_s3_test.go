@@ -6,9 +6,9 @@ package datasync_test
 import (
 	"context"
 	"fmt"
-	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/service/datasync"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -38,14 +38,14 @@ func TestAccDataSyncLocationS3_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLocationS3Exists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "agent_arns.#", "0"),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "datasync", regexp.MustCompile(`location/loc-.+`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "datasync", regexache.MustCompile(`location/loc-.+`)),
 					resource.TestCheckResourceAttrPair(resourceName, "s3_bucket_arn", s3BucketResourceName, "arn"),
 					resource.TestCheckResourceAttr(resourceName, "s3_config.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "s3_config.0.bucket_access_role_arn", iamRoleResourceName, "arn"),
 					resource.TestCheckResourceAttrSet(resourceName, "s3_storage_class"),
 					resource.TestCheckResourceAttr(resourceName, "subdirectory", "/test/"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-					resource.TestMatchResourceAttr(resourceName, "uri", regexp.MustCompile(`^s3://.+/`)),
+					resource.TestMatchResourceAttr(resourceName, "uri", regexache.MustCompile(`^s3://.+/`)),
 				),
 			},
 			{
@@ -76,13 +76,13 @@ func TestAccDataSyncLocationS3_storageClass(t *testing.T) {
 				Config: testAccLocationS3Config_storageClass(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLocationS3Exists(ctx, resourceName, &v),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "datasync", regexp.MustCompile(`location/loc-.+`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "datasync", regexache.MustCompile(`location/loc-.+`)),
 					resource.TestCheckResourceAttrPair(resourceName, "s3_bucket_arn", s3BucketResourceName, "arn"),
 					resource.TestCheckResourceAttr(resourceName, "s3_config.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "s3_config.0.bucket_access_role_arn", iamRoleResourceName, "arn"),
 					resource.TestCheckResourceAttr(resourceName, "subdirectory", "/test/"),
 					resource.TestCheckResourceAttr(resourceName, "s3_storage_class", "STANDARD_IA"),
-					resource.TestMatchResourceAttr(resourceName, "uri", regexp.MustCompile(`^s3://.+/`)),
+					resource.TestMatchResourceAttr(resourceName, "uri", regexache.MustCompile(`^s3://.+/`)),
 				),
 			},
 			{

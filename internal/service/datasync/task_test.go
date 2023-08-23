@@ -7,9 +7,9 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/datasync"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
@@ -39,7 +39,7 @@ func TestAccDataSyncTask_basic(t *testing.T) {
 				Config: testAccTaskConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTaskExists(ctx, resourceName, &task1),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "datasync", regexp.MustCompile(`task/task-.+`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "datasync", regexache.MustCompile(`task/task-.+`)),
 					resource.TestCheckResourceAttr(resourceName, "cloudwatch_log_group_arn", ""),
 					resource.TestCheckResourceAttrPair(resourceName, "destination_location_arn", dataSyncDestinationLocationResourceName, "arn"),
 					resource.TestCheckResourceAttr(resourceName, "excludes.#", "0"),

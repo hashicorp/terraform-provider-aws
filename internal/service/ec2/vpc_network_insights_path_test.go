@@ -6,9 +6,9 @@ package ec2_test
 import (
 	"context"
 	"fmt"
-	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -34,7 +34,7 @@ func TestAccVPCNetworkInsightsPath_basic(t *testing.T) {
 				Config: testAccVPCNetworkInsightsPathConfig_basic(rName, "tcp"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckNetworkInsightsPathExists(ctx, resourceName),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "ec2", regexp.MustCompile(`network-insights-path/.+$`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "ec2", regexache.MustCompile(`network-insights-path/.+$`)),
 					resource.TestCheckResourceAttrPair(resourceName, "destination", "aws_network_interface.test.1", "id"),
 					resource.TestCheckResourceAttr(resourceName, "destination_ip", ""),
 					resource.TestCheckResourceAttr(resourceName, "destination_port", "0"),

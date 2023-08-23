@@ -7,9 +7,9 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/service/codestarconnections"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -39,8 +39,8 @@ func TestAccCodeStarConnectionsConnection_basic(t *testing.T) {
 				Config: testAccConnectionConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckConnectionExists(ctx, resourceName, &v),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "id", "codestar-connections", regexp.MustCompile("connection/.+")),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "codestar-connections", regexp.MustCompile("connection/.+")),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "id", "codestar-connections", regexache.MustCompile("connection/.+")),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "codestar-connections", regexache.MustCompile("connection/.+")),
 					resource.TestCheckResourceAttr(resourceName, "provider_type", codestarconnections.ProviderTypeBitbucket),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "connection_status", codestarconnections.ConnectionStatusPending),
@@ -74,9 +74,9 @@ func TestAccCodeStarConnectionsConnection_hostARN(t *testing.T) {
 				Config: testAccConnectionConfig_hostARN(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckConnectionExists(ctx, resourceName, &v),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "id", "codestar-connections", regexp.MustCompile("connection/.+")),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "codestar-connections", regexp.MustCompile("connection/.+")),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "host_arn", "codestar-connections", regexp.MustCompile("host/.+")),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "id", "codestar-connections", regexache.MustCompile("connection/.+")),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "codestar-connections", regexache.MustCompile("connection/.+")),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "host_arn", "codestar-connections", regexache.MustCompile("host/.+")),
 					resource.TestCheckResourceAttr(resourceName, "provider_type", codestarconnections.ProviderTypeGitHubEnterpriseServer),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "connection_status", codestarconnections.ConnectionStatusPending),

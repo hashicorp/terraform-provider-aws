@@ -6,9 +6,9 @@ package codestarnotifications
 import (
 	"context"
 	"log"
-	"regexp"
 	"time"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/codestarnotifications"
 	"github.com/aws/aws-sdk-go-v2/service/codestarnotifications/types"
@@ -64,7 +64,7 @@ func resourceNotificationRule() *schema.Resource {
 				Required: true,
 				ValidateFunc: validation.All(
 					validation.StringLenBetween(1, 64),
-					validation.StringMatch(regexp.MustCompile(`^[A-Za-z0-9\-_ ]+$`), "must be one or more alphanumeric, hyphen, underscore or space characters"),
+					validation.StringMatch(regexache.MustCompile(`^[A-Za-z0-9\-_ ]+$`), "must be one or more alphanumeric, hyphen, underscore or space characters"),
 				),
 			},
 			"resource": {

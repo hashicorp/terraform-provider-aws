@@ -7,9 +7,9 @@ import (
 	"context"
 	"fmt"
 	"os"
-	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -107,7 +107,7 @@ func testAccClientVPNEndpoint_basic(t *testing.T) {
 				Config: testAccClientVPNEndpointConfig_basic(t, rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckClientVPNEndpointExists(ctx, resourceName, &v),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "ec2", regexp.MustCompile(`client-vpn-endpoint/cvpn-endpoint-.+`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "ec2", regexache.MustCompile(`client-vpn-endpoint/cvpn-endpoint-.+`)),
 					resource.TestCheckResourceAttr(resourceName, "authentication_options.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "authentication_options.*", map[string]string{
 						"type": "certificate-authentication",

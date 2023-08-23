@@ -8,10 +8,10 @@ import (
 	"encoding/json"
 	"fmt"
 	"reflect"
-	"regexp"
 	"strconv"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/sns"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
@@ -87,7 +87,7 @@ func TestAccSNSTopicSubscription_basic(t *testing.T) {
 				Config: testAccTopicSubscriptionConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTopicSubscriptionExists(ctx, resourceName, &attributes),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", sns.ServiceName, regexp.MustCompile(fmt.Sprintf("%s:.+", rName))),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", sns.ServiceName, regexache.MustCompile(fmt.Sprintf("%s:.+", rName))),
 					resource.TestCheckResourceAttr(resourceName, "confirmation_was_authenticated", "true"),
 					resource.TestCheckResourceAttr(resourceName, "delivery_policy", ""),
 					resource.TestCheckResourceAttrPair(resourceName, "endpoint", "aws_sqs_queue.test", "arn"),
@@ -348,7 +348,7 @@ func TestAccSNSTopicSubscription_filterPolicyScope_policyNotSet(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccTopicSubscriptionConfig_filterPolicyScope_policyNotSet(rName),
-				ExpectError: regexp.MustCompile(`filter_policy is required when filter_policy_scope is set`),
+				ExpectError: regexache.MustCompile(`filter_policy is required when filter_policy_scope is set`),
 			},
 		},
 	})
@@ -599,7 +599,7 @@ func TestAccSNSTopicSubscription_email(t *testing.T) {
 				Config: testAccTopicSubscriptionConfig_email(rName, acctest.DefaultEmailAddress),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTopicSubscriptionExists(ctx, resourceName, &attributes),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", sns.ServiceName, regexp.MustCompile(fmt.Sprintf("%s:.+", rName))),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", sns.ServiceName, regexache.MustCompile(fmt.Sprintf("%s:.+", rName))),
 					resource.TestCheckResourceAttr(resourceName, "confirmation_was_authenticated", "false"),
 					resource.TestCheckResourceAttr(resourceName, "delivery_policy", ""),
 					resource.TestCheckResourceAttr(resourceName, "endpoint", acctest.DefaultEmailAddress),
@@ -630,7 +630,7 @@ func TestAccSNSTopicSubscription_firehose(t *testing.T) {
 				Config: testAccTopicSubscriptionConfig_firehose(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTopicSubscriptionExists(ctx, resourceName, &attributes),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", sns.ServiceName, regexp.MustCompile(fmt.Sprintf("%s:.+", rName))),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", sns.ServiceName, regexache.MustCompile(fmt.Sprintf("%s:.+", rName))),
 					resource.TestCheckResourceAttr(resourceName, "delivery_policy", ""),
 					resource.TestCheckResourceAttrPair(resourceName, "endpoint", "aws_kinesis_firehose_delivery_stream.test_stream", "arn"),
 					resource.TestCheckResourceAttr(resourceName, "filter_policy", ""),

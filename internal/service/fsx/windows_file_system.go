@@ -7,10 +7,10 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"regexp"
 	"strings"
 	"time"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/fsx"
@@ -66,7 +66,7 @@ func ResourceWindowsFileSystem() *schema.Resource {
 					Type: schema.TypeString,
 					ValidateFunc: validation.All(
 						validation.StringLenBetween(4, 253),
-						// validation.StringMatch(regexp.MustCompile(`^[A-Za-z0-9]([.][A-Za-z0-9][A-Za-z0-9-]*[A-Za-z0-9])+$`), "must be in the fqdn format hostname.domain"),
+						// validation.StringMatch(regexache.MustCompile(`^[A-Za-z0-9]([.][A-Za-z0-9][A-Za-z0-9-]*[A-Za-z0-9])+$`), "must be in the fqdn format hostname.domain"),
 					),
 				},
 			},
@@ -129,7 +129,7 @@ func ResourceWindowsFileSystem() *schema.Resource {
 				Computed: true,
 				ValidateFunc: validation.All(
 					validation.StringLenBetween(5, 5),
-					validation.StringMatch(regexp.MustCompile(`^([01]\d|2[0-3]):?([0-5]\d)$`), "must be in the format HH:MM"),
+					validation.StringMatch(regexache.MustCompile(`^([01]\d|2[0-3]):?([0-5]\d)$`), "must be in the format HH:MM"),
 				),
 			},
 			"deployment_type": {
@@ -268,7 +268,7 @@ func ResourceWindowsFileSystem() *schema.Resource {
 				Computed: true,
 				ValidateFunc: validation.All(
 					validation.StringLenBetween(7, 7),
-					validation.StringMatch(regexp.MustCompile(`^[1-7]:([01]\d|2[0-3]):?([0-5]\d)$`), "must be in the format d:HH:MM"),
+					validation.StringMatch(regexache.MustCompile(`^[1-7]:([01]\d|2[0-3]):?([0-5]\d)$`), "must be in the format d:HH:MM"),
 				),
 			},
 		},

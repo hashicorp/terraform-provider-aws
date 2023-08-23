@@ -6,9 +6,9 @@ package datasync_test
 import (
 	"context"
 	"fmt"
-	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/service/datasync"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -37,7 +37,7 @@ func TestAccDataSyncLocationAzureBlob_basic(t *testing.T) {
 					testAccCheckLocationAzureBlobExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "access_tier", "HOT"),
 					resource.TestCheckResourceAttr(resourceName, "agent_arns.#", "1"),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "datasync", regexp.MustCompile(`location/loc-.+`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "datasync", regexache.MustCompile(`location/loc-.+`)),
 					resource.TestCheckResourceAttr(resourceName, "authentication_type", "SAS"),
 					resource.TestCheckResourceAttr(resourceName, "blob_type", "BLOCK"),
 					resource.TestCheckResourceAttr(resourceName, "container_url", "https://example.com/path"),
@@ -45,7 +45,7 @@ func TestAccDataSyncLocationAzureBlob_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "sas_configuration.0.token"),
 					resource.TestCheckResourceAttr(resourceName, "subdirectory", "/path/"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-					resource.TestMatchResourceAttr(resourceName, "uri", regexp.MustCompile(`^azure-blob://.+/`)),
+					resource.TestMatchResourceAttr(resourceName, "uri", regexache.MustCompile(`^azure-blob://.+/`)),
 				),
 			},
 			{
@@ -147,7 +147,7 @@ func TestAccDataSyncLocationAzureBlob_update(t *testing.T) {
 					testAccCheckLocationAzureBlobExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "access_tier", "HOT"),
 					resource.TestCheckResourceAttr(resourceName, "agent_arns.#", "1"),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "datasync", regexp.MustCompile(`location/loc-.+`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "datasync", regexache.MustCompile(`location/loc-.+`)),
 					resource.TestCheckResourceAttr(resourceName, "authentication_type", "SAS"),
 					resource.TestCheckResourceAttr(resourceName, "blob_type", "BLOCK"),
 					resource.TestCheckResourceAttr(resourceName, "container_url", "https://example.com/path"),
@@ -155,7 +155,7 @@ func TestAccDataSyncLocationAzureBlob_update(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "sas_configuration.0.token"),
 					resource.TestCheckResourceAttr(resourceName, "subdirectory", "/path/"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-					resource.TestMatchResourceAttr(resourceName, "uri", regexp.MustCompile(`^azure-blob://.+/`)),
+					resource.TestMatchResourceAttr(resourceName, "uri", regexache.MustCompile(`^azure-blob://.+/`)),
 				),
 			},
 			{
@@ -164,7 +164,7 @@ func TestAccDataSyncLocationAzureBlob_update(t *testing.T) {
 					testAccCheckLocationAzureBlobExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "access_tier", "COOL"),
 					resource.TestCheckResourceAttr(resourceName, "agent_arns.#", "1"),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "datasync", regexp.MustCompile(`location/loc-.+`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "datasync", regexache.MustCompile(`location/loc-.+`)),
 					resource.TestCheckResourceAttr(resourceName, "authentication_type", "SAS"),
 					resource.TestCheckResourceAttr(resourceName, "blob_type", "BLOCK"),
 					resource.TestCheckResourceAttr(resourceName, "container_url", "https://example.com/path"),
@@ -172,7 +172,7 @@ func TestAccDataSyncLocationAzureBlob_update(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "sas_configuration.0.token"),
 					resource.TestCheckResourceAttr(resourceName, "subdirectory", "/path/"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-					resource.TestMatchResourceAttr(resourceName, "uri", regexp.MustCompile(`^azure-blob://.+/`)),
+					resource.TestMatchResourceAttr(resourceName, "uri", regexache.MustCompile(`^azure-blob://.+/`)),
 				),
 			},
 		},

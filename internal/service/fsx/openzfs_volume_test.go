@@ -6,9 +6,9 @@ package fsx_test
 import (
 	"context"
 	"fmt"
-	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/fsx"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
@@ -36,7 +36,7 @@ func TestAccFSxOpenzfsVolume_basic(t *testing.T) {
 				Config: testAccOpenZFSVolumeConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOpenzfsVolumeExists(ctx, resourceName, &volume),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "fsx", regexp.MustCompile(`volume/fs-.+/fsvol-.+`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "fsx", regexache.MustCompile(`volume/fs-.+/fsvol-.+`)),
 					resource.TestCheckResourceAttr(resourceName, "copy_tags_to_snapshots", "false"),
 					resource.TestCheckResourceAttr(resourceName, "data_compression_type", "NONE"),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
@@ -81,8 +81,8 @@ func TestAccFSxOpenzfsVolume_parentVolume(t *testing.T) {
 					testAccCheckOpenzfsVolumeExists(ctx, resourceName, &volume),
 					testAccCheckOpenzfsVolumeExists(ctx, resourceName2, &volume2),
 					testAccCheckOpenzfsVolumeGetID(resourceName, &volumeId),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "fsx", regexp.MustCompile(`volume/fs-.+/fsvol-.+`)),
-					acctest.MatchResourceAttrRegionalARN(resourceName2, "arn", "fsx", regexp.MustCompile(`volume/fs-.+/fsvol-.+`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "fsx", regexache.MustCompile(`volume/fs-.+/fsvol-.+`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName2, "arn", "fsx", regexache.MustCompile(`volume/fs-.+/fsvol-.+`)),
 					resource.TestCheckResourceAttrPtr(resourceName2, "parent_volume_id", &volumeId),
 				),
 			},

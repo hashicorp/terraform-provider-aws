@@ -7,10 +7,10 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"regexp"
 	"testing"
 	"time"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/aws/aws-sdk-go/aws/session"
@@ -165,7 +165,7 @@ func TestAccIAMUserLoginProfile_keybaseDoesntExist(t *testing.T) {
 			{
 				// We own this account but it doesn't have any key associated with it
 				Config:      testAccUserLoginProfileConfig_keybase(rName, "keybase:terraform_nope"),
-				ExpectError: regexp.MustCompile(`retrieving Public Key`),
+				ExpectError: regexache.MustCompile(`retrieving Public Key`),
 			},
 		},
 	})
@@ -184,7 +184,7 @@ func TestAccIAMUserLoginProfile_notAKey(t *testing.T) {
 			{
 				// We own this account but it doesn't have any key associated with it
 				Config:      testAccUserLoginProfileConfig_required(rName, "lolimnotakey"),
-				ExpectError: regexp.MustCompile(`encrypting Password`),
+				ExpectError: regexache.MustCompile(`encrypting Password`),
 			},
 		},
 	})

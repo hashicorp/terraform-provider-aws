@@ -7,9 +7,9 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/route53"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
@@ -104,7 +104,7 @@ func TestAccRoute53Zone_basic(t *testing.T) {
 				Config: testAccZoneConfig_basic(zoneName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckZoneExists(ctx, resourceName, &zone),
-					acctest.MatchResourceAttrGlobalARNNoAccount(resourceName, "arn", "route53", regexp.MustCompile("hostedzone/.+")),
+					acctest.MatchResourceAttrGlobalARNNoAccount(resourceName, "arn", "route53", regexache.MustCompile("hostedzone/.+")),
 					resource.TestCheckResourceAttr(resourceName, "name", zoneName),
 					resource.TestCheckResourceAttr(resourceName, "name_servers.#", "4"),
 					resource.TestCheckResourceAttrSet(resourceName, "primary_name_server"),

@@ -6,9 +6,9 @@ package ssoadmin_test
 import (
 	"context"
 	"fmt"
-	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/service/ssoadmin"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -36,7 +36,7 @@ func TestAccSSOAdminManagedPolicyAttachment_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckManagedPolicyAttachmentExists(ctx, resourceName),
 					//lintignore:AWSAT001
-					resource.TestMatchResourceAttr(resourceName, "managed_policy_arn", regexp.MustCompile(`policy/AlexaForBusinessDeviceSetup`)),
+					resource.TestMatchResourceAttr(resourceName, "managed_policy_arn", regexache.MustCompile(`policy/AlexaForBusinessDeviceSetup`)),
 					resource.TestCheckResourceAttr(resourceName, "managed_policy_name", "AlexaForBusinessDeviceSetup"),
 					resource.TestCheckResourceAttrPair(resourceName, "instance_arn", permissionSetResourceName, "instance_arn"),
 					resource.TestCheckResourceAttrPair(resourceName, "permission_set_arn", permissionSetResourceName, "arn"),
@@ -74,7 +74,7 @@ func TestAccSSOAdminManagedPolicyAttachment_forceNew(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckManagedPolicyAttachmentExists(ctx, resourceName),
 					//lintignore:AWSAT001
-					resource.TestMatchResourceAttr(resourceName, "managed_policy_arn", regexp.MustCompile(`policy/AmazonCognitoReadOnly`)),
+					resource.TestMatchResourceAttr(resourceName, "managed_policy_arn", regexache.MustCompile(`policy/AmazonCognitoReadOnly`)),
 					resource.TestCheckResourceAttr(resourceName, "managed_policy_name", "AmazonCognitoReadOnly"),
 					resource.TestCheckResourceAttrPair(resourceName, "instance_arn", permissionSetResourceName, "instance_arn"),
 					resource.TestCheckResourceAttrPair(resourceName, "permission_set_arn", permissionSetResourceName, "arn"),
@@ -161,7 +161,7 @@ func TestAccSSOAdminManagedPolicyAttachment_multipleManagedPolicies(t *testing.T
 					testAccCheckManagedPolicyAttachmentExists(ctx, resourceName),
 					testAccCheckManagedPolicyAttachmentExists(ctx, otherResourceName),
 					//lintignore:AWSAT001
-					resource.TestMatchResourceAttr(otherResourceName, "managed_policy_arn", regexp.MustCompile(`policy/AmazonDynamoDBReadOnlyAccess`)),
+					resource.TestMatchResourceAttr(otherResourceName, "managed_policy_arn", regexache.MustCompile(`policy/AmazonDynamoDBReadOnlyAccess`)),
 					resource.TestCheckResourceAttr(otherResourceName, "managed_policy_name", "AmazonDynamoDBReadOnlyAccess"),
 					resource.TestCheckResourceAttrPair(otherResourceName, "instance_arn", permissionSetResourceName, "instance_arn"),
 					resource.TestCheckResourceAttrPair(otherResourceName, "permission_set_arn", permissionSetResourceName, "arn"),

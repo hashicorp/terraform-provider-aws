@@ -7,9 +7,9 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"regexp"
 	"time"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/fsx"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
@@ -79,7 +79,7 @@ func ResourceOpenzfsFileSystem() *schema.Resource {
 				Computed: true,
 				ValidateFunc: validation.All(
 					validation.StringLenBetween(5, 5),
-					validation.StringMatch(regexp.MustCompile(`^([01]\d|2[0-3]):?([0-5]\d)$`), "must be in the format HH:MM"),
+					validation.StringMatch(regexache.MustCompile(`^([01]\d|2[0-3]):?([0-5]\d)$`), "must be in the format HH:MM"),
 				),
 			},
 			"deployment_type": {
@@ -143,7 +143,7 @@ func ResourceOpenzfsFileSystem() *schema.Resource {
 													Required: true,
 													ValidateFunc: validation.All(
 														validation.StringLenBetween(1, 128),
-														validation.StringMatch(regexp.MustCompile(`^[ -~]{1,128}$`), "must be either IP Address or CIDR"),
+														validation.StringMatch(regexache.MustCompile(`^[ -~]{1,128}$`), "must be either IP Address or CIDR"),
 													),
 												},
 												"options": {
@@ -268,7 +268,7 @@ func ResourceOpenzfsFileSystem() *schema.Resource {
 				Computed: true,
 				ValidateFunc: validation.All(
 					validation.StringLenBetween(7, 7),
-					validation.StringMatch(regexp.MustCompile(`^[1-7]:([01]\d|2[0-3]):?([0-5]\d)$`), "must be in the format d:HH:MM"),
+					validation.StringMatch(regexache.MustCompile(`^[1-7]:([01]\d|2[0-3]):?([0-5]\d)$`), "must be in the format d:HH:MM"),
 				),
 			},
 		},

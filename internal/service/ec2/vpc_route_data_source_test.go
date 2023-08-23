@@ -5,9 +5,9 @@ package ec2_test
 
 import (
 	"fmt"
-	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -200,7 +200,7 @@ func TestAccVPCRouteDataSource_gatewayVPCEndpoint(t *testing.T) {
 			},
 			{
 				Config:      testAccVPCRouteDataSourceConfig_gatewayEndpoint(rName),
-				ExpectError: regexp.MustCompile(`No routes matching supplied arguments found in Route Table`),
+				ExpectError: regexache.MustCompile(`No routes matching supplied arguments found in Route Table`),
 			},
 		},
 	})

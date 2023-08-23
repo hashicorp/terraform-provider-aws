@@ -6,9 +6,9 @@ package cloudformation_test
 import (
 	"context"
 	"fmt"
-	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cloudformation"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
@@ -39,7 +39,7 @@ func TestAccCloudFormationStackSet_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckStackSetExists(ctx, resourceName, &stackSet1),
 					resource.TestCheckResourceAttrPair(resourceName, "administration_role_arn", iamRoleResourceName, "arn"),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "cloudformation", regexp.MustCompile(`stackset/.+`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "cloudformation", regexache.MustCompile(`stackset/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "capabilities.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "call_as", "SELF"),
 					resource.TestCheckResourceAttr(resourceName, "description", ""),
@@ -50,7 +50,7 @@ func TestAccCloudFormationStackSet_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "operation_preferences.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "parameters.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "permission_model", "SELF_MANAGED"),
-					resource.TestMatchResourceAttr(resourceName, "stack_set_id", regexp.MustCompile(fmt.Sprintf("%s:.+", rName))),
+					resource.TestMatchResourceAttr(resourceName, "stack_set_id", regexache.MustCompile(fmt.Sprintf("%s:.+", rName))),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "template_body", testAccStackSetTemplateBodyVPC(rName)+"\n"),
 					resource.TestCheckNoResourceAttr(resourceName, "template_url"),
@@ -263,19 +263,19 @@ func TestAccCloudFormationStackSet_name(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccStackSetConfig_name(""),
-				ExpectError: regexp.MustCompile(`expected length`),
+				ExpectError: regexache.MustCompile(`expected length`),
 			},
 			{
 				Config:      testAccStackSetConfig_name(sdkacctest.RandStringFromCharSet(129, sdkacctest.CharSetAlpha)),
-				ExpectError: regexp.MustCompile(`(cannot be longer|expected length)`),
+				ExpectError: regexache.MustCompile(`(cannot be longer|expected length)`),
 			},
 			{
 				Config:      testAccStackSetConfig_name("1"),
-				ExpectError: regexp.MustCompile(`must begin with alphabetic character`),
+				ExpectError: regexache.MustCompile(`must begin with alphabetic character`),
 			},
 			{
 				Config:      testAccStackSetConfig_name("a_b"),
-				ExpectError: regexp.MustCompile(`must contain only alphanumeric and hyphen characters`),
+				ExpectError: regexache.MustCompile(`must contain only alphanumeric and hyphen characters`),
 			},
 			{
 				Config: testAccStackSetConfig_name(rName1),
@@ -583,12 +583,12 @@ func TestAccCloudFormationStackSet_PermissionModel_serviceManaged(t *testing.T) 
 				Config: testAccStackSetConfig_permissionModel(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckStackSetExists(ctx, resourceName, &stackSet1),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "cloudformation", regexp.MustCompile(`stackset/.+`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "cloudformation", regexache.MustCompile(`stackset/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "permission_model", "SERVICE_MANAGED"),
 					resource.TestCheckResourceAttr(resourceName, "auto_deployment.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "auto_deployment.0.enabled", "true"),
 					resource.TestCheckResourceAttr(resourceName, "auto_deployment.0.retain_stacks_on_account_removal", "false"),
-					resource.TestMatchResourceAttr(resourceName, "stack_set_id", regexp.MustCompile(fmt.Sprintf("%s:.+", rName))),
+					resource.TestMatchResourceAttr(resourceName, "stack_set_id", regexache.MustCompile(fmt.Sprintf("%s:.+", rName))),
 				),
 			},
 			{
