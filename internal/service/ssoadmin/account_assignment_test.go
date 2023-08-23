@@ -106,7 +106,7 @@ func TestAccSSOAdminAccountAssignment_MissingPolicy(t *testing.T) {
 			{
 				// We assign a policy called rName on the assumption it doesn't exist due to being randomly generated, hoping to generate an error
 				Config:      testAccAccountAssignmentConfig_withCustomerPolicy(userName, "/", rName, rName),
-				ExpectError: regexp.MustCompile(fmt.Sprintf(`Received a 404 status error: Not supported policy.*%s`, rName)),
+				ExpectError: regexache.MustCompile(fmt.Sprintf(`Received a 404 status error: Not supported policy.*%s`, rName)),
 			},
 		},
 	})
