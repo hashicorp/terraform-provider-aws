@@ -21,8 +21,25 @@ func {{ .ListTagsFunc }}(ctx context.Context, conn {{ .ClientType }}, identifier
 		{{- end }}
 		{{- end }}
 	}
+{{- if .ListTagsOpPaginated }}
+	var tags []*{{ .TagPackage }}.{{ .TagType }}
 
+	err := conn.{{ .ListTagsOp }}PagesWithContext(ctx, input, func(page *{{ .TagPackage  }}.{{ .ListTagsOp }}Output, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, tag := range page.{{ .ListTagsOutTagsElem }} {
+			if tag != nil {
+				tags = append(tags, tag)
+			}
+		}
+
+		return !lastPage
+	})
+{{- else }}
 	output, err := conn.{{ .ListTagsOp }}WithContext(ctx, input)
+{{- end }}
 
 	{{ if and ( .ParentNotFoundErrCode ) ( .ParentNotFoundErrMsg ) }}
 			if tfawserr.ErrMessageContains(err, "{{ .ParentNotFoundErrCode }}", "{{ .ParentNotFoundErrMsg }}") {
@@ -44,7 +61,11 @@ func {{ .ListTagsFunc }}(ctx context.Context, conn {{ .ClientType }}, identifier
 		return tftags.New(ctx, nil), err
 	}
 
-	return {{ .KeyValueTagsFunc }}(ctx, output.{{ .ListTagsOutTagsElem }}{{ if .TagTypeIDElem }}, identifier{{ if .TagResTypeElem }}, resourceType{{ end }}{{ end }}), nil
+{{- if not .ListTagsOpPaginated }}
+	tags := output.{{ .ListTagsOutTagsElem }}
+{{- end }}
+
+	return {{ .KeyValueTagsFunc }}(ctx, tags{{ if .TagTypeIDElem }}, identifier{{ if .TagResTypeElem }}, resourceType{{ end }}{{ end }}), nil
 }
 
 {{- if .IsDefaultListTags }}
