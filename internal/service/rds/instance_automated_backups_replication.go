@@ -183,7 +183,7 @@ func FindDBInstanceAutomatedBackupByARN(ctx context.Context, conn *rds.RDS, arn 
 	input := &rds.DescribeDBInstanceAutomatedBackupsInput{
 		DBInstanceAutomatedBackupsArn: aws.String(arn),
 	}
-	output, err := findDBInstanceAutomatedBackup(ctx, conn, input)
+	output, err := findDBInstanceAutomatedBackup(ctx, conn, input, tfslices.PredicateTrue[*rds.DBInstanceAutomatedBackup]())
 
 	if err != nil {
 		return nil, err
@@ -207,8 +207,8 @@ func FindDBInstanceAutomatedBackupByARN(ctx context.Context, conn *rds.RDS, arn 
 	return output, nil
 }
 
-func findDBInstanceAutomatedBackup(ctx context.Context, conn *rds.RDS, input *rds.DescribeDBInstanceAutomatedBackupsInput) (*rds.DBInstanceAutomatedBackup, error) {
-	output, err := findDBInstanceAutomatedBackups(ctx, conn, input, tfslices.PredicateTrue[*rds.DBInstanceAutomatedBackup]())
+func findDBInstanceAutomatedBackup(ctx context.Context, conn *rds.RDS, input *rds.DescribeDBInstanceAutomatedBackupsInput, filter tfslices.Predicate[*rds.DBInstanceAutomatedBackup]) (*rds.DBInstanceAutomatedBackup, error) {
+	output, err := findDBInstanceAutomatedBackups(ctx, conn, input, filter)
 
 	if err != nil {
 		return nil, err

@@ -22,7 +22,7 @@ import (
 )
 
 // @SDKResource("aws_transfer_connector", name="Connector")
-// @Tags(identifierAttribute="connector_id")
+// @Tags(identifierAttribute="arn")
 func ResourceConnector() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceConnectorCreate,
@@ -38,6 +38,10 @@ func ResourceConnector() *schema.Resource {
 			"access_role": {
 				Type:     schema.TypeString,
 				Required: true,
+			},
+			"arn": {
+				Type:     schema.TypeString,
+				Computed: true,
 			},
 			"as2_config": {
 				Type:     schema.TypeList,
@@ -148,6 +152,7 @@ func resourceConnectorRead(ctx context.Context, d *schema.ResourceData, meta int
 	}
 
 	d.Set("access_role", output.AccessRole)
+	d.Set("arn", output.Arn)
 	if err := d.Set("as2_config", flattenAs2Config(output.As2Config)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting as2_config: %s", err)
 	}

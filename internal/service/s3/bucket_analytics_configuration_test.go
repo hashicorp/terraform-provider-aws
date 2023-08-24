@@ -7,11 +7,11 @@ import (
 	"context"
 	"fmt"
 	"reflect"
-	"regexp"
 	"sort"
 	"testing"
 	"time"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/s3"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
@@ -149,7 +149,7 @@ func TestAccS3BucketAnalyticsConfiguration_WithFilter_empty(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccBucketAnalyticsConfigurationConfig_emptyFilter(rName, rName),
-				ExpectError: regexp.MustCompile(`one of .* must be specified`),
+				ExpectError: regexache.MustCompile(`one of .* must be specified`),
 			},
 		},
 	})
@@ -392,7 +392,7 @@ func TestAccS3BucketAnalyticsConfiguration_WithStorageClassAnalysis_empty(t *tes
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccBucketAnalyticsConfigurationConfig_emptyStorageClassAnalysis(rName, rName),
-				ExpectError: regexp.MustCompile(`running pre-apply refresh`),
+				ExpectError: regexache.MustCompile(`running pre-apply refresh`),
 			},
 		},
 	})

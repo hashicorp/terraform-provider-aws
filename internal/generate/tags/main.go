@@ -10,10 +10,10 @@ import (
 	"flag"
 	"fmt"
 	"os"
-	"regexp"
 	"strings"
 	"time"
 
+	"github.com/YakDriver/regexache"
 	"github.com/hashicorp/terraform-provider-aws/internal/generate/common"
 	v1 "github.com/hashicorp/terraform-provider-aws/internal/generate/tags/templates/v1"
 	v2 "github.com/hashicorp/terraform-provider-aws/internal/generate/tags/templates/v2"
@@ -85,10 +85,11 @@ var (
 	parentNotFoundErrMsg  = flag.String("ParentNotFoundErrMsg", "", "Parent 'NotFound' Error Message")
 
 	sdkServicePackage = flag.String("AWSSDKServicePackage", "", "AWS Go SDK package to use. Defaults to the provider service package name.")
-	sdkVersion        = flag.Int("AWSSDKVersion", sdkV1, "Version of the AWS SDK Go to use i.e. 1 or 2")
+	sdkVersion        = flag.Int("AWSSDKVersion", sdkV1, "Version of the AWS Go SDK to use i.e. 1 or 2")
 	kvtValues         = flag.Bool("KVTValues", false, "Whether KVT string map is of string pointers")
-	skipServiceImp    = flag.Bool("SkipAWSServiceImp", false, "Whether to skip importing the AWS service package")
+	skipAWSImp        = flag.Bool("SkipAWSImp", false, "Whether to skip importing the AWS Go SDK aws package") // nosemgrep:ci.aws-in-var-name
 	skipNamesImp      = flag.Bool("SkipNamesImp", false, "Whether to skip importing names")
+	skipServiceImp    = flag.Bool("SkipAWSServiceImp", false, "Whether to skip importing the AWS service package")
 	skipTypesImp      = flag.Bool("SkipTypesImp", false, "Whether to skip importing types")
 )
 
@@ -207,9 +208,12 @@ type TemplateData struct {
 	FmtPkg           bool
 	HelperSchemaPkg  bool
 	InternalTypesPkg bool
+	LoggingPkg       bool
 	NamesPkg         bool
+	SkipAWSImp       bool
 	SkipServiceImp   bool
 	SkipTypesImp     bool
+	TfLogPkg         bool
 	TfResourcePkg    bool
 	TimePkg          bool
 
@@ -296,9 +300,12 @@ func main() {
 		FmtPkg:           *updateTags,
 		HelperSchemaPkg:  awsPkg == "autoscaling",
 		InternalTypesPkg: (*listTags && *listTagsFunc == defaultListTagsFunc) || *serviceTagsMap || *serviceTagsSlice,
+		LoggingPkg:       *updateTags,
 		NamesPkg:         *updateTags && !*skipNamesImp,
+		SkipAWSImp:       *skipAWSImp,
 		SkipServiceImp:   *skipServiceImp,
 		SkipTypesImp:     *skipTypesImp,
+		TfLogPkg:         *updateTags,
 		TfResourcePkg:    (*getTag || *waitForPropagation),
 		TimePkg:          *waitForPropagation,
 
@@ -410,8 +417,8 @@ func main() {
 }
 
 func toSnakeCase(str string) string {
-	result := regexp.MustCompile("(.)([A-Z][a-z]+)").ReplaceAllString(str, "${1}_${2}")
-	result = regexp.MustCompile("([a-z0-9])([A-Z])").ReplaceAllString(result, "${1}_${2}")
+	result := regexache.MustCompile("(.)([A-Z][a-z]+)").ReplaceAllString(str, "${1}_${2}")
+	result = regexache.MustCompile("([a-z0-9])([A-Z])").ReplaceAllString(result, "${1}_${2}")
 	return strings.ToLower(result)
 }
 

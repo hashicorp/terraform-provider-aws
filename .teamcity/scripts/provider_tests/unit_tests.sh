@@ -16,6 +16,7 @@ go test \
     ./internal/flex/... \
     ./internal/framework/... \
     ./internal/generate/... \
+    ./internal/logging/... \
     ./internal/maps/... \
     ./internal/provider/... \
     ./internal/sdktypes/... \

@@ -7,6 +7,7 @@ import (
 	"context"
 
 	aws_sdkv1 "github.com/aws/aws-sdk-go/aws"
+	endpoints_sdkv1 "github.com/aws/aws-sdk-go/aws/endpoints"
 	request_sdkv1 "github.com/aws/aws-sdk-go/aws/request"
 	session_sdkv1 "github.com/aws/aws-sdk-go/aws/session"
 	s3_sdkv1 "github.com/aws/aws-sdk-go/service/s3"
@@ -19,6 +20,10 @@ func (p *servicePackage) NewConn(ctx context.Context, m map[string]any) (*s3_sdk
 	config := &aws_sdkv1.Config{
 		Endpoint:         aws_sdkv1.String(m["endpoint"].(string)),
 		S3ForcePathStyle: aws_sdkv1.Bool(m["s3_use_path_style"].(bool)),
+	}
+
+	if v, ok := m["s3_us_east_1_regional_endpoint"]; ok {
+		config.S3UsEast1RegionalEndpoint = v.(endpoints_sdkv1.S3UsEast1RegionalEndpoint)
 	}
 
 	return s3_sdkv1.New(sess.Copy(config)), nil

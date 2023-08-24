@@ -7,9 +7,9 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"regexp"
 	"strings"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/servicediscovery"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -41,9 +41,9 @@ func ResourceInstance() *schema.Resource {
 				Elem:     &schema.Schema{Type: schema.TypeString},
 				ValidateDiagFunc: verify.ValidAllDiag(
 					validation.MapKeyLenBetween(1, 255),
-					validation.MapKeyMatch(regexp.MustCompile(`^[a-zA-Z0-9!-~]+$`), ""),
+					validation.MapKeyMatch(regexache.MustCompile(`^[a-zA-Z0-9!-~]+$`), ""),
 					validation.MapValueLenBetween(0, 1024),
-					validation.MapValueMatch(regexp.MustCompile(`^([a-zA-Z0-9!-~][ \ta-zA-Z0-9!-~]*){0,1}[a-zA-Z0-9!-~]{0,1}$`), ""),
+					validation.MapValueMatch(regexache.MustCompile(`^([a-zA-Z0-9!-~][ \ta-zA-Z0-9!-~]*){0,1}[a-zA-Z0-9!-~]{0,1}$`), ""),
 				),
 			},
 			"instance_id": {
@@ -52,7 +52,7 @@ func ResourceInstance() *schema.Resource {
 				ForceNew: true,
 				ValidateFunc: validation.All(
 					validation.StringLenBetween(1, 64),
-					validation.StringMatch(regexp.MustCompile(`^[0-9a-zA-Z_/:.@-]+$`), ""),
+					validation.StringMatch(regexache.MustCompile(`^[0-9a-zA-Z_/:.@-]+$`), ""),
 				),
 			},
 			"service_id": {
