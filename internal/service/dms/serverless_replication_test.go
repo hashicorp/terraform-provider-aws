@@ -164,7 +164,7 @@ func testAccCheckReplicationDestroy(ctx context.Context) resource.TestCheckFunc 
 
 func testAccServerlessReplication_basic(rName string) string {
 	return acctest.ConfigCompose(
-		serverlessReplicationDbToDb(rName),
+		serverlessReplicationDBToDB(rName),
 		serverlessReplicationBase(rName),
 		fmt.Sprintf(`
 resource "aws_dms_serverless_replication" "test" {
@@ -174,7 +174,7 @@ resource "aws_dms_serverless_replication" "test" {
   source_endpoint_arn           = aws_dms_endpoint.source.endpoint_arn
   target_endpoint_arn           = aws_dms_endpoint.target.endpoint_arn
   table_mappings                = "{\"rules\":[{\"rule-type\":\"selection\",\"rule-id\":\"1\",\"rule-name\":\"1\",\"object-locator\":{\"schema-name\":\"%%\",\"table-name\":\"%%\"},\"rule-action\":\"include\"}]}"
-	
+
   compute_config {
     replication_subnet_group_id  = aws_dms_replication_subnet_group.test.replication_subnet_group_id
     max_capacity_units           = "128"
@@ -187,7 +187,7 @@ resource "aws_dms_serverless_replication" "test" {
 
 func testAccServerlessReplication_update(rName, replicationType string, minCapacity, maxCapacity int) string {
 	return acctest.ConfigCompose(
-		serverlessReplicationDbToDb(rName),
+		serverlessReplicationDBToDB(rName),
 		serverlessReplicationBase(rName),
 		fmt.Sprintf(`
 resource "aws_dms_serverless_replication" "test" {
@@ -210,7 +210,7 @@ resource "aws_dms_serverless_replication" "test" {
 
 func testAccServerlessReplication_startReplication(rName string, start bool) string {
 	return acctest.ConfigCompose(
-		serverlessReplicationDbToDb(rName),
+		serverlessReplicationDBToDB(rName),
 		serverlessReplicationBase(rName),
 		fmt.Sprintf(`
 resource "aws_dms_serverless_replication" "test" {
@@ -233,7 +233,7 @@ resource "aws_dms_serverless_replication" "test" {
 `, rName, start))
 }
 
-func serverlessReplicationDbToDb(rName string) string {
+func serverlessReplicationDBToDB(rName string) string {
 	return acctest.ConfigCompose(
 		fmt.Sprintf(`
 resource "aws_rds_cluster_parameter_group" "test" {
