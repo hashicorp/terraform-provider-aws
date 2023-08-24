@@ -13,6 +13,7 @@ import (
 	cloudcontrol_sdkv2 "github.com/aws/aws-sdk-go-v2/service/cloudcontrol"
 	cloudwatchlogs_sdkv2 "github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs"
 	codecatalyst_sdkv2 "github.com/aws/aws-sdk-go-v2/service/codecatalyst"
+	codestarconnections_sdkv2 "github.com/aws/aws-sdk-go-v2/service/codestarconnections"
 	codestarnotifications_sdkv2 "github.com/aws/aws-sdk-go-v2/service/codestarnotifications"
 	comprehend_sdkv2 "github.com/aws/aws-sdk-go-v2/service/comprehend"
 	computeoptimizer_sdkv2 "github.com/aws/aws-sdk-go-v2/service/computeoptimizer"
@@ -98,7 +99,6 @@ import (
 	codedeploy_sdkv1 "github.com/aws/aws-sdk-go/service/codedeploy"
 	codegurureviewer_sdkv1 "github.com/aws/aws-sdk-go/service/codegurureviewer"
 	codepipeline_sdkv1 "github.com/aws/aws-sdk-go/service/codepipeline"
-	codestarconnections_sdkv1 "github.com/aws/aws-sdk-go/service/codestarconnections"
 	cognitoidentity_sdkv1 "github.com/aws/aws-sdk-go/service/cognitoidentity"
 	cognitoidentityprovider_sdkv1 "github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
 	configservice_sdkv1 "github.com/aws/aws-sdk-go/service/configservice"
@@ -400,8 +400,8 @@ func (c *AWSClient) CodePipelineConn(ctx context.Context) *codepipeline_sdkv1.Co
 	return errs.Must(conn[*codepipeline_sdkv1.CodePipeline](ctx, c, names.CodePipeline))
 }
 
-func (c *AWSClient) CodeStarConnectionsConn(ctx context.Context) *codestarconnections_sdkv1.CodeStarConnections {
-	return errs.Must(conn[*codestarconnections_sdkv1.CodeStarConnections](ctx, c, names.CodeStarConnections))
+func (c *AWSClient) CodeStarConnectionsClient(ctx context.Context) *codestarconnections_sdkv2.Client {
+	return errs.Must(client[*codestarconnections_sdkv2.Client](ctx, c, names.CodeStarConnections))
 }
 
 func (c *AWSClient) CodeStarNotificationsClient(ctx context.Context) *codestarnotifications_sdkv2.Client {
