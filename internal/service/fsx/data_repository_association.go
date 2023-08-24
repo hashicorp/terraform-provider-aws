@@ -185,26 +185,57 @@ func resourceDataRepositoryAssociationCreate(ctx context.Context, d *schema.Reso
 	result, err := conn.CreateDataRepositoryAssociationWithContext(ctx, input)
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating FSx Lustre Data Repository Association: %s", err)
+		return sdkdiag.AppendErrorf(diags, "creating FSx for Lustre Data Repository Association: %s", err)
 	}
 
 	d.SetId(aws.StringValue(result.Association.AssociationId))
 
 	if _, err := waitDataRepositoryAssociationCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "waiting for FSx Lustre Data Repository Association (%s) create: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for FSx for Lustre Data Repository Association (%s) create: %s", d.Id(), err)
 	}
 
 	return append(diags, resourceDataRepositoryAssociationRead(ctx, d, meta)...)
+}
+
+func resourceDataRepositoryAssociationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).FSxConn(ctx)
+
+	association, err := FindDataRepositoryAssociationByID(ctx, conn, d.Id())
+
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] FSx for Lustre Data Repository Association (%s) not found, removing from state", d.Id())
+		d.SetId("")
+		return diags
+	}
+
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "reading FSx for Lustre Data Repository Association (%s): %s", d.Id(), err)
+	}
+
+	d.Set("arn", association.ResourceARN)
+	d.Set("batch_import_meta_data_on_create", association.BatchImportMetaDataOnCreate)
+	d.Set("data_repository_path", association.DataRepositoryPath)
+	d.Set("file_system_id", association.FileSystemId)
+	d.Set("file_system_path", association.FileSystemPath)
+	d.Set("imported_file_chunk_size", association.ImportedFileChunkSize)
+	if err := d.Set("s3", flattenDataRepositoryAssociationS3(association.S3)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting s3: %s", err)
+	}
+
+	setTagsOut(ctx, association.Tags)
+
+	return diags
 }
 
 func resourceDataRepositoryAssociationUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).FSxConn(ctx)
 
-	if d.HasChangesExcept("tags_all", "tags") {
+	if d.HasChangesExcept("tags", "tags_all") {
 		input := &fsx.UpdateDataRepositoryAssociationInput{
-			ClientRequestToken: aws.String(id.UniqueId()),
 			AssociationId:      aws.String(d.Id()),
+			ClientRequestToken: aws.String(id.UniqueId()),
 		}
 
 		if d.HasChange("imported_file_chunk_size") {
@@ -216,46 +247,17 @@ func resourceDataRepositoryAssociationUpdate(ctx context.Context, d *schema.Reso
 		}
 
 		_, err := conn.UpdateDataRepositoryAssociationWithContext(ctx, input)
+
 		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating FSX Lustre Data Repository Association (%s): %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "updating FSx for Lustre Data Repository Association (%s): %s", d.Id(), err)
 		}
 
 		if _, err := waitDataRepositoryAssociationUpdated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
-			return sdkdiag.AppendErrorf(diags, "waiting for FSx Lustre Data Repository Association (%s) update: %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "waiting for FSx for Lustre Data Repository Association (%s) update: %s", d.Id(), err)
 		}
 	}
 
 	return append(diags, resourceDataRepositoryAssociationRead(ctx, d, meta)...)
-}
-
-func resourceDataRepositoryAssociationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).FSxConn(ctx)
-
-	association, err := FindDataRepositoryAssociationByID(ctx, conn, d.Id())
-	if !d.IsNewResource() && tfresource.NotFound(err) {
-		log.Printf("[WARN] FSx Lustre Data Repository Association (%s) not found, removing from state", d.Id())
-		d.SetId("")
-		return diags
-	}
-
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading FSx Lustre Data Repository Association (%s): %s", d.Id(), err)
-	}
-
-	d.Set("arn", association.ResourceARN)
-	d.Set("batch_import_meta_data_on_create", association.BatchImportMetaDataOnCreate)
-	d.Set("data_repository_path", association.DataRepositoryPath)
-	d.Set("file_system_id", association.FileSystemId)
-	d.Set("file_system_path", association.FileSystemPath)
-	d.Set("imported_file_chunk_size", association.ImportedFileChunkSize)
-	if err := d.Set("s3", flattenDataRepositoryAssociationS3(association.S3)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting s3 data repository configuration: %s", err)
-	}
-
-	setTagsOut(ctx, association.Tags)
-
-	return diags
 }
 
 func resourceDataRepositoryAssociationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
@@ -263,12 +265,12 @@ func resourceDataRepositoryAssociationDelete(ctx context.Context, d *schema.Reso
 	conn := meta.(*conns.AWSClient).FSxConn(ctx)
 
 	request := &fsx.DeleteDataRepositoryAssociationInput{
-		ClientRequestToken:     aws.String(id.UniqueId()),
 		AssociationId:          aws.String(d.Id()),
+		ClientRequestToken:     aws.String(id.UniqueId()),
 		DeleteDataInFileSystem: aws.Bool(d.Get("delete_data_in_filesystem").(bool)),
 	}
 
-	log.Printf("[DEBUG] Deleting FSx Lustre Data Repository Association: %s", d.Id())
+	log.Printf("[DEBUG] Deleting FSx for Lustre Data Repository Association: %s", d.Id())
 	_, err := conn.DeleteDataRepositoryAssociationWithContext(ctx, request)
 
 	if tfawserr.ErrCodeEquals(err, fsx.ErrCodeDataRepositoryAssociationNotFound) {
@@ -276,11 +278,11 @@ func resourceDataRepositoryAssociationDelete(ctx context.Context, d *schema.Reso
 	}
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "deleting FSx Lustre Data Repository Association (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting FSx for Lustre Data Repository Association (%s): %s", d.Id(), err)
 	}
 
 	if _, err := waitDataRepositoryAssociationDeleted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "waiting for FSx Lustre Data Repository Association (%s) to deleted: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for FSx for Lustre Data Repository Association (%s) delete: %s", d.Id(), err)
 	}
 
 	return diags

@@ -540,25 +540,22 @@ func TestAccFSxDataRepositoryAssociation_s3FullPolicy(t *testing.T) {
 	})
 }
 
-func testAccCheckDataRepositoryAssociationExists(ctx context.Context, resourceName string, assoc *fsx.DataRepositoryAssociation) resource.TestCheckFunc {
+func testAccCheckDataRepositoryAssociationExists(ctx context.Context, n string, v *fsx.DataRepositoryAssociation) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[resourceName]
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return fmt.Errorf("Not found: %s", resourceName)
+			return fmt.Errorf("Not found: %s", n)
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).FSxConn(ctx)
 
-		association, err := tffsx.FindDataRepositoryAssociationByID(ctx, conn, rs.Primary.ID)
+		output, err := tffsx.FindDataRepositoryAssociationByID(ctx, conn, rs.Primary.ID)
+
 		if err != nil {
 			return err
 		}
 
-		if association == nil {
-			return fmt.Errorf("FSx Lustre Data Repository Association (%s) not found", rs.Primary.ID)
-		}
-
-		*assoc = *association
+		*v = *output
 
 		return nil
 	}
@@ -573,15 +570,19 @@ func testAccCheckDataRepositoryAssociationDestroy(ctx context.Context) resource.
 				continue
 			}
 
-			filesystem, err := tffsx.FindFileSystemByID(ctx, conn, rs.Primary.ID)
+			_, err := tffsx.FindDataRepositoryAssociationByID(ctx, conn, rs.Primary.ID)
+
 			if tfresource.NotFound(err) {
 				continue
 			}
 
-			if filesystem != nil {
-				return fmt.Errorf("FSx Lustre File System (%s) still exists", rs.Primary.ID)
+			if err != nil {
+				return err
 			}
+
+			return fmt.Errorf("FSx for Lustre Data Repository Association %s still exists", rs.Primary.ID)
 		}
+
 		return nil
 	}
 }
