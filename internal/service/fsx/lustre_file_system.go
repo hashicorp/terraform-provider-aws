@@ -297,129 +297,127 @@ func resourceLustreFileSystemCreate(ctx context.Context, d *schema.ResourceData,
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).FSxConn(ctx)
 
-	input := &fsx.CreateFileSystemInput{
+	inputC := &fsx.CreateFileSystemInput{
 		ClientRequestToken: aws.String(id.UniqueId()),
 		FileSystemType:     aws.String(fsx.FileSystemTypeLustre),
-		StorageCapacity:    aws.Int64(int64(d.Get("storage_capacity").(int))),
-		StorageType:        aws.String(d.Get("storage_type").(string)),
-		SubnetIds:          flex.ExpandStringList(d.Get("subnet_ids").([]interface{})),
 		LustreConfiguration: &fsx.CreateFileSystemLustreConfiguration{
 			DeploymentType: aws.String(d.Get("deployment_type").(string)),
 		},
-		Tags: getTagsIn(ctx),
+		StorageCapacity: aws.Int64(int64(d.Get("storage_capacity").(int))),
+		StorageType:     aws.String(d.Get("storage_type").(string)),
+		SubnetIds:       flex.ExpandStringList(d.Get("subnet_ids").([]interface{})),
+		Tags:            getTagsIn(ctx),
 	}
-
-	backupInput := &fsx.CreateFileSystemFromBackupInput{
+	inputB := &fsx.CreateFileSystemFromBackupInput{
 		ClientRequestToken: aws.String(id.UniqueId()),
-		StorageType:        aws.String(d.Get("storage_type").(string)),
-		SubnetIds:          flex.ExpandStringList(d.Get("subnet_ids").([]interface{})),
 		LustreConfiguration: &fsx.CreateFileSystemLustreConfiguration{
 			DeploymentType: aws.String(d.Get("deployment_type").(string)),
 		},
-		Tags: getTagsIn(ctx),
-	}
-
-	//Applicable only for TypePersistent1 and TypePersistent2
-	if v, ok := d.GetOk("kms_key_id"); ok {
-		input.KmsKeyId = aws.String(v.(string))
-		backupInput.KmsKeyId = aws.String(v.(string))
-	}
-
-	if v, ok := d.GetOk("automatic_backup_retention_days"); ok {
-		input.LustreConfiguration.AutomaticBackupRetentionDays = aws.Int64(int64(v.(int)))
-		backupInput.LustreConfiguration.AutomaticBackupRetentionDays = aws.Int64(int64(v.(int)))
-	}
-
-	if v, ok := d.GetOk("daily_automatic_backup_start_time"); ok {
-		input.LustreConfiguration.DailyAutomaticBackupStartTime = aws.String(v.(string))
-		backupInput.LustreConfiguration.DailyAutomaticBackupStartTime = aws.String(v.(string))
-	}
-
-	if v, ok := d.GetOk("export_path"); ok {
-		input.LustreConfiguration.ExportPath = aws.String(v.(string))
-		backupInput.LustreConfiguration.ExportPath = aws.String(v.(string))
-	}
-
-	if v, ok := d.GetOk("import_path"); ok {
-		input.LustreConfiguration.ImportPath = aws.String(v.(string))
-		backupInput.LustreConfiguration.ImportPath = aws.String(v.(string))
-	}
-
-	if v, ok := d.GetOk("imported_file_chunk_size"); ok {
-		input.LustreConfiguration.ImportedFileChunkSize = aws.Int64(int64(v.(int)))
-		backupInput.LustreConfiguration.ImportedFileChunkSize = aws.Int64(int64(v.(int)))
-	}
-
-	if v, ok := d.GetOk("security_group_ids"); ok {
-		input.SecurityGroupIds = flex.ExpandStringSet(v.(*schema.Set))
-		backupInput.SecurityGroupIds = flex.ExpandStringSet(v.(*schema.Set))
-	}
-
-	if v, ok := d.GetOk("weekly_maintenance_start_time"); ok {
-		input.LustreConfiguration.WeeklyMaintenanceStartTime = aws.String(v.(string))
-		backupInput.LustreConfiguration.WeeklyMaintenanceStartTime = aws.String(v.(string))
-	}
-
-	if v, ok := d.GetOk("per_unit_storage_throughput"); ok {
-		input.LustreConfiguration.PerUnitStorageThroughput = aws.Int64(int64(v.(int)))
-		backupInput.LustreConfiguration.PerUnitStorageThroughput = aws.Int64(int64(v.(int)))
-	}
-
-	if v, ok := d.GetOk("drive_cache_type"); ok {
-		input.LustreConfiguration.DriveCacheType = aws.String(v.(string))
-		backupInput.LustreConfiguration.DriveCacheType = aws.String(v.(string))
+		StorageType: aws.String(d.Get("storage_type").(string)),
+		SubnetIds:   flex.ExpandStringList(d.Get("subnet_ids").([]interface{})),
+		Tags:        getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("auto_import_policy"); ok {
-		input.LustreConfiguration.AutoImportPolicy = aws.String(v.(string))
-		backupInput.LustreConfiguration.AutoImportPolicy = aws.String(v.(string))
+		inputC.LustreConfiguration.AutoImportPolicy = aws.String(v.(string))
+		inputB.LustreConfiguration.AutoImportPolicy = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("automatic_backup_retention_days"); ok {
+		inputC.LustreConfiguration.AutomaticBackupRetentionDays = aws.Int64(int64(v.(int)))
+		inputB.LustreConfiguration.AutomaticBackupRetentionDays = aws.Int64(int64(v.(int)))
 	}
 
 	if v, ok := d.GetOk("copy_tags_to_backups"); ok {
-		input.LustreConfiguration.CopyTagsToBackups = aws.Bool(v.(bool))
-		backupInput.LustreConfiguration.CopyTagsToBackups = aws.Bool(v.(bool))
+		inputC.LustreConfiguration.CopyTagsToBackups = aws.Bool(v.(bool))
+		inputB.LustreConfiguration.CopyTagsToBackups = aws.Bool(v.(bool))
+	}
+
+	if v, ok := d.GetOk("daily_automatic_backup_start_time"); ok {
+		inputC.LustreConfiguration.DailyAutomaticBackupStartTime = aws.String(v.(string))
+		inputB.LustreConfiguration.DailyAutomaticBackupStartTime = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("data_compression_type"); ok {
-		input.LustreConfiguration.DataCompressionType = aws.String(v.(string))
-		backupInput.LustreConfiguration.DataCompressionType = aws.String(v.(string))
+		inputC.LustreConfiguration.DataCompressionType = aws.String(v.(string))
+		inputB.LustreConfiguration.DataCompressionType = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("drive_cache_type"); ok {
+		inputC.LustreConfiguration.DriveCacheType = aws.String(v.(string))
+		inputB.LustreConfiguration.DriveCacheType = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("export_path"); ok {
+		inputC.LustreConfiguration.ExportPath = aws.String(v.(string))
+		inputB.LustreConfiguration.ExportPath = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("file_system_type_version"); ok {
-		input.FileSystemTypeVersion = aws.String(v.(string))
-		backupInput.FileSystemTypeVersion = aws.String(v.(string))
+		inputC.FileSystemTypeVersion = aws.String(v.(string))
+		inputB.FileSystemTypeVersion = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("import_path"); ok {
+		inputC.LustreConfiguration.ImportPath = aws.String(v.(string))
+		inputB.LustreConfiguration.ImportPath = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("imported_file_chunk_size"); ok {
+		inputC.LustreConfiguration.ImportedFileChunkSize = aws.Int64(int64(v.(int)))
+		inputB.LustreConfiguration.ImportedFileChunkSize = aws.Int64(int64(v.(int)))
+	}
+
+	// Applicable only for TypePersistent1 and TypePersistent2.
+	if v, ok := d.GetOk("kms_key_id"); ok {
+		inputC.KmsKeyId = aws.String(v.(string))
+		inputB.KmsKeyId = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("log_configuration"); ok && len(v.([]interface{})) > 0 {
-		input.LustreConfiguration.LogConfiguration = expandLustreLogCreateConfiguration(v.([]interface{}))
-		backupInput.LustreConfiguration.LogConfiguration = expandLustreLogCreateConfiguration(v.([]interface{}))
+		inputC.LustreConfiguration.LogConfiguration = expandLustreLogCreateConfiguration(v.([]interface{}))
+		inputB.LustreConfiguration.LogConfiguration = expandLustreLogCreateConfiguration(v.([]interface{}))
+	}
+
+	if v, ok := d.GetOk("per_unit_storage_throughput"); ok {
+		inputC.LustreConfiguration.PerUnitStorageThroughput = aws.Int64(int64(v.(int)))
+		inputB.LustreConfiguration.PerUnitStorageThroughput = aws.Int64(int64(v.(int)))
 	}
 
 	if v, ok := d.GetOk("root_squash_configuration"); ok && len(v.([]interface{})) > 0 {
-		input.LustreConfiguration.RootSquashConfiguration = expandLustreRootSquashConfiguration(v.([]interface{}))
-		backupInput.LustreConfiguration.RootSquashConfiguration = expandLustreRootSquashConfiguration(v.([]interface{}))
+		inputC.LustreConfiguration.RootSquashConfiguration = expandLustreRootSquashConfiguration(v.([]interface{}))
+		inputB.LustreConfiguration.RootSquashConfiguration = expandLustreRootSquashConfiguration(v.([]interface{}))
+	}
+
+	if v, ok := d.GetOk("security_group_ids"); ok {
+		inputC.SecurityGroupIds = flex.ExpandStringSet(v.(*schema.Set))
+		inputB.SecurityGroupIds = flex.ExpandStringSet(v.(*schema.Set))
+	}
+
+	if v, ok := d.GetOk("weekly_maintenance_start_time"); ok {
+		inputC.LustreConfiguration.WeeklyMaintenanceStartTime = aws.String(v.(string))
+		inputB.LustreConfiguration.WeeklyMaintenanceStartTime = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("backup_id"); ok {
-		backupInput.BackupId = aws.String(v.(string))
+		backupID := v.(string)
+		inputB.BackupId = aws.String(backupID)
 
-		log.Printf("[DEBUG] Creating FSx Lustre File System: %s", backupInput)
-		result, err := conn.CreateFileSystemFromBackupWithContext(ctx, backupInput)
+		output, err := conn.CreateFileSystemFromBackupWithContext(ctx, inputB)
 
 		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "creating FSx Lustre File System from backup: %s", err)
+			return sdkdiag.AppendErrorf(diags, "creating FSx Lustre File System from backup (%s): %s", backupID, err)
 		}
 
-		d.SetId(aws.StringValue(result.FileSystem.FileSystemId))
+		d.SetId(aws.StringValue(output.FileSystem.FileSystemId))
 	} else {
-		log.Printf("[DEBUG] Creating FSx Lustre File System: %s", input)
-		result, err := conn.CreateFileSystemWithContext(ctx, input)
+		output, err := conn.CreateFileSystemWithContext(ctx, inputC)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "creating FSx Lustre File System: %s", err)
 		}
 
-		d.SetId(aws.StringValue(result.FileSystem.FileSystemId))
+		d.SetId(aws.StringValue(output.FileSystem.FileSystemId))
 	}
 
 	if _, err := waitFileSystemCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
