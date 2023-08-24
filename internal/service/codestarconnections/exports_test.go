@@ -6,6 +6,8 @@ package codestarconnections
 // Exports for use in tests only.
 var (
 	FindConnectionByARN = findConnectionByARN
+	FindHostByARN       = findHostByARN
 
 	ResourceConnection = resourceConnection
+	ResourceHost       = resourceHost
 )

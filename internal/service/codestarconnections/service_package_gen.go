@@ -42,8 +42,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceHost,
+			Factory:  resourceHost,
 			TypeName: "aws_codestarconnections_host",
+			Name:     "Host",
 		},
 	}
 }
