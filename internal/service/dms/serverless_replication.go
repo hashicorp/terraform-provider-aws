@@ -179,7 +179,7 @@ func resourceServerlessReplicationCreate(ctx context.Context, d *schema.Resource
 	}
 
 	// Field can only be set if the engine type is of type Neptune
-	if v, ok := d.GetOk("supplemental_settings"); ok && len(v.(string)) > 0 {
+	if v, _ := d.GetOk("supplemental_settings"); len(v.(string)) > 0 {
 		apiObject.SupplementalSettings = aws.String(d.Get("supplemental_settings").(string))
 	}
 
@@ -205,7 +205,7 @@ func resourceServerlessReplicationRead(ctx context.Context, d *schema.ResourceDa
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DMSConn(ctx)
 
-	response, err := conn.DescribeReplicationConfigs(&dms.DescribeReplicationConfigsInput{
+	response, err := conn.DescribeReplicationConfigsWithContext(ctx, &dms.DescribeReplicationConfigsInput{
 		Filters: []*dms.Filter{
 			{
 				Name:   aws.String("replication-config-id"),
@@ -426,12 +426,12 @@ func startReplication(ctx context.Context, id string, conn *dms.DatabaseMigratio
 
 	replication, _ := FindReplicationById(ctx, id, conn)
 
-	if *replication.Status == replicationStatusRunning {
+	if aws.StringValue(replication.Status) == replicationStatusRunning {
 		return nil
 	}
 
 	startReplicationType := replicationTypeValueStartReplication
-	if *replication.Status != replicationStatusReady {
+	if aws.StringValue(replication.Status) != replicationStatusReady {
 		startReplicationType = replicationTypeValueResumeProcessing
 	}
 
@@ -456,8 +456,9 @@ func stopReplication(ctx context.Context, id string, conn *dms.DatabaseMigration
 	log.Printf("[DEBUG] Stopping DMS Serverless Replication: (%s)", id)
 
 	replication, _ := FindReplicationById(ctx, id, conn)
+	status := aws.StringValue(replication.Status)
 
-	if *replication.Status == replicationStatusStopped || *replication.Status == replicationStatusCreated || *replication.Status == replicationStatusFailed {
+	if status == replicationStatusStopped || status == replicationStatusCreated || status == replicationStatusFailed {
 		return nil
 	}
 
