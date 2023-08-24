@@ -34,6 +34,7 @@ func ResourceDataRepositoryAssociation() *schema.Resource {
 		ReadWithoutTimeout:   resourceDataRepositoryAssociationRead,
 		UpdateWithoutTimeout: resourceDataRepositoryAssociationUpdate,
 		DeleteWithoutTimeout: resourceDataRepositoryAssociationDelete,
+
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
@@ -66,6 +67,11 @@ func ResourceDataRepositoryAssociation() *schema.Resource {
 					validation.StringLenBetween(3, 900),
 					validation.StringMatch(regexache.MustCompile(`^s3://`), "must begin with s3://"),
 				),
+			},
+			"delete_data_in_filesystem": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
 			},
 			"file_system_id": {
 				Type:     schema.TypeString,
@@ -141,11 +147,6 @@ func ResourceDataRepositoryAssociation() *schema.Resource {
 					},
 				},
 				DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
-			},
-			"delete_data_in_filesystem": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
 			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
