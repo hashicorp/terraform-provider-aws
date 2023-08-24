@@ -566,7 +566,7 @@ func testAccCheckDataRepositoryAssociationDestroy(ctx context.Context) resource.
 		conn := acctest.Provider.Meta().(*conns.AWSClient).FSxConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
-			if rs.Type != "aws_fsx_lustre_file_system" {
+			if rs.Type != "aws_fsx_data_repository_association" {
 				continue
 			}
 
