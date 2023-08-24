@@ -490,16 +490,16 @@ func resourceLustreFileSystemUpdate(ctx context.Context, d *schema.ResourceData,
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).FSxConn(ctx)
 
-	if d.HasChangesExcept("tags_all", "tags") {
-		var waitAdminAction = false
+	if d.HasChangesExcept("tags", "tags_all") {
+		waitAdminAction := false
 		input := &fsx.UpdateFileSystemInput{
 			ClientRequestToken:  aws.String(id.UniqueId()),
-			FileSystemId:        aws.String(d.Id()),
 			LustreConfiguration: &fsx.UpdateFileSystemLustreConfiguration{},
+			FileSystemId:        aws.String(d.Id()),
 		}
 
-		if d.HasChange("weekly_maintenance_start_time") {
-			input.LustreConfiguration.WeeklyMaintenanceStartTime = aws.String(d.Get("weekly_maintenance_start_time").(string))
+		if d.HasChange("auto_import_policy") {
+			input.LustreConfiguration.AutoImportPolicy = aws.String(d.Get("auto_import_policy").(string))
 		}
 
 		if d.HasChange("automatic_backup_retention_days") {
@@ -508,14 +508,6 @@ func resourceLustreFileSystemUpdate(ctx context.Context, d *schema.ResourceData,
 
 		if d.HasChange("daily_automatic_backup_start_time") {
 			input.LustreConfiguration.DailyAutomaticBackupStartTime = aws.String(d.Get("daily_automatic_backup_start_time").(string))
-		}
-
-		if d.HasChange("auto_import_policy") {
-			input.LustreConfiguration.AutoImportPolicy = aws.String(d.Get("auto_import_policy").(string))
-		}
-
-		if d.HasChange("storage_capacity") {
-			input.StorageCapacity = aws.Int64(int64(d.Get("storage_capacity").(int)))
 		}
 
 		if v, ok := d.GetOk("data_compression_type"); ok {
@@ -532,7 +524,16 @@ func resourceLustreFileSystemUpdate(ctx context.Context, d *schema.ResourceData,
 			waitAdminAction = true
 		}
 
+		if d.HasChange("storage_capacity") {
+			input.StorageCapacity = aws.Int64(int64(d.Get("storage_capacity").(int)))
+		}
+
+		if d.HasChange("weekly_maintenance_start_time") {
+			input.LustreConfiguration.WeeklyMaintenanceStartTime = aws.String(d.Get("weekly_maintenance_start_time").(string))
+		}
+
 		_, err := conn.UpdateFileSystemWithContext(ctx, input)
+
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating FSX Lustre File System (%s): %s", d.Id(), err)
 		}
@@ -543,7 +544,7 @@ func resourceLustreFileSystemUpdate(ctx context.Context, d *schema.ResourceData,
 
 		if waitAdminAction {
 			if _, err := waitAdministrativeActionCompleted(ctx, conn, d.Id(), fsx.AdministrativeActionTypeFileSystemUpdate, d.Timeout(schema.TimeoutUpdate)); err != nil {
-				return sdkdiag.AppendErrorf(diags, "waiting for FSx Lustre File System (%s) Log Configuratio to be updated: %s", d.Id(), err)
+				return sdkdiag.AppendErrorf(diags, "waiting for FSx Lustre File System (%s) administrative action complete: %s", d.Id(), err)
 			}
 		}
 	}
