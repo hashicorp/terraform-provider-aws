@@ -243,6 +243,7 @@ func (r *resourceJobQueue) Update(ctx context.Context, request resource.UpdateRe
 				"cannot remove the fair share scheduling policy",
 				"cannot remove scheduling policy",
 			)
+			return
 		}
 	}
 
