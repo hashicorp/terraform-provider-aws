@@ -1023,7 +1023,9 @@ func testAccCheckLustreFileSystemRecreated(i, j *fsx.FileSystem) resource.TestCh
 }
 
 func testAccLustreFileSystemConfig_base(rName string) string {
-	return acctest.ConfigCompose(acctest.ConfigVPCWithSubnets(rName, 1))
+	return acctest.ConfigCompose(acctest.ConfigVPCWithSubnets(rName, 1), `
+data "aws_partition" "current" {}
+`)
 }
 
 func testAccLustreFileSystemConfig_exportPath(rName, exportPrefix string) string {
