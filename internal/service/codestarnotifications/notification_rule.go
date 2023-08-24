@@ -170,7 +170,7 @@ func resourceNotificationRuleRead(ctx context.Context, d *schema.ResourceData, m
 			"status":  t.TargetStatus,
 		})
 	}
-	if err = d.Set("target", targets); err != nil {
+	if err := d.Set("target", targets); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting target: %s", err)
 	}
 
