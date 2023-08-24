@@ -18,11 +18,13 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -431,7 +433,8 @@ func resourceLustreFileSystemRead(ctx context.Context, d *schema.ResourceData, m
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).FSxConn(ctx)
 
-	filesystem, err := FindFileSystemByID(ctx, conn, d.Id())
+	filesystem, err := FindLustreFileSystemByID(ctx, conn, d.Id())
+
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] FSx Lustre File System (%s) not found, removing from state", d.Id())
 		d.SetId("")
@@ -443,61 +446,42 @@ func resourceLustreFileSystemRead(ctx context.Context, d *schema.ResourceData, m
 	}
 
 	lustreConfig := filesystem.LustreConfiguration
-
-	if filesystem.WindowsConfiguration != nil {
-		return sdkdiag.AppendErrorf(diags, "expected FSx Lustre File System, found FSx Windows File System: %s", d.Id())
-	}
-
-	if lustreConfig == nil {
-		return sdkdiag.AppendErrorf(diags, "describing FSx Lustre File System (%s): empty Lustre configuration", d.Id())
-	}
-
 	if lustreConfig.DataRepositoryConfiguration == nil {
-		// Initialize an empty structure to simplify d.Set() handling
+		// Initialize an empty structure to simplify d.Set() handling.
 		lustreConfig.DataRepositoryConfiguration = &fsx.DataRepositoryConfiguration{}
 	}
 
 	d.Set("arn", filesystem.ResourceARN)
-	d.Set("dns_name", filesystem.DNSName)
-	d.Set("export_path", lustreConfig.DataRepositoryConfiguration.ExportPath)
-	d.Set("import_path", lustreConfig.DataRepositoryConfiguration.ImportPath)
 	d.Set("auto_import_policy", lustreConfig.DataRepositoryConfiguration.AutoImportPolicy)
-	d.Set("imported_file_chunk_size", lustreConfig.DataRepositoryConfiguration.ImportedFileChunkSize)
+	d.Set("automatic_backup_retention_days", lustreConfig.AutomaticBackupRetentionDays)
+	d.Set("copy_tags_to_backups", lustreConfig.CopyTagsToBackups)
+	d.Set("daily_automatic_backup_start_time", lustreConfig.DailyAutomaticBackupStartTime)
+	d.Set("data_compression_type", lustreConfig.DataCompressionType)
 	d.Set("deployment_type", lustreConfig.DeploymentType)
-	d.Set("per_unit_storage_throughput", lustreConfig.PerUnitStorageThroughput)
-	d.Set("mount_name", lustreConfig.MountName)
-	d.Set("storage_type", filesystem.StorageType)
+	d.Set("dns_name", filesystem.DNSName)
 	d.Set("drive_cache_type", lustreConfig.DriveCacheType)
+	d.Set("export_path", lustreConfig.DataRepositoryConfiguration.ExportPath)
+	d.Set("file_system_type_version", filesystem.FileSystemTypeVersion)
+	d.Set("import_path", lustreConfig.DataRepositoryConfiguration.ImportPath)
+	d.Set("imported_file_chunk_size", lustreConfig.DataRepositoryConfiguration.ImportedFileChunkSize)
 	d.Set("kms_key_id", filesystem.KmsKeyId)
-
-	if err := d.Set("network_interface_ids", aws.StringValueSlice(filesystem.NetworkInterfaceIds)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting network_interface_ids: %s", err)
-	}
-
-	d.Set("owner_id", filesystem.OwnerId)
-	d.Set("storage_capacity", filesystem.StorageCapacity)
-
-	if err := d.Set("subnet_ids", aws.StringValueSlice(filesystem.SubnetIds)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting subnet_ids: %s", err)
-	}
-
 	if err := d.Set("log_configuration", flattenLustreLogConfiguration(lustreConfig.LogConfiguration)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting log_configuration: %s", err)
 	}
-
+	d.Set("mount_name", lustreConfig.MountName)
+	d.Set("network_interface_ids", aws.StringValueSlice(filesystem.NetworkInterfaceIds))
+	d.Set("owner_id", filesystem.OwnerId)
+	d.Set("per_unit_storage_throughput", lustreConfig.PerUnitStorageThroughput)
 	if err := d.Set("root_squash_configuration", flattenLustreRootSquashConfiguration(lustreConfig.RootSquashConfiguration)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting root_squash_configuration: %s", err)
 	}
-
-	setTagsOut(ctx, filesystem.Tags)
-
+	d.Set("storage_capacity", filesystem.StorageCapacity)
+	d.Set("storage_type", filesystem.StorageType)
+	d.Set("subnet_ids", aws.StringValueSlice(filesystem.SubnetIds))
 	d.Set("vpc_id", filesystem.VpcId)
 	d.Set("weekly_maintenance_start_time", lustreConfig.WeeklyMaintenanceStartTime)
-	d.Set("automatic_backup_retention_days", lustreConfig.AutomaticBackupRetentionDays)
-	d.Set("daily_automatic_backup_start_time", lustreConfig.DailyAutomaticBackupStartTime)
-	d.Set("copy_tags_to_backups", lustreConfig.CopyTagsToBackups)
-	d.Set("data_compression_type", lustreConfig.DataCompressionType)
-	d.Set("file_system_type_version", filesystem.FileSystemTypeVersion)
+
+	setTagsOut(ctx, filesystem.Tags)
 
 	return diags
 }
@@ -674,4 +658,109 @@ func logStateFunc(v interface{}) string {
 		}
 	}
 	return value
+}
+
+func FindFileSystemByID(ctx context.Context, conn *fsx.FSx, id string) (*fsx.FileSystem, error) {
+	input := &fsx.DescribeFileSystemsInput{
+		FileSystemIds: []*string{aws.String(id)},
+	}
+
+	var filesystems []*fsx.FileSystem
+
+	err := conn.DescribeFileSystemsPagesWithContext(ctx, input, func(page *fsx.DescribeFileSystemsOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		filesystems = append(filesystems, page.FileSystems...)
+
+		return !lastPage
+	})
+
+	if tfawserr.ErrCodeEquals(err, fsx.ErrCodeFileSystemNotFound) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if len(filesystems) == 0 || filesystems[0] == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	if count := len(filesystems); count > 1 {
+		return nil, tfresource.NewTooManyResultsError(count, input)
+	}
+
+	return filesystems[0], nil
+}
+
+func FindLustreFileSystemByID(ctx context.Context, conn *fsx.FSx, id string) (*fsx.FileSystem, error) {
+	output, err := findFileSystemByIDAndType(ctx, conn, id, fsx.FileSystemTypeLustre)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output.LustreConfiguration == nil {
+		return nil, tfresource.NewEmptyResultError(nil)
+	}
+
+	return output, nil
+}
+
+func findFileSystemByIDAndType(ctx context.Context, conn *fsx.FSx, fsID, fsType string) (*fsx.FileSystem, error) {
+	input := &fsx.DescribeFileSystemsInput{
+		FileSystemIds: aws.StringSlice([]string{fsID}),
+	}
+	filter := func(fs *fsx.FileSystem) bool {
+		return aws.StringValue(fs.FileSystemType) == fsType
+	}
+
+	return findFileSystem(ctx, conn, input, filter)
+}
+
+func findFileSystem(ctx context.Context, conn *fsx.FSx, input *fsx.DescribeFileSystemsInput, filter tfslices.Predicate[*fsx.FileSystem]) (*fsx.FileSystem, error) {
+	output, err := findFileSystems(ctx, conn, input, filter)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSinglePtrResult(output)
+}
+
+func findFileSystems(ctx context.Context, conn *fsx.FSx, input *fsx.DescribeFileSystemsInput, filter tfslices.Predicate[*fsx.FileSystem]) ([]*fsx.FileSystem, error) {
+	var output []*fsx.FileSystem
+
+	err := conn.DescribeFileSystemsPagesWithContext(ctx, input, func(page *fsx.DescribeFileSystemsOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, v := range page.FileSystems {
+			if v != nil && filter(v) {
+				output = append(output, v)
+			}
+		}
+
+		return !lastPage
+	})
+
+	if tfawserr.ErrCodeEquals(err, fsx.ErrCodeFileSystemNotFound) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	return output, nil
 }

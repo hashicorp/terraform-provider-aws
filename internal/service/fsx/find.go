@@ -122,45 +122,6 @@ func findDataRepositoryAssociationsByIDs(ctx context.Context, conn *fsx.FSx, ids
 	return dataRepositoryAssociations, nil
 }
 
-func FindFileSystemByID(ctx context.Context, conn *fsx.FSx, id string) (*fsx.FileSystem, error) {
-	input := &fsx.DescribeFileSystemsInput{
-		FileSystemIds: []*string{aws.String(id)},
-	}
-
-	var filesystems []*fsx.FileSystem
-
-	err := conn.DescribeFileSystemsPagesWithContext(ctx, input, func(page *fsx.DescribeFileSystemsOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
-		}
-
-		filesystems = append(filesystems, page.FileSystems...)
-
-		return !lastPage
-	})
-
-	if tfawserr.ErrCodeEquals(err, fsx.ErrCodeFileSystemNotFound) {
-		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
-		}
-	}
-
-	if err != nil {
-		return nil, err
-	}
-
-	if len(filesystems) == 0 || filesystems[0] == nil {
-		return nil, tfresource.NewEmptyResultError(input)
-	}
-
-	if count := len(filesystems); count > 1 {
-		return nil, tfresource.NewTooManyResultsError(count, input)
-	}
-
-	return filesystems[0], nil
-}
-
 func FindDataRepositoryAssociationByID(ctx context.Context, conn *fsx.FSx, id string) (*fsx.DataRepositoryAssociation, error) {
 	input := &fsx.DescribeDataRepositoryAssociationsInput{
 		AssociationIds: []*string{aws.String(id)},
