@@ -27,8 +27,21 @@ func listTags(ctx context.Context, conn kmsiface.KMSAPI, identifier string) (tft
 	input := &kms.ListResourceTagsInput{
 		KeyId: aws.String(identifier),
 	}
+	var output []*kms.Tag
 
-	output, err := conn.ListResourceTagsWithContext(ctx, input)
+	err := conn.ListResourceTagsPagesWithContext(ctx, input, func(page *kms.ListResourceTagsOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, v := range page.Tags {
+			if v != nil {
+				output = append(output, v)
+			}
+		}
+
+		return !lastPage
+	})
 
 	if tfawserr.ErrCodeEquals(err, "NotFoundException") {
 		return nil, &retry.NotFoundError{
@@ -41,7 +54,7 @@ func listTags(ctx context.Context, conn kmsiface.KMSAPI, identifier string) (tft
 		return tftags.New(ctx, nil), err
 	}
 
-	return KeyValueTags(ctx, output.Tags), nil
+	return KeyValueTags(ctx, output), nil
 }
 
 // ListTags lists kms service tags and set them in Context.
@@ -179,6 +192,10 @@ func waitTagsPropagated(ctx context.Context, conn kmsiface.KMSAPI, id string, ta
 
 		if err != nil {
 			return false, err
+		}
+
+		if inContext, ok := tftags.FromContext(ctx); ok {
+			output = output.IgnoreConfig(inContext.IgnoreConfig)
 		}
 
 		return output.Equal(tags), nil
