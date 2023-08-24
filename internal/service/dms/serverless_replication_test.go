@@ -169,16 +169,16 @@ func testAccServerlessReplication_basic(rName string) string {
 		fmt.Sprintf(`
 resource "aws_dms_serverless_replication" "test" {
   replication_config_identifier = %[1]q
-  resource_identifier = %[1]q
-  replication_type = "cdc"
-  source_endpoint_arn = aws_dms_endpoint.source.endpoint_arn
-  target_endpoint_arn = aws_dms_endpoint.target.endpoint_arn
-  table_mappings = "{\"rules\":[{\"rule-type\":\"selection\",\"rule-id\":\"1\",\"rule-name\":\"1\",\"object-locator\":{\"schema-name\":\"%%\",\"table-name\":\"%%\"},\"rule-action\":\"include\"}]}"
+  resource_identifier           = %[1]q
+  replication_type              = "cdc"
+  source_endpoint_arn           = aws_dms_endpoint.source.endpoint_arn
+  target_endpoint_arn           = aws_dms_endpoint.target.endpoint_arn
+  table_mappings                = "{\"rules\":[{\"rule-type\":\"selection\",\"rule-id\":\"1\",\"rule-name\":\"1\",\"object-locator\":{\"schema-name\":\"%%\",\"table-name\":\"%%\"},\"rule-action\":\"include\"}]}"
 	
   compute_config {
-    replication_subnet_group_id = aws_dms_replication_subnet_group.test.replication_subnet_group_id
-    max_capacity_units = "128"
-    min_capacity_units = "2"
+    replication_subnet_group_id  = aws_dms_replication_subnet_group.test.replication_subnet_group_id
+    max_capacity_units           = "128"
+    min_capacity_units           = "2"
     preferred_maintenance_window = "sun:23:45-mon:00:30"
   }
 }
@@ -192,16 +192,16 @@ func testAccServerlessReplication_update(rName, replicationType string, minCapac
 		fmt.Sprintf(`
 resource "aws_dms_serverless_replication" "test" {
   replication_config_identifier = %[1]q
-  resource_identifier = %[1]q
-  replication_type = %[2]q
-  source_endpoint_arn = aws_dms_endpoint.source.endpoint_arn
-  target_endpoint_arn = aws_dms_endpoint.target.endpoint_arn
-  table_mappings = "{\"rules\":[{\"rule-type\":\"selection\",\"rule-id\":\"1\",\"rule-name\":\"1\",\"object-locator\":{\"schema-name\":\"%%\",\"table-name\":\"%%\"},\"rule-action\":\"include\"}]}"
+  resource_identifier           = %[1]q
+  replication_type              = %[2]q
+  source_endpoint_arn           = aws_dms_endpoint.source.endpoint_arn
+  target_endpoint_arn           = aws_dms_endpoint.target.endpoint_arn
+  table_mappings                = "{\"rules\":[{\"rule-type\":\"selection\",\"rule-id\":\"1\",\"rule-name\":\"1\",\"object-locator\":{\"schema-name\":\"%%\",\"table-name\":\"%%\"},\"rule-action\":\"include\"}]}"
 
   compute_config {
-    replication_subnet_group_id = aws_dms_replication_subnet_group.test.replication_subnet_group_id
-    max_capacity_units = "%[3]d"
-    min_capacity_units = "%[4]d"
+    replication_subnet_group_id  = aws_dms_replication_subnet_group.test.replication_subnet_group_id
+    max_capacity_units           = "%[3]d"
+    min_capacity_units           = "%[4]d"
     preferred_maintenance_window = "sun:23:45-mon:00:30"
   }
 }
@@ -215,18 +215,18 @@ func testAccServerlessReplication_startReplication(rName string, start bool) str
 		fmt.Sprintf(`
 resource "aws_dms_serverless_replication" "test" {
   replication_config_identifier = %[1]q
-  resource_identifier = %[1]q
-  replication_type = "cdc"
-  source_endpoint_arn = aws_dms_endpoint.source.endpoint_arn
-  target_endpoint_arn = aws_dms_endpoint.target.endpoint_arn
-  table_mappings = "{\"rules\":[{\"rule-type\":\"selection\",\"rule-id\":\"1\",\"rule-name\":\"1\",\"object-locator\":{\"schema-name\":\"%%\",\"table-name\":\"%%\"},\"rule-action\":\"include\"}]}"
+  resource_identifier           = %[1]q
+  replication_type              = "cdc"
+  source_endpoint_arn           = aws_dms_endpoint.source.endpoint_arn
+  target_endpoint_arn           = aws_dms_endpoint.target.endpoint_arn
+  table_mappings                = "{\"rules\":[{\"rule-type\":\"selection\",\"rule-id\":\"1\",\"rule-name\":\"1\",\"object-locator\":{\"schema-name\":\"%%\",\"table-name\":\"%%\"},\"rule-action\":\"include\"}]}"
 
   start_replication = %[2]t
 
   compute_config {
-    replication_subnet_group_id = aws_dms_replication_subnet_group.test.replication_subnet_group_id
-    max_capacity_units = "128"
-    min_capacity_units = "2"
+    replication_subnet_group_id  = aws_dms_replication_subnet_group.test.replication_subnet_group_id
+    max_capacity_units           = "128"
+    min_capacity_units           = "2"
     preferred_maintenance_window = "sun:23:45-mon:00:30"
   }
 }
@@ -368,7 +368,7 @@ resource "aws_dms_replication_subnet_group" "test" {
 }
 
 resource "aws_db_subnet_group" "test" {
-  name       = %[1]q
+  name = %[1]q
   subnet_ids = [
     aws_subnet.test1.id,
     aws_subnet.test2.id,
@@ -379,9 +379,9 @@ resource "aws_security_group" "test" {
   vpc_id = aws_vpc.test.id
 
   ingress {
-    from_port = 0
-    to_port   = 0
-    protocol  = -1
+    from_port   = 0
+    to_port     = 0
+    protocol    = -1
     cidr_blocks = ["0.0.0.0/0"]
   }
 
