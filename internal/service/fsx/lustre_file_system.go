@@ -408,7 +408,7 @@ func resourceLustreFileSystemCreate(ctx context.Context, d *schema.ResourceData,
 		output, err := conn.CreateFileSystemFromBackupWithContext(ctx, inputB)
 
 		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "creating FSx Lustre File System from backup (%s): %s", backupID, err)
+			return sdkdiag.AppendErrorf(diags, "creating FSx for Lustre File System from backup (%s): %s", backupID, err)
 		}
 
 		d.SetId(aws.StringValue(output.FileSystem.FileSystemId))
@@ -416,14 +416,14 @@ func resourceLustreFileSystemCreate(ctx context.Context, d *schema.ResourceData,
 		output, err := conn.CreateFileSystemWithContext(ctx, inputC)
 
 		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "creating FSx Lustre File System: %s", err)
+			return sdkdiag.AppendErrorf(diags, "creating FSx for Lustre File System: %s", err)
 		}
 
 		d.SetId(aws.StringValue(output.FileSystem.FileSystemId))
 	}
 
 	if _, err := waitFileSystemCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "waiting for FSx Lustre File System (%s) create: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for FSx for Lustre File System (%s) create: %s", d.Id(), err)
 	}
 
 	return append(diags, resourceLustreFileSystemRead(ctx, d, meta)...)
@@ -436,13 +436,13 @@ func resourceLustreFileSystemRead(ctx context.Context, d *schema.ResourceData, m
 	filesystem, err := FindLustreFileSystemByID(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
-		log.Printf("[WARN] FSx Lustre File System (%s) not found, removing from state", d.Id())
+		log.Printf("[WARN] FSx for Lustre File System (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
 	}
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading FSx Lustre File System (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading FSx for Lustre File System (%s): %s", d.Id(), err)
 	}
 
 	lustreConfig := filesystem.LustreConfiguration
@@ -535,16 +535,16 @@ func resourceLustreFileSystemUpdate(ctx context.Context, d *schema.ResourceData,
 		_, err := conn.UpdateFileSystemWithContext(ctx, input)
 
 		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating FSX Lustre File System (%s): %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "updating FSX for Lustre File System (%s): %s", d.Id(), err)
 		}
 
 		if _, err := waitFileSystemUpdated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
-			return sdkdiag.AppendErrorf(diags, "waiting for FSx Lustre File System (%s) update: %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "waiting for FSx for Lustre File System (%s) update: %s", d.Id(), err)
 		}
 
 		if waitAdminAction {
 			if _, err := waitAdministrativeActionCompleted(ctx, conn, d.Id(), fsx.AdministrativeActionTypeFileSystemUpdate, d.Timeout(schema.TimeoutUpdate)); err != nil {
-				return sdkdiag.AppendErrorf(diags, "waiting for FSx Lustre File System (%s) administrative action complete: %s", d.Id(), err)
+				return sdkdiag.AppendErrorf(diags, "waiting for FSx for Lustre File System (%s) administrative action complete: %s", d.Id(), err)
 			}
 		}
 	}
@@ -556,7 +556,7 @@ func resourceLustreFileSystemDelete(ctx context.Context, d *schema.ResourceData,
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).FSxConn(ctx)
 
-	log.Printf("[DEBUG] Deleting FSx Lustre File System: %s", d.Id())
+	log.Printf("[DEBUG] Deleting FSx for Lustre File System: %s", d.Id())
 	_, err := conn.DeleteFileSystemWithContext(ctx, &fsx.DeleteFileSystemInput{
 		FileSystemId: aws.String(d.Id()),
 	})
@@ -566,11 +566,11 @@ func resourceLustreFileSystemDelete(ctx context.Context, d *schema.ResourceData,
 	}
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "deleting FSx Lustre File System (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting FSx for Lustre File System (%s): %s", d.Id(), err)
 	}
 
 	if _, err := waitFileSystemDeleted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "waiting for FSx Lustre File System (%s) delete: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for FSx for Lustre File System (%s) delete: %s", d.Id(), err)
 	}
 
 	return diags

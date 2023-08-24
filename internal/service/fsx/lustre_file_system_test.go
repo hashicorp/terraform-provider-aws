@@ -995,7 +995,7 @@ func testAccCheckLustreFileSystemDestroy(ctx context.Context) resource.TestCheck
 				return err
 			}
 
-			return fmt.Errorf("FSx Lustre File System %s still exists", rs.Primary.ID)
+			return fmt.Errorf("FSx for Lustre File System %s still exists", rs.Primary.ID)
 		}
 
 		return nil
@@ -1005,7 +1005,7 @@ func testAccCheckLustreFileSystemDestroy(ctx context.Context) resource.TestCheck
 func testAccCheckLustreFileSystemNotRecreated(i, j *fsx.FileSystem) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		if aws.StringValue(i.FileSystemId) != aws.StringValue(j.FileSystemId) {
-			return fmt.Errorf("FSx File System (%s) recreated", aws.StringValue(i.FileSystemId))
+			return fmt.Errorf("FSx for File System (%s) recreated", aws.StringValue(i.FileSystemId))
 		}
 
 		return nil
@@ -1015,7 +1015,7 @@ func testAccCheckLustreFileSystemNotRecreated(i, j *fsx.FileSystem) resource.Tes
 func testAccCheckLustreFileSystemRecreated(i, j *fsx.FileSystem) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		if aws.StringValue(i.FileSystemId) == aws.StringValue(j.FileSystemId) {
-			return fmt.Errorf("FSx File System (%s) not recreated", aws.StringValue(i.FileSystemId))
+			return fmt.Errorf("FSx for File System (%s) not recreated", aws.StringValue(i.FileSystemId))
 		}
 
 		return nil
