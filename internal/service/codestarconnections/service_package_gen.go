@@ -34,7 +34,7 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePackageSDKResource {
 	return []*types.ServicePackageSDKResource{
 		{
-			Factory:  ResourceConnection,
+			Factory:  resourceConnection,
 			TypeName: "aws_codestarconnections_connection",
 			Name:     "Connection",
 			Tags: &types.ServicePackageResourceTags{

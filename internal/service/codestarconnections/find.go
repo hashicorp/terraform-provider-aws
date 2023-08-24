@@ -13,31 +13,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func FindConnectionByARN(ctx context.Context, conn *codestarconnections.CodeStarConnections, arn string) (*codestarconnections.Connection, error) {
-	input := &codestarconnections.GetConnectionInput{
-		ConnectionArn: aws.String(arn),
-	}
-
-	output, err := conn.GetConnectionWithContext(ctx, input)
-
-	if tfawserr.ErrCodeEquals(err, codestarconnections.ErrCodeResourceNotFoundException) {
-		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
-		}
-	}
-
-	if err != nil {
-		return nil, err
-	}
-
-	if output == nil || output.Connection == nil {
-		return nil, tfresource.NewEmptyResultError(input)
-	}
-
-	return output.Connection, nil
-}
-
 func FindHostByARN(ctx context.Context, conn *codestarconnections.CodeStarConnections, arn string) (*codestarconnections.GetHostOutput, error) {
 	input := &codestarconnections.GetHostInput{
 		HostArn: aws.String(arn),
