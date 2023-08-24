@@ -52,14 +52,60 @@ func ResourceLustreFileSystem() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"auto_import_policy": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Computed:     true,
+				ValidateFunc: validation.StringInSlice(fsx.AutoImportPolicyType_Values(), false),
+			},
+			"automatic_backup_retention_days": {
+				Type:         schema.TypeInt,
+				Optional:     true,
+				Computed:     true,
+				ValidateFunc: validation.IntBetween(0, 90),
+			},
 			"backup_id": {
 				Type:     schema.TypeString,
 				Optional: true,
 				ForceNew: true,
 			},
+			"copy_tags_to_backups": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				ForceNew: true,
+				Default:  false,
+			},
+			"daily_automatic_backup_start_time": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+				ValidateFunc: validation.All(
+					validation.StringLenBetween(5, 5),
+					validation.StringMatch(regexache.MustCompile(`^([01]\d|2[0-3]):?([0-5]\d)$`), "must be in the format HH:MM"),
+				),
+			},
+			"data_compression_type": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ValidateFunc: validation.StringInSlice(fsx.DataCompressionType_Values(), false),
+				Default:      fsx.DataCompressionTypeNone,
+			},
+			"deployment_type": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ForceNew:     true,
+				Default:      fsx.LustreDeploymentTypeScratch1,
+				ValidateFunc: validation.StringInSlice(fsx.LustreDeploymentType_Values(), false),
+			},
 			"dns_name": {
 				Type:     schema.TypeString,
 				Computed: true,
+			},
+			"drive_cache_type": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.StringInSlice(fsx.DriveCacheType_Values(), false),
 			},
 			"export_path": {
 				Type:     schema.TypeString,
@@ -69,6 +115,16 @@ func ResourceLustreFileSystem() *schema.Resource {
 				ValidateFunc: validation.All(
 					validation.StringLenBetween(3, 900),
 					validation.StringMatch(regexache.MustCompile(`^s3://`), "must begin with s3://"),
+				),
+			},
+			"file_system_type_version": {
+				Type:     schema.TypeString,
+				ForceNew: true,
+				Computed: true,
+				Optional: true,
+				ValidateFunc: validation.All(
+					validation.StringLenBetween(1, 20),
+					validation.StringMatch(regexache.MustCompile(`^[0-9].[0-9]+$`), "must be in format x.y"),
 				),
 			},
 			"import_path": {
@@ -87,141 +143,12 @@ func ResourceLustreFileSystem() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: validation.IntBetween(1, 512000),
 			},
-			"mount_name": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"network_interface_ids": {
-				// As explained in https://docs.aws.amazon.com/fsx/latest/LustreGuide/mounting-on-premises.html, the first
-				// network_interface_id is the primary one, so ordering matters. Use TypeList instead of TypeSet to preserve it.
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			"owner_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"security_group_ids": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				ForceNew: true,
-				MaxItems: 50,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			"storage_capacity": {
-				Type:         schema.TypeInt,
-				Optional:     true,
-				ValidateFunc: validation.IntAtLeast(1200),
-			},
-			"subnet_ids": {
-				Type:     schema.TypeList,
-				Required: true,
-				ForceNew: true,
-				MinItems: 1,
-				MaxItems: 1,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			"vpc_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"weekly_maintenance_start_time": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-				ValidateFunc: validation.All(
-					validation.StringLenBetween(7, 7),
-					validation.StringMatch(regexache.MustCompile(`^[1-7]:([01]\d|2[0-3]):?([0-5]\d)$`), "must be in the format d:HH:MM"),
-				),
-			},
-			"deployment_type": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ForceNew:     true,
-				Default:      fsx.LustreDeploymentTypeScratch1,
-				ValidateFunc: validation.StringInSlice(fsx.LustreDeploymentType_Values(), false),
-			},
 			"kms_key_id": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
 				ForceNew:     true,
 				ValidateFunc: verify.ValidARN,
-			},
-			"per_unit_storage_throughput": {
-				Type:     schema.TypeInt,
-				Optional: true,
-				ForceNew: true,
-				ValidateFunc: validation.IntInSlice([]int{
-					12,
-					40,
-					50,
-					100,
-					125,
-					200,
-					250,
-					500,
-					1000,
-				}),
-			},
-			"automatic_backup_retention_days": {
-				Type:         schema.TypeInt,
-				Optional:     true,
-				Computed:     true,
-				ValidateFunc: validation.IntBetween(0, 90),
-			},
-			"daily_automatic_backup_start_time": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-				ValidateFunc: validation.All(
-					validation.StringLenBetween(5, 5),
-					validation.StringMatch(regexache.MustCompile(`^([01]\d|2[0-3]):?([0-5]\d)$`), "must be in the format HH:MM"),
-				),
-			},
-			"storage_type": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ForceNew:     true,
-				Default:      fsx.StorageTypeSsd,
-				ValidateFunc: validation.StringInSlice(fsx.StorageType_Values(), false),
-			},
-			"drive_cache_type": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringInSlice(fsx.DriveCacheType_Values(), false),
-			},
-			"auto_import_policy": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ValidateFunc: validation.StringInSlice(fsx.AutoImportPolicyType_Values(), false),
-			},
-			"copy_tags_to_backups": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				ForceNew: true,
-				Default:  false,
-			},
-			"data_compression_type": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validation.StringInSlice(fsx.DataCompressionType_Values(), false),
-				Default:      fsx.DataCompressionTypeNone,
-			},
-			"file_system_type_version": {
-				Type:     schema.TypeString,
-				ForceNew: true,
-				Computed: true,
-				Optional: true,
-				ValidateFunc: validation.All(
-					validation.StringLenBetween(1, 20),
-					validation.StringMatch(regexache.MustCompile(`^[0-9].[0-9]+$`), "must be in format x.y"),
-				),
 			},
 			"log_configuration": {
 				Type:     schema.TypeList,
@@ -248,6 +175,37 @@ func ResourceLustreFileSystem() *schema.Resource {
 					},
 				},
 			},
+			"mount_name": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"network_interface_ids": {
+				// As explained in https://docs.aws.amazon.com/fsx/latest/LustreGuide/mounting-on-premises.html, the first
+				// network_interface_id is the primary one, so ordering matters. Use TypeList instead of TypeSet to preserve it.
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+			},
+			"owner_id": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"per_unit_storage_throughput": {
+				Type:     schema.TypeInt,
+				Optional: true,
+				ForceNew: true,
+				ValidateFunc: validation.IntInSlice([]int{
+					12,
+					40,
+					50,
+					100,
+					125,
+					200,
+					250,
+					500,
+					1000,
+				}),
+			},
 			"root_squash_configuration": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -269,6 +227,48 @@ func ResourceLustreFileSystem() *schema.Resource {
 						},
 					},
 				},
+			},
+			"security_group_ids": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				ForceNew: true,
+				MaxItems: 50,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+			},
+			"storage_capacity": {
+				Type:         schema.TypeInt,
+				Optional:     true,
+				ValidateFunc: validation.IntAtLeast(1200),
+			},
+			"storage_type": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ForceNew:     true,
+				Default:      fsx.StorageTypeSsd,
+				ValidateFunc: validation.StringInSlice(fsx.StorageType_Values(), false),
+			},
+			"subnet_ids": {
+				Type:     schema.TypeList,
+				Required: true,
+				ForceNew: true,
+				MinItems: 1,
+				MaxItems: 1,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+			},
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
+			"vpc_id": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"weekly_maintenance_start_time": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+				ValidateFunc: validation.All(
+					validation.StringLenBetween(7, 7),
+					validation.StringMatch(regexache.MustCompile(`^[1-7]:([01]\d|2[0-3]):?([0-5]\d)$`), "must be in the format d:HH:MM"),
+				),
 			},
 		},
 
