@@ -195,6 +195,21 @@ func TestAccIAMPolicyDocumentDataSource_sourceListConflicting(t *testing.T) {
 	})
 }
 
+func TestAccIAMPolicyDocumentDataSource_sidFormatError(t *testing.T) {
+	ctx := acctest.Context(t)
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, iam.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccPolicyDocumentDataSourceConfig_invalidSid,
+				ExpectError: regexache.MustCompile(`Sid must be a compose only of alphanumeric characters`),
+			},
+		},
+	})
+}
+
 func TestAccIAMPolicyDocumentDataSource_override(t *testing.T) {
 	ctx := acctest.Context(t)
 	resource.ParallelTest(t, resource.TestCase{
@@ -1063,6 +1078,17 @@ data "aws_iam_policy_document" "test_source_list_conflicting" {
     data.aws_iam_policy_document.policy_b.json,
     data.aws_iam_policy_document.policy_c.json
   ]
+}
+`
+
+var testAccPolicyDocumentDataSourceConfig_invalidSid = `
+data "aws_iam_policy_document" "policy_a" {
+  statement {
+    sid     = "invalid-sid"
+    effect  = "Allow"
+    actions   = ["*"]
+    resources = ["*"]
+  }
 }
 `
 
