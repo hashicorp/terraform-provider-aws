@@ -239,7 +239,7 @@ func sweepClusters(region string) error {
 			d.Set("skip_final_snapshot", true)
 
 			if engineMode := aws.StringValue(v.EngineMode); engineMode == EngineModeGlobal || engineMode == EngineModeProvisioned {
-				globalCluster, err := DescribeGlobalClusterFromClusterARN(ctx, conn, arn)
+				globalCluster, err := FindGlobalClusterByDBClusterARN(ctx, conn, arn)
 				if err != nil {
 					if !tfresource.NotFound(err) {
 						sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("reading RDS Global Cluster information for DB Cluster (%s): %s", id, err))

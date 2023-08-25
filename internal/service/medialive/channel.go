@@ -321,7 +321,21 @@ func ResourceChannel() *schema.Resource {
 																	MaxItems: 1,
 																	Elem: &schema.Resource{
 																		Schema: map[string]*schema.Schema{
-																			"track": {
+																			"dolby_e_decode": {
+																				Type:     schema.TypeList,
+																				Optional: true,
+																				MaxItems: 1,
+																				Elem: &schema.Resource{
+																					Schema: map[string]*schema.Schema{
+																						"program_selection": {
+																							Type:             schema.TypeString,
+																							Required:         true,
+																							ValidateDiagFunc: enum.Validate[types.DolbyEProgramSelection](),
+																						},
+																					},
+																				},
+																			},
+																			"tracks": {
 																				Type:     schema.TypeSet,
 																				Required: true,
 																				Elem: &schema.Resource{
@@ -374,7 +388,15 @@ func ResourceChannel() *schema.Resource {
 																		},
 																	},
 																},
-																"dvb_tdt_settings": {
+																"arib_source_settings": {
+																	Type:     schema.TypeList,
+																	Optional: true,
+																	MaxItems: 1,
+																	Elem: &schema.Resource{
+																		Schema: map[string]*schema.Schema{}, // no exported elements in this list
+																	},
+																},
+																"dvb_sub_source_settings": {
 																	Type:     schema.TypeList,
 																	Optional: true,
 																	MaxItems: 1,
@@ -386,8 +408,9 @@ func ResourceChannel() *schema.Resource {
 																				ValidateDiagFunc: enum.Validate[types.DvbSubOcrLanguage](),
 																			},
 																			"pid": {
-																				Type:     schema.TypeInt,
-																				Optional: true,
+																				Type:         schema.TypeInt,
+																				Optional:     true,
+																				ValidateFunc: validation.IntAtLeast(1),
 																			},
 																		},
 																	},
@@ -409,10 +432,6 @@ func ResourceChannel() *schema.Resource {
 																				ValidateDiagFunc: enum.Validate[types.EmbeddedScte20Detection](),
 																			},
 																			"source_608_channel_number": {
-																				Type:     schema.TypeInt,
-																				Optional: true,
-																			},
-																			"source_608_track_number": {
 																				Type:     schema.TypeInt,
 																				Optional: true,
 																			},
@@ -1203,7 +1222,9 @@ func expandInputAttachmentInputSettingsAudioSelectors(tfList []interface{}) []ty
 		if v, ok := m["name"].(string); ok && v != "" {
 			a.Name = aws.String(v)
 		}
-		// TODO selectorSettings
+		if v, ok := m["selector_settings"].([]interface{}); ok && len(v) > 0 {
+			a.SelectorSettings = expandInputAttachmentInputSettingsAudioSelectorsSelectorSettings(v)
+		}
 
 		as = append(as, a)
 	}
@@ -1211,7 +1232,142 @@ func expandInputAttachmentInputSettingsAudioSelectors(tfList []interface{}) []ty
 	return as
 }
 
+func expandInputAttachmentInputSettingsAudioSelectorsSelectorSettings(tfList []interface{}) *types.AudioSelectorSettings {
+	if tfList == nil {
+		return nil
+	}
+
+	m := tfList[0].(map[string]interface{})
+
+	var out types.AudioSelectorSettings
+	if v, ok := m["audio_hls_rendition_selection"].([]interface{}); ok && len(v) > 0 {
+		out.AudioHlsRenditionSelection = expandInputAttachmentInputSettingsAudioSelectorsSelectorSettingsAudioHlsRenditionSelection(v)
+	}
+	if v, ok := m["audio_language_selection"].([]interface{}); ok && len(v) > 0 {
+		out.AudioLanguageSelection = expandInputAttachmentInputSettingsAudioSelectorsSelectorSettingsAudioLanguageSelection(v)
+	}
+	if v, ok := m["audio_pid_selection"].([]interface{}); ok && len(v) > 0 {
+		out.AudioPidSelection = expandInputAttachmentInputSettingsAudioSelectorsSelectorSettingsAudioPidSelection(v)
+	}
+	if v, ok := m["audio_track_selection"].([]interface{}); ok && len(v) > 0 {
+		out.AudioTrackSelection = expandInputAttachmentInputSettingsAudioSelectorsSelectorSettingsAudioTrackSelection(v)
+	}
+
+	return &out
+}
+
+func expandInputAttachmentInputSettingsAudioSelectorsSelectorSettingsAudioHlsRenditionSelection(tfList []interface{}) *types.AudioHlsRenditionSelection {
+	if tfList == nil {
+		return nil
+	}
+
+	m := tfList[0].(map[string]interface{})
+
+	var out types.AudioHlsRenditionSelection
+	if v, ok := m["group_id"].(string); ok && len(v) > 0 {
+		out.GroupId = aws.String(v)
+	}
+	if v, ok := m["name"].(string); ok && len(v) > 0 {
+		out.Name = aws.String(v)
+	}
+
+	return &out
+}
+
+func expandInputAttachmentInputSettingsAudioSelectorsSelectorSettingsAudioLanguageSelection(tfList []interface{}) *types.AudioLanguageSelection {
+	if tfList == nil {
+		return nil
+	}
+
+	m := tfList[0].(map[string]interface{})
+
+	var out types.AudioLanguageSelection
+	if v, ok := m["language_code"].(string); ok && len(v) > 0 {
+		out.LanguageCode = aws.String(v)
+	}
+	if v, ok := m["language_selection_policy"].(string); ok && len(v) > 0 {
+		out.LanguageSelectionPolicy = types.AudioLanguageSelectionPolicy(v)
+	}
+
+	return &out
+}
+
+func expandInputAttachmentInputSettingsAudioSelectorsSelectorSettingsAudioPidSelection(tfList []interface{}) *types.AudioPidSelection {
+	if tfList == nil {
+		return nil
+	}
+
+	m := tfList[0].(map[string]interface{})
+
+	var out types.AudioPidSelection
+	if v, ok := m["pid"].(int); ok {
+		out.Pid = int32(v)
+	}
+
+	return &out
+}
+
+func expandInputAttachmentInputSettingsAudioSelectorsSelectorSettingsAudioTrackSelection(tfList []interface{}) *types.AudioTrackSelection {
+	if tfList == nil {
+		return nil
+	}
+
+	m := tfList[0].(map[string]interface{})
+
+	var out types.AudioTrackSelection
+	if v, ok := m["tracks"].(*schema.Set); ok && v.Len() > 0 {
+		out.Tracks = expandInputAttachmentInputSettingsAudioSelectorsSelectorSettingsAudioTrackSelectionTracks(v.List())
+	}
+	if v, ok := m["dolby_e_decode"].([]interface{}); ok && len(v) > 0 {
+		out.DolbyEDecode = expandInputAttachmentInputSettingsAudioSelectorsSelectorSettingsAudioTrackSelectionDolbyEDecode(v)
+	}
+
+	return &out
+}
+
+func expandInputAttachmentInputSettingsAudioSelectorsSelectorSettingsAudioTrackSelectionTracks(tfList []interface{}) []types.AudioTrack {
+	if len(tfList) == 0 {
+		return nil
+	}
+
+	var out []types.AudioTrack
+	for _, v := range tfList {
+		m, ok := v.(map[string]interface{})
+		if !ok {
+			continue
+		}
+
+		var o types.AudioTrack
+		if v, ok := m["track"].(int); ok {
+			o.Track = int32(v)
+		}
+
+		out = append(out, o)
+	}
+
+	return out
+}
+
+func expandInputAttachmentInputSettingsAudioSelectorsSelectorSettingsAudioTrackSelectionDolbyEDecode(tfList []interface{}) *types.AudioDolbyEDecode {
+	if tfList == nil {
+		return nil
+	}
+
+	m := tfList[0].(map[string]interface{})
+
+	var out types.AudioDolbyEDecode
+	if v, ok := m["program_selection"].(string); ok && v != "" {
+		out.ProgramSelection = types.DolbyEProgramSelection(v)
+	}
+
+	return &out
+}
+
 func expandInputAttachmentInputSettingsCaptionSelectors(tfList []interface{}) []types.CaptionSelector {
+	if len(tfList) == 0 {
+		return nil
+	}
+
 	var out []types.CaptionSelector
 	for _, v := range tfList {
 		m, ok := v.(map[string]interface{})
@@ -1226,12 +1382,179 @@ func expandInputAttachmentInputSettingsCaptionSelectors(tfList []interface{}) []
 		if v, ok := m["language_code"].(string); ok && v != "" {
 			o.LanguageCode = aws.String(v)
 		}
-		// TODO selectorSettings
+		if v, ok := m["selector_settings"].([]interface{}); ok && len(v) > 0 {
+			o.SelectorSettings = expandInputAttachmentInputSettingsCaptionSelectorsSelectorSettings(v)
+		}
 
 		out = append(out, o)
 	}
 
 	return out
+}
+
+func expandInputAttachmentInputSettingsCaptionSelectorsSelectorSettings(tfList []interface{}) *types.CaptionSelectorSettings {
+	if tfList == nil {
+		return nil
+	}
+
+	m := tfList[0].(map[string]interface{})
+
+	var out types.CaptionSelectorSettings
+	if v, ok := m["ancillary_source_settings"].([]interface{}); ok && len(v) > 0 {
+		out.AncillarySourceSettings = expandInputAttachmentInputSettingsCaptionSelectorsSelectorSettingsAncillarySourceSettings(v)
+	}
+	if v, ok := m["arib_source_settings"].([]interface{}); ok && len(v) > 0 {
+		out.AribSourceSettings = &types.AribSourceSettings{} // no exported fields
+	}
+	if v, ok := m["dvb_sub_source_settings"].([]interface{}); ok && len(v) > 0 {
+		out.DvbSubSourceSettings = expandInputAttachmentInputSettingsCaptionSelectorsSelectorSettingsDvbSubSourceSettings(v)
+	}
+	if v, ok := m["embedded_source_settings"].([]interface{}); ok && len(v) > 0 {
+		out.EmbeddedSourceSettings = expandInputAttachmentInputSettingsCaptionSelectorsSelectorSettingsEmbeddedSourceSettings(v)
+	}
+	if v, ok := m["scte20_source_settings"].([]interface{}); ok && len(v) > 0 {
+		out.Scte20SourceSettings = expandInputAttachmentInputSettingsCaptionSelectorsSelectorSettingsScte20SourceSettings(v)
+	}
+	if v, ok := m["scte27_source_settings"].([]interface{}); ok && len(v) > 0 {
+		out.Scte27SourceSettings = expandInputAttachmentInputSettingsCaptionSelectorsSelectorSettingsScte27SourceSettings(v)
+	}
+	if v, ok := m["teletext_source_settings"].([]interface{}); ok && len(v) > 0 {
+		out.TeletextSourceSettings = expandInputAttachmentInputSettingsCaptionSelectorsSelectorSettingsTeletextSourceSettings(v)
+	}
+
+	return &out
+}
+
+func expandInputAttachmentInputSettingsCaptionSelectorsSelectorSettingsAncillarySourceSettings(tfList []interface{}) *types.AncillarySourceSettings {
+	if tfList == nil {
+		return nil
+	}
+
+	m := tfList[0].(map[string]interface{})
+
+	var out types.AncillarySourceSettings
+	if v, ok := m["source_ancillary_channel_number"].(int); ok {
+		out.SourceAncillaryChannelNumber = int32(v)
+	}
+
+	return &out
+}
+
+func expandInputAttachmentInputSettingsCaptionSelectorsSelectorSettingsDvbSubSourceSettings(tfList []interface{}) *types.DvbSubSourceSettings {
+	if tfList == nil {
+		return nil
+	}
+
+	m := tfList[0].(map[string]interface{})
+
+	var out types.DvbSubSourceSettings
+	if v, ok := m["ocr_language"].(string); ok && v != "" {
+		out.OcrLanguage = types.DvbSubOcrLanguage(v)
+	}
+	if v, ok := m["pid"].(int); ok {
+		out.Pid = int32(v)
+	}
+
+	return &out
+}
+
+func expandInputAttachmentInputSettingsCaptionSelectorsSelectorSettingsEmbeddedSourceSettings(tfList []interface{}) *types.EmbeddedSourceSettings {
+	if tfList == nil {
+		return nil
+	}
+
+	m := tfList[0].(map[string]interface{})
+
+	var out types.EmbeddedSourceSettings
+	if v, ok := m["convert_608_to_708"].(string); ok && v != "" {
+		out.Convert608To708 = types.EmbeddedConvert608To708(v)
+	}
+	if v, ok := m["scte20_detection"].(string); ok && v != "" {
+		out.Scte20Detection = types.EmbeddedScte20Detection(v)
+	}
+	if v, ok := m["source_608_channel_number"].(int); ok {
+		out.Source608ChannelNumber = int32(v)
+	}
+
+	return &out
+}
+
+func expandInputAttachmentInputSettingsCaptionSelectorsSelectorSettingsScte20SourceSettings(tfList []interface{}) *types.Scte20SourceSettings {
+	if tfList == nil {
+		return nil
+	}
+
+	m := tfList[0].(map[string]interface{})
+
+	var out types.Scte20SourceSettings
+	if v, ok := m["convert_608_to_708"].(string); ok && v != "" {
+		out.Convert608To708 = types.Scte20Convert608To708(v)
+	}
+	if v, ok := m["source_608_channel_number"].(int); ok {
+		out.Source608ChannelNumber = int32(v)
+	}
+
+	return &out
+}
+
+func expandInputAttachmentInputSettingsCaptionSelectorsSelectorSettingsScte27SourceSettings(tfList []interface{}) *types.Scte27SourceSettings {
+	if tfList == nil {
+		return nil
+	}
+
+	m := tfList[0].(map[string]interface{})
+
+	var out types.Scte27SourceSettings
+	if v, ok := m["ocr_language"].(string); ok && v != "" {
+		out.OcrLanguage = types.Scte27OcrLanguage(v)
+	}
+	if v, ok := m["pid"].(int); ok {
+		out.Pid = int32(v)
+	}
+
+	return &out
+}
+
+func expandInputAttachmentInputSettingsCaptionSelectorsSelectorSettingsTeletextSourceSettings(tfList []interface{}) *types.TeletextSourceSettings {
+	if tfList == nil {
+		return nil
+	}
+
+	m := tfList[0].(map[string]interface{})
+
+	var out types.TeletextSourceSettings
+	if v, ok := m["output_rectangle"].([]interface{}); ok && len(v) > 0 {
+		out.OutputRectangle = expandInputAttachmentInputSettingsCaptionSelectorsSelectorSettingsTeletextSourceSettingsOutputRectangle(v)
+	}
+	if v, ok := m["page_number"].(string); ok && v != "" {
+		out.PageNumber = aws.String(v)
+	}
+
+	return &out
+}
+
+func expandInputAttachmentInputSettingsCaptionSelectorsSelectorSettingsTeletextSourceSettingsOutputRectangle(tfList []interface{}) *types.CaptionRectangle {
+	if tfList == nil {
+		return nil
+	}
+
+	m := tfList[0].(map[string]interface{})
+
+	var out types.CaptionRectangle
+	if v, ok := m["height"].(float32); ok {
+		out.Height = float64(v)
+	}
+	if v, ok := m["left_offset"].(float32); ok {
+		out.LeftOffset = float64(v)
+	}
+	if v, ok := m["top_offset"].(float32); ok {
+		out.TopOffset = float64(v)
+	}
+	if v, ok := m["width"].(float32); ok {
+		out.Width = float64(v)
+	}
+
+	return &out
 }
 
 func expandInputAttachmentInputSettingsNetworkInputSettings(tfList []interface{}) *types.NetworkInputSettings {
@@ -1328,7 +1651,104 @@ func flattenInputAttachmentsInputSettingsAudioSelectors(tfList []types.AudioSele
 
 	for _, v := range tfList {
 		m := map[string]interface{}{
-			"name": aws.ToString(v.Name),
+			"name":              aws.ToString(v.Name),
+			"selector_settings": flattenInputAttachmentsInputSettingsAudioSelectorsSelectorSettings(v.SelectorSettings),
+		}
+
+		out = append(out, m)
+	}
+
+	return out
+}
+
+func flattenInputAttachmentsInputSettingsAudioSelectorsSelectorSettings(in *types.AudioSelectorSettings) []interface{} {
+	if in == nil {
+		return nil
+	}
+
+	m := map[string]interface{}{
+		"audio_hls_rendition_selection": flattenInputAttachmentsInputSettingsAudioSelectorsSelectorSettingsAudioHlsRenditionSelection(in.AudioHlsRenditionSelection),
+		"audio_language_selection":      flattenInputAttachmentsInputSettingsAudioSelectorsSelectorSettingsAudioLanguageSelection(in.AudioLanguageSelection),
+		"audio_pid_selection":           flattenInputAttachmentsInputSettingsAudioSelectorsSelectorSettingsAudioPidSelection(in.AudioPidSelection),
+		"audio_track_selection":         flattenInputAttachmentsInputSettingsAudioSelectorsSelectorSettingsAudioTrackSelection(in.AudioTrackSelection),
+	}
+
+	return []interface{}{m}
+}
+
+func flattenInputAttachmentsInputSettingsAudioSelectorsSelectorSettingsAudioHlsRenditionSelection(in *types.AudioHlsRenditionSelection) []interface{} {
+	if in == nil {
+		return nil
+	}
+
+	m := map[string]interface{}{
+		"group_id": aws.ToString(in.GroupId),
+		"name":     aws.ToString(in.Name),
+	}
+
+	return []interface{}{m}
+}
+
+func flattenInputAttachmentsInputSettingsAudioSelectorsSelectorSettingsAudioLanguageSelection(in *types.AudioLanguageSelection) []interface{} {
+	if in == nil {
+		return nil
+	}
+
+	m := map[string]interface{}{
+		"language_code":             aws.ToString(in.LanguageCode),
+		"language_selection_policy": string(in.LanguageSelectionPolicy),
+	}
+
+	return []interface{}{m}
+}
+
+func flattenInputAttachmentsInputSettingsAudioSelectorsSelectorSettingsAudioPidSelection(in *types.AudioPidSelection) []interface{} {
+	if in == nil {
+		return nil
+	}
+
+	m := map[string]interface{}{
+		"pid": int(in.Pid),
+	}
+
+	return []interface{}{m}
+}
+
+func flattenInputAttachmentsInputSettingsAudioSelectorsSelectorSettingsAudioTrackSelection(in *types.AudioTrackSelection) []interface{} {
+	if in == nil {
+		return nil
+	}
+
+	m := map[string]interface{}{
+		"dolby_e_decode": flattenInputAttachmentsInputSettingsAudioSelectorsSelectorSettingsAudioTrackSelectionDolbyEDecode(in.DolbyEDecode),
+		"tracks":         flattenInputAttachmentsInputSettingsAudioSelectorsSelectorSettingsAudioTrackSelectionTracks(in.Tracks),
+	}
+
+	return []interface{}{m}
+}
+
+func flattenInputAttachmentsInputSettingsAudioSelectorsSelectorSettingsAudioTrackSelectionDolbyEDecode(in *types.AudioDolbyEDecode) []interface{} {
+	if in == nil {
+		return nil
+	}
+
+	m := map[string]interface{}{
+		"program_selection": string(in.ProgramSelection),
+	}
+
+	return []interface{}{m}
+}
+
+func flattenInputAttachmentsInputSettingsAudioSelectorsSelectorSettingsAudioTrackSelectionTracks(tfList []types.AudioTrack) []interface{} {
+	if len(tfList) == 0 {
+		return nil
+	}
+
+	var out []interface{}
+
+	for _, v := range tfList {
+		m := map[string]interface{}{
+			"track": int(v.Track),
 		}
 
 		out = append(out, m)
@@ -1346,14 +1766,126 @@ func flattenInputAttachmentsInputSettingsCaptionSelectors(tfList []types.Caption
 
 	for _, v := range tfList {
 		m := map[string]interface{}{
-			"name":          aws.ToString(v.Name),
-			"language_code": aws.ToString(v.LanguageCode),
+			"name":              aws.ToString(v.Name),
+			"language_code":     aws.ToString(v.LanguageCode),
+			"selector_settings": flattenInputAttachmentsInputSettingsCaptionSelectorsSelectorSettings(v.SelectorSettings),
 		}
 
 		out = append(out, m)
 	}
 
 	return out
+}
+
+func flattenInputAttachmentsInputSettingsCaptionSelectorsSelectorSettings(in *types.CaptionSelectorSettings) []interface{} {
+	if in == nil {
+		return nil
+	}
+
+	m := map[string]interface{}{
+		"ancillary_source_settings": flattenInputAttachmentsInputSettingsCaptionSelectorsSelectorSettingsAncillarySourceSettings(in.AncillarySourceSettings),
+		"arib_source_settings":      []interface{}{}, // attribute has no exported fields
+		"dvb_sub_source_settings":   flattenInputAttachmentsInputSettingsCaptionSelectorsSelectorSettingsDvbSubSourceSettings(in.DvbSubSourceSettings),
+		"embedded_source_settings":  flattenInputAttachmentsInputSettingsCaptionSelectorsSelectorSettingsEmbeddedSourceSettings(in.EmbeddedSourceSettings),
+		"scte20_source_settings":    flattenInputAttachmentsInputSettingsCaptionSelectorsSelectorSettingsScte20SourceSettings(in.Scte20SourceSettings),
+		"scte27_source_settings":    flattenInputAttachmentsInputSettingsCaptionSelectorsSelectorSettingsScte27SourceSettings(in.Scte27SourceSettings),
+		"teletext_source_settings":  flattenInputAttachmentsInputSettingsCaptionSelectorsSelectorSettingsTeletextSourceSettings(in.TeletextSourceSettings),
+	}
+
+	return []interface{}{m}
+}
+
+func flattenInputAttachmentsInputSettingsCaptionSelectorsSelectorSettingsAncillarySourceSettings(in *types.AncillarySourceSettings) []interface{} {
+	if in == nil {
+		return nil
+	}
+
+	m := map[string]interface{}{
+		"source_ancillary_channel_number": int(in.SourceAncillaryChannelNumber),
+	}
+
+	return []interface{}{m}
+}
+
+func flattenInputAttachmentsInputSettingsCaptionSelectorsSelectorSettingsDvbSubSourceSettings(in *types.DvbSubSourceSettings) []interface{} {
+	if in == nil {
+		return nil
+	}
+
+	m := map[string]interface{}{
+		"ocr_language": string(in.OcrLanguage),
+		"pid":          int(in.Pid),
+	}
+
+	return []interface{}{m}
+}
+
+func flattenInputAttachmentsInputSettingsCaptionSelectorsSelectorSettingsEmbeddedSourceSettings(in *types.EmbeddedSourceSettings) []interface{} {
+	if in == nil {
+		return nil
+	}
+
+	m := map[string]interface{}{
+		"convert_608_to_708":        string(in.Convert608To708),
+		"scte20_detection":          string(in.Scte20Detection),
+		"source_608_channel_number": int(in.Source608ChannelNumber),
+	}
+
+	return []interface{}{m}
+}
+
+func flattenInputAttachmentsInputSettingsCaptionSelectorsSelectorSettingsScte20SourceSettings(in *types.Scte20SourceSettings) []interface{} {
+	if in == nil {
+		return nil
+	}
+
+	m := map[string]interface{}{
+		"convert_608_to_708":        string(in.Convert608To708),
+		"source_608_channel_number": int(in.Source608ChannelNumber),
+	}
+
+	return []interface{}{m}
+}
+
+func flattenInputAttachmentsInputSettingsCaptionSelectorsSelectorSettingsScte27SourceSettings(in *types.Scte27SourceSettings) []interface{} {
+	if in == nil {
+		return nil
+	}
+
+	m := map[string]interface{}{
+		"ocr_language": string(in.OcrLanguage),
+		"pid":          int(in.Pid),
+	}
+
+	return []interface{}{m}
+}
+
+func flattenInputAttachmentsInputSettingsCaptionSelectorsSelectorSettingsTeletextSourceSettings(in *types.TeletextSourceSettings) []interface{} {
+	if in == nil {
+		return nil
+	}
+
+	m := map[string]interface{}{
+		"output_rectangle": flattenInputAttachmentsInputSettingsCaptionSelectorsSelectorSettingsTeletextSourceSettingsOutputRectangle(in.OutputRectangle),
+		"page_number":      aws.ToString(in.PageNumber),
+	}
+
+	return []interface{}{m}
+}
+
+func flattenInputAttachmentsInputSettingsCaptionSelectorsSelectorSettingsTeletextSourceSettingsOutputRectangle(in *types.CaptionRectangle) []interface{} {
+	if in == nil {
+		return nil
+	}
+
+	m := map[string]interface{}{
+		"height":      float32(in.Height),
+		"left_offset": float32(in.LeftOffset),
+		"top_offset":  float32(in.TopOffset),
+		"width":       float32(in.Width),
+	}
+
+	return []interface{}{m}
 }
 
 func flattenInputAttachmentsInputSettingsNetworkInputSettings(in *types.NetworkInputSettings) []interface{} {

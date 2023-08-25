@@ -7,10 +7,10 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"regexp"
 	"strings"
 	"time"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
@@ -468,15 +468,15 @@ func BucketACLParseResourceID(id string) (string, string, string, error) {
 	// ~> On or after 3/1/2018: Bucket names can consist of only lowercase letters, numbers, dots, and hyphens; Max 63 characters
 	// ~> Before 3/1/2018: Bucket names could consist of uppercase letters and underscores if in us-east-1; Max 255 characters
 	// Reference: https://docs.aws.amazon.com/AmazonS3/latest/userguide/bucketnamingrules.html
-	bucketRegex := regexp.MustCompile(`^([a-z0-9.-]{1,63}|[a-zA-Z0-9.\-_]{1,255})$`)
+	bucketRegex := regexache.MustCompile(`^([a-z0-9.-]{1,63}|[a-zA-Z0-9.\-_]{1,255})$`)
 	// For bucket and accountID in the ID e.g. bucket,123456789101
 	// ~> Account IDs must consist of 12 digits
-	bucketAndOwnerRegex := regexp.MustCompile(`^([a-z0-9.-]{1,63}|[a-zA-Z0-9.\-_]{1,255}),\d{12}$`)
+	bucketAndOwnerRegex := regexache.MustCompile(`^([a-z0-9.-]{1,63}|[a-zA-Z0-9.\-_]{1,255}),\d{12}$`)
 	// For bucket and ACL in the ID e.g. bucket,public-read
 	// ~> (Canned) ACL values include: private, public-read, public-read-write, authenticated-read, aws-exec-read, and log-delivery-write
-	bucketAndAclRegex := regexp.MustCompile(`^([a-z0-9.-]{1,63}|[a-zA-Z0-9.\-_]{1,255}),[a-z-]+$`)
+	bucketAndAclRegex := regexache.MustCompile(`^([a-z0-9.-]{1,63}|[a-zA-Z0-9.\-_]{1,255}),[a-z-]+$`)
 	// For bucket, accountID, and ACL in the ID e.g. bucket,123456789101,public-read
-	bucketOwnerAclRegex := regexp.MustCompile(`^([a-z0-9.-]{1,63}|[a-zA-Z0-9.\-_]{1,255}),\d{12},[a-z-]+$`)
+	bucketOwnerAclRegex := regexache.MustCompile(`^([a-z0-9.-]{1,63}|[a-zA-Z0-9.\-_]{1,255}),\d{12},[a-z-]+$`)
 
 	// Bucket name ONLY
 	if bucketRegex.MatchString(id) {

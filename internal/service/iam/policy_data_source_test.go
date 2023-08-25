@@ -5,9 +5,9 @@ package iam_test
 
 import (
 	"fmt"
-	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/service/iam"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -195,7 +195,7 @@ func TestAccIAMPolicyDataSource_nonExistent(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccPolicyDataSourceConfig_nonExistent(policyName, policyPath),
-				ExpectError: regexp.MustCompile(`no matching IAM Policy found`),
+				ExpectError: regexache.MustCompile(`no matching IAM Policy found`),
 			},
 		},
 	})

@@ -6,9 +6,9 @@ package ssm_test
 import (
 	"context"
 	"fmt"
-	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ssm"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
@@ -846,7 +846,7 @@ func TestAccSSMParameter_Secure_insecure(t *testing.T) {
 			},
 			{
 				Config:      testAccParameterConfig_insecure(rName, "SecureString", "notsecret"),
-				ExpectError: regexp.MustCompile("invalid configuration"),
+				ExpectError: regexache.MustCompile("invalid configuration"),
 			},
 		},
 	})
