@@ -82,6 +82,8 @@ func dataSourceConnectionRead(ctx context.Context, d *schema.ResourceData, meta 
 			}
 
 			for _, v := range page.Connections {
+				v := v
+
 				if aws.ToString(v.ConnectionName) == name {
 					connection = &v
 					break
