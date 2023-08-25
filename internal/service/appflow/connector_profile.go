@@ -192,7 +192,7 @@ func ResourceConnectorProfile() *schema.Resource {
 																Optional:  true,
 																Sensitive: true,
 																ValidateFunc: validation.All(
-																	validation.StringLenBetween(1, 2048),
+																	validation.StringLenBetween(1, 4096),
 																	validation.StringMatch(regexache.MustCompile(`\S+`), "must not contain any whitespace characters"),
 																),
 															},
@@ -223,7 +223,7 @@ func ResourceConnectorProfile() *schema.Resource {
 																			Type:     schema.TypeString,
 																			Optional: true,
 																			ValidateFunc: validation.All(
-																				validation.StringLenBetween(1, 2048),
+																				validation.StringLenBetween(1, 4096),
 																				validation.StringMatch(regexache.MustCompile(`\S+`), "must not contain any whitespace characters"),
 																			),
 																		},
@@ -242,7 +242,7 @@ func ResourceConnectorProfile() *schema.Resource {
 																Type:     schema.TypeString,
 																Optional: true,
 																ValidateFunc: validation.All(
-																	validation.StringLenBetween(1, 1024),
+																	validation.StringLenBetween(1, 4096),
 																	validation.StringMatch(regexache.MustCompile(`\S+`), "must not contain any whitespace characters"),
 																),
 															},
