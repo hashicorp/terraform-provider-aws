@@ -507,15 +507,11 @@ func resourceOpenzfsFileSystemUpdate(ctx context.Context, d *schema.ResourceData
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).FSxConn(ctx)
 
-	if d.HasChangesExcept("tags_all", "tags") {
+	if d.HasChangesExcept("tags", "tags_all") {
 		input := &fsx.UpdateFileSystemInput{
 			ClientRequestToken:   aws.String(id.UniqueId()),
 			FileSystemId:         aws.String(d.Id()),
 			OpenZFSConfiguration: &fsx.UpdateFileSystemOpenZFSConfiguration{},
-		}
-
-		if d.HasChange("storage_capacity") {
-			input.StorageCapacity = aws.Int64(int64(d.Get("storage_capacity").(int)))
 		}
 
 		if d.HasChange("automatic_backup_retention_days") {
@@ -534,12 +530,16 @@ func resourceOpenzfsFileSystemUpdate(ctx context.Context, d *schema.ResourceData
 			input.OpenZFSConfiguration.DailyAutomaticBackupStartTime = aws.String(d.Get("daily_automatic_backup_start_time").(string))
 		}
 
-		if d.HasChange("throughput_capacity") {
-			input.OpenZFSConfiguration.ThroughputCapacity = aws.Int64(int64(d.Get("throughput_capacity").(int)))
-		}
-
 		if d.HasChange("disk_iops_configuration") {
 			input.OpenZFSConfiguration.DiskIopsConfiguration = expandOpenzfsFileDiskIopsConfiguration(d.Get("disk_iops_configuration").([]interface{}))
+		}
+
+		if d.HasChange("storage_capacity") {
+			input.StorageCapacity = aws.Int64(int64(d.Get("storage_capacity").(int)))
+		}
+
+		if d.HasChange("throughput_capacity") {
+			input.OpenZFSConfiguration.ThroughputCapacity = aws.Int64(int64(d.Get("throughput_capacity").(int)))
 		}
 
 		if d.HasChange("weekly_maintenance_start_time") {
@@ -561,22 +561,21 @@ func resourceOpenzfsFileSystemUpdate(ctx context.Context, d *schema.ResourceData
 		}
 
 		if d.HasChange("root_volume_configuration") {
+			rootVolumeID := d.Get("root_volume_id").(string)
 			input := &fsx.UpdateVolumeInput{
 				ClientRequestToken:   aws.String(id.UniqueId()),
-				VolumeId:             aws.String(d.Get("root_volume_id").(string)),
-				OpenZFSConfiguration: &fsx.UpdateOpenZFSVolumeConfiguration{},
+				OpenZFSConfiguration: expandOpenzfsUpdateRootVolumeConfiguration(d.Get("root_volume_configuration").([]interface{})),
+				VolumeId:             aws.String(rootVolumeID),
 			}
-
-			input.OpenZFSConfiguration = expandOpenzfsUpdateRootVolumeConfiguration(d.Get("root_volume_configuration").([]interface{}))
 
 			_, err := conn.UpdateVolumeWithContext(ctx, input)
 
 			if err != nil {
-				return sdkdiag.AppendErrorf(diags, "updating FSx for OpenZFS Root Volume (%s): %s", d.Get("root_volume_id").(string), err)
+				return sdkdiag.AppendErrorf(diags, "updating FSx for OpenZFS Root Volume (%s): %s", rootVolumeID, err)
 			}
 
-			if _, err := waitVolumeUpdated(ctx, conn, d.Get("root_volume_id").(string), d.Timeout(schema.TimeoutUpdate)); err != nil {
-				return sdkdiag.AppendErrorf(diags, "waiting for FSx for OpenZFS Root Volume (%s) update: %s", d.Get("root_volume_id").(string), err)
+			if _, err := waitVolumeUpdated(ctx, conn, rootVolumeID, d.Timeout(schema.TimeoutUpdate)); err != nil {
+				return sdkdiag.AppendErrorf(diags, "waiting for FSx for OpenZFS Root Volume (%s) update: %s", rootVolumeID, err)
 			}
 		}
 	}
