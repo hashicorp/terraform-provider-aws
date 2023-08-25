@@ -2410,20 +2410,22 @@ resource "aws_opensearch_domain" "test" {
   }
 
   auto_tune_options {
-    desired_state 		= "ENABLED"
+    desired_state       = "ENABLED"
     rollback_on_disable = "NO_ROLLBACK"
   }
 
   cluster_config {
-    instance_count         			= 3
-    instance_type          			= "m6g.large.search"
-    zone_awareness_enabled 			= true
-	zone_awareness_config {
-	  availability_zone_count 		= 3
-	}
-	dedicated_master_enabled 		= true
-    dedicated_master_type    		= "m6g.large.search" 
-	multi_az_with_standby_enabled 	=  %[2]t
+    instance_count         = 3
+    instance_type          = "m6g.large.search"
+    zone_awareness_enabled = true
+
+    zone_awareness_config {
+      availability_zone_count = 3
+    }
+
+    dedicated_master_enabled      = true
+    dedicated_master_type         = "m6g.large.search"
+    multi_az_with_standby_enabled =  %[2]t
   }
 }
 `, rName, enableStandby)
