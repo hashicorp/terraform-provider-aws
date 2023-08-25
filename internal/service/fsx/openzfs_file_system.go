@@ -109,6 +109,26 @@ func ResourceOpenzfsFileSystem() *schema.Resource {
 					},
 				},
 			},
+			"dns_name": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"kms_key_id": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Computed:     true,
+				ForceNew:     true,
+				ValidateFunc: verify.ValidARN,
+			},
+			"network_interface_ids": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+			},
+			"owner_id": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"root_volume_configuration": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -200,26 +220,6 @@ func ResourceOpenzfsFileSystem() *schema.Resource {
 						},
 					},
 				},
-			},
-			"dns_name": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"kms_key_id": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ForceNew:     true,
-				ValidateFunc: verify.ValidARN,
-			},
-			"network_interface_ids": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			"owner_id": {
-				Type:     schema.TypeString,
-				Computed: true,
 			},
 			"root_volume_id": {
 				Type:     schema.TypeString,
