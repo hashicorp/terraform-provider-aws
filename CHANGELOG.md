@@ -1,4 +1,5 @@
-## 5.14.0 (Unreleased)
+## 5.15.0 (Unreleased)
+## 5.14.0 (August 24, 2023)
 
 NOTES:
 
@@ -13,7 +14,9 @@ ENHANCEMENTS:
 
 * data-source/aws_dms_endpoint: Fix crash when specified endpoint not found ([#33158](https://github.com/hashicorp/terraform-provider-aws/issues/33158))
 * data-source/aws_dms_replication_instance: Add `network_type` attribute ([#33158](https://github.com/hashicorp/terraform-provider-aws/issues/33158))
+* data-source/aws_ec2_network_insights_path: Add `destination_arn` and `source_arn` attributes ([#33168](https://github.com/hashicorp/terraform-provider-aws/issues/33168))
 * resource/aws_dms_replication_instance: Add `network_type` argument ([#33158](https://github.com/hashicorp/terraform-provider-aws/issues/33158))
+* resource/aws_ec2_network_insights_path: Add `destination_arn` and `source_arn` attributes ([#33168](https://github.com/hashicorp/terraform-provider-aws/issues/33168))
 * resource/aws_finspace_kx_environment: Add `transit_gateway_configuration.*.attachment_network_acl_configuration` argument. ([#33123](https://github.com/hashicorp/terraform-provider-aws/issues/33123))
 * resource/aws_medialive_channel: Updates schemas for `selector_settings` for `audio_selector` and `selector_settings` for `caption_selector` ([#32714](https://github.com/hashicorp/terraform-provider-aws/issues/32714))
 * resource/aws_ssoadmin_account_assignment: Add configurable timeouts ([#33121](https://github.com/hashicorp/terraform-provider-aws/issues/33121))
@@ -27,6 +30,10 @@ BUG FIXES:
 
 * data-source/aws_iam_policy_document: Fix inconsistent handling of `condition` blocks with duplicated `test` and `variable` arguments ([#33093](https://github.com/hashicorp/terraform-provider-aws/issues/33093))
 * resource/aws_ec2_host: Fixed a bug that caused resource recreation when specifying an `outpost_arn` without an `asset_id` ([#33142](https://github.com/hashicorp/terraform-provider-aws/issues/33142))
+* resource/aws_ec2_network_insights_analysis: Fix `setting forward_path_components: Invalid address to set` errors ([#33168](https://github.com/hashicorp/terraform-provider-aws/issues/33168))
+* resource/aws_ec2_network_insights_path: Avoid recreating resource when passing an ARN as `source` or `destination` ([#33168](https://github.com/hashicorp/terraform-provider-aws/issues/33168))
+* resource/aws_ec2_network_insights_path: Retry `AnalysisExistsForNetworkInsightsPath` errors on resource Delete ([#33168](https://github.com/hashicorp/terraform-provider-aws/issues/33168))
+* resource/aws_kms_key: Fix `tag propagation: timeout while waiting for state to become 'TRUE'` errors when [`ignore_tags`](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#ignore_tags) has been configured ([#33167](https://github.com/hashicorp/terraform-provider-aws/issues/33167))
 * resource/aws_licensemanager_license_configuration: Surface `InvalidParameterValueException` errors during resource Delete ([#32845](https://github.com/hashicorp/terraform-provider-aws/issues/32845))
 * resource/aws_msk_cluster_policy: Fix `Current cluster policy version needed for Update` errors ([#33118](https://github.com/hashicorp/terraform-provider-aws/issues/33118))
 * resource/aws_quicksight_analysis: Change `definition.*.parameter_declarations` to a set type, preventing persistent differences ([#33120](https://github.com/hashicorp/terraform-provider-aws/issues/33120))
