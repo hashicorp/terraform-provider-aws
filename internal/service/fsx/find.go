@@ -131,45 +131,6 @@ func FindStorageVirtualMachineByID(ctx context.Context, conn *fsx.FSx, id string
 	return storageVirtualMachines[0], nil
 }
 
-func FindVolumeByID(ctx context.Context, conn *fsx.FSx, id string) (*fsx.Volume, error) {
-	input := &fsx.DescribeVolumesInput{
-		VolumeIds: []*string{aws.String(id)},
-	}
-
-	var volumes []*fsx.Volume
-
-	err := conn.DescribeVolumesPagesWithContext(ctx, input, func(page *fsx.DescribeVolumesOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
-		}
-
-		volumes = append(volumes, page.Volumes...)
-
-		return !lastPage
-	})
-
-	if tfawserr.ErrCodeEquals(err, fsx.ErrCodeVolumeNotFound) {
-		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
-		}
-	}
-
-	if err != nil {
-		return nil, err
-	}
-
-	if len(volumes) == 0 || volumes[0] == nil {
-		return nil, tfresource.NewEmptyResultError(input)
-	}
-
-	if count := len(volumes); count > 1 {
-		return nil, tfresource.NewTooManyResultsError(count, input)
-	}
-
-	return volumes[0], nil
-}
-
 func FindSnapshotByID(ctx context.Context, conn *fsx.FSx, id string) (*fsx.Snapshot, error) {
 	input := &fsx.DescribeSnapshotsInput{
 		SnapshotIds: aws.StringSlice([]string{id}),

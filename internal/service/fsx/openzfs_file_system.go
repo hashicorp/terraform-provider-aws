@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -429,7 +430,8 @@ func resourceOpenzfsFileSystemRead(ctx context.Context, d *schema.ResourceData, 
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).FSxConn(ctx)
 
-	filesystem, err := FindFileSystemByID(ctx, conn, d.Id())
+	filesystem, err := FindOpenZFSFileSystemByID(ctx, conn, d.Id())
+
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] FSx for OpenZFS File System (%s) not found, removing from state", d.Id())
 		d.SetId("")
@@ -440,60 +442,36 @@ func resourceOpenzfsFileSystemRead(ctx context.Context, d *schema.ResourceData, 
 		return sdkdiag.AppendErrorf(diags, "reading FSx for OpenZFS File System (%s): %s", d.Id(), err)
 	}
 
-	openzfsConfig := filesystem.OpenZFSConfiguration
-
-	if filesystem.WindowsConfiguration != nil {
-		return sdkdiag.AppendErrorf(diags, "expected FSx OpenZFS File System, found FSx Windows File System: %s", d.Id())
-	}
-
-	if filesystem.LustreConfiguration != nil {
-		return sdkdiag.AppendErrorf(diags, "expected FSx OpenZFS File System, found FSx Lustre File System: %s", d.Id())
-	}
-
-	if filesystem.OntapConfiguration != nil {
-		return sdkdiag.AppendErrorf(diags, "expected FSx OpeZFS File System, found FSx ONTAP File System: %s", d.Id())
-	}
-
-	if openzfsConfig == nil {
-		return sdkdiag.AppendErrorf(diags, "describing FSx OpenZFS File System (%s): empty Openzfs configuration", d.Id())
-	}
+	openZFSConfig := filesystem.OpenZFSConfiguration
 
 	d.Set("arn", filesystem.ResourceARN)
+	d.Set("automatic_backup_retention_days", openZFSConfig.AutomaticBackupRetentionDays)
+	d.Set("copy_tags_to_backups", openZFSConfig.CopyTagsToBackups)
+	d.Set("copy_tags_to_volumes", openZFSConfig.CopyTagsToVolumes)
+	d.Set("daily_automatic_backup_start_time", openZFSConfig.DailyAutomaticBackupStartTime)
+	d.Set("deployment_type", openZFSConfig.DeploymentType)
+	if err := d.Set("disk_iops_configuration", flattenOpenzfsFileDiskIopsConfiguration(openZFSConfig.DiskIopsConfiguration)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting disk_iops_configuration: %s", err)
+	}
 	d.Set("dns_name", filesystem.DNSName)
-	d.Set("deployment_type", openzfsConfig.DeploymentType)
-	d.Set("throughput_capacity", openzfsConfig.ThroughputCapacity)
-	d.Set("storage_type", filesystem.StorageType)
 	d.Set("kms_key_id", filesystem.KmsKeyId)
-
-	if err := d.Set("network_interface_ids", aws.StringValueSlice(filesystem.NetworkInterfaceIds)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting network_interface_ids: %s", err)
-	}
-
+	d.Set("network_interface_ids", aws.StringValueSlice(filesystem.NetworkInterfaceIds))
 	d.Set("owner_id", filesystem.OwnerId)
-	d.Set("root_volume_id", openzfsConfig.RootVolumeId)
+	rootVolumeID := aws.StringValue(openZFSConfig.RootVolumeId)
+	d.Set("root_volume_id", rootVolumeID)
 	d.Set("storage_capacity", filesystem.StorageCapacity)
-
-	if err := d.Set("subnet_ids", aws.StringValueSlice(filesystem.SubnetIds)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting subnet_ids: %s", err)
-	}
+	d.Set("storage_type", filesystem.StorageType)
+	d.Set("subnet_ids", aws.StringValueSlice(filesystem.SubnetIds))
+	d.Set("throughput_capacity", openZFSConfig.ThroughputCapacity)
+	d.Set("vpc_id", filesystem.VpcId)
+	d.Set("weekly_maintenance_start_time", openZFSConfig.WeeklyMaintenanceStartTime)
 
 	setTagsOut(ctx, filesystem.Tags)
 
-	if err := d.Set("disk_iops_configuration", flattenOpenzfsFileDiskIopsConfiguration(openzfsConfig.DiskIopsConfiguration)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting disk_iops_configuration: %s", err)
-	}
-
-	d.Set("vpc_id", filesystem.VpcId)
-	d.Set("weekly_maintenance_start_time", openzfsConfig.WeeklyMaintenanceStartTime)
-	d.Set("automatic_backup_retention_days", openzfsConfig.AutomaticBackupRetentionDays)
-	d.Set("daily_automatic_backup_start_time", openzfsConfig.DailyAutomaticBackupStartTime)
-	d.Set("copy_tags_to_backups", openzfsConfig.CopyTagsToBackups)
-	d.Set("copy_tags_to_volumes", openzfsConfig.CopyTagsToVolumes)
-
-	rootVolume, err := FindVolumeByID(ctx, conn, *openzfsConfig.RootVolumeId)
+	rootVolume, err := FindVolumeByID(ctx, conn, rootVolumeID)
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading FSx for OpenZFS Root Volume Configuration (%s): %s", *openzfsConfig.RootVolumeId, err)
+		return sdkdiag.AppendErrorf(diags, "reading FSx for OpenZFS File System (%s) root volume (%s): %s", d.Id(), rootVolumeID, err)
 	}
 
 	if err := d.Set("root_volume_configuration", flattenOpenzfsRootVolumeConfiguration(rootVolume)); err != nil {
@@ -879,4 +857,67 @@ func flattenOpenzfsFileUserAndGroupQuotas(rs []*fsx.OpenZFSUserOrGroupQuota) []m
 	}
 
 	return nil
+}
+
+func FindOpenZFSFileSystemByID(ctx context.Context, conn *fsx.FSx, id string) (*fsx.FileSystem, error) {
+	output, err := findFileSystemByIDAndType(ctx, conn, id, fsx.FileSystemTypeOpenzfs)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output.OpenZFSConfiguration == nil {
+		return nil, tfresource.NewEmptyResultError(nil)
+	}
+
+	return output, nil
+}
+
+func FindVolumeByID(ctx context.Context, conn *fsx.FSx, id string) (*fsx.Volume, error) {
+	input := &fsx.DescribeVolumesInput{
+		VolumeIds: aws.StringSlice([]string{id}),
+	}
+
+	return findVolume(ctx, conn, input)
+}
+
+func findVolume(ctx context.Context, conn *fsx.FSx, input *fsx.DescribeVolumesInput) (*fsx.Volume, error) {
+	output, err := findVolumes(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSinglePtrResult(output)
+}
+
+func findVolumes(ctx context.Context, conn *fsx.FSx, input *fsx.DescribeVolumesInput) ([]*fsx.Volume, error) {
+	var output []*fsx.Volume
+
+	err := conn.DescribeVolumesPagesWithContext(ctx, input, func(page *fsx.DescribeVolumesOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, v := range page.Volumes {
+			if v != nil {
+				output = append(output, v)
+			}
+		}
+
+		return !lastPage
+	})
+
+	if tfawserr.ErrCodeEquals(err, fsx.ErrCodeVolumeNotFound) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	return output, nil
 }
