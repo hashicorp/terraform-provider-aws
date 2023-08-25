@@ -40,12 +40,12 @@ func TestAccFSxOpenzfsFileSystem_basic(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, fsx.EndpointsID) },
 		ErrorCheck:               acctest.ErrorCheck(t, fsx.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckOpenzfsFileSystemDestroy(ctx),
+		CheckDestroy:             testAccCheckOpenZFSFileSystemDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccOpenZFSFileSystemConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckOpenzfsFileSystemExists(ctx, resourceName, &filesystem),
+					testAccCheckOpenZFSFileSystemExists(ctx, resourceName, &filesystem),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "fsx", regexache.MustCompile(`file-system/fs-.+`)),
 					resource.TestCheckResourceAttr(resourceName, "network_interface_ids.#", "1"),
 					acctest.CheckResourceAttrAccountID(resourceName, "owner_id"),
@@ -98,12 +98,12 @@ func TestAccFSxOpenzfsFileSystem_diskIops(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, fsx.EndpointsID) },
 		ErrorCheck:               acctest.ErrorCheck(t, fsx.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckOpenzfsFileSystemDestroy(ctx),
+		CheckDestroy:             testAccCheckOpenZFSFileSystemDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccOpenZFSFileSystemConfig_diskIOPSConfiguration(rName, 192),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckOpenzfsFileSystemExists(ctx, resourceName, &filesystem),
+					testAccCheckOpenZFSFileSystemExists(ctx, resourceName, &filesystem),
 					resource.TestCheckResourceAttr(resourceName, "disk_iops_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "disk_iops_configuration.0.mode", "USER_PROVISIONED"),
 					resource.TestCheckResourceAttr(resourceName, "disk_iops_configuration.0.iops", "192"),
@@ -118,7 +118,7 @@ func TestAccFSxOpenzfsFileSystem_diskIops(t *testing.T) {
 			{
 				Config: testAccOpenZFSFileSystemConfig_diskIOPSConfiguration(rName, 200),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckOpenzfsFileSystemExists(ctx, resourceName, &filesystem),
+					testAccCheckOpenZFSFileSystemExists(ctx, resourceName, &filesystem),
 					resource.TestCheckResourceAttr(resourceName, "disk_iops_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "disk_iops_configuration.0.mode", "USER_PROVISIONED"),
 					resource.TestCheckResourceAttr(resourceName, "disk_iops_configuration.0.iops", "200"),
@@ -138,12 +138,12 @@ func TestAccFSxOpenzfsFileSystem_disappears(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, fsx.EndpointsID) },
 		ErrorCheck:               acctest.ErrorCheck(t, fsx.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckOpenzfsFileSystemDestroy(ctx),
+		CheckDestroy:             testAccCheckOpenZFSFileSystemDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccOpenZFSFileSystemConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckOpenzfsFileSystemExists(ctx, resourceName, &filesystem),
+					testAccCheckOpenZFSFileSystemExists(ctx, resourceName, &filesystem),
 					acctest.CheckResourceDisappears(ctx, acctest.Provider, tffsx.ResourceOpenzfsFileSystem(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -162,12 +162,12 @@ func TestAccFSxOpenzfsFileSystem_rootVolume(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, fsx.EndpointsID) },
 		ErrorCheck:               acctest.ErrorCheck(t, fsx.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckOpenzfsFileSystemDestroy(ctx),
+		CheckDestroy:             testAccCheckOpenZFSFileSystemDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccOpenZFSFileSystemConfig_rootVolume1(rName, "NONE", "false", 128),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckOpenzfsFileSystemExists(ctx, resourceName, &filesystem1),
+					testAccCheckOpenZFSFileSystemExists(ctx, resourceName, &filesystem1),
 					resource.TestCheckResourceAttr(resourceName, "root_volume_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "root_volume_configuration.0.data_compression_type", "NONE"),
 					resource.TestCheckResourceAttr(resourceName, "root_volume_configuration.0.nfs_exports.#", "1"),
@@ -195,7 +195,7 @@ func TestAccFSxOpenzfsFileSystem_rootVolume(t *testing.T) {
 			{
 				Config: testAccOpenZFSFileSystemConfig_rootVolume2(rName, "ZSTD", "true", 256, 8),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckOpenzfsFileSystemExists(ctx, resourceName, &filesystem2),
+					testAccCheckOpenZFSFileSystemExists(ctx, resourceName, &filesystem2),
 					testAccCheckOpenzfsFileSystemNotRecreated(&filesystem1, &filesystem2),
 					resource.TestCheckResourceAttr(resourceName, "root_volume_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "root_volume_configuration.0.data_compression_type", "ZSTD"),
@@ -218,7 +218,7 @@ func TestAccFSxOpenzfsFileSystem_rootVolume(t *testing.T) {
 			{
 				Config: testAccOpenZFSFileSystemConfig_rootVolume3Client(rName, "NONE", "false", 128, 1024, 512),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckOpenzfsFileSystemExists(ctx, resourceName, &filesystem3),
+					testAccCheckOpenZFSFileSystemExists(ctx, resourceName, &filesystem3),
 					testAccCheckOpenzfsFileSystemNotRecreated(&filesystem1, &filesystem3),
 					resource.TestCheckResourceAttr(resourceName, "root_volume_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "root_volume_configuration.0.data_compression_type", "NONE"),
@@ -262,7 +262,7 @@ func TestAccFSxOpenzfsFileSystem_rootVolume(t *testing.T) {
 			{
 				Config: testAccOpenZFSFileSystemConfig_rootVolume4(rName, "NONE", "false", 128, 1024),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckOpenzfsFileSystemExists(ctx, resourceName, &filesystem1),
+					testAccCheckOpenZFSFileSystemExists(ctx, resourceName, &filesystem1),
 					resource.TestCheckResourceAttr(resourceName, "root_volume_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "root_volume_configuration.0.data_compression_type", "NONE"),
 					resource.TestCheckResourceAttr(resourceName, "root_volume_configuration.0.nfs_exports.#", "0"),
@@ -305,12 +305,12 @@ func TestAccFSxOpenzfsFileSystem_securityGroupIDs(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, fsx.EndpointsID) },
 		ErrorCheck:               acctest.ErrorCheck(t, fsx.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckOpenzfsFileSystemDestroy(ctx),
+		CheckDestroy:             testAccCheckOpenZFSFileSystemDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccOpenZFSFileSystemConfig_securityGroupIDs1(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckOpenzfsFileSystemExists(ctx, resourceName, &filesystem1),
+					testAccCheckOpenZFSFileSystemExists(ctx, resourceName, &filesystem1),
 					resource.TestCheckResourceAttr(resourceName, "security_group_ids.#", "1"),
 				),
 			},
@@ -323,7 +323,7 @@ func TestAccFSxOpenzfsFileSystem_securityGroupIDs(t *testing.T) {
 			{
 				Config: testAccOpenZFSFileSystemConfig_securityGroupIDs2(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckOpenzfsFileSystemExists(ctx, resourceName, &filesystem2),
+					testAccCheckOpenZFSFileSystemExists(ctx, resourceName, &filesystem2),
 					testAccCheckOpenzfsFileSystemRecreated(&filesystem1, &filesystem2),
 					resource.TestCheckResourceAttr(resourceName, "security_group_ids.#", "2"),
 				),
@@ -342,12 +342,12 @@ func TestAccFSxOpenzfsFileSystem_tags(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, fsx.EndpointsID) },
 		ErrorCheck:               acctest.ErrorCheck(t, fsx.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckOpenzfsFileSystemDestroy(ctx),
+		CheckDestroy:             testAccCheckOpenZFSFileSystemDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccOpenZFSFileSystemConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckOpenzfsFileSystemExists(ctx, resourceName, &filesystem1),
+					testAccCheckOpenZFSFileSystemExists(ctx, resourceName, &filesystem1),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
@@ -361,7 +361,7 @@ func TestAccFSxOpenzfsFileSystem_tags(t *testing.T) {
 			{
 				Config: testAccOpenZFSFileSystemConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckOpenzfsFileSystemExists(ctx, resourceName, &filesystem2),
+					testAccCheckOpenZFSFileSystemExists(ctx, resourceName, &filesystem2),
 					testAccCheckOpenzfsFileSystemNotRecreated(&filesystem1, &filesystem2),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
@@ -371,7 +371,7 @@ func TestAccFSxOpenzfsFileSystem_tags(t *testing.T) {
 			{
 				Config: testAccOpenZFSFileSystemConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckOpenzfsFileSystemExists(ctx, resourceName, &filesystem3),
+					testAccCheckOpenZFSFileSystemExists(ctx, resourceName, &filesystem3),
 					testAccCheckOpenzfsFileSystemNotRecreated(&filesystem2, &filesystem3),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
@@ -391,12 +391,12 @@ func TestAccFSxOpenzfsFileSystem_copyTags(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, fsx.EndpointsID) },
 		ErrorCheck:               acctest.ErrorCheck(t, fsx.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckOpenzfsFileSystemDestroy(ctx),
+		CheckDestroy:             testAccCheckOpenZFSFileSystemDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccOpenZFSFileSystemConfig_copyTags(rName, "key1", "value1", "true"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckOpenzfsFileSystemExists(ctx, resourceName, &filesystem1),
+					testAccCheckOpenZFSFileSystemExists(ctx, resourceName, &filesystem1),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 					resource.TestCheckResourceAttr(resourceName, "copy_tags_to_backups", "true"),
@@ -412,7 +412,7 @@ func TestAccFSxOpenzfsFileSystem_copyTags(t *testing.T) {
 			{
 				Config: testAccOpenZFSFileSystemConfig_copyTags(rName, "key1", "value1", "false"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckOpenzfsFileSystemExists(ctx, resourceName, &filesystem2),
+					testAccCheckOpenZFSFileSystemExists(ctx, resourceName, &filesystem2),
 					testAccCheckOpenzfsFileSystemNotRecreated(&filesystem1, &filesystem2),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 					resource.TestCheckResourceAttr(resourceName, "copy_tags_to_backups", "false"),
@@ -433,12 +433,12 @@ func TestAccFSxOpenzfsFileSystem_throughput(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, fsx.EndpointsID) },
 		ErrorCheck:               acctest.ErrorCheck(t, fsx.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckOpenzfsFileSystemDestroy(ctx),
+		CheckDestroy:             testAccCheckOpenZFSFileSystemDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccOpenZFSFileSystemConfig_throughput(rName, 64),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckOpenzfsFileSystemExists(ctx, resourceName, &filesystem1),
+					testAccCheckOpenZFSFileSystemExists(ctx, resourceName, &filesystem1),
 					resource.TestCheckResourceAttr(resourceName, "throughput_capacity", "64"),
 				),
 			},
@@ -451,7 +451,7 @@ func TestAccFSxOpenzfsFileSystem_throughput(t *testing.T) {
 			{
 				Config: testAccOpenZFSFileSystemConfig_throughput(rName, 128),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckOpenzfsFileSystemExists(ctx, resourceName, &filesystem2),
+					testAccCheckOpenZFSFileSystemExists(ctx, resourceName, &filesystem2),
 					testAccCheckOpenzfsFileSystemNotRecreated(&filesystem1, &filesystem2),
 					resource.TestCheckResourceAttr(resourceName, "throughput_capacity", "128"),
 				),
@@ -470,12 +470,12 @@ func TestAccFSxOpenzfsFileSystem_storageType(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, fsx.EndpointsID) },
 		ErrorCheck:               acctest.ErrorCheck(t, fsx.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckOpenzfsFileSystemDestroy(ctx),
+		CheckDestroy:             testAccCheckOpenZFSFileSystemDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccOpenZFSFileSystemConfig_storageType(rName, "SSD"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckOpenzfsFileSystemExists(ctx, resourceName, &filesystem1),
+					testAccCheckOpenZFSFileSystemExists(ctx, resourceName, &filesystem1),
 					resource.TestCheckResourceAttr(resourceName, "storage_type", "SSD"),
 				),
 			},
@@ -499,12 +499,12 @@ func TestAccFSxOpenzfsFileSystem_weeklyMaintenanceStartTime(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, fsx.EndpointsID) },
 		ErrorCheck:               acctest.ErrorCheck(t, fsx.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckOpenzfsFileSystemDestroy(ctx),
+		CheckDestroy:             testAccCheckOpenZFSFileSystemDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccOpenZFSFileSystemConfig_weeklyMaintenanceStartTime(rName, "1:01:01"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckOpenzfsFileSystemExists(ctx, resourceName, &filesystem1),
+					testAccCheckOpenZFSFileSystemExists(ctx, resourceName, &filesystem1),
 					resource.TestCheckResourceAttr(resourceName, "weekly_maintenance_start_time", "1:01:01"),
 				),
 			},
@@ -517,7 +517,7 @@ func TestAccFSxOpenzfsFileSystem_weeklyMaintenanceStartTime(t *testing.T) {
 			{
 				Config: testAccOpenZFSFileSystemConfig_weeklyMaintenanceStartTime(rName, "2:02:02"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckOpenzfsFileSystemExists(ctx, resourceName, &filesystem2),
+					testAccCheckOpenZFSFileSystemExists(ctx, resourceName, &filesystem2),
 					testAccCheckOpenzfsFileSystemNotRecreated(&filesystem1, &filesystem2),
 					resource.TestCheckResourceAttr(resourceName, "weekly_maintenance_start_time", "2:02:02"),
 				),
@@ -536,12 +536,12 @@ func TestAccFSxOpenzfsFileSystem_automaticBackupRetentionDays(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, fsx.EndpointsID) },
 		ErrorCheck:               acctest.ErrorCheck(t, fsx.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckOpenzfsFileSystemDestroy(ctx),
+		CheckDestroy:             testAccCheckOpenZFSFileSystemDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccOpenZFSFileSystemConfig_automaticBackupRetentionDays(rName, 90),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckOpenzfsFileSystemExists(ctx, resourceName, &filesystem1),
+					testAccCheckOpenZFSFileSystemExists(ctx, resourceName, &filesystem1),
 					resource.TestCheckResourceAttr(resourceName, "automatic_backup_retention_days", "90"),
 				),
 			},
@@ -554,7 +554,7 @@ func TestAccFSxOpenzfsFileSystem_automaticBackupRetentionDays(t *testing.T) {
 			{
 				Config: testAccOpenZFSFileSystemConfig_automaticBackupRetentionDays(rName, 0),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckOpenzfsFileSystemExists(ctx, resourceName, &filesystem2),
+					testAccCheckOpenZFSFileSystemExists(ctx, resourceName, &filesystem2),
 					testAccCheckOpenzfsFileSystemNotRecreated(&filesystem1, &filesystem2),
 					resource.TestCheckResourceAttr(resourceName, "automatic_backup_retention_days", "0"),
 				),
@@ -562,7 +562,7 @@ func TestAccFSxOpenzfsFileSystem_automaticBackupRetentionDays(t *testing.T) {
 			{
 				Config: testAccOpenZFSFileSystemConfig_automaticBackupRetentionDays(rName, 1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckOpenzfsFileSystemExists(ctx, resourceName, &filesystem1),
+					testAccCheckOpenZFSFileSystemExists(ctx, resourceName, &filesystem1),
 					resource.TestCheckResourceAttr(resourceName, "automatic_backup_retention_days", "1"),
 				),
 			},
@@ -580,12 +580,12 @@ func TestAccFSxOpenzfsFileSystem_kmsKeyID(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, fsx.EndpointsID) },
 		ErrorCheck:               acctest.ErrorCheck(t, fsx.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckOpenzfsFileSystemDestroy(ctx),
+		CheckDestroy:             testAccCheckOpenZFSFileSystemDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccOpenZFSFileSystemConfig_kmsKeyID(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckOpenzfsFileSystemExists(ctx, resourceName, &filesystem),
+					testAccCheckOpenZFSFileSystemExists(ctx, resourceName, &filesystem),
 					resource.TestCheckResourceAttrPair(resourceName, "kms_key_id", "aws_kms_key.test", "arn"),
 				),
 			},
@@ -609,12 +609,12 @@ func TestAccFSxOpenzfsFileSystem_dailyAutomaticBackupStartTime(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, fsx.EndpointsID) },
 		ErrorCheck:               acctest.ErrorCheck(t, fsx.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckOpenzfsFileSystemDestroy(ctx),
+		CheckDestroy:             testAccCheckOpenZFSFileSystemDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccOpenZFSFileSystemConfig_dailyAutomaticBackupStartTime(rName, "01:01"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckOpenzfsFileSystemExists(ctx, resourceName, &filesystem1),
+					testAccCheckOpenZFSFileSystemExists(ctx, resourceName, &filesystem1),
 					resource.TestCheckResourceAttr(resourceName, "daily_automatic_backup_start_time", "01:01"),
 				),
 			},
@@ -627,7 +627,7 @@ func TestAccFSxOpenzfsFileSystem_dailyAutomaticBackupStartTime(t *testing.T) {
 			{
 				Config: testAccOpenZFSFileSystemConfig_dailyAutomaticBackupStartTime(rName, "02:02"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckOpenzfsFileSystemExists(ctx, resourceName, &filesystem2),
+					testAccCheckOpenZFSFileSystemExists(ctx, resourceName, &filesystem2),
 					testAccCheckOpenzfsFileSystemNotRecreated(&filesystem1, &filesystem2),
 					resource.TestCheckResourceAttr(resourceName, "daily_automatic_backup_start_time", "02:02"),
 				),
@@ -646,12 +646,12 @@ func TestAccFSxOpenzfsFileSystem_throughputCapacity(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, fsx.EndpointsID) },
 		ErrorCheck:               acctest.ErrorCheck(t, fsx.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckOpenzfsFileSystemDestroy(ctx),
+		CheckDestroy:             testAccCheckOpenZFSFileSystemDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccOpenZFSFileSystemConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckOpenzfsFileSystemExists(ctx, resourceName, &filesystem1),
+					testAccCheckOpenZFSFileSystemExists(ctx, resourceName, &filesystem1),
 					resource.TestCheckResourceAttr(resourceName, "throughput_capacity", "64"),
 				),
 			},
@@ -664,7 +664,7 @@ func TestAccFSxOpenzfsFileSystem_throughputCapacity(t *testing.T) {
 			{
 				Config: testAccOpenzfsFileSystemConfig_throughputCapacity(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckOpenzfsFileSystemExists(ctx, resourceName, &filesystem2),
+					testAccCheckOpenZFSFileSystemExists(ctx, resourceName, &filesystem2),
 					testAccCheckOpenzfsFileSystemNotRecreated(&filesystem1, &filesystem2),
 					resource.TestCheckResourceAttr(resourceName, "throughput_capacity", "128"),
 				),
@@ -683,12 +683,12 @@ func TestAccFSxOpenzfsFileSystem_storageCapacity(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, fsx.EndpointsID) },
 		ErrorCheck:               acctest.ErrorCheck(t, fsx.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckOpenzfsFileSystemDestroy(ctx),
+		CheckDestroy:             testAccCheckOpenZFSFileSystemDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccOpenZFSFileSystemConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckOpenzfsFileSystemExists(ctx, resourceName, &filesystem1),
+					testAccCheckOpenZFSFileSystemExists(ctx, resourceName, &filesystem1),
 					resource.TestCheckResourceAttr(resourceName, "storage_capacity", "64"),
 				),
 			},
@@ -701,7 +701,7 @@ func TestAccFSxOpenzfsFileSystem_storageCapacity(t *testing.T) {
 			{
 				Config: testAccOpenzfsFileSystemConfig_storageCapacity(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckOpenzfsFileSystemExists(ctx, resourceName, &filesystem2),
+					testAccCheckOpenZFSFileSystemExists(ctx, resourceName, &filesystem2),
 					testAccCheckOpenzfsFileSystemNotRecreated(&filesystem1, &filesystem2),
 					resource.TestCheckResourceAttr(resourceName, "storage_capacity", "75"),
 				),
@@ -720,12 +720,12 @@ func TestAccFSxOpenzfsFileSystem_deploymentType(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, fsx.EndpointsID) },
 		ErrorCheck:               acctest.ErrorCheck(t, fsx.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckOpenzfsFileSystemDestroy(ctx),
+		CheckDestroy:             testAccCheckOpenZFSFileSystemDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccOpenzfsFileSystemConfig_deploymentType(rName, "SINGLE_AZ_1", 64),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckOpenzfsFileSystemExists(ctx, resourceName, &filesystem1),
+					testAccCheckOpenZFSFileSystemExists(ctx, resourceName, &filesystem1),
 					resource.TestCheckResourceAttr(resourceName, "deployment_type", "SINGLE_AZ_1"),
 					resource.TestCheckResourceAttr(resourceName, "throughput_capacity", "64"),
 				),
@@ -739,7 +739,7 @@ func TestAccFSxOpenzfsFileSystem_deploymentType(t *testing.T) {
 			{
 				Config: testAccOpenzfsFileSystemConfig_deploymentType(rName, "SINGLE_AZ_2", 160),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckOpenzfsFileSystemExists(ctx, resourceName, &filesystem2),
+					testAccCheckOpenZFSFileSystemExists(ctx, resourceName, &filesystem2),
 					testAccCheckOpenzfsFileSystemRecreated(&filesystem1, &filesystem2),
 					resource.TestCheckResourceAttr(resourceName, "deployment_type", "SINGLE_AZ_2"),
 					resource.TestCheckResourceAttr(resourceName, "throughput_capacity", "160"),
@@ -749,25 +749,48 @@ func TestAccFSxOpenzfsFileSystem_deploymentType(t *testing.T) {
 	})
 }
 
-func testAccCheckOpenzfsFileSystemExists(ctx context.Context, resourceName string, fs *fsx.FileSystem) resource.TestCheckFunc {
+func testAccCheckOpenZFSFileSystemExists(ctx context.Context, n string, v *fsx.FileSystem) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[resourceName]
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return fmt.Errorf("Not found: %s", resourceName)
+			return fmt.Errorf("Not found: %s", n)
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).FSxConn(ctx)
 
-		filesystem, err := tffsx.FindFileSystemByID(ctx, conn, rs.Primary.ID)
+		output, err := tffsx.FindOpenZFSFileSystemByID(ctx, conn, rs.Primary.ID)
+
 		if err != nil {
 			return err
 		}
 
-		if filesystem == nil {
-			return fmt.Errorf("FSx Openzfs File System (%s) not found", rs.Primary.ID)
-		}
+		*v = *output
 
-		*fs = *filesystem
+		return nil
+	}
+}
+
+func testAccCheckOpenZFSFileSystemDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).FSxConn(ctx)
+
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_fsx_openzfs_file_system" {
+				continue
+			}
+
+			_, err := tffsx.FindOpenZFSFileSystemByID(ctx, conn, rs.Primary.ID)
+
+			if tfresource.NotFound(err) {
+				continue
+			}
+
+			if err != nil {
+				return err
+			}
+
+			return fmt.Errorf("FSx for OpenZFS File System %s still exists", rs.Primary.ID)
+		}
 
 		return nil
 	}
@@ -789,28 +812,6 @@ func testAccCheckOpenzfsFileSystemRecreated(i, j *fsx.FileSystem) resource.TestC
 			return fmt.Errorf("FSx OpenZFS File System (%s) not recreated", aws.StringValue(i.FileSystemId))
 		}
 
-		return nil
-	}
-}
-
-func testAccCheckOpenzfsFileSystemDestroy(ctx context.Context) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).FSxConn(ctx)
-
-		for _, rs := range s.RootModule().Resources {
-			if rs.Type != "aws_fsx_openzfs_file_system" {
-				continue
-			}
-
-			filesystem, err := tffsx.FindFileSystemByID(ctx, conn, rs.Primary.ID)
-			if tfresource.NotFound(err) {
-				continue
-			}
-
-			if filesystem != nil {
-				return fmt.Errorf("FSx OpenZFS File System (%s) still exists", rs.Primary.ID)
-			}
-		}
 		return nil
 	}
 }
@@ -853,8 +854,8 @@ resource "aws_fsx_openzfs_file_system" "test" {
 func testAccOpenZFSFileSystemConfig_securityGroupIDs1(rName string) string {
 	return acctest.ConfigCompose(testAccOpenzfsFileSystemConfig_base(rName), fmt.Sprintf(`
 resource "aws_security_group" "test1" {
-  description = "security group for FSx testing"
-  vpc_id      = aws_vpc.test.id
+  name   = "%[1]s-1"
+  vpc_id = aws_vpc.test.id
 
   ingress {
     cidr_blocks = [aws_vpc.test.cidr_block]
@@ -893,8 +894,8 @@ resource "aws_fsx_openzfs_file_system" "test" {
 func testAccOpenZFSFileSystemConfig_securityGroupIDs2(rName string) string {
 	return acctest.ConfigCompose(testAccOpenzfsFileSystemConfig_base(rName), fmt.Sprintf(`
 resource "aws_security_group" "test1" {
-  description = "security group for FSx testing"
-  vpc_id      = aws_vpc.test.id
+  name   = "%[1]s-1"
+  vpc_id = aws_vpc.test.id
 
   ingress {
     cidr_blocks = [aws_vpc.test.cidr_block]
@@ -916,8 +917,8 @@ resource "aws_security_group" "test1" {
 }
 
 resource "aws_security_group" "test2" {
-  description = "security group for FSx testing"
-  vpc_id      = aws_vpc.test.id
+  name   = "%[1]s-2"
+  vpc_id = aws_vpc.test.id
 
   ingress {
     cidr_blocks = [aws_vpc.test.cidr_block]
