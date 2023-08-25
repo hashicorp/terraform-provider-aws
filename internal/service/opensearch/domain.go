@@ -271,6 +271,10 @@ func ResourceDomain() *schema.Resource {
 							Optional: true,
 							Default:  opensearchservice.OpenSearchPartitionInstanceTypeM3MediumSearch,
 						},
+						"multi_az_with_standby_enabled": {
+							Type:     schema.TypeBool,
+							Optional: true,
+						},
 						"warm_count": {
 							Type:         schema.TypeInt,
 							Optional:     true,
@@ -302,10 +306,6 @@ func ResourceDomain() *schema.Resource {
 							},
 						},
 						"zone_awareness_enabled": {
-							Type:     schema.TypeBool,
-							Optional: true,
-						},
-						"multi_az_with_standby_enabled": {
 							Type:     schema.TypeBool,
 							Optional: true,
 						},
@@ -1192,6 +1192,10 @@ func flattenNodeToNodeEncryptionOptions(o *opensearchservice.NodeToNodeEncryptio
 func expandClusterConfig(m map[string]interface{}) *opensearchservice.ClusterConfig {
 	config := opensearchservice.ClusterConfig{}
 
+	if v, ok := m["cold_storage_options"]; ok {
+		config.ColdStorageOptions = expandColdStorageOptions(v.([]interface{}))
+	}
+
 	if v, ok := m["dedicated_master_enabled"]; ok {
 		isEnabled := v.(bool)
 		config.DedicatedMasterEnabled = aws.Bool(isEnabled)
@@ -1214,19 +1218,8 @@ func expandClusterConfig(m map[string]interface{}) *opensearchservice.ClusterCon
 		config.InstanceType = aws.String(v.(string))
 	}
 
-	if v, ok := m["zone_awareness_enabled"]; ok {
-		isEnabled := v.(bool)
-		config.ZoneAwarenessEnabled = aws.Bool(isEnabled)
-
-		if isEnabled {
-			if v, ok := m["zone_awareness_config"]; ok {
-				config.ZoneAwarenessConfig = expandZoneAwarenessConfig(v.([]interface{}))
-			}
-		}
-	}
-
-	if v, ok := m["cold_storage_options"]; ok {
-		config.ColdStorageOptions = expandColdStorageOptions(v.([]interface{}))
+	if v, ok := m["multi_az_with_standby_enabled"]; ok {
+		config.MultiAZWithStandbyEnabled = aws.Bool(v.(bool))
 	}
 
 	if v, ok := m["warm_enabled"]; ok {
@@ -1244,8 +1237,15 @@ func expandClusterConfig(m map[string]interface{}) *opensearchservice.ClusterCon
 		}
 	}
 
-	if v, ok := m["multi_az_with_standby_enabled"]; ok {
-		config.MultiAZWithStandbyEnabled = aws.Bool(v.(bool))
+	if v, ok := m["zone_awareness_enabled"]; ok {
+		isEnabled := v.(bool)
+		config.ZoneAwarenessEnabled = aws.Bool(isEnabled)
+
+		if isEnabled {
+			if v, ok := m["zone_awareness_config"]; ok {
+				config.ZoneAwarenessConfig = expandZoneAwarenessConfig(v.([]interface{}))
+			}
+		}
 	}
 
 	return &config
@@ -1307,6 +1307,9 @@ func flattenClusterConfig(c *opensearchservice.ClusterConfig) []map[string]inter
 	if c.InstanceType != nil {
 		m["instance_type"] = aws.StringValue(c.InstanceType)
 	}
+	if c.MultiAZWithStandbyEnabled != nil {
+		m["multi_az_with_standby_enabled"] = aws.BoolValue(c.MultiAZWithStandbyEnabled)
+	}
 	if c.WarmEnabled != nil {
 		m["warm_enabled"] = aws.BoolValue(c.WarmEnabled)
 	}
@@ -1315,9 +1318,6 @@ func flattenClusterConfig(c *opensearchservice.ClusterConfig) []map[string]inter
 	}
 	if c.WarmType != nil {
 		m["warm_type"] = aws.StringValue(c.WarmType)
-	}
-	if c.MultiAZWithStandbyEnabled != nil {
-		m["multi_az_with_standby_enabled"] = aws.BoolValue(c.MultiAZWithStandbyEnabled)
 	}
 
 	return []map[string]interface{}{m}

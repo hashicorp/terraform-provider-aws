@@ -141,6 +141,10 @@ func DataSourceDomain() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
+						"multi_az_with_standby_enabled": {
+							Type:     schema.TypeBool,
+							Computed: true,
+						},
 						"warm_count": {
 							Type:     schema.TypeInt,
 							Computed: true,
@@ -166,10 +170,6 @@ func DataSourceDomain() *schema.Resource {
 							},
 						},
 						"zone_awareness_enabled": {
-							Type:     schema.TypeBool,
-							Computed: true,
-						},
-						"multi_az_with_standby_enabled": {
 							Type:     schema.TypeBool,
 							Computed: true,
 						},
