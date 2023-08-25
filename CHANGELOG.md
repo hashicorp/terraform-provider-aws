@@ -1,4 +1,14 @@
 ## 5.15.0 (Unreleased)
+
+ENHANCEMENTS:
+
+* data-source/aws_lakeformation_data_lake_settings: Add `read_only_admins` attribute ([#33189](https://github.com/hashicorp/terraform-provider-aws/issues/33189))
+* resource/aws_lakeformation_data_lake_settings: Add `read_only_admins` argument ([#33189](https://github.com/hashicorp/terraform-provider-aws/issues/33189))
+
+BUG FIXES:
+
+* resource/aws_appflow_connector_profile: Fix validation on `oauth2` in `custom_connector_profile` ([#33192](https://github.com/hashicorp/terraform-provider-aws/issues/33192))
+
 ## 5.14.0 (August 24, 2023)
 
 NOTES:
