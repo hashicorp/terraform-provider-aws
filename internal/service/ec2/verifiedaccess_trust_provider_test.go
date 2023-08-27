@@ -1,173 +1,57 @@
 package ec2_test
-// **PLEASE DELETE THIS AND ALL TIP COMMENTS BEFORE SUBMITTING A PR FOR REVIEW!**
-//
-// TIP: ==== INTRODUCTION ====
-// Thank you for trying the skaff tool!
-//
-// You have opted to include these helpful comments. They all include "TIP:"
-// to help you find and remove them when you're done with them.
-//
-// While some aspects of this file are customized to your input, the
-// scaffold tool does *not* look at the AWS API and ensure it has correct
-// function, structure, and variable names. It makes guesses based on
-// commonalities. You will need to make significant adjustments.
-//
-// In other words, as generated, this is a rough outline of the work you will
-// need to do. If something doesn't make sense for your situation, get rid of
-// it.
 
 import (
-	// TIP: ==== IMPORTS ====
-	// This is a common set of imports but not customized to your code since
-	// your code hasn't been written yet. Make sure you, your IDE, or
-	// goimports -w <file> fixes these imports.
-	//
-	// The provider linter wants your imports to be in two groups: first,
-	// standard library (i.e., "fmt" or "strings"), second, everything else.
-	//
-	// Also, AWS Go SDK v2 may handle nested structures differently than v1,
-	// using the services/ec2/types package. If so, you'll
-	// need to import types and reference the nested types, e.g., as
-	// types.<Type Name>.
 	"context"
+	"errors"
 	"fmt"
-	"regexp"
-	"strings"
 	"testing"
 
-	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
-	"github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 
-	// TIP: You will often need to import the package that this test file lives
-	// in. Since it is in the "test" context, it must import the package to use
-	// any normal context constants, variables, or functions.
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 )
 
-// TIP: File Structure. The basic outline for all test files should be as
-// follows. Improve this resource's maintainability by following this
-// outline.
-//
-// 1. Package declaration (add "_test" since this is a test file)
-// 2. Imports
-// 3. Unit tests
-// 4. Basic test
-// 5. Disappears test
-// 6. All the other tests
-// 7. Helper functions (exists, destroy, check, etc.)
-// 8. Functions that return Terraform configurations
-
-// TIP: ==== UNIT TESTS ====
-// This is an example of a unit test. Its name is not prefixed with
-// "TestAcc" like an acceptance test.
-//
-// Unlike acceptance tests, unit tests do not access AWS and are focused on a
-// function (or method). Because of this, they are quick and cheap to run.
-//
-// In designing a resource's implementation, isolate complex bits from AWS bits
-// so that they can be tested through a unit test. We encourage more unit tests
-// in the provider.
-//
-// Cut and dry functions using well-used patterns, like typical flatteners and
-// expanders, don't need unit testing. However, if they are complex or
-// intricate, they should be unit tested.
-func TestVerifiedaccessTrustProviderExampleUnitTest(t *testing.T) {
-	testCases := []struct {
-		TestName string
-		Input    string
-		Expected string
-		Error    bool
-	}{
-		{
-			TestName: "empty",
-			Input:    "",
-			Expected: "",
-			Error:    true,
-		},
-		{
-			TestName: "descriptive name",
-			Input:    "some input",
-			Expected: "some output",
-			Error:    false,
-		},
-		{
-			TestName: "another descriptive name",
-			Input:    "more input",
-			Expected: "more output",
-			Error:    false,
-		},
-	}
-
-	for _, testCase := range testCases {
-		t.Run(testCase.TestName, func(t *testing.T) {
-			got, err := tfec2.FunctionFromResource(testCase.Input)
-
-			if err != nil && !testCase.Error {
-				t.Errorf("got error (%s), expected no error", err)
-			}
-
-			if err == nil && testCase.Error {
-				t.Errorf("got (%s) and no error, expected error", got)
-			}
-
-			if got != testCase.Expected {
-				t.Errorf("got %s, expected %s", got, testCase.Expected)
-			}
-		})
-	}
-}
-
-// TIP: ==== ACCEPTANCE TESTS ====
-// This is an example of a basic acceptance test. This should test as much of
-// standard functionality of the resource as possible, and test importing, if
-// applicable. We prefix its name with "TestAcc", the service, and the
-// resource name.
-//
-// Acceptance test access AWS and cost money to run.
-func TestAccEC2VerifiedaccessTrustProvider_basic(t *testing.T) {
+func TestAccVerifiedAccessTrustProvider_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	// TIP: This is a long-running test guard for tests that run longer than
-	// 300s (5 min) generally.
+
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var verifiedaccesstrustprovider ec2.DescribeVerifiedaccessTrustProviderResponse
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_ec2_verifiedaccess_trust_provider.test"
+	var verifiedaccesstrustprovider ec2.DescribeVerifiedAccessTrustProvidersOutput
+	resourceName := "aws_verifiedaccess_trust_provider.test"
+	policyReferenceName := "test"
+	trustProviderType := "user"
+	userTrustProviderType := "iam-identity-center"
+	description := sdkacctest.RandString(10)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, names.EC2EndpointID)
+			acctest.PreCheckPartitionHasService(t, names.EC2)
 			testAccPreCheck(ctx, t)
+			acctest.PreCheckIAMServiceLinkedRole(ctx, t, "/aws-service-role/sso.amazonaws.com")
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.EC2EndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckVerifiedaccessTrustProviderDestroy(ctx),
+		CheckDestroy:             testAccCheckVerifiedAccessTrustProviderDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVerifiedaccessTrustProviderConfig_basic(rName),
+				Config: testAccVerifiedAccessTrustProviderConfig_basic(policyReferenceName, trustProviderType, userTrustProviderType, description),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVerifiedaccessTrustProviderExists(ctx, resourceName, &verifiedaccesstrustprovider),
-					resource.TestCheckResourceAttr(resourceName, "auto_minor_version_upgrade", "false"),
-					resource.TestCheckResourceAttrSet(resourceName, "maintenance_window_start_time.0.day_of_week"),
-					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "user.*", map[string]string{
-						"console_access": "false",
-						"groups.#":       "0",
-						"username":       "Test",
-						"password":       "TestTest1234",
-					}),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "ec2", regexp.MustCompile(`verifiedaccesstrustprovider:+.`)),
+					testAccCheckVerifiedAccessTrustProviderExists(ctx, resourceName, &verifiedaccesstrustprovider),
+					resource.TestCheckResourceAttr(resourceName, "description", description),
+					resource.TestCheckResourceAttr(resourceName, "policy_reference_name", policyReferenceName),
+					resource.TestCheckResourceAttr(resourceName, "trust_provider_type", trustProviderType),
+					resource.TestCheckResourceAttr(resourceName, "user_trust_provider_type", userTrustProviderType),
 				),
 			},
 			{
@@ -180,30 +64,73 @@ func TestAccEC2VerifiedaccessTrustProvider_basic(t *testing.T) {
 	})
 }
 
-func TestAccEC2VerifiedaccessTrustProvider_disappears(t *testing.T) {
+func TestAccVerifiedAccessTrustProvider_deviceOptions(t *testing.T) {
+	ctx := acctest.Context(t)
+	var verifiedaccesstrustprovider ec2.DescribeVerifiedAccessTrustProvidersOutput
+	resourceName := "aws_verifiedaccess_trust_provider.test"
+	policyReferenceName := "test"
+	trustProviderType := "device"
+	deviceTrustProviderType := "jamf"
+	tenantId := sdkacctest.RandString(10)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckVerifiedAccessTrustProviderDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVerifiedAccessTrustProviderConfig_deviceOptions(policyReferenceName, trustProviderType, deviceTrustProviderType, tenantId),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVerifiedAccessTrustProviderExists(ctx, resourceName, &verifiedaccesstrustprovider),
+					resource.TestCheckResourceAttr(resourceName, "device_options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "device_options.0.tenant_id", tenantId),
+					resource.TestCheckResourceAttr(resourceName, "device_trust_provider_type", deviceTrustProviderType),
+					resource.TestCheckResourceAttr(resourceName, "policy_reference_name", policyReferenceName),
+					resource.TestCheckResourceAttr(resourceName, "trust_provider_type", trustProviderType),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"apply_immediately", "user"},
+			},
+		},
+	})
+}
+
+func TestAccVerifiedAccessTrustProvider_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var verifiedaccesstrustprovider ec2.DescribeVerifiedaccessTrustProviderResponse
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_ec2_verifiedaccess_trust_provider.test"
+	var verifiedaccesstrustprovider ec2.DescribeVerifiedAccessTrustProvidersOutput
+	resourceName := "aws_verifiedaccess_trust_provider.test"
+	policyReferenceName := "test"
+	trustProviderType := "user"
+	userTrustProviderType := "iam-identity-center"
+	description := sdkacctest.RandString(10)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, names.EC2EndpointID)
-			testAccPreCheck(t)
+			acctest.PreCheckPartitionHasService(t, names.EC2)
+			acctest.PreCheckIAMServiceLinkedRole(ctx, t, "/aws-service-role/sso.amazonaws.com")
+			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.EC2EndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckVerifiedaccessTrustProviderDestroy(ctx),
+		CheckDestroy:             testAccCheckVerifiedAccessTrustProviderDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVerifiedaccessTrustProviderConfig_basic(rName, testAccVerifiedaccessTrustProviderVersionNewer),
+				Config: testAccVerifiedAccessTrustProviderConfig_basic(policyReferenceName, trustProviderType, userTrustProviderType, description),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVerifiedaccessTrustProviderExists(ctx, resourceName, &verifiedaccesstrustprovider),
+					testAccCheckVerifiedAccessTrustProviderExists(ctx, resourceName, &verifiedaccesstrustprovider),
 					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfec2.ResourceVerifiedaccessTrustProvider(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -212,53 +139,151 @@ func TestAccEC2VerifiedaccessTrustProvider_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckVerifiedaccessTrustProviderDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckVerifiedAccessTrustProviderDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
 		for _, rs := range s.RootModule().Resources {
-			if rs.Type != "aws_ec2_verifiedaccess_trust_provider" {
+			if rs.Type != "aws_verifiedaccess_trust_provider" {
 				continue
 			}
 
-			input := &ec2.DescribeVerifiedaccessTrustProviderInput{
-				VerifiedaccessTrustProviderId: aws.String(rs.Primary.ID),
-			}
-			_, err := conn.DescribeVerifiedaccessTrustProvider(ctx, &ec2.DescribeVerifiedaccessTrustProviderInput{
-				VerifiedaccessTrustProviderId: aws.String(rs.Primary.ID),
-			})
-			if errs.IsA[*types.ResourceNotFoundException](err){
-				return nil
+			_, err := tfec2.FindVerifiedaccessTrustProviderByID(ctx, conn, rs.Primary.ID)
+			if tfresource.NotFound(err) {
+				continue
 			}
 			if err != nil {
 				return nil
 			}
 
-			return create.Error(names.EC2, create.ErrActionCheckingDestroyed, tfec2.ResNameVerifiedaccessTrustProvider, rs.Primary.ID, errors.New("not destroyed"))
+			return create.Error(names.EC2, create.ErrActionCheckingDestroyed, tfec2.ResNameVerifiedAccessTrustProvider, rs.Primary.ID, errors.New("not destroyed"))
 		}
 
 		return nil
 	}
 }
 
-func testAccCheckVerifiedaccessTrustProviderExists(ctx context.Context, name string, verifiedaccesstrustprovider *ec2.DescribeVerifiedaccessTrustProviderResponse) resource.TestCheckFunc {
+func TestAccVerifiedAccessTrustProvider_oidcOptions(t *testing.T) {
+	ctx := acctest.Context(t)
+	var verifiedaccesstrustprovider ec2.DescribeVerifiedAccessTrustProvidersOutput
+	resourceName := "aws_verifiedaccess_trust_provider.test"
+	policyReferenceName := "test"
+	trustProviderType := "user"
+	userTrustProviderType := "oidc"
+	authorizationEndpoint := "https://authorization.example.com"
+	clientId := sdkacctest.RandString(10)
+	clientSecret := sdkacctest.RandString(10)
+	issuer := "https://issuer.example.com"
+	scope := sdkacctest.RandString(10)
+	tokenEndpoint := "https://token.example.com"
+	userInfoEndpoint := "https://user.example.com"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckVerifiedAccessTrustProviderDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVerifiedAccessTrustProviderConfig_oidcOptions(policyReferenceName, trustProviderType, userTrustProviderType, authorizationEndpoint, clientId, clientSecret, issuer, scope, tokenEndpoint, userInfoEndpoint),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVerifiedAccessTrustProviderExists(ctx, resourceName, &verifiedaccesstrustprovider),
+					resource.TestCheckResourceAttr(resourceName, "oidc_options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "oidc_options.0.authorization_endpoint", authorizationEndpoint),
+					resource.TestCheckResourceAttr(resourceName, "oidc_options.0.client_id", clientId),
+					resource.TestCheckResourceAttr(resourceName, "oidc_options.0.client_secret", clientSecret),
+					resource.TestCheckResourceAttr(resourceName, "oidc_options.0.issuer", issuer),
+					resource.TestCheckResourceAttr(resourceName, "oidc_options.0.scope", scope),
+					resource.TestCheckResourceAttr(resourceName, "oidc_options.0.token_endpoint", tokenEndpoint),
+					resource.TestCheckResourceAttr(resourceName, "oidc_options.0.user_info_endpoint", userInfoEndpoint),
+					resource.TestCheckResourceAttr(resourceName, "policy_reference_name", policyReferenceName),
+					resource.TestCheckResourceAttr(resourceName, "trust_provider_type", trustProviderType),
+					resource.TestCheckResourceAttr(resourceName, "user_trust_provider_type", userTrustProviderType),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"apply_immediately", "user"},
+			},
+		},
+	})
+}
+
+func TestAccVerifiedAccessTrustProvider_tags(t *testing.T) {
+	ctx := acctest.Context(t)
+	var verifiedaccesstrustprovider ec2.DescribeVerifiedAccessTrustProvidersOutput
+	resourceName := "aws_verifiedaccess_trust_provider.test"
+	policyReferenceName := "test"
+	trustProviderType := "user"
+	userTrustProviderType := "iam-identity-center"
+	description := sdkacctest.RandString(10)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheck(ctx, t)
+			acctest.PreCheckIAMServiceLinkedRole(ctx, t, "/aws-service-role/sso.amazonaws.com")
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckVerifiedAccessTrustProviderDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVerifiedAccessTrustProviderConfig_tags1(policyReferenceName, trustProviderType, userTrustProviderType, description, "key1", "value1"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVerifiedAccessTrustProviderExists(ctx, resourceName, &verifiedaccesstrustprovider),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+				),
+			},
+			{
+				Config: testAccVerifiedAccessTrustProviderConfig_tags2(policyReferenceName, trustProviderType, userTrustProviderType, description, "key1", "value1updated", "key2", "value2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVerifiedAccessTrustProviderExists(ctx, resourceName, &verifiedaccesstrustprovider),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+				),
+			},
+			{
+				Config: testAccVerifiedAccessTrustProviderConfig_tags1(policyReferenceName, trustProviderType, userTrustProviderType, description, "key2", "value2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVerifiedAccessTrustProviderExists(ctx, resourceName, &verifiedaccesstrustprovider),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"apply_immediately", "user"},
+			},
+		},
+	})
+}
+
+func testAccCheckVerifiedAccessTrustProviderExists(ctx context.Context, name string, verifiedaccesstrustprovider *ec2.DescribeVerifiedAccessTrustProvidersOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
-			return create.Error(names.EC2, create.ErrActionCheckingExistence, tfec2.ResNameVerifiedaccessTrustProvider, name, errors.New("not found"))
+			return create.Error(names.EC2, create.ErrActionCheckingExistence, tfec2.ResNameVerifiedAccessTrustProvider, name, errors.New("not found"))
 		}
-
 		if rs.Primary.ID == "" {
-			return create.Error(names.EC2, create.ErrActionCheckingExistence, tfec2.ResNameVerifiedaccessTrustProvider, name, errors.New("not set"))
+			return create.Error(names.EC2, create.ErrActionCheckingExistence, tfec2.ResNameVerifiedAccessTrustProvider, name, errors.New("not set"))
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
-		resp, err := conn.DescribeVerifiedaccessTrustProvider(ctx, &ec2.DescribeVerifiedaccessTrustProviderInput{
-			VerifiedaccessTrustProviderId: aws.String(rs.Primary.ID),
-		})
 
+		resp, err := tfec2.FindVerifiedaccessTrustProviderByID(ctx, conn, rs.Primary.ID)
+		fmt.Println(err)
 		if err != nil {
-			return create.Error(names.EC2, create.ErrActionCheckingExistence, tfec2.ResNameVerifiedaccessTrustProvider, rs.Primary.ID, err)
+			return create.Error(names.EC2, create.ErrActionCheckingExistence, tfec2.ResNameVerifiedAccessTrustProvider, rs.Primary.ID, err)
 		}
 
 		*verifiedaccesstrustprovider = *resp
@@ -270,8 +295,8 @@ func testAccCheckVerifiedaccessTrustProviderExists(ctx context.Context, name str
 func testAccPreCheck(ctx context.Context, t *testing.T) {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
-	input := &ec2.ListVerifiedaccessTrustProvidersInput{}
-	_, err := conn.ListVerifiedaccessTrustProviders(ctx, input)
+	input := &ec2.DescribeVerifiedAccessTrustProvidersInput{}
+	_, err := conn.DescribeVerifiedAccessTrustProviders(ctx, input)
 
 	if acctest.PreCheckSkipError(err) {
 		t.Skipf("skipping acceptance testing: %s", err)
@@ -281,39 +306,74 @@ func testAccPreCheck(ctx context.Context, t *testing.T) {
 	}
 }
 
-func testAccCheckVerifiedaccessTrustProviderNotRecreated(before, after *ec2.DescribeVerifiedaccessTrustProviderResponse) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		if before, after := aws.ToString(before.VerifiedaccessTrustProviderId), aws.ToString(after.VerifiedaccessTrustProviderId); before != after {
-			return create.Error(names.EC2, create.ErrActionCheckingNotRecreated, tfec2.ResNameVerifiedaccessTrustProvider, aws.ToString(before.VerifiedaccessTrustProviderId), errors.New("recreated"))
-		}
-
-		return nil
-	}
-}
-
-func testAccVerifiedaccessTrustProviderConfig_basic(rName, version string) string {
+func testAccVerifiedAccessTrustProviderConfig_basic(policyReferenceName, trustProviderType, userTrustProviderType, description string) string {
 	return fmt.Sprintf(`
-resource "aws_security_group" "test" {
-  name = %[1]q
+resource "aws_verifiedaccess_trust_provider" "test" {
+  description              = %[4]q
+  policy_reference_name    = %[1]q
+  trust_provider_type      = %[2]q
+  user_trust_provider_type = %[3]q
+}
+`, policyReferenceName, trustProviderType, userTrustProviderType, description)
 }
 
-resource "aws_ec2_verifiedaccess_trust_provider" "test" {
-  verifiedaccess_trust_provider_name             = %[1]q
-  engine_type             = "ActiveEC2"
-  engine_version          = %[2]q
-  host_instance_type      = "ec2.t2.micro"
-  security_groups         = [aws_security_group.test.id]
-  authentication_strategy = "simple"
-  storage_type            = "efs"
-
-  logs {
-    general = true
+func testAccVerifiedAccessTrustProviderConfig_deviceOptions(policyReferenceName, trustProviderType, deviceTrustProviderType, tenantId string) string {
+	return fmt.Sprintf(`
+resource "aws_verifiedaccess_trust_provider" "test" {
+  device_options {
+    tenant_id = %[4]q
   }
+  device_trust_provider_type = %[3]q
+  policy_reference_name      = %[1]q
+  trust_provider_type        = %[2]q
+}
+`, policyReferenceName, trustProviderType, deviceTrustProviderType, tenantId)
+}
 
-  user {
-    username = "Test"
-    password = "TestTest1234"
+func testAccVerifiedAccessTrustProviderConfig_oidcOptions(policyReferenceName, trustProviderType, userTrustProviderType, authorizationEndpoint, clientId, clientSecret, issuer, scope, tokenEndpoint, userInfoEndpoint string) string {
+	return fmt.Sprintf(`
+resource "aws_verifiedaccess_trust_provider" "test" {
+  oidc_options {
+    authorization_endpoint = %[4]q
+    client_id              = %[5]q
+    client_secret          = %[6]q
+    issuer                 = %[7]q
+    scope                  = %[8]q
+    token_endpoint         = %[9]q
+    user_info_endpoint     = %[10]q
+  }
+  policy_reference_name    = %[1]q
+  trust_provider_type      = %[2]q
+  user_trust_provider_type = %[3]q
+}
+`, policyReferenceName, trustProviderType, userTrustProviderType, authorizationEndpoint, clientId, clientSecret, issuer, scope, tokenEndpoint, userInfoEndpoint)
+}
+
+func testAccVerifiedAccessTrustProviderConfig_tags1(policyReferenceName, trustProviderType, userTrustProviderType, description, tagKey1, tagValue1 string) string {
+	return fmt.Sprintf(`
+resource "aws_verifiedaccess_trust_provider" "test" {
+  description              = %[4]q
+  policy_reference_name    = %[1]q
+  trust_provider_type      = %[2]q
+  user_trust_provider_type = %[3]q
+  tags = {
+    %[5]q = %[6]q
   }
 }
-`, rName, version)
+`, policyReferenceName, trustProviderType, userTrustProviderType, description, tagKey1, tagValue1)
+}
+
+func testAccVerifiedAccessTrustProviderConfig_tags2(policyReferenceName, trustProviderType, userTrustProviderType, description, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+	return fmt.Sprintf(`
+resource "aws_verifiedaccess_trust_provider" "test" {
+  description              = %[4]q
+  policy_reference_name    = %[1]q
+  trust_provider_type      = %[2]q
+  user_trust_provider_type = %[3]q
+  tags = {
+    %[5]q = %[6]q
+    %[7]q = %[8]q
+  }
+}
+`, policyReferenceName, trustProviderType, userTrustProviderType, description, tagKey1, tagValue1, tagKey2, tagValue2)
 }

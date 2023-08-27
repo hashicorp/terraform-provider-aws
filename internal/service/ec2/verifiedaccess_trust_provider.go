@@ -11,9 +11,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	"github.com/aws/aws-sdk-go-v2/service/ec2/types"
 
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -68,11 +66,6 @@ func ResourceVerifiedaccessTrustProvider() *schema.Resource {
 				Optional: true,
 				// ValidateFunc: validation.StringInSlice(ec2.DeviceTrustProviderType_Values(), false),
 			},
-			"dry_run": {
-				Type:     schema.TypeBool,
-				ForceNew: true,
-				Optional: true,
-			},
 			"oidc_options": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -92,8 +85,8 @@ func ResourceVerifiedaccessTrustProvider() *schema.Resource {
 						},
 						"client_secret": {
 							Type:     schema.TypeString,
-							ForceNew: true,
 							Optional: true,
+							ForceNew: true,
 						},
 						"issuer": {
 							Type:         schema.TypeString,
@@ -160,10 +153,6 @@ func resourceVerifiedaccessTrustProviderCreate(ctx context.Context, d *schema.Re
 		TrustProviderType:   types.TrustProviderType(d.Get("trust_provider_type").(string)),
 	}
 
-	if v, ok := d.GetOk("dry_run"); ok {
-		in.DryRun = aws.Bool(v.(bool))
-	}
-
 	if v, ok := d.GetOk("description"); ok {
 		in.Description = aws.String(v.(string))
 	}
@@ -180,13 +169,17 @@ func resourceVerifiedaccessTrustProviderCreate(ctx context.Context, d *schema.Re
 		in.UserTrustProviderType = types.UserTrustProviderType(v.(string))
 	}
 
+	if v, ok := d.GetOk("oidc_options"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		in.OidcOptions = expandCreateVerifiedAccessTrustProviderOIDCOptions(v.([]interface{})[0].(map[string]interface{}))
+	}
+
 	out, err := conn.CreateVerifiedAccessTrustProvider(ctx, in)
 	if err != nil {
-		return append(diags, create.DiagError(names.EC2, create.ErrActionCreating, ResNameVerifiedAccessTrustProvider, d.Get("name").(string), err)...)
+		return append(diags, create.DiagError(names.EC2, create.ErrActionCreating, ResNameVerifiedAccessTrustProvider, "", err)...)
 	}
 
 	if out == nil {
-		return append(diags, create.DiagError(names.EC2, create.ErrActionCreating, ResNameVerifiedAccessTrustProvider, d.Get("name").(string), errors.New("empty output"))...)
+		return append(diags, create.DiagError(names.EC2, create.ErrActionCreating, ResNameVerifiedAccessTrustProvider, "", errors.New("empty output"))...)
 	}
 
 	d.SetId(aws.ToString(out.VerifiedAccessTrustProvider.VerifiedAccessTrustProviderId))
@@ -199,8 +192,8 @@ func resourceVerifiedaccessTrustProviderRead(ctx context.Context, d *schema.Reso
 
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
-	out, err := findVerifiedaccessTrustProviderByID(ctx, conn, d.Id())
-
+	output, err := FindVerifiedaccessTrustProviderByID(ctx, conn, d.Id())
+	// out := output.VerifiedAccessTrustProviders[0]
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] EC2 VerifiedaccessTrustProvider (%s) not found, removing from state", d.Id())
 		d.SetId("")
@@ -211,25 +204,25 @@ func resourceVerifiedaccessTrustProviderRead(ctx context.Context, d *schema.Reso
 		return append(diags, create.DiagError(names.EC2, create.ErrActionReading, ResNameVerifiedAccessTrustProvider, d.Id(), err)...)
 	}
 
-	d.Set("description", out.Description)
+	d.Set("description", output.VerifiedAccessTrustProviders[0].Description)
 
-	if v := out.DeviceOptions; v != nil {
+	if v := output.VerifiedAccessTrustProviders[0].DeviceOptions; v != nil {
 		if err := d.Set("device_options", flattenDeviceOptions(v)); err != nil {
 			return create.DiagError(names.EC2, create.ErrActionSetting, ResNameVerifiedAccessTrustProvider, d.Id(), err)
 		}
 	}
 
-	d.Set("device_trust_provider_type", out.DeviceTrustProviderType)
+	d.Set("device_trust_provider_type", output.VerifiedAccessTrustProviders[0].DeviceTrustProviderType)
 
-	if v := out.OidcOptions; v != nil {
+	if v := output.VerifiedAccessTrustProviders[0].OidcOptions; v != nil {
 		if err := d.Set("oidc_options", flattenOIDCOptions(v)); err != nil {
 			return create.DiagError(names.EC2, create.ErrActionSetting, ResNameVerifiedAccessTrustProvider, d.Id(), err)
 		}
 	}
 
-	d.Set("policy_reference_name", out.PolicyReferenceName)
-	d.Set("trust_provider_type", out.TrustProviderType)
-	d.Set("user_trust_provider_type", out.UserTrustProviderType)
+	d.Set("policy_reference_name", output.VerifiedAccessTrustProviders[0].PolicyReferenceName)
+	d.Set("trust_provider_type", output.VerifiedAccessTrustProviders[0].TrustProviderType)
+	d.Set("user_trust_provider_type", output.VerifiedAccessTrustProviders[0].UserTrustProviderType)
 
 	return diags
 }
@@ -281,7 +274,6 @@ func resourceVerifiedaccessTrustProviderDelete(ctx context.Context, d *schema.Re
 
 	_, err := conn.DeleteVerifiedAccessTrustProvider(ctx, &ec2.DeleteVerifiedAccessTrustProviderInput{
 		VerifiedAccessTrustProviderId: aws.String(d.Id()),
-		DryRun:                        aws.Bool(d.Get("dry_run").(bool)),
 	})
 
 	if err != nil {
@@ -291,30 +283,7 @@ func resourceVerifiedaccessTrustProviderDelete(ctx context.Context, d *schema.Re
 	return diags
 }
 
-func findVerifiedaccessTrustProviderByID(ctx context.Context, conn *ec2.Client, id string) (*types.VerifiedAccessTrustProvider, error) {
-	in := &ec2.DescribeVerifiedAccessTrustProvidersInput{
-		VerifiedAccessTrustProviderIds: []string{id},
-	}
-	out, err := conn.DescribeVerifiedAccessTrustProviders(ctx, in)
-	if tfawserr.ErrCodeEquals(err, errCodeInvalidVerifiedAccessTrustProviderIdNotFound) {
-		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: in,
-		}
-	}
-
-	if err != nil {
-		return nil, err
-	}
-
-	if out == nil || out.VerifiedAccessTrustProviders == nil {
-		return nil, tfresource.NewEmptyResultError(in)
-	}
-
-	return &out.VerifiedAccessTrustProviders[0], nil
-}
-
-func flattenDeviceOptions(apiObject *types.DeviceOptions) map[string]interface{} {
+func flattenDeviceOptions(apiObject *types.DeviceOptions) []interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -325,10 +294,10 @@ func flattenDeviceOptions(apiObject *types.DeviceOptions) map[string]interface{}
 		tfMap["tenant_id"] = aws.ToString(v)
 	}
 
-	return tfMap
+	return []interface{}{tfMap}
 }
 
-func flattenOIDCOptions(apiObject *types.OidcOptions) map[string]interface{} {
+func flattenOIDCOptions(apiObject *types.OidcOptions) []interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -357,7 +326,7 @@ func flattenOIDCOptions(apiObject *types.OidcOptions) map[string]interface{} {
 		tfMap["user_info_endpoint"] = aws.ToString(v)
 	}
 
-	return tfMap
+	return []interface{}{tfMap}
 }
 
 func expandCreateVerifiedAccessTrustProviderDeviceOptions(tfMap map[string]interface{}) *types.CreateVerifiedAccessTrustProviderDeviceOptions {

@@ -7020,3 +7020,27 @@ func FindInstanceConnectEndpointByID(ctx context.Context, conn *ec2_sdkv2.Client
 
 	return output, nil
 }
+
+func FindVerifiedaccessTrustProviderByID(ctx context.Context, conn *ec2_sdkv2.Client, id string) (*ec2_sdkv2.DescribeVerifiedAccessTrustProvidersOutput, error) {
+	in := &ec2_sdkv2.DescribeVerifiedAccessTrustProvidersInput{
+		VerifiedAccessTrustProviderIds: []string{id},
+	}
+	out, err := conn.DescribeVerifiedAccessTrustProviders(ctx, in)
+
+	if tfawserr_sdkv2.ErrCodeEquals(err, errCodeInvalidVerifiedAccessTrustProviderIdNotFound) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: in,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if out == nil || out.VerifiedAccessTrustProviders == nil {
+		return nil, tfresource.NewEmptyResultError(in)
+	}
+
+	return out, nil
+}
