@@ -36,9 +36,9 @@ The following arguments are optional:
 * `tags` - (Optional) Key-value mapping of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `user_trust_provider_type` - (Optional) The type of user-based trust provider.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The ID of the AWS Verified Access trust provider.
 
@@ -52,8 +52,17 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Verified Access Trust Providers can be imported using the `id`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Transfer Workflows using the `id`. For example:
 
+```terraform
+import {
+  to = aws_verifiedaccess_trust_provider.example
+  id = "vatp-8012925589"
+}
 ```
-$ terraform import aws_verifiedaccess_trust_provider.example vatp-8012925589
+
+Using `terraform import`, import Transfer Workflows using the  `id`. For example:
+
+```console
+% terraform import aws_verifiedaccess_trust_provider.example vatp-8012925589
 ```
