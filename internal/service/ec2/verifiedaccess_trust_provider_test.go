@@ -208,7 +208,7 @@ func TestAccVerifiedAccessTrustProvider_oidcOptions(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"apply_immediately", "user"},
+				ImportStateVerifyIgnore: []string{"oidc_options.0.client_secret"},
 			},
 		},
 	})
@@ -262,7 +262,7 @@ func TestAccVerifiedAccessTrustProvider_tags(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"apply_immediately", "user"},
+				ImportStateVerifyIgnore: []string{},
 			},
 		},
 	})

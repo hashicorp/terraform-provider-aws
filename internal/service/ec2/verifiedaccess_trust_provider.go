@@ -84,9 +84,9 @@ func ResourceVerifiedaccessTrustProvider() *schema.Resource {
 							Optional: true,
 						},
 						"client_secret": {
-							Type:     schema.TypeString,
-							Optional: true,
-							ForceNew: true,
+							Type:      schema.TypeString,
+							Required:  true,
+							Sensitive: true,
 						},
 						"issuer": {
 							Type:         schema.TypeString,
@@ -215,7 +215,7 @@ func resourceVerifiedaccessTrustProviderRead(ctx context.Context, d *schema.Reso
 	d.Set("device_trust_provider_type", output.VerifiedAccessTrustProviders[0].DeviceTrustProviderType)
 
 	if v := output.VerifiedAccessTrustProviders[0].OidcOptions; v != nil {
-		if err := d.Set("oidc_options", flattenOIDCOptions(v)); err != nil {
+		if err := d.Set("oidc_options", flattenOIDCOptions(v, d.Get("oidc_options.0.client_secret").(string))); err != nil {
 			return create.DiagError(names.EC2, create.ErrActionSetting, ResNameVerifiedAccessTrustProvider, d.Id(), err)
 		}
 	}
@@ -297,21 +297,20 @@ func flattenDeviceOptions(apiObject *types.DeviceOptions) []interface{} {
 	return []interface{}{tfMap}
 }
 
-func flattenOIDCOptions(apiObject *types.OidcOptions) []interface{} {
+func flattenOIDCOptions(apiObject *types.OidcOptions, clientSecret string) []interface{} {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]interface{}{
+		"client_secret": clientSecret,
+	}
 
 	if v := apiObject.AuthorizationEndpoint; v != nil {
 		tfMap["authorization_endpoint"] = aws.ToString(v)
 	}
 	if v := apiObject.ClientId; v != nil {
 		tfMap["client_id"] = aws.ToString(v)
-	}
-	if v := apiObject.ClientSecret; v != nil {
-		tfMap["client_secret"] = aws.ToString(v)
 	}
 	if v := apiObject.Issuer; v != nil {
 		tfMap["issuer"] = aws.ToString(v)
