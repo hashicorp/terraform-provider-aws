@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -61,10 +62,10 @@ func ResourceVerifiedaccessTrustProvider() *schema.Resource {
 				},
 			},
 			"device_trust_provider_type": {
-				Type:     schema.TypeString,
-				ForceNew: true,
-				Optional: true,
-				// ValidateFunc: validation.StringInSlice(ec2.DeviceTrustProviderType_Values(), false),
+				Type:             schema.TypeString,
+				ForceNew:         true,
+				Optional:         true,
+				ValidateDiagFunc: enum.Validate[types.DeviceTrustProviderType](),
 			},
 			"oidc_options": {
 				Type:     schema.TypeList,
@@ -122,16 +123,16 @@ func ResourceVerifiedaccessTrustProvider() *schema.Resource {
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			"trust_provider_type": {
-				Type:     schema.TypeString,
-				ForceNew: true,
-				Required: true,
-				// ValidateFunc: validation.StringInSlice(ec2.TrustProviderType(), false),
+				Type:             schema.TypeString,
+				ForceNew:         true,
+				Required:         true,
+				ValidateDiagFunc: enum.Validate[types.TrustProviderType](),
 			},
 			"user_trust_provider_type": {
-				Type:     schema.TypeString,
-				ForceNew: true,
-				Optional: true,
-				// ValidateFunc: validation.StringInSlice(types.TrustProviderType(), false),
+				Type:             schema.TypeString,
+				ForceNew:         true,
+				Optional:         true,
+				ValidateDiagFunc: enum.Validate[types.UserTrustProviderType](),
 			},
 		},
 
@@ -151,6 +152,7 @@ func resourceVerifiedaccessTrustProviderCreate(ctx context.Context, d *schema.Re
 	in := &ec2.CreateVerifiedAccessTrustProviderInput{
 		PolicyReferenceName: aws.String(d.Get("policy_reference_name").(string)),
 		TrustProviderType:   types.TrustProviderType(d.Get("trust_provider_type").(string)),
+		TagSpecifications:   getTagSpecificationsInV2(ctx, types.ResourceTypeVerifiedAccessTrustProvider),
 	}
 
 	if v, ok := d.GetOk("description"); ok {
@@ -193,7 +195,8 @@ func resourceVerifiedaccessTrustProviderRead(ctx context.Context, d *schema.Reso
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	output, err := FindVerifiedaccessTrustProviderByID(ctx, conn, d.Id())
-	// out := output.VerifiedAccessTrustProviders[0]
+
+	// ouxd := oux.DeviceOptions
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] EC2 VerifiedaccessTrustProvider (%s) not found, removing from state", d.Id())
 		d.SetId("")
@@ -223,7 +226,7 @@ func resourceVerifiedaccessTrustProviderRead(ctx context.Context, d *schema.Reso
 	d.Set("policy_reference_name", output.VerifiedAccessTrustProviders[0].PolicyReferenceName)
 	d.Set("trust_provider_type", output.VerifiedAccessTrustProviders[0].TrustProviderType)
 	d.Set("user_trust_provider_type", output.VerifiedAccessTrustProviders[0].UserTrustProviderType)
-
+	setTagsOutV2(ctx, output.VerifiedAccessTrustProviders[0].Tags)
 	return diags
 }
 

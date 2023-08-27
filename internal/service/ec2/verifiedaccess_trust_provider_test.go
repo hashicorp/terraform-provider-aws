@@ -58,7 +58,7 @@ func TestAccVerifiedAccessTrustProvider_basic(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"apply_immediately", "user"},
+				ImportStateVerifyIgnore: []string{},
 			},
 		},
 	})
@@ -97,7 +97,7 @@ func TestAccVerifiedAccessTrustProvider_deviceOptions(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"apply_immediately", "user"},
+				ImportStateVerifyIgnore: []string{},
 			},
 		},
 	})
@@ -281,7 +281,6 @@ func testAccCheckVerifiedAccessTrustProviderExists(ctx context.Context, name str
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
 		resp, err := tfec2.FindVerifiedaccessTrustProviderByID(ctx, conn, rs.Primary.ID)
-		fmt.Println(err)
 		if err != nil {
 			return create.Error(names.EC2, create.ErrActionCheckingExistence, tfec2.ResNameVerifiedAccessTrustProvider, rs.Primary.ID, err)
 		}
