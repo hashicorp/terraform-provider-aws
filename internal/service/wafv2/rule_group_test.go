@@ -12,6 +12,7 @@ import (
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/wafv2"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -48,6 +49,72 @@ func TestAccWAFV2RuleGroup_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "visibility_config.0.metric_name", "friendly-metric-name"),
 					resource.TestCheckResourceAttr(resourceName, "visibility_config.0.sampled_requests_enabled", "false"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateIdFunc: testAccRuleGroupImportStateIdFunc(resourceName),
+			},
+		},
+	})
+}
+
+func TestAccWAFV2RuleGroup_Name_generated(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v wafv2.RuleGroup
+	ruleGroupDescription := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_wafv2_rule_group.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckScopeRegional(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, wafv2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRuleGroupDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccRuleGroupConfig_nameGenerated(ruleGroupDescription),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRuleGroupExists(ctx, resourceName, &v),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexache.MustCompile(`regional/rulegroup/.+$`)),
+					resource.TestCheckResourceAttr(resourceName, "name", ruleGroupDescription),
+					resource.TestMatchResourceAttr(resourceName, "name", regexache.MustCompile(fmt.Sprintf("%s[[:xdigit:]]{%d}", id.UniqueIdPrefix, id.UniqueIDSuffixLength))),
+					resource.TestCheckResourceAttr(resourceName, "name_prefix", id.UniqueIdPrefix),
+					resource.TestCheckResourceAttr(resourceName, "description", ruleGroupDescription),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateIdFunc: testAccRuleGroupImportStateIdFunc(resourceName),
+			},
+		},
+	})
+}
+
+func TestAccWAFV2RuleGroup_namePrefix(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v wafv2.RuleGroup
+	ruleGroupDescription := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_wafv2_rule_group.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckScopeRegional(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, wafv2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRuleGroupDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccRuleGroupConfig_nameGenerated(ruleGroupDescription),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRuleGroupExists(ctx, resourceName, &v),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexache.MustCompile(`regional/rulegroup/.+$`)),
+					resource.TestCheckResourceAttr(resourceName, "name", ruleGroupDescription),
+					resource.TestMatchResourceAttr(resourceName, "name", regexache.MustCompile(fmt.Sprintf("%s[[:xdigit:]]{%d}", id.UniqueIdPrefix, id.UniqueIDSuffixLength))),
+					resource.TestCheckResourceAttr(resourceName, "name_prefix", id.UniqueIdPrefix),
+					resource.TestCheckResourceAttr(resourceName, "description", ruleGroupDescription),
 				),
 			},
 			{
@@ -2193,6 +2260,39 @@ resource "aws_wafv2_rule_group" "test" {
   }
 }
 `, name, name)
+}
+
+func testAccRuleGroupConfig_namePrefix(namePrefix string) string {
+	return fmt.Sprintf(`
+resource "aws_wafv2_rule_group" "test" {
+  capacity    = 2
+  name_prefix = "%[1]s"
+  description = "%[1]s"
+  scope       = "REGIONAL"
+
+  visibility_config {
+    cloudwatch_metrics_enabled = false
+    metric_name                = "friendly-metric-name"
+    sampled_requests_enabled   = false
+  }
+}
+`, namePrefix)
+}
+
+func testAccRuleGroupConfig_nameGenerated(description string) string {
+	return fmt.Sprintf(`
+resource "aws_wafv2_rule_group" "test" {
+  capacity    = 2
+  description = "%[1]s"
+  scope       = "REGIONAL"
+
+  visibility_config {
+    cloudwatch_metrics_enabled = false
+    metric_name                = "friendly-metric-name"
+    sampled_requests_enabled   = false
+  }
+}
+`, description)
 }
 
 func testAccRuleGroupConfig_basicUpdate(name string) string {
