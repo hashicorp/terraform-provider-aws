@@ -111,6 +111,8 @@ github.com/aws/aws-sdk-go-v2/service/keyspaces v1.4.5 h1:Z4qTRZdPJHmd5yGdY/4dL71
 github.com/aws/aws-sdk-go-v2/service/keyspaces v1.4.5/go.mod h1:q+dIzmt9fMxRXiTFs8dlIvHtmor246UzM82hW5Gpz0U=
 github.com/aws/aws-sdk-go-v2/service/lambda v1.39.5 h1:uMvxJFS92hNW6BRX0Ou+5zb9DskgrJQHZ+5yT8FXK5Y=
 github.com/aws/aws-sdk-go-v2/service/lambda v1.39.5/go.mod h1:ByLHcf0zbHpyLTOy1iPVRPJWmAUPCiJv5k81dt52ID8=
+github.com/aws/aws-sdk-go-v2/service/lexmodelsv2 v1.32.5 h1:vI9ar8zMH9oJ0ywJU184iMj8MRe/2WjOUpWxK3mzIUQ=
+github.com/aws/aws-sdk-go-v2/service/lexmodelsv2 v1.32.5/go.mod h1:BsjYt3w75hHFse6bzZt4Lvzdl2yKESDV6WIOOVOQsUU=
 github.com/aws/aws-sdk-go-v2/service/lightsail v1.28.5 h1:IFT75uoZ5Ohcpb0sf7NQTF0Tyx8SmfCMz9IQGjyztXQ=
 github.com/aws/aws-sdk-go-v2/service/lightsail v1.28.5/go.mod h1:nh/y5+FgVxvjrwd2myeB92rKKJVMkxZem3irP3/bT28=
 github.com/aws/aws-sdk-go-v2/service/medialive v1.35.0 h1:N1PUKTdG9zb0FEc3c2tYngdx6mkk3blAXYMBsy1dXd0=
