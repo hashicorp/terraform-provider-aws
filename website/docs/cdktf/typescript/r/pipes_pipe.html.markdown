@@ -41,7 +41,7 @@ class MyConvertedCode extends TerraformStack {
     const source = new SqsQueue(this, "source", {});
     const target = new SqsQueue(this, "target", {});
     const main = new DataAwsCallerIdentity(this, "main", {});
-    const test = new IamRole(this, "test", {
+    const example = new IamRole(this, "example", {
       assumeRolePolicy: Token.asString(
         Fn.jsonencode({
           Statement: {
@@ -77,7 +77,7 @@ class MyConvertedCode extends TerraformStack {
           Version: "2012-10-17",
         })
       ),
-      role: test.id,
+      role: example.id,
     });
     /*This allows the Terraform resource name to match the original name. You can remove the call if you don't need them to match.*/
     awsIamRolePolicySource.overrideLogicalId("source");
@@ -94,17 +94,19 @@ class MyConvertedCode extends TerraformStack {
           Version: "2012-10-17",
         })
       ),
-      role: test.id,
+      role: example.id,
     });
     /*This allows the Terraform resource name to match the original name. You can remove the call if you don't need them to match.*/
     awsIamRolePolicyTarget.overrideLogicalId("target");
-    new PipesPipe(this, "example", {
+    const awsPipesPipeExample = new PipesPipe(this, "example_6", {
       dependsOn: [awsIamRolePolicySource, awsIamRolePolicyTarget],
       name: "example-pipe",
-      roleArn: Token.asString(awsIamRoleExample.arn),
+      roleArn: example.arn,
       source: source.arn,
       target: target.arn,
     });
+    /*This allows the Terraform resource name to match the original name. You can remove the call if you don't need them to match.*/
+    awsPipesPipeExample.overrideLogicalId("example");
   }
 }
 
@@ -128,16 +130,16 @@ class MyConvertedCode extends TerraformStack {
       enrichment: Token.asString(awsCloudwatchEventApiDestinationExample.arn),
       enrichmentParameters: {
         httpParameters: {
-          "example-header": "example-value",
-          "second-example-header": "second-example-value",
-        },
-        path_parameter_values: ["example-path-param"],
-        query_string_parameters: [
-          {
+          headerParameters: {
+            "example-header": "example-value",
+            "second-example-header": "second-example-value",
+          },
+          pathParameterValues: ["example-path-param"],
+          queryStringParameters: {
             "example-query-string": "example-value",
             "second-example-query-string": "second-example-value",
           },
-        ],
+        },
       },
       name: "example-pipe",
       roleArn: Token.asString(awsIamRoleExample.arn),
@@ -615,4 +617,4 @@ Using `terraform import`, import pipes using the `name`. For example:
 % terraform import aws_pipes_pipe.example my-pipe
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-e93e107d34790863cac856616a4c5a95ac55081516dd2a2417d72cfb6472a99d -->
+<!-- cache-key: cdktf-0.18.0 input-1a860b54f52a7aaa05aba46c72e3c39fe95c80a585397250f041eb4e41a13d7f -->
