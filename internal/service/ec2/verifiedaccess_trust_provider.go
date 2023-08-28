@@ -200,7 +200,6 @@ func resourceVerifiedaccessTrustProviderRead(ctx context.Context, d *schema.Reso
 
 	output, err := FindVerifiedaccessTrustProviderByID(ctx, conn, d.Id())
 
-	// ouxd := oux.DeviceOptions
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] EC2 VerifiedaccessTrustProvider (%s) not found, removing from state", d.Id())
 		d.SetId("")
