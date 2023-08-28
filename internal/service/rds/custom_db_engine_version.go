@@ -257,7 +257,6 @@ func resourceCustomDBEngineVersionUpdate(ctx context.Context, d *schema.Resource
 	engine, engineVersion, e := customEngineVersionParseID(d.Id())
 	if e != nil {
 		return append(diags, create.DiagError(names.RDS, create.ErrActionUpdating, ResNameCustomDBEngineVersion, d.Id(), e)...)
-		return sdkdiag.AppendErrorf(diags, "deleting RDS DB Proxy (%s): %s", d.Id(), err)
 	}
 	input := &rds.ModifyCustomDBEngineVersionInput{
 		Engine:        aws.String(engine),
@@ -348,15 +347,10 @@ func waitCustomDBEngineVersionCreated(ctx context.Context, conn *rds.RDS, id str
 	return nil, err
 }
 
-// TIP: It is easier to determine whether a resource is updated for some
-// resources than others. The best case is a status flag that tells you when
-// the update has been fully realized. Other times, you can check to see if a
-// key resource argument is updated to a new value or not.
-
 func waitCustomDBEngineVersionUpdated(ctx context.Context, conn *rds.RDS, id string, timeout time.Duration) (*rds.DBEngineVersion, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending:                   []string{statusChangePending},
-		Target:                    []string{statusUpdated},
+		Pending:                   []string{statusAvailable},
+		Target:                    []string{statusAvailable},
 		Refresh:                   statusCustomDBEngineVersion(ctx, conn, id),
 		Timeout:                   timeout,
 		NotFoundChecks:            20,
@@ -371,12 +365,9 @@ func waitCustomDBEngineVersionUpdated(ctx context.Context, conn *rds.RDS, id str
 	return nil, err
 }
 
-// TIP: A deleted waiter is almost like a backwards created waiter. There may
-// be additional pending states, however.
-
 func waitCustomDBEngineVersionDeleted(ctx context.Context, conn *rds.RDS, id string, timeout time.Duration) (*rds.DBEngineVersion, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending: []string{statusDeleting, statusNormal},
+		Pending: []string{statusDeleting},
 		Target:  []string{},
 		Refresh: statusCustomDBEngineVersion(ctx, conn, id),
 		Timeout: timeout,
@@ -406,7 +397,10 @@ func statusCustomDBEngineVersion(ctx context.Context, conn *rds.RDS, id string) 
 }
 
 func findCustomDBEngineVersionByID(ctx context.Context, conn *rds.RDS, id string) (*rds.DBEngineVersion, error) {
-	engine, engineVersion, err := customEngineVersionParseID(id)
+	engine, engineVersion, e := customEngineVersionParseID(id)
+	if e != nil {
+		return nil, e
+	}
 	input := &rds.DescribeDBEngineVersionsInput{
 		Engine:        aws.String(engine),
 		EngineVersion: aws.String(engineVersion),
