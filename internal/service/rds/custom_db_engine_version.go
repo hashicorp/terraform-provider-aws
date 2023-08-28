@@ -100,6 +100,7 @@ func ResourceCustomDBEngineVersion() *schema.Resource {
 			"image_id": {
 				Type:         schema.TypeString,
 				Optional:     true,
+				ForceNew:     true,
 				ValidateFunc: validation.StringLenBetween(1, 255),
 			},
 			"kms_key_id": {
@@ -117,6 +118,7 @@ func ResourceCustomDBEngineVersion() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
+				ForceNew: true,
 				ValidateFunc: validation.All(
 					validation.StringIsJSON,
 					validation.StringLenBetween(1, 100000),
@@ -133,10 +135,12 @@ func ResourceCustomDBEngineVersion() *schema.Resource {
 				Optional: true,
 			},
 			"status": {
-				Type:     schema.TypeString,
-				Computed: true,
+				Type:         schema.TypeString,
+				Optional:     true,
+				Computed:     true,
+				ValidateFunc: validation.StringInSlice(rds.CustomEngineVersionStatus_Values(), false),
 			},
-			names.AttrTags:    tftags.TagsSchema(), // TIP: Many, but not all, resources have `tags` and `tags_all` attributes.
+			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
 		CustomizeDiff: verify.SetTagsDiff,
@@ -247,75 +251,64 @@ func resourceCustomDBEngineVersionRead(ctx context.Context, d *schema.ResourceDa
 
 func resourceCustomDBEngineVersionUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).RDSClient(ctx)
+	conn := meta.(*conns.AWSClient).RDSConn(ctx)
 
 	update := false
-
-	input := &rds.UpdateCustomDBEngineVersionInput{
-		Id: aws.String(d.Id()),
+	engine, engineVersion, e := customEngineVersionParseID(d.Id())
+	if e != nil {
+		return append(diags, create.DiagError(names.RDS, create.ErrActionUpdating, ResNameCustomDBEngineVersion, d.Id(), e)...)
+		return sdkdiag.AppendErrorf(diags, "deleting RDS DB Proxy (%s): %s", d.Id(), err)
+	}
+	input := &rds.ModifyCustomDBEngineVersionInput{
+		Engine:        aws.String(engine),
+		EngineVersion: aws.String(engineVersion),
 	}
 
-	if d.HasChanges("an_argument") {
-		input.AnArgument = aws.String(d.Get("an_argument").(string))
+	if d.HasChanges("description") {
+		input.Description = aws.String(d.Get("description").(string))
+		update = true
+	}
+	if d.HasChanges("status") {
+		input.Status = aws.String(d.Get("status").(string))
 		update = true
 	}
 
 	if !update {
-		// TIP: If update doesn't do anything at all, which is rare, you can
-		// return diags. Otherwise, return a read call, as below.
 		return diags
 	}
 
-	// TIP: -- 3. Call the AWS modify/update function
-	log.Printf("[DEBUG] Updating RDS CustomDBEngineVersion (%s): %#v", d.Id(), in)
-	out, err := conn.UpdateCustomDBEngineVersion(ctx, put)
+	log.Printf("[DEBUG] Updating RDS CustomDBEngineVersion (%s): %#v", d.Id(), input)
+	output, err := conn.ModifyCustomDBEngineVersionWithContext(ctx, input)
 	if err != nil {
 		return append(diags, create.DiagError(names.RDS, create.ErrActionUpdating, ResNameCustomDBEngineVersion, d.Id(), err)...)
 	}
+	if output == nil {
+		return append(diags, create.DiagError(names.RDS, create.ErrActionUpdating, ResNameCustomDBEngineVersion, d.Id(), errors.New("empty output"))...)
+	}
 
-	// TIP: -- 4. Use a waiter to wait for update to complete
-	if _, err := waitCustomDBEngineVersionUpdated(ctx, conn, aws.ToString(out.OperationId), d.Timeout(schema.TimeoutUpdate)); err != nil {
+	if _, err := waitCustomDBEngineVersionUpdated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
 		return append(diags, create.DiagError(names.RDS, create.ErrActionWaitingForUpdate, ResNameCustomDBEngineVersion, d.Id(), err)...)
 	}
 
-	// TIP: -- 5. Call the Read function in the Update return
 	return append(diags, resourceCustomDBEngineVersionRead(ctx, d, meta)...)
 }
 
 func resourceCustomDBEngineVersionDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	// TIP: ==== RESOURCE DELETE ====
-	// Most resources have Delete functions. There are rare situations
-	// where you might not need a delete:
-	// a. The AWS API does not provide a way to delete the resource
-	// b. The point of your resource is to perform an action (e.g., reboot a
-	//    server) and deleting serves no purpose.
-	//
-	// The Delete function should do the following things. Make sure there
-	// is a good reason if you don't do one of these.
-	//
-	// 1. Get a client connection to the relevant service
-	// 2. Populate a delete input structure
-	// 3. Call the AWS delete function
-	// 4. Use a waiter to wait for delete to complete
-	// 5. Return diags
+	conn := meta.(*conns.AWSClient).RDSConn(ctx)
 
-	// TIP: -- 1. Get a client connection to the relevant service
-	conn := meta.(*conns.AWSClient).RDSClient(ctx)
-
-	// TIP: -- 2. Populate a delete input structure
 	log.Printf("[INFO] Deleting RDS CustomDBEngineVersion %s", d.Id())
 
-	// TIP: -- 3. Call the AWS delete function
-	_, err := conn.DeleteCustomDBEngineVersion(ctx, &rds.DeleteCustomDBEngineVersionInput{
-		Id: aws.String(d.Id()),
+	engine, engineVersion, e := customEngineVersionParseID(d.Id())
+	output, err := conn.DeleteCustomDBEngineVersionWithContext(ctx, &rds.DeleteCustomDBEngineVersionInput{
+		Engine:        aws.String(engine),
+		EngineVersion: aws.String(engineVersion),
 	})
 
-	// TIP: On rare occassions, the API returns a not found error after deleting a
-	// resource. If that happens, we don't want it to show up as an error.
-	if errs.IsA[*types.ResourceNotFoundException](err) {
+	if tfawserr.ErrCodeEquals(err, rds.ErrCodeCustomDBEngineVersionNotFoundFault) {
 		return diags
 	}
+
 	if err != nil {
 		return append(diags, create.DiagError(names.RDS, create.ErrActionDeleting, ResNameCustomDBEngineVersion, d.Id(), err)...)
 	}
