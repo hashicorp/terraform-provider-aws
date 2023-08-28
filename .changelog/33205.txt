@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_lb: Allow to add subnets without forcing recreation
+```
