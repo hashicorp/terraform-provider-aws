@@ -1118,9 +1118,6 @@ func TestAccIoTTopicRule_IoT_events_batch_mode(t *testing.T) {
 
 func TestAccIoTTopicRule_kafka(t *testing.T) {
 	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
 
 	rName := testAccTopicRuleName()
 	resourceName := "aws_iot_topic_rule.test"
@@ -1132,7 +1129,7 @@ func TestAccIoTTopicRule_kafka(t *testing.T) {
 		CheckDestroy:             testAccCheckTopicRuleDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTopicRuleConfig_kafka(rName),
+				Config: testAccTopicRuleConfig_kafka(rName, "fake_topic"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTopicRuleExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "cloudwatch_alarm.#", "0"),
@@ -1167,6 +1164,9 @@ func TestAccIoTTopicRule_kafka(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "step_functions.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "timestream.#", "0"),
 				),
+			},
+			{
+				Config: testAccTopicRuleConfig_kafka(rName, "different_topic"),
 			},
 			{
 				ResourceName:      resourceName,
@@ -2314,11 +2314,14 @@ resource "aws_iot_topic_rule" "test" {
 `, rName, batchMode))
 }
 
-func testAccTopicRuleConfig_kafka(rName string) string {
+func testAccTopicRuleConfig_kafka(rName string, topic string) string {
+	// Making a topic rule destination takes several minutes, as it requires creating many networking resources.
+	// It's far faster to simply use a properly-formatted but nonexistent ARN for the destination.
 	return acctest.ConfigCompose(
-		testAccTopicRuleDestinationConfig_basic(rName),
+		testAccTopicRuleConfig_destinationRole(rName),
 		fmt.Sprintf(`
 data "aws_region" "current" {}
+data "aws_caller_identity" "current" {}
 
 resource "aws_iot_topic_rule" "test" {
   name        = %[1]q
@@ -2327,8 +2330,8 @@ resource "aws_iot_topic_rule" "test" {
   sql_version = "2015-10-08"
 
   kafka {
-    destination_arn = aws_iot_topic_rule_destination.test.arn
-    topic           = "fake_topic"
+    destination_arn = "arn:${data.aws_partition.current.partition}:iot:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:ruledestination/vpc/pretend-this-is-a-uuid"
+    topic           = "%s"
 
     client_properties = {
       "acks"                  = "1"
@@ -2342,7 +2345,7 @@ resource "aws_iot_topic_rule" "test" {
     }
   }
 }
-`, rName))
+`, rName, topic))
 }
 
 func testAccTopicRuleConfig_kinesis(rName string) string {
