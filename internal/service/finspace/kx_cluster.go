@@ -213,6 +213,8 @@ func ResourceKxCluster() *schema.Resource {
 										ForceNew: true,
 										ValidateFunc: validation.StringInSlice([]string{
 											"CACHE_1000",
+											"CACHE_250",
+											"CACHE_12",
 										}, true),
 									},
 									"db_paths": {
