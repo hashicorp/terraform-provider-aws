@@ -102,6 +102,30 @@ func TestAccEventsBusPolicy_disappears(t *testing.T) {
 	})
 }
 
+func TestAccEventsBusPolicy_disappears_EventBus(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName := "aws_cloudwatch_event_bus_policy.test"
+	parentResourceName := "aws_cloudwatch_event_bus.test"
+	rstring := sdkacctest.RandString(5)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, eventbridge.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckBusDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccBusPolicyConfig_basic(rstring),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckBusPolicyExists(ctx, resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfevents.ResourceBus(), parentResourceName),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
 func testAccCheckBusPolicyExists(ctx context.Context, pr string) resource.TestCheckFunc {
 	return func(state *terraform.State) error {
 		eventBusResource, ok := state.RootModule().Resources[pr]

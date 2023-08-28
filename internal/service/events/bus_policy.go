@@ -106,6 +106,13 @@ func resourceBusPolicyRead(ctx context.Context, d *schema.ResourceData, meta int
 		log.Printf("[DEBUG] Reading EventBridge bus: %s", input)
 		output, err = conn.DescribeEventBusWithContext(ctx, &input)
 		if err != nil {
+			if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, "ResourceNotFoundException") {
+				return &retry.RetryError{
+					Err:       &retry.NotFoundError{LastError: err, LastRequest: input},
+					Retryable: false,
+				}
+			}
+
 			return retry.NonRetryableError(fmt.Errorf("reading EventBridge permission (%s) failed: %w", d.Id(), err))
 		}
 
