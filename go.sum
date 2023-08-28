@@ -22,8 +22,8 @@ github.com/apparentlymart/go-textseg/v13 v13.0.0/go.mod h1:ZK2fH7c4NqDTLtiYLvIkE
 github.com/armon/go-radix v0.0.0-20180808171621-7fddfc383310/go.mod h1:ufUuZ+zHj4x4TnLV4JWEpy2hxWSpsRywHrMgIH9cCH8=
 github.com/armon/go-radix v1.0.0 h1:F4z6KzEeeQIMeLFa97iZU6vupzoecKdU5TX24SNppXI=
 github.com/armon/go-radix v1.0.0/go.mod h1:ufUuZ+zHj4x4TnLV4JWEpy2hxWSpsRywHrMgIH9cCH8=
-github.com/aws/aws-sdk-go v1.44.331 h1:hEwdOTv6973uegCUY2EY8jyyq0OUg9INc0HOzcu2bjw=
-github.com/aws/aws-sdk-go v1.44.331/go.mod h1:aVsgQcEevwlmQ7qHE9I3h+dtQgpqhFB+i8Phjh7fkwI=
+github.com/aws/aws-sdk-go v1.44.332 h1:Ze+98F41+LxoJUdsisAFThV+0yYYLYw17/Vt0++nFYM=
+github.com/aws/aws-sdk-go v1.44.332/go.mod h1:aVsgQcEevwlmQ7qHE9I3h+dtQgpqhFB+i8Phjh7fkwI=
 github.com/aws/aws-sdk-go-v2 v1.20.1/go.mod h1:NU06lETsFm8fUC6ZjhgDpVBcGZTFQ6XM+LZWZxMI4ac=
 github.com/aws/aws-sdk-go-v2 v1.21.0 h1:gMT0IW+03wtYJhRqTVYn0wLzwdnK9sRMcxmtfGzRdJc=
 github.com/aws/aws-sdk-go-v2 v1.21.0/go.mod h1:/RfNgGmRxI+iFOB1OeJUyxiU+9s88k3pfHvDagGEp0M=
@@ -143,8 +143,8 @@ github.com/aws/aws-sdk-go-v2/service/scheduler v1.2.5 h1:AGRPn7Hef59Eb9zfXjf6MGn
 github.com/aws/aws-sdk-go-v2/service/scheduler v1.2.5/go.mod h1:cdpHC7Nd4Yvtf/rhRqyqqI0fzoCb0fpo2oOFVZ0HTeQ=
 github.com/aws/aws-sdk-go-v2/service/securitylake v1.6.5 h1:080Jcl86xHli+9yjGqaTaMqQp2JNUr2rurioj2YMpB4=
 github.com/aws/aws-sdk-go-v2/service/securitylake v1.6.5/go.mod h1:/MCawoN8Xib5q04k2HsIQ+K2cNtC3CHamrfLZXd6KmA=
-github.com/aws/aws-sdk-go-v2/service/sesv2 v1.19.5 h1:UDFvgXf0aLuzvWOXZTTkvVgFxiPb0vAanb1gpe5A+DQ=
-github.com/aws/aws-sdk-go-v2/service/sesv2 v1.19.5/go.mod h1:qpAr/ear7teIUoBd1gaPbvavdICoo1XyAIHPVlyawQc=
+github.com/aws/aws-sdk-go-v2/service/sesv2 v1.19.6 h1:aaWAyPwGB1fRyrv/OooH008o9TB6f/Mox+bvyh2jUnI=
+github.com/aws/aws-sdk-go-v2/service/sesv2 v1.19.6/go.mod h1:qpAr/ear7teIUoBd1gaPbvavdICoo1XyAIHPVlyawQc=
 github.com/aws/aws-sdk-go-v2/service/signer v1.16.5 h1:nqZqDR44/ao9zQXyuCJI8L/C3QQIo4wtZyLtgwJfpEY=
 github.com/aws/aws-sdk-go-v2/service/signer v1.16.5/go.mod h1:gHTmxtN3p6WKxFhcOSvWBFfEbxDRFtwfxjj1S7shS64=
 github.com/aws/aws-sdk-go-v2/service/ssm v1.37.5 h1:s9QR0F1W5+11lq04OJ/mihpRpA2VDFIHmu+ktgAbNfg=
