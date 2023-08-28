@@ -141,12 +141,14 @@ func resourceThingTypeRead(ctx context.Context, d *schema.ResourceData, meta int
 	log.Printf("[DEBUG] Reading IoT Thing Type: %s", params)
 	out, err := conn.DescribeThingTypeWithContext(ctx, params)
 
+	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, "ResourceNotFoundException") {
+		log.Printf("[WARN] IoT Thing Type (%s) not found, removing from state", d.Id())
+		d.SetId("")
+		return diags
+	}
+
 	if err != nil {
-		if tfawserr.ErrCodeEquals(err, iot.ErrCodeResourceNotFoundException) {
-			log.Printf("[WARN] IoT Thing Type (%s) not found, removing from state", d.Id())
-			d.SetId("")
-		}
-		return sdkdiag.AppendErrorf(diags, "reading IoT Thing Type (%s): %s", d.Id(), err)
+		return diag.Errorf("reading IoT Thing Type (%s): %s", d.Id(), err)
 	}
 
 	if out.ThingTypeMetadata != nil {

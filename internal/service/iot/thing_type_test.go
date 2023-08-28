@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfiot "github.com/hashicorp/terraform-provider-aws/internal/service/iot"
 )
 
 func TestAccIoTThingType_basic(t *testing.T) {
@@ -123,6 +124,29 @@ func TestAccIoTThingType_tags(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
+			},
+		},
+	})
+}
+
+func TestAccIoTThingType_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName := "aws_iot_thing_type.foo"
+	rInt := sdkacctest.RandInt()
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, iot.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckThingTypeDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccThingTypeConfig_basic(rInt),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckThingTypeExists(ctx, resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfiot.ResourceThingType(), resourceName),
+				),
+				ExpectNonEmptyPlan: true,
 			},
 		},
 	})
