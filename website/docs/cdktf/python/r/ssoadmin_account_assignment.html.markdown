@@ -80,6 +80,13 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `id` - The identifier of the Account Assignment i.e., `principal_id`, `principal_type`, `target_id`, `target_type`, `permission_set_arn`, `instance_arn` separated by commas (`,`).
 
+## Timeouts
+
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
+
+- `create` - (Default `5m`)
+- `delete` - (Default `5m`)
+
 ## Import
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import SSO Account Assignments using the `principal_id`, `principal_type`, `target_id`, `target_type`, `permission_set_arn`, `instance_arn` separated by commas (`,`). For example:
@@ -99,4 +106,4 @@ Using `terraform import`, import SSO Account Assignments using the `principal_id
 % terraform import aws_ssoadmin_account_assignment.example f81d4fae-7dec-11d0-a765-00a0c91e6bf6,GROUP,1234567890,AWS_ACCOUNT,arn:aws:sso:::permissionSet/ssoins-0123456789abcdef/ps-0123456789abcdef,arn:aws:sso:::instance/ssoins-0123456789abcdef
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-65a4b56f7954af8a548f34c32364cf75a4868821f9dd3e1d93d54186280d7cd0 -->
+<!-- cache-key: cdktf-0.18.0 input-8b452aa69c7edc6b5216675cd1c17412026fe86f918609ce3cea201495fc2f0e -->

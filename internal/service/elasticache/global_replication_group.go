@@ -12,6 +12,7 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/elasticache"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
@@ -48,7 +49,7 @@ func ResourceGlobalReplicationGroup() *schema.Resource {
 		DeleteWithoutTimeout: resourceGlobalReplicationGroupDelete,
 		Importer: &schema.ResourceImporter{
 			StateContext: func(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
-				re := regexp.MustCompile("^" + GlobalReplicationGroupRegionPrefixFormat)
+				re := regexache.MustCompile("^" + GlobalReplicationGroupRegionPrefixFormat)
 				d.Set("global_replication_group_id_suffix", re.ReplaceAllLiteralString(d.Id(), ""))
 
 				return []*schema.ResourceData{d}, nil
@@ -692,7 +693,7 @@ func globalReplicationGroupNodeGroupDecrease(ctx context.Context, conn *elastica
 }
 
 func globalReplicationGroupNodeNumber(id string) int {
-	re := regexp.MustCompile(`^.+-0{0,3}(\d+)$`)
+	re := regexache.MustCompile(`^.+-0{0,3}(\d+)$`)
 	matches := re.FindStringSubmatch(id)
 	if len(matches) == 2 {
 		if v, err := strconv.Atoi(matches[1]); err == nil {

@@ -6,9 +6,9 @@ package s3control_test
 import (
 	"context"
 	"fmt"
-	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/service/s3control"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -35,7 +35,7 @@ func TestAccS3ControlAccessPointPolicy_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAccessPointPolicyExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "has_public_access_policy", "false"),
-					resource.TestMatchResourceAttr(resourceName, "policy", regexp.MustCompile(`s3:GetObjectTagging`)),
+					resource.TestMatchResourceAttr(resourceName, "policy", regexache.MustCompile(`s3:GetObjectTagging`)),
 				),
 			},
 			{
@@ -111,7 +111,7 @@ func TestAccS3ControlAccessPointPolicy_update(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAccessPointPolicyExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "has_public_access_policy", "false"),
-					resource.TestMatchResourceAttr(resourceName, "policy", regexp.MustCompile(`s3:GetObjectTagging`)),
+					resource.TestMatchResourceAttr(resourceName, "policy", regexache.MustCompile(`s3:GetObjectTagging`)),
 				),
 			},
 			{
@@ -125,7 +125,7 @@ func TestAccS3ControlAccessPointPolicy_update(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAccessPointPolicyExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "has_public_access_policy", "false"),
-					resource.TestMatchResourceAttr(resourceName, "policy", regexp.MustCompile(`s3:GetObjectLegalHold`)),
+					resource.TestMatchResourceAttr(resourceName, "policy", regexache.MustCompile(`s3:GetObjectLegalHold`)),
 				),
 			},
 		},

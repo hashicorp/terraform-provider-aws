@@ -40,9 +40,10 @@ import (
 	// types.<Type Name>.
 {{- end }}
 	"fmt"
-	"regexp"
 	"strings"
 	"testing"
+
+	"github.com/YakDriver/regexache"
 {{ if .AWSGoSDKV2 }}
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/{{ .ServicePackage }}"
@@ -200,7 +201,7 @@ func TestAcc{{ .Service }}{{ .DataSource }}DataSource_basic(t *testing.T) {
 						"username":       "Test",
 						"password":       "TestTest1234",
 					}),
-					acctest.MatchResourceAttrRegionalARN(dataSourceName, "arn", "{{ .ServicePackage }}", regexp.MustCompile(`{{ .DataSourceLower }}:+.`)),
+					acctest.MatchResourceAttrRegionalARN(dataSourceName, "arn", "{{ .ServicePackage }}", regexache.MustCompile(`{{ .DataSourceLower }}:+.`)),
 				),
 			},
 		},

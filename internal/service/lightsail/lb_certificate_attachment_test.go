@@ -5,10 +5,10 @@ package lightsail_test
 
 import (
 	"fmt"
-	"regexp"
 	"strings"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/service/lightsail"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -33,7 +33,7 @@ func testAccLoadBalancerCertificateAttachment_basic(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccLoadBalancerCertificateAttachmentConfig_basic(lbName, cName, domainName),
-				ExpectError: regexp.MustCompile(`Sorry, you can only attach a validated certificate to a load balancer.`),
+				ExpectError: regexache.MustCompile(`Sorry, you can only attach a validated certificate to a load balancer.`),
 			},
 		},
 	})

@@ -8,9 +8,9 @@ import (
 	"fmt"
 	"log"
 	"os"
-	"regexp"
 	"time"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/feature/ec2/imds"
 	"github.com/aws/aws-sdk-go/aws/endpoints"
@@ -593,7 +593,7 @@ func assumeRoleSchema() *schema.Schema {
 					Description: "A unique identifier that might be required when you assume a role in another account.",
 					ValidateFunc: validation.All(
 						validation.StringLenBetween(2, 1224),
-						validation.StringMatch(regexp.MustCompile(`[\w+=,.@:\/\-]*`), ""),
+						validation.StringMatch(regexache.MustCompile(`[\w+=,.@:\/\-]*`), ""),
 					),
 				},
 				"policy": {

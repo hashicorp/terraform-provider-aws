@@ -189,7 +189,7 @@ The following arguments are required:
 The following arguments are required:
 
 * `default_dimension_value` - (Required) The default value of the dimension that is published to Amazon CloudWatch if you don't provide the value of the dimension when you send an email.
-( `dimension_name` - (Required) The name of an Amazon CloudWatch dimension associated with an email sending metric.
+* `dimension_name` - (Required) The name of an Amazon CloudWatch dimension associated with an email sending metric.
 * `dimension_value_source` - (Required) The location where the Amazon SES API v2 finds the value of a dimension to publish to Amazon CloudWatch. Valid values: `MESSAGE_TAG`, `EMAIL_HEADER`, `LINK_TAG`.
 
 ### kinesis_firehose_destination
@@ -236,4 +236,4 @@ Using `terraform import`, import SESv2 (Simple Email V2) Configuration Set Event
 % terraform import aws_sesv2_configuration_set_event_destination.example example_configuration_set|example_event_destination
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-78da1195950c031c685c5400d78ed3ac03e1865e0469aaf91953431f947beea0 -->
+<!-- cache-key: cdktf-0.18.0 input-cad711a1f404bc31687becda354a170176c8e53426698806bef4713eb256b918 -->

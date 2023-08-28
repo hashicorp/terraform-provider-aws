@@ -5,9 +5,9 @@ package kendra_test
 
 import (
 	"fmt"
-	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/service/backup"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -31,7 +31,7 @@ func TestAccKendraFaqDataSource_basic(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccFaqDataSourceConfig_nonExistent,
-				ExpectError: regexp.MustCompile(`getting Kendra Faq`),
+				ExpectError: regexache.MustCompile(`getting Kendra Faq`),
 			},
 			{
 				Config: testAccFaqDataSourceConfig_basic(rName, rName2, rName3, rName4, rName5),
