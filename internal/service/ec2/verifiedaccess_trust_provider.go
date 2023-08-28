@@ -117,10 +117,12 @@ func ResourceVerifiedaccessTrustProvider() *schema.Resource {
 				},
 			},
 			"policy_reference_name": {
-				Type:         schema.TypeString,
-				ForceNew:     true,
-				Required:     true,
-				ValidateFunc: validation.StringMatch(regexp.MustCompile(`[a-zA-Z_][a-zA-Z0-9_]*`), ""),
+				Type:     schema.TypeString,
+				ForceNew: true,
+				Required: true,
+				ValidateFunc: validation.All(
+					validation.StringMatch(regexp.MustCompile(`[a-zA-Z_][a-zA-Z0-9_]*`), ""),
+				),
 			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
