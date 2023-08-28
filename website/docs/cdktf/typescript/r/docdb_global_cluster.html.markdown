@@ -59,6 +59,7 @@ class MyConvertedCode extends TerraformStack {
     const awsDocdbClusterSecondary = new DocdbCluster(this, "secondary", {
       clusterIdentifier: "test-secondary-cluster",
       dbSubnetGroupName: "default",
+      dependsOn: [awsDocdbClusterPrimary],
       engine: example.engine,
       engineVersion: example.engineVersion,
       globalClusterIdentifier: example.id,
@@ -213,4 +214,4 @@ class MyConvertedCode extends TerraformStack {
 
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-7e0f84c0c2bf541e702d65ca57662790eabf33b1642d8268615d51150c3b5e17 -->
+<!-- cache-key: cdktf-0.18.0 input-1969b7e5823c37dcaa70faf533c61504633b6662145d39efba4b15fdc30e77b9 -->

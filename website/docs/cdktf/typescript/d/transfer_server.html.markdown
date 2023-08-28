@@ -53,7 +53,7 @@ This data source exports the following attributes in addition to the arguments a
 * `loggingRole` - ARN of an IAM role that allows the service to write your SFTP users’ activity to your Amazon CloudWatch logs for monitoring and auditing purposes.
 * `protocols` - File transfer protocol or protocols over which your file transfer protocol client can connect to your server's endpoint.
 * `securityPolicyName` - The name of the security policy that is attached to the server.
-* `structuredLoggingDestinations` - A set of ARNs of destinations that will receive structured logs from the transfer server such as CloudWatch Log Group ARNs.
+* `structuredLogDestinations` - A set of ARNs of destinations that will receive structured logs from the transfer server such as CloudWatch Log Group ARNs.
 * `url` - URL of the service endpoint used to authenticate users with an `identityProviderType` of `apiGateway`.
 
-<!-- cache-key: cdktf-0.18.0 input-9da47ca1471d584fa39cfc5a9fd51a344d2c710c1df3659eec0fc131466bbd3a -->
+<!-- cache-key: cdktf-0.18.0 input-527a93818210197a7ed1dcc84d2ff4fa1fd16ef88ced9a8af3676cc1ab7b8447 -->
