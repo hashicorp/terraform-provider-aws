@@ -7,7 +7,6 @@ import (
 	"context"
 	"errors"
 	"log"
-	"regexp"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -120,9 +119,6 @@ func ResourceVerifiedaccessTrustProvider() *schema.Resource {
 				Type:     schema.TypeString,
 				ForceNew: true,
 				Required: true,
-				ValidateFunc: validation.All(
-					validation.StringMatch(regexp.MustCompile(`[a-zA-Z_][a-zA-Z0-9_]*`), ""),
-				),
 			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
