@@ -1679,28 +1679,38 @@ func expandKafkaAction(tfList []interface{}) *iot.KafkaAction {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
+	empty := true
 
 	apiObject := &iot.KafkaAction{}
 	tfMap := tfList[0].(map[string]interface{})
 
 	if v, ok := tfMap["client_properties"].(map[string]interface{}); ok && len(v) > 0 {
 		apiObject.ClientProperties = flex.ExpandStringMap(v)
+		empty = false
 	}
 
 	if v, ok := tfMap["destination_arn"].(string); ok && v != "" {
 		apiObject.DestinationArn = aws.String(v)
+		empty = false
 	}
 
 	if v, ok := tfMap["key"].(string); ok && v != "" {
 		apiObject.Key = aws.String(v)
+		empty = false
 	}
 
 	if v, ok := tfMap["partition"].(string); ok && v != "" {
 		apiObject.Partition = aws.String(v)
+		empty = false
 	}
 
 	if v, ok := tfMap["topic"].(string); ok && v != "" {
 		apiObject.Topic = aws.String(v)
+		empty = false
+	}
+
+	if empty {
+		return nil
 	}
 
 	return apiObject

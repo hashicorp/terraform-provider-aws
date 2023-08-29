@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_iot_topic_rule: Fix error when updating topic_rule with destination type kafka.
+```
