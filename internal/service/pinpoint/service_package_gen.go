@@ -66,6 +66,11 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			TypeName: "aws_pinpoint_email_channel",
 		},
 		{
+			Factory:  ResourceEmailTemplate,
+			TypeName: "aws_pinpoint_email_template",
+			Name:     "EmailTemplate",
+		},
+		{
 			Factory:  ResourceEventStream,
 			TypeName: "aws_pinpoint_event_stream",
 		},
