@@ -249,7 +249,7 @@ func ResourceDomain() *schema.Resource {
 						"dedicated_master_count": {
 							Type:             schema.TypeInt,
 							Optional:         true,
-							DiffSuppressFunc: isDedicatedMasterDisabled,
+							DiffSuppressFunc: suppressComputedDedicatedMaster,
 						},
 						"dedicated_master_enabled": {
 							Type:     schema.TypeBool,
@@ -259,7 +259,7 @@ func ResourceDomain() *schema.Resource {
 						"dedicated_master_type": {
 							Type:             schema.TypeString,
 							Optional:         true,
-							DiffSuppressFunc: isDedicatedMasterDisabled,
+							DiffSuppressFunc: suppressComputedDedicatedMaster,
 						},
 						"instance_count": {
 							Type:     schema.TypeInt,
@@ -1149,7 +1149,7 @@ func getKibanaEndpoint(d *schema.ResourceData) string {
 	return d.Get("endpoint").(string) + "/_plugin/kibana/"
 }
 
-func isDedicatedMasterDisabled(k, old, new string, d *schema.ResourceData) bool {
+func suppressComputedDedicatedMaster(k, old, new string, d *schema.ResourceData) bool {
 	v, ok := d.GetOk("cluster_config")
 	if ok {
 		clusterConfig := v.([]interface{})[0].(map[string]interface{})
