@@ -13,13 +13,16 @@ func expandProtocol(l []interface{}) *datasync.FsxProtocol {
 	}
 
 	m := l[0].(map[string]interface{})
+	protocol := &datasync.FsxProtocol{}
 
-	Protocol := &datasync.FsxProtocol{
-		NFS: expandNFS(m["nfs"].([]interface{})),
-		SMB: expandSMB(m["smb"].([]interface{})),
+	if v, ok := m["nfs"].([]interface{}); ok {
+		protocol.NFS = expandNFS(v)
+	}
+	if v, ok := m["smb"].([]interface{}); ok {
+		protocol.SMB = expandSMB(v)
 	}
 
-	return Protocol
+	return protocol
 }
 
 func flattenProtocol(protocol *datasync.FsxProtocol) []interface{} {
@@ -46,11 +49,11 @@ func expandNFS(l []interface{}) *datasync.FsxProtocolNfs {
 
 	m := l[0].(map[string]interface{})
 
-	Protocol := &datasync.FsxProtocolNfs{
+	protocol := &datasync.FsxProtocolNfs{
 		MountOptions: expandNFSMountOptions(m["mount_options"].([]interface{})),
 	}
 
-	return Protocol
+	return protocol
 }
 
 func expandSMB(l []interface{}) *datasync.FsxProtocolSmb {
@@ -60,11 +63,11 @@ func expandSMB(l []interface{}) *datasync.FsxProtocolSmb {
 
 	m := l[0].(map[string]interface{})
 
-	Protocol := &datasync.FsxProtocolSmb{
+	protocol := &datasync.FsxProtocolSmb{
 		MountOptions: expandSMBMountOptions(m["mount_options"].([]interface{})),
 	}
 
-	return Protocol
+	return protocol
 }
 
 // todo: go another level down?
