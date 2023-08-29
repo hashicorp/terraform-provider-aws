@@ -263,6 +263,14 @@ func resourceWebACLRead(ctx context.Context, d *schema.ResourceData, meta interf
 func resourceWebACLUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).WAFV2Conn(ctx)
 
+	// Find the AWS managed ShieldMitigationRuleGroup group rule if existent and add it into the set of rules to update
+	// so that the provider will not remove the Shield rule when changes are applied to the WebACL
+	output, err := FindWebACLByThreePartKey(ctx, conn, d.Id(), d.Get("name").(string), d.Get("scope").(string))
+	if err != nil {
+		return diag.Errorf("reading WAFv2 WebACL (%s): %s", d.Id(), err)
+	}
+	rules := append(expandWebACLRules(d.Get("rule").(*schema.Set).List()), findShieldRule(output.WebACL.Rules)...)
+
 	if d.HasChangesExcept("tags", "tags_all") {
 		input := &wafv2.UpdateWebACLInput{
 			AssociationConfig: expandAssociationConfig(d.Get("association_config").([]interface{})),
@@ -271,7 +279,7 @@ func resourceWebACLUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 			Id:                aws.String(d.Id()),
 			LockToken:         aws.String(d.Get("lock_token").(string)),
 			Name:              aws.String(d.Get("name").(string)),
-			Rules:             expandWebACLRules(d.Get("rule").(*schema.Set).List()),
+			Rules:             rules,
 			Scope:             aws.String(d.Get("scope").(string)),
 			VisibilityConfig:  expandVisibilityConfig(d.Get("visibility_config").([]interface{})),
 		}
@@ -364,9 +372,14 @@ func FindWebACLByThreePartKey(ctx context.Context, conn *wafv2.WAFV2, id, name, 
 // See https://docs.aws.amazon.com/waf/latest/developerguide/ddos-automatic-app-layer-response-rg.html
 func filterWebACLRules(rules, configRules []*wafv2.Rule) []*wafv2.Rule {
 	var fr []*wafv2.Rule
-	pattern := `^ShieldMitigationRuleGroup_\d{12}_[0-9A-Fa-f]{8}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{12}_.*`
+	sr := findShieldRule(rules)
+
+	if len(sr) == 0 {
+		return rules
+	}
+
 	for _, r := range rules {
-		if regexache.MustCompile(pattern).MatchString(aws.StringValue(r.Name)) {
+		if aws.StringValue(r.Name) == aws.StringValue(sr[0].Name) {
 			filter := true
 			for _, cr := range configRules {
 				if aws.StringValue(cr.Name) == aws.StringValue(r.Name) {
@@ -382,4 +395,15 @@ func filterWebACLRules(rules, configRules []*wafv2.Rule) []*wafv2.Rule {
 		fr = append(fr, r)
 	}
 	return fr
+}
+
+func findShieldRule(rules []*wafv2.Rule) []*wafv2.Rule {
+	pattern := `^ShieldMitigationRuleGroup_\d{12}_[0-9A-Fa-f]{8}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{12}_.*`
+	var sr []*wafv2.Rule
+	for _, r := range rules {
+		if regexache.MustCompile(pattern).MatchString(aws.StringValue(r.Name)) {
+			sr = append(sr, r)
+		}
+	}
+	return sr
 }
