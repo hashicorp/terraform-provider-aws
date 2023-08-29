@@ -27,9 +27,13 @@ func flattenProtocol(protocol *datasync.FsxProtocol) []interface{} {
 		return []interface{}{}
 	}
 
-	m := map[string]interface{}{
-		"nfs": flattenNFS(protocol.NFS),
-		"smb": flattenSMB(protocol.SMB),
+	m := map[string]interface{}{}
+
+	if protocol.NFS != nil {
+		m["nfs"] = flattenNFS(protocol.NFS)
+	}
+	if protocol.SMB != nil {
+		m["smb"] = flattenSMB(protocol.SMB)
 	}
 
 	return []interface{}{m}
