@@ -295,8 +295,8 @@ func ResourceOpenZFSFileSystem() *schema.Resource {
 			validateDiskConfigurationIOPS,
 			func(_ context.Context, d *schema.ResourceDiff, meta interface{}) error {
 				var (
-					singleAZ1ThroughputCapacityValues = []int{64, 128, 256, 512, 1024, 2048, 3072, 4096}
-					singleAZ2ThroughputCapacityValues = []int{160, 320, 640, 1280, 2560, 3840, 5120, 7680, 10240}
+					singleAZ1ThroughputCapacityValues            = []int{64, 128, 256, 512, 1024, 2048, 3072, 4096}
+					singleAZ2AndMultiAZ1ThroughputCapacityValues = []int{160, 320, 640, 1280, 2560, 3840, 5120, 7680, 10240}
 				)
 
 				switch deploymentType, throughputCapacity := d.Get("deployment_type").(string), d.Get("throughput_capacity").(int); deploymentType {
@@ -304,9 +304,9 @@ func ResourceOpenZFSFileSystem() *schema.Resource {
 					if !slices.Contains(singleAZ1ThroughputCapacityValues, throughputCapacity) {
 						return fmt.Errorf("%d is not a valid value for `throughput_capacity` when `deployment_type` is %q. Valid values: %v", throughputCapacity, deploymentType, singleAZ1ThroughputCapacityValues)
 					}
-				case fsx.OpenZFSDeploymentTypeSingleAz2:
-					if !slices.Contains(singleAZ2ThroughputCapacityValues, throughputCapacity) {
-						return fmt.Errorf("%d is not a valid value for `throughput_capacity` when `deployment_type` is %q. Valid values: %v", throughputCapacity, deploymentType, singleAZ2ThroughputCapacityValues)
+				case fsx.OpenZFSDeploymentTypeSingleAz2, fsx.OpenZFSDeploymentTypeMultiAz1:
+					if !slices.Contains(singleAZ2AndMultiAZ1ThroughputCapacityValues, throughputCapacity) {
+						return fmt.Errorf("%d is not a valid value for `throughput_capacity` when `deployment_type` is %q. Valid values: %v", throughputCapacity, deploymentType, singleAZ2AndMultiAZ1ThroughputCapacityValues)
 					}
 					// default:
 					// Allow validation to pass for unknown/new types.
