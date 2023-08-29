@@ -23,7 +23,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -219,7 +218,7 @@ func resourceCustomDBEngineVersionRead(ctx context.Context, d *schema.ResourceDa
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RDSConn(ctx)
 
-	out, err := findCustomDBEngineVersionByID(ctx, conn, d.Id())
+	out, err := FindCustomDBEngineVersionByID(ctx, conn, d.Id())
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] RDS CustomDBEngineVersion (%s) not found, removing from state", d.Id())
 		d.SetId("")
@@ -299,7 +298,10 @@ func resourceCustomDBEngineVersionDelete(ctx context.Context, d *schema.Resource
 	log.Printf("[INFO] Deleting RDS CustomDBEngineVersion %s", d.Id())
 
 	engine, engineVersion, e := customEngineVersionParseID(d.Id())
-	output, err := conn.DeleteCustomDBEngineVersionWithContext(ctx, &rds.DeleteCustomDBEngineVersionInput{
+	if e != nil {
+		return append(diags, create.DiagError(names.RDS, create.ErrActionUpdating, ResNameCustomDBEngineVersion, d.Id(), e)...)
+	}
+	_, err := conn.DeleteCustomDBEngineVersionWithContext(ctx, &rds.DeleteCustomDBEngineVersionInput{
 		Engine:        aws.String(engine),
 		EngineVersion: aws.String(engineVersion),
 	})
@@ -312,12 +314,10 @@ func resourceCustomDBEngineVersionDelete(ctx context.Context, d *schema.Resource
 		return append(diags, create.DiagError(names.RDS, create.ErrActionDeleting, ResNameCustomDBEngineVersion, d.Id(), err)...)
 	}
 
-	// TIP: -- 4. Use a waiter to wait for delete to complete
 	if _, err := waitCustomDBEngineVersionDeleted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
 		return append(diags, create.DiagError(names.RDS, create.ErrActionWaitingForDeletion, ResNameCustomDBEngineVersion, d.Id(), err)...)
 	}
 
-	// TIP: -- 5. Return diags
 	return diags
 }
 
@@ -383,7 +383,7 @@ func waitCustomDBEngineVersionDeleted(ctx context.Context, conn *rds.RDS, id str
 
 func statusCustomDBEngineVersion(ctx context.Context, conn *rds.RDS, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		out, err := findCustomDBEngineVersionByID(ctx, conn, id)
+		out, err := FindCustomDBEngineVersionByID(ctx, conn, id)
 		if tfresource.NotFound(err) {
 			return nil, "", nil
 		}
@@ -396,7 +396,7 @@ func statusCustomDBEngineVersion(ctx context.Context, conn *rds.RDS, id string) 
 	}
 }
 
-func findCustomDBEngineVersionByID(ctx context.Context, conn *rds.RDS, id string) (*rds.DBEngineVersion, error) {
+func FindCustomDBEngineVersionByID(ctx context.Context, conn *rds.RDS, id string) (*rds.DBEngineVersion, error) {
 	engine, engineVersion, e := customEngineVersionParseID(id)
 	if e != nil {
 		return nil, e
@@ -426,130 +426,8 @@ func findCustomDBEngineVersionByID(ctx context.Context, conn *rds.RDS, id string
 	return output.DBEngineVersions[0], nil
 }
 
-// TIP: ==== FLEX ====
-// Flatteners and expanders ("flex" functions) help handle complex data
-// types. Flatteners take an API data type and return something you can use in
-// a d.Set() call. In other words, flatteners translate from AWS -> Terraform.
-//
-// On the other hand, expanders take a Terraform data structure and return
-// something that you can send to the AWS API. In other words, expanders
-// translate from Terraform -> AWS.
-//
-// See more:
-// https://hashicorp.github.io/terraform-provider-aws/data-handling-and-conversion/
-func flattenComplexArgument(apiObject *rds.ComplexArgument) map[string]interface{} {
-	if apiObject == nil {
-		return nil
-	}
-
-	m := map[string]interface{}{}
-
-	if v := apiObject.SubFieldOne; v != nil {
-		m["sub_field_one"] = aws.ToString(v)
-	}
-
-	if v := apiObject.SubFieldTwo; v != nil {
-		m["sub_field_two"] = aws.ToString(v)
-	}
-
-	return m
-}
-
-// TIP: Often the AWS API will return a slice of structures in response to a
-// request for information. Sometimes you will have set criteria (e.g., the ID)
-// that means you'll get back a one-length slice. This plural function works
-// brilliantly for that situation too.
-func flattenComplexArguments(apiObjects []*rds.ComplexArgument) []interface{} {
-	if len(apiObjects) == 0 {
-		return nil
-	}
-
-	var l []interface{}
-
-	for _, apiObject := range apiObjects {
-		if apiObject == nil {
-			continue
-		}
-
-		l = append(l, flattenComplexArgument(apiObject))
-	}
-
-	return l
-}
-
-// TIP: Remember, as mentioned above, expanders take a Terraform data structure
-// and return something that you can send to the AWS API. In other words,
-// expanders translate from Terraform -> AWS.
-//
-// See more:
-// https://hashicorp.github.io/terraform-provider-aws/data-handling-and-conversion/
-func expandComplexArgument(tfMap map[string]interface{}) *rds.ComplexArgument {
-	if tfMap == nil {
-		return nil
-	}
-
-	a := &rds.ComplexArgument{}
-
-	if v, ok := tfMap["sub_field_one"].(string); ok && v != "" {
-		a.SubFieldOne = aws.String(v)
-	}
-
-	if v, ok := tfMap["sub_field_two"].(string); ok && v != "" {
-		a.SubFieldTwo = aws.String(v)
-	}
-
-	return a
-}
-
-// TIP: Even when you have a list with max length of 1, this plural function
-// works brilliantly. However, if the AWS API takes a structure rather than a
-// slice of structures, you will not need it.
-func expandComplexArguments(tfList []interface{}) []*rds.ComplexArgument {
-	// TIP: The AWS API can be picky about whether you send a nil or zero-
-	// length for an argument that should be cleared. For example, in some
-	// cases, if you send a nil value, the AWS API interprets that as "make no
-	// changes" when what you want to say is "remove everything." Sometimes
-	// using a zero-length list will cause an error.
-	//
-	// As a result, here are two options. Usually, option 1, nil, will work as
-	// expected, clearing the field. But, test going from something to nothing
-	// to make sure it works. If not, try the second option.
-
-	// TIP: Option 1: Returning nil for zero-length list
-	if len(tfList) == 0 {
-		return nil
-	}
-
-	var s []*rds.ComplexArgument
-
-	// TIP: Option 2: Return zero-length list for zero-length list. If option 1 does
-	// not work, after testing going from something to nothing (if that is
-	// possible), uncomment out the next line and remove option 1.
-	//
-	// s := make([]*rds.ComplexArgument, 0)
-
-	for _, r := range tfList {
-		m, ok := r.(map[string]interface{})
-
-		if !ok {
-			continue
-		}
-
-		a := expandComplexArgument(m)
-
-		if a == nil {
-			continue
-		}
-
-		s = append(s, a)
-	}
-
-	return s
-}
-
 func customEngineVersionParseID(id string) (string, string, error) {
 	parts := strings.SplitN(id, ":", 2)
-
 	if len(parts) != 2 || parts[0] == "" || parts[1] == "" {
 		return "", "", fmt.Errorf("unexpected format of ID (%s), expected engine:engineversion", id)
 	}
