@@ -1027,6 +1027,10 @@ func managedRuleGroupConfigSchema() *schema.Schema {
 									validation.StringMatch(regexache.MustCompile(`.*\S.*`), `must conform to pattern .*\S.* `),
 								),
 							},
+							"enable_regex_in_path": {
+								Type:     schema.TypeBool,
+								Optional: true,
+							},
 							"request_inspection":  managedRuleGroupConfigATPRequestInspectionSchema(),
 							"response_inspection": managedRuleGroupConfigATPResponseInspectionSchema(),
 						},

@@ -1170,6 +1170,10 @@ func expandManagedRulesATPRuleSet(tfList []interface{}) *wafv2.AWSManagedRulesAT
 		LoginPath: aws.String(m["login_path"].(string)),
 	}
 
+	if v, ok := m["enable_regex_in_path"]; ok {
+		out.EnableRegexInPath = aws.Bool(v.(bool))
+	}
+
 	if v, ok := m["request_inspection"].([]interface{}); ok && len(v) > 0 {
 		out.RequestInspection = expandRequestInspection(v)
 	}
@@ -2322,7 +2326,8 @@ func flattenManagedRulesATPRuleSet(apiObject *wafv2.AWSManagedRulesATPRuleSet) [
 	}
 
 	m := map[string]interface{}{
-		"login_path": aws.StringValue(apiObject.LoginPath),
+		"login_path":           aws.StringValue(apiObject.LoginPath),
+		"enable_regex_in_path": aws.BoolValue(apiObject.EnableRegexInPath),
 	}
 	if apiObject.RequestInspection != nil {
 		m["request_inspection"] = flattenRequestInspection(apiObject.RequestInspection)
