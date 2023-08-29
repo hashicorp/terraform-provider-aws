@@ -8,6 +8,7 @@ ENHANCEMENTS:
 BUG FIXES:
 
 * resource/aws_appflow_connector_profile: Fix validation on `oauth2` in `custom_connector_profile` ([#33192](https://github.com/hashicorp/terraform-provider-aws/issues/33192))
+* resource/aws_codeartifact_domain: Change the type of asset_size_bytes to `TypeString` instead of `TypeInt` to prevent `value out of range` panic ([#33220](https://github.com/hashicorp/terraform-provider-aws/issues/33220))
 
 ## 5.14.0 (August 24, 2023)
 
