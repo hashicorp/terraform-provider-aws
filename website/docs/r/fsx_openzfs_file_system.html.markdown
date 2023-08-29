@@ -28,7 +28,7 @@ This resource supports the following arguments:
 
 * `deployment_type` - (Required) - The filesystem deployment type. Valid values: `SINGLE_AZ_1`, `SINGLE_AZ_2` and `MULTI_AZ_1`.
 * `storage_capacity` - (Required) The storage capacity (GiB) of the file system. Valid values between `64` and `524288`.
-* `subnet_ids` - (Required) A list of IDs for the subnets that the file system will be accessible from. Exactly 1 subnet need to be provided.
+* `subnet_ids` - (Required) A list of IDs for the subnets that the file system will be accessible from.
 * `throughput_capacity` - (Required) Throughput (MB/s) of the file system. Valid values depend on `deployment_type`. Must be one of `64`, `128`, `256`, `512`, `1024`, `2048`, `3072`, `4096` for `SINGLE_AZ_1`. Must be one of `160`, `320`, `640`, `1280`, `2560`, `3840`, `5120`, `7680`, `10240` for `SINGLE_AZ_2`.
 * `automatic_backup_retention_days` - (Optional) The number of days to retain automatic backups. Setting this to 0 disables automatic backups. You can retain automatic backups for a maximum of 90 days.
 * `backup_id` - (Optional) The ID of the source backup to create the filesystem from.

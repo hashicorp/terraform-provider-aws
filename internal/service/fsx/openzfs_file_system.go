@@ -267,7 +267,6 @@ func ResourceOpenZFSFileSystem() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 				MinItems: 1,
-				MaxItems: 1,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 			names.AttrTags:    tftags.TagsSchema(),
