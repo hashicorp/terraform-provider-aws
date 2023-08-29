@@ -31,12 +31,12 @@ import (
 
 // @SDKResource("aws_fsx_openzfs_file_system", name="OpenZFS File System")
 // @Tags(identifierAttribute="arn")
-func ResourceOpenzfsFileSystem() *schema.Resource {
+func ResourceOpenZFSFileSystem() *schema.Resource {
 	return &schema.Resource{
-		CreateWithoutTimeout: resourceOpenzfsFileSystemCreate,
-		ReadWithoutTimeout:   resourceOpenzfsFileSystemRead,
-		UpdateWithoutTimeout: resourceOpenzfsFileSystemUpdate,
-		DeleteWithoutTimeout: resourceOpenzfsFileSystemDelete,
+		CreateWithoutTimeout: resourceOpenZFSFileSystemCreate,
+		ReadWithoutTimeout:   resourceOpenZFSFileSystemRead,
+		UpdateWithoutTimeout: resourceOpenZFSFileSystemUpdate,
+		DeleteWithoutTimeout: resourceOpenZFSFileSystemDelete,
 
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
@@ -343,7 +343,7 @@ func validateDiskConfigurationIOPS(_ context.Context, d *schema.ResourceDiff, me
 	return nil
 }
 
-func resourceOpenzfsFileSystemCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceOpenZFSFileSystemCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).FSxConn(ctx)
 
@@ -455,10 +455,10 @@ func resourceOpenzfsFileSystemCreate(ctx context.Context, d *schema.ResourceData
 		return sdkdiag.AppendErrorf(diags, "waiting for FSx for OpenZFS File System (%s) create: %s", d.Id(), err)
 	}
 
-	return append(diags, resourceOpenzfsFileSystemRead(ctx, d, meta)...)
+	return append(diags, resourceOpenZFSFileSystemRead(ctx, d, meta)...)
 }
 
-func resourceOpenzfsFileSystemRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceOpenZFSFileSystemRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).FSxConn(ctx)
 
@@ -516,7 +516,7 @@ func resourceOpenzfsFileSystemRead(ctx context.Context, d *schema.ResourceData, 
 	return diags
 }
 
-func resourceOpenzfsFileSystemUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceOpenZFSFileSystemUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).FSxConn(ctx)
 
@@ -606,10 +606,10 @@ func resourceOpenzfsFileSystemUpdate(ctx context.Context, d *schema.ResourceData
 		}
 	}
 
-	return append(diags, resourceOpenzfsFileSystemRead(ctx, d, meta)...)
+	return append(diags, resourceOpenZFSFileSystemRead(ctx, d, meta)...)
 }
 
-func resourceOpenzfsFileSystemDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceOpenZFSFileSystemDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).FSxConn(ctx)
 
