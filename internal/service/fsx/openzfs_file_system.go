@@ -114,6 +114,11 @@ func ResourceOpenzfsFileSystem() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"endpoint_ip_address_range": {
+				Type:     schema.TypeString,
+				Optional: true,
+				ForceNew: true,
+			},
 			"kms_key_id": {
 				Type:         schema.TypeString,
 				Optional:     true,
@@ -129,6 +134,11 @@ func ResourceOpenzfsFileSystem() *schema.Resource {
 			"owner_id": {
 				Type:     schema.TypeString,
 				Computed: true,
+			},
+			"preferred_subnet_id": {
+				Type:     schema.TypeString,
+				Optional: true,
+				ForceNew: true,
 			},
 			"root_volume_configuration": {
 				Type:     schema.TypeList,
@@ -225,6 +235,13 @@ func ResourceOpenzfsFileSystem() *schema.Resource {
 			"root_volume_id": {
 				Type:     schema.TypeString,
 				Computed: true,
+			},
+			"route_table_ids": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				Computed: true,
+				MaxItems: 50,
+				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 			"security_group_ids": {
 				Type:     schema.TypeSet,
@@ -373,14 +390,29 @@ func resourceOpenzfsFileSystemCreate(ctx context.Context, d *schema.ResourceData
 		inputB.OpenZFSConfiguration.DiskIopsConfiguration = expandOpenzfsFileDiskIopsConfiguration(v.([]interface{}))
 	}
 
+	if v, ok := d.GetOk("endpoint_ip_address_range"); ok {
+		inputC.OpenZFSConfiguration.EndpointIpAddressRange = aws.String(v.(string))
+		inputB.OpenZFSConfiguration.EndpointIpAddressRange = aws.String(v.(string))
+	}
+
 	if v, ok := d.GetOk("kms_key_id"); ok {
 		inputC.KmsKeyId = aws.String(v.(string))
 		inputB.KmsKeyId = aws.String(v.(string))
 	}
 
+	if v, ok := d.GetOk("preferred_subnet_id"); ok {
+		inputC.OpenZFSConfiguration.PreferredSubnetId = aws.String(v.(string))
+		inputB.OpenZFSConfiguration.PreferredSubnetId = aws.String(v.(string))
+	}
+
 	if v, ok := d.GetOk("root_volume_configuration"); ok {
 		inputC.OpenZFSConfiguration.RootVolumeConfiguration = expandOpenzfsRootVolumeConfiguration(v.([]interface{}))
 		inputB.OpenZFSConfiguration.RootVolumeConfiguration = expandOpenzfsRootVolumeConfiguration(v.([]interface{}))
+	}
+
+	if v, ok := d.GetOk("route_table_ids"); ok {
+		inputC.OpenZFSConfiguration.RouteTableIds = flex.ExpandStringSet(v.(*schema.Set))
+		inputB.OpenZFSConfiguration.RouteTableIds = flex.ExpandStringSet(v.(*schema.Set))
 	}
 
 	if v, ok := d.GetOk("security_group_ids"); ok {
@@ -454,11 +486,14 @@ func resourceOpenzfsFileSystemRead(ctx context.Context, d *schema.ResourceData, 
 		return sdkdiag.AppendErrorf(diags, "setting disk_iops_configuration: %s", err)
 	}
 	d.Set("dns_name", filesystem.DNSName)
+	d.Set("endpoint_ip_address_range", openZFSConfig.EndpointIpAddressRange)
 	d.Set("kms_key_id", filesystem.KmsKeyId)
 	d.Set("network_interface_ids", aws.StringValueSlice(filesystem.NetworkInterfaceIds))
 	d.Set("owner_id", filesystem.OwnerId)
+	d.Set("preferred_subnet_id", openZFSConfig.PreferredSubnetId)
 	rootVolumeID := aws.StringValue(openZFSConfig.RootVolumeId)
 	d.Set("root_volume_id", rootVolumeID)
+	d.Set("route_table_ids", aws.StringValueSlice(openZFSConfig.RouteTableIds))
 	d.Set("storage_capacity", filesystem.StorageCapacity)
 	d.Set("storage_type", filesystem.StorageType)
 	d.Set("subnet_ids", aws.StringValueSlice(filesystem.SubnetIds))
@@ -510,6 +545,19 @@ func resourceOpenzfsFileSystemUpdate(ctx context.Context, d *schema.ResourceData
 
 		if d.HasChange("disk_iops_configuration") {
 			input.OpenZFSConfiguration.DiskIopsConfiguration = expandOpenzfsFileDiskIopsConfiguration(d.Get("disk_iops_configuration").([]interface{}))
+		}
+
+		if d.HasChange("route_table_ids") {
+			o, n := d.GetChange("route_table_ids")
+			os, ns := o.(*schema.Set), n.(*schema.Set)
+			add, del := flex.ExpandStringValueSet(ns.Difference(os)), flex.ExpandStringValueSet(os.Difference(ns))
+
+			if len(add) > 0 {
+				input.OpenZFSConfiguration.AddRouteTableIds = aws.StringSlice(add)
+			}
+			if len(del) > 0 {
+				input.OpenZFSConfiguration.RemoveRouteTableIds = aws.StringSlice(del)
+			}
 		}
 
 		if d.HasChange("storage_capacity") {
