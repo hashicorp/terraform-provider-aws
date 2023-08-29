@@ -117,6 +117,7 @@ func ResourceOpenZFSFileSystem() *schema.Resource {
 			"endpoint_ip_address_range": {
 				Type:     schema.TypeString,
 				Optional: true,
+				Computed: true,
 				ForceNew: true,
 			},
 			"kms_key_id": {
