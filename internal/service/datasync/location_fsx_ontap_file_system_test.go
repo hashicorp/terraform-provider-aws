@@ -262,6 +262,10 @@ resource "aws_fsx_ontap_file_system" "test" {
   deployment_type     = "SINGLE_AZ_1"
   throughput_capacity = 512
   preferred_subnet_id = aws_subnet.test[0].id
+
+  tags = {
+    Name = %[1]q
+  }
 }
 
 resource "aws_fsx_ontap_storage_virtual_machine" "test" {
