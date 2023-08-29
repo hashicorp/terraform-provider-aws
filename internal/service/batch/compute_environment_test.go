@@ -6,9 +6,9 @@ package batch_test
 import (
 	"context"
 	"fmt"
-	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/batch"
 	"github.com/google/go-cmp/cmp"
@@ -865,7 +865,7 @@ func TestAccBatchComputeEnvironment_defaultServiceRole(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.tags.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.type", "FARGATE"),
 					resource.TestCheckResourceAttrSet(resourceName, "ecs_cluster_arn"),
-					acctest.MatchResourceAttrGlobalARN(resourceName, "service_role", "iam", regexp.MustCompile(`role/aws-service-role/batch`)),
+					acctest.MatchResourceAttrGlobalARN(resourceName, "service_role", "iam", regexache.MustCompile(`role/aws-service-role/batch`)),
 					resource.TestCheckResourceAttr(resourceName, "state", "ENABLED"),
 					resource.TestCheckResourceAttrSet(resourceName, "status"),
 					resource.TestCheckResourceAttrSet(resourceName, "status_reason"),
@@ -1593,7 +1593,7 @@ func TestAccBatchComputeEnvironment_createUnmanagedWithComputeResources(t *testi
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccComputeEnvironmentConfig_unmanagedResources(rName),
-				ExpectError: regexp.MustCompile("no `compute_resources` can be specified when `type` is \"UNMANAGED\""),
+				ExpectError: regexache.MustCompile("no `compute_resources` can be specified when `type` is \"UNMANAGED\""),
 			},
 		},
 	})
@@ -1759,7 +1759,7 @@ func TestAccBatchComputeEnvironment_createEC2WithoutComputeResources(t *testing.
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccComputeEnvironmentConfig_ec2NoResources(rName),
-				ExpectError: regexp.MustCompile(`computeResources must be provided for a MANAGED compute environment`),
+				ExpectError: regexache.MustCompile(`computeResources must be provided for a MANAGED compute environment`),
 			},
 		},
 	})

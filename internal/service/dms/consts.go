@@ -6,6 +6,12 @@ package dms
 const (
 	endpointStatusDeleting = "deleting"
 
+	replicationInstanceStatusAvailable = "available"
+	replicationInstanceStatusCreating  = "creating"
+	replicationInstanceStatusDeleting  = "deleting"
+	replicationInstanceStatusModifying = "modifying"
+	replicationInstanceStatusUpgrading = "upgrading"
+
 	replicationTaskStatusCreating  = "creating"
 	replicationTaskStatusDeleting  = "deleting"
 	replicationTaskStatusFailed    = "failed"
@@ -123,5 +129,17 @@ func encryptionMode_Values() []string {
 	return []string{
 		encryptionModeSseKMS,
 		encryptionModeSseS3,
+	}
+}
+
+const (
+	networkTypeDual = "DUAL"
+	networkTypeIPv4 = "IPV4"
+)
+
+func networkType_Values() []string {
+	return []string{
+		networkTypeDual,
+		networkTypeIPv4,
 	}
 }

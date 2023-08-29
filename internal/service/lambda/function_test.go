@@ -9,10 +9,10 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"regexp"
 	"testing"
 	"time"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/lambda"
 	"github.com/aws/aws-sdk-go-v2/service/lambda/types"
@@ -374,7 +374,7 @@ func TestAccLambdaFunction_expectFilenameAndS3Attributes(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccFunctionConfig_noFilenameAndS3Attributes(rName),
-				ExpectError: regexp.MustCompile("one of `filename,image_uri,s3_bucket` must be specified"),
+				ExpectError: regexache.MustCompile("one of `filename,image_uri,s3_bucket` must be specified"),
 			},
 		},
 	})
@@ -579,7 +579,7 @@ func TestAccLambdaFunction_nameValidation(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccFunctionConfig_basic(badFuncName, rName, rName, rName),
-				ExpectError: regexp.MustCompile(`invalid value for function_name \(must be valid function name or function ARN\)`),
+				ExpectError: regexache.MustCompile(`invalid value for function_name \(must be valid function name or function ARN\)`),
 			},
 		},
 	})
@@ -907,7 +907,7 @@ func TestAccLambdaFunction_nilDeadLetter(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFunctionConfig_nilDeadLetter(rName),
-				ExpectError: regexp.MustCompile(
+				ExpectError: regexache.MustCompile(
 					fmt.Sprintf("nil dead_letter_config supplied for function: %s", rName)),
 			},
 		},
@@ -2078,7 +2078,7 @@ func TestAccLambdaFunction_runtimes(t *testing.T) {
 		{
 			// Test invalid runtime.
 			Config:      testAccFunctionConfig_runtime(rName, rName),
-			ExpectError: regexp.MustCompile(`expected runtime to be one of`),
+			ExpectError: regexache.MustCompile(`expected runtime to be one of`),
 		},
 	}
 	for _, runtime := range types.Runtime("").Values() {
@@ -2151,11 +2151,11 @@ func TestAccLambdaFunction_Zip_validation(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccFunctionConfig_zipNoHandler(rName),
-				ExpectError: regexp.MustCompile("handler and runtime must be set when PackageType is Zip"),
+				ExpectError: regexache.MustCompile("handler and runtime must be set when PackageType is Zip"),
 			},
 			{
 				Config:      testAccFunctionConfig_zipNoRuntime(rName),
-				ExpectError: regexp.MustCompile("handler and runtime must be set when PackageType is Zip"),
+				ExpectError: regexache.MustCompile("handler and runtime must be set when PackageType is Zip"),
 			},
 		},
 	})

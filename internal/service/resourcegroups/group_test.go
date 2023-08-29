@@ -6,9 +6,9 @@ package resourcegroups_test
 import (
 	"context"
 	"fmt"
-	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/service/resourcegroups"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -183,7 +183,7 @@ func TestAccResourceGroupsGroup_Configuration(t *testing.T) {
 			// Check that trying to change the configuration group to a resource-query group fails
 			{
 				Config:      testAccGroupConfig_basic(rName, desc1, testAccResourceGroupQueryConfig),
-				ExpectError: regexp.MustCompile(`conversion between resource-query and configuration group types is not possible`),
+				ExpectError: regexache.MustCompile(`conversion between resource-query and configuration group types is not possible`),
 			},
 		},
 	})

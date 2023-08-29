@@ -31,6 +31,8 @@ const (
 	AuditManagerEndpointID               = "auditmanager"
 	CleanRoomsEndpointID                 = "cleanrooms"
 	CloudWatchLogsEndpointID             = "logs"
+	CodeStarConnectionsEndpointID        = "codestar-connections"
+	CodeStarNotificationsEndpointID      = "codestar-notifications"
 	ComprehendEndpointID                 = "comprehend"
 	ComputeOptimizerEndpointID           = "computeoptimizer"
 	DSEndpointID                         = "ds"
