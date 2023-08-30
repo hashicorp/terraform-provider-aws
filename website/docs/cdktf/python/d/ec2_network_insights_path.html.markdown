@@ -53,11 +53,13 @@ This data source exports the following attributes in addition to the arguments a
 
 * `arn` - ARN of the selected Network Insights Path.
 * `destination` - AWS resource that is the destination of the path.
+* `destination_arn` - ARN of the destination.
 * `destination_ip` - IP address of the AWS resource that is the destination of the path.
 * `destination_port` - Destination port.
 * `protocol` - Protocol.
 * `source` - AWS resource that is the source of the path.
+* `source_arn` - ARN of the source.
 * `source_ip` - IP address of the AWS resource that is the source of the path.
 * `tags` - Map of tags assigned to the resource.
 
-<!-- cache-key: cdktf-0.18.0 input-2c6a08d048d9f4e96402d9a6a1ae388b7d91e8e4bc602475811a612685350fcf -->
+<!-- cache-key: cdktf-0.18.0 input-445b5efe4c93146386518473af01d6da2f1f20f20f9a688cc7349f4a0720df0a -->
