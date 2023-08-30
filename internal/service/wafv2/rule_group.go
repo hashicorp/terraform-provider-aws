@@ -182,9 +182,8 @@ func resourceRuleGroupCreate(ctx context.Context, d *schema.ResourceData, meta i
 		return diag.Errorf("creating WAFv2 RuleGroup (%s): %s", name, err)
 	}
 
-	output := outputRaw.(*wafv2.CreateRuleGroupOutput)
-
-	d.SetId(aws.StringValue(output.Summary.Id))
+	d.SetId(aws.StringValue(outputRaw.(*wafv2.CreateRuleGroupOutput).Summary.Id))
+	d.Set("name", name) // Required in Read.
 
 	return resourceRuleGroupRead(ctx, d, meta)
 }
