@@ -261,6 +261,10 @@ resource "aws_fsx_lustre_file_system" "test" {
   storage_capacity   = 1200
   subnet_ids         = aws_subnet.test[*].id
   deployment_type    = data.aws_partition.current.partition == "aws-us-gov" ? "SCRATCH_2" : null # GovCloud does not support SCRATCH_1
+
+  tags = {
+    Name = %[1]q
+  }
 }
 `, rName))
 }

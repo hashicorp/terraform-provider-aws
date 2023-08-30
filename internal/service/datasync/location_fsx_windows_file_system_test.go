@@ -284,6 +284,10 @@ resource "aws_fsx_windows_file_system" "test" {
   storage_capacity    = 32
   subnet_ids          = [aws_subnet.test[0].id]
   throughput_capacity = 8
+
+  tags = {
+    Name = %[1]q
+  }
 }
 `, rName))
 }
