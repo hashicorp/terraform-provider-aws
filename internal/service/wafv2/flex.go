@@ -2326,8 +2326,8 @@ func flattenManagedRulesATPRuleSet(apiObject *wafv2.AWSManagedRulesATPRuleSet) [
 	}
 
 	m := map[string]interface{}{
-		"login_path":           aws.StringValue(apiObject.LoginPath),
 		"enable_regex_in_path": aws.BoolValue(apiObject.EnableRegexInPath),
+		"login_path":           aws.StringValue(apiObject.LoginPath),
 	}
 	if apiObject.RequestInspection != nil {
 		m["request_inspection"] = flattenRequestInspection(apiObject.RequestInspection)

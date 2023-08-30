@@ -999,6 +999,29 @@ func managedRuleGroupConfigSchema() *schema.Schema {
 		Optional: true,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
+				"aws_managed_rules_atp_rule_set": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"enable_regex_in_path": {
+								Type:     schema.TypeBool,
+								Optional: true,
+							},
+							"login_path": {
+								Type:     schema.TypeString,
+								Required: true,
+								ValidateFunc: validation.All(
+									validation.StringLenBetween(1, 256),
+									validation.StringMatch(regexache.MustCompile(`.*\S.*`), `must conform to pattern .*\S.* `),
+								),
+							},
+							"request_inspection":  managedRuleGroupConfigATPRequestInspectionSchema(),
+							"response_inspection": managedRuleGroupConfigATPResponseInspectionSchema(),
+						},
+					},
+				},
 				"aws_managed_rules_bot_control_rule_set": {
 					Type:     schema.TypeList,
 					Optional: true,
@@ -1010,29 +1033,6 @@ func managedRuleGroupConfigSchema() *schema.Schema {
 								Required:     true,
 								ValidateFunc: validation.StringInSlice(wafv2.InspectionLevel_Values(), false),
 							},
-						},
-					},
-				},
-				"aws_managed_rules_atp_rule_set": {
-					Type:     schema.TypeList,
-					Optional: true,
-					MaxItems: 1,
-					Elem: &schema.Resource{
-						Schema: map[string]*schema.Schema{
-							"login_path": {
-								Type:     schema.TypeString,
-								Required: true,
-								ValidateFunc: validation.All(
-									validation.StringLenBetween(1, 256),
-									validation.StringMatch(regexache.MustCompile(`.*\S.*`), `must conform to pattern .*\S.* `),
-								),
-							},
-							"enable_regex_in_path": {
-								Type:     schema.TypeBool,
-								Optional: true,
-							},
-							"request_inspection":  managedRuleGroupConfigATPRequestInspectionSchema(),
-							"response_inspection": managedRuleGroupConfigATPResponseInspectionSchema(),
 						},
 					},
 				},
