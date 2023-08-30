@@ -185,11 +185,21 @@ func TestAccFSxOpenZFSFileSystem_rootVolume(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "root_volume_configuration.0.nfs_exports.0.client_configurations.0.options.1", "rw"),
 					resource.TestCheckResourceAttr(resourceName, "root_volume_configuration.0.read_only", "false"),
 					resource.TestCheckResourceAttr(resourceName, "root_volume_configuration.0.record_size_kib", "128"),
-					resource.TestCheckResourceAttr(resourceName, "root_volume_configuration.0.user_and_group_quotas.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "root_volume_configuration.0.user_and_group_quotas.#", "3"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "root_volume_configuration.0.user_and_group_quotas.*", map[string]string{
 						"id":                         "10",
 						"storage_capacity_quota_gib": "128",
 						"type":                       "USER",
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "root_volume_configuration.0.user_and_group_quotas.*", map[string]string{
+						"id":                         "0",
+						"storage_capacity_quota_gib": "0",
+						"type":                       "USER",
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "root_volume_configuration.0.user_and_group_quotas.*", map[string]string{
+						"id":                         "0",
+						"storage_capacity_quota_gib": "0",
+						"type":                       "GROUP",
 					}),
 				),
 			},
@@ -214,11 +224,21 @@ func TestAccFSxOpenZFSFileSystem_rootVolume(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "root_volume_configuration.0.nfs_exports.0.client_configurations.0.options.1", "rw"),
 					resource.TestCheckResourceAttr(resourceName, "root_volume_configuration.0.read_only", "true"),
 					resource.TestCheckResourceAttr(resourceName, "root_volume_configuration.0.record_size_kib", "8"),
-					resource.TestCheckResourceAttr(resourceName, "root_volume_configuration.0.user_and_group_quotas.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "root_volume_configuration.0.user_and_group_quotas.#", "3"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "root_volume_configuration.0.user_and_group_quotas.*", map[string]string{
 						"id":                         "10",
 						"storage_capacity_quota_gib": "256",
 						"type":                       "USER",
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "root_volume_configuration.0.user_and_group_quotas.*", map[string]string{
+						"id":                         "0",
+						"storage_capacity_quota_gib": "0",
+						"type":                       "USER",
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "root_volume_configuration.0.user_and_group_quotas.*", map[string]string{
+						"id":                         "0",
+						"storage_capacity_quota_gib": "0",
+						"type":                       "GROUP",
 					}),
 				),
 			},
@@ -243,7 +263,7 @@ func TestAccFSxOpenZFSFileSystem_rootVolume(t *testing.T) {
 					}),
 					resource.TestCheckResourceAttr(resourceName, "root_volume_configuration.0.read_only", "false"),
 					resource.TestCheckResourceAttr(resourceName, "root_volume_configuration.0.record_size_kib", "512"),
-					resource.TestCheckResourceAttr(resourceName, "root_volume_configuration.0.user_and_group_quotas.#", "4"),
+					resource.TestCheckResourceAttr(resourceName, "root_volume_configuration.0.user_and_group_quotas.#", "6"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "root_volume_configuration.0.user_and_group_quotas.*", map[string]string{
 						"id":                         "10",
 						"storage_capacity_quota_gib": "128",
@@ -263,6 +283,16 @@ func TestAccFSxOpenZFSFileSystem_rootVolume(t *testing.T) {
 						"id":                         "100",
 						"storage_capacity_quota_gib": "128",
 						"type":                       "USER",
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "root_volume_configuration.0.user_and_group_quotas.*", map[string]string{
+						"id":                         "0",
+						"storage_capacity_quota_gib": "0",
+						"type":                       "USER",
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "root_volume_configuration.0.user_and_group_quotas.*", map[string]string{
+						"id":                         "0",
+						"storage_capacity_quota_gib": "0",
+						"type":                       "GROUP",
 					}),
 				),
 			},
@@ -275,7 +305,7 @@ func TestAccFSxOpenZFSFileSystem_rootVolume(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "root_volume_configuration.0.nfs_exports.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "root_volume_configuration.0.read_only", "false"),
 					resource.TestCheckResourceAttr(resourceName, "root_volume_configuration.0.record_size_kib", "128"),
-					resource.TestCheckResourceAttr(resourceName, "root_volume_configuration.0.user_and_group_quotas.#", "4"),
+					resource.TestCheckResourceAttr(resourceName, "root_volume_configuration.0.user_and_group_quotas.#", "6"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "root_volume_configuration.0.user_and_group_quotas.*", map[string]string{
 						"id":                         "10",
 						"storage_capacity_quota_gib": "128",
@@ -295,6 +325,16 @@ func TestAccFSxOpenZFSFileSystem_rootVolume(t *testing.T) {
 						"id":                         "100",
 						"storage_capacity_quota_gib": "128",
 						"type":                       "USER",
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "root_volume_configuration.0.user_and_group_quotas.*", map[string]string{
+						"id":                         "0",
+						"storage_capacity_quota_gib": "0",
+						"type":                       "USER",
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "root_volume_configuration.0.user_and_group_quotas.*", map[string]string{
+						"id":                         "0",
+						"storage_capacity_quota_gib": "0",
+						"type":                       "GROUP",
 					}),
 				),
 			},
@@ -807,7 +847,8 @@ func TestAccFSxOpenZFSFileSystem_multiAZ(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "subnet_ids.#", "2"),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "subnet_ids.*", "aws_subnet.test.0", "id"),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "subnet_ids.*", "aws_subnet.test.1", "id"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Name", rName),
 					resource.TestCheckResourceAttr(resourceName, "throughput_capacity", "160"),
 					resource.TestCheckResourceAttrPair(resourceName, "vpc_id", "aws_vpc.test", "id"),
 					resource.TestMatchResourceAttr(resourceName, "weekly_maintenance_start_time", regexache.MustCompile(`^\d:\d\d:\d\d$`)),
@@ -1240,20 +1281,34 @@ resource "aws_fsx_openzfs_file_system" "test" {
   subnet_ids          = aws_subnet.test[*].id
   deployment_type     = "SINGLE_AZ_1"
   throughput_capacity = 64
+
   root_volume_configuration {
     copy_tags_to_snapshots = true
     data_compression_type  = %[2]q
+
     nfs_exports {
       client_configurations {
         clients = "10.0.1.0/24"
         options = ["sync", "rw"]
       }
     }
+
     read_only = %[3]s
+
     user_and_group_quotas {
       id                         = 10
       storage_capacity_quota_gib = %[4]d
       type                       = "USER"
+    }
+    user_and_group_quotas {
+      id                         = 0
+      storage_capacity_quota_gib = 0
+      type                       = "USER"
+    }
+    user_and_group_quotas {
+      id                         = 0
+      storage_capacity_quota_gib = 0
+      type                       = "GROUP"
     }
   }
 
@@ -1275,6 +1330,7 @@ resource "aws_fsx_openzfs_file_system" "test" {
   root_volume_configuration {
     copy_tags_to_snapshots = true
     data_compression_type  = %[2]q
+
     nfs_exports {
       client_configurations {
         clients = "10.0.1.0/24"
@@ -1289,6 +1345,16 @@ resource "aws_fsx_openzfs_file_system" "test" {
       id                         = 10
       storage_capacity_quota_gib = %[4]d
       type                       = "USER"
+    }
+    user_and_group_quotas {
+      id                         = 0
+      storage_capacity_quota_gib = 0
+      type                       = "USER"
+    }
+    user_and_group_quotas {
+      id                         = 0
+      storage_capacity_quota_gib = 0
+      type                       = "GROUP"
     }
   }
 
@@ -1310,6 +1376,7 @@ resource "aws_fsx_openzfs_file_system" "test" {
   root_volume_configuration {
     copy_tags_to_snapshots = true
     data_compression_type  = %[2]q
+
     nfs_exports {
       client_configurations {
         clients = "10.0.1.0/24"
@@ -1344,6 +1411,16 @@ resource "aws_fsx_openzfs_file_system" "test" {
       storage_capacity_quota_gib = %[4]d
       type                       = "USER"
     }
+    user_and_group_quotas {
+      id                         = 0
+      storage_capacity_quota_gib = 0
+      type                       = "USER"
+    }
+    user_and_group_quotas {
+      id                         = 0
+      storage_capacity_quota_gib = 0
+      type                       = "GROUP"
+    }
   }
 
   tags = {
@@ -1360,6 +1437,7 @@ resource "aws_fsx_openzfs_file_system" "test" {
   subnet_ids          = aws_subnet.test[*].id
   deployment_type     = "SINGLE_AZ_1"
   throughput_capacity = 64
+
   root_volume_configuration {
     copy_tags_to_snapshots = true
     data_compression_type  = %[2]q
@@ -1383,6 +1461,16 @@ resource "aws_fsx_openzfs_file_system" "test" {
       id                         = 100
       storage_capacity_quota_gib = %[4]d
       type                       = "USER"
+    }
+    user_and_group_quotas {
+      id                         = 0
+      storage_capacity_quota_gib = 0
+      type                       = "USER"
+    }
+    user_and_group_quotas {
+      id                         = 0
+      storage_capacity_quota_gib = 0
+      type                       = "GROUP"
     }
   }
 
@@ -1439,15 +1527,19 @@ resource "aws_fsx_openzfs_file_system" "test" {
 }
 
 func testAccOpenZFSFileSystemConfig_multiAZ(rName string) string {
-	return acctest.ConfigCompose(testAccOpenZFSFileSystemConfig_baseMultiAZ(rName), `
+	return acctest.ConfigCompose(testAccOpenZFSFileSystemConfig_baseMultiAZ(rName), fmt.Sprintf(`
 resource "aws_fsx_openzfs_file_system" "test" {
   storage_capacity    = 64
   subnet_ids          = aws_subnet.test[*].id
   preferred_subnet_id = aws_subnet.test[0].id
   deployment_type     = "MULTI_AZ_1"
   throughput_capacity = 160
+
+  tags = {
+    Name = %[1]q
+  }
 }
-`)
+`, rName))
 }
 
 func testAccOpenZFSFileSystemConfig_routeTableIDs(rName string, n int) string {
