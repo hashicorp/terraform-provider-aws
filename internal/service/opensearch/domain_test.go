@@ -2425,7 +2425,7 @@ resource "aws_opensearch_domain" "test" {
 
     dedicated_master_enabled      = true
     dedicated_master_type         = "m6g.large.search"
-    multi_az_with_standby_enabled =  %[2]t
+    multi_az_with_standby_enabled = %[2]t
   }
 }
 `, rName, enableStandby)
