@@ -737,6 +737,7 @@ func TestAccWAFV2WebACL_ManagedRuleGroup_ManagedRuleGroupConfig_ATPRuleSet(t *te
 						"statement.#":               "1",
 						"statement.0.managed_rule_group_statement.#":                                                                                                                "1",
 						"statement.0.managed_rule_group_statement.0.managed_rule_group_configs.0.aws_managed_rules_atp_rule_set.#":                                                  "1",
+						"statement.0.managed_rule_group_statement.0.managed_rule_group_configs.0.aws_managed_rules_atp_rule_set.0.enable_regex_in_path":                             "false",
 						"statement.0.managed_rule_group_statement.0.managed_rule_group_configs.0.aws_managed_rules_atp_rule_set.0.login_path":                                       "/api/1/signin",
 						"statement.0.managed_rule_group_statement.0.managed_rule_group_configs.0.aws_managed_rules_atp_rule_set.0.request_inspection.#":                             "1",
 						"statement.0.managed_rule_group_statement.0.managed_rule_group_configs.0.aws_managed_rules_atp_rule_set.0.request_inspection.0.password_field.#":            "1",
@@ -768,6 +769,7 @@ func TestAccWAFV2WebACL_ManagedRuleGroup_ManagedRuleGroupConfig_ATPRuleSet(t *te
 						"statement.#":               "1",
 						"statement.0.managed_rule_group_statement.#":                                                                                                                "1",
 						"statement.0.managed_rule_group_statement.0.managed_rule_group_configs.0.aws_managed_rules_atp_rule_set.#":                                                  "1",
+						"statement.0.managed_rule_group_statement.0.managed_rule_group_configs.0.aws_managed_rules_atp_rule_set.0.enable_regex_in_path":                             "true",
 						"statement.0.managed_rule_group_statement.0.managed_rule_group_configs.0.aws_managed_rules_atp_rule_set.0.login_path":                                       "/api/2/signin",
 						"statement.0.managed_rule_group_statement.0.managed_rule_group_configs.0.aws_managed_rules_atp_rule_set.0.request_inspection.#":                             "1",
 						"statement.0.managed_rule_group_statement.0.managed_rule_group_configs.0.aws_managed_rules_atp_rule_set.0.request_inspection.0.password_field.#":            "1",
@@ -3781,7 +3783,9 @@ resource "aws_wafv2_web_acl" "test" {
 
         managed_rule_group_configs {
           aws_managed_rules_atp_rule_set {
-            login_path = "/api/2/signin"
+            enable_regex_in_path = true
+            login_path           = "/api/2/signin"
+
             request_inspection {
               password_field {
                 identifier = "/pass"
