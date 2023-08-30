@@ -5,13 +5,13 @@ package events
 
 import (
 	"context"
-	"errors"
 	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/eventbridge"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -89,6 +89,14 @@ func resourceBusPolicyPut(ctx context.Context, d *schema.ResourceData, meta inte
 		d.SetId(eventBusName)
 	}
 
+	_, err = tfresource.RetryWhenNotFound(ctx, propagationTimeout, func() (interface{}, error) {
+		return FindEventBusPolicyByName(ctx, conn, d.Id())
+	})
+
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "wait for EventBridge Event Bus (%s) Policy create: %s", d.Id(), err)
+	}
+
 	return append(diags, resourceBusPolicyRead(ctx, d, meta)...)
 }
 
@@ -96,18 +104,7 @@ func resourceBusPolicyRead(ctx context.Context, d *schema.ResourceData, meta int
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EventsConn(ctx)
 
-	outputRaw, err := tfresource.RetryWhen(ctx, propagationTimeout,
-		func() (interface{}, error) {
-			return FindEventBusPolicyByName(ctx, conn, d.Id())
-		},
-		func(err error) (bool, error) {
-			if errors.Is(err, errPolicyNotFound) {
-				return true, err
-			}
-
-			return false, err
-		},
-	)
+	policy, err := FindEventBusPolicyByName(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] EventBridge Event Bus (%s) Policy not found, removing from state", d.Id())
@@ -125,7 +122,7 @@ func resourceBusPolicyRead(ctx context.Context, d *schema.ResourceData, meta int
 	}
 	d.Set("event_bus_name", eventBusName)
 
-	policyToSet, err := verify.PolicyToSet(d.Get("policy").(string), aws.StringValue(outputRaw.(*string)))
+	policyToSet, err := verify.PolicyToSet(d.Get("policy").(string), aws.StringValue(policy))
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
@@ -156,10 +153,6 @@ func resourceBusPolicyDelete(ctx context.Context, d *schema.ResourceData, meta i
 	return diags
 }
 
-var (
-	errPolicyNotFound = errors.New(`EventBridge policy not found`)
-)
-
 func FindEventBusPolicyByName(ctx context.Context, conn *eventbridge.EventBridge, name string) (*string, error) {
 	output, err := FindEventBusByName(ctx, conn, name)
 
@@ -168,7 +161,7 @@ func FindEventBusPolicyByName(ctx context.Context, conn *eventbridge.EventBridge
 	}
 
 	if aws.StringValue(output.Policy) == "" {
-		return nil, errPolicyNotFound
+		return nil, &retry.NotFoundError{}
 	}
 
 	return output.Policy, nil
