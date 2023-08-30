@@ -85,9 +85,11 @@ func autoFlexConvert(ctx context.Context, from, to any, flexer autoFlexer) diag.
 	}
 
 	// Top-level struct to struct conversion.
-	if typFrom, typTo := valFrom.Type(), valTo.Type(); typFrom.Kind() == reflect.Struct && typTo.Kind() == reflect.Struct {
-		diags.Append(autoFlexConvertStruct(ctx, from, to, flexer)...)
-		return diags
+	if valFrom.IsValid() && valTo.IsValid() {
+		if typFrom, typTo := valFrom.Type(), valTo.Type(); typFrom.Kind() == reflect.Struct && typTo.Kind() == reflect.Struct {
+			diags.Append(autoFlexConvertStruct(ctx, from, to, flexer)...)
+			return diags
+		}
 	}
 
 	// Anything else.
