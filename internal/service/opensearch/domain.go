@@ -1153,7 +1153,7 @@ func suppressComputedDedicatedMaster(k, old, new string, d *schema.ResourceData)
 	v, ok := d.GetOk("cluster_config")
 	if ok {
 		clusterConfig := v.([]interface{})[0].(map[string]interface{})
-		return !clusterConfig["dedicated_master_enabled"].(bool) || clusterConfig["multi_az_with_standby_enabled"].(bool)
+		return !clusterConfig["dedicated_master_enabled"].(bool)
 	}
 	return false
 }

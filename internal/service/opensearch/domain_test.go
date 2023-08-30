@@ -2397,7 +2397,8 @@ resource "aws_opensearch_domain" "test" {
 func testAccDomainConfig_multiAzWithStandbyEnabled(rName string, enableStandby bool) string {
 	return fmt.Sprintf(`
 resource "aws_opensearch_domain" "test" {
-  domain_name = %[1]q
+  domain_name    = %[1]q
+  engine_version = "OpenSearch_2.7"
 
   domain_endpoint_options {
     enforce_https       = true
@@ -2406,7 +2407,7 @@ resource "aws_opensearch_domain" "test" {
 
   ebs_options {
     ebs_enabled = true
-    volume_size = 10
+    volume_size = 20
   }
 
   auto_tune_options {
@@ -2415,16 +2416,17 @@ resource "aws_opensearch_domain" "test" {
   }
 
   cluster_config {
-    instance_count         = 3
-    instance_type          = "m6g.large.search"
-    zone_awareness_enabled = true
+    zone_awareness_enabled 	 = true
+    instance_count           = 3
+    instance_type            = "m6g.large.search"
+	dedicated_master_enabled = true
+	dedicated_master_count	 = 3
+    dedicated_master_type    = "m6g.large.search"
 
     zone_awareness_config {
       availability_zone_count = 3
     }
-
-    dedicated_master_enabled      = true
-    dedicated_master_type         = "m6g.large.search"
+	
     multi_az_with_standby_enabled = %[2]t
   }
 }
