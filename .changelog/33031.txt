@@ -5,3 +5,7 @@ resource/aws_opensearch_domain: Add `cluster_config.multi_az_with_standby_enable
 ```release-note:enhancement
 data-source/aws_opensearch_domain: Add `cluster_config.multi_az_with_standby_enabled` attribute
 ```
+
+```release-note:bug
+resource/aws_opensearch_domain: Mark `cluster_config.dedicated_master_count` and `cluster_config.dedicated_master_type` as Computed
+```
