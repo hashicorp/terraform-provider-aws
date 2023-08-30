@@ -247,9 +247,9 @@ func ResourceDomain() *schema.Resource {
 							},
 						},
 						"dedicated_master_count": {
-							Type:     schema.TypeInt,
-							Optional: true,
-							Computed: true,
+							Type:             schema.TypeInt,
+							Optional:         true,
+							DiffSuppressFunc: suppressComputedDedicatedMaster,
 						},
 						"dedicated_master_enabled": {
 							Type:     schema.TypeBool,
@@ -257,9 +257,9 @@ func ResourceDomain() *schema.Resource {
 							Default:  false,
 						},
 						"dedicated_master_type": {
-							Type:     schema.TypeString,
-							Optional: true,
-							Computed: true,
+							Type:             schema.TypeString,
+							Optional:         true,
+							DiffSuppressFunc: suppressComputedDedicatedMaster,
 						},
 						"instance_count": {
 							Type:     schema.TypeInt,
@@ -1149,6 +1149,15 @@ func getKibanaEndpoint(d *schema.ResourceData) string {
 	return d.Get("endpoint").(string) + "/_plugin/kibana/"
 }
 
+func suppressComputedDedicatedMaster(k, old, new string, d *schema.ResourceData) bool {
+	v, ok := d.GetOk("cluster_config")
+	if ok {
+		clusterConfig := v.([]interface{})[0].(map[string]interface{})
+		return !clusterConfig["dedicated_master_enabled"].(bool) || clusterConfig["multi_az_with_standby_enabled"].(bool)
+	}
+	return false
+}
+
 func isCustomEndpointDisabled(k, old, new string, d *schema.ResourceData) bool {
 	v, ok := d.GetOk("domain_endpoint_options")
 	if ok {
@@ -1181,7 +1190,7 @@ func flattenNodeToNodeEncryptionOptions(o *opensearchservice.NodeToNodeEncryptio
 }
 
 func expandClusterConfig(m map[string]interface{}) *opensearchservice.ClusterConfig {
-	config := &opensearchservice.ClusterConfig{}
+	config := opensearchservice.ClusterConfig{}
 
 	if v, ok := m["cold_storage_options"]; ok {
 		config.ColdStorageOptions = expandColdStorageOptions(v.([]interface{}))
@@ -1210,17 +1219,7 @@ func expandClusterConfig(m map[string]interface{}) *opensearchservice.ClusterCon
 	}
 
 	if v, ok := m["multi_az_with_standby_enabled"]; ok {
-		isEnabled := v.(bool)
-		config.MultiAZWithStandbyEnabled = aws.Bool(isEnabled)
-
-		if isEnabled {
-			if v, ok := m["dedicated_master_count"]; ok && v.(int) > 0 {
-				config.DedicatedMasterCount = aws.Int64(int64(v.(int)))
-			}
-			if v, ok := m["dedicated_master_type"]; ok && v.(string) != "" {
-				config.DedicatedMasterType = aws.String(v.(string))
-			}
-		}
+		config.MultiAZWithStandbyEnabled = aws.Bool(v.(bool))
 	}
 
 	if v, ok := m["warm_enabled"]; ok {
@@ -1249,7 +1248,7 @@ func expandClusterConfig(m map[string]interface{}) *opensearchservice.ClusterCon
 		}
 	}
 
-	return config
+	return &config
 }
 
 func expandZoneAwarenessConfig(l []interface{}) *opensearchservice.ZoneAwarenessConfig {
