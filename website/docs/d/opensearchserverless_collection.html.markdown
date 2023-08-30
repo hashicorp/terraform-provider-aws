@@ -34,7 +34,7 @@ This data source exports the following attributes in addition to the arguments a
 * `arn` - Amazon Resource Name (ARN) of the collection.
 * `collection_endpoint` - Collection-specific endpoint used to submit index, search, and data upload requests to an OpenSearch Serverless collection.
 * `created_date` - Date the Collection was created.
-* `dashboard_endpont` - Collection-specific endpoint used to access OpenSearch Dashboards.
+* `dashboard_endpoint` - Collection-specific endpoint used to access OpenSearch Dashboards.
 * `description` - Description of the collection.
 * `kms_key_arn` - The ARN of the Amazon Web Services KMS key used to encrypt the collection.
 * `last_modified_date` - Date the Collection was last modified.
