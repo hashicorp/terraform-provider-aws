@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_kms_key: Fix `tag propagation: timeout while waiting for state to become 'TRUE'` errors when any tag value is empty (`""`)
+```
