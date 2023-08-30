@@ -2222,7 +2222,7 @@ func TestAccWAFV2WebACL_tags(t *testing.T) {
 		CheckDestroy:             testAccCheckWebACLDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccWebACLConfig_tags1(rName, "key1", "value1"),
+				Config: testAccWebACLConfig_tags1(webACLName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWebACLExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -2236,7 +2236,7 @@ func TestAccWAFV2WebACL_tags(t *testing.T) {
 				ImportStateIdFunc: testAccWebACLImportStateIdFunc(resourceName),
 			},
 			{
-				Config: testAccWebACLConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccWebACLConfig_tags2(webACLName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWebACLExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
@@ -2245,7 +2245,7 @@ func TestAccWAFV2WebACL_tags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccWebACLConfig_tags1(rName, "key2", "value2"),
+				Config: testAccWebACLConfig_tags1(webACLName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWebACLExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -2934,7 +2934,7 @@ resource "aws_wafv2_web_acl" "test" {
     sampled_requests_enabled   = false
   }
 }
-`, name, countryCodes)
+`, rName, countryCodes)
 }
 
 func testAccWebACLConfig_labelMatchStatement(rName, labelScope string, labelKey string) string {
@@ -4764,7 +4764,7 @@ resource "aws_wafv2_web_acl" "test" {
     sampled_requests_enabled   = false
   }
 }
-`, name)
+`, rName)
 }
 
 func testAccWebACLConfig_tokenDomains(rName, domain1, domain2 string) string {
