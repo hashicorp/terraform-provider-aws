@@ -2416,11 +2416,11 @@ resource "aws_opensearch_domain" "test" {
   }
 
   cluster_config {
-    zone_awareness_enabled 	 = true
+    zone_awareness_enabled   = true
     instance_count           = 3
     instance_type            = "m6g.large.search"
     dedicated_master_enabled = true
-    dedicated_master_count	 = 3
+    dedicated_master_count   = 3
     dedicated_master_type    = "m6g.large.search"
 
     zone_awareness_config {
