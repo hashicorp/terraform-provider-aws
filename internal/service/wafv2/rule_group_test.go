@@ -2543,7 +2543,7 @@ func testAccRuleGroupConfig_actionBlock(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_wafv2_rule_group" "test" {
   capacity = 2
-  name     = "%[1]q
+  name     = %[1]q
   scope    = "REGIONAL"
 
   rule {
@@ -3564,7 +3564,7 @@ resource "aws_wafv2_ip_set" "test" {
 
 resource "aws_wafv2_rule_group" "test" {
   capacity = 5
-  name     = "%[1]q
+  name     = %[1]q
   scope    = "REGIONAL"
 
   rule {
