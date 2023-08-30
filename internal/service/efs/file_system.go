@@ -99,6 +99,10 @@ func ResourceFileSystem() *schema.Resource {
 					},
 				},
 			},
+			"name": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"number_of_mount_targets": {
 				Type:     schema.TypeInt,
 				Computed: true,
@@ -242,6 +246,7 @@ func resourceFileSystemRead(ctx context.Context, d *schema.ResourceData, meta in
 	d.Set("dns_name", meta.(*conns.AWSClient).RegionalHostname(fmt.Sprintf("%s.efs", aws.StringValue(fs.FileSystemId))))
 	d.Set("encrypted", fs.Encrypted)
 	d.Set("kms_key_id", fs.KmsKeyId)
+	d.Set("name", fs.Name)
 	d.Set("number_of_mount_targets", fs.NumberOfMountTargets)
 	d.Set("owner_id", fs.OwnerId)
 	d.Set("performance_mode", fs.PerformanceMode)

@@ -39,6 +39,7 @@ func TestAccEFSFileSystem_basic(t *testing.T) {
 					acctest.MatchResourceAttrRegionalHostname(resourceName, "dns_name", "efs", regexache.MustCompile(`fs-[^.]+`)),
 					resource.TestCheckResourceAttr(resourceName, "encrypted", "false"),
 					resource.TestCheckResourceAttr(resourceName, "lifecycle_policy.#", "0"),
+					acctest.MatchResourceAttrAccountID(resourceName, "name"),
 					resource.TestCheckResourceAttr(resourceName, "number_of_mount_targets", "0"),
 					acctest.MatchResourceAttrAccountID(resourceName, "owner_id"),
 					resource.TestCheckResourceAttr(resourceName, "performance_mode", "generalPurpose"),

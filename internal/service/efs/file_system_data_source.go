@@ -92,6 +92,10 @@ func DataSourceFileSystem() *schema.Resource {
 					},
 				},
 			},
+			"name": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 		},
 	}
 }
@@ -158,6 +162,7 @@ func dataSourceFileSystemRead(ctx context.Context, d *schema.ResourceData, meta 
 	d.Set("kms_key_id", fs.KmsKeyId)
 	d.Set("provisioned_throughput_in_mibps", fs.ProvisionedThroughputInMibps)
 	d.Set("throughput_mode", fs.ThroughputMode)
+	d.Set("name", fs.Name)
 	if fs.SizeInBytes != nil {
 		d.Set("size_in_bytes", fs.SizeInBytes.Value)
 	}
