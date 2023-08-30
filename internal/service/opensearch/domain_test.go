@@ -2426,7 +2426,7 @@ resource "aws_opensearch_domain" "test" {
     zone_awareness_config {
       availability_zone_count = 3
     }
-	
+
     multi_az_with_standby_enabled = %[2]t
   }
 }
