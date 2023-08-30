@@ -2,17 +2,5 @@
     "mediaImportTemplateVersion":"2020-08-14",
     "databaseInstallationFileNames":[
         "V982063-01.zip"
-    ],
-    "opatchFileNames":[
-        "p6880880_190000_Linux-x86-64.zip"
-    ],
-    "psuRuPatchFileNames":[
-        "p31720396_190000_Linux-x86-64.zip",
-        "p29213893_199000DBRU_Generic.zip",        
-        "p29374604_199000DBRU_Linux-x86-64.zip",
-        "p28852325_190000_Linux-x86-64.zip",
-        "p29997937_190000_Linux-x86-64.zip",
-        "p31335037_190000_Linux-x86-64.zip",
-        "p31335142_190000_Generic.zip"
     ]
 }

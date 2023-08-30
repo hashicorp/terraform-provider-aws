@@ -322,17 +322,18 @@ func resourceCustomDBEngineVersionDelete(ctx context.Context, d *schema.Resource
 }
 
 const (
-	statusAvailable  = "available"
-	statusCreating   = "creating"
-	statusDeleting   = "deleting"
-	statusDeprecated = "deprecated"
-	statusFailed     = "failed"
+	statusAvailable         = "available"
+	statusCreating          = "creating"
+	statusDeleting          = "deleting"
+	statusDeprecated        = "deprecated"
+	statusFailed            = "failed"
+	statusPendingValidation = "pending-validation" // Custom for SQL Server, ready for validation by an instance
 )
 
 func waitCustomDBEngineVersionCreated(ctx context.Context, conn *rds.RDS, id string, timeout time.Duration) (*rds.DBEngineVersion, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending:                   []string{statusCreating},
-		Target:                    []string{statusAvailable},
+		Target:                    []string{statusAvailable, statusPendingValidation},
 		Refresh:                   statusCustomDBEngineVersion(ctx, conn, id),
 		Timeout:                   timeout,
 		NotFoundChecks:            20,
@@ -350,7 +351,7 @@ func waitCustomDBEngineVersionCreated(ctx context.Context, conn *rds.RDS, id str
 func waitCustomDBEngineVersionUpdated(ctx context.Context, conn *rds.RDS, id string, timeout time.Duration) (*rds.DBEngineVersion, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending:                   []string{statusAvailable},
-		Target:                    []string{statusAvailable},
+		Target:                    []string{statusAvailable, statusPendingValidation},
 		Refresh:                   statusCustomDBEngineVersion(ctx, conn, id),
 		Timeout:                   timeout,
 		NotFoundChecks:            20,

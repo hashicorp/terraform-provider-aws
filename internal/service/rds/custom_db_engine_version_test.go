@@ -17,100 +17,20 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	tfrds "github.com/hashicorp/terraform-provider-aws/internal/service/rds"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
-
-	// TIP: You will often need to import the package that this test file lives
-	// in. Since it is in the "test" context, it must import the package to use
-	// any normal context constants, variables, or functions.
-	tfrds "github.com/hashicorp/terraform-provider-aws/internal/service/rds"
 )
 
-// TIP: File Structure. The basic outline for all test files should be as
-// follows. Improve this resource's maintainability by following this
-// outline.
-//
-// 1. Package declaration (add "_test" since this is a test file)
-// 2. Imports
-// 3. Unit tests
-// 4. Basic test
-// 5. Disappears test
-// 6. All the other tests
-// 7. Helper functions (exists, destroy, check, etc.)
-// 8. Functions that return Terraform configurations
-
-// TIP: ==== UNIT TESTS ====
-// This is an example of a unit test. Its name is not prefixed with
-// "TestAcc" like an acceptance test.
-//
-// Unlike acceptance tests, unit tests do not access AWS and are focused on a
-// function (or method). Because of this, they are quick and cheap to run.
-//
-// In designing a resource's implementation, isolate complex bits from AWS bits
-// so that they can be tested through a unit test. We encourage more unit tests
-// in the provider.
-//
-// Cut and dry functions using well-used patterns, like typical flatteners and
-// expanders, don't need unit testing. However, if they are complex or
-// intricate, they should be unit tested.
-// func TestCustomDBEngineVersionExampleUnitTest(t *testing.T) {
-// 	t.Parallel()
-
-// 	testCases := []struct {
-// 		TestName string
-// 		Input    string
-// 		Expected string
-// 		Error    bool
-// 	}{
-// 		{
-// 			TestName: "empty",
-// 			Input:    "",
-// 			Expected: "",
-// 			Error:    true,
-// 		},
-// 		{
-// 			TestName: "descriptive name",
-// 			Input:    "some input",
-// 			Expected: "some output",
-// 			Error:    false,
-// 		},
-// 		{
-// 			TestName: "another descriptive name",
-// 			Input:    "more input",
-// 			Expected: "more output",
-// 			Error:    false,
-// 		},
-// 	}
-
-// 	for _, testCase := range testCases {
-// 		testCase := testCase
-// 		t.Run(testCase.TestName, func(t *testing.T) {
-// 			t.Parallel()
-// 			got, err := tfrds.FunctionFromResource(testCase.Input)
-
-// 			if err != nil && !testCase.Error {
-// 				t.Errorf("got error (%s), expected no error", err)
-// 			}
-
-// 			if err == nil && testCase.Error {
-// 				t.Errorf("got (%s) and no error, expected error", got)
-// 			}
-
-// 			if got != testCase.Expected {
-// 				t.Errorf("got %s, expected %s", got, testCase.Expected)
-// 			}
-// 		})
-// 	}
-// }
-
-func TestAccRDSCustomDBEngineVersion_basic(t *testing.T) {
+func TestAccRDSCustomDBEngineVersion_sqlServer(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
 
 	var customdbengineversion rds.DBEngineVersion
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := fmt.Sprintf("%s%s%d", "15.00.4249.2.", acctest.ResourcePrefix, sdkacctest.RandIntRange(100, 999))
+	ami := "ami-0bb58d385d4c80ea2"
 	resourceName := "aws_rds_custom_db_engine_version.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -124,7 +44,86 @@ func TestAccRDSCustomDBEngineVersion_basic(t *testing.T) {
 		CheckDestroy:             testAccCheckCustomDBEngineVersionDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCustomDBEngineVersionConfig_basic(rName),
+				Config: testAccCustomDBEngineVersionConfig_sqlServer(rName, ami),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCustomDBEngineVersionExists(ctx, resourceName, &customdbengineversion),
+					resource.TestCheckResourceAttr(resourceName, "engine_version", rName),
+					resource.TestCheckResourceAttrSet(resourceName, "create_time"),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "rds", regexp.MustCompile(`customdbengineversion:+.`)),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"filename", "manifest_hash"},
+			},
+		},
+	})
+}
+
+func TestAccRDSCustomDBEngineVersion_oracle(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var customdbengineversion rds.DBEngineVersion
+	rName := fmt.Sprintf("%s%s%d", "19.19.ee.", acctest.ResourcePrefix, sdkacctest.RandIntRange(100, 999))
+	resourceName := "aws_rds_custom_db_engine_version.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, rds.EndpointsID)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckCustomDBEngineVersionDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCustomDBEngineVersionConfig_oracle(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCustomDBEngineVersionExists(ctx, resourceName, &customdbengineversion),
+					resource.TestCheckResourceAttr(resourceName, "engine_version", rName),
+					resource.TestCheckResourceAttrSet(resourceName, "create_time"),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "rds", regexp.MustCompile(`customdbengineversion:+.`)),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"filename", "manifest_hash"},
+			},
+		},
+	})
+}
+
+func TestAccRDSCustomDBEngineVersion_manifestFile(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var customdbengineversion rds.DBEngineVersion
+	rName := fmt.Sprintf("%s%s%d", "19.19.ee.", acctest.ResourcePrefix, sdkacctest.RandIntRange(100, 999))
+	filename := "test-fixtures/custom-oracle-manifest.json"
+	resourceName := "aws_rds_custom_db_engine_version.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, rds.EndpointsID)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckCustomDBEngineVersionDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCustomDBEngineVersionConfig_manifestFile(rName, filename),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCustomDBEngineVersionExists(ctx, resourceName, &customdbengineversion),
 					resource.TestCheckResourceAttr(resourceName, "engine_version", rName),
@@ -150,6 +149,7 @@ func TestAccRDSCustomDBEngineVersion_disappears(t *testing.T) {
 
 	var customdbengineversion rds.DBEngineVersion
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	ami := "ami-0bb58d385d4c80ea2"
 	resourceName := "aws_rds_custom_db_engine_version.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -163,7 +163,7 @@ func TestAccRDSCustomDBEngineVersion_disappears(t *testing.T) {
 		CheckDestroy:             testAccCheckCustomDBEngineVersionDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCustomDBEngineVersionConfig_basic(rName),
+				Config: testAccCustomDBEngineVersionConfig_sqlServer(rName, ami),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCustomDBEngineVersionExists(ctx, resourceName, &customdbengineversion),
 					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfrds.ResourceCustomDBEngineVersion(), resourceName),
@@ -237,42 +237,63 @@ func testAccPreCheck(ctx context.Context, t *testing.T) {
 	}
 }
 
-func testAccCustomDBEngineVersionConfig_basic(rName string) string {
+func testAccCustomDBEngineVersionConfig_sqlServer(rName, ami string) string {
 	return fmt.Sprintf(`
-data "aws_ami" "test" {
-  most_recent = true
-  owners      = ["amazon"]
+data "aws_region" "current" {}
 
-  filter {
-    name   = "name"
-    values = ["Windows_Server-2022-English-Full-SQL_2019_Standard-2023.08.10"]
-  }
-
-  filter {
-    name   = "virtualization-type"
-    values = ["hvm"]
-  }
-
-  filter {
-    name   = "root-device-type"
-    values = ["ebs"]
-  }
-
-  filter {
-    name   = "block-device-mapping.volume-type"
-    values = ["gp2"]
-  }
+# Copy the Amazon AMI for Windows SQL Server, CEV creation requires an AMI owned by the operator
+resource "aws_ami_copy" "test" {
+  name              = %[1]q
+  source_ami_id     = %[2]q
+  source_ami_region = data.aws_region.current.name
 }
 
-resource "aws_kms_key" "rdscfo_kms_key" {
-  description = "KMS symmetric key for RDS Custom for Oracle"
+resource "aws_kms_key" "rdscfss_kms_key" {
+  description = "KMS symmetric key for RDS Custom for SQL Server"
 }
 
 resource "aws_rds_custom_db_engine_version" "test" {
   engine         = "custom-sqlserver-se"
   engine_version = %[1]q
-  image-id       = aws_ami.test.id
-  kms_key_id     = aws_kms_key.rdscfo_kms_key.key_id
+  image_id       = aws_ami_copy.test.id
+  kms_key_id     = aws_kms_key.rdscfss_kms_key.arn
+}
+`, rName, ami)
+}
+
+func testAccCustomDBEngineVersionConfig_oracle(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_kms_key" "rdscfo_kms_key" {
+  description = "KMS symmetric key for RDS Custom for Oracle"
+}
+
+resource "aws_rds_custom_db_engine_version" "test" {
+  database_installation_files_s3_bucket_name = "313127153659-rds"
+  engine                                     = "custom-oracle-ee-cdb"
+  engine_version                             = %[1]q
+  kms_key_id                                 = aws_kms_key.rdscfo_kms_key.arn
+  manifest                                   = <<JSON
+  {
+	"databaseInstallationFileNames":["V982063-01.zip"]
+  }
+  JSON
 }
 `, rName)
+}
+
+func testAccCustomDBEngineVersionConfig_manifestFile(rName, filename string) string {
+	return fmt.Sprintf(`
+resource "aws_kms_key" "rdscfo_kms_key" {
+  description = "KMS symmetric key for RDS Custom for Oracle"
+}
+
+resource "aws_rds_custom_db_engine_version" "test" {
+  database_installation_files_s3_bucket_name = "313127153659-rds"
+  engine                                     = "custom-oracle-ee-cdb"
+  engine_version                             = %[1]q
+  kms_key_id                                 = aws_kms_key.rdscfo_kms_key.arn
+  filename                                   = %[2]q
+  manifest_hash                              = filebase64sha256(%[2]q)
+}
+`, rName, filename)
 }
