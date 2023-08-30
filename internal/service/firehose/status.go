@@ -1,15 +1,20 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package firehose
 
 import (
+	"context"
+
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/firehose"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func statusDeliveryStream(conn *firehose.Firehose, name string) resource.StateRefreshFunc {
+func statusDeliveryStream(ctx context.Context, conn *firehose.Firehose, name string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := FindDeliveryStreamByName(conn, name)
+		output, err := FindDeliveryStreamByName(ctx, conn, name)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil
@@ -23,9 +28,9 @@ func statusDeliveryStream(conn *firehose.Firehose, name string) resource.StateRe
 	}
 }
 
-func statusDeliveryStreamEncryptionConfiguration(conn *firehose.Firehose, name string) resource.StateRefreshFunc {
+func statusDeliveryStreamEncryptionConfiguration(ctx context.Context, conn *firehose.Firehose, name string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := FindDeliveryStreamEncryptionConfigurationByName(conn, name)
+		output, err := FindDeliveryStreamEncryptionConfigurationByName(ctx, conn, name)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil

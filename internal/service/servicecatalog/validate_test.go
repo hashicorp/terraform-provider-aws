@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package servicecatalog
 
 import (
@@ -5,6 +8,8 @@ import (
 )
 
 func TestValidSharePrincipal(t *testing.T) {
+	t.Parallel()
+
 	v := ""
 	_, errors := validSharePrincipal(v, "arn")
 	if len(errors) == 0 {

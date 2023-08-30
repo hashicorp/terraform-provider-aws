@@ -1,34 +1,41 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package route53resolver_test
 
 import (
+	"context"
 	"fmt"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/route53resolver"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfroute53resolver "github.com/hashicorp/terraform-provider-aws/internal/service/route53resolver"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func TestAccRoute53ResolverFirewallDomainList_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	var v route53resolver.FirewallDomainList
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_route53_resolver_firewall_domain_list.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, route53resolver.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckRoute53ResolverFirewallDomainListDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, route53resolver.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckFirewallDomainListDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRoute53ResolverFirewallDomainListConfig(rName),
+				Config: testAccFirewallDomainListConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRoute53ResolverFirewallDomainListExists(resourceName, &v),
+					testAccCheckFirewallDomainListExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttrSet(resourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "domains.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
@@ -43,23 +50,23 @@ func TestAccRoute53ResolverFirewallDomainList_basic(t *testing.T) {
 }
 
 func TestAccRoute53ResolverFirewallDomainList_domains(t *testing.T) {
+	ctx := acctest.Context(t)
 	var v route53resolver.FirewallDomainList
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_route53_resolver_firewall_domain_list.test"
-
 	domainName1 := acctest.RandomFQDomainName()
 	domainName2 := acctest.RandomFQDomainName()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, route53resolver.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckRoute53ResolverFirewallDomainListDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, route53resolver.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckFirewallDomainListDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRoute53ResolverFirewallDomainListConfigDomains(rName, domainName1),
+				Config: testAccFirewallDomainListConfig_domains(rName, domainName1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRoute53ResolverFirewallDomainListExists(resourceName, &v),
+					testAccCheckFirewallDomainListExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "domains.#", "1"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "domains.*", domainName1),
@@ -71,18 +78,18 @@ func TestAccRoute53ResolverFirewallDomainList_domains(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccRoute53ResolverFirewallDomainListConfigDomains(rName, domainName2),
+				Config: testAccFirewallDomainListConfig_domains(rName, domainName2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRoute53ResolverFirewallDomainListExists(resourceName, &v),
+					testAccCheckFirewallDomainListExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "domains.#", "1"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "domains.*", domainName2),
 				),
 			},
 			{
-				Config: testAccRoute53ResolverFirewallDomainListConfig(rName),
+				Config: testAccFirewallDomainListConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRoute53ResolverFirewallDomainListExists(resourceName, &v),
+					testAccCheckFirewallDomainListExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "domains.#", "0"),
 				),
@@ -92,21 +99,22 @@ func TestAccRoute53ResolverFirewallDomainList_domains(t *testing.T) {
 }
 
 func TestAccRoute53ResolverFirewallDomainList_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
 	var v route53resolver.FirewallDomainList
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_route53_resolver_firewall_domain_list.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, route53resolver.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckRoute53ResolverFirewallDomainListDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, route53resolver.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckFirewallDomainListDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRoute53ResolverFirewallDomainListConfig(rName),
+				Config: testAccFirewallDomainListConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRoute53ResolverFirewallDomainListExists(resourceName, &v),
-					acctest.CheckResourceDisappears(acctest.Provider, tfroute53resolver.ResourceFirewallDomainList(), resourceName),
+					testAccCheckFirewallDomainListExists(ctx, resourceName, &v),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfroute53resolver.ResourceFirewallDomainList(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -115,20 +123,21 @@ func TestAccRoute53ResolverFirewallDomainList_disappears(t *testing.T) {
 }
 
 func TestAccRoute53ResolverFirewallDomainList_tags(t *testing.T) {
+	ctx := acctest.Context(t)
 	var v route53resolver.FirewallDomainList
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_route53_resolver_firewall_domain_list.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, route53resolver.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckRoute53ResolverFirewallDomainListDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, route53resolver.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckFirewallDomainListDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRoute53ResolverFirewallDomainListConfigTags1(rName, "key1", "value1"),
+				Config: testAccFirewallDomainListConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRoute53ResolverFirewallDomainListExists(resourceName, &v),
+					testAccCheckFirewallDomainListExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
@@ -140,9 +149,9 @@ func TestAccRoute53ResolverFirewallDomainList_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccRoute53ResolverFirewallDomainListConfigTags2(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccFirewallDomainListConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRoute53ResolverFirewallDomainListExists(resourceName, &v),
+					testAccCheckFirewallDomainListExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
@@ -150,9 +159,9 @@ func TestAccRoute53ResolverFirewallDomainList_tags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccRoute53ResolverFirewallDomainListConfigTags1(rName, "key2", "value2"),
+				Config: testAccFirewallDomainListConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRoute53ResolverFirewallDomainListExists(resourceName, &v),
+					testAccCheckFirewallDomainListExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
@@ -162,30 +171,33 @@ func TestAccRoute53ResolverFirewallDomainList_tags(t *testing.T) {
 	})
 }
 
-func testAccCheckRoute53ResolverFirewallDomainListDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).Route53ResolverConn
+func testAccCheckFirewallDomainListDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).Route53ResolverConn(ctx)
 
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_route53_resolver_firewall_domain_list" {
-			continue
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_route53_resolver_firewall_domain_list" {
+				continue
+			}
+
+			_, err := tfroute53resolver.FindFirewallDomainListByID(ctx, conn, rs.Primary.ID)
+
+			if tfresource.NotFound(err) {
+				continue
+			}
+
+			if err != nil {
+				return err
+			}
+
+			return fmt.Errorf("Route53 Resolver Firewall Domain List still exists: %s", rs.Primary.ID)
 		}
 
-		// Try to find the resource
-		_, err := tfroute53resolver.FindFirewallDomainListByID(conn, rs.Primary.ID)
-		// Verify the error is what we want
-		if tfawserr.ErrCodeEquals(err, route53resolver.ErrCodeResourceNotFoundException) {
-			continue
-		}
-		if err != nil {
-			return err
-		}
-		return fmt.Errorf("Route 53 Resolver DNS Firewall domain list still exists: %s", rs.Primary.ID)
+		return nil
 	}
-
-	return nil
 }
 
-func testAccCheckRoute53ResolverFirewallDomainListExists(n string, v *route53resolver.FirewallDomainList) resource.TestCheckFunc {
+func testAccCheckFirewallDomainListExists(ctx context.Context, n string, v *route53resolver.FirewallDomainList) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -193,22 +205,24 @@ func testAccCheckRoute53ResolverFirewallDomainListExists(n string, v *route53res
 		}
 
 		if rs.Primary.ID == "" {
-			return fmt.Errorf("No Route 53 Resolver DNS Firewall domain list ID is set")
+			return fmt.Errorf("No Route53 Resolver Firewall Domain List ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).Route53ResolverConn
-		out, err := tfroute53resolver.FindFirewallDomainListByID(conn, rs.Primary.ID)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).Route53ResolverConn(ctx)
+
+		output, err := tfroute53resolver.FindFirewallDomainListByID(ctx, conn, rs.Primary.ID)
+
 		if err != nil {
 			return err
 		}
 
-		*v = *out
+		*v = *output
 
 		return nil
 	}
 }
 
-func testAccRoute53ResolverFirewallDomainListConfig(rName string) string {
+func testAccFirewallDomainListConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_route53_resolver_firewall_domain_list" "test" {
   name = %[1]q
@@ -216,7 +230,7 @@ resource "aws_route53_resolver_firewall_domain_list" "test" {
 `, rName)
 }
 
-func testAccRoute53ResolverFirewallDomainListConfigDomains(rName, domain string) string {
+func testAccFirewallDomainListConfig_domains(rName, domain string) string {
 	return fmt.Sprintf(`
 resource "aws_route53_resolver_firewall_domain_list" "test" {
   name    = %[1]q
@@ -225,10 +239,11 @@ resource "aws_route53_resolver_firewall_domain_list" "test" {
 `, rName, domain)
 }
 
-func testAccRoute53ResolverFirewallDomainListConfigTags1(rName, tagKey1, tagValue1 string) string {
+func testAccFirewallDomainListConfig_tags1(rName, tagKey1, tagValue1 string) string {
 	return fmt.Sprintf(`
 resource "aws_route53_resolver_firewall_domain_list" "test" {
   name = %[1]q
+
   tags = {
     %[2]q = %[3]q
   }
@@ -236,10 +251,11 @@ resource "aws_route53_resolver_firewall_domain_list" "test" {
 `, rName, tagKey1, tagValue1)
 }
 
-func testAccRoute53ResolverFirewallDomainListConfigTags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+func testAccFirewallDomainListConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return fmt.Sprintf(`
 resource "aws_route53_resolver_firewall_domain_list" "test" {
   name = %[1]q
+
   tags = {
     %[2]q = %[3]q
     %[4]q = %[5]q

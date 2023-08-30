@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package amplify_test
 
 import (
@@ -7,6 +10,8 @@ import (
 )
 
 func TestBranchParseResourceID(t *testing.T) {
+	t.Parallel()
+
 	testCases := []struct {
 		TestName           string
 		InputID            string
@@ -45,7 +50,10 @@ func TestBranchParseResourceID(t *testing.T) {
 	}
 
 	for _, testCase := range testCases {
+		testCase := testCase
 		t.Run(testCase.TestName, func(t *testing.T) {
+			t.Parallel()
+
 			gotAppID, gotBranchName, err := tfamplify.BranchParseResourceID(testCase.InputID)
 
 			if err == nil && testCase.ExpectError {

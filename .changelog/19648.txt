@@ -1,0 +1,7 @@
+```release-note:note:enhancement
+resource/aws_lakeformation_permissions: Add LF-tag support
+```
+
+```release-note:note:enhancement
+datasource/aws_lakeformation_permissions: Add LF-tag support
+```

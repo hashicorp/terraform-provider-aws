@@ -1,9 +1,14 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package neptune
 
 import (
+	"context"
+
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/neptune"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
@@ -14,24 +19,18 @@ const (
 	// EventSubscription Unknown
 	EventSubscriptionStatusUnknown = "Unknown"
 
-	// Cluster NotFound
-	ClusterStatusNotFound = "NotFound"
-
-	// Cluster Unknown
-	ClusterStatusUnknown = "Unknown"
-
 	// DBClusterEndpoint Unknown
 	DBClusterEndpointStatusUnknown = "Unknown"
 )
 
 // StatusEventSubscription fetches the EventSubscription and its Status
-func StatusEventSubscription(conn *neptune.Neptune, subscriptionName string) resource.StateRefreshFunc {
+func StatusEventSubscription(ctx context.Context, conn *neptune.Neptune, subscriptionName string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		input := &neptune.DescribeEventSubscriptionsInput{
 			SubscriptionName: aws.String(subscriptionName),
 		}
 
-		output, err := conn.DescribeEventSubscriptions(input)
+		output, err := conn.DescribeEventSubscriptionsWithContext(ctx, input)
 
 		if err != nil {
 			return nil, EventSubscriptionStatusUnknown, err
@@ -45,33 +44,10 @@ func StatusEventSubscription(conn *neptune.Neptune, subscriptionName string) res
 	}
 }
 
-// StatusCluster fetches the Cluster and its Status
-func StatusCluster(conn *neptune.Neptune, id string) resource.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-		input := &neptune.DescribeDBClustersInput{
-			DBClusterIdentifier: aws.String(id),
-		}
-
-		output, err := conn.DescribeDBClusters(input)
-
-		if err != nil {
-			return nil, ClusterStatusUnknown, err
-		}
-
-		if len(output.DBClusters) == 0 {
-			return nil, ClusterStatusNotFound, nil
-		}
-
-		cluster := output.DBClusters[0]
-
-		return cluster, aws.StringValue(cluster.Status), nil
-	}
-}
-
 // StatusDBClusterEndpoint fetches the DBClusterEndpoint and its Status
-func StatusDBClusterEndpoint(conn *neptune.Neptune, id string) resource.StateRefreshFunc {
+func StatusDBClusterEndpoint(ctx context.Context, conn *neptune.Neptune, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := FindEndpointByID(conn, id)
+		output, err := FindEndpointByID(ctx, conn, id)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil

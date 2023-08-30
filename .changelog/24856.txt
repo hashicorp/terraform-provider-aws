@@ -1,0 +1,11 @@
+```release-note:enhancement
+resource/aws_redshift_cluster: Add plan-time validation for `iam_roles`, `owner_account`, and `port`.
+```
+
+```release-note:enhancement
+resource/aws_redshift_cluster: Add `aqua_configuration_status` and `apply_immediately` arguments.
+```
+
+```release-note:enhancement
+data-source/aws_redshift_cluster: Add `aqua_configuration_status` attribute.
+```

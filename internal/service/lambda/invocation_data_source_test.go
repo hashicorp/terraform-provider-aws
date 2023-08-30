@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package lambda_test
 
 import (
@@ -5,9 +8,9 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/lambda"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
@@ -38,16 +41,17 @@ func testAccCheckInvocationResult(name, expectedResult string) resource.TestChec
 }
 
 func TestAccLambdaInvocationDataSource_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	testData := "value3"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { acctest.PreCheck(t) },
-		ErrorCheck: acctest.ErrorCheck(t, lambda.EndpointsID),
-		Providers:  acctest.Providers,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, lambda.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInvocationDataSource_basic_config(rName, testData),
+				Config: testAccInvocationDataSourceConfig_basic(rName, testData),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInvocationResult("data.aws_lambda_invocation.invocation_test", `{"key1":"value1","key2":"value2","key3":"`+testData+`"}`),
 				),
@@ -57,16 +61,17 @@ func TestAccLambdaInvocationDataSource_basic(t *testing.T) {
 }
 
 func TestAccLambdaInvocationDataSource_qualifier(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	testData := "value3"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { acctest.PreCheck(t) },
-		ErrorCheck: acctest.ErrorCheck(t, lambda.EndpointsID),
-		Providers:  acctest.Providers,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, lambda.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInvocationDataSource_qualifier_config(rName, testData),
+				Config: testAccInvocationDataSourceConfig_qualifier(rName, testData),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInvocationResult("data.aws_lambda_invocation.invocation_test", `{"key1":"value1","key2":"value2","key3":"`+testData+`"}`),
 				),
@@ -76,16 +81,17 @@ func TestAccLambdaInvocationDataSource_qualifier(t *testing.T) {
 }
 
 func TestAccLambdaInvocationDataSource_complex(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	testData := "value3"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { acctest.PreCheck(t) },
-		ErrorCheck: acctest.ErrorCheck(t, lambda.EndpointsID),
-		Providers:  acctest.Providers,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, lambda.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInvocationDataSource_complex_config(rName, testData),
+				Config: testAccInvocationDataSourceConfig_complex(rName, testData),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInvocationResult("data.aws_lambda_invocation.invocation_test", `{"key1":{"subkey1":"subvalue1"},"key2":{"subkey2":"subvalue2","subkey3":{"a": "b"}},"key3":"`+testData+`"}`),
 				),
@@ -122,7 +128,7 @@ resource "aws_iam_role_policy_attachment" "lambda_role_policy" {
 `, roleName)
 }
 
-func testAccInvocationDataSource_basic_config(rName, testData string) string {
+func testAccInvocationDataSourceConfig_basic(rName, testData string) string {
 	return fmt.Sprintf(testAccInvocationDataSource_base_config(rName)+`
 resource "aws_lambda_function" "lambda" {
   depends_on = [aws_iam_role_policy_attachment.lambda_role_policy]
@@ -131,7 +137,7 @@ resource "aws_lambda_function" "lambda" {
   function_name = "%s"
   role          = aws_iam_role.lambda_role.arn
   handler       = "lambda_invocation.handler"
-  runtime       = "nodejs12.x"
+  runtime       = "nodejs16.x"
 
   environment {
     variables = {
@@ -153,7 +159,7 @@ JSON
 `, rName, testData)
 }
 
-func testAccInvocationDataSource_qualifier_config(rName, testData string) string {
+func testAccInvocationDataSourceConfig_qualifier(rName, testData string) string {
 	return fmt.Sprintf(testAccInvocationDataSource_base_config(rName)+`
 resource "aws_lambda_function" "lambda" {
   depends_on = [aws_iam_role_policy_attachment.lambda_role_policy]
@@ -162,7 +168,7 @@ resource "aws_lambda_function" "lambda" {
   function_name = "%s"
   role          = aws_iam_role.lambda_role.arn
   handler       = "lambda_invocation.handler"
-  runtime       = "nodejs12.x"
+  runtime       = "nodejs16.x"
   publish       = true
 
   environment {
@@ -186,7 +192,7 @@ JSON
 `, rName, testData)
 }
 
-func testAccInvocationDataSource_complex_config(rName, testData string) string {
+func testAccInvocationDataSourceConfig_complex(rName, testData string) string {
 	return fmt.Sprintf(testAccInvocationDataSource_base_config(rName)+`
 resource "aws_lambda_function" "lambda" {
   depends_on = [aws_iam_role_policy_attachment.lambda_role_policy]
@@ -195,7 +201,7 @@ resource "aws_lambda_function" "lambda" {
   function_name = "%s"
   role          = aws_iam_role.lambda_role.arn
   handler       = "lambda_invocation.handler"
-  runtime       = "nodejs12.x"
+  runtime       = "nodejs16.x"
   publish       = true
 
   environment {

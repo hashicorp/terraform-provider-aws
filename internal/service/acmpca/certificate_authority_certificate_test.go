@@ -1,12 +1,16 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package acmpca_test
 
 import (
+	"context"
 	"fmt"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/acmpca"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfacmpca "github.com/hashicorp/terraform-provider-aws/internal/service/acmpca"
@@ -14,21 +18,22 @@ import (
 )
 
 func TestAccACMPCACertificateAuthorityCertificate_rootCA(t *testing.T) {
+	ctx := acctest.Context(t)
 	var v acmpca.GetCertificateAuthorityCertificateOutput
 	resourceName := "aws_acmpca_certificate_authority_certificate.test"
 
 	commonName := acctest.RandomDomainName()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, acmpca.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: nil, // Certificate authority certificates cannot be deleted
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, acmpca.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             nil, // Certificate authority certificates cannot be deleted
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCertificateAuthorityCertificate_RootCA(commonName),
+				Config: testAccCertificateAuthorityCertificateConfig_rootCA(commonName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckCertificateAuthorityCertificateExists(resourceName, &v),
+					testAccCheckCertificateAuthorityCertificateExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttrPair(resourceName, "certificate_authority_arn", "aws_acmpca_certificate_authority.test", "arn"),
 					resource.TestCheckResourceAttrPair(resourceName, "certificate", "aws_acmpca_certificate.test", "certificate"),
 					resource.TestCheckResourceAttrPair(resourceName, "certificate_chain", "aws_acmpca_certificate.test", "certificate_chain"),
@@ -44,6 +49,7 @@ func TestAccACMPCACertificateAuthorityCertificate_rootCA(t *testing.T) {
 }
 
 func TestAccACMPCACertificateAuthorityCertificate_updateRootCA(t *testing.T) {
+	ctx := acctest.Context(t)
 	var v acmpca.GetCertificateAuthorityCertificateOutput
 	resourceName := "aws_acmpca_certificate_authority_certificate.test"
 	updatedResourceName := "aws_acmpca_certificate_authority_certificate.updated"
@@ -51,24 +57,24 @@ func TestAccACMPCACertificateAuthorityCertificate_updateRootCA(t *testing.T) {
 	commonName := acctest.RandomDomainName()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, acmpca.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: nil, // Certificate authority certificates cannot be deleted
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, acmpca.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             nil, // Certificate authority certificates cannot be deleted
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCertificateAuthorityCertificate_RootCA(commonName),
+				Config: testAccCertificateAuthorityCertificateConfig_rootCA(commonName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckCertificateAuthorityCertificateExists(resourceName, &v),
+					testAccCheckCertificateAuthorityCertificateExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttrPair(resourceName, "certificate_authority_arn", "aws_acmpca_certificate_authority.test", "arn"),
 					resource.TestCheckResourceAttrPair(resourceName, "certificate", "aws_acmpca_certificate.test", "certificate"),
 					resource.TestCheckResourceAttrPair(resourceName, "certificate_chain", "aws_acmpca_certificate.test", "certificate_chain"),
 				),
 			},
 			{
-				Config: testAccCertificateAuthorityCertificate_UpdateRootCA(commonName),
+				Config: testAccCertificateAuthorityCertificateConfig_updateRootCA(commonName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckCertificateAuthorityCertificateExists(updatedResourceName, &v),
+					testAccCheckCertificateAuthorityCertificateExists(ctx, updatedResourceName, &v),
 					resource.TestCheckResourceAttrPair(updatedResourceName, "certificate_authority_arn", "aws_acmpca_certificate_authority.test", "arn"),
 					resource.TestCheckResourceAttrPair(updatedResourceName, "certificate", "aws_acmpca_certificate.updated", "certificate"),
 					resource.TestCheckResourceAttrPair(updatedResourceName, "certificate_chain", "aws_acmpca_certificate.updated", "certificate_chain"),
@@ -79,21 +85,22 @@ func TestAccACMPCACertificateAuthorityCertificate_updateRootCA(t *testing.T) {
 }
 
 func TestAccACMPCACertificateAuthorityCertificate_subordinateCA(t *testing.T) {
+	ctx := acctest.Context(t)
 	var v acmpca.GetCertificateAuthorityCertificateOutput
 	resourceName := "aws_acmpca_certificate_authority_certificate.test"
 
 	commonName := acctest.RandomDomainName()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, acmpca.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: nil, // Certificate authority certificates cannot be deleted
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, acmpca.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             nil, // Certificate authority certificates cannot be deleted
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCertificateAuthorityCertificate_SubordinateCA(commonName),
+				Config: testAccCertificateAuthorityCertificateConfig_subordinateCA(commonName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckCertificateAuthorityCertificateExists(resourceName, &v),
+					testAccCheckCertificateAuthorityCertificateExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttrPair(resourceName, "certificate_authority_arn", "aws_acmpca_certificate_authority.test", "arn"),
 					resource.TestCheckResourceAttrPair(resourceName, "certificate", "aws_acmpca_certificate.test", "certificate"),
 					resource.TestCheckResourceAttrPair(resourceName, "certificate_chain", "aws_acmpca_certificate.test", "certificate_chain"),
@@ -108,16 +115,16 @@ func TestAccACMPCACertificateAuthorityCertificate_subordinateCA(t *testing.T) {
 	})
 }
 
-func testAccCheckCertificateAuthorityCertificateExists(resourceName string, certificate *acmpca.GetCertificateAuthorityCertificateOutput) resource.TestCheckFunc {
+func testAccCheckCertificateAuthorityCertificateExists(ctx context.Context, resourceName string, certificate *acmpca.GetCertificateAuthorityCertificateOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resourceName]
 		if !ok {
-			return fmt.Errorf("Not found: %s", resourceName)
+			return fmt.Errorf("not found: %s", resourceName)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ACMPCAConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ACMPCAConn(ctx)
 
-		output, err := tfacmpca.FindCertificateAuthorityCertificateByARN(conn, rs.Primary.ID)
+		output, err := tfacmpca.FindCertificateAuthorityCertificateByARN(ctx, conn, rs.Primary.ID)
 		if err != nil {
 			return err
 		}
@@ -131,7 +138,7 @@ func testAccCheckCertificateAuthorityCertificateExists(resourceName string, cert
 	}
 }
 
-func testAccCertificateAuthorityCertificate_RootCA(commonName string) string {
+func testAccCertificateAuthorityCertificateConfig_rootCA(commonName string) string {
 	return fmt.Sprintf(`
 resource "aws_acmpca_certificate_authority_certificate" "test" {
   certificate_authority_arn = aws_acmpca_certificate_authority.test.arn
@@ -171,7 +178,7 @@ data "aws_partition" "current" {}
 `, commonName)
 }
 
-func testAccCertificateAuthorityCertificate_UpdateRootCA(commonName string) string {
+func testAccCertificateAuthorityCertificateConfig_updateRootCA(commonName string) string {
 	return fmt.Sprintf(`
 resource "aws_acmpca_certificate_authority_certificate" "updated" {
   certificate_authority_arn = aws_acmpca_certificate_authority.test.arn
@@ -211,7 +218,7 @@ data "aws_partition" "current" {}
 `, commonName)
 }
 
-func testAccCertificateAuthorityCertificate_SubordinateCA(commonName string) string {
+func testAccCertificateAuthorityCertificateConfig_subordinateCA(commonName string) string {
 	return fmt.Sprintf(`
 resource "aws_acmpca_certificate_authority_certificate" "test" {
   certificate_authority_arn = aws_acmpca_certificate_authority.test.arn

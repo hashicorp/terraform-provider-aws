@@ -21,24 +21,33 @@ resource "aws_appsync_domain_name" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
-* `certificate_arn` - (Required) The Amazon Resource Name (ARN) of the certificate. This can be an Certificate Manager (ACM) certificate or an Identity and Access Management (IAM) server certificate. The certifiacte must reside in us-east-1.
+* `certificate_arn` - (Required) ARN of the certificate. This can be an Certificate Manager (ACM) certificate or an Identity and Access Management (IAM) server certificate. The certifiacte must reside in us-east-1.
 * `description` - (Optional)  A description of the Domain Name.
-* `domain_name` - (Required) The domain name.
+* `domain_name` - (Required) Domain name.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
-* `id` - The Appsync Domain Name.
-* `appsync_domain_name` - The domain name that AppSync provides.
-* `hosted_zone_id` - The ID of your Amazon Route 53 hosted zone.
+* `id` - Appsync Domain Name.
+* `appsync_domain_name` - Domain name that AppSync provides.
+* `hosted_zone_id` - ID of your Amazon Route 53 hosted zone.
 
 ## Import
 
-`aws_appsync_domain_name` can be imported using the AppSync domain name, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_appsync_domain_name` using the AppSync domain name. For example:
 
+```terraform
+import {
+  to = aws_appsync_domain_name.example
+  id = "example.com"
+}
 ```
-$ terraform import aws_appsync_domain_name.example example.com
+
+Using `terraform import`, import `aws_appsync_domain_name` using the AppSync domain name. For example:
+
+```console
+% terraform import aws_appsync_domain_name.example example.com
 ```

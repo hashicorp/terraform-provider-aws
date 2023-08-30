@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/aws_redshift_cluster: Add `availability_zone_relocation_enabled` attribute and allow `availability_zone` to be changed in-place.
+```
+
+```release-note:enhancement
+data_source/aws_redshift_cluster: Add `availability_zone_relocation_enabled` attribute.
+```

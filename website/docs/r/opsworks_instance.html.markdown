@@ -105,9 +105,9 @@ resources cannot be automatically detected by Terraform. After making updates
 to block device configuration, resource recreation can be manually triggered by
 using the [`taint` command](https://www.terraform.io/docs/commands/taint.html).
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `created_at` - Time that the instance was created.
 * `ec2_instance_id` - EC2 instance ID.
@@ -131,18 +131,25 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Timeouts
 
-`aws_opsworks_instance` provides the following
-[Timeouts](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts) configuration options:
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-- `create` - (Default `10 minutes`) Used when the instance is created. It should cover the time needed for the instance to start successfully.
-- `delete` - (Default `10 minutes`) Used when the instance is deleted. It should cover the time needed for the instance to stop successfully.
-- `update` - (Default `10 minutes`) Used when the instance is changed. It should cover the time needed to either start or stop the instance.
+- `create` - (Default `10m`)
+- `delete` - (Default `10m`)
+- `update` - (Default `10m`)
 
 ## Import
 
-Opsworks Instances can be imported using the `instance id`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Opsworks Instances using the instance `id`. For example:
 
-```
-$ terraform import aws_opsworks_instance.my_instance 4d6d1710-ded9-42a1-b08e-b043ad7af1e2
+```terraform
+import {
+  to = aws_opsworks_instance.my_instance
+  id = "4d6d1710-ded9-42a1-b08e-b043ad7af1e2"
+}
 ```
 
+Using `terraform import`, import Opsworks Instances using the instance `id`. For example:
+
+```console
+% terraform import aws_opsworks_instance.my_instance 4d6d1710-ded9-42a1-b08e-b043ad7af1e2
+```

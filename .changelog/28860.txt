@@ -1,0 +1,7 @@
+```release-note:bug
+resource/aws_sns_topic: Improve refresh to avoid unnecessary diffs in `policy`
+```
+
+```release-note:bug
+resource/aws_sns_topic_policy: Improve refresh to avoid unnecessary diffs in `policy`
+```

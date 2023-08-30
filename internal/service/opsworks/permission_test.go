@@ -1,64 +1,65 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package opsworks_test
 
 import (
+	"context"
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/opsworks"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfopsworks "github.com/hashicorp/terraform-provider-aws/internal/service/opsworks"
 )
 
 func TestAccOpsWorksPermission_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_opsworks_permission.test"
 	var opsperm opsworks.Permission
+
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(opsworks.EndpointsID, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, opsworks.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckPermissionDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, opsworks.EndpointsID) },
+		ErrorCheck:               acctest.ErrorCheck(t, opsworks.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             acctest.CheckDestroyNoop,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccPermissionCreate(rName, true, true, "iam_only"),
+				Config: testAccPermissionConfig_create(rName, true, true, "iam_only"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPermissionExists(resourceName, &opsperm),
-					testAccCheckCreatePermissionAttributes(&opsperm, true, true, "iam_only"),
+					testAccCheckPermissionExists(ctx, resourceName, &opsperm),
 					resource.TestCheckResourceAttr(resourceName, "allow_ssh", "true"),
 					resource.TestCheckResourceAttr(resourceName, "allow_sudo", "true"),
 					resource.TestCheckResourceAttr(resourceName, "level", "iam_only"),
 				),
 			},
 			{
-				Config: testAccPermissionCreate(rName, true, false, "iam_only"),
+				Config: testAccPermissionConfig_create(rName, true, false, "iam_only"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPermissionExists(resourceName, &opsperm),
-					testAccCheckCreatePermissionAttributes(&opsperm, true, false, "iam_only"),
+					testAccCheckPermissionExists(ctx, resourceName, &opsperm),
 					resource.TestCheckResourceAttr(resourceName, "allow_ssh", "true"),
 					resource.TestCheckResourceAttr(resourceName, "allow_sudo", "false"),
 					resource.TestCheckResourceAttr(resourceName, "level", "iam_only"),
 				),
 			},
 			{
-				Config: testAccPermissionCreate(rName, false, false, "deny"),
+				Config: testAccPermissionConfig_create(rName, false, false, "deny"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPermissionExists(resourceName, &opsperm),
-					testAccCheckCreatePermissionAttributes(&opsperm, false, false, "deny"),
+					testAccCheckPermissionExists(ctx, resourceName, &opsperm),
 					resource.TestCheckResourceAttr(resourceName, "allow_ssh", "false"),
 					resource.TestCheckResourceAttr(resourceName, "allow_sudo", "false"),
 					resource.TestCheckResourceAttr(resourceName, "level", "deny"),
 				),
 			},
 			{
-				Config: testAccPermissionCreate(rName, false, false, "show"),
+				Config: testAccPermissionConfig_create(rName, false, false, "show"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPermissionExists(resourceName, &opsperm),
-					testAccCheckCreatePermissionAttributes(&opsperm, false, false, "show"),
+					testAccCheckPermissionExists(ctx, resourceName, &opsperm),
 					resource.TestCheckResourceAttr(resourceName, "allow_ssh", "false"),
 					resource.TestCheckResourceAttr(resourceName, "allow_sudo", "false"),
 					resource.TestCheckResourceAttr(resourceName, "level", "show"),
@@ -70,28 +71,29 @@ func TestAccOpsWorksPermission_basic(t *testing.T) {
 
 // Reference: https://github.com/hashicorp/terraform-provider-aws/issues/4804
 func TestAccOpsWorksPermission_self(t *testing.T) {
+	ctx := acctest.Context(t)
 	var opsperm opsworks.Permission
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_opsworks_permission.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(opsworks.EndpointsID, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, opsworks.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: nil, // Cannot delete own OpsWorks Permission
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, opsworks.EndpointsID) },
+		ErrorCheck:               acctest.ErrorCheck(t, opsworks.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             acctest.CheckDestroyNoop,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccPermissionSelf(rName, true, true),
+				Config: testAccPermissionConfig_self(rName, true, true),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPermissionExists(resourceName, &opsperm),
+					testAccCheckPermissionExists(ctx, resourceName, &opsperm),
 					resource.TestCheckResourceAttr(resourceName, "allow_ssh", "true"),
 					resource.TestCheckResourceAttr(resourceName, "allow_sudo", "true"),
 				),
 			},
 			{
-				Config: testAccPermissionSelf(rName, true, false),
+				Config: testAccPermissionConfig_self(rName, true, false),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPermissionExists(resourceName, &opsperm),
+					testAccCheckPermissionExists(ctx, resourceName, &opsperm),
 					resource.TestCheckResourceAttr(resourceName, "allow_ssh", "true"),
 					resource.TestCheckResourceAttr(resourceName, "allow_sudo", "false"),
 				),
@@ -100,8 +102,7 @@ func TestAccOpsWorksPermission_self(t *testing.T) {
 	})
 }
 
-func testAccCheckPermissionExists(
-	n string, opsperm *opsworks.Permission) resource.TestCheckFunc {
+func testAccCheckPermissionExists(ctx context.Context, n string, v *opsworks.Permission) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -109,194 +110,26 @@ func testAccCheckPermissionExists(
 		}
 
 		if rs.Primary.ID == "" {
-			return fmt.Errorf("No ID is set")
+			return fmt.Errorf("No OpsWorks Layer ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).OpsWorksConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).OpsWorksConn(ctx)
 
-		params := &opsworks.DescribePermissionsInput{
-			StackId:    aws.String(rs.Primary.Attributes["stack_id"]),
-			IamUserArn: aws.String(rs.Primary.Attributes["user_arn"]),
-		}
-		resp, err := conn.DescribePermissions(params)
+		output, err := tfopsworks.FindPermissionByTwoPartKey(ctx, conn, rs.Primary.Attributes["user_arn"], rs.Primary.Attributes["stack_id"])
 
 		if err != nil {
 			return err
 		}
 
-		if v := len(resp.Permissions); v != 1 {
-			return fmt.Errorf("Expected 1 response returned, got %d", v)
-		}
-
-		*opsperm = *resp.Permissions[0]
+		*v = *output
 
 		return nil
 	}
 }
 
-func testAccCheckCreatePermissionAttributes(
-	opsperm *opsworks.Permission, allowSSH bool, allowSudo bool, level string) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		if *opsperm.AllowSsh != allowSSH {
-			return fmt.Errorf("Unnexpected allowSSH: %t", *opsperm.AllowSsh)
-		}
-
-		if *opsperm.AllowSudo != allowSudo {
-			return fmt.Errorf("Unnexpected allowSudo: %t", *opsperm.AllowSudo)
-		}
-
-		if *opsperm.Level != level {
-			return fmt.Errorf("Unnexpected level: %s", *opsperm.Level)
-		}
-
-		return nil
-	}
-}
-
-func testAccCheckPermissionDestroy(s *terraform.State) error {
-	client := acctest.Provider.Meta().(*conns.AWSClient).OpsWorksConn
-
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_opsworks_permission" {
-			continue
-		}
-
-		req := &opsworks.DescribePermissionsInput{
-			IamUserArn: aws.String(rs.Primary.Attributes["user_arn"]),
-		}
-
-		resp, err := client.DescribePermissions(req)
-		if err == nil {
-			if len(resp.Permissions) > 0 {
-				return fmt.Errorf("OpsWorks Permissions still exist.")
-			}
-		}
-
-		if awserr, ok := err.(awserr.Error); ok {
-			if awserr.Code() != "ResourceNotFoundException" {
-				return err
-			}
-		}
-	}
-	return nil
-}
-
-func testAccPermissionBase(rName string) string {
-	return fmt.Sprintf(`
-data "aws_region" "current" {}
-
-resource "aws_vpc" "test" {
-  cidr_block = "10.0.0.0/24"
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_subnet" "test" {
-  cidr_block = aws_vpc.test.cidr_block
-  vpc_id     = aws_vpc.test.id
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_opsworks_stack" "test" {
-  name                         = %[1]q
-  region                       = data.aws_region.current.name
-  vpc_id                       = aws_vpc.test.id
-  default_subnet_id            = aws_subnet.test.id
-  service_role_arn             = aws_iam_role.service.arn
-  default_instance_profile_arn = aws_iam_instance_profile.test.arn
-  default_os                   = "Amazon Linux 2016.09"
-  default_root_device_type     = "ebs"
-
-  custom_json = <<EOF
-{
-  "key": "value"
-}
-EOF
-
-  configuration_manager_version = "11.10"
-  use_opsworks_security_groups  = false
-}
-
-resource "aws_iam_role" "service" {
-  name = "%[1]s-service"
-
-  assume_role_policy = <<EOT
-{
-  "Version": "2008-10-17",
-  "Statement": [
-    {
-      "Sid": "",
-      "Effect": "Allow",
-      "Principal": {
-        "Service": "opsworks.amazonaws.com"
-      },
-      "Action": "sts:AssumeRole"
-    }
-  ]
-}
-EOT
-}
-
-resource "aws_iam_role_policy" "service" {
-  name = %[1]q
-  role = aws_iam_role.service.id
-
-  policy = <<EOT
-{
-  "Statement": [
-    {
-      "Action": [
-        "ec2:*",
-        "iam:PassRole",
-        "cloudwatch:GetMetricStatistics",
-        "elasticloadbalancing:*",
-        "rds:*"
-      ],
-      "Effect": "Allow",
-      "Resource": [
-        "*"
-      ]
-    }
-  ]
-}
-EOT
-}
-
-resource "aws_iam_role" "instance" {
-  name = "%[1]s-instance"
-
-  assume_role_policy = <<EOT
-{
-  "Version": "2008-10-17",
-  "Statement": [
-    {
-      "Sid": "",
-      "Effect": "Allow",
-      "Principal": {
-        "Service": "ec2.amazonaws.com"
-      },
-      "Action": "sts:AssumeRole"
-    }
-  ]
-}
-EOT
-}
-
-resource "aws_iam_instance_profile" "test" {
-  name = %[1]q
-  role = aws_iam_role.instance.name
-}
-`, rName)
-}
-
-func testAccPermissionCreate(rName string, allowSSH, allowSudo bool, level string) string {
+func testAccPermissionConfig_create(rName string, allowSSH, allowSudo bool, level string) string {
 	return acctest.ConfigCompose(
-		testAccStackVPCCreateConfig(rName),
+		testAccStackConfig_vpcCreate(rName),
 		fmt.Sprintf(`
 resource "aws_opsworks_permission" "test" {
   stack_id = aws_opsworks_stack.test.id
@@ -319,9 +152,9 @@ resource "aws_iam_user" "user" {
 `, allowSSH, allowSudo, level, rName))
 }
 
-func testAccPermissionSelf(rName string, allowSSH bool, allowSudo bool) string {
+func testAccPermissionConfig_self(rName string, allowSSH bool, allowSudo bool) string {
 	return acctest.ConfigCompose(
-		testAccPermissionBase(rName),
+		testAccStackConfig_vpcCreate(rName),
 		fmt.Sprintf(`
 data "aws_caller_identity" "current" {}
 

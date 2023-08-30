@@ -1,0 +1,7 @@
+```release-note:bug
+resource/aws_medialive_channel: Add missing `rate_control_mode` in `acc_settings` for `audio_descriptions`
+```
+
+```release-note:bug
+resource/aws_medialive_input: Fix eventual consistency error when updating
+```

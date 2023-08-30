@@ -11,6 +11,9 @@ description: |-
 Use this data source to get the Account ID of the [AWS Redshift Service Account](http://docs.aws.amazon.com/redshift/latest/mgmt/db-auditing.html#db-auditing-enable-logging)
 in a given region for the purpose of allowing Redshift to store audit data in S3.
 
+~> **Note:** AWS documentation [states that](https://docs.aws.amazon.com/redshift/latest/mgmt/db-auditing.html#db-auditing-bucket-permissions) a [service principal name](https://docs.aws.amazon.com/IAM/latest/UserGuide/reference_policies_elements_principal.html#principal-services) should be used instead of an AWS account ID in any relevant IAM policy.
+The `aws_redshift_service_account` data source has been deprecated and will be removed in a future version.
+
 ## Example Usage
 
 ```terraform
@@ -21,33 +24,39 @@ resource "aws_s3_bucket" "bucket" {
   force_destroy = true
 }
 
+data "aws_iam_policy_document" "allow_audit_logging" {
+  statement {
+    sid    = "Put bucket policy needed for audit logging"
+    effect = "Allow"
+
+    principals {
+      type        = "AWS"
+      identifiers = [data.aws_redshift_service_account.main.arn]
+    }
+
+    actions   = ["s3:PutObject"]
+    resources = ["${aws_s3_bucket.bucket.arn}/*"]
+  }
+
+  statement {
+    sid    = "Get bucket policy needed for audit logging"
+    effect = "Allow"
+
+    principals {
+      type = "AWS"
+      identifiers = [
+        data.aws_redshift_service_account.main.arn,
+      ]
+    }
+
+    actions   = ["s3:GetBucketAcl"]
+    resources = data.aws_s3_bucket.bucket.arn
+  }
+}
+
 resource "aws_s3_bucket_policy" "allow_audit_logging" {
   bucket = aws_s3_bucket.bucket.id
-  policy = <<EOF
-{
-	"Version": "2008-10-17",
-	"Statement": [
-		{
-            "Sid": "Put bucket policy needed for audit logging",
-            "Effect": "Allow",
-            "Principal": {
-		        "AWS": "${data.aws_redshift_service_account.main.arn}"
-            },
-            "Action": "s3:PutObject",
-            "Resource": "arn:aws:s3:::tf-redshift-logging-test-bucket/*"
-        },
-        {
-            "Sid": "Get bucket policy needed for audit logging ",
-            "Effect": "Allow",
-            "Principal": {
-		        "AWS": "${data.aws_redshift_service_account.main.arn}"
-            },
-            "Action": "s3:GetBucketAcl",
-            "Resource": "arn:aws:s3:::tf-redshift-logging-test-bucket"
-        }
-	]
-}
-EOF
+  policy = data.aws_iam_policy_document.allow_audit_logging.json
 }
 ```
 
@@ -56,7 +65,9 @@ EOF
 * `region` - (Optional) Name of the region whose AWS Redshift account ID is desired.
 Defaults to the region from the AWS provider configuration.
 
-## Attributes Reference
+## Attribute Reference
 
-* `id` - The ID of the AWS Redshift service account in the selected region.
-* `arn` - The ARN of the AWS Redshift service account in the selected region.
+This data source exports the following attributes in addition to the arguments above:
+
+* `id` - ID of the AWS Redshift service account in the selected region.
+* `arn` - ARN of the AWS Redshift service account in the selected region.

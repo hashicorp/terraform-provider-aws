@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ec2_test
 
 import (
@@ -5,28 +8,29 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/ec2"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 )
 
-func TestAccEC2VPCEndpointPolicy_basic(t *testing.T) {
+func TestAccVPCEndpointPolicy_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	var endpoint ec2.VpcEndpoint
 
 	resourceName := "aws_vpc_endpoint_policy.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckVpcEndpointDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckVPCEndpointDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVpcEndpointPolicyBasicConfig(rName, policy1),
+				Config: testAccVPCEndpointPolicyConfig_basic(rName, policy1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVpcEndpointExists(resourceName, &endpoint),
+					testAccCheckVPCEndpointExists(ctx, resourceName, &endpoint),
 				),
 			},
 			{
@@ -35,31 +39,32 @@ func TestAccEC2VPCEndpointPolicy_basic(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccVpcEndpointPolicyBasicConfig(rName, policy2),
+				Config: testAccVPCEndpointPolicyConfig_basic(rName, policy2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVpcEndpointExists(resourceName, &endpoint),
+					testAccCheckVPCEndpointExists(ctx, resourceName, &endpoint),
 				),
 			},
 		},
 	})
 }
 
-func TestAccEC2VPCEndpointPolicy_disappears(t *testing.T) {
+func TestAccVPCEndpointPolicy_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
 	var endpoint ec2.VpcEndpoint
 	resourceName := "aws_vpc_endpoint_policy.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckVpcEndpointDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckVPCEndpointDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVpcEndpointPolicyBasicConfig(rName, policy1),
+				Config: testAccVPCEndpointPolicyConfig_basic(rName, policy1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVpcEndpointExists(resourceName, &endpoint),
-					acctest.CheckResourceDisappears(acctest.Provider, tfec2.ResourceVPCEndpointPolicy(), resourceName),
+					testAccCheckVPCEndpointExists(ctx, resourceName, &endpoint),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfec2.ResourceVPCEndpointPolicy(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -67,22 +72,23 @@ func TestAccEC2VPCEndpointPolicy_disappears(t *testing.T) {
 	})
 }
 
-func TestAccEC2VPCEndpointPolicy_disappears_endpoint(t *testing.T) {
+func TestAccVPCEndpointPolicy_disappears_endpoint(t *testing.T) {
+	ctx := acctest.Context(t)
 	var endpoint ec2.VpcEndpoint
 	resourceName := "aws_vpc_endpoint_policy.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckVpcEndpointDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckVPCEndpointDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVpcEndpointPolicyBasicConfig(rName, policy1),
+				Config: testAccVPCEndpointPolicyConfig_basic(rName, policy1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVpcEndpointExists(resourceName, &endpoint),
-					acctest.CheckResourceDisappears(acctest.Provider, tfec2.ResourceVPCEndpoint(), "aws_vpc_endpoint.test"),
+					testAccCheckVPCEndpointExists(ctx, resourceName, &endpoint),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfec2.ResourceVPCEndpoint(), "aws_vpc_endpoint.test"),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -125,7 +131,7 @@ const policy2 = `
 }
 `
 
-func testAccVpcEndpointPolicyBasicConfig(rName, policy string) string {
+func testAccVPCEndpointPolicyConfig_basic(rName, policy string) string {
 	return fmt.Sprintf(`
 data "aws_vpc_endpoint_service" "test" {
   service = "dynamodb"

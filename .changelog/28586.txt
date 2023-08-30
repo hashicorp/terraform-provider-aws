@@ -1,0 +1,7 @@
+```release-note:bug
+resource/aws_lambda_event_source_mapping: Fix IAM eventual consistency errors on resource Update
+```
+
+```release-note:enhancement
+resource/aws_lambda_event_source_mapping: Add `document_db_event_source_config` configuration block
+```

@@ -1,5 +1,5 @@
 ---
-subcategory: "Route53 Resolver"
+subcategory: "Route 53 Resolver"
 layout: "aws"
 page_title: "AWS: aws_route53_resolver_firewall_domain_list"
 description: |-
@@ -20,24 +20,33 @@ resource "aws_route53_resolver_firewall_domain_list" "example" {
 
 ## Argument Reference
 
-The following argument is supported:
+This resource supports the following arguments:
 
 * `name` - (Required) A name that lets you identify the domain list, to manage and use it.
 * `domains` - (Optional) A array of domains for the firewall domain list.
-* `tags` - (Optional) A map of tags to assign to the resource. f configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) A map of tags to assign to the resource. f configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - The ARN (Amazon Resource Name) of the domain list.
 * `id` - The ID of the domain list.
-* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
+* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 
- Route 53 Resolver DNS Firewall domain lists can be imported using the Route 53 Resolver DNS Firewall domain list ID, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import  Route 53 Resolver DNS Firewall domain lists using the Route 53 Resolver DNS Firewall domain list ID. For example:
 
+```terraform
+import {
+  to = aws_route53_resolver_firewall_domain_list.example
+  id = "rslvr-fdl-0123456789abcdef"
+}
 ```
-$ terraform import aws_route53_resolver_firewall_domain_list.example rslvr-fdl-0123456789abcdef
+
+Using `terraform import`, import  Route 53 Resolver DNS Firewall domain lists using the Route 53 Resolver DNS Firewall domain list ID. For example:
+
+```console
+% terraform import aws_route53_resolver_firewall_domain_list.example rslvr-fdl-0123456789abcdef
 ```

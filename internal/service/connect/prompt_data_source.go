@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package connect
 
 import (
@@ -11,9 +14,10 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
+// @SDKDataSource("aws_connect_prompt")
 func DataSourcePrompt() *schema.Resource {
 	return &schema.Resource{
-		ReadContext: dataSourcePromptRead,
+		ReadWithoutTimeout: dataSourcePromptRead,
 		Schema: map[string]*schema.Schema{
 			"arn": {
 				Type:     schema.TypeString,
@@ -36,19 +40,19 @@ func DataSourcePrompt() *schema.Resource {
 }
 
 func dataSourcePromptRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ConnectConn
+	conn := meta.(*conns.AWSClient).ConnectConn(ctx)
 
 	instanceID := d.Get("instance_id").(string)
 	name := d.Get("name").(string)
 
-	promptSummary, err := dataSourceGetConnectPromptSummaryByName(ctx, conn, instanceID, name)
+	promptSummary, err := dataSourceGetPromptSummaryByName(ctx, conn, instanceID, name)
 
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error finding Connect Prompt Summary by name (%s): %w", name, err))
+		return diag.Errorf("finding Connect Prompt Summary by name (%s): %s", name, err)
 	}
 
 	if promptSummary == nil {
-		return diag.FromErr(fmt.Errorf("error finding Connect Prompt Summary by name (%s): not found", name))
+		return diag.Errorf("finding Connect Prompt Summary by name (%s): not found", name)
 	}
 
 	d.Set("arn", promptSummary.Arn)
@@ -61,7 +65,7 @@ func dataSourcePromptRead(ctx context.Context, d *schema.ResourceData, meta inte
 	return nil
 }
 
-func dataSourceGetConnectPromptSummaryByName(ctx context.Context, conn *connect.Connect, instanceID, name string) (*connect.PromptSummary, error) {
+func dataSourceGetPromptSummaryByName(ctx context.Context, conn *connect.Connect, instanceID, name string) (*connect.PromptSummary, error) {
 	var result *connect.PromptSummary
 
 	input := &connect.ListPromptsInput{

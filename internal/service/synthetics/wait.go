@@ -1,12 +1,16 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package synthetics
 
 import (
+	"context"
 	"fmt"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/synthetics"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
@@ -17,15 +21,15 @@ const (
 	canaryDeletedTimeout = 5 * time.Minute
 )
 
-func waitCanaryReady(conn *synthetics.Synthetics, name string) (*synthetics.Canary, error) { //nolint:unparam
-	stateConf := &resource.StateChangeConf{
+func waitCanaryReady(ctx context.Context, conn *synthetics.Synthetics, name string) (*synthetics.Canary, error) { //nolint:unparam
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{synthetics.CanaryStateCreating, synthetics.CanaryStateUpdating},
 		Target:  []string{synthetics.CanaryStateReady},
-		Refresh: statusCanaryState(conn, name),
+		Refresh: statusCanaryState(ctx, conn, name),
 		Timeout: canaryCreatedTimeout,
 	}
 
-	outputRaw, err := stateConf.WaitForState()
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*synthetics.Canary); ok {
 		if status := output.Status; aws.StringValue(status.State) == synthetics.CanaryStateError {
@@ -38,8 +42,8 @@ func waitCanaryReady(conn *synthetics.Synthetics, name string) (*synthetics.Cana
 	return nil, err
 }
 
-func waitCanaryStopped(conn *synthetics.Synthetics, name string) (*synthetics.Canary, error) { //nolint:unparam
-	stateConf := &resource.StateChangeConf{
+func waitCanaryStopped(ctx context.Context, conn *synthetics.Synthetics, name string) (*synthetics.Canary, error) { //nolint:unparam
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{
 			synthetics.CanaryStateStopping,
 			synthetics.CanaryStateUpdating,
@@ -48,11 +52,11 @@ func waitCanaryStopped(conn *synthetics.Synthetics, name string) (*synthetics.Ca
 			synthetics.CanaryStateStarting,
 		},
 		Target:  []string{synthetics.CanaryStateStopped},
-		Refresh: statusCanaryState(conn, name),
+		Refresh: statusCanaryState(ctx, conn, name),
 		Timeout: canaryStoppedTimeout,
 	}
 
-	outputRaw, err := stateConf.WaitForState()
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*synthetics.Canary); ok {
 		if status := output.Status; aws.StringValue(status.State) == synthetics.CanaryStateError {
@@ -65,8 +69,8 @@ func waitCanaryStopped(conn *synthetics.Synthetics, name string) (*synthetics.Ca
 	return nil, err
 }
 
-func waitCanaryRunning(conn *synthetics.Synthetics, name string) (*synthetics.Canary, error) {
-	stateConf := &resource.StateChangeConf{
+func waitCanaryRunning(ctx context.Context, conn *synthetics.Synthetics, name string) (*synthetics.Canary, error) {
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{
 			synthetics.CanaryStateStarting,
 			synthetics.CanaryStateUpdating,
@@ -74,11 +78,11 @@ func waitCanaryRunning(conn *synthetics.Synthetics, name string) (*synthetics.Ca
 			synthetics.CanaryStateReady,
 		},
 		Target:  []string{synthetics.CanaryStateRunning},
-		Refresh: statusCanaryState(conn, name),
+		Refresh: statusCanaryState(ctx, conn, name),
 		Timeout: canaryRunningTimeout,
 	}
 
-	outputRaw, err := stateConf.WaitForState()
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*synthetics.Canary); ok {
 		if status := output.Status; aws.StringValue(status.State) == synthetics.CanaryStateError {
@@ -91,15 +95,15 @@ func waitCanaryRunning(conn *synthetics.Synthetics, name string) (*synthetics.Ca
 	return nil, err
 }
 
-func waitCanaryDeleted(conn *synthetics.Synthetics, name string) (*synthetics.Canary, error) { //nolint:unparam
-	stateConf := &resource.StateChangeConf{
+func waitCanaryDeleted(ctx context.Context, conn *synthetics.Synthetics, name string) (*synthetics.Canary, error) { //nolint:unparam
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{synthetics.CanaryStateDeleting, synthetics.CanaryStateStopped},
 		Target:  []string{},
-		Refresh: statusCanaryState(conn, name),
+		Refresh: statusCanaryState(ctx, conn, name),
 		Timeout: canaryDeletedTimeout,
 	}
 
-	outputRaw, err := stateConf.WaitForState()
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*synthetics.Canary); ok {
 		if status := output.Status; aws.StringValue(status.State) == synthetics.CanaryStateError {

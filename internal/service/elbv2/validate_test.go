@@ -1,12 +1,17 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package elbv2
 
 import (
 	"testing"
 
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 )
 
 func TestValidName(t *testing.T) {
+	t.Parallel()
+
 	validNames := []string{
 		"tf-test-elb",
 	}
@@ -35,6 +40,8 @@ func TestValidName(t *testing.T) {
 }
 
 func TestValidNamePrefix(t *testing.T) {
+	t.Parallel()
+
 	validNamePrefixes := []string{
 		"test-",
 	}
@@ -62,6 +69,8 @@ func TestValidNamePrefix(t *testing.T) {
 }
 
 func TestValidTargetGroupName(t *testing.T) {
+	t.Parallel()
+
 	cases := []struct {
 		Value    string
 		ErrCount int
@@ -92,6 +101,8 @@ func TestValidTargetGroupName(t *testing.T) {
 }
 
 func TestValidTargetGroupNamePrefix(t *testing.T) {
+	t.Parallel()
+
 	cases := []struct {
 		Value    string
 		ErrCount int

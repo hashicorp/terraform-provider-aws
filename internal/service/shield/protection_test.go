@@ -1,6 +1,10 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package shield_test
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"testing"
@@ -9,32 +13,33 @@ import (
 	"github.com/aws/aws-sdk-go/service/cloudfront"
 	"github.com/aws/aws-sdk-go/service/shield"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfshield "github.com/hashicorp/terraform-provider-aws/internal/service/shield"
 )
 
 func TestAccShieldProtection_globalAccelerator(t *testing.T) {
+	ctx := acctest.Context(t)
 	resourceName := "aws_shield_protection.test"
 	rName := sdkacctest.RandString(10)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(shield.EndpointsID, t)
-			testAccPreCheck(t)
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, shield.EndpointsID)
+			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, shield.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckProtectionDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, shield.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckProtectionDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccShieldProtectionGlobalAcceleratorConfig(rName),
+				Config: testAccProtectionConfig_globalAccelerator(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckProtectionExists(resourceName),
+					testAccCheckProtectionExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "tags_all.%", "0"),
 				),
@@ -49,23 +54,24 @@ func TestAccShieldProtection_globalAccelerator(t *testing.T) {
 }
 
 func TestAccShieldProtection_elasticIPAddress(t *testing.T) {
+	ctx := acctest.Context(t)
 	resourceName := "aws_shield_protection.test"
 	rName := sdkacctest.RandString(10)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(shield.EndpointsID, t)
-			testAccPreCheck(t)
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, shield.EndpointsID)
+			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, shield.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckProtectionDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, shield.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckProtectionDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccShieldProtectionElasticIPAddressConfig(rName),
+				Config: testAccProtectionConfig_elasticIPAddress(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckProtectionExists(resourceName),
+					testAccCheckProtectionExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "tags_all.%", "0"),
 				),
@@ -80,24 +86,25 @@ func TestAccShieldProtection_elasticIPAddress(t *testing.T) {
 }
 
 func TestAccShieldProtection_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
 	resourceName := "aws_shield_protection.test"
 	rName := sdkacctest.RandString(10)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(shield.EndpointsID, t)
-			testAccPreCheck(t)
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, shield.EndpointsID)
+			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, shield.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckProtectionDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, shield.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckProtectionDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccShieldProtectionElasticIPAddressConfig(rName),
+				Config: testAccProtectionConfig_elasticIPAddress(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckProtectionExists(resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tfshield.ResourceProtection(), resourceName),
+					testAccCheckProtectionExists(ctx, resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfshield.ResourceProtection(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -106,23 +113,24 @@ func TestAccShieldProtection_disappears(t *testing.T) {
 }
 
 func TestAccShieldProtection_alb(t *testing.T) {
+	ctx := acctest.Context(t)
 	resourceName := "aws_shield_protection.test"
 	rName := sdkacctest.RandString(10)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(shield.EndpointsID, t)
-			testAccPreCheck(t)
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, shield.EndpointsID)
+			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, shield.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckProtectionDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, shield.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckProtectionDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccShieldProtectionAlbConfig(rName),
+				Config: testAccProtectionConfig_alb(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckProtectionExists(resourceName),
+					testAccCheckProtectionExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "tags_all.%", "0"),
 				),
@@ -137,23 +145,24 @@ func TestAccShieldProtection_alb(t *testing.T) {
 }
 
 func TestAccShieldProtection_elb(t *testing.T) {
+	ctx := acctest.Context(t)
 	resourceName := "aws_shield_protection.test"
 	rName := sdkacctest.RandString(10)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(shield.EndpointsID, t)
-			testAccPreCheck(t)
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, shield.EndpointsID)
+			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, shield.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckProtectionDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, shield.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckProtectionDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccShieldProtectionElbConfig(rName),
+				Config: testAccProtectionConfig_elb(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckProtectionExists(resourceName),
+					testAccCheckProtectionExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "tags_all.%", "0"),
 				),
@@ -168,24 +177,25 @@ func TestAccShieldProtection_elb(t *testing.T) {
 }
 
 func TestAccShieldProtection_cloudFront(t *testing.T) {
+	ctx := acctest.Context(t)
 	resourceName := "aws_shield_protection.test"
 	rName := sdkacctest.RandString(10)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(shield.EndpointsID, t)
-			acctest.PreCheckPartitionHasService(cloudfront.EndpointsID, t)
-			testAccPreCheck(t)
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, shield.EndpointsID)
+			acctest.PreCheckPartitionHasService(t, cloudfront.EndpointsID)
+			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, shield.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckProtectionDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, shield.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckProtectionDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccShieldProtectionCloudfrontConfig(rName, testAccShieldProtectionCloudfrontRetainConfig()),
+				Config: testAccProtectionConfig_cloudFront(rName, testAccProtectionCloudFrontRetainConfig()),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckProtectionExists(resourceName),
+					testAccCheckProtectionExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "tags_all.%", "0"),
 				),
@@ -200,24 +210,25 @@ func TestAccShieldProtection_cloudFront(t *testing.T) {
 }
 
 func TestAccShieldProtection_CloudFront_tags(t *testing.T) {
+	ctx := acctest.Context(t)
 	resourceName := "aws_shield_protection.test"
 	rName := sdkacctest.RandString(10)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(shield.EndpointsID, t)
-			acctest.PreCheckPartitionHasService(cloudfront.EndpointsID, t)
-			testAccPreCheck(t)
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, shield.EndpointsID)
+			acctest.PreCheckPartitionHasService(t, cloudfront.EndpointsID)
+			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, shield.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckProtectionDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, shield.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckProtectionDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccShieldProtectionCloudfrontConfigTags1(rName, testAccShieldProtectionCloudfrontRetainConfig(), "Key1", "value1"),
+				Config: testAccProtectionConfig_cloudFrontTags1(rName, testAccProtectionCloudFrontRetainConfig(), "Key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckProtectionExists(resourceName),
+					testAccCheckProtectionExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags_all.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key1", "value1"),
@@ -229,9 +240,9 @@ func TestAccShieldProtection_CloudFront_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccShieldProtectionCloudfrontConfigTags2(rName, testAccShieldProtectionCloudfrontRetainConfig(), "Key1", "value1updated", "Key2", "value2"),
+				Config: testAccProtectionConfig_cloudFrontTags2(rName, testAccProtectionCloudFrontRetainConfig(), "Key1", "value1updated", "Key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckProtectionExists(resourceName),
+					testAccCheckProtectionExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags_all.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key1", "value1updated"),
@@ -239,9 +250,9 @@ func TestAccShieldProtection_CloudFront_tags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccShieldProtectionCloudfrontConfigTags1(rName, testAccShieldProtectionCloudfrontRetainConfig(), "Key2", "value2"),
+				Config: testAccProtectionConfig_cloudFrontTags1(rName, testAccProtectionCloudFrontRetainConfig(), "Key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckProtectionExists(resourceName),
+					testAccCheckProtectionExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags_all.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key2", "value2"),
@@ -252,23 +263,24 @@ func TestAccShieldProtection_CloudFront_tags(t *testing.T) {
 }
 
 func TestAccShieldProtection_route53(t *testing.T) {
+	ctx := acctest.Context(t)
 	resourceName := "aws_shield_protection.test"
 	rName := sdkacctest.RandString(10)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(shield.EndpointsID, t)
-			testAccPreCheck(t)
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, shield.EndpointsID)
+			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, shield.EndpointsID, "route53"),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckProtectionDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, shield.EndpointsID, "route53"),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckProtectionDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccShieldProtectionRoute53HostedZoneConfig(rName),
+				Config: testAccProtectionConfig_route53HostedZone(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckProtectionExists(resourceName),
+					testAccCheckProtectionExists(ctx, resourceName),
 				),
 			},
 			{
@@ -280,65 +292,63 @@ func TestAccShieldProtection_route53(t *testing.T) {
 	})
 }
 
-func testAccCheckProtectionDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).ShieldConn
-
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_shield_protection" {
-			continue
-		}
-
-		input := &shield.DescribeProtectionInput{
-			ProtectionId: aws.String(rs.Primary.ID),
-		}
-
-		resp, err := conn.DescribeProtection(input)
-
-		if tfawserr.ErrCodeEquals(err, shield.ErrCodeResourceNotFoundException) {
-			continue
-		}
-
-		if err != nil {
-			return err
-		}
-
-		if resp != nil && resp.Protection != nil && aws.StringValue(resp.Protection.Id) == rs.Primary.ID {
-			return fmt.Errorf("The Shield protection with ID %v still exists", rs.Primary.ID)
-		}
-	}
-
-	return nil
-}
-
-func testAccCheckProtectionExists(name string) resource.TestCheckFunc {
+func testAccCheckProtectionDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[name]
-		if !ok {
-			return fmt.Errorf("Not found: %s", name)
-		}
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ShieldConn(ctx)
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ShieldConn
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_shield_protection" {
+				continue
+			}
 
-		input := &shield.DescribeProtectionInput{
-			ProtectionId: aws.String(rs.Primary.ID),
-		}
+			input := &shield.DescribeProtectionInput{
+				ProtectionId: aws.String(rs.Primary.ID),
+			}
 
-		_, err := conn.DescribeProtection(input)
+			resp, err := conn.DescribeProtectionWithContext(ctx, input)
 
-		if err != nil {
-			return err
+			if tfawserr.ErrCodeEquals(err, shield.ErrCodeResourceNotFoundException) {
+				continue
+			}
+
+			if err != nil {
+				return err
+			}
+
+			if resp != nil && resp.Protection != nil && aws.StringValue(resp.Protection.Id) == rs.Primary.ID {
+				return fmt.Errorf("The Shield protection with ID %v still exists", rs.Primary.ID)
+			}
 		}
 
 		return nil
 	}
 }
 
-func testAccPreCheck(t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).ShieldConn
+func testAccCheckProtectionExists(ctx context.Context, name string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[name]
+		if !ok {
+			return fmt.Errorf("Not found: %s", name)
+		}
+
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ShieldConn(ctx)
+
+		input := &shield.DescribeProtectionInput{
+			ProtectionId: aws.String(rs.Primary.ID),
+		}
+
+		_, err := conn.DescribeProtectionWithContext(ctx, input)
+
+		return err
+	}
+}
+
+func testAccPreCheck(ctx context.Context, t *testing.T) {
+	conn := acctest.Provider.Meta().(*conns.AWSClient).ShieldConn(ctx)
 
 	input := &shield.ListProtectionsInput{}
 
-	_, err := conn.ListProtections(input)
+	_, err := conn.ListProtectionsWithContext(ctx, input)
 
 	if acctest.PreCheckSkipError(err) || tfawserr.ErrMessageContains(err, shield.ErrCodeResourceNotFoundException, "subscription does not exist") {
 		t.Skipf("skipping acceptance testing: %s", err)
@@ -352,14 +362,14 @@ func testAccPreCheck(t *testing.T) {
 // Set the environment variable TF_TEST_CLOUDFRONT_RETAIN
 // when doing manual tests so that the test is not waiting for
 // the distribution to be removed completely.
-func testAccShieldProtectionCloudfrontRetainConfig() string {
+func testAccProtectionCloudFrontRetainConfig() string {
 	if _, ok := os.LookupEnv("TF_TEST_CLOUDFRONT_RETAIN"); ok {
 		return "retain_on_delete = true"
 	}
 	return ""
 }
 
-func testAccShieldProtectionRoute53HostedZoneConfig(rName string) string {
+func testAccProtectionConfig_route53HostedZone(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_route53_zone" "test" {
   name    = "%[1]s.com."
@@ -380,7 +390,7 @@ resource "aws_shield_protection" "test" {
 `, rName)
 }
 
-func testAccShieldProtectionElbConfig(rName string) string {
+func testAccProtectionConfig_elb(rName string) string {
 	return fmt.Sprintf(`
 data "aws_availability_zones" "available" {
   state = "available"
@@ -446,7 +456,7 @@ resource "aws_shield_protection" "test" {
 `, rName)
 }
 
-func testAccShieldProtectionAlbConfig(rName string) string {
+func testAccProtectionConfig_alb(rName string) string {
 	return fmt.Sprintf(`
 data "aws_availability_zones" "available" {
   state = "available"
@@ -531,7 +541,7 @@ resource "aws_shield_protection" "test" {
 `, rName)
 }
 
-func testAccShieldProtectionCloudfrontConfig(rName, retainOnDelete string) string {
+func testAccProtectionConfig_cloudFront(rName, retainOnDelete string) string {
 	return fmt.Sprintf(`
 resource "aws_cloudfront_distribution" "test" {
   origin {
@@ -601,7 +611,7 @@ resource "aws_shield_protection" "test" {
 `, rName, retainOnDelete)
 }
 
-func testAccShieldProtectionCloudfrontConfigTags1(rName, retainOnDelete, tagKey string, tagValue string) string {
+func testAccProtectionConfig_cloudFrontTags1(rName, retainOnDelete, tagKey string, tagValue string) string {
 	return fmt.Sprintf(`
 resource "aws_cloudfront_distribution" "test" {
   origin {
@@ -674,7 +684,7 @@ resource "aws_shield_protection" "test" {
 `, rName, retainOnDelete, tagKey, tagValue)
 }
 
-func testAccShieldProtectionCloudfrontConfigTags2(rName, retainOnDelete, tagKey1 string, tagValue1 string, tagKey2 string, tagValue2 string) string {
+func testAccProtectionConfig_cloudFrontTags2(rName, retainOnDelete, tagKey1 string, tagValue1 string, tagKey2 string, tagValue2 string) string {
 	return fmt.Sprintf(`
 resource "aws_cloudfront_distribution" "test" {
   origin {
@@ -748,7 +758,7 @@ resource "aws_shield_protection" "test" {
 `, rName, retainOnDelete, tagKey1, tagValue1, tagKey2, tagValue2)
 }
 
-func testAccShieldProtectionElasticIPAddressConfig(rName string) string {
+func testAccProtectionConfig_elasticIPAddress(rName string) string {
 	return fmt.Sprintf(`
 data "aws_availability_zones" "available" {
   state = "available"
@@ -766,7 +776,7 @@ data "aws_caller_identity" "current" {}
 data "aws_partition" "current" {}
 
 resource "aws_eip" "test" {
-  vpc = true
+  domain = "vpc"
 
   tags = {
     foo  = "bar"
@@ -781,7 +791,7 @@ resource "aws_shield_protection" "test" {
 `, rName)
 }
 
-func testAccShieldProtectionGlobalAcceleratorConfig(rName string) string {
+func testAccProtectionConfig_globalAccelerator(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_shield_protection" "test" {
   name         = %[1]q

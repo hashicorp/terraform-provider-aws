@@ -1,8 +1,10 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package apprunner
 
 import (
 	"context"
-	"fmt"
 	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -14,8 +16,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @SDKResource("aws_apprunner_connection", name="Connection")
+// @Tags(identifierAttribute="arn")
 func ResourceConnection() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceConnectionCreate,
@@ -51,9 +56,8 @@ func ResourceConnection() *schema.Resource {
 				Computed: true,
 			},
 
-			"tags": tftags.TagsSchema(),
-
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
 
 		CustomizeDiff: verify.SetTagsDiff,
@@ -61,29 +65,23 @@ func ResourceConnection() *schema.Resource {
 }
 
 func resourceConnectionCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).AppRunnerConn
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	conn := meta.(*conns.AWSClient).AppRunnerConn(ctx)
 
 	name := d.Get("connection_name").(string)
-
 	input := &apprunner.CreateConnectionInput{
 		ConnectionName: aws.String(name),
 		ProviderType:   aws.String(d.Get("provider_type").(string)),
-	}
-
-	if len(tags) > 0 {
-		input.Tags = Tags(tags.IgnoreAWS())
+		Tags:           getTagsIn(ctx),
 	}
 
 	output, err := conn.CreateConnectionWithContext(ctx, input)
 
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error creating App Runner Connection (%s): %w", name, err))
+		return diag.Errorf("creating App Runner Connection (%s): %s", name, err)
 	}
 
 	if output == nil || output.Connection == nil {
-		return diag.FromErr(fmt.Errorf("error creating App Runner Connection (%s): empty output", name))
+		return diag.Errorf("creating App Runner Connection (%s): empty output", name)
 	}
 
 	d.SetId(aws.StringValue(output.Connection.ConnectionName))
@@ -92,9 +90,7 @@ func resourceConnectionCreate(ctx context.Context, d *schema.ResourceData, meta 
 }
 
 func resourceConnectionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).AppRunnerConn
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).AppRunnerConn(ctx)
 
 	c, err := FindConnectionSummaryByName(ctx, conn, d.Id())
 
@@ -105,12 +101,12 @@ func resourceConnectionRead(ctx context.Context, d *schema.ResourceData, meta in
 	}
 
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error reading App Runner Connection (%s): %w", d.Id(), err))
+		return diag.Errorf("reading App Runner Connection (%s): %s", d.Id(), err)
 	}
 
 	if c == nil {
 		if d.IsNewResource() {
-			return diag.FromErr(fmt.Errorf("error reading App Runner Connection (%s): empty output after creation", d.Id()))
+			return diag.Errorf("reading App Runner Connection (%s): empty output after creation", d.Id())
 		}
 		log.Printf("[WARN] App Runner Connection (%s) not found, removing from state", d.Id())
 		d.SetId("")
@@ -124,42 +120,16 @@ func resourceConnectionRead(ctx context.Context, d *schema.ResourceData, meta in
 	d.Set("provider_type", c.ProviderType)
 	d.Set("status", c.Status)
 
-	tags, err := ListTags(conn, arn)
-
-	if err != nil {
-		return diag.FromErr(fmt.Errorf("error listing tags for App Runner Connection (%s): %w", arn, err))
-	}
-
-	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return diag.FromErr(fmt.Errorf("error setting tags: %w", err))
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return diag.FromErr(fmt.Errorf("error setting tags_all: %w", err))
-	}
-
 	return nil
 }
 
 func resourceConnectionUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).AppRunnerConn
-
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
-			return diag.FromErr(fmt.Errorf("error updating App Runner Connection (%s) tags: %w", d.Get("arn").(string), err))
-		}
-	}
-
+	// Tags only.
 	return resourceConnectionRead(ctx, d, meta)
 }
 
 func resourceConnectionDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).AppRunnerConn
+	conn := meta.(*conns.AWSClient).AppRunnerConn(ctx)
 
 	input := &apprunner.DeleteConnectionInput{
 		ConnectionArn: aws.String(d.Get("arn").(string)),
@@ -171,14 +141,14 @@ func resourceConnectionDelete(ctx context.Context, d *schema.ResourceData, meta 
 		if tfawserr.ErrCodeEquals(err, apprunner.ErrCodeResourceNotFoundException) {
 			return nil
 		}
-		return diag.FromErr(fmt.Errorf("error deleting App Runner Connection (%s): %w", d.Id(), err))
+		return diag.Errorf("deleting App Runner Connection (%s): %s", d.Id(), err)
 	}
 
 	if err := WaitConnectionDeleted(ctx, conn, d.Id()); err != nil {
 		if tfawserr.ErrCodeEquals(err, apprunner.ErrCodeResourceNotFoundException) {
 			return nil
 		}
-		return diag.FromErr(fmt.Errorf("error waiting for App Runner Connection (%s) deletion: %w", d.Id(), err))
+		return diag.Errorf("waiting for App Runner Connection (%s) deletion: %s", d.Id(), err)
 	}
 
 	return nil

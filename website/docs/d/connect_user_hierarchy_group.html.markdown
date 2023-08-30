@@ -1,0 +1,65 @@
+---
+subcategory: "Connect"
+layout: "aws"
+page_title: "AWS: aws_connect_user_hierarchy_group"
+description: |-
+  Provides details about a specific Amazon Connect User Hierarchy Group.
+---
+
+# Data Source: aws_connect_user_hierarchy_group
+
+Provides details about a specific Amazon Connect User Hierarchy Group.
+
+## Example Usage
+
+By `name`
+
+```hcl
+data "aws_connect_user_hierarchy_group" "example" {
+  instance_id = "aaaaaaaa-bbbb-cccc-dddd-111111111111"
+  name        = "Example"
+}
+```
+
+By `hierarchy_group_id`
+
+```hcl
+data "aws_connect_user_hierarchy_group" "example" {
+  instance_id        = "aaaaaaaa-bbbb-cccc-dddd-111111111111"
+  hierarchy_group_id = "cccccccc-bbbb-cccc-dddd-111111111111"
+}
+```
+
+## Argument Reference
+
+~> **NOTE:** `instance_id` and one of either `name` or `hierarchy_group_id` is required.
+
+This argument supports the following arguments:
+
+* `hierarchy_group_id` - (Optional) Returns information on a specific hierarchy group by hierarchy group id
+* `instance_id` - (Required) Reference to the hosting Amazon Connect Instance
+* `name` - (Optional) Returns information on a specific hierarchy group by name
+
+## Attribute Reference
+
+This data source exports the following attributes in addition to the arguments above:
+
+* `arn` - ARN of the hierarchy group.
+* `hierarchy_path` - Block that contains information about the levels in the hierarchy group. The `hierarchy_path` block is documented below.
+* `level_id` - Identifier of the level in the hierarchy group.
+* `id` - Identifier of the hosting Amazon Connect Instance and identifier of the hierarchy group separated by a colon (`:`).
+* `tags` - Map of tags to assign to the hierarchy group.
+
+A `hierarchy_path` block supports the following attributes:
+
+* `level_one` - Details of level one. See below.
+* `level_two` - Details of level two. See below.
+* `level_three` - Details of level three. See below.
+* `level_four` - Details of level four. See below.
+* `level_five` - Details of level five. See below.
+
+A level block supports the following attributes:
+
+* `arn` -  ARN of the hierarchy group.
+* `id` -  The identifier of the hierarchy group.
+* `name` - Name of the hierarchy group.

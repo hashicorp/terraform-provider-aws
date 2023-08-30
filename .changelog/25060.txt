@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/aws_transfer_server: Add support for `TransferSecurityPolicy-2022-03` `security_policy_name` value
+```

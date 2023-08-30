@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package cloudformation
 
 import (
@@ -21,5 +24,5 @@ func StackSetInstanceParseResourceID(id string) (string, string, string, error) 
 		return parts[0], parts[1], parts[2], nil
 	}
 
-	return "", "", "", fmt.Errorf("unexpected format for ID (%[1]s), expected STACKSETNAME%[2]sACCOUNDID%[2]sREGION", id, stackSetInstanceResourceIDSeparator)
+	return "", "", "", fmt.Errorf("unexpected format for ID (%[1]s), expected STACKSETNAME%[2]sACCOUNTID%[2]sREGION", id, stackSetInstanceResourceIDSeparator)
 }

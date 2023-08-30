@@ -1,36 +1,44 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package fsx
 
 import (
 	"context"
 	"fmt"
 	"log"
-	"regexp"
 	"strings"
 	"time"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/fsx"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @SDKResource("aws_fsx_lustre_file_system", name="Lustre File System")
+// @Tags(identifierAttribute="arn")
 func ResourceLustreFileSystem() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceLustreFileSystemCreate,
-		Read:   resourceLustreFileSystemRead,
-		Update: resourceLustreFileSystemUpdate,
-		Delete: resourceLustreFileSystemDelete,
+		CreateWithoutTimeout: resourceLustreFileSystemCreate,
+		ReadWithoutTimeout:   resourceLustreFileSystemRead,
+		UpdateWithoutTimeout: resourceLustreFileSystemUpdate,
+		DeleteWithoutTimeout: resourceLustreFileSystemDelete,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Timeouts: &schema.ResourceTimeout{
@@ -60,7 +68,7 @@ func ResourceLustreFileSystem() *schema.Resource {
 				ForceNew: true,
 				ValidateFunc: validation.All(
 					validation.StringLenBetween(3, 900),
-					validation.StringMatch(regexp.MustCompile(`^s3://`), "must begin with s3://"),
+					validation.StringMatch(regexache.MustCompile(`^s3://`), "must begin with s3://"),
 				),
 			},
 			"import_path": {
@@ -69,7 +77,7 @@ func ResourceLustreFileSystem() *schema.Resource {
 				ForceNew: true,
 				ValidateFunc: validation.All(
 					validation.StringLenBetween(3, 900),
-					validation.StringMatch(regexp.MustCompile(`^s3://`), "must begin with s3://"),
+					validation.StringMatch(regexache.MustCompile(`^s3://`), "must begin with s3://"),
 				),
 			},
 			"imported_file_chunk_size": {
@@ -114,8 +122,8 @@ func ResourceLustreFileSystem() *schema.Resource {
 				MaxItems: 1,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			"vpc_id": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -126,7 +134,7 @@ func ResourceLustreFileSystem() *schema.Resource {
 				Computed: true,
 				ValidateFunc: validation.All(
 					validation.StringLenBetween(7, 7),
-					validation.StringMatch(regexp.MustCompile(`^[1-7]:([01]\d|2[0-3]):?([0-5]\d)$`), "must be in the format d:HH:MM"),
+					validation.StringMatch(regexache.MustCompile(`^[1-7]:([01]\d|2[0-3]):?([0-5]\d)$`), "must be in the format d:HH:MM"),
 				),
 			},
 			"deployment_type": {
@@ -171,7 +179,7 @@ func ResourceLustreFileSystem() *schema.Resource {
 				Computed: true,
 				ValidateFunc: validation.All(
 					validation.StringLenBetween(5, 5),
-					validation.StringMatch(regexp.MustCompile(`^([01]\d|2[0-3]):?([0-5]\d)$`), "must be in the format HH:MM"),
+					validation.StringMatch(regexache.MustCompile(`^([01]\d|2[0-3]):?([0-5]\d)$`), "must be in the format HH:MM"),
 				),
 			},
 			"storage_type": {
@@ -212,7 +220,7 @@ func ResourceLustreFileSystem() *schema.Resource {
 				Optional: true,
 				ValidateFunc: validation.All(
 					validation.StringLenBetween(1, 20),
-					validation.StringMatch(regexp.MustCompile(`^[0-9].[0-9]+$`), "must be in format x.y"),
+					validation.StringMatch(regexache.MustCompile(`^[0-9].[0-9]+$`), "must be in format x.y"),
 				),
 			},
 			"log_configuration": {
@@ -240,16 +248,38 @@ func ResourceLustreFileSystem() *schema.Resource {
 					},
 				},
 			},
+			"root_squash_configuration": {
+				Type:     schema.TypeList,
+				Optional: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"no_squash_nids": {
+							Type:     schema.TypeSet,
+							Optional: true,
+							Elem: &schema.Schema{
+								Type:         schema.TypeString,
+								ValidateFunc: validation.StringMatch(regexache.MustCompile(`^([0-9\[\]\-]*\.){3}([0-9\[\]\-]*)@tcp$`), "must be in the standard Lustre NID foramt"),
+							},
+						},
+						"root_squash": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							ValidateFunc: validation.StringMatch(regexache.MustCompile(`^([0-9]{1,10}):([0-9]{1,10})$`), "must be in the format UID:GID"),
+						},
+					},
+				},
+			},
 		},
 
 		CustomizeDiff: customdiff.Sequence(
 			verify.SetTagsDiff,
-			resourceFsxLustreFileSystemSchemaCustomizeDiff,
+			resourceLustreFileSystemSchemaCustomizeDiff,
 		),
 	}
 }
 
-func resourceFsxLustreFileSystemSchemaCustomizeDiff(_ context.Context, d *schema.ResourceDiff, meta interface{}) error {
+func resourceLustreFileSystemSchemaCustomizeDiff(_ context.Context, d *schema.ResourceDiff, meta interface{}) error {
 	// we want to force a new resource if the new storage capacity is less than the old one
 	if d.HasChange("storage_capacity") {
 		o, n := d.GetChange("storage_capacity")
@@ -263,13 +293,12 @@ func resourceFsxLustreFileSystemSchemaCustomizeDiff(_ context.Context, d *schema
 	return nil
 }
 
-func resourceLustreFileSystemCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).FSxConn
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+func resourceLustreFileSystemCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).FSxConn(ctx)
 
 	input := &fsx.CreateFileSystemInput{
-		ClientRequestToken: aws.String(resource.UniqueId()),
+		ClientRequestToken: aws.String(id.UniqueId()),
 		FileSystemType:     aws.String(fsx.FileSystemTypeLustre),
 		StorageCapacity:    aws.Int64(int64(d.Get("storage_capacity").(int))),
 		StorageType:        aws.String(d.Get("storage_type").(string)),
@@ -277,15 +306,17 @@ func resourceLustreFileSystemCreate(d *schema.ResourceData, meta interface{}) er
 		LustreConfiguration: &fsx.CreateFileSystemLustreConfiguration{
 			DeploymentType: aws.String(d.Get("deployment_type").(string)),
 		},
+		Tags: getTagsIn(ctx),
 	}
 
 	backupInput := &fsx.CreateFileSystemFromBackupInput{
-		ClientRequestToken: aws.String(resource.UniqueId()),
+		ClientRequestToken: aws.String(id.UniqueId()),
 		StorageType:        aws.String(d.Get("storage_type").(string)),
 		SubnetIds:          flex.ExpandStringList(d.Get("subnet_ids").([]interface{})),
 		LustreConfiguration: &fsx.CreateFileSystemLustreConfiguration{
 			DeploymentType: aws.String(d.Get("deployment_type").(string)),
 		},
+		Tags: getTagsIn(ctx),
 	}
 
 	//Applicable only for TypePersistent1 and TypePersistent2
@@ -324,11 +355,6 @@ func resourceLustreFileSystemCreate(d *schema.ResourceData, meta interface{}) er
 		backupInput.SecurityGroupIds = flex.ExpandStringSet(v.(*schema.Set))
 	}
 
-	if len(tags) > 0 {
-		input.Tags = Tags(tags.IgnoreAWS())
-		backupInput.Tags = Tags(tags.IgnoreAWS())
-	}
-
 	if v, ok := d.GetOk("weekly_maintenance_start_time"); ok {
 		input.LustreConfiguration.WeeklyMaintenanceStartTime = aws.String(v.(string))
 		backupInput.LustreConfiguration.WeeklyMaintenanceStartTime = aws.String(v.(string))
@@ -365,54 +391,52 @@ func resourceLustreFileSystemCreate(d *schema.ResourceData, meta interface{}) er
 	}
 
 	if v, ok := d.GetOk("log_configuration"); ok && len(v.([]interface{})) > 0 {
-		input.LustreConfiguration.LogConfiguration = expandFsxLustreLogCreateConfiguration(v.([]interface{}))
-		backupInput.LustreConfiguration.LogConfiguration = expandFsxLustreLogCreateConfiguration(v.([]interface{}))
+		input.LustreConfiguration.LogConfiguration = expandLustreLogCreateConfiguration(v.([]interface{}))
+		backupInput.LustreConfiguration.LogConfiguration = expandLustreLogCreateConfiguration(v.([]interface{}))
+	}
+
+	if v, ok := d.GetOk("root_squash_configuration"); ok && len(v.([]interface{})) > 0 {
+		input.LustreConfiguration.RootSquashConfiguration = expandLustreRootSquashConfiguration(v.([]interface{}))
+		backupInput.LustreConfiguration.RootSquashConfiguration = expandLustreRootSquashConfiguration(v.([]interface{}))
 	}
 
 	if v, ok := d.GetOk("backup_id"); ok {
 		backupInput.BackupId = aws.String(v.(string))
 
 		log.Printf("[DEBUG] Creating FSx Lustre File System: %s", backupInput)
-		result, err := conn.CreateFileSystemFromBackup(backupInput)
+		result, err := conn.CreateFileSystemFromBackupWithContext(ctx, backupInput)
 
 		if err != nil {
-			return fmt.Errorf("error creating FSx Lustre File System from backup: %w", err)
+			return sdkdiag.AppendErrorf(diags, "creating FSx Lustre File System from backup: %s", err)
 		}
 
 		d.SetId(aws.StringValue(result.FileSystem.FileSystemId))
 	} else {
 		log.Printf("[DEBUG] Creating FSx Lustre File System: %s", input)
-		result, err := conn.CreateFileSystem(input)
+		result, err := conn.CreateFileSystemWithContext(ctx, input)
 
 		if err != nil {
-			return fmt.Errorf("error creating FSx Lustre File System: %w", err)
+			return sdkdiag.AppendErrorf(diags, "creating FSx Lustre File System: %s", err)
 		}
 
 		d.SetId(aws.StringValue(result.FileSystem.FileSystemId))
 	}
 
-	if _, err := waitFileSystemCreated(conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
-		return fmt.Errorf("error waiting for FSx Lustre File System (%s) create: %w", d.Id(), err)
+	if _, err := waitFileSystemCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for FSx Lustre File System (%s) create: %s", d.Id(), err)
 	}
 
-	return resourceLustreFileSystemRead(d, meta)
+	return append(diags, resourceLustreFileSystemRead(ctx, d, meta)...)
 }
 
-func resourceLustreFileSystemUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).FSxConn
-
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
-			return fmt.Errorf("error updating FSx Lustre File System (%s) tags: %w", d.Get("arn").(string), err)
-		}
-	}
+func resourceLustreFileSystemUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).FSxConn(ctx)
 
 	if d.HasChangesExcept("tags_all", "tags") {
 		var waitAdminAction = false
 		input := &fsx.UpdateFileSystemInput{
-			ClientRequestToken:  aws.String(resource.UniqueId()),
+			ClientRequestToken:  aws.String(id.UniqueId()),
 			FileSystemId:        aws.String(d.Id()),
 			LustreConfiguration: &fsx.UpdateFileSystemLustreConfiguration{},
 		}
@@ -442,53 +466,57 @@ func resourceLustreFileSystemUpdate(d *schema.ResourceData, meta interface{}) er
 		}
 
 		if d.HasChange("log_configuration") {
-			input.LustreConfiguration.LogConfiguration = expandFsxLustreLogCreateConfiguration(d.Get("log_configuration").([]interface{}))
+			input.LustreConfiguration.LogConfiguration = expandLustreLogCreateConfiguration(d.Get("log_configuration").([]interface{}))
 			waitAdminAction = true
 		}
 
-		_, err := conn.UpdateFileSystem(input)
-		if err != nil {
-			return fmt.Errorf("error updating FSX Lustre File System (%s): %w", d.Id(), err)
+		if d.HasChange("root_squash_configuration") {
+			input.LustreConfiguration.RootSquashConfiguration = expandLustreRootSquashConfiguration(d.Get("root_squash_configuration").([]interface{}))
+			waitAdminAction = true
 		}
 
-		if _, err := waitFileSystemUpdated(conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
-			return fmt.Errorf("error waiting for FSx Lustre File System (%s) update: %w", d.Id(), err)
+		_, err := conn.UpdateFileSystemWithContext(ctx, input)
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating FSX Lustre File System (%s): %s", d.Id(), err)
+		}
+
+		if _, err := waitFileSystemUpdated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "waiting for FSx Lustre File System (%s) update: %s", d.Id(), err)
 		}
 
 		if waitAdminAction {
-			if _, err := waitAdministrativeActionCompleted(conn, d.Id(), fsx.AdministrativeActionTypeFileSystemUpdate, d.Timeout(schema.TimeoutUpdate)); err != nil {
-				return fmt.Errorf("error waiting for FSx Lustre File System (%s) Log Configuratio to be updated: %w", d.Id(), err)
+			if _, err := waitAdministrativeActionCompleted(ctx, conn, d.Id(), fsx.AdministrativeActionTypeFileSystemUpdate, d.Timeout(schema.TimeoutUpdate)); err != nil {
+				return sdkdiag.AppendErrorf(diags, "waiting for FSx Lustre File System (%s) Log Configuratio to be updated: %s", d.Id(), err)
 			}
 		}
 	}
 
-	return resourceLustreFileSystemRead(d, meta)
+	return append(diags, resourceLustreFileSystemRead(ctx, d, meta)...)
 }
 
-func resourceLustreFileSystemRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).FSxConn
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+func resourceLustreFileSystemRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).FSxConn(ctx)
 
-	filesystem, err := FindFileSystemByID(conn, d.Id())
+	filesystem, err := FindFileSystemByID(ctx, conn, d.Id())
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] FSx Lustre File System (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading FSx Lustre File System (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading FSx Lustre File System (%s): %s", d.Id(), err)
 	}
 
 	lustreConfig := filesystem.LustreConfiguration
 
 	if filesystem.WindowsConfiguration != nil {
-		return fmt.Errorf("expected FSx Lustre File System, found FSx Windows File System: %s", d.Id())
+		return sdkdiag.AppendErrorf(diags, "expected FSx Lustre File System, found FSx Windows File System: %s", d.Id())
 	}
 
 	if lustreConfig == nil {
-		return fmt.Errorf("error describing FSx Lustre File System (%s): empty Lustre configuration", d.Id())
+		return sdkdiag.AppendErrorf(diags, "describing FSx Lustre File System (%s): empty Lustre configuration", d.Id())
 	}
 
 	if lustreConfig.DataRepositoryConfiguration == nil {
@@ -503,44 +531,32 @@ func resourceLustreFileSystemRead(d *schema.ResourceData, meta interface{}) erro
 	d.Set("auto_import_policy", lustreConfig.DataRepositoryConfiguration.AutoImportPolicy)
 	d.Set("imported_file_chunk_size", lustreConfig.DataRepositoryConfiguration.ImportedFileChunkSize)
 	d.Set("deployment_type", lustreConfig.DeploymentType)
-	if lustreConfig.PerUnitStorageThroughput != nil {
-		d.Set("per_unit_storage_throughput", lustreConfig.PerUnitStorageThroughput)
-	}
+	d.Set("per_unit_storage_throughput", lustreConfig.PerUnitStorageThroughput)
 	d.Set("mount_name", lustreConfig.MountName)
 	d.Set("storage_type", filesystem.StorageType)
-	if lustreConfig.DriveCacheType != nil {
-		d.Set("drive_cache_type", lustreConfig.DriveCacheType)
-	}
-
-	if filesystem.KmsKeyId != nil {
-		d.Set("kms_key_id", filesystem.KmsKeyId)
-	}
+	d.Set("drive_cache_type", lustreConfig.DriveCacheType)
+	d.Set("kms_key_id", filesystem.KmsKeyId)
 
 	if err := d.Set("network_interface_ids", aws.StringValueSlice(filesystem.NetworkInterfaceIds)); err != nil {
-		return fmt.Errorf("error setting network_interface_ids: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting network_interface_ids: %s", err)
 	}
 
 	d.Set("owner_id", filesystem.OwnerId)
 	d.Set("storage_capacity", filesystem.StorageCapacity)
 
 	if err := d.Set("subnet_ids", aws.StringValueSlice(filesystem.SubnetIds)); err != nil {
-		return fmt.Errorf("error setting subnet_ids: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting subnet_ids: %s", err)
 	}
 
-	if err := d.Set("log_configuration", flattenFsxLustreLogConfiguration(lustreConfig.LogConfiguration)); err != nil {
-		return fmt.Errorf("error setting log_configuration: %w", err)
+	if err := d.Set("log_configuration", flattenLustreLogConfiguration(lustreConfig.LogConfiguration)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting log_configuration: %s", err)
 	}
 
-	tags := KeyValueTags(filesystem.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
+	if err := d.Set("root_squash_configuration", flattenLustreRootSquashConfiguration(lustreConfig.RootSquashConfiguration)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting root_squash_configuration: %s", err)
 	}
 
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("error setting tags_all: %w", err)
-	}
+	setTagsOut(ctx, filesystem.Tags)
 
 	d.Set("vpc_id", filesystem.VpcId)
 	d.Set("weekly_maintenance_start_time", lustreConfig.WeeklyMaintenanceStartTime)
@@ -550,35 +566,73 @@ func resourceLustreFileSystemRead(d *schema.ResourceData, meta interface{}) erro
 	d.Set("data_compression_type", lustreConfig.DataCompressionType)
 	d.Set("file_system_type_version", filesystem.FileSystemTypeVersion)
 
-	return nil
+	return diags
 }
 
-func resourceLustreFileSystemDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).FSxConn
+func resourceLustreFileSystemDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).FSxConn(ctx)
 
 	request := &fsx.DeleteFileSystemInput{
 		FileSystemId: aws.String(d.Id()),
 	}
 
 	log.Printf("[DEBUG] Deleting FSx Lustre File System: %s", d.Id())
-	_, err := conn.DeleteFileSystem(request)
+	_, err := conn.DeleteFileSystemWithContext(ctx, request)
 
 	if tfawserr.ErrCodeEquals(err, fsx.ErrCodeFileSystemNotFound) {
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("error deleting FSx Lustre File System (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting FSx Lustre File System (%s): %s", d.Id(), err)
 	}
 
-	if _, err := waitFileSystemDeleted(conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
-		return fmt.Errorf("error waiting for FSx Lustre File System (%s) to deleted: %w", d.Id(), err)
+	if _, err := waitFileSystemDeleted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for FSx Lustre File System (%s) to deleted: %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
-func expandFsxLustreLogCreateConfiguration(l []interface{}) *fsx.LustreLogCreateConfiguration {
+func expandLustreRootSquashConfiguration(l []interface{}) *fsx.LustreRootSquashConfiguration {
+	if len(l) == 0 || l[0] == nil {
+		return nil
+	}
+
+	data := l[0].(map[string]interface{})
+	req := &fsx.LustreRootSquashConfiguration{}
+
+	if v, ok := data["root_squash"].(string); ok && v != "" {
+		req.RootSquash = aws.String(v)
+	}
+
+	if v, ok := data["no_squash_nids"].(*schema.Set); ok && v.Len() > 0 {
+		req.NoSquashNids = flex.ExpandStringSet(v)
+	}
+
+	return req
+}
+
+func flattenLustreRootSquashConfiguration(adopts *fsx.LustreRootSquashConfiguration) []map[string]interface{} {
+	if adopts == nil {
+		return []map[string]interface{}{}
+	}
+
+	m := map[string]interface{}{}
+
+	if adopts.RootSquash != nil {
+		m["root_squash"] = aws.StringValue(adopts.RootSquash)
+	}
+
+	if adopts.NoSquashNids != nil {
+		m["no_squash_nids"] = flex.FlattenStringSet(adopts.NoSquashNids)
+	}
+
+	return []map[string]interface{}{m}
+}
+
+func expandLustreLogCreateConfiguration(l []interface{}) *fsx.LustreLogCreateConfiguration {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
@@ -595,7 +649,7 @@ func expandFsxLustreLogCreateConfiguration(l []interface{}) *fsx.LustreLogCreate
 	return req
 }
 
-func flattenFsxLustreLogConfiguration(adopts *fsx.LustreLogConfiguration) []map[string]interface{} {
+func flattenLustreLogConfiguration(adopts *fsx.LustreLogConfiguration) []map[string]interface{} {
 	if adopts == nil {
 		return []map[string]interface{}{}
 	}

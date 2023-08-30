@@ -1,37 +1,43 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package cloudfront_test
 
 import (
+	"context"
 	"fmt"
-	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cloudfront"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfcloudfront "github.com/hashicorp/terraform-provider-aws/internal/service/cloudfront"
 )
 
 func TestAccCloudFrontPublicKey_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	rInt := sdkacctest.RandInt()
 	resourceName := "aws_cloudfront_public_key.example"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(cloudfront.EndpointsID, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, cloudfront.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckCloudFrontPublicKeyDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, cloudfront.EndpointsID) },
+		ErrorCheck:               acctest.ErrorCheck(t, cloudfront.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckPublicKeyDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccPublicKeyConfig(rInt),
+				Config: testAccPublicKeyConfig_basic(rInt),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCloudFrontPublicKeyExistence(resourceName),
+					testAccCheckPublicKeyExistence(ctx, resourceName),
 					resource.TestCheckResourceAttr("aws_cloudfront_public_key.example", "comment", "test key"),
-					resource.TestMatchResourceAttr("aws_cloudfront_public_key.example", "caller_reference", regexp.MustCompile(fmt.Sprintf("^%s", resource.UniqueIdPrefix))),
+					resource.TestMatchResourceAttr("aws_cloudfront_public_key.example", "caller_reference", regexache.MustCompile(fmt.Sprintf("^%s", id.UniqueIdPrefix))),
 					resource.TestCheckResourceAttr("aws_cloudfront_public_key.example", "name", fmt.Sprintf("tf-acc-test-%d", rInt)),
 				),
 			},
@@ -45,20 +51,21 @@ func TestAccCloudFrontPublicKey_basic(t *testing.T) {
 }
 
 func TestAccCloudFrontPublicKey_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
 	rInt := sdkacctest.RandInt()
 	resourceName := "aws_cloudfront_public_key.example"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(cloudfront.EndpointsID, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, cloudfront.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckCloudFrontPublicKeyDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, cloudfront.EndpointsID) },
+		ErrorCheck:               acctest.ErrorCheck(t, cloudfront.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckPublicKeyDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccPublicKeyConfig(rInt),
+				Config: testAccPublicKeyConfig_basic(rInt),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCloudFrontPublicKeyExistence(resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tfcloudfront.ResourcePublicKey(), resourceName),
+					testAccCheckPublicKeyExistence(ctx, resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfcloudfront.ResourcePublicKey(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -67,19 +74,20 @@ func TestAccCloudFrontPublicKey_disappears(t *testing.T) {
 }
 
 func TestAccCloudFrontPublicKey_namePrefix(t *testing.T) {
-	startsWithPrefix := regexp.MustCompile("^tf-acc-test-")
+	ctx := acctest.Context(t)
+	startsWithPrefix := regexache.MustCompile("^tf-acc-test-")
 	resourceName := "aws_cloudfront_public_key.example"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(cloudfront.EndpointsID, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, cloudfront.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckCloudFrontPublicKeyDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, cloudfront.EndpointsID) },
+		ErrorCheck:               acctest.ErrorCheck(t, cloudfront.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckPublicKeyDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPublicKeyConfig_namePrefix(),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCloudFrontPublicKeyExistence(resourceName),
+					testAccCheckPublicKeyExistence(ctx, resourceName),
 					resource.TestMatchResourceAttr("aws_cloudfront_public_key.example", "name", startsWithPrefix),
 				),
 			},
@@ -96,19 +104,20 @@ func TestAccCloudFrontPublicKey_namePrefix(t *testing.T) {
 }
 
 func TestAccCloudFrontPublicKey_update(t *testing.T) {
+	ctx := acctest.Context(t)
 	rInt := sdkacctest.RandInt()
 	resourceName := "aws_cloudfront_public_key.example"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(cloudfront.EndpointsID, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, cloudfront.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckCloudFrontPublicKeyDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, cloudfront.EndpointsID) },
+		ErrorCheck:               acctest.ErrorCheck(t, cloudfront.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckPublicKeyDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccPublicKeyConfig(rInt),
+				Config: testAccPublicKeyConfig_basic(rInt),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCloudFrontPublicKeyExistence(resourceName),
+					testAccCheckPublicKeyExistence(ctx, resourceName),
 					resource.TestCheckResourceAttr("aws_cloudfront_public_key.example", "comment", "test key"),
 				),
 			},
@@ -118,9 +127,9 @@ func TestAccCloudFrontPublicKey_update(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccPublicKeyUpdateConfig(rInt),
+				Config: testAccPublicKeyConfig_update(rInt),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCloudFrontPublicKeyExistence(resourceName),
+					testAccCheckPublicKeyExistence(ctx, resourceName),
 					resource.TestCheckResourceAttr("aws_cloudfront_public_key.example", "comment", "test key1"),
 				),
 			},
@@ -128,7 +137,7 @@ func TestAccCloudFrontPublicKey_update(t *testing.T) {
 	})
 }
 
-func testAccCheckCloudFrontPublicKeyExistence(r string) resource.TestCheckFunc {
+func testAccCheckPublicKeyExistence(ctx context.Context, r string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[r]
 		if !ok {
@@ -138,13 +147,13 @@ func testAccCheckCloudFrontPublicKeyExistence(r string) resource.TestCheckFunc {
 			return fmt.Errorf("No Id is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudFrontConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudFrontConn(ctx)
 
 		params := &cloudfront.GetPublicKeyInput{
 			Id: aws.String(rs.Primary.ID),
 		}
 
-		_, err := conn.GetPublicKey(params)
+		_, err := conn.GetPublicKeyWithContext(ctx, params)
 		if err != nil {
 			return fmt.Errorf("Error retrieving CloudFront PublicKey: %s", err)
 		}
@@ -152,32 +161,34 @@ func testAccCheckCloudFrontPublicKeyExistence(r string) resource.TestCheckFunc {
 	}
 }
 
-func testAccCheckCloudFrontPublicKeyDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).CloudFrontConn
+func testAccCheckPublicKeyDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudFrontConn(ctx)
 
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_cloudfront_public_key" {
-			continue
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_cloudfront_public_key" {
+				continue
+			}
+
+			params := &cloudfront.GetPublicKeyInput{
+				Id: aws.String(rs.Primary.ID),
+			}
+
+			_, err := conn.GetPublicKeyWithContext(ctx, params)
+			if tfawserr.ErrCodeEquals(err, cloudfront.ErrCodeNoSuchPublicKey) {
+				continue
+			}
+			if err != nil {
+				return err
+			}
+			return fmt.Errorf("CloudFront PublicKey (%s) was not deleted", rs.Primary.ID)
 		}
 
-		params := &cloudfront.GetPublicKeyInput{
-			Id: aws.String(rs.Primary.ID),
-		}
-
-		_, err := conn.GetPublicKey(params)
-		if tfawserr.ErrCodeEquals(err, cloudfront.ErrCodeNoSuchPublicKey) {
-			continue
-		}
-		if err != nil {
-			return err
-		}
-		return fmt.Errorf("CloudFront PublicKey (%s) was not deleted", rs.Primary.ID)
+		return nil
 	}
-
-	return nil
 }
 
-func testAccPublicKeyConfig(rInt int) string {
+func testAccPublicKeyConfig_basic(rInt int) string {
 	return fmt.Sprintf(`
 resource "aws_cloudfront_public_key" "example" {
   comment     = "test key"
@@ -197,7 +208,7 @@ resource "aws_cloudfront_public_key" "example" {
 `
 }
 
-func testAccPublicKeyUpdateConfig(rInt int) string {
+func testAccPublicKeyConfig_update(rInt int) string {
 	return fmt.Sprintf(`
 resource "aws_cloudfront_public_key" "example" {
   comment     = "test key1"

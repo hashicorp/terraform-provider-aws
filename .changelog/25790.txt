@@ -1,0 +1,15 @@
+```release-note:enhancement
+resource/aws_imagebuilder_image_recipe: Add `throughput` argument to the `block_device_mapping` configuration block
+```
+
+```release-note:enhancement
+data-source/aws_imagebuilder_image_recipe: Add `throughput` attribute to the `block_device_mapping` configuration block
+```
+
+```release-note:enhancement
+resource/aws_imagebuilder_container_recipe: Add `throughput` argument to the `block_device_mapping` configuration block
+```
+
+```release-note:enhancement
+data-source/aws_imagebuilder_container_recipe: Add `throughput` attribute to the `block_device_mapping` configuration block
+```

@@ -1,58 +1,64 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package wafv2
 
 import (
-	"fmt"
+	"context"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/wafv2"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
+// @SDKDataSource("aws_wafv2_regex_pattern_set")
 func DataSourceRegexPatternSet() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceRegexPatternSetRead,
+		ReadWithoutTimeout: dataSourceRegexPatternSetRead,
 
-		Schema: map[string]*schema.Schema{
-			"arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"description": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"name": {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			"regular_expression": {
-				Type:     schema.TypeSet,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"regex_string": {
-							Type:     schema.TypeString,
-							Computed: true,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"arn": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"description": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"name": {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+				"regular_expression": {
+					Type:     schema.TypeSet,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"regex_string": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
 						},
 					},
 				},
-			},
-			"scope": {
-				Type:     schema.TypeString,
-				Required: true,
-				ValidateFunc: validation.StringInSlice([]string{
-					wafv2.ScopeCloudfront,
-					wafv2.ScopeRegional,
-				}, false),
-			},
+				"scope": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ValidateFunc: validation.StringInSlice(wafv2.Scope_Values(), false),
+				},
+			}
 		},
 	}
 }
 
-func dataSourceRegexPatternSetRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).WAFV2Conn
+func dataSourceRegexPatternSetRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).WAFV2Conn(ctx)
 	name := d.Get("name").(string)
 
 	var foundRegexPatternSet *wafv2.RegexPatternSetSummary
@@ -62,13 +68,13 @@ func dataSourceRegexPatternSetRead(d *schema.ResourceData, meta interface{}) err
 	}
 
 	for {
-		resp, err := conn.ListRegexPatternSets(input)
+		resp, err := conn.ListRegexPatternSetsWithContext(ctx, input)
 		if err != nil {
-			return fmt.Errorf("Error reading WAFv2 RegexPatternSets: %w", err)
+			return sdkdiag.AppendErrorf(diags, "reading WAFv2 RegexPatternSets: %s", err)
 		}
 
 		if resp == nil || resp.RegexPatternSets == nil {
-			return fmt.Errorf("Error reading WAFv2 RegexPatternSets")
+			return sdkdiag.AppendErrorf(diags, "reading WAFv2 RegexPatternSets")
 		}
 
 		for _, regexPatternSet := range resp.RegexPatternSets {
@@ -85,21 +91,21 @@ func dataSourceRegexPatternSetRead(d *schema.ResourceData, meta interface{}) err
 	}
 
 	if foundRegexPatternSet == nil {
-		return fmt.Errorf("WAFv2 RegexPatternSet not found for name: %s", name)
+		return sdkdiag.AppendErrorf(diags, "WAFv2 RegexPatternSet not found for name: %s", name)
 	}
 
-	resp, err := conn.GetRegexPatternSet(&wafv2.GetRegexPatternSetInput{
+	resp, err := conn.GetRegexPatternSetWithContext(ctx, &wafv2.GetRegexPatternSetInput{
 		Id:    foundRegexPatternSet.Id,
 		Name:  foundRegexPatternSet.Name,
 		Scope: aws.String(d.Get("scope").(string)),
 	})
 
 	if err != nil {
-		return fmt.Errorf("Error reading WAFv2 RegexPatternSet: %w", err)
+		return sdkdiag.AppendErrorf(diags, "reading WAFv2 RegexPatternSet: %s", err)
 	}
 
 	if resp == nil || resp.RegexPatternSet == nil {
-		return fmt.Errorf("Error reading WAFv2 RegexPatternSet")
+		return sdkdiag.AppendErrorf(diags, "reading WAFv2 RegexPatternSet")
 	}
 
 	d.SetId(aws.StringValue(resp.RegexPatternSet.Id))
@@ -107,8 +113,8 @@ func dataSourceRegexPatternSetRead(d *schema.ResourceData, meta interface{}) err
 	d.Set("description", resp.RegexPatternSet.Description)
 
 	if err := d.Set("regular_expression", flattenRegexPatternSet(resp.RegexPatternSet.RegularExpressionList)); err != nil {
-		return fmt.Errorf("Error setting regular_expression: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting regular_expression: %s", err)
 	}
 
-	return nil
+	return diags
 }

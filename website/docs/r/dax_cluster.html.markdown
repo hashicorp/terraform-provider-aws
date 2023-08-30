@@ -23,7 +23,7 @@ resource "aws_dax_cluster" "bar" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `cluster_endpoint_encryption_type` – (Optional) The type of encryption the
 cluster's endpoint should support. Valid values are: `NONE` and `TLS`.
@@ -68,15 +68,15 @@ with the cluster
 * `subnet_group_name` – (Optional) Name of the subnet group to be used for the
 cluster
 
-* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 The `server_side_encryption` object supports the following:
 
 * `enabled` - (Optional) Whether to enable encryption at rest. Defaults to `false`.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - The ARN of the DAX cluster
 
@@ -91,23 +91,31 @@ consisting of a DNS name and a port number
 
 * `port` - The port used by the configuration endpoint
 
-* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
+* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Timeouts
 
-`aws_dax_cluster` provides the following
-[Timeouts](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts) configuration options:
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-- `create` - (Default `45 minutes`) Used for creating a DAX cluster
-- `update` - (Default `45 minutes`) Used for cluster modifications
-- `delete` - (Default `90 minutes`) Used for destroying a DAX cluster
+- `create` - (Default `45m`)
+- `update` - (Default `45m`)
+- `delete` - (Default `90m`)
 
 ## Import
 
-DAX Clusters can be imported using the `cluster_name`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import DAX Clusters using the `cluster_name`. For example:
 
+```terraform
+import {
+  to = aws_dax_cluster.my_cluster
+  id = "my_cluster"
+}
 ```
-$ terraform import aws_dax_cluster.my_cluster my_cluster
+
+Using `terraform import`, import DAX Clusters using the `cluster_name`. For example:
+
+```console
+% terraform import aws_dax_cluster.my_cluster my_cluster
 ```
 
 [1]: http://docs.aws.amazon.com/amazondynamodb/latest/developerguide/DAX.concepts.cluster.html#DAX.concepts.nodes

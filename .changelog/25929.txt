@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/aws_datasync_task: Add `includes` argument
+```

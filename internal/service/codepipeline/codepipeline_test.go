@@ -1,25 +1,28 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package codepipeline_test
 
 import (
 	"context"
 	"fmt"
-	"regexp"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/service/codepipeline"
 	"github.com/aws/aws-sdk-go/service/codestarconnections"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/envvar"
 	tfcodepipeline "github.com/hashicorp/terraform-provider-aws/internal/service/codepipeline"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func TestAccCodePipeline_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	var p1, p2 codepipeline.PipelineDeclaration
 	name := sdkacctest.RandString(10)
 	resourceName := "aws_codepipeline.test"
@@ -27,20 +30,20 @@ func TestAccCodePipeline_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
-			testAccPreCheckSupported(t)
-			acctest.PreCheckPartitionHasService(codestarconnections.EndpointsID, t)
+			acctest.PreCheck(ctx, t)
+			testAccPreCheckSupported(ctx, t)
+			acctest.PreCheckPartitionHasService(t, codestarconnections.EndpointsID)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, codepipeline.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, codepipeline.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckPipelineDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccConfig_basic(name),
+				Config: testAccCodePipelineConfig_basic(name),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckExists(resourceName, &p1),
+					testAccCheckPipelineExists(ctx, resourceName, &p1),
 					resource.TestCheckResourceAttrPair(resourceName, "role_arn", "aws_iam_role.codepipeline_role", "arn"),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "codepipeline", regexp.MustCompile(fmt.Sprintf("test-pipeline-%s", name))),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "codepipeline", regexache.MustCompile(fmt.Sprintf("test-pipeline-%s", name))),
 					resource.TestCheckResourceAttr(resourceName, "artifact_store.#", "1"),
 
 					resource.TestCheckResourceAttr(resourceName, "stage.#", "2"),
@@ -86,9 +89,9 @@ func TestAccCodePipeline_basic(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccConfig_basicUpdated(name),
+				Config: testAccCodePipelineConfig_basicUpdated(name),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckExists(resourceName, &p2),
+					testAccCheckPipelineExists(ctx, resourceName, &p2),
 
 					resource.TestCheckResourceAttr(resourceName, "stage.#", "2"),
 
@@ -126,25 +129,26 @@ func TestAccCodePipeline_basic(t *testing.T) {
 }
 
 func TestAccCodePipeline_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
 	var p codepipeline.PipelineDeclaration
 	name := sdkacctest.RandString(10)
 	resourceName := "aws_codepipeline.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
-			testAccPreCheckSupported(t)
-			acctest.PreCheckPartitionHasService(codestarconnections.EndpointsID, t)
+			acctest.PreCheck(ctx, t)
+			testAccPreCheckSupported(ctx, t)
+			acctest.PreCheckPartitionHasService(t, codestarconnections.EndpointsID)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, codepipeline.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, codepipeline.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckPipelineDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccConfig_basic(name),
+				Config: testAccCodePipelineConfig_basic(name),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckExists(resourceName, &p),
-					acctest.CheckResourceDisappears(acctest.Provider, tfcodepipeline.ResourceCodePipeline(), resourceName),
+					testAccCheckPipelineExists(ctx, resourceName, &p),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfcodepipeline.ResourcePipeline(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -153,25 +157,26 @@ func TestAccCodePipeline_disappears(t *testing.T) {
 }
 
 func TestAccCodePipeline_emptyStageArtifacts(t *testing.T) {
+	ctx := acctest.Context(t)
 	var p codepipeline.PipelineDeclaration
 	name := sdkacctest.RandString(10)
 	resourceName := "aws_codepipeline.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
-			testAccPreCheckSupported(t)
-			acctest.PreCheckPartitionHasService(codestarconnections.EndpointsID, t)
+			acctest.PreCheck(ctx, t)
+			testAccPreCheckSupported(ctx, t)
+			acctest.PreCheckPartitionHasService(t, codestarconnections.EndpointsID)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, codepipeline.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, codepipeline.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckPipelineDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccConfig_emptyStageArtifacts(name),
+				Config: testAccCodePipelineConfig_emptyStageArtifacts(name),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckExists(resourceName, &p),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "codepipeline", regexp.MustCompile(fmt.Sprintf("test-pipeline-%s$", name))),
+					testAccCheckPipelineExists(ctx, resourceName, &p),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "codepipeline", regexache.MustCompile(fmt.Sprintf("test-pipeline-%s$", name))),
 					resource.TestCheckResourceAttr(resourceName, "artifact_store.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "stage.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "stage.1.name", "Build"),
@@ -195,24 +200,25 @@ func TestAccCodePipeline_emptyStageArtifacts(t *testing.T) {
 }
 
 func TestAccCodePipeline_deployWithServiceRole(t *testing.T) {
+	ctx := acctest.Context(t)
 	var p codepipeline.PipelineDeclaration
 	name := sdkacctest.RandString(10)
 	resourceName := "aws_codepipeline.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
-			testAccPreCheckSupported(t)
-			acctest.PreCheckPartitionHasService(codestarconnections.EndpointsID, t)
+			acctest.PreCheck(ctx, t)
+			testAccPreCheckSupported(ctx, t)
+			acctest.PreCheckPartitionHasService(t, codestarconnections.EndpointsID)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, codepipeline.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, codepipeline.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckPipelineDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccConfig_deployWithServiceRole(name),
+				Config: testAccCodePipelineConfig_deployServiceRole(name),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckExists(resourceName, &p),
+					testAccCheckPipelineExists(ctx, resourceName, &p),
 					resource.TestCheckResourceAttr(resourceName, "stage.2.name", "Deploy"),
 					resource.TestCheckResourceAttr(resourceName, "stage.2.action.0.category", "Deploy"),
 					resource.TestCheckResourceAttrPair(resourceName, "stage.2.action.0.role_arn", "aws_iam_role.codepipeline_action_role", "arn"),
@@ -228,24 +234,25 @@ func TestAccCodePipeline_deployWithServiceRole(t *testing.T) {
 }
 
 func TestAccCodePipeline_tags(t *testing.T) {
+	ctx := acctest.Context(t)
 	var p1, p2, p3 codepipeline.PipelineDeclaration
 	name := sdkacctest.RandString(10)
 	resourceName := "aws_codepipeline.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
-			testAccPreCheckSupported(t)
-			acctest.PreCheckPartitionHasService(codestarconnections.EndpointsID, t)
+			acctest.PreCheck(ctx, t)
+			testAccPreCheckSupported(ctx, t)
+			acctest.PreCheckPartitionHasService(t, codestarconnections.EndpointsID)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, codepipeline.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, codepipeline.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckPipelineDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccWithTagsConfig(name, "tag1value", "tag2value"),
+				Config: testAccCodePipelineConfig_tags(name, "tag1value", "tag2value"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckExists(resourceName, &p1),
+					testAccCheckPipelineExists(ctx, resourceName, &p1),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "3"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Name", fmt.Sprintf("test-pipeline-%s", name)),
 					resource.TestCheckResourceAttr(resourceName, "tags.tag1", "tag1value"),
@@ -258,9 +265,9 @@ func TestAccCodePipeline_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccWithTagsConfig(name, "tag1valueUpdate", "tag2valueUpdate"),
+				Config: testAccCodePipelineConfig_tags(name, "tag1valueUpdate", "tag2valueUpdate"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckExists(resourceName, &p2),
+					testAccCheckPipelineExists(ctx, resourceName, &p2),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "3"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Name", fmt.Sprintf("test-pipeline-%s", name)),
 					resource.TestCheckResourceAttr(resourceName, "tags.tag1", "tag1valueUpdate"),
@@ -273,9 +280,9 @@ func TestAccCodePipeline_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccConfig_basic(name),
+				Config: testAccCodePipelineConfig_basic(name),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckExists(resourceName, &p3),
+					testAccCheckPipelineExists(ctx, resourceName, &p3),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
 			},
@@ -284,27 +291,27 @@ func TestAccCodePipeline_tags(t *testing.T) {
 }
 
 func TestAccCodePipeline_MultiRegion_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	var p codepipeline.PipelineDeclaration
 	resourceName := "aws_codepipeline.test"
-	var providers []*schema.Provider
 
 	name := sdkacctest.RandString(10)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
+			acctest.PreCheck(ctx, t)
 			acctest.PreCheckMultipleRegion(t, 2)
-			testAccPreCheckSupported(t, acctest.AlternateRegion())
-			acctest.PreCheckPartitionHasService(codestarconnections.EndpointsID, t)
+			testAccPreCheckSupported(ctx, t, acctest.AlternateRegion())
+			acctest.PreCheckPartitionHasService(t, codestarconnections.EndpointsID)
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, codepipeline.EndpointsID),
-		ProviderFactories: acctest.FactoriesAlternate(&providers),
-		CheckDestroy:      testAccCheckDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, codepipeline.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+		CheckDestroy:             testAccCheckPipelineDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccConfig_multiregion(name),
+				Config: testAccCodePipelineConfig_multiregion(name),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckExists(resourceName, &p),
+					testAccCheckPipelineExists(ctx, resourceName, &p),
 					resource.TestCheckResourceAttr(resourceName, "artifact_store.#", "2"),
 
 					resource.TestCheckResourceAttr(resourceName, "stage.1.name", "Build"),
@@ -316,7 +323,7 @@ func TestAccCodePipeline_MultiRegion_basic(t *testing.T) {
 				),
 			},
 			{
-				Config:            testAccConfig_multiregion(name),
+				Config:            testAccCodePipelineConfig_multiregion(name),
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
@@ -326,27 +333,27 @@ func TestAccCodePipeline_MultiRegion_basic(t *testing.T) {
 }
 
 func TestAccCodePipeline_MultiRegion_update(t *testing.T) {
+	ctx := acctest.Context(t)
 	var p1, p2 codepipeline.PipelineDeclaration
 	resourceName := "aws_codepipeline.test"
-	var providers []*schema.Provider
 
 	name := sdkacctest.RandString(10)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
+			acctest.PreCheck(ctx, t)
 			acctest.PreCheckMultipleRegion(t, 2)
-			testAccPreCheckSupported(t, acctest.AlternateRegion())
-			acctest.PreCheckPartitionHasService(codestarconnections.EndpointsID, t)
+			testAccPreCheckSupported(ctx, t, acctest.AlternateRegion())
+			acctest.PreCheckPartitionHasService(t, codestarconnections.EndpointsID)
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, codepipeline.EndpointsID),
-		ProviderFactories: acctest.FactoriesAlternate(&providers),
-		CheckDestroy:      testAccCheckDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, codepipeline.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+		CheckDestroy:             testAccCheckPipelineDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccConfig_multiregion(name),
+				Config: testAccCodePipelineConfig_multiregion(name),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckExists(resourceName, &p1),
+					testAccCheckPipelineExists(ctx, resourceName, &p1),
 					resource.TestCheckResourceAttr(resourceName, "artifact_store.#", "2"),
 
 					resource.TestCheckResourceAttr(resourceName, "stage.1.name", "Build"),
@@ -358,9 +365,9 @@ func TestAccCodePipeline_MultiRegion_update(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccConfig_multiregionUpdated(name),
+				Config: testAccCodePipelineConfig_multiregionUpdated(name),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckExists(resourceName, &p2),
+					testAccCheckPipelineExists(ctx, resourceName, &p2),
 					resource.TestCheckResourceAttr(resourceName, "artifact_store.#", "2"),
 
 					resource.TestCheckResourceAttr(resourceName, "stage.1.name", "Build"),
@@ -372,7 +379,7 @@ func TestAccCodePipeline_MultiRegion_update(t *testing.T) {
 				),
 			},
 			{
-				Config:            testAccConfig_multiregionUpdated(name),
+				Config:            testAccCodePipelineConfig_multiregionUpdated(name),
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
@@ -382,27 +389,27 @@ func TestAccCodePipeline_MultiRegion_update(t *testing.T) {
 }
 
 func TestAccCodePipeline_MultiRegion_convertSingleRegion(t *testing.T) {
+	ctx := acctest.Context(t)
 	var p1, p2 codepipeline.PipelineDeclaration
 	resourceName := "aws_codepipeline.test"
-	var providers []*schema.Provider
 
 	name := sdkacctest.RandString(10)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
+			acctest.PreCheck(ctx, t)
 			acctest.PreCheckMultipleRegion(t, 2)
-			testAccPreCheckSupported(t, acctest.AlternateRegion())
-			acctest.PreCheckPartitionHasService(codestarconnections.EndpointsID, t)
+			testAccPreCheckSupported(ctx, t, acctest.AlternateRegion())
+			acctest.PreCheckPartitionHasService(t, codestarconnections.EndpointsID)
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, codepipeline.EndpointsID),
-		ProviderFactories: acctest.FactoriesAlternate(&providers),
-		CheckDestroy:      testAccCheckDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, codepipeline.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+		CheckDestroy:             testAccCheckPipelineDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccConfig_basic(name),
+				Config: testAccCodePipelineConfig_basic(name),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckExists(resourceName, &p1),
+					testAccCheckPipelineExists(ctx, resourceName, &p1),
 					resource.TestCheckResourceAttr(resourceName, "artifact_store.#", "1"),
 
 					resource.TestCheckResourceAttr(resourceName, "stage.1.name", "Build"),
@@ -412,9 +419,9 @@ func TestAccCodePipeline_MultiRegion_convertSingleRegion(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccConfig_multiregion(name),
+				Config: testAccCodePipelineConfig_multiregion(name),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckExists(resourceName, &p2),
+					testAccCheckPipelineExists(ctx, resourceName, &p2),
 					resource.TestCheckResourceAttr(resourceName, "artifact_store.#", "2"),
 
 					resource.TestCheckResourceAttr(resourceName, "stage.1.name", "Build"),
@@ -426,9 +433,9 @@ func TestAccCodePipeline_MultiRegion_convertSingleRegion(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccConfig_backToBasic(name),
+				Config: testAccCodePipelineConfig_backToBasic(name),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckExists(resourceName, &p1),
+					testAccCheckPipelineExists(ctx, resourceName, &p1),
 					resource.TestCheckResourceAttr(resourceName, "artifact_store.#", "1"),
 
 					resource.TestCheckResourceAttr(resourceName, "stage.1.name", "Build"),
@@ -438,7 +445,7 @@ func TestAccCodePipeline_MultiRegion_convertSingleRegion(t *testing.T) {
 				),
 			},
 			{
-				Config:            testAccConfig_backToBasic(name),
+				Config:            testAccCodePipelineConfig_backToBasic(name),
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
@@ -448,25 +455,26 @@ func TestAccCodePipeline_MultiRegion_convertSingleRegion(t *testing.T) {
 }
 
 func TestAccCodePipeline_withNamespace(t *testing.T) {
+	ctx := acctest.Context(t)
 	var p1 codepipeline.PipelineDeclaration
 	name := sdkacctest.RandString(10)
 	resourceName := "aws_codepipeline.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
-			testAccPreCheckSupported(t)
-			acctest.PreCheckPartitionHasService(codestarconnections.EndpointsID, t)
+			acctest.PreCheck(ctx, t)
+			testAccPreCheckSupported(ctx, t)
+			acctest.PreCheckPartitionHasService(t, codestarconnections.EndpointsID)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, codepipeline.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, codepipeline.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckPipelineDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccWithNamespaceConfig(name),
+				Config: testAccCodePipelineConfig_namespace(name),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckExists(resourceName, &p1),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "codepipeline", regexp.MustCompile(fmt.Sprintf("test-pipeline-%s", name))),
+					testAccCheckPipelineExists(ctx, resourceName, &p1),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "codepipeline", regexache.MustCompile(fmt.Sprintf("test-pipeline-%s", name))),
 					resource.TestCheckResourceAttr(resourceName, "stage.0.action.0.namespace", "SourceVariables"),
 				),
 			},
@@ -480,7 +488,8 @@ func TestAccCodePipeline_withNamespace(t *testing.T) {
 }
 
 func TestAccCodePipeline_withGitHubV1SourceAction(t *testing.T) {
-	githubToken := conns.SkipIfEnvVarEmpty(t, conns.EnvVarGithubToken, "token with GitHub permissions to repository for CodePipeline source configuration")
+	ctx := acctest.Context(t)
+	githubToken := envvar.SkipIfEmpty(t, envvar.GithubToken, "token with GitHub permissions to repository for CodePipeline source configuration")
 
 	var v codepipeline.PipelineDeclaration
 	name := sdkacctest.RandString(10)
@@ -488,17 +497,17 @@ func TestAccCodePipeline_withGitHubV1SourceAction(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
-			testAccPreCheckSupported(t)
+			acctest.PreCheck(ctx, t)
+			testAccPreCheckSupported(ctx, t)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, codepipeline.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, codepipeline.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckPipelineDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccConfig_WithGitHubv1SourceAction(name, githubToken),
+				Config: testAccCodePipelineConfig_gitHubv1SourceAction(name, githubToken),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckExists(resourceName, &v),
+					testAccCheckPipelineExists(ctx, resourceName, &v),
 
 					resource.TestCheckResourceAttr(resourceName, "stage.#", "2"),
 
@@ -524,9 +533,9 @@ func TestAccCodePipeline_withGitHubV1SourceAction(t *testing.T) {
 				},
 			},
 			{
-				Config: testAccConfig_WithGitHubv1SourceAction_Updated(name, githubToken),
+				Config: testAccCodePipelineConfig_gitHubv1SourceActionUpdated(name, githubToken),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckExists(resourceName, &v),
+					testAccCheckPipelineExists(ctx, resourceName, &v),
 
 					resource.TestCheckResourceAttr(resourceName, "stage.#", "2"),
 
@@ -555,7 +564,56 @@ func TestAccCodePipeline_withGitHubV1SourceAction(t *testing.T) {
 	})
 }
 
-func testAccCheckExists(n string, pipeline *codepipeline.PipelineDeclaration) resource.TestCheckFunc {
+func TestAccCodePipeline_ecr(t *testing.T) {
+	ctx := acctest.Context(t)
+	var p codepipeline.PipelineDeclaration
+	name := sdkacctest.RandString(10)
+	resourceName := "aws_codepipeline.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheckSupported(ctx, t)
+			acctest.PreCheckPartitionHasService(t, codestarconnections.EndpointsID)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, codepipeline.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckPipelineDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCodePipelineConfig_ecr(name),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckPipelineExists(ctx, resourceName, &p),
+					resource.TestCheckResourceAttr(resourceName, "stage.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "stage.0.name", "Source"),
+					resource.TestCheckResourceAttr(resourceName, "stage.0.action.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "stage.0.action.0.name", "Source"),
+					resource.TestCheckResourceAttr(resourceName, "stage.0.action.0.category", "Source"),
+					resource.TestCheckResourceAttr(resourceName, "stage.0.action.0.owner", "AWS"),
+					resource.TestCheckResourceAttr(resourceName, "stage.0.action.0.provider", "ECR"),
+					resource.TestCheckResourceAttr(resourceName, "stage.0.action.0.version", "1"),
+					resource.TestCheckResourceAttr(resourceName, "stage.0.action.0.input_artifacts.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "stage.0.action.0.output_artifacts.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "stage.0.action.0.output_artifacts.0", "test"),
+					resource.TestCheckResourceAttr(resourceName, "stage.0.action.0.configuration.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "stage.0.action.0.configuration.RepositoryName", "my-image-repo"),
+					resource.TestCheckResourceAttr(resourceName, "stage.0.action.0.configuration.ImageTag", "latest"),
+					resource.TestCheckResourceAttr(resourceName, "stage.0.action.0.role_arn", ""),
+					resource.TestCheckResourceAttr(resourceName, "stage.0.action.0.run_order", "1"),
+					resource.TestCheckResourceAttr(resourceName, "stage.0.action.0.region", ""),
+					resource.TestCheckResourceAttr(resourceName, "stage.1.name", "Build"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func testAccCheckPipelineExists(ctx context.Context, n string, v *codepipeline.PipelineDeclaration) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -566,59 +624,61 @@ func testAccCheckExists(n string, pipeline *codepipeline.PipelineDeclaration) re
 			return fmt.Errorf("No CodePipeline ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CodePipelineConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CodePipelineConn(ctx)
 
-		out, err := conn.GetPipeline(&codepipeline.GetPipelineInput{
-			Name: aws.String(rs.Primary.ID),
-		})
+		output, err := tfcodepipeline.FindPipelineByName(ctx, conn, rs.Primary.ID)
+
 		if err != nil {
 			return err
 		}
 
-		*pipeline = *out.Pipeline
+		*v = *output.Pipeline
 
 		return nil
 	}
 }
 
-func testAccCheckDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).CodePipelineConn
+func testAccCheckPipelineDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CodePipelineConn(ctx)
 
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_codepipeline" {
-			continue
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_codepipeline" {
+				continue
+			}
+
+			_, err := tfcodepipeline.FindPipelineByName(ctx, conn, rs.Primary.ID)
+
+			if tfresource.NotFound(err) {
+				continue
+			}
+
+			if err != nil {
+				return err
+			}
+
+			return fmt.Errorf("CodePipeline %s still exists", rs.Primary.ID)
 		}
 
-		_, err := conn.GetPipeline(&codepipeline.GetPipelineInput{
-			Name: aws.String(rs.Primary.ID),
-		})
-
-		if err == nil {
-			return fmt.Errorf("Expected AWS CodePipeline to be gone, but was still found")
-		}
-		if tfawserr.ErrCodeEquals(err, "PipelineNotFoundException") {
-			continue
-		}
-		return err
+		return nil
 	}
-
-	return nil
 }
 
-func testAccPreCheckSupported(t *testing.T, regions ...string) {
+func testAccPreCheckSupported(ctx context.Context, t *testing.T, regions ...string) {
 	regions = append(regions, acctest.Region())
 	for _, region := range regions {
 		conf := &conns.Config{
 			Region: region,
 		}
-		client, diags := conf.Client(context.TODO())
+		client, diags := conf.ConfigureProvider(ctx, acctest.Provider.Meta().(*conns.AWSClient))
+
 		if diags.HasError() {
 			t.Fatalf("error getting AWS client for region %s", region)
 		}
-		conn := client.(*conns.AWSClient).CodePipelineConn
+		conn := client.CodePipelineConn(ctx)
 
 		input := &codepipeline.ListPipelinesInput{}
-		_, err := conn.ListPipelines(input)
+		_, err := conn.ListPipelinesWithContext(ctx, input)
 
 		if acctest.PreCheckSkipError(err) {
 			t.Skipf("skipping acceptance testing: %s", err)
@@ -749,7 +809,7 @@ EOF
 `, rName)
 }
 
-func testAccConfig_basic(rName string) string {
+func testAccCodePipelineConfig_basic(rName string) string { // nosemgrep:ci.codepipeline-in-func-name
 	return acctest.ConfigCompose(
 		testAccS3DefaultBucket(rName),
 		testAccServiceIAMRole(rName),
@@ -812,7 +872,7 @@ resource "aws_codestarconnections_connection" "test" {
 `, rName))
 }
 
-func testAccConfig_basicUpdated(rName string) string {
+func testAccCodePipelineConfig_basicUpdated(rName string) string { // nosemgrep:ci.codepipeline-in-func-name
 	return acctest.ConfigCompose(
 		testAccS3DefaultBucket(rName),
 		testAccS3Bucket("updated", rName),
@@ -876,7 +936,7 @@ resource "aws_codestarconnections_connection" "test" {
 `, rName))
 }
 
-func testAccConfig_emptyStageArtifacts(rName string) string {
+func testAccCodePipelineConfig_emptyStageArtifacts(rName string) string { // nosemgrep:ci.codepipeline-in-func-name
 	return acctest.ConfigCompose(
 		testAccS3DefaultBucket(rName),
 		testAccServiceIAMRole(rName),
@@ -986,7 +1046,7 @@ EOF
 `, rName)
 }
 
-func testAccConfig_deployWithServiceRole(rName string) string {
+func testAccCodePipelineConfig_deployServiceRole(rName string) string { // nosemgrep:ci.codepipeline-in-func-name
 	return acctest.ConfigCompose(
 		testAccS3DefaultBucket(rName),
 		testAccServiceIAMRoleWithAssumeRole(rName),
@@ -1072,7 +1132,7 @@ resource "aws_codestarconnections_connection" "test" {
 `, rName))
 }
 
-func testAccWithTagsConfig(rName, tag1, tag2 string) string {
+func testAccCodePipelineConfig_tags(rName, tag1, tag2 string) string { // nosemgrep:ci.codepipeline-in-func-name
 	return acctest.ConfigCompose(
 		testAccS3DefaultBucket(rName),
 		testAccServiceIAMRole(rName),
@@ -1141,7 +1201,7 @@ resource "aws_codestarconnections_connection" "test" {
 `, rName, tag1, tag2))
 }
 
-func testAccConfig_multiregion(rName string) string {
+func testAccCodePipelineConfig_multiregion(rName string) string { // nosemgrep:ci.codepipeline-in-func-name
 	return acctest.ConfigCompose(
 		acctest.ConfigAlternateRegionProvider(),
 		testAccS3DefaultBucket(rName),
@@ -1235,7 +1295,7 @@ resource "aws_codestarconnections_connection" "test" {
 `, rName, acctest.Region(), acctest.AlternateRegion()))
 }
 
-func testAccConfig_multiregionUpdated(rName string) string {
+func testAccCodePipelineConfig_multiregionUpdated(rName string) string { // nosemgrep:ci.codepipeline-in-func-name
 	return acctest.ConfigCompose(
 		acctest.ConfigAlternateRegionProvider(),
 		testAccS3DefaultBucket(rName),
@@ -1329,10 +1389,10 @@ resource "aws_codestarconnections_connection" "test" {
 `, rName, acctest.Region(), acctest.AlternateRegion()))
 }
 
-func testAccConfig_backToBasic(rName string) string {
+func testAccCodePipelineConfig_backToBasic(rName string) string { // nosemgrep:ci.codepipeline-in-func-name
 	return acctest.ConfigCompose(
 		acctest.ConfigAlternateRegionProvider(),
-		testAccConfig_basic(rName),
+		testAccCodePipelineConfig_basic(rName),
 	)
 }
 
@@ -1345,11 +1405,6 @@ func testAccS3Bucket(bucket, rName string) string {
 resource "aws_s3_bucket" "%[1]s" {
   bucket = "tf-test-pipeline-%[1]s-%[2]s"
 }
-
-resource "aws_s3_bucket_acl" "%[1]s" {
-  bucket = aws_s3_bucket.%[1]s.id
-  acl    = "private"
-}
 `, bucket, rName)
 }
 
@@ -1359,16 +1414,10 @@ resource "aws_s3_bucket" "%[1]s" {
   bucket   = "tf-test-pipeline-%[1]s-%[2]s"
   provider = %[3]s
 }
-
-resource "aws_s3_bucket_acl" "%[1]s" {
-  bucket   = aws_s3_bucket.%[1]s.id
-  acl      = "private"
-  provider = %[3]s
-}
 `, bucket, rName, provider)
 }
 
-func testAccWithNamespaceConfig(rName string) string {
+func testAccCodePipelineConfig_namespace(rName string) string { // nosemgrep:ci.codepipeline-in-func-name
 	return acctest.ConfigCompose(
 		testAccS3DefaultBucket(rName),
 		testAccServiceIAMRole(rName),
@@ -1433,15 +1482,10 @@ resource "aws_codestarconnections_connection" "test" {
 resource "aws_s3_bucket" "foo" {
   bucket = "tf-test-pipeline-%[1]s"
 }
-
-resource "aws_s3_bucket_acl" "foo_acl" {
-  bucket = aws_s3_bucket.foo.id
-  acl    = "private"
-}
 `, rName))
 }
 
-func testAccConfig_WithGitHubv1SourceAction(rName, githubToken string) string {
+func testAccCodePipelineConfig_gitHubv1SourceAction(rName, githubToken string) string { // nosemgrep:ci.codepipeline-in-func-name
 	return acctest.ConfigCompose(
 		testAccS3DefaultBucket(rName),
 		testAccServiceIAMRole(rName),
@@ -1500,7 +1544,7 @@ resource "aws_codepipeline" "test" {
 `, rName, githubToken))
 }
 
-func testAccConfig_WithGitHubv1SourceAction_Updated(rName, githubToken string) string {
+func testAccCodePipelineConfig_gitHubv1SourceActionUpdated(rName, githubToken string) string { // nosemgrep:ci.codepipeline-in-func-name
 	return acctest.ConfigCompose(
 		testAccS3DefaultBucket(rName),
 		testAccServiceIAMRole(rName),
@@ -1559,123 +1603,59 @@ resource "aws_codepipeline" "test" {
 `, rName, githubToken))
 }
 
-func TestExpandArtifactStoresValidation(t *testing.T) {
-	cases := []struct {
-		Name          string
-		Input         []interface{}
-		ExpectedError string
-	}{
-		{
-			Name: "Single-region",
-			Input: []interface{}{
-				map[string]interface{}{
-					"location":       "",
-					"type":           "",
-					"encryption_key": []interface{}{},
-					"region":         "",
-				},
-			},
-		},
-		{
-			Name: "Single-region, names region",
-			Input: []interface{}{
-				map[string]interface{}{
-					"location":       "",
-					"type":           "",
-					"encryption_key": []interface{}{},
-					"region":         "us-west-2", //lintignore:AWSAT003
-				},
-			},
-			ExpectedError: "region cannot be set for a single-region CodePipeline",
-		},
-		{
-			Name: "Cross-region",
-			Input: []interface{}{
-				map[string]interface{}{
-					"location":       "",
-					"type":           "",
-					"encryption_key": []interface{}{},
-					"region":         "us-west-2", //lintignore:AWSAT003
-				},
-				map[string]interface{}{
-					"location":       "",
-					"type":           "",
-					"encryption_key": []interface{}{},
-					"region":         "us-east-1", //lintignore:AWSAT003
-				},
-			},
-		},
-		{
-			Name: "Cross-region, no regions",
-			Input: []interface{}{
-				map[string]interface{}{
-					"location":       "",
-					"type":           "",
-					"encryption_key": []interface{}{},
-					"region":         "",
-				},
-				map[string]interface{}{
-					"location":       "",
-					"type":           "",
-					"encryption_key": []interface{}{},
-					"region":         "",
-				},
-			},
-			ExpectedError: "region must be set for a cross-region CodePipeline",
-		},
-		{
-			Name: "Cross-region, not all regions",
-			Input: []interface{}{
-				map[string]interface{}{
-					"location":       "",
-					"type":           "",
-					"encryption_key": []interface{}{},
-					"region":         "us-west-2", //lintignore:AWSAT003
-				},
-				map[string]interface{}{
-					"location":       "",
-					"type":           "",
-					"encryption_key": []interface{}{},
-					"region":         "",
-				},
-			},
-			ExpectedError: "region must be set for a cross-region CodePipeline",
-		},
-		{
-			Name: "Duplicate regions",
-			Input: []interface{}{
-				map[string]interface{}{
-					"location":       "",
-					"type":           "",
-					"encryption_key": []interface{}{},
-					"region":         "us-west-2", //lintignore:AWSAT003
-				},
-				map[string]interface{}{
-					"location":       "",
-					"type":           "",
-					"encryption_key": []interface{}{},
-					"region":         "us-west-2", //lintignore:AWSAT003
-				},
-			},
-			ExpectedError: "only one Artifact Store can be defined per region for a cross-region CodePipeline",
-		},
-	}
+func testAccCodePipelineConfig_ecr(rName string) string { // nosemgrep:ci.codepipeline-in-func-name
+	return acctest.ConfigCompose(
+		testAccS3DefaultBucket(rName),
+		testAccServiceIAMRole(rName),
+		fmt.Sprintf(`
+resource "aws_codepipeline" "test" {
+  name     = "test-pipeline-%[1]s"
+  role_arn = aws_iam_role.codepipeline_role.arn
 
-	for _, tc := range cases {
-		tc := tc
-		_, err := tfcodepipeline.ExpandArtifactStores(tc.Input)
-		if tc.ExpectedError == "" {
-			if err != nil {
-				t.Errorf("%s: Did not expect an error, but got: %s", tc.Name, err)
-			}
-		} else {
-			if err == nil {
-				t.Errorf("%s: Expected an error, but did not get one", tc.Name)
-			} else {
-				if err.Error() != tc.ExpectedError {
-					t.Errorf("%s: Expected error %q, got %s", tc.Name, tc.ExpectedError, err)
-				}
-			}
-		}
-	}
+  artifact_store {
+    location = aws_s3_bucket.test.bucket
+    type     = "S3"
+
+    encryption_key {
+      id   = "1234"
+      type = "KMS"
+    }
+  }
+
+  stage {
+    name = "Source"
+
+    action {
+      name             = "Source"
+      category         = "Source"
+      owner            = "AWS"
+      provider         = "ECR"
+      version          = "1"
+      output_artifacts = ["test"]
+
+      configuration = {
+        RepositoryName = "my-image-repo"
+        ImageTag       = "latest"
+      }
+    }
+  }
+
+  stage {
+    name = "Build"
+
+    action {
+      name            = "Build"
+      category        = "Build"
+      owner           = "AWS"
+      provider        = "CodeBuild"
+      input_artifacts = ["test"]
+      version         = "1"
+
+      configuration = {
+        ProjectName = "test"
+      }
+    }
+  }
+}
+`, rName))
 }

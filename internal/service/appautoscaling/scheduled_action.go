@@ -1,7 +1,10 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package appautoscaling
 
 import (
-	"fmt"
+	"context"
 	"log"
 	"strconv"
 	"time"
@@ -9,20 +12,23 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/applicationautoscaling"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/experimental/nullable"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/types/nullable"
 )
 
+// @SDKResource("aws_appautoscaling_scheduled_action")
 func ResourceScheduledAction() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceScheduledActionPut,
-		Read:   resourceScheduledActionRead,
-		Update: resourceScheduledActionPut,
-		Delete: resourceScheduledActionDelete,
+		CreateWithoutTimeout: resourceScheduledActionPut,
+		ReadWithoutTimeout:   resourceScheduledActionRead,
+		UpdateWithoutTimeout: resourceScheduledActionPut,
+		DeleteWithoutTimeout: resourceScheduledActionDelete,
 
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -103,8 +109,9 @@ func ResourceScheduledAction() *schema.Resource {
 	}
 }
 
-func resourceScheduledActionPut(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).AppAutoScalingConn
+func resourceScheduledActionPut(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).AppAutoScalingConn(ctx)
 
 	input := &applicationautoscaling.PutScheduledActionInput{
 		ScheduledActionName: aws.String(d.Get("name").(string)),
@@ -115,27 +122,27 @@ func resourceScheduledActionPut(d *schema.ResourceData, meta interface{}) error 
 
 	needsPut := true
 	if d.IsNewResource() {
-		appautoscalingScheduledActionPopulateInputForCreate(input, d)
+		scheduledActionPopulateInputForCreate(input, d)
 	} else {
-		needsPut = appautoscalingScheduledActionPopulateInputForUpdate(input, d)
+		needsPut = scheduledActionPopulateInputForUpdate(input, d)
 	}
 
 	if needsPut {
-		err := resource.Retry(5*time.Minute, func() *resource.RetryError {
-			_, err := conn.PutScheduledAction(input)
+		err := retry.RetryContext(ctx, 5*time.Minute, func() *retry.RetryError {
+			_, err := conn.PutScheduledActionWithContext(ctx, input)
 			if err != nil {
 				if tfawserr.ErrCodeEquals(err, applicationautoscaling.ErrCodeObjectNotFoundException) {
-					return resource.RetryableError(err)
+					return retry.RetryableError(err)
 				}
-				return resource.NonRetryableError(err)
+				return retry.NonRetryableError(err)
 			}
 			return nil
 		})
 		if tfresource.TimedOut(err) {
-			_, err = conn.PutScheduledAction(input)
+			_, err = conn.PutScheduledActionWithContext(ctx, input)
 		}
 		if err != nil {
-			return fmt.Errorf("error putting Application Auto Scaling scheduled action: %w", err)
+			return sdkdiag.AppendErrorf(diags, "putting Application Auto Scaling scheduled action: %s", err)
 		}
 
 		if d.IsNewResource() {
@@ -143,10 +150,10 @@ func resourceScheduledActionPut(d *schema.ResourceData, meta interface{}) error 
 		}
 	}
 
-	return resourceScheduledActionRead(d, meta)
+	return append(diags, resourceScheduledActionRead(ctx, d, meta)...)
 }
 
-func appautoscalingScheduledActionPopulateInputForCreate(input *applicationautoscaling.PutScheduledActionInput, d *schema.ResourceData) {
+func scheduledActionPopulateInputForCreate(input *applicationautoscaling.PutScheduledActionInput, d *schema.ResourceData) {
 	input.Schedule = aws.String(d.Get("schedule").(string))
 	input.ScalableTargetAction = expandScalableTargetAction(d.Get("scalable_target_action").([]interface{}))
 	input.Timezone = aws.String(d.Get("timezone").(string))
@@ -161,7 +168,7 @@ func appautoscalingScheduledActionPopulateInputForCreate(input *applicationautos
 	}
 }
 
-func appautoscalingScheduledActionPopulateInputForUpdate(input *applicationautoscaling.PutScheduledActionInput, d *schema.ResourceData) bool {
+func scheduledActionPopulateInputForUpdate(input *applicationautoscaling.PutScheduledActionInput, d *schema.ResourceData) bool {
 	hasChange := false
 
 	if d.HasChange("schedule") {
@@ -197,21 +204,22 @@ func appautoscalingScheduledActionPopulateInputForUpdate(input *applicationautos
 	return hasChange
 }
 
-func resourceScheduledActionRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).AppAutoScalingConn
+func resourceScheduledActionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).AppAutoScalingConn(ctx)
 
-	scheduledAction, err := FindScheduledAction(conn, d.Get("name").(string), d.Get("service_namespace").(string), d.Get("resource_id").(string))
+	scheduledAction, err := FindScheduledAction(ctx, conn, d.Get("name").(string), d.Get("service_namespace").(string), d.Get("resource_id").(string))
 	if tfresource.NotFound(err) && !d.IsNewResource() {
 		log.Printf("[WARN] Application Auto Scaling Scheduled Action (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 	if err != nil {
-		return fmt.Errorf("error describing Application Auto Scaling Scheduled Action (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "describing Application Auto Scaling Scheduled Action (%s): %s", d.Id(), err)
 	}
 
 	if err := d.Set("scalable_target_action", flattenScalableTargetAction(scheduledAction.ScalableTargetAction)); err != nil {
-		return fmt.Errorf("error setting scalable_target_action: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting scalable_target_action: %s", err)
 	}
 
 	d.Set("schedule", scheduledAction.Schedule)
@@ -224,11 +232,12 @@ func resourceScheduledActionRead(d *schema.ResourceData, meta interface{}) error
 	d.Set("timezone", scheduledAction.Timezone)
 	d.Set("arn", scheduledAction.ScheduledActionARN)
 
-	return nil
+	return diags
 }
 
-func resourceScheduledActionDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).AppAutoScalingConn
+func resourceScheduledActionDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).AppAutoScalingConn(ctx)
 
 	input := &applicationautoscaling.DeleteScheduledActionInput{
 		ScheduledActionName: aws.String(d.Get("name").(string)),
@@ -238,16 +247,15 @@ func resourceScheduledActionDelete(d *schema.ResourceData, meta interface{}) err
 	if v, ok := d.GetOk("scalable_dimension"); ok {
 		input.ScalableDimension = aws.String(v.(string))
 	}
-	_, err := conn.DeleteScheduledAction(input)
+	_, err := conn.DeleteScheduledActionWithContext(ctx, input)
 	if err != nil {
 		if tfawserr.ErrCodeEquals(err, applicationautoscaling.ErrCodeObjectNotFoundException) {
-			log.Printf("[WARN] Application Auto Scaling scheduled action (%s) not found, removing from state", d.Id())
-			return nil
+			return diags
 		}
-		return err
+		return sdkdiag.AppendErrorf(diags, "deleting Application Auto Scaling Scheduled Action (%s): %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 func expandScalableTargetAction(l []interface{}) *applicationautoscaling.ScalableTargetAction {

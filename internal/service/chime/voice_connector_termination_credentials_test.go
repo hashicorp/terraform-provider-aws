@@ -1,34 +1,42 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package chime_test
 
 import (
+	"context"
 	"fmt"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/chime"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfchime "github.com/hashicorp/terraform-provider-aws/internal/service/chime"
 )
 
 func TestAccChimeVoiceConnectorTerminationCredentials_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_chime_voice_connector_termination_credentials.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, chime.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckVoiceConnectorTerminationCredentialsDestroy,
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, chime.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckVoiceConnectorTerminationCredentialsDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVoiceConnectorTerminationCredentialsConfig(rName),
+				Config: testAccVoiceConnectorTerminationCredentialsConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckVoiceConnectorTerminationCredentialsExists(resourceName),
+					testAccCheckVoiceConnectorTerminationCredentialsExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "credentials.#", "1"),
 				),
 			},
@@ -43,20 +51,24 @@ func TestAccChimeVoiceConnectorTerminationCredentials_basic(t *testing.T) {
 }
 
 func TestAccChimeVoiceConnectorTerminationCredentials_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_chime_voice_connector_termination_credentials.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, chime.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckVoiceConnectorTerminationCredentialsDestroy,
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, chime.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckVoiceConnectorTerminationCredentialsDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVoiceConnectorTerminationCredentialsConfig(rName),
+				Config: testAccVoiceConnectorTerminationCredentialsConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVoiceConnectorTerminationCredentialsExists(resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tfchime.ResourceVoiceConnectorTerminationCredentials(), resourceName),
+					testAccCheckVoiceConnectorTerminationCredentialsExists(ctx, resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfchime.ResourceVoiceConnectorTerminationCredentials(), resourceName),
 				),
 				ExpectNonEmptyPlan: false,
 			},
@@ -65,26 +77,30 @@ func TestAccChimeVoiceConnectorTerminationCredentials_disappears(t *testing.T) {
 }
 
 func TestAccChimeVoiceConnectorTerminationCredentials_update(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_chime_voice_connector_termination_credentials.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, chime.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckVoiceConnectorTerminationCredentialsDestroy,
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, chime.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckVoiceConnectorTerminationCredentialsDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVoiceConnectorTerminationCredentialsConfig(rName),
+				Config: testAccVoiceConnectorTerminationCredentialsConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckVoiceConnectorTerminationCredentialsExists(resourceName),
+					testAccCheckVoiceConnectorTerminationCredentialsExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "credentials.#", "1"),
 				),
 			},
 			{
-				Config: testAccVoiceConnectorTerminationCredentialsUpdatedConfig(rName),
+				Config: testAccVoiceConnectorTerminationCredentialsConfig_updated(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckVoiceConnectorTerminationCredentialsExists(resourceName),
+					testAccCheckVoiceConnectorTerminationCredentialsExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "credentials.#", "2"),
 				),
 			},
@@ -92,7 +108,7 @@ func TestAccChimeVoiceConnectorTerminationCredentials_update(t *testing.T) {
 	})
 }
 
-func testAccCheckVoiceConnectorTerminationCredentialsExists(name string) resource.TestCheckFunc {
+func testAccCheckVoiceConnectorTerminationCredentialsExists(ctx context.Context, name string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -103,12 +119,12 @@ func testAccCheckVoiceConnectorTerminationCredentialsExists(name string) resourc
 			return fmt.Errorf("no Chime Voice Connector termination credentials ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ChimeConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ChimeConn(ctx)
 		input := &chime.ListVoiceConnectorTerminationCredentialsInput{
 			VoiceConnectorId: aws.String(rs.Primary.ID),
 		}
 
-		resp, err := conn.ListVoiceConnectorTerminationCredentials(input)
+		resp, err := conn.ListVoiceConnectorTerminationCredentialsWithContext(ctx, input)
 		if err != nil {
 			return err
 		}
@@ -121,31 +137,33 @@ func testAccCheckVoiceConnectorTerminationCredentialsExists(name string) resourc
 	}
 }
 
-func testAccCheckVoiceConnectorTerminationCredentialsDestroy(s *terraform.State) error {
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_chime_voice_connector_termination_credentials" {
-			continue
-		}
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ChimeConn
-		input := &chime.ListVoiceConnectorTerminationCredentialsInput{
-			VoiceConnectorId: aws.String(rs.Primary.ID),
-		}
-		resp, err := conn.ListVoiceConnectorTerminationCredentials(input)
+func testAccCheckVoiceConnectorTerminationCredentialsDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_chime_voice_connector_termination_credentials" {
+				continue
+			}
+			conn := acctest.Provider.Meta().(*conns.AWSClient).ChimeConn(ctx)
+			input := &chime.ListVoiceConnectorTerminationCredentialsInput{
+				VoiceConnectorId: aws.String(rs.Primary.ID),
+			}
+			resp, err := conn.ListVoiceConnectorTerminationCredentialsWithContext(ctx, input)
 
-		if tfawserr.ErrCodeEquals(err, chime.ErrCodeNotFoundException) {
-			continue
+			if tfawserr.ErrCodeEquals(err, chime.ErrCodeNotFoundException) {
+				continue
+			}
+
+			if err != nil {
+				return err
+			}
+
+			if resp != nil && resp.Usernames != nil {
+				return fmt.Errorf("error Chime Voice Connector Termination credentials still exists")
+			}
 		}
 
-		if err != nil {
-			return err
-		}
-
-		if resp != nil && resp.Usernames != nil {
-			return fmt.Errorf("error Chime Voice Connector Termination credentials still exists")
-		}
+		return nil
 	}
-
-	return nil
 }
 
 func testAccVoiceConnectorTerminationCredentialsBaseConfig(rName string) string {
@@ -164,7 +182,7 @@ resource "aws_chime_voice_connector_termination" "test" {
 `, rName)
 }
 
-func testAccVoiceConnectorTerminationCredentialsConfig(rName string) string {
+func testAccVoiceConnectorTerminationCredentialsConfig_basic(rName string) string {
 	return acctest.ConfigCompose(testAccVoiceConnectorTerminationCredentialsBaseConfig(rName), `
 resource "aws_chime_voice_connector_termination_credentials" "test" {
   voice_connector_id = aws_chime_voice_connector.chime.id
@@ -179,7 +197,7 @@ resource "aws_chime_voice_connector_termination_credentials" "test" {
 `)
 }
 
-func testAccVoiceConnectorTerminationCredentialsUpdatedConfig(rName string) string {
+func testAccVoiceConnectorTerminationCredentialsConfig_updated(rName string) string {
 	return acctest.ConfigCompose(testAccVoiceConnectorTerminationCredentialsBaseConfig(rName), `
 resource "aws_chime_voice_connector_termination_credentials" "test" {
   voice_connector_id = aws_chime_voice_connector.chime.id

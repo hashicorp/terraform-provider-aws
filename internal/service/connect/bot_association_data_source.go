@@ -1,8 +1,10 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package connect
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -11,9 +13,10 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
+// @SDKDataSource("aws_connect_bot_association")
 func DataSourceBotAssociation() *schema.Resource {
 	return &schema.Resource{
-		ReadContext: dataSourceBotAssociationRead,
+		ReadWithoutTimeout: dataSourceBotAssociationRead,
 		Schema: map[string]*schema.Schema{
 			"instance_id": {
 				Type:     schema.TypeString,
@@ -43,7 +46,7 @@ func DataSourceBotAssociation() *schema.Resource {
 }
 
 func dataSourceBotAssociationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ConnectConn
+	conn := meta.(*conns.AWSClient).ConnectConn(ctx)
 
 	instanceID := d.Get("instance_id").(string)
 
@@ -56,18 +59,18 @@ func dataSourceBotAssociationRead(ctx context.Context, d *schema.ResourceData, m
 
 	lexBot, err := FindBotAssociationV1ByNameAndRegionWithContext(ctx, conn, instanceID, name, region)
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error finding Connect Bot Association (%s,%s): %w", instanceID, name, err))
+		return diag.Errorf("finding Connect Bot Association (%s,%s): %s", instanceID, name, err)
 	}
 
 	if lexBot == nil {
-		return diag.FromErr(fmt.Errorf("error finding Connect Bot Association (%s,%s) : not found", instanceID, name))
+		return diag.Errorf("finding Connect Bot Association (%s,%s) : not found", instanceID, name)
 	}
 
 	d.SetId(meta.(*conns.AWSClient).Region)
 
 	d.Set("instance_id", instanceID)
 	if err := d.Set("lex_bot", flattenLexBot(lexBot)); err != nil {
-		return diag.FromErr(fmt.Errorf("error setting lex_bot: %w", err))
+		return diag.Errorf("setting lex_bot: %s", err)
 	}
 
 	return nil

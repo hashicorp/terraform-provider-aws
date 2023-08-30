@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ec2
 
 import (
@@ -8,27 +11,38 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @SDKResource("aws_ebs_volume", name="EBS Volume")
+// @Tags(identifierAttribute="id")
 func ResourceEBSVolume() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceEBSVolumeCreate,
-		Read:   resourceEBSVolumeRead,
-		Update: resourceEBSVolumeUpdate,
-		Delete: resourceEBSVolumeDelete,
+		CreateWithoutTimeout: resourceEBSVolumeCreate,
+		ReadWithoutTimeout:   resourceEBSVolumeRead,
+		UpdateWithoutTimeout: resourceEBSVolumeUpdate,
+		DeleteWithoutTimeout: resourceEBSVolumeDelete,
+
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
+		},
+
+		Timeouts: &schema.ResourceTimeout{
+			Create: schema.DefaultTimeout(5 * time.Minute),
+			Update: schema.DefaultTimeout(5 * time.Minute),
+			Delete: schema.DefaultTimeout(5 * time.Minute),
 		},
 
 		CustomizeDiff: customdiff.Sequence(
@@ -52,6 +66,11 @@ func ResourceEBSVolume() *schema.Resource {
 				Computed: true,
 				ForceNew: true,
 			},
+			"final_snapshot": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
+			},
 			"iops": {
 				Type:     schema.TypeInt,
 				Optional: true,
@@ -69,6 +88,12 @@ func ResourceEBSVolume() *schema.Resource {
 				Optional: true,
 				ForceNew: true,
 			},
+			"outpost_arn": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ForceNew:     true,
+				ValidateFunc: verify.ValidARN,
+			},
 			"size": {
 				Type:         schema.TypeInt,
 				Optional:     true,
@@ -82,314 +107,232 @@ func ResourceEBSVolume() *schema.Resource {
 				ForceNew:     true,
 				AtLeastOneOf: []string{"size", "snapshot_id"},
 			},
-			"outpost_arn": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ForceNew:     true,
-				ValidateFunc: verify.ValidARN,
-			},
-			"type": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			"throughput": {
 				Type:         schema.TypeInt,
 				Optional:     true,
 				Computed:     true,
 				ValidateFunc: validation.IntBetween(125, 1000),
 			},
+			"type": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
 		},
 	}
 }
 
-func resourceEBSVolumeCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+func resourceEBSVolumeCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
-	request := &ec2.CreateVolumeInput{
+	input := &ec2.CreateVolumeInput{
 		AvailabilityZone:  aws.String(d.Get("availability_zone").(string)),
-		TagSpecifications: ec2TagSpecificationsFromKeyValueTags(tags, ec2.ResourceTypeVolume),
+		ClientToken:       aws.String(id.UniqueId()),
+		TagSpecifications: getTagSpecificationsIn(ctx, ec2.ResourceTypeVolume),
 	}
+
 	if value, ok := d.GetOk("encrypted"); ok {
-		request.Encrypted = aws.Bool(value.(bool))
+		input.Encrypted = aws.Bool(value.(bool))
 	}
+
 	if value, ok := d.GetOk("iops"); ok {
-		request.Iops = aws.Int64(int64(value.(int)))
+		input.Iops = aws.Int64(int64(value.(int)))
 	}
+
 	if value, ok := d.GetOk("kms_key_id"); ok {
-		request.KmsKeyId = aws.String(value.(string))
+		input.KmsKeyId = aws.String(value.(string))
 	}
-	if value, ok := d.GetOk("size"); ok {
-		request.Size = aws.Int64(int64(value.(int)))
-	}
-	if value, ok := d.GetOk("snapshot_id"); ok {
-		request.SnapshotId = aws.String(value.(string))
-	}
+
 	if value, ok := d.GetOk("multi_attach_enabled"); ok {
-		request.MultiAttachEnabled = aws.Bool(value.(bool))
+		input.MultiAttachEnabled = aws.Bool(value.(bool))
 	}
+
 	if value, ok := d.GetOk("outpost_arn"); ok {
-		request.OutpostArn = aws.String(value.(string))
+		input.OutpostArn = aws.String(value.(string))
 	}
+
+	if value, ok := d.GetOk("size"); ok {
+		input.Size = aws.Int64(int64(value.(int)))
+	}
+
+	if value, ok := d.GetOk("snapshot_id"); ok {
+		input.SnapshotId = aws.String(value.(string))
+	}
+
 	if value, ok := d.GetOk("throughput"); ok {
-		request.Throughput = aws.Int64(int64(value.(int)))
+		input.Throughput = aws.Int64(int64(value.(int)))
 	}
+
 	if value, ok := d.GetOk("type"); ok {
-		request.VolumeType = aws.String(value.(string))
+		input.VolumeType = aws.String(value.(string))
 	}
 
-	log.Printf("[DEBUG] EBS Volume create opts: %s", request)
-	result, err := conn.CreateVolume(request)
+	output, err := conn.CreateVolumeWithContext(ctx, input)
+
 	if err != nil {
-		return fmt.Errorf("Error creating EC2 volume: %s", err)
+		return sdkdiag.AppendErrorf(diags, "creating EBS Volume: %s", err)
 	}
 
-	log.Println("[DEBUG] Waiting for Volume to become available")
+	d.SetId(aws.StringValue(output.VolumeId))
 
-	stateConf := &resource.StateChangeConf{
-		Pending:    []string{ec2.VolumeStateCreating},
-		Target:     []string{ec2.VolumeStateAvailable},
-		Refresh:    volumeStateRefreshFunc(conn, *result.VolumeId),
-		Timeout:    5 * time.Minute,
-		Delay:      10 * time.Second,
-		MinTimeout: 3 * time.Second,
+	if _, err := WaitVolumeCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for EBS Volume (%s) create: %s", d.Id(), err)
 	}
 
-	_, err = stateConf.WaitForState()
-	if err != nil {
-		return fmt.Errorf(
-			"Error waiting for Volume (%s) to become available: %s",
-			*result.VolumeId, err)
-	}
-
-	d.SetId(aws.StringValue(result.VolumeId))
-
-	return resourceEBSVolumeRead(d, meta)
+	return append(diags, resourceEBSVolumeRead(ctx, d, meta)...)
 }
 
-func resourceEBSVolumeUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+func resourceEBSVolumeRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
-	if d.HasChangesExcept("tags", "tags_all") {
-		params := &ec2.ModifyVolumeInput{
-			VolumeId: aws.String(d.Id()),
-		}
+	volume, err := FindEBSVolumeByID(ctx, conn, d.Id())
 
-		if d.HasChange("size") {
-			params.Size = aws.Int64(int64(d.Get("size").(int)))
-		}
-
-		if d.HasChange("type") {
-			params.VolumeType = aws.String(d.Get("type").(string))
-		}
-
-		if d.HasChange("iops") {
-			params.Iops = aws.Int64(int64(d.Get("iops").(int)))
-		}
-
-		// "If no throughput value is specified, the existing value is retained."
-		// Not currently correct, so always specify any non-zero throughput value.
-		// Throughput is valid only for gp3 volumes.
-		if v := d.Get("throughput").(int); v > 0 && d.Get("type").(string) == ec2.VolumeTypeGp3 {
-			params.Throughput = aws.Int64(int64(v))
-		}
-
-		result, err := conn.ModifyVolume(params)
-		if err != nil {
-			return err
-		}
-
-		stateConf := &resource.StateChangeConf{
-			Pending:    []string{ec2.VolumeStateCreating, ec2.VolumeModificationStateModifying},
-			Target:     []string{ec2.VolumeStateAvailable, ec2.VolumeStateInUse},
-			Refresh:    volumeStateRefreshFunc(conn, *result.VolumeModification.VolumeId),
-			Timeout:    5 * time.Minute,
-			Delay:      10 * time.Second,
-			MinTimeout: 3 * time.Second,
-		}
-
-		_, err = stateConf.WaitForState()
-		if err != nil {
-			return fmt.Errorf(
-				"Error waiting for Volume (%s) to become available: %s",
-				*result.VolumeModification.VolumeId, err)
-		}
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] EBS Volume %s not found, removing from state", d.Id())
+		d.SetId("")
+		return diags
 	}
 
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		if err := UpdateTags(conn, d.Id(), o, n); err != nil {
-			return fmt.Errorf("error updating tags: %s", err)
-		}
-	}
-
-	return resourceEBSVolumeRead(d, meta)
-}
-
-// volumeStateRefreshFunc returns a resource.StateRefreshFunc that is used to watch
-// a the state of a Volume. Returns successfully when volume is available
-func volumeStateRefreshFunc(conn *ec2.EC2, volumeID string) resource.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-		resp, err := conn.DescribeVolumes(&ec2.DescribeVolumesInput{
-			VolumeIds: []*string{aws.String(volumeID)},
-		})
-
-		if err != nil {
-			if ec2err, ok := err.(awserr.Error); ok {
-				// Set this to nil as if we didn't find anything.
-				log.Printf("Error on Volume State Refresh: message: \"%s\", code:\"%s\"", ec2err.Message(), ec2err.Code())
-				resp = nil
-				return nil, "", err
-			} else {
-				log.Printf("Error on Volume State Refresh: %s", err)
-				return nil, "", err
-			}
-		}
-
-		v := resp.Volumes[0]
-		return v, *v.State, nil
-	}
-}
-
-func resourceEBSVolumeRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
-
-	request := &ec2.DescribeVolumesInput{
-		VolumeIds: []*string{aws.String(d.Id())},
-	}
-
-	response, err := conn.DescribeVolumes(request)
 	if err != nil {
-		if tfawserr.ErrCodeEquals(err, "InvalidVolume.NotFound") {
-			d.SetId("")
-			return nil
-		}
-		return fmt.Errorf("Error reading EC2 volume %s: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading EBS Volume (%s): %s", d.Id(), err)
 	}
-
-	if response == nil || len(response.Volumes) == 0 || response.Volumes[0] == nil {
-		return fmt.Errorf("error reading EC2 Volume (%s): empty response", d.Id())
-	}
-
-	volume := response.Volumes[0]
 
 	arn := arn.ARN{
-		AccountID: meta.(*conns.AWSClient).AccountID,
 		Partition: meta.(*conns.AWSClient).Partition,
-		Region:    meta.(*conns.AWSClient).Region,
-		Resource:  fmt.Sprintf("volume/%s", d.Id()),
 		Service:   ec2.ServiceName,
+		Region:    meta.(*conns.AWSClient).Region,
+		AccountID: meta.(*conns.AWSClient).AccountID,
+		Resource:  fmt.Sprintf("volume/%s", d.Id()),
 	}
 	d.Set("arn", arn.String())
 	d.Set("availability_zone", volume.AvailabilityZone)
 	d.Set("encrypted", volume.Encrypted)
 	d.Set("iops", volume.Iops)
 	d.Set("kms_key_id", volume.KmsKeyId)
+	d.Set("multi_attach_enabled", volume.MultiAttachEnabled)
+	d.Set("outpost_arn", volume.OutpostArn)
 	d.Set("size", volume.Size)
 	d.Set("snapshot_id", volume.SnapshotId)
-	d.Set("outpost_arn", volume.OutpostArn)
-	d.Set("multi_attach_enabled", volume.MultiAttachEnabled)
 	d.Set("throughput", volume.Throughput)
-
-	tags := KeyValueTags(volume.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("error setting tags_all: %w", err)
-	}
-
 	d.Set("type", volume.VolumeType)
 
-	return nil
+	setTagsOut(ctx, volume.Tags)
+
+	return diags
 }
 
-func resourceEBSVolumeDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+func resourceEBSVolumeUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
-	input := &ec2.DeleteVolumeInput{
-		VolumeId: aws.String(d.Id()),
-	}
-
-	err := resource.Retry(5*time.Minute, func() *resource.RetryError {
-		_, err := conn.DeleteVolume(input)
-
-		if tfawserr.ErrCodeEquals(err, "InvalidVolume.NotFound") {
-			return nil
+	if d.HasChangesExcept("tags", "tags_all") {
+		input := &ec2.ModifyVolumeInput{
+			VolumeId: aws.String(d.Id()),
 		}
 
-		if tfawserr.ErrCodeEquals(err, "VolumeInUse") {
-			return resource.RetryableError(fmt.Errorf("EBS VolumeInUse - trying again while it detaches"))
+		if d.HasChange("iops") {
+			input.Iops = aws.Int64(int64(d.Get("iops").(int)))
 		}
 
-		if err != nil {
-			return resource.NonRetryableError(err)
+		if d.HasChange("size") {
+			input.Size = aws.Int64(int64(d.Get("size").(int)))
 		}
 
-		return nil
-	})
-
-	if tfresource.TimedOut(err) {
-		_, err = conn.DeleteVolume(input)
-	}
-
-	if err != nil {
-		return fmt.Errorf("error deleting EBS Volume (%s): %s", d.Id(), err)
-	}
-
-	describeInput := &ec2.DescribeVolumesInput{
-		VolumeIds: []*string{aws.String(d.Id())},
-	}
-
-	var output *ec2.DescribeVolumesOutput
-	err = resource.Retry(5*time.Minute, func() *resource.RetryError {
-		var err error
-		output, err = conn.DescribeVolumes(describeInput)
-
-		if err != nil {
-			return resource.NonRetryableError(err)
+		// "If no throughput value is specified, the existing value is retained."
+		// Not currently correct, so always specify any non-zero throughput value.
+		// Throughput is valid only for gp3 volumes.
+		if v := d.Get("throughput").(int); v > 0 && d.Get("type").(string) == ec2.VolumeTypeGp3 {
+			input.Throughput = aws.Int64(int64(v))
 		}
 
-		for _, volume := range output.Volumes {
-			if aws.StringValue(volume.VolumeId) == d.Id() {
-				state := aws.StringValue(volume.State)
+		if d.HasChange("type") {
+			volumeType := d.Get("type").(string)
+			input.VolumeType = aws.String(volumeType)
 
-				if state == ec2.VolumeStateDeleting {
-					return resource.RetryableError(fmt.Errorf("EBS Volume (%s) still deleting", d.Id()))
-				}
-
-				return resource.NonRetryableError(fmt.Errorf("EBS Volume (%s) in unexpected state after deletion: %s", d.Id(), state))
+			// Get Iops value because in the ec2.ModifyVolumeInput API,
+			// if you change the volume type to io1, io2, or gp3, the default is 3,000.
+			// https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_ModifyVolume.html
+			if volumeType == ec2.VolumeTypeIo1 || volumeType == ec2.VolumeTypeIo2 || volumeType == ec2.VolumeTypeGp3 {
+				input.Iops = aws.Int64(int64(d.Get("iops").(int)))
 			}
 		}
 
-		return nil
-	})
+		_, err := conn.ModifyVolumeWithContext(ctx, input)
 
-	if tfresource.TimedOut(err) {
-		output, err = conn.DescribeVolumes(describeInput)
-	}
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "modifying EBS Volume (%s): %s", d.Id(), err)
+		}
 
-	if tfawserr.ErrCodeEquals(err, "InvalidVolume.NotFound") {
-		return nil
-	}
-
-	for _, volume := range output.Volumes {
-		if aws.StringValue(volume.VolumeId) == d.Id() {
-			return fmt.Errorf("EBS Volume (%s) in unexpected state after deletion: %s", d.Id(), aws.StringValue(volume.State))
+		if _, err := WaitVolumeUpdated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "waiting for EBS Volume (%s) update: %s", d.Id(), err)
 		}
 	}
 
-	return nil
+	return append(diags, resourceEBSVolumeRead(ctx, d, meta)...)
+}
+
+func resourceEBSVolumeDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
+
+	if d.Get("final_snapshot").(bool) {
+		input := &ec2.CreateSnapshotInput{
+			TagSpecifications: tagSpecificationsFromMap(ctx, d.Get("tags_all").(map[string]interface{}), ec2.ResourceTypeSnapshot),
+			VolumeId:          aws.String(d.Id()),
+		}
+
+		log.Printf("[DEBUG] Creating EBS Snapshot: %s", input)
+		outputRaw, err := tfresource.RetryWhenAWSErrMessageContains(ctx, 1*time.Minute,
+			func() (interface{}, error) {
+				return conn.CreateSnapshotWithContext(ctx, input)
+			},
+			errCodeSnapshotCreationPerVolumeRateExceeded, "The maximum per volume CreateSnapshot request rate has been exceeded")
+
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "creating EBS Snapshot (%s): %s", d.Id(), err)
+		}
+
+		snapshotID := aws.StringValue(outputRaw.(*ec2.Snapshot).SnapshotId)
+
+		_, err = tfresource.RetryWhenAWSErrCodeEquals(ctx, d.Timeout(schema.TimeoutDelete),
+			func() (interface{}, error) {
+				return nil, conn.WaitUntilSnapshotCompletedWithContext(ctx, &ec2.DescribeSnapshotsInput{
+					SnapshotIds: aws.StringSlice([]string{snapshotID}),
+				})
+			},
+			errCodeResourceNotReady)
+
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "waiting for EBS Snapshot (%s) create: %s", snapshotID, err)
+		}
+	}
+
+	log.Printf("[DEBUG] Deleting EBS Volume: %s", d.Id())
+	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, d.Timeout(schema.TimeoutDelete),
+		func() (interface{}, error) {
+			return conn.DeleteVolumeWithContext(ctx, &ec2.DeleteVolumeInput{
+				VolumeId: aws.String(d.Id()),
+			})
+		},
+		errCodeVolumeInUse)
+
+	if tfawserr.ErrCodeEquals(err, errCodeInvalidVolumeNotFound) {
+		return diags
+	}
+
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "deleting EBS Volume (%s): %s", d.Id(), err)
+	}
+
+	if _, err := WaitVolumeDeleted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for EBS Volume (%s) delete: %s", d.Id(), err)
+	}
+
+	return diags
 }
 
 func resourceEBSVolumeCustomizeDiff(_ context.Context, diff *schema.ResourceDiff, meta interface{}) error {
@@ -421,8 +364,8 @@ func resourceEBSVolumeCustomizeDiff(_ context.Context, diff *schema.ResourceDiff
 			}
 		}
 
-		// MultiAttachEnabled is supported with io1 volumes only.
-		if multiAttachEnabled && volumeType != ec2.VolumeTypeIo1 {
+		// MultiAttachEnabled is supported with io1 & io2 volumes only.
+		if multiAttachEnabled && volumeType != ec2.VolumeTypeIo1 && volumeType != ec2.VolumeTypeIo2 {
 			return fmt.Errorf("'multi_attach_enabled' must not be set when 'type' is '%s'", volumeType)
 		}
 
@@ -434,7 +377,7 @@ func resourceEBSVolumeCustomizeDiff(_ context.Context, diff *schema.ResourceDiff
 		// Update.
 
 		// Setting 'iops = 0' is a no-op if the volume type does not require Iops to be specified.
-		if diff.HasChange("iops") && volumeType != ec2.VolumeTypeIo1 && volumeType != ec2.VolumeTypeIo2 && iops == 0 {
+		if diff.HasChange("iops") && volumeType != ec2.VolumeTypeIo1 && volumeType != ec2.VolumeTypeIo2 && volumeType != ec2.VolumeTypeGp3 && iops == 0 {
 			return diff.Clear("iops")
 		}
 	}

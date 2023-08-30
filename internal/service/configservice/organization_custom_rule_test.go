@@ -1,37 +1,45 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package configservice_test
 
 import (
+	"context"
+	"errors"
 	"fmt"
-	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/service/configservice"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	tfconfig "github.com/hashicorp/terraform-provider-aws/internal/service/configservice"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	tfconfigservice "github.com/hashicorp/terraform-provider-aws/internal/service/configservice"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func testAccOrganizationCustomRule_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	var rule configservice.OrganizationConfigRule
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	lambdaFunctionResourceName := "aws_lambda_function.test"
 	resourceName := "aws_config_organization_custom_rule.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckOrganizationsAccount(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, configservice.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckOrganizationCustomRuleDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckOrganizationsAccount(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, configservice.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckOrganizationCustomRuleDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccOrganizationCustomRuleConfigTriggerTypes1(rName, "ConfigurationItemChangeNotification"),
+				Config: testAccOrganizationCustomRuleConfig_triggerTypes1(rName, "ConfigurationItemChangeNotification"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckOrganizationCustomRuleExists(resourceName, &rule),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "config", regexp.MustCompile(fmt.Sprintf("organization-config-rule/%s-.+", rName))),
+					testAccCheckOrganizationCustomRuleExists(ctx, resourceName, &rule),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "config", regexache.MustCompile(fmt.Sprintf("organization-config-rule/%s-.+", rName))),
 					resource.TestCheckResourceAttr(resourceName, "description", ""),
 					resource.TestCheckResourceAttr(resourceName, "excluded_accounts.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "input_parameters", ""),
@@ -55,21 +63,22 @@ func testAccOrganizationCustomRule_basic(t *testing.T) {
 }
 
 func testAccOrganizationCustomRule_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
 	var rule configservice.OrganizationConfigRule
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_config_organization_custom_rule.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckOrganizationsAccount(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, configservice.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckOrganizationCustomRuleDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckOrganizationsAccount(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, configservice.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckOrganizationCustomRuleDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccOrganizationCustomRuleConfigTriggerTypes1(rName, "ConfigurationItemChangeNotification"),
+				Config: testAccOrganizationCustomRuleConfig_triggerTypes1(rName, "ConfigurationItemChangeNotification"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckOrganizationCustomRuleExists(resourceName, &rule),
-					acctest.CheckResourceDisappears(acctest.Provider, tfconfig.ResourceOrganizationCustomRule(), resourceName),
+					testAccCheckOrganizationCustomRuleExists(ctx, resourceName, &rule),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfconfigservice.ResourceOrganizationCustomRule(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -78,37 +87,39 @@ func testAccOrganizationCustomRule_disappears(t *testing.T) {
 }
 
 func testAccOrganizationCustomRule_errorHandling(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckOrganizationsAccount(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, configservice.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckOrganizationCustomRuleDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckOrganizationsAccount(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, configservice.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckOrganizationCustomRuleDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccOrganizationCustomRuleConfigErrorHandling(rName),
-				ExpectError: regexp.MustCompile(`InsufficientPermission`),
+				Config:      testAccOrganizationCustomRuleConfig_errorHandling(rName),
+				ExpectError: regexache.MustCompile(`InsufficientPermission`),
 			},
 		},
 	})
 }
 
 func testAccOrganizationCustomRule_Description(t *testing.T) {
+	ctx := acctest.Context(t)
 	var rule configservice.OrganizationConfigRule
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_config_organization_custom_rule.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckOrganizationsAccount(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, configservice.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckOrganizationCustomRuleDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckOrganizationsAccount(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, configservice.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckOrganizationCustomRuleDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccOrganizationCustomRuleConfigDescription(rName, "description1"),
+				Config: testAccOrganizationCustomRuleConfig_description(rName, "description1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckOrganizationCustomRuleExists(resourceName, &rule),
+					testAccCheckOrganizationCustomRuleExists(ctx, resourceName, &rule),
 					resource.TestCheckResourceAttr(resourceName, "description", "description1"),
 				),
 			},
@@ -118,9 +129,9 @@ func testAccOrganizationCustomRule_Description(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccOrganizationCustomRuleConfigDescription(rName, "description2"),
+				Config: testAccOrganizationCustomRuleConfig_description(rName, "description2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckOrganizationCustomRuleExists(resourceName, &rule),
+					testAccCheckOrganizationCustomRuleExists(ctx, resourceName, &rule),
 					resource.TestCheckResourceAttr(resourceName, "description", "description2"),
 				),
 			},
@@ -129,20 +140,21 @@ func testAccOrganizationCustomRule_Description(t *testing.T) {
 }
 
 func testAccOrganizationCustomRule_ExcludedAccounts(t *testing.T) {
+	ctx := acctest.Context(t)
 	var rule configservice.OrganizationConfigRule
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_config_organization_custom_rule.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckOrganizationsAccount(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, configservice.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckOrganizationCustomRuleDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckOrganizationsAccount(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, configservice.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckOrganizationCustomRuleDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccOrganizationCustomRuleConfigExcludedAccounts1(rName),
+				Config: testAccOrganizationCustomRuleConfig_excludedAccounts1(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckOrganizationCustomRuleExists(resourceName, &rule),
+					testAccCheckOrganizationCustomRuleExists(ctx, resourceName, &rule),
 					resource.TestCheckResourceAttr(resourceName, "excluded_accounts.#", "1"),
 				),
 			},
@@ -152,9 +164,9 @@ func testAccOrganizationCustomRule_ExcludedAccounts(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccOrganizationCustomRuleConfigExcludedAccounts2(rName),
+				Config: testAccOrganizationCustomRuleConfig_excludedAccounts2(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckOrganizationCustomRuleExists(resourceName, &rule),
+					testAccCheckOrganizationCustomRuleExists(ctx, resourceName, &rule),
 					resource.TestCheckResourceAttr(resourceName, "excluded_accounts.#", "2"),
 				),
 			},
@@ -163,6 +175,7 @@ func testAccOrganizationCustomRule_ExcludedAccounts(t *testing.T) {
 }
 
 func testAccOrganizationCustomRule_InputParameters(t *testing.T) {
+	ctx := acctest.Context(t)
 	var rule configservice.OrganizationConfigRule
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_config_organization_custom_rule.test"
@@ -171,16 +184,16 @@ func testAccOrganizationCustomRule_InputParameters(t *testing.T) {
 	inputParameters2 := `{"tag1Key":"Department", "tag2Key":"Owner"}`
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckOrganizationsAccount(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, configservice.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckOrganizationCustomRuleDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckOrganizationsAccount(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, configservice.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckOrganizationCustomRuleDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccOrganizationCustomRuleConfigInputParameters(rName, inputParameters1),
+				Config: testAccOrganizationCustomRuleConfig_inputParameters(rName, inputParameters1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckOrganizationCustomRuleExists(resourceName, &rule),
-					resource.TestMatchResourceAttr(resourceName, "input_parameters", regexp.MustCompile(`CostCenter`)),
+					testAccCheckOrganizationCustomRuleExists(ctx, resourceName, &rule),
+					resource.TestMatchResourceAttr(resourceName, "input_parameters", regexache.MustCompile(`CostCenter`)),
 				),
 			},
 			{
@@ -189,17 +202,18 @@ func testAccOrganizationCustomRule_InputParameters(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccOrganizationCustomRuleConfigInputParameters(rName, inputParameters2),
+				Config: testAccOrganizationCustomRuleConfig_inputParameters(rName, inputParameters2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckOrganizationCustomRuleExists(resourceName, &rule),
-					resource.TestMatchResourceAttr(resourceName, "input_parameters", regexp.MustCompile(`Department`)),
+					testAccCheckOrganizationCustomRuleExists(ctx, resourceName, &rule),
+					resource.TestMatchResourceAttr(resourceName, "input_parameters", regexache.MustCompile(`Department`)),
 				),
 			},
 		},
 	})
 }
 
-func testAccOrganizationCustomRule_LambdaFunctionArn(t *testing.T) {
+func testAccOrganizationCustomRule_lambdaFunctionARN(t *testing.T) {
+	ctx := acctest.Context(t)
 	var rule configservice.OrganizationConfigRule
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	lambdaFunctionResourceName1 := "aws_lambda_function.test"
@@ -207,15 +221,15 @@ func testAccOrganizationCustomRule_LambdaFunctionArn(t *testing.T) {
 	resourceName := "aws_config_organization_custom_rule.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckOrganizationsAccount(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, configservice.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckOrganizationCustomRuleDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckOrganizationsAccount(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, configservice.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckOrganizationCustomRuleDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccOrganizationCustomRuleConfigLambdaFunctionArn1(rName),
+				Config: testAccOrganizationCustomRuleConfig_lambdaFunctionARN1(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckOrganizationCustomRuleExists(resourceName, &rule),
+					testAccCheckOrganizationCustomRuleExists(ctx, resourceName, &rule),
 					resource.TestCheckResourceAttrPair(resourceName, "lambda_function_arn", lambdaFunctionResourceName1, "arn"),
 				),
 			},
@@ -225,9 +239,9 @@ func testAccOrganizationCustomRule_LambdaFunctionArn(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccOrganizationCustomRuleConfigLambdaFunctionArn2(rName),
+				Config: testAccOrganizationCustomRuleConfig_lambdaFunctionARN2(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckOrganizationCustomRuleExists(resourceName, &rule),
+					testAccCheckOrganizationCustomRuleExists(ctx, resourceName, &rule),
 					resource.TestCheckResourceAttrPair(resourceName, "lambda_function_arn", lambdaFunctionResourceName2, "arn"),
 				),
 			},
@@ -236,20 +250,21 @@ func testAccOrganizationCustomRule_LambdaFunctionArn(t *testing.T) {
 }
 
 func testAccOrganizationCustomRule_MaximumExecutionFrequency(t *testing.T) {
+	ctx := acctest.Context(t)
 	var rule configservice.OrganizationConfigRule
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_config_organization_custom_rule.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckOrganizationsAccount(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, configservice.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckOrganizationCustomRuleDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckOrganizationsAccount(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, configservice.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckOrganizationCustomRuleDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccOrganizationCustomRuleConfigMaximumExecutionFrequency(rName, "One_Hour"),
+				Config: testAccOrganizationCustomRuleConfig_maximumExecutionFrequency(rName, "One_Hour"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckOrganizationCustomRuleExists(resourceName, &rule),
+					testAccCheckOrganizationCustomRuleExists(ctx, resourceName, &rule),
 					resource.TestCheckResourceAttr(resourceName, "maximum_execution_frequency", "One_Hour"),
 				),
 			},
@@ -259,9 +274,9 @@ func testAccOrganizationCustomRule_MaximumExecutionFrequency(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccOrganizationCustomRuleConfigMaximumExecutionFrequency(rName, "Three_Hours"),
+				Config: testAccOrganizationCustomRuleConfig_maximumExecutionFrequency(rName, "Three_Hours"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckOrganizationCustomRuleExists(resourceName, &rule),
+					testAccCheckOrganizationCustomRuleExists(ctx, resourceName, &rule),
 					resource.TestCheckResourceAttr(resourceName, "maximum_execution_frequency", "Three_Hours"),
 				),
 			},
@@ -270,20 +285,21 @@ func testAccOrganizationCustomRule_MaximumExecutionFrequency(t *testing.T) {
 }
 
 func testAccOrganizationCustomRule_ResourceIdScope(t *testing.T) {
+	ctx := acctest.Context(t)
 	var rule configservice.OrganizationConfigRule
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_config_organization_custom_rule.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckOrganizationsAccount(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, configservice.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckOrganizationCustomRuleDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckOrganizationsAccount(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, configservice.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckOrganizationCustomRuleDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccOrganizationCustomRuleConfigResourceIdScope(rName, "i-12345678"),
+				Config: testAccOrganizationCustomRuleConfig_resourceIdScope(rName, "i-12345678"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckOrganizationCustomRuleExists(resourceName, &rule),
+					testAccCheckOrganizationCustomRuleExists(ctx, resourceName, &rule),
 					resource.TestCheckResourceAttr(resourceName, "resource_id_scope", "i-12345678"),
 				),
 			},
@@ -293,9 +309,9 @@ func testAccOrganizationCustomRule_ResourceIdScope(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccOrganizationCustomRuleConfigResourceIdScope(rName, "i-87654321"),
+				Config: testAccOrganizationCustomRuleConfig_resourceIdScope(rName, "i-87654321"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckOrganizationCustomRuleExists(resourceName, &rule),
+					testAccCheckOrganizationCustomRuleExists(ctx, resourceName, &rule),
 					resource.TestCheckResourceAttr(resourceName, "resource_id_scope", "i-87654321"),
 				),
 			},
@@ -304,20 +320,21 @@ func testAccOrganizationCustomRule_ResourceIdScope(t *testing.T) {
 }
 
 func testAccOrganizationCustomRule_ResourceTypesScope(t *testing.T) {
+	ctx := acctest.Context(t)
 	var rule configservice.OrganizationConfigRule
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_config_organization_custom_rule.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckOrganizationsAccount(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, configservice.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckOrganizationCustomRuleDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckOrganizationsAccount(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, configservice.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckOrganizationCustomRuleDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccOrganizationCustomRuleConfigResourceTypesScope1(rName),
+				Config: testAccOrganizationCustomRuleConfig_resourceTypesScope1(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckOrganizationCustomRuleExists(resourceName, &rule),
+					testAccCheckOrganizationCustomRuleExists(ctx, resourceName, &rule),
 					resource.TestCheckResourceAttr(resourceName, "resource_types_scope.#", "1"),
 				),
 			},
@@ -327,9 +344,9 @@ func testAccOrganizationCustomRule_ResourceTypesScope(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccOrganizationCustomRuleConfigResourceTypesScope2(rName),
+				Config: testAccOrganizationCustomRuleConfig_resourceTypesScope2(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckOrganizationCustomRuleExists(resourceName, &rule),
+					testAccCheckOrganizationCustomRuleExists(ctx, resourceName, &rule),
 					resource.TestCheckResourceAttr(resourceName, "resource_types_scope.#", "2"),
 				),
 			},
@@ -338,20 +355,21 @@ func testAccOrganizationCustomRule_ResourceTypesScope(t *testing.T) {
 }
 
 func testAccOrganizationCustomRule_TagKeyScope(t *testing.T) {
+	ctx := acctest.Context(t)
 	var rule configservice.OrganizationConfigRule
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_config_organization_custom_rule.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckOrganizationsAccount(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, configservice.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckOrganizationCustomRuleDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckOrganizationsAccount(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, configservice.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckOrganizationCustomRuleDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccOrganizationCustomRuleConfigTagKeyScope(rName, "key1"),
+				Config: testAccOrganizationCustomRuleConfig_tagKeyScope(rName, "key1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckOrganizationCustomRuleExists(resourceName, &rule),
+					testAccCheckOrganizationCustomRuleExists(ctx, resourceName, &rule),
 					resource.TestCheckResourceAttr(resourceName, "tag_key_scope", "key1"),
 				),
 			},
@@ -361,9 +379,9 @@ func testAccOrganizationCustomRule_TagKeyScope(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccOrganizationCustomRuleConfigTagKeyScope(rName, "key2"),
+				Config: testAccOrganizationCustomRuleConfig_tagKeyScope(rName, "key2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckOrganizationCustomRuleExists(resourceName, &rule),
+					testAccCheckOrganizationCustomRuleExists(ctx, resourceName, &rule),
 					resource.TestCheckResourceAttr(resourceName, "tag_key_scope", "key2"),
 				),
 			},
@@ -372,20 +390,21 @@ func testAccOrganizationCustomRule_TagKeyScope(t *testing.T) {
 }
 
 func testAccOrganizationCustomRule_TagValueScope(t *testing.T) {
+	ctx := acctest.Context(t)
 	var rule configservice.OrganizationConfigRule
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_config_organization_custom_rule.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckOrganizationsAccount(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, configservice.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckOrganizationCustomRuleDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckOrganizationsAccount(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, configservice.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckOrganizationCustomRuleDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccOrganizationCustomRuleConfigTagValueScope(rName, "value1"),
+				Config: testAccOrganizationCustomRuleConfig_tagValueScope(rName, "value1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckOrganizationCustomRuleExists(resourceName, &rule),
+					testAccCheckOrganizationCustomRuleExists(ctx, resourceName, &rule),
 					resource.TestCheckResourceAttr(resourceName, "tag_value_scope", "value1"),
 				),
 			},
@@ -395,9 +414,9 @@ func testAccOrganizationCustomRule_TagValueScope(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccOrganizationCustomRuleConfigTagValueScope(rName, "value2"),
+				Config: testAccOrganizationCustomRuleConfig_tagValueScope(rName, "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckOrganizationCustomRuleExists(resourceName, &rule),
+					testAccCheckOrganizationCustomRuleExists(ctx, resourceName, &rule),
 					resource.TestCheckResourceAttr(resourceName, "tag_value_scope", "value2"),
 				),
 			},
@@ -406,20 +425,21 @@ func testAccOrganizationCustomRule_TagValueScope(t *testing.T) {
 }
 
 func testAccOrganizationCustomRule_TriggerTypes(t *testing.T) {
+	ctx := acctest.Context(t)
 	var rule configservice.OrganizationConfigRule
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_config_organization_custom_rule.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckOrganizationsAccount(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, configservice.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckOrganizationCustomRuleDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckOrganizationsAccount(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, configservice.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckOrganizationCustomRuleDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccOrganizationCustomRuleConfigTriggerTypes1(rName, "ScheduledNotification"),
+				Config: testAccOrganizationCustomRuleConfig_triggerTypes1(rName, "ScheduledNotification"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckOrganizationCustomRuleExists(resourceName, &rule),
+					testAccCheckOrganizationCustomRuleExists(ctx, resourceName, &rule),
 					resource.TestCheckResourceAttr(resourceName, "trigger_types.#", "1"),
 				),
 			},
@@ -429,9 +449,9 @@ func testAccOrganizationCustomRule_TriggerTypes(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccOrganizationCustomRuleConfigTriggerTypes2(rName, "ConfigurationItemChangeNotification", "OversizedConfigurationItemChangeNotification"),
+				Config: testAccOrganizationCustomRuleConfig_triggerTypes2(rName, "ConfigurationItemChangeNotification", "OversizedConfigurationItemChangeNotification"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckOrganizationCustomRuleExists(resourceName, &rule),
+					testAccCheckOrganizationCustomRuleExists(ctx, resourceName, &rule),
 					resource.TestCheckResourceAttr(resourceName, "trigger_types.#", "2"),
 				),
 			},
@@ -439,23 +459,23 @@ func testAccOrganizationCustomRule_TriggerTypes(t *testing.T) {
 	})
 }
 
-func testAccCheckOrganizationCustomRuleExists(resourceName string, ocr *configservice.OrganizationConfigRule) resource.TestCheckFunc {
+func testAccCheckOrganizationCustomRuleExists(ctx context.Context, resourceName string, ocr *configservice.OrganizationConfigRule) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resourceName]
 		if !ok {
-			return fmt.Errorf("Not Found: %s", resourceName)
+			return create.Error(names.ConfigService, create.ErrActionCheckingExistence, tfconfigservice.ResNameOrganizationCustomRule, resourceName, errors.New("not found"))
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ConfigServiceConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ConfigServiceConn(ctx)
 
-		rule, err := tfconfig.DescribeOrganizationConfigRule(conn, rs.Primary.ID)
+		rule, err := tfconfigservice.DescribeOrganizationConfigRule(ctx, conn, rs.Primary.ID)
 
 		if err != nil {
-			return fmt.Errorf("error describing Config Organization Managed Rule (%s): %s", rs.Primary.ID, err)
+			return create.Error(names.ConfigService, create.ErrActionCheckingExistence, tfconfigservice.ResNameOrganizationCustomRule, resourceName, err)
 		}
 
 		if rule == nil {
-			return fmt.Errorf("Config Organization Managed Rule (%s) not found", rs.Primary.ID)
+			return create.Error(names.ConfigService, create.ErrActionCheckingExistence, tfconfigservice.ResNameOrganizationCustomRule, resourceName, errors.New("empty response"))
 		}
 
 		*ocr = *rule
@@ -464,30 +484,32 @@ func testAccCheckOrganizationCustomRuleExists(resourceName string, ocr *configse
 	}
 }
 
-func testAccCheckOrganizationCustomRuleDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).ConfigServiceConn
+func testAccCheckOrganizationCustomRuleDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ConfigServiceConn(ctx)
 
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_config_organization_custom_rule" {
-			continue
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_config_organization_custom_rule" {
+				continue
+			}
+
+			rule, err := tfconfigservice.DescribeOrganizationConfigRule(ctx, conn, rs.Primary.ID)
+
+			if tfawserr.ErrCodeEquals(err, configservice.ErrCodeNoSuchOrganizationConfigRuleException) {
+				continue
+			}
+
+			if err != nil {
+				return create.Error(names.ConfigService, create.ErrActionCheckingDestroyed, tfconfigservice.ResNameOrganizationCustomRule, rs.Primary.ID, err)
+			}
+
+			if rule != nil {
+				return create.Error(names.ConfigService, create.ErrActionCheckingDestroyed, tfconfigservice.ResNameOrganizationCustomRule, rs.Primary.ID, errors.New("still exists"))
+			}
 		}
 
-		rule, err := tfconfig.DescribeOrganizationConfigRule(conn, rs.Primary.ID)
-
-		if tfawserr.ErrCodeEquals(err, configservice.ErrCodeNoSuchOrganizationConfigRuleException) {
-			continue
-		}
-
-		if err != nil {
-			return fmt.Errorf("error describing Config Organization Managed Rule (%s): %s", rs.Primary.ID, err)
-		}
-
-		if rule != nil {
-			return fmt.Errorf("Config Organization Managed Rule (%s) still exists", rs.Primary.ID)
-		}
+		return nil
 	}
-
-	return nil
 }
 
 func testAccOrganizationCustomRuleConfigBase(rName string) string {
@@ -523,7 +545,7 @@ POLICY
 }
 
 resource "aws_iam_role_policy_attachment" "config" {
-  policy_arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/service-role/AWSConfigRole"
+  policy_arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/service-role/AWS_ConfigRole"
   role       = aws_iam_role.config.name
 }
 
@@ -557,7 +579,7 @@ resource "aws_lambda_function" "test" {
   function_name = %[1]q
   role          = aws_iam_role.lambda.arn
   handler       = "exports.example"
-  runtime       = "nodejs12.x"
+  runtime       = "nodejs16.x"
 }
 
 resource "aws_lambda_permission" "test" {
@@ -574,7 +596,7 @@ resource "aws_organizations_organization" "test" {
 `, rName)
 }
 
-func testAccOrganizationCustomRuleConfigDescription(rName, description string) string {
+func testAccOrganizationCustomRuleConfig_description(rName, description string) string {
 	return testAccOrganizationCustomRuleConfigBase(rName) + fmt.Sprintf(`
 resource "aws_config_organization_custom_rule" "test" {
   depends_on = [aws_config_configuration_recorder.test, aws_lambda_permission.test, aws_organizations_organization.test]
@@ -587,7 +609,7 @@ resource "aws_config_organization_custom_rule" "test" {
 `, rName, description)
 }
 
-func testAccOrganizationCustomRuleConfigErrorHandling(rName string) string {
+func testAccOrganizationCustomRuleConfig_errorHandling(rName string) string {
 	return fmt.Sprintf(`
 data "aws_partition" "current" {
 }
@@ -622,7 +644,7 @@ resource "aws_lambda_function" "test" {
   function_name = %[1]q
   role          = aws_iam_role.lambda.arn
   handler       = "exports.example"
-  runtime       = "nodejs12.x"
+  runtime       = "nodejs16.x"
 }
 
 resource "aws_organizations_organization" "test" {
@@ -640,7 +662,7 @@ resource "aws_config_organization_custom_rule" "test" {
 `, rName)
 }
 
-func testAccOrganizationCustomRuleConfigExcludedAccounts1(rName string) string {
+func testAccOrganizationCustomRuleConfig_excludedAccounts1(rName string) string {
 	return testAccOrganizationCustomRuleConfigBase(rName) + fmt.Sprintf(`
 resource "aws_config_organization_custom_rule" "test" {
   depends_on = [aws_config_configuration_recorder.test, aws_lambda_permission.test, aws_organizations_organization.test]
@@ -653,7 +675,7 @@ resource "aws_config_organization_custom_rule" "test" {
 `, rName)
 }
 
-func testAccOrganizationCustomRuleConfigExcludedAccounts2(rName string) string {
+func testAccOrganizationCustomRuleConfig_excludedAccounts2(rName string) string {
 	return testAccOrganizationCustomRuleConfigBase(rName) + fmt.Sprintf(`
 resource "aws_config_organization_custom_rule" "test" {
   depends_on = [aws_config_configuration_recorder.test, aws_lambda_permission.test, aws_organizations_organization.test]
@@ -666,7 +688,7 @@ resource "aws_config_organization_custom_rule" "test" {
 `, rName)
 }
 
-func testAccOrganizationCustomRuleConfigInputParameters(rName, inputParameters string) string {
+func testAccOrganizationCustomRuleConfig_inputParameters(rName, inputParameters string) string {
 	return testAccOrganizationCustomRuleConfigBase(rName) + fmt.Sprintf(`
 resource "aws_config_organization_custom_rule" "test" {
   depends_on = [aws_config_configuration_recorder.test, aws_lambda_permission.test, aws_organizations_organization.test]
@@ -682,7 +704,7 @@ PARAMS
 `, rName, inputParameters)
 }
 
-func testAccOrganizationCustomRuleConfigLambdaFunctionArn1(rName string) string {
+func testAccOrganizationCustomRuleConfig_lambdaFunctionARN1(rName string) string {
 	return testAccOrganizationCustomRuleConfigBase(rName) + fmt.Sprintf(`
 resource "aws_config_organization_custom_rule" "test" {
   depends_on = [aws_config_configuration_recorder.test, aws_lambda_permission.test, aws_organizations_organization.test]
@@ -694,14 +716,14 @@ resource "aws_config_organization_custom_rule" "test" {
 `, rName)
 }
 
-func testAccOrganizationCustomRuleConfigLambdaFunctionArn2(rName string) string {
+func testAccOrganizationCustomRuleConfig_lambdaFunctionARN2(rName string) string {
 	return testAccOrganizationCustomRuleConfigBase(rName) + fmt.Sprintf(`
 resource "aws_lambda_function" "test2" {
   filename      = "test-fixtures/lambdatest.zip"
   function_name = "%[1]s2"
   role          = aws_iam_role.lambda.arn
   handler       = "exports.example"
-  runtime       = "nodejs12.x"
+  runtime       = "nodejs16.x"
 }
 
 resource "aws_lambda_permission" "test2" {
@@ -721,7 +743,7 @@ resource "aws_config_organization_custom_rule" "test" {
 `, rName)
 }
 
-func testAccOrganizationCustomRuleConfigMaximumExecutionFrequency(rName, maximumExecutionFrequency string) string {
+func testAccOrganizationCustomRuleConfig_maximumExecutionFrequency(rName, maximumExecutionFrequency string) string {
 	return testAccOrganizationCustomRuleConfigBase(rName) + fmt.Sprintf(`
 resource "aws_config_organization_custom_rule" "test" {
   depends_on = [aws_config_configuration_recorder.test, aws_lambda_permission.test, aws_organizations_organization.test]
@@ -734,7 +756,7 @@ resource "aws_config_organization_custom_rule" "test" {
 `, rName, maximumExecutionFrequency)
 }
 
-func testAccOrganizationCustomRuleConfigResourceIdScope(rName, resourceIdScope string) string {
+func testAccOrganizationCustomRuleConfig_resourceIdScope(rName, resourceIdScope string) string {
 	return testAccOrganizationCustomRuleConfigBase(rName) + fmt.Sprintf(`
 resource "aws_config_organization_custom_rule" "test" {
   depends_on = [aws_config_configuration_recorder.test, aws_lambda_permission.test, aws_organizations_organization.test]
@@ -748,7 +770,7 @@ resource "aws_config_organization_custom_rule" "test" {
 `, rName, resourceIdScope)
 }
 
-func testAccOrganizationCustomRuleConfigResourceTypesScope1(rName string) string {
+func testAccOrganizationCustomRuleConfig_resourceTypesScope1(rName string) string {
 	return testAccOrganizationCustomRuleConfigBase(rName) + fmt.Sprintf(`
 resource "aws_config_organization_custom_rule" "test" {
   depends_on = [aws_config_configuration_recorder.test, aws_lambda_permission.test, aws_organizations_organization.test]
@@ -761,7 +783,7 @@ resource "aws_config_organization_custom_rule" "test" {
 `, rName)
 }
 
-func testAccOrganizationCustomRuleConfigResourceTypesScope2(rName string) string {
+func testAccOrganizationCustomRuleConfig_resourceTypesScope2(rName string) string {
 	return testAccOrganizationCustomRuleConfigBase(rName) + fmt.Sprintf(`
 resource "aws_config_organization_custom_rule" "test" {
   depends_on = [aws_config_configuration_recorder.test, aws_lambda_permission.test, aws_organizations_organization.test]
@@ -774,7 +796,7 @@ resource "aws_config_organization_custom_rule" "test" {
 `, rName)
 }
 
-func testAccOrganizationCustomRuleConfigTagKeyScope(rName, tagKeyScope string) string {
+func testAccOrganizationCustomRuleConfig_tagKeyScope(rName, tagKeyScope string) string {
 	return testAccOrganizationCustomRuleConfigBase(rName) + fmt.Sprintf(`
 resource "aws_config_organization_custom_rule" "test" {
   depends_on = [aws_config_configuration_recorder.test, aws_lambda_permission.test, aws_organizations_organization.test]
@@ -787,7 +809,7 @@ resource "aws_config_organization_custom_rule" "test" {
 `, rName, tagKeyScope)
 }
 
-func testAccOrganizationCustomRuleConfigTagValueScope(rName, tagValueScope string) string {
+func testAccOrganizationCustomRuleConfig_tagValueScope(rName, tagValueScope string) string {
 	return testAccOrganizationCustomRuleConfigBase(rName) + fmt.Sprintf(`
 resource "aws_config_organization_custom_rule" "test" {
   depends_on = [aws_config_configuration_recorder.test, aws_lambda_permission.test, aws_organizations_organization.test]
@@ -801,7 +823,7 @@ resource "aws_config_organization_custom_rule" "test" {
 `, rName, tagValueScope)
 }
 
-func testAccOrganizationCustomRuleConfigTriggerTypes1(rName, triggerType1 string) string {
+func testAccOrganizationCustomRuleConfig_triggerTypes1(rName, triggerType1 string) string {
 	return testAccOrganizationCustomRuleConfigBase(rName) + fmt.Sprintf(`
 resource "aws_config_organization_custom_rule" "test" {
   depends_on = [aws_config_configuration_recorder.test, aws_lambda_permission.test, aws_organizations_organization.test]
@@ -813,7 +835,7 @@ resource "aws_config_organization_custom_rule" "test" {
 `, rName, triggerType1)
 }
 
-func testAccOrganizationCustomRuleConfigTriggerTypes2(rName, triggerType1, triggerType2 string) string {
+func testAccOrganizationCustomRuleConfig_triggerTypes2(rName, triggerType1, triggerType2 string) string {
 	return testAccOrganizationCustomRuleConfigBase(rName) + fmt.Sprintf(`
 resource "aws_config_organization_custom_rule" "test" {
   depends_on = [aws_config_configuration_recorder.test, aws_lambda_permission.test, aws_organizations_organization.test]

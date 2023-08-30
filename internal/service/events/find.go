@@ -1,23 +1,28 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package events
 
 import (
-	"fmt"
+	"context"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/eventbridge"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func FindConnectionByName(conn *eventbridge.EventBridge, name string) (*eventbridge.DescribeConnectionOutput, error) {
+func FindConnectionByName(ctx context.Context, conn *eventbridge.EventBridge, name string) (*eventbridge.DescribeConnectionOutput, error) {
 	input := &eventbridge.DescribeConnectionInput{
 		Name: aws.String(name),
 	}
 
-	output, err := conn.DescribeConnection(input)
+	output, err := conn.DescribeConnectionWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, eventbridge.ErrCodeResourceNotFoundException) {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -28,79 +33,53 @@ func FindConnectionByName(conn *eventbridge.EventBridge, name string) (*eventbri
 	}
 
 	if output == nil {
-		return nil, &resource.NotFoundError{
-			Message:     "Empty result",
-			LastRequest: input,
-		}
+		return nil, tfresource.NewEmptyResultError(input)
 	}
 
 	return output, nil
 }
 
-func FindRuleByEventBusAndRuleNames(conn *eventbridge.EventBridge, eventBusName, ruleName string) (*eventbridge.DescribeRuleOutput, error) {
-	input := eventbridge.DescribeRuleInput{
-		Name: aws.String(ruleName),
+func FindTargetByThreePartKey(ctx context.Context, conn *eventbridge.EventBridge, busName, ruleName, targetID string) (*eventbridge.Target, error) {
+	input := &eventbridge.ListTargetsByRuleInput{
+		Rule:  aws.String(ruleName),
+		Limit: aws.Int64(100), // Set limit to allowed maximum to prevent API throttling
 	}
 
-	if eventBusName != "" {
-		input.EventBusName = aws.String(eventBusName)
+	if busName != "" {
+		input.EventBusName = aws.String(busName)
 	}
 
-	output, err := conn.DescribeRule(&input)
+	var output *eventbridge.Target
 
-	if tfawserr.ErrCodeEquals(err, eventbridge.ErrCodeResourceNotFoundException) {
-		return nil, &resource.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
-		}
-	}
-
-	if err != nil {
-		return nil, err
-	}
-
-	if output == nil {
-		return nil, &resource.NotFoundError{
-			Message:     "Empty result",
-			LastRequest: input,
-		}
-	}
-
-	return output, nil
-}
-
-func FindRuleByResourceID(conn *eventbridge.EventBridge, id string) (*eventbridge.DescribeRuleOutput, error) {
-	eventBusName, ruleName, err := RuleParseResourceID(id)
-
-	if err != nil {
-		return nil, err
-	}
-
-	return FindRuleByEventBusAndRuleNames(conn, eventBusName, ruleName)
-}
-
-func FindTarget(conn *eventbridge.EventBridge, busName, ruleName, targetId string) (*eventbridge.Target, error) {
-	var result *eventbridge.Target
-	err := ListAllTargetsForRulePages(conn, busName, ruleName, func(page *eventbridge.ListTargetsByRuleOutput, lastPage bool) bool {
+	err := listTargetsByRulePages(ctx, conn, input, func(page *eventbridge.ListTargetsByRuleOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
 
-		for _, t := range page.Targets {
-			if targetId == aws.StringValue(t.Id) {
-				result = t
+		for _, v := range page.Targets {
+			if targetID == aws.StringValue(v.Id) {
+				output = v
 				return false
 			}
 		}
 
 		return !lastPage
 	})
+
+	if tfawserr.ErrCodeEquals(err, "ValidationException", eventbridge.ErrCodeResourceNotFoundException) || (err != nil && regexache.MustCompile(" not found$").MatchString(err.Error())) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
 	if err != nil {
 		return nil, err
 	}
 
-	if result == nil {
-		return nil, fmt.Errorf("EventBridge FindTarget %q (\"%s/%s\") not found", targetId, busName, ruleName)
+	if output == nil {
+		return nil, &retry.NotFoundError{}
 	}
-	return result, nil
+
+	return output, nil
 }
