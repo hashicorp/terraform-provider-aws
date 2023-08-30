@@ -5,7 +5,6 @@ package flex_test
 
 import (
 	"context"
-	"strings"
 	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -123,42 +122,6 @@ func TestStringToFrameworkLegacy(t *testing.T) {
 			t.Parallel()
 
 			got := flex.StringToFrameworkLegacy(context.Background(), test.input)
-
-			if diff := cmp.Diff(got, test.expected); diff != "" {
-				t.Errorf("unexpected diff (+wanted, -got): %s", diff)
-			}
-		})
-	}
-}
-
-func TestStringToFrameworkWithTransform(t *testing.T) {
-	t.Parallel()
-
-	type testCase struct {
-		input    *string
-		expected types.String
-	}
-	tests := map[string]testCase{
-		"valid string": {
-			input:    aws.String("TEST"),
-			expected: types.StringValue("test"),
-		},
-		"empty string": {
-			input:    aws.String(""),
-			expected: types.StringValue(""),
-		},
-		"nil string": {
-			input:    nil,
-			expected: types.StringNull(),
-		},
-	}
-
-	for name, test := range tests {
-		name, test := name, test
-		t.Run(name, func(t *testing.T) {
-			t.Parallel()
-
-			got := flex.StringToFrameworkWithTransform(context.Background(), test.input, strings.ToLower)
 
 			if diff := cmp.Diff(got, test.expected); diff != "" {
 				t.Errorf("unexpected diff (+wanted, -got): %s", diff)
