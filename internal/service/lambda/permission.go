@@ -394,13 +394,7 @@ func resourcePermissionImport(ctx context.Context, d *schema.ResourceData, meta 
 	statementId := idParts[1]
 	log.Printf("[DEBUG] Importing Lambda Permission %s for function name %s", statementId, functionName)
 
-	conn := meta.(*conns.AWSClient).LambdaConn(ctx)
-	getFunctionOutput, err := conn.GetFunctionWithContext(ctx, input)
-	if err != nil {
-		return nil, err
-	}
-
-	d.Set("function_name", getFunctionOutput.Configuration.FunctionArn)
+	d.Set("function_name", functionName)
 	d.Set("statement_id", statementId)
 	if qualifier != "" {
 		d.Set("qualifier", qualifier)
