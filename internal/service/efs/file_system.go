@@ -157,14 +157,13 @@ func ResourceFileSystem() *schema.Resource {
 func resourceFileSystemCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).EFSConn(ctx)
 
-	creationToken := ""
+	var creationToken string
 	if v, ok := d.GetOk("creation_token"); ok {
 		creationToken = v.(string)
 	} else {
 		creationToken = id.UniqueId()
 	}
 	throughputMode := d.Get("throughput_mode").(string)
-
 	input := &efs.CreateFileSystemInput{
 		CreationToken:  aws.String(creationToken),
 		Tags:           getTagsIn(ctx),
@@ -251,13 +250,12 @@ func resourceFileSystemRead(ctx context.Context, d *schema.ResourceData, meta in
 	d.Set("owner_id", fs.OwnerId)
 	d.Set("performance_mode", fs.PerformanceMode)
 	d.Set("provisioned_throughput_in_mibps", fs.ProvisionedThroughputInMibps)
-	d.Set("throughput_mode", fs.ThroughputMode)
-
-	setTagsOut(ctx, fs.Tags)
-
 	if err := d.Set("size_in_bytes", flattenFileSystemSizeInBytes(fs.SizeInBytes)); err != nil {
 		return diag.Errorf("setting size_in_bytes: %s", err)
 	}
+	d.Set("throughput_mode", fs.ThroughputMode)
+
+	setTagsOut(ctx, fs.Tags)
 
 	output, err := conn.DescribeLifecycleConfigurationWithContext(ctx, &efs.DescribeLifecycleConfigurationInput{
 		FileSystemId: aws.String(d.Id()),
@@ -279,7 +277,6 @@ func resourceFileSystemUpdate(ctx context.Context, d *schema.ResourceData, meta 
 
 	if d.HasChanges("provisioned_throughput_in_mibps", "throughput_mode") {
 		throughputMode := d.Get("throughput_mode").(string)
-
 		input := &efs.UpdateFileSystemInput{
 			FileSystemId:   aws.String(d.Id()),
 			ThroughputMode: aws.String(throughputMode),
