@@ -541,7 +541,7 @@ func resourceWindowsFileSystemDelete(ctx context.Context, d *schema.ResourceData
 		},
 	}
 
-	log.Printf("[DEBUG] Deleting FSx Windows File System: %s", d.Id())
+	log.Printf("[DEBUG] Deleting FSx for Windows File Server File System: %s", d.Id())
 	_, err := conn.DeleteFileSystemWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, fsx.ErrCodeFileSystemNotFound) {
@@ -549,11 +549,11 @@ func resourceWindowsFileSystemDelete(ctx context.Context, d *schema.ResourceData
 	}
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "deleting FSx Windows File System (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting FSx for Windows File Server File System (%s): %s", d.Id(), err)
 	}
 
 	if _, err := waitFileSystemDeleted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "waiting for FSx Windows File System (%s) delete: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for FSx for Windows File Server File System (%s) delete: %s", d.Id(), err)
 	}
 
 	return diags
