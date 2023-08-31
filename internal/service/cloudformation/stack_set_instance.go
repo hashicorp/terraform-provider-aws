@@ -33,7 +33,7 @@ func ResourceStackSetInstance() *schema.Resource {
 		DeleteWithoutTimeout: resourceStackSetInstanceDelete,
 
 		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
+			StateContext: resourceStackSetInstanceImport,
 		},
 
 		Timeouts: &schema.ResourceTimeout{
@@ -133,16 +133,16 @@ func ResourceStackSetInstance() *schema.Resource {
 				Optional: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"retain_stack": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-			},
 			"region": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
+			},
+			"retain_stack": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
 			},
 			"stack_id": {
 				Type:     schema.TypeString,
@@ -453,6 +453,38 @@ func resourceStackSetInstanceDelete(ctx context.Context, d *schema.ResourceData,
 	}
 
 	return diags
+}
+
+func resourceStackSetInstanceImport(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+	switch parts := strings.Split(d.Id(), stackSetInstanceResourceIDSeparator); len(parts) {
+	case 3:
+	case 4:
+		d.SetId(strings.Join([]string{parts[0], parts[1], parts[2]}, stackSetInstanceResourceIDSeparator))
+		d.Set("call_as", parts[3])
+	default:
+		return []*schema.ResourceData{}, fmt.Errorf("unexpected format for import ID (%[1]s), use: STACKSETNAME%[2]sACCOUNTID%[2]sREGION or STACKSETNAME%[2]sACCOUNTID%[2]sREGION%[2]sCALLAS", d.Id(), stackSetInstanceResourceIDSeparator)
+	}
+
+	return []*schema.ResourceData{d}, nil
+}
+
+const stackSetInstanceResourceIDSeparator = ","
+
+func StackSetInstanceCreateResourceID(stackSetName, accountID, region string) string {
+	parts := []string{stackSetName, accountID, region}
+	id := strings.Join(parts, stackSetInstanceResourceIDSeparator)
+
+	return id
+}
+
+func StackSetInstanceParseResourceID(id string) (string, string, string, error) {
+	parts := strings.Split(id, stackSetInstanceResourceIDSeparator)
+
+	if len(parts) == 3 && parts[0] != "" && parts[1] != "" && parts[2] != "" {
+		return parts[0], parts[1], parts[2], nil
+	}
+
+	return "", "", "", fmt.Errorf("unexpected format for ID (%[1]s), expected STACKSETNAME%[2]sACCOUNTID%[2]sREGION", id, stackSetInstanceResourceIDSeparator)
 }
 
 func expandDeploymentTargets(tfList []interface{}) *cloudformation.DeploymentTargets {

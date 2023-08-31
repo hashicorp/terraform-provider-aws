@@ -5,3 +5,7 @@ resource/aws_cloudformation_stack_set: Fix `Can only set RetainStacksOnAccountRe
 ```release-note:enhancement
 resource/aws_cloudformation_stack_set: Support resource import with `call_as = "DELEGATED_ADMIN"` via _<StackSetName>_/_<CallAs>_ syntax for `import` block or `terraform import` command
 ```
+
+```release-note:enhancement
+resource/aws_cloudformation_stack_set_instance: Support resource import with `call_as = "DELEGATED_ADMIN"` via _<StackSetName>_,_<AccountID>_,_<Region>_,_<CallAs>_ syntax for `import` block or `terraform import` command
+```
