@@ -22,8 +22,8 @@ github.com/apparentlymart/go-textseg/v13 v13.0.0/go.mod h1:ZK2fH7c4NqDTLtiYLvIkE
 github.com/armon/go-radix v0.0.0-20180808171621-7fddfc383310/go.mod h1:ufUuZ+zHj4x4TnLV4JWEpy2hxWSpsRywHrMgIH9cCH8=
 github.com/armon/go-radix v1.0.0 h1:F4z6KzEeeQIMeLFa97iZU6vupzoecKdU5TX24SNppXI=
 github.com/armon/go-radix v1.0.0/go.mod h1:ufUuZ+zHj4x4TnLV4JWEpy2hxWSpsRywHrMgIH9cCH8=
-github.com/aws/aws-sdk-go v1.44.334 h1:h2bdbGb//fez6Sv6PaYv868s9liDeoYM6hYsAqTB4MU=
-github.com/aws/aws-sdk-go v1.44.334/go.mod h1:aVsgQcEevwlmQ7qHE9I3h+dtQgpqhFB+i8Phjh7fkwI=
+github.com/aws/aws-sdk-go v1.45.0 h1:qoVOQHuLacxJMO71T49KeE70zm+Tk3vtrl7XO4VUPZc=
+github.com/aws/aws-sdk-go v1.45.0/go.mod h1:aVsgQcEevwlmQ7qHE9I3h+dtQgpqhFB+i8Phjh7fkwI=
 github.com/aws/aws-sdk-go-v2 v1.20.1/go.mod h1:NU06lETsFm8fUC6ZjhgDpVBcGZTFQ6XM+LZWZxMI4ac=
 github.com/aws/aws-sdk-go-v2 v1.21.0 h1:gMT0IW+03wtYJhRqTVYn0wLzwdnK9sRMcxmtfGzRdJc=
 github.com/aws/aws-sdk-go-v2 v1.21.0/go.mod h1:/RfNgGmRxI+iFOB1OeJUyxiU+9s88k3pfHvDagGEp0M=
@@ -54,8 +54,8 @@ github.com/aws/aws-sdk-go-v2/service/appconfig v1.18.5 h1:3SgSsuDoJ4I0DL+jBG4/2N
 github.com/aws/aws-sdk-go-v2/service/appconfig v1.18.5/go.mod h1:zk3+CYtLFK+Yo83oc+rARhvajxgM3rmxPRmoFpHTsNw=
 github.com/aws/aws-sdk-go-v2/service/auditmanager v1.26.5 h1:nAZnFygNPs3I3LR9AR7rud21ESTiTTHXuLQ4KW4tO+0=
 github.com/aws/aws-sdk-go-v2/service/auditmanager v1.26.5/go.mod h1:EwlbwoKCPpH81bmlIVk6XD91fh9fF7CKQlp8uxlndXE=
-github.com/aws/aws-sdk-go-v2/service/cleanrooms v1.3.5 h1:zHP6cVTySf0GF0IGflLeYYKCGZ6wT/SJUF8Iv4ZUz+0=
-github.com/aws/aws-sdk-go-v2/service/cleanrooms v1.3.5/go.mod h1:MrKI9BOSn2qulUfYxligb7ZKrYB1FtxjP5kcK3VxFoY=
+github.com/aws/aws-sdk-go-v2/service/cleanrooms v1.4.0 h1:wDRpDU1x+xSKfezFyMUA96wzwXDVN/TbBKr6EED6Muo=
+github.com/aws/aws-sdk-go-v2/service/cleanrooms v1.4.0/go.mod h1:MrKI9BOSn2qulUfYxligb7ZKrYB1FtxjP5kcK3VxFoY=
 github.com/aws/aws-sdk-go-v2/service/cloudcontrol v1.12.5 h1:u0OiSC//5remFN6t5U9iYPemlKsEQ9qeC9bzF0JaJHo=
 github.com/aws/aws-sdk-go-v2/service/cloudcontrol v1.12.5/go.mod h1:Jg/MLglEy39ieHbPCeU5SwPITQRSxqNDPU4S+46U0fg=
 github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs v1.23.5 h1:/rXnxd9VGnTc5fLuSFKkWCy+kDP6CxXAIMvfJQEfx8U=
