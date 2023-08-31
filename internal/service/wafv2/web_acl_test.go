@@ -1736,11 +1736,10 @@ func TestAccWAFV2WebACL_RuleGroupReference_shieldMitigation(t *testing.T) {
 		CheckDestroy:             testAccCheckWebACLDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccWebACLConfig_ruleGroupForShieldMitigation(webACLName),
+				Config: testAccWebACLConfig_ruleGroupForShieldMitigation(webACLName, "desc1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWebACLExists(ctx, resourceName, &v),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexache.MustCompile(`regional/webacl/.+$`)),
-					resource.TestCheckResourceAttr(resourceName, "name", webACLName),
+					resource.TestCheckResourceAttr(resourceName, "description", "desc1"),
 					resource.TestCheckResourceAttr(resourceName, "rule.#", "0"),
 				),
 			},
@@ -1758,7 +1757,7 @@ func TestAccWAFV2WebACL_RuleGroupReference_shieldMitigation(t *testing.T) {
 					aclID := ""
 					lockToken := ""
 
-					err := webACLsPages(ctx, conn, input, func(page *wafv2.ListWebACLsOutput, lastPage bool) bool {
+					err := tfwafv2.ListWebACLsPages(ctx, conn, input, func(page *wafv2.ListWebACLsOutput, lastPage bool) bool {
 						if page == nil {
 							return !lastPage
 						}
@@ -1789,7 +1788,7 @@ func TestAccWAFV2WebACL_RuleGroupReference_shieldMitigation(t *testing.T) {
 
 					rgARN := ""
 
-					err = ruleGroupPages(ctx, conn, in, func(page *wafv2.ListRuleGroupsOutput, lastPage bool) bool {
+					err = tfwafv2.ListRuleGroupsPages(ctx, conn, in, func(page *wafv2.ListRuleGroupsOutput, lastPage bool) bool {
 						if page == nil {
 							return !lastPage
 						}
@@ -1859,50 +1858,23 @@ func TestAccWAFV2WebACL_RuleGroupReference_shieldMitigation(t *testing.T) {
 						t.Fatalf("out-of-band added rule (%s) not found, cannot test handling of rule", webACLName)
 					}
 				},
-				Config: testAccWebACLConfig_ruleGroupForShieldMitigation(webACLName),
+				Config: testAccWebACLConfig_ruleGroupForShieldMitigation(webACLName, "desc1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWebACLExists(ctx, resourceName, &v),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexache.MustCompile(`regional/webacl/.+$`)),
-					resource.TestCheckResourceAttr(resourceName, "name", webACLName),
+					resource.TestCheckResourceAttr(resourceName, "description", "desc1"),
+					resource.TestCheckResourceAttr(resourceName, "rule.#", "0"),
+				),
+			},
+			{
+				Config: testAccWebACLConfig_ruleGroupForShieldMitigation(webACLName, "desc2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckWebACLExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "description", "desc2"),
 					resource.TestCheckResourceAttr(resourceName, "rule.#", "0"),
 				),
 			},
 		},
 	})
-}
-
-func webACLsPages(ctx context.Context, conn *wafv2.WAFV2, input *wafv2.ListWebACLsInput, fn func(*wafv2.ListWebACLsOutput, bool) bool) error {
-	for {
-		output, err := conn.ListWebACLsWithContext(ctx, input)
-		if err != nil {
-			return err
-		}
-
-		lastPage := aws.StringValue(output.NextMarker) == ""
-		if !fn(output, lastPage) || lastPage {
-			break
-		}
-
-		input.NextMarker = output.NextMarker
-	}
-	return nil
-}
-
-func ruleGroupPages(ctx context.Context, conn *wafv2.WAFV2, input *wafv2.ListRuleGroupsInput, fn func(*wafv2.ListRuleGroupsOutput, bool) bool) error {
-	for {
-		output, err := conn.ListRuleGroupsWithContext(ctx, input)
-		if err != nil {
-			return err
-		}
-
-		lastPage := aws.StringValue(output.NextMarker) == ""
-		if !fn(output, lastPage) || lastPage {
-			break
-		}
-
-		input.NextMarker = output.NextMarker
-	}
-	return nil
 }
 
 // Ensure magically-added (i.e., AWS-added) rule for Shield with CF distribution DDoS auto
@@ -1921,16 +1893,27 @@ func TestAccWAFV2WebACL_RuleGroupReference_manageShieldMitigationRule(t *testing
 		CheckDestroy:             testAccCheckWebACLDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccWebACLConfig_ruleGroupShieldMitigation(webACLName),
+				Config: testAccWebACLConfig_ruleGroupShieldMitigation(webACLName, "desc1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWebACLExists(ctx, resourceName, &v),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexache.MustCompile(`regional/webacl/.+$`)),
-					resource.TestCheckResourceAttr(resourceName, "name", webACLName),
+					resource.TestCheckResourceAttr(resourceName, "description", "desc1"),
 					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
 				),
 			},
 			{
-				Config:   testAccWebACLConfig_ruleGroupShieldMitigation(webACLName),
+				Config:   testAccWebACLConfig_ruleGroupShieldMitigation(webACLName, "desc1"),
+				PlanOnly: true,
+			},
+			{
+				Config: testAccWebACLConfig_ruleGroupShieldMitigation(webACLName, "desc2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckWebACLExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "description", "desc2"),
+					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
+				),
+			},
+			{
+				Config:   testAccWebACLConfig_ruleGroupShieldMitigation(webACLName, "desc2"),
 				PlanOnly: true,
 			},
 		},
@@ -4682,7 +4665,7 @@ resource "aws_wafv2_web_acl" "test" {
 `, rName)
 }
 
-func testAccWebACLConfig_ruleGroupShieldMitigation(rName string) string {
+func testAccWebACLConfig_ruleGroupShieldMitigation(rName, description string) string {
 	return fmt.Sprintf(`
 resource "aws_wafv2_rule_group" "test" {
   capacity = 10
@@ -4705,6 +4688,8 @@ resource "aws_wafv2_web_acl" "test" {
   default_action {
     block {}
   }
+
+  description = %[2]q
 
   rule {
     name     = "ShieldMitigationRuleGroup_${data.aws_caller_identity.current.account_id}_5e665b1c-1641-4b7a-8db1-567871a18b2a_uniqueid"
@@ -4733,10 +4718,10 @@ resource "aws_wafv2_web_acl" "test" {
     sampled_requests_enabled   = false
   }
 }
-`, rName)
+`, rName, description)
 }
 
-func testAccWebACLConfig_ruleGroupForShieldMitigation(rName string) string {
+func testAccWebACLConfig_ruleGroupForShieldMitigation(rName, description string) string {
 	return fmt.Sprintf(`
 resource "aws_wafv2_rule_group" "test" {
   capacity = 10
@@ -4758,13 +4743,15 @@ resource "aws_wafv2_web_acl" "test" {
     block {}
   }
 
+  description = %[2]q
+
   visibility_config {
     cloudwatch_metrics_enabled = true
     metric_name                = "friendly-metric-name"
     sampled_requests_enabled   = false
   }
 }
-`, rName)
+`, rName, description)
 }
 
 func testAccWebACLConfig_tokenDomains(rName, domain1, domain2 string) string {
