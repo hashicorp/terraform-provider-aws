@@ -281,7 +281,7 @@ func resourceWindowsFileSystemCreate(ctx context.Context, d *schema.ResourceData
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).FSxConn(ctx)
 
-	input := &fsx.CreateFileSystemInput{
+	inputC := &fsx.CreateFileSystemInput{
 		ClientRequestToken: aws.String(id.UniqueId()),
 		FileSystemType:     aws.String(fsx.FileSystemTypeWindows),
 		StorageCapacity:    aws.Int64(int64(d.Get("storage_capacity").(int))),
@@ -293,8 +293,7 @@ func resourceWindowsFileSystemCreate(ctx context.Context, d *schema.ResourceData
 			ThroughputCapacity:           aws.Int64(int64(d.Get("throughput_capacity").(int))),
 		},
 	}
-
-	backupInput := &fsx.CreateFileSystemFromBackupInput{
+	inputB := &fsx.CreateFileSystemFromBackupInput{
 		ClientRequestToken: aws.String(id.UniqueId()),
 		SubnetIds:          flex.ExpandStringList(d.Get("subnet_ids").([]interface{})),
 		Tags:               getTagsIn(ctx),
@@ -306,82 +305,83 @@ func resourceWindowsFileSystemCreate(ctx context.Context, d *schema.ResourceData
 	}
 
 	if v, ok := d.GetOk("active_directory_id"); ok {
-		input.WindowsConfiguration.ActiveDirectoryId = aws.String(v.(string))
-		backupInput.WindowsConfiguration.ActiveDirectoryId = aws.String(v.(string))
+		inputC.WindowsConfiguration.ActiveDirectoryId = aws.String(v.(string))
+		inputB.WindowsConfiguration.ActiveDirectoryId = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("aliases"); ok {
-		input.WindowsConfiguration.Aliases = flex.ExpandStringSet(v.(*schema.Set))
-		backupInput.WindowsConfiguration.Aliases = flex.ExpandStringSet(v.(*schema.Set))
+		inputC.WindowsConfiguration.Aliases = flex.ExpandStringSet(v.(*schema.Set))
+		inputB.WindowsConfiguration.Aliases = flex.ExpandStringSet(v.(*schema.Set))
 	}
 
 	if v, ok := d.GetOk("audit_log_configuration"); ok && len(v.([]interface{})) > 0 {
-		input.WindowsConfiguration.AuditLogConfiguration = expandWindowsAuditLogCreateConfiguration(v.([]interface{}))
-		backupInput.WindowsConfiguration.AuditLogConfiguration = expandWindowsAuditLogCreateConfiguration(v.([]interface{}))
+		inputC.WindowsConfiguration.AuditLogConfiguration = expandWindowsAuditLogCreateConfiguration(v.([]interface{}))
+		inputB.WindowsConfiguration.AuditLogConfiguration = expandWindowsAuditLogCreateConfiguration(v.([]interface{}))
 	}
 
 	if v, ok := d.GetOk("daily_automatic_backup_start_time"); ok {
-		input.WindowsConfiguration.DailyAutomaticBackupStartTime = aws.String(v.(string))
-		backupInput.WindowsConfiguration.DailyAutomaticBackupStartTime = aws.String(v.(string))
+		inputC.WindowsConfiguration.DailyAutomaticBackupStartTime = aws.String(v.(string))
+		inputB.WindowsConfiguration.DailyAutomaticBackupStartTime = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("deployment_type"); ok {
-		input.WindowsConfiguration.DeploymentType = aws.String(v.(string))
-		backupInput.WindowsConfiguration.DeploymentType = aws.String(v.(string))
+		inputC.WindowsConfiguration.DeploymentType = aws.String(v.(string))
+		inputB.WindowsConfiguration.DeploymentType = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("kms_key_id"); ok {
-		input.KmsKeyId = aws.String(v.(string))
-		backupInput.KmsKeyId = aws.String(v.(string))
+		inputC.KmsKeyId = aws.String(v.(string))
+		inputB.KmsKeyId = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("preferred_subnet_id"); ok {
-		input.WindowsConfiguration.PreferredSubnetId = aws.String(v.(string))
-		backupInput.WindowsConfiguration.PreferredSubnetId = aws.String(v.(string))
+		inputC.WindowsConfiguration.PreferredSubnetId = aws.String(v.(string))
+		inputB.WindowsConfiguration.PreferredSubnetId = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("security_group_ids"); ok {
-		input.SecurityGroupIds = flex.ExpandStringSet(v.(*schema.Set))
-		backupInput.SecurityGroupIds = flex.ExpandStringSet(v.(*schema.Set))
+		inputC.SecurityGroupIds = flex.ExpandStringSet(v.(*schema.Set))
+		inputB.SecurityGroupIds = flex.ExpandStringSet(v.(*schema.Set))
 	}
 
 	if v, ok := d.GetOk("self_managed_active_directory"); ok {
-		input.WindowsConfiguration.SelfManagedActiveDirectoryConfiguration = expandSelfManagedActiveDirectoryConfigurationCreate(v.([]interface{}))
-		backupInput.WindowsConfiguration.SelfManagedActiveDirectoryConfiguration = expandSelfManagedActiveDirectoryConfigurationCreate(v.([]interface{}))
+		inputC.WindowsConfiguration.SelfManagedActiveDirectoryConfiguration = expandSelfManagedActiveDirectoryConfigurationCreate(v.([]interface{}))
+		inputB.WindowsConfiguration.SelfManagedActiveDirectoryConfiguration = expandSelfManagedActiveDirectoryConfigurationCreate(v.([]interface{}))
 	}
 
 	if v, ok := d.GetOk("storage_type"); ok {
-		input.StorageType = aws.String(v.(string))
-		backupInput.StorageType = aws.String(v.(string))
+		inputC.StorageType = aws.String(v.(string))
+		inputB.StorageType = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("weekly_maintenance_start_time"); ok {
-		input.WindowsConfiguration.WeeklyMaintenanceStartTime = aws.String(v.(string))
-		backupInput.WindowsConfiguration.WeeklyMaintenanceStartTime = aws.String(v.(string))
+		inputC.WindowsConfiguration.WeeklyMaintenanceStartTime = aws.String(v.(string))
+		inputB.WindowsConfiguration.WeeklyMaintenanceStartTime = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("backup_id"); ok {
-		backupInput.BackupId = aws.String(v.(string))
+		backupID := v.(string)
+		inputB.BackupId = aws.String(backupID)
 
-		output, err := conn.CreateFileSystemFromBackupWithContext(ctx, backupInput)
+		output, err := conn.CreateFileSystemFromBackupWithContext(ctx, inputB)
 
 		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "creating FSx Windows File System from backup: %s", err)
+			return sdkdiag.AppendErrorf(diags, "creating FSx for Windows File Server File System from backup (%s): %s", backupID, err)
 		}
 
 		d.SetId(aws.StringValue(output.FileSystem.FileSystemId))
 	} else {
-		output, err := conn.CreateFileSystemWithContext(ctx, input)
+		output, err := conn.CreateFileSystemWithContext(ctx, inputC)
 
 		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "creating FSx Windows File System: %s", err)
+			return sdkdiag.AppendErrorf(diags, "creating FSx for Windows File Server File System: %s", err)
 		}
 
 		d.SetId(aws.StringValue(output.FileSystem.FileSystemId))
 	}
 
 	if _, err := waitFileSystemCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "waiting for FSx Windows File System (%s) create: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for FSx for Windows File Server File System (%s) create: %s", d.Id(), err)
 	}
 
 	return append(diags, resourceWindowsFileSystemRead(ctx, d, meta)...)
