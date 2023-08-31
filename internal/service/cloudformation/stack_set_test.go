@@ -65,6 +65,16 @@ func TestAccCloudFormationStackSet_basic(t *testing.T) {
 					"template_url",
 				},
 			},
+			// Test import with call_as.
+			{
+				ResourceName:      resourceName,
+				ImportStateId:     fmt.Sprintf("%s,SELF", rName),
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"template_url",
+				},
+			},
 		},
 	})
 }
@@ -737,6 +747,84 @@ func TestAccCloudFormationStackSet_templateURL(t *testing.T) {
 	})
 }
 
+// https://github.com/hashicorp/terraform-provider-aws/issues/19015.
+func TestAccCloudFormationStackSet_autoDeploymentEnabled(t *testing.T) {
+	ctx := acctest.Context(t)
+	var stackSet cloudformation.StackSet
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_cloudformation_stack_set.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheckStackSet(ctx, t)
+			acctest.PreCheckOrganizationManagementAccount(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, cloudformation.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckStackSetDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccStackSetConfig_autoDeployment(rName, true, false),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckStackSetExists(ctx, resourceName, &stackSet),
+					resource.TestCheckResourceAttr(resourceName, "auto_deployment.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "auto_deployment.0.enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "auto_deployment.0.retain_stacks_on_account_removal", "false"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"call_as",
+					"template_url",
+				},
+			},
+		},
+	})
+}
+
+// https://github.com/hashicorp/terraform-provider-aws/issues/19015.
+func TestAccCloudFormationStackSet_autoDeploymentDisabled(t *testing.T) {
+	ctx := acctest.Context(t)
+	var stackSet cloudformation.StackSet
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_cloudformation_stack_set.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheckStackSet(ctx, t)
+			acctest.PreCheckOrganizationManagementAccount(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, cloudformation.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckStackSetDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccStackSetConfig_autoDeployment(rName, false, false),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckStackSetExists(ctx, resourceName, &stackSet),
+					resource.TestCheckResourceAttr(resourceName, "auto_deployment.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "auto_deployment.0.enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "auto_deployment.0.retain_stacks_on_account_removal", "false"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"call_as",
+					"template_url",
+				},
+			},
+		},
+	})
+}
+
 func testAccCheckStackSetExists(ctx context.Context, resourceName string, v *cloudformation.StackSet) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resourceName]
@@ -744,11 +832,9 @@ func testAccCheckStackSetExists(ctx context.Context, resourceName string, v *clo
 			return fmt.Errorf("Not found: %s", resourceName)
 		}
 
-		callAs := rs.Primary.Attributes["call_as"]
-
 		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudFormationConn(ctx)
 
-		output, err := tfcloudformation.FindStackSetByName(ctx, conn, rs.Primary.ID, callAs)
+		output, err := tfcloudformation.FindStackSetByName(ctx, conn, rs.Primary.ID, rs.Primary.Attributes["call_as"])
 
 		if err != nil {
 			return err
@@ -769,9 +855,7 @@ func testAccCheckStackSetDestroy(ctx context.Context) resource.TestCheckFunc {
 				continue
 			}
 
-			callAs := rs.Primary.Attributes["call_as"]
-
-			_, err := tfcloudformation.FindStackSetByName(ctx, conn, rs.Primary.ID, callAs)
+			_, err := tfcloudformation.FindStackSetByName(ctx, conn, rs.Primary.ID, rs.Primary.Attributes["call_as"])
 
 			if tfresource.NotFound(err) {
 				continue
@@ -1315,4 +1399,22 @@ resource "aws_cloudformation_stack_set" "test" {
 TEMPLATE
 }
 `, rName, failureTolerancePercentage, maxConcurrentPercentage, testAccStackSetTemplateBodyVPC(rName)))
+}
+
+func testAccStackSetConfig_autoDeployment(rName string, enabled, retainStacksOnAccountRemoval bool) string {
+	return fmt.Sprintf(`
+resource "aws_cloudformation_stack_set" "test" {
+  name             = %[1]q
+  permission_model = "SERVICE_MANAGED"
+
+  auto_deployment {
+    enabled                          = %[3]t
+    retain_stacks_on_account_removal = %[4]t
+  }
+
+  template_body = <<TEMPLATE
+%[2]s
+TEMPLATE
+}
+`, rName, testAccStackSetTemplateBodyVPC(rName), enabled, retainStacksOnAccountRemoval)
 }
