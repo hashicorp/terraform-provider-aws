@@ -449,9 +449,41 @@ func resourceWindowsFileSystemUpdate(ctx context.Context, d *schema.ResourceData
 
 	if d.HasChange("aliases") {
 		o, n := d.GetChange("aliases")
+		os, ns := o.(*schema.Set), n.(*schema.Set)
+		add, del := flex.ExpandStringValueSet(ns.Difference(os)), flex.ExpandStringValueSet(os.Difference(ns))
 
-		if err := updateAliases(ctx, conn, d.Id(), o.(*schema.Set), n.(*schema.Set), d.Timeout(schema.TimeoutUpdate)); err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating FSx Windows File System (%s) aliases: %s", d.Id(), err)
+		if len(add) > 0 {
+			input := &fsx.AssociateFileSystemAliasesInput{
+				Aliases:      aws.StringSlice(add),
+				FileSystemId: aws.String(d.Id()),
+			}
+
+			_, err := conn.AssociateFileSystemAliasesWithContext(ctx, input)
+
+			if err != nil {
+				return sdkdiag.AppendErrorf(diags, "associating FSx for Windows File Server File System (%s) aliases: %s", d.Id(), err)
+			}
+
+			if _, err := waitAdministrativeActionCompleted(ctx, conn, d.Id(), fsx.AdministrativeActionTypeFileSystemAliasAssociation, d.Timeout(schema.TimeoutUpdate)); err != nil {
+				return sdkdiag.AppendErrorf(diags, "waiting for FSx for Windows File Server File System (%s) administrative action complete: %s", d.Id(), err)
+			}
+		}
+
+		if len(del) > 0 {
+			input := &fsx.DisassociateFileSystemAliasesInput{
+				Aliases:      aws.StringSlice(del),
+				FileSystemId: aws.String(d.Id()),
+			}
+
+			_, err := conn.DisassociateFileSystemAliasesWithContext(ctx, input)
+
+			if err != nil {
+				return sdkdiag.AppendErrorf(diags, "disassociating FSx for Windows File Server File System (%s) aliases: %s", d.Id(), err)
+			}
+
+			if _, err := waitAdministrativeActionCompleted(ctx, conn, d.Id(), fsx.AdministrativeActionTypeFileSystemAliasDisassociation, d.Timeout(schema.TimeoutUpdate)); err != nil {
+				return sdkdiag.AppendErrorf(diags, "waiting for FSx for Windows File Server File System (%s) administrative action complete: %s", d.Id(), err)
+			}
 		}
 	}
 
@@ -471,11 +503,13 @@ func resourceWindowsFileSystemUpdate(ctx context.Context, d *schema.ResourceData
 			_, err := conn.UpdateFileSystemWithContext(ctx, input)
 
 			if err != nil {
-				return sdkdiag.AppendErrorf(diags, "updating FSx Windows File System (%s) ThroughputCapacity: %s", d.Id(), err)
+				return sdkdiag.AppendErrorf(diags, "updating FSx for Windows File Server File System (%s) ThroughputCapacity: %s", d.Id(), err)
 			}
 
+			// TODO: waitFileSystemUpdated?
+
 			if _, err := waitAdministrativeActionCompleted(ctx, conn, d.Id(), fsx.AdministrativeActionTypeFileSystemUpdate, d.Timeout(schema.TimeoutUpdate)); err != nil {
-				return sdkdiag.AppendErrorf(diags, "waiting for FSx Windows File System (%s) update: %s", d.Id(), err)
+				return sdkdiag.AppendErrorf(diags, "waiting for FSx for Windows File Server File System (%s) administrative action complete: %s", d.Id(), err)
 			}
 		}
 	}
@@ -518,11 +552,13 @@ func resourceWindowsFileSystemUpdate(ctx context.Context, d *schema.ResourceData
 		_, err := conn.UpdateFileSystemWithContext(ctx, input)
 
 		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating FSx Windows File System (%s): %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "updating FSx for Windows File Server File System (%s): %s", d.Id(), err)
 		}
 
+		// TODO: waitFileSystemUpdated?
+
 		if _, err := waitAdministrativeActionCompleted(ctx, conn, d.Id(), fsx.AdministrativeActionTypeFileSystemUpdate, d.Timeout(schema.TimeoutUpdate)); err != nil {
-			return sdkdiag.AppendErrorf(diags, "waiting for FSx Windows File System (%s) update: %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "waiting for FSx for Windows File Server File System (%s) administrative action complete: %s", d.Id(), err)
 		}
 	}
 
@@ -568,48 +604,6 @@ func expandAliasValues(aliases []*fsx.Alias) []*string {
 	}
 
 	return alternateDNSNames
-}
-
-func updateAliases(ctx context.Context, conn *fsx.FSx, identifier string, oldSet *schema.Set, newSet *schema.Set, timeout time.Duration) error {
-	if newSet.Len() > 0 {
-		if newAliases := newSet.Difference(oldSet); newAliases.Len() > 0 {
-			input := &fsx.AssociateFileSystemAliasesInput{
-				FileSystemId: aws.String(identifier),
-				Aliases:      flex.ExpandStringSet(newAliases),
-			}
-
-			_, err := conn.AssociateFileSystemAliasesWithContext(ctx, input)
-
-			if err != nil {
-				return fmt.Errorf("associating aliases to FSx file system (%s): %w", identifier, err)
-			}
-
-			if _, err := waitAdministrativeActionCompleted(ctx, conn, identifier, fsx.AdministrativeActionTypeFileSystemAliasAssociation, timeout); err != nil {
-				return fmt.Errorf("waiting for FSx Windows File System (%s) alias to be associated: %w", identifier, err)
-			}
-		}
-	}
-
-	if oldSet.Len() > 0 {
-		if oldAliases := oldSet.Difference(newSet); oldAliases.Len() > 0 {
-			input := &fsx.DisassociateFileSystemAliasesInput{
-				FileSystemId: aws.String(identifier),
-				Aliases:      flex.ExpandStringSet(oldAliases),
-			}
-
-			_, err := conn.DisassociateFileSystemAliasesWithContext(ctx, input)
-
-			if err != nil {
-				return fmt.Errorf("disassociating aliases from FSx file system (%s): %w", identifier, err)
-			}
-
-			if _, err := waitAdministrativeActionCompleted(ctx, conn, identifier, fsx.AdministrativeActionTypeFileSystemAliasDisassociation, timeout); err != nil {
-				return fmt.Errorf("waiting for FSx Windows File System (%s) alias to be disassociated: %w", identifier, err)
-			}
-		}
-	}
-
-	return nil
 }
 
 func expandSelfManagedActiveDirectoryConfigurationCreate(l []interface{}) *fsx.SelfManagedActiveDirectoryConfiguration {
