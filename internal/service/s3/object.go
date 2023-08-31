@@ -580,7 +580,6 @@ func resourceObjectCustomizeDiff(_ context.Context, d *schema.ResourceDiff, meta
 }
 
 func resourceObjectCustomizeTagDiff(ctx context.Context, d *schema.ResourceDiff, meta interface{}) error {
-
 	if d.Get("ignore_default_tags").(bool) {
 		return d.SetNew("tags_all", d.Get("tags"))
 	}
