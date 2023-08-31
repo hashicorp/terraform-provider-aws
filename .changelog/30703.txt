@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_db_instance: Allow `engine` and `engine_version` to be set when `replicate_source_db` is set
+```

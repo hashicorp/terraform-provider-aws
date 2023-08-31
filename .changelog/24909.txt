@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/aws_redshift_event_subscription: Add plan time validations for `event_categories`, `source_type`, and `severity`.
+```

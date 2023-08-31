@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package networkfirewall
 
 import (
@@ -21,27 +24,17 @@ func FindLoggingConfiguration(ctx context.Context, conn *networkfirewall.Network
 	return output, nil
 }
 
-// FindFirewall returns the FirewallOutput from a call to DescribeFirewallWithContext
-// given the context and FindFirewall ARN.
-// Returns nil if the FindFirewall is not found.
-func FindFirewall(ctx context.Context, conn *networkfirewall.NetworkFirewall, arn string) (*networkfirewall.DescribeFirewallOutput, error) {
-	input := &networkfirewall.DescribeFirewallInput{
-		FirewallArn: aws.String(arn),
+// FindFirewallPolicyByNameAndARN returns the FirewallPolicyOutput from a call to DescribeFirewallPolicyWithContext
+// given the context and at least one of FirewallPolicyArn and FirewallPolicyName.
+func FindFirewallPolicyByNameAndARN(ctx context.Context, conn *networkfirewall.NetworkFirewall, arn string, name string) (*networkfirewall.DescribeFirewallPolicyOutput, error) {
+	input := &networkfirewall.DescribeFirewallPolicyInput{}
+	if arn != "" {
+		input.FirewallPolicyArn = aws.String(arn)
 	}
-	output, err := conn.DescribeFirewallWithContext(ctx, input)
-	if err != nil {
-		return nil, err
+	if name != "" {
+		input.FirewallPolicyName = aws.String(name)
 	}
-	return output, nil
-}
 
-// FindFirewallPolicy returns the FirewallPolicyOutput from a call to DescribeFirewallPolicyWithContext
-// given the context and FindFirewallPolicy ARN.
-// Returns nil if the FindFirewallPolicy is not found.
-func FindFirewallPolicy(ctx context.Context, conn *networkfirewall.NetworkFirewall, arn string) (*networkfirewall.DescribeFirewallPolicyOutput, error) {
-	input := &networkfirewall.DescribeFirewallPolicyInput{
-		FirewallPolicyArn: aws.String(arn),
-	}
 	output, err := conn.DescribeFirewallPolicyWithContext(ctx, input)
 	if err != nil {
 		return nil, err
@@ -64,18 +57,4 @@ func FindResourcePolicy(ctx context.Context, conn *networkfirewall.NetworkFirewa
 		return nil, nil
 	}
 	return output.Policy, nil
-}
-
-// FindRuleGroup returns the RuleGroupOutput from a call to DescribeRuleGroupWithContext
-// given the context and FindRuleGroup ARN.
-// Returns nil if the FindRuleGroup is not found.
-func FindRuleGroup(ctx context.Context, conn *networkfirewall.NetworkFirewall, arn string) (*networkfirewall.DescribeRuleGroupOutput, error) {
-	input := &networkfirewall.DescribeRuleGroupInput{
-		RuleGroupArn: aws.String(arn),
-	}
-	output, err := conn.DescribeRuleGroupWithContext(ctx, input)
-	if err != nil {
-		return nil, err
-	}
-	return output, nil
 }

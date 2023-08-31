@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/aws_ec2_fleet: Add `target_capacity_unit_type` attribute to the `target_capacity_specification` configuration block
+```
+
+```release-note:enhancement
+resource/aws_spot_fleet_request: Add `target_capacity_unit_type` argument
+```

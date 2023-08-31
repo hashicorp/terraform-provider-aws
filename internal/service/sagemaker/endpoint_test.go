@@ -1,35 +1,43 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package sagemaker_test
 
 import (
+	"context"
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/sagemaker"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfsagemaker "github.com/hashicorp/terraform-provider-aws/internal/service/sagemaker"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func TestAccSageMakerEndpoint_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_sagemaker_endpoint.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, sagemaker.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckSagemakerEndpointDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, sagemaker.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckEndpointDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSagemakerEndpointConfig(rName),
+				Config: testAccEndpointConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSagemakerEndpointExists(resourceName),
+					testAccCheckEndpointExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "sagemaker", fmt.Sprintf("endpoint/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "endpoint_config_name", rName),
+					resource.TestCheckResourceAttr(resourceName, "deployment_config.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
 			},
 			{
@@ -42,6 +50,11 @@ func TestAccSageMakerEndpoint_basic(t *testing.T) {
 }
 
 func TestAccSageMakerEndpoint_endpointName(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resourceName := "aws_sagemaker_endpoint.test"
@@ -49,22 +62,22 @@ func TestAccSageMakerEndpoint_endpointName(t *testing.T) {
 	sagemakerEndpointConfigurationResourceName2 := "aws_sagemaker_endpoint_configuration.test2"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, sagemaker.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckSagemakerEndpointDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, sagemaker.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckEndpointDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSagemakerEndpointConfig(rName),
+				Config: testAccEndpointConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSagemakerEndpointExists(resourceName),
+					testAccCheckEndpointExists(ctx, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "endpoint_config_name", sagemakerEndpointConfigurationResourceName1, "name"),
 				),
 			},
 			{
-				Config: testAccSagemakerEndpointConfigEndpointConfigNameUpdate(rName),
+				Config: testAccEndpointConfig_nameUpdate(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSagemakerEndpointExists(resourceName),
+					testAccCheckEndpointExists(ctx, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "endpoint_config_name", sagemakerEndpointConfigurationResourceName2, "name"),
 				),
 			},
@@ -78,27 +91,32 @@ func TestAccSageMakerEndpoint_endpointName(t *testing.T) {
 }
 
 func TestAccSageMakerEndpoint_tags(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_sagemaker_endpoint.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, sagemaker.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckSagemakerEndpointDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, sagemaker.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckEndpointDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSagemakerEndpointConfigTags(rName),
+				Config: testAccEndpointConfig_tags(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSagemakerEndpointExists(resourceName),
+					testAccCheckEndpointExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.foo", "bar"),
 				),
 			},
 			{
-				Config: testAccSagemakerEndpointConfigTagsUpdate(rName),
+				Config: testAccEndpointConfig_tagsUpdate(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSagemakerEndpointExists(resourceName),
+					testAccCheckEndpointExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.bar", "baz"),
 				),
@@ -112,34 +130,181 @@ func TestAccSageMakerEndpoint_tags(t *testing.T) {
 	})
 }
 
-func testAccCheckSagemakerEndpointDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).SageMakerConn
-
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_sagemaker_endpoint" {
-			continue
-		}
-
-		describeInput := &sagemaker.DescribeEndpointInput{
-			EndpointName: aws.String(rs.Primary.ID),
-		}
-
-		_, err := conn.DescribeEndpoint(describeInput)
-
-		if tfawserr.ErrMessageContains(err, "ValidationException", "") {
-			continue
-		}
-
-		if err != nil {
-			return err
-		}
-
-		return fmt.Errorf("SageMaker Endpoint (%s) still exists", rs.Primary.ID)
+func TestAccSageMakerEndpoint_deploymentConfig(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
 	}
-	return nil
+
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_sagemaker_endpoint.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, sagemaker.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckEndpointDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccEndpointConfig_deploymentBasic(rName, "ALL_AT_ONCE", 60),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckEndpointExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "deployment_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "deployment_config.0.auto_rollback_configuration.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "deployment_config.0.blue_green_update_policy.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "deployment_config.0.blue_green_update_policy.0.termination_wait_in_seconds", "0"),
+					resource.TestCheckResourceAttr(resourceName, "deployment_config.0.blue_green_update_policy.0.traffic_routing_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "deployment_config.0.blue_green_update_policy.0.traffic_routing_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "deployment_config.0.blue_green_update_policy.0.traffic_routing_configuration.0.type", "ALL_AT_ONCE"),
+					resource.TestCheckResourceAttr(resourceName, "deployment_config.0.blue_green_update_policy.0.traffic_routing_configuration.0.wait_interval_in_seconds", "60"),
+					resource.TestCheckResourceAttr(resourceName, "deployment_config.0.blue_green_update_policy.0.traffic_routing_configuration.0.canary_size.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "deployment_config.0.blue_green_update_policy.0.traffic_routing_configuration.0.linear_step_size.#", "0"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
 }
 
-func testAccCheckSagemakerEndpointExists(n string) resource.TestCheckFunc {
+func TestAccSageMakerEndpoint_deploymentConfig_blueGreen(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_sagemaker_endpoint.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, sagemaker.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckEndpointDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccEndpointConfig_deploymentBlueGreen(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckEndpointExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "deployment_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "deployment_config.0.auto_rollback_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "deployment_config.0.auto_rollback_configuration.0.alarms.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "deployment_config.0.blue_green_update_policy.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "deployment_config.0.blue_green_update_policy.0.termination_wait_in_seconds", "0"),
+					resource.TestCheckResourceAttr(resourceName, "deployment_config.0.blue_green_update_policy.0.traffic_routing_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "deployment_config.0.blue_green_update_policy.0.traffic_routing_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "deployment_config.0.blue_green_update_policy.0.traffic_routing_configuration.0.type", "LINEAR"),
+					resource.TestCheckResourceAttr(resourceName, "deployment_config.0.blue_green_update_policy.0.traffic_routing_configuration.0.wait_interval_in_seconds", "60"),
+					resource.TestCheckResourceAttr(resourceName, "deployment_config.0.blue_green_update_policy.0.traffic_routing_configuration.0.canary_size.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "deployment_config.0.blue_green_update_policy.0.traffic_routing_configuration.0.linear_step_size.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "deployment_config.0.blue_green_update_policy.0.traffic_routing_configuration.0.linear_step_size.0.type", "INSTANCE_COUNT"),
+					resource.TestCheckResourceAttr(resourceName, "deployment_config.0.blue_green_update_policy.0.traffic_routing_configuration.0.linear_step_size.0.value", "1"),
+					resource.TestCheckResourceAttr(resourceName, "deployment_config.0.rolling_update_policy.#", "0"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccSageMakerEndpoint_deploymentConfig_rolling(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_sagemaker_endpoint.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, sagemaker.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckEndpointDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccEndpointConfig_deploymentRolling(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckEndpointExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "deployment_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "deployment_config.0.auto_rollback_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "deployment_config.0.auto_rollback_configuration.0.alarms.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "deployment_config.0.blue_green_update_policy.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "deployment_config.0.rolling_update_policy.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "deployment_config.0.rolling_update_policy.0.wait_interval_in_seconds", "60"),
+					resource.TestCheckResourceAttr(resourceName, "deployment_config.0.rolling_update_policy.0.maximum_batch_size.0.type", "CAPACITY_PERCENT"),
+					resource.TestCheckResourceAttr(resourceName, "deployment_config.0.rolling_update_policy.0.maximum_batch_size.0.value", "5"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccSageMakerEndpoint_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_sagemaker_endpoint.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, sagemaker.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckEndpointDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccEndpointConfig_basic(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckEndpointExists(ctx, resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfsagemaker.ResourceEndpoint(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfsagemaker.ResourceEndpoint(), resourceName),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
+func testAccCheckEndpointDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SageMakerConn(ctx)
+
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_sagemaker_endpoint" {
+				continue
+			}
+
+			_, err := tfsagemaker.FindEndpointByName(ctx, conn, rs.Primary.ID)
+
+			if tfresource.NotFound(err) {
+				continue
+			}
+
+			if err != nil {
+				return err
+			}
+
+			return fmt.Errorf("SageMaker Endpoint (%s) still exists", rs.Primary.ID)
+		}
+		return nil
+	}
+}
+
+func testAccCheckEndpointExists(ctx context.Context, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -150,19 +315,14 @@ func testAccCheckSagemakerEndpointExists(n string) resource.TestCheckFunc {
 			return fmt.Errorf("no SageMaker Endpoint ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SageMakerConn
-		opts := &sagemaker.DescribeEndpointInput{
-			EndpointName: aws.String(rs.Primary.ID),
-		}
-		_, err := conn.DescribeEndpoint(opts)
-		if err != nil {
-			return err
-		}
-		return nil
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SageMakerConn(ctx)
+		_, err := tfsagemaker.FindEndpointByName(ctx, conn, rs.Primary.ID)
+
+		return err
 	}
 }
 
-func testAccSagemakerEndpointConfig_Base(rName string) string {
+func testAccEndpointConfig_Base(rName string) string {
 	return fmt.Sprintf(`
 data "aws_iam_policy_document" "access" {
   statement {
@@ -210,11 +370,10 @@ resource "aws_iam_role_policy" "test" {
 }
 
 resource "aws_s3_bucket" "test" {
-  acl    = "private"
   bucket = %[1]q
 }
 
-resource "aws_s3_bucket_object" "test" {
+resource "aws_s3_object" "test" {
   bucket = aws_s3_bucket.test.id
   key    = "model.tar.gz"
   source = "test-fixtures/sagemaker-tensorflow-serving-test-model.tar.gz"
@@ -231,7 +390,7 @@ resource "aws_sagemaker_model" "test" {
 
   primary_container {
     image          = data.aws_sagemaker_prebuilt_ecr_image.test.registry_path
-    model_data_url = "https://${aws_s3_bucket.test.bucket_regional_domain_name}/${aws_s3_bucket_object.test.key}"
+    model_data_url = "https://${aws_s3_bucket.test.bucket_regional_domain_name}/${aws_s3_object.test.key}"
   }
 
   depends_on = [aws_iam_role_policy.test]
@@ -241,7 +400,7 @@ resource "aws_sagemaker_endpoint_configuration" "test" {
   name = %[1]q
 
   production_variants {
-    initial_instance_count = 1
+    initial_instance_count = 2
     initial_variant_weight = 1
     instance_type          = "ml.t2.medium"
     model_name             = aws_sagemaker_model.test.name
@@ -251,8 +410,8 @@ resource "aws_sagemaker_endpoint_configuration" "test" {
 `, rName)
 }
 
-func testAccSagemakerEndpointConfig(rName string) string {
-	return testAccSagemakerEndpointConfig_Base(rName) + fmt.Sprintf(`
+func testAccEndpointConfig_basic(rName string) string {
+	return testAccEndpointConfig_Base(rName) + fmt.Sprintf(`
 resource "aws_sagemaker_endpoint" "test" {
   endpoint_config_name = aws_sagemaker_endpoint_configuration.test.name
   name                 = %[1]q
@@ -260,8 +419,8 @@ resource "aws_sagemaker_endpoint" "test" {
 `, rName)
 }
 
-func testAccSagemakerEndpointConfigEndpointConfigNameUpdate(rName string) string {
-	return testAccSagemakerEndpointConfig_Base(rName) + fmt.Sprintf(`
+func testAccEndpointConfig_nameUpdate(rName string) string {
+	return testAccEndpointConfig_Base(rName) + fmt.Sprintf(`
 resource "aws_sagemaker_endpoint_configuration" "test2" {
   name = "%[1]s2"
 
@@ -281,8 +440,8 @@ resource "aws_sagemaker_endpoint" "test" {
 `, rName)
 }
 
-func testAccSagemakerEndpointConfigTags(rName string) string {
-	return testAccSagemakerEndpointConfig_Base(rName) + fmt.Sprintf(`
+func testAccEndpointConfig_tags(rName string) string {
+	return testAccEndpointConfig_Base(rName) + fmt.Sprintf(`
 resource "aws_sagemaker_endpoint" "test" {
   endpoint_config_name = aws_sagemaker_endpoint_configuration.test.name
   name                 = %[1]q
@@ -294,14 +453,121 @@ resource "aws_sagemaker_endpoint" "test" {
 `, rName)
 }
 
-func testAccSagemakerEndpointConfigTagsUpdate(rName string) string {
-	return testAccSagemakerEndpointConfig_Base(rName) + fmt.Sprintf(`
+func testAccEndpointConfig_tagsUpdate(rName string) string {
+	return testAccEndpointConfig_Base(rName) + fmt.Sprintf(`
 resource "aws_sagemaker_endpoint" "test" {
   endpoint_config_name = aws_sagemaker_endpoint_configuration.test.name
   name                 = %[1]q
 
   tags = {
     bar = "baz"
+  }
+}
+`, rName)
+}
+
+func testAccEndpointConfig_deploymentBasic(rName, tType string, wait int) string {
+	return testAccEndpointConfig_Base(rName) + fmt.Sprintf(`
+resource "aws_sagemaker_endpoint" "test" {
+  endpoint_config_name = aws_sagemaker_endpoint_configuration.test.name
+  name                 = %[1]q
+
+  deployment_config {
+    blue_green_update_policy {
+      traffic_routing_configuration {
+        type                     = %[2]q
+        wait_interval_in_seconds = %[3]d
+      }
+    }
+  }
+}
+`, rName, tType, wait)
+}
+
+func testAccEndpointConfig_deploymentBlueGreen(rName string) string {
+	return testAccEndpointConfig_Base(rName) + fmt.Sprintf(`
+resource "aws_cloudwatch_metric_alarm" "test" {
+  alarm_name                = %[1]q
+  comparison_operator       = "GreaterThanOrEqualToThreshold"
+  evaluation_periods        = "2"
+  metric_name               = "CPUUtilization"
+  namespace                 = "AWS/EC2"
+  period                    = "120"
+  statistic                 = "Average"
+  threshold                 = "80"
+  alarm_description         = "This metric monitors ec2 cpu utilization"
+  insufficient_data_actions = []
+
+  dimensions = {
+    InstanceId = "i-abc123"
+  }
+}
+
+resource "aws_sagemaker_endpoint" "test" {
+  endpoint_config_name = aws_sagemaker_endpoint_configuration.test.name
+  name                 = %[1]q
+
+  deployment_config {
+    blue_green_update_policy {
+      traffic_routing_configuration {
+        type                     = "LINEAR"
+        wait_interval_in_seconds = "60"
+
+        linear_step_size {
+          type  = "INSTANCE_COUNT"
+          value = 1
+        }
+      }
+    }
+
+    auto_rollback_configuration {
+      alarms {
+        alarm_name = aws_cloudwatch_metric_alarm.test.alarm_name
+      }
+    }
+  }
+}
+`, rName)
+}
+
+func testAccEndpointConfig_deploymentRolling(rName string) string {
+	return testAccEndpointConfig_Base(rName) + fmt.Sprintf(`
+resource "aws_cloudwatch_metric_alarm" "test" {
+  alarm_name                = %[1]q
+  comparison_operator       = "GreaterThanOrEqualToThreshold"
+  evaluation_periods        = "2"
+  metric_name               = "CPUUtilization"
+  namespace                 = "AWS/EC2"
+  period                    = "120"
+  statistic                 = "Average"
+  threshold                 = "80"
+  alarm_description         = "This metric monitors ec2 cpu utilization"
+  insufficient_data_actions = []
+
+  dimensions = {
+    InstanceId = "i-abc123"
+  }
+}
+
+resource "aws_sagemaker_endpoint" "test" {
+  endpoint_config_name = aws_sagemaker_endpoint_configuration.test.name
+  name                 = %[1]q
+
+  deployment_config {
+    auto_rollback_configuration {
+      alarms {
+        alarm_name = aws_cloudwatch_metric_alarm.test.alarm_name
+      }
+    }
+
+    rolling_update_policy {
+      wait_interval_in_seconds = 60
+
+      maximum_batch_size {
+        type  = "CAPACITY_PERCENT"
+        value = 5
+      }
+    }
   }
 }
 `, rName)

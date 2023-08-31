@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package opsworks
 
 import (
@@ -5,6 +8,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
+// @SDKResource("aws_opsworks_php_app_layer", name="PHP App Layer")
+// @Tags(identifierAttribute="arn")
 func ResourcePHPAppLayer() *schema.Resource {
 	layerType := &opsworksLayerType{
 		TypeName:         opsworks.LayerTypePhpApp,
@@ -13,5 +18,5 @@ func ResourcePHPAppLayer() *schema.Resource {
 		Attributes: map[string]*opsworksLayerTypeAttribute{},
 	}
 
-	return layerType.SchemaResource()
+	return layerType.resourceSchema()
 }

@@ -1,77 +1,76 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package autoscaling_test
 
 import (
+	"context"
 	"fmt"
-	"regexp"
 	"testing"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/autoscaling"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfautoscaling "github.com/hashicorp/terraform-provider-aws/internal/service/autoscaling"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func TestAccAutoScalingSchedule_basic(t *testing.T) {
-	var schedule autoscaling.ScheduledUpdateGroupAction
-	rName := fmt.Sprintf("tf-test-%d", sdkacctest.RandInt())
-	start := testAccScheduleValidStart(t)
-	end := testAccScheduleValidEnd(t)
-
-	scheduledActionName := "foobar"
-	resourceName := fmt.Sprintf("aws_autoscaling_schedule.%s", scheduledActionName)
-	importInput := fmt.Sprintf("%s/%s", rName, scheduledActionName)
+	ctx := acctest.Context(t)
+	var v autoscaling.ScheduledUpdateGroupAction
+	rName1 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	startTime := testAccScheduleValidStart(t)
+	endTime := testAccScheduleValidEnd(t)
+	resourceName := "aws_autoscaling_schedule.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, autoscaling.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckScheduleDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, autoscaling.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckScheduleDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccScheduleConfig(rName, start, end),
+				Config: testAccScheduleConfig_basic(rName1, rName2, startTime, endTime),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckScalingScheduleExists(resourceName, &schedule),
+					testAccCheckScalingScheduleExists(ctx, resourceName, &v),
 				),
 			},
 			{
 				ResourceName:      resourceName,
-				ImportStateId:     importInput,
+				ImportStateId:     fmt.Sprintf("%s/%s", rName1, rName2),
 				ImportState:       true,
 				ImportStateVerify: true,
-			},
-			{
-				ResourceName:      resourceName,
-				ImportStateId:     fmt.Sprintf("%s/nonexistent", rName),
-				ImportState:       true,
-				ImportStateVerify: false,
-				ExpectError:       regexp.MustCompile(`(Cannot import non-existent remote object)`),
 			},
 		},
 	})
 }
 
 func TestAccAutoScalingSchedule_disappears(t *testing.T) {
-	var schedule autoscaling.ScheduledUpdateGroupAction
-	rName := fmt.Sprintf("tf-test-%d", sdkacctest.RandInt())
-	start := testAccScheduleValidStart(t)
-	end := testAccScheduleValidEnd(t)
+	ctx := acctest.Context(t)
+	var v autoscaling.ScheduledUpdateGroupAction
+	rName1 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	startTime := testAccScheduleValidStart(t)
+	endTime := testAccScheduleValidEnd(t)
+	resourceName := "aws_autoscaling_schedule.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, autoscaling.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckScheduleDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, autoscaling.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckScheduleDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccScheduleConfig(rName, start, end),
+				Config: testAccScheduleConfig_basic(rName1, rName2, startTime, endTime),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckScalingScheduleExists("aws_autoscaling_schedule.foobar", &schedule),
-					testAccCheckScalingScheduleDisappears(&schedule),
+					testAccCheckScalingScheduleExists(ctx, resourceName, &v),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfautoscaling.ResourceSchedule(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -79,43 +78,28 @@ func TestAccAutoScalingSchedule_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckScalingScheduleDisappears(schedule *autoscaling.ScheduledUpdateGroupAction) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AutoScalingConn
-		params := &autoscaling.DeleteScheduledActionInput{
-			AutoScalingGroupName: schedule.AutoScalingGroupName,
-			ScheduledActionName:  schedule.ScheduledActionName,
-		}
-		_, err := conn.DeleteScheduledAction(params)
-		return err
-	}
-}
-
 func TestAccAutoScalingSchedule_recurrence(t *testing.T) {
-	var schedule autoscaling.ScheduledUpdateGroupAction
-
-	rName := fmt.Sprintf("tf-test-%d", sdkacctest.RandInt())
-
-	scheduledActionName := "foobar"
-	resourceName := fmt.Sprintf("aws_autoscaling_schedule.%s", scheduledActionName)
-	importInput := fmt.Sprintf("%s/%s", rName, scheduledActionName)
+	ctx := acctest.Context(t)
+	var v autoscaling.ScheduledUpdateGroupAction
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_autoscaling_schedule.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, autoscaling.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckScheduleDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, autoscaling.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckScheduleDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccScheduleConfig_recurrence(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckScalingScheduleExists(resourceName, &schedule),
+					testAccCheckScalingScheduleExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "recurrence", "0 8 * * *"),
 				),
 			},
 			{
 				ResourceName:      resourceName,
-				ImportStateId:     importInput,
+				ImportStateId:     fmt.Sprintf("%s/%s", rName, rName),
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
@@ -124,31 +108,28 @@ func TestAccAutoScalingSchedule_recurrence(t *testing.T) {
 }
 
 func TestAccAutoScalingSchedule_zeroValues(t *testing.T) {
-	var schedule autoscaling.ScheduledUpdateGroupAction
-
-	rName := fmt.Sprintf("tf-test-%d", sdkacctest.RandInt())
-	start := testAccScheduleValidStart(t)
-	end := testAccScheduleValidEnd(t)
-
-	scheduledActionName := "foobar"
-	resourceName := fmt.Sprintf("aws_autoscaling_schedule.%s", scheduledActionName)
-	importInput := fmt.Sprintf("%s/%s", rName, scheduledActionName)
+	ctx := acctest.Context(t)
+	var v autoscaling.ScheduledUpdateGroupAction
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	startTime := testAccScheduleValidStart(t)
+	endTime := testAccScheduleValidEnd(t)
+	resourceName := "aws_autoscaling_schedule.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, autoscaling.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckScheduleDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, autoscaling.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckScheduleDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccScheduleConfig_zeroValues(rName, start, end),
+				Config: testAccScheduleConfig_zeroValues(rName, startTime, endTime),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckScalingScheduleExists(resourceName, &schedule),
+					testAccCheckScalingScheduleExists(ctx, resourceName, &v),
 				),
 			},
 			{
 				ResourceName:      resourceName,
-				ImportStateId:     importInput,
+				ImportStateId:     fmt.Sprintf("%s/%s", rName, rName),
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
@@ -157,33 +138,30 @@ func TestAccAutoScalingSchedule_zeroValues(t *testing.T) {
 }
 
 func TestAccAutoScalingSchedule_negativeOne(t *testing.T) {
-	var schedule autoscaling.ScheduledUpdateGroupAction
-
-	rName := fmt.Sprintf("tf-test-%d", sdkacctest.RandInt())
-	start := testAccScheduleValidStart(t)
-	end := testAccScheduleValidEnd(t)
-
-	scheduledActionName := "foobar"
-	resourceName := fmt.Sprintf("aws_autoscaling_schedule.%s", scheduledActionName)
-	importInput := fmt.Sprintf("%s/%s", rName, scheduledActionName)
+	ctx := acctest.Context(t)
+	var v autoscaling.ScheduledUpdateGroupAction
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	startTime := testAccScheduleValidStart(t)
+	endTime := testAccScheduleValidEnd(t)
+	resourceName := "aws_autoscaling_schedule.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, autoscaling.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckScheduleDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, autoscaling.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckScheduleDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccScheduleConfig_negativeOne(rName, start, end),
+				Config: testAccScheduleConfig_negativeOne(rName, startTime, endTime),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckScalingScheduleExists(resourceName, &schedule),
-					testAccCheckScalingScheduleHasNoDesiredCapacity(&schedule),
+					testAccCheckScalingScheduleExists(ctx, resourceName, &v),
+					testAccCheckScalingScheduleHasNoDesiredCapacity(&v),
 					resource.TestCheckResourceAttr(resourceName, "desired_capacity", "-1"),
 				),
 			},
 			{
 				ResourceName:      resourceName,
-				ImportStateId:     importInput,
+				ImportStateId:     fmt.Sprintf("%s/%s", rName, rName),
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
@@ -203,261 +181,146 @@ func testAccScheduleTime(t *testing.T, duration string) string {
 	n := time.Now().UTC()
 	d, err := time.ParseDuration(duration)
 	if err != nil {
-		t.Fatalf("err parsing time duration: %s", err)
+		t.Fatal(err)
 	}
 	return n.Add(d).Format(tfautoscaling.ScheduleTimeLayout)
 }
 
-func testAccCheckScalingScheduleExists(n string, policy *autoscaling.ScheduledUpdateGroupAction) resource.TestCheckFunc {
+func testAccCheckScalingScheduleExists(ctx context.Context, n string, v *autoscaling.ScheduledUpdateGroupAction) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		autoScalingGroup := rs.Primary.Attributes["autoscaling_group_name"]
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AutoScalingConn
-		params := &autoscaling.DescribeScheduledActionsInput{
-			AutoScalingGroupName: aws.String(autoScalingGroup),
-			ScheduledActionNames: []*string{aws.String(rs.Primary.ID)},
+		if rs.Primary.ID == "" {
+			return fmt.Errorf("No Auto Scaling Scheduled Action ID is set")
 		}
 
-		resp, err := conn.DescribeScheduledActions(params)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AutoScalingConn(ctx)
+
+		output, err := tfautoscaling.FindScheduledUpdateGroupAction(ctx, conn, rs.Primary.Attributes["autoscaling_group_name"], rs.Primary.ID)
+
 		if err != nil {
 			return err
 		}
-		if len(resp.ScheduledUpdateGroupActions) == 0 {
-			return fmt.Errorf("Scaling Schedule not found")
-		}
 
-		*policy = *resp.ScheduledUpdateGroupActions[0]
+		*v = *output
 
 		return nil
 	}
 }
 
-func testAccCheckScheduleDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).AutoScalingConn
+func testAccCheckScheduleDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AutoScalingConn(ctx)
 
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_autoscaling_schedule" {
-			continue
-		}
-
-		autoScalingGroup := rs.Primary.Attributes["autoscaling_group_name"]
-		params := &autoscaling.DescribeScheduledActionsInput{
-			AutoScalingGroupName: aws.String(autoScalingGroup),
-			ScheduledActionNames: []*string{aws.String(rs.Primary.ID)},
-		}
-
-		resp, err := conn.DescribeScheduledActions(params)
-
-		if err == nil {
-			if len(resp.ScheduledUpdateGroupActions) != 0 &&
-				*resp.ScheduledUpdateGroupActions[0].ScheduledActionName == rs.Primary.ID {
-				return fmt.Errorf("Scaling Schedule Still Exists: %s", rs.Primary.ID)
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_autoscaling_schedule" {
+				continue
 			}
-		}
-	}
 
-	return nil
+			_, err := tfautoscaling.FindScheduledUpdateGroupAction(ctx, conn, rs.Primary.Attributes["autoscaling_group_name"], rs.Primary.ID)
+
+			if tfresource.NotFound(err) {
+				continue
+			}
+
+			if err != nil {
+				return err
+			}
+
+			return fmt.Errorf("Auto Scaling Scheduled Action %s still exists", rs.Primary.ID)
+		}
+
+		return nil
+	}
 }
 
-func testAccCheckScalingScheduleHasNoDesiredCapacity(
-	schedule *autoscaling.ScheduledUpdateGroupAction) resource.TestCheckFunc {
+func testAccCheckScalingScheduleHasNoDesiredCapacity(v *autoscaling.ScheduledUpdateGroupAction) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		if schedule.DesiredCapacity == nil {
+		if v.DesiredCapacity == nil {
 			return nil
 		}
-		return fmt.Errorf("Expected not to set desired capacity, got %v",
-			aws.Int64Value(schedule.DesiredCapacity))
+
+		return fmt.Errorf("Expected not to set desired capacity, got %v", aws.Int64Value(v.DesiredCapacity))
 	}
 }
 
-func testAccScheduleConfig(r, start, end string) string {
-	return acctest.ConfigLatestAmazonLinuxHvmEbsAmi() + fmt.Sprintf(`
-resource "aws_launch_configuration" "foobar" {
-  name          = "%s"
-  image_id      = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
-  instance_type = "t1.micro"
-}
-
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
-resource "aws_autoscaling_group" "foobar" {
+func testAccScheduleConfig_base(rName string) string {
+	return acctest.ConfigCompose(testAccGroupConfig_launchConfigurationBase(rName, "t2.micro"), fmt.Sprintf(`
+resource "aws_autoscaling_group" "test" {
   availability_zones        = [data.aws_availability_zones.available.names[1]]
-  name                      = "%s"
+  name                      = %[1]q
   max_size                  = 1
   min_size                  = 1
   health_check_grace_period = 300
   health_check_type         = "ELB"
   force_delete              = true
   termination_policies      = ["OldestInstance"]
-  launch_configuration      = aws_launch_configuration.foobar.name
+  launch_configuration      = aws_launch_configuration.test.name
 
   tag {
-    key                 = "Foo"
-    value               = "foo-bar"
+    key                 = "Name"
+    value               = %[1]q
     propagate_at_launch = true
   }
 }
+`, rName))
+}
 
-resource "aws_autoscaling_schedule" "foobar" {
-  scheduled_action_name  = "foobar"
+func testAccScheduleConfig_basic(rName1, rName2, startTime, endTime string) string {
+	return acctest.ConfigCompose(testAccScheduleConfig_base(rName1), fmt.Sprintf(`
+resource "aws_autoscaling_schedule" "test" {
+  scheduled_action_name  = %[1]q
   min_size               = 0
   max_size               = 1
   desired_capacity       = 0
-  start_time             = "%s"
-  end_time               = "%s"
-  autoscaling_group_name = aws_autoscaling_group.foobar.name
+  start_time             = %[2]q
+  end_time               = %[3]q
+  autoscaling_group_name = aws_autoscaling_group.test.name
 }
-`, r, r, start, end)
-}
-
-func testAccScheduleConfig_recurrence(r string) string {
-	return acctest.ConfigLatestAmazonLinuxHvmEbsAmi() + fmt.Sprintf(`
-resource "aws_launch_configuration" "foobar" {
-  name          = "%s"
-  image_id      = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
-  instance_type = "t1.micro"
+`, rName2, startTime, endTime))
 }
 
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
-resource "aws_autoscaling_group" "foobar" {
-  availability_zones        = [data.aws_availability_zones.available.names[1]]
-  name                      = "%s"
-  max_size                  = 1
-  min_size                  = 1
-  health_check_grace_period = 300
-  health_check_type         = "ELB"
-  force_delete              = true
-  termination_policies      = ["OldestInstance"]
-  launch_configuration      = aws_launch_configuration.foobar.name
-
-  tag {
-    key                 = "Foo"
-    value               = "foo-bar"
-    propagate_at_launch = true
-  }
-}
-
-resource "aws_autoscaling_schedule" "foobar" {
-  scheduled_action_name  = "foobar"
+func testAccScheduleConfig_recurrence(rName string) string {
+	return acctest.ConfigCompose(testAccScheduleConfig_base(rName), fmt.Sprintf(`
+resource "aws_autoscaling_schedule" "test" {
+  scheduled_action_name  = %[1]q
   min_size               = 0
   max_size               = 1
   desired_capacity       = 0
   recurrence             = "0 8 * * *"
   time_zone              = "Pacific/Tahiti"
-  autoscaling_group_name = aws_autoscaling_group.foobar.name
+  autoscaling_group_name = aws_autoscaling_group.test.name
 }
-`, r, r)
-}
-
-func testAccScheduleConfig_zeroValues(r, start, end string) string {
-	return acctest.ConfigLatestAmazonLinuxHvmEbsAmi() + fmt.Sprintf(`
-resource "aws_launch_configuration" "foobar" {
-  name          = "%s"
-  image_id      = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
-  instance_type = "t1.micro"
+`, rName))
 }
 
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
-resource "aws_autoscaling_group" "foobar" {
-  availability_zones        = [data.aws_availability_zones.available.names[1]]
-  name                      = "%s"
-  max_size                  = 1
-  min_size                  = 1
-  health_check_grace_period = 300
-  health_check_type         = "ELB"
-  force_delete              = true
-  termination_policies      = ["OldestInstance"]
-  launch_configuration      = aws_launch_configuration.foobar.name
-
-  tag {
-    key                 = "Foo"
-    value               = "foo-bar"
-    propagate_at_launch = true
-  }
-}
-
-resource "aws_autoscaling_schedule" "foobar" {
-  scheduled_action_name  = "foobar"
+func testAccScheduleConfig_zeroValues(rName, startTime, endTime string) string {
+	return acctest.ConfigCompose(testAccScheduleConfig_base(rName), fmt.Sprintf(`
+resource "aws_autoscaling_schedule" "test" {
+  scheduled_action_name  = %[1]q
   max_size               = 0
   min_size               = 0
   desired_capacity       = 0
-  start_time             = "%s"
-  end_time               = "%s"
-  autoscaling_group_name = aws_autoscaling_group.foobar.name
+  start_time             = %[2]q
+  end_time               = %[3]q
+  autoscaling_group_name = aws_autoscaling_group.test.name
 }
-`, r, r, start, end)
-}
-
-func testAccScheduleConfig_negativeOne(r, start, end string) string {
-	return acctest.ConfigLatestAmazonLinuxHvmEbsAmi() + fmt.Sprintf(`
-resource "aws_launch_configuration" "foobar" {
-  name          = "%s"
-  image_id      = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
-  instance_type = "t1.micro"
+`, rName, startTime, endTime))
 }
 
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
-resource "aws_autoscaling_group" "foobar" {
-  availability_zones        = [data.aws_availability_zones.available.names[1]]
-  name                      = "%s"
-  max_size                  = 1
-  min_size                  = 1
-  health_check_grace_period = 300
-  health_check_type         = "ELB"
-  force_delete              = true
-  termination_policies      = ["OldestInstance"]
-  launch_configuration      = aws_launch_configuration.foobar.name
-
-  tag {
-    key                 = "Foo"
-    value               = "foo-bar"
-    propagate_at_launch = true
-  }
-}
-
-resource "aws_autoscaling_schedule" "foobar" {
-  scheduled_action_name  = "foobar"
+func testAccScheduleConfig_negativeOne(rName, startTime, endTime string) string {
+	return acctest.ConfigCompose(testAccScheduleConfig_base(rName), fmt.Sprintf(`
+resource "aws_autoscaling_schedule" "test" {
+  scheduled_action_name  = %[1]q
   max_size               = 3
   min_size               = 1
   desired_capacity       = -1
   start_time             = "%s"
   end_time               = "%s"
-  autoscaling_group_name = aws_autoscaling_group.foobar.name
+  autoscaling_group_name = aws_autoscaling_group.test.name
 }
-`, r, r, start, end)
+`, rName, startTime, endTime))
 }

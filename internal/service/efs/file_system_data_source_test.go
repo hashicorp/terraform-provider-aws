@@ -1,27 +1,32 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package efs_test
 
 import (
 	"fmt"
-	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/service/efs"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func TestAccEFSFileSystemDataSource_id(t *testing.T) {
+	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_efs_file_system.test"
 	resourceName := "aws_efs_file_system.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { acctest.PreCheck(t) },
-		ErrorCheck: acctest.ErrorCheck(t, efs.EndpointsID),
-		Providers:  acctest.Providers,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, efs.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccFileSystemIDDataSourceConfig,
+				Config: testAccFileSystemDataSourceConfig_id,
 				Check: resource.ComposeTestCheckFunc(
 					testAccFileSystemCheckDataSource(dataSourceName, resourceName),
 					resource.TestCheckResourceAttrPair(dataSourceName, "arn", resourceName, "arn"),
@@ -34,7 +39,7 @@ func TestAccEFSFileSystemDataSource_id(t *testing.T) {
 					resource.TestCheckResourceAttrPair(dataSourceName, "provisioned_throughput_in_mibps", resourceName, "provisioned_throughput_in_mibps"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "throughput_mode", resourceName, "throughput_mode"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "lifecycle_policy", resourceName, "lifecycle_policy"),
-					resource.TestMatchResourceAttr(dataSourceName, "size_in_bytes", regexp.MustCompile(`^\d+$`)),
+					resource.TestMatchResourceAttr(dataSourceName, "size_in_bytes", regexache.MustCompile(`^\d+$`)),
 				),
 			},
 		},
@@ -42,16 +47,17 @@ func TestAccEFSFileSystemDataSource_id(t *testing.T) {
 }
 
 func TestAccEFSFileSystemDataSource_tags(t *testing.T) {
+	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_efs_file_system.test"
 	resourceName := "aws_efs_file_system.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { acctest.PreCheck(t) },
-		ErrorCheck: acctest.ErrorCheck(t, efs.EndpointsID),
-		Providers:  acctest.Providers,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, efs.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccFileSystemTagsDataSourceConfig,
+				Config: testAccFileSystemDataSourceConfig_tags,
 				Check: resource.ComposeTestCheckFunc(
 					testAccFileSystemCheckDataSource(dataSourceName, resourceName),
 					resource.TestCheckResourceAttrPair(dataSourceName, "arn", resourceName, "arn"),
@@ -64,7 +70,7 @@ func TestAccEFSFileSystemDataSource_tags(t *testing.T) {
 					resource.TestCheckResourceAttrPair(dataSourceName, "provisioned_throughput_in_mibps", resourceName, "provisioned_throughput_in_mibps"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "throughput_mode", resourceName, "throughput_mode"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "lifecycle_policy", resourceName, "lifecycle_policy"),
-					resource.TestMatchResourceAttr(dataSourceName, "size_in_bytes", regexp.MustCompile(`^\d+$`)),
+					resource.TestMatchResourceAttr(dataSourceName, "size_in_bytes", regexache.MustCompile(`^\d+$`)),
 				),
 			},
 		},
@@ -72,16 +78,17 @@ func TestAccEFSFileSystemDataSource_tags(t *testing.T) {
 }
 
 func TestAccEFSFileSystemDataSource_name(t *testing.T) {
+	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_efs_file_system.test"
 	resourceName := "aws_efs_file_system.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { acctest.PreCheck(t) },
-		ErrorCheck: acctest.ErrorCheck(t, efs.EndpointsID),
-		Providers:  acctest.Providers,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, efs.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccFileSystemNameDataSourceConfig,
+				Config: testAccFileSystemDataSourceConfig_name,
 				Check: resource.ComposeTestCheckFunc(
 					testAccFileSystemCheckDataSource(dataSourceName, resourceName),
 					resource.TestCheckResourceAttrPair(dataSourceName, "arn", resourceName, "arn"),
@@ -94,7 +101,7 @@ func TestAccEFSFileSystemDataSource_name(t *testing.T) {
 					resource.TestCheckResourceAttrPair(dataSourceName, "provisioned_throughput_in_mibps", resourceName, "provisioned_throughput_in_mibps"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "throughput_mode", resourceName, "throughput_mode"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "lifecycle_policy", resourceName, "lifecycle_policy"),
-					resource.TestMatchResourceAttr(dataSourceName, "size_in_bytes", regexp.MustCompile(`^\d+$`)),
+					resource.TestMatchResourceAttr(dataSourceName, "size_in_bytes", regexache.MustCompile(`^\d+$`)),
 				),
 			},
 		},
@@ -102,16 +109,17 @@ func TestAccEFSFileSystemDataSource_name(t *testing.T) {
 }
 
 func TestAccEFSFileSystemDataSource_availabilityZone(t *testing.T) {
+	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_efs_file_system.test"
 	resourceName := "aws_efs_file_system.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { acctest.PreCheck(t) },
-		ErrorCheck: acctest.ErrorCheck(t, efs.EndpointsID),
-		Providers:  acctest.Providers,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, efs.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccFileSystemAvailabilityZoneDataSourceConfig,
+				Config: testAccFileSystemDataSourceConfig_availabilityZone,
 				Check: resource.ComposeTestCheckFunc(
 					testAccFileSystemCheckDataSource(dataSourceName, resourceName),
 					resource.TestCheckResourceAttrPair(dataSourceName, "availability_zone_id", resourceName, "availability_zone_id"),
@@ -122,16 +130,26 @@ func TestAccEFSFileSystemDataSource_availabilityZone(t *testing.T) {
 	})
 }
 
-func TestAccEFSFileSystemDataSource_nonExistent(t *testing.T) {
+func TestAccEFSFileSystemDataSource_nonExistent_tags(t *testing.T) {
+	ctx := acctest.Context(t)
+	var desc efs.FileSystemDescription
+	resourceName := "aws_efs_file_system.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { acctest.PreCheck(t) },
-		ErrorCheck: acctest.ErrorCheck(t, efs.EndpointsID),
-		Providers:  acctest.Providers,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, efs.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccFileSystemIDDataSourceConfig_NonExistent,
-				ExpectError: regexp.MustCompile(`error reading EFS FileSystem`),
+				Config: testAccFileSystemConfig_dataSourceBasic(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckFileSystem(ctx, resourceName, &desc),
+				),
+			},
+			{
+				Config:      testAccFileSystemDataSourceConfig_tagsNonExistent(rName),
+				ExpectError: regexache.MustCompile(`Search returned 0 results`),
 			},
 		},
 	})
@@ -171,13 +189,27 @@ func testAccFileSystemCheckDataSource(dName, rName string) resource.TestCheckFun
 	}
 }
 
-const testAccFileSystemIDDataSourceConfig_NonExistent = `
-data "aws_efs_file_system" "test" {
-  file_system_id = "fs-nonexistent"
+func testAccFileSystemConfig_dataSourceBasic(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_efs_file_system" "test" {
+  creation_token = %[1]q
 }
-`
+`, rName)
+}
 
-const testAccFileSystemNameDataSourceConfig = `
+func testAccFileSystemDataSourceConfig_tagsNonExistent(rName string) string {
+	return acctest.ConfigCompose(
+		testAccFileSystemConfig_dataSourceBasic(rName),
+		`
+data "aws_efs_file_system" "test" {
+  tags = {
+    Name = "Does_Not_Exist"
+  }
+}
+`)
+}
+
+const testAccFileSystemDataSourceConfig_name = `
 resource "aws_efs_file_system" "test" {}
 
 data "aws_efs_file_system" "test" {
@@ -185,7 +217,7 @@ data "aws_efs_file_system" "test" {
 }
 `
 
-const testAccFileSystemIDDataSourceConfig = `
+const testAccFileSystemDataSourceConfig_id = `
 resource "aws_efs_file_system" "test" {}
 
 data "aws_efs_file_system" "test" {
@@ -193,7 +225,7 @@ data "aws_efs_file_system" "test" {
 }
 `
 
-const testAccFileSystemTagsDataSourceConfig = `
+const testAccFileSystemDataSourceConfig_tags = `
 resource "aws_efs_file_system" "test" {
   tags = {
     Name        = "default-efs"
@@ -214,7 +246,7 @@ data "aws_efs_file_system" "test" {
 }
 `
 
-const testAccFileSystemAvailabilityZoneDataSourceConfig = `
+const testAccFileSystemDataSourceConfig_availabilityZone = `
 data "aws_availability_zones" "available" {
   state = "available"
 

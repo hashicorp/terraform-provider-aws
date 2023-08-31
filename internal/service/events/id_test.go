@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package events_test
 
 import (
@@ -7,6 +10,8 @@ import (
 )
 
 func TestPermissionParseResourceID(t *testing.T) {
+	t.Parallel()
+
 	testCases := []struct {
 		TestName      string
 		InputID       string
@@ -65,7 +70,10 @@ func TestPermissionParseResourceID(t *testing.T) {
 	}
 
 	for _, testCase := range testCases {
+		testCase := testCase
 		t.Run(testCase.TestName, func(t *testing.T) {
+			t.Parallel()
+
 			gotPart0, gotPart1, err := tfevents.PermissionParseResourceID(testCase.InputID)
 
 			if err == nil && testCase.ExpectedError {
@@ -88,6 +96,8 @@ func TestPermissionParseResourceID(t *testing.T) {
 }
 
 func TestRuleParseResourceID(t *testing.T) {
+	t.Parallel()
+
 	testCases := []struct {
 		TestName      string
 		InputID       string
@@ -126,8 +136,8 @@ func TestRuleParseResourceID(t *testing.T) {
 		},
 		{
 			TestName:      "partner event bus 2",
-			InputID:       "aws.partner/foo.com/foo/18554d09-58ff-aa42-ba9c-c4c33899006f/test",
-			ExpectedPart0: "aws.partner/foo.com/foo/18554d09-58ff-aa42-ba9c-c4c33899006f",
+			InputID:       "aws.partner/example.net/id/18554d09-58ff-aa42-ba9c-c4c33899006f/test",
+			ExpectedPart0: "aws.partner/example.net/id/18554d09-58ff-aa42-ba9c-c4c33899006f",
 			ExpectedPart1: "test",
 		},
 		{
@@ -136,6 +146,14 @@ func TestRuleParseResourceID(t *testing.T) {
 			InputID: tfevents.RuleCreateResourceID("arn:aws:events:us-east-2:123456789012:event-bus/default", "TestRule"),
 			//lintignore:AWSAT003,AWSAT005
 			ExpectedPart0: "arn:aws:events:us-east-2:123456789012:event-bus/default",
+			ExpectedPart1: "TestRule",
+		},
+		{
+			TestName: "ARN based partner event bus",
+			// lintignore:AWSAT003,AWSAT005
+			InputID: "arn:aws:events:us-east-2:123456789012:event-bus/aws.partner/genesys.com/cloud/a12bc345-d678-90e1-2f34-gh5678i9012ej/_genesys/TestRule",
+			// lintignore:AWSAT003,AWSAT005
+			ExpectedPart0: "arn:aws:events:us-east-2:123456789012:event-bus/aws.partner/genesys.com/cloud/a12bc345-d678-90e1-2f34-gh5678i9012ej/_genesys",
 			ExpectedPart1: "TestRule",
 		},
 		{
@@ -176,7 +194,10 @@ func TestRuleParseResourceID(t *testing.T) {
 	}
 
 	for _, testCase := range testCases {
+		testCase := testCase
 		t.Run(testCase.TestName, func(t *testing.T) {
+			t.Parallel()
+
 			gotPart0, gotPart1, err := tfevents.RuleParseResourceID(testCase.InputID)
 
 			if err == nil && testCase.ExpectedError {
@@ -199,6 +220,8 @@ func TestRuleParseResourceID(t *testing.T) {
 }
 
 func TestTargetParseImportID(t *testing.T) {
+	t.Parallel()
+
 	testCases := []struct {
 		TestName      string
 		InputID       string
@@ -303,6 +326,15 @@ func TestTargetParseImportID(t *testing.T) {
 			ExpectedPart2: "TestTarget",
 		},
 		{
+			TestName: "ARN based partner event bus",
+			// lintignore:AWSAT003,AWSAT005
+			InputID: "arn:aws:events:us-east-2:123456789012:event-bus/aws.partner/genesys.com/cloud/a12bc345-d678-90e1-2f34-gh5678i9012ej/_genesys/TestRule/TestTarget",
+			// lintignore:AWSAT003,AWSAT005
+			ExpectedPart0: "arn:aws:events:us-east-2:123456789012:event-bus/aws.partner/genesys.com/cloud/a12bc345-d678-90e1-2f34-gh5678i9012ej/_genesys",
+			ExpectedPart1: "TestRule",
+			ExpectedPart2: "TestTarget",
+		},
+		{
 			TestName:      "empty partner event rule and target",
 			InputID:       "aws.partner/example.com/Test//",
 			ExpectedError: true,
@@ -325,7 +357,10 @@ func TestTargetParseImportID(t *testing.T) {
 	}
 
 	for _, testCase := range testCases {
+		testCase := testCase
 		t.Run(testCase.TestName, func(t *testing.T) {
+			t.Parallel()
+
 			gotPart0, gotPart1, gotPart2, err := tfevents.TargetParseImportID(testCase.InputID)
 
 			if err == nil && testCase.ExpectedError {

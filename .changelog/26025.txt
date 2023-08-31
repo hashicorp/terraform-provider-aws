@@ -1,0 +1,7 @@
+```release-note:new-resource
+aws_rds_reserved_instance
+```
+
+```release-note:new-data-source
+aws_rds_reserved_instance_offering
+```

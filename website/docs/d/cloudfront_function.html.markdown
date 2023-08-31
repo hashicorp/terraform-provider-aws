@@ -24,16 +24,16 @@ data "aws_cloudfront_function" "existing" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This data source supports the following arguments:
 
 * `name` - (Required) Name of the CloudFront function.
-* `stage` - (Required) The function’s stage, either `DEVELOPMENT` or `LIVE`.
+* `stage` - (Required) Function’s stage, either `DEVELOPMENT` or `LIVE`.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This data source exports the following attributes in addition to the arguments above:
 
-* `arn` - Amazon Resource Name (ARN) identifying your CloudFront Function.
+* `arn` - ARN identifying your CloudFront Function.
 * `code` - Source code of the function
 * `comment` - Comment.
 * `etag` - ETag hash of the function

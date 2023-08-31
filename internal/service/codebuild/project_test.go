@@ -1,26 +1,31 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package codebuild_test
 
 import (
+	"context"
 	"fmt"
 	"os"
-	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/codebuild"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfcodebuild "github.com/hashicorp/terraform-provider-aws/internal/service/codebuild"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func init() {
-	acctest.RegisterServiceErrorCheckFunc(codebuild.EndpointsID, testAccErrorCheckSkipCodebuild)
+	acctest.RegisterServiceErrorCheckFunc(codebuild.EndpointsID, testAccErrorCheckSkip)
 }
 
-func testAccErrorCheckSkipCodebuild(t *testing.T) resource.ErrorCheckFunc {
+func testAccErrorCheckSkip(t *testing.T) resource.ErrorCheckFunc {
 	return acctest.ErrorCheckSkipMessagesContaining(t,
 		"InvalidInputException: Region",
 	)
@@ -33,7 +38,7 @@ func testAccErrorCheckSkipCodebuild(t *testing.T) resource.ErrorCheckFunc {
 func testAccBitbucketSourceLocationFromEnv() string {
 	sourceLocation := os.Getenv("AWS_CODEBUILD_BITBUCKET_SOURCE_LOCATION")
 	if sourceLocation == "" {
-		return "https://terraform@bitbucket.org/terraform/aws-test.git" // nosemgrep: email-address
+		return "https://terraform@bitbucket.org/terraform/aws-test.git" // nosemgrep:ci.email-address
 	}
 	return sourceLocation
 }
@@ -51,6 +56,7 @@ func testAccGitHubSourceLocationFromEnv() string {
 }
 
 func TestAccCodeBuildProject_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	var project codebuild.Project
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -58,15 +64,15 @@ func TestAccCodeBuildProject_basic(t *testing.T) {
 	roleResourceName := "aws_iam_role.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, codebuild.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckProjectDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, codebuild.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckProjectDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccProjectConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckProjectExists(resourceName, &project),
+					testAccCheckProjectExists(ctx, resourceName, &project),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "codebuild", fmt.Sprintf("project/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "artifacts.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "badge_enabled", "false"),
@@ -85,14 +91,18 @@ func TestAccCodeBuildProject_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "environment.0.image_pull_credentials_type", codebuild.ImagePullCredentialsTypeCodebuild),
 					resource.TestCheckResourceAttr(resourceName, "logs_config.0.cloudwatch_logs.0.status", codebuild.LogsConfigStatusTypeEnabled),
 					resource.TestCheckResourceAttr(resourceName, "logs_config.0.s3_logs.0.status", codebuild.LogsConfigStatusTypeDisabled),
+					resource.TestCheckResourceAttr(resourceName, "project_visibility", "PRIVATE"),
 					resource.TestCheckResourceAttrPair(resourceName, "service_role", roleResourceName, "arn"),
 					resource.TestCheckResourceAttr(resourceName, "source.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "source.0.auth.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "source.0.git_clone_depth", "0"),
 					resource.TestCheckResourceAttr(resourceName, "source.0.insecure_ssl", "false"),
 					resource.TestCheckResourceAttr(resourceName, "source.0.location", "https://github.com/hashibot-test/aws-test.git"),
 					resource.TestCheckResourceAttr(resourceName, "source.0.report_build_status", "false"),
 					resource.TestCheckResourceAttr(resourceName, "source.0.type", "GITHUB"),
+					resource.TestCheckResourceAttr(resourceName, "secondary_source_version.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "build_batch_config.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "secondary_artifacts.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "secondary_sources.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "vpc_config.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
@@ -106,23 +116,70 @@ func TestAccCodeBuildProject_basic(t *testing.T) {
 	})
 }
 
+func TestAccCodeBuildProject_publicVisibility(t *testing.T) {
+	ctx := acctest.Context(t)
+	var project codebuild.Project
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resourceName := "aws_codebuild_project.test"
+	roleResourceName := "aws_iam_role.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, codebuild.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckProjectDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccProjectConfig_visibility(rName, "PUBLIC_READ"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckProjectExists(ctx, resourceName, &project),
+					resource.TestCheckResourceAttr(resourceName, "project_visibility", "PUBLIC_READ"),
+					resource.TestCheckResourceAttrSet(resourceName, "public_project_alias"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccProjectConfig_visibility(rName, "PRIVATE"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckProjectExists(ctx, resourceName, &project),
+					resource.TestCheckResourceAttr(resourceName, "project_visibility", "PRIVATE"),
+				),
+			},
+			{
+				Config: testAccProjectConfig_visibilityResourceRole(rName, "PRIVATE"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckProjectExists(ctx, resourceName, &project),
+					resource.TestCheckResourceAttr(resourceName, "project_visibility", "PRIVATE"),
+					resource.TestCheckResourceAttrPair(resourceName, "resource_access_role", roleResourceName, "arn"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccCodeBuildProject_badgeEnabled(t *testing.T) {
+	ctx := acctest.Context(t)
 	var project codebuild.Project
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_codebuild_project.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, codebuild.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckProjectDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, codebuild.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckProjectDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccProjectConfig_BadgeEnabled(rName, true),
+				Config: testAccProjectConfig_badgeEnabled(rName, true),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckProjectExists(resourceName, &project),
+					testAccCheckProjectExists(ctx, resourceName, &project),
 					resource.TestCheckResourceAttr(resourceName, "badge_enabled", "true"),
-					resource.TestMatchResourceAttr(resourceName, "badge_url", regexp.MustCompile(`\b(https?).*\b`)),
+					resource.TestMatchResourceAttr(resourceName, "badge_url", regexache.MustCompile(`\b(https?).*\b`)),
 				),
 			},
 			{
@@ -135,20 +192,21 @@ func TestAccCodeBuildProject_badgeEnabled(t *testing.T) {
 }
 
 func TestAccCodeBuildProject_buildTimeout(t *testing.T) {
+	ctx := acctest.Context(t)
 	var project codebuild.Project
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_codebuild_project.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, codebuild.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckProjectDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, codebuild.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckProjectDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccProjectConfig_BuildTimeout(rName, 120),
+				Config: testAccProjectConfig_buildTimeout(rName, 120),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckProjectExists(resourceName, &project),
+					testAccCheckProjectExists(ctx, resourceName, &project),
 					resource.TestCheckResourceAttr(resourceName, "build_timeout", "120"),
 				),
 			},
@@ -158,9 +216,9 @@ func TestAccCodeBuildProject_buildTimeout(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccProjectConfig_BuildTimeout(rName, 240),
+				Config: testAccProjectConfig_buildTimeout(rName, 240),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckProjectExists(resourceName, &project),
+					testAccCheckProjectExists(ctx, resourceName, &project),
 					resource.TestCheckResourceAttr(resourceName, "build_timeout", "240"),
 				),
 			},
@@ -169,20 +227,21 @@ func TestAccCodeBuildProject_buildTimeout(t *testing.T) {
 }
 
 func TestAccCodeBuildProject_queuedTimeout(t *testing.T) {
+	ctx := acctest.Context(t)
 	var project codebuild.Project
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_codebuild_project.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, codebuild.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckProjectDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, codebuild.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckProjectDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccProjectConfig_QueuedTimeout(rName, 120),
+				Config: testAccProjectConfig_queuedTimeout(rName, 120),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckProjectExists(resourceName, &project),
+					testAccCheckProjectExists(ctx, resourceName, &project),
 					resource.TestCheckResourceAttr(resourceName, "queued_timeout", "120"),
 				),
 			},
@@ -192,9 +251,9 @@ func TestAccCodeBuildProject_queuedTimeout(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccProjectConfig_QueuedTimeout(rName, 240),
+				Config: testAccProjectConfig_queuedTimeout(rName, 240),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckProjectExists(resourceName, &project),
+					testAccCheckProjectExists(ctx, resourceName, &project),
 					resource.TestCheckResourceAttr(resourceName, "queued_timeout", "240"),
 				),
 			},
@@ -203,6 +262,7 @@ func TestAccCodeBuildProject_queuedTimeout(t *testing.T) {
 }
 
 func TestAccCodeBuildProject_cache(t *testing.T) {
+	ctx := acctest.Context(t)
 	var project codebuild.Project
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_codebuild_project.test"
@@ -210,19 +270,19 @@ func TestAccCodeBuildProject_cache(t *testing.T) {
 	s3Location2 := rName + "-2"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, codebuild.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckProjectDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, codebuild.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckProjectDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccProjectConfig_Cache(rName, "", "S3"),
-				ExpectError: regexp.MustCompile(`cache location is required when cache type is "S3"`),
+				Config:      testAccProjectConfig_cache(rName, "", "S3"),
+				ExpectError: regexache.MustCompile(`cache location is required when cache type is "S3"`),
 			},
 			{
-				Config: testAccProjectConfig_Cache(rName, "", codebuild.CacheTypeNoCache),
+				Config: testAccProjectConfig_cache(rName, "", codebuild.CacheTypeNoCache),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckProjectExists(resourceName, &project),
+					testAccCheckProjectExists(ctx, resourceName, &project),
 					resource.TestCheckResourceAttr(resourceName, "cache.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "cache.0.type", codebuild.CacheTypeNoCache),
 				),
@@ -235,24 +295,24 @@ func TestAccCodeBuildProject_cache(t *testing.T) {
 			{
 				Config: testAccProjectConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckProjectExists(resourceName, &project),
+					testAccCheckProjectExists(ctx, resourceName, &project),
 					resource.TestCheckResourceAttr(resourceName, "cache.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "cache.0.type", codebuild.CacheTypeNoCache),
 				),
 			},
 			{
-				Config: testAccProjectConfig_Cache(rName, s3Location1, "S3"),
+				Config: testAccProjectConfig_cache(rName, s3Location1, "S3"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckProjectExists(resourceName, &project),
+					testAccCheckProjectExists(ctx, resourceName, &project),
 					resource.TestCheckResourceAttr(resourceName, "cache.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "cache.0.location", s3Location1),
 					resource.TestCheckResourceAttr(resourceName, "cache.0.type", "S3"),
 				),
 			},
 			{
-				Config: testAccProjectConfig_Cache(rName, s3Location2, "S3"),
+				Config: testAccProjectConfig_cache(rName, s3Location2, "S3"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckProjectExists(resourceName, &project),
+					testAccCheckProjectExists(ctx, resourceName, &project),
 					resource.TestCheckResourceAttr(resourceName, "cache.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "cache.0.location", s3Location2),
 					resource.TestCheckResourceAttr(resourceName, "cache.0.type", "S3"),
@@ -261,18 +321,26 @@ func TestAccCodeBuildProject_cache(t *testing.T) {
 			{
 				Config: testAccProjectConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckProjectExists(resourceName, &project),
+					testAccCheckProjectExists(ctx, resourceName, &project),
 					resource.TestCheckResourceAttr(resourceName, "cache.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "cache.0.type", codebuild.CacheTypeNoCache),
 				),
 			},
 			{
-				Config: testAccProjectConfig_LocalCache(rName, "LOCAL_DOCKER_LAYER_CACHE"),
+				Config: testAccProjectConfig_localCache(rName, "LOCAL_DOCKER_LAYER_CACHE"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckProjectExists(resourceName, &project),
+					testAccCheckProjectExists(ctx, resourceName, &project),
 					resource.TestCheckResourceAttr(resourceName, "cache.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "cache.0.modes.0", "LOCAL_DOCKER_LAYER_CACHE"),
 					resource.TestCheckResourceAttr(resourceName, "cache.0.type", "LOCAL"),
+				),
+			},
+			{
+				Config: testAccProjectConfig_s3ComputedLocation(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckProjectExists(ctx, resourceName, &project),
+					resource.TestCheckResourceAttr(resourceName, "cache.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "cache.0.type", codebuild.CacheTypeS3),
 				),
 			},
 		},
@@ -280,20 +348,21 @@ func TestAccCodeBuildProject_cache(t *testing.T) {
 }
 
 func TestAccCodeBuildProject_description(t *testing.T) {
+	ctx := acctest.Context(t)
 	var project codebuild.Project
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_codebuild_project.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, codebuild.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckProjectDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, codebuild.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckProjectDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccProjectConfig_Description(rName, "description1"),
+				Config: testAccProjectConfig_description(rName, "description1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckProjectExists(resourceName, &project),
+					testAccCheckProjectExists(ctx, resourceName, &project),
 					resource.TestCheckResourceAttr(resourceName, "description", "description1"),
 				),
 			},
@@ -303,9 +372,9 @@ func TestAccCodeBuildProject_description(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccProjectConfig_Description(rName, "description2"),
+				Config: testAccProjectConfig_description(rName, "description2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckProjectExists(resourceName, &project),
+					testAccCheckProjectExists(ctx, resourceName, &project),
 					resource.TestCheckResourceAttr(resourceName, "description", "description2"),
 				),
 			},
@@ -314,20 +383,21 @@ func TestAccCodeBuildProject_description(t *testing.T) {
 }
 
 func TestAccCodeBuildProject_fileSystemLocations(t *testing.T) {
+	ctx := acctest.Context(t)
 	var project codebuild.Project
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_codebuild_project.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, codebuild.EndpointsID, "efs"), //using efs.EndpointsID will import efs and make linters sad
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckProjectDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, codebuild.EndpointsID, "efs"), //using efs.EndpointsID will import efs and make linters sad
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckProjectDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccProjectConfig_FileSystemLocations(rName, "/mount1"),
+				Config: testAccProjectConfig_fileSystemLocations(rName, "/mount1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckProjectExists(resourceName, &project),
+					testAccCheckProjectExists(ctx, resourceName, &project),
 					resource.TestCheckResourceAttr(resourceName, "environment.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "environment.0.compute_type", codebuild.ComputeTypeBuildGeneral1Small),
 					resource.TestCheckResourceAttr(resourceName, "environment.0.environment_variable.#", "0"),
@@ -336,7 +406,7 @@ func TestAccCodeBuildProject_fileSystemLocations(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "environment.0.type", codebuild.EnvironmentTypeLinuxContainer),
 					resource.TestCheckResourceAttr(resourceName, "file_system_locations.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "file_system_locations.0.identifier", "test"),
-					resource.TestMatchResourceAttr(resourceName, "file_system_locations.0.location", regexp.MustCompile(`/directory-path$`)),
+					resource.TestMatchResourceAttr(resourceName, "file_system_locations.0.location", regexache.MustCompile(`/directory-path$`)),
 					resource.TestCheckResourceAttr(resourceName, "file_system_locations.0.mount_options", "nfsvers=4.1,rsize=1048576,wsize=1048576,hard,timeo=450,retrans=3"),
 					resource.TestCheckResourceAttr(resourceName, "file_system_locations.0.mount_point", "/mount1"),
 					resource.TestCheckResourceAttr(resourceName, "file_system_locations.0.type", codebuild.FileSystemTypeEfs),
@@ -348,12 +418,12 @@ func TestAccCodeBuildProject_fileSystemLocations(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccProjectConfig_FileSystemLocations(rName, "/mount2"),
+				Config: testAccProjectConfig_fileSystemLocations(rName, "/mount2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckProjectExists(resourceName, &project),
+					testAccCheckProjectExists(ctx, resourceName, &project),
 					resource.TestCheckResourceAttr(resourceName, "file_system_locations.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "file_system_locations.0.identifier", "test"),
-					resource.TestMatchResourceAttr(resourceName, "file_system_locations.0.location", regexp.MustCompile(`/directory-path$`)),
+					resource.TestMatchResourceAttr(resourceName, "file_system_locations.0.location", regexache.MustCompile(`/directory-path$`)),
 					resource.TestCheckResourceAttr(resourceName, "file_system_locations.0.mount_options", "nfsvers=4.1,rsize=1048576,wsize=1048576,hard,timeo=450,retrans=3"),
 					resource.TestCheckResourceAttr(resourceName, "file_system_locations.0.mount_point", "/mount2"),
 					resource.TestCheckResourceAttr(resourceName, "file_system_locations.0.type", codebuild.FileSystemTypeEfs),
@@ -364,20 +434,21 @@ func TestAccCodeBuildProject_fileSystemLocations(t *testing.T) {
 }
 
 func TestAccCodeBuildProject_sourceVersion(t *testing.T) {
+	ctx := acctest.Context(t)
 	var project codebuild.Project
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_codebuild_project.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, codebuild.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckProjectDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, codebuild.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckProjectDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccProjectConfig_SourceVersion(rName, "master"),
+				Config: testAccProjectConfig_sourceVersion(rName, "master"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckProjectExists(resourceName, &project),
+					testAccCheckProjectExists(ctx, resourceName, &project),
 					resource.TestCheckResourceAttr(resourceName, "source_version", "master"),
 				),
 			},
@@ -386,21 +457,22 @@ func TestAccCodeBuildProject_sourceVersion(t *testing.T) {
 }
 
 func TestAccCodeBuildProject_encryptionKey(t *testing.T) {
+	ctx := acctest.Context(t)
 	var project codebuild.Project
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_codebuild_project.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, codebuild.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckProjectDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, codebuild.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckProjectDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccProjectConfig_EncryptionKey(rName),
+				Config: testAccProjectConfig_encryptionKey(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckProjectExists(resourceName, &project),
-					resource.TestMatchResourceAttr(resourceName, "encryption_key", regexp.MustCompile(`.+`)),
+					testAccCheckProjectExists(ctx, resourceName, &project),
+					resource.TestCheckResourceAttrPair(resourceName, "encryption_key", "aws_kms_key.test", "arn"),
 				),
 			},
 			{
@@ -413,20 +485,21 @@ func TestAccCodeBuildProject_encryptionKey(t *testing.T) {
 }
 
 func TestAccCodeBuildProject_Environment_environmentVariable(t *testing.T) {
+	ctx := acctest.Context(t)
 	var project1, project2, project3 codebuild.Project
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_codebuild_project.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, codebuild.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckProjectDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, codebuild.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckProjectDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccProjectConfig_Environment_EnvironmentVariable_One(rName, "KEY1", "VALUE1"),
+				Config: testAccProjectConfig_environmentVariableOne(rName, "KEY1", "VALUE1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckProjectExists(resourceName, &project1),
+					testAccCheckProjectExists(ctx, resourceName, &project1),
 				),
 			},
 			{
@@ -435,9 +508,9 @@ func TestAccCodeBuildProject_Environment_environmentVariable(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccProjectConfig_Environment_EnvironmentVariable_Two(rName, "KEY1", "VALUE1UPDATED", "KEY2", "VALUE2"),
+				Config: testAccProjectConfig_environmentVariableTwo(rName, "KEY1", "VALUE1UPDATED", "KEY2", "VALUE2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckProjectExists(resourceName, &project2),
+					testAccCheckProjectExists(ctx, resourceName, &project2),
 				),
 			},
 			{
@@ -446,9 +519,9 @@ func TestAccCodeBuildProject_Environment_environmentVariable(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccProjectConfig_Environment_EnvironmentVariable_Zero(rName),
+				Config: testAccProjectConfig_environmentVariableZero(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckProjectExists(resourceName, &project3),
+					testAccCheckProjectExists(ctx, resourceName, &project3),
 					resource.TestCheckResourceAttr(resourceName, "environment.0.environment_variable.#", "0"),
 				),
 			},
@@ -462,20 +535,21 @@ func TestAccCodeBuildProject_Environment_environmentVariable(t *testing.T) {
 }
 
 func TestAccCodeBuildProject_EnvironmentEnvironmentVariable_type(t *testing.T) {
+	ctx := acctest.Context(t)
 	var project codebuild.Project
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_codebuild_project.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, codebuild.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckProjectDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, codebuild.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckProjectDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccProjectConfig_Environment_EnvironmentVariable_Type(rName, codebuild.EnvironmentVariableTypePlaintext),
+				Config: testAccProjectConfig_environmentVariableType(rName, codebuild.EnvironmentVariableTypePlaintext),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckProjectExists(resourceName, &project),
+					testAccCheckProjectExists(ctx, resourceName, &project),
 					resource.TestCheckResourceAttr(resourceName, "environment.0.environment_variable.0.type", codebuild.EnvironmentVariableTypePlaintext),
 					resource.TestCheckResourceAttr(resourceName, "environment.0.environment_variable.1.type", codebuild.EnvironmentVariableTypePlaintext),
 				),
@@ -486,17 +560,17 @@ func TestAccCodeBuildProject_EnvironmentEnvironmentVariable_type(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccProjectConfig_Environment_EnvironmentVariable_Type(rName, codebuild.EnvironmentVariableTypeParameterStore),
+				Config: testAccProjectConfig_environmentVariableType(rName, codebuild.EnvironmentVariableTypeParameterStore),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckProjectExists(resourceName, &project),
+					testAccCheckProjectExists(ctx, resourceName, &project),
 					resource.TestCheckResourceAttr(resourceName, "environment.0.environment_variable.0.type", codebuild.EnvironmentVariableTypePlaintext),
 					resource.TestCheckResourceAttr(resourceName, "environment.0.environment_variable.1.type", codebuild.EnvironmentVariableTypeParameterStore),
 				),
 			},
 			{
-				Config: testAccProjectConfig_Environment_EnvironmentVariable_Type(rName, codebuild.EnvironmentVariableTypeSecretsManager),
+				Config: testAccProjectConfig_environmentVariableType(rName, codebuild.EnvironmentVariableTypeSecretsManager),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckProjectExists(resourceName, &project),
+					testAccCheckProjectExists(ctx, resourceName, &project),
 					resource.TestCheckResourceAttr(resourceName, "environment.0.environment_variable.0.type", codebuild.EnvironmentVariableTypePlaintext),
 					resource.TestCheckResourceAttr(resourceName, "environment.0.environment_variable.1.type", codebuild.EnvironmentVariableTypeSecretsManager),
 				),
@@ -506,20 +580,21 @@ func TestAccCodeBuildProject_EnvironmentEnvironmentVariable_type(t *testing.T) {
 }
 
 func TestAccCodeBuildProject_EnvironmentEnvironmentVariable_value(t *testing.T) {
+	ctx := acctest.Context(t)
 	var project1, project2, project3 codebuild.Project
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_codebuild_project.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, codebuild.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckProjectDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, codebuild.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckProjectDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccProjectConfig_Environment_EnvironmentVariable_One(rName, "KEY1", ""),
+				Config: testAccProjectConfig_environmentVariableOne(rName, "KEY1", ""),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckProjectExists(resourceName, &project1),
+					testAccCheckProjectExists(ctx, resourceName, &project1),
 				),
 			},
 			{
@@ -528,9 +603,9 @@ func TestAccCodeBuildProject_EnvironmentEnvironmentVariable_value(t *testing.T) 
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccProjectConfig_Environment_EnvironmentVariable_One(rName, "KEY1", "VALUE1"),
+				Config: testAccProjectConfig_environmentVariableOne(rName, "KEY1", "VALUE1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckProjectExists(resourceName, &project2),
+					testAccCheckProjectExists(ctx, resourceName, &project2),
 				),
 			},
 			{
@@ -539,9 +614,9 @@ func TestAccCodeBuildProject_EnvironmentEnvironmentVariable_value(t *testing.T) 
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccProjectConfig_Environment_EnvironmentVariable_One(rName, "KEY1", ""),
+				Config: testAccProjectConfig_environmentVariableOne(rName, "KEY1", ""),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckProjectExists(resourceName, &project3),
+					testAccCheckProjectExists(ctx, resourceName, &project3),
 				),
 			},
 			{
@@ -554,21 +629,22 @@ func TestAccCodeBuildProject_EnvironmentEnvironmentVariable_value(t *testing.T) 
 }
 
 func TestAccCodeBuildProject_Environment_certificate(t *testing.T) {
+	ctx := acctest.Context(t)
 	var project codebuild.Project
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	oName := "certificate.pem"
 	resourceName := "aws_codebuild_project.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, codebuild.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckProjectDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, codebuild.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckProjectDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccProjectConfig_Environment_Certificate(rName, oName),
+				Config: testAccProjectConfig_environmentCertificate(rName, oName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckProjectExists(resourceName, &project),
+					testAccCheckProjectExists(ctx, resourceName, &project),
 					testAccCheckProjectCertificate(&project, fmt.Sprintf("%s/%s", rName, oName)),
 				),
 			},
@@ -582,38 +658,39 @@ func TestAccCodeBuildProject_Environment_certificate(t *testing.T) {
 }
 
 func TestAccCodeBuildProject_Logs_cloudWatchLogs(t *testing.T) {
+	ctx := acctest.Context(t)
 	var project codebuild.Project
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_codebuild_project.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, codebuild.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckProjectDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, codebuild.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckProjectDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccProjectConfig_LogsConfig_CloudWatchLogs(rName, codebuild.LogsConfigStatusTypeEnabled, "group-name", ""),
+				Config: testAccProjectConfig_cloudWatchLogs(rName, codebuild.LogsConfigStatusTypeEnabled, "group-name", ""),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckProjectExists(resourceName, &project),
+					testAccCheckProjectExists(ctx, resourceName, &project),
 					resource.TestCheckResourceAttr(resourceName, "logs_config.0.cloudwatch_logs.0.status", codebuild.LogsConfigStatusTypeEnabled),
 					resource.TestCheckResourceAttr(resourceName, "logs_config.0.cloudwatch_logs.0.group_name", "group-name"),
 					resource.TestCheckResourceAttr(resourceName, "logs_config.0.cloudwatch_logs.0.stream_name", ""),
 				),
 			},
 			{
-				Config: testAccProjectConfig_LogsConfig_CloudWatchLogs(rName, codebuild.LogsConfigStatusTypeEnabled, "group-name", "stream-name"),
+				Config: testAccProjectConfig_cloudWatchLogs(rName, codebuild.LogsConfigStatusTypeEnabled, "group-name", "stream-name"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckProjectExists(resourceName, &project),
+					testAccCheckProjectExists(ctx, resourceName, &project),
 					resource.TestCheckResourceAttr(resourceName, "logs_config.0.cloudwatch_logs.0.status", codebuild.LogsConfigStatusTypeEnabled),
 					resource.TestCheckResourceAttr(resourceName, "logs_config.0.cloudwatch_logs.0.group_name", "group-name"),
 					resource.TestCheckResourceAttr(resourceName, "logs_config.0.cloudwatch_logs.0.stream_name", "stream-name"),
 				),
 			},
 			{
-				Config: testAccProjectConfig_LogsConfig_CloudWatchLogs(rName, codebuild.LogsConfigStatusTypeDisabled, "", ""),
+				Config: testAccProjectConfig_cloudWatchLogs(rName, codebuild.LogsConfigStatusTypeDisabled, "", ""),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckProjectExists(resourceName, &project),
+					testAccCheckProjectExists(ctx, resourceName, &project),
 					resource.TestCheckResourceAttr(resourceName, "logs_config.0.cloudwatch_logs.0.status", codebuild.LogsConfigStatusTypeDisabled),
 				),
 			},
@@ -627,38 +704,39 @@ func TestAccCodeBuildProject_Logs_cloudWatchLogs(t *testing.T) {
 }
 
 func TestAccCodeBuildProject_Logs_s3Logs(t *testing.T) {
+	ctx := acctest.Context(t)
 	var project codebuild.Project
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_codebuild_project.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, codebuild.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckProjectDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, codebuild.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckProjectDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccProjectConfig_LogsConfig_S3Logs(rName, codebuild.LogsConfigStatusTypeEnabled, rName+"/build-log", false),
+				Config: testAccProjectConfig_s3Logs(rName, codebuild.LogsConfigStatusTypeEnabled, rName+"/build-log", false),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckProjectExists(resourceName, &project),
+					testAccCheckProjectExists(ctx, resourceName, &project),
 					resource.TestCheckResourceAttr(resourceName, "logs_config.0.s3_logs.0.status", codebuild.LogsConfigStatusTypeEnabled),
 					resource.TestCheckResourceAttr(resourceName, "logs_config.0.s3_logs.0.location", rName+"/build-log"),
 					resource.TestCheckResourceAttr(resourceName, "logs_config.0.s3_logs.0.encryption_disabled", "false"),
 				),
 			},
 			{
-				Config: testAccProjectConfig_LogsConfig_S3Logs(rName, codebuild.LogsConfigStatusTypeEnabled, rName+"/build-log", true),
+				Config: testAccProjectConfig_s3Logs(rName, codebuild.LogsConfigStatusTypeEnabled, rName+"/build-log", true),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckProjectExists(resourceName, &project),
+					testAccCheckProjectExists(ctx, resourceName, &project),
 					resource.TestCheckResourceAttr(resourceName, "logs_config.0.s3_logs.0.status", codebuild.LogsConfigStatusTypeEnabled),
 					resource.TestCheckResourceAttr(resourceName, "logs_config.0.s3_logs.0.location", rName+"/build-log"),
 					resource.TestCheckResourceAttr(resourceName, "logs_config.0.s3_logs.0.encryption_disabled", "true"),
 				),
 			},
 			{
-				Config: testAccProjectConfig_LogsConfig_S3Logs(rName, codebuild.LogsConfigStatusTypeDisabled, "", false),
+				Config: testAccProjectConfig_s3Logs(rName, codebuild.LogsConfigStatusTypeDisabled, "", false),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckProjectExists(resourceName, &project),
+					testAccCheckProjectExists(ctx, resourceName, &project),
 					resource.TestCheckResourceAttr(resourceName, "logs_config.0.s3_logs.0.status", codebuild.LogsConfigStatusTypeDisabled),
 				),
 			},
@@ -672,6 +750,7 @@ func TestAccCodeBuildProject_Logs_s3Logs(t *testing.T) {
 }
 
 func TestAccCodeBuildProject_buildBatch(t *testing.T) {
+	ctx := acctest.Context(t)
 	var project codebuild.Project
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_codebuild_project.test"
@@ -681,15 +760,15 @@ func TestAccCodeBuildProject_buildBatch(t *testing.T) {
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, codebuild.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckProjectDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, codebuild.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckProjectDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccProjectConfig_BuildBatchConfig(rName, true, "BUILD_GENERAL1_SMALL", 10, 5),
+				Config: testAccProjectConfig_buildBatch(rName, true, "BUILD_GENERAL1_SMALL", 10, 5),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckProjectExists(resourceName, &project),
+					testAccCheckProjectExists(ctx, resourceName, &project),
 					resource.TestCheckResourceAttr(resourceName, "build_batch_config.0.combine_artifacts", "true"),
 					resource.TestCheckResourceAttr(resourceName, "build_batch_config.0.restrictions.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "build_batch_config.0.restrictions.0.compute_types_allowed.#", "1"),
@@ -704,9 +783,9 @@ func TestAccCodeBuildProject_buildBatch(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccProjectConfig_BuildBatchConfig(rName, false, "BUILD_GENERAL1_MEDIUM", 20, 10),
+				Config: testAccProjectConfig_buildBatch(rName, false, "BUILD_GENERAL1_MEDIUM", 20, 10),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckProjectExists(resourceName, &project),
+					testAccCheckProjectExists(ctx, resourceName, &project),
 					resource.TestCheckResourceAttr(resourceName, "build_batch_config.0.combine_artifacts", "false"),
 					resource.TestCheckResourceAttr(resourceName, "build_batch_config.0.restrictions.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "build_batch_config.0.restrictions.0.compute_types_allowed.#", "1"),
@@ -720,20 +799,21 @@ func TestAccCodeBuildProject_buildBatch(t *testing.T) {
 }
 
 func TestAccCodeBuildProject_Source_gitCloneDepth(t *testing.T) {
+	ctx := acctest.Context(t)
 	var project codebuild.Project
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_codebuild_project.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, codebuild.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckProjectDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, codebuild.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckProjectDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccProjectConfig_Source_GitCloneDepth(rName, 1),
+				Config: testAccProjectConfig_sourceGitCloneDepth(rName, 1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckProjectExists(resourceName, &project),
+					testAccCheckProjectExists(ctx, resourceName, &project),
 					resource.TestCheckResourceAttr(resourceName, "source.0.git_clone_depth", "1"),
 				),
 			},
@@ -743,9 +823,9 @@ func TestAccCodeBuildProject_Source_gitCloneDepth(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccProjectConfig_Source_GitCloneDepth(rName, 2),
+				Config: testAccProjectConfig_sourceGitCloneDepth(rName, 2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckProjectExists(resourceName, &project),
+					testAccCheckProjectExists(ctx, resourceName, &project),
 					resource.TestCheckResourceAttr(resourceName, "source.0.git_clone_depth", "2"),
 				),
 			},
@@ -754,20 +834,21 @@ func TestAccCodeBuildProject_Source_gitCloneDepth(t *testing.T) {
 }
 
 func TestAccCodeBuildProject_SourceGitSubmodules_codeCommit(t *testing.T) {
+	ctx := acctest.Context(t)
 	var project codebuild.Project
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_codebuild_project.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, codebuild.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckProjectDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, codebuild.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckProjectDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccProjectConfig_Source_GitSubmodulesConfig_CodeCommit(rName, true),
+				Config: testAccProjectConfig_sourceGitSubmodulesCodeCommit(rName, true),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckProjectExists(resourceName, &project),
+					testAccCheckProjectExists(ctx, resourceName, &project),
 					resource.TestCheckResourceAttr(resourceName, "source.0.git_submodules_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "source.0.git_submodules_config.0.fetch_submodules", "true"),
 				),
@@ -778,9 +859,9 @@ func TestAccCodeBuildProject_SourceGitSubmodules_codeCommit(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccProjectConfig_Source_GitSubmodulesConfig_CodeCommit(rName, false),
+				Config: testAccProjectConfig_sourceGitSubmodulesCodeCommit(rName, false),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckProjectExists(resourceName, &project),
+					testAccCheckProjectExists(ctx, resourceName, &project),
 					resource.TestCheckResourceAttr(resourceName, "source.0.git_submodules_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "source.0.git_submodules_config.0.fetch_submodules", "false"),
 				),
@@ -790,20 +871,21 @@ func TestAccCodeBuildProject_SourceGitSubmodules_codeCommit(t *testing.T) {
 }
 
 func TestAccCodeBuildProject_SourceGitSubmodules_gitHub(t *testing.T) {
+	ctx := acctest.Context(t)
 	var project codebuild.Project
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_codebuild_project.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, codebuild.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckProjectDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, codebuild.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckProjectDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccProjectConfig_Source_GitSubmodulesConfig_GitHub(rName, true),
+				Config: testAccProjectConfig_sourceGitSubmodulesGitHub(rName, true),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckProjectExists(resourceName, &project),
+					testAccCheckProjectExists(ctx, resourceName, &project),
 				),
 			},
 			{
@@ -812,9 +894,9 @@ func TestAccCodeBuildProject_SourceGitSubmodules_gitHub(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccProjectConfig_Source_GitSubmodulesConfig_GitHub(rName, false),
+				Config: testAccProjectConfig_sourceGitSubmodulesGitHub(rName, false),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckProjectExists(resourceName, &project),
+					testAccCheckProjectExists(ctx, resourceName, &project),
 				),
 			},
 		},
@@ -822,20 +904,21 @@ func TestAccCodeBuildProject_SourceGitSubmodules_gitHub(t *testing.T) {
 }
 
 func TestAccCodeBuildProject_SourceGitSubmodules_gitHubEnterprise(t *testing.T) {
+	ctx := acctest.Context(t)
 	var project codebuild.Project
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_codebuild_project.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, codebuild.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckProjectDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, codebuild.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckProjectDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccProjectConfig_Source_GitSubmodulesConfig_GitHubEnterprise(rName, true),
+				Config: testAccProjectConfig_sourceGitSubmodulesGitHubEnterprise(rName, true),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckProjectExists(resourceName, &project),
+					testAccCheckProjectExists(ctx, resourceName, &project),
 				),
 			},
 			{
@@ -844,9 +927,9 @@ func TestAccCodeBuildProject_SourceGitSubmodules_gitHubEnterprise(t *testing.T) 
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccProjectConfig_Source_GitSubmodulesConfig_GitHubEnterprise(rName, false),
+				Config: testAccProjectConfig_sourceGitSubmodulesGitHubEnterprise(rName, false),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckProjectExists(resourceName, &project),
+					testAccCheckProjectExists(ctx, resourceName, &project),
 				),
 			},
 		},
@@ -854,20 +937,21 @@ func TestAccCodeBuildProject_SourceGitSubmodules_gitHubEnterprise(t *testing.T) 
 }
 
 func TestAccCodeBuildProject_SecondarySourcesGitSubmodules_codeCommit(t *testing.T) {
+	ctx := acctest.Context(t)
 	var project codebuild.Project
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_codebuild_project.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, codebuild.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckProjectDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, codebuild.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckProjectDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccProjectConfig_SecondarySources_GitSubmodulesConfig_CodeCommit(rName, true),
+				Config: testAccProjectConfig_secondarySourcesGitSubmodulesCodeCommit(rName, true),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckProjectExists(resourceName, &project),
+					testAccCheckProjectExists(ctx, resourceName, &project),
 					resource.TestCheckResourceAttr(resourceName, "secondary_sources.#", "2"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "secondary_sources.*", map[string]string{
 						"source_identifier":                        "secondarySource1",
@@ -887,9 +971,9 @@ func TestAccCodeBuildProject_SecondarySourcesGitSubmodules_codeCommit(t *testing
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccProjectConfig_SecondarySources_GitSubmodulesConfig_CodeCommit(rName, false),
+				Config: testAccProjectConfig_secondarySourcesGitSubmodulesCodeCommit(rName, false),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckProjectExists(resourceName, &project),
+					testAccCheckProjectExists(ctx, resourceName, &project),
 					resource.TestCheckResourceAttr(resourceName, "secondary_sources.#", "2"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "secondary_sources.*", map[string]string{
 						"source_identifier":                        "secondarySource1",
@@ -904,9 +988,9 @@ func TestAccCodeBuildProject_SecondarySourcesGitSubmodules_codeCommit(t *testing
 				),
 			},
 			{
-				Config: testAccProjectConfig_SecondarySources_none(rName, false),
+				Config: testAccProjectConfig_secondarySourcesNone(rName, false),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckProjectExists(resourceName, &project),
+					testAccCheckProjectExists(ctx, resourceName, &project),
 					resource.TestCheckResourceAttr(resourceName, "secondary_sources.#", "0"),
 				),
 			},
@@ -915,20 +999,21 @@ func TestAccCodeBuildProject_SecondarySourcesGitSubmodules_codeCommit(t *testing
 }
 
 func TestAccCodeBuildProject_SecondarySourcesGitSubmodules_gitHub(t *testing.T) {
+	ctx := acctest.Context(t)
 	var project codebuild.Project
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_codebuild_project.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, codebuild.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckProjectDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, codebuild.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckProjectDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccProjectConfig_SecondarySources_GitSubmodulesConfig_GitHub(rName, true),
+				Config: testAccProjectConfig_secondarySourcesGitSubmodulesGitHub(rName, true),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckProjectExists(resourceName, &project),
+					testAccCheckProjectExists(ctx, resourceName, &project),
 				),
 			},
 			{
@@ -937,9 +1022,9 @@ func TestAccCodeBuildProject_SecondarySourcesGitSubmodules_gitHub(t *testing.T) 
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccProjectConfig_SecondarySources_GitSubmodulesConfig_GitHub(rName, false),
+				Config: testAccProjectConfig_secondarySourcesGitSubmodulesGitHub(rName, false),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckProjectExists(resourceName, &project),
+					testAccCheckProjectExists(ctx, resourceName, &project),
 				),
 			},
 		},
@@ -947,20 +1032,21 @@ func TestAccCodeBuildProject_SecondarySourcesGitSubmodules_gitHub(t *testing.T) 
 }
 
 func TestAccCodeBuildProject_SecondarySourcesGitSubmodules_gitHubEnterprise(t *testing.T) {
+	ctx := acctest.Context(t)
 	var project codebuild.Project
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_codebuild_project.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, codebuild.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckProjectDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, codebuild.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckProjectDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccProjectConfig_SecondarySources_GitSubmodulesConfig_GitHubEnterprise(rName, true),
+				Config: testAccProjectConfig_secondarySourcesGitSubmodulesGitHubEnterprise(rName, true),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckProjectExists(resourceName, &project),
+					testAccCheckProjectExists(ctx, resourceName, &project),
 				),
 			},
 			{
@@ -969,9 +1055,102 @@ func TestAccCodeBuildProject_SecondarySourcesGitSubmodules_gitHubEnterprise(t *t
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccProjectConfig_SecondarySources_GitSubmodulesConfig_GitHubEnterprise(rName, false),
+				Config: testAccProjectConfig_secondarySourcesGitSubmodulesGitHubEnterprise(rName, false),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckProjectExists(resourceName, &project),
+					testAccCheckProjectExists(ctx, resourceName, &project),
+				),
+			},
+		},
+	})
+}
+
+func TestAccCodeBuildProject_SecondarySourcesVersions(t *testing.T) {
+	ctx := acctest.Context(t)
+	var project codebuild.Project
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_codebuild_project.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, codebuild.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckProjectDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccProjectConfig_secondarySourceVersionsCodeCommit(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckProjectExists(ctx, resourceName, &project),
+					resource.TestCheckResourceAttr(resourceName, "secondary_sources.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "secondary_source_version.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "secondary_sources.*", map[string]string{
+						"source_identifier": "secondarySource1",
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "secondary_sources.*", map[string]string{
+						"source_identifier": "secondarySource2",
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "secondary_source_version.*", map[string]string{
+						"source_identifier": "secondarySource1",
+						"source_version":    "master",
+					}),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccProjectConfig_secondarySourceVersionsCodeCommitUpdated(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckProjectExists(ctx, resourceName, &project),
+					resource.TestCheckResourceAttr(resourceName, "secondary_sources.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "secondary_source_version.#", "2"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "secondary_sources.*", map[string]string{
+						"source_identifier": "secondarySource1",
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "secondary_sources.*", map[string]string{
+						"source_identifier": "secondarySource2",
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "secondary_source_version.*", map[string]string{
+						"source_identifier": "secondarySource1",
+						"source_version":    "master",
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "secondary_source_version.*", map[string]string{
+						"source_identifier": "secondarySource2",
+						"source_version":    "master",
+					}),
+				),
+			},
+			{
+				Config: testAccProjectConfig_secondarySourceVersionsCodeCommit(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckProjectExists(ctx, resourceName, &project),
+					resource.TestCheckResourceAttr(resourceName, "secondary_sources.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "secondary_source_version.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "secondary_sources.*", map[string]string{
+						"source_identifier": "secondarySource1",
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "secondary_sources.*", map[string]string{
+						"source_identifier": "secondarySource2",
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "secondary_source_version.*", map[string]string{
+						"source_identifier": "secondarySource1",
+						"source_version":    "master",
+					}),
+				),
+			},
+			{
+				Config: testAccProjectConfig_secondarySourcesGitSubmodulesCodeCommit(rName, false),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckProjectExists(ctx, resourceName, &project),
+					resource.TestCheckResourceAttr(resourceName, "secondary_sources.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "secondary_source_version.#", "0"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "secondary_sources.*", map[string]string{
+						"source_identifier": "secondarySource1",
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "secondary_sources.*", map[string]string{
+						"source_identifier": "secondarySource2",
+					}),
 				),
 			},
 		},
@@ -979,6 +1158,7 @@ func TestAccCodeBuildProject_SecondarySourcesGitSubmodules_gitHubEnterprise(t *t
 }
 
 func TestAccCodeBuildProject_SourceBuildStatus_gitHubEnterprise(t *testing.T) {
+	ctx := acctest.Context(t)
 	var project codebuild.Project
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_codebuild_project.test"
@@ -988,15 +1168,15 @@ func TestAccCodeBuildProject_SourceBuildStatus_gitHubEnterprise(t *testing.T) {
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, codebuild.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckProjectDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, codebuild.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckProjectDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccProjectConfig_Source_BuildStatusConfig_GitHubEnterprise(rName),
+				Config: testAccProjectConfig_sourceBuildStatusGitHubEnterprise(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckProjectExists(resourceName, &project),
+					testAccCheckProjectExists(ctx, resourceName, &project),
 				),
 			},
 			{
@@ -1009,20 +1189,21 @@ func TestAccCodeBuildProject_SourceBuildStatus_gitHubEnterprise(t *testing.T) {
 }
 
 func TestAccCodeBuildProject_Source_insecureSSL(t *testing.T) {
+	ctx := acctest.Context(t)
 	var project codebuild.Project
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_codebuild_project.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, codebuild.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckProjectDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, codebuild.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckProjectDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccProjectConfig_Source_InsecureSSL(rName, true),
+				Config: testAccProjectConfig_sourceInsecureSSL(rName, true),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckProjectExists(resourceName, &project),
+					testAccCheckProjectExists(ctx, resourceName, &project),
 					resource.TestCheckResourceAttr(resourceName, "source.0.insecure_ssl", "true"),
 				),
 			},
@@ -1032,9 +1213,9 @@ func TestAccCodeBuildProject_Source_insecureSSL(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccProjectConfig_Source_InsecureSSL(rName, false),
+				Config: testAccProjectConfig_sourceInsecureSSL(rName, false),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckProjectExists(resourceName, &project),
+					testAccCheckProjectExists(ctx, resourceName, &project),
 					resource.TestCheckResourceAttr(resourceName, "source.0.insecure_ssl", "false"),
 				),
 			},
@@ -1043,6 +1224,7 @@ func TestAccCodeBuildProject_Source_insecureSSL(t *testing.T) {
 }
 
 func TestAccCodeBuildProject_SourceReportBuildStatus_bitbucket(t *testing.T) {
+	ctx := acctest.Context(t)
 	var project codebuild.Project
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_codebuild_project.test"
@@ -1050,15 +1232,15 @@ func TestAccCodeBuildProject_SourceReportBuildStatus_bitbucket(t *testing.T) {
 	sourceLocation := testAccBitbucketSourceLocationFromEnv()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, codebuild.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckProjectDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, codebuild.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckProjectDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccProjectConfig_Source_ReportBuildStatus_Bitbucket(rName, sourceLocation, true),
+				Config: testAccProjectConfig_sourceReportBuildStatusBitbucket(rName, sourceLocation, true),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckProjectExists(resourceName, &project),
+					testAccCheckProjectExists(ctx, resourceName, &project),
 					resource.TestCheckResourceAttr(resourceName, "source.0.report_build_status", "true"),
 				),
 			},
@@ -1068,9 +1250,9 @@ func TestAccCodeBuildProject_SourceReportBuildStatus_bitbucket(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccProjectConfig_Source_ReportBuildStatus_Bitbucket(rName, sourceLocation, false),
+				Config: testAccProjectConfig_sourceReportBuildStatusBitbucket(rName, sourceLocation, false),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckProjectExists(resourceName, &project),
+					testAccCheckProjectExists(ctx, resourceName, &project),
 					resource.TestCheckResourceAttr(resourceName, "source.0.report_build_status", "false"),
 				),
 			},
@@ -1079,20 +1261,21 @@ func TestAccCodeBuildProject_SourceReportBuildStatus_bitbucket(t *testing.T) {
 }
 
 func TestAccCodeBuildProject_SourceReportBuildStatus_gitHub(t *testing.T) {
+	ctx := acctest.Context(t)
 	var project codebuild.Project
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_codebuild_project.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, codebuild.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckProjectDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, codebuild.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckProjectDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccProjectConfig_Source_ReportBuildStatus_GitHub(rName, true),
+				Config: testAccProjectConfig_sourceReportBuildStatusGitHub(rName, true),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckProjectExists(resourceName, &project),
+					testAccCheckProjectExists(ctx, resourceName, &project),
 					resource.TestCheckResourceAttr(resourceName, "source.0.report_build_status", "true"),
 				),
 			},
@@ -1102,9 +1285,9 @@ func TestAccCodeBuildProject_SourceReportBuildStatus_gitHub(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccProjectConfig_Source_ReportBuildStatus_GitHub(rName, false),
+				Config: testAccProjectConfig_sourceReportBuildStatusGitHub(rName, false),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckProjectExists(resourceName, &project),
+					testAccCheckProjectExists(ctx, resourceName, &project),
 					resource.TestCheckResourceAttr(resourceName, "source.0.report_build_status", "false"),
 				),
 			},
@@ -1113,20 +1296,21 @@ func TestAccCodeBuildProject_SourceReportBuildStatus_gitHub(t *testing.T) {
 }
 
 func TestAccCodeBuildProject_SourceReportBuildStatus_gitHubEnterprise(t *testing.T) {
+	ctx := acctest.Context(t)
 	var project codebuild.Project
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_codebuild_project.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, codebuild.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckProjectDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, codebuild.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckProjectDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccProjectConfig_Source_ReportBuildStatus_GitHubEnterprise(rName, true),
+				Config: testAccProjectConfig_sourceReportBuildStatusGitHubEnterprise(rName, true),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckProjectExists(resourceName, &project),
+					testAccCheckProjectExists(ctx, resourceName, &project),
 					resource.TestCheckResourceAttr(resourceName, "source.0.report_build_status", "true"),
 				),
 			},
@@ -1136,9 +1320,9 @@ func TestAccCodeBuildProject_SourceReportBuildStatus_gitHubEnterprise(t *testing
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccProjectConfig_Source_ReportBuildStatus_GitHubEnterprise(rName, false),
+				Config: testAccProjectConfig_sourceReportBuildStatusGitHubEnterprise(rName, false),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckProjectExists(resourceName, &project),
+					testAccCheckProjectExists(ctx, resourceName, &project),
 					resource.TestCheckResourceAttr(resourceName, "source.0.report_build_status", "false"),
 				),
 			},
@@ -1147,6 +1331,7 @@ func TestAccCodeBuildProject_SourceReportBuildStatus_gitHubEnterprise(t *testing
 }
 
 func TestAccCodeBuildProject_SourceType_bitbucket(t *testing.T) {
+	ctx := acctest.Context(t)
 	var project codebuild.Project
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_codebuild_project.test"
@@ -1154,15 +1339,15 @@ func TestAccCodeBuildProject_SourceType_bitbucket(t *testing.T) {
 	sourceLocation := testAccBitbucketSourceLocationFromEnv()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, codebuild.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckProjectDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, codebuild.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckProjectDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccProjectConfig_Source_Type_Bitbucket(rName, sourceLocation),
+				Config: testAccProjectConfig_sourceTypeBitbucket(rName, sourceLocation),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckProjectExists(resourceName, &project),
+					testAccCheckProjectExists(ctx, resourceName, &project),
 					resource.TestCheckResourceAttr(resourceName, "source.0.type", "BITBUCKET"),
 					resource.TestCheckResourceAttr(resourceName, "source.0.location", sourceLocation),
 				),
@@ -1177,20 +1362,21 @@ func TestAccCodeBuildProject_SourceType_bitbucket(t *testing.T) {
 }
 
 func TestAccCodeBuildProject_SourceType_codeCommit(t *testing.T) {
+	ctx := acctest.Context(t)
 	var project codebuild.Project
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_codebuild_project.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, codebuild.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckProjectDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, codebuild.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckProjectDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccProjectConfig_Source_Type_CodeCommit(rName),
+				Config: testAccProjectConfig_sourceTypeCodeCommit(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckProjectExists(resourceName, &project),
+					testAccCheckProjectExists(ctx, resourceName, &project),
 					resource.TestCheckResourceAttr(resourceName, "source.0.type", "CODECOMMIT"),
 				),
 			},
@@ -1204,20 +1390,21 @@ func TestAccCodeBuildProject_SourceType_codeCommit(t *testing.T) {
 }
 
 func TestAccCodeBuildProject_SourceType_codePipeline(t *testing.T) {
+	ctx := acctest.Context(t)
 	var project codebuild.Project
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_codebuild_project.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, codebuild.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckProjectDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, codebuild.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckProjectDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccProjectConfig_Source_Type_CodePipeline(rName),
+				Config: testAccProjectConfig_sourceTypeCodePipeline(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckProjectExists(resourceName, &project),
+					testAccCheckProjectExists(ctx, resourceName, &project),
 					resource.TestCheckResourceAttr(resourceName, "source.0.type", "CODEPIPELINE"),
 				),
 			},
@@ -1231,20 +1418,21 @@ func TestAccCodeBuildProject_SourceType_codePipeline(t *testing.T) {
 }
 
 func TestAccCodeBuildProject_SourceType_gitHubEnterprise(t *testing.T) {
+	ctx := acctest.Context(t)
 	var project codebuild.Project
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_codebuild_project.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, codebuild.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckProjectDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, codebuild.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckProjectDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccProjectConfig_Source_Type_GitHubEnterprise(rName),
+				Config: testAccProjectConfig_sourceTypeGitHubEnterprise(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckProjectExists(resourceName, &project),
+					testAccCheckProjectExists(ctx, resourceName, &project),
 					resource.TestCheckResourceAttr(resourceName, "source.0.type", "GITHUB_ENTERPRISE"),
 				),
 			},
@@ -1258,20 +1446,21 @@ func TestAccCodeBuildProject_SourceType_gitHubEnterprise(t *testing.T) {
 }
 
 func TestAccCodeBuildProject_SourceType_s3(t *testing.T) {
+	ctx := acctest.Context(t)
 	var project codebuild.Project
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_codebuild_project.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, codebuild.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckProjectDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, codebuild.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckProjectDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccProjectConfig_Source_Type_S3(rName),
+				Config: testAccProjectConfig_sourceTypeS3(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckProjectExists(resourceName, &project),
+					testAccCheckProjectExists(ctx, resourceName, &project),
 				),
 			},
 			{
@@ -1284,6 +1473,7 @@ func TestAccCodeBuildProject_SourceType_s3(t *testing.T) {
 }
 
 func TestAccCodeBuildProject_SourceType_noSource(t *testing.T) {
+	ctx := acctest.Context(t)
 	var project codebuild.Project
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_codebuild_project.test"
@@ -1296,15 +1486,15 @@ phases:
 `
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, codebuild.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckProjectDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, codebuild.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckProjectDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccProjectConfig_Source_Type_NoSource(rName, "", rBuildspec),
+				Config: testAccProjectConfig_sourceTypeNoSource(rName, "", rBuildspec),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckProjectExists(resourceName, &project),
+					testAccCheckProjectExists(ctx, resourceName, &project),
 					resource.TestCheckResourceAttr(resourceName, "source.0.type", "NO_SOURCE"),
 				),
 			},
@@ -1318,6 +1508,7 @@ phases:
 }
 
 func TestAccCodeBuildProject_SourceType_noSourceInvalid(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rBuildspec := `
 version: 0.2
@@ -1328,38 +1519,39 @@ phases:
 `
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, codebuild.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckProjectDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, codebuild.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckProjectDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccProjectConfig_Source_Type_NoSource(rName, "", ""),
-				ExpectError: regexp.MustCompile("`buildspec` must be set when source's `type` is `NO_SOURCE`"),
+				Config:      testAccProjectConfig_sourceTypeNoSource(rName, "", ""),
+				ExpectError: regexache.MustCompile("`buildspec` must be set when source's `type` is `NO_SOURCE`"),
 			},
 			{
-				Config:      testAccProjectConfig_Source_Type_NoSource(rName, "location", rBuildspec),
-				ExpectError: regexp.MustCompile("`location` must be empty when source's `type` is `NO_SOURCE`"),
+				Config:      testAccProjectConfig_sourceTypeNoSource(rName, "location", rBuildspec),
+				ExpectError: regexache.MustCompile("`location` must be empty when source's `type` is `NO_SOURCE`"),
 			},
 		},
 	})
 }
 
 func TestAccCodeBuildProject_tags(t *testing.T) {
+	ctx := acctest.Context(t)
 	var project codebuild.Project
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_codebuild_project.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, codebuild.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckProjectDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, codebuild.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckProjectDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccProjectConfig_Tags(rName, "tag2", "tag2value"),
+				Config: testAccProjectConfig_tags(rName, "tag2", "tag2value"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckProjectExists(resourceName, &project),
+					testAccCheckProjectExists(ctx, resourceName, &project),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.tag1", "tag1value"),
 					resource.TestCheckResourceAttr(resourceName, "tags.tag2", "tag2value"),
@@ -1371,9 +1563,9 @@ func TestAccCodeBuildProject_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccProjectConfig_Tags(rName, "tag2", "tag2value-updated"),
+				Config: testAccProjectConfig_tags(rName, "tag2", "tag2value-updated"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckProjectExists(resourceName, &project),
+					testAccCheckProjectExists(ctx, resourceName, &project),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.tag1", "tag1value"),
 					resource.TestCheckResourceAttr(resourceName, "tags.tag2", "tag2value-updated"),
@@ -1384,24 +1576,25 @@ func TestAccCodeBuildProject_tags(t *testing.T) {
 }
 
 func TestAccCodeBuildProject_vpc(t *testing.T) {
+	ctx := acctest.Context(t)
 	var project codebuild.Project
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_codebuild_project.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, codebuild.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckProjectDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, codebuild.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckProjectDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccProjectConfig_VPCConfig2(rName),
+				Config: testAccProjectConfig_vpc2(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckProjectExists(resourceName, &project),
+					testAccCheckProjectExists(ctx, resourceName, &project),
 					resource.TestCheckResourceAttr(resourceName, "vpc_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "vpc_config.0.security_group_ids.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "vpc_config.0.subnets.#", "2"),
-					resource.TestMatchResourceAttr(resourceName, "vpc_config.0.vpc_id", regexp.MustCompile(`^vpc-`)),
+					resource.TestMatchResourceAttr(resourceName, "vpc_config.0.vpc_id", regexache.MustCompile(`^vpc-`)),
 				),
 			},
 			{
@@ -1410,19 +1603,19 @@ func TestAccCodeBuildProject_vpc(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccProjectConfig_VPCConfig1(rName),
+				Config: testAccProjectConfig_vpc1(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckProjectExists(resourceName, &project),
+					testAccCheckProjectExists(ctx, resourceName, &project),
 					resource.TestCheckResourceAttr(resourceName, "vpc_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "vpc_config.0.security_group_ids.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "vpc_config.0.subnets.#", "1"),
-					resource.TestMatchResourceAttr(resourceName, "vpc_config.0.vpc_id", regexp.MustCompile(`^vpc-`)),
+					resource.TestMatchResourceAttr(resourceName, "vpc_config.0.vpc_id", regexache.MustCompile(`^vpc-`)),
 				),
 			},
 			{
 				Config: testAccProjectConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckProjectExists(resourceName, &project),
+					testAccCheckProjectExists(ctx, resourceName, &project),
 					resource.TestCheckResourceAttr(resourceName, "vpc_config.#", "0"),
 				),
 			},
@@ -1431,20 +1624,21 @@ func TestAccCodeBuildProject_vpc(t *testing.T) {
 }
 
 func TestAccCodeBuildProject_windowsServer2019Container(t *testing.T) {
+	ctx := acctest.Context(t)
 	var project codebuild.Project
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_codebuild_project.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, codebuild.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckProjectDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, codebuild.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckProjectDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccProjectConfig_WindowsServer2019Container(rName),
+				Config: testAccProjectConfig_windowsServer2019Container(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckProjectExists(resourceName, &project),
+					testAccCheckProjectExists(ctx, resourceName, &project),
 					resource.TestCheckResourceAttr(resourceName, "environment.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "environment.0.compute_type", codebuild.ComputeTypeBuildGeneral1Medium),
 					resource.TestCheckResourceAttr(resourceName, "environment.0.environment_variable.#", "0"),
@@ -1464,20 +1658,21 @@ func TestAccCodeBuildProject_windowsServer2019Container(t *testing.T) {
 }
 
 func TestAccCodeBuildProject_armContainer(t *testing.T) {
+	ctx := acctest.Context(t)
 	var project codebuild.Project
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_codebuild_project.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, codebuild.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckProjectDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, codebuild.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckProjectDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccProjectConfig_ARMContainer(rName),
+				Config: testAccProjectConfig_armContainer(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckProjectExists(resourceName, &project),
+					testAccCheckProjectExists(ctx, resourceName, &project),
 				),
 			},
 			{
@@ -1490,6 +1685,7 @@ func TestAccCodeBuildProject_armContainer(t *testing.T) {
 }
 
 func TestAccCodeBuildProject_Artifacts_artifactIdentifier(t *testing.T) {
+	ctx := acctest.Context(t)
 	var project codebuild.Project
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_codebuild_project.test"
@@ -1498,15 +1694,15 @@ func TestAccCodeBuildProject_Artifacts_artifactIdentifier(t *testing.T) {
 	artifactIdentifier2 := "artifactIdentifier2"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, codebuild.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckProjectDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, codebuild.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckProjectDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccProjectConfig_Artifacts_ArtifactIdentifier(rName, artifactIdentifier1),
+				Config: testAccProjectConfig_artifactsArtifactIdentifier(rName, artifactIdentifier1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckProjectExists(resourceName, &project),
+					testAccCheckProjectExists(ctx, resourceName, &project),
 					resource.TestCheckResourceAttr(resourceName, "artifacts.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "artifacts.0.artifact_identifier", artifactIdentifier1),
 				),
@@ -1517,9 +1713,9 @@ func TestAccCodeBuildProject_Artifacts_artifactIdentifier(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccProjectConfig_Artifacts_ArtifactIdentifier(rName, artifactIdentifier2),
+				Config: testAccProjectConfig_artifactsArtifactIdentifier(rName, artifactIdentifier2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckProjectExists(resourceName, &project),
+					testAccCheckProjectExists(ctx, resourceName, &project),
 					resource.TestCheckResourceAttr(resourceName, "artifacts.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "artifacts.0.artifact_identifier", artifactIdentifier2),
 				),
@@ -1529,20 +1725,21 @@ func TestAccCodeBuildProject_Artifacts_artifactIdentifier(t *testing.T) {
 }
 
 func TestAccCodeBuildProject_Artifacts_encryptionDisabled(t *testing.T) {
+	ctx := acctest.Context(t)
 	var project codebuild.Project
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_codebuild_project.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, codebuild.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckProjectDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, codebuild.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckProjectDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccProjectConfig_Artifacts_EncryptionDisabled(rName, true),
+				Config: testAccProjectConfig_artifactsEncryptionDisabled(rName, true),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckProjectExists(resourceName, &project),
+					testAccCheckProjectExists(ctx, resourceName, &project),
 					resource.TestCheckResourceAttr(resourceName, "artifacts.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "artifacts.0.encryption_disabled", "true"),
 				),
@@ -1553,9 +1750,9 @@ func TestAccCodeBuildProject_Artifacts_encryptionDisabled(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccProjectConfig_Artifacts_EncryptionDisabled(rName, false),
+				Config: testAccProjectConfig_artifactsEncryptionDisabled(rName, false),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckProjectExists(resourceName, &project),
+					testAccCheckProjectExists(ctx, resourceName, &project),
 					resource.TestCheckResourceAttr(resourceName, "artifacts.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "artifacts.0.encryption_disabled", "false"),
 				),
@@ -1565,21 +1762,22 @@ func TestAccCodeBuildProject_Artifacts_encryptionDisabled(t *testing.T) {
 }
 
 func TestAccCodeBuildProject_Artifacts_location(t *testing.T) {
+	ctx := acctest.Context(t)
 	var project codebuild.Project
 	rName1 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_codebuild_project.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, codebuild.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckProjectDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, codebuild.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckProjectDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccProjectConfig_Artifacts_Location(rName1, rName1),
+				Config: testAccProjectConfig_artifactsLocation(rName1, rName1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckProjectExists(resourceName, &project),
+					testAccCheckProjectExists(ctx, resourceName, &project),
 					resource.TestCheckResourceAttr(resourceName, "artifacts.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "artifacts.0.location", rName1),
 				),
@@ -1590,9 +1788,9 @@ func TestAccCodeBuildProject_Artifacts_location(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccProjectConfig_Artifacts_Location(rName1, rName2),
+				Config: testAccProjectConfig_artifactsLocation(rName1, rName2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckProjectExists(resourceName, &project),
+					testAccCheckProjectExists(ctx, resourceName, &project),
 					resource.TestCheckResourceAttr(resourceName, "artifacts.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "artifacts.0.location", rName2),
 				),
@@ -1602,6 +1800,7 @@ func TestAccCodeBuildProject_Artifacts_location(t *testing.T) {
 }
 
 func TestAccCodeBuildProject_Artifacts_name(t *testing.T) {
+	ctx := acctest.Context(t)
 	var project codebuild.Project
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_codebuild_project.test"
@@ -1610,15 +1809,15 @@ func TestAccCodeBuildProject_Artifacts_name(t *testing.T) {
 	name2 := "name2"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, codebuild.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckProjectDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, codebuild.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckProjectDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccProjectConfig_Artifacts_Name(rName, name1),
+				Config: testAccProjectConfig_artifactsName(rName, name1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckProjectExists(resourceName, &project),
+					testAccCheckProjectExists(ctx, resourceName, &project),
 					resource.TestCheckResourceAttr(resourceName, "artifacts.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "artifacts.0.name", name1),
 				),
@@ -1629,9 +1828,9 @@ func TestAccCodeBuildProject_Artifacts_name(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccProjectConfig_Artifacts_Name(rName, name2),
+				Config: testAccProjectConfig_artifactsName(rName, name2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckProjectExists(resourceName, &project),
+					testAccCheckProjectExists(ctx, resourceName, &project),
 					resource.TestCheckResourceAttr(resourceName, "artifacts.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "artifacts.0.name", name2),
 				),
@@ -1641,20 +1840,21 @@ func TestAccCodeBuildProject_Artifacts_name(t *testing.T) {
 }
 
 func TestAccCodeBuildProject_Artifacts_namespaceType(t *testing.T) {
+	ctx := acctest.Context(t)
 	var project codebuild.Project
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_codebuild_project.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, codebuild.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckProjectDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, codebuild.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckProjectDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccProjectConfig_Artifacts_NamespaceType(rName, codebuild.ArtifactNamespaceBuildId),
+				Config: testAccProjectConfig_artifactsNamespaceType(rName, codebuild.ArtifactNamespaceBuildId),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckProjectExists(resourceName, &project),
+					testAccCheckProjectExists(ctx, resourceName, &project),
 					resource.TestCheckResourceAttr(resourceName, "artifacts.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "artifacts.0.namespace_type", codebuild.ArtifactNamespaceBuildId),
 				),
@@ -1665,9 +1865,9 @@ func TestAccCodeBuildProject_Artifacts_namespaceType(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccProjectConfig_Artifacts_NamespaceType(rName, codebuild.ArtifactNamespaceNone),
+				Config: testAccProjectConfig_artifactsNamespaceType(rName, codebuild.ArtifactNamespaceNone),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckProjectExists(resourceName, &project),
+					testAccCheckProjectExists(ctx, resourceName, &project),
 					resource.TestCheckResourceAttr(resourceName, "artifacts.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "artifacts.0.namespace_type", codebuild.ArtifactNamespaceNone),
 				),
@@ -1677,20 +1877,21 @@ func TestAccCodeBuildProject_Artifacts_namespaceType(t *testing.T) {
 }
 
 func TestAccCodeBuildProject_Artifacts_overrideArtifactName(t *testing.T) {
+	ctx := acctest.Context(t)
 	var project codebuild.Project
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_codebuild_project.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, codebuild.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckProjectDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, codebuild.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckProjectDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccProjectConfig_Artifacts_OverrideArtifactName(rName, true),
+				Config: testAccProjectConfig_artifactsOverrideArtifactName(rName, true),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckProjectExists(resourceName, &project),
+					testAccCheckProjectExists(ctx, resourceName, &project),
 					resource.TestCheckResourceAttr(resourceName, "artifacts.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "artifacts.0.override_artifact_name", "true"),
 				),
@@ -1701,9 +1902,9 @@ func TestAccCodeBuildProject_Artifacts_overrideArtifactName(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccProjectConfig_Artifacts_OverrideArtifactName(rName, false),
+				Config: testAccProjectConfig_artifactsOverrideArtifactName(rName, false),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckProjectExists(resourceName, &project),
+					testAccCheckProjectExists(ctx, resourceName, &project),
 					resource.TestCheckResourceAttr(resourceName, "artifacts.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "artifacts.0.override_artifact_name", "false"),
 				),
@@ -1713,20 +1914,21 @@ func TestAccCodeBuildProject_Artifacts_overrideArtifactName(t *testing.T) {
 }
 
 func TestAccCodeBuildProject_Artifacts_packaging(t *testing.T) {
+	ctx := acctest.Context(t)
 	var project codebuild.Project
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_codebuild_project.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, codebuild.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckProjectDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, codebuild.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckProjectDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccProjectConfig_Artifacts_Packaging(rName, codebuild.ArtifactPackagingZip),
+				Config: testAccProjectConfig_artifactsPackaging(rName, codebuild.ArtifactPackagingZip),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckProjectExists(resourceName, &project),
+					testAccCheckProjectExists(ctx, resourceName, &project),
 					resource.TestCheckResourceAttr(resourceName, "artifacts.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "artifacts.0.packaging", codebuild.ArtifactPackagingZip),
 				),
@@ -1737,9 +1939,9 @@ func TestAccCodeBuildProject_Artifacts_packaging(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccProjectConfig_Artifacts_Packaging(rName, codebuild.ArtifactPackagingNone),
+				Config: testAccProjectConfig_artifactsPackaging(rName, codebuild.ArtifactPackagingNone),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckProjectExists(resourceName, &project),
+					testAccCheckProjectExists(ctx, resourceName, &project),
 					resource.TestCheckResourceAttr(resourceName, "artifacts.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "artifacts.0.packaging", codebuild.ArtifactPackagingNone),
 				),
@@ -1749,20 +1951,21 @@ func TestAccCodeBuildProject_Artifacts_packaging(t *testing.T) {
 }
 
 func TestAccCodeBuildProject_Artifacts_path(t *testing.T) {
+	ctx := acctest.Context(t)
 	var project codebuild.Project
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_codebuild_project.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, codebuild.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckProjectDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, codebuild.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckProjectDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccProjectConfig_Artifacts_Path(rName, "path1"),
+				Config: testAccProjectConfig_artifactsPath(rName, "path1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckProjectExists(resourceName, &project),
+					testAccCheckProjectExists(ctx, resourceName, &project),
 					resource.TestCheckResourceAttr(resourceName, "artifacts.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "artifacts.0.path", "path1"),
 				),
@@ -1773,9 +1976,9 @@ func TestAccCodeBuildProject_Artifacts_path(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccProjectConfig_Artifacts_Path(rName, "path2"),
+				Config: testAccProjectConfig_artifactsPath(rName, "path2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckProjectExists(resourceName, &project),
+					testAccCheckProjectExists(ctx, resourceName, &project),
 					resource.TestCheckResourceAttr(resourceName, "artifacts.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "artifacts.0.path", "path2"),
 				),
@@ -1785,6 +1988,7 @@ func TestAccCodeBuildProject_Artifacts_path(t *testing.T) {
 }
 
 func TestAccCodeBuildProject_Artifacts_type(t *testing.T) {
+	ctx := acctest.Context(t)
 	var project codebuild.Project
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_codebuild_project.test"
@@ -1793,15 +1997,15 @@ func TestAccCodeBuildProject_Artifacts_type(t *testing.T) {
 	type2 := codebuild.ArtifactsTypeCodepipeline
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, codebuild.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckProjectDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, codebuild.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckProjectDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccProjectConfig_Artifacts_Type(rName, type1),
+				Config: testAccProjectConfig_artifactsType(rName, type1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckProjectExists(resourceName, &project),
+					testAccCheckProjectExists(ctx, resourceName, &project),
 					resource.TestCheckResourceAttr(resourceName, "artifacts.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "artifacts.0.type", type1),
 				),
@@ -1812,9 +2016,9 @@ func TestAccCodeBuildProject_Artifacts_type(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccProjectConfig_Artifacts_Type(rName, type2),
+				Config: testAccProjectConfig_artifactsType(rName, type2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckProjectExists(resourceName, &project),
+					testAccCheckProjectExists(ctx, resourceName, &project),
 					resource.TestCheckResourceAttr(resourceName, "artifacts.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "artifacts.0.type", type2),
 				),
@@ -1823,21 +2027,59 @@ func TestAccCodeBuildProject_Artifacts_type(t *testing.T) {
 	})
 }
 
-func TestAccCodeBuildProject_secondaryArtifacts(t *testing.T) {
+func TestAccCodeBuildProject_Artifacts_bucketOwnerAccess(t *testing.T) {
+	ctx := acctest.Context(t)
 	var project codebuild.Project
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_codebuild_project.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, codebuild.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckProjectDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, codebuild.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckProjectDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccProjectConfig_SecondaryArtifacts(rName),
+				Config: testAccProjectConfig_artifactsBucketOwnerAccess(rName, "FULL"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckProjectExists(resourceName, &project),
+					testAccCheckProjectExists(ctx, resourceName, &project),
+					resource.TestCheckResourceAttr(resourceName, "artifacts.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "artifacts.0.bucket_owner_access", "FULL"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccProjectConfig_artifactsBucketOwnerAccess(rName, "READ_ONLY"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckProjectExists(ctx, resourceName, &project),
+					resource.TestCheckResourceAttr(resourceName, "artifacts.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "artifacts.0.bucket_owner_access", "READ_ONLY"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccCodeBuildProject_secondaryArtifacts(t *testing.T) {
+	ctx := acctest.Context(t)
+	var project codebuild.Project
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_codebuild_project.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, codebuild.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckProjectDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccProjectConfig_secondaryArtifacts(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckProjectExists(ctx, resourceName, &project),
 					resource.TestCheckResourceAttr(resourceName, "secondary_artifacts.#", "2"),
 				),
 			},
@@ -1847,9 +2089,9 @@ func TestAccCodeBuildProject_secondaryArtifacts(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccProjectConfig_SecondaryArtifacts_none(rName),
+				Config: testAccProjectConfig_secondaryArtifactsNone(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckProjectExists(resourceName, &project),
+					testAccCheckProjectExists(ctx, resourceName, &project),
 					resource.TestCheckResourceAttr(resourceName, "secondary_artifacts.#", "0"),
 				),
 			},
@@ -1858,6 +2100,7 @@ func TestAccCodeBuildProject_secondaryArtifacts(t *testing.T) {
 }
 
 func TestAccCodeBuildProject_SecondaryArtifacts_artifactIdentifier(t *testing.T) {
+	ctx := acctest.Context(t)
 	var project codebuild.Project
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_codebuild_project.test"
@@ -1866,15 +2109,15 @@ func TestAccCodeBuildProject_SecondaryArtifacts_artifactIdentifier(t *testing.T)
 	artifactIdentifier2 := "artifactIdentifier2"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, codebuild.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckProjectDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, codebuild.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckProjectDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccProjectConfig_SecondaryArtifacts_ArtifactIdentifier(rName, artifactIdentifier1),
+				Config: testAccProjectConfig_secondaryArtifactsArtifactIdentifier(rName, artifactIdentifier1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckProjectExists(resourceName, &project),
+					testAccCheckProjectExists(ctx, resourceName, &project),
 					resource.TestCheckResourceAttr(resourceName, "secondary_artifacts.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "secondary_artifacts.*", map[string]string{
 						"artifact_identifier": artifactIdentifier1,
@@ -1887,9 +2130,9 @@ func TestAccCodeBuildProject_SecondaryArtifacts_artifactIdentifier(t *testing.T)
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccProjectConfig_SecondaryArtifacts_ArtifactIdentifier(rName, artifactIdentifier2),
+				Config: testAccProjectConfig_secondaryArtifactsArtifactIdentifier(rName, artifactIdentifier2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckProjectExists(resourceName, &project),
+					testAccCheckProjectExists(ctx, resourceName, &project),
 					resource.TestCheckResourceAttr(resourceName, "secondary_artifacts.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "secondary_artifacts.*", map[string]string{
 						"artifact_identifier": artifactIdentifier2,
@@ -1901,20 +2144,21 @@ func TestAccCodeBuildProject_SecondaryArtifacts_artifactIdentifier(t *testing.T)
 }
 
 func TestAccCodeBuildProject_SecondaryArtifacts_overrideArtifactName(t *testing.T) {
+	ctx := acctest.Context(t)
 	var project codebuild.Project
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_codebuild_project.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, codebuild.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckProjectDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, codebuild.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckProjectDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccProjectConfig_SecondaryArtifacts_OverrideArtifactName(rName, true),
+				Config: testAccProjectConfig_secondaryArtifactsOverrideArtifactName(rName, true),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckProjectExists(resourceName, &project),
+					testAccCheckProjectExists(ctx, resourceName, &project),
 					resource.TestCheckResourceAttr(resourceName, "secondary_artifacts.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "secondary_artifacts.*", map[string]string{
 						"override_artifact_name": "true",
@@ -1927,9 +2171,9 @@ func TestAccCodeBuildProject_SecondaryArtifacts_overrideArtifactName(t *testing.
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccProjectConfig_SecondaryArtifacts_OverrideArtifactName(rName, false),
+				Config: testAccProjectConfig_secondaryArtifactsOverrideArtifactName(rName, false),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckProjectExists(resourceName, &project),
+					testAccCheckProjectExists(ctx, resourceName, &project),
 					resource.TestCheckResourceAttr(resourceName, "secondary_artifacts.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "secondary_artifacts.*", map[string]string{
 						"override_artifact_name": "false",
@@ -1941,20 +2185,21 @@ func TestAccCodeBuildProject_SecondaryArtifacts_overrideArtifactName(t *testing.
 }
 
 func TestAccCodeBuildProject_SecondaryArtifacts_encryptionDisabled(t *testing.T) {
+	ctx := acctest.Context(t)
 	var project codebuild.Project
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_codebuild_project.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, codebuild.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckProjectDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, codebuild.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckProjectDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccProjectConfig_SecondaryArtifacts_EncryptionDisabled(rName, true),
+				Config: testAccProjectConfig_secondaryArtifactsEncryptionDisabled(rName, true),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckProjectExists(resourceName, &project),
+					testAccCheckProjectExists(ctx, resourceName, &project),
 					resource.TestCheckResourceAttr(resourceName, "secondary_artifacts.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "secondary_artifacts.*", map[string]string{
 						"encryption_disabled": "true",
@@ -1967,9 +2212,9 @@ func TestAccCodeBuildProject_SecondaryArtifacts_encryptionDisabled(t *testing.T)
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccProjectConfig_SecondaryArtifacts_EncryptionDisabled(rName, false),
+				Config: testAccProjectConfig_secondaryArtifactsEncryptionDisabled(rName, false),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckProjectExists(resourceName, &project),
+					testAccCheckProjectExists(ctx, resourceName, &project),
 					resource.TestCheckResourceAttr(resourceName, "secondary_artifacts.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "secondary_artifacts.*", map[string]string{
 						"encryption_disabled": "false",
@@ -1981,21 +2226,22 @@ func TestAccCodeBuildProject_SecondaryArtifacts_encryptionDisabled(t *testing.T)
 }
 
 func TestAccCodeBuildProject_SecondaryArtifacts_location(t *testing.T) {
+	ctx := acctest.Context(t)
 	var project codebuild.Project
 	rName1 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_codebuild_project.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, codebuild.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckProjectDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, codebuild.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckProjectDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccProjectConfig_SecondaryArtifacts_Location(rName1, rName1),
+				Config: testAccProjectConfig_secondaryArtifactsLocation(rName1, rName1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckProjectExists(resourceName, &project),
+					testAccCheckProjectExists(ctx, resourceName, &project),
 					resource.TestCheckResourceAttr(resourceName, "secondary_artifacts.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "secondary_artifacts.*", map[string]string{
 						"location": rName1,
@@ -2008,9 +2254,9 @@ func TestAccCodeBuildProject_SecondaryArtifacts_location(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccProjectConfig_SecondaryArtifacts_Location(rName1, rName2),
+				Config: testAccProjectConfig_secondaryArtifactsLocation(rName1, rName2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckProjectExists(resourceName, &project),
+					testAccCheckProjectExists(ctx, resourceName, &project),
 					resource.TestCheckResourceAttr(resourceName, "secondary_artifacts.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "secondary_artifacts.*", map[string]string{
 						"location": rName2,
@@ -2024,6 +2270,8 @@ func TestAccCodeBuildProject_SecondaryArtifacts_location(t *testing.T) {
 func TestAccCodeBuildProject_SecondaryArtifacts_name(t *testing.T) {
 	acctest.Skip(t, "Currently no solution to allow updates on name attribute")
 
+	ctx := acctest.Context(t)
+
 	var project codebuild.Project
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_codebuild_project.test"
@@ -2032,15 +2280,15 @@ func TestAccCodeBuildProject_SecondaryArtifacts_name(t *testing.T) {
 	name2 := "name2"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, codebuild.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckProjectDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, codebuild.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckProjectDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccProjectConfig_SecondaryArtifacts_Name(rName, name1),
+				Config: testAccProjectConfig_secondaryArtifactsName(rName, name1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckProjectExists(resourceName, &project),
+					testAccCheckProjectExists(ctx, resourceName, &project),
 					resource.TestCheckResourceAttr(resourceName, "secondary_artifacts.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "secondary_artifacts.*", map[string]string{
 						"name": name1,
@@ -2053,9 +2301,9 @@ func TestAccCodeBuildProject_SecondaryArtifacts_name(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccProjectConfig_SecondaryArtifacts_Name(rName, name2),
+				Config: testAccProjectConfig_secondaryArtifactsName(rName, name2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckProjectExists(resourceName, &project),
+					testAccCheckProjectExists(ctx, resourceName, &project),
 					resource.TestCheckResourceAttr(resourceName, "secondary_artifacts.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "secondary_artifacts.*", map[string]string{
 						"name": name2,
@@ -2067,20 +2315,21 @@ func TestAccCodeBuildProject_SecondaryArtifacts_name(t *testing.T) {
 }
 
 func TestAccCodeBuildProject_SecondaryArtifacts_namespaceType(t *testing.T) {
+	ctx := acctest.Context(t)
 	var project codebuild.Project
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_codebuild_project.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, codebuild.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckProjectDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, codebuild.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckProjectDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccProjectConfig_SecondaryArtifacts_NamespaceType(rName, codebuild.ArtifactNamespaceBuildId),
+				Config: testAccProjectConfig_secondaryArtifactsNamespaceType(rName, codebuild.ArtifactNamespaceBuildId),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckProjectExists(resourceName, &project),
+					testAccCheckProjectExists(ctx, resourceName, &project),
 					resource.TestCheckResourceAttr(resourceName, "secondary_artifacts.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "secondary_artifacts.*", map[string]string{
 						"namespace_type": codebuild.ArtifactNamespaceBuildId,
@@ -2093,9 +2342,9 @@ func TestAccCodeBuildProject_SecondaryArtifacts_namespaceType(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccProjectConfig_SecondaryArtifacts_NamespaceType(rName, codebuild.ArtifactNamespaceNone),
+				Config: testAccProjectConfig_secondaryArtifactsNamespaceType(rName, codebuild.ArtifactNamespaceNone),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckProjectExists(resourceName, &project),
+					testAccCheckProjectExists(ctx, resourceName, &project),
 					resource.TestCheckResourceAttr(resourceName, "secondary_artifacts.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "secondary_artifacts.*", map[string]string{
 						"namespace_type": codebuild.ArtifactNamespaceNone,
@@ -2107,20 +2356,21 @@ func TestAccCodeBuildProject_SecondaryArtifacts_namespaceType(t *testing.T) {
 }
 
 func TestAccCodeBuildProject_SecondaryArtifacts_packaging(t *testing.T) {
+	ctx := acctest.Context(t)
 	var project codebuild.Project
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_codebuild_project.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, codebuild.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckProjectDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, codebuild.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckProjectDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccProjectConfig_SecondaryArtifacts_Packaging(rName, codebuild.ArtifactPackagingZip),
+				Config: testAccProjectConfig_secondaryArtifactsPackaging(rName, codebuild.ArtifactPackagingZip),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckProjectExists(resourceName, &project),
+					testAccCheckProjectExists(ctx, resourceName, &project),
 					resource.TestCheckResourceAttr(resourceName, "secondary_artifacts.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "secondary_artifacts.*", map[string]string{
 						"packaging": codebuild.ArtifactPackagingZip,
@@ -2133,9 +2383,9 @@ func TestAccCodeBuildProject_SecondaryArtifacts_packaging(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccProjectConfig_SecondaryArtifacts_Packaging(rName, codebuild.ArtifactPackagingNone),
+				Config: testAccProjectConfig_secondaryArtifactsPackaging(rName, codebuild.ArtifactPackagingNone),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckProjectExists(resourceName, &project),
+					testAccCheckProjectExists(ctx, resourceName, &project),
 					resource.TestCheckResourceAttr(resourceName, "secondary_artifacts.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "secondary_artifacts.*", map[string]string{
 						"packaging": codebuild.ArtifactPackagingNone,
@@ -2147,6 +2397,7 @@ func TestAccCodeBuildProject_SecondaryArtifacts_packaging(t *testing.T) {
 }
 
 func TestAccCodeBuildProject_SecondaryArtifacts_path(t *testing.T) {
+	ctx := acctest.Context(t)
 	var project codebuild.Project
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_codebuild_project.test"
@@ -2155,15 +2406,15 @@ func TestAccCodeBuildProject_SecondaryArtifacts_path(t *testing.T) {
 	path2 := "path2"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, codebuild.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckProjectDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, codebuild.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckProjectDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccProjectConfig_SecondaryArtifacts_Path(rName, path1),
+				Config: testAccProjectConfig_secondaryArtifactsPath(rName, path1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckProjectExists(resourceName, &project),
+					testAccCheckProjectExists(ctx, resourceName, &project),
 					resource.TestCheckResourceAttr(resourceName, "secondary_artifacts.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "secondary_artifacts.*", map[string]string{
 						"path": path1,
@@ -2176,9 +2427,9 @@ func TestAccCodeBuildProject_SecondaryArtifacts_path(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccProjectConfig_SecondaryArtifacts_Path(rName, path2),
+				Config: testAccProjectConfig_secondaryArtifactsPath(rName, path2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckProjectExists(resourceName, &project),
+					testAccCheckProjectExists(ctx, resourceName, &project),
 					resource.TestCheckResourceAttr(resourceName, "secondary_artifacts.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "secondary_artifacts.*", map[string]string{
 						"path": path2,
@@ -2190,20 +2441,21 @@ func TestAccCodeBuildProject_SecondaryArtifacts_path(t *testing.T) {
 }
 
 func TestAccCodeBuildProject_SecondaryArtifacts_type(t *testing.T) {
+	ctx := acctest.Context(t)
 	var project codebuild.Project
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_codebuild_project.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, codebuild.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckProjectDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, codebuild.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckProjectDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccProjectConfig_SecondaryArtifacts_Type(rName, codebuild.ArtifactsTypeS3),
+				Config: testAccProjectConfig_secondaryArtifactsType(rName, codebuild.ArtifactsTypeS3),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckProjectExists(resourceName, &project),
+					testAccCheckProjectExists(ctx, resourceName, &project),
 					resource.TestCheckResourceAttr(resourceName, "secondary_artifacts.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "secondary_artifacts.*", map[string]string{
 						"type": codebuild.ArtifactsTypeS3,
@@ -2220,20 +2472,21 @@ func TestAccCodeBuildProject_SecondaryArtifacts_type(t *testing.T) {
 }
 
 func TestAccCodeBuildProject_SecondarySources_codeCommit(t *testing.T) {
+	ctx := acctest.Context(t)
 	var project codebuild.Project
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_codebuild_project.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, codebuild.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckProjectDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, codebuild.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckProjectDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccProjectConfig_SecondarySources_CodeCommit(rName),
+				Config: testAccProjectConfig_secondarySourcesCodeCommit(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckProjectExists(resourceName, &project),
+					testAccCheckProjectExists(ctx, resourceName, &project),
 					resource.TestCheckResourceAttr(resourceName, "source.0.type", "CODECOMMIT"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "secondary_sources.*", map[string]string{
 						"source_identifier": "secondarySource1",
@@ -2253,6 +2506,8 @@ func TestAccCodeBuildProject_SecondarySources_codeCommit(t *testing.T) {
 }
 
 func TestProject_nameValidation(t *testing.T) {
+	t.Parallel()
+
 	cases := []struct {
 		Value    string
 		ErrCount int
@@ -2274,20 +2529,21 @@ func TestProject_nameValidation(t *testing.T) {
 }
 
 func TestAccCodeBuildProject_concurrentBuildLimit(t *testing.T) {
+	ctx := acctest.Context(t)
 	var project codebuild.Project
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_codebuild_project.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		Providers:    acctest.Providers,
-		ErrorCheck:   acctest.ErrorCheck(t, codebuild.EndpointsID),
-		CheckDestroy: testAccCheckProjectDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		ErrorCheck:               acctest.ErrorCheck(t, codebuild.EndpointsID),
+		CheckDestroy:             testAccCheckProjectDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccProjectConfig_ConcurrentBuildLimit(rName, 4),
+				Config: testAccProjectConfig_concurrentBuildLimit(rName, 4),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckProjectExists(resourceName, &project),
+					testAccCheckProjectExists(ctx, resourceName, &project),
 					resource.TestCheckResourceAttr(resourceName, "concurrent_build_limit", "4"),
 				),
 			},
@@ -2297,9 +2553,9 @@ func TestAccCodeBuildProject_concurrentBuildLimit(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccProjectConfig_ConcurrentBuildLimit(rName, 12),
+				Config: testAccProjectConfig_concurrentBuildLimit(rName, 12),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckProjectExists(resourceName, &project),
+					testAccCheckProjectExists(ctx, resourceName, &project),
 					resource.TestCheckResourceAttr(resourceName, "concurrent_build_limit", "12"),
 				),
 			},
@@ -2308,20 +2564,21 @@ func TestAccCodeBuildProject_concurrentBuildLimit(t *testing.T) {
 }
 
 func TestAccCodeBuildProject_Environment_registryCredential(t *testing.T) {
+	ctx := acctest.Context(t)
 	var project codebuild.Project
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_codebuild_project.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, codebuild.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckProjectDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, codebuild.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckProjectDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccProjectConfig_Environment_RegistryCredential1(rName),
+				Config: testAccProjectConfig_environmentRegistryCredential1(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckProjectExists(resourceName, &project),
+					testAccCheckProjectExists(ctx, resourceName, &project),
 				),
 			},
 			{
@@ -2330,16 +2587,42 @@ func TestAccCodeBuildProject_Environment_registryCredential(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccProjectConfig_Environment_RegistryCredential2(rName),
+				Config: testAccProjectConfig_environmentRegistryCredential2(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckProjectExists(resourceName, &project),
+					testAccCheckProjectExists(ctx, resourceName, &project),
 				),
 			},
 		},
 	})
 }
 
-func testAccCheckProjectExists(n string, project *codebuild.Project) resource.TestCheckFunc {
+func TestAccCodeBuildProject_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
+	var project codebuild.Project
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resourceName := "aws_codebuild_project.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, codebuild.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckProjectDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccProjectConfig_basic(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckProjectExists(ctx, resourceName, &project),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfcodebuild.ResourceProject(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfcodebuild.ResourceProject(), resourceName),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
+func testAccCheckProjectExists(ctx context.Context, n string, project *codebuild.Project) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -2350,54 +2633,47 @@ func testAccCheckProjectExists(n string, project *codebuild.Project) resource.Te
 			return fmt.Errorf("No CodeBuild Project ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CodeBuildConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CodeBuildConn(ctx)
 
-		out, err := conn.BatchGetProjects(&codebuild.BatchGetProjectsInput{
-			Names: []*string{
-				aws.String(rs.Primary.ID),
-			},
-		})
-
+		output, err := tfcodebuild.FindProjectByARN(ctx, conn, rs.Primary.ID)
 		if err != nil {
 			return err
 		}
 
-		if len(out.Projects) < 1 {
-			return fmt.Errorf("No project found")
+		if output == nil {
+			return fmt.Errorf("CodeBuild Project (%s) not found", rs.Primary.ID)
 		}
 
-		*project = *out.Projects[0]
+		*project = *output
 
 		return nil
 	}
 }
 
-func testAccCheckProjectDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).CodeBuildConn
+func testAccCheckProjectDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CodeBuildConn(ctx)
 
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_codebuild_project" {
-			continue
-		}
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_codebuild_project" {
+				continue
+			}
 
-		out, err := conn.BatchGetProjects(&codebuild.BatchGetProjectsInput{
-			Names: []*string{
-				aws.String(rs.Primary.ID),
-			},
-		})
+			_, err := tfcodebuild.FindProjectByARN(ctx, conn, rs.Primary.ID)
 
-		if err != nil {
-			return err
-		}
+			if tfresource.NotFound(err) {
+				continue
+			}
 
-		if out != nil && len(out.Projects) > 0 {
-			return fmt.Errorf("Expected AWS CodeBuild Project to be gone, but was still found")
+			if err != nil {
+				return err
+			}
+
+			return fmt.Errorf("CodeBuild Project %s still exists", rs.Primary.ID)
 		}
 
 		return nil
 	}
-
-	return nil
 }
 
 func testAccCheckProjectCertificate(project *codebuild.Project, expectedCertificate string) resource.TestCheckFunc {
@@ -2409,20 +2685,16 @@ func testAccCheckProjectCertificate(project *codebuild.Project, expectedCertific
 	}
 }
 
-func testAccPreCheck(t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).CodeBuildConn
+func testAccPreCheck(ctx context.Context, t *testing.T) {
+	conn := acctest.Provider.Meta().(*conns.AWSClient).CodeBuildConn(ctx)
 
-	input := &codebuild.BatchGetProjectsInput{
-		Names: []*string{aws.String("tf-acc-test-precheck")},
-	}
-
-	_, err := conn.BatchGetProjects(input)
+	_, err := tfcodebuild.FindProjectByARN(ctx, conn, "tf-acc-test-precheck")
 
 	if acctest.PreCheckSkipError(err) {
 		t.Skipf("skipping acceptance testing: %s", err)
 	}
 
-	if err != nil {
+	if err != nil && !tfresource.NotFound(err) {
 		t.Fatalf("unexpected PreCheck error: %s", err)
 	}
 }
@@ -2471,6 +2743,7 @@ resource "aws_iam_role_policy" "test" {
         "s3:GetObject",
         "s3:GetObjectVersion",
         "s3:GetBucketAcl",
+        "s3:PutBucketAcl",
         "s3:GetBucketLocation"
       ]
     },
@@ -2530,7 +2803,58 @@ resource "aws_codebuild_project" "test" {
 `, rName, testAccGitHubSourceLocationFromEnv()))
 }
 
-func testAccProjectConfig_BadgeEnabled(rName string, badgeEnabled bool) string {
+func testAccProjectConfig_visibility(rName, visibility string) string {
+	return acctest.ConfigCompose(testAccProjectConfig_Base_ServiceRole(rName), fmt.Sprintf(`
+resource "aws_codebuild_project" "test" {
+  name               = %[1]q
+  service_role       = aws_iam_role.test.arn
+  project_visibility = %[3]q
+
+  artifacts {
+    type = "NO_ARTIFACTS"
+  }
+
+  environment {
+    compute_type = "BUILD_GENERAL1_SMALL"
+    image        = "2"
+    type         = "LINUX_CONTAINER"
+  }
+
+  source {
+    location = %[2]q
+    type     = "GITHUB"
+  }
+}
+`, rName, testAccGitHubSourceLocationFromEnv(), visibility))
+}
+
+func testAccProjectConfig_visibilityResourceRole(rName, visibility string) string {
+	return acctest.ConfigCompose(testAccProjectConfig_Base_ServiceRole(rName), fmt.Sprintf(`
+resource "aws_codebuild_project" "test" {
+  name                 = %[1]q
+  service_role         = aws_iam_role.test.arn
+  project_visibility   = %[3]q
+  resource_access_role = aws_iam_role.test.arn
+
+  artifacts {
+    type = "NO_ARTIFACTS"
+  }
+
+  environment {
+    compute_type = "BUILD_GENERAL1_SMALL"
+    image        = "2"
+    type         = "LINUX_CONTAINER"
+  }
+
+  source {
+    location = %[2]q
+    type     = "GITHUB"
+  }
+}
+`, rName, testAccGitHubSourceLocationFromEnv(), visibility))
+}
+
+func testAccProjectConfig_badgeEnabled(rName string, badgeEnabled bool) string {
 	return acctest.ConfigCompose(testAccProjectConfig_Base_ServiceRole(rName), fmt.Sprintf(`
 resource "aws_codebuild_project" "test" {
   badge_enabled = %[1]t
@@ -2555,7 +2879,7 @@ resource "aws_codebuild_project" "test" {
 `, badgeEnabled, rName))
 }
 
-func testAccProjectConfig_BuildTimeout(rName string, buildTimeout int) string {
+func testAccProjectConfig_buildTimeout(rName string, buildTimeout int) string {
 	return acctest.ConfigCompose(testAccProjectConfig_Base_ServiceRole(rName), fmt.Sprintf(`
 resource "aws_codebuild_project" "test" {
   build_timeout = %[1]d
@@ -2580,7 +2904,7 @@ resource "aws_codebuild_project" "test" {
 `, buildTimeout, rName))
 }
 
-func testAccProjectConfig_QueuedTimeout(rName string, queuedTimeout int) string {
+func testAccProjectConfig_queuedTimeout(rName string, queuedTimeout int) string {
 	return acctest.ConfigCompose(testAccProjectConfig_Base_ServiceRole(rName), fmt.Sprintf(`
 resource "aws_codebuild_project" "test" {
   queued_timeout = %[1]d
@@ -2605,7 +2929,40 @@ resource "aws_codebuild_project" "test" {
 `, queuedTimeout, rName))
 }
 
-func testAccProjectConfig_Cache(rName, cacheLocation, cacheType string) string {
+func testAccProjectConfig_s3ComputedLocation(rName string) string {
+	return acctest.ConfigCompose(testAccProjectConfig_Base_ServiceRole(rName), fmt.Sprintf(`
+resource "aws_s3_bucket" "test" {
+  bucket_prefix = "cache"
+}
+
+resource "aws_codebuild_project" "test" {
+  name         = %[1]q
+  service_role = aws_iam_role.test.arn
+
+  artifacts {
+    type = "NO_ARTIFACTS"
+  }
+
+  environment {
+    compute_type = "BUILD_GENERAL1_SMALL"
+    image        = "2"
+    type         = "LINUX_CONTAINER"
+  }
+
+  source {
+    type     = "GITHUB"
+    location = "https://github.com/hashicorp/packer.git"
+  }
+
+  cache {
+    type     = "S3"
+    location = aws_s3_bucket.test.bucket
+  }
+}
+`, rName))
+}
+
+func testAccProjectConfig_cache(rName, cacheLocation, cacheType string) string {
 	return acctest.ConfigCompose(testAccProjectConfig_Base_ServiceRole(rName), fmt.Sprintf(`
 resource "aws_s3_bucket" "test1" {
   bucket        = "%[1]s-1"
@@ -2646,7 +3003,7 @@ resource "aws_codebuild_project" "test" {
 `, rName, cacheLocation, cacheType))
 }
 
-func testAccProjectConfig_LocalCache(rName, modeType string) string {
+func testAccProjectConfig_localCache(rName, modeType string) string {
 	return acctest.ConfigCompose(testAccProjectConfig_Base_ServiceRole(rName), fmt.Sprintf(`
 resource "aws_codebuild_project" "test" {
   name         = %[1]q
@@ -2675,7 +3032,7 @@ resource "aws_codebuild_project" "test" {
 `, rName, modeType))
 }
 
-func testAccProjectConfig_Description(rName, description string) string {
+func testAccProjectConfig_description(rName, description string) string {
 	return acctest.ConfigCompose(testAccProjectConfig_Base_ServiceRole(rName), fmt.Sprintf(`
 resource "aws_codebuild_project" "test" {
   description  = %[1]q
@@ -2700,7 +3057,7 @@ resource "aws_codebuild_project" "test" {
 `, description, rName))
 }
 
-func testAccProjectConfig_SourceVersion(rName, sourceVersion string) string {
+func testAccProjectConfig_sourceVersion(rName, sourceVersion string) string {
 	return acctest.ConfigCompose(testAccProjectConfig_Base_ServiceRole(rName), fmt.Sprintf(`
 resource "aws_codebuild_project" "test" {
   name         = %[1]q
@@ -2726,7 +3083,7 @@ resource "aws_codebuild_project" "test" {
 `, rName, sourceVersion))
 }
 
-func testAccProjectConfig_EncryptionKey(rName string) string {
+func testAccProjectConfig_encryptionKey(rName string) string {
 	return acctest.ConfigCompose(testAccProjectConfig_Base_ServiceRole(rName), fmt.Sprintf(`
 resource "aws_kms_key" "test" {
   description             = %[1]q
@@ -2756,7 +3113,7 @@ resource "aws_codebuild_project" "test" {
 `, rName))
 }
 
-func testAccProjectConfig_Environment_EnvironmentVariable_One(rName, key1, value1 string) string {
+func testAccProjectConfig_environmentVariableOne(rName, key1, value1 string) string {
 	return acctest.ConfigCompose(testAccProjectConfig_Base_ServiceRole(rName), fmt.Sprintf(`
 resource "aws_codebuild_project" "test" {
   name         = %[1]q
@@ -2785,7 +3142,7 @@ resource "aws_codebuild_project" "test" {
 `, rName, key1, value1))
 }
 
-func testAccProjectConfig_Environment_EnvironmentVariable_Two(rName, key1, value1, key2, value2 string) string {
+func testAccProjectConfig_environmentVariableTwo(rName, key1, value1, key2, value2 string) string {
 	return acctest.ConfigCompose(testAccProjectConfig_Base_ServiceRole(rName), fmt.Sprintf(`
 resource "aws_codebuild_project" "test" {
   name         = %[1]q
@@ -2819,7 +3176,7 @@ resource "aws_codebuild_project" "test" {
 `, rName, key1, value1, key2, value2))
 }
 
-func testAccProjectConfig_Environment_EnvironmentVariable_Zero(rName string) string {
+func testAccProjectConfig_environmentVariableZero(rName string) string {
 	return acctest.ConfigCompose(testAccProjectConfig_Base_ServiceRole(rName), fmt.Sprintf(`
 resource "aws_codebuild_project" "test" {
   name         = %[1]q
@@ -2843,7 +3200,7 @@ resource "aws_codebuild_project" "test" {
 `, rName))
 }
 
-func testAccProjectConfig_Environment_EnvironmentVariable_Type(rName, environmentVariableType string) string {
+func testAccProjectConfig_environmentVariableType(rName, environmentVariableType string) string {
 	return acctest.ConfigCompose(testAccProjectConfig_Base_ServiceRole(rName), fmt.Sprintf(`
 resource "aws_codebuild_project" "test" {
   name         = %[1]q
@@ -2878,7 +3235,7 @@ resource "aws_codebuild_project" "test" {
 `, rName, environmentVariableType))
 }
 
-func testAccProjectConfig_Environment_Certificate(rName string, oName string) string {
+func testAccProjectConfig_environmentCertificate(rName string, oName string) string {
 	return acctest.ConfigCompose(
 		testAccProjectConfig_Base_ServiceRole(rName),
 		fmt.Sprintf(`
@@ -2887,7 +3244,7 @@ resource "aws_s3_bucket" "test" {
   force_destroy = true
 }
 
-resource "aws_s3_bucket_object" "test" {
+resource "aws_s3_object" "test" {
   bucket  = aws_s3_bucket.test.bucket
   key     = %[1]q
   content = "test"
@@ -2905,7 +3262,7 @@ resource "aws_codebuild_project" "test" {
     compute_type = "BUILD_GENERAL1_SMALL"
     image        = "2"
     type         = "LINUX_CONTAINER"
-    certificate  = "${aws_s3_bucket.test.bucket}/${aws_s3_bucket_object.test.key}"
+    certificate  = "${aws_s3_bucket.test.bucket}/${aws_s3_object.test.key}"
   }
 
   source {
@@ -2916,7 +3273,7 @@ resource "aws_codebuild_project" "test" {
 `, oName, rName))
 }
 
-func testAccProjectConfig_Environment_RegistryCredential1(rName string) string {
+func testAccProjectConfig_environmentRegistryCredential1(rName string) string {
 	return acctest.ConfigCompose(testAccProjectConfig_Base_ServiceRole(rName), fmt.Sprintf(`
 resource "aws_codebuild_project" "test" {
   name         = %[1]q
@@ -2956,7 +3313,7 @@ resource "aws_secretsmanager_secret_version" "test" {
 `, rName))
 }
 
-func testAccProjectConfig_Environment_RegistryCredential2(rName string) string {
+func testAccProjectConfig_environmentRegistryCredential2(rName string) string {
 	return acctest.ConfigCompose(testAccProjectConfig_Base_ServiceRole(rName), fmt.Sprintf(`
 resource "aws_codebuild_project" "test" {
   name         = %[1]q
@@ -2996,7 +3353,7 @@ resource "aws_secretsmanager_secret_version" "test" {
 `, rName))
 }
 
-func testAccProjectConfig_LogsConfig_CloudWatchLogs(rName, status, gName, sName string) string {
+func testAccProjectConfig_cloudWatchLogs(rName, status, gName, sName string) string {
 	return acctest.ConfigCompose(testAccProjectConfig_Base_ServiceRole(rName), fmt.Sprintf(`
 resource "aws_codebuild_project" "test" {
   name         = %[1]q
@@ -3028,7 +3385,7 @@ resource "aws_codebuild_project" "test" {
 `, rName, status, gName, sName))
 }
 
-func testAccProjectConfig_BuildBatchConfig(rName string, combineArtifacts bool, computeTypesAllowed string, maximumBuildsAllowed, timeoutInMins int) string {
+func testAccProjectConfig_buildBatch(rName string, combineArtifacts bool, computeTypesAllowed string, maximumBuildsAllowed, timeoutInMins int) string {
 	return acctest.ConfigCompose(testAccProjectConfig_Base_ServiceRole(rName), fmt.Sprintf(`
 resource "aws_codebuild_project" "test" {
   name         = %[1]q
@@ -3064,7 +3421,7 @@ resource "aws_codebuild_project" "test" {
 `, rName, combineArtifacts, computeTypesAllowed, maximumBuildsAllowed, timeoutInMins))
 }
 
-func testAccProjectConfig_LogsConfig_S3Logs(rName, status, location string, encryptionDisabled bool) string {
+func testAccProjectConfig_s3Logs(rName, status, location string, encryptionDisabled bool) string {
 	return acctest.ConfigCompose(
 		testAccProjectConfig_Base_ServiceRole(rName),
 		fmt.Sprintf(`
@@ -3103,7 +3460,7 @@ resource "aws_codebuild_project" "test" {
 `, rName, status, location, encryptionDisabled))
 }
 
-func testAccProjectConfig_Source_GitCloneDepth(rName string, gitCloneDepth int) string {
+func testAccProjectConfig_sourceGitCloneDepth(rName string, gitCloneDepth int) string {
 	return acctest.ConfigCompose(testAccProjectConfig_Base_ServiceRole(rName), fmt.Sprintf(`
 resource "aws_codebuild_project" "test" {
   name         = %[1]q
@@ -3128,7 +3485,7 @@ resource "aws_codebuild_project" "test" {
 `, rName, gitCloneDepth))
 }
 
-func testAccProjectConfig_Source_GitSubmodulesConfig_CodeCommit(rName string, fetchSubmodules bool) string {
+func testAccProjectConfig_sourceGitSubmodulesCodeCommit(rName string, fetchSubmodules bool) string {
 	return acctest.ConfigCompose(testAccProjectConfig_Base_ServiceRole(rName), fmt.Sprintf(`
 resource "aws_codebuild_project" "test" {
   name         = %[1]q
@@ -3156,7 +3513,7 @@ resource "aws_codebuild_project" "test" {
 `, rName, fetchSubmodules))
 }
 
-func testAccProjectConfig_Source_GitSubmodulesConfig_GitHub(rName string, fetchSubmodules bool) string {
+func testAccProjectConfig_sourceGitSubmodulesGitHub(rName string, fetchSubmodules bool) string {
 	return acctest.ConfigCompose(testAccProjectConfig_Base_ServiceRole(rName), fmt.Sprintf(`
 resource "aws_codebuild_project" "test" {
   name         = %[1]q
@@ -3184,7 +3541,7 @@ resource "aws_codebuild_project" "test" {
 `, rName, fetchSubmodules))
 }
 
-func testAccProjectConfig_Source_GitSubmodulesConfig_GitHubEnterprise(rName string, fetchSubmodules bool) string {
+func testAccProjectConfig_sourceGitSubmodulesGitHubEnterprise(rName string, fetchSubmodules bool) string {
 	return acctest.ConfigCompose(testAccProjectConfig_Base_ServiceRole(rName), fmt.Sprintf(`
 resource "aws_codebuild_project" "test" {
   name         = %[1]q
@@ -3212,7 +3569,7 @@ resource "aws_codebuild_project" "test" {
 `, rName, fetchSubmodules))
 }
 
-func testAccProjectConfig_SecondarySources_GitSubmodulesConfig_CodeCommit(rName string, fetchSubmodules bool) string {
+func testAccProjectConfig_secondarySourcesGitSubmodulesCodeCommit(rName string, fetchSubmodules bool) string {
 	return acctest.ConfigCompose(testAccProjectConfig_Base_ServiceRole(rName), fmt.Sprintf(`
 resource "aws_codebuild_project" "test" {
   name         = %[1]q
@@ -3260,7 +3617,7 @@ resource "aws_codebuild_project" "test" {
 `, rName, fetchSubmodules))
 }
 
-func testAccProjectConfig_SecondarySources_none(rName string, fetchSubmodules bool) string {
+func testAccProjectConfig_secondarySourcesNone(rName string, fetchSubmodules bool) string {
 	return acctest.ConfigCompose(testAccProjectConfig_Base_ServiceRole(rName), fmt.Sprintf(`
 resource "aws_codebuild_project" "test" {
   name         = %[1]q
@@ -3288,7 +3645,7 @@ resource "aws_codebuild_project" "test" {
 `, rName, fetchSubmodules))
 }
 
-func testAccProjectConfig_SecondarySources_GitSubmodulesConfig_GitHub(rName string, fetchSubmodules bool) string {
+func testAccProjectConfig_secondarySourcesGitSubmodulesGitHub(rName string, fetchSubmodules bool) string {
 	return acctest.ConfigCompose(testAccProjectConfig_Base_ServiceRole(rName), fmt.Sprintf(`
 resource "aws_codebuild_project" "test" {
   name         = %[1]q
@@ -3336,7 +3693,7 @@ resource "aws_codebuild_project" "test" {
 `, rName, fetchSubmodules))
 }
 
-func testAccProjectConfig_SecondarySources_GitSubmodulesConfig_GitHubEnterprise(rName string, fetchSubmodules bool) string {
+func testAccProjectConfig_secondarySourcesGitSubmodulesGitHubEnterprise(rName string, fetchSubmodules bool) string {
 	return acctest.ConfigCompose(testAccProjectConfig_Base_ServiceRole(rName), fmt.Sprintf(`
 resource "aws_codebuild_project" "test" {
   name         = %[1]q
@@ -3384,7 +3741,94 @@ resource "aws_codebuild_project" "test" {
 `, rName, fetchSubmodules))
 }
 
-func testAccProjectConfig_Source_InsecureSSL(rName string, insecureSSL bool) string {
+func testAccProjectConfig_secondarySourceVersionsCodeCommit(rName string) string {
+	return acctest.ConfigCompose(testAccProjectConfig_Base_ServiceRole(rName), fmt.Sprintf(`
+resource "aws_codebuild_project" "test" {
+  name         = %[1]q
+  service_role = aws_iam_role.test.arn
+
+  artifacts {
+    type = "NO_ARTIFACTS"
+  }
+
+  environment {
+    compute_type = "BUILD_GENERAL1_SMALL"
+    image        = "2"
+    type         = "LINUX_CONTAINER"
+  }
+
+  source {
+    location = "https://git-codecommit.region-id.amazonaws.com/v1/repos/repo-name"
+    type     = "CODECOMMIT"
+  }
+
+  secondary_sources {
+    location          = "https://git-codecommit.region-id.amazonaws.com/v1/repos/second-repo-name"
+    type              = "CODECOMMIT"
+    source_identifier = "secondarySource1"
+  }
+
+  secondary_sources {
+    location          = "https://git-codecommit.region-id.amazonaws.com/v1/repos/third-repo-name"
+    type              = "CODECOMMIT"
+    source_identifier = "secondarySource2"
+  }
+
+  secondary_source_version {
+    source_version    = "master"
+    source_identifier = "secondarySource1"
+  }
+}
+`, rName))
+}
+
+func testAccProjectConfig_secondarySourceVersionsCodeCommitUpdated(rName string) string {
+	return acctest.ConfigCompose(testAccProjectConfig_Base_ServiceRole(rName), fmt.Sprintf(`
+resource "aws_codebuild_project" "test" {
+  name         = %[1]q
+  service_role = aws_iam_role.test.arn
+
+  artifacts {
+    type = "NO_ARTIFACTS"
+  }
+
+  environment {
+    compute_type = "BUILD_GENERAL1_SMALL"
+    image        = "2"
+    type         = "LINUX_CONTAINER"
+  }
+
+  source {
+    location = "https://git-codecommit.region-id.amazonaws.com/v1/repos/repo-name"
+    type     = "CODECOMMIT"
+  }
+
+  secondary_sources {
+    location          = "https://git-codecommit.region-id.amazonaws.com/v1/repos/second-repo-name"
+    type              = "CODECOMMIT"
+    source_identifier = "secondarySource1"
+  }
+
+  secondary_sources {
+    location          = "https://git-codecommit.region-id.amazonaws.com/v1/repos/third-repo-name"
+    type              = "CODECOMMIT"
+    source_identifier = "secondarySource2"
+  }
+
+  secondary_source_version {
+    source_version    = "master"
+    source_identifier = "secondarySource1"
+  }
+
+  secondary_source_version {
+    source_version    = "master"
+    source_identifier = "secondarySource2"
+  }
+}
+`, rName))
+}
+
+func testAccProjectConfig_sourceInsecureSSL(rName string, insecureSSL bool) string {
 	return acctest.ConfigCompose(testAccProjectConfig_Base_ServiceRole(rName), fmt.Sprintf(`
 resource "aws_codebuild_project" "test" {
   name         = %[1]q
@@ -3409,7 +3853,7 @@ resource "aws_codebuild_project" "test" {
 `, rName, insecureSSL))
 }
 
-func testAccProjectConfig_Source_ReportBuildStatus_Bitbucket(rName, sourceLocation string, reportBuildStatus bool) string {
+func testAccProjectConfig_sourceReportBuildStatusBitbucket(rName, sourceLocation string, reportBuildStatus bool) string {
 	return acctest.ConfigCompose(testAccProjectConfig_Base_ServiceRole(rName), fmt.Sprintf(`
 resource "aws_codebuild_project" "test" {
   name         = %[1]q
@@ -3434,7 +3878,7 @@ resource "aws_codebuild_project" "test" {
 `, rName, sourceLocation, reportBuildStatus))
 }
 
-func testAccProjectConfig_Source_ReportBuildStatus_GitHub(rName string, reportBuildStatus bool) string {
+func testAccProjectConfig_sourceReportBuildStatusGitHub(rName string, reportBuildStatus bool) string {
 	return acctest.ConfigCompose(testAccProjectConfig_Base_ServiceRole(rName), fmt.Sprintf(`
 resource "aws_codebuild_project" "test" {
   name         = %[1]q
@@ -3459,7 +3903,7 @@ resource "aws_codebuild_project" "test" {
 `, rName, reportBuildStatus))
 }
 
-func testAccProjectConfig_Source_ReportBuildStatus_GitHubEnterprise(rName string, reportBuildStatus bool) string {
+func testAccProjectConfig_sourceReportBuildStatusGitHubEnterprise(rName string, reportBuildStatus bool) string {
 	return acctest.ConfigCompose(testAccProjectConfig_Base_ServiceRole(rName), fmt.Sprintf(`
 resource "aws_codebuild_project" "test" {
   name         = %[1]q
@@ -3484,7 +3928,7 @@ resource "aws_codebuild_project" "test" {
 `, rName, reportBuildStatus))
 }
 
-func testAccProjectConfig_Source_Type_Bitbucket(rName, sourceLocation string) string {
+func testAccProjectConfig_sourceTypeBitbucket(rName, sourceLocation string) string {
 	return acctest.ConfigCompose(testAccProjectConfig_Base_ServiceRole(rName), fmt.Sprintf(`
 resource "aws_codebuild_project" "test" {
   name         = %[1]q
@@ -3508,7 +3952,7 @@ resource "aws_codebuild_project" "test" {
 `, rName, sourceLocation))
 }
 
-func testAccProjectConfig_Source_Type_CodeCommit(rName string) string {
+func testAccProjectConfig_sourceTypeCodeCommit(rName string) string {
 	return acctest.ConfigCompose(testAccProjectConfig_Base_ServiceRole(rName), fmt.Sprintf(`
 resource "aws_codebuild_project" "test" {
   name         = %[1]q
@@ -3532,7 +3976,7 @@ resource "aws_codebuild_project" "test" {
 `, rName))
 }
 
-func testAccProjectConfig_Source_Type_CodePipeline(rName string) string {
+func testAccProjectConfig_sourceTypeCodePipeline(rName string) string {
 	return acctest.ConfigCompose(testAccProjectConfig_Base_ServiceRole(rName), fmt.Sprintf(`
 resource "aws_codebuild_project" "test" {
   name         = %[1]q
@@ -3555,7 +3999,7 @@ resource "aws_codebuild_project" "test" {
 `, rName))
 }
 
-func testAccProjectConfig_Source_Type_GitHubEnterprise(rName string) string {
+func testAccProjectConfig_sourceTypeGitHubEnterprise(rName string) string {
 	return acctest.ConfigCompose(testAccProjectConfig_Base_ServiceRole(rName), fmt.Sprintf(`
 resource "aws_codebuild_project" "test" {
   name         = %[1]q
@@ -3579,13 +4023,13 @@ resource "aws_codebuild_project" "test" {
 `, rName))
 }
 
-func testAccProjectConfig_Source_Type_S3(rName string) string {
+func testAccProjectConfig_sourceTypeS3(rName string) string {
 	return acctest.ConfigCompose(testAccProjectConfig_Base_ServiceRole(rName), fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
   bucket = %[1]q
 }
 
-resource "aws_s3_bucket_object" "test" {
+resource "aws_s3_object" "test" {
   bucket  = aws_s3_bucket.test.bucket
   content = "test"
   key     = "test.txt"
@@ -3606,14 +4050,14 @@ resource "aws_codebuild_project" "test" {
   }
 
   source {
-    location = "${aws_s3_bucket.test.bucket}/${aws_s3_bucket_object.test.key}"
+    location = "${aws_s3_bucket.test.bucket}/${aws_s3_object.test.key}"
     type     = "S3"
   }
 }
 `, rName))
 }
 
-func testAccProjectConfig_Source_Type_NoSource(rName string, rLocation string, rBuildspec string) string {
+func testAccProjectConfig_sourceTypeNoSource(rName string, rLocation string, rBuildspec string) string {
 	return acctest.ConfigCompose(testAccProjectConfig_Base_ServiceRole(rName), fmt.Sprintf(`
 resource "aws_codebuild_project" "test" {
   name         = %[1]q
@@ -3638,7 +4082,7 @@ resource "aws_codebuild_project" "test" {
 `, rName, rLocation, rBuildspec))
 }
 
-func testAccProjectConfig_Tags(rName, tagKey, tagValue string) string {
+func testAccProjectConfig_tags(rName, tagKey, tagValue string) string {
 	return acctest.ConfigCompose(testAccProjectConfig_Base_ServiceRole(rName), fmt.Sprintf(`
 resource "aws_codebuild_project" "test" {
   name         = %[1]q
@@ -3668,7 +4112,7 @@ resource "aws_codebuild_project" "test" {
 `, rName, tagKey, tagValue))
 }
 
-func testAccProjectConfig_VPCConfig1(rName string) string {
+func testAccProjectConfig_vpc1(rName string) string {
 	return acctest.ConfigCompose(
 		testAccProjectConfig_Base_ServiceRole(rName),
 		acctest.ConfigAvailableAZsNoOptIn(),
@@ -3726,7 +4170,7 @@ resource "aws_codebuild_project" "test" {
 `, rName))
 }
 
-func testAccProjectConfig_VPCConfig2(rName string) string {
+func testAccProjectConfig_vpc2(rName string) string {
 	return acctest.ConfigCompose(
 		testAccProjectConfig_Base_ServiceRole(rName),
 		acctest.ConfigAvailableAZsNoOptIn(),
@@ -3784,7 +4228,7 @@ resource "aws_codebuild_project" "test" {
 `, rName))
 }
 
-func testAccProjectConfig_WindowsServer2019Container(rName string) string {
+func testAccProjectConfig_windowsServer2019Container(rName string) string {
 	return acctest.ConfigCompose(testAccProjectConfig_Base_ServiceRole(rName), fmt.Sprintf(`
 resource "aws_codebuild_project" "test" {
   name         = %[1]q
@@ -3808,7 +4252,7 @@ resource "aws_codebuild_project" "test" {
 `, rName, testAccGitHubSourceLocationFromEnv()))
 }
 
-func testAccProjectConfig_ARMContainer(rName string) string {
+func testAccProjectConfig_armContainer(rName string) string {
 	return acctest.ConfigCompose(testAccProjectConfig_Base_ServiceRole(rName), fmt.Sprintf(`
 resource "aws_codebuild_project" "test" {
   name         = %[1]q
@@ -3832,7 +4276,7 @@ resource "aws_codebuild_project" "test" {
 `, rName, testAccGitHubSourceLocationFromEnv()))
 }
 
-func testAccProjectConfig_Artifacts_ArtifactIdentifier(rName string, artifactIdentifier string) string {
+func testAccProjectConfig_artifactsArtifactIdentifier(rName string, artifactIdentifier string) string {
 	return acctest.ConfigCompose(
 		testAccProjectConfig_Base_ServiceRole(rName),
 		fmt.Sprintf(`
@@ -3865,7 +4309,7 @@ resource "aws_codebuild_project" "test" {
 `, rName, artifactIdentifier))
 }
 
-func testAccProjectConfig_Artifacts_EncryptionDisabled(rName string, encryptionDisabled bool) string {
+func testAccProjectConfig_artifactsEncryptionDisabled(rName string, encryptionDisabled bool) string {
 	return acctest.ConfigCompose(
 		testAccProjectConfig_Base_ServiceRole(rName),
 		fmt.Sprintf(`
@@ -3898,7 +4342,7 @@ resource "aws_codebuild_project" "test" {
 `, rName, encryptionDisabled))
 }
 
-func testAccProjectConfig_Artifacts_Location(rName, bucketName string) string {
+func testAccProjectConfig_artifactsLocation(rName, bucketName string) string {
 	return acctest.ConfigCompose(
 		testAccProjectConfig_Base_ServiceRole(rName),
 		fmt.Sprintf(`
@@ -3930,7 +4374,7 @@ resource "aws_codebuild_project" "test" {
 `, rName, bucketName))
 }
 
-func testAccProjectConfig_Artifacts_Name(rName string, name string) string {
+func testAccProjectConfig_artifactsName(rName string, name string) string {
 	return acctest.ConfigCompose(
 		testAccProjectConfig_Base_ServiceRole(rName),
 		fmt.Sprintf(`
@@ -3963,7 +4407,7 @@ resource "aws_codebuild_project" "test" {
 `, rName, name))
 }
 
-func testAccProjectConfig_Artifacts_NamespaceType(rName, namespaceType string) string {
+func testAccProjectConfig_artifactsNamespaceType(rName, namespaceType string) string {
 	return acctest.ConfigCompose(
 		testAccProjectConfig_Base_ServiceRole(rName),
 		fmt.Sprintf(`
@@ -3996,7 +4440,7 @@ resource "aws_codebuild_project" "test" {
 `, rName, namespaceType))
 }
 
-func testAccProjectConfig_Artifacts_OverrideArtifactName(rName string, overrideArtifactName bool) string {
+func testAccProjectConfig_artifactsOverrideArtifactName(rName string, overrideArtifactName bool) string {
 	return acctest.ConfigCompose(
 		testAccProjectConfig_Base_ServiceRole(rName),
 		fmt.Sprintf(`
@@ -4029,7 +4473,7 @@ resource "aws_codebuild_project" "test" {
 `, rName, overrideArtifactName))
 }
 
-func testAccProjectConfig_Artifacts_Packaging(rName, packaging string) string {
+func testAccProjectConfig_artifactsPackaging(rName, packaging string) string {
 	return acctest.ConfigCompose(
 		testAccProjectConfig_Base_ServiceRole(rName),
 		fmt.Sprintf(`
@@ -4062,7 +4506,7 @@ resource "aws_codebuild_project" "test" {
 `, rName, packaging))
 }
 
-func testAccProjectConfig_Artifacts_Path(rName, path string) string {
+func testAccProjectConfig_artifactsPath(rName, path string) string {
 	return acctest.ConfigCompose(
 		testAccProjectConfig_Base_ServiceRole(rName),
 		fmt.Sprintf(`
@@ -4095,7 +4539,7 @@ resource "aws_codebuild_project" "test" {
 `, rName, path))
 }
 
-func testAccProjectConfig_Artifacts_Type(rName string, artifactType string) string {
+func testAccProjectConfig_artifactsType(rName string, artifactType string) string {
 	return acctest.ConfigCompose(
 		testAccProjectConfig_Base_ServiceRole(rName),
 		fmt.Sprintf(`
@@ -4127,7 +4571,40 @@ resource "aws_codebuild_project" "test" {
 `, rName, artifactType))
 }
 
-func testAccProjectConfig_SecondaryArtifacts(rName string) string {
+func testAccProjectConfig_artifactsBucketOwnerAccess(rName string, typ string) string {
+	return acctest.ConfigCompose(
+		testAccProjectConfig_Base_ServiceRole(rName),
+		fmt.Sprintf(`
+resource "aws_s3_bucket" "test" {
+  bucket        = %[1]q
+  force_destroy = true
+}
+
+resource "aws_codebuild_project" "test" {
+  name         = %[1]q
+  service_role = aws_iam_role.test.arn
+
+  artifacts {
+    type                = "S3"
+    location            = aws_s3_bucket.test.bucket
+    bucket_owner_access = %[2]q
+  }
+
+  environment {
+    compute_type = "BUILD_GENERAL1_SMALL"
+    image        = "2"
+    type         = "LINUX_CONTAINER"
+  }
+
+  source {
+    type     = "S3"
+    location = "${aws_s3_bucket.test.bucket}/"
+  }
+}
+`, rName, typ))
+}
+
+func testAccProjectConfig_secondaryArtifacts(rName string) string {
 	return acctest.ConfigCompose(
 		testAccProjectConfig_Base_ServiceRole(rName),
 		fmt.Sprintf(`
@@ -4171,7 +4648,7 @@ resource "aws_codebuild_project" "test" {
 `, rName))
 }
 
-func testAccProjectConfig_SecondaryArtifacts_none(rName string) string {
+func testAccProjectConfig_secondaryArtifactsNone(rName string) string {
 	return acctest.ConfigCompose(
 		testAccProjectConfig_Base_ServiceRole(rName),
 		fmt.Sprintf(`
@@ -4203,7 +4680,7 @@ resource "aws_codebuild_project" "test" {
 `, rName))
 }
 
-func testAccProjectConfig_SecondaryArtifacts_ArtifactIdentifier(rName string, artifactIdentifier string) string {
+func testAccProjectConfig_secondaryArtifactsArtifactIdentifier(rName string, artifactIdentifier string) string {
 	return acctest.ConfigCompose(
 		testAccProjectConfig_Base_ServiceRole(rName),
 		fmt.Sprintf(`
@@ -4241,7 +4718,7 @@ resource "aws_codebuild_project" "test" {
 `, rName, artifactIdentifier))
 }
 
-func testAccProjectConfig_SecondaryArtifacts_EncryptionDisabled(rName string, encryptionDisabled bool) string {
+func testAccProjectConfig_secondaryArtifactsEncryptionDisabled(rName string, encryptionDisabled bool) string {
 	return acctest.ConfigCompose(
 		testAccProjectConfig_Base_ServiceRole(rName),
 		fmt.Sprintf(`
@@ -4280,7 +4757,7 @@ resource "aws_codebuild_project" "test" {
 `, rName, encryptionDisabled))
 }
 
-func testAccProjectConfig_SecondaryArtifacts_Location(rName, bucketName string) string {
+func testAccProjectConfig_secondaryArtifactsLocation(rName, bucketName string) string {
 	return acctest.ConfigCompose(
 		testAccProjectConfig_Base_ServiceRole(rName),
 		fmt.Sprintf(`
@@ -4318,7 +4795,7 @@ resource "aws_codebuild_project" "test" {
 `, rName, bucketName))
 }
 
-func testAccProjectConfig_SecondaryArtifacts_Name(rName string, name string) string {
+func testAccProjectConfig_secondaryArtifactsName(rName string, name string) string {
 	return acctest.ConfigCompose(
 		testAccProjectConfig_Base_ServiceRole(rName),
 		fmt.Sprintf(`
@@ -4357,7 +4834,7 @@ resource "aws_codebuild_project" "test" {
 `, rName, name))
 }
 
-func testAccProjectConfig_SecondaryArtifacts_NamespaceType(rName, namespaceType string) string {
+func testAccProjectConfig_secondaryArtifactsNamespaceType(rName, namespaceType string) string {
 	return acctest.ConfigCompose(
 		testAccProjectConfig_Base_ServiceRole(rName),
 		fmt.Sprintf(`
@@ -4396,7 +4873,7 @@ resource "aws_codebuild_project" "test" {
 `, rName, namespaceType))
 }
 
-func testAccProjectConfig_SecondaryArtifacts_OverrideArtifactName(rName string, overrideArtifactName bool) string {
+func testAccProjectConfig_secondaryArtifactsOverrideArtifactName(rName string, overrideArtifactName bool) string {
 	return acctest.ConfigCompose(
 		testAccProjectConfig_Base_ServiceRole(rName),
 		fmt.Sprintf(`
@@ -4435,7 +4912,7 @@ resource "aws_codebuild_project" "test" {
 `, rName, overrideArtifactName))
 }
 
-func testAccProjectConfig_SecondaryArtifacts_Packaging(rName, packaging string) string {
+func testAccProjectConfig_secondaryArtifactsPackaging(rName, packaging string) string {
 	return acctest.ConfigCompose(
 		testAccProjectConfig_Base_ServiceRole(rName),
 		fmt.Sprintf(`
@@ -4474,7 +4951,7 @@ resource "aws_codebuild_project" "test" {
 `, rName, packaging))
 }
 
-func testAccProjectConfig_SecondaryArtifacts_Path(rName, path string) string {
+func testAccProjectConfig_secondaryArtifactsPath(rName, path string) string {
 	return acctest.ConfigCompose(
 		testAccProjectConfig_Base_ServiceRole(rName),
 		fmt.Sprintf(`
@@ -4513,7 +4990,7 @@ resource "aws_codebuild_project" "test" {
 `, rName, path))
 }
 
-func testAccProjectConfig_SecondaryArtifacts_Type(rName string, artifactType string) string {
+func testAccProjectConfig_secondaryArtifactsType(rName string, artifactType string) string {
 	return acctest.ConfigCompose(
 		testAccProjectConfig_Base_ServiceRole(rName),
 		fmt.Sprintf(`
@@ -4551,7 +5028,7 @@ resource "aws_codebuild_project" "test" {
 `, rName, artifactType))
 }
 
-func testAccProjectConfig_SecondarySources_CodeCommit(rName string) string {
+func testAccProjectConfig_secondarySourcesCodeCommit(rName string) string {
 	return acctest.ConfigCompose(testAccProjectConfig_Base_ServiceRole(rName), fmt.Sprintf(`
 resource "aws_codebuild_project" "test" {
   name         = %[1]q
@@ -4587,7 +5064,7 @@ resource "aws_codebuild_project" "test" {
 `, rName))
 }
 
-func testAccProjectConfig_Source_BuildStatusConfig_GitHubEnterprise(rName string) string {
+func testAccProjectConfig_sourceBuildStatusGitHubEnterprise(rName string) string {
 	return acctest.ConfigCompose(testAccProjectConfig_Base_ServiceRole(rName), fmt.Sprintf(`
 resource "aws_codebuild_project" "test" {
   name         = %[1]q
@@ -4616,7 +5093,7 @@ resource "aws_codebuild_project" "test" {
 `, rName))
 }
 
-func testAccProjectConfig_ConcurrentBuildLimit(rName string, concurrentBuildLimit int) string {
+func testAccProjectConfig_concurrentBuildLimit(rName string, concurrentBuildLimit int) string {
 	return acctest.ConfigCompose(testAccProjectConfig_Base_ServiceRole(rName), fmt.Sprintf(`
 resource "aws_codebuild_project" "test" {
   concurrent_build_limit = %[1]d
@@ -4641,7 +5118,7 @@ resource "aws_codebuild_project" "test" {
 `, concurrentBuildLimit, rName))
 }
 
-func testAccProjectConfig_FileSystemLocations(rName, mountPoint string) string {
+func testAccProjectConfig_fileSystemLocations(rName, mountPoint string) string {
 	return acctest.ConfigCompose(
 		testAccProjectConfig_Base_ServiceRole(rName),
 		acctest.ConfigAvailableAZsNoOptIn(),
@@ -4708,7 +5185,7 @@ resource "aws_subnet" "private" {
 }
 
 resource "aws_eip" "test" {
-  vpc = true
+  domain = "vpc"
 
   tags = {
     Name = %[1]q

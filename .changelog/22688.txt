@@ -1,0 +1,3 @@
+```release-note:new-resource
+aws_devicefarm_test_grid_project
+```

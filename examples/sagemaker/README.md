@@ -3,7 +3,6 @@
 This example takes the [example model provided by AWS](https://github.com/awslabs/amazon-sagemaker-examples/blob/master/advanced_functionality/scikit_bring_your_own/scikit_bring_your_own.ipynb)
 to show how to deploy your own machine learning algorithm into a SageMaker container using Terraform.
 
-
 ### Wrap model in Docker container and upload to [ECR](https://aws.amazon.com/ecr/)
 
 Get the SageMaker example model from AWS:
@@ -15,7 +14,7 @@ Export credentials for your account:
 
     export AWS_ACCESS_KEY_ID=<your-access-key-id>
     export AWS_SECRET_ACCESS_KEY=<your-secret-access-key>
-    
+
 Create docker container and push it to ECR:
 
     ./build_and_push.sh foo
@@ -26,7 +25,6 @@ In the directory where this README is located, run the following:
 
     terraform init
     terraform apply
-   
 
 Go back to `amazon-sagemaker-examples/advanced_functionality/scikit_bring_your_own/container/` and make a test call to the deployed model:
 

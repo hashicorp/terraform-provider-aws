@@ -1,5 +1,5 @@
 ---
-subcategory: "RDS"
+subcategory: "RDS (Relational Database)"
 layout: "aws"
 page_title: "AWS: aws_db_option_group"
 description: |-
@@ -48,7 +48,7 @@ resource "aws_db_option_group" "example" {
 }
 ```
 
-~> **Note**: Any modifications to the `aws_db_option_group` are set to happen immediately as we default to applying immediately.
+~> **Note:** Any modifications to the `aws_db_option_group` are set to happen immediately as we default to applying immediately.
 
 ~> **WARNING:** You can perform a destroy on a `aws_db_option_group`, as long as it is not associated with any Amazon RDS resource. An option group can be associated with a DB instance, a manual DB snapshot, or an automated DB snapshot.
 
@@ -60,7 +60,7 @@ More information about this can be found [here](https://docs.aws.amazon.com/Amaz
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `name` - (Optional, Forces new resource) The name of the option group. If omitted, Terraform will assign a random, unique name. Must be lowercase, to match as it is stored in AWS.
 * `name_prefix` - (Optional, Forces new resource) Creates a unique name beginning with the specified prefix. Conflicts with `name`. Must be lowercase, to match as it is stored in AWS.
@@ -68,7 +68,7 @@ The following arguments are supported:
 * `engine_name` - (Required) Specifies the name of the engine that this option group should be associated with.
 * `major_engine_version` - (Required) Specifies the major version of the engine that this option group should be associated with.
 * `option` - (Optional) A list of Options to apply.
-* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 Option blocks support the following:
 
@@ -84,25 +84,33 @@ Option Settings blocks support the following:
 * `name` - (Optional) The Name of the setting.
 * `value` - (Optional) The Value of the setting.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The db option group name.
 * `arn` - The ARN of the db option group.
-* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
+* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Timeouts
 
-`aws_db_option_group` provides the following
-[Timeouts](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts) configuration options:
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-- `delete` - (Default `15 minutes`)
+- `delete` - (Default `15m`)
 
 ## Import
 
-DB Option groups can be imported using the `name`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import DB Option groups using the `name`. For example:
 
+```terraform
+import {
+  to = aws_db_option_group.example
+  id = "mysql-option-group"
+}
 ```
-$ terraform import aws_db_option_group.example mysql-option-group
+
+Using `terraform import`, import DB Option groups using the `name`. For example:
+
+```console
+% terraform import aws_db_option_group.example mysql-option-group
 ```

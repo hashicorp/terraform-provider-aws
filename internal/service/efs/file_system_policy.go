@@ -1,29 +1,35 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package efs
 
 import (
-	"fmt"
+	"context"
 	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/efs"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/service/iam"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_efs_file_system_policy")
 func ResourceFileSystemPolicy() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceFileSystemPolicyPut,
-		Read:   resourceFileSystemPolicyRead,
-		Update: resourceFileSystemPolicyPut,
-		Delete: resourceFileSystemPolicyDelete,
+		CreateWithoutTimeout: resourceFileSystemPolicyPut,
+		ReadWithoutTimeout:   resourceFileSystemPolicyRead,
+		UpdateWithoutTimeout: resourceFileSystemPolicyPut,
+		DeleteWithoutTimeout: resourceFileSystemPolicyDelete,
+
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -38,86 +44,100 @@ func ResourceFileSystemPolicy() *schema.Resource {
 				ForceNew: true,
 			},
 			"policy": {
-				Type:             schema.TypeString,
-				Required:         true,
-				ValidateFunc:     validation.StringIsJSON,
-				DiffSuppressFunc: verify.SuppressEquivalentJSONDiffs,
+				Type:                  schema.TypeString,
+				Required:              true,
+				ValidateFunc:          validation.StringIsJSON,
+				DiffSuppressFunc:      verify.SuppressEquivalentPolicyDiffs,
+				DiffSuppressOnRefresh: true,
+				StateFunc: func(v interface{}) string {
+					json, _ := structure.NormalizeJsonString(v)
+					return json
+				},
 			},
 		},
 	}
 }
 
-func resourceFileSystemPolicyPut(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EFSConn
+func resourceFileSystemPolicyPut(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).EFSConn(ctx)
+
+	policy, err := structure.NormalizeJsonString(d.Get("policy").(string))
+	if err != nil {
+		return sdkdiag.AppendFromErr(diags, err)
+	}
 
 	fsID := d.Get("file_system_id").(string)
 	input := &efs.PutFileSystemPolicyInput{
 		BypassPolicyLockoutSafetyCheck: aws.Bool(d.Get("bypass_policy_lockout_safety_check").(bool)),
 		FileSystemId:                   aws.String(fsID),
-		Policy:                         aws.String(d.Get("policy").(string)),
+		Policy:                         aws.String(policy),
 	}
 
-	log.Printf("[DEBUG] Putting EFS File System Policy: %s", input)
-	err := resource.Retry(iam.PropagationTimeout, func() *resource.RetryError {
-		_, err := conn.PutFileSystemPolicy(input)
-		if err != nil {
-			if tfawserr.ErrMessageContains(err, "InvalidPolicyException", "Policy contains invalid Principal block.") {
-				return resource.RetryableError(err)
-			} else {
-				return resource.NonRetryableError(err)
-			}
-		}
-		return nil
-	})
-	if tfresource.TimedOut(err) {
-		_, err = conn.PutFileSystemPolicy(input)
-	}
+	_, err = tfresource.RetryWhenAWSErrMessageContains(ctx, propagationTimeout, func() (interface{}, error) {
+		return conn.PutFileSystemPolicyWithContext(ctx, input)
+	}, efs.ErrCodeInvalidPolicyException, "Policy contains invalid Principal block")
 
 	if err != nil {
-		return fmt.Errorf("error putting EFS File System Policy (%s): %w", fsID, err)
+		return sdkdiag.AppendErrorf(diags, "putting EFS File System Policy (%s): %s", fsID, err)
 	}
 
-	d.SetId(fsID)
+	if d.IsNewResource() {
+		d.SetId(fsID)
+	}
 
-	return resourceFileSystemPolicyRead(d, meta)
+	return append(diags, resourceFileSystemPolicyRead(ctx, d, meta)...)
 }
 
-func resourceFileSystemPolicyRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EFSConn
+func resourceFileSystemPolicyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).EFSConn(ctx)
 
-	output, err := FindFileSystemPolicyByID(conn, d.Id())
+	output, err := FindFileSystemPolicyByID(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] EFS File System Policy (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading EFS File System Policy (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading EFS File System Policy (%s): %s", d.Id(), err)
 	}
 
 	d.Set("file_system_id", output.FileSystemId)
-	d.Set("policy", output.Policy)
 
-	return nil
+	policyToSet, err := verify.SecondJSONUnlessEquivalent(d.Get("policy").(string), aws.StringValue(output.Policy))
+	if err != nil {
+		return sdkdiag.AppendFromErr(diags, err)
+	}
+
+	policyToSet, err = structure.NormalizeJsonString(policyToSet)
+	if err != nil {
+		return sdkdiag.AppendFromErr(diags, err)
+	}
+
+	d.Set("policy", policyToSet)
+
+	return diags
 }
 
-func resourceFileSystemPolicyDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EFSConn
+func resourceFileSystemPolicyDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).EFSConn(ctx)
 
 	log.Printf("[DEBUG] Deleting EFS File System Policy: %s", d.Id())
-	_, err := conn.DeleteFileSystemPolicy(&efs.DeleteFileSystemPolicyInput{
+	_, err := conn.DeleteFileSystemPolicyWithContext(ctx, &efs.DeleteFileSystemPolicyInput{
 		FileSystemId: aws.String(d.Id()),
 	})
 
 	if tfawserr.ErrCodeEquals(err, efs.ErrCodeFileSystemNotFound) {
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("error deleting EFS File System Policy (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting EFS File System Policy (%s): %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }

@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 //go:build sweep
 // +build sweep
 
@@ -8,11 +11,10 @@ import (
 	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/endpoints"
 	"github.com/aws/aws-sdk-go/service/s3control"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
-	"github.com/hashicorp/go-multierror"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	multierror "github.com/hashicorp/go-multierror"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
@@ -20,48 +22,57 @@ func init() {
 	resource.AddTestSweepers("aws_s3_access_point", &resource.Sweeper{
 		Name: "aws_s3_access_point",
 		F:    sweepAccessPoints,
+		Dependencies: []string{
+			"aws_s3control_object_lambda_access_point",
+		},
+	})
+
+	resource.AddTestSweepers("aws_s3control_multi_region_access_point", &resource.Sweeper{
+		Name: "aws_s3control_multi_region_access_point",
+		F:    sweepMultiRegionAccessPoints,
+	})
+
+	resource.AddTestSweepers("aws_s3control_object_lambda_access_point", &resource.Sweeper{
+		Name: "aws_s3control_object_lambda_access_point",
+		F:    sweepObjectLambdaAccessPoints,
+	})
+
+	resource.AddTestSweepers("aws_s3control_storage_lens_configuration", &resource.Sweeper{
+		Name: "aws_s3control_storage_lens_configuration",
+		F:    sweepStorageLensConfigurations,
 	})
 }
 
 func sweepAccessPoints(region string) error {
-	client, err := sweep.SharedRegionalSweepClient(region)
+	ctx := sweep.Context(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-
-	accountId := client.(*conns.AWSClient).AccountID
-	conn := client.(*conns.AWSClient).S3ControlConn
-
+	conn := client.S3ControlConn(ctx)
+	accountID := client.AccountID
 	input := &s3control.ListAccessPointsInput{
-		AccountId: aws.String(accountId),
+		AccountId: aws.String(accountID),
 	}
+	sweepResources := make([]sweep.Sweepable, 0)
 	var sweeperErrs *multierror.Error
 
-	err = conn.ListAccessPointsPages(input, func(page *s3control.ListAccessPointsOutput, lastPage bool) bool {
+	err = conn.ListAccessPointsPagesWithContext(ctx, input, func(page *s3control.ListAccessPointsOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
 
-		for _, accessPoint := range page.AccessPointList {
-			input := &s3control.DeleteAccessPointInput{
-				AccountId: aws.String(accountId),
-				Name:      accessPoint.Name,
-			}
-			name := aws.StringValue(accessPoint.Name)
-
-			log.Printf("[INFO] Deleting S3 Access Point: %s", name)
-			_, err := conn.DeleteAccessPoint(input)
-
-			if tfawserr.ErrMessageContains(err, "NoSuchAccessPoint", "") {
+		for _, v := range page.AccessPointList {
+			r := resourceAccessPoint()
+			d := r.Data(nil)
+			if id, err := AccessPointCreateResourceID(aws.StringValue(v.AccessPointArn)); err != nil {
+				sweeperErrs = multierror.Append(sweeperErrs, err)
 				continue
+			} else {
+				d.SetId(id)
 			}
 
-			if err != nil {
-				sweeperErr := fmt.Errorf("error deleting S3 Access Point (%s): %w", name, err)
-				log.Printf("[ERROR] %s", sweeperErr)
-				sweeperErrs = multierror.Append(sweeperErrs, sweeperErr)
-				continue
-			}
+			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
 
 		return !lastPage
@@ -69,12 +80,170 @@ func sweepAccessPoints(region string) error {
 
 	if sweep.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping S3 Access Point sweep for %s: %s", region, err)
+		return sweeperErrs.ErrorOrNil()
+	}
+
+	if err != nil {
+		return fmt.Errorf("error listing S3 Access Points (%s): %w", region, err)
+	}
+
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
+
+	if err != nil {
+		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error sweeping S3 Access Points (%s): %w", region, err))
+	}
+
+	return sweeperErrs.ErrorOrNil()
+}
+
+func sweepMultiRegionAccessPoints(region string) error {
+	ctx := sweep.Context(region)
+	if region != endpoints.UsWest2RegionID {
+		log.Printf("[WARN] Skipping S3 Multi-Region Access Point sweep for region: %s", region)
+		return nil
+	}
+
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
+	if err != nil {
+		return fmt.Errorf("error getting client: %s", err)
+	}
+	conn := client.S3ControlConn(ctx)
+	accountID := client.AccountID
+	input := &s3control.ListMultiRegionAccessPointsInput{
+		AccountId: aws.String(accountID),
+	}
+	sweepResources := make([]sweep.Sweepable, 0)
+
+	err = conn.ListMultiRegionAccessPointsPagesWithContext(ctx, input, func(page *s3control.ListMultiRegionAccessPointsOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, v := range page.AccessPoints {
+			r := resourceMultiRegionAccessPoint()
+			d := r.Data(nil)
+			d.SetId(MultiRegionAccessPointCreateResourceID(accountID, aws.StringValue(v.Name)))
+
+			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
+		}
+
+		return !lastPage
+	})
+
+	if sweep.SkipSweepError(err) {
+		log.Printf("[WARN] Skipping S3 Multi-Region Access Point sweep for %s: %s", region, err)
 		return nil
 	}
 
 	if err != nil {
-		return fmt.Errorf("error listing S3 Access Points: %w", err)
+		return fmt.Errorf("error listing S3 Multi-Region Access Points (%s): %w", region, err)
 	}
 
-	return sweeperErrs.ErrorOrNil()
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
+
+	if err != nil {
+		return fmt.Errorf("error sweeping S3 Multi-Region Access Points (%s): %w", region, err)
+	}
+
+	return nil
+}
+
+func sweepObjectLambdaAccessPoints(region string) error {
+	ctx := sweep.Context(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
+	if err != nil {
+		return fmt.Errorf("error getting client: %s", err)
+	}
+	conn := client.S3ControlConn(ctx)
+	accountID := client.AccountID
+	input := &s3control.ListAccessPointsForObjectLambdaInput{
+		AccountId: aws.String(accountID),
+	}
+	sweepResources := make([]sweep.Sweepable, 0)
+
+	conn.ListAccessPointsForObjectLambdaPagesWithContext(ctx, input, func(page *s3control.ListAccessPointsForObjectLambdaOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, v := range page.ObjectLambdaAccessPointList {
+			r := resourceObjectLambdaAccessPoint()
+			d := r.Data(nil)
+			d.SetId(ObjectLambdaAccessPointCreateResourceID(accountID, aws.StringValue(v.Name)))
+
+			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
+		}
+
+		return !lastPage
+	})
+
+	if sweep.SkipSweepError(err) {
+		log.Printf("[WARN] Skipping S3 Object Lambda Access Point sweep for %s: %s", region, err)
+		return nil
+	}
+
+	if err != nil {
+		return fmt.Errorf("error listing S3 Object Lambda Access Points (%s): %w", region, err)
+	}
+
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
+
+	if err != nil {
+		return fmt.Errorf("error sweeping S3 Object Lambda Access Points (%s): %w", region, err)
+	}
+
+	return nil
+}
+
+func sweepStorageLensConfigurations(region string) error {
+	ctx := sweep.Context(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
+	if err != nil {
+		return fmt.Errorf("error getting client: %s", err)
+	}
+	conn := client.S3ControlConn(ctx)
+	accountID := client.AccountID
+	input := &s3control.ListStorageLensConfigurationsInput{
+		AccountId: aws.String(accountID),
+	}
+	sweepResources := make([]sweep.Sweepable, 0)
+
+	conn.ListStorageLensConfigurationsPagesWithContext(ctx, input, func(page *s3control.ListStorageLensConfigurationsOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, v := range page.StorageLensConfigurationList {
+			configID := aws.StringValue(v.Id)
+
+			if configID == "default-account-dashboard" {
+				continue
+			}
+
+			r := resourceStorageLensConfiguration()
+			d := r.Data(nil)
+			d.SetId(StorageLensConfigurationCreateResourceID(accountID, configID))
+
+			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
+		}
+
+		return !lastPage
+	})
+
+	if sweep.SkipSweepError(err) {
+		log.Printf("[WARN] Skipping S3 Storage Lens Configuration sweep for %s: %s", region, err)
+		return nil
+	}
+
+	if err != nil {
+		return fmt.Errorf("error listing S3 Storage Lens Configurations (%s): %w", region, err)
+	}
+
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
+
+	if err != nil {
+		return fmt.Errorf("error sweeping S3 Storage Lens Configurations (%s): %w", region, err)
+	}
+
+	return nil
 }

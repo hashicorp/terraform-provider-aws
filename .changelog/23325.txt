@@ -1,0 +1,3 @@
+```release-note:note
+resource/aws_s3_bucket_lifecycle_configuration: The `prefix` argument of the `rule` configuration block has been deprecated. Use the `filter` configuration block instead.
+```

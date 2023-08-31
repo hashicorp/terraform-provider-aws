@@ -1,0 +1,51 @@
+```release-note:enhancement
+resource/aws_servicecatalog_budget_resource_association: Add configurable timeouts
+```
+
+```release-note:enhancement
+resource/aws_servicecatalog_constraint: Add configurable timeouts
+```
+
+```release-note:enhancement
+resource/aws_servicecatalog_organizations_access: Add configurable timeouts
+```
+
+```release-note:enhancement
+resource/aws_servicecatalog_portfolio: Add configurable timeouts
+```
+
+```release-note:enhancement
+resource/aws_servicecatalog_portfolio_share: Add configurable timeouts
+```
+
+```release-note:enhancement
+resource/aws_servicecatalog_principal_portfolio_association: Add configurable timeouts
+```
+
+```release-note:enhancement
+resource/aws_servicecatalog_product: Add configurable timeouts
+```
+
+```release-note:enhancement
+resource/aws_servicecatalog_product_portfolio_association: Add configurable timeouts
+```
+
+```release-note:enhancement
+resource/aws_servicecatalog_provisioned_product: Add configurable timeouts
+```
+
+```release-note:enhancement
+resource/aws_servicecatalog_provisioning_artifact: Add configurable timeouts
+```
+
+```release-note:enhancement
+resource/aws_servicecatalog_service_action: Add configurable timeouts
+```
+
+```release-note:enhancement
+resource/aws_servicecatalog_tag_option: Add configurable timeouts
+```
+
+```release-note:enhancement
+resource/aws_servicecatalog_tag_option_resource_association: Add configurable timeouts
+```

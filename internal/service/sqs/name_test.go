@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package sqs_test
 
 import (
@@ -7,6 +10,8 @@ import (
 )
 
 func TestQueueNameFromURL(t *testing.T) {
+	t.Parallel()
+
 	testCases := []struct {
 		Name              string
 		URL               string
@@ -40,7 +45,10 @@ func TestQueueNameFromURL(t *testing.T) {
 	}
 
 	for _, testCase := range testCases {
+		testCase := testCase
 		t.Run(testCase.Name, func(t *testing.T) {
+			t.Parallel()
+
 			got, err := tfsqs.QueueNameFromURL(testCase.URL)
 
 			if err != nil && !testCase.ExpectError {

@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package lakeformation_test
 
 import (
@@ -8,6 +11,8 @@ import (
 )
 
 func TestStringSlicesEqualIgnoreOrder(t *testing.T) {
+	t.Parallel()
+
 	equal := []interface{}{
 		[]interface{}{
 			[]string{"a", "b", "c"},
@@ -62,6 +67,8 @@ func TestStringSlicesEqualIgnoreOrder(t *testing.T) {
 }
 
 func TestStringSlicesEqual(t *testing.T) {
+	t.Parallel()
+
 	equal := []interface{}{
 		[]interface{}{
 			[]string{"a", "b", "c"},

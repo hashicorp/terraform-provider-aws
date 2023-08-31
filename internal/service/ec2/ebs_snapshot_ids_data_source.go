@@ -1,23 +1,38 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ec2
 
 import (
-	"fmt"
-	"log"
+	"context"
 	"sort"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 )
 
+// @SDKDataSource("aws_ebs_snapshot_ids")
 func DataSourceEBSSnapshotIDs() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceEBSSnapshotIDsRead,
+		ReadWithoutTimeout: dataSourceEBSSnapshotIDsRead,
+
+		Timeouts: &schema.ResourceTimeout{
+			Read: schema.DefaultTimeout(20 * time.Minute),
+		},
 
 		Schema: map[string]*schema.Schema{
-			"filter": DataSourceFiltersSchema(),
+			"filter": CustomFiltersSchema(),
+			"ids": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+			},
 			"owners": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -28,56 +43,50 @@ func DataSourceEBSSnapshotIDs() *schema.Resource {
 				Optional: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"ids": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
 		},
 	}
 }
 
-func dataSourceEBSSnapshotIDsRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+func dataSourceEBSSnapshotIDsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
-	restorableUsers, restorableUsersOk := d.GetOk("restorable_by_user_ids")
-	filters, filtersOk := d.GetOk("filter")
-	owners, ownersOk := d.GetOk("owners")
+	input := &ec2.DescribeSnapshotsInput{}
 
-	if restorableUsers == false && !filtersOk && !ownersOk {
-		return fmt.Errorf("One of filters, restorable_by_user_ids, or owners must be assigned")
+	if v, ok := d.GetOk("owners"); ok && len(v.([]interface{})) > 0 {
+		input.OwnerIds = flex.ExpandStringList(v.([]interface{}))
 	}
 
-	params := &ec2.DescribeSnapshotsInput{}
-
-	if restorableUsersOk {
-		params.RestorableByUserIds = flex.ExpandStringList(restorableUsers.([]interface{}))
-	}
-	if filtersOk {
-		params.Filters = BuildFiltersDataSource(filters.(*schema.Set))
-	}
-	if ownersOk {
-		params.OwnerIds = flex.ExpandStringList(owners.([]interface{}))
+	if v, ok := d.GetOk("restorable_by_user_ids"); ok && len(v.([]interface{})) > 0 {
+		input.RestorableByUserIds = flex.ExpandStringList(v.([]interface{}))
 	}
 
-	log.Printf("[DEBUG] Reading EBS Snapshot IDs: %s", params)
-	resp, err := conn.DescribeSnapshots(params)
+	input.Filters = append(input.Filters, BuildCustomFilterList(
+		d.Get("filter").(*schema.Set),
+	)...)
+
+	if len(input.Filters) == 0 {
+		input.Filters = nil
+	}
+
+	snapshots, err := FindSnapshots(ctx, conn, input)
+
 	if err != nil {
-		return err
+		return sdkdiag.AppendErrorf(diags, "reading EBS Snapshots: %s", err)
 	}
 
-	snapshotIds := make([]string, 0)
-
-	sort.Slice(resp.Snapshots, func(i, j int) bool {
-		return aws.TimeValue(resp.Snapshots[i].StartTime).Unix() > aws.TimeValue(resp.Snapshots[j].StartTime).Unix()
+	sort.Slice(snapshots, func(i, j int) bool {
+		return aws.TimeValue(snapshots[i].StartTime).Unix() > aws.TimeValue(snapshots[j].StartTime).Unix()
 	})
-	for _, snapshot := range resp.Snapshots {
-		snapshotIds = append(snapshotIds, *snapshot.SnapshotId)
+
+	var snapshotIDs []string
+
+	for _, v := range snapshots {
+		snapshotIDs = append(snapshotIDs, aws.StringValue(v.SnapshotId))
 	}
 
 	d.SetId(meta.(*conns.AWSClient).Region)
+	d.Set("ids", snapshotIDs)
 
-	d.Set("ids", snapshotIds)
-
-	return nil
+	return diags
 }

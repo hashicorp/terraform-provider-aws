@@ -1,166 +1,180 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package iot
 
 import (
+	"context"
 	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/iot"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
+// @SDKResource("aws_iot_thing")
 func ResourceThing() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceThingCreate,
-		Read:   resourceThingRead,
-		Update: resourceThingUpdate,
-		Delete: resourceThingDelete,
+		CreateWithoutTimeout: resourceThingCreate,
+		ReadWithoutTimeout:   resourceThingRead,
+		UpdateWithoutTimeout: resourceThingUpdate,
+		DeleteWithoutTimeout: resourceThingDelete,
 
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
-			"name": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringLenBetween(1, 128),
+			"arn": {
+				Type:     schema.TypeString,
+				Computed: true,
 			},
 			"attributes": {
 				Type:     schema.TypeMap,
 				Optional: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
+			"default_client_id": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"name": {
+				Type:         schema.TypeString,
+				Required:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.StringLenBetween(1, 128),
+			},
 			"thing_type_name": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: validation.StringLenBetween(1, 128),
 			},
-			"default_client_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
 			"version": {
 				Type:     schema.TypeInt,
-				Computed: true,
-			},
-			"arn": {
-				Type:     schema.TypeString,
 				Computed: true,
 			},
 		},
 	}
 }
 
-func resourceThingCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).IoTConn
+func resourceThingCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).IoTConn(ctx)
 
-	params := &iot.CreateThingInput{
-		ThingName: aws.String(d.Get("name").(string)),
+	name := d.Get("name").(string)
+	input := &iot.CreateThingInput{
+		ThingName: aws.String(name),
 	}
 
-	if v, ok := d.GetOk("thing_type_name"); ok {
-		params.ThingTypeName = aws.String(v.(string))
-	}
-	if v, ok := d.GetOk("attributes"); ok {
-		params.AttributePayload = &iot.AttributePayload{
+	if v, ok := d.GetOk("attributes"); ok && len(v.(map[string]interface{})) > 0 {
+		input.AttributePayload = &iot.AttributePayload{
 			Attributes: flex.ExpandStringMap(v.(map[string]interface{})),
 		}
 	}
 
-	log.Printf("[DEBUG] Creating IoT Thing: %s", params)
-	out, err := conn.CreateThing(params)
-	if err != nil {
-		return err
+	if v, ok := d.GetOk("thing_type_name"); ok {
+		input.ThingTypeName = aws.String(v.(string))
 	}
 
-	d.SetId(aws.StringValue(out.ThingName))
-
-	return resourceThingRead(d, meta)
-}
-
-func resourceThingRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).IoTConn
-
-	params := &iot.DescribeThingInput{
-		ThingName: aws.String(d.Id()),
-	}
-	log.Printf("[DEBUG] Reading IoT Thing: %s", params)
-	out, err := conn.DescribeThing(params)
+	log.Printf("[DEBUG] Creating IoT Thing: %s", input)
+	output, err := conn.CreateThingWithContext(ctx, input)
 
 	if err != nil {
-		if tfawserr.ErrMessageContains(err, iot.ErrCodeResourceNotFoundException, "") {
-			log.Printf("[WARN] IoT Thing %q not found, removing from state", d.Id())
-			d.SetId("")
-		}
-		return err
+		return sdkdiag.AppendErrorf(diags, "creating IoT Thing (%s): %s", name, err)
 	}
 
-	log.Printf("[DEBUG] Received IoT Thing: %s", out)
+	d.SetId(aws.StringValue(output.ThingName))
 
-	d.Set("arn", out.ThingArn)
-	d.Set("name", out.ThingName)
-	d.Set("attributes", aws.StringValueMap(out.Attributes))
-	d.Set("default_client_id", out.DefaultClientId)
-	d.Set("thing_type_name", out.ThingTypeName)
-	d.Set("version", out.Version)
-
-	return nil
+	return append(diags, resourceThingRead(ctx, d, meta)...)
 }
 
-func resourceThingUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).IoTConn
+func resourceThingRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).IoTConn(ctx)
 
-	params := &iot.UpdateThingInput{
+	output, err := FindThingByName(ctx, conn, d.Id())
+
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] IoT Thing (%s) not found, removing from state", d.Id())
+		d.SetId("")
+		return diags
+	}
+
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "reading IoT Thing (%s): %s", d.Id(), err)
+	}
+
+	d.Set("arn", output.ThingArn)
+	d.Set("default_client_id", output.DefaultClientId)
+	d.Set("name", output.ThingName)
+	d.Set("attributes", aws.StringValueMap(output.Attributes))
+	d.Set("thing_type_name", output.ThingTypeName)
+	d.Set("version", output.Version)
+
+	return diags
+}
+
+func resourceThingUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).IoTConn(ctx)
+
+	input := &iot.UpdateThingInput{
 		ThingName: aws.String(d.Get("name").(string)),
 	}
-	if d.HasChange("thing_type_name") {
-		if v, ok := d.GetOk("thing_type_name"); ok {
-			params.ThingTypeName = aws.String(v.(string))
-		} else {
-			params.RemoveThingType = aws.Bool(true)
-		}
-	}
+
 	if d.HasChange("attributes") {
 		attributes := map[string]*string{}
 
-		if v, ok := d.GetOk("attributes"); ok {
-			if m, ok := v.(map[string]interface{}); ok {
-				attributes = flex.ExpandStringMap(m)
-			}
+		if v, ok := d.GetOk("attributes"); ok && len(v.(map[string]interface{})) > 0 {
+			attributes = flex.ExpandStringMap(v.(map[string]interface{}))
 		}
-		params.AttributePayload = &iot.AttributePayload{
+
+		input.AttributePayload = &iot.AttributePayload{
 			Attributes: attributes,
 		}
 	}
 
-	_, err := conn.UpdateThing(params)
-	if err != nil {
-		return err
+	if d.HasChange("thing_type_name") {
+		if v, ok := d.GetOk("thing_type_name"); ok {
+			input.ThingTypeName = aws.String(v.(string))
+		} else {
+			input.RemoveThingType = aws.Bool(true)
+		}
 	}
 
-	return resourceThingRead(d, meta)
+	log.Printf("[DEBUG] Updating IoT Thing: %s", input)
+	_, err := conn.UpdateThingWithContext(ctx, input)
+
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "updating IoT Thing (%s): %s", d.Id(), err)
+	}
+
+	return append(diags, resourceThingRead(ctx, d, meta)...)
 }
 
-func resourceThingDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).IoTConn
+func resourceThingDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).IoTConn(ctx)
 
-	params := &iot.DeleteThingInput{
+	log.Printf("[DEBUG] Deleting IoT Thing: %s", d.Id())
+	_, err := conn.DeleteThingWithContext(ctx, &iot.DeleteThingInput{
 		ThingName: aws.String(d.Id()),
-	}
-	log.Printf("[DEBUG] Deleting IoT Thing: %s", params)
+	})
 
-	_, err := conn.DeleteThing(params)
+	if tfawserr.ErrCodeEquals(err, iot.ErrCodeResourceNotFoundException) {
+		return diags
+	}
+
 	if err != nil {
-		if tfawserr.ErrMessageContains(err, iot.ErrCodeResourceNotFoundException, "") {
-			return nil
-		}
-		return err
+		return sdkdiag.AppendErrorf(diags, "deleting IoT Thing (%s): %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }

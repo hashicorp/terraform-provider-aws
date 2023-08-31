@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package chime
 
 import (
@@ -6,19 +9,20 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/chime"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
+// @SDKResource("aws_chime_voice_connector_group")
 func ResourceVoiceConnectorGroup() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: resourceVoiceConnectorGroupCreate,
-		ReadContext:   resourceVoiceConnectorGroupRead,
-		UpdateContext: resourceVoiceConnectorGroupUpdate,
-		DeleteContext: resourceVoiceConnectorGroupDelete,
+		CreateWithoutTimeout: resourceVoiceConnectorGroupCreate,
+		ReadWithoutTimeout:   resourceVoiceConnectorGroupRead,
+		UpdateWithoutTimeout: resourceVoiceConnectorGroupUpdate,
+		DeleteWithoutTimeout: resourceVoiceConnectorGroupDelete,
 
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
@@ -54,7 +58,7 @@ func ResourceVoiceConnectorGroup() *schema.Resource {
 }
 
 func resourceVoiceConnectorGroupCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ChimeConn
+	conn := meta.(*conns.AWSClient).ChimeConn(ctx)
 
 	input := &chime.CreateVoiceConnectorGroupInput{
 		Name: aws.String(d.Get("name").(string)),
@@ -66,7 +70,7 @@ func resourceVoiceConnectorGroupCreate(ctx context.Context, d *schema.ResourceDa
 
 	resp, err := conn.CreateVoiceConnectorGroupWithContext(ctx, input)
 	if err != nil || resp.VoiceConnectorGroup == nil {
-		return diag.Errorf("error creating Chime Voice Connector group: %s", err)
+		return diag.Errorf("creating Chime Voice Connector group: %s", err)
 	}
 
 	d.SetId(aws.StringValue(resp.VoiceConnectorGroup.VoiceConnectorGroupId))
@@ -75,32 +79,32 @@ func resourceVoiceConnectorGroupCreate(ctx context.Context, d *schema.ResourceDa
 }
 
 func resourceVoiceConnectorGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ChimeConn
+	conn := meta.(*conns.AWSClient).ChimeConn(ctx)
 
 	getInput := &chime.GetVoiceConnectorGroupInput{
 		VoiceConnectorGroupId: aws.String(d.Id()),
 	}
 
 	resp, err := conn.GetVoiceConnectorGroupWithContext(ctx, getInput)
-	if !d.IsNewResource() && tfawserr.ErrMessageContains(err, chime.ErrCodeNotFoundException, "") {
+	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, chime.ErrCodeNotFoundException) {
 		log.Printf("[WARN] Chime Voice conector group %s not found", d.Id())
 		d.SetId("")
 		return nil
 	}
 	if err != nil || resp.VoiceConnectorGroup == nil {
-		return diag.Errorf("error getting Chime Voice Connector group (%s): %s", d.Id(), err)
+		return diag.Errorf("getting Chime Voice Connector group (%s): %s", d.Id(), err)
 	}
 
 	d.Set("name", resp.VoiceConnectorGroup.Name)
 
 	if err := d.Set("connector", flattenVoiceConnectorItems(resp.VoiceConnectorGroup.VoiceConnectorItems)); err != nil {
-		return diag.Errorf("error setting Chime Voice Connector group items (%s): %s", d.Id(), err)
+		return diag.Errorf("setting Chime Voice Connector group items (%s): %s", d.Id(), err)
 	}
 	return nil
 }
 
 func resourceVoiceConnectorGroupUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ChimeConn
+	conn := meta.(*conns.AWSClient).ChimeConn(ctx)
 
 	input := &chime.UpdateVoiceConnectorGroupInput{
 		Name:                  aws.String(d.Get("name").(string)),
@@ -116,19 +120,14 @@ func resourceVoiceConnectorGroupUpdate(ctx context.Context, d *schema.ResourceDa
 	}
 
 	if _, err := conn.UpdateVoiceConnectorGroupWithContext(ctx, input); err != nil {
-		if tfawserr.ErrMessageContains(err, chime.ErrCodeNotFoundException, "") {
-			log.Printf("[WARN] Chime Voice conector group %s not found", d.Id())
-			d.SetId("")
-			return nil
-		}
-		return diag.Errorf("error updating Chime Voice Connector group (%s): %s", d.Id(), err)
+		return diag.Errorf("updating Chime Voice Connector group (%s): %s", d.Id(), err)
 	}
 
 	return resourceVoiceConnectorGroupRead(ctx, d, meta)
 }
 
 func resourceVoiceConnectorGroupDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ChimeConn
+	conn := meta.(*conns.AWSClient).ChimeConn(ctx)
 
 	if v, ok := d.GetOk("connector"); ok && v.(*schema.Set).Len() > 0 {
 		if err := resourceVoiceConnectorGroupUpdate(ctx, d, meta); err != nil {
@@ -141,11 +140,11 @@ func resourceVoiceConnectorGroupDelete(ctx context.Context, d *schema.ResourceDa
 	}
 
 	if _, err := conn.DeleteVoiceConnectorGroupWithContext(ctx, input); err != nil {
-		if tfawserr.ErrMessageContains(err, chime.ErrCodeNotFoundException, "") {
+		if tfawserr.ErrCodeEquals(err, chime.ErrCodeNotFoundException) {
 			log.Printf("[WARN] Chime Voice conector group %s not found", d.Id())
 			return nil
 		}
-		return diag.Errorf("error deleting Chime Voice Connector group (%s): %s", d.Id(), err)
+		return diag.Errorf("deleting Chime Voice Connector group (%s): %s", d.Id(), err)
 	}
 
 	return nil

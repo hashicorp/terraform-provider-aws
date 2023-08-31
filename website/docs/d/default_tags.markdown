@@ -1,5 +1,5 @@
 ---
-subcategory: ""
+subcategory: "Meta Data Sources"
 layout: "aws"
 page_title: "AWS: aws_default_tags"
 description: |-
@@ -51,9 +51,9 @@ resource "aws_autoscaling_group" "example" {
 
 This data source has no arguments.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This data source exports the following attributes in addition to the arguments above:
 
 * `tags` - Blocks of default tags set on the provider. See details below.
 

@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package apprunner_test
 
 import (
@@ -8,6 +11,8 @@ import (
 )
 
 func TestCustomDomainAssociationParseID(t *testing.T) {
+	t.Parallel()
+
 	testCases := []struct {
 		TestName      string
 		InputID       string
@@ -55,7 +60,10 @@ func TestCustomDomainAssociationParseID(t *testing.T) {
 	}
 
 	for _, testCase := range testCases {
+		testCase := testCase
 		t.Run(testCase.TestName, func(t *testing.T) {
+			t.Parallel()
+
 			gotPart0, gotPart1, err := tfapprunner.CustomDomainAssociationParseID(testCase.InputID)
 
 			if err == nil && testCase.ExpectedError {

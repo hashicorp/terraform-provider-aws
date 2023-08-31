@@ -1,19 +1,25 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package apigatewayv2
 
 import (
-	"fmt"
+	"context"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/apigatewayv2"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
+// @SDKDataSource("aws_apigatewayv2_apis")
 func DataSourceAPIs() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAPIsRead,
+		ReadWithoutTimeout: dataSourceAPIsRead,
 
 		Schema: map[string]*schema.Schema{
 			"ids": {
@@ -35,16 +41,17 @@ func DataSourceAPIs() *schema.Resource {
 	}
 }
 
-func dataSourceAPIsRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).APIGatewayV2Conn
+func dataSourceAPIsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).APIGatewayV2Conn(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	tagsToMatch := tftags.New(d.Get("tags").(map[string]interface{})).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+	tagsToMatch := tftags.New(ctx, d.Get("tags").(map[string]interface{})).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
-	apis, err := FindAPIs(conn, &apigatewayv2.GetApisInput{})
+	apis, err := findAPIs(ctx, conn, &apigatewayv2.GetApisInput{})
 
 	if err != nil {
-		return fmt.Errorf("error reading API Gateway v2 APIs: %w", err)
+		return sdkdiag.AppendErrorf(diags, "reading API Gateway v2 APIs: %s", err)
 	}
 
 	var ids []*string
@@ -58,7 +65,7 @@ func dataSourceAPIsRead(d *schema.ResourceData, meta interface{}) error {
 			continue
 		}
 
-		if len(tagsToMatch) > 0 && !KeyValueTags(api.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).ContainsAll(tagsToMatch) {
+		if len(tagsToMatch) > 0 && !KeyValueTags(ctx, api.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).ContainsAll(tagsToMatch) {
 			continue
 		}
 
@@ -68,8 +75,34 @@ func dataSourceAPIsRead(d *schema.ResourceData, meta interface{}) error {
 	d.SetId(meta.(*conns.AWSClient).Region)
 
 	if err := d.Set("ids", flex.FlattenStringSet(ids)); err != nil {
-		return fmt.Errorf("error setting ids: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting ids: %s", err)
 	}
 
-	return nil
+	return diags
+}
+
+func findAPIs(ctx context.Context, conn *apigatewayv2.ApiGatewayV2, input *apigatewayv2.GetApisInput) ([]*apigatewayv2.Api, error) {
+	var apis []*apigatewayv2.Api
+
+	err := getAPIsPages(ctx, conn, input, func(page *apigatewayv2.GetApisOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, item := range page.Items {
+			if item == nil {
+				continue
+			}
+
+			apis = append(apis, item)
+		}
+
+		return !lastPage
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	return apis, nil
 }

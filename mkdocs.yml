@@ -1,0 +1,74 @@
+site_name: Terraform AWS Provider - Contributor Guide
+site_description: 'Contributor documentation and reference for the
+                   Terraform AWS Provider'
+copyright: HashiCorp
+repo_name: hashicorp/terraform-provider-aws
+repo_url: https://github.com/hashicorp/terraform-provider-aws
+edit_uri: "https://github.com/hashicorp/terraform-provider-aws/tree/main/docs"
+
+nav:
+  - Welcome: index.md
+  - Contribute:
+      - Development Environment: development-environment.md
+      - Contribution Guides:
+          - Resource: add-a-new-resource.md
+          - Service: add-a-new-service.md
+          - Data source: add-a-new-datasource.md
+          - AWS Region: add-a-new-region.md
+          - Import Support: add-import-support.md
+          - Resource Filtering: resource-filtering.md
+          - Resource Name Generation: resource-name-generation.md
+          - Resource Tagging: resource-tagging.md
+          - Tag Resource: adding-a-tag-resource.md
+          - Bugs and Enhancements: bugs-and-enhancements.md
+          - Documentation Changes: documentation-changes.md
+      - Acceptance Tests: running-and-writing-acceptance-tests.md
+      - Changelog Process: changelog-process.md
+      - Raising a Pull Request: raising-a-pull-request.md
+      - How We Prioritize: prioritization.md
+  - Developer Reference:
+      - Acceptance Test Environment Variables: acc-test-environment-variables.md
+      - Data Handling and Conversion: data-handling-and-conversion.md
+      - Debugging: debugging.md
+      - Design Decision Log: design-decision-log.md
+      - Dependency Updates: dependency-updates.md
+      - AWS SDK for Go Versions: aws-go-sdk-versions.md
+      - Terraform Plugin Versions: terraform-plugin-versions.md
+      - AWS Go SDK Base: aws-go-sdk-base.md
+      - Error Handling: error-handling.md
+      - Provider Design: provider-design.md
+      - Provider Scaffolding (skaff): skaff.md
+      - Naming Standards: naming.md
+      - Retries and Waiters: retries-and-waiters.md
+  - Submit an Issue: issue-reporting-and-lifecycle.md
+  - FAQ: faq.md
+
+theme:
+  name: material
+  logo: images/hashicorp.png
+  favicon: images/hashicorp-black.png
+  palette:
+    scheme: hashicorp
+    primary: black
+    accent: blue
+  icon:
+    repo: fontawesome/brands/github
+  font: false
+  features:
+    - navigation.instant
+    - content.tabs.link
+
+plugins:
+  - search:
+      lang:
+        - en
+
+markdown_extensions:
+  - pymdownx.highlight
+  - pymdownx.superfences
+  - pymdownx.inlinehilite
+  - toc:
+      permalink: "#"
+
+extra_css:
+  - stylesheets/extra.css

@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/aws_lambda_function: Add validation for `function_name` attribute
+```

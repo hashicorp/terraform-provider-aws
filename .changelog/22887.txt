@@ -1,0 +1,7 @@
+```release-note:note
+resource/aws_ec2_client_vpn_endpoint: The `status` attribute has been deprecated
+```
+
+```release-note:note
+resource/aws_ec2_client_vpn_network_association: The `status` attribute has been deprecated
+```
