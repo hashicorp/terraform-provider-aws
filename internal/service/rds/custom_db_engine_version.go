@@ -106,7 +106,6 @@ func ResourceCustomDBEngineVersion() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
-				ForceNew:     true,
 				ValidateFunc: verify.ValidARN,
 			},
 			"major_engine_version": {
@@ -230,7 +229,9 @@ func resourceCustomDBEngineVersionRead(ctx context.Context, d *schema.ResourceDa
 	}
 
 	d.Set("arn", out.DBEngineVersionArn)
-	d.Set("create_time", out.CreateTime)
+	if out.CreateTime != nil {
+		d.Set("create_time", out.CreateTime.Format(time.RFC3339))
+	}
 	d.Set("database_installation_files_s3_bucket_name", out.DatabaseInstallationFilesS3BucketName)
 	d.Set("database_installation_files_s3_prefix", out.DatabaseInstallationFilesS3Prefix)
 	d.Set("db_parameter_group_family", out.DBParameterGroupFamily)
@@ -238,7 +239,9 @@ func resourceCustomDBEngineVersionRead(ctx context.Context, d *schema.ResourceDa
 	d.Set("engine", out.Engine)
 	d.Set("engine_version", out.EngineVersion)
 	d.Set("image_id", out.Image.ImageId)
-	d.Set("kms_key_id", out.KMSKeyId)
+	if out.KMSKeyId != nil {
+		d.Set("kms_key_id", out.KMSKeyId)
+	}
 	d.Set("major_engine_version", out.MajorEngineVersion)
 	d.Set("manifest", out.CustomDBEngineVersionManifest)
 	d.Set("status", out.Status)
@@ -251,6 +254,10 @@ func resourceCustomDBEngineVersionRead(ctx context.Context, d *schema.ResourceDa
 func resourceCustomDBEngineVersionUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RDSConn(ctx)
+
+	if d.HasChangesExcept("description", "status") {
+		return append(diags, create.DiagError(names.RDS, create.ErrActionUpdating, ResNameCustomDBEngineVersion, d.Id(), errors.New("only description and status can be updated"))...)
+	}
 
 	update := false
 	engine, engineVersion, e := customEngineVersionParseID(d.Id())
