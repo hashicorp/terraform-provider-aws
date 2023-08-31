@@ -65,6 +65,16 @@ func TestAccCloudFormationStackSet_basic(t *testing.T) {
 					"template_url",
 				},
 			},
+			// Test import with call_as.
+			{
+				ResourceName:      resourceName,
+				ImportStateId:     fmt.Sprintf("%s/SELF", rName),
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"template_url",
+				},
+			},
 		},
 	})
 }
@@ -812,11 +822,9 @@ func testAccCheckStackSetExists(ctx context.Context, resourceName string, v *clo
 			return fmt.Errorf("Not found: %s", resourceName)
 		}
 
-		callAs := rs.Primary.Attributes["call_as"]
-
 		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudFormationConn(ctx)
 
-		output, err := tfcloudformation.FindStackSetByName(ctx, conn, rs.Primary.ID, callAs)
+		output, err := tfcloudformation.FindStackSetByName(ctx, conn, rs.Primary.ID, rs.Primary.Attributes["call_as"])
 
 		if err != nil {
 			return err
@@ -837,9 +845,7 @@ func testAccCheckStackSetDestroy(ctx context.Context) resource.TestCheckFunc {
 				continue
 			}
 
-			callAs := rs.Primary.Attributes["call_as"]
-
-			_, err := tfcloudformation.FindStackSetByName(ctx, conn, rs.Primary.ID, callAs)
+			_, err := tfcloudformation.FindStackSetByName(ctx, conn, rs.Primary.ID, rs.Primary.Attributes["call_as"])
 
 			if tfresource.NotFound(err) {
 				continue

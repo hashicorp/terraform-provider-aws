@@ -5,7 +5,9 @@ package cloudformation
 
 import (
 	"context"
+	"fmt"
 	"log"
+	"strings"
 	"time"
 
 	"github.com/YakDriver/regexache"
@@ -35,7 +37,7 @@ func ResourceStackSet() *schema.Resource {
 		DeleteWithoutTimeout: resourceStackSetDelete,
 
 		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
+			StateContext: resourceStackSetImport,
 		},
 
 		Timeouts: &schema.ResourceTimeout{
@@ -433,6 +435,20 @@ func resourceStackSetDelete(ctx context.Context, d *schema.ResourceData, meta in
 	}
 
 	return diags
+}
+
+func resourceStackSetImport(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+	// <StackSetName> or <StackSetName>/<CallAs>
+	switch parts := strings.Split(d.Id(), "/"); len(parts) {
+	case 1:
+	case 2:
+		d.SetId(parts[0])
+		d.Set("call_as", parts[1])
+	default:
+		return []*schema.ResourceData{}, fmt.Errorf("wrong format of import ID (%s), use: 'name' or 'name/call_as'", d.Id())
+	}
+
+	return []*schema.ResourceData{d}, nil
 }
 
 func expandAutoDeployment(l []interface{}) *cloudformation.AutoDeployment {
