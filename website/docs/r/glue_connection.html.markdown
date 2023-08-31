@@ -77,12 +77,12 @@ data "aws_secretmanager_secret" "example" {
 }
 
 resource "aws_glue_connection" "example_connector" {
-  connection_type ="CUSTOM"
+  connection_type = "CUSTOM"
 
   connection_properties = {
     CONNECTOR_CLASS_NAME = "net.snowflake.client.jdbc.SnowflakeDriver"
     CONNECTION_TYPE      = "Jdbc"
-    CONNECTOR_URL        = "s3://example/snowflake-jdbc.jar"  # S3 path to the snowflake jdbc jar
+    CONNECTOR_URL        = "s3://example/snowflake-jdbc.jar" # S3 path to the snowflake jdbc jar
     JDBC_CONNECTION_URL  = "[[\"default=jdbc:snowflake://example.com/?user=$${user}&password=$${password}\"],\",\"]"
   }
 
@@ -93,8 +93,8 @@ resource "aws_glue_connection" "example_connector" {
 
 # Reference the connector using match_criteria with the connector created above.
 
-resource "aws_glue_connection" "example" {
-  connection_type ="CUSTOM"
+resource "aws_glue_connection" "example_connection" {
+  connection_type = "CUSTOM"
 
   connection_properties = {
     CONNECTOR_CLASS_NAME = "net.snowflake.client.jdbc.SnowflakeDriver"
@@ -103,8 +103,8 @@ resource "aws_glue_connection" "example" {
     JDBC_CONNECTION_URL  = "jdbc:snowflake://example.com/?user=$${user}&password=$${password}"
     SECRET_ID            = data.aws_secretmanager_secret.example.name
   }
-  name = "example"
-  match_criteria = ["Connection",aws_glue_connection.example_connector.name]
+  name           = "example"
+  match_criteria = ["Connection", aws_glue_connection.example_connector.name]
 }
 
 ```
