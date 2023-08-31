@@ -167,16 +167,15 @@ func resourceThingTypeUpdate(ctx context.Context, d *schema.ResourceData, meta i
 	conn := meta.(*conns.AWSClient).IoTConn(ctx)
 
 	if d.HasChange("deprecated") {
-		params := &iot.DeprecateThingTypeInput{
+		input := &iot.DeprecateThingTypeInput{
 			ThingTypeName: aws.String(d.Id()),
 			UndoDeprecate: aws.Bool(!d.Get("deprecated").(bool)),
 		}
 
-		log.Printf("[DEBUG] Updating IoT Thing Type: %s", params)
-		_, err := conn.DeprecateThingTypeWithContext(ctx, params)
+		_, err := conn.DeprecateThingTypeWithContext(ctx, input)
 
 		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating IoT Thing Type (%s): deprecating Thing Type: %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "deprecating IoT Thing Type (%s): %s", d.Id(), err)
 		}
 	}
 
