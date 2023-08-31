@@ -7240,6 +7240,9 @@ var awsPartition = partition{
 					Region: "eu-west-3",
 				}: endpoint{},
 				endpointKey{
+					Region: "il-central-1",
+				}: endpoint{},
+				endpointKey{
 					Region: "me-south-1",
 				}: endpoint{},
 				endpointKey{
@@ -18009,6 +18012,9 @@ var awsPartition = partition{
 					},
 					Deprecated: boxedTrue,
 				},
+				endpointKey{
+					Region: "il-central-1",
+				}: endpoint{},
 				endpointKey{
 					Region: "me-south-1",
 				}: endpoint{},
