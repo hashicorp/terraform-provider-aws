@@ -48,6 +48,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/qldb v1.16.5
 	github.com/aws/aws-sdk-go-v2/service/rbin v1.9.5
 	github.com/aws/aws-sdk-go-v2/service/rds v1.53.0
+	github.com/aws/aws-sdk-go-v2/service/redshiftdata v1.20.5
 	github.com/aws/aws-sdk-go-v2/service/resourceexplorer2 v1.3.5
 	github.com/aws/aws-sdk-go-v2/service/rolesanywhere v1.3.5
 	github.com/aws/aws-sdk-go-v2/service/route53domains v1.17.3
