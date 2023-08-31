@@ -1,6 +1,10 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package s3control
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"strings"
@@ -8,22 +12,27 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/s3control"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
-func ResourceAccessPoint() *schema.Resource {
+// @SDKResource("aws_s3_access_point")
+func resourceAccessPoint() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAccessPointCreate,
-		Read:   resourceAccessPointRead,
-		Update: resourceAccessPointUpdate,
-		Delete: resourceAccessPointDelete,
+		CreateWithoutTimeout: resourceAccessPointCreate,
+		ReadWithoutTimeout:   resourceAccessPointRead,
+		UpdateWithoutTimeout: resourceAccessPointUpdate,
+		DeleteWithoutTimeout: resourceAccessPointDelete,
 
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -33,6 +42,10 @@ func ResourceAccessPoint() *schema.Resource {
 				Computed:     true,
 				ForceNew:     true,
 				ValidateFunc: verify.ValidAccountID,
+			},
+			"alias": {
+				Type:     schema.TypeString,
+				Computed: true,
 			},
 			"arn": {
 				Type:     schema.TypeString,
@@ -44,9 +57,21 @@ func ResourceAccessPoint() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: validation.NoZeroValues,
 			},
+			"bucket_account_id": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Computed:     true,
+				ForceNew:     true,
+				ValidateFunc: verify.ValidAccountID,
+			},
 			"domain_name": {
 				Type:     schema.TypeString,
 				Computed: true,
+			},
+			"endpoints": {
+				Type:     schema.TypeMap,
+				Computed: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 			"has_public_access_policy": {
 				Type:     schema.TypeBool,
@@ -63,9 +88,16 @@ func ResourceAccessPoint() *schema.Resource {
 				Computed: true,
 			},
 			"policy": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				DiffSuppressFunc: verify.SuppressEquivalentPolicyDiffs,
+				Type:                  schema.TypeString,
+				Optional:              true,
+				Computed:              true,
+				ValidateFunc:          validation.StringIsJSON,
+				DiffSuppressFunc:      verify.SuppressEquivalentPolicyDiffs,
+				DiffSuppressOnRefresh: true,
+				StateFunc: func(v interface{}) string {
+					json, _ := structure.NormalizeJsonString(v)
+					return json
+				},
 			},
 			"public_access_block_configuration": {
 				Type:             schema.TypeList,
@@ -114,6 +146,7 @@ func ResourceAccessPoint() *schema.Resource {
 						"vpc_id": {
 							Type:     schema.TypeString,
 							Required: true,
+							ForceNew: true,
 						},
 					},
 				},
@@ -122,296 +155,343 @@ func ResourceAccessPoint() *schema.Resource {
 	}
 }
 
-func resourceAccessPointCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).S3ControlConn
+func resourceAccessPointCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	conn := meta.(*conns.AWSClient).S3ControlConn(ctx)
 
-	accountId := meta.(*conns.AWSClient).AccountID
+	accountID := meta.(*conns.AWSClient).AccountID
 	if v, ok := d.GetOk("account_id"); ok {
-		accountId = v.(string)
+		accountID = v.(string)
 	}
 	name := d.Get("name").(string)
 
 	input := &s3control.CreateAccessPointInput{
-		AccountId:                      aws.String(accountId),
-		Bucket:                         aws.String(d.Get("bucket").(string)),
-		Name:                           aws.String(name),
-		PublicAccessBlockConfiguration: expandS3AccessPointPublicAccessBlockConfiguration(d.Get("public_access_block_configuration").([]interface{})),
-		VpcConfiguration:               expandS3AccessPointVpcConfiguration(d.Get("vpc_configuration").([]interface{})),
+		AccountId: aws.String(accountID),
+		Bucket:    aws.String(d.Get("bucket").(string)),
+		Name:      aws.String(name),
 	}
 
-	log.Printf("[DEBUG] Creating S3 Access Point: %s", input)
-	output, err := conn.CreateAccessPoint(input)
+	if v, ok := d.GetOk("bucket_account_id"); ok {
+		input.BucketAccountId = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("public_access_block_configuration"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		input.PublicAccessBlockConfiguration = expandPublicAccessBlockConfiguration(v.([]interface{})[0].(map[string]interface{}))
+	}
+
+	if v, ok := d.GetOk("vpc_configuration"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		input.VpcConfiguration = expandVPCConfiguration(v.([]interface{})[0].(map[string]interface{}))
+	}
+
+	output, err := conn.CreateAccessPointWithContext(ctx, input)
 
 	if err != nil {
-		return fmt.Errorf("error creating S3 Control Access Point (%s): %w", name, err)
+		return diag.Errorf("creating S3 Access Point (%s): %s", name, err)
 	}
 
-	if output == nil {
-		return fmt.Errorf("error creating S3 Control Access Point (%s): empty response", name)
+	resourceID, err := AccessPointCreateResourceID(aws.StringValue(output.AccessPointArn))
+
+	if err != nil {
+		return diag.FromErr(err)
 	}
 
-	parsedARN, err := arn.Parse(aws.StringValue(output.AccessPointArn))
+	accountID, name, err = AccessPointParseResourceID(resourceID)
 
-	if err == nil && strings.HasPrefix(parsedARN.Resource, "outpost/") {
-		d.SetId(aws.StringValue(output.AccessPointArn))
-		name = aws.StringValue(output.AccessPointArn)
-	} else {
-		d.SetId(fmt.Sprintf("%s:%s", accountId, name))
+	if err != nil {
+		return diag.FromErr(err)
 	}
 
-	if v, ok := d.GetOk("policy"); ok {
-		log.Printf("[DEBUG] Putting S3 Access Point policy: %s", d.Id())
-		_, err := conn.PutAccessPointPolicy(&s3control.PutAccessPointPolicyInput{
-			AccountId: aws.String(accountId),
+	d.SetId(resourceID)
+
+	if v, ok := d.GetOk("policy"); ok && v.(string) != "" && v.(string) != "{}" {
+		policy, err := structure.NormalizeJsonString(v.(string))
+		if err != nil {
+			return diag.Errorf("policy (%s) is invalid JSON: %s", v.(string), err)
+		}
+
+		input := &s3control.PutAccessPointPolicyInput{
+			AccountId: aws.String(accountID),
 			Name:      aws.String(name),
-			Policy:    aws.String(v.(string)),
-		})
+			Policy:    aws.String(policy),
+		}
+
+		_, err = conn.PutAccessPointPolicyWithContext(ctx, input)
 
 		if err != nil {
-			return fmt.Errorf("error putting S3 Access Point (%s) policy: %s", d.Id(), err)
+			return diag.Errorf("creating S3 Access Point (%s) policy: %s", d.Id(), err)
 		}
 	}
 
-	return resourceAccessPointRead(d, meta)
+	return resourceAccessPointRead(ctx, d, meta)
 }
 
-func resourceAccessPointRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).S3ControlConn
+func resourceAccessPointRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	conn := meta.(*conns.AWSClient).S3ControlConn(ctx)
 
-	accountId, name, err := AccessPointParseID(d.Id())
+	accountID, name, err := AccessPointParseResourceID(d.Id())
+
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
-	output, err := conn.GetAccessPoint(&s3control.GetAccessPointInput{
-		AccountId: aws.String(accountId),
-		Name:      aws.String(name),
-	})
+	s3OnOutposts := arn.IsARN(name)
 
-	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, errCodeNoSuchAccessPoint) {
+	output, err := FindAccessPointByTwoPartKey(ctx, conn, accountID, name)
+
+	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] S3 Access Point (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading S3 Access Point (%s): %w", d.Id(), err)
+		return diag.Errorf("reading S3 Access Point (%s): %s", d.Id(), err)
 	}
 
-	if output == nil {
-		return fmt.Errorf("error reading S3 Access Point (%s): empty response", d.Id())
-	}
-
-	if strings.HasPrefix(name, "arn:") {
-		parsedAccessPointARN, err := arn.Parse(name)
+	if s3OnOutposts {
+		accessPointARN, err := arn.Parse(name)
 
 		if err != nil {
-			return fmt.Errorf("error parsing S3 Control Access Point ARN (%s): %w", name, err)
+			return diag.FromErr(err)
 		}
 
+		// https://docs.aws.amazon.com/service-authorization/latest/reference/list_amazons3onoutposts.html#amazons3onoutposts-resources-for-iam-policies.
 		bucketARN := arn.ARN{
-			AccountID: parsedAccessPointARN.AccountID,
-			Partition: parsedAccessPointARN.Partition,
-			Region:    parsedAccessPointARN.Region,
+			Partition: accessPointARN.Partition,
+			Service:   accessPointARN.Service,
+			Region:    accessPointARN.Region,
+			AccountID: accessPointARN.AccountID,
 			Resource: strings.Replace(
-				parsedAccessPointARN.Resource,
+				accessPointARN.Resource,
 				fmt.Sprintf("accesspoint/%s", aws.StringValue(output.Name)),
 				fmt.Sprintf("bucket/%s", aws.StringValue(output.Bucket)),
 				1,
 			),
-			Service: parsedAccessPointARN.Service,
 		}
 
 		d.Set("arn", name)
 		d.Set("bucket", bucketARN.String())
 	} else {
+		// https://docs.aws.amazon.com/service-authorization/latest/reference/list_amazons3.html#amazons3-resources-for-iam-policies.
 		accessPointARN := arn.ARN{
-			AccountID: accountId,
 			Partition: meta.(*conns.AWSClient).Partition,
-			Region:    meta.(*conns.AWSClient).Region,
-			Resource:  fmt.Sprintf("accesspoint/%s", aws.StringValue(output.Name)),
 			Service:   "s3",
+			Region:    meta.(*conns.AWSClient).Region,
+			AccountID: accountID,
+			Resource:  fmt.Sprintf("accesspoint/%s", aws.StringValue(output.Name)),
 		}
 
 		d.Set("arn", accessPointARN.String())
 		d.Set("bucket", output.Bucket)
 	}
 
-	d.Set("account_id", accountId)
-	d.Set("domain_name", meta.(*conns.AWSClient).RegionalHostname(fmt.Sprintf("%s-%s.s3-accesspoint", aws.StringValue(output.Name), accountId)))
+	d.Set("account_id", accountID)
+	d.Set("alias", output.Alias)
+	d.Set("bucket_account_id", output.BucketAccountId)
+	d.Set("domain_name", meta.(*conns.AWSClient).RegionalHostname(fmt.Sprintf("%s-%s.s3-accesspoint", aws.StringValue(output.Name), accountID)))
+	d.Set("endpoints", aws.StringValueMap(output.Endpoints))
 	d.Set("name", output.Name)
 	d.Set("network_origin", output.NetworkOrigin)
-	if err := d.Set("public_access_block_configuration", flattenS3AccessPointPublicAccessBlockConfiguration(output.PublicAccessBlockConfiguration)); err != nil {
-		return fmt.Errorf("error setting public_access_block_configuration: %s", err)
-	}
-	if err := d.Set("vpc_configuration", flattenS3AccessPointVpcConfiguration(output.VpcConfiguration)); err != nil {
-		return fmt.Errorf("error setting vpc_configuration: %s", err)
-	}
-
-	policyOutput, err := conn.GetAccessPointPolicy(&s3control.GetAccessPointPolicyInput{
-		AccountId: aws.String(accountId),
-		Name:      aws.String(name),
-	})
-
-	if tfawserr.ErrMessageContains(err, "NoSuchAccessPointPolicy", "") {
-		d.Set("policy", "")
+	if output.PublicAccessBlockConfiguration != nil {
+		if err := d.Set("public_access_block_configuration", []interface{}{flattenPublicAccessBlockConfiguration(output.PublicAccessBlockConfiguration)}); err != nil {
+			return diag.Errorf("setting public_access_block_configuration: %s", err)
+		}
 	} else {
-		if err != nil {
-			return fmt.Errorf("error reading S3 Access Point (%s) policy: %s", d.Id(), err)
+		d.Set("public_access_block_configuration", nil)
+	}
+	if output.VpcConfiguration != nil {
+		if err := d.Set("vpc_configuration", []interface{}{flattenVPCConfiguration(output.VpcConfiguration)}); err != nil {
+			return diag.Errorf("setting vpc_configuration: %s", err)
+		}
+	} else {
+		d.Set("vpc_configuration", nil)
+	}
+
+	policy, status, err := FindAccessPointPolicyAndStatusByTwoPartKey(ctx, conn, accountID, name)
+
+	if err == nil && policy != "" {
+		if s3OnOutposts {
+			d.Set("has_public_access_policy", false)
+		} else {
+			d.Set("has_public_access_policy", status.IsPublic)
 		}
 
-		d.Set("policy", policyOutput.Policy)
-	}
-
-	// Return early since S3 on Outposts cannot have public policies
-	if strings.HasPrefix(name, "arn:") {
-		d.Set("has_public_access_policy", false)
-
-		return nil
-	}
-
-	policyStatusOutput, err := conn.GetAccessPointPolicyStatus(&s3control.GetAccessPointPolicyStatusInput{
-		AccountId: aws.String(accountId),
-		Name:      aws.String(name),
-	})
-
-	if tfawserr.ErrMessageContains(err, "NoSuchAccessPointPolicy", "") {
-		d.Set("has_public_access_policy", false)
-	} else {
+		policyToSet, err := verify.PolicyToSet(d.Get("policy").(string), policy)
 		if err != nil {
-			return fmt.Errorf("error reading S3 Access Point (%s) policy status: %s", d.Id(), err)
+			return diag.FromErr(err)
 		}
 
-		d.Set("has_public_access_policy", policyStatusOutput.PolicyStatus.IsPublic)
+		d.Set("policy", policyToSet)
+	} else if policy == "" || tfresource.NotFound(err) {
+		d.Set("has_public_access_policy", false)
+		d.Set("policy", nil)
+	} else {
+		return diag.Errorf("reading S3 Access Point (%s) policy: %s", d.Id(), err)
 	}
 
 	return nil
 }
 
-func resourceAccessPointUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).S3ControlConn
+func resourceAccessPointUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	conn := meta.(*conns.AWSClient).S3ControlConn(ctx)
 
-	accountId, name, err := AccessPointParseID(d.Id())
+	accountID, name, err := AccessPointParseResourceID(d.Id())
+
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	if d.HasChange("policy") {
-		if v, ok := d.GetOk("policy"); ok {
-			log.Printf("[DEBUG] Putting S3 Access Point policy: %s", d.Id())
-			_, err := conn.PutAccessPointPolicy(&s3control.PutAccessPointPolicyInput{
-				AccountId: aws.String(accountId),
+		if v, ok := d.GetOk("policy"); ok && v.(string) != "" && v.(string) != "{}" {
+			policy, err := structure.NormalizeJsonString(v.(string))
+			if err != nil {
+				return diag.Errorf("policy (%s) is invalid JSON: %s", v.(string), err)
+			}
+
+			input := &s3control.PutAccessPointPolicyInput{
+				AccountId: aws.String(accountID),
 				Name:      aws.String(name),
-				Policy:    aws.String(v.(string)),
-			})
+				Policy:    aws.String(policy),
+			}
+
+			_, err = conn.PutAccessPointPolicyWithContext(ctx, input)
 
 			if err != nil {
-				return fmt.Errorf("error putting S3 Access Point (%s) policy: %s", d.Id(), err)
+				return diag.Errorf("updating S3 Access Point (%s) policy: %s", d.Id(), err)
 			}
 		} else {
-			log.Printf("[DEBUG] Deleting S3 Access Point policy: %s", d.Id())
-			_, err := conn.DeleteAccessPointPolicy(&s3control.DeleteAccessPointPolicyInput{
-				AccountId: aws.String(accountId),
+			_, err := conn.DeleteAccessPointPolicyWithContext(ctx, &s3control.DeleteAccessPointPolicyInput{
+				AccountId: aws.String(accountID),
 				Name:      aws.String(name),
 			})
 
 			if err != nil {
-				return fmt.Errorf("error deleting S3 Access Point (%s) policy: %s", d.Id(), err)
+				return diag.Errorf("deleting S3 Access Point (%s) policy: %s", d.Id(), err)
 			}
 		}
 	}
 
-	return resourceAccessPointRead(d, meta)
+	return resourceAccessPointRead(ctx, d, meta)
 }
 
-func resourceAccessPointDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).S3ControlConn
+func resourceAccessPointDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	conn := meta.(*conns.AWSClient).S3ControlConn(ctx)
 
-	accountId, name, err := AccessPointParseID(d.Id())
+	accountID, name, err := AccessPointParseResourceID(d.Id())
+
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	log.Printf("[DEBUG] Deleting S3 Access Point: %s", d.Id())
-	_, err = conn.DeleteAccessPoint(&s3control.DeleteAccessPointInput{
-		AccountId: aws.String(accountId),
+	_, err = conn.DeleteAccessPointWithContext(ctx, &s3control.DeleteAccessPointInput{
+		AccountId: aws.String(accountID),
 		Name:      aws.String(name),
 	})
 
-	if tfawserr.ErrMessageContains(err, "NoSuchAccessPoint", "") {
+	if tfawserr.ErrCodeEquals(err, errCodeNoSuchAccessPoint) {
 		return nil
 	}
 
 	if err != nil {
-		return fmt.Errorf("error deleting S3 Access Point (%s): %s", d.Id(), err)
+		return diag.Errorf("deleting S3 Access Point (%s): %s", d.Id(), err)
 	}
 
 	return nil
 }
 
-// AccessPointParseID returns the Account ID and Access Point Name (S3) or ARN (S3 on Outposts)
-func AccessPointParseID(id string) (string, string, error) {
-	parsedARN, err := arn.Parse(id)
-
-	if err == nil {
-		return parsedARN.AccountID, id, nil
+func FindAccessPointByTwoPartKey(ctx context.Context, conn *s3control.S3Control, accountID string, name string) (*s3control.GetAccessPointOutput, error) {
+	input := &s3control.GetAccessPointInput{
+		AccountId: aws.String(accountID),
+		Name:      aws.String(name),
 	}
 
-	parts := strings.SplitN(id, ":", 2)
+	output, err := conn.GetAccessPointWithContext(ctx, input)
 
-	if len(parts) != 2 || parts[0] == "" || parts[1] == "" {
-		return "", "", fmt.Errorf("unexpected format of ID (%s), expected ACCOUNT_ID:NAME", id)
+	if tfawserr.ErrCodeEquals(err, errCodeNoSuchAccessPoint) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
 	}
 
-	return parts[0], parts[1], nil
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output, nil
 }
 
-func expandS3AccessPointVpcConfiguration(vConfig []interface{}) *s3control.VpcConfiguration {
-	if len(vConfig) == 0 || vConfig[0] == nil {
+const accessPointResourceIDSeparator = ":"
+
+func AccessPointCreateResourceID(accessPointARN string) (string, error) {
+	v, err := arn.Parse(accessPointARN)
+
+	if err != nil {
+		return "", err
+	}
+
+	switch service := v.Service; service {
+	case "s3":
+		resource := v.Resource
+		if !strings.HasPrefix(resource, "accesspoint/") {
+			return "", fmt.Errorf("unexpected resource: %s", resource)
+		}
+
+		parts := []string{v.AccountID, strings.TrimPrefix(resource, "accesspoint/")}
+		id := strings.Join(parts, accessPointResourceIDSeparator)
+
+		return id, nil
+
+	case "s3-outposts":
+		return accessPointARN, nil
+
+	default:
+		return "", fmt.Errorf("unexpected service: %s", service)
+	}
+}
+
+func AccessPointParseResourceID(id string) (string, string, error) {
+	if v, err := arn.Parse(id); err == nil {
+		return v.AccountID, id, nil
+	}
+
+	parts := strings.Split(id, multiRegionAccessPointResourceIDSeparator)
+
+	if len(parts) == 2 && parts[0] != "" && parts[1] != "" {
+		return parts[0], parts[1], nil
+	}
+
+	return "", "", fmt.Errorf("unexpected format for ID (%[1]s), expected account-id%[2]saccess-point-name", id, accessPointResourceIDSeparator)
+}
+
+func expandVPCConfiguration(tfMap map[string]interface{}) *s3control.VpcConfiguration {
+	if tfMap == nil {
 		return nil
 	}
 
-	mConfig := vConfig[0].(map[string]interface{})
+	apiObject := &s3control.VpcConfiguration{}
 
-	return &s3control.VpcConfiguration{
-		VpcId: aws.String(mConfig["vpc_id"].(string)),
-	}
-}
-
-func flattenS3AccessPointVpcConfiguration(config *s3control.VpcConfiguration) []interface{} {
-	if config == nil {
-		return []interface{}{}
+	if v, ok := tfMap["vpc_id"].(string); ok {
+		apiObject.VpcId = aws.String(v)
 	}
 
-	return []interface{}{map[string]interface{}{
-		"vpc_id": aws.StringValue(config.VpcId),
-	}}
+	return apiObject
 }
 
-func expandS3AccessPointPublicAccessBlockConfiguration(vConfig []interface{}) *s3control.PublicAccessBlockConfiguration {
-	if len(vConfig) == 0 || vConfig[0] == nil {
+func flattenVPCConfiguration(apiObject *s3control.VpcConfiguration) map[string]interface{} {
+	if apiObject == nil {
 		return nil
 	}
 
-	mConfig := vConfig[0].(map[string]interface{})
+	tfMap := map[string]interface{}{}
 
-	return &s3control.PublicAccessBlockConfiguration{
-		BlockPublicAcls:       aws.Bool(mConfig["block_public_acls"].(bool)),
-		BlockPublicPolicy:     aws.Bool(mConfig["block_public_policy"].(bool)),
-		IgnorePublicAcls:      aws.Bool(mConfig["ignore_public_acls"].(bool)),
-		RestrictPublicBuckets: aws.Bool(mConfig["restrict_public_buckets"].(bool)),
-	}
-}
-
-func flattenS3AccessPointPublicAccessBlockConfiguration(config *s3control.PublicAccessBlockConfiguration) []interface{} {
-	if config == nil {
-		return []interface{}{}
+	if v := apiObject.VpcId; v != nil {
+		tfMap["vpc_id"] = aws.StringValue(v)
 	}
 
-	return []interface{}{map[string]interface{}{
-		"block_public_acls":       aws.BoolValue(config.BlockPublicAcls),
-		"block_public_policy":     aws.BoolValue(config.BlockPublicPolicy),
-		"ignore_public_acls":      aws.BoolValue(config.IgnorePublicAcls),
-		"restrict_public_buckets": aws.BoolValue(config.RestrictPublicBuckets),
-	}}
+	return tfMap
 }

@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 //go:build sweep
 // +build sweep
 
@@ -11,9 +14,9 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/servicecatalog"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/go-multierror"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
@@ -82,19 +85,20 @@ func init() {
 }
 
 func sweepBudgetResourceAssociations(region string) error {
-	client, err := sweep.SharedRegionalSweepClient(region)
+	ctx := sweep.Context(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 
 	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
+		return fmt.Errorf("error getting client: %w", err)
 	}
 
-	conn := client.(*conns.AWSClient).ServiceCatalogConn
-	sweepResources := make([]*sweep.SweepResource, 0)
+	conn := client.ServiceCatalogConn(ctx)
+	sweepResources := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
 
 	input := &servicecatalog.ListPortfoliosInput{}
 
-	err = conn.ListPortfoliosPages(input, func(page *servicecatalog.ListPortfoliosOutput, lastPage bool) bool {
+	err = conn.ListPortfoliosPagesWithContext(ctx, input, func(page *servicecatalog.ListPortfoliosOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
@@ -108,7 +112,7 @@ func sweepBudgetResourceAssociations(region string) error {
 				ResourceId: port.Id,
 			}
 
-			err = conn.ListBudgetsForResourcePages(resInput, func(page *servicecatalog.ListBudgetsForResourceOutput, lastPage bool) bool {
+			err = conn.ListBudgetsForResourcePagesWithContext(ctx, resInput, func(page *servicecatalog.ListBudgetsForResourceOutput, lastPage bool) bool {
 				if page == nil {
 					return !lastPage
 				}
@@ -138,7 +142,7 @@ func sweepBudgetResourceAssociations(region string) error {
 
 	prodInput := &servicecatalog.SearchProductsAsAdminInput{}
 
-	err = conn.SearchProductsAsAdminPages(prodInput, func(page *servicecatalog.SearchProductsAsAdminOutput, lastPage bool) bool {
+	err = conn.SearchProductsAsAdminPagesWithContext(ctx, prodInput, func(page *servicecatalog.SearchProductsAsAdminOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
@@ -152,7 +156,7 @@ func sweepBudgetResourceAssociations(region string) error {
 				ResourceId: pvd.ProductViewSummary.ProductId,
 			}
 
-			err = conn.ListBudgetsForResourcePages(resInput, func(page *servicecatalog.ListBudgetsForResourceOutput, lastPage bool) bool {
+			err = conn.ListBudgetsForResourcePagesWithContext(ctx, resInput, func(page *servicecatalog.ListBudgetsForResourceOutput, lastPage bool) bool {
 				if page == nil {
 					return !lastPage
 				}
@@ -180,7 +184,7 @@ func sweepBudgetResourceAssociations(region string) error {
 		errs = multierror.Append(errs, fmt.Errorf("error describing Service Catalog Budget Resource (Product) Associations for %s: %w", region, err))
 	}
 
-	if err = sweep.SweepOrchestrator(sweepResources); err != nil {
+	if err = sweep.SweepOrchestrator(ctx, sweepResources); err != nil {
 		errs = multierror.Append(errs, fmt.Errorf("error sweeping Service Catalog Budget Resource Associations for %s: %w", region, err))
 	}
 
@@ -193,21 +197,22 @@ func sweepBudgetResourceAssociations(region string) error {
 }
 
 func sweepConstraints(region string) error {
-	client, err := sweep.SharedRegionalSweepClient(region)
+	ctx := sweep.Context(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 
 	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
+		return fmt.Errorf("error getting client: %w", err)
 	}
 
-	conn := client.(*conns.AWSClient).ServiceCatalogConn
-	sweepResources := make([]*sweep.SweepResource, 0)
+	conn := client.ServiceCatalogConn(ctx)
+	sweepResources := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
 
 	// no paginator or list operation for constraints directly, have to list portfolios and constraints of portfolios
 
 	input := &servicecatalog.ListPortfoliosInput{}
 
-	err = conn.ListPortfoliosPages(input, func(page *servicecatalog.ListPortfoliosOutput, lastPage bool) bool {
+	err = conn.ListPortfoliosPagesWithContext(ctx, input, func(page *servicecatalog.ListPortfoliosOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
@@ -221,7 +226,7 @@ func sweepConstraints(region string) error {
 				PortfolioId: detail.Id,
 			}
 
-			err = conn.ListConstraintsForPortfolioPages(constraintInput, func(page *servicecatalog.ListConstraintsForPortfolioOutput, lastPage bool) bool {
+			err = conn.ListConstraintsForPortfolioPagesWithContext(ctx, constraintInput, func(page *servicecatalog.ListConstraintsForPortfolioOutput, lastPage bool) bool {
 				if page == nil {
 					return !lastPage
 				}
@@ -249,7 +254,7 @@ func sweepConstraints(region string) error {
 		errs = multierror.Append(errs, fmt.Errorf("error describing Service Catalog Constraints for %s: %w", region, err))
 	}
 
-	if err = sweep.SweepOrchestrator(sweepResources); err != nil {
+	if err = sweep.SweepOrchestrator(ctx, sweepResources); err != nil {
 		errs = multierror.Append(errs, fmt.Errorf("error sweeping Service Catalog Constraints for %s: %w", region, err))
 	}
 
@@ -262,19 +267,20 @@ func sweepConstraints(region string) error {
 }
 
 func sweepPrincipalPortfolioAssociations(region string) error {
-	client, err := sweep.SharedRegionalSweepClient(region)
+	ctx := sweep.Context(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 
 	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
+		return fmt.Errorf("error getting client: %w", err)
 	}
 
-	conn := client.(*conns.AWSClient).ServiceCatalogConn
-	sweepResources := make([]*sweep.SweepResource, 0)
+	conn := client.ServiceCatalogConn(ctx)
+	sweepResources := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
 
 	input := &servicecatalog.ListPortfoliosInput{}
 
-	err = conn.ListPortfoliosPages(input, func(page *servicecatalog.ListPortfoliosOutput, lastPage bool) bool {
+	err = conn.ListPortfoliosPagesWithContext(ctx, input, func(page *servicecatalog.ListPortfoliosOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
@@ -288,7 +294,7 @@ func sweepPrincipalPortfolioAssociations(region string) error {
 				PortfolioId: detail.Id,
 			}
 
-			err = conn.ListPrincipalsForPortfolioPages(pInput, func(page *servicecatalog.ListPrincipalsForPortfolioOutput, lastPage bool) bool {
+			err = conn.ListPrincipalsForPortfolioPagesWithContext(ctx, pInput, func(page *servicecatalog.ListPrincipalsForPortfolioOutput, lastPage bool) bool {
 				if page == nil {
 					return !lastPage
 				}
@@ -321,7 +327,7 @@ func sweepPrincipalPortfolioAssociations(region string) error {
 		errs = multierror.Append(errs, fmt.Errorf("error describing Service Catalog Principal Portfolio Associations for %s: %w", region, err))
 	}
 
-	if err = sweep.SweepOrchestrator(sweepResources); err != nil {
+	if err = sweep.SweepOrchestrator(ctx, sweepResources); err != nil {
 		errs = multierror.Append(errs, fmt.Errorf("error sweeping Service Catalog Principal Portfolio Associations for %s: %w", region, err))
 	}
 
@@ -334,21 +340,22 @@ func sweepPrincipalPortfolioAssociations(region string) error {
 }
 
 func sweepProductPortfolioAssociations(region string) error {
-	client, err := sweep.SharedRegionalSweepClient(region)
+	ctx := sweep.Context(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 
 	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
+		return fmt.Errorf("error getting client: %w", err)
 	}
 
-	conn := client.(*conns.AWSClient).ServiceCatalogConn
-	sweepResources := make([]*sweep.SweepResource, 0)
+	conn := client.ServiceCatalogConn(ctx)
+	sweepResources := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
 
 	// no paginator or list operation for associations directly, have to list products and associations of products
 
 	input := &servicecatalog.SearchProductsAsAdminInput{}
 
-	err = conn.SearchProductsAsAdminPages(input, func(page *servicecatalog.SearchProductsAsAdminOutput, lastPage bool) bool {
+	err = conn.SearchProductsAsAdminPagesWithContext(ctx, input, func(page *servicecatalog.SearchProductsAsAdminOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
@@ -380,7 +387,7 @@ func sweepProductPortfolioAssociations(region string) error {
 				ProductId: aws.String(productID),
 			}
 
-			err = conn.ListPortfoliosForProductPages(assocInput, func(page *servicecatalog.ListPortfoliosForProductOutput, lastPage bool) bool {
+			err = conn.ListPortfoliosForProductPagesWithContext(ctx, assocInput, func(page *servicecatalog.ListPortfoliosForProductOutput, lastPage bool) bool {
 				if page == nil {
 					return !lastPage
 				}
@@ -413,7 +420,7 @@ func sweepProductPortfolioAssociations(region string) error {
 		errs = multierror.Append(errs, fmt.Errorf("error describing Service Catalog Product Portfolio Associations for %s: %w", region, err))
 	}
 
-	if err = sweep.SweepOrchestrator(sweepResources); err != nil {
+	if err = sweep.SweepOrchestrator(ctx, sweepResources); err != nil {
 		errs = multierror.Append(errs, fmt.Errorf("error sweeping Service Catalog Product Portfolio Associations for %s: %w", region, err))
 	}
 
@@ -426,19 +433,20 @@ func sweepProductPortfolioAssociations(region string) error {
 }
 
 func sweepProducts(region string) error {
-	client, err := sweep.SharedRegionalSweepClient(region)
+	ctx := sweep.Context(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 
 	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
+		return fmt.Errorf("error getting client: %w", err)
 	}
 
-	conn := client.(*conns.AWSClient).ServiceCatalogConn
-	sweepResources := make([]*sweep.SweepResource, 0)
+	conn := client.ServiceCatalogConn(ctx)
+	sweepResources := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
 
 	input := &servicecatalog.SearchProductsAsAdminInput{}
 
-	err = conn.SearchProductsAsAdminPages(input, func(page *servicecatalog.SearchProductsAsAdminOutput, lastPage bool) bool {
+	err = conn.SearchProductsAsAdminPagesWithContext(ctx, input, func(page *servicecatalog.SearchProductsAsAdminOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
@@ -464,7 +472,7 @@ func sweepProducts(region string) error {
 		errs = multierror.Append(errs, fmt.Errorf("error describing Service Catalog Products for %s: %w", region, err))
 	}
 
-	if err = sweep.SweepOrchestrator(sweepResources); err != nil {
+	if err = sweep.SweepOrchestrator(ctx, sweepResources); err != nil {
 		errs = multierror.Append(errs, fmt.Errorf("error sweeping Service Catalog Products for %s: %w", region, err))
 	}
 
@@ -477,24 +485,25 @@ func sweepProducts(region string) error {
 }
 
 func sweepProvisionedProducts(region string) error {
-	client, err := sweep.SharedRegionalSweepClient(region)
+	ctx := sweep.Context(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 
 	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
+		return fmt.Errorf("error getting client: %w", err)
 	}
 
-	conn := client.(*conns.AWSClient).ServiceCatalogConn
-	sweepResources := make([]*sweep.SweepResource, 0)
+	conn := client.ServiceCatalogConn(ctx)
+	sweepResources := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
 
 	input := &servicecatalog.SearchProvisionedProductsInput{
 		AccessLevelFilter: &servicecatalog.AccessLevelFilter{
 			Key:   aws.String(servicecatalog.AccessLevelFilterKeyAccount),
-			Value: aws.String(client.(*conns.AWSClient).AccountID),
+			Value: aws.String("self"), // only supported value
 		},
 	}
 
-	err = conn.SearchProvisionedProductsPages(input, func(page *servicecatalog.SearchProvisionedProductsOutput, lastPage bool) bool {
+	err = conn.SearchProvisionedProductsPagesWithContext(ctx, input, func(page *servicecatalog.SearchProvisionedProductsOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
@@ -518,7 +527,7 @@ func sweepProvisionedProducts(region string) error {
 		errs = multierror.Append(errs, fmt.Errorf("error describing Service Catalog Provisioned Products for %s: %w", region, err))
 	}
 
-	if err = sweep.SweepOrchestrator(sweepResources); err != nil {
+	if err = sweep.SweepOrchestrator(ctx, sweepResources); err != nil {
 		errs = multierror.Append(errs, fmt.Errorf("error sweeping Service Catalog Provisioned Products for %s: %w", region, err))
 	}
 
@@ -531,19 +540,20 @@ func sweepProvisionedProducts(region string) error {
 }
 
 func sweepProvisioningArtifacts(region string) error {
-	client, err := sweep.SharedRegionalSweepClient(region)
+	ctx := sweep.Context(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 
 	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
+		return fmt.Errorf("error getting client: %w", err)
 	}
 
-	conn := client.(*conns.AWSClient).ServiceCatalogConn
-	sweepResources := make([]*sweep.SweepResource, 0)
+	conn := client.ServiceCatalogConn(ctx)
+	sweepResources := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
 
 	input := &servicecatalog.SearchProductsAsAdminInput{}
 
-	err = conn.SearchProductsAsAdminPages(input, func(page *servicecatalog.SearchProductsAsAdminOutput, lastPage bool) bool {
+	err = conn.SearchProductsAsAdminPagesWithContext(ctx, input, func(page *servicecatalog.SearchProductsAsAdminOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
@@ -561,7 +571,7 @@ func sweepProvisioningArtifacts(region string) error {
 
 			// there's no paginator for ListProvisioningArtifacts
 			for {
-				output, err := conn.ListProvisioningArtifacts(artInput)
+				output, err := conn.ListProvisioningArtifactsWithContext(ctx, artInput)
 
 				if err != nil {
 					err := fmt.Errorf("error listing Service Catalog Provisioning Artifacts for product (%s): %w", productID, err)
@@ -599,7 +609,7 @@ func sweepProvisioningArtifacts(region string) error {
 		errs = multierror.Append(errs, fmt.Errorf("error describing Service Catalog Provisioning Artifacts for %s: %w", region, err))
 	}
 
-	if err = sweep.SweepOrchestrator(sweepResources); err != nil {
+	if err = sweep.SweepOrchestrator(ctx, sweepResources); err != nil {
 		errs = multierror.Append(errs, fmt.Errorf("error sweeping Service Catalog Provisioning Artifacts for %s: %w", region, err))
 	}
 
@@ -612,19 +622,20 @@ func sweepProvisioningArtifacts(region string) error {
 }
 
 func sweepServiceActions(region string) error {
-	client, err := sweep.SharedRegionalSweepClient(region)
+	ctx := sweep.Context(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 
 	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
+		return fmt.Errorf("error getting client: %w", err)
 	}
 
-	conn := client.(*conns.AWSClient).ServiceCatalogConn
-	sweepResources := make([]*sweep.SweepResource, 0)
+	conn := client.ServiceCatalogConn(ctx)
+	sweepResources := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
 
 	input := &servicecatalog.ListServiceActionsInput{}
 
-	err = conn.ListServiceActionsPages(input, func(page *servicecatalog.ListServiceActionsOutput, lastPage bool) bool {
+	err = conn.ListServiceActionsPagesWithContext(ctx, input, func(page *servicecatalog.ListServiceActionsOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
@@ -650,7 +661,7 @@ func sweepServiceActions(region string) error {
 		errs = multierror.Append(errs, fmt.Errorf("error describing Service Catalog Service Actions for %s: %w", region, err))
 	}
 
-	if err = sweep.SweepOrchestrator(sweepResources); err != nil {
+	if err = sweep.SweepOrchestrator(ctx, sweepResources); err != nil {
 		errs = multierror.Append(errs, fmt.Errorf("error sweeping Service Catalog Service Actions for %s: %w", region, err))
 	}
 
@@ -663,19 +674,20 @@ func sweepServiceActions(region string) error {
 }
 
 func sweepTagOptionResourceAssociations(region string) error {
-	client, err := sweep.SharedRegionalSweepClient(region)
+	ctx := sweep.Context(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 
 	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
+		return fmt.Errorf("error getting client: %w", err)
 	}
 
-	conn := client.(*conns.AWSClient).ServiceCatalogConn
-	sweepResources := make([]*sweep.SweepResource, 0)
+	conn := client.ServiceCatalogConn(ctx)
+	sweepResources := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
 
 	input := &servicecatalog.ListTagOptionsInput{}
 
-	err = conn.ListTagOptionsPages(input, func(page *servicecatalog.ListTagOptionsOutput, lastPage bool) bool {
+	err = conn.ListTagOptionsPagesWithContext(ctx, input, func(page *servicecatalog.ListTagOptionsOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
@@ -689,7 +701,7 @@ func sweepTagOptionResourceAssociations(region string) error {
 				TagOptionId: tag.Id,
 			}
 
-			err = conn.ListResourcesForTagOptionPages(resInput, func(page *servicecatalog.ListResourcesForTagOptionOutput, lastPage bool) bool {
+			err = conn.ListResourcesForTagOptionPagesWithContext(ctx, resInput, func(page *servicecatalog.ListResourcesForTagOptionOutput, lastPage bool) bool {
 				if page == nil {
 					return !lastPage
 				}
@@ -713,11 +725,15 @@ func sweepTagOptionResourceAssociations(region string) error {
 		return !lastPage
 	})
 
+	if tfawserr.ErrCodeEquals(err, servicecatalog.ErrCodeTagOptionNotMigratedException) {
+		log.Printf("[WARN] Skipping Service Catalog Tag Option Resource Associations sweep for %s: %s", region, err)
+		return nil
+	}
 	if err != nil {
 		errs = multierror.Append(errs, fmt.Errorf("error describing Service Catalog Tag Option Resource Associations for %s: %w", region, err))
 	}
 
-	if err = sweep.SweepOrchestrator(sweepResources); err != nil {
+	if err = sweep.SweepOrchestrator(ctx, sweepResources); err != nil {
 		errs = multierror.Append(errs, fmt.Errorf("error sweeping Service Catalog Tag Option Resource Associations for %s: %w", region, err))
 	}
 
@@ -730,19 +746,20 @@ func sweepTagOptionResourceAssociations(region string) error {
 }
 
 func sweepTagOptions(region string) error {
-	client, err := sweep.SharedRegionalSweepClient(region)
+	ctx := sweep.Context(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 
 	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
+		return fmt.Errorf("error getting client: %w", err)
 	}
 
-	conn := client.(*conns.AWSClient).ServiceCatalogConn
-	sweepResources := make([]*sweep.SweepResource, 0)
+	conn := client.ServiceCatalogConn(ctx)
+	sweepResources := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
 
 	input := &servicecatalog.ListTagOptionsInput{}
 
-	err = conn.ListTagOptionsPages(input, func(page *servicecatalog.ListTagOptionsOutput, lastPage bool) bool {
+	err = conn.ListTagOptionsPagesWithContext(ctx, input, func(page *servicecatalog.ListTagOptionsOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
@@ -764,11 +781,15 @@ func sweepTagOptions(region string) error {
 		return !lastPage
 	})
 
+	if tfawserr.ErrCodeEquals(err, servicecatalog.ErrCodeTagOptionNotMigratedException) {
+		log.Printf("[WARN] Skipping Service Catalog Tag Options sweep for %s: %s", region, err)
+		return nil
+	}
 	if err != nil {
 		errs = multierror.Append(errs, fmt.Errorf("error describing Service Catalog Tag Options for %s: %w", region, err))
 	}
 
-	if err = sweep.SweepOrchestrator(sweepResources); err != nil {
+	if err = sweep.SweepOrchestrator(ctx, sweepResources); err != nil {
 		errs = multierror.Append(errs, fmt.Errorf("error sweeping Service Catalog Tag Options for %s: %w", region, err))
 	}
 

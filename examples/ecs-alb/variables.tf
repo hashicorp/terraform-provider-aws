@@ -1,3 +1,6 @@
+# Copyright (c) HashiCorp, Inc.
+# SPDX-License-Identifier: MPL-2.0
+
 variable "aws_region" {
   description = "The AWS region to create things in."
   default     = "us-west-2"
@@ -5,6 +8,7 @@ variable "aws_region" {
 
 variable "az_count" {
   description = "Number of AZs to cover in a given AWS region"
+  type        = number
   default     = "2"
 }
 

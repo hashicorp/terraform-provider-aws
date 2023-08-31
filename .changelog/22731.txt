@@ -1,0 +1,7 @@
+```release-note:new-data-source
+aws_api_gateway_export
+```
+
+```release-note:new-data-source
+aws_api_gateway_sdk
+```

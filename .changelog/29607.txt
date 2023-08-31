@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_default_vpc: Change `enable_network_address_usage_metrics` to Optional+Computed, matching the `aws_vpc` resource
+```

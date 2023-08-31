@@ -22,10 +22,12 @@ data "aws_secretsmanager_secret_rotation" "example" {
 
 ## Argument Reference
 
-* `secret_id` - (Required) Specifies the secret containing the version that you want to retrieve. You can specify either the Amazon Resource Name (ARN) or the friendly name of the secret.
+* `secret_id` - (Required) Specifies the secret containing the version that you want to retrieve. You can specify either the ARN or the friendly name of the secret.
 
-## Attributes Reference
+## Attribute Reference
 
-* `rotation_enabled` - The ARN of the secret.
-* `rotation_lambda_arn` - The decrypted part of the protected secret information that was originally provided as a string.
-* `rotation_rules` - The decrypted part of the protected secret information that was originally provided as a binary. Base64 encoded.
+This data source exports the following attributes in addition to the arguments above:
+
+* `rotation_enabled` - ARN of the secret.
+* `rotation_lambda_arn` - Decrypted part of the protected secret information that was originally provided as a string.
+* `rotation_rules` - Decrypted part of the protected secret information that was originally provided as a binary. Base64 encoded.

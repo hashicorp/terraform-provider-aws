@@ -1,47 +1,51 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package datasync_test
 
 import (
-	"errors"
+	"context"
 	"fmt"
-	"regexp"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/service/datasync"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfdatasync "github.com/hashicorp/terraform-provider-aws/internal/service/datasync"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func TestAccDataSyncLocationS3_basic(t *testing.T) {
-	var locationS31 datasync.DescribeLocationS3Output
+	ctx := acctest.Context(t)
+	var v datasync.DescribeLocationS3Output
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	iamRoleResourceName := "aws_iam_role.test"
 	resourceName := "aws_datasync_location_s3.test"
 	s3BucketResourceName := "aws_s3_bucket.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, datasync.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckLocationS3Destroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, datasync.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckLocationS3Destroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccLocationS3Config(rName),
+				Config: testAccLocationS3Config_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckLocationS3Exists(resourceName, &locationS31),
+					testAccCheckLocationS3Exists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "agent_arns.#", "0"),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "datasync", regexp.MustCompile(`location/loc-.+`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "datasync", regexache.MustCompile(`location/loc-.+`)),
 					resource.TestCheckResourceAttrPair(resourceName, "s3_bucket_arn", s3BucketResourceName, "arn"),
 					resource.TestCheckResourceAttr(resourceName, "s3_config.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "s3_config.0.bucket_access_role_arn", iamRoleResourceName, "arn"),
 					resource.TestCheckResourceAttrSet(resourceName, "s3_storage_class"),
 					resource.TestCheckResourceAttr(resourceName, "subdirectory", "/test/"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-					resource.TestMatchResourceAttr(resourceName, "uri", regexp.MustCompile(`^s3://.+/`)),
+					resource.TestMatchResourceAttr(resourceName, "uri", regexache.MustCompile(`^s3://.+/`)),
 				),
 			},
 			{
@@ -55,29 +59,30 @@ func TestAccDataSyncLocationS3_basic(t *testing.T) {
 }
 
 func TestAccDataSyncLocationS3_storageClass(t *testing.T) {
-	var locationS31 datasync.DescribeLocationS3Output
+	ctx := acctest.Context(t)
+	var v datasync.DescribeLocationS3Output
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	iamRoleResourceName := "aws_iam_role.test"
 	resourceName := "aws_datasync_location_s3.test"
 	s3BucketResourceName := "aws_s3_bucket.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, datasync.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckLocationS3Destroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, datasync.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckLocationS3Destroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccLocationS3StorageClassConfig(rName),
+				Config: testAccLocationS3Config_storageClass(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckLocationS3Exists(resourceName, &locationS31),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "datasync", regexp.MustCompile(`location/loc-.+`)),
+					testAccCheckLocationS3Exists(ctx, resourceName, &v),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "datasync", regexache.MustCompile(`location/loc-.+`)),
 					resource.TestCheckResourceAttrPair(resourceName, "s3_bucket_arn", s3BucketResourceName, "arn"),
 					resource.TestCheckResourceAttr(resourceName, "s3_config.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "s3_config.0.bucket_access_role_arn", iamRoleResourceName, "arn"),
 					resource.TestCheckResourceAttr(resourceName, "subdirectory", "/test/"),
 					resource.TestCheckResourceAttr(resourceName, "s3_storage_class", "STANDARD_IA"),
-					resource.TestMatchResourceAttr(resourceName, "uri", regexp.MustCompile(`^s3://.+/`)),
+					resource.TestMatchResourceAttr(resourceName, "uri", regexache.MustCompile(`^s3://.+/`)),
 				),
 			},
 			{
@@ -91,21 +96,22 @@ func TestAccDataSyncLocationS3_storageClass(t *testing.T) {
 }
 
 func TestAccDataSyncLocationS3_disappears(t *testing.T) {
-	var locationS31 datasync.DescribeLocationS3Output
+	ctx := acctest.Context(t)
+	var v datasync.DescribeLocationS3Output
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_datasync_location_s3.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, datasync.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckLocationS3Destroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, datasync.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckLocationS3Destroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccLocationS3Config(rName),
+				Config: testAccLocationS3Config_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckLocationS3Exists(resourceName, &locationS31),
-					testAccCheckLocationS3Disappears(&locationS31),
+					testAccCheckLocationS3Exists(ctx, resourceName, &v),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfdatasync.ResourceLocationS3(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -114,20 +120,21 @@ func TestAccDataSyncLocationS3_disappears(t *testing.T) {
 }
 
 func TestAccDataSyncLocationS3_tags(t *testing.T) {
-	var locationS31, locationS32, locationS33 datasync.DescribeLocationS3Output
+	ctx := acctest.Context(t)
+	var v datasync.DescribeLocationS3Output
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_datasync_location_s3.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, datasync.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckLocationS3Destroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, datasync.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckLocationS3Destroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccLocationS3Tags1Config(rName, "key1", "value1"),
+				Config: testAccLocationS3Config_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckLocationS3Exists(resourceName, &locationS31),
+					testAccCheckLocationS3Exists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
@@ -139,20 +146,18 @@ func TestAccDataSyncLocationS3_tags(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"s3_bucket_arn"},
 			},
 			{
-				Config: testAccLocationS3Tags2Config(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccLocationS3Config_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckLocationS3Exists(resourceName, &locationS32),
-					testAccCheckLocationS3NotRecreated(&locationS31, &locationS32),
+					testAccCheckLocationS3Exists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
 			{
-				Config: testAccLocationS3Tags1Config(rName, "key1", "value1"),
+				Config: testAccLocationS3Config_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckLocationS3Exists(resourceName, &locationS33),
-					testAccCheckLocationS3NotRecreated(&locationS32, &locationS33),
+					testAccCheckLocationS3Exists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
@@ -161,88 +166,57 @@ func TestAccDataSyncLocationS3_tags(t *testing.T) {
 	})
 }
 
-func testAccCheckLocationS3Destroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).DataSyncConn
+func testAccCheckLocationS3Destroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DataSyncConn(ctx)
 
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_datasync_location_s3" {
-			continue
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_datasync_location_s3" {
+				continue
+			}
+
+			_, err := tfdatasync.FindLocationS3ByARN(ctx, conn, rs.Primary.ID)
+
+			if tfresource.NotFound(err) {
+				continue
+			}
+
+			if err != nil {
+				return err
+			}
+
+			return fmt.Errorf("DataSync Location S3 %s still exists", rs.Primary.ID)
 		}
 
-		input := &datasync.DescribeLocationS3Input{
-			LocationArn: aws.String(rs.Primary.ID),
-		}
-
-		_, err := conn.DescribeLocationS3(input)
-
-		if tfawserr.ErrMessageContains(err, "InvalidRequestException", "not found") {
-			return nil
-		}
-
-		if err != nil {
-			return err
-		}
+		return nil
 	}
-
-	return nil
 }
 
-func testAccCheckLocationS3Exists(resourceName string, locationS3 *datasync.DescribeLocationS3Output) resource.TestCheckFunc {
+func testAccCheckLocationS3Exists(ctx context.Context, n string, v *datasync.DescribeLocationS3Output) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[resourceName]
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return fmt.Errorf("Not found: %s", resourceName)
+			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DataSyncConn
-		input := &datasync.DescribeLocationS3Input{
-			LocationArn: aws.String(rs.Primary.ID),
-		}
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DataSyncConn(ctx)
 
-		output, err := conn.DescribeLocationS3(input)
+		output, err := tfdatasync.FindLocationS3ByARN(ctx, conn, rs.Primary.ID)
 
 		if err != nil {
 			return err
 		}
 
-		if output == nil {
-			return fmt.Errorf("Location %q does not exist", rs.Primary.ID)
-		}
-
-		*locationS3 = *output
+		*v = *output
 
 		return nil
 	}
 }
 
-func testAccCheckLocationS3Disappears(location *datasync.DescribeLocationS3Output) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DataSyncConn
-
-		input := &datasync.DeleteLocationInput{
-			LocationArn: location.LocationArn,
-		}
-
-		_, err := conn.DeleteLocation(input)
-
-		return err
-	}
-}
-
-func testAccCheckLocationS3NotRecreated(i, j *datasync.DescribeLocationS3Output) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		if !aws.TimeValue(i.CreationTime).Equal(aws.TimeValue(j.CreationTime)) {
-			return errors.New("DataSync Location S3 was recreated")
-		}
-
-		return nil
-	}
-}
-
-func testAccLocationS3BaseConfig(rName string) string {
+func testAccLocationS3Config_base(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_role" "test" {
-  name = %q
+  name = %[1]q
 
   assume_role_policy = <<POLICY
 {
@@ -280,14 +254,14 @@ POLICY
 }
 
 resource "aws_s3_bucket" "test" {
-  bucket        = %q
+  bucket        = %[1]q
   force_destroy = true
 }
-`, rName, rName)
+`, rName)
 }
 
-func testAccLocationS3Config(rName string) string {
-	return testAccLocationS3BaseConfig(rName) + `
+func testAccLocationS3Config_basic(rName string) string {
+	return acctest.ConfigCompose(testAccLocationS3Config_base(rName), `
 resource "aws_datasync_location_s3" "test" {
   s3_bucket_arn = aws_s3_bucket.test.arn
   subdirectory  = "/test"
@@ -295,14 +269,12 @@ resource "aws_datasync_location_s3" "test" {
   s3_config {
     bucket_access_role_arn = aws_iam_role.test.arn
   }
-
-  depends_on = [aws_iam_role_policy.test]
 }
-`
+`)
 }
 
-func testAccLocationS3StorageClassConfig(rName string) string {
-	return testAccLocationS3BaseConfig(rName) + `
+func testAccLocationS3Config_storageClass(rName string) string {
+	return acctest.ConfigCompose(testAccLocationS3Config_base(rName), `
 resource "aws_datasync_location_s3" "test" {
   s3_bucket_arn    = aws_s3_bucket.test.arn
   subdirectory     = "/test"
@@ -311,14 +283,12 @@ resource "aws_datasync_location_s3" "test" {
   s3_config {
     bucket_access_role_arn = aws_iam_role.test.arn
   }
-
-  depends_on = [aws_iam_role_policy.test]
 }
-`
+`)
 }
 
-func testAccLocationS3Tags1Config(rName, key1, value1 string) string {
-	return testAccLocationS3BaseConfig(rName) + fmt.Sprintf(`
+func testAccLocationS3Config_tags1(rName, key1, value1 string) string {
+	return acctest.ConfigCompose(testAccLocationS3Config_base(rName), fmt.Sprintf(`
 resource "aws_datasync_location_s3" "test" {
   s3_bucket_arn = aws_s3_bucket.test.arn
   subdirectory  = "/test"
@@ -328,16 +298,14 @@ resource "aws_datasync_location_s3" "test" {
   }
 
   tags = {
-    %q = %q
+    %[1]q = %[2]q
   }
-
-  depends_on = [aws_iam_role_policy.test]
 }
-`, key1, value1)
+`, key1, value1))
 }
 
-func testAccLocationS3Tags2Config(rName, key1, value1, key2, value2 string) string {
-	return testAccLocationS3BaseConfig(rName) + fmt.Sprintf(`
+func testAccLocationS3Config_tags2(rName, key1, value1, key2, value2 string) string {
+	return acctest.ConfigCompose(testAccLocationS3Config_base(rName), fmt.Sprintf(`
 resource "aws_datasync_location_s3" "test" {
   s3_bucket_arn = aws_s3_bucket.test.arn
   subdirectory  = "/test"
@@ -347,11 +315,9 @@ resource "aws_datasync_location_s3" "test" {
   }
 
   tags = {
-    %q = %q
-    %q = %q
+    %[1]q = %[2]q
+    %[3]q = %[4]q
   }
-
-  depends_on = [aws_iam_role_policy.test]
 }
-`, key1, value1, key2, value2)
+`, key1, value1, key2, value2))
 }

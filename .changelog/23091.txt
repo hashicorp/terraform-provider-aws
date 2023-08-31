@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_api_gateway_stage: Fixed issue with providing `cache_cluster_size` without `cache_cluster_enabled` resulted in waiter error
+```

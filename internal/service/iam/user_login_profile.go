@@ -1,31 +1,36 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package iam
 
 import (
 	"bytes"
+	"context"
 	"crypto/rand"
 	"errors"
-	"fmt"
 	"log"
 	"math/big"
-	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/iam"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
+// @SDKResource("aws_iam_user_login_profile")
 func ResourceUserLoginProfile() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceUserLoginProfileCreate,
-		Read:   resourceUserLoginProfileRead,
-		Delete: resourceUserLoginProfileDelete,
+		CreateWithoutTimeout: resourceUserLoginProfileCreate,
+		ReadWithoutTimeout:   resourceUserLoginProfileRead,
+		DeleteWithoutTimeout: resourceUserLoginProfileDelete,
 		Importer: &schema.ResourceImporter{
-			State: func(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+			StateContext: func(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 				d.Set("encrypted_password", "")
 				d.Set("key_fingerprint", "")
 				return []*schema.ResourceData{d}, nil
@@ -40,13 +45,13 @@ func ResourceUserLoginProfile() *schema.Resource {
 			},
 			"pgp_key": {
 				Type:     schema.TypeString,
-				Required: true,
+				Optional: true,
 				ForceNew: true,
 			},
 			"password_reset_required": {
 				Type:     schema.TypeBool,
 				Optional: true,
-				Default:  true,
+				Computed: true,
 				ForceNew: true,
 			},
 			"password_length": {
@@ -62,6 +67,10 @@ func ResourceUserLoginProfile() *schema.Resource {
 				Computed: true,
 			},
 			"encrypted_password": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"password": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -123,47 +132,53 @@ func CheckPwdPolicy(pass []byte) bool {
 		bytes.ContainsAny(pass, charUpper))
 }
 
-func resourceUserLoginProfileCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).IAMConn
+func resourceUserLoginProfileCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).IAMConn(ctx)
 	username := d.Get("user").(string)
 
-	encryptionKey, err := RetrieveGPGKey(strings.TrimSpace(d.Get("pgp_key").(string)))
-	if err != nil {
-		return fmt.Errorf("error retrieving GPG Key during IAM User Login Profile (%s) creation: %s", username, err)
-	}
-
-	passwordResetRequired := d.Get("password_reset_required").(bool)
 	passwordLength := d.Get("password_length").(int)
 	initialPassword, err := GeneratePassword(passwordLength)
 	if err != nil {
-		return err
-	}
-
-	fingerprint, encrypted, err := EncryptValue(encryptionKey, initialPassword, "Password")
-	if err != nil {
-		return fmt.Errorf("error encrypting password during IAM User Login Profile (%s) creation: %s", username, err)
+		return sdkdiag.AppendErrorf(diags, "creating IAM User Login Profile for %q: %s", username, err)
 	}
 
 	request := &iam.CreateLoginProfileInput{
 		UserName:              aws.String(username),
 		Password:              aws.String(initialPassword),
-		PasswordResetRequired: aws.Bool(passwordResetRequired),
+		PasswordResetRequired: aws.Bool(d.Get("password_reset_required").(bool)),
 	}
 
-	log.Println("[DEBUG] Create IAM User Login Profile request:", request)
-	createResp, err := conn.CreateLoginProfile(request)
+	createResp, err := conn.CreateLoginProfileWithContext(ctx, request)
 	if err != nil {
-		return fmt.Errorf("Error creating IAM User Login Profile for %q: %s", username, err)
+		return sdkdiag.AppendErrorf(diags, "creating IAM User Login Profile for %q: %s", username, err)
 	}
 
 	d.SetId(aws.StringValue(createResp.LoginProfile.UserName))
-	d.Set("key_fingerprint", fingerprint)
-	d.Set("encrypted_password", encrypted)
-	return nil
+
+	if v, ok := d.GetOk("pgp_key"); ok {
+		encryptionKey, err := retrieveGPGKey(v.(string))
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "creating IAM User Login Profile for %q: %s", username, err)
+		}
+
+		fingerprint, encrypted, err := encryptValue(encryptionKey, initialPassword, "Password")
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "creating IAM User Login Profile for %q: %s", username, err)
+		}
+
+		d.Set("key_fingerprint", fingerprint)
+		d.Set("encrypted_password", encrypted)
+	} else {
+		d.Set("password", initialPassword)
+	}
+
+	return diags
 }
 
-func resourceUserLoginProfileRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).IAMConn
+func resourceUserLoginProfileRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).IAMConn(ctx)
 
 	input := &iam.GetLoginProfileInput{
 		UserName: aws.String(d.Id()),
@@ -171,47 +186,51 @@ func resourceUserLoginProfileRead(d *schema.ResourceData, meta interface{}) erro
 
 	var output *iam.GetLoginProfileOutput
 
-	err := resource.Retry(PropagationTimeout, func() *resource.RetryError {
+	err := retry.RetryContext(ctx, propagationTimeout, func() *retry.RetryError {
 		var err error
 
-		output, err = conn.GetLoginProfile(input)
+		output, err = conn.GetLoginProfileWithContext(ctx, input)
 
 		if d.IsNewResource() && tfawserr.ErrCodeEquals(err, iam.ErrCodeNoSuchEntityException) {
-			return resource.RetryableError(err)
+			return retry.RetryableError(err)
 		}
 
 		if err != nil {
-			return resource.NonRetryableError(err)
+			return retry.NonRetryableError(err)
 		}
 
 		return nil
 	})
 
 	if tfresource.TimedOut(err) {
-		output, err = conn.GetLoginProfile(input)
+		output, err = conn.GetLoginProfileWithContext(ctx, input)
 	}
 
 	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, iam.ErrCodeNoSuchEntityException) {
 		log.Printf("[WARN] IAM User Login Profile (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading IAM User Login Profile (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading IAM User Login Profile (%s): %s", d.Id(), err)
 	}
 
 	if output == nil || output.LoginProfile == nil {
-		return fmt.Errorf("error reading IAM User Login Profile (%s): empty response", d.Id())
+		return sdkdiag.AppendErrorf(diags, "reading IAM User Login Profile (%s): empty response", d.Id())
 	}
 
-	d.Set("user", output.LoginProfile.UserName)
+	loginProfile := output.LoginProfile
 
-	return nil
+	d.Set("user", loginProfile.UserName)
+	d.Set("password_reset_required", loginProfile.PasswordResetRequired)
+
+	return diags
 }
 
-func resourceUserLoginProfileDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).IAMConn
+func resourceUserLoginProfileDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).IAMConn(ctx)
 
 	input := &iam.DeleteLoginProfileInput{
 		UserName: aws.String(d.Id()),
@@ -219,20 +238,20 @@ func resourceUserLoginProfileDelete(d *schema.ResourceData, meta interface{}) er
 
 	log.Printf("[DEBUG] Deleting IAM User Login Profile (%s): %s", d.Id(), input)
 	// Handle IAM eventual consistency
-	err := resource.Retry(PropagationTimeout, func() *resource.RetryError {
-		_, err := conn.DeleteLoginProfile(input)
+	err := retry.RetryContext(ctx, propagationTimeout, func() *retry.RetryError {
+		_, err := conn.DeleteLoginProfileWithContext(ctx, input)
 
-		if tfawserr.ErrMessageContains(err, iam.ErrCodeNoSuchEntityException, "") {
+		if tfawserr.ErrCodeEquals(err, iam.ErrCodeNoSuchEntityException) {
 			return nil
 		}
 
 		// EntityTemporarilyUnmodifiable: Login Profile for User XXX cannot be modified while login profile is being created.
-		if tfawserr.ErrMessageContains(err, iam.ErrCodeEntityTemporarilyUnmodifiableException, "") {
-			return resource.RetryableError(err)
+		if tfawserr.ErrCodeEquals(err, iam.ErrCodeEntityTemporarilyUnmodifiableException) {
+			return retry.RetryableError(err)
 		}
 
 		if err != nil {
-			return resource.NonRetryableError(err)
+			return retry.NonRetryableError(err)
 		}
 
 		return nil
@@ -240,16 +259,16 @@ func resourceUserLoginProfileDelete(d *schema.ResourceData, meta interface{}) er
 
 	// Handle AWS Go SDK automatic retries
 	if tfresource.TimedOut(err) {
-		_, err = conn.DeleteLoginProfile(input)
+		_, err = conn.DeleteLoginProfileWithContext(ctx, input)
 	}
 
-	if tfawserr.ErrMessageContains(err, iam.ErrCodeNoSuchEntityException, "") {
-		return nil
+	if tfawserr.ErrCodeEquals(err, iam.ErrCodeNoSuchEntityException) {
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("error deleting IAM User Login Profile (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting IAM User Login Profile (%s): %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }

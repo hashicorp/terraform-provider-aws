@@ -30,11 +30,13 @@ resource "aws_networkfirewall_firewall" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `delete_protection` - (Optional) A boolean flag indicating whether it is possible to delete the firewall. Defaults to `false`.
 
 * `description` - (Optional) A friendly description of the firewall.
+
+* `encryption_configuration` - (Optional) KMS encryption configuration settings. See [Encryption Configuration](#encryption-configuration) below for details.
 
 * `firewall_policy_arn` - (Required) The Amazon Resource Name (ARN) of the VPC Firewall policy.
 
@@ -46,19 +48,27 @@ The following arguments are supported:
 
 * `subnet_mapping` - (Required) Set of configuration blocks describing the public subnets. Each subnet must belong to a different Availability Zone in the VPC. AWS Network Firewall creates a firewall endpoint in each subnet. See [Subnet Mapping](#subnet-mapping) below for details.
 
-* `tags` - (Optional) Map of resource tags to associate with the resource. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) Map of resource tags to associate with the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 * `vpc_id` - (Required, Forces new resource) The unique identifier of the VPC where AWS Network Firewall should create the firewall.
+
+### Encryption Configuration
+
+`encryption_configuration` settings for customer managed KMS keys. Remove this block to use the default AWS-managed KMS encryption (rather than setting `type` to `AWS_OWNED_KMS_KEY`).
+
+* `key_id` - (Optional) The ID of the customer managed key. You can use any of the [key identifiers](https://docs.aws.amazon.com/kms/latest/developerguide/concepts.html#key-id) that KMS supports, unless you're using a key that's managed by another account. If you're using a key managed by another account, then specify the key ARN.
+* `type` - (Required) The type of AWS KMS key to use for encryption of your Network Firewall resources. Valid values are `CUSTOMER_KMS` and `AWS_OWNED_KMS_KEY`.
 
 ### Subnet Mapping
 
 The `subnet_mapping` block supports the following arguments:
 
+* `ip_address_type` - (Optional) The subnet's IP address type. Valida values: `"DUALSTACK"`, `"IPV4"`.
 * `subnet_id` - (Required) The unique identifier for the subnet.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The Amazon Resource Name (ARN) that identifies the firewall.
 
@@ -71,14 +81,23 @@ In addition to all arguments above, the following attributes are exported:
             * `subnet_id` - The unique identifier of the subnet that you've specified to be used for a firewall endpoint.
         * `availability_zone` - The Availability Zone where the subnet is configured.
 
-* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
+* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 * `update_token` - A string token used when updating a firewall.
 
 ## Import
 
-Network Firewall Firewalls can be imported using their `ARN`.
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Network Firewall Firewalls using their `arn`. For example:
 
+```terraform
+import {
+  to = aws_networkfirewall_firewall.example
+  id = "arn:aws:network-firewall:us-west-1:123456789012:firewall/example"
+}
 ```
-$ terraform import aws_networkfirewall_firewall.example arn:aws:network-firewall:us-west-1:123456789012:firewall/example
+
+Using `terraform import`, import Network Firewall Firewalls using their `arn`. For example:
+
+```console
+% terraform import aws_networkfirewall_firewall.example arn:aws:network-firewall:us-west-1:123456789012:firewall/example
 ```

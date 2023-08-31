@@ -1,26 +1,32 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package cloudfront
 
 import (
-	"fmt"
+	"context"
 	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cloudfront"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
+// @SDKResource("aws_cloudfront_function")
 func ResourceFunction() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceFunctionCreate,
-		Read:   resourceFunctionRead,
-		Update: resourceFunctionUpdate,
-		Delete: resourceFunctionDelete,
+		CreateWithoutTimeout: resourceFunctionCreate,
+		ReadWithoutTimeout:   resourceFunctionRead,
+		UpdateWithoutTimeout: resourceFunctionUpdate,
+		DeleteWithoutTimeout: resourceFunctionDelete,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -28,40 +34,37 @@ func ResourceFunction() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
 			"code": {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-
 			"comment": {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-
 			"etag": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
+			"live_stage_etag": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"name": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-
 			"publish": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  true,
 			},
-
 			"runtime": {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: validation.StringInSlice(cloudfront.FunctionRuntime_Values(), false),
 			},
-
 			"status": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -70,10 +73,9 @@ func ResourceFunction() *schema.Resource {
 	}
 }
 
-// resourceAwsCloudFrontFunction maps to:
-// CreateFunction in the API / SDK
-func resourceFunctionCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CloudFrontConn
+func resourceFunctionCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).CloudFrontConn(ctx)
 
 	functionName := d.Get("name").(string)
 	input := &cloudfront.CreateFunctionInput{
@@ -85,11 +87,11 @@ func resourceFunctionCreate(d *schema.ResourceData, meta interface{}) error {
 		Name: aws.String(functionName),
 	}
 
-	log.Printf("[DEBUG] Creating CloudFront Function %s", functionName)
-	output, err := conn.CreateFunction(input)
+	log.Printf("[DEBUG] Creating CloudFront Function: %s", functionName)
+	output, err := conn.CreateFunctionWithContext(ctx, input)
 
 	if err != nil {
-		return fmt.Errorf("error creating CloudFront Function (%s): %w", functionName, err)
+		return sdkdiag.AppendErrorf(diags, "creating CloudFront Function (%s): %s", functionName, err)
 	}
 
 	d.SetId(aws.StringValue(output.FunctionSummary.Name))
@@ -100,37 +102,31 @@ func resourceFunctionCreate(d *schema.ResourceData, meta interface{}) error {
 			IfMatch: output.ETag,
 		}
 
-		log.Printf("[DEBUG] Publishing Cloudfront Function: %s", input)
-		_, err := conn.PublishFunction(input)
+		log.Printf("[DEBUG] Publishing CloudFront Function: %s", input)
+		_, err := conn.PublishFunctionWithContext(ctx, input)
 
 		if err != nil {
-			return fmt.Errorf("error publishing CloudFront Function (%s): %w", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "publishing CloudFront Function (%s): %s", d.Id(), err)
 		}
 	}
 
-	return resourceFunctionRead(d, meta)
+	return append(diags, resourceFunctionRead(ctx, d, meta)...)
 }
 
-// resourceFunctionRead maps to:
-// GetFunction in the API / SDK
-func resourceFunctionRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CloudFrontConn
+func resourceFunctionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).CloudFrontConn(ctx)
 
-	stage := cloudfront.FunctionStageDevelopment
-	if d.Get("publish").(bool) {
-		stage = cloudfront.FunctionStageLive
-	}
-
-	describeFunctionOutput, err := FindFunctionByNameAndStage(conn, d.Id(), stage)
+	describeFunctionOutput, err := FindFunctionByNameAndStage(ctx, conn, d.Id(), cloudfront.FunctionStageDevelopment)
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
-		log.Printf("[WARN] CloudFront Function (%s/%s) not found, removing from state", d.Id(), stage)
+		log.Printf("[WARN] CloudFront Function (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("error describing CloudFront Function (%s/%s): %w", d.Id(), stage, err)
+		return sdkdiag.AppendErrorf(diags, "reading CloudFront Function (%s) DEVELOPMENT stage: %s", d.Id(), err)
 	}
 
 	d.Set("arn", describeFunctionOutput.FunctionSummary.FunctionMetadata.FunctionARN)
@@ -140,24 +136,33 @@ func resourceFunctionRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("runtime", describeFunctionOutput.FunctionSummary.FunctionConfig.Runtime)
 	d.Set("status", describeFunctionOutput.FunctionSummary.Status)
 
-	getFunctionOutput, err := conn.GetFunction(&cloudfront.GetFunctionInput{
+	getFunctionOutput, err := conn.GetFunctionWithContext(ctx, &cloudfront.GetFunctionInput{
 		Name:  aws.String(d.Id()),
-		Stage: aws.String(stage),
+		Stage: aws.String(cloudfront.FunctionStageDevelopment),
 	})
 
 	if err != nil {
-		return fmt.Errorf("error getting CloudFront Function (%s/%s): %w", d.Id(), stage, err)
+		return sdkdiag.AppendErrorf(diags, "reading CloudFront Function (%s) DEVELOPMENT stage code: %s", d.Id(), err)
 	}
 
 	d.Set("code", string(getFunctionOutput.FunctionCode))
 
-	return nil
+	describeFunctionOutput, err = FindFunctionByNameAndStage(ctx, conn, d.Id(), cloudfront.FunctionStageLive)
+
+	if tfresource.NotFound(err) {
+		d.Set("live_stage_etag", "")
+	} else if err != nil {
+		return sdkdiag.AppendErrorf(diags, "reading CloudFront Function (%s) LIVE stage: %s", d.Id(), err)
+	} else {
+		d.Set("live_stage_etag", describeFunctionOutput.ETag)
+	}
+
+	return diags
 }
 
-// resourceFunctionUpdate maps to:
-// UpdateFunctionCode in the API / SDK
-func resourceFunctionUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CloudFrontConn
+func resourceFunctionUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).CloudFrontConn(ctx)
 	etag := d.Get("etag").(string)
 
 	if d.HasChanges("code", "comment", "runtime") {
@@ -171,11 +176,11 @@ func resourceFunctionUpdate(d *schema.ResourceData, meta interface{}) error {
 			IfMatch: aws.String(etag),
 		}
 
-		log.Printf("[INFO] Updating Cloudfront Function: %s", d.Id())
-		output, err := conn.UpdateFunction(input)
+		log.Printf("[INFO] Updating CloudFront Function: %s", d.Id())
+		output, err := conn.UpdateFunctionWithContext(ctx, input)
 
 		if err != nil {
-			return fmt.Errorf("error updating CloudFront Function (%s) configuration : %w", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "updating CloudFront Function (%s): %s", d.Id(), err)
 		}
 
 		etag = aws.StringValue(output.ETag)
@@ -187,35 +192,34 @@ func resourceFunctionUpdate(d *schema.ResourceData, meta interface{}) error {
 			IfMatch: aws.String(etag),
 		}
 
-		log.Printf("[DEBUG] Publishing Cloudfront Function: %s", d.Id())
-		_, err := conn.PublishFunction(input)
+		log.Printf("[DEBUG] Publishing CloudFront Function: %s", d.Id())
+		_, err := conn.PublishFunctionWithContext(ctx, input)
 
 		if err != nil {
-			return fmt.Errorf("error publishing CloudFront Function (%s): %w", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "publishing CloudFront Function (%s): %s", d.Id(), err)
 		}
 	}
 
-	return resourceFunctionRead(d, meta)
+	return append(diags, resourceFunctionRead(ctx, d, meta)...)
 }
 
-// resourceAwsCloudFrontFunction maps to:
-// DeleteFunction in the API / SDK
-func resourceFunctionDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CloudFrontConn
+func resourceFunctionDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).CloudFrontConn(ctx)
 
-	log.Printf("[INFO] Deleting Cloudfront Function: %s", d.Id())
-	_, err := conn.DeleteFunction(&cloudfront.DeleteFunctionInput{
+	log.Printf("[INFO] Deleting CloudFront Function: %s", d.Id())
+	_, err := conn.DeleteFunctionWithContext(ctx, &cloudfront.DeleteFunctionInput{
 		Name:    aws.String(d.Id()),
 		IfMatch: aws.String(d.Get("etag").(string)),
 	})
 
 	if tfawserr.ErrCodeEquals(err, cloudfront.ErrCodeNoSuchFunctionExists) {
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("error deleting CloudFront Function (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting CloudFront Function (%s): %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }

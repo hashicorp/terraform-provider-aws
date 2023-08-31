@@ -1,0 +1,7 @@
+```release-note:bug
+resource/aws_s3_bucket_versioning: Let resource be removed from tfstate if bucket deleted outside Terraform
+```
+
+```release-note:bug
+resource/aws_s3_bucket_policy: Let resource be removed from tfstate if bucket deleted outside Terraform
+```

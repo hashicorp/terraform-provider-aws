@@ -1,13 +1,19 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package iam_test
 
 import (
 	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	tfiam "github.com/hashicorp/terraform-provider-aws/internal/service/iam"
 )
 
 func TestInstanceProfileARNToName(t *testing.T) {
+	t.Parallel()
+
 	testCases := []struct {
 		TestName      string
 		InputARN      string
@@ -17,42 +23,45 @@ func TestInstanceProfileARNToName(t *testing.T) {
 		{
 			TestName:      "empty ARN",
 			InputARN:      "",
-			ExpectedError: regexp.MustCompile(`error parsing ARN`),
+			ExpectedError: regexache.MustCompile(`parsing ARN`),
 		},
 		{
 			TestName:      "unparsable ARN",
 			InputARN:      "test",
-			ExpectedError: regexp.MustCompile(`error parsing ARN`),
+			ExpectedError: regexache.MustCompile(`parsing ARN`),
 		},
 		{
 			TestName:      "invalid ARN service",
-			InputARN:      "arn:aws:ec2:us-east-1:123456789012:instance/i-12345678",
-			ExpectedError: regexp.MustCompile(`expected service iam`),
+			InputARN:      "arn:aws:ec2:us-east-1:123456789012:instance/i-12345678", //lintignore:AWSAT003,AWSAT005
+			ExpectedError: regexache.MustCompile(`expected service iam`),
 		},
 		{
 			TestName:      "invalid ARN resource parts",
-			InputARN:      "arn:aws:iam:us-east-1:123456789012:name",
-			ExpectedError: regexp.MustCompile(`expected at least 2 resource parts`),
+			InputARN:      "arn:aws:iam:us-east-1:123456789012:name", //lintignore:AWSAT003,AWSAT005
+			ExpectedError: regexache.MustCompile(`expected at least 2 resource parts`),
 		},
 		{
 			TestName:      "invalid ARN resource prefix",
-			InputARN:      "arn:aws:iam:us-east-1:123456789012:role/name",
-			ExpectedError: regexp.MustCompile(`expected resource prefix instance-profile`),
+			InputARN:      "arn:aws:iam:us-east-1:123456789012:role/name", //lintignore:AWSAT003,AWSAT005
+			ExpectedError: regexache.MustCompile(`expected resource prefix instance-profile`),
 		},
 		{
 			TestName:     "valid ARN",
-			InputARN:     "arn:aws:iam:us-east-1:123456789012:instance-profile/name",
+			InputARN:     "arn:aws:iam:us-east-1:123456789012:instance-profile/name", //lintignore:AWSAT003,AWSAT005
 			ExpectedName: "name",
 		},
 		{
 			TestName:     "valid ARN with multiple parts",
-			InputARN:     "arn:aws:iam:us-east-1:123456789012:instance-profile/path/name",
+			InputARN:     "arn:aws:iam:us-east-1:123456789012:instance-profile/path/name", //lintignore:AWSAT003,AWSAT005
 			ExpectedName: "name",
 		},
 	}
 
 	for _, testCase := range testCases {
+		testCase := testCase
 		t.Run(testCase.TestName, func(t *testing.T) {
+			t.Parallel()
+
 			got, err := tfiam.InstanceProfileARNToName(testCase.InputARN)
 
 			if err == nil && testCase.ExpectedError != nil {

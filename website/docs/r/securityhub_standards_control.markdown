@@ -17,14 +17,14 @@ into management. When you _delete_ this resource configuration, Terraform "aband
 ## Example Usage
 
 ```terraform
-resource aws_securityhub_account example {}
+resource "aws_securityhub_account" "example" {}
 
-resource aws_securityhub_standards_subscription cis_aws_foundations_benchmark {
+resource "aws_securityhub_standards_subscription" "cis_aws_foundations_benchmark" {
   standards_arn = "arn:aws:securityhub:::ruleset/cis-aws-foundations-benchmark/v/1.2.0"
   depends_on    = [aws_securityhub_account.example]
 }
 
-resource aws_securityhub_standards_control ensure_iam_password_policy_prevents_password_reuse {
+resource "aws_securityhub_standards_control" "ensure_iam_password_policy_prevents_password_reuse" {
   standards_control_arn = "arn:aws:securityhub:us-east-1:111111111111:control/cis-aws-foundations-benchmark/v/1.2.0/1.10"
   control_status        = "DISABLED"
   disabled_reason       = "We handle password policies within Okta"
@@ -35,15 +35,15 @@ resource aws_securityhub_standards_control ensure_iam_password_policy_prevents_p
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
-* `standards_control_arn` - (Required) The standards control ARN.
+* `standards_control_arn` - (Required) The standards control ARN. See the AWS documentation for how to list existing controls using [`get-enabled-standards`](https://awscli.amazonaws.com/v2/documentation/api/latest/reference/securityhub/get-enabled-standards.html) and [`describe-standards-controls`](https://awscli.amazonaws.com/v2/documentation/api/latest/reference/securityhub/describe-standards-controls.html).
 * `control_status` – (Required) The control status could be `ENABLED` or `DISABLED`. You have to specify `disabled_reason` argument for `DISABLED` control status.
 * `disabled_reason` – (Optional) A description of the reason why you are disabling a security standard control. If you specify this attribute, `control_status` will be set to `DISABLED` automatically.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The standard control ARN.
 * `control_id` – The identifier of the security standard control.

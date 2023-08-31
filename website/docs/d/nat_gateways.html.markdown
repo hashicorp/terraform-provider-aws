@@ -1,0 +1,59 @@
+---
+subcategory: "VPC (Virtual Private Cloud)"
+layout: "aws"
+page_title: "AWS: aws_nat_gateways"
+description: |-
+    Get information on Amazon NAT Gateways.
+---
+
+# Data Source: aws_nat_gateways
+
+This resource can be useful for getting back a list of NAT gateway ids to be referenced elsewhere.
+
+## Example Usage
+
+The following returns all NAT gateways in a specified VPC that are marked as available
+
+```terraform
+data "aws_nat_gateways" "ngws" {
+  vpc_id = var.vpc_id
+
+  filter {
+    name   = "state"
+    values = ["available"]
+  }
+}
+
+data "aws_nat_gateway" "ngw" {
+  count = length(data.aws_nat_gateways.ngws.ids)
+  id    = tolist(data.aws_nat_gateways.ngws.ids)[count.index]
+}
+```
+
+## Argument Reference
+
+* `filter` - (Optional) Custom filter block as described below.
+* `vpc_id` - (Optional) VPC ID that you want to filter from.
+* `tags` - (Optional) Map of tags, each pair of which must exactly match
+  a pair on the desired NAT Gateways.
+
+More complex filters can be expressed using one or more `filter` sub-blocks,
+which take the following arguments:
+
+* `name` - (Required) Name of the field to filter by, as defined by
+  [the underlying AWS API](https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_DescribeNatGateways.html).
+* `values` - (Required) Set of values that are accepted for the given field.
+  A Nat Gateway will be selected if any one of the given values matches.
+
+## Attribute Reference
+
+This data source exports the following attributes in addition to the arguments above:
+
+* `id` - AWS Region.
+* `ids` - List of all the NAT gateway ids found.
+
+## Timeouts
+
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
+
+- `read` - (Default `20m`)

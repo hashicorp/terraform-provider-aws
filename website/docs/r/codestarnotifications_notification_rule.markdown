@@ -54,7 +54,7 @@ resource "aws_codestarnotifications_notification_rule" "commits" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `detail_type` - (Required) The level of detail to include in the notifications for this resource. Possible values are `BASIC` and `FULL`.
 * `event_type_ids` - (Required) A list of event types associated with this notification rule.
@@ -62,7 +62,7 @@ The following arguments are supported:
 * `name` - (Required) The name of notification rule.
 * `resource` - (Required) The ARN of the resource to associate with the notification rule.
 * `status` - (Optional) The status of the notification rule. Possible values are `ENABLED` and `DISABLED`, default is `ENABLED`.
-* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `target` - (Optional) Configuration blocks containing notification target information. Can be specified multiple times. At least one target must be specified on creation.
 
 An `target` block supports the following arguments:
@@ -70,18 +70,27 @@ An `target` block supports the following arguments:
 * `address` - (Required) The ARN of notification rule target. For example, a SNS Topic ARN.
 * `type` - (Optional) The type of the notification target. Default value is `SNS`.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The codestar notification rule ARN.
 * `arn` - The codestar notification rule ARN.
-* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
+* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 
-CodeStar notification rule can be imported using the ARN, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import CodeStar notification rule using the ARN. For example:
 
+```terraform
+import {
+  to = aws_codestarnotifications_notification_rule.foo
+  id = "arn:aws:codestar-notifications:us-west-1:0123456789:notificationrule/2cdc68a3-8f7c-4893-b6a5-45b362bd4f2b"
+}
 ```
-$ terraform import aws_codestarnotifications_notification_rule.foo arn:aws:codestar-notifications:us-west-1:0123456789:notificationrule/2cdc68a3-8f7c-4893-b6a5-45b362bd4f2b
+
+Using `terraform import`, import CodeStar notification rule using the ARN. For example:
+
+```console
+% terraform import aws_codestarnotifications_notification_rule.foo arn:aws:codestar-notifications:us-west-1:0123456789:notificationrule/2cdc68a3-8f7c-4893-b6a5-45b362bd4f2b
 ```

@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_ec2_transit_gateway: Fix MaxItems and subnet size validation in `transit_gateway_cidr_blocks`
+```

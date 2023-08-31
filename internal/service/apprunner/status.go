@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package apprunner
 
 import (
@@ -5,7 +8,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/apprunner"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 )
 
 const (
@@ -16,9 +19,17 @@ const (
 	CustomDomainAssociationStatusCreating                        = "creating"
 	CustomDomainAssociationStatusDeleting                        = "deleting"
 	CustomDomainAssociationStatusPendingCertificateDNSValidation = "pending_certificate_dns_validation"
+	CustomDomainAssociationStatusBindingCertificate              = "binding_certificate"
+
+	ObservabilityConfigurationStatusActive   = "ACTIVE"
+	ObservabilityConfigurationStatusInactive = "INACTIVE"
+
+	VPCIngressConnectionStatusActive          = "AVAILABLE"
+	VPCIngressConnectionStatusPendingDeletion = "PENDING_DELETION"
+	VPCIngressConnectionStatusDeleted         = "DELETED"
 )
 
-func StatusAutoScalingConfiguration(ctx context.Context, conn *apprunner.AppRunner, arn string) resource.StateRefreshFunc {
+func StatusAutoScalingConfiguration(ctx context.Context, conn *apprunner.AppRunner, arn string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		input := &apprunner.DescribeAutoScalingConfigurationInput{
 			AutoScalingConfigurationArn: aws.String(arn),
@@ -38,7 +49,47 @@ func StatusAutoScalingConfiguration(ctx context.Context, conn *apprunner.AppRunn
 	}
 }
 
-func StatusConnection(ctx context.Context, conn *apprunner.AppRunner, name string) resource.StateRefreshFunc {
+func StatusObservabilityConfiguration(ctx context.Context, conn *apprunner.AppRunner, arn string) retry.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		input := &apprunner.DescribeObservabilityConfigurationInput{
+			ObservabilityConfigurationArn: aws.String(arn),
+		}
+
+		output, err := conn.DescribeObservabilityConfigurationWithContext(ctx, input)
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		if output == nil || output.ObservabilityConfiguration == nil {
+			return nil, "", nil
+		}
+
+		return output.ObservabilityConfiguration, aws.StringValue(output.ObservabilityConfiguration.Status), nil
+	}
+}
+
+func StatusVPCIngressConnection(ctx context.Context, conn *apprunner.AppRunner, arn string) retry.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		input := &apprunner.DescribeVpcIngressConnectionInput{
+			VpcIngressConnectionArn: aws.String(arn),
+		}
+
+		output, err := conn.DescribeVpcIngressConnectionWithContext(ctx, input)
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		if output == nil || output.VpcIngressConnection == nil {
+			return nil, "", nil
+		}
+
+		return output.VpcIngressConnection, aws.StringValue(output.VpcIngressConnection.Status), nil
+	}
+}
+
+func StatusConnection(ctx context.Context, conn *apprunner.AppRunner, name string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		c, err := FindConnectionSummaryByName(ctx, conn, name)
 
@@ -54,7 +105,7 @@ func StatusConnection(ctx context.Context, conn *apprunner.AppRunner, name strin
 	}
 }
 
-func StatusCustomDomain(ctx context.Context, conn *apprunner.AppRunner, domainName, serviceArn string) resource.StateRefreshFunc {
+func StatusCustomDomain(ctx context.Context, conn *apprunner.AppRunner, domainName, serviceArn string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		customDomain, err := FindCustomDomain(ctx, conn, domainName, serviceArn)
 
@@ -70,7 +121,7 @@ func StatusCustomDomain(ctx context.Context, conn *apprunner.AppRunner, domainNa
 	}
 }
 
-func StatusService(ctx context.Context, conn *apprunner.AppRunner, serviceArn string) resource.StateRefreshFunc {
+func StatusService(ctx context.Context, conn *apprunner.AppRunner, serviceArn string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		input := &apprunner.DescribeServiceInput{
 			ServiceArn: aws.String(serviceArn),

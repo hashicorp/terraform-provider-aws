@@ -1,3 +1,3 @@
 ```release-note:bug
-resource/aws_cloudformation_stack_set: Fix retain_stacks_on_account_removal flag if auto_deployment enabled is false
+resource/aws_cloudformation_stack_set: Fix `Can only set RetainStacksOnAccountRemoval if AutoDeployment is enabled` errors
 ```

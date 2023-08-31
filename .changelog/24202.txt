@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_cloudformation_stack_set: Prevent `InvalidParameter` errors when updating `operation_preferences`
+```

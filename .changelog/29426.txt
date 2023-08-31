@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/aws_cloudwatch_log_group: Allow `retention_in_days` attribute to accept a three year retention period (1096 days)
+```

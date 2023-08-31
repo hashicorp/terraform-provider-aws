@@ -1,17 +1,23 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package cloudfront
 
 import (
-	"fmt"
+	"context"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cloudfront"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
+// @SDKDataSource("aws_cloudfront_origin_request_policy")
 func DataSourceOriginRequestPolicy() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceOriginRequestPolicyRead,
+		ReadWithoutTimeout: dataSourceOriginRequestPolicyRead,
 
 		Schema: map[string]*schema.Schema{
 			"comment": {
@@ -73,12 +79,14 @@ func DataSourceOriginRequestPolicy() *schema.Resource {
 				},
 			},
 			"id": {
-				Type:     schema.TypeString,
-				Optional: true,
+				Type:         schema.TypeString,
+				Optional:     true,
+				ExactlyOneOf: []string{"id", "name"},
 			},
 			"name": {
-				Type:     schema.TypeString,
-				Optional: true,
+				Type:         schema.TypeString,
+				Optional:     true,
+				ExactlyOneOf: []string{"id", "name"},
 			},
 			"query_strings_config": {
 				Type:     schema.TypeList,
@@ -109,59 +117,76 @@ func DataSourceOriginRequestPolicy() *schema.Resource {
 	}
 }
 
-func dataSourceOriginRequestPolicyRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CloudFrontConn
+func dataSourceOriginRequestPolicyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).CloudFrontConn(ctx)
 
-	if d.Get("id").(string) == "" {
-		if err := dataSourceOriginRequestPolicyFindByName(d, conn); err != nil {
-			return fmt.Errorf("Unable to find origin request policy by name: %w", err)
-		}
-	}
+	var originRequestPolicyID string
 
-	if d.Id() != "" {
-		request := &cloudfront.GetOriginRequestPolicyInput{
-			Id: aws.String(d.Id()),
-		}
+	if v, ok := d.GetOk("id"); ok {
+		originRequestPolicyID = v.(string)
+	} else {
+		name := d.Get("name").(string)
+		input := &cloudfront.ListOriginRequestPoliciesInput{}
 
-		resp, err := conn.GetOriginRequestPolicy(request)
+		err := ListOriginRequestPoliciesPages(ctx, conn, input, func(page *cloudfront.ListOriginRequestPoliciesOutput, lastPage bool) bool {
+			if page == nil {
+				return !lastPage
+			}
+
+			for _, policySummary := range page.OriginRequestPolicyList.Items {
+				if originRequestPolicy := policySummary.OriginRequestPolicy; aws.StringValue(originRequestPolicy.OriginRequestPolicyConfig.Name) == name {
+					originRequestPolicyID = aws.StringValue(originRequestPolicy.Id)
+
+					return false
+				}
+			}
+
+			return !lastPage
+		})
+
 		if err != nil {
-			return fmt.Errorf("Unable to retrieve origin request policy with ID %s: %w", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "listing CloudFront Origin Request Policies: %s", err)
 		}
 
-		if resp == nil || resp.OriginRequestPolicy == nil || resp.OriginRequestPolicy.OriginRequestPolicyConfig == nil {
-			return nil
+		if originRequestPolicyID == "" {
+			return sdkdiag.AppendErrorf(diags, "no matching CloudFront Origin Request Policy (%s)", name)
 		}
-
-		d.Set("etag", resp.ETag)
-
-		originRequestPolicy := resp.OriginRequestPolicy.OriginRequestPolicyConfig
-		d.Set("comment", originRequestPolicy.Comment)
-		d.Set("name", originRequestPolicy.Name)
-		d.Set("cookies_config", flattenCloudFrontOriginRequestPolicyCookiesConfig(originRequestPolicy.CookiesConfig))
-		d.Set("headers_config", flattenCloudFrontOriginRequestPolicyHeadersConfig(originRequestPolicy.HeadersConfig))
-		d.Set("query_strings_config", flattenCloudFrontOriginRequestPolicyQueryStringsConfig(originRequestPolicy.QueryStringsConfig))
 	}
 
-	return nil
-}
+	output, err := FindOriginRequestPolicyByID(ctx, conn, originRequestPolicyID)
 
-func dataSourceOriginRequestPolicyFindByName(d *schema.ResourceData, conn *cloudfront.CloudFront) error {
-	var originRequestPolicy *cloudfront.OriginRequestPolicy
-	request := &cloudfront.ListOriginRequestPoliciesInput{}
-	resp, err := conn.ListOriginRequestPolicies(request)
 	if err != nil {
-		return err
+		return sdkdiag.AppendErrorf(diags, "reading CloudFront Origin Request Policy (%s): %s", originRequestPolicyID, err)
 	}
 
-	for _, policySummary := range resp.OriginRequestPolicyList.Items {
-		if aws.StringValue(policySummary.OriginRequestPolicy.OriginRequestPolicyConfig.Name) == d.Get("name").(string) {
-			originRequestPolicy = policySummary.OriginRequestPolicy
-			break
+	d.SetId(originRequestPolicyID)
+
+	apiObject := output.OriginRequestPolicy.OriginRequestPolicyConfig
+	d.Set("comment", apiObject.Comment)
+	if apiObject.CookiesConfig != nil {
+		if err := d.Set("cookies_config", []interface{}{flattenOriginRequestPolicyCookiesConfig(apiObject.CookiesConfig)}); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting cookies_config: %s", err)
 		}
+	} else {
+		d.Set("cookies_config", nil)
+	}
+	d.Set("etag", output.ETag)
+	if apiObject.HeadersConfig != nil {
+		if err := d.Set("headers_config", []interface{}{flattenOriginRequestPolicyHeadersConfig(apiObject.HeadersConfig)}); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting headers_config: %s", err)
+		}
+	} else {
+		d.Set("headers_config", nil)
+	}
+	d.Set("name", apiObject.Name)
+	if apiObject.QueryStringsConfig != nil {
+		if err := d.Set("query_strings_config", []interface{}{flattenOriginRequestPolicyQueryStringsConfig(apiObject.QueryStringsConfig)}); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting query_strings_config: %s", err)
+		}
+	} else {
+		d.Set("query_strings_config", nil)
 	}
 
-	if originRequestPolicy != nil {
-		d.SetId(aws.StringValue(originRequestPolicy.Id))
-	}
-	return nil
+	return diags
 }

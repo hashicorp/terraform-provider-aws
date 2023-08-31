@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/aws_sagemaker_endpoint_configuration: Add `production_variants.enable_ssm_access` and `shadow_production_variants.enable_ssm_access` arguments
+```

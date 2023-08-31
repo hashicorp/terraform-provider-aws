@@ -1,0 +1,11 @@
+```release-note:breaking-change
+resource/aws_route_table: These arguments can no longer be set to `""`: `route.*.cidr_block`, `route.*.ipv6_cidr_block`
+```
+
+```release-note:breaking-change
+resource/aws_default_route_table: These arguments can no longer be set to `""`: `route.*.cidr_block`, `route.*.ipv6_cidr_block`
+```
+
+```release-note:breaking-change
+resource/aws_route: Exactly one of these can be set: `destination_cidr_block`, `destination_ipv6_cidr_block`, `destination_prefix_list_id`. These arguments can no longer be set to `""`: `destination_cidr_block`, `destination_ipv6_cidr_block`.
+```

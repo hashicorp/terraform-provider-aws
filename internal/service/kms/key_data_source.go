@@ -1,29 +1,26 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package kms
 
 import (
-	"fmt"
+	"context"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/kms"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 )
 
+// @SDKDataSource("aws_kms_key")
 func DataSourceKey() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceKeyRead,
+		ReadWithoutTimeout: dataSourceKeyRead,
 		Schema: map[string]*schema.Schema{
-			"key_id": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: validKey,
-			},
-			"grant_tokens": {
-				Type:     schema.TypeList,
-				Optional: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
 			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -32,7 +29,19 @@ func DataSourceKey() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"cloud_hsm_cluster_id": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"creation_date": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"customer_master_key_spec": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"custom_key_store_id": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -52,7 +61,21 @@ func DataSourceKey() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"grant_tokens": {
+				Type:     schema.TypeList,
+				Optional: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+			},
+			"key_id": {
+				Type:         schema.TypeString,
+				Required:     true,
+				ValidateFunc: ValidateKeyOrAlias,
+			},
 			"key_manager": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"key_spec": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -64,54 +87,211 @@ func DataSourceKey() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"customer_master_key_spec": {
-				Type:     schema.TypeString,
+			"multi_region": {
+				Type:     schema.TypeBool,
 				Computed: true,
+			},
+			"multi_region_configuration": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"multi_region_key_type": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"primary_key": {
+							Type:     schema.TypeList,
+							Computed: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"arn": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+									"region": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+								},
+							},
+						},
+						"replica_keys": {
+							Type:     schema.TypeList,
+							Computed: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"arn": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+									"region": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+								},
+							},
+						},
+					},
+				},
 			},
 			"origin": {
 				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"pending_deletion_window_in_days": {
+				Type:     schema.TypeInt,
 				Computed: true,
 			},
 			"valid_to": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"xks_key_configuration": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"id": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+					},
+				},
+			},
 		},
 	}
 }
 
-func dataSourceKeyRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).KMSConn
-	keyId := d.Get("key_id")
-	var grantTokens []*string
-	if v, ok := d.GetOk("grant_tokens"); ok {
-		grantTokens = aws.StringSlice(v.([]string))
-	}
+func dataSourceKeyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).KMSConn(ctx)
+
+	keyID := d.Get("key_id").(string)
 	input := &kms.DescribeKeyInput{
-		KeyId:       aws.String(keyId.(string)),
-		GrantTokens: grantTokens,
+		KeyId: aws.String(keyID),
 	}
-	output, err := conn.DescribeKey(input)
+
+	if v, ok := d.GetOk("grant_tokens"); ok && len(v.([]interface{})) > 0 {
+		input.GrantTokens = flex.ExpandStringList(v.([]interface{}))
+	}
+
+	output, err := conn.DescribeKeyWithContext(ctx, input)
+
 	if err != nil {
-		return fmt.Errorf("error while describing key [%s]: %w", keyId, err)
+		return sdkdiag.AppendErrorf(diags, "reading KMS Key (%s): %s", keyID, err)
 	}
-	d.SetId(aws.StringValue(output.KeyMetadata.KeyId))
-	d.Set("arn", output.KeyMetadata.Arn)
-	d.Set("aws_account_id", output.KeyMetadata.AWSAccountId)
-	d.Set("creation_date", aws.TimeValue(output.KeyMetadata.CreationDate).Format(time.RFC3339))
-	if output.KeyMetadata.DeletionDate != nil {
-		d.Set("deletion_date", aws.TimeValue(output.KeyMetadata.DeletionDate).Format(time.RFC3339))
+
+	keyMetadata := output.KeyMetadata
+	d.SetId(aws.StringValue(keyMetadata.KeyId))
+	d.Set("arn", keyMetadata.Arn)
+	d.Set("aws_account_id", keyMetadata.AWSAccountId)
+	d.Set("cloud_hsm_cluster_id", keyMetadata.CloudHsmClusterId)
+	d.Set("creation_date", aws.TimeValue(keyMetadata.CreationDate).Format(time.RFC3339))
+	d.Set("customer_master_key_spec", keyMetadata.CustomerMasterKeySpec)
+	d.Set("custom_key_store_id", keyMetadata.CustomKeyStoreId)
+	if keyMetadata.DeletionDate != nil {
+		d.Set("deletion_date", aws.TimeValue(keyMetadata.DeletionDate).Format(time.RFC3339))
 	}
-	d.Set("description", output.KeyMetadata.Description)
-	d.Set("enabled", output.KeyMetadata.Enabled)
-	d.Set("expiration_model", output.KeyMetadata.ExpirationModel)
-	d.Set("key_manager", output.KeyMetadata.KeyManager)
-	d.Set("key_state", output.KeyMetadata.KeyState)
-	d.Set("key_usage", output.KeyMetadata.KeyUsage)
-	d.Set("customer_master_key_spec", output.KeyMetadata.CustomerMasterKeySpec)
-	d.Set("origin", output.KeyMetadata.Origin)
-	if output.KeyMetadata.ValidTo != nil {
-		d.Set("valid_to", aws.TimeValue(output.KeyMetadata.ValidTo).Format(time.RFC3339))
+	d.Set("description", keyMetadata.Description)
+	d.Set("enabled", keyMetadata.Enabled)
+	d.Set("expiration_model", keyMetadata.ExpirationModel)
+	d.Set("key_manager", keyMetadata.KeyManager)
+	d.Set("key_spec", keyMetadata.KeySpec)
+	d.Set("key_state", keyMetadata.KeyState)
+	d.Set("key_usage", keyMetadata.KeyUsage)
+	d.Set("multi_region", keyMetadata.MultiRegion)
+	if keyMetadata.MultiRegionConfiguration != nil {
+		if err := d.Set("multi_region_configuration", []interface{}{flattenMultiRegionConfiguration(keyMetadata.MultiRegionConfiguration)}); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting multi_region_configuration: %s", err)
+		}
+	} else {
+		d.Set("multi_region_configuration", nil)
 	}
-	return nil
+	d.Set("origin", keyMetadata.Origin)
+	d.Set("pending_deletion_window_in_days", keyMetadata.PendingDeletionWindowInDays)
+	if keyMetadata.ValidTo != nil {
+		d.Set("valid_to", aws.TimeValue(keyMetadata.ValidTo).Format(time.RFC3339))
+	}
+	if keyMetadata.XksKeyConfiguration != nil {
+		if err := d.Set("xks_key_configuration", []interface{}{flattenXksKeyConfigurationType(keyMetadata.XksKeyConfiguration)}); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting xks_key_configuration: %s", err)
+		}
+	} else {
+		d.Set("xks_key_configuration", nil)
+	}
+
+	return diags
+}
+
+func flattenMultiRegionConfiguration(apiObject *kms.MultiRegionConfiguration) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.MultiRegionKeyType; v != nil {
+		tfMap["multi_region_key_type"] = aws.StringValue(v)
+	}
+
+	if v := apiObject.PrimaryKey; v != nil {
+		tfMap["primary_key"] = []interface{}{flattenMultiRegionKey(v)}
+	}
+
+	if v := apiObject.ReplicaKeys; v != nil {
+		tfMap["replica_keys"] = flattenMultiRegionKeys(v)
+	}
+
+	return tfMap
+}
+
+func flattenMultiRegionKey(apiObject *kms.MultiRegionKey) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.Arn; v != nil {
+		tfMap["arn"] = aws.StringValue(v)
+	}
+
+	if v := apiObject.Region; v != nil {
+		tfMap["region"] = aws.StringValue(v)
+	}
+
+	return tfMap
+}
+
+func flattenMultiRegionKeys(apiObjects []*kms.MultiRegionKey) []interface{} {
+	if len(apiObjects) == 0 {
+		return nil
+	}
+
+	var tfList []interface{}
+
+	for _, apiObject := range apiObjects {
+		if apiObject == nil {
+			continue
+		}
+
+		tfList = append(tfList, flattenMultiRegionKey(apiObject))
+	}
+
+	return tfList
+}
+
+func flattenXksKeyConfigurationType(apiObject *kms.XksKeyConfigurationType) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.Id; v != nil {
+		tfMap["id"] = aws.StringValue(v)
+	}
+
+	return tfMap
 }

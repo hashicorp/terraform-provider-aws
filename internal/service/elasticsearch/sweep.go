@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 //go:build sweep
 // +build sweep
 
@@ -10,8 +13,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/elasticsearchservice"
 	"github.com/hashicorp/go-multierror"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
@@ -23,20 +25,21 @@ func init() {
 }
 
 func sweepDomains(region string) error {
-	client, err := sweep.SharedRegionalSweepClient(region)
+	ctx := sweep.Context(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
 
-	conn := client.(*conns.AWSClient).ElasticSearchConn
-	sweepResources := make([]*sweep.SweepResource, 0)
+	conn := client.ElasticsearchConn(ctx)
+	sweepResources := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
 
 	input := &elasticsearchservice.ListDomainNamesInput{}
 
 	// ListDomainNames has no pagination support whatsoever
-	output, err := conn.ListDomainNames(input)
+	output, err := conn.ListDomainNamesWithContext(ctx, input)
 
 	if sweep.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping Elasticsearch Domain sweep for %s: %s", region, err)
@@ -66,12 +69,7 @@ func sweepDomains(region string) error {
 		// e.g. Deleted and Processing are both true for days in the API
 		// Filter out domains that are Deleted already.
 
-		input := &elasticsearchservice.DescribeElasticsearchDomainInput{
-			DomainName: domainInfo.DomainName,
-		}
-
-		output, err := conn.DescribeElasticsearchDomain(input)
-
+		output, err := FindDomainByName(ctx, conn, name)
 		if err != nil {
 			sweeperErr := fmt.Errorf("error describing Elasticsearch Domain (%s): %w", name, err)
 			log.Printf("[ERROR] %s", sweeperErr)
@@ -79,7 +77,7 @@ func sweepDomains(region string) error {
 			continue
 		}
 
-		if output != nil && output.DomainStatus != nil && aws.BoolValue(output.DomainStatus.Deleted) {
+		if output != nil && aws.BoolValue(output.Deleted) {
 			log.Printf("[INFO] Skipping Elasticsearch Domain (%s) with deleted status", name)
 			continue
 		}
@@ -92,8 +90,8 @@ func sweepDomains(region string) error {
 		sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 	}
 
-	if err = sweep.SweepOrchestrator(sweepResources); err != nil {
-		errs = multierror.Append(errs, fmt.Errorf("error sweeping ElasticSearch Domains for %s: %w", region, err))
+	if err = sweep.SweepOrchestrator(ctx, sweepResources); err != nil {
+		errs = multierror.Append(errs, fmt.Errorf("error sweeping Elasticsearch Domains for %s: %w", region, err))
 	}
 
 	if sweep.SkipSweepError(errs.ErrorOrNil()) {

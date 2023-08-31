@@ -1,6 +1,11 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package apigatewayv2
 
 import (
+	"context"
+	"errors"
 	"fmt"
 	"log"
 	"time"
@@ -8,23 +13,30 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/apigatewayv2"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @SDKResource("aws_apigatewayv2_domain_name", name="Domain Name")
+// @Tags(identifierAttribute="arn")
 func ResourceDomainName() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceDomainNameCreate,
-		Read:   resourceDomainNameRead,
-		Update: resourceDomainNameUpdate,
-		Delete: resourceDomainNameDelete,
+		CreateWithoutTimeout: resourceDomainNameCreate,
+		ReadWithoutTimeout:   resourceDomainNameRead,
+		UpdateWithoutTimeout: resourceDomainNameUpdate,
+		DeleteWithoutTimeout: resourceDomainNameDelete,
+
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Timeouts: &schema.ResourceTimeout{
@@ -81,6 +93,12 @@ func ResourceDomainName() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
+						"ownership_verification_certificate_arn": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							Computed:     true,
+							ValidateFunc: verify.ValidARN,
+						},
 					},
 				},
 			},
@@ -93,7 +111,6 @@ func ResourceDomainName() *schema.Resource {
 						"truststore_uri": {
 							Type:     schema.TypeString,
 							Required: true,
-							ForceNew: true,
 						},
 						"truststore_version": {
 							Type:     schema.TypeString,
@@ -102,58 +119,55 @@ func ResourceDomainName() *schema.Resource {
 					},
 				},
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
 
 		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
-func resourceDomainNameCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).APIGatewayV2Conn
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
-	domainName := d.Get("domain_name").(string)
+func resourceDomainNameCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).APIGatewayV2Conn(ctx)
 
+	domainName := d.Get("domain_name").(string)
 	input := &apigatewayv2.CreateDomainNameInput{
 		DomainName:               aws.String(domainName),
-		DomainNameConfigurations: expandApiGatewayV2DomainNameConfiguration(d.Get("domain_name_configuration").([]interface{})),
-		MutualTlsAuthentication:  expandApiGatewayV2MutualTlsAuthentication(d.Get("mutual_tls_authentication").([]interface{})),
-		Tags:                     Tags(tags.IgnoreAWS()),
+		DomainNameConfigurations: expandDomainNameConfigurations(d.Get("domain_name_configuration").([]interface{})),
+		MutualTlsAuthentication:  expandMutualTLSAuthentication(d.Get("mutual_tls_authentication").([]interface{})),
+		Tags:                     getTagsIn(ctx),
 	}
 
-	log.Printf("[DEBUG] Creating API Gateway v2 domain name: %s", input)
-	output, err := conn.CreateDomainName(input)
+	output, err := conn.CreateDomainNameWithContext(ctx, input)
 
 	if err != nil {
-		return fmt.Errorf("error creating API Gateway v2 domain name (%s): %w", domainName, err)
+		return sdkdiag.AppendErrorf(diags, "creating API Gateway v2 Domain Name (%s): %s", domainName, err)
 	}
 
 	d.SetId(aws.StringValue(output.DomainName))
 
-	if _, err := WaitDomainNameAvailable(conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
-		return fmt.Errorf("error waiting for API Gateway v2 domain name (%s) to become available: %w", d.Id(), err)
+	if _, err := waitDomainNameAvailable(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for API Gateway v2 Domain Name (%s) create: %s", d.Id(), err)
 	}
 
-	return resourceDomainNameRead(d, meta)
+	return append(diags, resourceDomainNameRead(ctx, d, meta)...)
 }
 
-func resourceDomainNameRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).APIGatewayV2Conn
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+func resourceDomainNameRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).APIGatewayV2Conn(ctx)
 
-	output, err := FindDomainNameByName(conn, d.Id())
+	output, err := FindDomainName(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
-		log.Printf("[WARN] API Gateway v2 domain name (%s) not found, removing from state", d.Id())
+		log.Printf("[WARN] API Gateway v2 Domain Name (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading API Gateway v2 domain name (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading API Gateway v2 Domain Name (%s): %s", d.Id(), err)
 	}
 
 	d.Set("api_mapping_selection_expression", output.ApiMappingSelectionExpression)
@@ -165,145 +179,263 @@ func resourceDomainNameRead(d *schema.ResourceData, meta interface{}) error {
 	}.String()
 	d.Set("arn", arn)
 	d.Set("domain_name", output.DomainName)
-	err = d.Set("domain_name_configuration", flattenApiGatewayV2DomainNameConfiguration(output.DomainNameConfigurations[0]))
-	if err != nil {
-		return fmt.Errorf("error setting domain_name_configuration: %w", err)
+	if err := d.Set("domain_name_configuration", flattenDomainNameConfiguration(output.DomainNameConfigurations[0])); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting domain_name_configuration: %s", err)
 	}
-	err = d.Set("mutual_tls_authentication", flattenApiGatewayV2MutualTlsAuthentication(output.MutualTlsAuthentication))
-	if err != nil {
-		return fmt.Errorf("error setting mutual_tls_authentication: %w", err)
+	if err := d.Set("mutual_tls_authentication", flattenMutualTLSAuthentication(output.MutualTlsAuthentication)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting mutual_tls_authentication: %s", err)
 	}
 
-	tags := KeyValueTags(output.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+	setTagsOut(ctx, output.Tags)
 
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("error setting tags_all: %w", err)
-	}
-
-	return nil
+	return diags
 }
 
-func resourceDomainNameUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).APIGatewayV2Conn
+func resourceDomainNameUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).APIGatewayV2Conn(ctx)
 
 	if d.HasChanges("domain_name_configuration", "mutual_tls_authentication") {
 		input := &apigatewayv2.UpdateDomainNameInput{
 			DomainName:               aws.String(d.Id()),
-			DomainNameConfigurations: expandApiGatewayV2DomainNameConfiguration(d.Get("domain_name_configuration").([]interface{})),
+			DomainNameConfigurations: expandDomainNameConfigurations(d.Get("domain_name_configuration").([]interface{})),
 		}
 
 		if d.HasChange("mutual_tls_authentication") {
-			vMutualTlsAuthentication := d.Get("mutual_tls_authentication").([]interface{})
+			if v, ok := d.GetOk("mutual_tls_authentication"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+				tfMap := v.([]interface{})[0].(map[string]interface{})
 
-			if len(vMutualTlsAuthentication) == 0 || vMutualTlsAuthentication[0] == nil {
+				input.MutualTlsAuthentication = &apigatewayv2.MutualTlsAuthenticationInput{}
+
+				if d.HasChange("mutual_tls_authentication.0.truststore_uri") {
+					input.MutualTlsAuthentication.TruststoreUri = aws.String(tfMap["truststore_uri"].(string))
+				}
+
+				if d.HasChange("mutual_tls_authentication.0.truststore_version") {
+					input.MutualTlsAuthentication.TruststoreVersion = aws.String(tfMap["truststore_version"].(string))
+				}
+			} else {
 				// To disable mutual TLS for a custom domain name, remove the truststore from your custom domain name.
 				input.MutualTlsAuthentication = &apigatewayv2.MutualTlsAuthenticationInput{
 					TruststoreUri: aws.String(""),
 				}
-			} else {
-				input.MutualTlsAuthentication = &apigatewayv2.MutualTlsAuthenticationInput{
-					TruststoreVersion: aws.String(vMutualTlsAuthentication[0].(map[string]interface{})["truststore_version"].(string)),
-				}
 			}
 		}
 
-		log.Printf("[DEBUG] Updating API Gateway v2 domain name: %s", input)
-		_, err := conn.UpdateDomainName(input)
+		_, err := conn.UpdateDomainNameWithContext(ctx, input)
 
 		if err != nil {
-			return fmt.Errorf("error updating API Gateway v2 domain name (%s): %w", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "updating API Gateway v2 Domain Name (%s): %s", d.Id(), err)
 		}
 
-		if _, err := WaitDomainNameAvailable(conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
-			return fmt.Errorf("error waiting for API Gateway v2 domain name (%s) to become available: %w", d.Id(), err)
-		}
-	}
-
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
-			return fmt.Errorf("error updating API Gateway v2 domain name (%s) tags: %w", d.Id(), err)
+		if _, err := waitDomainNameAvailable(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "waiting for API Gateway v2 Domain Name (%s) update: %s", d.Id(), err)
 		}
 	}
 
-	return resourceDomainNameRead(d, meta)
+	return append(diags, resourceDomainNameRead(ctx, d, meta)...)
 }
 
-func resourceDomainNameDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).APIGatewayV2Conn
+func resourceDomainNameDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).APIGatewayV2Conn(ctx)
 
-	log.Printf("[DEBUG] Deleting API Gateway v2 domain name (%s)", d.Id())
-	_, err := conn.DeleteDomainName(&apigatewayv2.DeleteDomainNameInput{
+	log.Printf("[DEBUG] Deleting API Gateway v2 Domain Name: %s", d.Id())
+	_, err := conn.DeleteDomainNameWithContext(ctx, &apigatewayv2.DeleteDomainNameInput{
 		DomainName: aws.String(d.Id()),
 	})
 
 	if tfawserr.ErrCodeEquals(err, apigatewayv2.ErrCodeNotFoundException) {
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("error deleting API Gateway v2 domain name (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting API Gateway v2 Domain Name (%s): %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
-func expandApiGatewayV2DomainNameConfiguration(vDomainNameConfiguration []interface{}) []*apigatewayv2.DomainNameConfiguration {
-	if len(vDomainNameConfiguration) == 0 || vDomainNameConfiguration[0] == nil {
+func FindDomainName(ctx context.Context, conn *apigatewayv2.ApiGatewayV2, name string) (*apigatewayv2.GetDomainNameOutput, error) {
+	input := &apigatewayv2.GetDomainNameInput{
+		DomainName: aws.String(name),
+	}
+
+	output, err := conn.GetDomainNameWithContext(ctx, input)
+
+	if tfawserr.ErrCodeEquals(err, apigatewayv2.ErrCodeNotFoundException) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || len(output.DomainNameConfigurations) == 0 || output.DomainNameConfigurations[0] == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output, nil
+}
+
+func statusDomainName(ctx context.Context, conn *apigatewayv2.ApiGatewayV2, name string) retry.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := FindDomainName(ctx, conn, name)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, aws.StringValue(output.DomainNameConfigurations[0].DomainNameStatus), nil
+	}
+}
+
+func waitDomainNameAvailable(ctx context.Context, conn *apigatewayv2.ApiGatewayV2, name string, timeout time.Duration) (*apigatewayv2.GetDomainNameOutput, error) { //nolint:unparam
+	stateConf := &retry.StateChangeConf{
+		Pending: []string{apigatewayv2.DomainNameStatusUpdating},
+		Target:  []string{apigatewayv2.DomainNameStatusAvailable},
+		Refresh: statusDomainName(ctx, conn, name),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*apigatewayv2.GetDomainNameOutput); ok {
+		tfresource.SetLastError(err, errors.New(aws.StringValue(output.DomainNameConfigurations[0].DomainNameStatusMessage)))
+
+		return output, err
+	}
+
+	return nil, err
+}
+
+func expandDomainNameConfiguration(tfMap map[string]interface{}) *apigatewayv2.DomainNameConfiguration {
+	if tfMap == nil {
 		return nil
 	}
-	mDomainNameConfiguration := vDomainNameConfiguration[0].(map[string]interface{})
 
-	return []*apigatewayv2.DomainNameConfiguration{{
-		CertificateArn: aws.String(mDomainNameConfiguration["certificate_arn"].(string)),
-		EndpointType:   aws.String(mDomainNameConfiguration["endpoint_type"].(string)),
-		SecurityPolicy: aws.String(mDomainNameConfiguration["security_policy"].(string)),
-	}}
-}
+	apiObject := &apigatewayv2.DomainNameConfiguration{}
 
-func flattenApiGatewayV2DomainNameConfiguration(domainNameConfiguration *apigatewayv2.DomainNameConfiguration) []interface{} {
-	if domainNameConfiguration == nil {
-		return []interface{}{}
+	if v, ok := tfMap["certificate_arn"].(string); ok && v != "" {
+		apiObject.CertificateArn = aws.String(v)
 	}
 
-	return []interface{}{map[string]interface{}{
-		"certificate_arn":    aws.StringValue(domainNameConfiguration.CertificateArn),
-		"endpoint_type":      aws.StringValue(domainNameConfiguration.EndpointType),
-		"hosted_zone_id":     aws.StringValue(domainNameConfiguration.HostedZoneId),
-		"security_policy":    aws.StringValue(domainNameConfiguration.SecurityPolicy),
-		"target_domain_name": aws.StringValue(domainNameConfiguration.ApiGatewayDomainName),
-	}}
+	if v, ok := tfMap["endpoint_type"].(string); ok && v != "" {
+		apiObject.EndpointType = aws.String(v)
+	}
+
+	if v, ok := tfMap["security_policy"].(string); ok && v != "" {
+		apiObject.SecurityPolicy = aws.String(v)
+	}
+
+	if v, ok := tfMap["ownership_verification_certificate_arn"].(string); ok && v != "" {
+		apiObject.OwnershipVerificationCertificateArn = aws.String(v)
+	}
+
+	return apiObject
 }
 
-func expandApiGatewayV2MutualTlsAuthentication(vMutualTlsAuthentication []interface{}) *apigatewayv2.MutualTlsAuthenticationInput {
-	if len(vMutualTlsAuthentication) == 0 || vMutualTlsAuthentication[0] == nil {
+func expandDomainNameConfigurations(tfList []interface{}) []*apigatewayv2.DomainNameConfiguration {
+	if len(tfList) == 0 {
 		return nil
 	}
-	mMutualTlsAuthentication := vMutualTlsAuthentication[0].(map[string]interface{})
 
-	mutualTlsAuthentication := &apigatewayv2.MutualTlsAuthenticationInput{
-		TruststoreUri: aws.String(mMutualTlsAuthentication["truststore_uri"].(string)),
+	var apiObjects []*apigatewayv2.DomainNameConfiguration
+
+	for _, tfMapRaw := range tfList {
+		tfMap, ok := tfMapRaw.(map[string]interface{})
+
+		if !ok {
+			continue
+		}
+
+		apiObject := expandDomainNameConfiguration(tfMap)
+
+		if apiObject == nil {
+			continue
+		}
+
+		apiObjects = append(apiObjects, apiObject)
 	}
 
-	if vTruststoreVersion, ok := mMutualTlsAuthentication["truststore_version"].(string); ok && vTruststoreVersion != "" {
-		mutualTlsAuthentication.TruststoreVersion = aws.String(vTruststoreVersion)
-	}
-
-	return mutualTlsAuthentication
+	return apiObjects
 }
 
-func flattenApiGatewayV2MutualTlsAuthentication(mutualTlsAuthentication *apigatewayv2.MutualTlsAuthentication) []interface{} {
-	if mutualTlsAuthentication == nil {
-		return []interface{}{}
+func flattenDomainNameConfiguration(apiObject *apigatewayv2.DomainNameConfiguration) []interface{} {
+	if apiObject == nil {
+		return nil
 	}
 
-	return []interface{}{map[string]interface{}{
-		"truststore_uri":     aws.StringValue(mutualTlsAuthentication.TruststoreUri),
-		"truststore_version": aws.StringValue(mutualTlsAuthentication.TruststoreVersion),
-	}}
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.CertificateArn; v != nil {
+		tfMap["certificate_arn"] = aws.StringValue(v)
+	}
+
+	if v := apiObject.EndpointType; v != nil {
+		tfMap["endpoint_type"] = aws.StringValue(v)
+	}
+
+	if v := apiObject.HostedZoneId; v != nil {
+		tfMap["hosted_zone_id"] = aws.StringValue(v)
+	}
+
+	if v := apiObject.SecurityPolicy; v != nil {
+		tfMap["security_policy"] = aws.StringValue(v)
+	}
+
+	if v := apiObject.ApiGatewayDomainName; v != nil {
+		tfMap["target_domain_name"] = aws.StringValue(v)
+	}
+
+	if v := apiObject.OwnershipVerificationCertificateArn; v != nil {
+		tfMap["ownership_verification_certificate_arn"] = aws.StringValue(v)
+	}
+
+	return []interface{}{tfMap}
+}
+
+func expandMutualTLSAuthentication(tfList []interface{}) *apigatewayv2.MutualTlsAuthenticationInput {
+	if len(tfList) == 0 || tfList[0] == nil {
+		return nil
+	}
+
+	tfMap := tfList[0].(map[string]interface{})
+
+	apiObject := &apigatewayv2.MutualTlsAuthenticationInput{}
+
+	if v, ok := tfMap["truststore_uri"].(string); ok && v != "" {
+		apiObject.TruststoreUri = aws.String(v)
+	}
+
+	if v, ok := tfMap["truststore_version"].(string); ok && v != "" {
+		apiObject.TruststoreVersion = aws.String(v)
+	}
+
+	return apiObject
+}
+
+func flattenMutualTLSAuthentication(apiObject *apigatewayv2.MutualTlsAuthentication) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.TruststoreUri; v != nil {
+		tfMap["truststore_uri"] = aws.StringValue(v)
+	}
+
+	if v := apiObject.TruststoreVersion; v != nil {
+		tfMap["truststore_version"] = aws.StringValue(v)
+	}
+
+	return []interface{}{tfMap}
 }

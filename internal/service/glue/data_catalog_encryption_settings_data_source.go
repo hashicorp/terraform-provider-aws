@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package glue
 
 import (
@@ -10,9 +13,10 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
+// @SDKDataSource("aws_glue_data_catalog_encryption_settings")
 func DataSourceDataCatalogEncryptionSettings() *schema.Resource {
 	return &schema.Resource{
-		ReadContext: dataSourceDataCatalogEncryptionSettingsRead,
+		ReadWithoutTimeout: dataSourceDataCatalogEncryptionSettingsRead,
 		Schema: map[string]*schema.Schema{
 			"catalog_id": {
 				Type:     schema.TypeString,
@@ -63,20 +67,26 @@ func DataSourceDataCatalogEncryptionSettings() *schema.Resource {
 }
 
 func dataSourceDataCatalogEncryptionSettingsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).GlueConn
-	id := d.Get("catalog_id").(string)
-	input := &glue.GetDataCatalogEncryptionSettingsInput{
-		CatalogId: aws.String(id),
-	}
-	out, err := conn.GetDataCatalogEncryptionSettings(input)
-	if err != nil {
-		return diag.Errorf("Error reading Glue Data Catalog Encryption Settings: %s", err)
-	}
-	d.SetId(id)
-	d.Set("catalog_id", d.Id())
+	conn := meta.(*conns.AWSClient).GlueConn(ctx)
 
-	if err := d.Set("data_catalog_encryption_settings", flattenGlueDataCatalogEncryptionSettings(out.DataCatalogEncryptionSettings)); err != nil {
-		return diag.Errorf("error setting data_catalog_encryption_settings: %s", err)
+	catalogID := d.Get("catalog_id").(string)
+	output, err := conn.GetDataCatalogEncryptionSettingsWithContext(ctx, &glue.GetDataCatalogEncryptionSettingsInput{
+		CatalogId: aws.String(catalogID),
+	})
+
+	if err != nil {
+		return diag.Errorf("reading Glue Data Catalog Encryption Settings (%s): %s", catalogID, err)
 	}
+
+	d.SetId(catalogID)
+	d.Set("catalog_id", d.Id())
+	if output.DataCatalogEncryptionSettings != nil {
+		if err := d.Set("data_catalog_encryption_settings", []interface{}{flattenDataCatalogEncryptionSettings(output.DataCatalogEncryptionSettings)}); err != nil {
+			return diag.Errorf("setting data_catalog_encryption_settings: %s", err)
+		}
+	} else {
+		d.Set("data_catalog_encryption_settings", nil)
+	}
+
 	return nil
 }

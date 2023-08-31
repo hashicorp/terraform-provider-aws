@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package apprunner
 
 import (
@@ -7,7 +10,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/apprunner"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -15,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_apprunner_custom_domain_association")
 func ResourceCustomDomainAssociation() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceCustomDomainAssociationCreate,
@@ -81,7 +85,7 @@ func ResourceCustomDomainAssociation() *schema.Resource {
 }
 
 func resourceCustomDomainAssociationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).AppRunnerConn
+	conn := meta.(*conns.AWSClient).AppRunnerConn(ctx)
 
 	domainName := d.Get("domain_name").(string)
 	serviceArn := d.Get("service_arn").(string)
@@ -95,25 +99,25 @@ func resourceCustomDomainAssociationCreate(ctx context.Context, d *schema.Resour
 	output, err := conn.AssociateCustomDomainWithContext(ctx, input)
 
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error associating App Runner Custom Domain (%s) for Service (%s): %w", domainName, serviceArn, err))
+		return diag.Errorf("associating App Runner Custom Domain (%s) for Service (%s): %s", domainName, serviceArn, err)
 	}
 
 	if output == nil {
-		return diag.FromErr(fmt.Errorf("error associating App Runner Custom Domain (%s) for Service (%s): empty output", domainName, serviceArn))
+		return diag.Errorf("associating App Runner Custom Domain (%s) for Service (%s): empty output", domainName, serviceArn)
 	}
 
 	d.SetId(fmt.Sprintf("%s,%s", aws.StringValue(output.CustomDomain.DomainName), aws.StringValue(output.ServiceArn)))
 	d.Set("dns_target", output.DNSTarget)
 
 	if err := WaitCustomDomainAssociationCreated(ctx, conn, domainName, serviceArn); err != nil {
-		return diag.FromErr(fmt.Errorf("error waiting for App Runner Custom Domain Association (%s) creation: %w", d.Id(), err))
+		return diag.Errorf("waiting for App Runner Custom Domain Association (%s) creation: %s", d.Id(), err)
 	}
 
 	return resourceCustomDomainAssociationRead(ctx, d, meta)
 }
 
 func resourceCustomDomainAssociationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).AppRunnerConn
+	conn := meta.(*conns.AWSClient).AppRunnerConn(ctx)
 
 	domainName, serviceArn, err := CustomDomainAssociationParseID(d.Id())
 
@@ -131,15 +135,15 @@ func resourceCustomDomainAssociationRead(ctx context.Context, d *schema.Resource
 
 	if customDomain == nil {
 		if d.IsNewResource() {
-			return diag.FromErr(fmt.Errorf("error reading App Runner Custom Domain Association (%s): empty output after creation", d.Id()))
+			return diag.Errorf("reading App Runner Custom Domain Association (%s): empty output after creation", d.Id())
 		}
 		log.Printf("[WARN] App Runner Custom Domain Association (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}
 
-	if err := d.Set("certificate_validation_records", flattenAppRunnerCustomDomainCertificateValidationRecords(customDomain.CertificateValidationRecords)); err != nil {
-		return diag.FromErr(fmt.Errorf("error setting certificate_validation_records: %w", err))
+	if err := d.Set("certificate_validation_records", flattenCustomDomainCertificateValidationRecords(customDomain.CertificateValidationRecords)); err != nil {
+		return diag.Errorf("setting certificate_validation_records: %s", err)
 	}
 
 	d.Set("domain_name", customDomain.DomainName)
@@ -151,7 +155,7 @@ func resourceCustomDomainAssociationRead(ctx context.Context, d *schema.Resource
 }
 
 func resourceCustomDomainAssociationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).AppRunnerConn
+	conn := meta.(*conns.AWSClient).AppRunnerConn(ctx)
 
 	domainName, serviceArn, err := CustomDomainAssociationParseID(d.Id())
 
@@ -171,7 +175,7 @@ func resourceCustomDomainAssociationDelete(ctx context.Context, d *schema.Resour
 	}
 
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error disassociating App Runner Custom Domain (%s) for Service (%s): %w", domainName, serviceArn, err))
+		return diag.Errorf("disassociating App Runner Custom Domain (%s) for Service (%s): %s", domainName, serviceArn, err)
 	}
 
 	if err := WaitCustomDomainAssociationDeleted(ctx, conn, domainName, serviceArn); err != nil {
@@ -179,13 +183,13 @@ func resourceCustomDomainAssociationDelete(ctx context.Context, d *schema.Resour
 			return nil
 		}
 
-		return diag.FromErr(fmt.Errorf("error waiting for App Runner Custom Domain Association (%s) deletion: %w", d.Id(), err))
+		return diag.Errorf("waiting for App Runner Custom Domain Association (%s) deletion: %s", d.Id(), err)
 	}
 
 	return nil
 }
 
-func flattenAppRunnerCustomDomainCertificateValidationRecords(records []*apprunner.CertificateValidationRecord) []interface{} {
+func flattenCustomDomainCertificateValidationRecords(records []*apprunner.CertificateValidationRecord) []interface{} {
 	var results []interface{}
 
 	for _, record := range records {

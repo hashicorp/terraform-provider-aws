@@ -1,0 +1,3 @@
+```new-resource
+aws_grafana_workspace_saml_configuration
+```

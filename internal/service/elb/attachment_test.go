@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package elb_test
 
 import (
@@ -6,47 +9,48 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/elb"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func TestAccELBAttachment_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	var conf elb.LoadBalancerDescription
 	resourceName := "aws_elb.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, elb.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckLoadBalancerDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, elb.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckLoadBalancerDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAttachment1Config(),
+				Config: testAccAttachmentConfig_1(),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckLoadBalancerExists(resourceName, &conf),
+					testAccCheckLoadBalancerExists(ctx, resourceName, &conf),
 					testAccAttachmentCheckInstanceCount(&conf, 1),
 				),
 			},
 			{
-				Config: testAccAttachment2Config(),
+				Config: testAccAttachmentConfig_2(),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckLoadBalancerExists(resourceName, &conf),
+					testAccCheckLoadBalancerExists(ctx, resourceName, &conf),
 					testAccAttachmentCheckInstanceCount(&conf, 2),
 				),
 			},
 			{
-				Config: testAccAttachment3Config(),
+				Config: testAccAttachmentConfig_3(),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckLoadBalancerExists(resourceName, &conf),
+					testAccCheckLoadBalancerExists(ctx, resourceName, &conf),
 					testAccAttachmentCheckInstanceCount(&conf, 2),
 				),
 			},
 			{
-				Config: testAccAttachment4Config(),
+				Config: testAccAttachmentConfig_4(),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckLoadBalancerExists(resourceName, &conf),
+					testAccCheckLoadBalancerExists(ctx, resourceName, &conf),
 					testAccAttachmentCheckInstanceCount(&conf, 0),
 				),
 			},
@@ -56,11 +60,12 @@ func TestAccELBAttachment_basic(t *testing.T) {
 
 // remove and instance and check that it's correctly re-attached.
 func TestAccELBAttachment_drift(t *testing.T) {
+	ctx := acctest.Context(t)
 	var conf elb.LoadBalancerDescription
 	resourceName := "aws_elb.test"
 
-	deregInstance := func() {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ELBConn
+	testAccAttachmentConfig_deregInstance := func() {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ELBConn(ctx)
 
 		deRegisterInstancesOpts := elb.DeregisterInstancesFromLoadBalancerInput{
 			LoadBalancerName: conf.LoadBalancerName,
@@ -69,32 +74,31 @@ func TestAccELBAttachment_drift(t *testing.T) {
 
 		log.Printf("[DEBUG] deregistering instance %v from ELB", *conf.Instances[0].InstanceId)
 
-		_, err := conn.DeregisterInstancesFromLoadBalancer(&deRegisterInstancesOpts)
+		_, err := conn.DeregisterInstancesFromLoadBalancerWithContext(ctx, &deRegisterInstancesOpts)
 		if err != nil {
 			t.Fatalf("Failure deregistering instances from ELB: %s", err)
 		}
-
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, elb.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckLoadBalancerDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, elb.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckLoadBalancerDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAttachment1Config(),
+				Config: testAccAttachmentConfig_1(),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckLoadBalancerExists(resourceName, &conf),
+					testAccCheckLoadBalancerExists(ctx, resourceName, &conf),
 					testAccAttachmentCheckInstanceCount(&conf, 1),
 				),
 			},
 			// remove an instance from the ELB, and make sure it gets re-added
 			{
-				Config:    testAccAttachment1Config(),
-				PreConfig: deregInstance,
+				Config:    testAccAttachmentConfig_1(),
+				PreConfig: testAccAttachmentConfig_deregInstance,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckLoadBalancerExists(resourceName, &conf),
+					testAccCheckLoadBalancerExists(ctx, resourceName, &conf),
 					testAccAttachmentCheckInstanceCount(&conf, 1),
 				),
 			},
@@ -112,8 +116,8 @@ func testAccAttachmentCheckInstanceCount(conf *elb.LoadBalancerDescription, expe
 }
 
 // add one attachment
-func testAccAttachment1Config() string {
-	return acctest.ConfigCompose(acctest.ConfigLatestAmazonLinuxHvmEbsAmi(), `
+func testAccAttachmentConfig_1() string {
+	return acctest.ConfigCompose(acctest.ConfigLatestAmazonLinuxHVMEBSAMI(), `
 data "aws_availability_zones" "available" {
   state = "available"
 
@@ -147,8 +151,8 @@ resource "aws_elb_attachment" "foo1" {
 }
 
 // add a second attachment
-func testAccAttachment2Config() string {
-	return acctest.ConfigCompose(acctest.ConfigLatestAmazonLinuxHvmEbsAmi(), `
+func testAccAttachmentConfig_2() string {
+	return acctest.ConfigCompose(acctest.ConfigLatestAmazonLinuxHVMEBSAMI(), `
 data "aws_availability_zones" "available" {
   state = "available"
 
@@ -192,8 +196,8 @@ resource "aws_elb_attachment" "foo2" {
 }
 
 // swap attachments between resources
-func testAccAttachment3Config() string {
-	return acctest.ConfigCompose(acctest.ConfigLatestAmazonLinuxHvmEbsAmi(), `
+func testAccAttachmentConfig_3() string {
+	return acctest.ConfigCompose(acctest.ConfigLatestAmazonLinuxHVMEBSAMI(), `
 data "aws_availability_zones" "available" {
   state = "available"
 
@@ -237,7 +241,7 @@ resource "aws_elb_attachment" "foo2" {
 }
 
 // destroy attachments
-func testAccAttachment4Config() string {
+func testAccAttachmentConfig_4() string {
 	return `
 data "aws_availability_zones" "available" {
   state = "available"

@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package batch_test
 
 import (
@@ -6,22 +9,21 @@ import (
 	tfbatch "github.com/hashicorp/terraform-provider-aws/internal/service/batch"
 )
 
-func TestEquivalentBatchContainerPropertiesJSON(t *testing.T) {
-	testCases := []struct {
-		Name              string
+func TestEquivalentContainerPropertiesJSON(t *testing.T) {
+	t.Parallel()
+
+	testCases := map[string]struct {
 		ApiJson           string
 		ConfigurationJson string
 		ExpectEquivalent  bool
 		ExpectError       bool
 	}{
-		{
-			Name:              "empty",
+		"empty": {
 			ApiJson:           ``,
 			ConfigurationJson: ``,
 			ExpectEquivalent:  true,
 		},
-		{
-			Name: "empty ResourceRequirements",
+		"empty ResourceRequirements": {
 			ApiJson: `
 {
 	"command": ["ls", "-la"],
@@ -97,8 +99,7 @@ func TestEquivalentBatchContainerPropertiesJSON(t *testing.T) {
 `,
 			ExpectEquivalent: true,
 		},
-		{
-			Name: "reordered Environment",
+		"reordered Environment": {
 			ApiJson: `
 {
 	"command": ["ls", "-la"],
@@ -183,8 +184,8 @@ func TestEquivalentBatchContainerPropertiesJSON(t *testing.T) {
 `,
 			ExpectEquivalent: true,
 		},
-		{
-			Name: "empty environment, mountPoints, ulimits, and volumes",
+		"empty environment, mountPoints, ulimits, and volumes": {
+			//lintignore:AWSAT005
 			ApiJson: `
 {
 	"image": "example:image",
@@ -199,6 +200,7 @@ func TestEquivalentBatchContainerPropertiesJSON(t *testing.T) {
 	"resourceRequirements": []
 }
 `,
+			//lintignore:AWSAT005
 			ConfigurationJson: `
 {
 	"command": ["start.py", "Ref::S3bucket", "Ref::S3key"],
@@ -210,8 +212,8 @@ func TestEquivalentBatchContainerPropertiesJSON(t *testing.T) {
 `,
 			ExpectEquivalent: true,
 		},
-		{
-			Name: "empty command, logConfiguration.secretOptions, mountPoints, resourceRequirements, secrets, ulimits, volumes",
+		"empty command, logConfiguration.secretOptions, mountPoints, resourceRequirements, secrets, ulimits, volumes": {
+			//lintignore:AWSAT003,AWSAT005
 			ApiJson: `
 {
 	"image": "123.dkr.ecr.us-east-1.amazonaws.com/my-app",
@@ -231,6 +233,7 @@ func TestEquivalentBatchContainerPropertiesJSON(t *testing.T) {
 	"secrets": []
 }
 `,
+			//lintignore:AWSAT003,AWSAT005
 			ConfigurationJson: `
 {
     "image": "123.dkr.ecr.us-east-1.amazonaws.com/my-app",
@@ -250,8 +253,8 @@ func TestEquivalentBatchContainerPropertiesJSON(t *testing.T) {
 `,
 			ExpectEquivalent: true,
 		},
-		{
-			Name: "no fargatePlatformConfiguration",
+		"no fargatePlatformConfiguration": {
+			//lintignore:AWSAT003,AWSAT005
 			ApiJson: `
 {
 	"image": "123.dkr.ecr.us-east-1.amazonaws.com/my-app",
@@ -270,6 +273,7 @@ func TestEquivalentBatchContainerPropertiesJSON(t *testing.T) {
 	}
 }
 `,
+			//lintignore:AWSAT003,AWSAT005
 			ConfigurationJson: `
 {
 	"image": "123.dkr.ecr.us-east-1.amazonaws.com/my-app",
@@ -287,8 +291,8 @@ func TestEquivalentBatchContainerPropertiesJSON(t *testing.T) {
 `,
 			ExpectEquivalent: true,
 		},
-		{
-			Name: "empty linuxParameters.devices, linuxParameters.tmpfs, logConfiguration.options",
+		"empty linuxParameters.devices, linuxParameters.tmpfs, logConfiguration.options": {
+			//lintignore:AWSAT003,AWSAT005
 			ApiJson: `
 {
 	"image": "123.dkr.ecr.us-east-1.amazonaws.com/my-app",
@@ -307,6 +311,7 @@ func TestEquivalentBatchContainerPropertiesJSON(t *testing.T) {
 	}
 }
 `,
+			//lintignore:AWSAT003,AWSAT005
 			ConfigurationJson: `
 {
 	"image": "123.dkr.ecr.us-east-1.amazonaws.com/my-app",
@@ -324,8 +329,8 @@ func TestEquivalentBatchContainerPropertiesJSON(t *testing.T) {
 `,
 			ExpectEquivalent: true,
 		},
-		{
-			Name: "empty linuxParameters.devices.permissions, linuxParameters.tmpfs.mountOptions",
+		"empty linuxParameters.devices.permissions, linuxParameters.tmpfs.mountOptions": {
+			//lintignore:AWSAT003,AWSAT005
 			ApiJson: `
 {
 	"image": "123.dkr.ecr.us-east-1.amazonaws.com/my-app",
@@ -348,6 +353,7 @@ func TestEquivalentBatchContainerPropertiesJSON(t *testing.T) {
 	}
 }
 `,
+			//lintignore:AWSAT003,AWSAT005
 			ConfigurationJson: `
 {
 	"image": "123.dkr.ecr.us-east-1.amazonaws.com/my-app",
@@ -370,10 +376,86 @@ func TestEquivalentBatchContainerPropertiesJSON(t *testing.T) {
 `,
 			ExpectEquivalent: true,
 		},
+		"empty environment variables": {
+			//lintignore:AWSAT005
+			ApiJson: `
+{
+	"image": "example:image",
+	"vcpus": 8,
+	"memory": 2048,
+	"command": ["start.py", "Ref::S3bucket", "Ref::S3key"],
+	"environment": [
+		{
+			"name": "VALUE",
+			"value": "test"
+		}
+	],
+	"jobRoleArn": "arn:aws:iam::123456789012:role/example",
+	"volumes": [],
+	"mountPoints": [],
+	"ulimits": [],
+	"resourceRequirements": []
+}`,
+			//lintignore:AWSAT005
+			ConfigurationJson: `
+{
+	"command": ["start.py", "Ref::S3bucket", "Ref::S3key"],
+	"image": "example:image",
+	"memory": 2048,
+	"vcpus": 8,
+	"environment": [
+		{
+			"name": "EMPTY",
+			"value": ""
+		},
+		{
+			"name": "VALUE",
+			"value": "test"
+		}
+	],
+	"jobRoleArn": "arn:aws:iam::123456789012:role/example"
+}`,
+			ExpectEquivalent: true,
+		},
+		"empty environment variable": {
+			//lintignore:AWSAT005
+			ApiJson: `
+{
+	"image": "example:image",
+	"vcpus": 8,
+	"memory": 2048,
+	"command": ["start.py", "Ref::S3bucket", "Ref::S3key"],
+	"environment": [],
+	"jobRoleArn": "arn:aws:iam::123456789012:role/example",
+	"volumes": [],
+	"mountPoints": [],
+	"ulimits": [],
+	"resourceRequirements": []
+}`,
+			//lintignore:AWSAT005
+			ConfigurationJson: `
+{
+	"command": ["start.py", "Ref::S3bucket", "Ref::S3key"],
+	"image": "example:image",
+	"memory": 2048,
+	"vcpus": 8,
+	"environment": [
+		{
+			"name": "EMPTY",
+			"value": ""
+		}
+	],
+	"jobRoleArn": "arn:aws:iam::123456789012:role/example"
+}`,
+			ExpectEquivalent: true,
+		},
 	}
 
-	for _, testCase := range testCases {
-		t.Run(testCase.Name, func(t *testing.T) {
+	for name, testCase := range testCases {
+		testCase := testCase
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
 			got, err := tfbatch.EquivalentContainerPropertiesJSON(testCase.ConfigurationJson, testCase.ApiJson)
 
 			if err != nil && !testCase.ExpectError {

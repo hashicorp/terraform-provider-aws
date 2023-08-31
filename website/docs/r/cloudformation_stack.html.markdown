@@ -20,34 +20,38 @@ resource "aws_cloudformation_stack" "network" {
     VPCCidr = "10.0.0.0/16"
   }
 
-  template_body = <<STACK
-{
-  "Parameters" : {
-    "VPCCidr" : {
-      "Type" : "String",
-      "Default" : "10.0.0.0/16",
-      "Description" : "Enter the CIDR block for the VPC. Default is 10.0.0.0/16."
-    }
-  },
-  "Resources" : {
-    "myVpc": {
-      "Type" : "AWS::EC2::VPC",
-      "Properties" : {
-        "CidrBlock" : { "Ref" : "VPCCidr" },
-        "Tags" : [
-          {"Key": "Name", "Value": "Primary_CF_VPC"}
-        ]
+  template_body = jsonencode({
+    Parameters = {
+      VPCCidr = {
+        Type        = "String"
+        Default     = "10.0.0.0/16"
+        Description = "Enter the CIDR block for the VPC. Default is 10.0.0.0/16."
       }
     }
-  }
-}
-STACK
+
+    Resources = {
+      myVpc = {
+        Type = "AWS::EC2::VPC"
+        Properties = {
+          CidrBlock = {
+            "Ref" = "VPCCidr"
+          }
+          Tags = [
+            {
+              Key   = "Name"
+              Value = "Primary_CF_VPC"
+            }
+          ]
+        }
+      }
+    }
+  })
 }
 ```
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `name` - (Required) Stack name.
 * `template_body` - (Optional) Structure containing the template body (max size: 51,200 bytes).
@@ -64,32 +68,39 @@ The following arguments are supported:
   Conflicts w/ `policy_url`.
 * `policy_url` - (Optional) Location of a file containing the stack policy.
   Conflicts w/ `policy_body`.
-* `tags` - (Optional) Map of resource tags to associate with this stack. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) Map of resource tags to associate with this stack. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `iam_role_arn` - (Optional) The ARN of an IAM role that AWS CloudFormation assumes to create the stack. If you don't specify a value, AWS CloudFormation uses the role that was previously associated with the stack. If no role is available, AWS CloudFormation uses a temporary session that is generated from your user credentials.
 * `timeout_in_minutes` - (Optional) The amount of time that can pass before the stack status becomes `CREATE_FAILED`.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - A unique identifier of the stack.
 * `outputs` - A map of outputs from the stack.
-* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
-
-
-## Import
-
-Cloudformation Stacks can be imported using the `name`, e.g.,
-
-```
-$ terraform import aws_cloudformation_stack.stack networking-stack
-```
+* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Timeouts
 
-`aws_cloudformation_stack` provides the following
-[Timeouts](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts) configuration options:
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-- `create` - (Default `30 minutes`) Used for Creating Stacks
-- `update` - (Default `30 minutes`) Used for Stack modifications
-- `delete` - (Default `30 minutes`) Used for destroying stacks.
+- `create` - (Default `30m`)
+- `update` - (Default `30m`)
+- `delete` - (Default `30m`)
+
+## Import
+
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Cloudformation Stacks using the `name`. For example:
+
+```terraform
+import {
+  to = aws_cloudformation_stack.stack
+  id = "networking-stack"
+}
+```
+
+Using `terraform import`, import Cloudformation Stacks using the `name`. For example:
+
+```console
+% terraform import aws_cloudformation_stack.stack networking-stack
+```

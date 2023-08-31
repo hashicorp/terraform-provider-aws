@@ -1,31 +1,33 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ecs
 
 import (
-	"log"
+	"context"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ecs"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 const (
-	// AWS will likely add consts for these at some point
 	serviceStatusInactive = "INACTIVE"
 	serviceStatusActive   = "ACTIVE"
 	serviceStatusDraining = "DRAINING"
+	// Non-standard statuses for statusServiceWaitForStable()
+	serviceStatusPending = "tfPENDING"
+	serviceStatusStable  = "tfSTABLE"
 
-	serviceStatusError = "ERROR"
-	serviceStatusNone  = "NONE"
-
-	clusterStatusError = "ERROR"
-	clusterStatusNone  = "NONE"
+	taskSetStatusActive   = "ACTIVE"
+	taskSetStatusDraining = "DRAINING"
+	taskSetStatusPrimary  = "PRIMARY"
 )
 
-func statusCapacityProvider(conn *ecs.ECS, arn string) resource.StateRefreshFunc {
+func statusCapacityProvider(ctx context.Context, conn *ecs.ECS, arn string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := FindCapacityProviderByARN(conn, arn)
+		output, err := FindCapacityProviderByARN(ctx, conn, arn)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil
@@ -39,9 +41,9 @@ func statusCapacityProvider(conn *ecs.ECS, arn string) resource.StateRefreshFunc
 	}
 }
 
-func statusCapacityProviderUpdate(conn *ecs.ECS, arn string) resource.StateRefreshFunc {
+func statusCapacityProviderUpdate(ctx context.Context, conn *ecs.ECS, arn string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := FindCapacityProviderByARN(conn, arn)
+		output, err := FindCapacityProviderByARN(ctx, conn, arn)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil
@@ -55,48 +57,85 @@ func statusCapacityProviderUpdate(conn *ecs.ECS, arn string) resource.StateRefre
 	}
 }
 
-func statusService(conn *ecs.ECS, id, cluster string) resource.StateRefreshFunc {
+func statusServiceNoTags(ctx context.Context, conn *ecs.ECS, id, cluster string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		input := &ecs.DescribeServicesInput{
-			Services: aws.StringSlice([]string{id}),
-			Cluster:  aws.String(cluster),
+		service, err := FindServiceNoTagsByID(ctx, conn, id, cluster)
+		if tfresource.NotFound(err) {
+			return nil, "", nil
 		}
-
-		output, err := conn.DescribeServices(input)
-
-		if tfawserr.ErrCodeEquals(err, ecs.ErrCodeServiceNotFoundException) {
-			return nil, serviceStatusNone, nil
-		}
-
 		if err != nil {
-			return nil, serviceStatusError, err
+			return nil, "", err
 		}
 
-		if len(output.Services) == 0 {
-			return nil, serviceStatusNone, nil
-		}
-
-		log.Printf("[DEBUG] ECS service (%s) is currently %q", id, *output.Services[0].Status)
-		return output, aws.StringValue(output.Services[0].Status), err
+		return service, aws.StringValue(service.Status), err
 	}
 }
 
-func statusCluster(conn *ecs.ECS, arn string) resource.StateRefreshFunc {
+func statusServiceWaitForStable(ctx context.Context, conn *ecs.ECS, id, cluster string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := FindClusterByARN(conn, arn)
-
-		if tfawserr.ErrCodeEquals(err, ecs.ErrCodeClusterNotFoundException) {
-			return nil, clusterStatusNone, nil
+		serviceRaw, status, err := statusServiceNoTags(ctx, conn, id, cluster)()
+		if err != nil {
+			return nil, "", err
 		}
+
+		if status != serviceStatusActive {
+			return serviceRaw, status, nil
+		}
+
+		service := serviceRaw.(*ecs.Service)
+
+		if d, dc, rc := len(service.Deployments),
+			aws.Int64Value(service.DesiredCount),
+			aws.Int64Value(service.RunningCount); d == 1 && dc == rc {
+			status = serviceStatusStable
+		} else {
+			status = serviceStatusPending
+		}
+
+		return service, status, nil
+	}
+}
+
+func stabilityStatusTaskSet(ctx context.Context, conn *ecs.ECS, taskSetID, service, cluster string) retry.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		input := &ecs.DescribeTaskSetsInput{
+			Cluster:  aws.String(cluster),
+			Service:  aws.String(service),
+			TaskSets: aws.StringSlice([]string{taskSetID}),
+		}
+
+		output, err := conn.DescribeTaskSetsWithContext(ctx, input)
 
 		if err != nil {
-			return nil, clusterStatusError, err
+			return nil, "", err
 		}
 
-		if len(output.Clusters) == 0 {
-			return nil, clusterStatusNone, nil
+		if output == nil || len(output.TaskSets) == 0 {
+			return nil, "", nil
 		}
 
-		return output, aws.StringValue(output.Clusters[0].Status), err
+		return output.TaskSets[0], aws.StringValue(output.TaskSets[0].StabilityStatus), nil
+	}
+}
+
+func statusTaskSet(ctx context.Context, conn *ecs.ECS, taskSetID, service, cluster string) retry.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		input := &ecs.DescribeTaskSetsInput{
+			Cluster:  aws.String(cluster),
+			Service:  aws.String(service),
+			TaskSets: aws.StringSlice([]string{taskSetID}),
+		}
+
+		output, err := conn.DescribeTaskSetsWithContext(ctx, input)
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		if output == nil || len(output.TaskSets) == 0 {
+			return nil, "", nil
+		}
+
+		return output.TaskSets[0], aws.StringValue(output.TaskSets[0].Status), nil
 	}
 }

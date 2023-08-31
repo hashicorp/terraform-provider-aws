@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_security_group: Fix complex dependency violations such as using a security group with an EMR cluster
+```

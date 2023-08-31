@@ -1,5 +1,5 @@
 ---
-subcategory: "RDS"
+subcategory: "RDS (Relational Database)"
 layout: "aws"
 page_title: "AWS: aws_rds_orderable_db_instance"
 description: |-
@@ -35,10 +35,9 @@ data "aws_rds_orderable_db_instance" "test" {
 }
 ```
 
-
 ## Argument Reference
 
-The following arguments are supported:
+This data source supports the following arguments:
 
 * `availability_zone_group` - (Optional) Availability zone group.
 * `engine` - (Required) DB engine. Engine values include `aurora`, `aurora-mysql`, `aurora-postgresql`, `docdb`, `mariadb`, `mysql`, `neptune`, `oracle-ee`, `oracle-se`, `oracle-se1`, `oracle-se2`, `postgres`, `sqlserver-ee`, `sqlserver-ex`, `sqlserver-se`, and `sqlserver-web`.
@@ -60,7 +59,7 @@ The following arguments are supported:
 
 ## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This data source exports the following attributes in addition to the arguments above:
 
 * `availability_zones` - Availability zones where the instance is available.
 * `max_iops_per_db_instance` - Maximum total provisioned IOPS for a DB instance.
@@ -73,3 +72,4 @@ In addition to all arguments above, the following attributes are exported:
 * `outpost_capable` - Whether a DB instance supports RDS on Outposts.
 * `read_replica_capable` - Whether a DB instance can have a read replica.
 * `supported_engine_modes` - A list of the supported DB engine modes.
+* `supported_network_types` - The network types supported by the DB instance (`IPV4` or `DUAL`).

@@ -1,43 +1,49 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package opsworks_test
 
 import (
+	"context"
 	"fmt"
 	"reflect"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/opsworks"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func TestAccOpsWorksApplication_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	var opsapp opsworks.App
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_opsworks_application.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(opsworks.EndpointsID, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, opsworks.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckApplicationDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, opsworks.EndpointsID) },
+		ErrorCheck:               acctest.ErrorCheck(t, opsworks.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckApplicationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccApplicationCreate(rName),
+				Config: testAccApplicationConfig_create(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckApplicationExists(resourceName, &opsapp),
+					testAccCheckApplicationExists(ctx, resourceName, &opsapp),
 					testAccCheckCreateAppAttributes(&opsapp),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "type", "other"),
 					resource.TestCheckResourceAttr(resourceName, "enable_ssl", "false"),
-					resource.TestCheckNoResourceAttr(resourceName, "ssl_configuration"),
+					resource.TestCheckResourceAttr(resourceName, "ssl_configuration.#", "0"),
 					resource.TestCheckNoResourceAttr(resourceName, "domains"),
-					resource.TestCheckNoResourceAttr(resourceName, "app_source"),
+					resource.TestCheckResourceAttr(resourceName, "app_source.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "app_source.0.type", "other"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "environment.*", map[string]string{
 						"key":    "key1",
 						"value":  "value1",
@@ -54,9 +60,9 @@ func TestAccOpsWorksApplication_basic(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"environment"},
 			},
 			{
-				Config: testAccApplicationUpdate(rName),
+				Config: testAccApplicationConfig_update(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckApplicationExists(resourceName, &opsapp),
+					testAccCheckApplicationExists(ctx, resourceName, &opsapp),
 					testAccCheckUpdateAppAttributes(&opsapp),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "type", "rails"),
@@ -90,7 +96,7 @@ func TestAccOpsWorksApplication_basic(t *testing.T) {
 	})
 }
 
-func testAccCheckApplicationExists(
+func testAccCheckApplicationExists(ctx context.Context,
 	n string, opsapp *opsworks.App) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -102,12 +108,12 @@ func testAccCheckApplicationExists(
 			return fmt.Errorf("No ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).OpsWorksConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).OpsWorksConn(ctx)
 
 		params := &opsworks.DescribeAppsInput{
 			AppIds: []*string{&rs.Primary.ID},
 		}
-		resp, err := conn.DescribeApps(params)
+		resp, err := conn.DescribeAppsWithContext(ctx, params)
 
 		if err != nil {
 			return err
@@ -232,43 +238,46 @@ func testAccCheckUpdateAppAttributes(
 	}
 }
 
-func testAccCheckApplicationDestroy(s *terraform.State) error {
-	client := acctest.Provider.Meta().(*conns.AWSClient).OpsWorksConn
+func testAccCheckApplicationDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		client := acctest.Provider.Meta().(*conns.AWSClient).OpsWorksConn(ctx)
 
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_opsworks_application" {
-			continue
-		}
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_opsworks_application" {
+				continue
+			}
 
-		req := &opsworks.DescribeAppsInput{
-			AppIds: []*string{
-				aws.String(rs.Primary.ID),
-			},
-		}
+			req := &opsworks.DescribeAppsInput{
+				AppIds: []*string{
+					aws.String(rs.Primary.ID),
+				},
+			}
 
-		resp, err := client.DescribeApps(req)
-		if err == nil {
-			if len(resp.Apps) > 0 {
-				return fmt.Errorf("OpsWorks App still exist.")
+			resp, err := client.DescribeAppsWithContext(ctx, req)
+			if err == nil {
+				if len(resp.Apps) > 0 {
+					return fmt.Errorf("OpsWorks App still exist.")
+				}
+			}
+
+			if !tfawserr.ErrCodeEquals(err, opsworks.ErrCodeResourceNotFoundException) {
+				return err
 			}
 		}
 
-		if !tfawserr.ErrMessageContains(err, opsworks.ErrCodeResourceNotFoundException, "") {
-			return err
-		}
+		return nil
 	}
-
-	return nil
 }
 
-func testAccApplicationCreate(name string) string {
-	return testAccStackVPCCreateConfig(name) +
+func testAccApplicationConfig_create(rName string) string {
+	return acctest.ConfigCompose(
+		testAccStackConfig_vpcCreate(rName),
 		fmt.Sprintf(`
 resource "aws_opsworks_application" "test" {
   document_root = "foo"
   enable_ssl    = false
-  name          = %q
-  stack_id      = aws_opsworks_stack.tf-acc.id
+  name          = %[1]q
+  stack_id      = aws_opsworks_stack.test.id
   type          = "other"
 
   app_source {
@@ -281,20 +290,21 @@ resource "aws_opsworks_application" "test" {
     secure = false
   }
 }
-`, name)
+`, rName))
 }
 
-func testAccApplicationUpdate(name string) string {
-	return testAccStackVPCCreateConfig(name) +
+func testAccApplicationConfig_update(rName string) string {
+	return acctest.ConfigCompose(
+		testAccStackConfig_vpcCreate(rName),
 		fmt.Sprintf(`
 resource "aws_opsworks_application" "test" {
   auto_bundle_on_deploy = "true"
   document_root         = "root"
   domains               = ["example.com", "sub.example.com"]
   enable_ssl            = true
-  name                  = %q
+  name                  = %[1]q
   rails_env             = "staging"
-  stack_id              = aws_opsworks_stack.tf-acc.id
+  stack_id              = aws_opsworks_stack.test.id
   type                  = "rails"
 
   ssl_configuration {
@@ -349,5 +359,5 @@ EOS
     value = "value2"
   }
 }
-`, name)
+`, rName))
 }
