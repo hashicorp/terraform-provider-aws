@@ -44,6 +44,7 @@ import (
 	qldb_sdkv2 "github.com/aws/aws-sdk-go-v2/service/qldb"
 	rbin_sdkv2 "github.com/aws/aws-sdk-go-v2/service/rbin"
 	rds_sdkv2 "github.com/aws/aws-sdk-go-v2/service/rds"
+	redshiftdata_sdkv2 "github.com/aws/aws-sdk-go-v2/service/redshiftdata"
 	resourceexplorer2_sdkv2 "github.com/aws/aws-sdk-go-v2/service/resourceexplorer2"
 	rolesanywhere_sdkv2 "github.com/aws/aws-sdk-go-v2/service/rolesanywhere"
 	route53domains_sdkv2 "github.com/aws/aws-sdk-go-v2/service/route53domains"
@@ -182,7 +183,6 @@ import (
 	ram_sdkv1 "github.com/aws/aws-sdk-go/service/ram"
 	rds_sdkv1 "github.com/aws/aws-sdk-go/service/rds"
 	redshift_sdkv1 "github.com/aws/aws-sdk-go/service/redshift"
-	redshiftdataapiservice_sdkv1 "github.com/aws/aws-sdk-go/service/redshiftdataapiservice"
 	redshiftserverless_sdkv1 "github.com/aws/aws-sdk-go/service/redshiftserverless"
 	resourcegroups_sdkv1 "github.com/aws/aws-sdk-go/service/resourcegroups"
 	resourcegroupstaggingapi_sdkv1 "github.com/aws/aws-sdk-go/service/resourcegroupstaggingapi"
@@ -861,8 +861,8 @@ func (c *AWSClient) RedshiftConn(ctx context.Context) *redshift_sdkv1.Redshift {
 	return errs.Must(conn[*redshift_sdkv1.Redshift](ctx, c, names.Redshift))
 }
 
-func (c *AWSClient) RedshiftDataConn(ctx context.Context) *redshiftdataapiservice_sdkv1.RedshiftDataAPIService {
-	return errs.Must(conn[*redshiftdataapiservice_sdkv1.RedshiftDataAPIService](ctx, c, names.RedshiftData))
+func (c *AWSClient) RedshiftDataClient(ctx context.Context) *redshiftdata_sdkv2.Client {
+	return errs.Must(client[*redshiftdata_sdkv2.Client](ctx, c, names.RedshiftData))
 }
 
 func (c *AWSClient) RedshiftServerlessConn(ctx context.Context) *redshiftserverless_sdkv1.RedshiftServerless {
