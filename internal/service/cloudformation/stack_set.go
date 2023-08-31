@@ -442,11 +442,12 @@ func expandAutoDeployment(l []interface{}) *cloudformation.AutoDeployment {
 
 	m := l[0].(map[string]interface{})
 
+	enabled := m["enabled"].(bool)
 	autoDeployment := &cloudformation.AutoDeployment{
-		Enabled: aws.Bool(m["enabled"].(bool)),
+		Enabled: aws.Bool(enabled),
 	}
 
-	if *autoDeployment.Enabled {
+	if enabled {
 		autoDeployment.RetainStacksOnAccountRemoval = aws.Bool(m["retain_stacks_on_account_removal"].(bool))
 	}
 
