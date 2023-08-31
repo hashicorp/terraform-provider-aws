@@ -230,7 +230,6 @@ func resourceStackSetInstanceCreate(ctx context.Context, d *schema.ResourceData,
 		input.OperationPreferences = expandOperationPreferences(v.([]interface{})[0].(map[string]interface{}))
 	}
 
-	log.Printf("[DEBUG] Creating CloudFormation StackSet Instance: %s", input)
 	_, err := tfresource.RetryWhen(ctx, propagationTimeout,
 		func() (interface{}, error) {
 			input.OperationId = aws.String(id.UniqueId())
@@ -284,7 +283,7 @@ func resourceStackSetInstanceCreate(ctx context.Context, d *schema.ResourceData,
 				return true, err
 			}
 
-			return false, fmt.Errorf("waiting for CloudFormation StackSet Instance (%s) creation: %w", d.Id(), err)
+			return false, err
 		},
 	)
 
@@ -301,11 +300,9 @@ func resourceStackSetInstanceRead(ctx context.Context, d *schema.ResourceData, m
 
 	stackSetName, accountOrOrgID, region, err := StackSetInstanceParseResourceID(d.Id())
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading CloudFormation StackSet Instance (%s): %s", d.Id(), err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
-	if accountOrOrgID == "" {
-		return sdkdiag.AppendErrorf(diags, "reading CloudFormation StackSet Instance (%s): account_id or organizational_unit_id section empty", d.Id())
-	}
+
 	d.Set("region", region)
 	d.Set("stack_set_name", stackSetName)
 
@@ -314,11 +311,13 @@ func resourceStackSetInstanceRead(ctx context.Context, d *schema.ResourceData, m
 	if accountIDRegexp.MatchString(accountOrOrgID) {
 		// Stack instances deployed by account ID
 		stackInstance, err := FindStackInstanceByName(ctx, conn, stackSetName, accountOrOrgID, region, callAs)
+
 		if !d.IsNewResource() && tfresource.NotFound(err) {
 			log.Printf("[WARN] CloudFormation StackSet Instance (%s) not found, removing from state", d.Id())
 			d.SetId("")
 			return diags
 		}
+
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "reading CloudFormation StackSet Instance (%s): %s", d.Id(), err)
 		}
@@ -336,13 +335,15 @@ func resourceStackSetInstanceRead(ctx context.Context, d *schema.ResourceData, m
 		orgIDs := strings.Split(accountOrOrgID, "/")
 
 		summaries, err := FindStackInstanceSummariesByOrgIDs(ctx, conn, stackSetName, region, callAs, orgIDs)
+
 		if !d.IsNewResource() && tfresource.NotFound(err) {
 			log.Printf("[WARN] CloudFormation StackSet Instance (%s) not found, removing from state", d.Id())
 			d.SetId("")
 			return diags
 		}
+
 		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "finding CloudFormation StackSet Instance (%s) Account: %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "finding CloudFormation StackSet Instance (%s): %s", d.Id(), err)
 		}
 
 		d.Set("deployment_targets", flattenDeploymentTargetsFromSlice(orgIDs))
@@ -358,9 +359,8 @@ func resourceStackSetInstanceUpdate(ctx context.Context, d *schema.ResourceData,
 
 	if d.HasChanges("deployment_targets", "parameter_overrides", "operation_preferences") {
 		stackSetName, accountOrOrgID, region, err := StackSetInstanceParseResourceID(d.Id())
-
 		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating CloudFormation StackSet Instance (%s): %s", d.Id(), err)
+			return sdkdiag.AppendFromErr(diags, err)
 		}
 
 		input := &cloudformation.UpdateStackInstancesInput{
@@ -391,7 +391,6 @@ func resourceStackSetInstanceUpdate(ctx context.Context, d *schema.ResourceData,
 			input.OperationPreferences = expandOperationPreferences(v.([]interface{})[0].(map[string]interface{}))
 		}
 
-		log.Printf("[DEBUG] Updating CloudFormation StackSet Instance: %s", input)
 		output, err := conn.UpdateStackInstancesWithContext(ctx, input)
 
 		if err != nil {
@@ -399,7 +398,7 @@ func resourceStackSetInstanceUpdate(ctx context.Context, d *schema.ResourceData,
 		}
 
 		if _, err := WaitStackSetOperationSucceeded(ctx, conn, stackSetName, aws.StringValue(output.OperationId), callAs, d.Timeout(schema.TimeoutUpdate)); err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating CloudFormation StackSet Instance (%s): waiting for completion: %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "waiting for CloudFormation StackSet Instance (%s) update: %s", d.Id(), err)
 		}
 	}
 
@@ -411,9 +410,8 @@ func resourceStackSetInstanceDelete(ctx context.Context, d *schema.ResourceData,
 	conn := meta.(*conns.AWSClient).CloudFormationConn(ctx)
 
 	stackSetName, accountOrOrgID, region, err := StackSetInstanceParseResourceID(d.Id())
-
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "deleting CloudFormation StackSet Instance (%s): %s", d.Id(), err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	input := &cloudformation.DeleteStackInstancesInput{
@@ -440,7 +438,7 @@ func resourceStackSetInstanceDelete(ctx context.Context, d *schema.ResourceData,
 	log.Printf("[DEBUG] Deleting CloudFormation StackSet Instance: %s", d.Id())
 	output, err := conn.DeleteStackInstancesWithContext(ctx, input)
 
-	if tfawserr.ErrCodeEquals(err, cloudformation.ErrCodeStackInstanceNotFoundException) || tfawserr.ErrCodeEquals(err, cloudformation.ErrCodeStackSetNotFoundException) {
+	if tfawserr.ErrCodeEquals(err, cloudformation.ErrCodeStackInstanceNotFoundException, cloudformation.ErrCodeStackSetNotFoundException) {
 		return diags
 	}
 
@@ -449,7 +447,7 @@ func resourceStackSetInstanceDelete(ctx context.Context, d *schema.ResourceData,
 	}
 
 	if _, err := WaitStackSetOperationSucceeded(ctx, conn, stackSetName, aws.StringValue(output.OperationId), callAs, d.Timeout(schema.TimeoutDelete)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "deleting CloudFormation StackSet Instance (%s): waiting for completion: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for CloudFormation StackSet Instance (%s) delete: %s", d.Id(), err)
 	}
 
 	return diags
