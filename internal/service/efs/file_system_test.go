@@ -39,6 +39,7 @@ func TestAccEFSFileSystem_basic(t *testing.T) {
 					acctest.MatchResourceAttrRegionalHostname(resourceName, "dns_name", "efs", regexache.MustCompile(`fs-[^.]+`)),
 					resource.TestCheckResourceAttr(resourceName, "encrypted", "false"),
 					resource.TestCheckResourceAttr(resourceName, "lifecycle_policy.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "name", ""),
 					resource.TestCheckResourceAttr(resourceName, "number_of_mount_targets", "0"),
 					acctest.MatchResourceAttrAccountID(resourceName, "owner_id"),
 					resource.TestCheckResourceAttr(resourceName, "performance_mode", "generalPurpose"),
@@ -218,8 +219,11 @@ func TestAccEFSFileSystem_kmsKey(t *testing.T) {
 				Config: testAccFileSystemConfig_kmsKey(rName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFileSystem(ctx, resourceName, &desc),
-					resource.TestCheckResourceAttrPair(resourceName, "kms_key_id", kmsKeyResourceName, "arn"),
 					resource.TestCheckResourceAttr(resourceName, "encrypted", "true"),
+					resource.TestCheckResourceAttrPair(resourceName, "kms_key_id", kmsKeyResourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Name", rName),
 				),
 			},
 			{
@@ -571,6 +575,10 @@ resource "aws_kms_key" "test" {
 resource "aws_efs_file_system" "test" {
   encrypted  = %[2]t
   kms_key_id = aws_kms_key.test.arn
+
+  tags = {
+    Name = %[1]q
+  }
 }
 `, rName, enable)
 }

@@ -6,7 +6,6 @@ package efs
 import (
 	"context"
 	"fmt"
-	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/efs"
@@ -42,6 +41,10 @@ func DataSourceFileSystem() *schema.Resource {
 				Computed:     true,
 				ValidateFunc: validation.StringLenBetween(0, 64),
 			},
+			"dns_name": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"encrypted": {
 				Type:     schema.TypeBool,
 				Computed: true,
@@ -53,27 +56,6 @@ func DataSourceFileSystem() *schema.Resource {
 			},
 			"kms_key_id": {
 				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"performance_mode": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"dns_name": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"tags": tftags.TagsSchemaComputed(),
-			"throughput_mode": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"provisioned_throughput_in_mibps": {
-				Type:     schema.TypeFloat,
-				Computed: true,
-			},
-			"size_in_bytes": {
-				Type:     schema.TypeInt,
 				Computed: true,
 			},
 			"lifecycle_policy": {
@@ -91,6 +73,27 @@ func DataSourceFileSystem() *schema.Resource {
 						},
 					},
 				},
+			},
+			"name": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"performance_mode": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"provisioned_throughput_in_mibps": {
+				Type:     schema.TypeFloat,
+				Computed: true,
+			},
+			"size_in_bytes": {
+				Type:     schema.TypeInt,
+				Computed: true,
+			},
+			"tags": tftags.TagsSchemaComputed(),
+			"throughput_mode": {
+				Type:     schema.TypeString,
+				Computed: true,
 			},
 		},
 	}
@@ -113,7 +116,6 @@ func dataSourceFileSystemRead(ctx context.Context, d *schema.ResourceData, meta 
 		describeEfsOpts.FileSystemId = aws.String(v.(string))
 	}
 
-	log.Printf("[DEBUG] Reading EFS File System: %s", describeEfsOpts)
 	describeResp, err := conn.DescribeFileSystemsWithContext(ctx, describeEfsOpts)
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading EFS FileSystem: %s", err)
@@ -148,19 +150,21 @@ func dataSourceFileSystemRead(ctx context.Context, d *schema.ResourceData, meta 
 	fs := results[0]
 
 	d.SetId(aws.StringValue(fs.FileSystemId))
+	d.Set("arn", fs.FileSystemArn)
 	d.Set("availability_zone_id", fs.AvailabilityZoneId)
 	d.Set("availability_zone_name", fs.AvailabilityZoneName)
 	d.Set("creation_token", fs.CreationToken)
-	d.Set("performance_mode", fs.PerformanceMode)
-	d.Set("arn", fs.FileSystemArn)
+	d.Set("dns_name", meta.(*conns.AWSClient).RegionalHostname(fmt.Sprintf("%s.efs", aws.StringValue(fs.FileSystemId))))
 	d.Set("file_system_id", fs.FileSystemId)
 	d.Set("encrypted", fs.Encrypted)
 	d.Set("kms_key_id", fs.KmsKeyId)
+	d.Set("name", fs.Name)
+	d.Set("performance_mode", fs.PerformanceMode)
 	d.Set("provisioned_throughput_in_mibps", fs.ProvisionedThroughputInMibps)
-	d.Set("throughput_mode", fs.ThroughputMode)
 	if fs.SizeInBytes != nil {
 		d.Set("size_in_bytes", fs.SizeInBytes.Value)
 	}
+	d.Set("throughput_mode", fs.ThroughputMode)
 
 	if err := d.Set("tags", KeyValueTags(ctx, fs.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
@@ -177,8 +181,6 @@ func dataSourceFileSystemRead(ctx context.Context, d *schema.ResourceData, meta 
 	if err := d.Set("lifecycle_policy", flattenFileSystemLifecyclePolicies(res.LifecyclePolicies)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting lifecycle_policy: %s", err)
 	}
-
-	d.Set("dns_name", meta.(*conns.AWSClient).RegionalHostname(fmt.Sprintf("%s.efs", aws.StringValue(fs.FileSystemId))))
 
 	return diags
 }
