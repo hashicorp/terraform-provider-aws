@@ -1758,7 +1758,7 @@ func TestAccWAFV2WebACL_RuleGroupReference_shieldMitigation(t *testing.T) {
 					aclID := ""
 					lockToken := ""
 
-					err := webACLsPages(ctx, conn, input, func(page *wafv2.ListWebACLsOutput, lastPage bool) bool {
+					err := listWebACLsPages(ctx, conn, input, func(page *wafv2.ListWebACLsOutput, lastPage bool) bool {
 						if page == nil {
 							return !lastPage
 						}
@@ -1789,7 +1789,7 @@ func TestAccWAFV2WebACL_RuleGroupReference_shieldMitigation(t *testing.T) {
 
 					rgARN := ""
 
-					err = ruleGroupPages(ctx, conn, in, func(page *wafv2.ListRuleGroupsOutput, lastPage bool) bool {
+					err = listRuleGroupsPages(ctx, conn, in, func(page *wafv2.ListRuleGroupsOutput, lastPage bool) bool {
 						if page == nil {
 							return !lastPage
 						}
@@ -1869,40 +1869,6 @@ func TestAccWAFV2WebACL_RuleGroupReference_shieldMitigation(t *testing.T) {
 			},
 		},
 	})
-}
-
-func webACLsPages(ctx context.Context, conn *wafv2.WAFV2, input *wafv2.ListWebACLsInput, fn func(*wafv2.ListWebACLsOutput, bool) bool) error {
-	for {
-		output, err := conn.ListWebACLsWithContext(ctx, input)
-		if err != nil {
-			return err
-		}
-
-		lastPage := aws.StringValue(output.NextMarker) == ""
-		if !fn(output, lastPage) || lastPage {
-			break
-		}
-
-		input.NextMarker = output.NextMarker
-	}
-	return nil
-}
-
-func ruleGroupPages(ctx context.Context, conn *wafv2.WAFV2, input *wafv2.ListRuleGroupsInput, fn func(*wafv2.ListRuleGroupsOutput, bool) bool) error {
-	for {
-		output, err := conn.ListRuleGroupsWithContext(ctx, input)
-		if err != nil {
-			return err
-		}
-
-		lastPage := aws.StringValue(output.NextMarker) == ""
-		if !fn(output, lastPage) || lastPage {
-			break
-		}
-
-		input.NextMarker = output.NextMarker
-	}
-	return nil
 }
 
 // Ensure magically-added (i.e., AWS-added) rule for Shield with CF distribution DDoS auto
