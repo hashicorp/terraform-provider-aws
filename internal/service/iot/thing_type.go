@@ -12,6 +12,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/iot"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
@@ -133,13 +134,9 @@ func resourceThingTypeRead(ctx context.Context, d *schema.ResourceData, meta int
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).IoTConn(ctx)
 
-	params := &iot.DescribeThingTypeInput{
-		ThingTypeName: aws.String(d.Id()),
-	}
-	log.Printf("[DEBUG] Reading IoT Thing Type: %s", params)
-	out, err := conn.DescribeThingTypeWithContext(ctx, params)
+	output, err := FindThingTypeByName(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, "ResourceNotFoundException") {
+	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] IoT Thing Type (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -149,15 +146,13 @@ func resourceThingTypeRead(ctx context.Context, d *schema.ResourceData, meta int
 		return diag.Errorf("reading IoT Thing Type (%s): %s", d.Id(), err)
 	}
 
-	if out.ThingTypeMetadata != nil {
-		d.Set("deprecated", out.ThingTypeMetadata.Deprecated)
+	d.Set("arn", output.ThingTypeArn)
+	if output.ThingTypeMetadata != nil {
+		d.Set("deprecated", output.ThingTypeMetadata.Deprecated)
 	}
-
-	if err := d.Set("properties", flattenThingTypeProperties(out.ThingTypeProperties)); err != nil {
+	if err := d.Set("properties", flattenThingTypeProperties(output.ThingTypeProperties)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting properties: %s", err)
 	}
-
-	d.Set("arn", out.ThingTypeArn)
 
 	return diags
 }
@@ -215,4 +210,29 @@ func resourceThingTypeDelete(ctx context.Context, d *schema.ResourceData, meta i
 	}
 
 	return diags
+}
+
+func FindThingTypeByName(ctx context.Context, conn *iot.IoT, name string) (*iot.DescribeThingTypeOutput, error) {
+	input := &iot.DescribeThingTypeInput{
+		ThingTypeName: aws.String(name),
+	}
+
+	output, err := conn.DescribeThingTypeWithContext(ctx, input)
+
+	if tfawserr.ErrCodeEquals(err, iot.ErrCodeResourceNotFoundException) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output, nil
 }
