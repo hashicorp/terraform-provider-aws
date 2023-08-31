@@ -93,16 +93,15 @@ func resourceThingTypeCreate(ctx context.Context, d *schema.ResourceData, meta i
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).IoTConn(ctx)
 
+	name := d.Get("name").(string)
 	input := &iot.CreateThingTypeInput{
 		Tags:          getTagsIn(ctx),
-		ThingTypeName: aws.String(d.Get("name").(string)),
+		ThingTypeName: aws.String(name),
 	}
 
 	if v, ok := d.GetOk("properties"); ok {
 		configs := v.([]interface{})
-		config, ok := configs[0].(map[string]interface{})
-
-		if ok && config != nil {
+		if config, ok := configs[0].(map[string]interface{}); ok && config != nil {
 			input.ThingTypeProperties = expandThingTypeProperties(config)
 		}
 	}
@@ -110,21 +109,21 @@ func resourceThingTypeCreate(ctx context.Context, d *schema.ResourceData, meta i
 	out, err := conn.CreateThingTypeWithContext(ctx, input)
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating IoT Thing Type (%s): %s", d.Get("name").(string), err)
+		return sdkdiag.AppendErrorf(diags, "creating IoT Thing Type (%s): %s", name, err)
 	}
 
 	d.SetId(aws.StringValue(out.ThingTypeName))
 
 	if v := d.Get("deprecated").(bool); v {
-		params := &iot.DeprecateThingTypeInput{
+		input := &iot.DeprecateThingTypeInput{
 			ThingTypeName: aws.String(d.Id()),
 			UndoDeprecate: aws.Bool(false),
 		}
 
-		_, err := conn.DeprecateThingTypeWithContext(ctx, params)
+		_, err := conn.DeprecateThingTypeWithContext(ctx, input)
 
 		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "creating IoT Thing Type (%s): deprecating Thing Type: %s", d.Get("name").(string), err)
+			return sdkdiag.AppendErrorf(diags, "deprecating IoT Thing Type (%s): %s", d.Id(), err)
 		}
 	}
 
