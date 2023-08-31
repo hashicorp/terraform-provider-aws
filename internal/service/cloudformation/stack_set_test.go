@@ -748,7 +748,7 @@ func TestAccCloudFormationStackSet_templateURL(t *testing.T) {
 }
 
 // https://github.com/hashicorp/terraform-provider-aws/issues/19015.
-func TestAccAWSCloudFormationStackSet_AutoDeployment_Enabled(t *testing.T) {
+func TestAccCloudFormationStackSet_autoDeploymentEnabled(t *testing.T) {
 	ctx := acctest.Context(t)
 	var stackSet cloudformation.StackSet
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -761,7 +761,7 @@ func TestAccAWSCloudFormationStackSet_AutoDeployment_Enabled(t *testing.T) {
 		CheckDestroy:             testAccCheckStackSetDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSCloudFormationStackSetConfigAutoDeployment(rName, true, false),
+				Config: testAccStackSetConfig_autoDeployment(rName, true, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckStackSetExists(ctx, resourceName, &stackSet),
 					resource.TestCheckResourceAttr(resourceName, "auto_deployment.#", "1"),
@@ -782,7 +782,7 @@ func TestAccAWSCloudFormationStackSet_AutoDeployment_Enabled(t *testing.T) {
 }
 
 // https://github.com/hashicorp/terraform-provider-aws/issues/19015.
-func TestAccAWSCloudFormationStackSet_AutoDeployment_Disabled(t *testing.T) {
+func TestAccCloudFormationStackSet_autoDeploymentDisabled(t *testing.T) {
 	ctx := acctest.Context(t)
 	var stackSet cloudformation.StackSet
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -795,7 +795,7 @@ func TestAccAWSCloudFormationStackSet_AutoDeployment_Disabled(t *testing.T) {
 		CheckDestroy:             testAccCheckStackSetDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSCloudFormationStackSetConfigAutoDeployment(rName, false, false),
+				Config: testAccStackSetConfig_autoDeployment(rName, false, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckStackSetExists(ctx, resourceName, &stackSet),
 					resource.TestCheckResourceAttr(resourceName, "auto_deployment.#", "1"),
@@ -1391,7 +1391,7 @@ TEMPLATE
 `, rName, failureTolerancePercentage, maxConcurrentPercentage, testAccStackSetTemplateBodyVPC(rName)))
 }
 
-func testAccAWSCloudFormationStackSetConfigAutoDeployment(rName string, enabled, retainStacksOnAccountRemoval bool) string {
+func testAccStackSetConfig_autoDeployment(rName string, enabled, retainStacksOnAccountRemoval bool) string {
 	return fmt.Sprintf(`
 resource "aws_cloudformation_stack_set" "test" {
   name             = %[1]q
