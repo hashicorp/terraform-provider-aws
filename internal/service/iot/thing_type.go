@@ -12,7 +12,6 @@ import (
 	"github.com/aws/aws-sdk-go/service/iot"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
@@ -188,49 +187,33 @@ func resourceThingTypeDelete(ctx context.Context, d *schema.ResourceData, meta i
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).IoTConn(ctx)
 
-	// In order to delete an IoT Thing Type, you must deprecate it first and wait
-	// at least 5 minutes.
-	deprecateParams := &iot.DeprecateThingTypeInput{
+	// In order to delete an IoT Thing Type, you must deprecate it first and wait at least 5 minutes.
+	_, err := conn.DeprecateThingTypeWithContext(ctx, &iot.DeprecateThingTypeInput{
 		ThingTypeName: aws.String(d.Id()),
+	})
+
+	if tfawserr.ErrCodeEquals(err, iot.ErrCodeResourceNotFoundException) {
+		return nil
 	}
-	log.Printf("[DEBUG] Deprecating IoT Thing Type: %s", deprecateParams)
-	_, err := conn.DeprecateThingTypeWithContext(ctx, deprecateParams)
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "deleting IoT Thing Type (%s): deprecating Thing Type: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deprecating IoT Thing Type (%s): %s", d.Id(), err)
 	}
 
-	deleteParams := &iot.DeleteThingTypeInput{
-		ThingTypeName: aws.String(d.Id()),
-	}
+	log.Printf("[DEBUG] Deleting IoT Thing Type: %s", d.Id())
+	_, err = tfresource.RetryWhenAWSErrMessageContains(ctx, 6*time.Minute, func() (interface{}, error) {
+		return conn.DeleteThingTypeWithContext(ctx, &iot.DeleteThingTypeInput{
+			ThingTypeName: aws.String(d.Id()),
+		})
+	}, iot.ErrCodeInvalidRequestException, "Please wait for 5 minutes after deprecation and then retry")
 
-	err = retry.RetryContext(ctx, 6*time.Minute, func() *retry.RetryError {
-		_, err := conn.DeleteThingTypeWithContext(ctx, deleteParams)
-
-		if err != nil {
-			if tfawserr.ErrMessageContains(err, iot.ErrCodeInvalidRequestException, "Please wait for 5 minutes after deprecation and then retry") {
-				return retry.RetryableError(err)
-			}
-
-			// As the delay post-deprecation is about 5 minutes, it may have been
-			// deleted in between, thus getting a Not Found Exception.
-			if tfawserr.ErrCodeEquals(err, iot.ErrCodeResourceNotFoundException) {
-				return nil
-			}
-
-			return retry.NonRetryableError(err)
-		}
-
+	if tfawserr.ErrCodeEquals(err, iot.ErrCodeResourceNotFoundException) {
 		return nil
-	})
-	if tfresource.TimedOut(err) {
-		_, err = conn.DeleteThingTypeWithContext(ctx, deleteParams)
-		if tfawserr.ErrCodeEquals(err, iot.ErrCodeResourceNotFoundException) {
-			return diags
-		}
 	}
+
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "deleting IoT Thing Type (%s): %s", d.Id(), err)
 	}
+
 	return diags
 }
