@@ -69,7 +69,7 @@ func TestAccRDSCustomDBEngineVersion_sqlServer(t *testing.T) {
 	})
 }
 
-func testAccRDSCustomDBEngineVersion_sqlServerUpdate(t *testing.T) {
+func TestAccRDSCustomDBEngineVersion_sqlServerUpdate(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
