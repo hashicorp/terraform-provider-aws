@@ -230,6 +230,10 @@ func resourceStackSetCreate(ctx context.Context, d *schema.ResourceData, meta in
 		input.AutoDeployment = expandAutoDeployment(v.([]interface{}))
 	}
 
+	if v, ok := d.GetOk("call_as"); ok {
+		input.CallAs = aws.String(v.(string))
+	}
+
 	if v, ok := d.GetOk("capabilities"); ok {
 		input.Capabilities = flex.ExpandStringSet(v.(*schema.Set))
 	}
@@ -254,10 +258,6 @@ func resourceStackSetCreate(ctx context.Context, d *schema.ResourceData, meta in
 		input.PermissionModel = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("call_as"); ok {
-		input.CallAs = aws.String(v.(string))
-	}
-
 	if v, ok := d.GetOk("template_body"); ok {
 		input.TemplateBody = aws.String(v.(string))
 	}
@@ -266,7 +266,6 @@ func resourceStackSetCreate(ctx context.Context, d *schema.ResourceData, meta in
 		input.TemplateURL = aws.String(v.(string))
 	}
 
-	log.Printf("[DEBUG] Creating CloudFormation StackSet: %s", input)
 	_, err := conn.CreateStackSetWithContext(ctx, input)
 
 	if err != nil {
@@ -297,34 +296,24 @@ func resourceStackSetRead(ctx context.Context, d *schema.ResourceData, meta inte
 
 	d.Set("administration_role_arn", stackSet.AdministrationRoleARN)
 	d.Set("arn", stackSet.StackSetARN)
-
 	if err := d.Set("auto_deployment", flattenStackSetAutoDeploymentResponse(stackSet.AutoDeployment)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting auto_deployment: %s", err)
 	}
-
-	if err := d.Set("capabilities", aws.StringValueSlice(stackSet.Capabilities)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting capabilities: %s", err)
-	}
-
+	d.Set("capabilities", aws.StringValueSlice(stackSet.Capabilities))
 	d.Set("description", stackSet.Description)
 	d.Set("execution_role_name", stackSet.ExecutionRoleName)
-
 	if err := d.Set("managed_execution", flattenStackSetManagedExecution(stackSet.ManagedExecution)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting managed_execution: %s", err)
 	}
-
 	d.Set("name", stackSet.StackSetName)
 	d.Set("permission_model", stackSet.PermissionModel)
-
 	if err := d.Set("parameters", flattenAllParameters(stackSet.Parameters)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting parameters: %s", err)
 	}
-
 	d.Set("stack_set_id", stackSet.StackSetId)
+	d.Set("template_body", stackSet.TemplateBody)
 
 	setTagsOut(ctx, stackSet.Tags)
-
-	d.Set("template_body", stackSet.TemplateBody)
 
 	return diags
 }
@@ -342,6 +331,11 @@ func resourceStackSetUpdate(ctx context.Context, d *schema.ResourceData, meta in
 
 	if v, ok := d.GetOk("administration_role_arn"); ok {
 		input.AdministrationRoleARN = aws.String(v.(string))
+	}
+
+	callAs := d.Get("call_as").(string)
+	if v, ok := d.GetOk("call_as"); ok {
+		input.CallAs = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("capabilities"); ok {
@@ -372,11 +366,6 @@ func resourceStackSetUpdate(ctx context.Context, d *schema.ResourceData, meta in
 		input.PermissionModel = aws.String(v.(string))
 	}
 
-	callAs := d.Get("call_as").(string)
-	if v, ok := d.GetOk("call_as"); ok {
-		input.CallAs = aws.String(v.(string))
-	}
-
 	if tags := getTagsIn(ctx); len(tags) > 0 {
 		input.Tags = tags
 	}
@@ -397,7 +386,6 @@ func resourceStackSetUpdate(ctx context.Context, d *schema.ResourceData, meta in
 		input.AutoDeployment = expandAutoDeployment(v.([]interface{}))
 	}
 
-	log.Printf("[DEBUG] Updating CloudFormation StackSet: %s", input)
 	output, err := conn.UpdateStackSetWithContext(ctx, input)
 
 	if err != nil {
