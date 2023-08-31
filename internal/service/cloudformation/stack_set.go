@@ -426,14 +426,15 @@ func resourceStackSetDelete(ctx context.Context, d *schema.ResourceData, meta in
 }
 
 func resourceStackSetImport(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
-	// <StackSetName> or <StackSetName>/<CallAs>
-	switch parts := strings.Split(d.Id(), "/"); len(parts) {
+	const stackSetImportIDSeparator = ","
+
+	switch parts := strings.Split(d.Id(), stackSetImportIDSeparator); len(parts) {
 	case 1:
 	case 2:
 		d.SetId(parts[0])
 		d.Set("call_as", parts[1])
 	default:
-		return []*schema.ResourceData{}, fmt.Errorf("wrong format of import ID (%s), use: 'name' or 'name/call_as'", d.Id())
+		return []*schema.ResourceData{}, fmt.Errorf("unexpected format for import ID (%[1]s), use: STACKSETNAME or STACKSETNAME%[2]sCALLAS", d.Id(), stackSetImportIDSeparator)
 	}
 
 	return []*schema.ResourceData{d}, nil

@@ -134,7 +134,16 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import CloudFormation StackSets using the `name` or `name/call_as`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import CloudFormation StackSets using the `name`:
+
+```terraform
+import {
+  to = aws_cloudformation_stack_set.example
+  id = "example"
+}
+```
+
+Import CloudFormation StackSets when acting a delegated administrator in a member account using the `name` and `call_as` values separated by a comma (`,`):
 
 ```terraform
 import {
@@ -143,8 +152,14 @@ import {
 }
 ```
 
-Using `terraform import`, import CloudFormation StackSets using the `name` or `name/call_as`. For example:
+Using `terraform import`, import CloudFormation StackSets using the `name`:
 
 ```console
 % terraform import aws_cloudformation_stack_set.example example
+```
+
+Using `terraform import`, import CloudFormation StackSets when acting a delegated administrator in a member account using the `name` and `call_as` values separated by a comma (`,`):
+
+```console
+% terraform import aws_cloudformation_stack_set.example example/DELEGATED_ADMIN
 ```

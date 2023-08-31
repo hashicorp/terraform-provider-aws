@@ -68,7 +68,7 @@ func TestAccCloudFormationStackSet_basic(t *testing.T) {
 			// Test import with call_as.
 			{
 				ResourceName:      resourceName,
-				ImportStateId:     fmt.Sprintf("%s/SELF", rName),
+				ImportStateId:     fmt.Sprintf("%s,SELF", rName),
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
