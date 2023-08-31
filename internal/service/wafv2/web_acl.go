@@ -263,15 +263,21 @@ func resourceWebACLRead(ctx context.Context, d *schema.ResourceData, meta interf
 func resourceWebACLUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).WAFV2Conn(ctx)
 
-	// Find the AWS managed ShieldMitigationRuleGroup group rule if existent and add it into the set of rules to update
-	// so that the provider will not remove the Shield rule when changes are applied to the WebACL
-	output, err := FindWebACLByThreePartKey(ctx, conn, d.Id(), d.Get("name").(string), d.Get("scope").(string))
-	if err != nil {
-		return diag.Errorf("reading WAFv2 WebACL (%s): %s", d.Id(), err)
-	}
-	rules := append(expandWebACLRules(d.Get("rule").(*schema.Set).List()), findShieldRule(output.WebACL.Rules)...)
-
 	if d.HasChangesExcept("tags", "tags_all") {
+		// Find the AWS managed ShieldMitigationRuleGroup group rule if existent and add it into the set of rules to update
+		// so that the provider will not remove the Shield rule when changes are applied to the WebACL.
+		var rules []*wafv2.Rule
+		configRules := expandWebACLRules(d.Get("rule").(*schema.Set).List())
+		if sr := findShieldRule(configRules); len(sr) == 0 {
+			output, err := FindWebACLByThreePartKey(ctx, conn, d.Id(), d.Get("name").(string), d.Get("scope").(string))
+			if err != nil {
+				return diag.Errorf("reading WAFv2 WebACL (%s): %s", d.Id(), err)
+			}
+			rules = append(configRules, findShieldRule(output.WebACL.Rules)...)
+		} else {
+			rules = configRules
+		}
+
 		input := &wafv2.UpdateWebACLInput{
 			AssociationConfig: expandAssociationConfig(d.Get("association_config").([]interface{})),
 			CaptchaConfig:     expandCaptchaConfig(d.Get("captcha_config").([]interface{})),
