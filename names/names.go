@@ -51,6 +51,7 @@ const (
 	PipesEndpointID                      = "pipes"
 	PricingEndpointID                    = "pricing"
 	QLDBEndpointID                       = "qldb"
+	RedshiftDataEndpointID               = "redshift-data"
 	ResourceExplorer2EndpointID          = "resource-explorer-2"
 	RolesAnywhereEndpointID              = "rolesanywhere"
 	Route53DomainsEndpointID             = "route53domains"
