@@ -47,11 +47,6 @@ func ResourceAssociation() *schema.Resource {
 				Default:  false,
 				Optional: true,
 			},
-			"sync_compliance": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validation.StringInSlice([]string{"AUTO", "MANUAL"}, false),
-			},
 			"association_name": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -101,6 +96,11 @@ func ResourceAssociation() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: validation.StringLenBetween(1, 256),
+			},
+			"sync_compliance": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ValidateFunc: validation.StringInSlice(ssm.AssociationSyncCompliance_Values(), false),
 			},
 			"output_location": {
 				Type:     schema.TypeList,
@@ -175,10 +175,6 @@ func resourceAssociationCreate(ctx context.Context, d *schema.ResourceData, meta
 		Name: aws.String(d.Get("name").(string)),
 	}
 
-	if v, ok := d.GetOk("sync_compliance"); ok {
-		associationInput.SyncCompliance = aws.String(v.(string))
-	}
-
 	if v, ok := d.GetOk("apply_only_at_cron_interval"); ok {
 		associationInput.ApplyOnlyAtCronInterval = aws.Bool(v.(bool))
 	}
@@ -195,12 +191,16 @@ func resourceAssociationCreate(ctx context.Context, d *schema.ResourceData, meta
 		associationInput.DocumentVersion = aws.String(v.(string))
 	}
 
+	if v, ok := d.GetOk("parameters"); ok {
+		associationInput.Parameters = expandDocumentParameters(v.(map[string]interface{}))
+	}
+
 	if v, ok := d.GetOk("schedule_expression"); ok {
 		associationInput.ScheduleExpression = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("parameters"); ok {
-		associationInput.Parameters = expandDocumentParameters(v.(map[string]interface{}))
+	if v, ok := d.GetOk("sync_compliance"); ok {
+		associationInput.SyncCompliance = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("targets"); ok {
@@ -273,13 +273,13 @@ func resourceAssociationRead(ctx context.Context, d *schema.ResourceData, meta i
 		Resource:  fmt.Sprintf("association/%s", aws.StringValue(association.AssociationId)),
 	}.String()
 	d.Set("arn", arn)
-	d.Set("sync_compliance", association.SyncCompliance)
 	d.Set("apply_only_at_cron_interval", association.ApplyOnlyAtCronInterval)
 	d.Set("association_name", association.AssociationName)
 	d.Set("instance_id", association.InstanceId)
 	d.Set("name", association.Name)
 	d.Set("association_id", association.AssociationId)
 	d.Set("schedule_expression", association.ScheduleExpression)
+	d.Set("sync_compliance", association.SyncCompliance)
 	d.Set("document_version", association.DocumentVersion)
 	d.Set("compliance_severity", association.ComplianceSeverity)
 	d.Set("max_concurrency", association.MaxConcurrency)
@@ -326,6 +326,10 @@ func resourceAssociationUpdate(ctx context.Context, d *schema.ResourceData, meta
 
 	if v, ok := d.GetOk("schedule_expression"); ok {
 		associationInput.ScheduleExpression = aws.String(v.(string))
+	}
+
+	if d.HasChange("sync_compliance") {
+		associationInput.SyncCompliance = aws.String(d.Get("sync_compliance").(string))
 	}
 
 	if v, ok := d.GetOk("parameters"); ok {
