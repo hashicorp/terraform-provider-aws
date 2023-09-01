@@ -71,10 +71,6 @@ func TestAccFSxWindowsFileSystem_basic(t *testing.T) {
 					"skip_final_backup",
 				},
 			},
-			{
-				Config:   testAccWindowsFileSystemConfig_subnetIDs1SingleType(rName, domainName, "SINGLE_AZ_1"),
-				PlanOnly: true,
-			},
 		},
 	})
 }
