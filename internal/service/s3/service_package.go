@@ -50,5 +50,6 @@ func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (
 		if endpoint := config["endpoint"].(string); endpoint != "" {
 			o.BaseEndpoint = aws_sdkv2.String(endpoint)
 		}
+		o.UsePathStyle = config["s3_use_path_style"].(bool)
 	}), nil
 }
