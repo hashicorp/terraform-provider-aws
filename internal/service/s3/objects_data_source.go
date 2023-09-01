@@ -6,12 +6,13 @@ package s3
 import (
 	"context"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/s3"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/s3"
+	"github.com/aws/aws-sdk-go-v2/service/s3/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
@@ -37,8 +38,9 @@ func DataSourceObjects() *schema.Resource {
 				Optional: true,
 			},
 			"encoding_type": {
-				Type:     schema.TypeString,
-				Optional: true,
+				Type:             schema.TypeString,
+				Optional:         true,
+				ValidateDiagFunc: enum.Validate[types.EncodingType](),
 			},
 			"fetch_owner": {
 				Type:     schema.TypeBool,
@@ -68,9 +70,9 @@ func DataSourceObjects() *schema.Resource {
 				Computed: true,
 			},
 			"request_payer": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validation.StringInSlice(s3.RequestPayer_Values(), false),
+				Type:             schema.TypeString,
+				Optional:         true,
+				ValidateDiagFunc: enum.Validate[types.RequestPayer](),
 			},
 			"start_after": {
 				Type:     schema.TypeString,
@@ -82,10 +84,10 @@ func DataSourceObjects() *schema.Resource {
 
 func dataSourceObjectsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).S3Conn(ctx)
+	conn := meta.(*conns.AWSClient).S3Client(ctx)
 
 	bucket := d.Get("bucket").(string)
-	input := s3.ListObjectsV2Input{
+	input := &s3.ListObjectsV2Input{
 		Bucket: aws.String(bucket),
 	}
 
@@ -94,11 +96,11 @@ func dataSourceObjectsRead(ctx context.Context, d *schema.ResourceData, meta int
 	}
 
 	if v, ok := d.GetOk("encoding_type"); ok {
-		input.EncodingType = aws.String(v.(string))
+		input.EncodingType = types.EncodingType(v.(string))
 	}
 
 	if v, ok := d.GetOk("fetch_owner"); ok {
-		input.FetchOwner = aws.Bool(v.(bool))
+		input.FetchOwner = v.(bool)
 	}
 
 	// "input.MaxKeys" refers to max keys returned in a single request
@@ -106,7 +108,7 @@ func dataSourceObjectsRead(ctx context.Context, d *schema.ResourceData, meta int
 	// through the results. "max_keys" does refer to total keys returned.
 	maxKeys := int64(d.Get("max_keys").(int))
 	if maxKeys <= keyRequestPageSize {
-		input.MaxKeys = aws.Int64(maxKeys)
+		input.MaxKeys = int32(maxKeys)
 	}
 
 	if v, ok := d.GetOk("prefix"); ok {
@@ -114,7 +116,7 @@ func dataSourceObjectsRead(ctx context.Context, d *schema.ResourceData, meta int
 	}
 
 	if v, ok := d.GetOk("request_payer"); ok {
-		input.RequestPayer = aws.String(v.(string))
+		input.RequestPayer = types.RequestPayer(v.(string))
 	}
 
 	if v, ok := d.GetOk("start_after"); ok {
@@ -124,37 +126,34 @@ func dataSourceObjectsRead(ctx context.Context, d *schema.ResourceData, meta int
 	var commonPrefixes, keys, owners []string
 	var requestCharged string
 
-	err := conn.ListObjectsV2PagesWithContext(ctx, &input, func(page *s3.ListObjectsV2Output, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
+	pages := s3.NewListObjectsV2Paginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "listing S3 Bucket (%s) Objects: %s", bucket, err)
 		}
 
-		requestCharged = aws.StringValue(page.RequestCharged)
+		requestCharged = string(page.RequestCharged)
 
 		for _, v := range page.CommonPrefixes {
-			commonPrefixes = append(commonPrefixes, aws.StringValue(v.Prefix))
+			commonPrefixes = append(commonPrefixes, aws.ToString(v.Prefix))
 		}
 
 		for _, v := range page.Contents {
-			keys = append(keys, aws.StringValue(v.Key))
+			keys = append(keys, aws.ToString(v.Key))
 
 			if v := v.Owner; v != nil {
-				owners = append(owners, aws.StringValue(v.ID))
+				owners = append(owners, aws.ToString(v.ID))
 			}
 		}
 
-		maxKeys = maxKeys - aws.Int64Value(page.KeyCount)
+		maxKeys = maxKeys - int64(page.KeyCount)
 		if maxKeys <= 0 {
-			return false
+			break
 		} else if maxKeys <= keyRequestPageSize {
-			input.MaxKeys = aws.Int64(maxKeys)
+			input.MaxKeys = int32(maxKeys) // TODO Fix this
 		}
-
-		return !lastPage
-	})
-
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "listing S3 Bucket (%s) Objects: %s", bucket, err)
 	}
 
 	d.SetId(bucket)
