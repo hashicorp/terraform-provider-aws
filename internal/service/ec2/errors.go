@@ -93,6 +93,7 @@ const (
 	errCodeInvalidSubnetIdNotFound                           = "InvalidSubnetId.NotFound"
 	errCodeInvalidTrafficMirrorFilterIdNotFound              = "InvalidTrafficMirrorFilterId.NotFound"
 	errCodeInvalidTrafficMirrorFilterRuleIdNotFound          = "InvalidTrafficMirrorFilterRuleId.NotFound"
+	errCodeInvalidVerifiedAccessGroupIdNotFound              = "InvalidVerifiedAccessGroupId.NotFound"
 	errCodeInvalidTrafficMirrorSessionIdNotFound             = "InvalidTrafficMirrorSessionId.NotFound"
 	errCodeInvalidTrafficMirrorTargetIdNotFound              = "InvalidTrafficMirrorTargetId.NotFound"
 	errCodeInvalidTransitGatewayAttachmentIDNotFound         = "InvalidTransitGatewayAttachmentID.NotFound"
