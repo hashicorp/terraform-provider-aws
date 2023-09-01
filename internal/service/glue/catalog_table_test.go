@@ -1451,21 +1451,22 @@ resource "aws_glue_catalog_database" "test" {
 }
 
 resource "aws_s3_bucket" "bucket" {
-  bucket = %[1]q
+  bucket        = %[1]q
   force_destroy = true
 }
 
 resource "aws_glue_catalog_table" "test" {
   database_name = aws_glue_catalog_database.test.name
   name          = %[1]q
-  table_type = "EXTERNAL_TABLE"
+  table_type    = "EXTERNAL_TABLE"
 
   open_table_format_input {
-      iceberg_input {
-      	metadata_operation = "CREATE"
-		version = 2
-      }
+    iceberg_input {
+      metadata_operation = "CREATE"
+      version            = 2
+    }
   }
+
   storage_descriptor {
     location = "s3://%[1]s/files/"
 
