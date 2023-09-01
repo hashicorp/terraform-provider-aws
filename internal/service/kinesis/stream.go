@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package kinesis
 
 import (
@@ -12,7 +15,7 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -21,8 +24,11 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @SDKResource("aws_kinesis_stream", name="Stream")
+// @Tags(identifierAttribute="name")
 func ResourceStream() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceStreamCreate,
@@ -133,17 +139,15 @@ func ResourceStream() *schema.Resource {
 				},
 				DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
 	}
 }
 
 func resourceStreamCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).KinesisConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	conn := meta.(*conns.AWSClient).KinesisConn(ctx)
 
 	name := d.Get("name").(string)
 	input := &kinesis.CreateStreamInput{
@@ -240,10 +244,8 @@ func resourceStreamCreate(ctx context.Context, d *schema.ResourceData, meta inte
 		}
 	}
 
-	if len(tags) > 0 {
-		if err := UpdateTags(ctx, conn, name, nil, tags); err != nil {
-			return sdkdiag.AppendErrorf(diags, "adding Kinesis Stream (%s) tags: %s", name, err)
-		}
+	if err := createTags(ctx, conn, name, getTagsIn(ctx)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting Kinesis Stream (%s) tags: %s", name, err)
 	}
 
 	return append(diags, resourceStreamRead(ctx, d, meta)...)
@@ -251,11 +253,9 @@ func resourceStreamCreate(ctx context.Context, d *schema.ResourceData, meta inte
 
 func resourceStreamRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).KinesisConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
-	name := d.Get("name").(string)
+	conn := meta.(*conns.AWSClient).KinesisConn(ctx)
 
+	name := d.Get("name").(string)
 	stream, err := FindStreamByName(ctx, conn, name)
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
@@ -298,38 +298,13 @@ func resourceStreamRead(ctx context.Context, d *schema.ResourceData, meta interf
 		d.Set("stream_mode_details", nil)
 	}
 
-	tags, err := ListTags(ctx, conn, name)
-
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "listing tags for Kinesis Stream (%s): %s", name, err)
-	}
-
-	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
-	}
-
 	return diags
 }
 
 func resourceStreamUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).KinesisConn()
+	conn := meta.(*conns.AWSClient).KinesisConn(ctx)
 	name := d.Get("name").(string)
-
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		if err := UpdateTags(ctx, conn, name, o, n); err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating Kinesis Stream (%s) tags: %s", name, err)
-		}
-	}
 
 	if d.HasChange("stream_mode_details.0.stream_mode") {
 		input := &kinesis.UpdateStreamModeInput{
@@ -523,7 +498,7 @@ func resourceStreamUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 
 func resourceStreamDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).KinesisConn()
+	conn := meta.(*conns.AWSClient).KinesisConn(ctx)
 	name := d.Get("name").(string)
 
 	log.Printf("[DEBUG] Deleting Kinesis Stream: (%s)", name)
@@ -550,7 +525,7 @@ func resourceStreamDelete(ctx context.Context, d *schema.ResourceData, meta inte
 }
 
 func resourceStreamImport(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
-	conn := meta.(*conns.AWSClient).KinesisConn()
+	conn := meta.(*conns.AWSClient).KinesisConn(ctx)
 
 	output, err := FindStreamByName(ctx, conn, d.Id())
 
@@ -571,7 +546,7 @@ func FindStreamByName(ctx context.Context, conn *kinesis.Kinesis, name string) (
 	output, err := conn.DescribeStreamSummaryWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, kinesis.ErrCodeResourceNotFoundException) {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -588,7 +563,7 @@ func FindStreamByName(ctx context.Context, conn *kinesis.Kinesis, name string) (
 	return output.StreamDescriptionSummary, nil
 }
 
-func streamStatus(ctx context.Context, conn *kinesis.Kinesis, name string) resource.StateRefreshFunc {
+func streamStatus(ctx context.Context, conn *kinesis.Kinesis, name string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := FindStreamByName(ctx, conn, name)
 
@@ -605,7 +580,7 @@ func streamStatus(ctx context.Context, conn *kinesis.Kinesis, name string) resou
 }
 
 func waitStreamCreated(ctx context.Context, conn *kinesis.Kinesis, name string, timeout time.Duration) (*kinesis.StreamDescriptionSummary, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:    []string{kinesis.StreamStatusCreating},
 		Target:     []string{kinesis.StreamStatusActive},
 		Refresh:    streamStatus(ctx, conn, name),
@@ -624,7 +599,7 @@ func waitStreamCreated(ctx context.Context, conn *kinesis.Kinesis, name string, 
 }
 
 func waitStreamDeleted(ctx context.Context, conn *kinesis.Kinesis, name string, timeout time.Duration) (*kinesis.StreamDescriptionSummary, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:    []string{kinesis.StreamStatusDeleting},
 		Target:     []string{},
 		Refresh:    streamStatus(ctx, conn, name),
@@ -643,7 +618,7 @@ func waitStreamDeleted(ctx context.Context, conn *kinesis.Kinesis, name string, 
 }
 
 func waitStreamUpdated(ctx context.Context, conn *kinesis.Kinesis, name string, timeout time.Duration) (*kinesis.StreamDescriptionSummary, error) { //nolint:unparam
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:    []string{kinesis.StreamStatusUpdating},
 		Target:     []string{kinesis.StreamStatusActive},
 		Refresh:    streamStatus(ctx, conn, name),

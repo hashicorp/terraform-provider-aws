@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package emr
 
 import (
@@ -12,7 +15,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/emr"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -27,6 +30,7 @@ const (
 	instanceGroupUpdateTimeout = 30 * time.Minute
 )
 
+// @SDKResource("aws_emr_instance_group")
 func ResourceInstanceGroup() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceInstanceGroupCreate,
@@ -140,7 +144,7 @@ func ResourceInstanceGroup() *schema.Resource {
 
 func resourceInstanceGroupCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EMRConn()
+	conn := meta.(*conns.AWSClient).EMRConn(ctx)
 
 	instanceRole := emr.InstanceGroupTypeTask
 	groupConfig := &emr.InstanceGroupConfig{
@@ -206,7 +210,7 @@ func resourceInstanceGroupCreate(ctx context.Context, d *schema.ResourceData, me
 
 func resourceInstanceGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EMRConn()
+	conn := meta.(*conns.AWSClient).EMRConn(ctx)
 
 	ig, err := FetchInstanceGroup(ctx, conn, d.Get("cluster_id").(string), d.Id())
 
@@ -276,7 +280,7 @@ func resourceInstanceGroupRead(ctx context.Context, d *schema.ResourceData, meta
 
 func resourceInstanceGroupUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EMRConn()
+	conn := meta.(*conns.AWSClient).EMRConn(ctx)
 
 	log.Printf("[DEBUG] Modify EMR task group")
 	if d.HasChanges("instance_count", "configurations_json") {
@@ -339,7 +343,7 @@ func resourceInstanceGroupUpdate(ctx context.Context, d *schema.ResourceData, me
 
 func resourceInstanceGroupDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EMRConn()
+	conn := meta.(*conns.AWSClient).EMRConn(ctx)
 
 	log.Printf("[WARN] AWS EMR Instance Group does not support DELETE; resizing cluster to zero before removing from state")
 	params := &emr.ModifyInstanceGroupsInput{
@@ -357,7 +361,7 @@ func resourceInstanceGroupDelete(ctx context.Context, d *schema.ResourceData, me
 	return diags
 }
 
-func instanceGroupStateRefresh(ctx context.Context, conn *emr.EMR, clusterID, groupID string) resource.StateRefreshFunc {
+func instanceGroupStateRefresh(ctx context.Context, conn *emr.EMR, clusterID, groupID string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		ig, err := FetchInstanceGroup(ctx, conn, clusterID, groupID)
 		if err != nil {
@@ -400,7 +404,7 @@ func FetchInstanceGroup(ctx context.Context, conn *emr.EMR, clusterID, groupID s
 	}
 
 	if ig == nil {
-		return nil, &resource.NotFoundError{}
+		return nil, &retry.NotFoundError{}
 	}
 
 	return ig, nil
@@ -438,7 +442,7 @@ func readEBSConfig(d *schema.ResourceData) *emr.EbsConfiguration {
 }
 
 func waitForInstanceGroupStateRunning(ctx context.Context, conn *emr.EMR, clusterID string, instanceGroupID string, timeout time.Duration) error {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{
 			emr.InstanceGroupStateBootstrapping,
 			emr.InstanceGroupStateProvisioning,

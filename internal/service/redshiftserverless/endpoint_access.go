@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package redshiftserverless
 
 import (
@@ -16,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
+// @SDKResource("aws_redshiftserverless_endpoint_access")
 func ResourceEndpointAccess() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceEndpointAccessCreate,
@@ -113,7 +117,7 @@ func ResourceEndpointAccess() *schema.Resource {
 
 func resourceEndpointAccessCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).RedshiftServerlessConn()
+	conn := meta.(*conns.AWSClient).RedshiftServerlessConn(ctx)
 
 	input := redshiftserverless.CreateEndpointAccessInput{
 		WorkgroupName: aws.String(d.Get("workgroup_name").(string)),
@@ -145,7 +149,7 @@ func resourceEndpointAccessCreate(ctx context.Context, d *schema.ResourceData, m
 
 func resourceEndpointAccessRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).RedshiftServerlessConn()
+	conn := meta.(*conns.AWSClient).RedshiftServerlessConn(ctx)
 
 	out, err := FindEndpointAccessByName(ctx, conn, d.Id())
 	if !d.IsNewResource() && tfresource.NotFound(err) {
@@ -181,7 +185,7 @@ func resourceEndpointAccessRead(ctx context.Context, d *schema.ResourceData, met
 
 func resourceEndpointAccessUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).RedshiftServerlessConn()
+	conn := meta.(*conns.AWSClient).RedshiftServerlessConn(ctx)
 
 	input := &redshiftserverless.UpdateEndpointAccessInput{
 		EndpointName: aws.String(d.Id()),
@@ -205,7 +209,7 @@ func resourceEndpointAccessUpdate(ctx context.Context, d *schema.ResourceData, m
 
 func resourceEndpointAccessDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).RedshiftServerlessConn()
+	conn := meta.(*conns.AWSClient).RedshiftServerlessConn(ctx)
 
 	deleteInput := redshiftserverless.DeleteEndpointAccessInput{
 		EndpointName: aws.String(d.Id()),

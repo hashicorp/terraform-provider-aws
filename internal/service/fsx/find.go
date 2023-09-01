@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package fsx
 
 import (
@@ -6,7 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/fsx"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
@@ -39,7 +42,7 @@ func FindBackupByID(ctx context.Context, conn *fsx.FSx, id string) (*fsx.Backup,
 	output, err := conn.DescribeBackupsWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, fsx.ErrCodeFileSystemNotFound) || tfawserr.ErrCodeEquals(err, fsx.ErrCodeBackupNotFound) {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -72,7 +75,7 @@ func findFileCacheByID(ctx context.Context, conn *fsx.FSx, id string) (*fsx.File
 	})
 
 	if tfawserr.ErrCodeEquals(err, fsx.ErrCodeFileCacheNotFound) {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -87,114 +90,6 @@ func findFileCacheByID(ctx context.Context, conn *fsx.FSx, id string) (*fsx.File
 		return nil, tfresource.NewTooManyResultsError(count, input)
 	}
 	return fileCaches[0], nil
-}
-
-func findDataRepositoryAssociationsByIDs(ctx context.Context, conn *fsx.FSx, ids []*string) ([]*fsx.DataRepositoryAssociation, error) {
-	input := &fsx.DescribeDataRepositoryAssociationsInput{
-		AssociationIds: ids,
-	}
-	var dataRepositoryAssociations []*fsx.DataRepositoryAssociation
-
-	err := conn.DescribeDataRepositoryAssociationsPagesWithContext(ctx, input, func(page *fsx.DescribeDataRepositoryAssociationsOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
-		}
-		dataRepositoryAssociations = append(dataRepositoryAssociations, page.Associations...)
-		return !lastPage
-	})
-
-	if tfawserr.ErrCodeEquals(err, fsx.ErrCodeDataRepositoryAssociationNotFound) {
-		return nil, &resource.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
-		}
-	}
-	if err != nil {
-		return nil, err
-	}
-	if len(dataRepositoryAssociations) == 0 || dataRepositoryAssociations[0] == nil {
-		return nil, tfresource.NewEmptyResultError(input)
-	}
-
-	return dataRepositoryAssociations, nil
-}
-
-func FindFileSystemByID(ctx context.Context, conn *fsx.FSx, id string) (*fsx.FileSystem, error) {
-	input := &fsx.DescribeFileSystemsInput{
-		FileSystemIds: []*string{aws.String(id)},
-	}
-
-	var filesystems []*fsx.FileSystem
-
-	err := conn.DescribeFileSystemsPagesWithContext(ctx, input, func(page *fsx.DescribeFileSystemsOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
-		}
-
-		filesystems = append(filesystems, page.FileSystems...)
-
-		return !lastPage
-	})
-
-	if tfawserr.ErrCodeEquals(err, fsx.ErrCodeFileSystemNotFound) {
-		return nil, &resource.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
-		}
-	}
-
-	if err != nil {
-		return nil, err
-	}
-
-	if len(filesystems) == 0 || filesystems[0] == nil {
-		return nil, tfresource.NewEmptyResultError(input)
-	}
-
-	if count := len(filesystems); count > 1 {
-		return nil, tfresource.NewTooManyResultsError(count, input)
-	}
-
-	return filesystems[0], nil
-}
-
-func FindDataRepositoryAssociationByID(ctx context.Context, conn *fsx.FSx, id string) (*fsx.DataRepositoryAssociation, error) {
-	input := &fsx.DescribeDataRepositoryAssociationsInput{
-		AssociationIds: []*string{aws.String(id)},
-	}
-
-	var associations []*fsx.DataRepositoryAssociation
-
-	err := conn.DescribeDataRepositoryAssociationsPagesWithContext(ctx, input, func(page *fsx.DescribeDataRepositoryAssociationsOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
-		}
-
-		associations = append(associations, page.Associations...)
-
-		return !lastPage
-	})
-
-	if tfawserr.ErrCodeEquals(err, fsx.ErrCodeDataRepositoryAssociationNotFound) {
-		return nil, &resource.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
-		}
-	}
-
-	if err != nil {
-		return nil, err
-	}
-
-	if len(associations) == 0 || associations[0] == nil {
-		return nil, tfresource.NewEmptyResultError(input)
-	}
-
-	if count := len(associations); count > 1 {
-		return nil, tfresource.NewTooManyResultsError(count, input)
-	}
-
-	return associations[0], nil
 }
 
 func FindStorageVirtualMachineByID(ctx context.Context, conn *fsx.FSx, id string) (*fsx.StorageVirtualMachine, error) {
@@ -215,7 +110,7 @@ func FindStorageVirtualMachineByID(ctx context.Context, conn *fsx.FSx, id string
 	})
 
 	if tfawserr.ErrCodeEquals(err, fsx.ErrCodeStorageVirtualMachineNotFound) {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -236,45 +131,6 @@ func FindStorageVirtualMachineByID(ctx context.Context, conn *fsx.FSx, id string
 	return storageVirtualMachines[0], nil
 }
 
-func FindVolumeByID(ctx context.Context, conn *fsx.FSx, id string) (*fsx.Volume, error) {
-	input := &fsx.DescribeVolumesInput{
-		VolumeIds: []*string{aws.String(id)},
-	}
-
-	var volumes []*fsx.Volume
-
-	err := conn.DescribeVolumesPagesWithContext(ctx, input, func(page *fsx.DescribeVolumesOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
-		}
-
-		volumes = append(volumes, page.Volumes...)
-
-		return !lastPage
-	})
-
-	if tfawserr.ErrCodeEquals(err, fsx.ErrCodeVolumeNotFound) {
-		return nil, &resource.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
-		}
-	}
-
-	if err != nil {
-		return nil, err
-	}
-
-	if len(volumes) == 0 || volumes[0] == nil {
-		return nil, tfresource.NewEmptyResultError(input)
-	}
-
-	if count := len(volumes); count > 1 {
-		return nil, tfresource.NewTooManyResultsError(count, input)
-	}
-
-	return volumes[0], nil
-}
-
 func FindSnapshotByID(ctx context.Context, conn *fsx.FSx, id string) (*fsx.Snapshot, error) {
 	input := &fsx.DescribeSnapshotsInput{
 		SnapshotIds: aws.StringSlice([]string{id}),
@@ -283,7 +139,7 @@ func FindSnapshotByID(ctx context.Context, conn *fsx.FSx, id string) (*fsx.Snaps
 	output, err := conn.DescribeSnapshotsWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, fsx.ErrCodeVolumeNotFound) || tfawserr.ErrCodeEquals(err, fsx.ErrCodeSnapshotNotFound) {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -318,7 +174,7 @@ func FindSnapshots(ctx context.Context, conn *fsx.FSx, input *fsx.DescribeSnapsh
 	})
 
 	if tfawserr.ErrCodeEquals(err, fsx.ErrCodeSnapshotNotFound) {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}

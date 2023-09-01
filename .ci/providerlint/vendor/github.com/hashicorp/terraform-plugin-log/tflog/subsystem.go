@@ -84,7 +84,9 @@ func NewSubsystem(ctx context.Context, subsystem string, options ...logging.Opti
 func SubsystemSetField(ctx context.Context, subsystem, key string, value interface{}) context.Context {
 	lOpts := logging.GetProviderSubsystemTFLoggerOpts(ctx, subsystem)
 
-	lOpts = logging.WithField(key, value)(lOpts)
+	// Copy to prevent slice/map aliasing issues.
+	// Reference: https://github.com/hashicorp/terraform-plugin-log/issues/131
+	lOpts = logging.WithField(key, value)(lOpts.Copy())
 
 	return logging.SetProviderSubsystemTFLoggerOpts(ctx, subsystem, lOpts)
 }
@@ -223,16 +225,17 @@ func SubsystemError(ctx context.Context, subsystem, msg string, additionalFields
 //
 // Example:
 //
-//   configuration = `['foo', 'baz']`
+//	configuration = `['foo', 'baz']`
 //
-//   log1 = `{ msg = "...", fields = { 'foo': '...', 'bar': '...' }`  -> omitted
-//   log2 = `{ msg = "...", fields = { 'bar': '...' }`                -> printed
-//   log3 = `{ msg = "...", fields = { 'baz': '...', 'boo': '...' }`  -> omitted
-//
+//	log1 = `{ msg = "...", fields = { 'foo': '...', 'bar': '...' }`  -> omitted
+//	log2 = `{ msg = "...", fields = { 'bar': '...' }`                -> printed
+//	log3 = `{ msg = "...", fields = { 'baz': '...', 'boo': '...' }`  -> omitted
 func SubsystemOmitLogWithFieldKeys(ctx context.Context, subsystem string, keys ...string) context.Context {
 	lOpts := logging.GetProviderSubsystemTFLoggerOpts(ctx, subsystem)
 
-	lOpts = logging.WithOmitLogWithFieldKeys(keys...)(lOpts)
+	// Copy to prevent slice/map aliasing issues.
+	// Reference: https://github.com/hashicorp/terraform-plugin-log/issues/131
+	lOpts = logging.WithOmitLogWithFieldKeys(keys...)(lOpts.Copy())
 
 	return logging.SetProviderSubsystemTFLoggerOpts(ctx, subsystem, lOpts)
 }
@@ -246,16 +249,17 @@ func SubsystemOmitLogWithFieldKeys(ctx context.Context, subsystem string, keys .
 //
 // Example:
 //
-//   configuration = `[regexp.MustCompile("(foo|bar)")]`
+//	configuration = `[regexp.MustCompile("(foo|bar)")]`
 //
-//   log1 = `{ msg = "banana apple foo", fields = {...}`     -> omitted
-//   log2 = `{ msg = "pineapple mango", fields = {...}`      -> printed
-//   log3 = `{ msg = "pineapple mango bar", fields = {...}`  -> omitted
-//
+//	log1 = `{ msg = "banana apple foo", fields = {...}`     -> omitted
+//	log2 = `{ msg = "pineapple mango", fields = {...}`      -> printed
+//	log3 = `{ msg = "pineapple mango bar", fields = {...}`  -> omitted
 func SubsystemOmitLogWithMessageRegexes(ctx context.Context, subsystem string, expressions ...*regexp.Regexp) context.Context {
 	lOpts := logging.GetProviderSubsystemTFLoggerOpts(ctx, subsystem)
 
-	lOpts = logging.WithOmitLogWithMessageRegexes(expressions...)(lOpts)
+	// Copy to prevent slice/map aliasing issues.
+	// Reference: https://github.com/hashicorp/terraform-plugin-log/issues/131
+	lOpts = logging.WithOmitLogWithMessageRegexes(expressions...)(lOpts.Copy())
 
 	return logging.SetProviderSubsystemTFLoggerOpts(ctx, subsystem, lOpts)
 }
@@ -268,16 +272,17 @@ func SubsystemOmitLogWithMessageRegexes(ctx context.Context, subsystem string, e
 //
 // Example:
 //
-//   configuration = `['foo', 'bar']`
+//	configuration = `['foo', 'bar']`
 //
-//   log1 = `{ msg = "banana apple foo", fields = {...}`     -> omitted
-//   log2 = `{ msg = "pineapple mango", fields = {...}`      -> printed
-//   log3 = `{ msg = "pineapple mango bar", fields = {...}`  -> omitted
-//
+//	log1 = `{ msg = "banana apple foo", fields = {...}`     -> omitted
+//	log2 = `{ msg = "pineapple mango", fields = {...}`      -> printed
+//	log3 = `{ msg = "pineapple mango bar", fields = {...}`  -> omitted
 func SubsystemOmitLogWithMessageStrings(ctx context.Context, subsystem string, matchingStrings ...string) context.Context {
 	lOpts := logging.GetProviderSubsystemTFLoggerOpts(ctx, subsystem)
 
-	lOpts = logging.WithOmitLogWithMessageStrings(matchingStrings...)(lOpts)
+	// Copy to prevent slice/map aliasing issues.
+	// Reference: https://github.com/hashicorp/terraform-plugin-log/issues/131
+	lOpts = logging.WithOmitLogWithMessageStrings(matchingStrings...)(lOpts.Copy())
 
 	return logging.SetProviderSubsystemTFLoggerOpts(ctx, subsystem, lOpts)
 }
@@ -291,16 +296,17 @@ func SubsystemOmitLogWithMessageStrings(ctx context.Context, subsystem string, m
 //
 // Example:
 //
-//   configuration = `['foo', 'baz']`
+//	configuration = `['foo', 'baz']`
 //
-//   log1 = `{ msg = "...", fields = { 'foo': '***', 'bar': '...' }`  -> masked value
-//   log2 = `{ msg = "...", fields = { 'bar': '...' }`                -> as-is value
-//   log3 = `{ msg = "...", fields = { 'baz': '***', 'boo': '...' }`  -> masked value
-//
+//	log1 = `{ msg = "...", fields = { 'foo': '***', 'bar': '...' }`  -> masked value
+//	log2 = `{ msg = "...", fields = { 'bar': '...' }`                -> as-is value
+//	log3 = `{ msg = "...", fields = { 'baz': '***', 'boo': '...' }`  -> masked value
 func SubsystemMaskFieldValuesWithFieldKeys(ctx context.Context, subsystem string, keys ...string) context.Context {
 	lOpts := logging.GetProviderSubsystemTFLoggerOpts(ctx, subsystem)
 
-	lOpts = logging.WithMaskFieldValuesWithFieldKeys(keys...)(lOpts)
+	// Copy to prevent slice/map aliasing issues.
+	// Reference: https://github.com/hashicorp/terraform-plugin-log/issues/131
+	lOpts = logging.WithMaskFieldValuesWithFieldKeys(keys...)(lOpts.Copy())
 
 	return logging.SetProviderSubsystemTFLoggerOpts(ctx, subsystem, lOpts)
 }
@@ -316,16 +322,17 @@ func SubsystemMaskFieldValuesWithFieldKeys(ctx context.Context, subsystem string
 //
 // Example:
 //
-//   configuration = `[regexp.MustCompile("(foo|bar)")]`
+//	configuration = `[regexp.MustCompile("(foo|bar)")]`
 //
-//   log1 = `{ msg = "...", fields = { 'k1': '***', 'k2': '***', 'k3': 'baz' }`  -> masked value
-//   log2 = `{ msg = "...", fields = { 'k1': 'boo', 'k2': 'far', 'k3': 'baz' }`  -> as-is value
-//   log2 = `{ msg = "...", fields = { 'k1': '*** *** baz' }`                    -> masked value
-//
+//	log1 = `{ msg = "...", fields = { 'k1': '***', 'k2': '***', 'k3': 'baz' }`  -> masked value
+//	log2 = `{ msg = "...", fields = { 'k1': 'boo', 'k2': 'far', 'k3': 'baz' }`  -> as-is value
+//	log2 = `{ msg = "...", fields = { 'k1': '*** *** baz' }`                    -> masked value
 func SubsystemMaskAllFieldValuesRegexes(ctx context.Context, subsystem string, expressions ...*regexp.Regexp) context.Context {
 	lOpts := logging.GetProviderSubsystemTFLoggerOpts(ctx, subsystem)
 
-	lOpts = logging.WithMaskAllFieldValuesRegexes(expressions...)(lOpts)
+	// Copy to prevent slice/map aliasing issues.
+	// Reference: https://github.com/hashicorp/terraform-plugin-log/issues/131
+	lOpts = logging.WithMaskAllFieldValuesRegexes(expressions...)(lOpts.Copy())
 
 	return logging.SetProviderSubsystemTFLoggerOpts(ctx, subsystem, lOpts)
 }
@@ -341,16 +348,17 @@ func SubsystemMaskAllFieldValuesRegexes(ctx context.Context, subsystem string, e
 //
 // Example:
 //
-//   configuration = `[regexp.MustCompile("(foo|bar)")]`
+//	configuration = `[regexp.MustCompile("(foo|bar)")]`
 //
-//   log1 = `{ msg = "...", fields = { 'k1': '***', 'k2': '***', 'k3': 'baz' }`  -> masked value
-//   log2 = `{ msg = "...", fields = { 'k1': 'boo', 'k2': 'far', 'k3': 'baz' }`  -> as-is value
-//   log2 = `{ msg = "...", fields = { 'k1': '*** *** baz' }`                    -> masked value
-//
+//	log1 = `{ msg = "...", fields = { 'k1': '***', 'k2': '***', 'k3': 'baz' }`  -> masked value
+//	log2 = `{ msg = "...", fields = { 'k1': 'boo', 'k2': 'far', 'k3': 'baz' }`  -> as-is value
+//	log2 = `{ msg = "...", fields = { 'k1': '*** *** baz' }`                    -> masked value
 func SubsystemMaskAllFieldValuesStrings(ctx context.Context, subsystem string, matchingStrings ...string) context.Context {
 	lOpts := logging.GetProviderSubsystemTFLoggerOpts(ctx, subsystem)
 
-	lOpts = logging.WithMaskAllFieldValuesStrings(matchingStrings...)(lOpts)
+	// Copy to prevent slice/map aliasing issues.
+	// Reference: https://github.com/hashicorp/terraform-plugin-log/issues/131
+	lOpts = logging.WithMaskAllFieldValuesStrings(matchingStrings...)(lOpts.Copy())
 
 	return logging.SetProviderSubsystemTFLoggerOpts(ctx, subsystem, lOpts)
 }
@@ -364,16 +372,17 @@ func SubsystemMaskAllFieldValuesStrings(ctx context.Context, subsystem string, m
 //
 // Example:
 //
-//   configuration = `[regexp.MustCompile("(foo|bar)")]`
+//	configuration = `[regexp.MustCompile("(foo|bar)")]`
 //
-//   log1 = `{ msg = "banana apple ***", fields = {...}`     -> masked portion
-//   log2 = `{ msg = "pineapple mango", fields = {...}`      -> as-is
-//   log3 = `{ msg = "pineapple mango ***", fields = {...}`  -> masked portion
-//
+//	log1 = `{ msg = "banana apple ***", fields = {...}`     -> masked portion
+//	log2 = `{ msg = "pineapple mango", fields = {...}`      -> as-is
+//	log3 = `{ msg = "pineapple mango ***", fields = {...}`  -> masked portion
 func SubsystemMaskMessageRegexes(ctx context.Context, subsystem string, expressions ...*regexp.Regexp) context.Context {
 	lOpts := logging.GetProviderSubsystemTFLoggerOpts(ctx, subsystem)
 
-	lOpts = logging.WithMaskMessageRegexes(expressions...)(lOpts)
+	// Copy to prevent slice/map aliasing issues.
+	// Reference: https://github.com/hashicorp/terraform-plugin-log/issues/131
+	lOpts = logging.WithMaskMessageRegexes(expressions...)(lOpts.Copy())
 
 	return logging.SetProviderSubsystemTFLoggerOpts(ctx, subsystem, lOpts)
 }
@@ -387,16 +396,17 @@ func SubsystemMaskMessageRegexes(ctx context.Context, subsystem string, expressi
 //
 // Example:
 //
-//   configuration = `['foo', 'bar']`
+//	configuration = `['foo', 'bar']`
 //
-//   log1 = `{ msg = "banana apple ***", fields = { 'k1': 'foo, bar, baz' }`  -> masked portion
-//   log2 = `{ msg = "pineapple mango", fields = {...}`                       -> as-is
-//   log3 = `{ msg = "pineapple mango ***", fields = {...}`                   -> masked portion
-//
+//	log1 = `{ msg = "banana apple ***", fields = { 'k1': 'foo, bar, baz' }`  -> masked portion
+//	log2 = `{ msg = "pineapple mango", fields = {...}`                       -> as-is
+//	log3 = `{ msg = "pineapple mango ***", fields = {...}`                   -> masked portion
 func SubsystemMaskMessageStrings(ctx context.Context, subsystem string, matchingStrings ...string) context.Context {
 	lOpts := logging.GetProviderSubsystemTFLoggerOpts(ctx, subsystem)
 
-	lOpts = logging.WithMaskMessageStrings(matchingStrings...)(lOpts)
+	// Copy to prevent slice/map aliasing issues.
+	// Reference: https://github.com/hashicorp/terraform-plugin-log/issues/131
+	lOpts = logging.WithMaskMessageStrings(matchingStrings...)(lOpts.Copy())
 
 	return logging.SetProviderSubsystemTFLoggerOpts(ctx, subsystem, lOpts)
 }

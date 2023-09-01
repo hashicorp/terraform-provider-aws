@@ -1,11 +1,14 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package logs
 
 import (
 	"context"
 	"log"
-	"regexp"
 	"time"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cloudwatchlogs"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
@@ -16,12 +19,11 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func init() {
-	_sp.registerSDKResourceFactory("aws_cloudwatch_log_destination", resourceDestination)
-}
-
+// @SDKResource("aws_cloudwatch_log_destination", name="Destination")
+// @Tags(identifierAttribute="arn")
 func resourceDestination() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceDestinationCreate,
@@ -44,7 +46,7 @@ func resourceDestination() *schema.Resource {
 				ForceNew: true,
 				ValidateFunc: validation.Any(
 					validation.StringLenBetween(1, 512),
-					validation.StringMatch(regexp.MustCompile(`[^:*]*`), ""),
+					validation.StringMatch(regexache.MustCompile(`[^:*]*`), ""),
 				),
 			},
 			"role_arn": {
@@ -52,8 +54,8 @@ func resourceDestination() *schema.Resource {
 				Required:     true,
 				ValidateFunc: verify.ValidARN,
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			"target_arn": {
 				Type:         schema.TypeString,
 				Required:     true,
@@ -70,9 +72,7 @@ const (
 )
 
 func resourceDestinationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).LogsConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	conn := meta.(*conns.AWSClient).LogsConn(ctx)
 
 	name := d.Get("name").(string)
 	input := &cloudwatchlogs.PutDestinationInput{
@@ -81,7 +81,7 @@ func resourceDestinationCreate(ctx context.Context, d *schema.ResourceData, meta
 		TargetArn:       aws.String(d.Get("target_arn").(string)),
 	}
 
-	outputRaw, err := tfresource.RetryWhenAWSErrCodeEqualsContext(ctx, propagationTimeout, func() (interface{}, error) {
+	outputRaw, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, propagationTimeout, func() (interface{}, error) {
 		return conn.PutDestinationWithContext(ctx, input)
 	}, cloudwatchlogs.ErrCodeInvalidParameterException)
 
@@ -94,19 +94,15 @@ func resourceDestinationCreate(ctx context.Context, d *schema.ResourceData, meta
 
 	// Although PutDestinationInput has a Tags field, specifying tags there results in
 	// "InvalidParameterException: Could not deliver test message to specified destination. Check if the destination is valid."
-	if len(tags) > 0 {
-		if err := UpdateTags(ctx, conn, aws.StringValue(destination.Arn), nil, tags); err != nil {
-			return diag.Errorf("adding CloudWatch Logs Destination (%s) tags: %s", d.Id(), err)
-		}
+	if err := createTags(ctx, conn, aws.StringValue(destination.Arn), getTagsIn(ctx)); err != nil {
+		return diag.Errorf("setting CloudWatch Logs Destination (%s) tags: %s", d.Id(), err)
 	}
 
 	return resourceDestinationRead(ctx, d, meta)
 }
 
 func resourceDestinationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).LogsConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).LogsConn(ctx)
 
 	destination, err := FindDestinationByName(ctx, conn, d.Id())
 
@@ -125,28 +121,11 @@ func resourceDestinationRead(ctx context.Context, d *schema.ResourceData, meta i
 	d.Set("role_arn", destination.RoleArn)
 	d.Set("target_arn", destination.TargetArn)
 
-	tags, err := ListTags(ctx, conn, d.Get("arn").(string))
-
-	if err != nil {
-		return diag.Errorf("listing tags for CloudWatch Logs Destination (%s): %s", d.Id(), err)
-	}
-
-	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return diag.Errorf("setting tags: %s", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return diag.Errorf("setting tags_all: %s", err)
-	}
-
 	return nil
 }
 
 func resourceDestinationUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).LogsConn()
+	conn := meta.(*conns.AWSClient).LogsConn(ctx)
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		input := &cloudwatchlogs.PutDestinationInput{
@@ -155,7 +134,7 @@ func resourceDestinationUpdate(ctx context.Context, d *schema.ResourceData, meta
 			TargetArn:       aws.String(d.Get("target_arn").(string)),
 		}
 
-		_, err := tfresource.RetryWhenAWSErrCodeEqualsContext(ctx, propagationTimeout, func() (interface{}, error) {
+		_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, propagationTimeout, func() (interface{}, error) {
 			return conn.PutDestinationWithContext(ctx, input)
 		}, cloudwatchlogs.ErrCodeInvalidParameterException)
 
@@ -164,19 +143,11 @@ func resourceDestinationUpdate(ctx context.Context, d *schema.ResourceData, meta
 		}
 	}
 
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		if err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n); err != nil {
-			log.Printf("[WARN] failed updating tags for CloudWatch Logs Destination (%s): %s", d.Id(), err)
-		}
-	}
-
 	return resourceDestinationRead(ctx, d, meta)
 }
 
 func resourceDestinationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).LogsConn()
+	conn := meta.(*conns.AWSClient).LogsConn(ctx)
 
 	log.Printf("[INFO] Deleting CloudWatch Logs Destination: %s", d.Id())
 	_, err := conn.DeleteDestinationWithContext(ctx, &cloudwatchlogs.DeleteDestinationInput{

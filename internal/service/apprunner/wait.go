@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package apprunner
 
 import (
@@ -5,7 +8,7 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go/service/apprunner"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 )
 
 const (
@@ -29,7 +32,7 @@ const (
 )
 
 func WaitAutoScalingConfigurationActive(ctx context.Context, conn *apprunner.AppRunner, arn string) error {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{},
 		Target:  []string{AutoScalingConfigurationStatusActive},
 		Refresh: StatusAutoScalingConfiguration(ctx, conn, arn),
@@ -42,7 +45,7 @@ func WaitAutoScalingConfigurationActive(ctx context.Context, conn *apprunner.App
 }
 
 func WaitAutoScalingConfigurationInactive(ctx context.Context, conn *apprunner.AppRunner, arn string) error {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{AutoScalingConfigurationStatusActive},
 		Target:  []string{AutoScalingConfigurationStatusInactive},
 		Refresh: StatusAutoScalingConfiguration(ctx, conn, arn),
@@ -55,7 +58,7 @@ func WaitAutoScalingConfigurationInactive(ctx context.Context, conn *apprunner.A
 }
 
 func WaitConnectionDeleted(ctx context.Context, conn *apprunner.AppRunner, name string) error {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{apprunner.ConnectionStatusPendingHandshake, apprunner.ConnectionStatusAvailable, apprunner.ConnectionStatusDeleted},
 		Target:  []string{},
 		Refresh: StatusConnection(ctx, conn, name),
@@ -68,7 +71,7 @@ func WaitConnectionDeleted(ctx context.Context, conn *apprunner.AppRunner, name 
 }
 
 func WaitCustomDomainAssociationCreated(ctx context.Context, conn *apprunner.AppRunner, domainName, serviceArn string) error {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{CustomDomainAssociationStatusCreating},
 		Target:  []string{CustomDomainAssociationStatusPendingCertificateDNSValidation, CustomDomainAssociationStatusBindingCertificate},
 		Refresh: StatusCustomDomain(ctx, conn, domainName, serviceArn),
@@ -81,7 +84,7 @@ func WaitCustomDomainAssociationCreated(ctx context.Context, conn *apprunner.App
 }
 
 func WaitCustomDomainAssociationDeleted(ctx context.Context, conn *apprunner.AppRunner, domainName, serviceArn string) error {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{CustomDomainAssociationStatusActive, CustomDomainAssociationStatusDeleting},
 		Target:  []string{},
 		Refresh: StatusCustomDomain(ctx, conn, domainName, serviceArn),
@@ -94,7 +97,7 @@ func WaitCustomDomainAssociationDeleted(ctx context.Context, conn *apprunner.App
 }
 
 func WaitObservabilityConfigurationActive(ctx context.Context, conn *apprunner.AppRunner, observabilityConfigurationArn string) error {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{},
 		Target:  []string{ObservabilityConfigurationStatusActive},
 		Refresh: StatusObservabilityConfiguration(ctx, conn, observabilityConfigurationArn),
@@ -107,7 +110,7 @@ func WaitObservabilityConfigurationActive(ctx context.Context, conn *apprunner.A
 }
 
 func WaitObservabilityConfigurationInactive(ctx context.Context, conn *apprunner.AppRunner, observabilityConfigurationArn string) error {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{ObservabilityConfigurationStatusActive},
 		Target:  []string{ObservabilityConfigurationStatusInactive},
 		Refresh: StatusObservabilityConfiguration(ctx, conn, observabilityConfigurationArn),
@@ -120,7 +123,7 @@ func WaitObservabilityConfigurationInactive(ctx context.Context, conn *apprunner
 }
 
 func WaitVPCIngressConnectionActive(ctx context.Context, conn *apprunner.AppRunner, vpcIngressConnectionArn string) error {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{},
 		Target:  []string{VPCIngressConnectionStatusActive},
 		Refresh: StatusVPCIngressConnection(ctx, conn, vpcIngressConnectionArn),
@@ -133,7 +136,7 @@ func WaitVPCIngressConnectionActive(ctx context.Context, conn *apprunner.AppRunn
 }
 
 func WaitVPCIngressConnectionDeleted(ctx context.Context, conn *apprunner.AppRunner, vpcIngressConnectionArn string) error {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{VPCIngressConnectionStatusActive, VPCIngressConnectionStatusPendingDeletion},
 		Target:  []string{VPCIngressConnectionStatusDeleted},
 		Refresh: StatusVPCIngressConnection(ctx, conn, vpcIngressConnectionArn),
@@ -146,7 +149,7 @@ func WaitVPCIngressConnectionDeleted(ctx context.Context, conn *apprunner.AppRun
 }
 
 func WaitServiceCreated(ctx context.Context, conn *apprunner.AppRunner, serviceArn string) error {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{apprunner.ServiceStatusOperationInProgress},
 		Target:  []string{apprunner.ServiceStatusRunning},
 		Refresh: StatusService(ctx, conn, serviceArn),
@@ -159,7 +162,7 @@ func WaitServiceCreated(ctx context.Context, conn *apprunner.AppRunner, serviceA
 }
 
 func WaitServiceUpdated(ctx context.Context, conn *apprunner.AppRunner, serviceArn string) error {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{apprunner.ServiceStatusOperationInProgress},
 		Target:  []string{apprunner.ServiceStatusRunning},
 		Refresh: StatusService(ctx, conn, serviceArn),
@@ -172,7 +175,7 @@ func WaitServiceUpdated(ctx context.Context, conn *apprunner.AppRunner, serviceA
 }
 
 func WaitServiceDeleted(ctx context.Context, conn *apprunner.AppRunner, serviceArn string) error {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{apprunner.ServiceStatusRunning, apprunner.ServiceStatusOperationInProgress},
 		Target:  []string{apprunner.ServiceStatusDeleted},
 		Refresh: StatusService(ctx, conn, serviceArn),

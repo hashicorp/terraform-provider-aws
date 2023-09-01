@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package transfer
 
 import (
@@ -15,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
+// @SDKResource("aws_transfer_ssh_key")
 func ResourceSSHKey() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceSSHKeyCreate,
@@ -54,7 +58,7 @@ func ResourceSSHKey() *schema.Resource {
 
 func resourceSSHKeyCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).TransferConn()
+	conn := meta.(*conns.AWSClient).TransferConn(ctx)
 	userName := d.Get("user_name").(string)
 	serverID := d.Get("server_id").(string)
 
@@ -78,7 +82,7 @@ func resourceSSHKeyCreate(ctx context.Context, d *schema.ResourceData, meta inte
 
 func resourceSSHKeyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).TransferConn()
+	conn := meta.(*conns.AWSClient).TransferConn(ctx)
 	serverID, userName, sshKeyID, err := DecodeSSHKeyID(d.Id())
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "parsing Transfer SSH Public Key ID: %s", err)
@@ -120,7 +124,7 @@ func resourceSSHKeyRead(ctx context.Context, d *schema.ResourceData, meta interf
 
 func resourceSSHKeyDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).TransferConn()
+	conn := meta.(*conns.AWSClient).TransferConn(ctx)
 	serverID, userName, sshKeyID, err := DecodeSSHKeyID(d.Id())
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "parsing Transfer SSH Public Key ID: %s", err)

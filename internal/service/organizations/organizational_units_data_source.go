@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package organizations
 
 import (
@@ -11,15 +14,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
+// @SDKDataSource("aws_organizations_organizational_units")
 func DataSourceOrganizationalUnits() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceOrganizationalUnitsRead,
 
 		Schema: map[string]*schema.Schema{
-			"parent_id": {
-				Type:     schema.TypeString,
-				Required: true,
-			},
 			"children": {
 				Type:     schema.TypeList,
 				Computed: true,
@@ -40,46 +40,57 @@ func DataSourceOrganizationalUnits() *schema.Resource {
 					},
 				},
 			},
+			"parent_id": {
+				Type:     schema.TypeString,
+				Required: true,
+			},
 		},
 	}
 }
 
 func dataSourceOrganizationalUnitsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).OrganizationsConn()
+	conn := meta.(*conns.AWSClient).OrganizationsConn(ctx)
 
-	parent_id := d.Get("parent_id").(string)
-
-	params := &organizations.ListOrganizationalUnitsForParentInput{
-		ParentId: aws.String(parent_id),
-	}
-
-	var children []*organizations.OrganizationalUnit
-
-	err := conn.ListOrganizationalUnitsForParentPagesWithContext(ctx, params,
-		func(page *organizations.ListOrganizationalUnitsForParentOutput, lastPage bool) bool {
-			children = append(children, page.OrganizationalUnits...)
-
-			return !lastPage
-		})
+	parentID := d.Get("parent_id").(string)
+	children, err := findOrganizationalUnitsForParent(ctx, conn, parentID)
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "listing Organizations Organization Units for parent (%s): %s", parent_id, err)
+		return sdkdiag.AppendErrorf(diags, "listing Organizations Organization Units for parent (%s): %s", parentID, err)
 	}
 
-	d.SetId(parent_id)
-
-	if err := d.Set("children", FlattenOrganizationalUnits(children)); err != nil {
+	d.SetId(parentID)
+	if err := d.Set("children", flattenOrganizationalUnits(children)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting children: %s", err)
 	}
 
 	return diags
 }
 
-func FlattenOrganizationalUnits(ous []*organizations.OrganizationalUnit) []map[string]interface{} {
+func findOrganizationalUnitsForParent(ctx context.Context, conn *organizations.Organizations, id string) ([]*organizations.OrganizationalUnit, error) {
+	input := &organizations.ListOrganizationalUnitsForParentInput{
+		ParentId: aws.String(id),
+	}
+	var output []*organizations.OrganizationalUnit
+
+	err := conn.ListOrganizationalUnitsForParentPagesWithContext(ctx, input, func(page *organizations.ListOrganizationalUnitsForParentOutput, lastPage bool) bool {
+		output = append(output, page.OrganizationalUnits...)
+
+		return !lastPage
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	return output, nil
+}
+
+func flattenOrganizationalUnits(ous []*organizations.OrganizationalUnit) []map[string]interface{} {
 	if len(ous) == 0 {
 		return nil
 	}
+
 	var result []map[string]interface{}
 	for _, ou := range ous {
 		result = append(result, map[string]interface{}{

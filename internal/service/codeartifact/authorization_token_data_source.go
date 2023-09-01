@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package codeartifact
 
 import (
@@ -16,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKDataSource("aws_codeartifact_authorization_token")
 func DataSourceAuthorizationToken() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceAuthorizationTokenRead,
@@ -53,7 +57,7 @@ func DataSourceAuthorizationToken() *schema.Resource {
 
 func dataSourceAuthorizationTokenRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CodeArtifactConn()
+	conn := meta.(*conns.AWSClient).CodeArtifactConn(ctx)
 	domain := d.Get("domain").(string)
 	domainOwner := meta.(*conns.AWSClient).AccountID
 	params := &codeartifact.GetAuthorizationTokenInput{

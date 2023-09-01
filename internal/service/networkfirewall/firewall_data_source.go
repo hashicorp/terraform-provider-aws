@@ -1,11 +1,13 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package networkfirewall
 
 import (
 	"context"
-	"fmt"
 	"log"
-	"regexp"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/networkfirewall"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
@@ -17,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKDataSource("aws_networkfirewall_firewall")
 func DataSourceFirewall() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceFirewallResourceRead,
@@ -149,7 +152,7 @@ func DataSourceFirewall() *schema.Resource {
 				Optional:     true,
 				Computed:     true,
 				AtLeastOneOf: []string{"arn", "name"},
-				ValidateFunc: validation.StringMatch(regexp.MustCompile(`^[a-zA-Z0-9-]{1,128}$`), "Must have 1-128 valid characters: a-z, A-Z, 0-9 and -(hyphen)"),
+				ValidateFunc: validation.StringMatch(regexache.MustCompile(`^[a-zA-Z0-9-]{1,128}$`), "Must have 1-128 valid characters: a-z, A-Z, 0-9 and -(hyphen)"),
 			},
 			"subnet_change_protection": {
 				Type:     schema.TypeBool,
@@ -181,7 +184,7 @@ func DataSourceFirewall() *schema.Resource {
 }
 
 func dataSourceFirewallResourceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).NetworkFirewallConn()
+	conn := meta.(*conns.AWSClient).NetworkFirewallConn(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	input := &networkfirewall.DescribeFirewallInput{}
@@ -195,7 +198,7 @@ func dataSourceFirewallResourceRead(ctx context.Context, d *schema.ResourceData,
 	}
 
 	if input.FirewallArn == nil && input.FirewallName == nil {
-		return diag.FromErr(fmt.Errorf("must specify either arn, name, or both"))
+		return diag.Errorf("must specify either arn, name, or both")
 	}
 
 	output, err := conn.DescribeFirewallWithContext(ctx, input)
@@ -231,7 +234,7 @@ func dataSourceFirewallResourceRead(ctx context.Context, d *schema.ResourceData,
 		return diag.Errorf("setting subnet_mappings: %s", err)
 	}
 
-	if err := d.Set("tags", KeyValueTags(firewall.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+	if err := d.Set("tags", KeyValueTags(ctx, firewall.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return diag.Errorf("setting tags: %s", err)
 	}
 

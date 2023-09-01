@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package elbv2
 
 import (
@@ -18,6 +21,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKDataSource("aws_alb")
+// @SDKDataSource("aws_lb")
 func DataSourceLoadBalancer() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceLoadBalancerRead,
@@ -85,7 +90,15 @@ func DataSourceLoadBalancer() *schema.Resource {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
+			"enable_tls_version_and_cipher_suite_headers": {
+				Type:     schema.TypeBool,
+				Computed: true,
+			},
 			"enable_waf_fail_open": {
+				Type:     schema.TypeBool,
+				Computed: true,
+			},
+			"enable_xff_client_port": {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
@@ -157,6 +170,10 @@ func DataSourceLoadBalancer() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"xff_header_processing_mode": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"zone_id": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -167,10 +184,10 @@ func DataSourceLoadBalancer() *schema.Resource {
 
 func dataSourceLoadBalancerRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ELBV2Conn()
+	conn := meta.(*conns.AWSClient).ELBV2Conn(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	tagsToMatch := tftags.New(d.Get("tags").(map[string]interface{})).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+	tagsToMatch := tftags.New(ctx, d.Get("tags").(map[string]interface{})).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	input := &elbv2.DescribeLoadBalancersInput{}
 
@@ -191,7 +208,7 @@ func dataSourceLoadBalancerRead(ctx context.Context, d *schema.ResourceData, met
 
 		for _, loadBalancer := range results {
 			arn := aws.StringValue(loadBalancer.LoadBalancerArn)
-			tags, err := ListTags(ctx, conn, arn)
+			tags, err := listTags(ctx, conn, arn)
 
 			if tfawserr.ErrCodeEquals(err, elbv2.ErrCodeLoadBalancerNotFoundException) {
 				continue
@@ -255,7 +272,7 @@ func dataSourceLoadBalancerRead(ctx context.Context, d *schema.ResourceData, met
 	for _, attr := range attributesResp.Attributes {
 		switch aws.StringValue(attr.Key) {
 		case "access_logs.s3.enabled":
-			accessLogMap["enabled"] = aws.StringValue(attr.Value) == "true"
+			accessLogMap["enabled"] = flex.StringToBoolValue(attr.Value)
 		case "access_logs.s3.bucket":
 			accessLogMap["bucket"] = aws.StringValue(attr.Value)
 		case "access_logs.s3.prefix":
@@ -267,26 +284,35 @@ func dataSourceLoadBalancerRead(ctx context.Context, d *schema.ResourceData, met
 			}
 			d.Set("idle_timeout", timeout)
 		case "routing.http.drop_invalid_header_fields.enabled":
-			dropInvalidHeaderFieldsEnabled := aws.StringValue(attr.Value) == "true"
+			dropInvalidHeaderFieldsEnabled := flex.StringToBoolValue(attr.Value)
 			d.Set("drop_invalid_header_fields", dropInvalidHeaderFieldsEnabled)
 		case "routing.http.preserve_host_header.enabled":
-			preserveHostHeaderEnabled := aws.StringValue(attr.Value) == "true"
+			preserveHostHeaderEnabled := flex.StringToBoolValue(attr.Value)
 			d.Set("preserve_host_header", preserveHostHeaderEnabled)
 		case "deletion_protection.enabled":
-			protectionEnabled := aws.StringValue(attr.Value) == "true"
+			protectionEnabled := flex.StringToBoolValue(attr.Value)
 			d.Set("enable_deletion_protection", protectionEnabled)
 		case "routing.http2.enabled":
-			http2Enabled := aws.StringValue(attr.Value) == "true"
+			http2Enabled := flex.StringToBoolValue(attr.Value)
 			d.Set("enable_http2", http2Enabled)
 		case "waf.fail_open.enabled":
-			wafFailOpenEnabled := aws.StringValue(attr.Value) == "true"
+			wafFailOpenEnabled := flex.StringToBoolValue(attr.Value)
 			d.Set("enable_waf_fail_open", wafFailOpenEnabled)
 		case "load_balancing.cross_zone.enabled":
-			crossZoneLbEnabled := aws.StringValue(attr.Value) == "true"
+			crossZoneLbEnabled := flex.StringToBoolValue(attr.Value)
 			d.Set("enable_cross_zone_load_balancing", crossZoneLbEnabled)
 		case "routing.http.desync_mitigation_mode":
 			desyncMitigationMode := aws.StringValue(attr.Value)
 			d.Set("desync_mitigation_mode", desyncMitigationMode)
+		case "routing.http.x_amzn_tls_version_and_cipher_suite.enabled":
+			tlsVersionAndCipherEnabled := flex.StringToBoolValue(attr.Value)
+			d.Set("enable_tls_version_and_cipher_suite_headers", tlsVersionAndCipherEnabled)
+		case "routing.http.xff_client_port.enabled":
+			xffClientPortEnabled := flex.StringToBoolValue(attr.Value)
+			d.Set("enable_xff_client_port", xffClientPortEnabled)
+		case "routing.http.xff_header_processing.mode":
+			xffHeaderProcMode := aws.StringValue(attr.Value)
+			d.Set("xff_header_processing_mode", xffHeaderProcMode)
 		}
 	}
 
@@ -294,7 +320,7 @@ func dataSourceLoadBalancerRead(ctx context.Context, d *schema.ResourceData, met
 		return sdkdiag.AppendErrorf(diags, "setting access_logs: %s", err)
 	}
 
-	tags, err := ListTags(ctx, conn, d.Id())
+	tags, err := listTags(ctx, conn, d.Id())
 
 	if verify.ErrorISOUnsupported(conn.PartitionID, err) {
 		log.Printf("[WARN] Unable to list tags for ELBv2 Load Balancer %s: %s", d.Id(), err)

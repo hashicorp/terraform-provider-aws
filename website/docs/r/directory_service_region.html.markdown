@@ -1,5 +1,5 @@
 ---
-subcategory: "DS (Directory Service)"
+subcategory: "Directory Service"
 layout: "aws"
 page_title: "AWS: aws_directory_service_region"
 description: |-
@@ -119,7 +119,7 @@ resource "aws_directory_service_region" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `desired_number_of_domain_controllers` - (Optional) The number of domain controllers desired in the replicated directory. Minimum value of `2`.
 * `directory_id` - (Required) The identifier of the directory to which you want to add Region replication.
@@ -132,9 +132,9 @@ The following arguments are supported:
 * `subnet_ids` - (Required) The identifiers of the subnets for the directory servers.
 * `vpc_id` - (Optional) The identifier of the VPC in which to create the directory.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://www.terraform.io/docs/providers/aws/index.html#default_tags-configuration-block).
 
@@ -148,8 +148,17 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Replicated Regions can be imported using directory ID,Region name e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Replicated Regions using directory ID,Region name. For example:
 
+```terraform
+import {
+  to = aws_directory_service_region.example
+  id = "d-9267651497,us-east-2"
+}
 ```
-$ terraform import aws_directory_service_region.example d-9267651497,us-east-2
+
+Using `terraform import`, import Replicated Regions using directory ID,Region name. For example:
+
+```console
+% terraform import aws_directory_service_region.example d-9267651497,us-east-2
 ```

@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package cloudfront
 
 import (
@@ -17,6 +20,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_cloudfront_realtime_log_config")
 func ResourceRealtimeLogConfig() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceRealtimeLogConfigCreate,
@@ -88,7 +92,7 @@ func ResourceRealtimeLogConfig() *schema.Resource {
 
 func resourceRealtimeLogConfigCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CloudFrontConn()
+	conn := meta.(*conns.AWSClient).CloudFrontConn(ctx)
 
 	name := d.Get("name").(string)
 	input := &cloudfront.CreateRealtimeLogConfigInput{
@@ -121,7 +125,7 @@ func resourceRealtimeLogConfigCreate(ctx context.Context, d *schema.ResourceData
 
 func resourceRealtimeLogConfigRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CloudFrontConn()
+	conn := meta.(*conns.AWSClient).CloudFrontConn(ctx)
 
 	logConfig, err := FindRealtimeLogConfigByARN(ctx, conn, d.Id())
 
@@ -148,7 +152,7 @@ func resourceRealtimeLogConfigRead(ctx context.Context, d *schema.ResourceData, 
 
 func resourceRealtimeLogConfigUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CloudFrontConn()
+	conn := meta.(*conns.AWSClient).CloudFrontConn(ctx)
 
 	//
 	// https://docs.aws.amazon.com/cloudfront/latest/APIReference/API_UpdateRealtimeLogConfig.html:
@@ -182,7 +186,7 @@ func resourceRealtimeLogConfigUpdate(ctx context.Context, d *schema.ResourceData
 
 func resourceRealtimeLogConfigDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CloudFrontConn()
+	conn := meta.(*conns.AWSClient).CloudFrontConn(ctx)
 
 	log.Printf("[DEBUG] Deleting CloudFront Real-time Log Config (%s)", d.Id())
 	_, err := conn.DeleteRealtimeLogConfigWithContext(ctx, &cloudfront.DeleteRealtimeLogConfigInput{

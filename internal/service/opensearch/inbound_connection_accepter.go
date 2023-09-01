@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package opensearch
 
 import (
@@ -10,11 +13,12 @@ import (
 	"github.com/aws/aws-sdk-go/service/opensearchservice"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
+// @SDKResource("aws_opensearch_inbound_connection_accepter")
 func ResourceInboundConnectionAccepter() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceInboundConnectionAccepterCreate,
@@ -48,7 +52,7 @@ func ResourceInboundConnectionAccepter() *schema.Resource {
 }
 
 func resourceInboundConnectionAccepterCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).OpenSearchConn()
+	conn := meta.(*conns.AWSClient).OpenSearchConn(ctx)
 
 	// Create the Inbound Connection
 	acceptOpts := &opensearchservice.AcceptInboundConnectionInput{
@@ -59,7 +63,7 @@ func resourceInboundConnectionAccepterCreate(ctx context.Context, d *schema.Reso
 
 	resp, err := conn.AcceptInboundConnectionWithContext(ctx, acceptOpts)
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("Error accepting Inbound Connection: %s", err))
+		return diag.Errorf("accepting Inbound Connection: %s", err)
 	}
 
 	// Get the ID and store it
@@ -68,19 +72,19 @@ func resourceInboundConnectionAccepterCreate(ctx context.Context, d *schema.Reso
 
 	err = inboundConnectionWaitUntilActive(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate))
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("Error waiting for Inbound Connection to become active: %s", err))
+		return diag.Errorf("waiting for Inbound Connection to become active: %s", err)
 	}
 
 	return resourceInboundConnectionRead(ctx, d, meta)
 }
 
 func resourceInboundConnectionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).OpenSearchConn()
+	conn := meta.(*conns.AWSClient).OpenSearchConn(ctx)
 
 	ccscRaw, statusCode, err := inboundConnectionRefreshState(ctx, conn, d.Id())()
 
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("Error reading Inbound Connection: %s", err))
+		return diag.Errorf("reading Inbound Connection: %s", err)
 	}
 
 	ccsc := ccscRaw.(*opensearchservice.InboundConnection)
@@ -92,7 +96,7 @@ func resourceInboundConnectionRead(ctx context.Context, d *schema.ResourceData, 
 }
 
 func resourceInboundConnectionDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).OpenSearchConn()
+	conn := meta.(*conns.AWSClient).OpenSearchConn(ctx)
 
 	req := &opensearchservice.DeleteInboundConnectionInput{
 		ConnectionId: aws.String(d.Id()),
@@ -105,17 +109,17 @@ func resourceInboundConnectionDelete(ctx context.Context, d *schema.ResourceData
 	}
 
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("Error deleting Inbound Connection (%s): %s", d.Id(), err))
+		return diag.Errorf("deleting Inbound Connection (%s): %s", d.Id(), err)
 	}
 
 	if err := waitForInboundConnectionDeletion(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
-		return diag.FromErr(fmt.Errorf("Error waiting for VPC Peering Connection (%s) to be deleted: %s", d.Id(), err))
+		return diag.Errorf("waiting for VPC Peering Connection (%s) to be deleted: %s", d.Id(), err)
 	}
 
 	return nil
 }
 
-func inboundConnectionRefreshState(ctx context.Context, conn *opensearchservice.OpenSearchService, id string) resource.StateRefreshFunc {
+func inboundConnectionRefreshState(ctx context.Context, conn *opensearchservice.OpenSearchService, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		resp, err := conn.DescribeInboundConnectionsWithContext(ctx, &opensearchservice.DescribeInboundConnectionsInput{
 			Filters: []*opensearchservice.Filter{
@@ -149,7 +153,7 @@ func inboundConnectionRefreshState(ctx context.Context, conn *opensearchservice.
 
 func inboundConnectionWaitUntilActive(ctx context.Context, conn *opensearchservice.OpenSearchService, id string, timeout time.Duration) error {
 	log.Printf("[DEBUG] Waiting for Inbound Connection (%s) to become available.", id)
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{
 			opensearchservice.InboundConnectionStatusCodeProvisioning,
 			opensearchservice.InboundConnectionStatusCodeApproved,
@@ -161,13 +165,13 @@ func inboundConnectionWaitUntilActive(ctx context.Context, conn *opensearchservi
 		Timeout: timeout,
 	}
 	if _, err := stateConf.WaitForStateContext(ctx); err != nil {
-		return fmt.Errorf("Error waiting for Inbound Connection (%s) to become available: %s", id, err)
+		return fmt.Errorf("waiting for Inbound Connection (%s) to become available: %s", id, err)
 	}
 	return nil
 }
 
 func waitForInboundConnectionDeletion(ctx context.Context, conn *opensearchservice.OpenSearchService, id string, timeout time.Duration) error {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{
 			opensearchservice.InboundConnectionStatusCodeDeleting,
 		},

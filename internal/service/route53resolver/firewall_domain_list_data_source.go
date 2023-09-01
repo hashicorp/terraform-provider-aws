@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package route53resolver
 
 import (
@@ -9,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
+// @SDKDataSource("aws_route53_resolver_firewall_domain_list")
 func DataSourceFirewallDomainList() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceFirewallDomainListRead,
@@ -59,7 +63,7 @@ func DataSourceFirewallDomainList() *schema.Resource {
 }
 
 func dataSourceFirewallDomainListRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).Route53ResolverConn()
+	conn := meta.(*conns.AWSClient).Route53ResolverConn(ctx)
 
 	id := d.Get("firewall_domain_list_id").(string)
 	firewallDomainList, err := FindFirewallDomainListByID(ctx, conn, id)

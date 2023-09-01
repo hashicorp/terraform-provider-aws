@@ -42,24 +42,31 @@ data "aws_kms_key" "by_key_arn" {
     * Alias ARN: E.g.: `arn:aws:kms:us-east-1:111122223333:alias/my-key`
 * `grant_tokens` - (Optional) List of grant tokens
 
-## Attributes Reference
+## Attribute Reference
+
+This data source exports the following attributes in addition to the arguments above:
 
 * `id`: The globally unique identifier for the key
 * `arn`: The ARN of the key
 * `aws_account_id`: The twelve-digit account ID of the AWS account that owns the key
+* `cloud_hsm_cluster_id`: The cluster ID of the AWS CloudHSM cluster that contains the key material for the KMS key.
 * `creation_date`: The date and time when the key was created
+* `custom_key_store_id`: A unique identifier for the custom key store that contains the KMS key.
+* `customer_master_key_spec`: Specifies whether the key contains a symmetric key or an asymmetric key pair and the encryption algorithms or signing algorithms that the key supports
 * `deletion_date`: The date and time after which AWS KMS deletes the key. This value is present only when `key_state` is `PendingDeletion`, otherwise this value is 0
 * `description`: The description of the key.
 * `enabled`: Specifies whether the key is enabled. When `key_state` is `Enabled` this value is true, otherwise it is false
 * `expiration_model`: Specifies whether the Key's key material expires. This value is present only when `origin` is `EXTERNAL`, otherwise this value is empty
 * `key_manager`: The key's manager
+* `key_spec`: Describes the type of key material in the KMS key.
 * `key_state`: The state of the key
 * `key_usage`: Specifies the intended use of the key
-* `customer_master_key_spec`: Specifies whether the key contains a symmetric key or an asymmetric key pair and the encryption algorithms or signing algorithms that the key supports
 * `multi_region`: Indicates whether the KMS key is a multi-Region (`true`) or regional (`false`) key.
 * `multi_region_configuration`: Lists the primary and replica keys in same multi-Region key. Present only when the value of `multi_region` is `true`.
 * `origin`: When this value is `AWS_KMS`, AWS KMS created the key material. When this value is `EXTERNAL`, the key material was imported from your existing key management infrastructure or the CMK lacks key material
+* `pending_deletion_window_in_days`: The waiting period before the primary key in a multi-Region key is deleted.
 * `valid_to`: The time at which the imported key material expires. This value is present only when `origin` is `EXTERNAL` and whose `expiration_model` is `KEY_MATERIAL_EXPIRES`, otherwise this value is 0
+* `xks_key_configuration`: Information about the external key that is associated with a KMS key in an external key store.
 
 The `multi_region_configuration` object supports the following:
 

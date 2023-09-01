@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package sts
 
 import (
@@ -7,15 +10,11 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
+	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 )
 
-func init() {
-	_sp.registerFrameworkDataSourceFactory(newDataSourceCallerIdentity)
-}
-
-// newDataSourceCallerIdentity instantiates a new DataSource for the aws_caller_identity data source.
+// @FrameworkDataSource
 func newDataSourceCallerIdentity(context.Context) (datasource.DataSourceWithConfigure, error) {
 	d := &dataSourceCallerIdentity{}
 	d.SetMigratedFromPluginSDK(true)
@@ -65,7 +64,7 @@ func (d *dataSourceCallerIdentity) Read(ctx context.Context, request datasource.
 		return
 	}
 
-	conn := d.Meta().STSConn()
+	conn := d.Meta().STSConn(ctx)
 
 	output, err := FindCallerIdentity(ctx, conn)
 

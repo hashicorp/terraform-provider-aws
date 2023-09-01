@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package cognitoidp_test
 
 import (
@@ -7,14 +10,14 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/service/cognitoidp"
+	tfcognitoidp "github.com/hashicorp/terraform-provider-aws/internal/service/cognitoidp"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func TestAccCognitoIDPUser_basic(t *testing.T) {
@@ -24,7 +27,7 @@ func TestAccCognitoIDPUser_basic(t *testing.T) {
 	resourceName := "aws_cognito_user.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, cognitoidentityprovider.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckUserDestroy(ctx),
@@ -66,7 +69,7 @@ func TestAccCognitoIDPUser_disappears(t *testing.T) {
 	resourceName := "aws_cognito_user.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, cognitoidentityprovider.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckUserDestroy(ctx),
@@ -75,7 +78,7 @@ func TestAccCognitoIDPUser_disappears(t *testing.T) {
 				Config: testAccUserConfig_basic(rUserPoolName, rUserName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, cognitoidp.ResourceUser(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfcognitoidp.ResourceUser(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -94,7 +97,7 @@ func TestAccCognitoIDPUser_temporaryPassword(t *testing.T) {
 	clientResourceName := "aws_cognito_user_pool_client.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, cognitoidentityprovider.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckUserDestroy(ctx),
@@ -151,7 +154,7 @@ func TestAccCognitoIDPUser_password(t *testing.T) {
 	clientResourceName := "aws_cognito_user_pool_client.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, cognitoidentityprovider.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckUserDestroy(ctx),
@@ -204,7 +207,7 @@ func TestAccCognitoIDPUser_attributes(t *testing.T) {
 	resourceName := "aws_cognito_user.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, cognitoidentityprovider.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckUserDestroy(ctx),
@@ -253,7 +256,7 @@ func TestAccCognitoIDPUser_enabled(t *testing.T) {
 	resourceName := "aws_cognito_user.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, cognitoidentityprovider.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckUserDestroy(ctx),
@@ -289,63 +292,45 @@ func TestAccCognitoIDPUser_enabled(t *testing.T) {
 	})
 }
 
-func testAccCheckUserExists(ctx context.Context, name string) resource.TestCheckFunc {
+func testAccCheckUserExists(ctx context.Context, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[name]
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return fmt.Errorf("Not found: %s", name)
+			return fmt.Errorf("Not found: %s", n)
 		}
 
-		id := rs.Primary.ID
-		userName := rs.Primary.Attributes["username"]
-		userPoolId := rs.Primary.Attributes["user_pool_id"]
-
-		if userName == "" {
-			return errors.New("No Cognito User Name set")
+		if rs.Primary.ID == "" {
+			return fmt.Errorf("No Cognito User ID is set")
 		}
 
-		if userPoolId == "" {
-			return errors.New("No Cognito User Pool Id set")
-		}
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CognitoIDPConn(ctx)
 
-		if id != fmt.Sprintf("%s/%s", userPoolId, userName) {
-			return fmt.Errorf(fmt.Sprintf("ID should be user_pool_id/name. ID was %s. name was %s, user_pool_id was %s", id, userName, userPoolId))
-		}
+		_, err := tfcognitoidp.FindUserByTwoPartKey(ctx, conn, rs.Primary.Attributes["user_pool_id"], rs.Primary.Attributes["username"])
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CognitoIDPConn()
-
-		params := &cognitoidentityprovider.AdminGetUserInput{
-			Username:   aws.String(rs.Primary.Attributes["username"]),
-			UserPoolId: aws.String(rs.Primary.Attributes["user_pool_id"]),
-		}
-
-		_, err := conn.AdminGetUserWithContext(ctx, params)
 		return err
 	}
 }
 
 func testAccCheckUserDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CognitoIDPConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CognitoIDPConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_cognito_user" {
 				continue
 			}
 
-			params := &cognitoidentityprovider.AdminGetUserInput{
-				Username:   aws.String(rs.Primary.Attributes["username"]),
-				UserPoolId: aws.String(rs.Primary.Attributes["user_pool_id"]),
-			}
+			_, err := tfcognitoidp.FindUserByTwoPartKey(ctx, conn, rs.Primary.Attributes["user_pool_id"], rs.Primary.Attributes["username"])
 
-			_, err := conn.AdminGetUserWithContext(ctx, params)
+			if tfresource.NotFound(err) {
+				continue
+			}
 
 			if err != nil {
-				if awsErr, ok := err.(awserr.Error); ok && (awsErr.Code() == cognitoidentityprovider.ErrCodeUserNotFoundException || awsErr.Code() == cognitoidentityprovider.ErrCodeResourceNotFoundException) {
-					return nil
-				}
 				return err
 			}
+
+			return fmt.Errorf("Cognito User %s still exists", rs.Primary.ID)
 		}
 
 		return nil
@@ -368,7 +353,7 @@ func testAccUserTemporaryPassword(ctx context.Context, userResName string, clien
 		userPassword := userRs.Primary.Attributes["temporary_password"]
 		clientId := clientRs.Primary.Attributes["id"]
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CognitoIDPConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CognitoIDPConn(ctx)
 
 		params := &cognitoidentityprovider.InitiateAuthInput{
 			AuthFlow: aws.String(cognitoidentityprovider.AuthFlowTypeUserPasswordAuth),
@@ -408,7 +393,7 @@ func testAccUserPassword(ctx context.Context, userResName string, clientResName 
 		userPassword := userRs.Primary.Attributes["password"]
 		clientId := clientRs.Primary.Attributes["id"]
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CognitoIDPConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CognitoIDPConn(ctx)
 
 		params := &cognitoidentityprovider.InitiateAuthInput{
 			AuthFlow: aws.String(cognitoidentityprovider.AuthFlowTypeUserPasswordAuth),

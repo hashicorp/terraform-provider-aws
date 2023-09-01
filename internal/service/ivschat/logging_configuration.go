@@ -1,12 +1,15 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ivschat
 
 import (
 	"context"
 	"errors"
 	"log"
-	"regexp"
 	"time"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ivschat"
 	"github.com/aws/aws-sdk-go-v2/service/ivschat/types"
@@ -21,6 +24,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @SDKResource("aws_ivschat_logging_configuration", name="Logging Configuration")
+// @Tags(identifierAttribute="id")
 func ResourceLoggingConfiguration() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceLoggingConfigurationCreate,
@@ -68,7 +73,7 @@ func ResourceLoggingConfiguration() *schema.Resource {
 									"log_group_name": {
 										Type:         schema.TypeString,
 										Required:     true,
-										ValidateFunc: validation.StringMatch(regexp.MustCompile(`^[\.\-_/#A-Za-z0-9]{1,512}$`), "must contain only lowercase alphanumeric characters, hyphen, dot, underscore, forward slash, or hash sign, and between 1 and 512 characters"),
+										ValidateFunc: validation.StringMatch(regexache.MustCompile(`^[\.\-_/#A-Za-z0-9]{1,512}$`), "must contain only lowercase alphanumeric characters, hyphen, dot, underscore, forward slash, or hash sign, and between 1 and 512 characters"),
 									},
 								},
 							},
@@ -91,7 +96,7 @@ func ResourceLoggingConfiguration() *schema.Resource {
 									"delivery_stream_name": {
 										Type:         schema.TypeString,
 										Required:     true,
-										ValidateFunc: validation.StringMatch(regexp.MustCompile(`^[a-zA-Z0-9_.-]{1,64}$`), "must contain only lowercase alphanumeric characters, hyphen, dot, or underscore, and between 1 and 64 characters"),
+										ValidateFunc: validation.StringMatch(regexache.MustCompile(`^[a-zA-Z0-9_.-]{1,64}$`), "must contain only lowercase alphanumeric characters, hyphen, dot, or underscore, and between 1 and 64 characters"),
 									},
 								},
 							},
@@ -114,7 +119,7 @@ func ResourceLoggingConfiguration() *schema.Resource {
 									"bucket_name": {
 										Type:         schema.TypeString,
 										Required:     true,
-										ValidateFunc: validation.StringMatch(regexp.MustCompile(`^[a-z0-9-.]{3,63}$`), "must contain only lowercase alphanumeric characters, hyphen, or dot, and between 3 and 63 characters"),
+										ValidateFunc: validation.StringMatch(regexache.MustCompile(`^[a-z0-9-.]{3,63}$`), "must contain only lowercase alphanumeric characters, hyphen, or dot, and between 3 and 63 characters"),
 									},
 								},
 							},
@@ -130,8 +135,8 @@ func ResourceLoggingConfiguration() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
 
 		CustomizeDiff: verify.SetTagsDiff,
@@ -143,21 +148,15 @@ const (
 )
 
 func resourceLoggingConfigurationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).IVSChatClient()
+	conn := meta.(*conns.AWSClient).IVSChatClient(ctx)
 
 	in := &ivschat.CreateLoggingConfigurationInput{
 		DestinationConfiguration: expandDestinationConfiguration(d.Get("destination_configuration").([]interface{})),
+		Tags:                     getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("name"); ok {
 		in.Name = aws.String(v.(string))
-	}
-
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
-
-	if len(tags) > 0 {
-		in.Tags = Tags(tags.IgnoreAWS())
 	}
 
 	out, err := conn.CreateLoggingConfiguration(ctx, in)
@@ -179,7 +178,7 @@ func resourceLoggingConfigurationCreate(ctx context.Context, d *schema.ResourceD
 }
 
 func resourceLoggingConfigurationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).IVSChatClient()
+	conn := meta.(*conns.AWSClient).IVSChatClient(ctx)
 
 	out, err := findLoggingConfigurationByID(ctx, conn, d.Id())
 
@@ -202,28 +201,11 @@ func resourceLoggingConfigurationRead(ctx context.Context, d *schema.ResourceDat
 	d.Set("name", out.Name)
 	d.Set("state", out.State)
 
-	tags, err := ListTags(ctx, conn, d.Id())
-	if err != nil {
-		return create.DiagError(names.IVSChat, create.ErrActionReading, ResNameLoggingConfiguration, d.Id(), err)
-	}
-
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
-	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return create.DiagError(names.IVSChat, create.ErrActionSetting, ResNameLoggingConfiguration, d.Id(), err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return create.DiagError(names.IVSChat, create.ErrActionSetting, ResNameLoggingConfiguration, d.Id(), err)
-	}
-
 	return nil
 }
 
 func resourceLoggingConfigurationUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).IVSChatClient()
+	conn := meta.(*conns.AWSClient).IVSChatClient(ctx)
 
 	update := false
 
@@ -239,14 +221,6 @@ func resourceLoggingConfigurationUpdate(ctx context.Context, d *schema.ResourceD
 	if d.HasChanges("destination_configuration") {
 		in.DestinationConfiguration = expandDestinationConfiguration(d.Get("destination_configuration").([]interface{}))
 		update = true
-	}
-
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		if err := UpdateTags(ctx, conn, d.Id(), o, n); err != nil {
-			return create.DiagError(names.IVS, create.ErrActionUpdating, ResNameLoggingConfiguration, d.Id(), err)
-		}
 	}
 
 	if !update {
@@ -267,7 +241,7 @@ func resourceLoggingConfigurationUpdate(ctx context.Context, d *schema.ResourceD
 }
 
 func resourceLoggingConfigurationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).IVSChatClient()
+	conn := meta.(*conns.AWSClient).IVSChatClient(ctx)
 
 	log.Printf("[INFO] Deleting IVSChat LoggingConfiguration %s", d.Id())
 

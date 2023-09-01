@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package servicecatalog
 
 import (
@@ -12,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
+// @SDKResource("aws_servicecatalog_organizations_access")
 func ResourceOrganizationsAccess() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceOrganizationsAccessCreate,
@@ -34,7 +38,7 @@ func ResourceOrganizationsAccess() *schema.Resource {
 
 func resourceOrganizationsAccessCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ServiceCatalogConn()
+	conn := meta.(*conns.AWSClient).ServiceCatalogConn(ctx)
 
 	d.SetId(meta.(*conns.AWSClient).AccountID)
 
@@ -62,7 +66,7 @@ func resourceOrganizationsAccessCreate(ctx context.Context, d *schema.ResourceDa
 
 func resourceOrganizationsAccessRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ServiceCatalogConn()
+	conn := meta.(*conns.AWSClient).ServiceCatalogConn(ctx)
 
 	output, err := WaitOrganizationsAccessStable(ctx, conn, d.Timeout(schema.TimeoutRead))
 
@@ -92,7 +96,7 @@ func resourceOrganizationsAccessRead(ctx context.Context, d *schema.ResourceData
 
 func resourceOrganizationsAccessDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ServiceCatalogConn()
+	conn := meta.(*conns.AWSClient).ServiceCatalogConn(ctx)
 
 	// During create, if enabled = "true", then Enable Access and vice versa
 	// During delete, the opposite

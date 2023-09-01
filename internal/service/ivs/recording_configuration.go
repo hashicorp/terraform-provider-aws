@@ -1,12 +1,15 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ivs
 
 import (
 	"context"
 	"errors"
 	"log"
-	"regexp"
 	"time"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ivs"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
@@ -21,6 +24,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @SDKResource("aws_ivs_recording_configuration", name="Recording Configuration")
+// @Tags(identifierAttribute="id")
 func ResourceRecordingConfiguration() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceRecordingConfigurationCreate,
@@ -37,7 +42,6 @@ func ResourceRecordingConfiguration() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-
 			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -58,7 +62,7 @@ func ResourceRecordingConfiguration() *schema.Resource {
 									"bucket_name": {
 										Type:         schema.TypeString,
 										Required:     true,
-										ValidateFunc: validation.StringMatch(regexp.MustCompile(`^[a-z0-9-.]{3,63}$`), "must contain only lowercase alphanumeric characters, hyphen, or dot, and between 3 and 63 characters"),
+										ValidateFunc: validation.StringMatch(regexache.MustCompile(`^[a-z0-9-.]{3,63}$`), "must contain only lowercase alphanumeric characters, hyphen, or dot, and between 3 and 63 characters"),
 									},
 								},
 							},
@@ -71,7 +75,7 @@ func ResourceRecordingConfiguration() *schema.Resource {
 				Optional:     true,
 				Computed:     true,
 				ForceNew:     true,
-				ValidateFunc: validation.StringMatch(regexp.MustCompile(`^[a-zA-Z0-9-_]{0,128}$`), "must contain only alphanumeric characters, hyphen, or underscore, and at most 128 characters"),
+				ValidateFunc: validation.StringMatch(regexache.MustCompile(`^[a-zA-Z0-9-_]{0,128}$`), "must contain only alphanumeric characters, hyphen, or underscore, and at most 128 characters"),
 			},
 			"recording_reconnect_window_seconds": {
 				Type:         schema.TypeInt,
@@ -84,8 +88,8 @@ func ResourceRecordingConfiguration() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"tags":     tftags.TagsSchemaForceNew(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchemaForceNew(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			"thumbnail_configuration": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -120,10 +124,11 @@ const (
 )
 
 func resourceRecordingConfigurationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).IVSConn()
+	conn := meta.(*conns.AWSClient).IVSConn(ctx)
 
 	in := &ivs.CreateRecordingConfigurationInput{
 		DestinationConfiguration: expandDestinationConfiguration(d.Get("destination_configuration").([]interface{})),
+		Tags:                     getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("name"); ok {
@@ -132,13 +137,6 @@ func resourceRecordingConfigurationCreate(ctx context.Context, d *schema.Resourc
 
 	if v, ok := d.GetOk("recording_reconnect_window_seconds"); ok {
 		in.RecordingReconnectWindowSeconds = aws.Int64(int64(v.(int)))
-	}
-
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
-
-	if len(tags) > 0 {
-		in.Tags = Tags(tags.IgnoreAWS())
 	}
 
 	if v, ok := d.GetOk("thumbnail_configuration"); ok {
@@ -168,7 +166,7 @@ func resourceRecordingConfigurationCreate(ctx context.Context, d *schema.Resourc
 }
 
 func resourceRecordingConfigurationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).IVSConn()
+	conn := meta.(*conns.AWSClient).IVSConn(ctx)
 
 	out, err := FindRecordingConfigurationByID(ctx, conn, d.Id())
 
@@ -196,28 +194,11 @@ func resourceRecordingConfigurationRead(ctx context.Context, d *schema.ResourceD
 		return create.DiagError(names.IVS, create.ErrActionSetting, ResNameRecordingConfiguration, d.Id(), err)
 	}
 
-	tags, err := ListTags(ctx, conn, d.Id())
-	if err != nil {
-		return create.DiagError(names.IVS, create.ErrActionReading, ResNameRecordingConfiguration, d.Id(), err)
-	}
-
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
-	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return create.DiagError(names.IVS, create.ErrActionSetting, ResNameRecordingConfiguration, d.Id(), err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return create.DiagError(names.IVS, create.ErrActionSetting, ResNameRecordingConfiguration, d.Id(), err)
-	}
-
 	return nil
 }
 
 func resourceRecordingConfigurationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).IVSConn()
+	conn := meta.(*conns.AWSClient).IVSConn(ctx)
 
 	log.Printf("[INFO] Deleting IVS RecordingConfiguration %s", d.Id())
 

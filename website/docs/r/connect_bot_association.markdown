@@ -79,7 +79,7 @@ resource "aws_connect_bot_association" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `instance_id` - (Required) The identifier of the Amazon Connect instance. You can find the instanceId in the ARN of the instance.
 * `lex_bot` - (Required) Configuration information of an Amazon Lex (V1) bot. Detailed below.
@@ -91,16 +91,25 @@ The `lex_bot` configuration block supports the following:
 * `name` - (Required) The name of the Amazon Lex (V1) bot.
 * `lex_region` - (Optional) The Region that the Amazon Lex (V1) bot was created in. Defaults to current region.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The Amazon Connect instance ID, Lex (V1) bot name, and Lex (V1) bot region separated by colons (`:`).
 
 ## Import
 
-`aws_connect_bot_association` can be imported by using the Amazon Connect instance ID, Lex (V1) bot name, and Lex (V1) bot region separated by colons (`:`), e.g.
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_connect_bot_association` using the Amazon Connect instance ID, Lex (V1) bot name, and Lex (V1) bot region separated by colons (`:`). For example:
 
+```terraform
+import {
+  to = aws_connect_bot_association.example
+  id = "aaaaaaaa-bbbb-cccc-dddd-111111111111:Example:us-west-2"
+}
 ```
-$ terraform import aws_connect_bot_association.example aaaaaaaa-bbbb-cccc-dddd-111111111111:Example:us-west-2
+
+Using `terraform import`, import `aws_connect_bot_association` using the Amazon Connect instance ID, Lex (V1) bot name, and Lex (V1) bot region separated by colons (`:`). For example:
+
+```console
+% terraform import aws_connect_bot_association.example aaaaaaaa-bbbb-cccc-dddd-111111111111:Example:us-west-2
 ```

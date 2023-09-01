@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_config_remediation_configuration: Change `parameter` attribute to `TypeList` for better diff calculation
+```

@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package gamelift
 
 import (
@@ -6,7 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/gamelift"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
@@ -18,7 +21,7 @@ func FindBuildByID(ctx context.Context, conn *gamelift.GameLift, id string) (*ga
 	output, err := conn.DescribeBuildWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, gamelift.ErrCodeNotFoundException) {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -43,7 +46,7 @@ func FindFleetByID(ctx context.Context, conn *gamelift.GameLift, id string) (*ga
 	output, err := conn.DescribeFleetAttributesWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, gamelift.ErrCodeNotFoundException) {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -78,7 +81,7 @@ func FindGameServerGroupByName(ctx context.Context, conn *gamelift.GameLift, nam
 	output, err := conn.DescribeGameServerGroupWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, gamelift.ErrCodeNotFoundException) {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -103,7 +106,7 @@ func FindScriptByID(ctx context.Context, conn *gamelift.GameLift, id string) (*g
 	output, err := conn.DescribeScriptWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, gamelift.ErrCodeNotFoundException) {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}

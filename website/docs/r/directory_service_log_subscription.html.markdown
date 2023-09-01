@@ -1,5 +1,5 @@
 ---
-subcategory: "DS (Directory Service)"
+subcategory: "Directory Service"
 layout: "aws"
 page_title: "AWS: aws_directory_service_log_subscription"
 description: |-
@@ -49,19 +49,28 @@ resource "aws_directory_service_log_subscription" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `directory_id` - (Required) ID of directory.
 * `log_group_name` - (Required) Name of the cloudwatch log group to which the logs should be published. The log group should be already created and the directory service principal should be provided with required permission to create stream and publish logs. Changing this value would delete the current subscription and create a new one. A directory can only have one log subscription at a time.
 
-## Attributes Reference
+## Attribute Reference
 
-No additional attributes are exported.
+This resource exports no additional attributes.
 
 ## Import
 
-Directory Service Log Subscriptions can be imported using the directory id, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Directory Service Log Subscriptions using the directory id. For example:
 
+```terraform
+import {
+  to = aws_directory_service_log_subscription.msad
+  id = "d-1234567890"
+}
 ```
-$ terraform import aws_directory_service_log_subscription.msad d-1234567890
+
+Using `terraform import`, import Directory Service Log Subscriptions using the directory id. For example:
+
+```console
+% terraform import aws_directory_service_log_subscription.msad d-1234567890
 ```

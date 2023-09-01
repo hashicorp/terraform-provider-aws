@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package rds
 
 import (
@@ -64,7 +67,7 @@ func (o *blueGreenOrchestrator) switchover(ctx context.Context, identifier strin
 	input := &rds_sdkv2.SwitchoverBlueGreenDeploymentInput{
 		BlueGreenDeploymentIdentifier: aws.String(identifier),
 	}
-	_, err := tfresource.RetryWhenContext(ctx, 10*time.Minute,
+	_, err := tfresource.RetryWhen(ctx, 10*time.Minute,
 		func() (interface{}, error) {
 			return o.conn.SwitchoverBlueGreenDeployment(ctx, input)
 		},
@@ -97,7 +100,7 @@ func (h *instanceHandler) precondition(ctx context.Context, d *schema.ResourceDa
 	needsPreConditions := false
 	input := &rds_sdkv2.ModifyDBInstanceInput{
 		ApplyImmediately:     true,
-		DBInstanceIdentifier: aws.String(d.Id()),
+		DBInstanceIdentifier: aws.String(d.Get("identifier").(string)),
 	}
 
 	// Backups must be enabled for Blue/Green Deployments. Enable them first.
@@ -113,7 +116,7 @@ func (h *instanceHandler) precondition(ctx context.Context, d *schema.ResourceDa
 	}
 
 	if needsPreConditions {
-		err := dbInstanceModify(ctx, h.conn, input, d.Timeout(schema.TimeoutUpdate))
+		err := dbInstanceModify(ctx, h.conn, d.Id(), input, d.Timeout(schema.TimeoutUpdate))
 		if err != nil {
 			return fmt.Errorf("setting pre-conditions: %s", err)
 		}
@@ -123,7 +126,7 @@ func (h *instanceHandler) precondition(ctx context.Context, d *schema.ResourceDa
 
 func (h *instanceHandler) createBlueGreenInput(d *schema.ResourceData) *rds_sdkv2.CreateBlueGreenDeploymentInput {
 	input := &rds_sdkv2.CreateBlueGreenDeploymentInput{
-		BlueGreenDeploymentName: aws.String(d.Id()),
+		BlueGreenDeploymentName: aws.String(d.Get("identifier").(string)),
 		Source:                  aws.String(d.Get("arn").(string)),
 	}
 
@@ -148,25 +151,11 @@ func (h *instanceHandler) modifyTarget(ctx context.Context, identifier string, d
 	if needsModify {
 		log.Printf("[DEBUG] %s: Updating Green environment", operation)
 
-		err := dbInstanceModify(ctx, h.conn, modifyInput, timeout)
+		err := dbInstanceModify(ctx, h.conn, d.Id(), modifyInput, timeout)
 		if err != nil {
 			return fmt.Errorf("updating Green environment: %s", err)
 		}
 	}
 
 	return nil
-}
-
-type deadline time.Time
-
-func NewDeadline(duration time.Duration) deadline {
-	return deadline(time.Now().Add(duration))
-}
-
-func (d deadline) remaining() time.Duration {
-	if v := time.Until(time.Time(d)); v < 0 {
-		return 0
-	} else {
-		return v
-	}
 }

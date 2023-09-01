@@ -8,13 +8,16 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cloudwatchlogs"
 	"github.com/aws/aws-sdk-go/service/cloudwatchlogs/cloudwatchlogsiface"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
+	"github.com/hashicorp/terraform-provider-aws/internal/logging"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// ListLogGroupTags lists logs service tags.
+// listLogGroupTags lists logs service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func ListLogGroupTags(ctx context.Context, conn cloudwatchlogsiface.CloudWatchLogsAPI, identifier string) (tftags.KeyValueTags, error) {
+func listLogGroupTags(ctx context.Context, conn cloudwatchlogsiface.CloudWatchLogsAPI, identifier string) (tftags.KeyValueTags, error) {
 	input := &cloudwatchlogs.ListTagsLogGroupInput{
 		LogGroupName: aws.String(identifier),
 	}
@@ -22,23 +25,27 @@ func ListLogGroupTags(ctx context.Context, conn cloudwatchlogsiface.CloudWatchLo
 	output, err := conn.ListTagsLogGroupWithContext(ctx, input)
 
 	if err != nil {
-		return tftags.New(nil), err
+		return tftags.New(ctx, nil), err
 	}
 
-	return KeyValueTags(output.Tags), nil
+	return KeyValueTags(ctx, output.Tags), nil
 }
 
-// UpdateLogGroupTags updates logs service tags.
+// updateLogGroupTags updates logs service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func UpdateLogGroupTags(ctx context.Context, conn cloudwatchlogsiface.CloudWatchLogsAPI, identifier string, oldTagsMap interface{}, newTagsMap interface{}) error {
-	oldTags := tftags.New(oldTagsMap)
-	newTags := tftags.New(newTagsMap)
+func updateLogGroupTags(ctx context.Context, conn cloudwatchlogsiface.CloudWatchLogsAPI, identifier string, oldTagsMap, newTagsMap any) error {
+	oldTags := tftags.New(ctx, oldTagsMap)
+	newTags := tftags.New(ctx, newTagsMap)
 
-	if removedTags := oldTags.Removed(newTags); len(removedTags) > 0 {
+	ctx = tflog.SetField(ctx, logging.KeyResourceId, identifier)
+
+	removedTags := oldTags.Removed(newTags)
+	removedTags = removedTags.IgnoreSystem(names.Logs)
+	if len(removedTags) > 0 {
 		input := &cloudwatchlogs.UntagLogGroupInput{
 			LogGroupName: aws.String(identifier),
-			Tags:         aws.StringSlice(removedTags.IgnoreAWS().Keys()),
+			Tags:         aws.StringSlice(removedTags.Keys()),
 		}
 
 		_, err := conn.UntagLogGroupWithContext(ctx, input)
@@ -48,10 +55,12 @@ func UpdateLogGroupTags(ctx context.Context, conn cloudwatchlogsiface.CloudWatch
 		}
 	}
 
-	if updatedTags := oldTags.Updated(newTags); len(updatedTags) > 0 {
+	updatedTags := oldTags.Updated(newTags)
+	updatedTags = updatedTags.IgnoreSystem(names.Logs)
+	if len(updatedTags) > 0 {
 		input := &cloudwatchlogs.TagLogGroupInput{
 			LogGroupName: aws.String(identifier),
-			Tags:         Tags(updatedTags.IgnoreAWS()),
+			Tags:         Tags(updatedTags),
 		}
 
 		_, err := conn.TagLogGroupWithContext(ctx, input)

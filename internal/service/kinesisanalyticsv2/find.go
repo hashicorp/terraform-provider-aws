@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package kinesisanalyticsv2
 
 import (
@@ -6,7 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/kinesisanalyticsv2"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 )
 
 // FindApplicationDetailByName returns the application corresponding to the specified name.
@@ -25,7 +28,7 @@ func FindApplicationDetail(ctx context.Context, conn *kinesisanalyticsv2.Kinesis
 	output, err := conn.DescribeApplicationWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, kinesisanalyticsv2.ErrCodeResourceNotFoundException) {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -36,7 +39,7 @@ func FindApplicationDetail(ctx context.Context, conn *kinesisanalyticsv2.Kinesis
 	}
 
 	if output == nil || output.ApplicationDetail == nil {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			Message:     "Empty result",
 			LastRequest: input,
 		}
@@ -62,14 +65,14 @@ func FindSnapshotDetails(ctx context.Context, conn *kinesisanalyticsv2.KinesisAn
 	output, err := conn.DescribeApplicationSnapshotWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, kinesisanalyticsv2.ErrCodeResourceNotFoundException) {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
 	}
 
 	if tfawserr.ErrMessageContains(err, kinesisanalyticsv2.ErrCodeInvalidArgumentException, "does not exist") {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -80,7 +83,7 @@ func FindSnapshotDetails(ctx context.Context, conn *kinesisanalyticsv2.KinesisAn
 	}
 
 	if output == nil || output.SnapshotDetails == nil {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			Message:     "Empty result",
 			LastRequest: input,
 		}

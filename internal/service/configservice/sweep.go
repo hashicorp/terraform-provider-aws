@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 //go:build sweep
 // +build sweep
 
@@ -11,8 +14,8 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/configservice"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 )
 
@@ -43,11 +46,11 @@ func init() {
 
 func sweepAggregateAuthorizations(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
 		return fmt.Errorf("Error getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).ConfigServiceConn()
+	conn := client.ConfigServiceConn(ctx)
 
 	aggregateAuthorizations, err := DescribeAggregateAuthorizations(ctx, conn)
 	if err != nil {
@@ -81,11 +84,11 @@ func sweepAggregateAuthorizations(region string) error {
 
 func sweepConfigurationAggregators(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
 		return fmt.Errorf("Error getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).ConfigServiceConn()
+	conn := client.ConfigServiceConn(ctx)
 
 	resp, err := conn.DescribeConfigurationAggregatorsWithContext(ctx, &configservice.DescribeConfigurationAggregatorsInput{})
 	if err != nil {
@@ -120,11 +123,11 @@ func sweepConfigurationAggregators(region string) error {
 
 func sweepConfigurationRecorder(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).ConfigServiceConn()
+	conn := client.ConfigServiceConn(ctx)
 
 	req := &configservice.DescribeConfigurationRecordersInput{}
 	resp, err := conn.DescribeConfigurationRecordersWithContext(ctx, req)
@@ -164,23 +167,23 @@ func sweepConfigurationRecorder(region string) error {
 
 func sweepDeliveryChannels(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).ConfigServiceConn()
+	conn := client.ConfigServiceConn(ctx)
 
 	req := &configservice.DescribeDeliveryChannelsInput{}
 	var resp *configservice.DescribeDeliveryChannelsOutput
-	err = resource.RetryContext(ctx, 1*time.Minute, func() *resource.RetryError {
+	err = retry.RetryContext(ctx, 1*time.Minute, func() *retry.RetryError {
 		var err error
 		resp, err = conn.DescribeDeliveryChannelsWithContext(ctx, req)
 		if err != nil {
 			// ThrottlingException: Rate exceeded
 			if tfawserr.ErrMessageContains(err, "ThrottlingException", "Rate exceeded") {
-				return resource.RetryableError(err)
+				return retry.RetryableError(err)
 			}
-			return resource.NonRetryableError(err)
+			return retry.NonRetryableError(err)
 		}
 		return nil
 	})

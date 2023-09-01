@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package rds
 
 import (
@@ -37,6 +40,25 @@ func expandScalingConfiguration(tfMap map[string]interface{}) *rds.ScalingConfig
 	}
 
 	return apiObject
+}
+
+func flattenManagedMasterUserSecret(apiObject *rds.MasterUserSecret) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+	if v := apiObject.KmsKeyId; v != nil {
+		tfMap["kms_key_id"] = aws.StringValue(v)
+	}
+	if v := apiObject.SecretArn; v != nil {
+		tfMap["secret_arn"] = aws.StringValue(v)
+	}
+	if v := apiObject.SecretStatus; v != nil {
+		tfMap["secret_status"] = aws.StringValue(v)
+	}
+
+	return tfMap
 }
 
 func flattenScalingConfigurationInfo(apiObject *rds.ScalingConfigurationInfo) map[string]interface{} {

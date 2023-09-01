@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package sqs
 
 import (
@@ -7,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
+// @SDKResource("aws_sqs_queue_redrive_policy")
 func ResourceQueueRedrivePolicy() *schema.Resource {
 	h := &queueAttributeHandler{
 		AttributeName: sqs.QueueAttributeNameRedrivePolicy,

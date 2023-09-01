@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package neptune
 
 import (
@@ -5,6 +8,14 @@ import (
 )
 
 const (
-	propagationTimeout                     = 2 * time.Minute
-	ErrClusterStillAttachedToGlobalCluster = "neptune Cluster still exists in Neptune Global Cluster"
+	propagationTimeout = 2 * time.Minute
+)
+
+const (
+	GlobalClusterStatusAvailable = "available"
+	GlobalClusterStatusCreating  = "creating"
+	GlobalClusterStatusDeleted   = "deleted"
+	GlobalClusterStatusDeleting  = "deleting"
+	GlobalClusterStatusModifying = "modifying"
+	GlobalClusterStatusUpgrading = "upgrading"
 )

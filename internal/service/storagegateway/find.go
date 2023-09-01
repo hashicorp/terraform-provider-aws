@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package storagegateway
 
 import (
@@ -6,7 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/storagegateway"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
@@ -93,7 +96,7 @@ func FindGatewayByARN(ctx context.Context, conn *storagegateway.StorageGateway, 
 	output, err := conn.DescribeGatewayInformationWithContext(ctx, input)
 
 	if operationErrorCode(err) == operationErrCodeGatewayNotFound || tfawserr.ErrCodeEquals(err, storagegateway.ErrorCodeGatewayNotFound) {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -118,7 +121,7 @@ func FindNFSFileShareByARN(ctx context.Context, conn *storagegateway.StorageGate
 	output, err := conn.DescribeNFSFileSharesWithContext(ctx, input)
 
 	if operationErrorCode(err) == operationErrCodeFileShareNotFound {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -147,7 +150,7 @@ func FindSMBFileShareByARN(ctx context.Context, conn *storagegateway.StorageGate
 	output, err := conn.DescribeSMBFileSharesWithContext(ctx, input)
 
 	if operationErrorCode(err) == operationErrCodeFileShareNotFound {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -176,7 +179,7 @@ func FindFileSystemAssociationByARN(ctx context.Context, conn *storagegateway.St
 	output, err := conn.DescribeFileSystemAssociationsWithContext(ctx, input)
 
 	if operationErrorCode(err) == operationErrCodeFileSystemAssociationNotFound {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}

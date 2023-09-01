@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package cloudformation
 
 import (
@@ -15,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKDataSource("aws_cloudformation_stack")
 func DataSourceStack() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceStackRead,
@@ -73,7 +77,7 @@ func DataSourceStack() *schema.Resource {
 
 func dataSourceStackRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CloudFormationConn()
+	conn := meta.(*conns.AWSClient).CloudFormationConn(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	name := d.Get("name").(string)
@@ -102,7 +106,7 @@ func dataSourceStackRead(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 
 	d.Set("parameters", flattenAllParameters(stack.Parameters))
-	if err := d.Set("tags", KeyValueTags(stack.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+	if err := d.Set("tags", KeyValueTags(ctx, stack.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 	d.Set("outputs", flattenOutputs(stack.Outputs))

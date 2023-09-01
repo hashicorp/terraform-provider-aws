@@ -42,9 +42,9 @@ The following arguments are optional:
 * `image_tests_enabled` - (Optional) Whether image tests are enabled. Defaults to `true`.
 * `timeout_minutes` - (Optional) Number of minutes before image tests time out. Valid values are between `60` and `1440`. Defaults to `720`.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - Amazon Resource Name (ARN) of the image.
 * `date_created` - Date the image was created.
@@ -57,6 +57,9 @@ In addition to all arguments above, the following attributes are exported:
         * `image` - Identifier of the AMI.
         * `name` - Name of the AMI.
         * `region` - Region of the AMI.
+    * `containers` - Set of objects with each container image created and stored in the output repository.
+        * `image_uris` - Set of URIs for created containers.
+        * `region` - Region of the container image.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 * `version` - Version of the image.
 
@@ -68,8 +71,17 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-`aws_imagebuilder_image` resources can be imported using the Amazon Resource Name (ARN), e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_imagebuilder_image` resources using the Amazon Resource Name (ARN). For example:
 
+```terraform
+import {
+  to = aws_imagebuilder_image.example
+  id = "arn:aws:imagebuilder:us-east-1:123456789012:image/example/1.0.0/1"
+}
 ```
-$ terraform import aws_imagebuilder_image.example arn:aws:imagebuilder:us-east-1:123456789012:image/example/1.0.0/1
+
+Using `terraform import`, import `aws_imagebuilder_image` resources using the Amazon Resource Name (ARN). For example:
+
+```console
+% terraform import aws_imagebuilder_image.example arn:aws:imagebuilder:us-east-1:123456789012:image/example/1.0.0/1
 ```

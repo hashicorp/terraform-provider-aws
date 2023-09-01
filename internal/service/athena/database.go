@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package athena
 
 import (
@@ -5,21 +8,22 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"regexp"
 	"strings"
 	"time"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/athena"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
+// @SDKResource("aws_athena_database")
 func ResourceDatabase() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceDatabaseCreate,
@@ -91,7 +95,7 @@ func ResourceDatabase() *schema.Resource {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
-				ValidateFunc: validation.StringMatch(regexp.MustCompile("^[_a-z0-9]+$"), "must be lowercase letters, numbers, or underscore ('_')"),
+				ValidateFunc: validation.StringMatch(regexache.MustCompile("^[_a-z0-9]+$"), "must be lowercase letters, numbers, or underscore ('_')"),
 			},
 			"properties": {
 				Type:     schema.TypeMap,
@@ -105,7 +109,7 @@ func ResourceDatabase() *schema.Resource {
 
 func resourceDatabaseCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).AthenaConn()
+	conn := meta.(*conns.AWSClient).AthenaConn(ctx)
 
 	name := d.Get("name").(string)
 	var queryString bytes.Buffer
@@ -153,7 +157,7 @@ func resourceDatabaseCreate(ctx context.Context, d *schema.ResourceData, meta in
 
 func resourceDatabaseRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).AthenaConn()
+	conn := meta.(*conns.AWSClient).AthenaConn(ctx)
 
 	input := &athena.GetDatabaseInput{
 		DatabaseName: aws.String(d.Id()),
@@ -182,7 +186,7 @@ func resourceDatabaseRead(ctx context.Context, d *schema.ResourceData, meta inte
 
 func resourceDatabaseDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).AthenaConn()
+	conn := meta.(*conns.AWSClient).AthenaConn(ctx)
 
 	queryString := fmt.Sprintf("drop database `%s`", d.Id())
 	if d.Get("force_destroy").(bool) {
@@ -268,7 +272,7 @@ func executeAndExpectNoRows(ctx context.Context, conn *athena.Athena, qeid strin
 }
 
 func QueryExecutionResult(ctx context.Context, conn *athena.Athena, qeid string) (*athena.ResultSet, error) {
-	executionStateConf := &resource.StateChangeConf{
+	executionStateConf := &retry.StateChangeConf{
 		Pending:    []string{athena.QueryExecutionStateQueued, athena.QueryExecutionStateRunning},
 		Target:     []string{athena.QueryExecutionStateSucceeded},
 		Refresh:    queryExecutionStateRefreshFunc(ctx, conn, qeid),
@@ -291,7 +295,7 @@ func QueryExecutionResult(ctx context.Context, conn *athena.Athena, qeid string)
 	return resp.ResultSet, nil
 }
 
-func queryExecutionStateRefreshFunc(ctx context.Context, conn *athena.Athena, qeid string) resource.StateRefreshFunc {
+func queryExecutionStateRefreshFunc(ctx context.Context, conn *athena.Athena, qeid string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		input := &athena.GetQueryExecutionInput{
 			QueryExecutionId: aws.String(qeid),

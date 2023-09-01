@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package connect
 
 import (
@@ -16,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_connect_instance_storage_config")
 func ResourceInstanceStorageConfig() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceInstanceStorageConfigCreate,
@@ -173,7 +177,7 @@ func ResourceInstanceStorageConfig() *schema.Resource {
 }
 
 func resourceInstanceStorageConfigCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ConnectConn()
+	conn := meta.(*conns.AWSClient).ConnectConn(ctx)
 
 	instanceId := d.Get("instance_id").(string)
 	resourceType := d.Get("resource_type").(string)
@@ -201,7 +205,7 @@ func resourceInstanceStorageConfigCreate(ctx context.Context, d *schema.Resource
 }
 
 func resourceInstanceStorageConfigRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ConnectConn()
+	conn := meta.(*conns.AWSClient).ConnectConn(ctx)
 
 	instanceId, associationId, resourceType, err := InstanceStorageConfigParseId(d.Id())
 
@@ -243,7 +247,7 @@ func resourceInstanceStorageConfigRead(ctx context.Context, d *schema.ResourceDa
 }
 
 func resourceInstanceStorageConfigUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ConnectConn()
+	conn := meta.(*conns.AWSClient).ConnectConn(ctx)
 
 	instanceId, associationId, resourceType, err := InstanceStorageConfigParseId(d.Id())
 
@@ -271,7 +275,7 @@ func resourceInstanceStorageConfigUpdate(ctx context.Context, d *schema.Resource
 }
 
 func resourceInstanceStorageConfigDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ConnectConn()
+	conn := meta.(*conns.AWSClient).ConnectConn(ctx)
 
 	instanceId, associationId, resourceType, err := InstanceStorageConfigParseId(d.Id())
 

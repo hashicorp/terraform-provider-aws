@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package controltower_test
 
 import (
@@ -6,8 +9,8 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/controltower"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfcontroltower "github.com/hashicorp/terraform-provider-aws/internal/service/controltower"
@@ -36,7 +39,7 @@ func testAccControl_basic(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
+			acctest.PreCheck(ctx, t)
 			acctest.PreCheckOrganizationManagementAccount(ctx, t)
 			testAccPreCheck(ctx, t)
 		},
@@ -64,7 +67,7 @@ func testAccControl_disappears(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
+			acctest.PreCheck(ctx, t)
 			acctest.PreCheckOrganizationManagementAccount(ctx, t)
 			testAccPreCheck(ctx, t)
 		},
@@ -100,7 +103,7 @@ func testAccCheckControlExists(ctx context.Context, n string, v *controltower.En
 			return err
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ControlTowerConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ControlTowerConn(ctx)
 
 		output, err := tfcontroltower.FindEnabledControlByTwoPartKey(ctx, conn, targetIdentifier, controlIdentifier)
 
@@ -116,7 +119,7 @@ func testAccCheckControlExists(ctx context.Context, n string, v *controltower.En
 
 func testAccCheckControlDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ControlTowerConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ControlTowerConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_controltower_control" {

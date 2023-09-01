@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package sfn
 
 import (
@@ -9,15 +12,18 @@ import (
 	"github.com/aws/aws-sdk-go/service/sfn"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @SDKResource("aws_sfn_activity", name="Activity")
+// @Tags(identifierAttribute="id")
 func ResourceActivity() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceActivityCreate,
@@ -40,8 +46,8 @@ func ResourceActivity() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: validation.StringLenBetween(0, 80),
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
 
 		CustomizeDiff: verify.SetTagsDiff,
@@ -49,14 +55,12 @@ func ResourceActivity() *schema.Resource {
 }
 
 func resourceActivityCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).SFNConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	conn := meta.(*conns.AWSClient).SFNConn(ctx)
 
 	name := d.Get("name").(string)
 	input := &sfn.CreateActivityInput{
 		Name: aws.String(name),
-		Tags: Tags(tags.IgnoreAWS()),
+		Tags: getTagsIn(ctx),
 	}
 
 	output, err := conn.CreateActivityWithContext(ctx, input)
@@ -71,9 +75,7 @@ func resourceActivityCreate(ctx context.Context, d *schema.ResourceData, meta in
 }
 
 func resourceActivityRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).SFNConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).SFNConn(ctx)
 
 	output, err := FindActivityByARN(ctx, conn, d.Id())
 
@@ -90,42 +92,16 @@ func resourceActivityRead(ctx context.Context, d *schema.ResourceData, meta inte
 	d.Set("creation_date", output.CreationDate.Format(time.RFC3339))
 	d.Set("name", output.Name)
 
-	tags, err := ListTags(ctx, conn, d.Id())
-
-	if err != nil {
-		return diag.Errorf("listing tags for Step Functions Activity (%s): %s", d.Id(), err)
-	}
-
-	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return diag.Errorf("setting tags: %s", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return diag.Errorf("setting tags_all: %s", err)
-	}
-
 	return nil
 }
 
 func resourceActivityUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).SFNConn()
-
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		if err := UpdateTags(ctx, conn, d.Id(), o, n); err != nil {
-			return diag.Errorf("updating Step Functions Activity (%s) tags: %s", d.Id(), err)
-		}
-	}
-
+	// Tags only.
 	return resourceActivityRead(ctx, d, meta)
 }
 
 func resourceActivityDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).SFNConn()
+	conn := meta.(*conns.AWSClient).SFNConn(ctx)
 
 	log.Printf("[DEBUG] Deleting Step Functions Activity: %s", d.Id())
 	_, err := conn.DeleteActivityWithContext(ctx, &sfn.DeleteActivityInput{
@@ -147,7 +123,7 @@ func FindActivityByARN(ctx context.Context, conn *sfn.SFN, arn string) (*sfn.Des
 	output, err := conn.DescribeActivityWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, sfn.ErrCodeActivityDoesNotExist) {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}

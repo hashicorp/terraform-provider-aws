@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package s3control
 
 import (
@@ -9,10 +12,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
-func init() {
-	_sp.registerSDKDataSourceFactory("aws_s3_account_public_access_block", dataSourceAccountPublicAccessBlock)
-}
-
+// @SDKDataSource("aws_s3_account_public_access_block")
 func dataSourceAccountPublicAccessBlock() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceAccountPublicAccessBlockRead,
@@ -44,7 +44,7 @@ func dataSourceAccountPublicAccessBlock() *schema.Resource {
 }
 
 func dataSourceAccountPublicAccessBlockRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).S3ControlConn()
+	conn := meta.(*conns.AWSClient).S3ControlConn(ctx)
 
 	accountID := meta.(*conns.AWSClient).AccountID
 	if v, ok := d.GetOk("account_id"); ok {

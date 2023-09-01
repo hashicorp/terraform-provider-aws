@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package imagebuilder
 
 import (
@@ -6,11 +9,11 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/imagebuilder"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 )
 
 // statusImage fetches the Image and its Status
-func statusImage(ctx context.Context, conn *imagebuilder.Imagebuilder, imageBuildVersionArn string) resource.StateRefreshFunc {
+func statusImage(ctx context.Context, conn *imagebuilder.Imagebuilder, imageBuildVersionArn string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		input := &imagebuilder.GetImageInput{
 			ImageBuildVersionArn: aws.String(imageBuildVersionArn),

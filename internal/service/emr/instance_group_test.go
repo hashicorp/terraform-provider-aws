@@ -1,17 +1,18 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package emr_test
 
 import (
 	"context"
 	"fmt"
-	"log"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/emr"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfemr "github.com/hashicorp/terraform-provider-aws/internal/service/emr"
@@ -24,10 +25,10 @@ func TestAccEMRInstanceGroup_basic(t *testing.T) {
 	resourceName := "aws_emr_instance_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, emr.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckInstanceGroupDestroy(ctx),
+		CheckDestroy:             acctest.CheckDestroyNoop,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceGroupConfig_basic(rName),
@@ -56,10 +57,10 @@ func TestAccEMRInstanceGroup_disappears(t *testing.T) {
 	resourceName := "aws_emr_instance_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, emr.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckInstanceGroupDestroy(ctx),
+		CheckDestroy:             acctest.CheckDestroyNoop,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceGroupConfig_basic(rName),
@@ -84,10 +85,10 @@ func TestAccEMRInstanceGroup_Disappears_emrCluster(t *testing.T) {
 	emrClusterResourceName := "aws_emr_cluster.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, emr.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckInstanceGroupDestroy(ctx),
+		CheckDestroy:             acctest.CheckDestroyNoop,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceGroupConfig_basic(rName),
@@ -109,10 +110,10 @@ func TestAccEMRInstanceGroup_bidPrice(t *testing.T) {
 	resourceName := "aws_emr_instance_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, emr.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckInstanceGroupDestroy(ctx),
+		CheckDestroy:             acctest.CheckDestroyNoop,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceGroupConfig_basic(rName),
@@ -162,10 +163,10 @@ func TestAccEMRInstanceGroup_sJSON(t *testing.T) {
 	resourceName := "aws_emr_instance_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, emr.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckInstanceGroupDestroy(ctx),
+		CheckDestroy:             acctest.CheckDestroyNoop,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceGroupConfig_configurationsJSON(rName, "partitionName1"),
@@ -206,10 +207,10 @@ func TestAccEMRInstanceGroup_autoScalingPolicy(t *testing.T) {
 	resourceName := "aws_emr_instance_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, emr.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckInstanceGroupDestroy(ctx),
+		CheckDestroy:             acctest.CheckDestroyNoop,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceGroupConfig_autoScalingPolicy(rName, 1, 3),
@@ -252,10 +253,10 @@ func TestAccEMRInstanceGroup_instanceCount(t *testing.T) {
 	resourceName := "aws_emr_instance_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, emr.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckInstanceGroupDestroy(ctx),
+		CheckDestroy:             acctest.CheckDestroyNoop,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceGroupConfig_basic(rName),
@@ -283,10 +284,10 @@ func TestAccEMRInstanceGroup_EBS_ebsOptimized(t *testing.T) {
 	resourceName := "aws_emr_instance_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, emr.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckInstanceGroupDestroy(ctx),
+		CheckDestroy:             acctest.CheckDestroyNoop,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceGroupConfig_ebs(rName, true),
@@ -315,38 +316,6 @@ func TestAccEMRInstanceGroup_EBS_ebsOptimized(t *testing.T) {
 	})
 }
 
-func testAccCheckInstanceGroupDestroy(ctx context.Context) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EMRConn()
-
-		for _, rs := range s.RootModule().Resources {
-			if rs.Type != "aws_emr_cluster" {
-				continue
-			}
-
-			params := &emr.DescribeClusterInput{
-				ClusterId: aws.String(rs.Primary.ID),
-			}
-
-			describe, err := conn.DescribeClusterWithContext(ctx, params)
-
-			if err == nil {
-				if describe.Cluster != nil &&
-					*describe.Cluster.Status.State == "WAITING" {
-					return fmt.Errorf("EMR Cluster still exists")
-				}
-			}
-
-			if providerErr, ok := err.(awserr.Error); !ok {
-				log.Printf("[ERROR] %v", providerErr)
-				return err
-			}
-		}
-
-		return nil
-	}
-}
-
 func testAccCheckInstanceGroupExists(ctx context.Context, name string, ig *emr.InstanceGroup) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
@@ -359,7 +328,7 @@ func testAccCheckInstanceGroupExists(ctx context.Context, name string, ig *emr.I
 		}
 
 		meta := acctest.Provider.Meta()
-		conn := meta.(*conns.AWSClient).EMRConn()
+		conn := meta.(*conns.AWSClient).EMRConn(ctx)
 		group, err := tfemr.FetchInstanceGroup(ctx, conn, rs.Primary.Attributes["cluster_id"], rs.Primary.ID)
 		if err != nil {
 			return fmt.Errorf("EMR error: %v", err)

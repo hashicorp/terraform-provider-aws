@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package dms
 
 import (
@@ -12,7 +15,7 @@ import (
 	dms "github.com/aws/aws-sdk-go/service/databasemigrationservice"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -24,6 +27,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @SDKResource("aws_dms_s3_endpoint", name="S3 Endpoint")
+// @Tags(identifierAttribute="endpoint_arn")
 func ResourceS3Endpoint() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceS3EndpointCreate,
@@ -87,8 +92,8 @@ func ResourceS3Endpoint() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 
 			/////// S3-Specific Settings
 			"add_column_name": {
@@ -202,6 +207,10 @@ func ResourceS3Endpoint() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
+			"detach_target_on_lob_lookup_failure_parquet": {
+				Type:     schema.TypeBool,
+				Optional: true,
+			},
 			"dict_page_size_limit": {
 				Type:         schema.TypeInt,
 				Optional:     true,
@@ -313,15 +322,13 @@ const (
 
 func resourceS3EndpointCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DMSConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	conn := meta.(*conns.AWSClient).DMSConn(ctx)
 
 	input := &dms.CreateEndpointInput{
 		EndpointIdentifier: aws.String(d.Get("endpoint_id").(string)),
 		EndpointType:       aws.String(d.Get("endpoint_type").(string)),
 		EngineName:         aws.String("s3"),
-		Tags:               Tags(tags.IgnoreAWS()),
+		Tags:               getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("certificate_arn"); ok {
@@ -347,16 +354,16 @@ func resourceS3EndpointCreate(ctx context.Context, d *schema.ResourceData, meta 
 	log.Println("[DEBUG] DMS create endpoint:", input)
 
 	var out *dms.CreateEndpointOutput
-	err := resource.RetryContext(ctx, d.Timeout(schema.TimeoutCreate), func() *resource.RetryError {
+	err := retry.RetryContext(ctx, d.Timeout(schema.TimeoutCreate), func() *retry.RetryError {
 		var err error
 		out, err = conn.CreateEndpointWithContext(ctx, input)
 
 		if tfawserr.ErrCodeEquals(err, "AccessDeniedFault") {
-			return resource.RetryableError(err)
+			return retry.RetryableError(err)
 		}
 
 		if err != nil {
-			return resource.NonRetryableError(err)
+			return retry.NonRetryableError(err)
 		}
 
 		return nil
@@ -383,9 +390,7 @@ func resourceS3EndpointCreate(ctx context.Context, d *schema.ResourceData, meta 
 
 func resourceS3EndpointRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DMSConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).DMSConn(ctx)
 
 	endpoint, err := FindEndpointByID(ctx, conn, d.Id())
 
@@ -415,6 +420,8 @@ func resourceS3EndpointRead(ctx context.Context, d *schema.ResourceData, meta in
 	// d.Set("service_access_role_arn", endpoint.ServiceAccessRoleArn) // set from s3 settings
 	d.Set("ssl_mode", endpoint.SslMode)
 	d.Set("status", endpoint.Status)
+
+	setDetachTargetOnLobLookupFailureParquet(d, aws.StringValue(endpoint.ExtraConnectionAttributes))
 
 	s3settings := endpoint.S3Settings
 	d.Set("add_column_name", s3settings.AddColumnName)
@@ -467,28 +474,12 @@ func resourceS3EndpointRead(ctx context.Context, d *schema.ResourceData, meta in
 
 	d.Set("external_table_definition", p)
 
-	tags, err := ListTags(ctx, conn, d.Get("endpoint_arn").(string))
-	if err != nil {
-		return create.DiagError(names.DMS, create.ErrActionReading, ResNameS3Endpoint, d.Id(), err)
-	}
-
-	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return create.DiagError(names.DMS, create.ErrActionReading, ResNameS3Endpoint, d.Id(), err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return create.DiagError(names.DMS, create.ErrActionReading, ResNameS3Endpoint, d.Id(), err)
-	}
-
 	return diags
 }
 
 func resourceS3EndpointUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DMSConn()
+	conn := meta.(*conns.AWSClient).DMSConn(ctx)
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		input := &dms.ModifyEndpointInput{
@@ -522,15 +513,15 @@ func resourceS3EndpointUpdate(ctx context.Context, d *schema.ResourceData, meta 
 
 		log.Println("[DEBUG] DMS update endpoint:", input)
 
-		err := resource.RetryContext(ctx, d.Timeout(schema.TimeoutCreate), func() *resource.RetryError {
+		err := retry.RetryContext(ctx, d.Timeout(schema.TimeoutCreate), func() *retry.RetryError {
 			_, err := conn.ModifyEndpointWithContext(ctx, input)
 
 			if tfawserr.ErrCodeEquals(err, "AccessDeniedFault") {
-				return resource.RetryableError(err)
+				return retry.RetryableError(err)
 			}
 
 			if err != nil {
-				return resource.NonRetryableError(err)
+				return retry.NonRetryableError(err)
 			}
 
 			return nil
@@ -545,21 +536,12 @@ func resourceS3EndpointUpdate(ctx context.Context, d *schema.ResourceData, meta 
 		}
 	}
 
-	if d.HasChange("tags_all") {
-		arn := d.Get("endpoint_arn").(string)
-		o, n := d.GetChange("tags_all")
-
-		if err := UpdateTags(ctx, conn, arn, o, n); err != nil {
-			return create.DiagError(names.DMS, create.ErrActionUpdating, ResNameS3Endpoint, d.Id(), err)
-		}
-	}
-
 	return append(diags, resourceS3EndpointRead(ctx, d, meta)...)
 }
 
 func resourceS3EndpointDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DMSConn()
+	conn := meta.(*conns.AWSClient).DMSConn(ctx)
 
 	log.Printf("[DEBUG] Deleting DMS Endpoint: (%s)", d.Id())
 	_, err := conn.DeleteEndpointWithContext(ctx, &dms.DeleteEndpointInput{
@@ -750,10 +732,29 @@ func s3Settings(d *schema.ResourceData, target bool) *dms.S3Settings {
 func extraConnectionAnomalies(d *schema.ResourceData) *string {
 	// not all attributes work in the data structures and must be passed via ex conn attr
 
-	// add a loop to compose the string of ;-sep pairs, if this becomes more than one
+	var anoms []string
+
 	if v, ok := d.GetOk("cdc_path"); ok {
-		return aws.String(fmt.Sprintf("%s=%s", "CdcPath", v.(string)))
+		anoms = append(anoms, fmt.Sprintf("%s=%s", "CdcPath", v.(string)))
 	}
 
-	return nil
+	if v, ok := d.GetOk("detach_target_on_lob_lookup_failure_parquet"); ok {
+		anoms = append(anoms, fmt.Sprintf("%s=%t", "detachTargetOnLobLookupFailureParquet", v.(bool)))
+	}
+
+	if len(anoms) == 0 {
+		return nil
+	}
+
+	return aws.String(strings.Join(anoms, ";"))
+}
+
+func setDetachTargetOnLobLookupFailureParquet(d *schema.ResourceData, eca string) {
+	if strings.Contains(eca, "detachTargetOnLobLookupFailureParquet=false") {
+		d.Set("detach_target_on_lob_lookup_failure_parquet", false)
+	}
+
+	if strings.Contains(eca, "detachTargetOnLobLookupFailureParquet=true") {
+		d.Set("detach_target_on_lob_lookup_failure_parquet", true)
+	}
 }

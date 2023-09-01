@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 //go:build generate
 // +build generate
 
@@ -15,11 +18,9 @@ import (
 )
 
 var (
-	createTagsFunc = flag.String("CreateTagsFunc", "CreateTags", "createTagsFunc")
 	getTagFunc     = flag.String("GetTagFunc", "GetTag", "getTagFunc")
 	idAttribName   = flag.String("IDAttribName", "resource_arn", "idAttribName")
-	updateTagsFunc = flag.String("UpdateTagsFunc", "UpdateTags", "updateTagsFunc")
-	withContext    = flag.Bool("WithContext", true, `whether the Context-aware function includes "WithContext" in the name`)
+	updateTagsFunc = flag.String("UpdateTagsFunc", "updateTags", "updateTagsFunc")
 )
 
 func usage() {
@@ -30,13 +31,15 @@ func usage() {
 }
 
 type TemplateData struct {
-	AWSService      string
-	AWSServiceUpper string
-	ServicePackage  string
+	AWSService           string
+	AWSServiceUpper      string
+	ProviderResourceName string
+	ServicePackage       string
 
 	CreateTagsFunc string
 	GetTagFunc     string
 	IDAttribName   string
+
 	UpdateTagsFunc string
 	WithContext    bool
 }
@@ -61,16 +64,17 @@ func main() {
 		g.Fatalf("encountered: %s", err)
 	}
 
-	templateData := TemplateData{
-		AWSService:      awsService,
-		AWSServiceUpper: u,
-		ServicePackage:  servicePackage,
+	providerResName := fmt.Sprintf("aws_%s_tag", servicePackage)
 
-		CreateTagsFunc: *createTagsFunc,
+	templateData := TemplateData{
+		AWSService:           awsService,
+		AWSServiceUpper:      u,
+		ProviderResourceName: providerResName,
+		ServicePackage:       servicePackage,
+
 		GetTagFunc:     *getTagFunc,
 		IDAttribName:   *idAttribName,
 		UpdateTagsFunc: *updateTagsFunc,
-		WithContext:    *withContext,
 	}
 
 	const (

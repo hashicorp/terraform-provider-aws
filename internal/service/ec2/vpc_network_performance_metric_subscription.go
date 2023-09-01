@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ec2
 
 import (
@@ -16,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
+// @SDKResource("aws_vpc_network_performance_metric_subscription")
 func ResourceNetworkPerformanceMetricSubscription() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceNetworkPerformanceMetricSubscriptionCreate,
@@ -56,7 +60,7 @@ func ResourceNetworkPerformanceMetricSubscription() *schema.Resource {
 }
 
 func resourceNetworkPerformanceMetricSubscriptionCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).EC2Client()
+	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	source := d.Get("source").(string)
 	destination := d.Get("destination").(string)
@@ -82,7 +86,7 @@ func resourceNetworkPerformanceMetricSubscriptionCreate(ctx context.Context, d *
 }
 
 func resourceNetworkPerformanceMetricSubscriptionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).EC2Client()
+	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	source, destination, metric, statistic, err := NetworkPerformanceMetricSubscriptionResourceID(d.Id())
 
@@ -112,7 +116,7 @@ func resourceNetworkPerformanceMetricSubscriptionRead(ctx context.Context, d *sc
 }
 
 func resourceNetworkPerformanceMetricSubscriptionDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).EC2Client()
+	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	source, destination, metric, statistic, err := NetworkPerformanceMetricSubscriptionResourceID(d.Id())
 

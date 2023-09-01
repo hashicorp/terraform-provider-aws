@@ -1,9 +1,11 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package rds
 
 import (
 	"context"
 	"fmt"
-	"log"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -22,15 +24,19 @@ const (
 	ResNameReservedInstance = "Reserved Instance"
 )
 
+// @SDKResource("aws_rds_reserved_instance", name="Reserved Instance")
+// @Tags(identifierAttribute="arn")
 func ResourceReservedInstance() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceReservedInstanceCreate,
 		ReadWithoutTimeout:   resourceReservedInstanceRead,
 		UpdateWithoutTimeout: resourceReservedInstanceUpdate,
-		DeleteWithoutTimeout: resourceReservedInstanceDelete,
+		DeleteWithoutTimeout: schema.NoopContext,
+
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
+
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(30 * time.Minute),
 			Update: schema.DefaultTimeout(10 * time.Minute),
@@ -117,8 +123,8 @@ func ResourceReservedInstance() *schema.Resource {
 				Type:     schema.TypeFloat,
 				Computed: true,
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
 
 		CustomizeDiff: verify.SetTagsDiff,
@@ -126,12 +132,11 @@ func ResourceReservedInstance() *schema.Resource {
 }
 
 func resourceReservedInstanceCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).RDSConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	conn := meta.(*conns.AWSClient).RDSConn(ctx)
 
 	input := &rds.PurchaseReservedDBInstancesOfferingInput{
 		ReservedDBInstancesOfferingId: aws.String(d.Get("offering_id").(string)),
+		Tags:                          getTagsIn(ctx),
 	}
 
 	if v, ok := d.Get("instance_count").(int); ok && v > 0 {
@@ -140,10 +145,6 @@ func resourceReservedInstanceCreate(ctx context.Context, d *schema.ResourceData,
 
 	if v, ok := d.Get("reservation_id").(string); ok && v != "" {
 		input.ReservedDBInstanceId = aws.String(v)
-	}
-
-	if len(tags) > 0 {
-		input.Tags = Tags(tags.IgnoreAWS())
 	}
 
 	resp, err := conn.PurchaseReservedDBInstancesOfferingWithContext(ctx, input)
@@ -161,9 +162,7 @@ func resourceReservedInstanceCreate(ctx context.Context, d *schema.ResourceData,
 }
 
 func resourceReservedInstanceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).RDSConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).RDSConn(ctx)
 
 	reservation, err := FindReservedDBInstanceByID(ctx, conn, d.Id())
 
@@ -194,52 +193,12 @@ func resourceReservedInstanceRead(ctx context.Context, d *schema.ResourceData, m
 	d.Set("state", reservation.State)
 	d.Set("usage_price", reservation.UsagePrice)
 
-	tags, err := ListTags(ctx, conn, aws.ToString(reservation.ReservedDBInstanceArn))
-	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	if err != nil {
-		return create.DiagError(names.CE, create.ErrActionReading, ResNameTags, d.Id(), err)
-	}
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return create.DiagError(names.CE, create.ErrActionUpdating, ResNameTags, d.Id(), err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return create.DiagError(names.CE, create.ErrActionUpdating, ResNameTags, d.Id(), err)
-	}
-
 	return nil
 }
 
 func resourceReservedInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).RDSConn()
-
-	if d.HasChange("tags") {
-		o, n := d.GetChange("tags")
-
-		if err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n); err != nil {
-			return create.DiagError(names.RDS, create.ErrActionUpdating, ResNameTags, d.Id(), err)
-		}
-	}
-
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		if err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n); err != nil {
-			return create.DiagError(names.RDS, create.ErrActionUpdating, ResNameTags, d.Id(), err)
-		}
-	}
-
+	// Tags only.
 	return resourceReservedInstanceRead(ctx, d, meta)
-}
-
-func resourceReservedInstanceDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	// Reservations cannot be deleted. Removing from state.
-	log.Printf("[DEBUG] %s %s cannot be deleted. Removing from state.: %s", names.RDS, ResNameReservedInstance, d.Id())
-
-	return nil
 }
 
 func flattenRecurringCharges(recurringCharges []*rds.RecurringCharge) []interface{} {

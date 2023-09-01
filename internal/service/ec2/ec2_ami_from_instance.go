@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ec2
 
 import (
@@ -16,8 +19,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @SDKResource("aws_ami_from_instance", name="AMI")
+// @Tags(identifierAttribute="id")
 func ResourceAMIFromInstance() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceAMIFromInstanceCreate,
@@ -224,8 +230,8 @@ func ResourceAMIFromInstance() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			"tpm_support": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -246,9 +252,7 @@ func ResourceAMIFromInstance() *schema.Resource {
 
 func resourceAMIFromInstanceCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	instanceID := d.Get("source_instance_id").(string)
 	name := d.Get("name").(string)
@@ -257,7 +261,7 @@ func resourceAMIFromInstanceCreate(ctx context.Context, d *schema.ResourceData, 
 		InstanceId:        aws.String(instanceID),
 		Name:              aws.String(name),
 		NoReboot:          aws.Bool(d.Get("snapshot_without_reboot").(bool)),
-		TagSpecifications: tagSpecificationsFromKeyValueTags(tags, ec2.ResourceTypeImage),
+		TagSpecifications: getTagSpecificationsIn(ctx, ec2.ResourceTypeImage),
 	}
 
 	output, err := conn.CreateImageWithContext(ctx, input)

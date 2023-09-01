@@ -1,10 +1,13 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package autoscalingplans
 
 import (
 	"context"
 	"log"
-	"regexp"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/autoscalingplans"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
@@ -18,6 +21,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_autoscalingplans_scaling_plan")
 func ResourceScalingPlan() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceScalingPlanCreate,
@@ -76,7 +80,7 @@ func ResourceScalingPlan() *schema.Resource {
 				ForceNew: true,
 				ValidateFunc: validation.All(
 					validation.StringLenBetween(1, 128),
-					validation.StringMatch(regexp.MustCompile(`^[[:print:]]+$`), "must be printable"),
+					validation.StringMatch(regexache.MustCompile(`^[[:print:]]+$`), "must be printable"),
 					validation.StringDoesNotContainAny("|:/"),
 				),
 			},
@@ -322,7 +326,7 @@ func ResourceScalingPlan() *schema.Resource {
 
 func resourceScalingPlanCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).AutoScalingPlansConn()
+	conn := meta.(*conns.AWSClient).AutoScalingPlansConn(ctx)
 
 	scalingPlanName := d.Get("name").(string)
 	input := &autoscalingplans.CreateScalingPlanInput{
@@ -353,7 +357,7 @@ func resourceScalingPlanCreate(ctx context.Context, d *schema.ResourceData, meta
 
 func resourceScalingPlanRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).AutoScalingPlansConn()
+	conn := meta.(*conns.AWSClient).AutoScalingPlansConn(ctx)
 
 	scalingPlanName, scalingPlanVersion, err := scalingPlanParseResourceID(d.Id())
 
@@ -389,7 +393,7 @@ func resourceScalingPlanRead(ctx context.Context, d *schema.ResourceData, meta i
 
 func resourceScalingPlanUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).AutoScalingPlansConn()
+	conn := meta.(*conns.AWSClient).AutoScalingPlansConn(ctx)
 
 	scalingPlanName, scalingPlanVersion, err := scalingPlanParseResourceID(d.Id())
 
@@ -422,7 +426,7 @@ func resourceScalingPlanUpdate(ctx context.Context, d *schema.ResourceData, meta
 
 func resourceScalingPlanDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).AutoScalingPlansConn()
+	conn := meta.(*conns.AWSClient).AutoScalingPlansConn(ctx)
 
 	scalingPlanName, scalingPlanVersion, err := scalingPlanParseResourceID(d.Id())
 

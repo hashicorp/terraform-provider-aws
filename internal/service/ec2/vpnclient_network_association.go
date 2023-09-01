@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ec2
 
 import (
@@ -13,15 +16,14 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
-	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
+// @SDKResource("aws_ec2_client_vpn_network_association")
 func ResourceClientVPNNetworkAssociation() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceClientVPNNetworkAssociationCreate,
 		ReadWithoutTimeout:   resourceClientVPNNetworkAssociationRead,
-		UpdateWithoutTimeout: resourceClientVPNNetworkAssociationUpdate,
 		DeleteWithoutTimeout: resourceClientVPNNetworkAssociationDelete,
 
 		Importer: &schema.ResourceImporter{
@@ -43,21 +45,6 @@ func ResourceClientVPNNetworkAssociation() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
-			"security_groups": {
-				Type:       schema.TypeSet,
-				MinItems:   1,
-				MaxItems:   5,
-				Optional:   true,
-				Computed:   true,
-				Elem:       &schema.Schema{Type: schema.TypeString},
-				Set:        schema.HashString,
-				Deprecated: "Use the `security_group_ids` attribute of the `aws_ec2_client_vpn_endpoint` resource instead.",
-			},
-			"status": {
-				Type:       schema.TypeString,
-				Computed:   true,
-				Deprecated: `This attribute has been deprecated.`,
-			},
 			"subnet_id": {
 				Type:     schema.TypeString,
 				Required: true,
@@ -73,7 +60,7 @@ func ResourceClientVPNNetworkAssociation() *schema.Resource {
 
 func resourceClientVPNNetworkAssociationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	endpointID := d.Get("client_vpn_endpoint_id").(string)
 	input := &ec2.AssociateClientVpnTargetNetworkInput{
@@ -91,24 +78,8 @@ func resourceClientVPNNetworkAssociationCreate(ctx context.Context, d *schema.Re
 
 	d.SetId(aws.StringValue(output.AssociationId))
 
-	targetNetwork, err := WaitClientVPNNetworkAssociationCreated(ctx, conn, d.Id(), endpointID, d.Timeout(schema.TimeoutCreate))
-
-	if err != nil {
+	if _, err := WaitClientVPNNetworkAssociationCreated(ctx, conn, d.Id(), endpointID, d.Timeout(schema.TimeoutCreate)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for EC2 Client VPN Network Association (%s) create: %s", d.Id(), err)
-	}
-
-	if v, ok := d.GetOk("security_groups"); ok {
-		input := &ec2.ApplySecurityGroupsToClientVpnTargetNetworkInput{
-			ClientVpnEndpointId: aws.String(endpointID),
-			SecurityGroupIds:    flex.ExpandStringSet(v.(*schema.Set)),
-			VpcId:               targetNetwork.VpcId,
-		}
-
-		_, err := conn.ApplySecurityGroupsToClientVpnTargetNetworkWithContext(ctx, input)
-
-		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "applying Security Groups to EC2 Client VPN Network Association (%s): %s", d.Id(), err)
-		}
 	}
 
 	return append(diags, resourceClientVPNNetworkAssociationRead(ctx, d, meta)...)
@@ -116,7 +87,7 @@ func resourceClientVPNNetworkAssociationCreate(ctx context.Context, d *schema.Re
 
 func resourceClientVPNNetworkAssociationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	endpointID := d.Get("client_vpn_endpoint_id").(string)
 	network, err := FindClientVPNNetworkAssociationByIDs(ctx, conn, d.Id(), endpointID)
@@ -133,36 +104,15 @@ func resourceClientVPNNetworkAssociationRead(ctx context.Context, d *schema.Reso
 
 	d.Set("association_id", network.AssociationId)
 	d.Set("client_vpn_endpoint_id", network.ClientVpnEndpointId)
-	d.Set("security_groups", aws.StringValueSlice(network.SecurityGroups))
-	d.Set("status", network.Status.Code)
 	d.Set("subnet_id", network.TargetNetworkId)
 	d.Set("vpc_id", network.VpcId)
 
 	return diags
 }
 
-func resourceClientVPNNetworkAssociationUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
-
-	if d.HasChange("security_groups") {
-		input := &ec2.ApplySecurityGroupsToClientVpnTargetNetworkInput{
-			ClientVpnEndpointId: aws.String(d.Get("client_vpn_endpoint_id").(string)),
-			SecurityGroupIds:    flex.ExpandStringSet(d.Get("security_groups").(*schema.Set)),
-			VpcId:               aws.String(d.Get("vpc_id").(string)),
-		}
-
-		if _, err := conn.ApplySecurityGroupsToClientVpnTargetNetworkWithContext(ctx, input); err != nil {
-			return sdkdiag.AppendErrorf(diags, "applying Security Groups to EC2 Client VPN Network Association (%s): %s", d.Id(), err)
-		}
-	}
-
-	return append(diags, resourceClientVPNNetworkAssociationRead(ctx, d, meta)...)
-}
-
 func resourceClientVPNNetworkAssociationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	endpointID := d.Get("client_vpn_endpoint_id").(string)
 

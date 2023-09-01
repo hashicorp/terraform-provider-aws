@@ -1,17 +1,21 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package events_test
 
 import (
 	"context"
 	"fmt"
 	"os"
-	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/eventbridge"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/google/go-cmp/cmp"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfevents "github.com/hashicorp/terraform-provider-aws/internal/service/events"
@@ -29,25 +33,60 @@ func testAccErrorCheckSkip(t *testing.T) resource.ErrorCheckFunc {
 	)
 }
 
+func TestRuleEventPatternJSONDecoder(t *testing.T) {
+	t.Parallel()
+
+	type testCase struct {
+		input    string
+		expected string
+	}
+	tests := map[string]testCase{
+		"lessThanGreaterThan": {
+			input:    `{"detail":{"count":[{"numeric":["\u003e",0,"\u003c",5]}]}}`,
+			expected: `{"detail":{"count":[{"numeric":[">",0,"<",5]}]}}`,
+		},
+		"ampersand": {
+			input:    `{"detail":{"count":[{"numeric":["\u0026",0,"\u0026",5]}]}}`,
+			expected: `{"detail":{"count":[{"numeric":["&",0,"&",5]}]}}`,
+		},
+	}
+
+	for name, test := range tests {
+		name, test := name, test
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
+			got, err := tfevents.RuleEventPatternJSONDecoder(test.input)
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if diff := cmp.Diff(got, test.expected); diff != "" {
+				t.Errorf("unexpected diff (+wanted, -got): %s", diff)
+			}
+		})
+	}
+}
+
 func TestAccEventsRule_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v1, v2, v3 eventbridge.DescribeRuleOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName1 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_cloudwatch_event_rule.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, eventbridge.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckRuleDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRuleConfig_basic(rName),
+				Config: testAccRuleConfig_basic(rName1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRuleExists(ctx, resourceName, &v1),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "events", regexp.MustCompile(fmt.Sprintf(`rule/%s$`, rName))),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "events", regexache.MustCompile(fmt.Sprintf(`rule/%s$`, rName1))),
+					resource.TestCheckResourceAttr(resourceName, "name", rName1),
 					resource.TestCheckResourceAttr(resourceName, "name_prefix", ""),
 					resource.TestCheckResourceAttr(resourceName, "schedule_expression", "rate(1 hour)"),
 					resource.TestCheckResourceAttr(resourceName, "event_bus_name", "default"),
@@ -75,7 +114,7 @@ func TestAccEventsRule_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRuleExists(ctx, resourceName, &v2),
 					testAccCheckRuleRecreated(&v1, &v2),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "events", regexp.MustCompile(fmt.Sprintf(`rule/%s$`, rName2))),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "events", regexache.MustCompile(fmt.Sprintf(`rule/%s$`, rName2))),
 					resource.TestCheckResourceAttr(resourceName, "name", rName2),
 					resource.TestCheckResourceAttr(resourceName, "event_bus_name", "default"),
 					resource.TestCheckResourceAttr(resourceName, "schedule_expression", "rate(1 hour)"),
@@ -89,7 +128,7 @@ func TestAccEventsRule_basic(t *testing.T) {
 				Config: testAccRuleConfig_defaultBusName(rName2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRuleExists(ctx, resourceName, &v3),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "events", regexp.MustCompile(fmt.Sprintf(`rule/%s$`, rName2))),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "events", regexache.MustCompile(fmt.Sprintf(`rule/%s$`, rName2))),
 					testAccCheckRuleNotRecreated(&v2, &v3),
 					resource.TestCheckResourceAttr(resourceName, "name", rName2),
 					resource.TestCheckResourceAttr(resourceName, "event_bus_name", "default"),
@@ -102,25 +141,25 @@ func TestAccEventsRule_basic(t *testing.T) {
 func TestAccEventsRule_eventBusName(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v1, v2, v3 eventbridge.DescribeRuleOutput
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test-rule")
-	rName2 := sdkacctest.RandomWithPrefix("tf-acc-test-rule")
-	busName := sdkacctest.RandomWithPrefix("tf-acc-test-bus")
-	busName2 := sdkacctest.RandomWithPrefix("tf-acc-test-bus")
+	rName1 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	busName1 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	busName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_cloudwatch_event_rule.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, eventbridge.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckRuleDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRuleConfig_busName(rName, busName, "description 1"),
+				Config: testAccRuleConfig_busName(rName1, busName1, "description 1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRuleExists(ctx, resourceName, &v1),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttr(resourceName, "event_bus_name", busName),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "events", regexp.MustCompile(fmt.Sprintf(`rule/%s/%s$`, busName, rName))),
+					resource.TestCheckResourceAttr(resourceName, "name", rName1),
+					resource.TestCheckResourceAttr(resourceName, "event_bus_name", busName1),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "events", regexache.MustCompile(fmt.Sprintf(`rule/%s/%s$`, busName1, rName1))),
 				),
 			},
 			{
@@ -129,12 +168,12 @@ func TestAccEventsRule_eventBusName(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccRuleConfig_busName(rName, busName, "description 2"),
+				Config: testAccRuleConfig_busName(rName1, busName1, "description 2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRuleExists(ctx, resourceName, &v2),
 					testAccCheckRuleNotRecreated(&v1, &v2),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttr(resourceName, "event_bus_name", busName),
+					resource.TestCheckResourceAttr(resourceName, "name", rName1),
+					resource.TestCheckResourceAttr(resourceName, "event_bus_name", busName1),
 				),
 			},
 			{
@@ -144,7 +183,7 @@ func TestAccEventsRule_eventBusName(t *testing.T) {
 					testAccCheckRuleRecreated(&v2, &v3),
 					resource.TestCheckResourceAttr(resourceName, "name", rName2),
 					resource.TestCheckResourceAttr(resourceName, "event_bus_name", busName2),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "events", regexp.MustCompile(fmt.Sprintf(`rule/%s/%s$`, busName2, rName2))),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "events", regexache.MustCompile(fmt.Sprintf(`rule/%s/%s$`, busName2, rName2))),
 				),
 			},
 		},
@@ -155,12 +194,11 @@ func TestAccEventsRule_role(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v eventbridge.DescribeRuleOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-
 	resourceName := "aws_cloudwatch_event_rule.test"
 	iamRoleResourceName := "aws_iam_role.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, eventbridge.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckRuleDestroy(ctx),
@@ -189,7 +227,7 @@ func TestAccEventsRule_description(t *testing.T) {
 	resourceName := "aws_cloudwatch_event_rule.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, eventbridge.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckRuleDestroy(ctx),
@@ -226,7 +264,7 @@ func TestAccEventsRule_pattern(t *testing.T) {
 	resourceName := "aws_cloudwatch_event_rule.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, eventbridge.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckRuleDestroy(ctx),
@@ -257,6 +295,31 @@ func TestAccEventsRule_pattern(t *testing.T) {
 	})
 }
 
+func TestAccEventsRule_patternJSONEncoder(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v1 eventbridge.DescribeRuleOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_cloudwatch_event_rule.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, eventbridge.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRuleDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccRuleConfig_patternJSONEncoder(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRuleExists(ctx, resourceName, &v1),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "schedule_expression", ""),
+					acctest.CheckResourceAttrEquivalentJSON(resourceName, "event_pattern", `{"detail":{"count":[{"numeric":[">",0,"<",5]}]}}`),
+				),
+			},
+		},
+	})
+}
+
 func TestAccEventsRule_scheduleAndPattern(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v eventbridge.DescribeRuleOutput
@@ -264,7 +327,7 @@ func TestAccEventsRule_scheduleAndPattern(t *testing.T) {
 	resourceName := "aws_cloudwatch_event_rule.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, eventbridge.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckRuleDestroy(ctx),
@@ -294,7 +357,7 @@ func TestAccEventsRule_namePrefix(t *testing.T) {
 	resourceName := "aws_cloudwatch_event_rule.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, eventbridge.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckRuleDestroy(ctx),
@@ -322,7 +385,7 @@ func TestAccEventsRule_Name_generated(t *testing.T) {
 	resourceName := "aws_cloudwatch_event_rule.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, eventbridge.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckRuleDestroy(ctx),
@@ -351,7 +414,7 @@ func TestAccEventsRule_tags(t *testing.T) {
 	resourceName := "aws_cloudwatch_event_rule.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, eventbridge.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckRuleDestroy(ctx),
@@ -386,13 +449,6 @@ func TestAccEventsRule_tags(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
-			{
-				Config: testAccRuleConfig_tags0(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRuleExists(ctx, resourceName, &v3),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-				),
-			},
 		},
 	})
 }
@@ -404,7 +460,7 @@ func TestAccEventsRule_isEnabled(t *testing.T) {
 	resourceName := "aws_cloudwatch_event_rule.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, eventbridge.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckRuleDestroy(ctx),
@@ -451,11 +507,11 @@ func TestAccEventsRule_partnerEventBus(t *testing.T) {
 	}
 
 	var v eventbridge.DescribeRuleOutput
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test-rule")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_cloudwatch_event_rule.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, eventbridge.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckRuleDestroy(ctx),
@@ -464,7 +520,7 @@ func TestAccEventsRule_partnerEventBus(t *testing.T) {
 				Config: testAccRuleConfig_partnerBus(rName, busName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRuleExists(ctx, resourceName, &v),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "events", regexp.MustCompile(fmt.Sprintf(`rule/%s/%s$`, busName, rName))),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "events", regexache.MustCompile(fmt.Sprintf(`rule/%s/%s$`, busName, rName))),
 					resource.TestCheckResourceAttr(resourceName, "description", ""),
 					resource.TestCheckResourceAttr(resourceName, "event_bus_name", busName),
 					acctest.CheckResourceAttrEquivalentJSON(resourceName, "event_pattern", "{\"source\":[\"aws.ec2\"]}"),
@@ -487,12 +543,12 @@ func TestAccEventsRule_partnerEventBus(t *testing.T) {
 func TestAccEventsRule_eventBusARN(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v eventbridge.DescribeRuleOutput
-	rName := sdkacctest.RandomWithPrefix("tf-acc-test-rule")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_cloudwatch_event_rule.test"
 	eventBusName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, eventbridge.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckRuleDestroy(ctx),
@@ -501,7 +557,7 @@ func TestAccEventsRule_eventBusARN(t *testing.T) {
 				Config: testAccRuleConfig_busARN(rName, eventBusName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRuleExists(ctx, resourceName, &v),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "events", regexp.MustCompile(fmt.Sprintf(`rule/%s/%s$`, eventBusName, rName))),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "events", regexache.MustCompile(fmt.Sprintf(`rule/%s/%s$`, eventBusName, rName))),
 					resource.TestCheckResourceAttr(resourceName, "description", ""),
 					resource.TestCheckResourceAttrPair(resourceName, "event_bus_name", "aws_cloudwatch_event_bus.test", "arn"),
 					acctest.CheckResourceAttrEquivalentJSON(resourceName, "event_pattern", "{\"source\":[\"aws.ec2\"]}"),
@@ -521,7 +577,7 @@ func TestAccEventsRule_eventBusARN(t *testing.T) {
 	})
 }
 
-func testAccCheckRuleExists(ctx context.Context, n string, rule *eventbridge.DescribeRuleOutput) resource.TestCheckFunc {
+func testAccCheckRuleExists(ctx context.Context, n string, v *eventbridge.DescribeRuleOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -532,37 +588,49 @@ func testAccCheckRuleExists(ctx context.Context, n string, rule *eventbridge.Des
 			return fmt.Errorf("No EventBridge Rule ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EventsConn()
-
-		resp, err := tfevents.FindRuleByResourceID(ctx, conn, rs.Primary.ID)
+		eventBusName, ruleName, err := tfevents.RuleParseResourceID(rs.Primary.ID)
 
 		if err != nil {
 			return err
 		}
 
-		*rule = *resp
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EventsConn(ctx)
+
+		output, err := tfevents.FindRuleByTwoPartKey(ctx, conn, eventBusName, ruleName)
+
+		if err != nil {
+			return err
+		}
+
+		*v = *output
 
 		return nil
 	}
 }
 
-func testAccCheckRuleEnabled(ctx context.Context, n string, desired string) resource.TestCheckFunc {
+func testAccCheckRuleEnabled(ctx context.Context, n string, want string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EventsConn()
-
-		resp, err := tfevents.FindRuleByResourceID(ctx, conn, rs.Primary.ID)
+		eventBusName, ruleName, err := tfevents.RuleParseResourceID(rs.Primary.ID)
 
 		if err != nil {
 			return err
 		}
 
-		if aws.StringValue(resp.State) != desired {
-			return fmt.Errorf("Expected state %q, given %q", desired, aws.StringValue(resp.State))
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EventsConn(ctx)
+
+		output, err := tfevents.FindRuleByTwoPartKey(ctx, conn, eventBusName, ruleName)
+
+		if err != nil {
+			return err
+		}
+
+		if got := aws.StringValue(output.State); got != want {
+			return fmt.Errorf("EventBridge Rule State = %v, want %v", got, want)
 		}
 
 		return nil
@@ -571,14 +639,20 @@ func testAccCheckRuleEnabled(ctx context.Context, n string, desired string) reso
 
 func testAccCheckRuleDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EventsConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EventsConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_cloudwatch_event_rule" {
 				continue
 			}
 
-			_, err := tfevents.FindRuleByResourceID(ctx, conn, rs.Primary.ID)
+			eventBusName, ruleName, err := tfevents.RuleParseResourceID(rs.Primary.ID)
+
+			if err != nil {
+				return err
+			}
+
+			_, err = tfevents.FindRuleByTwoPartKey(ctx, conn, eventBusName, ruleName)
 
 			if tfresource.NotFound(err) {
 				continue
@@ -624,26 +698,26 @@ func testAccRuleNoBusNameImportStateIdFunc(resourceName string) resource.ImportS
 	}
 }
 
-func testAccRuleConfig_basic(name string) string {
+func testAccRuleConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_cloudwatch_event_rule" "test" {
-  name                = "%s"
+  name                = %[1]q
   schedule_expression = "rate(1 hour)"
 }
-`, name)
+`, rName)
 }
 
-func testAccRuleConfig_defaultBusName(name string) string {
+func testAccRuleConfig_defaultBusName(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_cloudwatch_event_rule" "test" {
   name                = %[1]q
   schedule_expression = "rate(1 hour)"
   event_bus_name      = "default"
 }
-`, name)
+`, rName)
 }
 
-func testAccRuleConfig_busName(name, eventBusName, description string) string {
+func testAccRuleConfig_busName(rName, eventBusName, description string) string {
 	return fmt.Sprintf(`
 resource "aws_cloudwatch_event_rule" "test" {
   name           = %[1]q
@@ -661,59 +735,68 @@ PATTERN
 resource "aws_cloudwatch_event_bus" "test" {
   name = %[3]q
 }
-`, name, description, eventBusName)
+`, rName, description, eventBusName)
 }
 
-func testAccRuleConfig_pattern(name, pattern string) string {
+func testAccRuleConfig_pattern(rName, pattern string) string {
 	return fmt.Sprintf(`
 resource "aws_cloudwatch_event_rule" "test" {
-  name          = "%s"
+  name          = %[1]q
   event_pattern = <<PATTERN
-	%s
+	%[2]s
 PATTERN
 }
-`, name, pattern)
+`, rName, pattern)
 }
 
-func testAccRuleConfig_scheduleAndPattern(name, pattern string) string {
+func testAccRuleConfig_patternJSONEncoder(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_cloudwatch_event_rule" "test" {
-  name                = "%s"
+  name          = %[1]q
+  event_pattern = jsonencode({ "detail" : { "count" : [{ "numeric" : [">", 0, "<", 5] }] } })
+}
+`, rName)
+}
+
+func testAccRuleConfig_scheduleAndPattern(rName, pattern string) string {
+	return fmt.Sprintf(`
+resource "aws_cloudwatch_event_rule" "test" {
+  name                = %[1]q
   schedule_expression = "rate(1 hour)"
   event_pattern       = <<PATTERN
-	%s
+	%[2]s
 PATTERN
 }
-`, name, pattern)
+`, rName, pattern)
 }
 
-func testAccRuleConfig_description(name, description string) string {
+func testAccRuleConfig_description(rName, description string) string {
 	return fmt.Sprintf(`
 resource "aws_cloudwatch_event_rule" "test" {
   name                = %[1]q
   description         = %[2]q
   schedule_expression = "rate(1 hour)"
 }
-`, name, description)
+`, rName, description)
 }
 
-func testAccRuleConfig_isEnabled(name string, enabled bool) string {
+func testAccRuleConfig_isEnabled(rName string, enabled bool) string {
 	return fmt.Sprintf(`
 resource "aws_cloudwatch_event_rule" "test" {
-  name                = "%s"
+  name                = %[1]q
   schedule_expression = "rate(1 hour)"
-  is_enabled          = %t
+  is_enabled          = %[2]t
 }
-`, name, enabled)
+`, rName, enabled)
 }
 
-func testAccRuleConfig_namePrefix(name string) string {
+func testAccRuleConfig_namePrefix(namePrefix string) string {
 	return fmt.Sprintf(`
 resource "aws_cloudwatch_event_rule" "test" {
-  name_prefix         = "%s"
+  name_prefix         = %[1]q
   schedule_expression = "rate(5 minutes)"
 }
-`, name)
+`, namePrefix)
 }
 
 const testAccRuleConfig_nameGenerated = `
@@ -722,7 +805,7 @@ resource "aws_cloudwatch_event_rule" "test" {
 }
 `
 
-func testAccRuleConfig_tags1(name, tagKey1, tagValue1 string) string {
+func testAccRuleConfig_tags1(rName, tagKey1, tagValue1 string) string {
 	return fmt.Sprintf(`
 resource "aws_cloudwatch_event_rule" "test" {
   name                = %[1]q
@@ -732,10 +815,10 @@ resource "aws_cloudwatch_event_rule" "test" {
     %[2]q = %[3]q
   }
 }
-`, name, tagKey1, tagValue1)
+`, rName, tagKey1, tagValue1)
 }
 
-func testAccRuleConfig_tags2(name, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+func testAccRuleConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return fmt.Sprintf(`
 resource "aws_cloudwatch_event_rule" "test" {
   name                = %[1]q
@@ -746,19 +829,10 @@ resource "aws_cloudwatch_event_rule" "test" {
     %[4]q = %[5]q
   }
 }
-`, name, tagKey1, tagValue1, tagKey2, tagValue2)
+`, rName, tagKey1, tagValue1, tagKey2, tagValue2)
 }
 
-func testAccRuleConfig_tags0(name string) string {
-	return fmt.Sprintf(`
-resource "aws_cloudwatch_event_rule" "test" {
-  name                = %[1]q
-  schedule_expression = "rate(1 hour)"
-}
-`, name)
-}
-
-func testAccRuleConfig_role(name string) string {
+func testAccRuleConfig_role(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_role" "test" {
   name = %[1]q
@@ -785,7 +859,7 @@ resource "aws_cloudwatch_event_rule" "test" {
   schedule_expression = "rate(1 hour)"
   role_arn            = aws_iam_role.test.arn
 }
-`, name)
+`, rName)
 }
 
 func testAccRuleConfig_partnerBus(rName, eventBusName string) string {

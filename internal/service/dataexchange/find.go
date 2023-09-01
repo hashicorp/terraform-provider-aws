@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package dataexchange
 
 import (
@@ -6,7 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/dataexchange"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 )
 
 func FindDataSetById(ctx context.Context, conn *dataexchange.DataExchange, id string) (*dataexchange.GetDataSetOutput, error) {
@@ -16,7 +19,7 @@ func FindDataSetById(ctx context.Context, conn *dataexchange.DataExchange, id st
 	output, err := conn.GetDataSetWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, dataexchange.ErrCodeResourceNotFoundException) {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -37,7 +40,7 @@ func FindRevisionById(ctx context.Context, conn *dataexchange.DataExchange, data
 	output, err := conn.GetRevisionWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, dataexchange.ErrCodeResourceNotFoundException) {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}

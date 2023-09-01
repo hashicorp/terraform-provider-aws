@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package kendra
 
 import (
@@ -5,16 +8,17 @@ import (
 	"errors"
 	"fmt"
 	"log"
-	"regexp"
 	"strings"
 	"time"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/kendra"
 	"github.com/aws/aws-sdk-go-v2/service/kendra/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -23,6 +27,7 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 const (
@@ -33,6 +38,8 @@ const (
 	validationExceptionMessage = "Please make sure your role exists and has `kendra.amazonaws.com` as trusted entity"
 )
 
+// @SDKResource("aws_kendra_index", name="Index")
+// @Tags(identifierAttribute="arn")
 func ResourceIndex() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceIndexCreate,
@@ -111,7 +118,7 @@ func ResourceIndex() *schema.Resource {
 										ValidateFunc: validation.All(
 											validation.StringLenBetween(1, 10),
 											validation.StringMatch(
-												regexp.MustCompile(`[0-9]+[s]`),
+												regexache.MustCompile(`[0-9]+[s]`),
 												"numeric string followed by the character \"s\"",
 											),
 										),
@@ -233,7 +240,7 @@ func ResourceIndex() *schema.Resource {
 				ValidateFunc: validation.All(
 					validation.StringLenBetween(1, 1000),
 					validation.StringMatch(
-						regexp.MustCompile(`[a-zA-Z0-9][a-zA-Z0-9_-]*`),
+						regexache.MustCompile(`[a-zA-Z0-9][a-zA-Z0-9_-]*`),
 						"The name must consist of alphanumerics, hyphens or underscores.",
 					),
 				),
@@ -349,7 +356,7 @@ func ResourceIndex() *schema.Resource {
 										ValidateFunc: validation.All(
 											validation.StringLenBetween(1, 2048),
 											validation.StringMatch(
-												regexp.MustCompile(`^(https?|ftp|file):\/\/([^\s]*)`),
+												regexache.MustCompile(`^(https?|ftp|file):\/\/([^\s]*)`),
 												"Must be valid URL",
 											),
 										),
@@ -365,23 +372,21 @@ func ResourceIndex() *schema.Resource {
 					},
 				},
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
 	}
 }
 
 func resourceIndexCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).KendraClient()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	conn := meta.(*conns.AWSClient).KendraClient(ctx)
 
 	name := d.Get("name").(string)
-
 	input := &kendra.CreateIndexInput{
-		ClientToken: aws.String(resource.UniqueId()),
+		ClientToken: aws.String(id.UniqueId()),
 		Name:        aws.String(name),
 		RoleArn:     aws.String(d.Get("role_arn").(string)),
+		Tags:        getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("description"); ok {
@@ -408,13 +413,7 @@ func resourceIndexCreate(ctx context.Context, d *schema.ResourceData, meta inter
 		input.UserTokenConfigurations = expandUserTokenConfigurations(v.([]interface{}))
 	}
 
-	if len(tags) > 0 {
-		input.Tags = Tags(tags.IgnoreAWS())
-	}
-
-	log.Printf("[DEBUG] Creating Kendra Index %#v", input)
-
-	outputRaw, err := tfresource.RetryWhenContext(ctx, propagationTimeout,
+	outputRaw, err := tfresource.RetryWhen(ctx, propagationTimeout,
 		func() (interface{}, error) {
 			return conn.CreateIndex(ctx, input)
 		},
@@ -430,11 +429,11 @@ func resourceIndexCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	)
 
 	if err != nil {
-		return diag.Errorf("error creating Kendra Index (%s): %s", name, err)
+		return diag.Errorf("creating Kendra Index (%s): %s", name, err)
 	}
 
 	if outputRaw == nil {
-		return diag.Errorf("error creating Kendra Index (%s): empty output", name)
+		return diag.Errorf("creating Kendra Index (%s): empty output", name)
 	}
 
 	output := outputRaw.(*kendra.CreateIndexOutput)
@@ -443,7 +442,7 @@ func resourceIndexCreate(ctx context.Context, d *schema.ResourceData, meta inter
 
 	// waiter since the status changes from CREATING to either ACTIVE or FAILED
 	if _, err := waitIndexCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
-		return diag.Errorf("error waiting for Index (%s) creation: %s", d.Id(), err)
+		return diag.Errorf("waiting for Index (%s) creation: %s", d.Id(), err)
 	}
 
 	callUpdateIndex := false
@@ -466,9 +465,7 @@ func resourceIndexCreate(ctx context.Context, d *schema.ResourceData, meta inter
 }
 
 func resourceIndexRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).KendraClient()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).KendraClient(ctx)
 
 	resp, err := findIndexByID(ctx, conn, d.Id())
 
@@ -479,7 +476,7 @@ func resourceIndexRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	}
 
 	if err != nil {
-		return diag.Errorf("error getting Kendra Index (%s): %s", d.Id(), err)
+		return diag.Errorf("getting Kendra Index (%s): %s", d.Id(), err)
 	}
 
 	arn := arn.ARN{
@@ -525,26 +522,11 @@ func resourceIndexRead(ctx context.Context, d *schema.ResourceData, meta interfa
 		return diag.FromErr(err)
 	}
 
-	tags, err := ListTags(ctx, conn, d.Get("arn").(string))
-	if err != nil {
-		return diag.Errorf("error listing tags for resource (%s): %s", d.Get("arn").(string), err)
-	}
-	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return diag.Errorf("error setting tags: %s", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return diag.Errorf("error setting tags_all: %s", err)
-	}
-
 	return nil
 }
 
 func resourceIndexUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).KendraClient()
+	conn := meta.(*conns.AWSClient).KendraClient(ctx)
 
 	id := d.Id()
 
@@ -577,7 +559,7 @@ func resourceIndexUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 			input.UserTokenConfigurations = expandUserTokenConfigurations(d.Get("user_token_configurations").([]interface{}))
 		}
 
-		_, err := tfresource.RetryWhenContext(ctx, propagationTimeout,
+		_, err := tfresource.RetryWhen(ctx, propagationTimeout,
 			func() (interface{}, error) {
 				return conn.UpdateIndex(ctx, input)
 			},
@@ -593,19 +575,12 @@ func resourceIndexUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 		)
 
 		if err != nil {
-			return diag.Errorf("error updating Index (%s): %s", d.Id(), err)
+			return diag.Errorf("updating Index (%s): %s", d.Id(), err)
 		}
 
 		// waiter since the status changes from UPDATING to either ACTIVE or FAILED
 		if _, err := waitIndexUpdated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
-			return diag.Errorf("error waiting for Index (%s) update: %s", d.Id(), err)
-		}
-	}
-
-	if !d.IsNewResource() && d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-		if err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n); err != nil {
-			return diag.Errorf("error updating tags: %s", err)
+			return diag.Errorf("waiting for Index (%s) update: %s", d.Id(), err)
 		}
 	}
 
@@ -613,7 +588,7 @@ func resourceIndexUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 }
 
 func resourceIndexDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).KendraClient()
+	conn := meta.(*conns.AWSClient).KendraClient(ctx)
 
 	id := d.Id()
 
@@ -622,11 +597,11 @@ func resourceIndexDelete(ctx context.Context, d *schema.ResourceData, meta inter
 	})
 
 	if err != nil {
-		return diag.Errorf("error deleting Index (%s): %s", d.Id(), err)
+		return diag.Errorf("deleting Index (%s): %s", d.Id(), err)
 	}
 
 	if _, err := waitIndexDeleted(ctx, conn, id, d.Timeout(schema.TimeoutDelete)); err != nil {
-		return diag.Errorf("error waiting for Index (%s) delete: %s", d.Id(), err)
+		return diag.Errorf("waiting for Index (%s) delete: %s", d.Id(), err)
 	}
 
 	return nil
@@ -643,7 +618,7 @@ func findIndexByID(ctx context.Context, conn *kendra.Client, id string) (*kendra
 		var resourceNotFoundException *types.ResourceNotFoundException
 
 		if errors.As(err, &resourceNotFoundException) {
-			return nil, &resource.NotFoundError{
+			return nil, &retry.NotFoundError{
 				LastError:   err,
 				LastRequest: input,
 			}
@@ -659,7 +634,7 @@ func findIndexByID(ctx context.Context, conn *kendra.Client, id string) (*kendra
 	return output, nil
 }
 
-func statusIndex(ctx context.Context, conn *kendra.Client, id string) resource.StateRefreshFunc {
+func statusIndex(ctx context.Context, conn *kendra.Client, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := findIndexByID(ctx, conn, id)
 
@@ -676,7 +651,7 @@ func statusIndex(ctx context.Context, conn *kendra.Client, id string) resource.S
 }
 
 func waitIndexCreated(ctx context.Context, conn *kendra.Client, id string, timeout time.Duration) (*kendra.DescribeIndexOutput, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(types.IndexStatusCreating),
 		Target:  enum.Slice(types.IndexStatusActive),
 		Timeout: timeout,
@@ -696,7 +671,7 @@ func waitIndexCreated(ctx context.Context, conn *kendra.Client, id string, timeo
 }
 
 func waitIndexUpdated(ctx context.Context, conn *kendra.Client, id string, timeout time.Duration) (*kendra.DescribeIndexOutput, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(types.IndexStatusUpdating),
 		Target:  enum.Slice(types.IndexStatusActive),
 		Timeout: timeout,
@@ -716,7 +691,7 @@ func waitIndexUpdated(ctx context.Context, conn *kendra.Client, id string, timeo
 }
 
 func waitIndexDeleted(ctx context.Context, conn *kendra.Client, id string, timeout time.Duration) (*kendra.DescribeIndexOutput, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(types.IndexStatusDeleting),
 		Target:  []string{},
 		Timeout: timeout,
@@ -1093,7 +1068,7 @@ func flattenUserGroupResolutionConfiguration(userGroupResolutionConfiguration *t
 	}
 
 	values := map[string]interface{}{
-		"user_group_resolution_configuration": userGroupResolutionConfiguration.UserGroupResolutionMode,
+		"user_group_resolution_mode": userGroupResolutionConfiguration.UserGroupResolutionMode,
 	}
 
 	return []interface{}{values}

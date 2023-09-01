@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package dynamodb
 
 import (
@@ -15,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @SDKDataSource("aws_dynamodb_table_item")
 func DataSourceTableItem() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceTableItemRead,
@@ -51,7 +55,7 @@ const (
 )
 
 func dataSourceTableItemRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).DynamoDBConn()
+	conn := meta.(*conns.AWSClient).DynamoDBConn(ctx)
 
 	tableName := d.Get("table_name").(string)
 	key, err := ExpandTableItemAttributes(d.Get("key").(string))

@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package rds
 
 import (
@@ -13,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/generate/namevaluesfilters"
 )
 
+// @SDKDataSource("aws_rds_engine_version")
 func DataSourceEngineVersion() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceEngineVersionRead,
@@ -141,7 +145,7 @@ func DataSourceEngineVersion() *schema.Resource {
 
 func dataSourceEngineVersionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).RDSConn()
+	conn := meta.(*conns.AWSClient).RDSConn(ctx)
 
 	input := &rds.DescribeDBEngineVersionsInput{
 		ListSupportedCharacterSets: aws.Bool(true),
@@ -189,7 +193,6 @@ func dataSourceEngineVersionRead(ctx context.Context, d *schema.ResourceData, me
 		}
 		return !lastPage
 	})
-
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading RDS engine versions: %s", err)
 	}

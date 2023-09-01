@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package elastictranscoder
 
 import (
@@ -8,7 +11,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/elastictranscoder"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -16,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 )
 
+// @SDKResource("aws_elastictranscoder_preset")
 func ResourcePreset() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourcePresetCreate,
@@ -503,7 +507,7 @@ func ResourcePreset() *schema.Resource {
 
 func resourcePresetCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ElasticTranscoderConn()
+	conn := meta.(*conns.AWSClient).ElasticTranscoderConn(ctx)
 
 	req := &elastictranscoder.CreatePresetInput{
 		Audio:       expandETAudioParams(d),
@@ -516,7 +520,7 @@ func resourcePresetCreate(ctx context.Context, d *schema.ResourceData, meta inte
 	if name, ok := d.GetOk("name"); ok {
 		req.Name = aws.String(name.(string))
 	} else {
-		name := resource.PrefixedUniqueId("tf-et-preset-")
+		name := id.PrefixedUniqueId("tf-et-preset-")
 		d.Set("name", name)
 		req.Name = aws.String(name)
 	}
@@ -750,7 +754,7 @@ func expandETVideoWatermarks(d *schema.ResourceData) []*elastictranscoder.Preset
 
 func resourcePresetRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ElasticTranscoderConn()
+	conn := meta.(*conns.AWSClient).ElasticTranscoderConn(ctx)
 
 	resp, err := conn.ReadPresetWithContext(ctx, &elastictranscoder.ReadPresetInput{
 		Id: aws.String(d.Id()),
@@ -917,7 +921,7 @@ func flattenETWatermarks(watermarks []*elastictranscoder.PresetWatermark) []map[
 
 func resourcePresetDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ElasticTranscoderConn()
+	conn := meta.(*conns.AWSClient).ElasticTranscoderConn(ctx)
 
 	log.Printf("[DEBUG] Elastic Transcoder Delete Preset: %s", d.Id())
 	_, err := conn.DeletePresetWithContext(ctx, &elastictranscoder.DeletePresetInput{

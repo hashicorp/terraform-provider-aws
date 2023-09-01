@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package securityhub
 
 import (
@@ -5,7 +8,7 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go/service/securityhub"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 )
 
 const (
@@ -14,14 +17,11 @@ const (
 
 	// Maximum amount of time to wait for an AdminAccount to return NotFound
 	adminAccountNotFoundTimeout = 5 * time.Minute
-
-	standardsSubscriptionCreateTimeout = 3 * time.Minute
-	standardsSubscriptionDeleteTimeout = 3 * time.Minute
 )
 
 // waitAdminAccountEnabled waits for an AdminAccount to return Enabled
 func waitAdminAccountEnabled(ctx context.Context, conn *securityhub.SecurityHub, adminAccountID string) (*securityhub.AdminAccount, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{adminStatusNotFound},
 		Target:  []string{securityhub.AdminStatusEnabled},
 		Refresh: statusAdminAccountAdmin(ctx, conn, adminAccountID),
@@ -39,7 +39,7 @@ func waitAdminAccountEnabled(ctx context.Context, conn *securityhub.SecurityHub,
 
 // waitAdminAccountNotFound waits for an AdminAccount to return NotFound
 func waitAdminAccountNotFound(ctx context.Context, conn *securityhub.SecurityHub, adminAccountID string) (*securityhub.AdminAccount, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{securityhub.AdminStatusDisableInProgress},
 		Target:  []string{adminStatusNotFound},
 		Refresh: statusAdminAccountAdmin(ctx, conn, adminAccountID),
@@ -49,40 +49,6 @@ func waitAdminAccountNotFound(ctx context.Context, conn *securityhub.SecurityHub
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*securityhub.AdminAccount); ok {
-		return output, err
-	}
-
-	return nil, err
-}
-
-func waitStandardsSubscriptionCreated(ctx context.Context, conn *securityhub.SecurityHub, arn string) (*securityhub.StandardsSubscription, error) {
-	stateConf := &resource.StateChangeConf{
-		Pending: []string{securityhub.StandardsStatusPending},
-		Target:  []string{securityhub.StandardsStatusReady, securityhub.StandardsStatusIncomplete},
-		Refresh: statusStandardsSubscription(ctx, conn, arn),
-		Timeout: standardsSubscriptionCreateTimeout,
-	}
-
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
-
-	if output, ok := outputRaw.(*securityhub.StandardsSubscription); ok {
-		return output, err
-	}
-
-	return nil, err
-}
-
-func waitStandardsSubscriptionDeleted(ctx context.Context, conn *securityhub.SecurityHub, arn string) (*securityhub.StandardsSubscription, error) {
-	stateConf := &resource.StateChangeConf{
-		Pending: []string{securityhub.StandardsStatusDeleting},
-		Target:  []string{standardsStatusNotFound, securityhub.StandardsStatusIncomplete},
-		Refresh: statusStandardsSubscription(ctx, conn, arn),
-		Timeout: standardsSubscriptionDeleteTimeout,
-	}
-
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
-
-	if output, ok := outputRaw.(*securityhub.StandardsSubscription); ok {
 		return output, err
 	}
 

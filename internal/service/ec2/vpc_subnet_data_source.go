@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ec2
 
 import (
@@ -14,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
+// @SDKDataSource("aws_subnet")
 func DataSourceSubnet() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceSubnetRead,
@@ -61,6 +65,10 @@ func DataSourceSubnet() *schema.Resource {
 			},
 			"enable_dns64": {
 				Type:     schema.TypeBool,
+				Computed: true,
+			},
+			"enable_lni_at_device_index": {
+				Type:     schema.TypeInt,
 				Computed: true,
 			},
 			"enable_resource_name_dns_aaaa_record_on_launch": {
@@ -127,7 +135,7 @@ func DataSourceSubnet() *schema.Resource {
 
 func dataSourceSubnetRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	input := &ec2.DescribeSubnetsInput{}
@@ -166,7 +174,7 @@ func dataSourceSubnetRead(ctx context.Context, d *schema.ResourceData, meta inte
 
 	if tags, tagsOk := d.GetOk("tags"); tagsOk {
 		input.Filters = append(input.Filters, BuildTagFilterList(
-			Tags(tftags.New(tags.(map[string]interface{}))),
+			Tags(tftags.New(ctx, tags.(map[string]interface{}))),
 		)...)
 	}
 
@@ -195,6 +203,7 @@ func dataSourceSubnetRead(ctx context.Context, d *schema.ResourceData, meta inte
 	d.Set("customer_owned_ipv4_pool", subnet.CustomerOwnedIpv4Pool)
 	d.Set("default_for_az", subnet.DefaultForAz)
 	d.Set("enable_dns64", subnet.EnableDns64)
+	d.Set("enable_lni_at_device_index", subnet.EnableLniAtDeviceIndex)
 	d.Set("ipv6_native", subnet.Ipv6Native)
 
 	// Make sure those values are set, if an IPv6 block exists it'll be set in the loop.
@@ -224,7 +233,7 @@ func dataSourceSubnetRead(ctx context.Context, d *schema.ResourceData, meta inte
 		d.Set("private_dns_hostname_type_on_launch", nil)
 	}
 
-	if err := d.Set("tags", KeyValueTags(subnet.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+	if err := d.Set("tags", KeyValueTags(ctx, subnet.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 

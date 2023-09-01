@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package organizations
 
 import (
@@ -6,7 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/organizations"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
@@ -18,7 +21,7 @@ func FindAccountByID(ctx context.Context, conn *organizations.Organizations, id 
 	output, err := conn.DescribeAccountWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, organizations.ErrCodeAccountNotFoundException) {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -33,36 +36,13 @@ func FindAccountByID(ctx context.Context, conn *organizations.Organizations, id 
 	}
 
 	if status := aws.StringValue(output.Account.Status); status == organizations.AccountStatusSuspended {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			Message:     status,
 			LastRequest: input,
 		}
 	}
 
 	return output.Account, nil
-}
-
-func FindOrganization(ctx context.Context, conn *organizations.Organizations) (*organizations.Organization, error) {
-	input := &organizations.DescribeOrganizationInput{}
-
-	output, err := conn.DescribeOrganizationWithContext(ctx, input)
-
-	if tfawserr.ErrCodeEquals(err, organizations.ErrCodeAWSOrganizationsNotInUseException) {
-		return nil, &resource.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
-		}
-	}
-
-	if err != nil {
-		return nil, err
-	}
-
-	if output == nil || output.Organization == nil {
-		return nil, tfresource.NewEmptyResultError(input)
-	}
-
-	return output.Organization, nil
 }
 
 func FindPolicyAttachmentByTwoPartKey(ctx context.Context, conn *organizations.Organizations, targetID, policyID string) (*organizations.PolicyTargetSummary, error) {
@@ -86,7 +66,7 @@ func FindPolicyAttachmentByTwoPartKey(ctx context.Context, conn *organizations.O
 	})
 
 	if tfawserr.ErrCodeEquals(err, organizations.ErrCodeTargetNotFoundException, organizations.ErrCodePolicyNotFoundException) {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -97,7 +77,7 @@ func FindPolicyAttachmentByTwoPartKey(ctx context.Context, conn *organizations.O
 	}
 
 	if output == nil {
-		return nil, &resource.NotFoundError{}
+		return nil, &retry.NotFoundError{}
 	}
 
 	return output, nil

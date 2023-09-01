@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ivs
 
 import (
@@ -6,7 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ivs"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
@@ -16,7 +19,7 @@ func FindPlaybackKeyPairByID(ctx context.Context, conn *ivs.IVS, id string) (*iv
 	}
 	out, err := conn.GetPlaybackKeyPairWithContext(ctx, in)
 	if tfawserr.ErrCodeEquals(err, ivs.ErrCodeResourceNotFoundException) {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: in,
 		}
@@ -39,7 +42,7 @@ func FindRecordingConfigurationByID(ctx context.Context, conn *ivs.IVS, id strin
 	}
 	out, err := conn.GetRecordingConfigurationWithContext(ctx, in)
 	if tfawserr.ErrCodeEquals(err, ivs.ErrCodeResourceNotFoundException) {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: in,
 		}
@@ -63,7 +66,7 @@ func FindChannelByID(ctx context.Context, conn *ivs.IVS, arn string) (*ivs.Chann
 	out, err := conn.GetChannelWithContext(ctx, in)
 	if err != nil {
 		if tfawserr.ErrCodeEquals(err, ivs.ErrCodeResourceNotFoundException) {
-			return nil, &resource.NotFoundError{
+			return nil, &retry.NotFoundError{
 				LastError:   err,
 				LastRequest: in,
 			}
@@ -85,7 +88,7 @@ func FindStreamKeyByChannelID(ctx context.Context, conn *ivs.IVS, channelArn str
 	}
 	out, err := conn.ListStreamKeysWithContext(ctx, in)
 	if tfawserr.ErrCodeEquals(err, ivs.ErrCodeResourceNotFoundException) {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: in,
 		}
@@ -96,7 +99,7 @@ func FindStreamKeyByChannelID(ctx context.Context, conn *ivs.IVS, channelArn str
 	}
 
 	if len(out.StreamKeys) < 1 {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastRequest: in,
 		}
 	}
@@ -112,7 +115,7 @@ func findStreamKeyByID(ctx context.Context, conn *ivs.IVS, id string) (*ivs.Stre
 	}
 	out, err := conn.GetStreamKeyWithContext(ctx, in)
 	if tfawserr.ErrCodeEquals(err, ivs.ErrCodeResourceNotFoundException) {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: in,
 		}

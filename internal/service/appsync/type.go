@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package appsync
 
 import (
@@ -17,6 +20,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
+// @SDKResource("aws_appsync_type")
 func ResourceType() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceTypeCreate,
@@ -60,7 +64,7 @@ func ResourceType() *schema.Resource {
 
 func resourceTypeCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).AppSyncConn()
+	conn := meta.(*conns.AWSClient).AppSyncConn(ctx)
 
 	apiID := d.Get("api_id").(string)
 
@@ -82,14 +86,14 @@ func resourceTypeCreate(ctx context.Context, d *schema.ResourceData, meta interf
 
 func resourceTypeRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).AppSyncConn()
+	conn := meta.(*conns.AWSClient).AppSyncConn(ctx)
 
 	apiID, format, name, err := DecodeTypeID(d.Id())
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading Appsync Type %q: %s", d.Id(), err)
 	}
 
-	resp, err := FindTypeByID(ctx, conn, apiID, format, name)
+	resp, err := FindTypeByThreePartKey(ctx, conn, apiID, format, name)
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] AppSync Type (%s) not found, removing from state", d.Id())
 		d.SetId("")
@@ -112,7 +116,7 @@ func resourceTypeRead(ctx context.Context, d *schema.ResourceData, meta interfac
 
 func resourceTypeUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).AppSyncConn()
+	conn := meta.(*conns.AWSClient).AppSyncConn(ctx)
 
 	params := &appsync.UpdateTypeInput{
 		ApiId:      aws.String(d.Get("api_id").(string)),
@@ -131,7 +135,7 @@ func resourceTypeUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 
 func resourceTypeDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).AppSyncConn()
+	conn := meta.(*conns.AWSClient).AppSyncConn(ctx)
 
 	input := &appsync.DeleteTypeInput{
 		ApiId:    aws.String(d.Get("api_id").(string)),

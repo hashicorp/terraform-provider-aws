@@ -1,10 +1,13 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package sagemaker_test
 
 import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/sagemaker"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
@@ -50,17 +53,20 @@ func TestAccSageMaker_serial(t *testing.T) {
 			"sharingSettings":                                        testAccDomain_sharingSettings,
 			"defaultUserSettingsUpdated":                             testAccDomain_defaultUserSettingsUpdated,
 			"canvas":                                                 testAccDomain_canvasAppSettings,
+			"modelRegisterSettings":                                  testAccDomain_modelRegisterSettings,
+			"workspaceSettings":                                      testAccDomain_workspaceSettings,
 			"domainSettings":                                         testAccDomain_domainSettings,
 			"rSessionAppSettings":                                    testAccDomain_rSessionAppSettings,
+			"rStudioServerProAppSettings":                            testAccDomain_rStudioServerProAppSettings,
 			"spaceSettingsKernelGatewayAppSettings":                  testAccDomain_spaceSettingsKernelGatewayAppSettings,
 			"code":                                                   testAccDomain_jupyterServerAppSettings_code,
 		},
 		"FlowDefinition": {
 			"basic":                          testAccFlowDefinition_basic,
 			"disappears":                     testAccFlowDefinition_disappears,
+			"tags":                           testAccFlowDefinition_tags,
 			"HumanLoopConfigPublicWorkforce": testAccFlowDefinition_humanLoopConfig_publicWorkforce,
 			"HumanLoopRequestSource":         testAccFlowDefinition_humanLoopRequestSource,
-			"Tags":                           testAccFlowDefinition_tags,
 		},
 		"Space": {
 			"basic":                    testAccSpace_basic,
@@ -91,10 +97,10 @@ func TestAccSageMaker_serial(t *testing.T) {
 		},
 		"Workteam": {
 			"disappears":         testAccWorkteam_disappears,
+			"tags":               testAccWorkteam_tags,
 			"CognitoConfig":      testAccWorkteam_cognitoConfig,
 			"NotificationConfig": testAccWorkteam_notificationConfig,
 			"OidcConfig":         testAccWorkteam_oidcConfig,
-			"Tags":               testAccWorkteam_tags,
 		},
 		"Servicecatalog": {
 			"basic": testAccServicecatalogPortfolioStatus_basic,

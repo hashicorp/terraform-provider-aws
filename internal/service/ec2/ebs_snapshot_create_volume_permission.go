@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ec2
 
 import (
@@ -17,6 +20,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
+// @SDKResource("aws_snapshot_create_volume_permission")
 func ResourceSnapshotCreateVolumePermission() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceSnapshotCreateVolumePermissionCreate,
@@ -47,7 +51,7 @@ func ResourceSnapshotCreateVolumePermission() *schema.Resource {
 
 func resourceSnapshotCreateVolumePermissionCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	snapshotID := d.Get("snapshot_id").(string)
 	accountID := d.Get("account_id").(string)
@@ -71,7 +75,7 @@ func resourceSnapshotCreateVolumePermissionCreate(ctx context.Context, d *schema
 
 	d.SetId(id)
 
-	_, err = tfresource.RetryWhenNotFoundContext(ctx, d.Timeout(schema.TimeoutCreate), func() (interface{}, error) {
+	_, err = tfresource.RetryWhenNotFound(ctx, d.Timeout(schema.TimeoutCreate), func() (interface{}, error) {
 		return FindCreateSnapshotCreateVolumePermissionByTwoPartKey(ctx, conn, snapshotID, accountID)
 	})
 
@@ -84,7 +88,7 @@ func resourceSnapshotCreateVolumePermissionCreate(ctx context.Context, d *schema
 
 func resourceSnapshotCreateVolumePermissionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	snapshotID, accountID, err := EBSSnapshotCreateVolumePermissionParseResourceID(d.Id())
 
@@ -109,7 +113,7 @@ func resourceSnapshotCreateVolumePermissionRead(ctx context.Context, d *schema.R
 
 func resourceSnapshotCreateVolumePermissionDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	snapshotID, accountID, err := EBSSnapshotCreateVolumePermissionParseResourceID(d.Id())
 
@@ -136,7 +140,7 @@ func resourceSnapshotCreateVolumePermissionDelete(ctx context.Context, d *schema
 		return sdkdiag.AppendErrorf(diags, "deleting EBS Snapshot CreateVolumePermission (%s): %s", d.Id(), err)
 	}
 
-	_, err = tfresource.RetryUntilNotFoundContext(ctx, d.Timeout(schema.TimeoutDelete), func() (interface{}, error) {
+	_, err = tfresource.RetryUntilNotFound(ctx, d.Timeout(schema.TimeoutDelete), func() (interface{}, error) {
 		return FindCreateSnapshotCreateVolumePermissionByTwoPartKey(ctx, conn, snapshotID, accountID)
 	})
 
@@ -150,7 +154,7 @@ func resourceSnapshotCreateVolumePermissionDelete(ctx context.Context, d *schema
 func resourceSnapshotCreateVolumePermissionCustomizeDiff(ctx context.Context, diff *schema.ResourceDiff, meta interface{}) error {
 	if diff.Id() == "" {
 		if snapshotID := diff.Get("snapshot_id").(string); snapshotID != "" {
-			conn := meta.(*conns.AWSClient).EC2Conn()
+			conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 			snapshot, err := FindSnapshotByID(ctx, conn, snapshotID)
 

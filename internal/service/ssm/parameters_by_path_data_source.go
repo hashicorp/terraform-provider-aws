@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ssm
 
 import (
@@ -11,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
+// @SDKDataSource("aws_ssm_parameters_by_path")
 func DataSourceParametersByPath() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceParametersReadByPath,
@@ -57,7 +61,7 @@ func DataSourceParametersByPath() *schema.Resource {
 
 func dataSourceParametersReadByPath(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SSMConn()
+	conn := meta.(*conns.AWSClient).SSMConn(ctx)
 
 	path := d.Get("path").(string)
 	input := &ssm.GetParametersByPathInput{

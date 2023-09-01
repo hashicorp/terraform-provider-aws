@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package iam
 
 import (
@@ -10,13 +13,15 @@ import (
 	"github.com/aws/aws-sdk-go/service/iam"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
+// @SDKResource("aws_iam_role_policy_attachment")
 func ResourceRolePolicyAttachment() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceRolePolicyAttachmentCreate,
@@ -43,7 +48,7 @@ func ResourceRolePolicyAttachment() *schema.Resource {
 
 func resourceRolePolicyAttachmentCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).IAMConn()
+	conn := meta.(*conns.AWSClient).IAMConn(ctx)
 
 	role := d.Get("role").(string)
 	arn := d.Get("policy_arn").(string)
@@ -54,14 +59,14 @@ func resourceRolePolicyAttachmentCreate(ctx context.Context, d *schema.ResourceD
 	}
 
 	//lintignore:R016 // Allow legacy unstable ID usage in managed resource
-	d.SetId(resource.PrefixedUniqueId(fmt.Sprintf("%s-", role)))
+	d.SetId(id.PrefixedUniqueId(fmt.Sprintf("%s-", role)))
 
 	return append(diags, resourceRolePolicyAttachmentRead(ctx, d, meta)...)
 }
 
 func resourceRolePolicyAttachmentRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).IAMConn()
+	conn := meta.(*conns.AWSClient).IAMConn(ctx)
 	role := d.Get("role").(string)
 	policyARN := d.Get("policy_arn").(string)
 	// Human friendly ID for error messages since d.Id() is non-descriptive
@@ -69,21 +74,21 @@ func resourceRolePolicyAttachmentRead(ctx context.Context, d *schema.ResourceDat
 
 	var hasPolicyAttachment bool
 
-	err := resource.RetryContext(ctx, propagationTimeout, func() *resource.RetryError {
+	err := retry.RetryContext(ctx, propagationTimeout, func() *retry.RetryError {
 		var err error
 
 		hasPolicyAttachment, err = RoleHasPolicyARNAttachment(ctx, conn, role, policyARN)
 
 		if d.IsNewResource() && tfawserr.ErrCodeEquals(err, iam.ErrCodeNoSuchEntityException) {
-			return resource.RetryableError(err)
+			return retry.RetryableError(err)
 		}
 
 		if err != nil {
-			return resource.NonRetryableError(err)
+			return retry.NonRetryableError(err)
 		}
 
 		if d.IsNewResource() && !hasPolicyAttachment {
-			return resource.RetryableError(&resource.NotFoundError{
+			return retry.RetryableError(&retry.NotFoundError{
 				LastError: fmt.Errorf("IAM Role Managed Policy Attachment (%s) not found", id),
 			})
 		}
@@ -119,7 +124,7 @@ func resourceRolePolicyAttachmentRead(ctx context.Context, d *schema.ResourceDat
 
 func resourceRolePolicyAttachmentDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).IAMConn()
+	conn := meta.(*conns.AWSClient).IAMConn(ctx)
 	role := d.Get("role").(string)
 	arn := d.Get("policy_arn").(string)
 

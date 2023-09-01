@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package events
 
 import (
@@ -11,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
+// @SDKDataSource("aws_cloudwatch_event_bus")
 func DataSourceBus() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceBusRead,
@@ -30,7 +34,7 @@ func DataSourceBus() *schema.Resource {
 
 func dataSourceBusRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EventsConn()
+	conn := meta.(*conns.AWSClient).EventsConn(ctx)
 
 	name := d.Get("name").(string)
 

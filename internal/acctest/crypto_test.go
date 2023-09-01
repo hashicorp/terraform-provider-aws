@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package acctest_test
 
 import (
@@ -85,5 +88,49 @@ func TestTLSECDSAPublicKeyPEM(t *testing.T) {
 
 	if !strings.Contains(publicKey, acctest.PEMBlockTypePublicKey) {
 		t.Errorf("key does not contain PUBLIC KEY: %s", publicKey)
+	}
+}
+
+func TestTLSPEMEscapeNewlines(t *testing.T) {
+	t.Parallel()
+
+	input := `
+ABCD
+12345
+`
+	want := "\\nABCD\\n12345\\n"
+
+	if got := acctest.TLSPEMEscapeNewlines(input); got != want {
+		t.Errorf("got: %s\nwant: %s", got, want)
+	}
+}
+
+func TestTLSPEMRemovePublicKeyEncapsulationBoundaries(t *testing.T) {
+	t.Parallel()
+
+	input := `-----BEGIN PUBLIC KEY-----
+ABCD
+12345
+-----END PUBLIC KEY-----
+`
+	want := "\nABCD\n12345\n\n"
+
+	if got := acctest.TLSPEMRemovePublicKeyEncapsulationBoundaries(input); got != want {
+		t.Errorf("got: %s\nwant: %s", got, want)
+	}
+}
+
+func TestTLSPEMRemoveNewlines(t *testing.T) {
+	t.Parallel()
+
+	input := `
+ABCD
+12345
+
+`
+	want := "ABCD12345"
+
+	if got := acctest.TLSPEMRemoveNewlines(input); got != want {
+		t.Errorf("got: %s\nwant: %s", got, want)
 	}
 }

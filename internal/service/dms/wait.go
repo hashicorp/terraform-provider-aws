@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package dms
 
 import (
@@ -5,7 +8,7 @@ import (
 	"time"
 
 	dms "github.com/aws/aws-sdk-go/service/databasemigrationservice"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 )
 
 const (
@@ -13,21 +16,8 @@ const (
 	replicationTaskRunningTimeout = 5 * time.Minute
 )
 
-func waitEndpointDeleted(ctx context.Context, conn *dms.DatabaseMigrationService, id string, timeout time.Duration) error {
-	stateConf := &resource.StateChangeConf{
-		Pending: []string{endpointStatusDeleting},
-		Target:  []string{},
-		Refresh: statusEndpoint(ctx, conn, id),
-		Timeout: timeout,
-	}
-
-	_, err := stateConf.WaitForStateContext(ctx)
-
-	return err
-}
-
 func waitReplicationTaskDeleted(ctx context.Context, conn *dms.DatabaseMigrationService, id string, timeout time.Duration) error {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:    []string{replicationTaskStatusDeleting},
 		Target:     []string{},
 		Refresh:    statusReplicationTask(ctx, conn, id),
@@ -43,7 +33,7 @@ func waitReplicationTaskDeleted(ctx context.Context, conn *dms.DatabaseMigration
 }
 
 func waitReplicationTaskModified(ctx context.Context, conn *dms.DatabaseMigrationService, id string, timeout time.Duration) error {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:    []string{replicationTaskStatusModifying},
 		Target:     []string{replicationTaskStatusReady, replicationTaskStatusStopped, replicationTaskStatusFailed},
 		Refresh:    statusReplicationTask(ctx, conn, id),
@@ -59,7 +49,7 @@ func waitReplicationTaskModified(ctx context.Context, conn *dms.DatabaseMigratio
 }
 
 func waitReplicationTaskReady(ctx context.Context, conn *dms.DatabaseMigrationService, id string, timeout time.Duration) error {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:    []string{replicationTaskStatusCreating},
 		Target:     []string{replicationTaskStatusReady},
 		Refresh:    statusReplicationTask(ctx, conn, id),
@@ -75,7 +65,7 @@ func waitReplicationTaskReady(ctx context.Context, conn *dms.DatabaseMigrationSe
 }
 
 func waitReplicationTaskRunning(ctx context.Context, conn *dms.DatabaseMigrationService, id string) error {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:    []string{replicationTaskStatusStarting},
 		Target:     []string{replicationTaskStatusRunning},
 		Refresh:    statusReplicationTask(ctx, conn, id),
@@ -91,7 +81,7 @@ func waitReplicationTaskRunning(ctx context.Context, conn *dms.DatabaseMigration
 }
 
 func waitReplicationTaskStopped(ctx context.Context, conn *dms.DatabaseMigrationService, id string) error {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:    []string{replicationTaskStatusStopping, replicationTaskStatusRunning},
 		Target:     []string{replicationTaskStatusStopped},
 		Refresh:    statusReplicationTask(ctx, conn, id),

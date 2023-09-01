@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package apigatewayv2
 
 import (
@@ -18,6 +21,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_apigatewayv2_authorizer")
 func ResourceAuthorizer() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceAuthorizerCreate,
@@ -99,7 +103,7 @@ func ResourceAuthorizer() *schema.Resource {
 
 func resourceAuthorizerCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).APIGatewayV2Conn()
+	conn := meta.(*conns.AWSClient).APIGatewayV2Conn(ctx)
 
 	apiId := d.Get("api_id").(string)
 	authorizerType := d.Get("authorizer_type").(string)
@@ -126,9 +130,10 @@ func resourceAuthorizerCreate(ctx context.Context, d *schema.ResourceData, meta 
 	}
 	if v, ok := d.GetOkExists("authorizer_result_ttl_in_seconds"); ok {
 		req.AuthorizerResultTtlInSeconds = aws.Int64(int64(v.(int)))
-	} else if protocolType == apigatewayv2.ProtocolTypeHttp && authorizerType == apigatewayv2.AuthorizerTypeRequest {
+	} else if protocolType == apigatewayv2.ProtocolTypeHttp && authorizerType == apigatewayv2.AuthorizerTypeRequest && len(req.IdentitySource) > 0 {
 		// Default in the AWS Console is 300 seconds.
 		// Explicitly set on creation so that we can correctly detect changes to the 0 value.
+		// This value should only be set when IdentitySources have been defined
 		req.AuthorizerResultTtlInSeconds = aws.Int64(300)
 	}
 	if v, ok := d.GetOk("authorizer_uri"); ok {
@@ -154,7 +159,7 @@ func resourceAuthorizerCreate(ctx context.Context, d *schema.ResourceData, meta 
 
 func resourceAuthorizerRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).APIGatewayV2Conn()
+	conn := meta.(*conns.AWSClient).APIGatewayV2Conn(ctx)
 
 	resp, err := conn.GetAuthorizerWithContext(ctx, &apigatewayv2.GetAuthorizerInput{
 		ApiId:        aws.String(d.Get("api_id").(string)),
@@ -188,7 +193,7 @@ func resourceAuthorizerRead(ctx context.Context, d *schema.ResourceData, meta in
 
 func resourceAuthorizerUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).APIGatewayV2Conn()
+	conn := meta.(*conns.AWSClient).APIGatewayV2Conn(ctx)
 
 	req := &apigatewayv2.UpdateAuthorizerInput{
 		ApiId:        aws.String(d.Get("api_id").(string)),
@@ -233,7 +238,7 @@ func resourceAuthorizerUpdate(ctx context.Context, d *schema.ResourceData, meta 
 
 func resourceAuthorizerDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).APIGatewayV2Conn()
+	conn := meta.(*conns.AWSClient).APIGatewayV2Conn(ctx)
 
 	log.Printf("[DEBUG] Deleting API Gateway v2 authorizer (%s)", d.Id())
 	_, err := conn.DeleteAuthorizerWithContext(ctx, &apigatewayv2.DeleteAuthorizerInput{

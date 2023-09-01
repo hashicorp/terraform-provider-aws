@@ -1,15 +1,18 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package storagegateway_test
 
 import (
 	"context"
 	"fmt"
-	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/service/storagegateway"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfstoragegateway "github.com/hashicorp/terraform-provider-aws/internal/service/storagegateway"
@@ -27,7 +30,7 @@ func TestAccStorageGatewaySMBFileShare_Authentication_activeDirectory(t *testing
 	domainName := acctest.RandomDomainName()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, storagegateway.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckSMBFileShareDestroy(ctx),
@@ -36,11 +39,11 @@ func TestAccStorageGatewaySMBFileShare_Authentication_activeDirectory(t *testing
 				Config: testAccSMBFileShareConfig_authenticationActiveDirectory(rName, domainName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSMBFileShareExists(ctx, resourceName, &smbFileShare),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "storagegateway", regexp.MustCompile(`share/share-.+`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "storagegateway", regexache.MustCompile(`share/share-.+`)),
 					resource.TestCheckResourceAttr(resourceName, "authentication", "ActiveDirectory"),
 					resource.TestCheckResourceAttr(resourceName, "default_storage_class", "S3_STANDARD"),
-					resource.TestMatchResourceAttr(resourceName, "fileshare_id", regexp.MustCompile(`^share-`)),
-					resource.TestMatchResourceAttr(resourceName, "file_share_name", regexp.MustCompile(`^tf-acc-test-`)),
+					resource.TestMatchResourceAttr(resourceName, "fileshare_id", regexache.MustCompile(`^share-`)),
+					resource.TestMatchResourceAttr(resourceName, "file_share_name", regexache.MustCompile(`^tf-acc-test-`)),
 					resource.TestCheckResourceAttrPair(resourceName, "gateway_arn", gatewayResourceName, "arn"),
 					resource.TestCheckResourceAttr(resourceName, "guess_mime_type_enabled", "true"),
 					resource.TestCheckResourceAttr(resourceName, "invalid_user_list.#", "0"),
@@ -48,7 +51,7 @@ func TestAccStorageGatewaySMBFileShare_Authentication_activeDirectory(t *testing
 					resource.TestCheckResourceAttr(resourceName, "kms_key_arn", ""),
 					resource.TestCheckResourceAttrPair(resourceName, "location_arn", bucketResourceName, "arn"),
 					resource.TestCheckResourceAttr(resourceName, "object_acl", storagegateway.ObjectACLPrivate),
-					resource.TestMatchResourceAttr(resourceName, "path", regexp.MustCompile(`^/.+`)),
+					resource.TestMatchResourceAttr(resourceName, "path", regexache.MustCompile(`^/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "read_only", "false"),
 					resource.TestCheckResourceAttr(resourceName, "requester_pays", "false"),
 					resource.TestCheckResourceAttrPair(resourceName, "role_arn", iamResourceName, "arn"),
@@ -77,7 +80,7 @@ func TestAccStorageGatewaySMBFileShare_Authentication_guestAccess(t *testing.T) 
 	iamResourceName := "aws_iam_role.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, storagegateway.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckSMBFileShareDestroy(ctx),
@@ -87,13 +90,13 @@ func TestAccStorageGatewaySMBFileShare_Authentication_guestAccess(t *testing.T) 
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSMBFileShareExists(ctx, resourceName, &smbFileShare),
 					resource.TestCheckResourceAttr(resourceName, "admin_user_list.#", "0"),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "storagegateway", regexp.MustCompile(`share/share-.+`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "storagegateway", regexache.MustCompile(`share/share-.+`)),
 					resource.TestCheckResourceAttr(resourceName, "authentication", "GuestAccess"),
 					resource.TestCheckResourceAttr(resourceName, "cache_attributes.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "case_sensitivity", "ClientSpecified"),
 					resource.TestCheckResourceAttr(resourceName, "default_storage_class", "S3_STANDARD"),
-					resource.TestMatchResourceAttr(resourceName, "fileshare_id", regexp.MustCompile(`^share-`)),
-					resource.TestMatchResourceAttr(resourceName, "file_share_name", regexp.MustCompile(`^tf-acc-test-`)),
+					resource.TestMatchResourceAttr(resourceName, "fileshare_id", regexache.MustCompile(`^share-`)),
+					resource.TestMatchResourceAttr(resourceName, "file_share_name", regexache.MustCompile(`^tf-acc-test-`)),
 					resource.TestCheckResourceAttrPair(resourceName, "gateway_arn", gatewayResourceName, "arn"),
 					resource.TestCheckResourceAttr(resourceName, "guess_mime_type_enabled", "true"),
 					resource.TestCheckResourceAttr(resourceName, "invalid_user_list.#", "0"),
@@ -125,7 +128,7 @@ func TestAccStorageGatewaySMBFileShare_accessBasedEnumeration(t *testing.T) {
 	resourceName := "aws_storagegateway_smb_file_share.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, storagegateway.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckSMBFileShareDestroy(ctx),
@@ -167,7 +170,7 @@ func TestAccStorageGatewaySMBFileShare_notificationPolicy(t *testing.T) {
 	resourceName := "aws_storagegateway_smb_file_share.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, storagegateway.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckSMBFileShareDestroy(ctx),
@@ -209,7 +212,7 @@ func TestAccStorageGatewaySMBFileShare_defaultStorageClass(t *testing.T) {
 	resourceName := "aws_storagegateway_smb_file_share.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, storagegateway.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckSMBFileShareDestroy(ctx),
@@ -237,6 +240,38 @@ func TestAccStorageGatewaySMBFileShare_defaultStorageClass(t *testing.T) {
 	})
 }
 
+func TestAccStorageGatewaySMBFileShare_encryptedUpdate(t *testing.T) {
+	ctx := acctest.Context(t)
+	var smbFileShare storagegateway.SMBFileShareInfo
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_storagegateway_smb_file_share.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, storagegateway.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckSMBFileShareDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSMBFileShareConfig_encryptedUpdate(rName, false),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSMBFileShareExists(ctx, resourceName, &smbFileShare),
+					resource.TestCheckResourceAttr(resourceName, "read_only", "false"),
+					resource.TestCheckResourceAttr(resourceName, "kms_encrypted", "true"),
+				),
+			},
+			{
+				Config: testAccSMBFileShareConfig_encryptedUpdate(rName, true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSMBFileShareExists(ctx, resourceName, &smbFileShare),
+					resource.TestCheckResourceAttr(resourceName, "read_only", "true"),
+					resource.TestCheckResourceAttr(resourceName, "kms_encrypted", "true"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccStorageGatewaySMBFileShare_fileShareName(t *testing.T) {
 	ctx := acctest.Context(t)
 	var smbFileShare storagegateway.SMBFileShareInfo
@@ -244,7 +279,7 @@ func TestAccStorageGatewaySMBFileShare_fileShareName(t *testing.T) {
 	resourceName := "aws_storagegateway_smb_file_share.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, storagegateway.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckSMBFileShareDestroy(ctx),
@@ -279,7 +314,7 @@ func TestAccStorageGatewaySMBFileShare_tags(t *testing.T) {
 	resourceName := "aws_storagegateway_smb_file_share.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, storagegateway.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckSMBFileShareDestroy(ctx),
@@ -325,7 +360,7 @@ func TestAccStorageGatewaySMBFileShare_guessMIMETypeEnabled(t *testing.T) {
 	resourceName := "aws_storagegateway_smb_file_share.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, storagegateway.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckSMBFileShareDestroy(ctx),
@@ -377,7 +412,7 @@ func TestAccStorageGatewaySMBFileShare_opLocksEnabled(t *testing.T) {
 	resourceName := "aws_storagegateway_smb_file_share.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
+		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, storagegateway.EndpointsID),
 		ProtoV5ProviderFactories:acctest.ProtoV5ProviderFactories,
 		CheckDestroy: testAccCheckSMBFileShareDestroy,
@@ -414,7 +449,7 @@ func TestAccStorageGatewaySMBFileShare_invalidUserList(t *testing.T) {
 	domainName := acctest.RandomDomainName()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, storagegateway.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckSMBFileShareDestroy(ctx),
@@ -456,14 +491,14 @@ func TestAccStorageGatewaySMBFileShare_kmsEncrypted(t *testing.T) {
 	resourceName := "aws_storagegateway_smb_file_share.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, storagegateway.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckSMBFileShareDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccSMBFileShareConfig_kmsEncrypted(rName, true),
-				ExpectError: regexp.MustCompile(`KMSKey is missing`),
+				ExpectError: regexache.MustCompile(`KMSKey is missing`),
 			},
 			{
 				Config: testAccSMBFileShareConfig_kmsEncrypted(rName, false),
@@ -490,7 +525,7 @@ func TestAccStorageGatewaySMBFileShare_kmsKeyARN(t *testing.T) {
 	keyUpdatedName := "aws_kms_key.test.1"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, storagegateway.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckSMBFileShareDestroy(ctx),
@@ -534,7 +569,7 @@ func TestAccStorageGatewaySMBFileShare_objectACL(t *testing.T) {
 	resourceName := "aws_storagegateway_smb_file_share.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, storagegateway.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckSMBFileShareDestroy(ctx),
@@ -569,7 +604,7 @@ func TestAccStorageGatewaySMBFileShare_readOnly(t *testing.T) {
 	resourceName := "aws_storagegateway_smb_file_share.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, storagegateway.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckSMBFileShareDestroy(ctx),
@@ -604,7 +639,7 @@ func TestAccStorageGatewaySMBFileShare_requesterPays(t *testing.T) {
 	resourceName := "aws_storagegateway_smb_file_share.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, storagegateway.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckSMBFileShareDestroy(ctx),
@@ -640,7 +675,7 @@ func TestAccStorageGatewaySMBFileShare_validUserList(t *testing.T) {
 	domainName := acctest.RandomDomainName()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, storagegateway.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckSMBFileShareDestroy(ctx),
@@ -683,7 +718,7 @@ func TestAccStorageGatewaySMBFileShare_SMB_acl(t *testing.T) {
 	domainName := acctest.RandomDomainName()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, storagegateway.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckSMBFileShareDestroy(ctx),
@@ -727,7 +762,7 @@ func TestAccStorageGatewaySMBFileShare_audit(t *testing.T) {
 	logResourceNameSecond := "aws_cloudwatch_log_group.test2"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, storagegateway.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckSMBFileShareDestroy(ctx),
@@ -762,7 +797,7 @@ func TestAccStorageGatewaySMBFileShare_cacheAttributes(t *testing.T) {
 	resourceName := "aws_storagegateway_smb_file_share.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, storagegateway.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckSMBFileShareDestroy(ctx),
@@ -807,7 +842,7 @@ func TestAccStorageGatewaySMBFileShare_caseSensitivity(t *testing.T) {
 	resourceName := "aws_storagegateway_smb_file_share.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, storagegateway.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckSMBFileShareDestroy(ctx),
@@ -849,7 +884,7 @@ func TestAccStorageGatewaySMBFileShare_disappears(t *testing.T) {
 	resourceName := "aws_storagegateway_smb_file_share.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, storagegateway.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckSMBFileShareDestroy(ctx),
@@ -874,7 +909,7 @@ func TestAccStorageGatewaySMBFileShare_adminUserList(t *testing.T) {
 	domainName := acctest.RandomDomainName()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, storagegateway.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckSMBFileShareDestroy(ctx),
@@ -911,7 +946,7 @@ func TestAccStorageGatewaySMBFileShare_adminUserList(t *testing.T) {
 
 func testAccCheckSMBFileShareDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).StorageGatewayConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).StorageGatewayConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_storagegateway_smb_file_share" {
@@ -942,7 +977,7 @@ func testAccCheckSMBFileShareExists(ctx context.Context, resourceName string, sm
 			return fmt.Errorf("Not found: %s", resourceName)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).StorageGatewayConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).StorageGatewayConn(ctx)
 
 		output, err := tfstoragegateway.FindSMBFileShareByARN(ctx, conn, rs.Primary.ID)
 
@@ -1115,6 +1150,26 @@ resource "aws_storagegateway_smb_file_share" "test" {
   role_arn              = aws_iam_role.test.arn
 }
 `, defaultStorageClass))
+}
+
+func testAccSMBFileShareConfig_encryptedUpdate(rName string, readOnly bool) string {
+	return acctest.ConfigCompose(testAcc_SMBFileShare_GuestAccessBase(rName), fmt.Sprintf(`
+resource "aws_kms_key" "test" {
+  deletion_window_in_days = 7
+  description             = "Terraform Acceptance Testing"
+}
+
+resource "aws_storagegateway_smb_file_share" "test" {
+  # Use GuestAccess to simplify testing
+  authentication = "GuestAccess"
+  gateway_arn    = aws_storagegateway_gateway.test.arn
+  kms_encrypted  = true
+  kms_key_arn    = aws_kms_key.test.arn
+  location_arn   = aws_s3_bucket.test.arn
+  role_arn       = aws_iam_role.test.arn
+  read_only      = %[1]t
+}
+`, readOnly))
 }
 
 func testAccSMBFileShareConfig_name(rName, fileShareName string) string {

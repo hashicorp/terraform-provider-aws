@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ses
 
 import (
@@ -14,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
+// @SDKDataSource("aws_ses_active_receipt_rule_set")
 func DataSourceActiveReceiptRuleSet() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceActiveReceiptRuleSetRead,
@@ -33,7 +37,7 @@ func DataSourceActiveReceiptRuleSet() *schema.Resource {
 
 func dataSourceActiveReceiptRuleSetRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SESConn()
+	conn := meta.(*conns.AWSClient).SESConn(ctx)
 
 	data, err := conn.DescribeActiveReceiptRuleSetWithContext(ctx, &ses.DescribeActiveReceiptRuleSetInput{})
 

@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package directconnect
 
 import (
@@ -17,8 +20,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @SDKResource("aws_dx_transit_virtual_interface", name="Transit Virtual Interface")
+// @Tags(identifierAttribute="arn")
 func ResourceTransitVirtualInterface() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceTransitVirtualInterfaceCreate,
@@ -103,8 +109,8 @@ func ResourceTransitVirtualInterface() *schema.Resource {
 				Type:     schema.TypeBool,
 				Optional: true,
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			"vlan": {
 				Type:         schema.TypeInt,
 				Required:     true,
@@ -125,9 +131,7 @@ func ResourceTransitVirtualInterface() *schema.Resource {
 
 func resourceTransitVirtualInterfaceCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DirectConnectConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	conn := meta.(*conns.AWSClient).DirectConnectConn(ctx)
 
 	req := &directconnect.CreateTransitVirtualInterfaceInput{
 		ConnectionId: aws.String(d.Get("connection_id").(string)),
@@ -137,6 +141,7 @@ func resourceTransitVirtualInterfaceCreate(ctx context.Context, d *schema.Resour
 			DirectConnectGatewayId: aws.String(d.Get("dx_gateway_id").(string)),
 			EnableSiteLink:         aws.Bool(d.Get("sitelink_enabled").(bool)),
 			Mtu:                    aws.Int64(int64(d.Get("mtu").(int))),
+			Tags:                   getTagsIn(ctx),
 			VirtualInterfaceName:   aws.String(d.Get("name").(string)),
 			Vlan:                   aws.Int64(int64(d.Get("vlan").(int))),
 		},
@@ -149,9 +154,6 @@ func resourceTransitVirtualInterfaceCreate(ctx context.Context, d *schema.Resour
 	}
 	if v, ok := d.GetOk("customer_address"); ok {
 		req.NewTransitVirtualInterface.CustomerAddress = aws.String(v.(string))
-	}
-	if len(tags) > 0 {
-		req.NewTransitVirtualInterface.Tags = Tags(tags.IgnoreAWS())
 	}
 
 	log.Printf("[DEBUG] Creating Direct Connect transit virtual interface: %s", req)
@@ -171,9 +173,7 @@ func resourceTransitVirtualInterfaceCreate(ctx context.Context, d *schema.Resour
 
 func resourceTransitVirtualInterfaceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DirectConnectConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).DirectConnectConn(ctx)
 
 	vif, err := virtualInterfaceRead(ctx, d.Id(), conn)
 	if err != nil {
@@ -208,23 +208,6 @@ func resourceTransitVirtualInterfaceRead(ctx context.Context, d *schema.Resource
 	d.Set("sitelink_enabled", vif.SiteLinkEnabled)
 	d.Set("vlan", vif.Vlan)
 
-	tags, err := ListTags(ctx, conn, arn)
-
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "listing tags for Direct Connect transit virtual interface (%s): %s", arn, err)
-	}
-
-	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
-	}
-
 	return diags
 }
 
@@ -236,7 +219,7 @@ func resourceTransitVirtualInterfaceUpdate(ctx context.Context, d *schema.Resour
 		return diags
 	}
 
-	if err := transitVirtualInterfaceWaitUntilAvailable(ctx, meta.(*conns.AWSClient).DirectConnectConn(), d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
+	if err := transitVirtualInterfaceWaitUntilAvailable(ctx, meta.(*conns.AWSClient).DirectConnectConn(ctx), d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
@@ -248,7 +231,7 @@ func resourceTransitVirtualInterfaceDelete(ctx context.Context, d *schema.Resour
 }
 
 func resourceTransitVirtualInterfaceImport(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
-	conn := meta.(*conns.AWSClient).DirectConnectConn()
+	conn := meta.(*conns.AWSClient).DirectConnectConn(ctx)
 
 	vif, err := virtualInterfaceRead(ctx, d.Id(), conn)
 	if err != nil {

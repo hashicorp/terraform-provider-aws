@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package iot
 
 import (
@@ -14,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
+// @SDKResource("aws_iot_thing_principal_attachment")
 func ResourceThingPrincipalAttachment() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceThingPrincipalAttachmentCreate,
@@ -37,7 +41,7 @@ func ResourceThingPrincipalAttachment() *schema.Resource {
 
 func resourceThingPrincipalAttachmentCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).IoTConn()
+	conn := meta.(*conns.AWSClient).IoTConn(ctx)
 
 	principal := d.Get("principal").(string)
 	thing := d.Get("thing").(string)
@@ -76,7 +80,7 @@ func GetThingPricipalAttachment(ctx context.Context, conn *iot.IoT, thing, princ
 
 func resourceThingPrincipalAttachmentRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).IoTConn()
+	conn := meta.(*conns.AWSClient).IoTConn(ctx)
 
 	principal := d.Get("principal").(string)
 	thing := d.Get("thing").(string)
@@ -97,7 +101,7 @@ func resourceThingPrincipalAttachmentRead(ctx context.Context, d *schema.Resourc
 
 func resourceThingPrincipalAttachmentDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).IoTConn()
+	conn := meta.(*conns.AWSClient).IoTConn(ctx)
 
 	principal := d.Get("principal").(string)
 	thing := d.Get("thing").(string)

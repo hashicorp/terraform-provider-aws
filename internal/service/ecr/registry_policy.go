@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ecr
 
 import (
@@ -16,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_ecr_registry_policy")
 func ResourceRegistryPolicy() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceRegistryPolicyPut,
@@ -48,7 +52,7 @@ func ResourceRegistryPolicy() *schema.Resource {
 
 func resourceRegistryPolicyPut(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ECRConn()
+	conn := meta.(*conns.AWSClient).ECRConn(ctx)
 
 	policy, err := structure.NormalizeJsonString(d.Get("policy").(string))
 
@@ -74,7 +78,7 @@ func resourceRegistryPolicyPut(ctx context.Context, d *schema.ResourceData, meta
 
 func resourceRegistryPolicyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ECRConn()
+	conn := meta.(*conns.AWSClient).ECRConn(ctx)
 
 	log.Printf("[DEBUG] Reading registry policy %s", d.Id())
 	out, err := conn.GetRegistryPolicyWithContext(ctx, &ecr.GetRegistryPolicyInput{})
@@ -108,7 +112,7 @@ func resourceRegistryPolicyRead(ctx context.Context, d *schema.ResourceData, met
 
 func resourceRegistryPolicyDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ECRConn()
+	conn := meta.(*conns.AWSClient).ECRConn(ctx)
 
 	_, err := conn.DeleteRegistryPolicyWithContext(ctx, &ecr.DeleteRegistryPolicyInput{})
 	if err != nil {

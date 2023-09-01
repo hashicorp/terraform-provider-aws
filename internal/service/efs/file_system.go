@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package efs
 
 import (
@@ -11,15 +14,19 @@ import (
 	"github.com/aws/aws-sdk-go/service/efs"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @SDKResource("aws_efs_file_system", name="File System")
+// @Tags(identifierAttribute="id")
 func ResourceFileSystem() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceFileSystemCreate,
@@ -92,6 +99,10 @@ func ResourceFileSystem() *schema.Resource {
 					},
 				},
 			},
+			"name": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"number_of_mount_targets": {
 				Type:     schema.TypeInt,
 				Computed: true,
@@ -131,8 +142,8 @@ func ResourceFileSystem() *schema.Resource {
 					},
 				},
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			"throughput_mode": {
 				Type:         schema.TypeString,
 				Optional:     true,
@@ -144,21 +155,18 @@ func ResourceFileSystem() *schema.Resource {
 }
 
 func resourceFileSystemCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).EFSConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	conn := meta.(*conns.AWSClient).EFSConn(ctx)
 
-	creationToken := ""
+	var creationToken string
 	if v, ok := d.GetOk("creation_token"); ok {
 		creationToken = v.(string)
 	} else {
-		creationToken = resource.UniqueId()
+		creationToken = id.UniqueId()
 	}
 	throughputMode := d.Get("throughput_mode").(string)
-
 	input := &efs.CreateFileSystemInput{
 		CreationToken:  aws.String(creationToken),
-		Tags:           Tags(tags.IgnoreAWS()),
+		Tags:           getTagsIn(ctx),
 		ThroughputMode: aws.String(throughputMode),
 	}
 
@@ -216,9 +224,7 @@ func resourceFileSystemCreate(ctx context.Context, d *schema.ResourceData, meta 
 }
 
 func resourceFileSystemRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).EFSConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).EFSConn(ctx)
 
 	fs, err := FindFileSystemByID(ctx, conn, d.Id())
 
@@ -239,26 +245,17 @@ func resourceFileSystemRead(ctx context.Context, d *schema.ResourceData, meta in
 	d.Set("dns_name", meta.(*conns.AWSClient).RegionalHostname(fmt.Sprintf("%s.efs", aws.StringValue(fs.FileSystemId))))
 	d.Set("encrypted", fs.Encrypted)
 	d.Set("kms_key_id", fs.KmsKeyId)
+	d.Set("name", fs.Name)
 	d.Set("number_of_mount_targets", fs.NumberOfMountTargets)
 	d.Set("owner_id", fs.OwnerId)
 	d.Set("performance_mode", fs.PerformanceMode)
 	d.Set("provisioned_throughput_in_mibps", fs.ProvisionedThroughputInMibps)
-	d.Set("throughput_mode", fs.ThroughputMode)
-
-	tags := KeyValueTags(fs.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return diag.Errorf("setting tags: %s", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return diag.Errorf("setting tags_all: %s", err)
-	}
-
 	if err := d.Set("size_in_bytes", flattenFileSystemSizeInBytes(fs.SizeInBytes)); err != nil {
 		return diag.Errorf("setting size_in_bytes: %s", err)
 	}
+	d.Set("throughput_mode", fs.ThroughputMode)
+
+	setTagsOut(ctx, fs.Tags)
 
 	output, err := conn.DescribeLifecycleConfigurationWithContext(ctx, &efs.DescribeLifecycleConfigurationInput{
 		FileSystemId: aws.String(d.Id()),
@@ -276,11 +273,10 @@ func resourceFileSystemRead(ctx context.Context, d *schema.ResourceData, meta in
 }
 
 func resourceFileSystemUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).EFSConn()
+	conn := meta.(*conns.AWSClient).EFSConn(ctx)
 
 	if d.HasChanges("provisioned_throughput_in_mibps", "throughput_mode") {
 		throughputMode := d.Get("throughput_mode").(string)
-
 		input := &efs.UpdateFileSystemInput{
 			FileSystemId:   aws.String(d.Id()),
 			ThroughputMode: aws.String(throughputMode),
@@ -321,19 +317,11 @@ func resourceFileSystemUpdate(ctx context.Context, d *schema.ResourceData, meta 
 		}
 	}
 
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		if err := UpdateTags(ctx, conn, d.Id(), o, n); err != nil {
-			return diag.Errorf("updating EFS file system (%s) tags: %s", d.Id(), err)
-		}
-	}
-
 	return resourceFileSystemRead(ctx, d, meta)
 }
 
 func resourceFileSystemDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).EFSConn()
+	conn := meta.(*conns.AWSClient).EFSConn(ctx)
 
 	log.Printf("[DEBUG] Deleting EFS file system: %s", d.Id())
 	_, err := conn.DeleteFileSystemWithContext(ctx, &efs.DeleteFileSystemInput{
@@ -363,7 +351,7 @@ func FindFileSystemByID(ctx context.Context, conn *efs.EFS, id string) (*efs.Fil
 	output, err := conn.DescribeFileSystemsWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, efs.ErrCodeFileSystemNotFound) {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -380,7 +368,7 @@ func FindFileSystemByID(ctx context.Context, conn *efs.EFS, id string) (*efs.Fil
 	return output.FileSystems[0], nil
 }
 
-func statusFileSystemLifeCycleState(ctx context.Context, conn *efs.EFS, id string) resource.StateRefreshFunc {
+func statusFileSystemLifeCycleState(ctx context.Context, conn *efs.EFS, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := FindFileSystemByID(ctx, conn, id)
 
@@ -406,7 +394,7 @@ const (
 )
 
 func waitFileSystemAvailable(ctx context.Context, conn *efs.EFS, fileSystemID string) (*efs.FileSystemDescription, error) { //nolint:unparam
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:    []string{efs.LifeCycleStateCreating, efs.LifeCycleStateUpdating},
 		Target:     []string{efs.LifeCycleStateAvailable},
 		Refresh:    statusFileSystemLifeCycleState(ctx, conn, fileSystemID),
@@ -425,7 +413,7 @@ func waitFileSystemAvailable(ctx context.Context, conn *efs.EFS, fileSystemID st
 }
 
 func waitFileSystemDeleted(ctx context.Context, conn *efs.EFS, fileSystemID string) (*efs.FileSystemDescription, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:    []string{efs.LifeCycleStateAvailable, efs.LifeCycleStateDeleting},
 		Target:     []string{},
 		Refresh:    statusFileSystemLifeCycleState(ctx, conn, fileSystemID),

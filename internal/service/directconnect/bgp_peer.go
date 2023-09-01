@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package directconnect
 
 import (
@@ -10,13 +13,14 @@ import (
 	"github.com/aws/aws-sdk-go/service/directconnect"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
+// @SDKResource("aws_dx_bgp_peer")
 func ResourceBGPPeer() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceBGPPeerCreate,
@@ -81,7 +85,7 @@ func ResourceBGPPeer() *schema.Resource {
 
 func resourceBGPPeerCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DirectConnectConn()
+	conn := meta.(*conns.AWSClient).DirectConnectConn(ctx)
 
 	vifId := d.Get("virtual_interface_id").(string)
 	addrFamily := d.Get("address_family").(string)
@@ -107,12 +111,12 @@ func resourceBGPPeerCreate(ctx context.Context, d *schema.ResourceData, meta int
 	log.Printf("[DEBUG] Creating Direct Connect BGP peer: %#v", req)
 	_, err := conn.CreateBGPPeerWithContext(ctx, req)
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "Error creating Direct Connect BGP peer: %s", err)
+		return sdkdiag.AppendErrorf(diags, "creating Direct Connect BGP peer: %s", err)
 	}
 
 	d.SetId(fmt.Sprintf("%s-%s-%d", vifId, addrFamily, asn))
 
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{
 			directconnect.BGPPeerStatePending,
 		},
@@ -127,7 +131,7 @@ func resourceBGPPeerCreate(ctx context.Context, d *schema.ResourceData, meta int
 	}
 	_, err = stateConf.WaitForStateContext(ctx)
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "Error waiting for Direct Connect BGP peer (%s) to be available: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for Direct Connect BGP peer (%s) to be available: %s", d.Id(), err)
 	}
 
 	return append(diags, resourceBGPPeerRead(ctx, d, meta)...)
@@ -135,7 +139,7 @@ func resourceBGPPeerCreate(ctx context.Context, d *schema.ResourceData, meta int
 
 func resourceBGPPeerRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DirectConnectConn()
+	conn := meta.(*conns.AWSClient).DirectConnectConn(ctx)
 
 	vifId := d.Get("virtual_interface_id").(string)
 	addrFamily := d.Get("address_family").(string)
@@ -143,7 +147,7 @@ func resourceBGPPeerRead(ctx context.Context, d *schema.ResourceData, meta inter
 
 	bgpPeerRaw, state, err := bgpPeerStateRefresh(ctx, conn, vifId, addrFamily, asn)()
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "Error reading Direct Connect BGP peer: %s", err)
+		return sdkdiag.AppendErrorf(diags, "reading Direct Connect BGP peer: %s", err)
 	}
 	if state == directconnect.BGPPeerStateDeleted {
 		log.Printf("[WARN] Direct Connect BGP peer (%s) not found, removing from state", d.Id())
@@ -164,7 +168,7 @@ func resourceBGPPeerRead(ctx context.Context, d *schema.ResourceData, meta inter
 
 func resourceBGPPeerDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DirectConnectConn()
+	conn := meta.(*conns.AWSClient).DirectConnectConn(ctx)
 
 	vifId := d.Get("virtual_interface_id").(string)
 	addrFamily := d.Get("address_family").(string)
@@ -184,7 +188,7 @@ func resourceBGPPeerDelete(ctx context.Context, d *schema.ResourceData, meta int
 		return sdkdiag.AppendErrorf(diags, "deleting Direct Connect BGP Peer (%s): %s", d.Id(), err)
 	}
 
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{
 			directconnect.BGPPeerStateAvailable,
 			directconnect.BGPPeerStateDeleting,
@@ -207,7 +211,7 @@ func resourceBGPPeerDelete(ctx context.Context, d *schema.ResourceData, meta int
 	return diags
 }
 
-func bgpPeerStateRefresh(ctx context.Context, conn *directconnect.DirectConnect, vifId, addrFamily string, asn int64) resource.StateRefreshFunc {
+func bgpPeerStateRefresh(ctx context.Context, conn *directconnect.DirectConnect, vifId, addrFamily string, asn int64) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		vif, err := virtualInterfaceRead(ctx, vifId, conn)
 		if err != nil {

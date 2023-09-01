@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package globalaccelerator
 
 import (
@@ -9,7 +12,8 @@ import (
 	"github.com/aws/aws-sdk-go/service/globalaccelerator"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -17,6 +21,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_globalaccelerator_endpoint_group")
 func ResourceEndpointGroup() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceEndpointGroupCreate,
@@ -135,11 +140,11 @@ func ResourceEndpointGroup() *schema.Resource {
 }
 
 func resourceEndpointGroupCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).GlobalAcceleratorConn()
+	conn := meta.(*conns.AWSClient).GlobalAcceleratorConn(ctx)
 
 	input := &globalaccelerator.CreateEndpointGroupInput{
 		EndpointGroupRegion: aws.String(meta.(*conns.AWSClient).Region),
-		IdempotencyToken:    aws.String(resource.UniqueId()),
+		IdempotencyToken:    aws.String(id.UniqueId()),
 		ListenerArn:         aws.String(d.Get("listener_arn").(string)),
 	}
 
@@ -201,7 +206,7 @@ func resourceEndpointGroupCreate(ctx context.Context, d *schema.ResourceData, me
 }
 
 func resourceEndpointGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).GlobalAcceleratorConn()
+	conn := meta.(*conns.AWSClient).GlobalAcceleratorConn(ctx)
 
 	endpointGroup, err := FindEndpointGroupByARN(ctx, conn, d.Id())
 
@@ -241,7 +246,7 @@ func resourceEndpointGroupRead(ctx context.Context, d *schema.ResourceData, meta
 }
 
 func resourceEndpointGroupUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).GlobalAcceleratorConn()
+	conn := meta.(*conns.AWSClient).GlobalAcceleratorConn(ctx)
 
 	input := &globalaccelerator.UpdateEndpointGroupInput{
 		EndpointGroupArn: aws.String(d.Id()),
@@ -303,7 +308,7 @@ func resourceEndpointGroupUpdate(ctx context.Context, d *schema.ResourceData, me
 }
 
 func resourceEndpointGroupDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).GlobalAcceleratorConn()
+	conn := meta.(*conns.AWSClient).GlobalAcceleratorConn(ctx)
 
 	log.Printf("[DEBUG] Deleting Global Accelerator Endpoint Group: %s", d.Id())
 	_, err := conn.DeleteEndpointGroupWithContext(ctx, &globalaccelerator.DeleteEndpointGroupInput{
@@ -331,6 +336,35 @@ func resourceEndpointGroupDelete(ctx context.Context, d *schema.ResourceData, me
 	return nil
 }
 
+func FindEndpointGroupByARN(ctx context.Context, conn *globalaccelerator.GlobalAccelerator, arn string) (*globalaccelerator.EndpointGroup, error) {
+	input := &globalaccelerator.DescribeEndpointGroupInput{
+		EndpointGroupArn: aws.String(arn),
+	}
+
+	return findEndpointGroup(ctx, conn, input)
+}
+
+func findEndpointGroup(ctx context.Context, conn *globalaccelerator.GlobalAccelerator, input *globalaccelerator.DescribeEndpointGroupInput) (*globalaccelerator.EndpointGroup, error) {
+	output, err := conn.DescribeEndpointGroupWithContext(ctx, input)
+
+	if tfawserr.ErrCodeEquals(err, globalaccelerator.ErrCodeEndpointGroupNotFoundException) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || output.EndpointGroup == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output.EndpointGroup, nil
+}
+
 func expandEndpointConfiguration(tfMap map[string]interface{}) *globalaccelerator.EndpointConfiguration {
 	if tfMap == nil {
 		return nil
@@ -346,7 +380,7 @@ func expandEndpointConfiguration(tfMap map[string]interface{}) *globalaccelerato
 		apiObject.EndpointId = aws.String(v)
 	}
 
-	if v, ok := tfMap["weight"].(int); ok && v != 0 {
+	if v, ok := tfMap["weight"].(int); ok {
 		apiObject.Weight = aws.Int64(int64(v))
 	}
 

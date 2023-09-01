@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package route53
 
 import (
@@ -10,13 +13,14 @@ import (
 	"github.com/aws/aws-sdk-go/service/route53"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
+// @SDKResource("aws_route53_delegation_set")
 func ResourceDelegationSet() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceDelegationSetCreate,
@@ -49,9 +53,9 @@ func ResourceDelegationSet() *schema.Resource {
 
 func resourceDelegationSetCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	r53 := meta.(*conns.AWSClient).Route53Conn()
+	r53 := meta.(*conns.AWSClient).Route53Conn(ctx)
 
-	callerRef := resource.UniqueId()
+	callerRef := id.UniqueId()
 	if v, ok := d.GetOk("reference_name"); ok {
 		callerRef = strings.Join([]string{
 			v.(string), "-", callerRef,
@@ -74,7 +78,7 @@ func resourceDelegationSetCreate(ctx context.Context, d *schema.ResourceData, me
 
 func resourceDelegationSetRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	r53 := meta.(*conns.AWSClient).Route53Conn()
+	r53 := meta.(*conns.AWSClient).Route53Conn(ctx)
 
 	input := &route53.GetReusableDelegationSetInput{
 		Id: aws.String(CleanDelegationSetID(d.Id())),
@@ -103,7 +107,7 @@ func resourceDelegationSetRead(ctx context.Context, d *schema.ResourceData, meta
 
 func resourceDelegationSetDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	r53 := meta.(*conns.AWSClient).Route53Conn()
+	r53 := meta.(*conns.AWSClient).Route53Conn(ctx)
 
 	input := &route53.DeleteReusableDelegationSetInput{
 		Id: aws.String(CleanDelegationSetID(d.Id())),

@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package kinesis
 
 import (
@@ -9,7 +12,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/kinesis"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
@@ -17,6 +20,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_kinesis_stream_consumer")
 func ResourceStreamConsumer() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceStreamConsumerCreate,
@@ -53,7 +57,7 @@ func ResourceStreamConsumer() *schema.Resource {
 
 func resourceStreamConsumerCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).KinesisConn()
+	conn := meta.(*conns.AWSClient).KinesisConn(ctx)
 
 	name := d.Get("name").(string)
 	input := &kinesis.RegisterStreamConsumerInput{
@@ -79,7 +83,7 @@ func resourceStreamConsumerCreate(ctx context.Context, d *schema.ResourceData, m
 
 func resourceStreamConsumerRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).KinesisConn()
+	conn := meta.(*conns.AWSClient).KinesisConn(ctx)
 
 	consumer, err := FindStreamConsumerByARN(ctx, conn, d.Id())
 
@@ -103,7 +107,7 @@ func resourceStreamConsumerRead(ctx context.Context, d *schema.ResourceData, met
 
 func resourceStreamConsumerDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).KinesisConn()
+	conn := meta.(*conns.AWSClient).KinesisConn(ctx)
 
 	log.Printf("[DEBUG] Deregistering Kinesis Stream Consumer: (%s)", d.Id())
 	_, err := conn.DeregisterStreamConsumerWithContext(ctx, &kinesis.DeregisterStreamConsumerInput{
@@ -133,7 +137,7 @@ func FindStreamConsumerByARN(ctx context.Context, conn *kinesis.Kinesis, arn str
 	output, err := conn.DescribeStreamConsumerWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, kinesis.ErrCodeResourceNotFoundException) {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -150,7 +154,7 @@ func FindStreamConsumerByARN(ctx context.Context, conn *kinesis.Kinesis, arn str
 	return output.ConsumerDescription, nil
 }
 
-func statusStreamConsumer(ctx context.Context, conn *kinesis.Kinesis, arn string) resource.StateRefreshFunc {
+func statusStreamConsumer(ctx context.Context, conn *kinesis.Kinesis, arn string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := FindStreamConsumerByARN(ctx, conn, arn)
 
@@ -172,7 +176,7 @@ const (
 )
 
 func waitStreamConsumerCreated(ctx context.Context, conn *kinesis.Kinesis, arn string) (*kinesis.ConsumerDescription, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{kinesis.ConsumerStatusCreating},
 		Target:  []string{kinesis.ConsumerStatusActive},
 		Refresh: statusStreamConsumer(ctx, conn, arn),
@@ -189,7 +193,7 @@ func waitStreamConsumerCreated(ctx context.Context, conn *kinesis.Kinesis, arn s
 }
 
 func waitStreamConsumerDeleted(ctx context.Context, conn *kinesis.Kinesis, arn string) (*kinesis.ConsumerDescription, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{kinesis.ConsumerStatusDeleting},
 		Target:  []string{},
 		Refresh: statusStreamConsumer(ctx, conn, arn),

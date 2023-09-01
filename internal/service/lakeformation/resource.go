@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package lakeformation
 
 import (
@@ -15,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_lakeformation_resource")
 func ResourceResource() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceResourceCreate,
@@ -45,7 +49,7 @@ func ResourceResource() *schema.Resource {
 
 func resourceResourceCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).LakeFormationConn()
+	conn := meta.(*conns.AWSClient).LakeFormationConn(ctx)
 	resourceArn := d.Get("arn").(string)
 
 	input := &lakeformation.RegisterResourceInput{
@@ -72,7 +76,7 @@ func resourceResourceCreate(ctx context.Context, d *schema.ResourceData, meta in
 
 func resourceResourceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).LakeFormationConn()
+	conn := meta.(*conns.AWSClient).LakeFormationConn(ctx)
 	resourceArn := d.Get("arn").(string)
 
 	input := &lakeformation.DescribeResourceInput{
@@ -106,7 +110,7 @@ func resourceResourceRead(ctx context.Context, d *schema.ResourceData, meta inte
 
 func resourceResourceDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).LakeFormationConn()
+	conn := meta.(*conns.AWSClient).LakeFormationConn(ctx)
 	resourceArn := d.Get("arn").(string)
 
 	input := &lakeformation.DeregisterResourceInput{

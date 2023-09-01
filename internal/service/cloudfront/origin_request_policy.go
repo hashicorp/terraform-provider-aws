@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package cloudfront
 
 import (
@@ -15,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
+// @SDKResource("aws_cloudfront_origin_request_policy")
 func ResourceOriginRequestPolicy() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceOriginRequestPolicyCreate,
@@ -128,7 +132,7 @@ func ResourceOriginRequestPolicy() *schema.Resource {
 
 func resourceOriginRequestPolicyCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CloudFrontConn()
+	conn := meta.(*conns.AWSClient).CloudFrontConn(ctx)
 
 	name := d.Get("name").(string)
 	apiObject := &cloudfront.OriginRequestPolicyConfig{
@@ -169,7 +173,7 @@ func resourceOriginRequestPolicyCreate(ctx context.Context, d *schema.ResourceDa
 
 func resourceOriginRequestPolicyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CloudFrontConn()
+	conn := meta.(*conns.AWSClient).CloudFrontConn(ctx)
 
 	output, err := FindOriginRequestPolicyByID(ctx, conn, d.Id())
 
@@ -214,7 +218,7 @@ func resourceOriginRequestPolicyRead(ctx context.Context, d *schema.ResourceData
 
 func resourceOriginRequestPolicyUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CloudFrontConn()
+	conn := meta.(*conns.AWSClient).CloudFrontConn(ctx)
 
 	//
 	// https://docs.aws.amazon.com/cloudfront/latest/APIReference/API_UpdateOriginRequestPolicy.html:
@@ -258,7 +262,7 @@ func resourceOriginRequestPolicyUpdate(ctx context.Context, d *schema.ResourceDa
 
 func resourceOriginRequestPolicyDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CloudFrontConn()
+	conn := meta.(*conns.AWSClient).CloudFrontConn(ctx)
 
 	log.Printf("[DEBUG] Deleting CloudFront Origin Request Policy: (%s)", d.Id())
 	_, err := conn.DeleteOriginRequestPolicyWithContext(ctx, &cloudfront.DeleteOriginRequestPolicyInput{

@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package mediaconvert
 
 import (
@@ -16,8 +19,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @SDKResource("aws_media_convert_queue", name="Queue")
+// @Tags
 func ResourceQueue() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceQueueCreate,
@@ -91,8 +97,8 @@ func ResourceQueue() *schema.Resource {
 					mediaconvert.QueueStatusPaused,
 				}, false),
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
 
 		CustomizeDiff: verify.SetTagsDiff,
@@ -101,19 +107,16 @@ func ResourceQueue() *schema.Resource {
 
 func resourceQueueCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn, err := GetAccountClient(meta.(*conns.AWSClient))
+	conn, err := GetAccountClient(ctx, meta.(*conns.AWSClient))
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "getting Media Convert Account Client: %s", err)
 	}
-
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
 	createOpts := &mediaconvert.CreateQueueInput{
 		Name:        aws.String(d.Get("name").(string)),
 		Status:      aws.String(d.Get("status").(string)),
 		PricingPlan: aws.String(d.Get("pricing_plan").(string)),
-		Tags:        Tags(tags.IgnoreAWS()),
+		Tags:        getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("description"); ok {
@@ -136,13 +139,10 @@ func resourceQueueCreate(ctx context.Context, d *schema.ResourceData, meta inter
 
 func resourceQueueRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn, err := GetAccountClient(meta.(*conns.AWSClient))
+	conn, err := GetAccountClient(ctx, meta.(*conns.AWSClient))
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "getting Media Convert Account Client: %s", err)
 	}
-
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	getOpts := &mediaconvert.GetQueueInput{
 		Name: aws.String(d.Id()),
@@ -168,29 +168,20 @@ func resourceQueueRead(ctx context.Context, d *schema.ResourceData, meta interfa
 		return sdkdiag.AppendErrorf(diags, "setting Media Convert Queue reservation_plan_settings: %s", err)
 	}
 
-	tags, err := ListTags(ctx, conn, aws.StringValue(resp.Queue.Arn))
+	tags, err := listTags(ctx, conn, aws.StringValue(resp.Queue.Arn))
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "listing tags for Media Convert Queue (%s): %s", d.Id(), err)
 	}
 
-	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
-	}
+	setTagsOut(ctx, Tags(tags))
 
 	return diags
 }
 
 func resourceQueueUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn, err := GetAccountClient(meta.(*conns.AWSClient))
+	conn, err := GetAccountClient(ctx, meta.(*conns.AWSClient))
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "getting Media Convert Account Client: %s", err)
 	}
@@ -218,7 +209,7 @@ func resourceQueueUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
-		if err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n); err != nil {
+		if err := updateTags(ctx, conn, d.Get("arn").(string), o, n); err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating tags: %s", err)
 		}
 	}
@@ -228,7 +219,7 @@ func resourceQueueUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 
 func resourceQueueDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn, err := GetAccountClient(meta.(*conns.AWSClient))
+	conn, err := GetAccountClient(ctx, meta.(*conns.AWSClient))
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "getting Media Convert Account Client: %s", err)
 	}
@@ -248,7 +239,7 @@ func resourceQueueDelete(ctx context.Context, d *schema.ResourceData, meta inter
 	return diags
 }
 
-func GetAccountClient(awsClient *conns.AWSClient) (*mediaconvert.MediaConvert, error) {
+func GetAccountClient(ctx context.Context, awsClient *conns.AWSClient) (*mediaconvert.MediaConvert, error) {
 	const mutexKey = `mediaconvertaccountconn`
 	conns.GlobalMutexKV.Lock(mutexKey)
 	defer conns.GlobalMutexKV.Unlock(mutexKey)
@@ -261,22 +252,22 @@ func GetAccountClient(awsClient *conns.AWSClient) (*mediaconvert.MediaConvert, e
 		Mode: aws.String(mediaconvert.DescribeEndpointsModeDefault),
 	}
 
-	output, err := awsClient.MediaConvertConn().DescribeEndpoints(input)
+	output, err := awsClient.MediaConvertConn(ctx).DescribeEndpointsWithContext(ctx, input)
 
 	if err != nil {
-		return nil, fmt.Errorf("error describing MediaConvert Endpoints: %w", err)
+		return nil, fmt.Errorf("describing MediaConvert Endpoints: %w", err)
 	}
 
 	if output == nil || len(output.Endpoints) == 0 || output.Endpoints[0] == nil || output.Endpoints[0].Url == nil {
-		return nil, fmt.Errorf("error describing MediaConvert Endpoints: empty response or URL")
+		return nil, fmt.Errorf("describing MediaConvert Endpoints: empty response or URL")
 	}
 
 	endpointURL := aws.StringValue(output.Endpoints[0].Url)
 
-	sess, err := session.NewSession(&awsClient.MediaConvertConn().Config)
+	sess, err := session.NewSession(&awsClient.MediaConvertConn(ctx).Config)
 
 	if err != nil {
-		return nil, fmt.Errorf("error creating AWS MediaConvert session: %w", err)
+		return nil, fmt.Errorf("creating AWS MediaConvert session: %w", err)
 	}
 
 	conn := mediaconvert.New(sess.Copy(&aws.Config{Endpoint: aws.String(endpointURL)}))

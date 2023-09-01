@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/aws_appsync_datasource: Add `event_bridge_config` argument to support AppSync EventBridge data sources
+```

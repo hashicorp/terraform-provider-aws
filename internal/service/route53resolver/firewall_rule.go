@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package route53resolver
 
 import (
@@ -10,13 +13,15 @@ import (
 	"github.com/aws/aws-sdk-go/service/route53resolver"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
+// @SDKResource("aws_route53_resolver_firewall_rule")
 func ResourceFirewallRule() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceFirewallRuleCreate,
@@ -80,15 +85,15 @@ func ResourceFirewallRule() *schema.Resource {
 }
 
 func resourceFirewallRuleCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).Route53ResolverConn()
+	conn := meta.(*conns.AWSClient).Route53ResolverConn(ctx)
 
 	firewallDomainListID := d.Get("firewall_domain_list_id").(string)
 	firewallRuleGroupID := d.Get("firewall_rule_group_id").(string)
-	id := FirewallRuleCreateResourceID(firewallRuleGroupID, firewallDomainListID)
+	ruleID := FirewallRuleCreateResourceID(firewallRuleGroupID, firewallDomainListID)
 	name := d.Get("name").(string)
 	input := &route53resolver.CreateFirewallRuleInput{
 		Action:               aws.String(d.Get("action").(string)),
-		CreatorRequestId:     aws.String(resource.PrefixedUniqueId("tf-r53-resolver-firewall-rule-")),
+		CreatorRequestId:     aws.String(id.PrefixedUniqueId("tf-r53-resolver-firewall-rule-")),
 		FirewallRuleGroupId:  aws.String(firewallRuleGroupID),
 		FirewallDomainListId: aws.String(firewallDomainListID),
 		Name:                 aws.String(name),
@@ -117,13 +122,13 @@ func resourceFirewallRuleCreate(ctx context.Context, d *schema.ResourceData, met
 		return diag.Errorf("creating Route53 Resolver Firewall Rule (%s): %s", name, err)
 	}
 
-	d.SetId(id)
+	d.SetId(ruleID)
 
 	return resourceFirewallRuleRead(ctx, d, meta)
 }
 
 func resourceFirewallRuleRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).Route53ResolverConn()
+	conn := meta.(*conns.AWSClient).Route53ResolverConn(ctx)
 
 	firewallRuleGroupID, firewallDomainListID, err := FirewallRuleParseResourceID(d.Id())
 
@@ -157,7 +162,7 @@ func resourceFirewallRuleRead(ctx context.Context, d *schema.ResourceData, meta 
 }
 
 func resourceFirewallRuleUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).Route53ResolverConn()
+	conn := meta.(*conns.AWSClient).Route53ResolverConn(ctx)
 
 	firewallRuleGroupID, firewallDomainListID, err := FirewallRuleParseResourceID(d.Id())
 
@@ -199,7 +204,7 @@ func resourceFirewallRuleUpdate(ctx context.Context, d *schema.ResourceData, met
 }
 
 func resourceFirewallRuleDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).Route53ResolverConn()
+	conn := meta.(*conns.AWSClient).Route53ResolverConn(ctx)
 
 	firewallRuleGroupID, firewallDomainListID, err := FirewallRuleParseResourceID(d.Id())
 
@@ -284,7 +289,7 @@ func findFirewallRules(ctx context.Context, conn *route53resolver.Route53Resolve
 	})
 
 	if tfawserr.ErrCodeEquals(err, route53resolver.ErrCodeResourceNotFoundException) {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}

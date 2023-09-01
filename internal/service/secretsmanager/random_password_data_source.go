@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package secretsmanager
 
 import (
@@ -11,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
+// @SDKDataSource("aws_secretsmanager_random_password")
 func DataSourceRandomPassword() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceRandomPasswordRead,
@@ -60,7 +64,7 @@ func DataSourceRandomPassword() *schema.Resource {
 
 func dataSourceRandomPasswordRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SecretsManagerConn()
+	conn := meta.(*conns.AWSClient).SecretsManagerConn(ctx)
 
 	var excludeCharacters string
 	if v, ok := d.GetOk("exclude_characters"); ok {

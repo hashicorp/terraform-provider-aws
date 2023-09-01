@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package logs
 
 import (
@@ -12,10 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 )
 
-func init() {
-	_sp.registerSDKDataSourceFactory("aws_cloudwatch_log_data_protection_policy_document", dataSourceDataProtectionPolicyDocument)
-}
-
+// @SDKDataSource("aws_cloudwatch_log_data_protection_policy_document")
 func dataSourceDataProtectionPolicyDocument() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceDataProtectionPolicyDocumentRead,

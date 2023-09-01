@@ -1,13 +1,15 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package backup_test
 
 import (
 	"fmt"
-	"regexp"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/backup"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
@@ -18,14 +20,10 @@ func testAccFrameworkDataSource_basic(t *testing.T) {
 	rName := fmt.Sprintf("tf_acc_test_%s", sdkacctest.RandString(7))
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccFrameworkPreCheck(ctx, t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccFrameworkPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, backup.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
-			{
-				Config:      testAccFrameworkDataSourceConfig_nonExistent,
-				ExpectError: regexp.MustCompile(`Error getting Backup Framework`),
-			},
 			{
 				Config: testAccFrameworkDataSourceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
@@ -75,7 +73,7 @@ func testAccFrameworkDataSource_controlScopeTag(t *testing.T) {
 	rName := fmt.Sprintf("tf_acc_test_%s", sdkacctest.RandString(7))
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccFrameworkPreCheck(ctx, t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccFrameworkPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, backup.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
@@ -100,12 +98,6 @@ func testAccFrameworkDataSource_controlScopeTag(t *testing.T) {
 		},
 	})
 }
-
-const testAccFrameworkDataSourceConfig_nonExistent = `
-data "aws_backup_framework" "test" {
-  name = "tf_acc_test_does_not_exist"
-}
-`
 
 func testAccFrameworkDataSourceConfig_basic(rName string) string {
 	return fmt.Sprintf(`

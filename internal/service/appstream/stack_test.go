@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package appstream_test
 
 import (
@@ -5,15 +8,14 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/appstream"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfappstream "github.com/hashicorp/terraform-provider-aws/internal/service/appstream"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func TestAccAppStreamStack_basic(t *testing.T) {
@@ -23,7 +25,7 @@ func TestAccAppStreamStack_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckStackDestroy(ctx),
 		ErrorCheck:               acctest.ErrorCheck(t, appstream.EndpointsID),
@@ -65,7 +67,7 @@ func TestAccAppStreamStack_disappears(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckStackDestroy(ctx),
 		ErrorCheck:               acctest.ErrorCheck(t, appstream.EndpointsID),
@@ -91,7 +93,7 @@ func TestAccAppStreamStack_complete(t *testing.T) {
 	descriptionUpdated := "Updated Description of a test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckStackDestroy(ctx),
 		ErrorCheck:               acctest.ErrorCheck(t, appstream.EndpointsID),
@@ -149,7 +151,7 @@ func TestAccAppStreamStack_applicationSettings_basic(t *testing.T) {
 	settingsGroupUpdated := "group-updated"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckStackDestroy(ctx),
 		ErrorCheck:               acctest.ErrorCheck(t, appstream.EndpointsID),
@@ -208,7 +210,7 @@ func TestAccAppStreamStack_applicationSettings_removeFromEnabled(t *testing.T) {
 	settingsGroup := "group"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckStackDestroy(ctx),
 		ErrorCheck:               acctest.ErrorCheck(t, appstream.EndpointsID),
@@ -247,7 +249,7 @@ func TestAccAppStreamStack_applicationSettings_removeFromDisabled(t *testing.T) 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckStackDestroy(ctx),
 		ErrorCheck:               acctest.ErrorCheck(t, appstream.EndpointsID),
@@ -278,7 +280,7 @@ func TestAccAppStreamStack_withTags(t *testing.T) {
 	descriptionUpdated := "Updated Description of a test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckStackDestroy(ctx),
 		ErrorCheck:               acctest.ErrorCheck(t, appstream.EndpointsID),
@@ -314,25 +316,60 @@ func TestAccAppStreamStack_withTags(t *testing.T) {
 	})
 }
 
-func testAccCheckStackExists(ctx context.Context, resourceName string, appStreamStack *appstream.Stack) resource.TestCheckFunc {
+func TestAccAppStreamStack_streamingExperienceSettings_basic(t *testing.T) {
+	ctx := acctest.Context(t)
+	var stackOutput appstream.Stack
+	resourceName := "aws_appstream_stack.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	preferredProtocol := "TCP"
+	newPreferredProtocol := "UDP"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckStackDestroy(ctx),
+		ErrorCheck:               acctest.ErrorCheck(t, appstream.EndpointsID),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccStackConfig_streamingExperienceSettings(rName, preferredProtocol),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckStackExists(ctx, resourceName, &stackOutput),
+					resource.TestCheckResourceAttr(resourceName, "streaming_experience_settings.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "streaming_experience_settings.0.preferred_protocol", "TCP"),
+				),
+			},
+			{
+				Config: testAccStackConfig_streamingExperienceSettings(rName, newPreferredProtocol),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckStackExists(ctx, resourceName, &stackOutput),
+					resource.TestCheckResourceAttr(resourceName, "streaming_experience_settings.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "streaming_experience_settings.0.preferred_protocol", "UDP"),
+				),
+			},
+		},
+	})
+}
+
+func testAccCheckStackExists(ctx context.Context, n string, v *appstream.Stack) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[resourceName]
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return fmt.Errorf("not found: %s", resourceName)
+			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AppStreamConn()
-		resp, err := conn.DescribeStacksWithContext(ctx, &appstream.DescribeStacksInput{Names: []*string{aws.String(rs.Primary.ID)}})
+		if rs.Primary.ID == "" {
+			return fmt.Errorf("No Appstream Stack ID is set")
+		}
+
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AppStreamConn(ctx)
+
+		output, err := tfappstream.FindStackByName(ctx, conn, rs.Primary.ID)
 
 		if err != nil {
-			return fmt.Errorf("problem checking for AppStream Stack existence: %w", err)
+			return err
 		}
 
-		if resp == nil || len(resp.Stacks) == 0 {
-			return fmt.Errorf("appstream stack %q does not exist", rs.Primary.ID)
-		}
-
-		*appStreamStack = *resp.Stacks[0]
+		*v = *output
 
 		return nil
 	}
@@ -340,26 +377,24 @@ func testAccCheckStackExists(ctx context.Context, resourceName string, appStream
 
 func testAccCheckStackDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AppStreamConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AppStreamConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_appstream_stack" {
 				continue
 			}
 
-			resp, err := conn.DescribeStacksWithContext(ctx, &appstream.DescribeStacksInput{Names: []*string{aws.String(rs.Primary.ID)}})
+			_, err := tfappstream.FindStackByName(ctx, conn, rs.Primary.ID)
 
-			if tfawserr.ErrCodeEquals(err, appstream.ErrCodeResourceNotFoundException) {
+			if tfresource.NotFound(err) {
 				continue
 			}
 
 			if err != nil {
-				return fmt.Errorf("problem while checking AppStream Stack was destroyed: %w", err)
+				return err
 			}
 
-			if resp != nil && len(resp.Stacks) > 0 {
-				return fmt.Errorf("appstream stack %q still exists", rs.Primary.ID)
-			}
+			return fmt.Errorf("Appstream Stack %s still exists", rs.Primary.ID)
 		}
 
 		return nil
@@ -505,4 +540,16 @@ resource "aws_appstream_stack" "test" {
   }
 }
 `, name, description)
+}
+
+func testAccStackConfig_streamingExperienceSettings(name, preferredProtocol string) string {
+	return fmt.Sprintf(`
+resource "aws_appstream_stack" "test" {
+  name = %[1]q
+
+  streaming_experience_settings {
+    preferred_protocol = %[2]q
+  }
+}
+`, name, preferredProtocol)
 }

@@ -55,7 +55,7 @@ resource "aws_lightsail_container_service_deployment_version" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `service_name` - (Required) The name for the container service.
 * `container` - (Required) A set of configuration blocks that describe the settings of the containers that will be launched on the container service. Maximum of 53. [Detailed below](#container).
@@ -90,9 +90,9 @@ The `health_check` configuration block supports the following arguments:
 * `path` - (Optional) The path on the container on which to perform the health check. Defaults to "/".
 * `success_codes` - (Optional) The HTTP codes to use when checking for a successful response from a container. You can specify values between 200 and 499. Defaults to "200-499".
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The `service_name` and `version` separation by a slash (`/`).
 * `created_at` - The timestamp when the deployment was created.
@@ -107,8 +107,17 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Lightsail Container Service Deployment Version can be imported using the `service_name` and `version` separated by a slash (`/`), e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Lightsail Container Service Deployment Version using the `service_name` and `version` separated by a slash (`/`). For example:
 
-```shell
-$ terraform import aws_lightsail_container_service_deployment_version.example container-service-1/1
+```terraform
+import {
+  to = aws_lightsail_container_service_deployment_version.example
+  id = "container-service-1/1"
+}
+```
+
+Using `terraform import`, import Lightsail Container Service Deployment Version using the `service_name` and `version` separated by a slash (`/`). For example:
+
+```console
+% terraform import aws_lightsail_container_service_deployment_version.example container-service-1/1
 ```

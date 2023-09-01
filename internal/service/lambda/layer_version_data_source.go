@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package lambda
 
 import (
@@ -14,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 )
 
+// @SDKDataSource("aws_lambda_layer_version")
 func DataSourceLayerVersion() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceLayerVersionRead,
@@ -97,7 +101,7 @@ func DataSourceLayerVersion() *schema.Resource {
 
 func dataSourceLayerVersionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).LambdaConn()
+	conn := meta.(*conns.AWSClient).LambdaConn(ctx)
 	layerName := d.Get("layer_name").(string)
 
 	var version int64

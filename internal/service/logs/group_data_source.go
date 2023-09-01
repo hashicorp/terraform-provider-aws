@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package logs
 
 import (
@@ -10,10 +13,7 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
-func init() {
-	_sp.registerSDKDataSourceFactory("aws_cloudwatch_log_group", dataSourceGroup)
-}
-
+// @SDKDataSource("aws_cloudwatch_log_group")
 func dataSourceGroup() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceGroupRead,
@@ -45,7 +45,7 @@ func dataSourceGroup() *schema.Resource {
 }
 
 func dataSourceGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).LogsConn()
+	conn := meta.(*conns.AWSClient).LogsConn(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	name := d.Get("name").(string)
@@ -61,7 +61,7 @@ func dataSourceGroupRead(ctx context.Context, d *schema.ResourceData, meta inter
 	d.Set("kms_key_id", logGroup.KmsKeyId)
 	d.Set("retention_in_days", logGroup.RetentionInDays)
 
-	tags, err := ListLogGroupTags(ctx, conn, name)
+	tags, err := listLogGroupTags(ctx, conn, name)
 
 	if err != nil {
 		return diag.Errorf("listing tags for CloudWatch Logs Log Group (%s): %s", name, err)

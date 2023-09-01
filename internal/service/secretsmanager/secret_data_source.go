@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package secretsmanager
 
 import (
@@ -15,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKDataSource("aws_secretsmanager_secret")
 func DataSourceSecret() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceSecretRead,
@@ -43,29 +47,6 @@ func DataSourceSecret() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"rotation_enabled": {
-				Deprecated: "Use the aws_secretsmanager_secret_rotation data source instead",
-				Type:       schema.TypeBool,
-				Computed:   true,
-			},
-			"rotation_lambda_arn": {
-				Deprecated: "Use the aws_secretsmanager_secret_rotation data source instead",
-				Type:       schema.TypeString,
-				Computed:   true,
-			},
-			"rotation_rules": {
-				Deprecated: "Use the aws_secretsmanager_secret_rotation data source instead",
-				Type:       schema.TypeList,
-				Computed:   true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"automatically_after_days": {
-							Type:     schema.TypeInt,
-							Computed: true,
-						},
-					},
-				},
-			},
 			"tags": {
 				Type:     schema.TypeMap,
 				Computed: true,
@@ -77,7 +58,7 @@ func DataSourceSecret() *schema.Resource {
 
 func dataSourceSecretRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SecretsManagerConn()
+	conn := meta.(*conns.AWSClient).SecretsManagerConn(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	var secretID string
@@ -117,8 +98,6 @@ func dataSourceSecretRead(ctx context.Context, d *schema.ResourceData, meta inte
 	d.Set("description", output.Description)
 	d.Set("kms_key_id", output.KmsKeyId)
 	d.Set("name", output.Name)
-	d.Set("rotation_enabled", output.RotationEnabled)
-	d.Set("rotation_lambda_arn", output.RotationLambdaARN)
 	d.Set("policy", "")
 
 	pIn := &secretsmanager.GetResourcePolicyInput{
@@ -138,11 +117,7 @@ func dataSourceSecretRead(ctx context.Context, d *schema.ResourceData, meta inte
 		d.Set("policy", policy)
 	}
 
-	if err := d.Set("rotation_rules", flattenRotationRules(output.RotationRules)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting rotation_rules: %s", err)
-	}
-
-	if err := d.Set("tags", KeyValueTags(output.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+	if err := d.Set("tags", KeyValueTags(ctx, output.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 

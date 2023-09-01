@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ec2
 
 import (
@@ -17,6 +20,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_vpc_endpoint_policy")
 func ResourceVPCEndpointPolicy() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceVPCEndpointPolicyPut,
@@ -56,7 +60,7 @@ func ResourceVPCEndpointPolicy() *schema.Resource {
 
 func resourceVPCEndpointPolicyPut(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	endpointID := d.Get("vpc_endpoint_id").(string)
 	req := &ec2.ModifyVpcEndpointInput{
@@ -76,7 +80,7 @@ func resourceVPCEndpointPolicyPut(ctx context.Context, d *schema.ResourceData, m
 
 	log.Printf("[DEBUG] Updating VPC Endpoint Policy: %#v", req)
 	if _, err := conn.ModifyVpcEndpointWithContext(ctx, req); err != nil {
-		return sdkdiag.AppendErrorf(diags, "Error updating VPC Endpoint Policy: %s", err)
+		return sdkdiag.AppendErrorf(diags, "updating VPC Endpoint Policy: %s", err)
 	}
 	d.SetId(endpointID)
 
@@ -91,7 +95,7 @@ func resourceVPCEndpointPolicyPut(ctx context.Context, d *schema.ResourceData, m
 
 func resourceVPCEndpointPolicyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	vpce, err := FindVPCEndpointByID(ctx, conn, d.Id())
 
@@ -125,7 +129,7 @@ func resourceVPCEndpointPolicyRead(ctx context.Context, d *schema.ResourceData, 
 
 func resourceVPCEndpointPolicyDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	req := &ec2.ModifyVpcEndpointInput{
 		VpcEndpointId: aws.String(d.Id()),
@@ -134,7 +138,7 @@ func resourceVPCEndpointPolicyDelete(ctx context.Context, d *schema.ResourceData
 
 	log.Printf("[DEBUG] Resetting VPC Endpoint Policy: %#v", req)
 	if _, err := conn.ModifyVpcEndpointWithContext(ctx, req); err != nil {
-		return sdkdiag.AppendErrorf(diags, "Error Resetting VPC Endpoint Policy: %s", err)
+		return sdkdiag.AppendErrorf(diags, "Resetting VPC Endpoint Policy: %s", err)
 	}
 
 	_, err := WaitVPCEndpointAvailable(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete))

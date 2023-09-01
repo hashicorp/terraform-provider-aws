@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package guardduty
 
 import (
@@ -5,7 +8,7 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go/service/guardduty"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 )
 
 const (
@@ -28,7 +31,7 @@ const (
 
 // waitAdminAccountEnabled waits for an AdminAccount to return Enabled
 func waitAdminAccountEnabled(ctx context.Context, conn *guardduty.GuardDuty, adminAccountID string) (*guardduty.AdminAccount, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{adminStatusNotFound},
 		Target:  []string{guardduty.AdminStatusEnabled},
 		Refresh: statusAdminAccountAdmin(ctx, conn, adminAccountID),
@@ -46,7 +49,7 @@ func waitAdminAccountEnabled(ctx context.Context, conn *guardduty.GuardDuty, adm
 
 // waitAdminAccountNotFound waits for an AdminAccount to return NotFound
 func waitAdminAccountNotFound(ctx context.Context, conn *guardduty.GuardDuty, adminAccountID string) (*guardduty.AdminAccount, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{guardduty.AdminStatusDisableInProgress},
 		Target:  []string{adminStatusNotFound},
 		Refresh: statusAdminAccountAdmin(ctx, conn, adminAccountID),
@@ -64,7 +67,7 @@ func waitAdminAccountNotFound(ctx context.Context, conn *guardduty.GuardDuty, ad
 
 // waitPublishingDestinationCreated waits for GuardDuty to return Publishing
 func waitPublishingDestinationCreated(ctx context.Context, conn *guardduty.GuardDuty, destinationID, detectorID string) (*guardduty.CreatePublishingDestinationOutput, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{guardduty.PublishingStatusPendingVerification},
 		Target:  []string{guardduty.PublishingStatusPublishing},
 		Refresh: statusPublishingDestination(ctx, conn, destinationID, detectorID),

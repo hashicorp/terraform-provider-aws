@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ssm_test
 
 import (
@@ -6,36 +9,37 @@ import (
 	"testing"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ssm"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfssm "github.com/hashicorp/terraform-provider-aws/internal/service/ssm"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func TestAccSSMActivation_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var ssmActivation ssm.Activation
-	name := sdkacctest.RandomWithPrefix("tf-acc")
-	tag := sdkacctest.RandomWithPrefix("tf-acc")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	roleName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ssm_activation.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ssm.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckActivationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccActivationConfig_basic(name, tag),
+				Config: testAccActivationConfig_basic(rName, roleName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckActivationExists(ctx, resourceName, &ssmActivation),
 					resource.TestCheckResourceAttrSet(resourceName, "activation_code"),
 					acctest.CheckResourceAttrRFC3339(resourceName, "expiration_date"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.Name", tag)),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+				),
 			},
 			{
 				ResourceName:      resourceName,
@@ -49,43 +53,27 @@ func TestAccSSMActivation_basic(t *testing.T) {
 	})
 }
 
-func TestAccSSMActivation_update(t *testing.T) {
+func TestAccSSMActivation_tags(t *testing.T) {
 	ctx := acctest.Context(t)
-	var ssmActivation1, ssmActivation2 ssm.Activation
-	name := sdkacctest.RandomWithPrefix("tf-acc")
+	var ssmActivation ssm.Activation
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	roleName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ssm_activation.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ssm.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckActivationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccActivationConfig_basic(name, "My Activation"),
+				Config: testAccActivationConfig_tags(rName, roleName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckActivationExists(ctx, resourceName, &ssmActivation1),
+					testAccCheckActivationExists(ctx, resourceName, &ssmActivation),
 					resource.TestCheckResourceAttrSet(resourceName, "activation_code"),
+					acctest.CheckResourceAttrRFC3339(resourceName, "expiration_date"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.Name", "My Activation"),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-				ImportStateVerifyIgnore: []string{
-					"activation_code",
-				},
-			},
-			{
-				Config: testAccActivationConfig_basic(name, "Foo"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckActivationExists(ctx, resourceName, &ssmActivation2),
-					resource.TestCheckResourceAttrSet(resourceName, "activation_code"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.Name", "Foo"),
-					testAccCheckActivationRecreated(t, &ssmActivation1, &ssmActivation2),
+					resource.TestCheckResourceAttr(resourceName, "tags.Name", rName),
 				),
 			},
 			{
@@ -103,22 +91,22 @@ func TestAccSSMActivation_update(t *testing.T) {
 func TestAccSSMActivation_expirationDate(t *testing.T) {
 	ctx := acctest.Context(t)
 	var ssmActivation ssm.Activation
-	rName := sdkacctest.RandomWithPrefix("tf-acc")
-	expirationTime := time.Now().Add(48 * time.Hour).UTC()
-	expirationDateS := expirationTime.Format(time.RFC3339)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	roleName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	expirationDate := time.Now().Add(48 * time.Hour).UTC().Format(time.RFC3339)
 	resourceName := "aws_ssm_activation.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ssm.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckActivationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccActivationConfig_expirationDate(rName, expirationDateS),
+				Config: testAccActivationConfig_expirationDate(rName, expirationDate, roleName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckActivationExists(ctx, resourceName, &ssmActivation),
-					resource.TestCheckResourceAttr(resourceName, "expiration_date", expirationDateS),
+					resource.TestCheckResourceAttr(resourceName, "expiration_date", expirationDate),
 				),
 			},
 			{
@@ -136,21 +124,21 @@ func TestAccSSMActivation_expirationDate(t *testing.T) {
 func TestAccSSMActivation_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var ssmActivation ssm.Activation
-	name := sdkacctest.RandomWithPrefix("tf-acc")
-	tag := sdkacctest.RandomWithPrefix("tf-acc")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	roleName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ssm_activation.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ssm.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckActivationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccActivationConfig_basic(name, tag),
+				Config: testAccActivationConfig_basic(rName, roleName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckActivationExists(ctx, resourceName, &ssmActivation),
-					testAccCheckActivationDisappears(ctx, &ssmActivation),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfssm.ResourceActivation(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -158,16 +146,7 @@ func TestAccSSMActivation_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckActivationRecreated(t *testing.T, before, after *ssm.Activation) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		if *before.ActivationId == *after.ActivationId {
-			t.Fatalf("expected SSM activation Ids to be different but got %v == %v", before.ActivationId, after.ActivationId)
-		}
-		return nil
-	}
-}
-
-func testAccCheckActivationExists(ctx context.Context, n string, ssmActivation *ssm.Activation) resource.TestCheckFunc {
+func testAccCheckActivationExists(ctx context.Context, n string, v *ssm.Activation) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -178,83 +157,51 @@ func testAccCheckActivationExists(ctx context.Context, n string, ssmActivation *
 			return fmt.Errorf("No SSM Activation ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SSMConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SSMConn(ctx)
 
-		resp, err := conn.DescribeActivationsWithContext(ctx, &ssm.DescribeActivationsInput{
-			Filters: []*ssm.DescribeActivationsFilter{
-				{
-					FilterKey: aws.String("ActivationIds"),
-					FilterValues: []*string{
-						aws.String(rs.Primary.ID),
-					},
-				},
-			},
-			MaxResults: aws.Int64(1),
-		})
+		output, err := tfssm.FindActivationByID(ctx, conn, rs.Primary.ID)
 
 		if err != nil {
-			return fmt.Errorf("Could not describe the activation - %s", err)
+			return err
 		}
 
-		*ssmActivation = *resp.ActivationList[0]
+		*v = *output
 
-		return nil
-	}
-}
-
-func testAccCheckActivationDisappears(ctx context.Context, a *ssm.Activation) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SSMConn()
-
-		input := &ssm.DeleteActivationInput{ActivationId: a.ActivationId}
-		_, err := conn.DeleteActivationWithContext(ctx, input)
-		if err != nil {
-			return fmt.Errorf("Error deleting SSM Activation: %s", err)
-		}
 		return nil
 	}
 }
 
 func testAccCheckActivationDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SSMConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SSMConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_ssm_activation" {
 				continue
 			}
 
-			out, err := conn.DescribeActivationsWithContext(ctx, &ssm.DescribeActivationsInput{
-				Filters: []*ssm.DescribeActivationsFilter{
-					{
-						FilterKey: aws.String("ActivationIds"),
-						FilterValues: []*string{
-							aws.String(rs.Primary.ID),
-						},
-					},
-				},
-				MaxResults: aws.Int64(1),
-			})
+			_, err := tfssm.FindActivationByID(ctx, conn, rs.Primary.ID)
 
-			if err == nil {
-				if len(out.ActivationList) != 0 &&
-					*out.ActivationList[0].ActivationId == rs.Primary.ID {
-					return fmt.Errorf("SSM Activation still exists")
-				}
+			if tfresource.NotFound(err) {
+				continue
 			}
 
-			return err
+			if err != nil {
+				return err
+			}
+
+			return fmt.Errorf("SSM Activation %s still exists", rs.Primary.ID)
 		}
 
 		return nil
 	}
 }
 
-func testAccActivationBasicBaseConfig(rName string) string {
+func testAccActivationConfig_base(roleName string) string {
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
 
-resource "aws_iam_role" "test_role" {
+resource "aws_iam_role" "test" {
   name = %[1]q
 
   assume_role_policy = <<EOF
@@ -274,38 +221,53 @@ EOF
 
 }
 
-resource "aws_iam_role_policy_attachment" "test_attach" {
-  role       = aws_iam_role.test_role.name
-  policy_arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/service-role/AmazonEC2RoleforSSM"
+resource "aws_iam_role_policy_attachment" "test" {
+  role       = aws_iam_role.test.name
+  policy_arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/AmazonSSMManagedInstanceCore"
 }
-`, rName)
+`, roleName)
 }
 
-func testAccActivationConfig_basic(rName string, rTag string) string {
-	return testAccActivationBasicBaseConfig(rName) + fmt.Sprintf(`
+func testAccActivationConfig_basic(rName string, roleName string) string {
+	return acctest.ConfigCompose(testAccActivationConfig_base(roleName), fmt.Sprintf(`
 resource "aws_ssm_activation" "test" {
   name               = %[1]q
   description        = "Test"
-  iam_role           = aws_iam_role.test_role.name
+  iam_role           = aws_iam_role.test.name
   registration_limit = "5"
-  depends_on         = [aws_iam_role_policy_attachment.test_attach]
+
+  depends_on = [aws_iam_role_policy_attachment.test]
+}
+`, rName))
+}
+
+func testAccActivationConfig_tags(rName string, roleName string) string {
+	return acctest.ConfigCompose(testAccActivationConfig_base(roleName), fmt.Sprintf(`
+resource "aws_ssm_activation" "test" {
+  name               = %[1]q
+  description        = "Test"
+  iam_role           = aws_iam_role.test.name
+  registration_limit = "5"
+
+  depends_on = [aws_iam_role_policy_attachment.test]
 
   tags = {
-    Name = %[2]q
+    Name = %[1]q
   }
 }
-`, rName, rTag)
+`, rName))
 }
 
-func testAccActivationConfig_expirationDate(rName, expirationDate string) string {
-	return testAccActivationBasicBaseConfig(rName) + fmt.Sprintf(`
+func testAccActivationConfig_expirationDate(rName string, expirationDate string, roleName string) string {
+	return acctest.ConfigCompose(testAccActivationConfig_base(roleName), fmt.Sprintf(`
 resource "aws_ssm_activation" "test" {
-  name               = "test_ssm_activation-%[1]s"
+  name               = %[1]q
   description        = "Test"
   expiration_date    = "%[2]s"
-  iam_role           = aws_iam_role.test_role.name
+  iam_role           = aws_iam_role.test.name
   registration_limit = "5"
-  depends_on         = [aws_iam_role_policy_attachment.test_attach]
+
+  depends_on = [aws_iam_role_policy_attachment.test]
 }
-`, rName, expirationDate)
+`, rName, expirationDate))
 }

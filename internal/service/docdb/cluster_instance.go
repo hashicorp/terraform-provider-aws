@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package docdb
 
 import (
@@ -10,7 +13,8 @@ import (
 	"github.com/aws/aws-sdk-go/service/docdb"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -18,8 +22,11 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @SDKResource("aws_docdb_cluster_instance", name="Cluster Instance")
+// @Tags(identifierAttribute="arn")
 func ResourceClusterInstance() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceClusterInstanceCreate,
@@ -160,8 +167,8 @@ func ResourceClusterInstance() *schema.Resource {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			"writer": {
 				Type:     schema.TypeBool,
 				Computed: true,
@@ -174,69 +181,66 @@ func ResourceClusterInstance() *schema.Resource {
 
 func resourceClusterInstanceCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DocDBConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	conn := meta.(*conns.AWSClient).DocDBConn(ctx)
 
-	createOpts := &docdb.CreateDBInstanceInput{
+	input := &docdb.CreateDBInstanceInput{
 		DBInstanceClass:         aws.String(d.Get("instance_class").(string)),
 		DBClusterIdentifier:     aws.String(d.Get("cluster_identifier").(string)),
 		Engine:                  aws.String(d.Get("engine").(string)),
 		PromotionTier:           aws.Int64(int64(d.Get("promotion_tier").(int))),
 		AutoMinorVersionUpgrade: aws.Bool(d.Get("auto_minor_version_upgrade").(bool)),
-		Tags:                    Tags(tags.IgnoreAWS()),
+		Tags:                    getTagsIn(ctx),
 	}
 
 	if attr, ok := d.GetOk("availability_zone"); ok {
-		createOpts.AvailabilityZone = aws.String(attr.(string))
+		input.AvailabilityZone = aws.String(attr.(string))
 	}
 
 	if attr, ok := d.GetOk("enable_performance_insights"); ok {
-		createOpts.EnablePerformanceInsights = aws.Bool(attr.(bool))
+		input.EnablePerformanceInsights = aws.Bool(attr.(bool))
 	}
 
 	if v, ok := d.GetOk("identifier"); ok {
-		createOpts.DBInstanceIdentifier = aws.String(v.(string))
+		input.DBInstanceIdentifier = aws.String(v.(string))
 	} else {
 		if v, ok := d.GetOk("identifier_prefix"); ok {
-			createOpts.DBInstanceIdentifier = aws.String(resource.PrefixedUniqueId(v.(string)))
+			input.DBInstanceIdentifier = aws.String(id.PrefixedUniqueId(v.(string)))
 		} else {
-			createOpts.DBInstanceIdentifier = aws.String(resource.PrefixedUniqueId("tf-"))
+			input.DBInstanceIdentifier = aws.String(id.PrefixedUniqueId("tf-"))
 		}
 	}
 
 	if attr, ok := d.GetOk("performance_insights_kms_key_id"); ok {
-		createOpts.PerformanceInsightsKMSKeyId = aws.String(attr.(string))
+		input.PerformanceInsightsKMSKeyId = aws.String(attr.(string))
 	}
 
 	if attr, ok := d.GetOk("preferred_maintenance_window"); ok {
-		createOpts.PreferredMaintenanceWindow = aws.String(attr.(string))
+		input.PreferredMaintenanceWindow = aws.String(attr.(string))
 	}
 
-	log.Printf("[DEBUG] Creating DocDB Instance opts: %s", createOpts)
 	var resp *docdb.CreateDBInstanceOutput
-	err := resource.RetryContext(ctx, propagationTimeout, func() *resource.RetryError {
+	err := retry.RetryContext(ctx, propagationTimeout, func() *retry.RetryError {
 		var err error
-		resp, err = conn.CreateDBInstanceWithContext(ctx, createOpts)
+		resp, err = conn.CreateDBInstanceWithContext(ctx, input)
 		if err != nil {
 			if tfawserr.ErrMessageContains(err, "InvalidParameterValue", "IAM role ARN value is invalid or does not include the required permissions") {
-				return resource.RetryableError(err)
+				return retry.RetryableError(err)
 			}
-			return resource.NonRetryableError(err)
+			return retry.NonRetryableError(err)
 		}
 		return nil
 	})
 	if tfresource.TimedOut(err) {
-		resp, err = conn.CreateDBInstanceWithContext(ctx, createOpts)
+		resp, err = conn.CreateDBInstanceWithContext(ctx, input)
 	}
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating DocDB Instance: %s", err)
+		return sdkdiag.AppendErrorf(diags, "creating DocumentDB Cluster Instance: %s", err)
 	}
 
 	d.SetId(aws.StringValue(resp.DBInstance.DBInstanceIdentifier))
 
 	// reuse db_instance refresh func
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:    resourceClusterInstanceCreateUpdatePendingStates,
 		Target:     []string{"available"},
 		Refresh:    resourceInstanceStateRefreshFunc(ctx, conn, d.Id()),
@@ -248,7 +252,7 @@ func resourceClusterInstanceCreate(ctx context.Context, d *schema.ResourceData, 
 	// Wait, catching any errors
 	_, err = stateConf.WaitForStateContext(ctx)
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "waiting for DocDB Instance (%s) to become available: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for DocumentDB Cluster Instance (%s) to become available: %s", d.Id(), err)
 	}
 
 	return append(diags, resourceClusterInstanceRead(ctx, d, meta)...)
@@ -256,18 +260,16 @@ func resourceClusterInstanceCreate(ctx context.Context, d *schema.ResourceData, 
 
 func resourceClusterInstanceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DocDBConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).DocDBConn(ctx)
 
 	db, err := resourceInstanceRetrieve(ctx, conn, d.Id())
 	if !d.IsNewResource() && tfresource.NotFound(err) {
-		log.Printf("[WARN] DocDB Cluster Instance (%s): not found, removing from state.", d.Id())
+		log.Printf("[WARN] DocumentDB Cluster Instance (%s): not found, removing from state.", d.Id())
 		d.SetId("")
 		return diags
 	}
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "retrieving DocDB Cluster Instance (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "retrieving DocumentDB Cluster Instance (%s): %s", d.Id(), err)
 	}
 
 	// Retrieve DB Cluster information, to determine if this Instance is a writer
@@ -283,7 +285,7 @@ func resourceClusterInstanceRead(ctx context.Context, d *schema.ResourceData, me
 	}
 
 	if dbc == nil {
-		return sdkdiag.AppendErrorf(diags, "Error finding DocDB Cluster (%s) for Cluster Instance (%s): %s",
+		return sdkdiag.AppendErrorf(diags, "finding DocumentDB Cluster (%s) for Cluster Instance (%s): %s",
 			aws.StringValue(db.DBClusterIdentifier), aws.StringValue(db.DBInstanceIdentifier), err)
 	}
 
@@ -329,29 +331,12 @@ func resourceClusterInstanceRead(ctx context.Context, d *schema.ResourceData, me
 	d.Set("storage_encrypted", db.StorageEncrypted)
 	d.Set("ca_cert_identifier", db.CACertificateIdentifier)
 
-	tags, err := ListTags(ctx, conn, d.Get("arn").(string))
-
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "listing tags for DocumentDB Cluster Instance (%s): %s", d.Get("arn").(string), err)
-	}
-
-	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
-	}
-
 	return diags
 }
 
 func resourceClusterInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DocDBConn()
+	conn := meta.(*conns.AWSClient).DocDBConn(ctx)
 	requestUpdate := false
 
 	req := &docdb.ModifyDBInstanceInput{
@@ -395,13 +380,13 @@ func resourceClusterInstanceUpdate(ctx context.Context, d *schema.ResourceData, 
 	}
 
 	if requestUpdate {
-		err := resource.RetryContext(ctx, propagationTimeout, func() *resource.RetryError {
+		err := retry.RetryContext(ctx, propagationTimeout, func() *retry.RetryError {
 			_, err := conn.ModifyDBInstanceWithContext(ctx, req)
 			if err != nil {
 				if tfawserr.ErrMessageContains(err, "InvalidParameterValue", "IAM role ARN value is invalid or does not include the required permissions") {
-					return resource.RetryableError(err)
+					return retry.RetryableError(err)
 				}
-				return resource.NonRetryableError(err)
+				return retry.NonRetryableError(err)
 			}
 			return nil
 		})
@@ -409,11 +394,11 @@ func resourceClusterInstanceUpdate(ctx context.Context, d *schema.ResourceData, 
 			_, err = conn.ModifyDBInstanceWithContext(ctx, req)
 		}
 		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "Error modifying DB Instance %s: %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "modifying DB Instance %s: %s", d.Id(), err)
 		}
 
 		// reuse db_instance refresh func
-		stateConf := &resource.StateChangeConf{
+		stateConf := &retry.StateChangeConf{
 			Pending:    resourceClusterInstanceCreateUpdatePendingStates,
 			Target:     []string{"available"},
 			Refresh:    resourceInstanceStateRefreshFunc(ctx, conn, d.Id()),
@@ -425,15 +410,7 @@ func resourceClusterInstanceUpdate(ctx context.Context, d *schema.ResourceData, 
 		// Wait, catching any errors
 		_, err = stateConf.WaitForStateContext(ctx)
 		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "waiting for DocDB Instance (%s) update: %s", d.Id(), err)
-		}
-	}
-
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		if err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n); err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating DocumentDB Cluster Instance (%s) tags: %s", d.Get("arn").(string), err)
+			return sdkdiag.AppendErrorf(diags, "waiting for DocumentDB Cluster Instance (%s) update: %s", d.Id(), err)
 		}
 	}
 
@@ -442,17 +419,17 @@ func resourceClusterInstanceUpdate(ctx context.Context, d *schema.ResourceData, 
 
 func resourceClusterInstanceDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DocDBConn()
+	conn := meta.(*conns.AWSClient).DocDBConn(ctx)
 
 	opts := docdb.DeleteDBInstanceInput{DBInstanceIdentifier: aws.String(d.Id())}
 
 	if _, err := conn.DeleteDBInstanceWithContext(ctx, &opts); err != nil {
-		return sdkdiag.AppendErrorf(diags, "deleting DocDB Instance (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting DocumentDB Cluster Instance (%s): %s", d.Id(), err)
 	}
 
 	// re-uses db_instance refresh func
-	log.Println("[INFO] Waiting for DocDB Cluster Instance to be destroyed")
-	stateConf := &resource.StateChangeConf{
+	log.Println("[INFO] Waiting for DocumentDB Cluster Instance to be destroyed")
+	stateConf := &retry.StateChangeConf{
 		Pending:    resourceClusterInstanceDeletePendingStates,
 		Target:     []string{},
 		Refresh:    resourceInstanceStateRefreshFunc(ctx, conn, d.Id()),
@@ -462,13 +439,13 @@ func resourceClusterInstanceDelete(ctx context.Context, d *schema.ResourceData, 
 	}
 
 	if _, err := stateConf.WaitForStateContext(ctx); err != nil {
-		return sdkdiag.AppendErrorf(diags, "waiting for DocDB Instance (%s) deletion: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for DocumentDB Cluster Instance (%s) deletion: %s", d.Id(), err)
 	}
 
 	return diags
 }
 
-func resourceInstanceStateRefreshFunc(ctx context.Context, conn *docdb.DocDB, id string) resource.StateRefreshFunc {
+func resourceInstanceStateRefreshFunc(ctx context.Context, conn *docdb.DocDB, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		v, err := resourceInstanceRetrieve(ctx, conn, id)
 
@@ -493,7 +470,7 @@ func resourceInstanceRetrieve(ctx context.Context, conn *docdb.DocDB, id string)
 	}
 	out, err := conn.DescribeDBInstancesWithContext(ctx, &input)
 	if tfawserr.ErrCodeEquals(err, docdb.ErrCodeDBInstanceNotFoundFault) {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}

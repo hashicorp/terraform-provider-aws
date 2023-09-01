@@ -15,8 +15,8 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/{Service}"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 )
 
 func TestAcc{Service}Tag_basic(t *testing.T) {
@@ -25,7 +25,7 @@ func TestAcc{Service}Tag_basic(t *testing.T) {
 	resourceName := "aws_{service}_tag.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, {Service}.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheck{Service}TagDestroy(ctx),
@@ -53,7 +53,7 @@ func TestAcc{Service}Tag_disappears(t *testing.T) {
 	resourceName := "aws_{service}_tag.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, {Service}.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheck{Service}TagDestroy(ctx),
@@ -76,7 +76,7 @@ func TestAcc{Service}Tag_Value(t *testing.T) {
 	resourceName := "aws_{service}_tag.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, {Service}.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheck{Service}TagDestroy(ctx),
@@ -157,21 +157,21 @@ resource "aws_{service}_tag" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `resource_arn` - (Required) ARN of the {SERVICE} resource to tag.
 * `key` - (Required) Tag name.
 * `value` - (Required) Tag value.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - {SERVICE} resource identifier and key, separated by a comma (`,`)
 
 ## Import
 
-`aws_{service}_tag` can be imported by using the {SERVICE} resource identifier and key, separated by a comma (`,`), e.g.
+Import `aws_{service}_tag` using the {SERVICE} resource identifier and key, separated by a comma (`,`). For example:
 
 ```console
 $ terraform import aws_{service}_tag.example arn:aws:{service}:us-east-1:123456789012:{thing}/example,Name

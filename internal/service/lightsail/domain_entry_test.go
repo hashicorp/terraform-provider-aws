@@ -1,17 +1,20 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package lightsail_test
 
 import (
 	"context"
 	"errors"
 	"fmt"
+	"strings"
 	"testing"
-	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/lightsail"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/aws/aws-sdk-go-v2/service/lightsail"
+	"github.com/aws/aws-sdk-go-v2/service/lightsail/types"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
@@ -22,21 +25,20 @@ import (
 
 func TestAccLightsailDomainEntry_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var domainEntry lightsail.DomainEntry
 	resourceName := "aws_lightsail_domain_entry.test"
 	domainName := acctest.RandomDomainName()
 	domainEntryName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckDomain(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, lightsail.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckRegion(t, string(types.RegionNameUsEast1)) },
+		ErrorCheck:               acctest.ErrorCheck(t, strings.ToLower(lightsail.ServiceID)),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDomainEntryDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDomainEntryConfig_basic(domainName, domainEntryName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDomainEntryExists(ctx, resourceName, &domainEntry),
+					testAccCheckDomainEntryExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "domain_name", domainName),
 					resource.TestCheckResourceAttr(resourceName, "name", domainEntryName),
 					resource.TestCheckResourceAttr(resourceName, "target", "127.0.0.1"),
@@ -48,49 +50,116 @@ func TestAccLightsailDomainEntry_basic(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
+			// Validate that we can import an existing resource using the legacy separator
+			// Validate that the ID is updated to use the new common separator
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateIdFunc: testAccDomainEntryStateLegacyIdFunc(resourceName),
+				ImportStateVerify: true,
+				Check:             resource.TestCheckResourceAttr(resourceName, "id", fmt.Sprintf("%s,%s,%s,%s", domainEntryName, domainName, "A", "127.0.0.1")),
+			},
 		},
 	})
 }
 
-func TestAccLightsailDomainEntry_disappears(t *testing.T) {
+func TestAccLightsailDomainEntry_underscore(t *testing.T) {
 	ctx := acctest.Context(t)
-	var domainEntry lightsail.DomainEntry
 	resourceName := "aws_lightsail_domain_entry.test"
 	domainName := acctest.RandomDomainName()
-	domainEntryName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-
-	testDestroy := func(*terraform.State) error {
-		conn := testAccProviderLightsailDomain.Meta().(*conns.AWSClient).LightsailConn()
-		_, err := conn.DeleteDomainEntryWithContext(ctx, &lightsail.DeleteDomainEntryInput{
-			DomainName: aws.String(domainName),
-			DomainEntry: &lightsail.DomainEntry{
-				Name:   aws.String(fmt.Sprintf("%s.%s", domainEntryName, domainName)),
-				Type:   aws.String("A"),
-				Target: aws.String("127.0.0.1"),
-			},
-		})
-
-		if err != nil {
-			return fmt.Errorf("error deleting Lightsail Domain Entry in disappear test")
-		}
-
-		// sleep 7 seconds to give it time, so we don't have to poll
-		time.Sleep(7 * time.Second)
-
-		return nil
-	}
+	domainEntryName := "_" + sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckDomain(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, lightsail.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckRegion(t, string(types.RegionNameUsEast1)) },
+		ErrorCheck:               acctest.ErrorCheck(t, strings.ToLower(lightsail.ServiceID)),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDomainEntryDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDomainEntryConfig_basic(domainName, domainEntryName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDomainEntryExists(ctx, resourceName, &domainEntry),
-					testDestroy,
+					testAccCheckDomainEntryExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "domain_name", domainName),
+					resource.TestCheckResourceAttr(resourceName, "name", domainEntryName),
+					resource.TestCheckResourceAttr(resourceName, "target", "127.0.0.1"),
+					resource.TestCheckResourceAttr(resourceName, "type", "A"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			// Validate that we can import an existing resource using the legacy separator
+			// Validate that the ID is updated to use the new common separator
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateIdFunc: testAccDomainEntryStateLegacyIdFunc(resourceName),
+				ImportStateVerify: true,
+				Check:             resource.TestCheckResourceAttr(resourceName, "id", fmt.Sprintf("%s,%s,%s,%s", domainEntryName, domainName, "A", "127.0.0.1")),
+			},
+		},
+	})
+}
+
+func TestAccLightsailDomainEntry_apex(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName := "aws_lightsail_domain_entry.test"
+	domainName := acctest.RandomDomainName()
+	domainEntryName := ""
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckRegion(t, string(types.RegionNameUsEast1)) },
+		ErrorCheck:               acctest.ErrorCheck(t, strings.ToLower(lightsail.ServiceID)),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDomainEntryDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDomainEntryConfig_basic(domainName, domainEntryName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckDomainEntryExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "domain_name", domainName),
+					resource.TestCheckResourceAttr(resourceName, "name", domainEntryName),
+					resource.TestCheckResourceAttr(resourceName, "target", "127.0.0.1"),
+					resource.TestCheckResourceAttr(resourceName, "type", "A"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			// Validate that we can import an existing resource using the legacy separator
+			// Validate that the ID is updated to use the new common separator
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateIdFunc: testAccDomainEntryStateLegacyIdFunc(resourceName),
+				ImportStateVerify: true,
+				Check:             resource.TestCheckResourceAttr(resourceName, "id", fmt.Sprintf("%s,%s,%s,%s", domainEntryName, domainName, "A", "127.0.0.1")),
+			},
+		},
+	})
+}
+
+func TestAccLightsailDomainEntry_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName := "aws_lightsail_domain_entry.test"
+	domainName := acctest.RandomDomainName()
+	domainEntryName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckRegion(t, string(types.RegionNameUsEast1)) },
+		ErrorCheck:               acctest.ErrorCheck(t, strings.ToLower(lightsail.ServiceID)),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDomainEntryDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDomainEntryConfig_basic(domainName, domainEntryName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckDomainEntryExists(ctx, resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tflightsail.ResourceDomainEntry(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -98,7 +167,47 @@ func TestAccLightsailDomainEntry_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckDomainEntryExists(ctx context.Context, n string, domainEntry *lightsail.DomainEntry) resource.TestCheckFunc {
+func TestAccLightsailDomainEntry_typeAAAA(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName := "aws_lightsail_domain_entry.test"
+	domainName := acctest.RandomDomainName()
+	domainEntryName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckRegion(t, string(types.RegionNameUsEast1)) },
+		ErrorCheck:               acctest.ErrorCheck(t, strings.ToLower(lightsail.ServiceID)),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDomainEntryDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDomainEntryConfig_typeAAAA(domainName, domainEntryName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckDomainEntryExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "domain_name", domainName),
+					resource.TestCheckResourceAttr(resourceName, "name", domainEntryName),
+					resource.TestCheckResourceAttr(resourceName, "target", "::1"),
+					resource.TestCheckResourceAttr(resourceName, "type", "AAAA"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			// Validate that we can import an existing resource using the legacy separator
+			// Validate that the ID is updated to use the new common separator
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateIdFunc: testAccDomainEntryStateLegacyIdFunc(resourceName),
+				ImportStateVerify: true,
+				Check:             resource.TestCheckResourceAttr(resourceName, "id", fmt.Sprintf("%s,%s,%s,%s", domainEntryName, domainName, "AAAA", "::1")),
+			},
+		},
+	})
+}
+
+func testAccCheckDomainEntryExists(ctx context.Context, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 
@@ -110,7 +219,7 @@ func testAccCheckDomainEntryExists(ctx context.Context, n string, domainEntry *l
 			return errors.New("No Lightsail Domain Entry ID is set")
 		}
 
-		conn := testAccProviderLightsailDomain.Meta().(*conns.AWSClient).LightsailConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).LightsailClient(ctx)
 
 		resp, err := tflightsail.FindDomainEntryById(ctx, conn, rs.Primary.ID)
 
@@ -121,8 +230,6 @@ func testAccCheckDomainEntryExists(ctx context.Context, n string, domainEntry *l
 		if resp == nil {
 			return fmt.Errorf("DomainEntry %q does not exist", rs.Primary.ID)
 		}
-
-		*domainEntry = *resp
 
 		return nil
 	}
@@ -135,7 +242,7 @@ func testAccCheckDomainEntryDestroy(ctx context.Context) resource.TestCheckFunc 
 				continue
 			}
 
-			conn := testAccProviderLightsailDomain.Meta().(*conns.AWSClient).LightsailConn()
+			conn := acctest.Provider.Meta().(*conns.AWSClient).LightsailClient(ctx)
 
 			_, err := tflightsail.FindDomainEntryById(ctx, conn, rs.Primary.ID)
 
@@ -155,17 +262,42 @@ func testAccCheckDomainEntryDestroy(ctx context.Context) resource.TestCheckFunc 
 }
 
 func testAccDomainEntryConfig_basic(domainName string, domainEntryName string) string {
-	return acctest.ConfigCompose(
-		testAccDomainRegionProviderConfig(),
-		fmt.Sprintf(`
+	return fmt.Sprintf(`
 resource "aws_lightsail_domain" "test" {
   domain_name = %[1]q
 }
+
 resource "aws_lightsail_domain_entry" "test" {
   domain_name = aws_lightsail_domain.test.id
   name        = %[2]q
   type        = "A"
   target      = "127.0.0.1"
 }
-`, domainName, domainEntryName))
+`, domainName, domainEntryName)
+}
+
+func testAccDomainEntryConfig_typeAAAA(domainName string, domainEntryName string) string {
+	return fmt.Sprintf(`
+resource "aws_lightsail_domain" "test" {
+  domain_name = %[1]q
+}
+
+resource "aws_lightsail_domain_entry" "test" {
+  domain_name = aws_lightsail_domain.test.id
+  name        = %[2]q
+  type        = "AAAA"
+  target      = "::1"
+}
+`, domainName, domainEntryName)
+}
+
+func testAccDomainEntryStateLegacyIdFunc(resourceName string) resource.ImportStateIdFunc {
+	return func(s *terraform.State) (string, error) {
+		rs, ok := s.RootModule().Resources[resourceName]
+		if !ok {
+			return "", fmt.Errorf("Not found: %s", resourceName)
+		}
+
+		return fmt.Sprintf("%s_%s_%s_%s", rs.Primary.Attributes["name"], rs.Primary.Attributes["domain_name"], rs.Primary.Attributes["type"], rs.Primary.Attributes["target"]), nil
+	}
 }

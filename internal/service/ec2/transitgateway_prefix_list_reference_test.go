@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ec2_test
 
 import (
@@ -6,9 +9,9 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/ec2"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
@@ -24,7 +27,7 @@ func testAccTransitGatewayPrefixListReference_basic(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
+			acctest.PreCheck(ctx, t)
 			testAccPreCheckTransitGateway(ctx, t)
 			testAccPreCheckManagedPrefixList(ctx, t)
 		},
@@ -59,7 +62,7 @@ func testAccTransitGatewayPrefixListReference_disappears(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
+			acctest.PreCheck(ctx, t)
 			testAccPreCheckTransitGateway(ctx, t)
 			testAccPreCheckManagedPrefixList(ctx, t)
 		},
@@ -87,7 +90,7 @@ func testAccTransitGatewayPrefixListReference_disappears_TransitGateway(t *testi
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
+			acctest.PreCheck(ctx, t)
 			testAccPreCheckTransitGateway(ctx, t)
 			testAccPreCheckManagedPrefixList(ctx, t)
 		},
@@ -116,7 +119,7 @@ func testAccTransitGatewayPrefixListReference_TransitGatewayAttachmentID(t *test
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
+			acctest.PreCheck(ctx, t)
 			testAccPreCheckTransitGateway(ctx, t)
 			testAccPreCheckManagedPrefixList(ctx, t)
 		},
@@ -151,7 +154,7 @@ func testAccTransitGatewayPrefixListReference_TransitGatewayAttachmentID(t *test
 
 func testAccCheckTransitGatewayPrefixListReferenceDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_ec2_transit_gateway_prefix_list_reference" {
@@ -198,7 +201,7 @@ func testAccTransitGatewayPrefixListReferenceExists(ctx context.Context, n strin
 			return err
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
 
 		_, err = tfec2.FindTransitGatewayPrefixListReferenceByTwoPartKey(ctx, conn, transitGatewayRouteTableID, prefixListID)
 

@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package iam
 
 import (
@@ -11,7 +14,8 @@ import (
 	"github.com/aws/aws-sdk-go/service/iam"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
@@ -19,6 +23,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_iam_group_policy")
 func ResourceGroupPolicy() *schema.Resource {
 	return &schema.Resource{
 		// PutGroupPolicy API is idempotent, so these can be the same.
@@ -68,7 +73,7 @@ func ResourceGroupPolicy() *schema.Resource {
 
 func resourceGroupPolicyPut(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).IAMConn()
+	conn := meta.(*conns.AWSClient).IAMConn(ctx)
 
 	policyDoc, err := verify.LegacyPolicyNormalize(d.Get("policy").(string))
 	if err != nil {
@@ -84,9 +89,9 @@ func resourceGroupPolicyPut(ctx context.Context, d *schema.ResourceData, meta in
 	if v, ok := d.GetOk("name"); ok {
 		policyName = v.(string)
 	} else if v, ok := d.GetOk("name_prefix"); ok {
-		policyName = resource.PrefixedUniqueId(v.(string))
+		policyName = id.PrefixedUniqueId(v.(string))
 	} else {
-		policyName = resource.UniqueId()
+		policyName = id.UniqueId()
 	}
 	request.PolicyName = aws.String(policyName)
 
@@ -100,7 +105,7 @@ func resourceGroupPolicyPut(ctx context.Context, d *schema.ResourceData, meta in
 
 func resourceGroupPolicyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).IAMConn()
+	conn := meta.(*conns.AWSClient).IAMConn(ctx)
 
 	group, name, err := GroupPolicyParseID(d.Id())
 	if err != nil {
@@ -114,17 +119,17 @@ func resourceGroupPolicyRead(ctx context.Context, d *schema.ResourceData, meta i
 
 	var getResp *iam.GetGroupPolicyOutput
 
-	err = resource.RetryContext(ctx, propagationTimeout, func() *resource.RetryError {
+	err = retry.RetryContext(ctx, propagationTimeout, func() *retry.RetryError {
 		var err error
 
 		getResp, err = conn.GetGroupPolicyWithContext(ctx, request)
 
 		if d.IsNewResource() && tfawserr.ErrCodeEquals(err, iam.ErrCodeNoSuchEntityException) {
-			return resource.RetryableError(err)
+			return retry.RetryableError(err)
 		}
 
 		if err != nil {
-			return resource.NonRetryableError(err)
+			return retry.NonRetryableError(err)
 		}
 
 		return nil
@@ -173,7 +178,7 @@ func resourceGroupPolicyRead(ctx context.Context, d *schema.ResourceData, meta i
 
 func resourceGroupPolicyDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).IAMConn()
+	conn := meta.(*conns.AWSClient).IAMConn(ctx)
 
 	group, name, err := GroupPolicyParseID(d.Id())
 	if err != nil {

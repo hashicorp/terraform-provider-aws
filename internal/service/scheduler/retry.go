@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package scheduler
 
 import (
@@ -14,7 +17,7 @@ const (
 )
 
 func retryWhenIAMNotPropagated[T any](ctx context.Context, f func() (T, error)) (T, error) {
-	v, err := tfresource.RetryWhenContext(
+	v, err := tfresource.RetryWhen(
 		ctx,
 		iamPropagationTimeout,
 		func() (interface{}, error) {

@@ -1,25 +1,29 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package s3control
 
 import (
 	"context"
 	"fmt"
 	"log"
-	"regexp"
 	"strings"
 	"time"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/s3control"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 const (
@@ -27,10 +31,8 @@ const (
 	bucketStatePropagationTimeout = 5 * time.Minute
 )
 
-func init() {
-	_sp.registerSDKResourceFactory("aws_s3control_bucket", resourceBucket)
-}
-
+// @SDKResource("aws_s3control_bucket", name="Bucket")
+// @Tags
 func resourceBucket() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceBucketCreate,
@@ -39,7 +41,7 @@ func resourceBucket() *schema.Resource {
 		DeleteWithoutTimeout: resourceBucketDelete,
 
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -53,9 +55,9 @@ func resourceBucket() *schema.Resource {
 				ForceNew: true,
 				ValidateFunc: validation.All(
 					validation.StringLenBetween(3, 63),
-					validation.StringMatch(regexp.MustCompile(`^[a-z0-9.-]+$`), "must contain only lowercase letters, numbers, periods, and hyphens"),
-					validation.StringMatch(regexp.MustCompile(`^[a-z0-9]`), "must begin with lowercase letter or number"),
-					validation.StringMatch(regexp.MustCompile(`[a-z0-9]$`), "must end with lowercase letter or number"),
+					validation.StringMatch(regexache.MustCompile(`^[a-z0-9.-]+$`), "must contain only lowercase letters, numbers, periods, and hyphens"),
+					validation.StringMatch(regexache.MustCompile(`^[a-z0-9]`), "must begin with lowercase letter or number"),
+					validation.StringMatch(regexache.MustCompile(`[a-z0-9]$`), "must end with lowercase letter or number"),
 				),
 			},
 			"creation_date": {
@@ -72,8 +74,8 @@ func resourceBucket() *schema.Resource {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
 
 		CustomizeDiff: verify.SetTagsDiff,
@@ -81,9 +83,7 @@ func resourceBucket() *schema.Resource {
 }
 
 func resourceBucketCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).S3ControlConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	conn := meta.(*conns.AWSClient).S3ControlConn(ctx)
 
 	bucket := d.Get("bucket").(string)
 	input := &s3control.CreateBucketInput{
@@ -99,7 +99,7 @@ func resourceBucketCreate(ctx context.Context, d *schema.ResourceData, meta inte
 
 	d.SetId(aws.StringValue(output.BucketArn))
 
-	if len(tags) > 0 {
+	if tags := KeyValueTags(ctx, getTagsIn(ctx)); len(tags) > 0 {
 		if err := bucketUpdateTags(ctx, conn, d.Id(), nil, tags); err != nil {
 			return diag.Errorf("adding S3 Control Bucket (%s) tags: %s", d.Id(), err)
 		}
@@ -109,9 +109,7 @@ func resourceBucketCreate(ctx context.Context, d *schema.ResourceData, meta inte
 }
 
 func resourceBucketRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).S3ControlConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).S3ControlConn(ctx)
 
 	parsedArn, err := arn.Parse(d.Id())
 
@@ -152,22 +150,13 @@ func resourceBucketRead(ctx context.Context, d *schema.ResourceData, meta interf
 		return diag.Errorf("listing tags for S3 Control Bucket (%s): %s", d.Id(), err)
 	}
 
-	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return diag.Errorf("setting tags: %s", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return diag.Errorf("setting tags_all: %s", err)
-	}
+	setTagsOut(ctx, Tags(tags))
 
 	return nil
 }
 
 func resourceBucketUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).S3ControlConn()
+	conn := meta.(*conns.AWSClient).S3ControlConn(ctx)
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
@@ -181,7 +170,7 @@ func resourceBucketUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 }
 
 func resourceBucketDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).S3ControlConn()
+	conn := meta.(*conns.AWSClient).S3ControlConn(ctx)
 
 	parsedArn, err := arn.Parse(d.Id())
 
@@ -198,7 +187,7 @@ func resourceBucketDelete(ctx context.Context, d *schema.ResourceData, meta inte
 	// can occur on deletion:
 	//   InvalidBucketState: Bucket is in an invalid state
 	log.Printf("[DEBUG] Deleting S3 Control Bucket: %s", d.Id())
-	_, err = tfresource.RetryWhenAWSErrCodeEqualsContext(ctx, bucketStatePropagationTimeout, func() (interface{}, error) {
+	_, err = tfresource.RetryWhenAWSErrCodeEquals(ctx, bucketStatePropagationTimeout, func() (interface{}, error) {
 		return conn.DeleteBucketWithContext(ctx, input)
 	}, errCodeInvalidBucketState)
 
@@ -222,7 +211,7 @@ func FindBucketByTwoPartKey(ctx context.Context, conn *s3control.S3Control, acco
 	output, err := conn.GetBucketWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, errCodeNoSuchBucket, errCodeNoSuchOutpost) {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -247,7 +236,7 @@ func bucketListTags(ctx context.Context, conn *s3control.S3Control, identifier s
 	parsedArn, err := arn.Parse(identifier)
 
 	if err != nil {
-		return tftags.New(nil), err
+		return tftags.New(ctx, nil), err
 	}
 
 	input := &s3control.GetBucketTaggingInput{
@@ -258,27 +247,27 @@ func bucketListTags(ctx context.Context, conn *s3control.S3Control, identifier s
 	output, err := conn.GetBucketTaggingWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, errCodeNoSuchTagSet) {
-		return tftags.New(nil), nil
+		return tftags.New(ctx, nil), nil
 	}
 
 	if err != nil {
-		return tftags.New(nil), err
+		return tftags.New(ctx, nil), err
 	}
 
-	return KeyValueTags(output.TagSet), nil
+	return KeyValueTags(ctx, output.TagSet), nil
 }
 
 // bucketUpdateTags updates S3control bucket tags.
 // The identifier is the bucket ARN.
-func bucketUpdateTags(ctx context.Context, conn *s3control.S3Control, identifier string, oldTagsMap interface{}, newTagsMap interface{}) error {
+func bucketUpdateTags(ctx context.Context, conn *s3control.S3Control, identifier string, oldTagsMap, newTagsMap any) error {
 	parsedArn, err := arn.Parse(identifier)
 
 	if err != nil {
 		return err
 	}
 
-	oldTags := tftags.New(oldTagsMap)
-	newTags := tftags.New(newTagsMap)
+	oldTags := tftags.New(ctx, oldTagsMap)
+	newTags := tftags.New(ctx, newTagsMap)
 
 	// We need to also consider any existing ignored tags.
 	allTags, err := bucketListTags(ctx, conn, identifier)

@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package elasticache
 
 import (
@@ -7,26 +10,29 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/elasticache"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @SDKResource("aws_elasticache_subnet_group", name="Subnet Group")
+// @Tags(identifierAttribute="arn")
 func ResourceSubnetGroup() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceSubnetGroupCreate,
 		ReadWithoutTimeout:   resourceSubnetGroupRead,
 		UpdateWithoutTimeout: resourceSubnetGroupUpdate,
 		DeleteWithoutTimeout: resourceSubnetGroupDelete,
+
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
@@ -56,10 +62,9 @@ func ResourceSubnetGroup() *schema.Resource {
 				Type:     schema.TypeSet,
 				Required: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
-				Set:      schema.HashString,
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
 
 		CustomizeDiff: resourceSubnetGroupDiff,
@@ -80,36 +85,23 @@ func resourceSubnetGroupDiff(ctx context.Context, diff *schema.ResourceDiff, met
 
 func resourceSubnetGroupCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ElastiCacheConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	conn := meta.(*conns.AWSClient).ElastiCacheConn(ctx)
 
-	// Get the group properties
 	name := d.Get("name").(string)
-	desc := d.Get("description").(string)
-	subnetIdsSet := d.Get("subnet_ids").(*schema.Set)
-
-	log.Printf("[DEBUG] Cache subnet group create: name: %s, description: %s", name, desc)
-
-	subnetIds := flex.ExpandStringSet(subnetIdsSet)
-
-	req := &elasticache.CreateCacheSubnetGroupInput{
-		CacheSubnetGroupDescription: aws.String(desc),
+	input := &elasticache.CreateCacheSubnetGroupInput{
+		CacheSubnetGroupDescription: aws.String(d.Get("description").(string)),
 		CacheSubnetGroupName:        aws.String(name),
-		SubnetIds:                   subnetIds,
+		SubnetIds:                   flex.ExpandStringSet(d.Get("subnet_ids").(*schema.Set)),
+		Tags:                        getTagsIn(ctx),
 	}
 
-	if len(tags) > 0 {
-		req.Tags = Tags(tags.IgnoreAWS())
-	}
+	output, err := conn.CreateCacheSubnetGroupWithContext(ctx, input)
 
-	output, err := conn.CreateCacheSubnetGroupWithContext(ctx, req)
+	// Some partitions (e.g. ISO) may not support tag-on-create.
+	if input.Tags != nil && errs.IsUnsupportedOperationInPartitionError(conn.PartitionID, err) {
+		input.Tags = nil
 
-	if req.Tags != nil && verify.ErrorISOUnsupported(conn.PartitionID, err) {
-		log.Printf("[WARN] failed creating ElastiCache Subnet Group with tags: %s. Trying create without tags.", err)
-
-		req.Tags = nil
-		output, err = conn.CreateCacheSubnetGroupWithContext(ctx, req)
+		output, err = conn.CreateCacheSubnetGroupWithContext(ctx, input)
 	}
 
 	if err != nil {
@@ -122,17 +114,17 @@ func resourceSubnetGroupCreate(ctx context.Context, d *schema.ResourceData, meta
 	// name contained uppercase characters.
 	d.SetId(strings.ToLower(name))
 
-	// In some partitions, only post-create tagging supported
-	if req.Tags == nil && len(tags) > 0 {
-		err := UpdateTags(ctx, conn, aws.StringValue(output.CacheSubnetGroup.ARN), nil, tags)
+	// For partitions not supporting tag-on-create, attempt tag after create.
+	if tags := getTagsIn(ctx); input.Tags == nil && len(tags) > 0 {
+		err := createTags(ctx, conn, aws.StringValue(output.CacheSubnetGroup.ARN), tags)
+
+		// If default tags only, continue. Otherwise, error.
+		if v, ok := d.GetOk(names.AttrTags); (!ok || len(v.(map[string]interface{})) == 0) && errs.IsUnsupportedOperationInPartitionError(conn.PartitionID, err) {
+			return append(diags, resourceSubnetGroupRead(ctx, d, meta)...)
+		}
 
 		if err != nil {
-			if v, ok := d.GetOk("tags"); (ok && len(v.(map[string]interface{})) > 0) || !verify.ErrorISOUnsupported(conn.PartitionID, err) {
-				// explicitly setting tags or not an iso-unsupported error
-				return sdkdiag.AppendErrorf(diags, "adding tags after create for ElastiCache Subnet Group (%s): %s", d.Id(), err)
-			}
-
-			log.Printf("[WARN] failed adding tags after create for ElastiCache Subnet Group (%s): %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "setting ElastiCache Subnet Group (%s) tags: %s", d.Id(), err)
 		}
 	}
 
@@ -141,9 +133,7 @@ func resourceSubnetGroupCreate(ctx context.Context, d *schema.ResourceData, meta
 
 func resourceSubnetGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ElastiCacheConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).ElastiCacheConn(ctx)
 
 	group, err := FindCacheSubnetGroupByName(ctx, conn, d.Id())
 
@@ -157,78 +147,34 @@ func resourceSubnetGroupRead(ctx context.Context, d *schema.ResourceData, meta i
 		return sdkdiag.AppendErrorf(diags, "reading ElastiCache Subnet Group (%s): %s", d.Id(), err)
 	}
 
-	var subnetIds []*string
+	var subnetIDs []*string
 	for _, subnet := range group.Subnets {
-		subnetIds = append(subnetIds, subnet.SubnetIdentifier)
+		subnetIDs = append(subnetIDs, subnet.SubnetIdentifier)
 	}
 
 	d.Set("arn", group.ARN)
 	d.Set("name", group.CacheSubnetGroupName)
 	d.Set("description", group.CacheSubnetGroupDescription)
-	d.Set("subnet_ids", subnetIds)
-
-	tags, err := ListTags(ctx, conn, d.Get("arn").(string))
-
-	if err != nil && !verify.ErrorISOUnsupported(conn.PartitionID, err) {
-		return sdkdiag.AppendErrorf(diags, "listing tags for ElastiCache Subnet Group (%s): %s", d.Id(), err)
-	}
-
-	// tags not supported in all partitions
-	if err != nil {
-		log.Printf("[WARN] failed listing tags for ElastiCache Subnet Group (%s): %s", d.Id(), err)
-	}
-
-	if tags != nil {
-		tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-		//lintignore:AWSR002
-		if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-			return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-		}
-
-		if err := d.Set("tags_all", tags.Map()); err != nil {
-			return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
-		}
-	}
+	d.Set("subnet_ids", aws.StringValueSlice(subnetIDs))
 
 	return diags
 }
 
 func resourceSubnetGroupUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ElastiCacheConn()
+	conn := meta.(*conns.AWSClient).ElastiCacheConn(ctx)
 
 	if d.HasChanges("subnet_ids", "description") {
-		var subnets []*string
-		if v := d.Get("subnet_ids"); v != nil {
-			for _, v := range v.(*schema.Set).List() {
-				subnets = append(subnets, aws.String(v.(string)))
-			}
-		}
-		log.Printf("[DEBUG] Updating ElastiCache Subnet Group")
-
-		_, err := conn.ModifyCacheSubnetGroupWithContext(ctx, &elasticache.ModifyCacheSubnetGroupInput{
-			CacheSubnetGroupName:        aws.String(d.Get("name").(string)),
+		input := &elasticache.ModifyCacheSubnetGroupInput{
 			CacheSubnetGroupDescription: aws.String(d.Get("description").(string)),
-			SubnetIds:                   subnets,
-		})
+			CacheSubnetGroupName:        aws.String(d.Get("name").(string)),
+			SubnetIds:                   flex.ExpandStringSet(d.Get("subnet_ids").(*schema.Set)),
+		}
+
+		_, err := conn.ModifyCacheSubnetGroupWithContext(ctx, input)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating ElastiCache Subnet Group (%s): %s", d.Id(), err)
-		}
-	}
-
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n)
-		if err != nil {
-			if v, ok := d.GetOk("tags"); (ok && len(v.(map[string]interface{})) > 0) || !verify.ErrorISOUnsupported(conn.PartitionID, err) {
-				// explicitly setting tags or not an iso-unsupported error
-				return sdkdiag.AppendErrorf(diags, "updating ElastiCache Subnet Group (%s) tags: %s", d.Id(), err)
-			}
-
-			log.Printf("[WARN] failed updating tags for ElastiCache Subnet Group (%s): %s", d.Id(), err)
 		}
 	}
 
@@ -237,35 +183,14 @@ func resourceSubnetGroupUpdate(ctx context.Context, d *schema.ResourceData, meta
 
 func resourceSubnetGroupDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ElastiCacheConn()
+	conn := meta.(*conns.AWSClient).ElastiCacheConn(ctx)
 
-	log.Printf("[DEBUG] Cache subnet group delete: %s", d.Id())
-
-	err := resource.RetryContext(ctx, 5*time.Minute, func() *resource.RetryError {
-		_, err := conn.DeleteCacheSubnetGroupWithContext(ctx, &elasticache.DeleteCacheSubnetGroupInput{
+	log.Printf("[DEBUG] Deleting ElastiCache Subnet Group: %s", d.Id())
+	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, 5*time.Minute, func() (interface{}, error) {
+		return conn.DeleteCacheSubnetGroupWithContext(ctx, &elasticache.DeleteCacheSubnetGroupInput{
 			CacheSubnetGroupName: aws.String(d.Id()),
 		})
-		if err != nil {
-			apierr, ok := err.(awserr.Error)
-			if !ok {
-				return resource.RetryableError(err)
-			}
-			log.Printf("[DEBUG] APIError.Code: %v", apierr.Code())
-			switch apierr.Code() {
-			case "DependencyViolation":
-				// If it is a dependency violation, we want to retry
-				return resource.RetryableError(err)
-			default:
-				return resource.NonRetryableError(err)
-			}
-		}
-		return nil
-	})
-	if tfresource.TimedOut(err) {
-		_, err = conn.DeleteCacheSubnetGroupWithContext(ctx, &elasticache.DeleteCacheSubnetGroupInput{
-			CacheSubnetGroupName: aws.String(d.Id()),
-		})
-	}
+	}, "DependencyViolation")
 
 	if tfawserr.ErrCodeEquals(err, elasticache.ErrCodeCacheSubnetGroupNotFoundFault) {
 		return diags

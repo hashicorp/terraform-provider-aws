@@ -51,7 +51,6 @@ Environment variables (beyond standard AWS Go SDK ones) used by acceptance testi
 | `AWS_CODEBUILD_GITHUB_SOURCE_LOCATION` | GitHub source URL for CodeBuild testing. CodeBuild must have access to this repository via OAuth or Source Credentials. Defaults to `https://github.com/hashibot-test/aws-test.git`. |
 | `AWS_DEFAULT_REGION` | Primary AWS region for tests. Defaults to `us-west-2`. |
 | `AWS_DETECTIVE_MEMBER_EMAIL` | Email address for Detective Member testing. A valid email address associated with an AWS root account is required for tests to pass. |
-| `AWS_EC2_CLASSIC_REGION` | AWS region for EC2-Classic testing. Defaults to `us-east-1` in AWS Commercial and `AWS_DEFAULT_REGION` otherwise. |
 | `AWS_EC2_CLIENT_VPN_LIMIT` | Concurrency limit for Client VPN acceptance tests. [Default is 5](https://docs.aws.amazon.com/vpn/latest/clientvpn-admin/limits.html) if not specified. |
 | `AWS_EC2_EIP_PUBLIC_IPV4_POOL` | Identifier for EC2 Public IPv4 Pool for EC2 EIP testing. |
 | `AWS_GUARDDUTY_MEMBER_ACCOUNT_ID` | Identifier of AWS Account for GuardDuty Member testing. **DEPRECATED:** Should be replaced with standard alternate account handling for tests. |
@@ -59,11 +58,16 @@ Environment variables (beyond standard AWS Go SDK ones) used by acceptance testi
 | `AWS_LAMBDA_IMAGE_LATEST_ID` | ECR repository image URI (tagged as `latest`) for Lambda container image acceptance tests.
 | `AWS_LAMBDA_IMAGE_V1_ID` | ECR repository image URI (tagged as `v1`) for Lambda container image acceptance tests.
 | `AWS_LAMBDA_IMAGE_V2_ID` | ECR repository image URI (tagged as `v2`) for Lambda container image acceptance tests.
+| `AWS_THIRD_ACCESS_KEY_ID` | AWS access key ID with access to a third AWS account for tests requiring multiple accounts. Requires `AWS_THIRD_SECRET_ACCESS_KEY`. Conflicts with `AWS_THIRD_PROFILE`. |
+| `AWS_THIRD_SECRET_ACCESS_KEY` | AWS secret access key with access to a third AWS account for tests requiring multiple accounts. Requires `AWS_THIRD_ACCESS_KEY_ID`. Conflicts with `AWS_THIRD_PROFILE`. |
+| `AWS_THIRD_PROFILE` | AWS profile with access to a third AWS account for tests requiring multiple accounts. Conflicts with `AWS_THIRD_ACCESS_KEY_ID` and `AWS_THIRD_SECRET_ACCESS_KEY`. |
+| `AWS_THIRD_REGION` | Third AWS region for tests requiring multiple regions. Defaults to `us-east-2`. |
 | `DX_CONNECTION_ID` | Identifier for Direct Connect Connection testing. |
 | `DX_VIRTUAL_INTERFACE_ID` | Identifier for Direct Connect Virtual Interface testing. |
 | `EC2_SECURITY_GROUP_RULES_PER_GROUP_LIMIT` | EC2 Quota for Rules per Security Group. Defaults to 50. **DEPRECATED:** Can be augmented or replaced with Service Quotas lookup. |
 | `EVENT_BRIDGE_PARTNER_EVENT_BUS_NAME` | Amazon EventBridge partner event bus name. |
 | `EVENT_BRIDGE_PARTNER_EVENT_SOURCE_NAME` | Amazon EventBridge partner event source name. |
+| `FINSPACE_MANAGED_KX_LICENSE_ENABLED` | Enables tests requiring a license to provision managed KX resources. |
 | `GCM_API_KEY` | API Key for Google Cloud Messaging in Pinpoint and SNS Platform Application testing. |
 | `GITHUB_TOKEN` | GitHub token for CodePipeline testing. |
 | `GLOBALACCERATOR_BYOIP_IPV4_ADDRESS` | IPv4 address from a BYOIP CIDR of AWS Account used for testing Global Accelerator's BYOIP accelerator. |
@@ -71,6 +75,7 @@ Environment variables (beyond standard AWS Go SDK ones) used by acceptance testi
 | `GRAFANA_SSO_USER_ID` | AWS SSO user ID for Grafana testing. |
 | `MACIE_MEMBER_ACCOUNT_ID` | Identifier of AWS Account for Macie Member testing. **DEPRECATED:** Should be replaced with standard alternate account handling for tests. |
 | `QUICKSIGHT_NAMESPACE` | QuickSight namespace name for testing. |
+| `QUICKSIGHT_ATHENA_TESTING_ENABLED` | Enable QuickSight tests dependent on Amazon Athena resources. |
 | `ROUTE53DOMAINS_DOMAIN_NAME` | Registered domain for Route 53 Domains testing. |
 | `SAGEMAKER_IMAGE_VERSION_BASE_IMAGE` | SageMaker base image to use for tests. |
 | `SERVICEQUOTAS_INCREASE_ON_CREATE_QUOTA_CODE` | Quota Code for Service Quotas testing (submits support case). |
@@ -83,4 +88,7 @@ Environment variables (beyond standard AWS Go SDK ones) used by acceptance testi
 | `TEST_AWS_SES_VERIFIED_EMAIL_ARN` | Verified SES Email Identity for use in Cognito User Pool testing. |
 | `TF_ACC` | Enables Go tests containing `resource.Test()` and `resource.ParallelTest()`. |
 | `TF_ACC_ASSUME_ROLE_ARN` | Amazon Resource Name of existing IAM Role to use for limited permissions acceptance testing. |
+| `TF_AWS_LICENSE_MANAGER_GRANT_HOME_REGION` | Region where a License Manager license is imported. |
+| `TF_AWS_LICENSE_MANAGER_GRANT_LICENSE_ARN` | ARN for a License Manager license imported into the current account. |
+| `TF_AWS_LICENSE_MANAGER_GRANT_PRINCIPAL` | ARN of a principal to share the License Manager license with. Either a root user, Organization, or Organizational Unit. |
 | `TF_TEST_CLOUDFRONT_RETAIN` | Flag to disable but dangle CloudFront Distributions during testing to reduce feedback time (must be manually destroyed afterwards) |

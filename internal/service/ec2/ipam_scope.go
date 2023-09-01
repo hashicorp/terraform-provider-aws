@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ec2
 
 import (
@@ -10,21 +13,24 @@ import (
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @SDKResource("aws_vpc_ipam_scope", name="IPAM Scope")
+// @Tags(identifierAttribute="id")
 func ResourceIPAMScope() *schema.Resource {
 	return &schema.Resource{
-		CreateWithoutTimeout: ResourceIPAMScopeCreate,
-		ReadWithoutTimeout:   ResourceIPAMScopeRead,
-		UpdateWithoutTimeout: ResourceIPAMScopeUpdate,
-		DeleteWithoutTimeout: ResourceIPAMScopeDelete,
+		CreateWithoutTimeout: resourceIPAMScopeCreate,
+		ReadWithoutTimeout:   resourceIPAMScopeRead,
+		UpdateWithoutTimeout: resourceIPAMScopeUpdate,
+		DeleteWithoutTimeout: resourceIPAMScopeDelete,
 
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
@@ -65,24 +71,22 @@ func ResourceIPAMScope() *schema.Resource {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
 
 		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
-func ResourceIPAMScopeCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceIPAMScopeCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	input := &ec2.CreateIpamScopeInput{
-		ClientToken:       aws.String(resource.UniqueId()),
+		ClientToken:       aws.String(id.UniqueId()),
 		IpamId:            aws.String(d.Get("ipam_id").(string)),
-		TagSpecifications: tagSpecificationsFromKeyValueTags(tags, ec2.ResourceTypeIpamScope),
+		TagSpecifications: getTagSpecificationsIn(ctx, ec2.ResourceTypeIpamScope),
 	}
 
 	if v, ok := d.GetOk("description"); ok {
@@ -101,14 +105,12 @@ func ResourceIPAMScopeCreate(ctx context.Context, d *schema.ResourceData, meta i
 		return sdkdiag.AppendErrorf(diags, "waiting for IPAM Scope (%s) create: %s", d.Id(), err)
 	}
 
-	return append(diags, ResourceIPAMScopeRead(ctx, d, meta)...)
+	return append(diags, resourceIPAMScopeRead(ctx, d, meta)...)
 }
 
-func ResourceIPAMScopeRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceIPAMScopeRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	scope, err := FindIPAMScopeByID(ctx, conn, d.Id())
 
@@ -131,23 +133,14 @@ func ResourceIPAMScopeRead(ctx context.Context, d *schema.ResourceData, meta int
 	d.Set("is_default", scope.IsDefault)
 	d.Set("pool_count", scope.PoolCount)
 
-	tags := KeyValueTags(scope.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
-	}
+	setTagsOut(ctx, scope.Tags)
 
 	return diags
 }
 
-func ResourceIPAMScopeUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceIPAMScopeUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	if d.HasChange("description") {
 		input := &ec2.ModifyIpamScopeInput{
@@ -169,20 +162,12 @@ func ResourceIPAMScopeUpdate(ctx context.Context, d *schema.ResourceData, meta i
 		}
 	}
 
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		if err := UpdateTags(ctx, conn, d.Id(), o, n); err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating IPAM Scope (%s) tags: %s", d.Id(), err)
-		}
-	}
-
-	return append(diags, ResourceIPAMScopeRead(ctx, d, meta)...)
+	return append(diags, resourceIPAMScopeRead(ctx, d, meta)...)
 }
 
-func ResourceIPAMScopeDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceIPAMScopeDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	log.Printf("[DEBUG] Deleting IPAM Scope: %s", d.Id())
 	_, err := conn.DeleteIpamScopeWithContext(ctx, &ec2.DeleteIpamScopeInput{

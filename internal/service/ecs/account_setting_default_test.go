@@ -1,16 +1,19 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ecs_test
 
 import (
 	"context"
 	"fmt"
-	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ecs"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
@@ -21,7 +24,7 @@ func TestAccECSAccountSettingDefault_containerInstanceLongARNFormat(t *testing.T
 	settingName := ecs.SettingNameContainerInstanceLongArnFormat
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ecs.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckAccountSettingDefaultDestroy(ctx),
@@ -31,7 +34,7 @@ func TestAccECSAccountSettingDefault_containerInstanceLongARNFormat(t *testing.T
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "name", settingName),
 					resource.TestCheckResourceAttr(resourceName, "value", "enabled"),
-					acctest.MatchResourceAttrGlobalARN(resourceName, "principal_arn", "iam", regexp.MustCompile("root")),
+					acctest.MatchResourceAttrGlobalARN(resourceName, "principal_arn", "iam", regexache.MustCompile("root")),
 				),
 			},
 			{
@@ -50,7 +53,7 @@ func TestAccECSAccountSettingDefault_serviceLongARNFormat(t *testing.T) {
 	settingName := ecs.SettingNameServiceLongArnFormat
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ecs.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckAccountSettingDefaultDestroy(ctx),
@@ -60,7 +63,7 @@ func TestAccECSAccountSettingDefault_serviceLongARNFormat(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "name", settingName),
 					resource.TestCheckResourceAttr(resourceName, "value", "enabled"),
-					acctest.MatchResourceAttrGlobalARN(resourceName, "principal_arn", "iam", regexp.MustCompile("root")),
+					acctest.MatchResourceAttrGlobalARN(resourceName, "principal_arn", "iam", regexache.MustCompile("root")),
 				),
 			},
 			{
@@ -79,7 +82,7 @@ func TestAccECSAccountSettingDefault_taskLongARNFormat(t *testing.T) {
 	settingName := ecs.SettingNameTaskLongArnFormat
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ecs.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckAccountSettingDefaultDestroy(ctx),
@@ -89,7 +92,7 @@ func TestAccECSAccountSettingDefault_taskLongARNFormat(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "name", settingName),
 					resource.TestCheckResourceAttr(resourceName, "value", "enabled"),
-					acctest.MatchResourceAttrGlobalARN(resourceName, "principal_arn", "iam", regexp.MustCompile("root")),
+					acctest.MatchResourceAttrGlobalARN(resourceName, "principal_arn", "iam", regexache.MustCompile("root")),
 				),
 			},
 			{
@@ -108,7 +111,7 @@ func TestAccECSAccountSettingDefault_vpcTrunking(t *testing.T) {
 	settingName := ecs.SettingNameAwsvpcTrunking
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ecs.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckAccountSettingDefaultDestroy(ctx),
@@ -118,7 +121,7 @@ func TestAccECSAccountSettingDefault_vpcTrunking(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "name", settingName),
 					resource.TestCheckResourceAttr(resourceName, "value", "enabled"),
-					acctest.MatchResourceAttrGlobalARN(resourceName, "principal_arn", "iam", regexp.MustCompile("root")),
+					acctest.MatchResourceAttrGlobalARN(resourceName, "principal_arn", "iam", regexache.MustCompile("root")),
 				),
 			},
 			{
@@ -137,7 +140,7 @@ func TestAccECSAccountSettingDefault_containerInsights(t *testing.T) {
 	settingName := ecs.SettingNameContainerInsights
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ecs.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckAccountSettingDefaultDestroy(ctx),
@@ -147,7 +150,7 @@ func TestAccECSAccountSettingDefault_containerInsights(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "name", settingName),
 					resource.TestCheckResourceAttr(resourceName, "value", "enabled"),
-					acctest.MatchResourceAttrGlobalARN(resourceName, "principal_arn", "iam", regexp.MustCompile("root")),
+					acctest.MatchResourceAttrGlobalARN(resourceName, "principal_arn", "iam", regexache.MustCompile("root")),
 				),
 			},
 			{
@@ -162,7 +165,7 @@ func TestAccECSAccountSettingDefault_containerInsights(t *testing.T) {
 
 func testAccCheckAccountSettingDefaultDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ECSConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ECSConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_ecs_account_setting_default" {

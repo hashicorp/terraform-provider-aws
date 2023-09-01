@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package efs
 
 import (
@@ -15,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 )
 
+// @SDKDataSource("aws_efs_mount_target")
 func DataSourceMountTarget() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceMountTargetRead,
@@ -81,7 +85,7 @@ func DataSourceMountTarget() *schema.Resource {
 
 func dataSourceMountTargetRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EFSConn()
+	conn := meta.(*conns.AWSClient).EFSConn(ctx)
 
 	input := &efs.DescribeMountTargetsInput{}
 

@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package kendra
 
 import (
@@ -5,16 +8,17 @@ import (
 	"errors"
 	"fmt"
 	"log"
-	"regexp"
 	"time"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/kendra"
 	"github.com/aws/aws-sdk-go-v2/service/kendra/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -23,6 +27,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_kendra_experience")
 func ResourceExperience() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceExperienceCreate,
@@ -70,7 +75,7 @@ func ResourceExperience() *schema.Resource {
 										MaxItems: 100,
 										Elem: &schema.Schema{
 											Type:         schema.TypeString,
-											ValidateFunc: validation.StringMatch(regexp.MustCompile(`[a-zA-Z0-9][a-zA-Z0-9_\-]*`), ""),
+											ValidateFunc: validation.StringMatch(regexache.MustCompile(`[a-zA-Z0-9][a-zA-Z0-9_\-]*`), ""),
 										},
 									},
 									"direct_put_content": {
@@ -85,7 +90,7 @@ func ResourceExperience() *schema.Resource {
 										MaxItems: 100,
 										Elem: &schema.Schema{
 											Type:         schema.TypeString,
-											ValidateFunc: validation.StringMatch(regexp.MustCompile(`[a-zA-Z0-9][a-zA-Z0-9_\-]*`), ""),
+											ValidateFunc: validation.StringMatch(regexache.MustCompile(`[a-zA-Z0-9][a-zA-Z0-9_\-]*`), ""),
 										},
 									},
 								},
@@ -104,7 +109,7 @@ func ResourceExperience() *schema.Resource {
 									"identity_attribute_name": {
 										Type:         schema.TypeString,
 										Required:     true,
-										ValidateFunc: validation.StringMatch(regexp.MustCompile(`[a-zA-Z0-9][a-zA-Z0-9_\-]*`), ""),
+										ValidateFunc: validation.StringMatch(regexache.MustCompile(`[a-zA-Z0-9][a-zA-Z0-9_\-]*`), ""),
 									},
 								},
 							},
@@ -141,14 +146,14 @@ func ResourceExperience() *schema.Resource {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
-				ValidateFunc: validation.StringMatch(regexp.MustCompile(`[a-zA-Z0-9][a-zA-Z0-9-]*`), ""),
+				ValidateFunc: validation.StringMatch(regexache.MustCompile(`[a-zA-Z0-9][a-zA-Z0-9-]*`), ""),
 			},
 			"name": {
 				Type:     schema.TypeString,
 				Required: true,
 				ValidateFunc: validation.All(
 					validation.StringLenBetween(1, 1000),
-					validation.StringMatch(regexp.MustCompile(`[a-zA-Z0-9][a-zA-Z0-9_\-]*`), ""),
+					validation.StringMatch(regexache.MustCompile(`[a-zA-Z0-9][a-zA-Z0-9_\-]*`), ""),
 				),
 			},
 			"role_arn": {
@@ -172,10 +177,10 @@ func ResourceExperience() *schema.Resource {
 }
 
 func resourceExperienceCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).KendraClient()
+	conn := meta.(*conns.AWSClient).KendraClient(ctx)
 
 	in := &kendra.CreateExperienceInput{
-		ClientToken: aws.String(resource.UniqueId()),
+		ClientToken: aws.String(id.UniqueId()),
 		IndexId:     aws.String(d.Get("index_id").(string)),
 		Name:        aws.String(d.Get("name").(string)),
 		RoleArn:     aws.String(d.Get("role_arn").(string)),
@@ -211,7 +216,7 @@ func resourceExperienceCreate(ctx context.Context, d *schema.ResourceData, meta 
 }
 
 func resourceExperienceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).KendraClient()
+	conn := meta.(*conns.AWSClient).KendraClient(ctx)
 
 	id, indexId, err := ExperienceParseResourceID(d.Id())
 	if err != nil {
@@ -258,7 +263,7 @@ func resourceExperienceRead(ctx context.Context, d *schema.ResourceData, meta in
 }
 
 func resourceExperienceUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).KendraClient()
+	conn := meta.(*conns.AWSClient).KendraClient(ctx)
 
 	id, indexId, err := ExperienceParseResourceID(d.Id())
 	if err != nil {
@@ -300,7 +305,7 @@ func resourceExperienceUpdate(ctx context.Context, d *schema.ResourceData, meta 
 }
 
 func resourceExperienceDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).KendraClient()
+	conn := meta.(*conns.AWSClient).KendraClient(ctx)
 
 	log.Printf("[INFO] Deleting Kendra Experience %s", d.Id())
 
@@ -330,7 +335,7 @@ func resourceExperienceDelete(ctx context.Context, d *schema.ResourceData, meta 
 }
 
 func waitExperienceCreated(ctx context.Context, conn *kendra.Client, id, indexId string, timeout time.Duration) error {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:                   enum.Slice(types.ExperienceStatusCreating),
 		Target:                    enum.Slice(types.ExperienceStatusActive),
 		Refresh:                   statusExperience(ctx, conn, id, indexId),
@@ -350,7 +355,7 @@ func waitExperienceCreated(ctx context.Context, conn *kendra.Client, id, indexId
 }
 
 func waitExperienceUpdated(ctx context.Context, conn *kendra.Client, id, indexId string, timeout time.Duration) error {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:                   []string{},
 		Target:                    enum.Slice(types.ExperienceStatusActive),
 		Refresh:                   statusExperience(ctx, conn, id, indexId),
@@ -370,7 +375,7 @@ func waitExperienceUpdated(ctx context.Context, conn *kendra.Client, id, indexId
 }
 
 func waitExperienceDeleted(ctx context.Context, conn *kendra.Client, id, indexId string, timeout time.Duration) error {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(types.ExperienceStatusDeleting),
 		Target:  []string{},
 		Refresh: statusExperience(ctx, conn, id, indexId),
@@ -387,7 +392,7 @@ func waitExperienceDeleted(ctx context.Context, conn *kendra.Client, id, indexId
 	return err
 }
 
-func statusExperience(ctx context.Context, conn *kendra.Client, id, indexId string) resource.StateRefreshFunc {
+func statusExperience(ctx context.Context, conn *kendra.Client, id, indexId string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		out, err := FindExperienceByID(ctx, conn, id, indexId)
 		if tfresource.NotFound(err) {
@@ -412,7 +417,7 @@ func FindExperienceByID(ctx context.Context, conn *kendra.Client, id, indexId st
 	var resourceNotFoundException *types.ResourceNotFoundException
 
 	if errors.As(err, &resourceNotFoundException) {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: in,
 		}

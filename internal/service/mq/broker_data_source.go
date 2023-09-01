@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package mq
 
 import (
@@ -8,10 +11,11 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/experimental/nullable"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/types/nullable"
 )
 
+// @SDKDataSource("aws_mq_broker")
 func DataSourceBroker() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceBrokerRead,
@@ -221,7 +225,6 @@ func DataSourceBroker() *schema.Resource {
 			"user": {
 				Type:     schema.TypeSet,
 				Computed: true,
-				Set:      resourceUserHash,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"console_access": {
@@ -233,9 +236,13 @@ func DataSourceBroker() *schema.Resource {
 							Elem:     &schema.Schema{Type: schema.TypeString},
 							Computed: true,
 						},
+						"replication_user": {
+							Type:     schema.TypeBool,
+							Computed: true,
+						},
 						"username": {
 							Type:     schema.TypeString,
-							Required: true,
+							Computed: true,
 						},
 					},
 				},
@@ -245,7 +252,7 @@ func DataSourceBroker() *schema.Resource {
 }
 
 func dataSourceBrokerRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).MQConn()
+	conn := meta.(*conns.AWSClient).MQConn(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	input := &mq.ListBrokersInput{}
@@ -343,7 +350,7 @@ func dataSourceBrokerRead(ctx context.Context, d *schema.ResourceData, meta inte
 		return diag.Errorf("setting user: %s", err)
 	}
 
-	if err := d.Set("tags", KeyValueTags(output.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+	if err := d.Set("tags", KeyValueTags(ctx, output.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return diag.Errorf("setting tags: %s", err)
 	}
 

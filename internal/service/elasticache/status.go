@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package elasticache
 
 import (
@@ -5,7 +8,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/elasticache"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
@@ -16,14 +19,10 @@ const (
 	ReplicationGroupStatusDeleting     = "deleting"
 	ReplicationGroupStatusCreateFailed = "create-failed"
 	ReplicationGroupStatusSnapshotting = "snapshotting"
-
-	UserStatusActive    = "active"
-	UserStatusDeleting  = "deleting"
-	UserStatusModifying = "modifying"
 )
 
 // StatusReplicationGroup fetches the Replication Group and its Status
-func StatusReplicationGroup(ctx context.Context, conn *elasticache.ElastiCache, replicationGroupID string) resource.StateRefreshFunc {
+func StatusReplicationGroup(ctx context.Context, conn *elasticache.ElastiCache, replicationGroupID string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		rg, err := FindReplicationGroupByID(ctx, conn, replicationGroupID)
 		if tfresource.NotFound(err) {
@@ -39,7 +38,7 @@ func StatusReplicationGroup(ctx context.Context, conn *elasticache.ElastiCache, 
 
 // StatusReplicationGroupMemberClusters fetches the Replication Group's Member Clusters and either "available" or the first non-"available" status.
 // NOTE: This function assumes that the intended end-state is to have all member clusters in "available" status.
-func StatusReplicationGroupMemberClusters(ctx context.Context, conn *elasticache.ElastiCache, replicationGroupID string) resource.StateRefreshFunc {
+func StatusReplicationGroupMemberClusters(ctx context.Context, conn *elasticache.ElastiCache, replicationGroupID string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		clusters, err := FindReplicationGroupMemberClustersByID(ctx, conn, replicationGroupID)
 		if tfresource.NotFound(err) {
@@ -74,7 +73,7 @@ const (
 )
 
 // StatusCacheCluster fetches the Cache Cluster and its Status
-func StatusCacheCluster(ctx context.Context, conn *elasticache.ElastiCache, cacheClusterID string) resource.StateRefreshFunc {
+func StatusCacheCluster(ctx context.Context, conn *elasticache.ElastiCache, cacheClusterID string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		c, err := FindCacheClusterByID(ctx, conn, cacheClusterID)
 		if tfresource.NotFound(err) {
@@ -98,7 +97,7 @@ const (
 )
 
 // statusGlobalReplicationGroup fetches the Global Replication Group and its Status
-func statusGlobalReplicationGroup(ctx context.Context, conn *elasticache.ElastiCache, globalReplicationGroupID string) resource.StateRefreshFunc {
+func statusGlobalReplicationGroup(ctx context.Context, conn *elasticache.ElastiCache, globalReplicationGroupID string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		grg, err := FindGlobalReplicationGroupByID(ctx, conn, globalReplicationGroupID)
 		if tfresource.NotFound(err) {
@@ -117,7 +116,7 @@ const (
 )
 
 // statusGlobalReplicationGroupMember fetches a Global Replication Group Member and its Status
-func statusGlobalReplicationGroupMember(ctx context.Context, conn *elasticache.ElastiCache, globalReplicationGroupID, id string) resource.StateRefreshFunc {
+func statusGlobalReplicationGroupMember(ctx context.Context, conn *elasticache.ElastiCache, globalReplicationGroupID, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		member, err := FindGlobalReplicationGroupMemberByID(ctx, conn, globalReplicationGroupID, id)
 		if tfresource.NotFound(err) {
@@ -128,22 +127,5 @@ func statusGlobalReplicationGroupMember(ctx context.Context, conn *elasticache.E
 		}
 
 		return member, aws.StringValue(member.Status), nil
-	}
-}
-
-// StatusUser fetches the ElastiCache user and its Status
-func StatusUser(ctx context.Context, conn *elasticache.ElastiCache, userId string) resource.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-		user, err := FindUserByID(ctx, conn, userId)
-
-		if tfresource.NotFound(err) {
-			return nil, "", nil
-		}
-
-		if err != nil {
-			return nil, "", err
-		}
-
-		return user, aws.StringValue(user.Status), nil
 	}
 }

@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package glue
 
 import (
@@ -17,6 +20,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
+// @SDKResource("aws_glue_classifier")
 func ResourceClassifier() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceClassifierCreate,
@@ -188,7 +192,7 @@ func ResourceClassifier() *schema.Resource {
 
 func resourceClassifierCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).GlueConn()
+	conn := meta.(*conns.AWSClient).GlueConn(ctx)
 	name := d.Get("name").(string)
 
 	input := &glue.CreateClassifierInput{}
@@ -226,7 +230,7 @@ func resourceClassifierCreate(ctx context.Context, d *schema.ResourceData, meta 
 
 func resourceClassifierRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).GlueConn()
+	conn := meta.(*conns.AWSClient).GlueConn(ctx)
 
 	classifier, err := FindClassifierByName(ctx, conn, d.Id())
 	if !d.IsNewResource() && tfresource.NotFound(err) {
@@ -262,7 +266,7 @@ func resourceClassifierRead(ctx context.Context, d *schema.ResourceData, meta in
 
 func resourceClassifierUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).GlueConn()
+	conn := meta.(*conns.AWSClient).GlueConn(ctx)
 
 	input := &glue.UpdateClassifierInput{}
 
@@ -297,7 +301,7 @@ func resourceClassifierUpdate(ctx context.Context, d *schema.ResourceData, meta 
 
 func resourceClassifierDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).GlueConn()
+	conn := meta.(*conns.AWSClient).GlueConn(ctx)
 
 	log.Printf("[DEBUG] Deleting Glue Classifier: %s", d.Id())
 	err := DeleteClassifier(ctx, conn, d.Id())

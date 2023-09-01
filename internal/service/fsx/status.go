@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package fsx
 
 import (
@@ -5,11 +8,11 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/fsx"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func statusAdministrativeAction(ctx context.Context, conn *fsx.FSx, fsID, actionType string) resource.StateRefreshFunc {
+func statusAdministrativeAction(ctx context.Context, conn *fsx.FSx, fsID, actionType string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := FindAdministrativeActionByFileSystemIDAndActionType(ctx, conn, fsID, actionType)
 
@@ -25,7 +28,7 @@ func statusAdministrativeAction(ctx context.Context, conn *fsx.FSx, fsID, action
 	}
 }
 
-func statusBackup(ctx context.Context, conn *fsx.FSx, id string) resource.StateRefreshFunc {
+func statusBackup(ctx context.Context, conn *fsx.FSx, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := FindBackupByID(ctx, conn, id)
 
@@ -41,7 +44,7 @@ func statusBackup(ctx context.Context, conn *fsx.FSx, id string) resource.StateR
 	}
 }
 
-func statusFileCache(ctx context.Context, conn *fsx.FSx, id string) resource.StateRefreshFunc {
+func statusFileCache(ctx context.Context, conn *fsx.FSx, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		out, err := findFileCacheByID(ctx, conn, id)
 		if tfresource.NotFound(err) {
@@ -56,7 +59,7 @@ func statusFileCache(ctx context.Context, conn *fsx.FSx, id string) resource.Sta
 	}
 }
 
-func statusFileSystem(ctx context.Context, conn *fsx.FSx, id string) resource.StateRefreshFunc {
+func statusFileSystem(ctx context.Context, conn *fsx.FSx, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := FindFileSystemByID(ctx, conn, id)
 
@@ -72,23 +75,7 @@ func statusFileSystem(ctx context.Context, conn *fsx.FSx, id string) resource.St
 	}
 }
 
-func statusDataRepositoryAssociation(ctx context.Context, conn *fsx.FSx, id string) resource.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-		output, err := FindDataRepositoryAssociationByID(ctx, conn, id)
-
-		if tfresource.NotFound(err) {
-			return nil, "", nil
-		}
-
-		if err != nil {
-			return nil, "", err
-		}
-
-		return output, aws.StringValue(output.Lifecycle), nil
-	}
-}
-
-func statusStorageVirtualMachine(ctx context.Context, conn *fsx.FSx, id string) resource.StateRefreshFunc {
+func statusStorageVirtualMachine(ctx context.Context, conn *fsx.FSx, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := FindStorageVirtualMachineByID(ctx, conn, id)
 
@@ -104,7 +91,7 @@ func statusStorageVirtualMachine(ctx context.Context, conn *fsx.FSx, id string) 
 	}
 }
 
-func statusVolume(ctx context.Context, conn *fsx.FSx, id string) resource.StateRefreshFunc {
+func statusVolume(ctx context.Context, conn *fsx.FSx, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := FindVolumeByID(ctx, conn, id)
 
@@ -120,7 +107,7 @@ func statusVolume(ctx context.Context, conn *fsx.FSx, id string) resource.StateR
 	}
 }
 
-func statusSnapshot(ctx context.Context, conn *fsx.FSx, id string) resource.StateRefreshFunc {
+func statusSnapshot(ctx context.Context, conn *fsx.FSx, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := FindSnapshotByID(ctx, conn, id)
 

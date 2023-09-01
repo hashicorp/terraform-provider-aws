@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package lexmodels
 
 import (
@@ -12,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
+// @SDKDataSource("aws_lex_bot")
 func DataSourceBot() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceBotRead,
@@ -90,7 +94,7 @@ func DataSourceBot() *schema.Resource {
 
 func dataSourceBotRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).LexModelsConn()
+	conn := meta.(*conns.AWSClient).LexModelsConn(ctx)
 
 	name := d.Get("name").(string)
 	version := d.Get("version").(string)

@@ -21,14 +21,14 @@ data "aws_lex_slot_type" "flower_types" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This data source supports the following arguments:
 
 * `name` - (Required) Name of the slot type. The name is case sensitive.
 * `version` - (Optional) Version of the slot type.
 
-## Attributes Reference
+## Attribute Reference
 
-The following attributes are exported.
+This data source exports the following attributes in addition to the arguments above:
 
 * `checksum` - Checksum identifying the version of the slot type that was created. The checksum is
 not included as an argument because the resource will add it automatically when updating the slot type.

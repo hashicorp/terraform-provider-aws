@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package directconnect
 
 import (
@@ -15,8 +18,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @SDKResource("aws_dx_hosted_public_virtual_interface_accepter", name="Hosted Public Virtual Interface")
+// @Tags(identifierAttribute="arn")
 func ResourceHostedPublicVirtualInterfaceAccepter() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceHostedPublicVirtualInterfaceAccepterCreate,
@@ -32,8 +38,8 @@ func ResourceHostedPublicVirtualInterfaceAccepter() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			"virtual_interface_id": {
 				Type:     schema.TypeString,
 				Required: true,
@@ -52,7 +58,7 @@ func ResourceHostedPublicVirtualInterfaceAccepter() *schema.Resource {
 
 func resourceHostedPublicVirtualInterfaceAccepterCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DirectConnectConn()
+	conn := meta.(*conns.AWSClient).DirectConnectConn(ctx)
 
 	vifId := d.Get("virtual_interface_id").(string)
 	req := &directconnect.ConfirmPublicVirtualInterfaceInput{
@@ -79,14 +85,16 @@ func resourceHostedPublicVirtualInterfaceAccepterCreate(ctx context.Context, d *
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
+	if err := createTags(ctx, conn, arn, getTagsIn(ctx)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting Direct Connect hosted public virtual interface (%s) tags: %s", arn, err)
+	}
+
 	return append(diags, resourceHostedPublicVirtualInterfaceAccepterUpdate(ctx, d, meta)...)
 }
 
 func resourceHostedPublicVirtualInterfaceAccepterRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DirectConnectConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).DirectConnectConn(ctx)
 
 	vif, err := virtualInterfaceRead(ctx, d.Id(), conn)
 	if err != nil {
@@ -107,24 +115,6 @@ func resourceHostedPublicVirtualInterfaceAccepterRead(ctx context.Context, d *sc
 	}
 
 	d.Set("virtual_interface_id", vif.VirtualInterfaceId)
-
-	arn := d.Get("arn").(string)
-	tags, err := ListTags(ctx, conn, arn)
-
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "listing tags for Direct Connect hosted public virtual interface (%s): %s", arn, err)
-	}
-
-	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
-	}
 
 	return diags
 }
@@ -147,7 +137,7 @@ func resourceHostedPublicVirtualInterfaceAccepterDelete(ctx context.Context, d *
 }
 
 func resourceHostedPublicVirtualInterfaceAccepterImport(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
-	conn := meta.(*conns.AWSClient).DirectConnectConn()
+	conn := meta.(*conns.AWSClient).DirectConnectConn(ctx)
 
 	vif, err := virtualInterfaceRead(ctx, d.Id(), conn)
 	if err != nil {

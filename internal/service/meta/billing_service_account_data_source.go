@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package meta
 
 import (
@@ -10,11 +13,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 )
 
-func init() {
-	_sp.registerFrameworkDataSourceFactory(newDataSourceBillingServiceAccount)
-}
-
-// newDataSourceBillingServiceAccount instantiates a new DataSource for the aws_billing_service_account data source.
+// @FrameworkDataSource
 func newDataSourceBillingServiceAccount(context.Context) (datasource.DataSourceWithConfigure, error) {
 	d := &dataSourceBillingServiceAccount{}
 	d.SetMigratedFromPluginSDK(true)

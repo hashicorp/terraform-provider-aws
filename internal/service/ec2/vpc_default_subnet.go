@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ec2
 
 import (
@@ -15,8 +18,11 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @SDKResource("aws_default_subnet", name="Subnet")
+// @Tags(identifierAttribute="id")
 func ResourceDefaultSubnet() *schema.Resource {
 	//lintignore:R011
 	return &schema.Resource{
@@ -43,6 +49,7 @@ func ResourceDefaultSubnet() *schema.Resource {
 		//   - availability_zone is Required/ForceNew
 		//   - availability_zone_id is Computed-only
 		//   - cidr_block is Computed-only
+		//   - enable_lni_at_device_index is Computed-only
 		//   - ipv6_cidr_block is Optional/Computed as it's automatically assigned if ipv6_native = true
 		//   - map_public_ip_on_launch has a Default of true
 		//   - outpost_arn is Computed-only
@@ -82,6 +89,10 @@ func ResourceDefaultSubnet() *schema.Resource {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  false,
+			},
+			"enable_lni_at_device_index": {
+				Type:     schema.TypeInt,
+				Computed: true,
 			},
 			"enable_resource_name_dns_aaaa_record_on_launch": {
 				Type:     schema.TypeBool,
@@ -142,8 +153,8 @@ func ResourceDefaultSubnet() *schema.Resource {
 				Computed:     true,
 				ValidateFunc: validation.StringInSlice(ec2.HostnameType_Values(), false),
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			"vpc_id": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -152,9 +163,9 @@ func ResourceDefaultSubnet() *schema.Resource {
 	}
 }
 
-func resourceDefaultSubnetCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDefaultSubnetCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics { // nosemgrep:ci.semgrep.tags.calling-UpdateTags-in-resource-create
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	availabilityZone := d.Get("availability_zone").(string)
 	input := &ec2.DescribeSubnetsInput{
@@ -229,13 +240,12 @@ func resourceDefaultSubnetCreate(ctx context.Context, d *schema.ResourceData, me
 	}
 
 	// Configure tags.
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
-	newTags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{}))).IgnoreConfig(ignoreTagsConfig)
-	oldTags := KeyValueTags(subnet.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+	newTags := KeyValueTags(ctx, getTagsIn(ctx))
+	oldTags := KeyValueTags(ctx, subnet.Tags).IgnoreSystem(names.EC2).IgnoreConfig(ignoreTagsConfig)
 
 	if !oldTags.Equal(newTags) {
-		if err := UpdateTags(ctx, conn, d.Id(), oldTags, newTags); err != nil {
+		if err := updateTags(ctx, conn, d.Id(), oldTags, newTags); err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating EC2 Default Subnet (%s) tags: %s", d.Id(), err)
 		}
 	}

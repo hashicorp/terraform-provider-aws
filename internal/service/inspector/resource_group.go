@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package inspector
 
 import (
@@ -12,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
+// @SDKResource("aws_inspector_resource_group")
 func ResourceResourceGroup() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceResourceGroupCreate,
@@ -35,16 +39,16 @@ func ResourceResourceGroup() *schema.Resource {
 
 func resourceResourceGroupCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).InspectorConn()
+	conn := meta.(*conns.AWSClient).InspectorConn(ctx)
 
 	req := &inspector.CreateResourceGroupInput{
 		ResourceGroupTags: expandResourceGroupTags(d.Get("tags").(map[string]interface{})),
 	}
-	log.Printf("[DEBUG] Creating Inspector resource group: %#v", req)
+	log.Printf("[DEBUG] Creating Inspector Classic Resource Group: %#v", req)
 	resp, err := conn.CreateResourceGroupWithContext(ctx, req)
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating Inspector resource group: %s", err)
+		return sdkdiag.AppendErrorf(diags, "creating Inspector Classic Resource Group: %s", err)
 	}
 
 	d.SetId(aws.StringValue(resp.ResourceGroupArn))
@@ -54,29 +58,29 @@ func resourceResourceGroupCreate(ctx context.Context, d *schema.ResourceData, me
 
 func resourceResourceGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).InspectorConn()
+	conn := meta.(*conns.AWSClient).InspectorConn(ctx)
 
 	resp, err := conn.DescribeResourceGroupsWithContext(ctx, &inspector.DescribeResourceGroupsInput{
 		ResourceGroupArns: aws.StringSlice([]string{d.Id()}),
 	})
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading Inspector resource group (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading Inspector Classic Resource Group (%s): %s", d.Id(), err)
 	}
 
 	if len(resp.ResourceGroups) == 0 {
 		if failedItem, ok := resp.FailedItems[d.Id()]; ok {
 			failureCode := aws.StringValue(failedItem.FailureCode)
 			if failureCode == inspector.FailedItemErrorCodeItemDoesNotExist {
-				log.Printf("[WARN] Inspector resource group (%s) not found, removing from state", d.Id())
+				log.Printf("[WARN] Inspector Classic Resource Group (%s) not found, removing from state", d.Id())
 				d.SetId("")
 				return diags
 			}
 
-			return sdkdiag.AppendErrorf(diags, "reading Inspector resource group (%s): %s", d.Id(), failureCode)
+			return sdkdiag.AppendErrorf(diags, "reading Inspector Classic Resource Group (%s): %s", d.Id(), failureCode)
 		}
 
-		return sdkdiag.AppendErrorf(diags, "reading Inspector resource group (%s): %v", d.Id(), resp.FailedItems)
+		return sdkdiag.AppendErrorf(diags, "reading Inspector Classic Resource Group (%s): %v", d.Id(), resp.FailedItems)
 	}
 
 	resourceGroup := resp.ResourceGroups[0]

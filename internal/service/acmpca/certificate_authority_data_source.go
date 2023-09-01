@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package acmpca
 
 import (
@@ -15,6 +18,7 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
+// @SDKDataSource("aws_acmpca_certificate_authority")
 func DataSourceCertificateAuthority() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceCertificateAuthorityRead,
@@ -33,6 +37,10 @@ func DataSourceCertificateAuthority() *schema.Resource {
 				Computed: true,
 			},
 			"certificate_signing_request": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"key_storage_security_standard": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -122,7 +130,7 @@ func DataSourceCertificateAuthority() *schema.Resource {
 
 func dataSourceCertificateAuthorityRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ACMPCAConn()
+	conn := meta.(*conns.AWSClient).ACMPCAConn(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 	certificateAuthorityARN := d.Get("arn").(string)
 
@@ -143,6 +151,7 @@ func dataSourceCertificateAuthorityRead(ctx context.Context, d *schema.ResourceD
 	certificateAuthority := describeCertificateAuthorityOutput.CertificateAuthority
 
 	d.Set("arn", certificateAuthority.Arn)
+	d.Set("key_storage_security_standard", certificateAuthority.KeyStorageSecurityStandard)
 	d.Set("not_after", aws.TimeValue(certificateAuthority.NotAfter).Format(time.RFC3339))
 	d.Set("not_before", aws.TimeValue(certificateAuthority.NotBefore).Format(time.RFC3339))
 	if err := d.Set("revocation_configuration", flattenRevocationConfiguration(certificateAuthority.RevocationConfiguration)); err != nil {
@@ -191,7 +200,7 @@ func dataSourceCertificateAuthorityRead(ctx context.Context, d *schema.ResourceD
 		d.Set("certificate_signing_request", getCertificateAuthorityCsrOutput.Csr)
 	}
 
-	tags, err := ListTags(ctx, conn, certificateAuthorityARN)
+	tags, err := listTags(ctx, conn, certificateAuthorityARN)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "listing tags for ACM PCA Certificate Authority (%s): %s", certificateAuthorityARN, err)

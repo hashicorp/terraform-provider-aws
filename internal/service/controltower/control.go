@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package controltower
 
 import (
@@ -12,13 +15,14 @@ import (
 	"github.com/aws/aws-sdk-go/service/controltower"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_controltower_control")
 func ResourceControl() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceControlCreate,
@@ -52,7 +56,7 @@ func ResourceControl() *schema.Resource {
 }
 
 func resourceControlCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ControlTowerConn()
+	conn := meta.(*conns.AWSClient).ControlTowerConn(ctx)
 
 	controlIdentifier := d.Get("control_identifier").(string)
 	targetIdentifier := d.Get("target_identifier").(string)
@@ -71,14 +75,14 @@ func resourceControlCreate(ctx context.Context, d *schema.ResourceData, meta int
 	d.SetId(id)
 
 	if _, err := waitOperationSucceeded(ctx, conn, aws.StringValue(output.OperationIdentifier), d.Timeout(schema.TimeoutCreate)); err != nil {
-		return diag.FromErr(fmt.Errorf("waiting for ControlTower Control (%s) create: %w", d.Id(), err))
+		return diag.Errorf("waiting for ControlTower Control (%s) create: %s", d.Id(), err)
 	}
 
 	return resourceControlRead(ctx, d, meta)
 }
 
 func resourceControlRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ControlTowerConn()
+	conn := meta.(*conns.AWSClient).ControlTowerConn(ctx)
 
 	targetIdentifier, controlIdentifier, err := ControlParseResourceID(d.Id())
 
@@ -105,7 +109,7 @@ func resourceControlRead(ctx context.Context, d *schema.ResourceData, meta inter
 }
 
 func resourceControlDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ControlTowerConn()
+	conn := meta.(*conns.AWSClient).ControlTowerConn(ctx)
 
 	targetIdentifier, controlIdentifier, err := ControlParseResourceID(d.Id())
 
@@ -176,7 +180,7 @@ func FindEnabledControlByTwoPartKey(ctx context.Context, conn *controltower.Cont
 	})
 
 	if tfawserr.ErrCodeEquals(err, controltower.ErrCodeResourceNotFoundException) {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -201,7 +205,7 @@ func findControlOperationByID(ctx context.Context, conn *controltower.ControlTow
 	output, err := conn.GetControlOperationWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, controltower.ErrCodeResourceNotFoundException) {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -218,7 +222,7 @@ func findControlOperationByID(ctx context.Context, conn *controltower.ControlTow
 	return output.ControlOperation, nil
 }
 
-func statusControlOperation(ctx context.Context, conn *controltower.ControlTower, id string) resource.StateRefreshFunc {
+func statusControlOperation(ctx context.Context, conn *controltower.ControlTower, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := findControlOperationByID(ctx, conn, id)
 
@@ -235,7 +239,7 @@ func statusControlOperation(ctx context.Context, conn *controltower.ControlTower
 }
 
 func waitOperationSucceeded(ctx context.Context, conn *controltower.ControlTower, id string, timeout time.Duration) (*controltower.ControlOperation, error) { //nolint:unparam
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{controltower.ControlOperationStatusInProgress},
 		Target:  []string{controltower.ControlOperationStatusSucceeded},
 		Refresh: statusControlOperation(ctx, conn, id),

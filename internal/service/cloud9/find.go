@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package cloud9
 
 import (
@@ -6,7 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cloud9"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
@@ -32,7 +35,7 @@ func findEnvironments(ctx context.Context, conn *cloud9.Cloud9, input *cloud9.De
 	output, err := conn.DescribeEnvironmentsWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, cloud9.ErrCodeNotFoundException) {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -62,7 +65,7 @@ func FindEnvironmentByID(ctx context.Context, conn *cloud9.Cloud9, id string) (*
 
 	// Eventual consistency check.
 	if aws.StringValue(output.Id) != id {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastRequest: input,
 		}
 	}
@@ -78,7 +81,7 @@ func FindEnvironmentMembershipByID(ctx context.Context, conn *cloud9.Cloud9, env
 	out, err := conn.DescribeEnvironmentMembershipsWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, cloud9.ErrCodeNotFoundException) {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}

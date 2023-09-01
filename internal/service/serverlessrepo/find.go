@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package serverlessrepo
 
 import (
@@ -7,7 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	serverlessrepo "github.com/aws/aws-sdk-go/service/serverlessapplicationrepository"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 )
 
 func findApplication(ctx context.Context, conn *serverlessrepo.ServerlessApplicationRepository, applicationID, version string) (*serverlessrepo.GetApplicationOutput, error) {
@@ -21,7 +24,7 @@ func findApplication(ctx context.Context, conn *serverlessrepo.ServerlessApplica
 	log.Printf("[DEBUG] Getting Serverless findApplication Repository Application: %s", input)
 	resp, err := conn.GetApplicationWithContext(ctx, input)
 	if tfawserr.ErrCodeEquals(err, serverlessrepo.ErrCodeNotFoundException) {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:    err,
 			LastRequest:  input,
 			LastResponse: resp,
@@ -32,7 +35,7 @@ func findApplication(ctx context.Context, conn *serverlessrepo.ServerlessApplica
 	}
 
 	if resp == nil {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastRequest:  input,
 			LastResponse: resp,
 			Message:      "returned empty response",

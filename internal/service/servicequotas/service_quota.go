@@ -1,11 +1,14 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package servicequotas
 
 import (
 	"context"
 	"fmt"
-	"regexp"
 	"strings"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/servicequotas"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
@@ -17,6 +20,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
+// @SDKResource("aws_servicequotas_service_quota")
 func ResourceServiceQuota() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceServiceQuotaCreate,
@@ -46,8 +50,8 @@ func ResourceServiceQuota() *schema.Resource {
 				ForceNew: true,
 				ValidateFunc: validation.All(
 					validation.StringLenBetween(1, 128),
-					validation.StringMatch(regexp.MustCompile(`^[a-zA-Z]`), "must begin with alphabetic character"),
-					validation.StringMatch(regexp.MustCompile(`^[a-zA-Z0-9-]+$`), "must contain only alphanumeric and hyphen characters"),
+					validation.StringMatch(regexache.MustCompile(`^[a-zA-Z]`), "must begin with alphabetic character"),
+					validation.StringMatch(regexache.MustCompile(`^[a-zA-Z0-9-]+$`), "must contain only alphanumeric and hyphen characters"),
 				),
 			},
 			"quota_name": {
@@ -68,13 +72,57 @@ func ResourceServiceQuota() *schema.Resource {
 				ForceNew: true,
 				ValidateFunc: validation.All(
 					validation.StringLenBetween(1, 63),
-					validation.StringMatch(regexp.MustCompile(`^[a-zA-Z]`), "must begin with alphabetic character"),
-					validation.StringMatch(regexp.MustCompile(`^[a-zA-Z0-9-]+$`), "must contain only alphanumeric and hyphen characters"),
+					validation.StringMatch(regexache.MustCompile(`^[a-zA-Z]`), "must begin with alphabetic character"),
+					validation.StringMatch(regexache.MustCompile(`^[a-zA-Z0-9-]+$`), "must contain only alphanumeric and hyphen characters"),
 				),
 			},
 			"service_name": {
 				Type:     schema.TypeString,
 				Computed: true,
+			},
+			"usage_metric": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"metric_dimensions": {
+							Type:     schema.TypeList,
+							Computed: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"class": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+									"resource": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+									"service": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+									"type": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+								},
+							},
+						},
+						"metric_name": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"metric_namespace": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"metric_statistic_recommendation": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+					},
+				},
 			},
 			"value": {
 				Type:     schema.TypeFloat,
@@ -86,7 +134,7 @@ func ResourceServiceQuota() *schema.Resource {
 
 func resourceServiceQuotaCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ServiceQuotasConn()
+	conn := meta.(*conns.AWSClient).ServiceQuotasConn(ctx)
 
 	quotaCode := d.Get("quota_code").(string)
 	serviceCode := d.Get("service_code").(string)
@@ -135,7 +183,7 @@ func resourceServiceQuotaCreate(ctx context.Context, d *schema.ResourceData, met
 
 func resourceServiceQuotaRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ServiceQuotasConn()
+	conn := meta.(*conns.AWSClient).ServiceQuotasConn(ctx)
 
 	serviceCode, quotaCode, err := resourceServiceQuotaParseID(d.Id())
 
@@ -158,6 +206,10 @@ func resourceServiceQuotaRead(ctx context.Context, d *schema.ResourceData, meta 
 	d.Set("service_code", defaultQuota.ServiceCode)
 	d.Set("service_name", defaultQuota.ServiceName)
 	d.Set("value", defaultQuota.Value)
+
+	if err := d.Set("usage_metric", flattenUsageMetric(defaultQuota.UsageMetric)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting usage_metric for (%s/%s): %s", serviceCode, quotaCode, err)
+	}
 
 	serviceQuota, err := findServiceQuotaByID(ctx, conn, serviceCode, quotaCode)
 	if err != nil && !tfresource.NotFound(err) {
@@ -208,7 +260,7 @@ func resourceServiceQuotaRead(ctx context.Context, d *schema.ResourceData, meta 
 
 func resourceServiceQuotaUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ServiceQuotasConn()
+	conn := meta.(*conns.AWSClient).ServiceQuotasConn(ctx)
 
 	value := d.Get("value").(float64)
 	serviceCode, quotaCode, err := resourceServiceQuotaParseID(d.Id())

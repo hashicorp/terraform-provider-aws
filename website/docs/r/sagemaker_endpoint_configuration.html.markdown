@@ -33,11 +33,12 @@ resource "aws_sagemaker_endpoint_configuration" "ec" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `production_variants` - (Required) An list of ProductionVariant objects, one for each model that you want to host at this endpoint. Fields are documented below.
 * `kms_key_arn` - (Optional) Amazon Resource Name (ARN) of a AWS Key Management Service key that Amazon SageMaker uses to encrypt data on the storage volume attached to the ML compute instance that hosts the endpoint.
-* `name` - (Optional) The name of the endpoint configuration. If omitted, Terraform will assign a random, unique name.
+* `name` - (Optional) The name of the endpoint configuration. If omitted, Terraform will assign a random, unique name. Conflicts with `name_prefix`.
+* `name_prefix` - (Optional) Creates a unique endpoint configuration name beginning with the specified prefix. Conflicts with `name`.
 * `tags` - (Optional) A mapping of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `data_capture_config` - (Optional) Specifies the parameters to capture input/output of SageMaker models endpoints. Fields are documented below.
 * `async_inference_config` - (Optional) Specifies configuration for how an endpoint performs asynchronous inference.
@@ -48,6 +49,7 @@ The following arguments are supported:
 * `accelerator_type` - (Optional) The size of the Elastic Inference (EI) instance to use for the production variant.
 * `container_startup_health_check_timeout_in_seconds` - (Optional) The timeout value, in seconds, for your inference container to pass health check by SageMaker Hosting. For more information about health check, see [How Your Container Should Respond to Health Check (Ping) Requests](https://docs.aws.amazon.com/sagemaker/latest/dg/your-algorithms-inference-code.html#your-algorithms-inference-algo-ping-requests). Valid values between `60` and `3600`.
 * `core_dump_config` - (Optional) Specifies configuration for a core dump from the model container when the process crashes. Fields are documented below.
+* `enable_ssm_access` - (Optional) You can use this parameter to turn on native Amazon Web Services Systems Manager (SSM) access for a production variant behind an endpoint. By default, SSM access is disabled for all production variants behind an endpoints.
 * `initial_instance_count` - (Optional) Initial number of instances used for auto-scaling.
 * `instance_type` - (Optional)  The type of instance to start.
 * `initial_variant_weight` - (Optional) Determines initial traffic distribution among all of the models that you specify in the endpoint configuration. If unspecified, it defaults to `1.0`.
@@ -66,6 +68,7 @@ The following arguments are supported:
 
 * `max_concurrency` - (Required) The maximum number of concurrent invocations your serverless endpoint can process. Valid values are between `1` and `200`.
 * `memory_size_in_mb` - (Required) The memory size of your serverless endpoint. Valid values are in 1 GB increments: `1024` MB, `2048` MB, `3072` MB, `4096` MB, `5120` MB, or `6144` MB.
+* `provisioned_concurrency` - The amount of provisioned concurrency to allocate for the serverless endpoint. Should be less than or equal to `max_concurrency`. Valid values are between `1` and `200`.
 
 ### data_capture_config
 
@@ -97,17 +100,19 @@ The following arguments are supported:
 #### output_config
 
 * `s3_output_path` - (Required) The Amazon S3 location to upload inference responses to.
+* `s3_failure_path` - (Optional) The Amazon S3 location to upload failure inference responses to.
 * `kms_key_id` - (Optional) The Amazon Web Services Key Management Service (Amazon Web Services KMS) key that Amazon SageMaker uses to encrypt the asynchronous inference output in Amazon S3.
 * `notification_config` - (Optional) Specifies the configuration for notifications of inference results for asynchronous inference.
 
 ##### notification_config
 
+* `include_inference_response_in` - (Optional) The Amazon SNS topics where you want the inference response to be included. Valid values are `SUCCESS_NOTIFICATION_TOPIC` and `ERROR_NOTIFICATION_TOPIC`.
 * `error_topic` - (Optional) Amazon SNS topic to post a notification to when inference fails. If no topic is provided, no notification is sent on failure.
 * `success_topic` - (Optional) Amazon SNS topic to post a notification to when inference completes successfully. If no topic is provided, no notification is sent on success.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - The Amazon Resource Name (ARN) assigned by AWS to this endpoint configuration.
 * `name` - The name of the endpoint configuration.
@@ -115,8 +120,17 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Endpoint configurations can be imported using the `name`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import endpoint configurations using the `name`. For example:
 
+```terraform
+import {
+  to = aws_sagemaker_endpoint_configuration.test_endpoint_config
+  id = "endpoint-config-foo"
+}
 ```
-$ terraform import aws_sagemaker_endpoint_configuration.test_endpoint_config endpoint-config-foo
+
+Using `terraform import`, import endpoint configurations using the `name`. For example:
+
+```console
+% terraform import aws_sagemaker_endpoint_configuration.test_endpoint_config endpoint-config-foo
 ```

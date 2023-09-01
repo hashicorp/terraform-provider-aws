@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package cloudfront
 
 import (
@@ -13,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
+// @SDKDataSource("aws_cloudfront_origin_access_identity")
 func DataSourceOriginAccessIdentity() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceOriginAccessIdentityRead,
@@ -53,7 +57,7 @@ func DataSourceOriginAccessIdentity() *schema.Resource {
 
 func dataSourceOriginAccessIdentityRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CloudFrontConn()
+	conn := meta.(*conns.AWSClient).CloudFrontConn(ctx)
 	id := d.Get("id").(string)
 	params := &cloudfront.GetCloudFrontOriginAccessIdentityInput{
 		Id: aws.String(id),

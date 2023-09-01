@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package sagemaker
 
 import (
@@ -9,7 +12,8 @@ import (
 	"github.com/aws/aws-sdk-go/service/sagemaker"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -18,8 +22,11 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @SDKResource("aws_sagemaker_model", name="Model")
+// @Tags(identifierAttribute="arn")
 func ResourceModel() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceModelCreate,
@@ -55,7 +62,7 @@ func ResourceModel() *schema.Resource {
 						},
 						"image": {
 							Type:         schema.TypeString,
-							Required:     true,
+							Optional:     true,
 							ForceNew:     true,
 							ValidateFunc: validImage,
 						},
@@ -101,6 +108,12 @@ func ResourceModel() *schema.Resource {
 							Optional:     true,
 							ForceNew:     true,
 							ValidateFunc: validModelDataURL,
+						},
+						"model_package_name": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							ForceNew:     true,
+							ValidateFunc: verify.ValidARN,
 						},
 					},
 				},
@@ -160,7 +173,7 @@ func ResourceModel() *schema.Resource {
 						},
 						"image": {
 							Type:         schema.TypeString,
-							Required:     true,
+							Optional:     true,
 							ForceNew:     true,
 							ValidateFunc: validImage,
 						},
@@ -207,11 +220,17 @@ func ResourceModel() *schema.Resource {
 							ForceNew:     true,
 							ValidateFunc: validModelDataURL,
 						},
+						"model_package_name": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							ForceNew:     true,
+							ValidateFunc: verify.ValidARN,
+						},
 					},
 				},
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			"vpc_config": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -242,19 +261,18 @@ func ResourceModel() *schema.Resource {
 
 func resourceModelCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SageMakerConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	conn := meta.(*conns.AWSClient).SageMakerConn(ctx)
 
 	var name string
 	if v, ok := d.GetOk("name"); ok {
 		name = v.(string)
 	} else {
-		name = resource.UniqueId()
+		name = id.UniqueId()
 	}
 
 	createOpts := &sagemaker.CreateModelInput{
 		ModelName: aws.String(name),
+		Tags:      getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("primary_container"); ok {
@@ -267,10 +285,6 @@ func resourceModelCreate(ctx context.Context, d *schema.ResourceData, meta inter
 
 	if v, ok := d.GetOk("execution_role_arn"); ok {
 		createOpts.ExecutionRoleArn = aws.String(v.(string))
-	}
-
-	if len(tags) > 0 {
-		createOpts.Tags = Tags(tags.IgnoreAWS())
 	}
 
 	if v, ok := d.GetOk("vpc_config"); ok {
@@ -286,7 +300,7 @@ func resourceModelCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 
 	log.Printf("[DEBUG] SageMaker model create config: %#v", *createOpts)
-	_, err := tfresource.RetryWhenAWSErrCodeEqualsContext(ctx, 2*time.Minute, func() (interface{}, error) {
+	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, 2*time.Minute, func() (interface{}, error) {
 		return conn.CreateModelWithContext(ctx, createOpts)
 	}, "ValidationException")
 
@@ -313,9 +327,7 @@ func expandVPCConfigRequest(l []interface{}) *sagemaker.VpcConfig {
 
 func resourceModelRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SageMakerConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).SageMakerConn(ctx)
 
 	request := &sagemaker.DescribeModelInput{
 		ModelName: aws.String(d.Id()),
@@ -353,22 +365,6 @@ func resourceModelRead(ctx context.Context, d *schema.ResourceData, meta interfa
 		return sdkdiag.AppendErrorf(diags, "setting inference_execution_config: %s", err)
 	}
 
-	tags, err := ListTags(ctx, conn, arn)
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "listing tags for SageMaker Model (%s): %s", d.Id(), err)
-	}
-
-	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
-	}
-
 	return diags
 }
 
@@ -387,38 +383,31 @@ func flattenVPCConfigResponse(vpcConfig *sagemaker.VpcConfig) []map[string]inter
 
 func resourceModelUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SageMakerConn()
 
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		if err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n); err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating SageMaker Model (%s) tags: %s", d.Id(), err)
-		}
-	}
+	// Tags only.
 
 	return append(diags, resourceModelRead(ctx, d, meta)...)
 }
 
 func resourceModelDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SageMakerConn()
+	conn := meta.(*conns.AWSClient).SageMakerConn(ctx)
 
 	deleteOpts := &sagemaker.DeleteModelInput{
 		ModelName: aws.String(d.Id()),
 	}
 	log.Printf("[INFO] Deleting SageMaker model: %s", d.Id())
 
-	err := resource.RetryContext(ctx, 5*time.Minute, func() *resource.RetryError {
+	err := retry.RetryContext(ctx, 5*time.Minute, func() *retry.RetryError {
 		_, err := conn.DeleteModelWithContext(ctx, deleteOpts)
 		if err == nil {
 			return nil
 		}
 
 		if tfawserr.ErrCodeEquals(err, "ResourceNotFound") {
-			return resource.RetryableError(err)
+			return retry.RetryableError(err)
 		}
-		return resource.NonRetryableError(err)
+		return retry.NonRetryableError(err)
 	})
 	if tfresource.TimedOut(err) {
 		_, err = conn.DeleteModelWithContext(ctx, deleteOpts)
@@ -430,8 +419,10 @@ func resourceModelDelete(ctx context.Context, d *schema.ResourceData, meta inter
 }
 
 func expandContainer(m map[string]interface{}) *sagemaker.ContainerDefinition {
-	container := sagemaker.ContainerDefinition{
-		Image: aws.String(m["image"].(string)),
+	container := sagemaker.ContainerDefinition{}
+
+	if v, ok := m["image"]; ok && v.(string) != "" {
+		container.Image = aws.String(v.(string))
 	}
 
 	if v, ok := m["mode"]; ok && v.(string) != "" {
@@ -443,6 +434,9 @@ func expandContainer(m map[string]interface{}) *sagemaker.ContainerDefinition {
 	}
 	if v, ok := m["model_data_url"]; ok && v.(string) != "" {
 		container.ModelDataUrl = aws.String(v.(string))
+	}
+	if v, ok := m["model_package_name"]; ok && v.(string) != "" {
+		container.ModelPackageName = aws.String(v.(string))
 	}
 	if v, ok := m["environment"].(map[string]interface{}); ok && len(v) > 0 {
 		container.Environment = flex.ExpandStringMap(v)
@@ -504,7 +498,9 @@ func flattenContainer(container *sagemaker.ContainerDefinition) []interface{} {
 
 	cfg := make(map[string]interface{})
 
-	cfg["image"] = aws.StringValue(container.Image)
+	if container.Image != nil {
+		cfg["image"] = aws.StringValue(container.Image)
+	}
 
 	if container.Mode != nil {
 		cfg["mode"] = aws.StringValue(container.Mode)
@@ -515,6 +511,9 @@ func flattenContainer(container *sagemaker.ContainerDefinition) []interface{} {
 	}
 	if container.ModelDataUrl != nil {
 		cfg["model_data_url"] = aws.StringValue(container.ModelDataUrl)
+	}
+	if container.ModelPackageName != nil {
+		cfg["model_package_name"] = aws.StringValue(container.ModelPackageName)
 	}
 	if container.Environment != nil {
 		cfg["environment"] = aws.StringValueMap(container.Environment)

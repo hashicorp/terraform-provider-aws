@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package guardduty
 
 import (
@@ -17,6 +20,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_guardduty_publishing_destination")
 func ResourcePublishingDestination() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourcePublishingDestinationCreate,
@@ -56,7 +60,7 @@ func ResourcePublishingDestination() *schema.Resource {
 
 func resourcePublishingDestinationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).GuardDutyConn()
+	conn := meta.(*conns.AWSClient).GuardDutyConn(ctx)
 
 	detectorID := d.Get("detector_id").(string)
 	input := guardduty.CreatePublishingDestinationInput{
@@ -87,7 +91,7 @@ func resourcePublishingDestinationCreate(ctx context.Context, d *schema.Resource
 
 func resourcePublishingDestinationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).GuardDutyConn()
+	conn := meta.(*conns.AWSClient).GuardDutyConn(ctx)
 
 	destinationId, detectorId, err := DecodePublishDestinationID(d.Id())
 
@@ -119,7 +123,7 @@ func resourcePublishingDestinationRead(ctx context.Context, d *schema.ResourceDa
 
 func resourcePublishingDestinationUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).GuardDutyConn()
+	conn := meta.(*conns.AWSClient).GuardDutyConn(ctx)
 
 	destinationId, detectorId, err := DecodePublishDestinationID(d.Id())
 
@@ -145,7 +149,7 @@ func resourcePublishingDestinationUpdate(ctx context.Context, d *schema.Resource
 
 func resourcePublishingDestinationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).GuardDutyConn()
+	conn := meta.(*conns.AWSClient).GuardDutyConn(ctx)
 
 	destinationId, detectorId, err := DecodePublishDestinationID(d.Id())
 

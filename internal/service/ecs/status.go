@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ecs
 
 import (
@@ -5,7 +8,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ecs"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
@@ -17,15 +20,12 @@ const (
 	serviceStatusPending = "tfPENDING"
 	serviceStatusStable  = "tfSTABLE"
 
-	clusterStatusError = "ERROR"
-	clusterStatusNone  = "NONE"
-
 	taskSetStatusActive   = "ACTIVE"
 	taskSetStatusDraining = "DRAINING"
 	taskSetStatusPrimary  = "PRIMARY"
 )
 
-func statusCapacityProvider(ctx context.Context, conn *ecs.ECS, arn string) resource.StateRefreshFunc {
+func statusCapacityProvider(ctx context.Context, conn *ecs.ECS, arn string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := FindCapacityProviderByARN(ctx, conn, arn)
 
@@ -41,7 +41,7 @@ func statusCapacityProvider(ctx context.Context, conn *ecs.ECS, arn string) reso
 	}
 }
 
-func statusCapacityProviderUpdate(ctx context.Context, conn *ecs.ECS, arn string) resource.StateRefreshFunc {
+func statusCapacityProviderUpdate(ctx context.Context, conn *ecs.ECS, arn string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := FindCapacityProviderByARN(ctx, conn, arn)
 
@@ -57,7 +57,7 @@ func statusCapacityProviderUpdate(ctx context.Context, conn *ecs.ECS, arn string
 	}
 }
 
-func statusServiceNoTags(ctx context.Context, conn *ecs.ECS, id, cluster string) resource.StateRefreshFunc {
+func statusServiceNoTags(ctx context.Context, conn *ecs.ECS, id, cluster string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		service, err := FindServiceNoTagsByID(ctx, conn, id, cluster)
 		if tfresource.NotFound(err) {
@@ -71,7 +71,7 @@ func statusServiceNoTags(ctx context.Context, conn *ecs.ECS, id, cluster string)
 	}
 }
 
-func statusServiceWaitForStable(ctx context.Context, conn *ecs.ECS, id, cluster string) resource.StateRefreshFunc {
+func statusServiceWaitForStable(ctx context.Context, conn *ecs.ECS, id, cluster string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		serviceRaw, status, err := statusServiceNoTags(ctx, conn, id, cluster)()
 		if err != nil {
@@ -96,23 +96,7 @@ func statusServiceWaitForStable(ctx context.Context, conn *ecs.ECS, id, cluster 
 	}
 }
 
-func statusCluster(ctx context.Context, conn *ecs.ECS, arn string) resource.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-		cluster, err := FindClusterByNameOrARN(ctx, conn, arn)
-
-		if tfresource.NotFound(err) {
-			return nil, clusterStatusNone, nil
-		}
-
-		if err != nil {
-			return nil, clusterStatusError, err
-		}
-
-		return cluster, aws.StringValue(cluster.Status), err
-	}
-}
-
-func stabilityStatusTaskSet(ctx context.Context, conn *ecs.ECS, taskSetID, service, cluster string) resource.StateRefreshFunc {
+func stabilityStatusTaskSet(ctx context.Context, conn *ecs.ECS, taskSetID, service, cluster string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		input := &ecs.DescribeTaskSetsInput{
 			Cluster:  aws.String(cluster),
@@ -134,7 +118,7 @@ func stabilityStatusTaskSet(ctx context.Context, conn *ecs.ECS, taskSetID, servi
 	}
 }
 
-func statusTaskSet(ctx context.Context, conn *ecs.ECS, taskSetID, service, cluster string) resource.StateRefreshFunc {
+func statusTaskSet(ctx context.Context, conn *ecs.ECS, taskSetID, service, cluster string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		input := &ecs.DescribeTaskSetsInput{
 			Cluster:  aws.String(cluster),

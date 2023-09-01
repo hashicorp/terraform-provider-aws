@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package iot
 
 import (
@@ -16,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
+// @SDKResource("aws_iot_thing")
 func ResourceThing() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceThingCreate,
@@ -62,7 +66,7 @@ func ResourceThing() *schema.Resource {
 
 func resourceThingCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).IoTConn()
+	conn := meta.(*conns.AWSClient).IoTConn(ctx)
 
 	name := d.Get("name").(string)
 	input := &iot.CreateThingInput{
@@ -93,7 +97,7 @@ func resourceThingCreate(ctx context.Context, d *schema.ResourceData, meta inter
 
 func resourceThingRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).IoTConn()
+	conn := meta.(*conns.AWSClient).IoTConn(ctx)
 
 	output, err := FindThingByName(ctx, conn, d.Id())
 
@@ -119,7 +123,7 @@ func resourceThingRead(ctx context.Context, d *schema.ResourceData, meta interfa
 
 func resourceThingUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).IoTConn()
+	conn := meta.(*conns.AWSClient).IoTConn(ctx)
 
 	input := &iot.UpdateThingInput{
 		ThingName: aws.String(d.Get("name").(string)),
@@ -157,7 +161,7 @@ func resourceThingUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 
 func resourceThingDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).IoTConn()
+	conn := meta.(*conns.AWSClient).IoTConn(ctx)
 
 	log.Printf("[DEBUG] Deleting IoT Thing: %s", d.Id())
 	_, err := conn.DeleteThingWithContext(ctx, &iot.DeleteThingInput{

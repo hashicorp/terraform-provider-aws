@@ -1,5 +1,41 @@
 # HCL Changelog
 
+## v2.17.0 (May 31, 2023)
+
+### Enhancements
+
+* HCL now uses a newer version of the upstream `cty` library which has improved treatment of unknown values: it can now track additional optional information that reduces the range of an unknown value, which allows some operations against unknown values to return known or partially-known results. ([#590](https://github.com/hashicorp/hcl/pull/590))
+
+    **Note:** This change effectively passes on [`cty`'s notion of backward compatibility](https://github.com/zclconf/go-cty/blob/main/COMPATIBILITY.md) whereby unknown values can become "more known" in later releases. In particular, if your caller is using `cty.Value.RawEquals` in its tests against the results of operations with unknown values then you may see those tests begin failing after upgrading, due to the values now being more "refined".
+    
+    If so, you should review the refinements with consideration to [the `cty` refinements docs](https://github.com/zclconf/go-cty/blob/7dcbae46a6f247e983efb1fa774d2bb68781a333/docs/refinements.md) and update your expected results to match only if the reported refinements seem correct for the given situation. The `RawEquals` method is intended only for making exact value comparisons in test cases, so main application code should not use it; use `Equals` instead for real logic, which will take refinements into account automatically.
+
+## v2.16.2 (March 9, 2023)
+
+### Bugs Fixed
+
+* ext/typeexpr: Verify type assumptions when applying default values, and ignore input values that do not match type assumptions. ([#594](https://github.com/hashicorp/hcl/pull/594))
+
+## v2.16.1 (February 13, 2023)
+
+### Bugs Fixed
+
+* hclsyntax: Report correct `Range.End` for `FunctionCall` with incomplete argument ([#588](https://github.com/hashicorp/hcl/pull/588))
+
+## v2.16.0 (January 30, 2023)
+
+### Enhancements
+
+* ext/typeexpr: Modify the `Defaults` functionality to implement additional flexibility. HCL will now upcast lists and sets into tuples, and maps into objects, when applying default values if the applied defaults cause the elements within a target collection to have differing types. Previously, this would have resulted in a panic, now HCL will return a modified overall type. ([#574](https://github.com/hashicorp/hcl/pull/574))
+
+    Users should return to the advice provided by v2.14.0, and apply the go-cty convert functionality *after* setting defaults on a given `cty.Value`, rather than before.
+* hclfmt: Avoid rewriting unchanged files. ([#576](https://github.com/hashicorp/hcl/pull/576))
+* hclsyntax: Simplify the AST for certain string expressions. ([#584](https://github.com/hashicorp/hcl/pull/584))
+
+### Bugs Fixed
+
+* hclwrite: Fix data race in `formatSpaces`. ([#511](https://github.com/hashicorp/hcl/pull/511))
+
 ## v2.15.0 (November 10, 2022)
 
 ### Bugs Fixed

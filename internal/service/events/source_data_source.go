@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package events
 
 import (
@@ -12,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
+// @SDKDataSource("aws_cloudwatch_event_source")
 func DataSourceSource() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceSourceRead,
@@ -43,7 +47,7 @@ func DataSourceSource() *schema.Resource {
 
 func dataSourceSourceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EventsConn()
+	conn := meta.(*conns.AWSClient).EventsConn(ctx)
 
 	input := &eventbridge.ListEventSourcesInput{}
 	if v, ok := d.GetOk("name_prefix"); ok {

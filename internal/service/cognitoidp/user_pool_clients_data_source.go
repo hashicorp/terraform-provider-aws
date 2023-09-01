@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package cognitoidp
 
 import (
@@ -11,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
+// @SDKDataSource("aws_cognito_user_pool_clients")
 func DataSourceUserPoolClients() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceuserPoolClientsRead,
@@ -39,7 +43,7 @@ func DataSourceUserPoolClients() *schema.Resource {
 
 func dataSourceuserPoolClientsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CognitoIDPConn()
+	conn := meta.(*conns.AWSClient).CognitoIDPConn(ctx)
 
 	userPoolID := d.Get("user_pool_id").(string)
 	input := &cognitoidentityprovider.ListUserPoolClientsInput{
@@ -66,7 +70,7 @@ func dataSourceuserPoolClientsRead(ctx context.Context, d *schema.ResourceData, 
 	})
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "Error getting user pool clients: %s", err)
+		return sdkdiag.AppendErrorf(diags, "getting user pool clients: %s", err)
 	}
 
 	d.SetId(userPoolID)

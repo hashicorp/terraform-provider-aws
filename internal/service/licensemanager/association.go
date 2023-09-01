@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package licensemanager
 
 import (
@@ -9,13 +12,14 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/licensemanager"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_licensemanager_association")
 func ResourceAssociation() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceAssociationCreate,
@@ -44,7 +48,7 @@ func ResourceAssociation() *schema.Resource {
 }
 
 func resourceAssociationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).LicenseManagerConn()
+	conn := meta.(*conns.AWSClient).LicenseManagerConn(ctx)
 
 	licenseConfigurationARN := d.Get("license_configuration_arn").(string)
 	resourceARN := d.Get("resource_arn").(string)
@@ -69,7 +73,7 @@ func resourceAssociationCreate(ctx context.Context, d *schema.ResourceData, meta
 }
 
 func resourceAssociationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).LicenseManagerConn()
+	conn := meta.(*conns.AWSClient).LicenseManagerConn(ctx)
 
 	resourceARN, licenseConfigurationARN, err := AssociationParseResourceID(d.Id())
 
@@ -96,7 +100,7 @@ func resourceAssociationRead(ctx context.Context, d *schema.ResourceData, meta i
 }
 
 func resourceAssociationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).LicenseManagerConn()
+	conn := meta.(*conns.AWSClient).LicenseManagerConn(ctx)
 
 	resourceARN, licenseConfigurationARN, err := AssociationParseResourceID(d.Id())
 
@@ -150,7 +154,7 @@ func FindAssociation(ctx context.Context, conn *licensemanager.LicenseManager, r
 		}
 	}
 
-	return &resource.NotFoundError{}
+	return &retry.NotFoundError{}
 }
 
 const associationResourceIDSeparator = ","

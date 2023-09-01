@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package shield
 
 import (
@@ -15,8 +18,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @SDKResource("aws_shield_protection_group", name="Protection Group")
+// @Tags(identifierAttribute="protection_group_arn")
 func ResourceProtectionGroup() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceProtectionGroupCreate,
@@ -67,8 +73,8 @@ func ResourceProtectionGroup() *schema.Resource {
 				ConflictsWith: []string{"members"},
 				ValidateFunc:  validation.StringInSlice(shield.ProtectedResourceType_Values(), false),
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
 		CustomizeDiff: verify.SetTagsDiff,
 	}
@@ -76,16 +82,14 @@ func ResourceProtectionGroup() *schema.Resource {
 
 func resourceProtectionGroupCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ShieldConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	conn := meta.(*conns.AWSClient).ShieldConn(ctx)
 
 	protectionGroupID := d.Get("protection_group_id").(string)
 	input := &shield.CreateProtectionGroupInput{
 		Aggregation:       aws.String(d.Get("aggregation").(string)),
 		Pattern:           aws.String(d.Get("pattern").(string)),
 		ProtectionGroupId: aws.String(protectionGroupID),
-		Tags:              Tags(tags.IgnoreAWS()),
+		Tags:              getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("members"); ok {
@@ -110,9 +114,7 @@ func resourceProtectionGroupCreate(ctx context.Context, d *schema.ResourceData, 
 
 func resourceProtectionGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ShieldConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).ShieldConn(ctx)
 
 	input := &shield.DescribeProtectionGroupInput{
 		ProtectionGroupId: aws.String(d.Id()),
@@ -138,29 +140,12 @@ func resourceProtectionGroupRead(ctx context.Context, d *schema.ResourceData, me
 	d.Set("members", resp.ProtectionGroup.Members)
 	d.Set("resource_type", resp.ProtectionGroup.ResourceType)
 
-	tags, err := ListTags(ctx, conn, arn)
-
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "listing tags for Shield Protection Group (%s): %s", arn, err)
-	}
-
-	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
-	}
-
 	return diags
 }
 
 func resourceProtectionGroupUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ShieldConn()
+	conn := meta.(*conns.AWSClient).ShieldConn(ctx)
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		input := &shield.UpdateProtectionGroupInput{
@@ -185,19 +170,12 @@ func resourceProtectionGroupUpdate(ctx context.Context, d *schema.ResourceData, 
 		}
 	}
 
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-		if err := UpdateTags(ctx, conn, d.Get("protection_group_arn").(string), o, n); err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating tags: %s", err)
-		}
-	}
-
 	return append(diags, resourceProtectionGroupRead(ctx, d, meta)...)
 }
 
 func resourceProtectionGroupDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ShieldConn()
+	conn := meta.(*conns.AWSClient).ShieldConn(ctx)
 
 	log.Printf("[DEBUG] Deletinh Shield Protection Group: %s", d.Id())
 	_, err := conn.DeleteProtectionGroupWithContext(ctx, &shield.DeleteProtectionGroupInput{

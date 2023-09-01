@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package s3control
 
 import (
@@ -13,10 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
-func init() {
-	_sp.registerSDKDataSourceFactory("aws_s3control_multi_region_access_point", dataSourceMultiRegionAccessPoint)
-}
-
+// @SDKDataSource("aws_s3control_multi_region_access_point")
 func dataSourceMultiRegionAccessPoint() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceMultiRegionAccessPointBlockRead,
@@ -97,7 +97,7 @@ func dataSourceMultiRegionAccessPoint() *schema.Resource {
 }
 
 func dataSourceMultiRegionAccessPointBlockRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn, err := ConnForMRAP(meta.(*conns.AWSClient))
+	conn, err := ConnForMRAP(ctx, meta.(*conns.AWSClient))
 
 	if err != nil {
 		return diag.FromErr(err)

@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package organizations_test
 
 import (
@@ -7,9 +10,9 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/organizations"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tforganizations "github.com/hashicorp/terraform-provider-aws/internal/service/organizations"
@@ -44,7 +47,7 @@ func testAccAccount_basic(t *testing.T) {
 	email := fmt.Sprintf("tf-acctest+%d@%s", rInt, orgsEmailDomain)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckOrganizationsEnabled(ctx, t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckOrganizationsEnabled(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, organizations.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckAccountDestroy(ctx),
@@ -83,7 +86,7 @@ func testAccAccount_CloseOnDeletion(t *testing.T) {
 	email := fmt.Sprintf("tf-acctest+%d@%s", rInt, orgsEmailDomain)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckOrganizationsEnabled(ctx, t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckOrganizationsEnabled(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, organizations.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckAccountDestroy(ctx),
@@ -125,7 +128,7 @@ func testAccAccount_ParentID(t *testing.T) {
 	parentIdResourceName2 := "aws_organizations_organizational_unit.test2"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckOrganizationsAccount(ctx, t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckOrganizationsEnabled(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, organizations.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckAccountDestroy(ctx),
@@ -164,7 +167,7 @@ func testAccAccount_Tags(t *testing.T) {
 	resourceName := "aws_organizations_account.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckOrganizationsAccount(ctx, t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckOrganizationsEnabled(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, organizations.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckAccountDestroy(ctx),
@@ -214,7 +217,7 @@ func testAccAccount_govCloud(t *testing.T) {
 	email := fmt.Sprintf("tf-acctest+%d@%s", rInt, orgsEmailDomain)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckOrganizationsEnabled(ctx, t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckOrganizationsEnabled(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, organizations.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckAccountDestroy(ctx),
@@ -233,7 +236,7 @@ func testAccAccount_govCloud(t *testing.T) {
 
 func testAccCheckAccountDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).OrganizationsConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).OrganizationsConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_organizations_account" {
@@ -268,7 +271,7 @@ func testAccCheckAccountExists(ctx context.Context, n string, v *organizations.A
 			return fmt.Errorf("No AWS Organizations Account ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).OrganizationsConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).OrganizationsConn(ctx)
 
 		output, err := tforganizations.FindAccountByID(ctx, conn, rs.Primary.ID)
 
@@ -303,16 +306,16 @@ resource "aws_organizations_account" "test" {
 
 func testAccAccountConfig_parentId1(name, email string) string {
 	return fmt.Sprintf(`
-resource "aws_organizations_organization" "test" {}
+data "aws_organizations_organization" "test" {}
 
 resource "aws_organizations_organizational_unit" "test1" {
   name      = "test1"
-  parent_id = aws_organizations_organization.test.roots[0].id
+  parent_id = data.aws_organizations_organization.test.roots[0].id
 }
 
 resource "aws_organizations_organizational_unit" "test2" {
   name      = "test2"
-  parent_id = aws_organizations_organization.test.roots[0].id
+  parent_id = data.aws_organizations_organization.test.roots[0].id
 }
 
 resource "aws_organizations_account" "test" {
@@ -326,16 +329,16 @@ resource "aws_organizations_account" "test" {
 
 func testAccAccountConfig_parentId2(name, email string) string {
 	return fmt.Sprintf(`
-resource "aws_organizations_organization" "test" {}
+data "aws_organizations_organization" "test" {}
 
 resource "aws_organizations_organizational_unit" "test1" {
   name      = "test1"
-  parent_id = aws_organizations_organization.test.roots[0].id
+  parent_id = data.aws_organizations_organization.test.roots[0].id
 }
 
 resource "aws_organizations_organizational_unit" "test2" {
   name      = "test2"
-  parent_id = aws_organizations_organization.test.roots[0].id
+  parent_id = data.aws_organizations_organization.test.roots[0].id
 }
 
 resource "aws_organizations_account" "test" {
@@ -349,8 +352,6 @@ resource "aws_organizations_account" "test" {
 
 func testAccAccountConfig_tags1(name, email, tagKey1, tagValue1 string) string {
 	return fmt.Sprintf(`
-resource "aws_organizations_organization" "test" {}
-
 resource "aws_organizations_account" "test" {
   name              = %[1]q
   email             = %[2]q
@@ -365,8 +366,6 @@ resource "aws_organizations_account" "test" {
 
 func testAccAccountConfig_tags2(name, email, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return fmt.Sprintf(`
-resource "aws_organizations_organization" "test" {}
-
 resource "aws_organizations_account" "test" {
   name              = %[1]q
   email             = %[2]q

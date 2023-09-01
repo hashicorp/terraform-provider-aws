@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package grafana
 
 import (
@@ -6,7 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/managedgrafana"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
@@ -18,7 +21,7 @@ func FindLicensedWorkspaceByID(ctx context.Context, conn *managedgrafana.Managed
 	}
 
 	if output.LicenseType == nil {
-		return nil, &resource.NotFoundError{}
+		return nil, &retry.NotFoundError{}
 	}
 
 	return output, nil
@@ -32,7 +35,7 @@ func FindWorkspaceByID(ctx context.Context, conn *managedgrafana.ManagedGrafana,
 	output, err := conn.DescribeWorkspaceWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, managedgrafana.ErrCodeResourceNotFoundException) {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -57,7 +60,7 @@ func FindSamlConfigurationByID(ctx context.Context, conn *managedgrafana.Managed
 	output, err := conn.DescribeWorkspaceAuthenticationWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, managedgrafana.ErrCodeResourceNotFoundException) {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -72,7 +75,7 @@ func FindSamlConfigurationByID(ctx context.Context, conn *managedgrafana.Managed
 	}
 
 	if status := aws.StringValue(output.Authentication.Saml.Status); status == managedgrafana.SamlConfigurationStatusNotConfigured {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			Message:     status,
 			LastRequest: input,
 		}
@@ -103,7 +106,7 @@ func FindRoleAssociationsByRoleAndWorkspaceID(ctx context.Context, conn *managed
 	})
 
 	if tfawserr.ErrCodeEquals(err, managedgrafana.ErrCodeResourceNotFoundException) {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}

@@ -68,27 +68,25 @@ resource "aws_lightsail_container_service" "default" {
   }
 }
 
+data "aws_iam_policy_document" "default" {
+  statement {
+    effect = "Allow"
+
+    principals {
+      type        = "AWS"
+      identifiers = [aws_lightsail_container_service.default.private_registry_access[0].ecr_image_puller_role[0].principal_arn]
+    }
+
+    actions = [
+      "ecr:BatchGetImage",
+      "ecr:GetDownloadUrlForLayer",
+    ]
+  }
+}
+
 resource "aws_ecr_repository_policy" "default" {
   repository = aws_ecr_repository.default.name
-
-  policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Sid": "AllowLightsailPull",
-      "Effect": "Allow",
-      "Principal": {
-        "AWS": "${aws_lightsail_container_service.default.private_registry_access[0].ecr_image_puller_role[0].principal_arn}"
-      },
-      "Action": [
-        "ecr:BatchGetImage",
-        "ecr:GetDownloadUrlForLayer"
-      ]
-    }
-  ]
-}
-EOF
+  policy     = data.aws_iam_policy_document.default.json
 }
 ```
 
@@ -98,7 +96,7 @@ EOF
 container service. For more information, see
 [Enabling and managing custom domains for your Amazon Lightsail container services](https://lightsail.aws.amazon.com/ls/docs/en_us/articles/amazon-lightsail-creating-container-services-certificates).
 
-The following arguments are supported:
+This argument supports the following arguments:
 
 * `name` - (Required) The name for the container service. Names must be of length 1 to 63, and be
   unique within each AWS Region in your Lightsail account.
@@ -131,9 +129,9 @@ The `ecr_image_puller_role` blocks supports the following arguments:
 
 * `is_active` - (Optional) A Boolean value that indicates whether to activate the role. The default is `false`.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - The Amazon Resource Name (ARN) of the container service.
 * `availability_zone` - The Availability Zone. Follows the format us-east-2a (case-sensitive).
@@ -162,8 +160,17 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Lightsail Container Service can be imported using the `name`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Lightsail Container Service using the `name`. For example:
 
-```shell
-$ terraform import aws_lightsail_container_service.my_container_service container-service-1
+```terraform
+import {
+  to = aws_lightsail_container_service.my_container_service
+  id = "container-service-1"
+}
+```
+
+Using `terraform import`, import Lightsail Container Service using the `name`. For example:
+
+```console
+% terraform import aws_lightsail_container_service.my_container_service container-service-1
 ```

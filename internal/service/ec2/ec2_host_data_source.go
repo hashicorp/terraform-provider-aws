@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ec2
 
 import (
@@ -16,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
+// @SDKDataSource("aws_ec2_host")
 func DataSourceHost() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceHostRead,
@@ -26,6 +30,10 @@ func DataSourceHost() *schema.Resource {
 
 		Schema: map[string]*schema.Schema{
 			"arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"asset_id": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -41,7 +49,7 @@ func DataSourceHost() *schema.Resource {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
-			"filter": DataSourceFiltersSchema(),
+			"filter": CustomFiltersSchema(),
 			"host_id": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -82,10 +90,23 @@ func DataSourceHost() *schema.Resource {
 
 func dataSourceHostRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	host, err := FindHostByIDAndFilters(ctx, conn, d.Get("host_id").(string), BuildFiltersDataSource(d.Get("filter").(*schema.Set)))
+	input := &ec2.DescribeHostsInput{
+		Filter: BuildCustomFilterList(d.Get("filter").(*schema.Set)),
+	}
+
+	if v, ok := d.GetOk("host_id"); ok {
+		input.HostIds = aws.StringSlice([]string{v.(string)})
+	}
+
+	if len(input.Filter) == 0 {
+		// Don't send an empty filters list; the EC2 API won't accept it.
+		input.Filter = nil
+	}
+
+	host, err := FindHost(ctx, conn, input)
 
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, tfresource.SingularDataSourceFindError("EC2 Host", err))
@@ -101,6 +122,7 @@ func dataSourceHostRead(ctx context.Context, d *schema.ResourceData, meta interf
 		Resource:  fmt.Sprintf("dedicated-host/%s", d.Id()),
 	}.String()
 	d.Set("arn", arn)
+	d.Set("asset_id", host.AssetId)
 	d.Set("auto_placement", host.AutoPlacement)
 	d.Set("availability_zone", host.AvailabilityZone)
 	d.Set("cores", host.HostProperties.Cores)
@@ -113,7 +135,7 @@ func dataSourceHostRead(ctx context.Context, d *schema.ResourceData, meta interf
 	d.Set("sockets", host.HostProperties.Sockets)
 	d.Set("total_vcpus", host.HostProperties.TotalVCpus)
 
-	if err := d.Set("tags", KeyValueTags(host.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+	if err := d.Set("tags", KeyValueTags(ctx, host.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 

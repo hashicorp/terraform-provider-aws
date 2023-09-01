@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ec2
 
 import (
@@ -16,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @SDKResource("aws_ec2_instance_state")
 func ResourceInstanceState() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceInstanceStateCreate,
@@ -54,7 +58,7 @@ func ResourceInstanceState() *schema.Resource {
 }
 
 func resourceInstanceStateCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 	instanceId := d.Get("instance_id").(string)
 
 	instance, instanceErr := WaitInstanceReadyWithContext(ctx, conn, instanceId, d.Timeout(schema.TimeoutCreate))
@@ -75,9 +79,9 @@ func resourceInstanceStateCreate(ctx context.Context, d *schema.ResourceData, me
 }
 
 func resourceInstanceStateRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
-	state, err := FindInstanceStateById(ctx, conn, d.Id())
+	state, err := FindInstanceStateByID(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		create.LogNotFoundRemoveState(names.EC2, create.ErrActionReading, ResInstanceState, d.Id())
@@ -97,7 +101,7 @@ func resourceInstanceStateRead(ctx context.Context, d *schema.ResourceData, meta
 }
 
 func resourceInstanceStateUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	instance, instanceErr := WaitInstanceReadyWithContext(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate))
 

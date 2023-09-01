@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package appmesh
 
 import (
@@ -381,15 +384,14 @@ func expandHTTPRoute(vHttpRoute []interface{}) *appmesh.HttpRoute {
 		if vMethod, ok := mHttpRouteMatch["method"].(string); ok && vMethod != "" {
 			httpRouteMatch.Method = aws.String(vMethod)
 		}
+		if vPort, ok := mHttpRouteMatch["port"].(int); ok && vPort > 0 {
+			httpRouteMatch.Port = aws.Int64(int64(vPort))
+		}
 		if vPrefix, ok := mHttpRouteMatch["prefix"].(string); ok && vPrefix != "" {
 			httpRouteMatch.Prefix = aws.String(vPrefix)
 		}
 		if vScheme, ok := mHttpRouteMatch["scheme"].(string); ok && vScheme != "" {
 			httpRouteMatch.Scheme = aws.String(vScheme)
-		}
-
-		if vPort, ok := mHttpRouteMatch["port"].(int); ok && vPort > 0 {
-			httpRouteMatch.Port = aws.Int64(int64(vPort))
 		}
 
 		if vHttpRouteHeaders, ok := mHttpRouteMatch["header"].(*schema.Set); ok && vHttpRouteHeaders.Len() > 0 {
@@ -443,6 +445,49 @@ func expandHTTPRoute(vHttpRoute []interface{}) *appmesh.HttpRoute {
 			}
 
 			httpRouteMatch.Headers = httpRouteHeaders
+		}
+
+		if vHttpRoutePath, ok := mHttpRouteMatch["path"].([]interface{}); ok && len(vHttpRoutePath) > 0 && vHttpRoutePath[0] != nil {
+			httpRoutePath := &appmesh.HttpPathMatch{}
+
+			mHttpRoutePath := vHttpRoutePath[0].(map[string]interface{})
+
+			if vExact, ok := mHttpRoutePath["exact"].(string); ok && vExact != "" {
+				httpRoutePath.Exact = aws.String(vExact)
+			}
+			if vRegex, ok := mHttpRoutePath["regex"].(string); ok && vRegex != "" {
+				httpRoutePath.Regex = aws.String(vRegex)
+			}
+
+			httpRouteMatch.Path = httpRoutePath
+		}
+
+		if vHttpRouteQueryParameters, ok := mHttpRouteMatch["query_parameter"].(*schema.Set); ok && vHttpRouteQueryParameters.Len() > 0 {
+			httpRouteQueryParameters := []*appmesh.HttpQueryParameter{}
+
+			for _, vHttpRouteQueryParameter := range vHttpRouteQueryParameters.List() {
+				httpRouteQueryParameter := &appmesh.HttpQueryParameter{}
+
+				mHttpRouteQueryParameter := vHttpRouteQueryParameter.(map[string]interface{})
+
+				if vName, ok := mHttpRouteQueryParameter["name"].(string); ok && vName != "" {
+					httpRouteQueryParameter.Name = aws.String(vName)
+				}
+
+				if vMatch, ok := mHttpRouteQueryParameter["match"].([]interface{}); ok && len(vMatch) > 0 && vMatch[0] != nil {
+					httpRouteQueryParameter.Match = &appmesh.QueryParameterMatch{}
+
+					mMatch := vMatch[0].(map[string]interface{})
+
+					if vExact, ok := mMatch["exact"].(string); ok && vExact != "" {
+						httpRouteQueryParameter.Match.Exact = aws.String(vExact)
+					}
+				}
+
+				httpRouteQueryParameters = append(httpRouteQueryParameters, httpRouteQueryParameter)
+			}
+
+			httpRouteMatch.QueryParameters = httpRouteQueryParameters
 		}
 
 		httpRoute.Match = httpRouteMatch
@@ -977,6 +1022,30 @@ func expandVirtualNodeSpec(vSpec []interface{}) *appmesh.VirtualNodeSpec {
 
 				mFile := vFile[0].(map[string]interface{})
 
+				if vFormat, ok := mFile["format"].([]interface{}); ok && len(vFormat) > 0 && vFormat[0] != nil {
+					format := &appmesh.LoggingFormat{}
+
+					mFormat := vFormat[0].(map[string]interface{})
+
+					if vJsonFormatRefs, ok := mFormat["json"].([]interface{}); ok && len(vJsonFormatRefs) > 0 {
+						jsonFormatRefs := []*appmesh.JsonFormatRef{}
+						for _, vJsonFormatRef := range vJsonFormatRefs {
+							mJsonFormatRef := &appmesh.JsonFormatRef{
+								Key:   aws.String(vJsonFormatRef.(map[string]interface{})["key"].(string)),
+								Value: aws.String(vJsonFormatRef.(map[string]interface{})["value"].(string)),
+							}
+							jsonFormatRefs = append(jsonFormatRefs, mJsonFormatRef)
+						}
+						format.Json = jsonFormatRefs
+					}
+
+					if vText, ok := mFormat["text"].(string); ok && vText != "" {
+						format.Text = aws.String(vText)
+					}
+
+					file.Format = format
+				}
+
 				if vPath, ok := mFile["path"].(string); ok && vPath != "" {
 					file.Path = aws.String(vPath)
 				}
@@ -1029,6 +1098,14 @@ func expandVirtualNodeSpec(vSpec []interface{}) *appmesh.VirtualNodeSpec {
 
 			if vHostname, ok := mDns["hostname"].(string); ok && vHostname != "" {
 				dns.Hostname = aws.String(vHostname)
+			}
+
+			if vIPPreference, ok := mDns["ip_preference"].(string); ok && vIPPreference != "" {
+				dns.IpPreference = aws.String(vIPPreference)
+			}
+
+			if vResponseType, ok := mDns["response_type"].(string); ok && vResponseType != "" {
+				dns.ResponseType = aws.String(vResponseType)
 			}
 
 			serviceDiscovery.Dns = dns
@@ -1382,13 +1459,44 @@ func flattenHTTPRoute(httpRoute *appmesh.HttpRoute) []interface{} {
 			vHttpRouteHeaders = append(vHttpRouteHeaders, mHttpRouteHeader)
 		}
 
+		vHttpRoutePath := []interface{}{}
+
+		if httpRoutePath := httpRouteMatch.Path; httpRoutePath != nil {
+			mHttpRoutePath := map[string]interface{}{
+				"exact": aws.StringValue(httpRoutePath.Exact),
+				"regex": aws.StringValue(httpRoutePath.Regex),
+			}
+
+			vHttpRoutePath = []interface{}{mHttpRoutePath}
+		}
+
+		vHttpRouteQueryParameters := []interface{}{}
+
+		for _, httpRouteQueryParameter := range httpRouteMatch.QueryParameters {
+			mHttpRouteQueryParameter := map[string]interface{}{
+				"name": aws.StringValue(httpRouteQueryParameter.Name),
+			}
+
+			if match := httpRouteQueryParameter.Match; match != nil {
+				mMatch := map[string]interface{}{
+					"exact": aws.StringValue(match.Exact),
+				}
+
+				mHttpRouteQueryParameter["match"] = []interface{}{mMatch}
+			}
+
+			vHttpRouteQueryParameters = append(vHttpRouteQueryParameters, mHttpRouteQueryParameter)
+		}
+
 		mHttpRoute["match"] = []interface{}{
 			map[string]interface{}{
-				"header": vHttpRouteHeaders,
-				"method": aws.StringValue(httpRouteMatch.Method),
-				"prefix": aws.StringValue(httpRouteMatch.Prefix),
-				"scheme": aws.StringValue(httpRouteMatch.Scheme),
-				"port":   int(aws.Int64Value(httpRouteMatch.Port)),
+				"header":          vHttpRouteHeaders,
+				"method":          aws.StringValue(httpRouteMatch.Method),
+				"path":            vHttpRoutePath,
+				"port":            int(aws.Int64Value(httpRouteMatch.Port)),
+				"prefix":          aws.StringValue(httpRouteMatch.Prefix),
+				"query_parameter": vHttpRouteQueryParameters,
+				"scheme":          aws.StringValue(httpRouteMatch.Scheme),
 			},
 		}
 	}
@@ -1720,11 +1828,36 @@ func flattenVirtualNodeSpec(spec *appmesh.VirtualNodeSpec) []interface{} {
 			mAccessLog := map[string]interface{}{}
 
 			if file := accessLog.File; file != nil {
-				mAccessLog["file"] = []interface{}{
-					map[string]interface{}{
-						"path": aws.StringValue(file.Path),
-					},
+				mFile := map[string]interface{}{}
+
+				if format := file.Format; format != nil {
+					mFormat := map[string]interface{}{}
+
+					if jsons := format.Json; jsons != nil {
+						vJsons := []interface{}{}
+
+						for _, j := range format.Json {
+							mJson := map[string]interface{}{
+								"key":   aws.StringValue(j.Key),
+								"value": aws.StringValue(j.Value),
+							}
+
+							vJsons = append(vJsons, mJson)
+						}
+
+						mFormat["json"] = vJsons
+					}
+
+					if text := format.Text; text != nil {
+						mFormat["text"] = aws.StringValue(text)
+					}
+
+					mFile["format"] = []interface{}{mFormat}
 				}
+
+				mFile["path"] = aws.StringValue(file.Path)
+
+				mAccessLog["file"] = []interface{}{mFile}
 			}
 
 			mLogging["access_log"] = []interface{}{mAccessLog}
@@ -1755,7 +1888,9 @@ func flattenVirtualNodeSpec(spec *appmesh.VirtualNodeSpec) []interface{} {
 		if dns := serviceDiscovery.Dns; dns != nil {
 			mServiceDiscovery["dns"] = []interface{}{
 				map[string]interface{}{
-					"hostname": aws.StringValue(dns.Hostname),
+					"hostname":      aws.StringValue(dns.Hostname),
+					"ip_preference": aws.StringValue(dns.IpPreference),
+					"response_type": aws.StringValue(dns.ResponseType),
 				},
 			}
 		}

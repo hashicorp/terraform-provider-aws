@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ec2_test
 
 import (
@@ -6,9 +9,9 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/ec2"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
@@ -22,11 +25,11 @@ func TestAccVPCEndpointConnectionAccepter_crossAccount(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
+			acctest.PreCheck(ctx, t)
 			acctest.PreCheckAlternateAccount(t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
-		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(t),
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
 		CheckDestroy:             testAccCheckVPCEndpointConnectionAccepterDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
@@ -47,7 +50,7 @@ func TestAccVPCEndpointConnectionAccepter_crossAccount(t *testing.T) {
 
 func testAccCheckVPCEndpointConnectionAccepterDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_vpc_endpoint_connection_accepter" {
@@ -187,14 +190,17 @@ resource "aws_subnet" "test_alternate3" {
   }
 }
 
-data "aws_subnet_ids" "alternate_intersect" {
+data "aws_subnets" "alternate_intersect" {
   provider = "awsalternate"
-
-  vpc_id = aws_vpc.test_alternate.id
 
   filter {
     name   = "availabilityZone"
     values = aws_vpc_endpoint_service.test.availability_zones
+  }
+
+  filter {
+    name   = "vpc-id"
+    values = [aws_vpc.test_alternate.id]
   }
 }
 
@@ -246,7 +252,7 @@ resource "aws_vpc_endpoint" "test" {
 
   vpc_id              = aws_vpc.test_alternate.id
   service_name        = aws_vpc_endpoint_service.test.service_name
-  subnet_ids          = data.aws_subnet_ids.alternate_intersect.ids
+  subnet_ids          = data.aws_subnets.alternate_intersect.ids
   vpc_endpoint_type   = "Interface"
   private_dns_enabled = false
 

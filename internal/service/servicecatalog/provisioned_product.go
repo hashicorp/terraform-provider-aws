@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package servicecatalog
 
 import (
@@ -11,7 +14,9 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -20,14 +25,18 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @SDKResource("aws_servicecatalog_provisioned_product", name="Provisioned Product")
+// @Tags
 func ResourceProvisionedProduct() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceProvisionedProductCreate,
 		ReadWithoutTimeout:   resourceProvisionedProductRead,
 		UpdateWithoutTimeout: resourceProvisionedProductUpdate,
 		DeleteWithoutTimeout: resourceProvisionedProductDelete,
+
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
@@ -244,28 +253,39 @@ func ResourceProvisionedProduct() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			"type": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
 		},
 
-		CustomizeDiff: verify.SetTagsDiff,
+		CustomizeDiff: customdiff.All(
+			refreshOutputsDiff,
+			verify.SetTagsDiff,
+		),
 	}
+}
+
+func refreshOutputsDiff(_ context.Context, diff *schema.ResourceDiff, meta interface{}) error {
+	if diff.HasChanges("provisioning_parameters", "provisioning_artifact_id", "provisioning_artifact_name") {
+		if err := diff.SetNewComputed("outputs"); err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
 
 func resourceProvisionedProductCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ServiceCatalogConn()
-
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	conn := meta.(*conns.AWSClient).ServiceCatalogConn(ctx)
 
 	input := &servicecatalog.ProvisionProductInput{
-		ProvisionToken:         aws.String(resource.UniqueId()),
+		ProvisionToken:         aws.String(id.UniqueId()),
 		ProvisionedProductName: aws.String(d.Get("name").(string)),
+		Tags:                   getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("accept_language"); ok {
@@ -308,27 +328,23 @@ func resourceProvisionedProductCreate(ctx context.Context, d *schema.ResourceDat
 		input.ProvisioningPreferences = expandProvisioningPreferences(v.([]interface{})[0].(map[string]interface{}))
 	}
 
-	if len(tags) > 0 {
-		input.Tags = Tags(tags.IgnoreAWS())
-	}
-
 	var output *servicecatalog.ProvisionProductOutput
 
-	err := resource.RetryContext(ctx, d.Timeout(schema.TimeoutCreate), func() *resource.RetryError {
+	err := retry.RetryContext(ctx, d.Timeout(schema.TimeoutCreate), func() *retry.RetryError {
 		var err error
 
 		output, err = conn.ProvisionProductWithContext(ctx, input)
 
 		if tfawserr.ErrMessageContains(err, servicecatalog.ErrCodeInvalidParametersException, "profile does not exist") {
-			return resource.RetryableError(err)
+			return retry.RetryableError(err)
 		}
 
 		if tfawserr.ErrCodeEquals(err, servicecatalog.ErrCodeResourceNotFoundException) {
-			return resource.RetryableError(err)
+			return retry.RetryableError(err)
 		}
 
 		if err != nil {
-			return resource.NonRetryableError(err)
+			return retry.NonRetryableError(err)
 		}
 
 		return nil
@@ -361,9 +377,7 @@ func resourceProvisionedProductCreate(ctx context.Context, d *schema.ResourceDat
 
 func resourceProvisionedProductRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ServiceCatalogConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).ServiceCatalogConn(ctx)
 
 	// There are two API operations for getting information about provisioned products:
 	// 1. DescribeProvisionedProduct (used in WaitProvisionedProductReady) and
@@ -465,27 +479,17 @@ func resourceProvisionedProductRead(ctx context.Context, d *schema.ResourceData,
 
 	d.Set("path_id", recordOutput.RecordDetail.PathId)
 
-	// tags are only available from the record tied to the provisioned product
-	tags := recordKeyValueTags(recordOutput.RecordDetail.RecordTags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
-	}
+	setTagsOut(ctx, Tags(recordKeyValueTags(ctx, recordOutput.RecordDetail.RecordTags)))
 
 	return diags
 }
 
 func resourceProvisionedProductUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ServiceCatalogConn()
+	conn := meta.(*conns.AWSClient).ServiceCatalogConn(ctx)
 
 	input := &servicecatalog.UpdateProvisionedProductInput{
-		UpdateToken:          aws.String(resource.UniqueId()),
+		UpdateToken:          aws.String(id.UniqueId()),
 		ProvisionedProductId: aws.String(d.Id()),
 	}
 
@@ -499,16 +503,21 @@ func resourceProvisionedProductUpdate(ctx context.Context, d *schema.ResourceDat
 		input.PathName = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("product_id"); ok {
-		input.ProductId = aws.String(v.(string))
-	} else if v, ok := d.GetOk("product_name"); ok {
+	// check product_name first. product_id is optional/computed and will always be
+	// set by the time update is called
+	if v, ok := d.GetOk("product_name"); ok {
 		input.ProductName = aws.String(v.(string))
+	} else if v, ok := d.GetOk("product_id"); ok {
+		input.ProductId = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("provisioning_artifact_id"); ok {
-		input.ProvisioningArtifactId = aws.String(v.(string))
-	} else if v, ok := d.GetOk("provisioning_artifact_name"); ok {
+	// check provisioning_artifact_name first. provisioning_artrifact_id is optional/computed
+	// and will always be set by the time update is called
+	// Reference: https://github.com/hashicorp/terraform-provider-aws/issues/26271
+	if v, ok := d.GetOk("provisioning_artifact_name"); ok {
 		input.ProvisioningArtifactName = aws.String(v.(string))
+	} else if v, ok := d.GetOk("provisioning_artifact_id"); ok {
+		input.ProvisioningArtifactId = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("provisioning_parameters"); ok && len(v.([]interface{})) > 0 {
@@ -520,25 +529,18 @@ func resourceProvisionedProductUpdate(ctx context.Context, d *schema.ResourceDat
 	}
 
 	if d.HasChanges("tags", "tags_all") {
-		defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-		tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
-
-		if len(tags) > 0 {
-			input.Tags = Tags(tags.IgnoreAWS())
-		} else {
-			input.Tags = nil
-		}
+		input.Tags = getTagsIn(ctx)
 	}
 
-	err := resource.RetryContext(ctx, d.Timeout(schema.TimeoutUpdate), func() *resource.RetryError {
+	err := retry.RetryContext(ctx, d.Timeout(schema.TimeoutUpdate), func() *retry.RetryError {
 		_, err := conn.UpdateProvisionedProductWithContext(ctx, input)
 
 		if tfawserr.ErrMessageContains(err, servicecatalog.ErrCodeInvalidParametersException, "profile does not exist") {
-			return resource.RetryableError(err)
+			return retry.RetryableError(err)
 		}
 
 		if err != nil {
-			return resource.NonRetryableError(err)
+			return retry.NonRetryableError(err)
 		}
 
 		return nil
@@ -561,10 +563,10 @@ func resourceProvisionedProductUpdate(ctx context.Context, d *schema.ResourceDat
 
 func resourceProvisionedProductDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ServiceCatalogConn()
+	conn := meta.(*conns.AWSClient).ServiceCatalogConn(ctx)
 
 	input := &servicecatalog.TerminateProvisionedProductInput{
-		TerminateToken:       aws.String(resource.UniqueId()),
+		TerminateToken:       aws.String(id.UniqueId()),
 		ProvisionedProductId: aws.String(d.Id()),
 	}
 
@@ -654,24 +656,24 @@ func expandProvisioningPreferences(tfMap map[string]interface{}) *servicecatalog
 
 	apiObject := &servicecatalog.ProvisioningPreferences{}
 
-	if v, ok := tfMap["account"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["accounts"].([]interface{}); ok && len(v) > 0 {
 		apiObject.StackSetAccounts = flex.ExpandStringList(v)
 	}
 
-	if v, ok := tfMap["failure_tolerance_count"].(int64); ok && v != 0 {
-		apiObject.StackSetFailureToleranceCount = aws.Int64(v)
+	if v, ok := tfMap["failure_tolerance_count"].(int); ok && v != 0 {
+		apiObject.StackSetFailureToleranceCount = aws.Int64(int64(v))
 	}
 
-	if v, ok := tfMap["failure_tolerance_percentage"].(int64); ok && v != 0 {
-		apiObject.StackSetFailureTolerancePercentage = aws.Int64(v)
+	if v, ok := tfMap["failure_tolerance_percentage"].(int); ok && v != 0 {
+		apiObject.StackSetFailureTolerancePercentage = aws.Int64(int64(v))
 	}
 
-	if v, ok := tfMap["max_concurrency_count"].(int64); ok && v != 0 {
-		apiObject.StackSetMaxConcurrencyCount = aws.Int64(v)
+	if v, ok := tfMap["max_concurrency_count"].(int); ok && v != 0 {
+		apiObject.StackSetMaxConcurrencyCount = aws.Int64(int64(v))
 	}
 
-	if v, ok := tfMap["max_concurrency_percentage"].(int64); ok && v != 0 {
-		apiObject.StackSetMaxConcurrencyPercentage = aws.Int64(v)
+	if v, ok := tfMap["max_concurrency_percentage"].(int); ok && v != 0 {
+		apiObject.StackSetMaxConcurrencyPercentage = aws.Int64(int64(v))
 	}
 
 	if v, ok := tfMap["regions"].([]interface{}); ok && len(v) > 0 {
@@ -736,24 +738,24 @@ func expandUpdateProvisioningPreferences(tfMap map[string]interface{}) *servicec
 
 	apiObject := &servicecatalog.UpdateProvisioningPreferences{}
 
-	if v, ok := tfMap["account"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["accounts"].([]interface{}); ok && len(v) > 0 {
 		apiObject.StackSetAccounts = flex.ExpandStringList(v)
 	}
 
-	if v, ok := tfMap["failure_tolerance_count"].(int64); ok && v != 0 {
-		apiObject.StackSetFailureToleranceCount = aws.Int64(v)
+	if v, ok := tfMap["failure_tolerance_count"].(int); ok && v != 0 {
+		apiObject.StackSetFailureToleranceCount = aws.Int64(int64(v))
 	}
 
-	if v, ok := tfMap["failure_tolerance_percentage"].(int64); ok && v != 0 {
-		apiObject.StackSetFailureTolerancePercentage = aws.Int64(v)
+	if v, ok := tfMap["failure_tolerance_percentage"].(int); ok && v != 0 {
+		apiObject.StackSetFailureTolerancePercentage = aws.Int64(int64(v))
 	}
 
-	if v, ok := tfMap["max_concurrency_count"].(int64); ok && v != 0 {
-		apiObject.StackSetMaxConcurrencyCount = aws.Int64(v)
+	if v, ok := tfMap["max_concurrency_count"].(int); ok && v != 0 {
+		apiObject.StackSetMaxConcurrencyCount = aws.Int64(int64(v))
 	}
 
-	if v, ok := tfMap["max_concurrency_percentage"].(int64); ok && v != 0 {
-		apiObject.StackSetMaxConcurrencyPercentage = aws.Int64(v)
+	if v, ok := tfMap["max_concurrency_percentage"].(int); ok && v != 0 {
+		apiObject.StackSetMaxConcurrencyPercentage = aws.Int64(int64(v))
 	}
 
 	if v, ok := tfMap["regions"].([]interface{}); ok && len(v) > 0 {

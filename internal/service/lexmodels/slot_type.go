@@ -1,11 +1,14 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package lexmodels
 
 import (
 	"context"
 	"log"
-	"regexp"
 	"time"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/lexmodelbuildingservice"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
@@ -25,6 +28,7 @@ const (
 	slotTypeDeleteTimeout = 5 * time.Minute
 )
 
+// @SDKResource("aws_lex_slot_type")
 func ResourceSlotType() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceSlotTypeCreate,
@@ -95,7 +99,7 @@ func ResourceSlotType() *schema.Resource {
 				ForceNew: true,
 				ValidateFunc: validation.All(
 					validation.StringLenBetween(1, 100),
-					validation.StringMatch(regexp.MustCompile(`^((AMAZON\.)_?|[A-Za-z]_?)+`), ""),
+					validation.StringMatch(regexache.MustCompile(`^((AMAZON\.)_?|[A-Za-z]_?)+`), ""),
 				),
 			},
 			"value_selection_strategy": {
@@ -136,7 +140,7 @@ func hasSlotTypeConfigChanges(d verify.ResourceDiffer) bool {
 
 func resourceSlotTypeCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).LexModelsConn()
+	conn := meta.(*conns.AWSClient).LexModelsConn(ctx)
 
 	name := d.Get("name").(string)
 	input := &lexmodelbuildingservice.PutSlotTypeInput{
@@ -151,7 +155,7 @@ func resourceSlotTypeCreate(ctx context.Context, d *schema.ResourceData, meta in
 	}
 
 	var output *lexmodelbuildingservice.PutSlotTypeOutput
-	_, err := tfresource.RetryWhenAWSErrCodeEqualsContext(ctx, d.Timeout(schema.TimeoutCreate), func() (interface{}, error) {
+	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, d.Timeout(schema.TimeoutCreate), func() (interface{}, error) {
 		var err error
 
 		if output != nil {
@@ -173,7 +177,7 @@ func resourceSlotTypeCreate(ctx context.Context, d *schema.ResourceData, meta in
 
 func resourceSlotTypeRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).LexModelsConn()
+	conn := meta.(*conns.AWSClient).LexModelsConn(ctx)
 
 	output, err := FindSlotTypeVersionByName(ctx, conn, d.Id(), SlotTypeVersionLatest)
 
@@ -211,7 +215,7 @@ func resourceSlotTypeRead(ctx context.Context, d *schema.ResourceData, meta inte
 
 func resourceSlotTypeUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).LexModelsConn()
+	conn := meta.(*conns.AWSClient).LexModelsConn(ctx)
 
 	input := &lexmodelbuildingservice.PutSlotTypeInput{
 		Checksum:               aws.String(d.Get("checksum").(string)),
@@ -225,7 +229,7 @@ func resourceSlotTypeUpdate(ctx context.Context, d *schema.ResourceData, meta in
 		input.EnumerationValues = expandEnumerationValues(v.(*schema.Set).List())
 	}
 
-	_, err := tfresource.RetryWhenAWSErrCodeEqualsContext(ctx, d.Timeout(schema.TimeoutUpdate), func() (interface{}, error) {
+	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, d.Timeout(schema.TimeoutUpdate), func() (interface{}, error) {
 		return conn.PutSlotTypeWithContext(ctx, input)
 	}, lexmodelbuildingservice.ErrCodeConflictException)
 
@@ -238,14 +242,14 @@ func resourceSlotTypeUpdate(ctx context.Context, d *schema.ResourceData, meta in
 
 func resourceSlotTypeDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).LexModelsConn()
+	conn := meta.(*conns.AWSClient).LexModelsConn(ctx)
 
 	input := &lexmodelbuildingservice.DeleteSlotTypeInput{
 		Name: aws.String(d.Id()),
 	}
 
 	log.Printf("[DEBUG] Deleting Lex Slot Type: (%s)", d.Id())
-	_, err := tfresource.RetryWhenAWSErrCodeEqualsContext(ctx, d.Timeout(schema.TimeoutDelete), func() (interface{}, error) {
+	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, d.Timeout(schema.TimeoutDelete), func() (interface{}, error) {
 		return conn.DeleteSlotTypeWithContext(ctx, input)
 	}, lexmodelbuildingservice.ErrCodeConflictException)
 

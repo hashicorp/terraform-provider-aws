@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package detective
 
 import (
@@ -7,7 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/detective"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 )
 
 func FindGraphByARN(ctx context.Context, conn *detective.Detective, arn string) (*detective.Graph, error) {
@@ -32,7 +35,7 @@ func FindGraphByARN(ctx context.Context, conn *detective.Detective, arn string) 
 		return !lastPage
 	})
 	if tfawserr.ErrCodeEquals(err, detective.ErrCodeResourceNotFoundException) {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -42,7 +45,7 @@ func FindGraphByARN(ctx context.Context, conn *detective.Detective, arn string) 
 	}
 
 	if result == nil {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			Message:     fmt.Sprintf("No detective graph with arn %q", arn),
 			LastRequest: input,
 		}
@@ -66,7 +69,7 @@ func FindInvitationByGraphARN(ctx context.Context, conn *detective.Detective, gr
 		return !lastPage
 	})
 	if tfawserr.ErrCodeEquals(err, detective.ErrCodeResourceNotFoundException) {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -76,7 +79,7 @@ func FindInvitationByGraphARN(ctx context.Context, conn *detective.Detective, gr
 	}
 
 	if result == nil {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			Message:     fmt.Sprintf("No member found with arn %q ", graphARN),
 			LastRequest: input,
 		}
@@ -111,7 +114,7 @@ func FindMemberByGraphARNAndAccountID(ctx context.Context, conn *detective.Detec
 		return !lastPage
 	})
 	if tfawserr.ErrCodeEquals(err, detective.ErrCodeResourceNotFoundException) {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -121,7 +124,7 @@ func FindMemberByGraphARNAndAccountID(ctx context.Context, conn *detective.Detec
 	}
 
 	if result == nil {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			Message:     fmt.Sprintf("No member found with arn %q and accountID %q", graphARN, accountID),
 			LastRequest: input,
 		}

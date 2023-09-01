@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package sqs
 
 import (
@@ -6,7 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/sqs"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
@@ -19,7 +22,7 @@ func FindQueueAttributesByURL(ctx context.Context, conn *sqs.SQS, url string) (m
 	output, err := conn.GetQueueAttributesWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, sqs.ErrCodeQueueDoesNotExist) {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -45,7 +48,7 @@ func FindQueueAttributeByURL(ctx context.Context, conn *sqs.SQS, url string, att
 	output, err := conn.GetQueueAttributesWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, sqs.ErrCodeQueueDoesNotExist) {
-		return "", &resource.NotFoundError{
+		return "", &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}

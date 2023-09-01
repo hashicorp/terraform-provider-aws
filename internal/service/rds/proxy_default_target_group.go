@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package rds
 
 import (
@@ -9,7 +12,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/rds"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -17,6 +20,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 )
 
+// @SDKResource("aws_db_proxy_default_target_group")
 func ResourceProxyDefaultTargetGroup() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceProxyDefaultTargetGroupCreate,
@@ -97,10 +101,9 @@ func ResourceProxyDefaultTargetGroup() *schema.Resource {
 
 func resourceProxyDefaultTargetGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).RDSConn()
+	conn := meta.(*conns.AWSClient).RDSConn(ctx)
 
 	tg, err := resourceProxyDefaultTargetGroupGet(ctx, conn, d.Id())
-
 	if err != nil {
 		if tfawserr.ErrCodeEquals(err, rds.ErrCodeDBProxyNotFoundFault) {
 			log.Printf("[WARN] DB Proxy (%s) not found, removing from state", d.Id())
@@ -137,7 +140,7 @@ func resourceProxyDefaultTargetGroupUpdate(ctx context.Context, d *schema.Resour
 
 func resourceProxyDefaultTargetGroupCreateUpdate(ctx context.Context, d *schema.ResourceData, timeout string, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).RDSConn()
+	conn := meta.(*conns.AWSClient).RDSConn(ctx)
 
 	params := rds.ModifyDBProxyTargetGroupInput{
 		DBProxyName:     aws.String(d.Get("db_proxy_name").(string)),
@@ -152,7 +155,7 @@ func resourceProxyDefaultTargetGroupCreateUpdate(ctx context.Context, d *schema.
 		return sdkdiag.AppendErrorf(diags, "updating RDS DB Proxy (%s) default target group: %s", d.Id(), err)
 	}
 
-	stateChangeConf := &resource.StateChangeConf{
+	stateChangeConf := &retry.StateChangeConf{
 		Pending: []string{rds.DBProxyStatusModifying},
 		Target:  []string{rds.DBProxyStatusAvailable},
 		Refresh: resourceProxyDefaultTargetGroupRefreshFunc(ctx, conn, d.Id()),
@@ -214,7 +217,6 @@ func resourceProxyDefaultTargetGroupGet(ctx context.Context, conn *rds.RDS, prox
 		}
 		return !lastPage
 	})
-
 	if err != nil {
 		return nil, err
 	}
@@ -223,10 +225,9 @@ func resourceProxyDefaultTargetGroupGet(ctx context.Context, conn *rds.RDS, prox
 	return defaultTargetGroup, nil
 }
 
-func resourceProxyDefaultTargetGroupRefreshFunc(ctx context.Context, conn *rds.RDS, proxyName string) resource.StateRefreshFunc {
+func resourceProxyDefaultTargetGroupRefreshFunc(ctx context.Context, conn *rds.RDS, proxyName string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		tg, err := resourceProxyDefaultTargetGroupGet(ctx, conn, proxyName)
-
 		if err != nil {
 			if tfawserr.ErrCodeEquals(err, rds.ErrCodeDBProxyNotFoundFault) {
 				return 42, "", nil

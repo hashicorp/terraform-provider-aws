@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package servicecatalog
 
 import (
@@ -9,7 +12,8 @@ import (
 	"github.com/aws/aws-sdk-go/service/servicecatalog"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -17,6 +21,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
+// @SDKResource("aws_servicecatalog_provisioning_artifact")
 func ResourceProvisioningArtifact() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceProvisioningArtifactCreate,
@@ -76,6 +81,10 @@ func ResourceProvisioningArtifact() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
+			"provisioning_artifact_id": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"template_physical_id": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -106,7 +115,7 @@ func ResourceProvisioningArtifact() *schema.Resource {
 
 func resourceProvisioningArtifactCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ServiceCatalogConn()
+	conn := meta.(*conns.AWSClient).ServiceCatalogConn(ctx)
 
 	parameters := make(map[string]interface{})
 	parameters["description"] = d.Get("description")
@@ -117,7 +126,7 @@ func resourceProvisioningArtifactCreate(ctx context.Context, d *schema.ResourceD
 	parameters["type"] = d.Get("type")
 
 	input := &servicecatalog.CreateProvisioningArtifactInput{
-		IdempotencyToken: aws.String(resource.UniqueId()),
+		IdempotencyToken: aws.String(id.UniqueId()),
 		Parameters:       expandProvisioningArtifactParameters(parameters),
 		ProductId:        aws.String(d.Get("product_id").(string)),
 	}
@@ -127,17 +136,17 @@ func resourceProvisioningArtifactCreate(ctx context.Context, d *schema.ResourceD
 	}
 
 	var output *servicecatalog.CreateProvisioningArtifactOutput
-	err := resource.RetryContext(ctx, d.Timeout(schema.TimeoutCreate), func() *resource.RetryError {
+	err := retry.RetryContext(ctx, d.Timeout(schema.TimeoutCreate), func() *retry.RetryError {
 		var err error
 
 		output, err = conn.CreateProvisioningArtifactWithContext(ctx, input)
 
 		if tfawserr.ErrMessageContains(err, servicecatalog.ErrCodeInvalidParametersException, "profile does not exist") {
-			return resource.RetryableError(err)
+			return retry.RetryableError(err)
 		}
 
 		if err != nil {
-			return resource.NonRetryableError(err)
+			return retry.NonRetryableError(err)
 		}
 
 		return nil
@@ -165,7 +174,7 @@ func resourceProvisioningArtifactCreate(ctx context.Context, d *schema.ResourceD
 
 func resourceProvisioningArtifactRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ServiceCatalogConn()
+	conn := meta.(*conns.AWSClient).ServiceCatalogConn(ctx)
 
 	artifactID, productID, err := ProvisioningArtifactParseID(d.Id())
 
@@ -207,6 +216,7 @@ func resourceProvisioningArtifactRead(ctx context.Context, d *schema.ResourceDat
 	d.Set("guidance", pad.Guidance)
 	d.Set("name", pad.Name)
 	d.Set("product_id", productID)
+	d.Set("provisioning_artifact_id", artifactID)
 	d.Set("type", pad.Type)
 
 	return diags
@@ -214,7 +224,7 @@ func resourceProvisioningArtifactRead(ctx context.Context, d *schema.ResourceDat
 
 func resourceProvisioningArtifactUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ServiceCatalogConn()
+	conn := meta.(*conns.AWSClient).ServiceCatalogConn(ctx)
 
 	if d.HasChanges("accept_language", "active", "description", "guidance", "name", "product_id") {
 		artifactID, productID, err := ProvisioningArtifactParseID(d.Id())
@@ -245,15 +255,15 @@ func resourceProvisioningArtifactUpdate(ctx context.Context, d *schema.ResourceD
 			input.Name = aws.String(v.(string))
 		}
 
-		err = resource.RetryContext(ctx, d.Timeout(schema.TimeoutUpdate), func() *resource.RetryError {
+		err = retry.RetryContext(ctx, d.Timeout(schema.TimeoutUpdate), func() *retry.RetryError {
 			_, err := conn.UpdateProvisioningArtifactWithContext(ctx, input)
 
 			if tfawserr.ErrMessageContains(err, servicecatalog.ErrCodeInvalidParametersException, "profile does not exist") {
-				return resource.RetryableError(err)
+				return retry.RetryableError(err)
 			}
 
 			if err != nil {
-				return resource.NonRetryableError(err)
+				return retry.NonRetryableError(err)
 			}
 
 			return nil
@@ -273,7 +283,7 @@ func resourceProvisioningArtifactUpdate(ctx context.Context, d *schema.ResourceD
 
 func resourceProvisioningArtifactDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ServiceCatalogConn()
+	conn := meta.(*conns.AWSClient).ServiceCatalogConn(ctx)
 
 	artifactID, productID, err := ProvisioningArtifactParseID(d.Id())
 

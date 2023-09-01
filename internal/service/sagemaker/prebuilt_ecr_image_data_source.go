@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package sagemaker
 
 import (
@@ -31,6 +34,8 @@ const (
 	repositoryLDA = "lda"
 	// SageMaker Algorithm Linear Learner
 	repositoryLinearLearner = "linear-learner"
+	// SageMaker Model Monitor
+	repositoryModelMonitor = "sagemaker-model-monitor-analyzer"
 	// SageMaker Algorithm Neural Topic Model
 	repositoryNeuralTopicModel = "ntm"
 	// SageMaker Algorithm Object2Vec
@@ -305,6 +310,36 @@ var prebuiltECRImageIDByRegion_tensorFlowServing = map[string]string{
 	endpoints.UsWest2RegionID:  "520713654638",
 }
 
+// https://docs.aws.amazon.com/sagemaker/latest/dg/model-monitor-pre-built-container.html
+var prebuiltECRImageIDByRegion_modelMonitor = map[string]string{
+	endpoints.AfSouth1RegionID:     "875698925577",
+	endpoints.ApEast1RegionID:      "001633400207",
+	endpoints.ApNortheast1RegionID: "574779866223",
+	endpoints.ApNortheast2RegionID: "709848358524",
+	endpoints.ApNortheast3RegionID: "990339680094",
+	endpoints.ApSouth1RegionID:     "126357580389",
+	endpoints.ApSoutheast1RegionID: "245545462676",
+	endpoints.ApSoutheast2RegionID: "563025443158",
+	endpoints.ApSoutheast3RegionID: "669540362728",
+	endpoints.CaCentral1RegionID:   "536280801234",
+	endpoints.CnNorth1RegionID:     "453000072557",
+	endpoints.CnNorthwest1RegionID: "453252182341",
+	endpoints.EuCentral1RegionID:   "048819808253",
+	endpoints.EuNorth1RegionID:     "895015795356",
+	endpoints.EuSouth1RegionID:     "933208885752",
+	endpoints.EuWest1RegionID:      "468650794304",
+	endpoints.EuWest2RegionID:      "749857270468",
+	endpoints.EuWest3RegionID:      "680080141114",
+	endpoints.MeSouth1RegionID:     "607024016150",
+	endpoints.SaEast1RegionID:      "539772159869",
+	endpoints.UsEast1RegionID:      "156813124566",
+	endpoints.UsEast2RegionID:      "777275614652",
+	endpoints.UsGovWest1RegionID:   "362178532790",
+	endpoints.UsWest1RegionID:      "890145073186",
+	endpoints.UsWest2RegionID:      "159807026194",
+}
+
+// @SDKDataSource("aws_sagemaker_prebuilt_ecr_image")
 func DataSourcePrebuiltECRImage() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourcePrebuiltECRImageRead,
@@ -322,6 +357,7 @@ func DataSourcePrebuiltECRImage() *schema.Resource {
 					repositoryKNearestNeighbor,
 					repositoryLDA,
 					repositoryLinearLearner,
+					repositoryModelMonitor,
 					repositoryMXNetInference,
 					repositoryMXNetInferenceEIA,
 					repositoryMXNetTraining,
@@ -405,6 +441,8 @@ func dataSourcePrebuiltECRImageRead(ctx context.Context, d *schema.ResourceData,
 		id = prebuiltECRImageIDByRegion_deepAR[region]
 	case repositoryLDA:
 		id = prebuiltECRImageIDByRegion_lda[region]
+	case repositoryModelMonitor:
+		id = prebuiltECRImageIDByRegion_modelMonitor[region]
 	case repositoryXGBoost:
 		id = prebuiltECRImageIDByRegion_xgBoost[region]
 	case repositoryScikitLearn, repositorySparkML:

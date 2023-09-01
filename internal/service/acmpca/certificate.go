@@ -1,30 +1,40 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package acmpca
 
 import (
 	"context"
-	"crypto/x509"
+	"encoding/json"
 	"encoding/pem"
+	"errors"
 	"fmt"
 	"log"
-	"regexp"
+	"math/big"
 	"strconv"
 	"strings"
 	"time"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/acmpca"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"golang.org/x/crypto/cryptobyte"
+	cryptobyte_asn1 "golang.org/x/crypto/cryptobyte/asn1"
 )
 
+// @SDKResource("aws_acmpca_certificate")
 func ResourceCertificate() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceCertificateCreate,
@@ -35,7 +45,7 @@ func ResourceCertificate() *schema.Resource {
 		// arn:aws:acm-pca:eu-west-1:555885746124:certificate-authority/08322ede-92f9-4200-8f21-c7d12b2b6edb/certificate/a4e9c2aa2ccfab625b1b9136464cd3a6
 		Importer: &schema.ResourceImporter{
 			StateContext: func(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
-				re := regexp.MustCompile(`arn:.+:certificate-authority/[^/]+`)
+				re := regexache.MustCompile(`arn:.+:certificate-authority/[^/]+`)
 				authorityARN := re.FindString(d.Id())
 				if authorityARN == "" {
 					return nil, fmt.Errorf("Unexpected format for ID (%q), expected ACM PCA Certificate ARN", d.Id())
@@ -106,19 +116,30 @@ func ResourceCertificate() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: ValidTemplateARN,
 			},
+			"api_passthrough": {
+				Type:             schema.TypeString,
+				Optional:         true,
+				ForceNew:         true,
+				ValidateFunc:     validation.StringIsJSON,
+				DiffSuppressFunc: verify.SuppressEquivalentJSONDiffs,
+				StateFunc: func(v interface{}) string {
+					json, _ := structure.NormalizeJsonString(v)
+					return json
+				},
+			},
 		},
 	}
 }
 
 func resourceCertificateCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ACMPCAConn()
+	conn := meta.(*conns.AWSClient).ACMPCAConn(ctx)
 
 	certificateAuthorityARN := d.Get("certificate_authority_arn").(string)
 	input := &acmpca.IssueCertificateInput{
 		CertificateAuthorityArn: aws.String(certificateAuthorityARN),
 		Csr:                     []byte(d.Get("certificate_signing_request").(string)),
-		IdempotencyToken:        aws.String(resource.UniqueId()),
+		IdempotencyToken:        aws.String(id.UniqueId()),
 		SigningAlgorithm:        aws.String(d.Get("signing_algorithm").(string)),
 	}
 	validity, err := expandValidity(d.Get("validity").([]interface{}))
@@ -131,15 +152,23 @@ func resourceCertificateCreate(ctx context.Context, d *schema.ResourceData, meta
 		input.TemplateArn = aws.String(v)
 	}
 
+	if v, ok := d.Get("api_passthrough").(string); ok && v != "" {
+		ap := &acmpca.ApiPassthrough{}
+		if err := json.Unmarshal([]byte(v), ap); err != nil {
+			return sdkdiag.AppendErrorf(diags, "decoding api_passthrough: %s", err)
+		}
+		input.ApiPassthrough = ap
+	}
+
 	var output *acmpca.IssueCertificateOutput
-	err = resource.RetryContext(ctx, certificateAuthorityActiveTimeout, func() *resource.RetryError {
+	err = retry.RetryContext(ctx, certificateAuthorityActiveTimeout, func() *retry.RetryError {
 		var err error
 		output, err = conn.IssueCertificateWithContext(ctx, input)
 		if tfawserr.ErrMessageContains(err, acmpca.ErrCodeInvalidStateException, "The certificate authority is not in a valid state for issuing certificates") {
-			return resource.RetryableError(err)
+			return retry.RetryableError(err)
 		}
 		if err != nil {
-			return resource.NonRetryableError(err)
+			return retry.NonRetryableError(err)
 		}
 		return nil
 	})
@@ -168,7 +197,7 @@ func resourceCertificateCreate(ctx context.Context, d *schema.ResourceData, meta
 
 func resourceCertificateRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ACMPCAConn()
+	conn := meta.(*conns.AWSClient).ACMPCAConn(ctx)
 
 	getCertificateInput := &acmpca.GetCertificateInput{
 		CertificateArn:          aws.String(d.Id()),
@@ -202,21 +231,25 @@ func resourceCertificateRead(ctx context.Context, d *schema.ResourceData, meta i
 
 func resourceCertificateRevoke(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ACMPCAConn()
+	conn := meta.(*conns.AWSClient).ACMPCAConn(ctx)
 
 	block, _ := pem.Decode([]byte(d.Get("certificate").(string)))
 	if block == nil {
 		log.Printf("[WARN] Failed to parse ACM PCA Certificate (%s)", d.Id())
 		return diags
 	}
-	cert, err := x509.ParseCertificate(block.Bytes)
+
+	// Certificate can contain invalid extension values that will prevent full certificate parsing hence revocation
+	// but still have serial number that we need in order to revoke it.
+	serial, err := getCertificateSerial(block.Bytes)
+
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "Failed to parse ACM PCA Certificate (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "getting ACM PCA Certificate (%s) serial number: %s", d.Id(), err)
 	}
 
 	input := &acmpca.RevokeCertificateInput{
 		CertificateAuthorityArn: aws.String(d.Get("certificate_authority_arn").(string)),
-		CertificateSerial:       aws.String(fmt.Sprintf("%x", cert.SerialNumber)),
+		CertificateSerial:       aws.String(fmt.Sprintf("%x", serial)),
 		RevocationReason:        aws.String(acmpca.RevocationReasonUnspecified),
 	}
 	_, err = conn.RevokeCertificateWithContext(ctx, input)
@@ -232,6 +265,40 @@ func resourceCertificateRevoke(ctx context.Context, d *schema.ResourceData, meta
 	}
 
 	return diags
+}
+
+// We parse certificate until we get serial number if possible.
+// This is partial copy of crypto/x509 package private function parseCertificate
+// https://github.com/golang/go/blob/6a70292d1cb3464e5b2c2c03341e5148730a1889/src/crypto/x509/parser.go#L800-L842
+func getCertificateSerial(der []byte) (*big.Int, error) {
+	malformedCertificateErr := errors.New("malformed certificate")
+	input := cryptobyte.String(der)
+	if !input.ReadASN1Element(&input, cryptobyte_asn1.SEQUENCE) {
+		return nil, malformedCertificateErr
+	}
+	if !input.ReadASN1(&input, cryptobyte_asn1.SEQUENCE) {
+		return nil, malformedCertificateErr
+	}
+
+	var tbs cryptobyte.String
+	if !input.ReadASN1Element(&tbs, cryptobyte_asn1.SEQUENCE) {
+		return nil, malformedCertificateErr
+	}
+	if !tbs.ReadASN1(&tbs, cryptobyte_asn1.SEQUENCE) {
+		return nil, malformedCertificateErr
+	}
+
+	var version int
+	if !tbs.ReadOptionalASN1Integer(&version, cryptobyte_asn1.Tag(0).Constructed().ContextSpecific(), 0) {
+		return nil, errors.New("malformed certificate version")
+	}
+
+	serial := new(big.Int)
+	if !tbs.ReadASN1Integer(serial) {
+		return nil, errors.New("malformed certificate serial number")
+	}
+
+	return serial, nil
 }
 
 func ValidTemplateARN(v interface{}, k string) (ws []string, errors []error) {
@@ -277,7 +344,7 @@ func expandValidity(l []interface{}) (*acmpca.Validity, error) {
 
 	i, err := ExpandValidityValue(valueType, m["value"].(string))
 	if err != nil {
-		return nil, fmt.Errorf("error parsing value %q: %w", m["value"].(string), err)
+		return nil, fmt.Errorf("parsing value %q: %w", m["value"].(string), err)
 	}
 	result.Value = aws.Int64(i)
 

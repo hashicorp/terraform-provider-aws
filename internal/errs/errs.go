@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package errs
 
 import (
@@ -21,12 +24,14 @@ func AsContains(err error, target any, message string) bool {
 	return false
 }
 
-// IsAErrorMessageContains returns whether or not the specified error is of the specified type
-// and its ErrorMessage() value contains the specified needle.
-func IsAErrorMessageContains[T interface {
+type ErrorWithErrorMessage interface {
 	error
 	errorMessager
-}](err error, needle string) bool {
+}
+
+// IsAErrorMessageContains returns whether or not the specified error is of the specified type
+// and its ErrorMessage() value contains the specified needle.
+func IsAErrorMessageContains[T ErrorWithErrorMessage](err error, needle string) bool {
 	as, ok := As[T](err)
 	if ok {
 		return strings.Contains(as.ErrorMessage(), needle)

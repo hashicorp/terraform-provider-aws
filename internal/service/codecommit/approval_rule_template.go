@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package codecommit
 
 import (
@@ -17,6 +20,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_codecommit_approval_rule_template")
 func ResourceApprovalRuleTemplate() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceApprovalRuleTemplateCreate,
@@ -77,7 +81,7 @@ func ResourceApprovalRuleTemplate() *schema.Resource {
 
 func resourceApprovalRuleTemplateCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CodeCommitConn()
+	conn := meta.(*conns.AWSClient).CodeCommitConn(ctx)
 
 	name := d.Get("name").(string)
 
@@ -102,7 +106,7 @@ func resourceApprovalRuleTemplateCreate(ctx context.Context, d *schema.ResourceD
 
 func resourceApprovalRuleTemplateRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CodeCommitConn()
+	conn := meta.(*conns.AWSClient).CodeCommitConn(ctx)
 
 	input := &codecommit.GetApprovalRuleTemplateInput{
 		ApprovalRuleTemplateName: aws.String(d.Id()),
@@ -140,7 +144,7 @@ func resourceApprovalRuleTemplateRead(ctx context.Context, d *schema.ResourceDat
 
 func resourceApprovalRuleTemplateUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CodeCommitConn()
+	conn := meta.(*conns.AWSClient).CodeCommitConn(ctx)
 
 	if d.HasChange("description") {
 		input := &codecommit.UpdateApprovalRuleTemplateDescriptionInput{
@@ -191,7 +195,7 @@ func resourceApprovalRuleTemplateUpdate(ctx context.Context, d *schema.ResourceD
 
 func resourceApprovalRuleTemplateDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CodeCommitConn()
+	conn := meta.(*conns.AWSClient).CodeCommitConn(ctx)
 
 	input := &codecommit.DeleteApprovalRuleTemplateInput{
 		ApprovalRuleTemplateName: aws.String(d.Id()),

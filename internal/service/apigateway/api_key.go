@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package apigateway
 
 import (
@@ -11,14 +14,19 @@ import (
 	"github.com/aws/aws-sdk-go/service/apigateway"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @SDKResource("aws_api_gateway_api_key", name="API Key")
+// @Tags(identifierAttribute="arn")
 func ResourceAPIKey() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceAPIKeyCreate,
@@ -64,14 +72,14 @@ func ResourceAPIKey() *schema.Resource {
 				Computed:     true,
 				ForceNew:     true,
 				Sensitive:    true,
-				ValidateFunc: validation.StringLenBetween(30, 128),
+				ValidateFunc: validation.StringLenBetween(20, 128),
 			},
 			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
 
 		CustomizeDiff: verify.SetTagsDiff,
@@ -80,20 +88,21 @@ func ResourceAPIKey() *schema.Resource {
 
 func resourceAPIKeyCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).APIGatewayConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
-	log.Printf("[DEBUG] Creating API Gateway API Key")
+	conn := meta.(*conns.AWSClient).APIGatewayConn(ctx)
 
-	apiKey, err := conn.CreateApiKeyWithContext(ctx, &apigateway.CreateApiKeyInput{
-		Name:        aws.String(d.Get("name").(string)),
+	name := d.Get("name").(string)
+	input := &apigateway.CreateApiKeyInput{
 		Description: aws.String(d.Get("description").(string)),
 		Enabled:     aws.Bool(d.Get("enabled").(bool)),
+		Name:        aws.String(name),
+		Tags:        getTagsIn(ctx),
 		Value:       aws.String(d.Get("value").(string)),
-		Tags:        Tags(tags.IgnoreAWS()),
-	})
+	}
+
+	apiKey, err := conn.CreateApiKeyWithContext(ctx, input)
+
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating API Gateway API Key: %s", err)
+		return sdkdiag.AppendErrorf(diags, "creating API Gateway API Key (%s): %s", name, err)
 	}
 
 	d.SetId(aws.StringValue(apiKey.Id))
@@ -103,36 +112,21 @@ func resourceAPIKeyCreate(ctx context.Context, d *schema.ResourceData, meta inte
 
 func resourceAPIKeyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).APIGatewayConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).APIGatewayConn(ctx)
 
-	log.Printf("[DEBUG] Reading API Gateway API Key: %s", d.Id())
+	apiKey, err := FindAPIKeyByID(ctx, conn, d.Id())
 
-	apiKey, err := conn.GetApiKeyWithContext(ctx, &apigateway.GetApiKeyInput{
-		ApiKey:       aws.String(d.Id()),
-		IncludeValue: aws.Bool(true),
-	})
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] API Gateway API Key (%s) not found, removing from state", d.Id())
+		d.SetId("")
+		return diags
+	}
+
 	if err != nil {
-		if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, apigateway.ErrCodeNotFoundException) {
-			log.Printf("[WARN] API Gateway API Key (%s) not found, removing from state", d.Id())
-			d.SetId("")
-			return diags
-		}
-
 		return sdkdiag.AppendErrorf(diags, "reading API Gateway API Key (%s): %s", d.Id(), err)
 	}
 
-	tags := KeyValueTags(apiKey.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
-	}
+	setTagsOut(ctx, apiKey.Tags)
 
 	arn := arn.ARN{
 		Partition: meta.(*conns.AWSClient).Partition,
@@ -185,23 +179,17 @@ func resourceAPIKeyUpdateOperations(d *schema.ResourceData) []*apigateway.PatchO
 
 func resourceAPIKeyUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).APIGatewayConn()
+	conn := meta.(*conns.AWSClient).APIGatewayConn(ctx)
 
-	log.Printf("[DEBUG] Updating API Gateway API Key: %s", d.Id())
+	if d.HasChangesExcept("tags", "tags_all") {
+		_, err := conn.UpdateApiKeyWithContext(ctx, &apigateway.UpdateApiKeyInput{
+			ApiKey:          aws.String(d.Id()),
+			PatchOperations: resourceAPIKeyUpdateOperations(d),
+		})
 
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-		if err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n); err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating tags: %s", err)
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating API Gateway API Key (%s): %s", d.Id(), err)
 		}
-	}
-
-	_, err := conn.UpdateApiKeyWithContext(ctx, &apigateway.UpdateApiKeyInput{
-		ApiKey:          aws.String(d.Id()),
-		PatchOperations: resourceAPIKeyUpdateOperations(d),
-	})
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "updating API Gateway API Key (%s): %s", d.Id(), err)
 	}
 
 	return append(diags, resourceAPIKeyRead(ctx, d, meta)...)
@@ -209,9 +197,9 @@ func resourceAPIKeyUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 
 func resourceAPIKeyDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).APIGatewayConn()
-	log.Printf("[DEBUG] Deleting API Gateway API Key: %s", d.Id())
+	conn := meta.(*conns.AWSClient).APIGatewayConn(ctx)
 
+	log.Printf("[DEBUG] Deleting API Gateway API Key: %s", d.Id())
 	_, err := conn.DeleteApiKeyWithContext(ctx, &apigateway.DeleteApiKeyInput{
 		ApiKey: aws.String(d.Id()),
 	})
@@ -225,4 +213,30 @@ func resourceAPIKeyDelete(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 
 	return diags
+}
+
+func FindAPIKeyByID(ctx context.Context, conn *apigateway.APIGateway, id string) (*apigateway.ApiKey, error) {
+	input := &apigateway.GetApiKeyInput{
+		ApiKey:       aws.String(id),
+		IncludeValue: aws.Bool(true),
+	}
+
+	output, err := conn.GetApiKeyWithContext(ctx, input)
+
+	if tfawserr.ErrCodeEquals(err, apigateway.ErrCodeNotFoundException) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output, nil
 }

@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ec2
 
 import (
@@ -20,6 +23,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
+// @SDKDataSource("aws_instance")
 func DataSourceInstance() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceInstanceRead,
@@ -224,6 +228,10 @@ func DataSourceInstance() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
+						"http_protocol_ipv6": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
 						"http_put_response_hop_limit": {
 							Type:     schema.TypeInt,
 							Computed: true,
@@ -391,7 +399,7 @@ func DataSourceInstance() *schema.Resource {
 // dataSourceInstanceRead performs the instanceID lookup
 func dataSourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	// Build up search parameters
@@ -399,7 +407,7 @@ func dataSourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta in
 
 	if tags, tagsOk := d.GetOk("instance_tags"); tagsOk {
 		input.Filters = append(input.Filters, BuildTagFilterList(
-			Tags(tftags.New(tags.(map[string]interface{}))),
+			Tags(tftags.New(ctx, tags.(map[string]interface{}))),
 		)...)
 	}
 
@@ -480,7 +488,7 @@ func instanceDescriptionAttributes(ctx context.Context, d *schema.ResourceData, 
 		name, err := InstanceProfileARNToName(aws.StringValue(instance.IamInstanceProfile.Arn))
 
 		if err != nil {
-			return fmt.Errorf("error setting iam_instance_profile: %w", err)
+			return fmt.Errorf("setting iam_instance_profile: %w", err)
 		}
 
 		d.Set("iam_instance_profile", name)
@@ -503,7 +511,7 @@ func instanceDescriptionAttributes(ctx context.Context, d *schema.ResourceData, 
 					}
 				}
 				if err := d.Set("secondary_private_ips", secondaryIPs); err != nil {
-					return fmt.Errorf("error setting secondary_private_ips: %w", err)
+					return fmt.Errorf("setting secondary_private_ips: %w", err)
 				}
 
 				ipV6Addresses := make([]string, 0, len(ni.Ipv6Addresses))
@@ -511,7 +519,7 @@ func instanceDescriptionAttributes(ctx context.Context, d *schema.ResourceData, 
 					ipV6Addresses = append(ipV6Addresses, aws.StringValue(ip.Ipv6Address))
 				}
 				if err := d.Set("ipv6_addresses", ipV6Addresses); err != nil {
-					return fmt.Errorf("error setting ipv6_addresses: %w", err)
+					return fmt.Errorf("setting ipv6_addresses: %w", err)
 				}
 			}
 		}
@@ -530,8 +538,8 @@ func instanceDescriptionAttributes(ctx context.Context, d *schema.ResourceData, 
 		d.Set("monitoring", monitoringState == "enabled" || monitoringState == "pending")
 	}
 
-	if err := d.Set("tags", KeyValueTags(instance.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
+	if err := d.Set("tags", KeyValueTags(ctx, instance.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+		return fmt.Errorf("setting tags: %w", err)
 	}
 
 	// Security Groups
@@ -601,7 +609,7 @@ func instanceDescriptionAttributes(ctx context.Context, d *schema.ResourceData, 
 
 		if instanceCreditSpecification != nil {
 			if err := d.Set("credit_specification", []interface{}{flattenInstanceCreditSpecification(instanceCreditSpecification)}); err != nil {
-				return fmt.Errorf("error setting credit_specification: %w", err)
+				return fmt.Errorf("setting credit_specification: %w", err)
 			}
 		} else {
 			d.Set("credit_specification", nil)
@@ -611,24 +619,24 @@ func instanceDescriptionAttributes(ctx context.Context, d *schema.ResourceData, 
 	}
 
 	if err := d.Set("enclave_options", flattenEnclaveOptions(instance.EnclaveOptions)); err != nil {
-		return fmt.Errorf("error setting enclave_options: %w", err)
+		return fmt.Errorf("setting enclave_options: %w", err)
 	}
 
 	if instance.MaintenanceOptions != nil {
 		if err := d.Set("maintenance_options", []interface{}{flattenInstanceMaintenanceOptions(instance.MaintenanceOptions)}); err != nil {
-			return fmt.Errorf("error setting maintenance_options: %w", err)
+			return fmt.Errorf("setting maintenance_options: %w", err)
 		}
 	} else {
 		d.Set("maintenance_options", nil)
 	}
 
 	if err := d.Set("metadata_options", flattenInstanceMetadataOptions(instance.MetadataOptions)); err != nil {
-		return fmt.Errorf("error setting metadata_options: %w", err)
+		return fmt.Errorf("setting metadata_options: %w", err)
 	}
 
 	if instance.PrivateDnsNameOptions != nil {
 		if err := d.Set("private_dns_name_options", []interface{}{flattenPrivateDNSNameOptionsResponse(instance.PrivateDnsNameOptions)}); err != nil {
-			return fmt.Errorf("error setting private_dns_name_options: %w", err)
+			return fmt.Errorf("setting private_dns_name_options: %w", err)
 		}
 	} else {
 		d.Set("private_dns_name_options", nil)

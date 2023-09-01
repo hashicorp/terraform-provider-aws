@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package rds
 
 import (
@@ -17,8 +20,11 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @SDKResource("aws_db_proxy", name="DB Proxy")
+// @Tags(identifierAttribute="arn")
 func ResourceProxy() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceProxyCreate,
@@ -41,7 +47,7 @@ func ResourceProxy() *schema.Resource {
 				Computed: true,
 			},
 			"auth": {
-				Type:     schema.TypeSet,
+				Type:     schema.TypeList,
 				Required: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
@@ -49,6 +55,12 @@ func ResourceProxy() *schema.Resource {
 							Type:         schema.TypeString,
 							Optional:     true,
 							ValidateFunc: validation.StringInSlice(rds.AuthScheme_Values(), false),
+						},
+						"client_password_auth_type": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							Computed:     true,
+							ValidateFunc: validation.StringInSlice(rds.ClientPasswordAuthType_Values(), false),
 						},
 						"description": {
 							Type:     schema.TypeString,
@@ -104,8 +116,8 @@ func ResourceProxy() *schema.Resource {
 				Required:     true,
 				ValidateFunc: verify.ValidARN,
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			"vpc_security_group_ids": {
 				Type:     schema.TypeSet,
 				Optional: true,
@@ -128,16 +140,14 @@ func ResourceProxy() *schema.Resource {
 
 func resourceProxyCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).RDSConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	conn := meta.(*conns.AWSClient).RDSConn(ctx)
 
 	input := rds.CreateDBProxyInput{
-		Auth:         expandProxyAuth(d.Get("auth").(*schema.Set).List()),
+		Auth:         expandProxyAuth(d.Get("auth").([]interface{})),
 		DBProxyName:  aws.String(d.Get("name").(string)),
 		EngineFamily: aws.String(d.Get("engine_family").(string)),
 		RoleArn:      aws.String(d.Get("role_arn").(string)),
-		Tags:         Tags(tags.IgnoreAWS()),
+		Tags:         getTagsIn(ctx),
 		VpcSubnetIds: flex.ExpandStringSet(d.Get("vpc_subnet_ids").(*schema.Set)),
 	}
 
@@ -157,9 +167,7 @@ func resourceProxyCreate(ctx context.Context, d *schema.ResourceData, meta inter
 		input.VpcSecurityGroupIds = flex.ExpandStringSet(v)
 	}
 
-	log.Printf("[DEBUG] Creating RDS DB Proxy: %s", input)
 	output, err := conn.CreateDBProxyWithContext(ctx, &input)
-
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating RDS DB Proxy: %s", err)
 	}
@@ -175,9 +183,7 @@ func resourceProxyCreate(ctx context.Context, d *schema.ResourceData, meta inter
 
 func resourceProxyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).RDSConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).RDSConn(ctx)
 
 	dbProxy, err := FindDBProxyByName(ctx, conn, d.Id())
 
@@ -203,34 +209,17 @@ func resourceProxyRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	d.Set("vpc_security_group_ids", flex.FlattenStringSet(dbProxy.VpcSecurityGroupIds))
 	d.Set("endpoint", dbProxy.Endpoint)
 
-	tags, err := ListTags(ctx, conn, d.Get("arn").(string))
-
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "listing tags for RDS DB Proxy (%s): %s", d.Get("arn").(string), err)
-	}
-
-	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
-	}
-
 	return diags
 }
 
 func resourceProxyUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).RDSConn()
+	conn := meta.(*conns.AWSClient).RDSConn(ctx)
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		oName, nName := d.GetChange("name")
 		input := &rds.ModifyDBProxyInput{
-			Auth:           expandProxyAuth(d.Get("auth").(*schema.Set).List()),
+			Auth:           expandProxyAuth(d.Get("auth").([]interface{})),
 			DBProxyName:    aws.String(oName.(string)),
 			DebugLogging:   aws.Bool(d.Get("debug_logging").(bool)),
 			NewDBProxyName: aws.String(nName.(string)),
@@ -246,9 +235,7 @@ func resourceProxyUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 			input.SecurityGroups = flex.ExpandStringSet(v)
 		}
 
-		log.Printf("[DEBUG] Updating RDS DB Proxy: %s", input)
 		_, err := conn.ModifyDBProxyWithContext(ctx, input)
-
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating RDS DB Proxy (%s): %s", d.Id(), err)
 		}
@@ -262,20 +249,12 @@ func resourceProxyUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 		}
 	}
 
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		if err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n); err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating RDS DB Proxy (%s) tags: %s", d.Get("arn").(string), err)
-		}
-	}
-
 	return append(diags, resourceProxyRead(ctx, d, meta)...)
 }
 
 func resourceProxyDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).RDSConn()
+	conn := meta.(*conns.AWSClient).RDSConn(ctx)
 
 	log.Printf("[DEBUG] Deleting RDS DB Proxy: %s", d.Id())
 	_, err := conn.DeleteDBProxyWithContext(ctx, &rds.DeleteDBProxyInput{
@@ -317,6 +296,10 @@ func expandProxyAuth(l []interface{}) []*rds.UserAuthConfig {
 			userAuthConfig.AuthScheme = aws.String(v)
 		}
 
+		if v, ok := m["client_password_auth_type"].(string); ok && v != "" {
+			userAuthConfig.ClientPasswordAuthType = aws.String(v)
+		}
+
 		if v, ok := m["description"].(string); ok && v != "" {
 			userAuthConfig.Description = aws.String(v)
 		}
@@ -343,6 +326,7 @@ func flattenProxyAuth(userAuthConfig *rds.UserAuthConfigInfo) map[string]interfa
 	m := make(map[string]interface{})
 
 	m["auth_scheme"] = aws.StringValue(userAuthConfig.AuthScheme)
+	m["client_password_auth_type"] = aws.StringValue(userAuthConfig.ClientPasswordAuthType)
 	m["description"] = aws.StringValue(userAuthConfig.Description)
 	m["iam_auth"] = aws.StringValue(userAuthConfig.IAMAuth)
 	m["secret_arn"] = aws.StringValue(userAuthConfig.SecretArn)

@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package resource
 
 import (
@@ -8,15 +11,18 @@ import (
 	"io/fs"
 	"os"
 	"path/filepath"
-	"regexp"
 	"strings"
 	"text/template"
 
+	"github.com/YakDriver/regexache"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 //go:embed resource.tmpl
 var resourceTmpl string
+
+//go:embed resourcefw.tmpl
+var resourceFrameworkTmpl string
 
 //go:embed resourcetest.tmpl
 var resourceTestTmpl string
@@ -30,12 +36,15 @@ type TemplateData struct {
 	ResourceSnake        string
 	HumanFriendlyService string
 	IncludeComments      bool
+	IncludeTags          bool
 	ServicePackage       string
 	Service              string
 	ServiceLower         string
 	AWSServiceName       string
 	AWSGoSDKV2           bool
+	PluginFramework      bool
 	HumanResourceName    string
+	ProviderResourceName string
 }
 
 func ToSnakeCase(upper string, snakeName string) string {
@@ -43,22 +52,26 @@ func ToSnakeCase(upper string, snakeName string) string {
 		return snakeName
 	}
 
-	re := regexp.MustCompile(`([a-z])([A-Z]{2,})`)
+	re := regexache.MustCompile(`([a-z])([A-Z]{2,})`)
 	upper = re.ReplaceAllString(upper, `${1}_${2}`)
 
-	re2 := regexp.MustCompile(`([A-Z][a-z])`)
+	re2 := regexache.MustCompile(`([A-Z][a-z])`)
 	return strings.TrimPrefix(strings.ToLower(re2.ReplaceAllString(upper, `_$1`)), "_")
 }
 
 func HumanResName(upper string) string {
-	re := regexp.MustCompile(`([a-z])([A-Z]{2,})`)
+	re := regexache.MustCompile(`([a-z])([A-Z]{2,})`)
 	upper = re.ReplaceAllString(upper, `${1} ${2}`)
 
-	re2 := regexp.MustCompile(`([A-Z][a-z])`)
+	re2 := regexache.MustCompile(`([A-Z][a-z])`)
 	return strings.TrimPrefix(re2.ReplaceAllString(upper, ` $1`), " ")
 }
 
-func Create(resName, snakeName string, comments, force, v2 bool) error {
+func ProviderResourceName(servicePackage, snakeName string) string {
+	return fmt.Sprintf("aws_%s_%s", servicePackage, snakeName)
+}
+
+func Create(resName, snakeName string, comments, force, v2, pluginFramework, tags bool) error {
 	wd, err := os.Getwd() // os.Getenv("GOPACKAGE") not available since this is not run with go generate
 	if err != nil {
 		return fmt.Errorf("error reading working directory: %s", err)
@@ -101,16 +114,23 @@ func Create(resName, snakeName string, comments, force, v2 bool) error {
 		ResourceSnake:        snakeName,
 		HumanFriendlyService: hf,
 		IncludeComments:      comments,
+		IncludeTags:          tags,
 		ServicePackage:       servicePackage,
 		Service:              s,
 		ServiceLower:         strings.ToLower(s),
 		AWSServiceName:       sn,
 		AWSGoSDKV2:           v2,
+		PluginFramework:      pluginFramework,
 		HumanResourceName:    HumanResName(resName),
+		ProviderResourceName: ProviderResourceName(servicePackage, snakeName),
 	}
 
+	tmpl := resourceTmpl
+	if pluginFramework {
+		tmpl = resourceFrameworkTmpl
+	}
 	f := fmt.Sprintf("%s.go", snakeName)
-	if err = writeTemplate("newres", f, resourceTmpl, force, templateData); err != nil {
+	if err = writeTemplate("newres", f, tmpl, force, templateData); err != nil {
 		return fmt.Errorf("writing resource template: %w", err)
 	}
 

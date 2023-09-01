@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package kafka
 
 import (
@@ -5,11 +8,11 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/kafka"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func statusClusterState(ctx context.Context, conn *kafka.Kafka, arn string) resource.StateRefreshFunc {
+func statusClusterState(ctx context.Context, conn *kafka.Kafka, arn string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := findClusterV2ByARN(ctx, conn, arn)
 
@@ -25,7 +28,7 @@ func statusClusterState(ctx context.Context, conn *kafka.Kafka, arn string) reso
 	}
 }
 
-func statusClusterOperationState(ctx context.Context, conn *kafka.Kafka, arn string) resource.StateRefreshFunc {
+func statusClusterOperationState(ctx context.Context, conn *kafka.Kafka, arn string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := FindClusterOperationByARN(ctx, conn, arn)
 
@@ -41,7 +44,7 @@ func statusClusterOperationState(ctx context.Context, conn *kafka.Kafka, arn str
 	}
 }
 
-func statusConfigurationState(ctx context.Context, conn *kafka.Kafka, arn string) resource.StateRefreshFunc {
+func statusConfigurationState(ctx context.Context, conn *kafka.Kafka, arn string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := FindConfigurationByARN(ctx, conn, arn)
 

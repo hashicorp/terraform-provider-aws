@@ -107,7 +107,7 @@ resource "github_repository_webhook" "bar" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `name` - (Required) The name of the webhook.
 * `authentication` - (Required) The type of authentication  to use. One of `IP`, `GITHUB_HMAC`, or `UNAUTHENTICATED`.
@@ -127,9 +127,9 @@ A `filter` block supports the following arguments:
 * `json_path` - (Required) The [JSON path](https://github.com/json-path/JsonPath) to filter on.
 * `match_equals` - (Required) The value to match on (e.g., `refs/heads/{Branch}`). See [AWS docs](https://docs.aws.amazon.com/codepipeline/latest/APIReference/API_WebhookFilterRule.html) for details.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - The CodePipeline webhook's ARN.
 * `id` - The CodePipeline webhook's ARN.
@@ -138,8 +138,17 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-CodePipeline Webhooks can be imported by their ARN, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import CodePipeline Webhooks using their ARN. For example:
 
+```terraform
+import {
+  to = aws_codepipeline_webhook.example
+  id = "arn:aws:codepipeline:us-west-2:123456789012:webhook:example"
+}
 ```
-$ terraform import aws_codepipeline_webhook.example arn:aws:codepipeline:us-west-2:123456789012:webhook:example
+
+Using `terraform import`, import CodePipeline Webhooks using their ARN. For example:
+
+```console
+% terraform import aws_codepipeline_webhook.example arn:aws:codepipeline:us-west-2:123456789012:webhook:example
 ```

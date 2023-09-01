@@ -1,16 +1,19 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package fsx
 
 import (
 	"context"
 	"log"
-	"regexp"
 	"time"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/fsx"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -19,8 +22,11 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @SDKResource("aws_fsx_ontap_file_system", name="ONTAP File System")
+// @Tags(identifierAttribute="arn")
 func ResourceOntapFileSystem() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceOntapFileSystemCreate,
@@ -54,7 +60,7 @@ func ResourceOntapFileSystem() *schema.Resource {
 				Computed: true,
 				ValidateFunc: validation.All(
 					validation.StringLenBetween(5, 5),
-					validation.StringMatch(regexp.MustCompile(`^([01]\d|2[0-3]):?([0-5]\d)$`), "must be in the format HH:MM"),
+					validation.StringMatch(regexache.MustCompile(`^([01]\d|2[0-3]):?([0-5]\d)$`), "must be in the format HH:MM"),
 				),
 			},
 			"deployment_type": {
@@ -178,7 +184,6 @@ func ResourceOntapFileSystem() *schema.Resource {
 				Type:     schema.TypeSet,
 				Optional: true,
 				Computed: true,
-				ForceNew: true,
 				MaxItems: 50,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
@@ -202,12 +207,12 @@ func ResourceOntapFileSystem() *schema.Resource {
 				MaxItems: 2,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			"throughput_capacity": {
 				Type:         schema.TypeInt,
 				Required:     true,
-				ValidateFunc: validation.IntInSlice([]int{128, 256, 512, 1024, 2048}),
+				ValidateFunc: validation.IntInSlice([]int{128, 256, 512, 1024, 2048, 4096}),
 			},
 			"vpc_id": {
 				Type:     schema.TypeString,
@@ -219,7 +224,7 @@ func ResourceOntapFileSystem() *schema.Resource {
 				Computed: true,
 				ValidateFunc: validation.All(
 					validation.StringLenBetween(7, 7),
-					validation.StringMatch(regexp.MustCompile(`^[1-7]:([01]\d|2[0-3]):?([0-5]\d)$`), "must be in the format d:HH:MM"),
+					validation.StringMatch(regexache.MustCompile(`^[1-7]:([01]\d|2[0-3]):?([0-5]\d)$`), "must be in the format d:HH:MM"),
 				),
 			},
 		},
@@ -230,12 +235,10 @@ func ResourceOntapFileSystem() *schema.Resource {
 
 func resourceOntapFileSystemCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).FSxConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	conn := meta.(*conns.AWSClient).FSxConn(ctx)
 
 	input := &fsx.CreateFileSystemInput{
-		ClientRequestToken: aws.String(resource.UniqueId()),
+		ClientRequestToken: aws.String(id.UniqueId()),
 		FileSystemType:     aws.String(fsx.FileSystemTypeOntap),
 		StorageCapacity:    aws.Int64(int64(d.Get("storage_capacity").(int))),
 		StorageType:        aws.String(d.Get("storage_type").(string)),
@@ -246,6 +249,7 @@ func resourceOntapFileSystemCreate(ctx context.Context, d *schema.ResourceData, 
 			ThroughputCapacity:           aws.Int64(int64(d.Get("throughput_capacity").(int))),
 			PreferredSubnetId:            aws.String(d.Get("preferred_subnet_id").(string)),
 		},
+		Tags: getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("kms_key_id"); ok {
@@ -280,11 +284,6 @@ func resourceOntapFileSystemCreate(ctx context.Context, d *schema.ResourceData, 
 		input.OntapConfiguration.WeeklyMaintenanceStartTime = aws.String(v.(string))
 	}
 
-	if len(tags) > 0 {
-		input.Tags = Tags(tags.IgnoreAWS())
-	}
-
-	log.Printf("[DEBUG] Creating FSx ONTAP File System: %s", input)
 	result, err := conn.CreateFileSystemWithContext(ctx, input)
 
 	if err != nil {
@@ -302,9 +301,7 @@ func resourceOntapFileSystemCreate(ctx context.Context, d *schema.ResourceData, 
 
 func resourceOntapFileSystemRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).FSxConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).FSxConn(ctx)
 
 	filesystem, err := FindFileSystemByID(ctx, conn, d.Id())
 
@@ -359,35 +356,18 @@ func resourceOntapFileSystemRead(ctx context.Context, d *schema.ResourceData, me
 		return sdkdiag.AppendErrorf(diags, "setting disk_iops_configuration: %s", err)
 	}
 
-	tags := KeyValueTags(filesystem.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
-	}
+	setTagsOut(ctx, filesystem.Tags)
 
 	return diags
 }
 
 func resourceOntapFileSystemUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).FSxConn()
-
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		if err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n); err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating FSx ONTAP File System (%s) tags: %s", d.Get("arn").(string), err)
-		}
-	}
+	conn := meta.(*conns.AWSClient).FSxConn(ctx)
 
 	if d.HasChangesExcept("tags_all", "tags") {
 		input := &fsx.UpdateFileSystemInput{
-			ClientRequestToken: aws.String(resource.UniqueId()),
+			ClientRequestToken: aws.String(id.UniqueId()),
 			FileSystemId:       aws.String(d.Id()),
 			OntapConfiguration: &fsx.UpdateFileSystemOntapConfiguration{},
 		}
@@ -420,6 +400,22 @@ func resourceOntapFileSystemUpdate(ctx context.Context, d *schema.ResourceData, 
 			input.OntapConfiguration.DiskIopsConfiguration = expandOntapFileDiskIopsConfiguration(d.Get("disk_iops_configuration").([]interface{}))
 		}
 
+		if d.HasChange("route_table_ids") {
+			o, n := d.GetChange("route_table_ids")
+			ns := n.(*schema.Set)
+			os := o.(*schema.Set)
+			added := ns.Difference(os)
+			removed := os.Difference(ns)
+
+			if added.Len() > 0 {
+				input.OntapConfiguration.AddRouteTableIds = flex.ExpandStringSet(added)
+			}
+
+			if removed.Len() > 0 {
+				input.OntapConfiguration.RemoveRouteTableIds = flex.ExpandStringSet(removed)
+			}
+		}
+
 		_, err := conn.UpdateFileSystemWithContext(ctx, input)
 
 		if err != nil {
@@ -440,7 +436,7 @@ func resourceOntapFileSystemUpdate(ctx context.Context, d *schema.ResourceData, 
 
 func resourceOntapFileSystemDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).FSxConn()
+	conn := meta.(*conns.AWSClient).FSxConn(ctx)
 
 	log.Printf("[DEBUG] Deleting FSx ONTAP File System: %s", d.Id())
 	_, err := conn.DeleteFileSystemWithContext(ctx, &fsx.DeleteFileSystemInput{

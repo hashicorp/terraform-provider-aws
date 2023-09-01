@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package acctest
 
 import (
@@ -10,17 +13,15 @@ import (
 	fwresource "github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-go/tftypes"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 )
 
 // Terraform Plugin Framework variants of standard acceptance test helpers.
 
-func DeleteFrameworkResource(factory func(context.Context) (fwresource.ResourceWithConfigure, error), is *terraform.InstanceState, meta interface{}) error {
-	ctx := context.Background()
-
+func deleteFrameworkResource(ctx context.Context, factory func(context.Context) (fwresource.ResourceWithConfigure, error), is *terraform.InstanceState, meta interface{}) error {
 	resource, err := factory(ctx)
 
 	if err != nil {
@@ -58,7 +59,7 @@ func DeleteFrameworkResource(factory func(context.Context) (fwresource.ResourceW
 	return nil
 }
 
-func CheckFrameworkResourceDisappears(provo *schema.Provider, factory func(context.Context) (fwresource.ResourceWithConfigure, error), n string) resource.TestCheckFunc {
+func CheckFrameworkResourceDisappears(ctx context.Context, provo *schema.Provider, factory func(context.Context) (fwresource.ResourceWithConfigure, error), n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -69,6 +70,6 @@ func CheckFrameworkResourceDisappears(provo *schema.Provider, factory func(conte
 			return fmt.Errorf("resource ID missing: %s", n)
 		}
 
-		return DeleteFrameworkResource(factory, rs.Primary, provo.Meta())
+		return deleteFrameworkResource(ctx, factory, rs.Primary, provo.Meta())
 	}
 }

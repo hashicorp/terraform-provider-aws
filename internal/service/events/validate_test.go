@@ -1,9 +1,12 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package events
 
 import (
 	"testing"
 
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 )
 
 func TestValidCustomEventBusSourceName(t *testing.T) {
@@ -113,7 +116,7 @@ func TestValidBusNameOrARN(t *testing.T) {
 	for _, v := range validNames {
 		_, errors := validBusNameOrARN(v, "name")
 		if len(errors) != 0 {
-			t.Fatalf("%q should be a valid CW event rule name: %q", v, errors)
+			t.Fatalf("%q should be a valid CW event bus name: %q", v, errors)
 		}
 	}
 
@@ -124,7 +127,7 @@ func TestValidBusNameOrARN(t *testing.T) {
 	for _, v := range invalidNames {
 		_, errors := validBusNameOrARN(v, "name")
 		if len(errors) == 0 {
-			t.Fatalf("%q should be an invalid CW event rule name", v)
+			t.Fatalf("%q should be an invalid CW event bus name", v)
 		}
 	}
 }

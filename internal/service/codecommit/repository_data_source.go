@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package codecommit
 
 import (
@@ -14,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
+// @SDKDataSource("aws_codecommit_repository")
 func DataSourceRepository() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceRepositoryRead,
@@ -50,7 +54,7 @@ func DataSourceRepository() *schema.Resource {
 
 func dataSourceRepositoryRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CodeCommitConn()
+	conn := meta.(*conns.AWSClient).CodeCommitConn(ctx)
 
 	repositoryName := d.Get("repository_name").(string)
 	input := &codecommit.GetRepositoryInput{
@@ -64,7 +68,7 @@ func dataSourceRepositoryRead(ctx context.Context, d *schema.ResourceData, meta 
 			d.SetId("")
 			return sdkdiag.AppendErrorf(diags, "Resource codecommit repository not found for %s", repositoryName)
 		} else {
-			return sdkdiag.AppendErrorf(diags, "Error reading CodeCommit Repository: %s", err)
+			return sdkdiag.AppendErrorf(diags, "reading CodeCommit Repository: %s", err)
 		}
 	}
 

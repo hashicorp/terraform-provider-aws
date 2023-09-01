@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package cloudfront
 
 import (
@@ -9,7 +12,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/cloudfront"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
@@ -17,6 +20,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @SDKResource("aws_cloudfront_public_key")
 func ResourcePublicKey() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourcePublicKeyCreate,
@@ -67,14 +71,14 @@ func ResourcePublicKey() *schema.Resource {
 
 func resourcePublicKeyCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CloudFrontConn()
+	conn := meta.(*conns.AWSClient).CloudFrontConn(ctx)
 
 	if v, ok := d.GetOk("name"); ok {
 		d.Set("name", v.(string))
 	} else if v, ok := d.GetOk("name_prefix"); ok {
-		d.Set("name", resource.PrefixedUniqueId(v.(string)))
+		d.Set("name", id.PrefixedUniqueId(v.(string)))
 	} else {
-		d.Set("name", resource.PrefixedUniqueId("tf-"))
+		d.Set("name", id.PrefixedUniqueId("tf-"))
 	}
 
 	request := &cloudfront.CreatePublicKeyInput{
@@ -94,7 +98,7 @@ func resourcePublicKeyCreate(ctx context.Context, d *schema.ResourceData, meta i
 
 func resourcePublicKeyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CloudFrontConn()
+	conn := meta.(*conns.AWSClient).CloudFrontConn(ctx)
 	request := &cloudfront.GetPublicKeyInput{
 		Id: aws.String(d.Id()),
 	}
@@ -132,7 +136,7 @@ func resourcePublicKeyRead(ctx context.Context, d *schema.ResourceData, meta int
 
 func resourcePublicKeyUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CloudFrontConn()
+	conn := meta.(*conns.AWSClient).CloudFrontConn(ctx)
 
 	request := &cloudfront.UpdatePublicKeyInput{
 		Id:              aws.String(d.Id()),
@@ -150,7 +154,7 @@ func resourcePublicKeyUpdate(ctx context.Context, d *schema.ResourceData, meta i
 
 func resourcePublicKeyDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CloudFrontConn()
+	conn := meta.(*conns.AWSClient).CloudFrontConn(ctx)
 
 	request := &cloudfront.DeletePublicKeyInput{
 		Id:      aws.String(d.Id()),
@@ -181,7 +185,7 @@ func expandPublicKeyConfig(d *schema.ResourceData) *cloudfront.PublicKeyConfig {
 	if v, ok := d.GetOk("caller_reference"); ok {
 		publicKeyConfig.CallerReference = aws.String(v.(string))
 	} else {
-		publicKeyConfig.CallerReference = aws.String(resource.UniqueId())
+		publicKeyConfig.CallerReference = aws.String(id.UniqueId())
 	}
 
 	return publicKeyConfig

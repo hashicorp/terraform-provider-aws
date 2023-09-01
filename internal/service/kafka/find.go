@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package kafka
 
 import (
@@ -6,7 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/kafka"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
@@ -18,7 +21,7 @@ func FindClusterByARN(ctx context.Context, conn *kafka.Kafka, arn string) (*kafk
 	output, err := conn.DescribeClusterWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, kafka.ErrCodeNotFoundException) {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -43,7 +46,7 @@ func findClusterV2ByARN(ctx context.Context, conn *kafka.Kafka, arn string) (*ka
 	output, err := conn.DescribeClusterV2WithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, kafka.ErrCodeNotFoundException) {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -68,7 +71,7 @@ func FindClusterOperationByARN(ctx context.Context, conn *kafka.Kafka, arn strin
 	output, err := conn.DescribeClusterOperationWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, kafka.ErrCodeNotFoundException) {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -93,7 +96,7 @@ func FindConfigurationByARN(ctx context.Context, conn *kafka.Kafka, arn string) 
 	output, err := conn.DescribeConfigurationWithContext(ctx, input)
 
 	if tfawserr.ErrMessageContains(err, kafka.ErrCodeBadRequestException, "Configuration ARN does not exist") {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}

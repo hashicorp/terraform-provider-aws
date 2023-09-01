@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package s3
 
 import (
@@ -9,6 +12,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -19,6 +23,7 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
+// @SDKDataSource("aws_s3_object")
 func DataSourceObject() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceObjectRead,
@@ -130,7 +135,7 @@ func DataSourceObject() *schema.Resource {
 
 func dataSourceObjectRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).S3Conn()
+	conn := meta.(*conns.AWSClient).S3Conn(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	bucket := d.Get("bucket").(string)
@@ -256,8 +261,15 @@ func isContentTypeAllowed(contentType *string) bool {
 	}
 
 	allowedContentTypes := []*regexp.Regexp{
-		regexp.MustCompile("^text/.+"),
-		regexp.MustCompile("^application/json$"),
+		regexache.MustCompile(`^application/atom\+xml$`),
+		regexache.MustCompile(`^application/json$`),
+		regexache.MustCompile(`^application/ld\+json$`),
+		regexache.MustCompile(`^application/x-csh$`),
+		regexache.MustCompile(`^application/x-httpd-php$`),
+		regexache.MustCompile(`^application/x-sh$`),
+		regexache.MustCompile(`^application/xhtml\+xml$`),
+		regexache.MustCompile(`^application/xml$`),
+		regexache.MustCompile(`^text/.+`),
 	}
 
 	for _, r := range allowedContentTypes {

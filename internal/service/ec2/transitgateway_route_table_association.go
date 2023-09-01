@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ec2
 
 import (
@@ -17,10 +20,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
+// @SDKResource("aws_ec2_transit_gateway_route_table_association")
 func ResourceTransitGatewayRouteTableAssociation() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceTransitGatewayRouteTableAssociationCreate,
 		ReadWithoutTimeout:   resourceTransitGatewayRouteTableAssociationRead,
+		UpdateWithoutTimeout: schema.NoopContext,
 		DeleteWithoutTimeout: resourceTransitGatewayRouteTableAssociationDelete,
 
 		Importer: &schema.ResourceImporter{
@@ -28,6 +33,11 @@ func ResourceTransitGatewayRouteTableAssociation() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
+			"replace_existing_association": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
+			},
 			"resource_id": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -54,11 +64,33 @@ func ResourceTransitGatewayRouteTableAssociation() *schema.Resource {
 
 func resourceTransitGatewayRouteTableAssociationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	transitGatewayAttachmentID := d.Get("transit_gateway_attachment_id").(string)
 	transitGatewayRouteTableID := d.Get("transit_gateway_route_table_id").(string)
 	id := TransitGatewayRouteTableAssociationCreateResourceID(transitGatewayRouteTableID, transitGatewayAttachmentID)
+
+	if d.Get("replace_existing_association").(bool) {
+		transitGatewayAttachment, err := FindTransitGatewayAttachmentByID(ctx, conn, transitGatewayAttachmentID)
+
+		if err != nil {
+			return sdkdiag.AppendFromErr(diags, err)
+		}
+
+		// If no Association object was found then Gateway Attachment is not linked to a Route Table.
+		if transitGatewayAttachment.Association != nil {
+			transitGatewayRouteTableID := aws.StringValue(transitGatewayAttachment.Association.TransitGatewayRouteTableId)
+
+			if state := aws.StringValue(transitGatewayAttachment.Association.State); state != ec2.AssociationStatusCodeAssociated {
+				return sdkdiag.AppendErrorf(diags, "existing EC2 Transit Gateway Route Table (%s) Association (%s) in unexpected state: %s", transitGatewayRouteTableID, transitGatewayAttachmentID, state)
+			}
+
+			if err := disassociateTransitGatewayRouteTable(ctx, conn, transitGatewayRouteTableID, transitGatewayAttachmentID); err != nil {
+				return sdkdiag.AppendFromErr(diags, err)
+			}
+		}
+	}
+
 	input := &ec2.AssociateTransitGatewayRouteTableInput{
 		TransitGatewayAttachmentId: aws.String(transitGatewayAttachmentID),
 		TransitGatewayRouteTableId: aws.String(transitGatewayRouteTableID),
@@ -81,7 +113,7 @@ func resourceTransitGatewayRouteTableAssociationCreate(ctx context.Context, d *s
 
 func resourceTransitGatewayRouteTableAssociationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	transitGatewayRouteTableID, transitGatewayAttachmentID, err := TransitGatewayRouteTableAssociationParseResourceID(d.Id())
 
@@ -111,7 +143,7 @@ func resourceTransitGatewayRouteTableAssociationRead(ctx context.Context, d *sch
 
 func resourceTransitGatewayRouteTableAssociationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	transitGatewayRouteTableID, transitGatewayAttachmentID, err := TransitGatewayRouteTableAssociationParseResourceID(d.Id())
 
@@ -120,21 +152,8 @@ func resourceTransitGatewayRouteTableAssociationDelete(ctx context.Context, d *s
 	}
 
 	log.Printf("[DEBUG] Deleting EC2 Transit Gateway Route Table Association: %s", d.Id())
-	_, err = conn.DisassociateTransitGatewayRouteTableWithContext(ctx, &ec2.DisassociateTransitGatewayRouteTableInput{
-		TransitGatewayAttachmentId: aws.String(transitGatewayAttachmentID),
-		TransitGatewayRouteTableId: aws.String(transitGatewayRouteTableID),
-	})
-
-	if tfawserr.ErrCodeEquals(err, errCodeInvalidRouteTableIDNotFound) {
-		return diags
-	}
-
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "deleting EC2 Transit Gateway Route Table Association (%s): %s", d.Id(), err)
-	}
-
-	if _, err := WaitTransitGatewayRouteTableAssociationDeleted(ctx, conn, transitGatewayRouteTableID, transitGatewayAttachmentID); err != nil {
-		return sdkdiag.AppendErrorf(diags, "waiting for EC2 Transit Gateway Route Table Association (%s) delete: %s", d.Id(), err)
+	if err := disassociateTransitGatewayRouteTable(ctx, conn, transitGatewayRouteTableID, transitGatewayAttachmentID); err != nil {
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	return diags
@@ -182,18 +201,32 @@ func transitGatewayRouteTableAssociationUpdate(ctx context.Context, conn *ec2.EC
 			return fmt.Errorf("waiting for EC2 Transit Gateway Route Table Association (%s) create: %w", id, err)
 		}
 
-		input := &ec2.DisassociateTransitGatewayRouteTableInput{
-			TransitGatewayAttachmentId: aws.String(transitGatewayAttachmentID),
-			TransitGatewayRouteTableId: aws.String(transitGatewayRouteTableID),
+		if err := disassociateTransitGatewayRouteTable(ctx, conn, transitGatewayRouteTableID, transitGatewayAttachmentID); err != nil {
+			return err
 		}
+	}
 
-		if _, err := conn.DisassociateTransitGatewayRouteTableWithContext(ctx, input); err != nil {
-			return fmt.Errorf("deleting EC2 Transit Gateway Route Table Association (%s): %w", id, err)
-		}
+	return nil
+}
 
-		if _, err := WaitTransitGatewayRouteTableAssociationDeleted(ctx, conn, transitGatewayRouteTableID, transitGatewayAttachmentID); err != nil {
-			return fmt.Errorf("waiting for EC2 Transit Gateway Route Table Association (%s) delete: %w", id, err)
-		}
+func disassociateTransitGatewayRouteTable(ctx context.Context, conn *ec2.EC2, transitGatewayRouteTableID, transitGatewayAttachmentID string) error {
+	input := &ec2.DisassociateTransitGatewayRouteTableInput{
+		TransitGatewayAttachmentId: aws.String(transitGatewayAttachmentID),
+		TransitGatewayRouteTableId: aws.String(transitGatewayRouteTableID),
+	}
+
+	_, err := conn.DisassociateTransitGatewayRouteTableWithContext(ctx, input)
+
+	if tfawserr.ErrCodeEquals(err, errCodeInvalidRouteTableIDNotFound) {
+		return nil
+	}
+
+	if err != nil {
+		return fmt.Errorf("deleting EC2 Transit Gateway Route Table (%s) Association (%s): %w", transitGatewayRouteTableID, transitGatewayAttachmentID, err)
+	}
+
+	if _, err := WaitTransitGatewayRouteTableAssociationDeleted(ctx, conn, transitGatewayRouteTableID, transitGatewayAttachmentID); err != nil {
+		return fmt.Errorf("waiting for EC2 Transit Gateway Route Table (%s) Association (%s) delete: %w", transitGatewayRouteTableID, transitGatewayAttachmentID, err)
 	}
 
 	return nil

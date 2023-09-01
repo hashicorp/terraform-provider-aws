@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package schema
 
 import (
@@ -659,20 +662,23 @@ func (s *GRPCProviderServer) PlanResourceChange(ctx context.Context, req *tfprot
 	ctx = logging.InitContext(ctx)
 	resp := &tfprotov5.PlanResourceChangeResponse{}
 
-	// This is a signal to Terraform Core that we're doing the best we can to
-	// shim the legacy type system of the SDK onto the Terraform type system
-	// but we need it to cut us some slack. This setting should not be taken
-	// forward to any new SDK implementations, since setting it prevents us
-	// from catching certain classes of provider bug that can lead to
-	// confusing downstream errors.
-	resp.UnsafeToUseLegacyTypeSystem = true //nolint:staticcheck
-
 	res, ok := s.provider.ResourcesMap[req.TypeName]
 	if !ok {
 		resp.Diagnostics = convert.AppendProtoDiag(ctx, resp.Diagnostics, fmt.Errorf("unknown resource type: %s", req.TypeName))
 		return resp, nil
 	}
 	schemaBlock := s.getResourceSchemaBlock(req.TypeName)
+
+	// This is a signal to Terraform Core that we're doing the best we can to
+	// shim the legacy type system of the SDK onto the Terraform type system
+	// but we need it to cut us some slack. This setting should not be taken
+	// forward to any new SDK implementations, since setting it prevents us
+	// from catching certain classes of provider bug that can lead to
+	// confusing downstream errors.
+	if !res.EnableLegacyTypeSystemPlanErrors {
+		//nolint:staticcheck // explicitly for this SDK
+		resp.UnsafeToUseLegacyTypeSystem = true
+	}
 
 	priorStateVal, err := msgpack.Unmarshal(req.PriorState.MsgPack, schemaBlock.ImpliedType())
 	if err != nil {
@@ -1072,7 +1078,10 @@ func (s *GRPCProviderServer) ApplyResourceChange(ctx context.Context, req *tfpro
 	// forward to any new SDK implementations, since setting it prevents us
 	// from catching certain classes of provider bug that can lead to
 	// confusing downstream errors.
-	resp.UnsafeToUseLegacyTypeSystem = true //nolint:staticcheck
+	if !res.EnableLegacyTypeSystemApplyErrors {
+		//nolint:staticcheck // explicitly for this SDK
+		resp.UnsafeToUseLegacyTypeSystem = true
+	}
 
 	return resp, nil
 }
@@ -1109,6 +1118,22 @@ func (s *GRPCProviderServer) ImportResourceState(ctx context.Context, req *tfpro
 
 		// Normalize the value and fill in any missing blocks.
 		newStateVal = objchange.NormalizeObjectFromLegacySDK(newStateVal, schemaBlock)
+
+		// Ensure any timeouts block is null in the imported state. There is no
+		// configuration to read from during import, so it is never valid to
+		// return a known value for the block.
+		//
+		// This is done without modifying HCL2ValueFromFlatmap or
+		// NormalizeObjectFromLegacySDK to prevent other unexpected changes.
+		//
+		// Reference: https://github.com/hashicorp/terraform-plugin-sdk/issues/1145
+		newStateType := newStateVal.Type()
+
+		if newStateVal != cty.NilVal && !newStateVal.IsNull() && newStateType.IsObjectType() && newStateType.HasAttribute(TimeoutsConfigKey) {
+			newStateValueMap := newStateVal.AsValueMap()
+			newStateValueMap[TimeoutsConfigKey] = cty.NullVal(newStateType.AttributeType(TimeoutsConfigKey))
+			newStateVal = cty.ObjectVal(newStateValueMap)
+		}
 
 		newStateMP, err := msgpack.Marshal(newStateVal, schemaBlock.ImpliedType())
 		if err != nil {
@@ -1284,7 +1309,7 @@ func stripResourceModifiers(r *Resource) *Resource {
 	newResource.CustomizeDiff = nil
 	newResource.Schema = map[string]*Schema{}
 
-	for k, s := range r.Schema {
+	for k, s := range r.SchemaMap() {
 		newResource.Schema[k] = stripSchema(s)
 	}
 

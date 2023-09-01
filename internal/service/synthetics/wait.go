@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package synthetics
 
 import (
@@ -7,7 +10,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/synthetics"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
@@ -19,7 +22,7 @@ const (
 )
 
 func waitCanaryReady(ctx context.Context, conn *synthetics.Synthetics, name string) (*synthetics.Canary, error) { //nolint:unparam
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{synthetics.CanaryStateCreating, synthetics.CanaryStateUpdating},
 		Target:  []string{synthetics.CanaryStateReady},
 		Refresh: statusCanaryState(ctx, conn, name),
@@ -40,7 +43,7 @@ func waitCanaryReady(ctx context.Context, conn *synthetics.Synthetics, name stri
 }
 
 func waitCanaryStopped(ctx context.Context, conn *synthetics.Synthetics, name string) (*synthetics.Canary, error) { //nolint:unparam
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{
 			synthetics.CanaryStateStopping,
 			synthetics.CanaryStateUpdating,
@@ -67,7 +70,7 @@ func waitCanaryStopped(ctx context.Context, conn *synthetics.Synthetics, name st
 }
 
 func waitCanaryRunning(ctx context.Context, conn *synthetics.Synthetics, name string) (*synthetics.Canary, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{
 			synthetics.CanaryStateStarting,
 			synthetics.CanaryStateUpdating,
@@ -93,7 +96,7 @@ func waitCanaryRunning(ctx context.Context, conn *synthetics.Synthetics, name st
 }
 
 func waitCanaryDeleted(ctx context.Context, conn *synthetics.Synthetics, name string) (*synthetics.Canary, error) { //nolint:unparam
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{synthetics.CanaryStateDeleting, synthetics.CanaryStateStopped},
 		Target:  []string{},
 		Refresh: statusCanaryState(ctx, conn, name),
