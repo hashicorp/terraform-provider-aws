@@ -44,6 +44,7 @@ func TestAccFSxWindowsFileSystemDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(datasourceName, "storage_capacity", resourceName, "storage_capacity"),
 					resource.TestCheckResourceAttrPair(datasourceName, "storage_type", resourceName, "storage_type"),
 					resource.TestCheckResourceAttrPair(datasourceName, "subnet_ids.#", resourceName, "subnet_ids.#"),
+					resource.TestCheckResourceAttrPair(datasourceName, "tags.%", resourceName, "tags.%"),
 					resource.TestCheckResourceAttrPair(datasourceName, "throughput_capacity", resourceName, "throughput_capacity"),
 					resource.TestCheckResourceAttrPair(datasourceName, "vpc_id", resourceName, "vpc_id"),
 				),
@@ -53,7 +54,7 @@ func TestAccFSxWindowsFileSystemDataSource_basic(t *testing.T) {
 }
 
 func testAccWindowsFileSystemDataSourceConfig_basic(rName, domain string) string {
-	return acctest.ConfigCompose(testAccWindowsFileSystemConfig_subnetIDs1(rName, domain), `
+	return acctest.ConfigCompose(testAccWindowsFileSystemConfig_basic(rName, domain), `
 data "aws_fsx_windows_file_system" "test" {
   id = aws_fsx_windows_file_system.test.id
 }
