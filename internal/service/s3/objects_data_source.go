@@ -10,6 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
@@ -62,6 +63,15 @@ func DataSourceObjects() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
+			"request_charged": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"request_payer": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ValidateFunc: validation.StringInSlice(s3.RequestPayer_Values(), false),
+			},
 			"start_after": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -103,16 +113,23 @@ func dataSourceObjectsRead(ctx context.Context, d *schema.ResourceData, meta int
 		input.Prefix = aws.String(v.(string))
 	}
 
+	if v, ok := d.GetOk("request_payer"); ok {
+		input.RequestPayer = aws.String(v.(string))
+	}
+
 	if v, ok := d.GetOk("start_after"); ok {
 		input.StartAfter = aws.String(v.(string))
 	}
 
 	var commonPrefixes, keys, owners []string
+	var requestCharged string
 
 	err := conn.ListObjectsV2PagesWithContext(ctx, &input, func(page *s3.ListObjectsV2Output, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
+
+		requestCharged = aws.StringValue(page.RequestCharged)
 
 		for _, v := range page.CommonPrefixes {
 			commonPrefixes = append(commonPrefixes, aws.StringValue(v.Prefix))
@@ -144,6 +161,7 @@ func dataSourceObjectsRead(ctx context.Context, d *schema.ResourceData, meta int
 	d.Set("common_prefixes", commonPrefixes)
 	d.Set("keys", keys)
 	d.Set("owners", owners)
+	d.Set("request_charged", requestCharged)
 
 	return diags
 }

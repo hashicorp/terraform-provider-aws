@@ -30,6 +30,7 @@ func TestAccS3ObjectsDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(dataSourceName, "common_prefixes.#", "0"),
 					resource.TestCheckResourceAttr(dataSourceName, "keys.#", "3"),
 					resource.TestCheckResourceAttr(dataSourceName, "owners.#", "0"),
+					resource.TestCheckResourceAttr(dataSourceName, "request_charged", ""),
 				),
 			},
 		},
