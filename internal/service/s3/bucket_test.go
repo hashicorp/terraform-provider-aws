@@ -8,11 +8,11 @@ import (
 	"fmt"
 	"log"
 	"reflect"
-	"regexp"
 	"strings"
 	"testing"
 	"time"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/endpoints"
 	"github.com/aws/aws-sdk-go/service/cloudformation"
@@ -101,7 +101,7 @@ func TestAccS3Bucket_Basic_emptyString(t *testing.T) {
 				Config: testAccBucketConfig_emptyString,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketExists(ctx, resourceName),
-					resource.TestMatchResourceAttr(resourceName, "bucket", regexp.MustCompile("^terraform-")),
+					resource.TestMatchResourceAttr(resourceName, "bucket", regexache.MustCompile("^terraform-")),
 				),
 			},
 			{
@@ -154,7 +154,7 @@ func TestAccS3Bucket_Basic_namePrefix(t *testing.T) {
 				Config: testAccBucketConfig_namePrefix,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketExists(ctx, resourceName),
-					resource.TestMatchResourceAttr(resourceName, "bucket", regexp.MustCompile("^tf-test-")),
+					resource.TestMatchResourceAttr(resourceName, "bucket", regexache.MustCompile("^tf-test-")),
 				),
 			},
 			{
@@ -295,7 +295,7 @@ func TestAccS3Bucket_Basic_keyEnabled(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "server_side_encryption_configuration.0.rule.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "server_side_encryption_configuration.0.rule.0.apply_server_side_encryption_by_default.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "server_side_encryption_configuration.0.rule.0.apply_server_side_encryption_by_default.0.sse_algorithm", "aws:kms"),
-					resource.TestMatchResourceAttr(resourceName, "server_side_encryption_configuration.0.rule.0.apply_server_side_encryption_by_default.0.kms_master_key_id", regexp.MustCompile("^arn")),
+					resource.TestMatchResourceAttr(resourceName, "server_side_encryption_configuration.0.rule.0.apply_server_side_encryption_by_default.0.kms_master_key_id", regexache.MustCompile("^arn")),
 					resource.TestCheckResourceAttr(resourceName, "server_side_encryption_configuration.0.rule.0.bucket_key_enabled", "true"),
 				),
 			},
@@ -385,7 +385,7 @@ func TestAccS3Bucket_Duplicate_basic(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccBucketConfig_duplicate(region, bucketName),
-				ExpectError: regexp.MustCompile(s3.ErrCodeBucketAlreadyOwnedByYou),
+				ExpectError: regexache.MustCompile(s3.ErrCodeBucketAlreadyOwnedByYou),
 			},
 		},
 	})
@@ -405,7 +405,7 @@ func TestAccS3Bucket_Duplicate_UsEast1(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccBucketConfig_duplicate(endpoints.UsEast1RegionID, bucketName),
-				ExpectError: regexp.MustCompile(tfs3.ErrMessageBucketAlreadyExists),
+				ExpectError: regexache.MustCompile(tfs3.ErrMessageBucketAlreadyExists),
 			},
 		},
 	})
@@ -426,7 +426,7 @@ func TestAccS3Bucket_Duplicate_UsEast1AltAccount(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccBucketConfig_duplicateAltAccount(endpoints.UsEast1RegionID, bucketName),
-				ExpectError: regexp.MustCompile(s3.ErrCodeBucketAlreadyExists),
+				ExpectError: regexache.MustCompile(s3.ErrCodeBucketAlreadyExists),
 			},
 		},
 	})
@@ -1560,7 +1560,7 @@ func TestAccS3Bucket_Replication_expectVersioningValidationError(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccBucketConfig_replicationNoVersioning(bucketName),
-				ExpectError: regexp.MustCompile(`versioning must be enabled to allow S3 bucket replication`),
+				ExpectError: regexache.MustCompile(`versioning must be enabled to allow S3 bucket replication`),
 			},
 		},
 	})
@@ -2030,7 +2030,7 @@ func TestAccS3Bucket_Security_enableDefaultEncryptionWhenTypical(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "server_side_encryption_configuration.0.rule.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "server_side_encryption_configuration.0.rule.0.apply_server_side_encryption_by_default.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "server_side_encryption_configuration.0.rule.0.apply_server_side_encryption_by_default.0.sse_algorithm", s3.ServerSideEncryptionAwsKms),
-					resource.TestMatchResourceAttr(resourceName, "server_side_encryption_configuration.0.rule.0.apply_server_side_encryption_by_default.0.kms_master_key_id", regexp.MustCompile("^arn")),
+					resource.TestMatchResourceAttr(resourceName, "server_side_encryption_configuration.0.rule.0.apply_server_side_encryption_by_default.0.kms_master_key_id", regexache.MustCompile("^arn")),
 				),
 			},
 			{

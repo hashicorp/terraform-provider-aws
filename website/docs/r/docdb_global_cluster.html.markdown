@@ -59,6 +59,10 @@ resource "aws_docdb_cluster" "secondary" {
   cluster_identifier        = "test-secondary-cluster"
   global_cluster_identifier = aws_docdb_global_cluster.example.id
   db_subnet_group_name      = "default"
+
+  depends_on = [
+    aws_docdb_cluster.primary
+  ]
 }
 
 resource "aws_docdb_cluster_instance" "secondary" {

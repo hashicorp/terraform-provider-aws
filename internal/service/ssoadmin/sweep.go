@@ -9,8 +9,8 @@ package ssoadmin
 import (
 	"fmt"
 	"log"
-	"regexp"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ssoadmin"
 	"github.com/hashicorp/go-multierror"
@@ -46,7 +46,7 @@ func sweepAccountAssignments(region string) error {
 	sweepResources := make([]sweep.Sweepable, 0)
 	var sweeperErrs *multierror.Error
 
-	accessDenied := regexp.MustCompile(`AccessDeniedException: .+ is not authorized to perform:`)
+	accessDenied := regexache.MustCompile(`AccessDeniedException: .+ is not authorized to perform:`)
 
 	// Need to Read the SSO Instance first; assumes the first instance returned
 	// is where the permission sets exist as AWS SSO currently supports only 1 instance
@@ -61,7 +61,7 @@ func sweepAccountAssignments(region string) error {
 		return err
 	}
 
-	instanceArn := dsData.Get("arns").(*schema.Set).List()[0].(string)
+	instanceArn := dsData.Get("arns").([]interface{})[0].(string)
 
 	// To sweep account assignments, we need to first determine which Permission Sets
 	// are available and then search for their respective assignments
@@ -150,7 +150,7 @@ func sweepPermissionSets(region string) error {
 	sweepResources := make([]sweep.Sweepable, 0)
 	var sweeperErrs *multierror.Error
 
-	accessDenied := regexp.MustCompile(`AccessDeniedException: .+ is not authorized to perform:`)
+	accessDenied := regexache.MustCompile(`AccessDeniedException: .+ is not authorized to perform:`)
 
 	// Need to Read the SSO Instance first; assumes the first instance returned
 	// is where the permission sets exist as AWS SSO currently supports only 1 instance

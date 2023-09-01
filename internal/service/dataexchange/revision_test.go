@@ -6,9 +6,9 @@ package dataexchange_test
 import (
 	"context"
 	"fmt"
-	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/service/dataexchange"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -37,7 +37,7 @@ func TestAccDataExchangeRevision_basic(t *testing.T) {
 					testAccCheckRevisionExists(ctx, resourceName, &proj),
 					resource.TestCheckResourceAttrPair(resourceName, "data_set_id", "aws_dataexchange_data_set.test", "id"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "dataexchange", regexp.MustCompile(`data-sets/.+/revisions/.+`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "dataexchange", regexache.MustCompile(`data-sets/.+/revisions/.+`)),
 				),
 			},
 			{

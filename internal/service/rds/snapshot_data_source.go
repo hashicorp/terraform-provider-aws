@@ -14,8 +14,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
-	"github.com/hashicorp/terraform-provider-aws/internal/slices"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_db_snapshot", name="DB Snapshot")
@@ -116,7 +117,7 @@ func DataSourceSnapshot() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"tags": tftags.TagsSchemaComputed(),
+			names.AttrTags: tftags.TagsSchemaComputed(),
 			"vpc_id": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -146,7 +147,7 @@ func dataSourceSnapshotRead(ctx context.Context, d *schema.ResourceData, meta in
 		input.SnapshotType = aws.String(v.(string))
 	}
 
-	f := slices.PredicateTrue[*rds.DBSnapshot]()
+	f := tfslices.PredicateTrue[*rds.DBSnapshot]()
 	if tags := getTagsIn(ctx); len(tags) > 0 {
 		f = func(v *rds.DBSnapshot) bool {
 			return KeyValueTags(ctx, v.TagList).ContainsAll(KeyValueTags(ctx, tags))

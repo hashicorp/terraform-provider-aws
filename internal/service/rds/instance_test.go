@@ -8,9 +8,9 @@ import (
 	"fmt"
 	"log"
 	"os"
-	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/endpoints"
 	"github.com/aws/aws-sdk-go/service/rds"
@@ -48,7 +48,7 @@ func TestAccRDSInstance_basic(t *testing.T) {
 					testAccCheckInstanceAttributes(&v),
 					resource.TestCheckResourceAttr(resourceName, "allocated_storage", "10"),
 					resource.TestCheckNoResourceAttr(resourceName, "allow_major_version_upgrade"),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "rds", regexp.MustCompile(`db:.+`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "rds", regexache.MustCompile(`db:.+`)),
 					resource.TestCheckResourceAttr(resourceName, "auto_minor_version_upgrade", "true"),
 					resource.TestCheckResourceAttrSet(resourceName, "availability_zone"),
 					resource.TestCheckResourceAttr(resourceName, "backup_retention_period", "0"),
@@ -73,8 +73,8 @@ func TestAccRDSInstance_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "listener_endpoint.#", "0"),
 					resource.TestCheckResourceAttrSet(resourceName, "maintenance_window"),
 					resource.TestCheckResourceAttr(resourceName, "max_allocated_storage", "0"),
-					resource.TestMatchResourceAttr(resourceName, "option_group_name", regexp.MustCompile(`^default:mysql-\d`)),
-					resource.TestMatchResourceAttr(resourceName, "parameter_group_name", regexp.MustCompile(`^default\.mysql\d`)),
+					resource.TestMatchResourceAttr(resourceName, "option_group_name", regexache.MustCompile(`^default:mysql-\d`)),
+					resource.TestMatchResourceAttr(resourceName, "parameter_group_name", regexache.MustCompile(`^default\.mysql\d`)),
 					resource.TestCheckResourceAttr(resourceName, "port", "3306"),
 					resource.TestCheckResourceAttr(resourceName, "publicly_accessible", "false"),
 					resource.TestCheckResourceAttrSet(resourceName, "resource_id"),
@@ -126,7 +126,7 @@ func TestAccRDSInstance_manage_password(t *testing.T) {
 					testAccCheckInstanceAttributes(&v),
 					resource.TestCheckResourceAttr(resourceName, "allocated_storage", "10"),
 					resource.TestCheckNoResourceAttr(resourceName, "allow_major_version_upgrade"),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "rds", regexp.MustCompile(`db:.+`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "rds", regexache.MustCompile(`db:.+`)),
 					resource.TestCheckResourceAttr(resourceName, "auto_minor_version_upgrade", "true"),
 					resource.TestCheckResourceAttrSet(resourceName, "availability_zone"),
 					resource.TestCheckResourceAttr(resourceName, "backup_retention_period", "0"),
@@ -151,8 +151,8 @@ func TestAccRDSInstance_manage_password(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "maintenance_window"),
 					resource.TestCheckResourceAttr(resourceName, "master_user_secret.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "max_allocated_storage", "0"),
-					resource.TestMatchResourceAttr(resourceName, "option_group_name", regexp.MustCompile(`^default:mysql-\d`)),
-					resource.TestMatchResourceAttr(resourceName, "parameter_group_name", regexp.MustCompile(`^default\.mysql\d`)),
+					resource.TestMatchResourceAttr(resourceName, "option_group_name", regexache.MustCompile(`^default:mysql-\d`)),
+					resource.TestMatchResourceAttr(resourceName, "parameter_group_name", regexache.MustCompile(`^default\.mysql\d`)),
 					resource.TestCheckResourceAttr(resourceName, "port", "3306"),
 					resource.TestCheckResourceAttr(resourceName, "publicly_accessible", "false"),
 					resource.TestCheckResourceAttrSet(resourceName, "resource_id"),
@@ -932,7 +932,7 @@ func TestAccRDSInstance_password(t *testing.T) {
 			// Password should not be shown in error message
 			{
 				Config:      testAccInstanceConfig_password(rName, "invalid"),
-				ExpectError: regexp.MustCompile(`MasterUserPassword is not a valid password because it is shorter than 8 characters`),
+				ExpectError: regexache.MustCompile(`MasterUserPassword is not a valid password because it is shorter than 8 characters`),
 			},
 			{
 				Config: testAccInstanceConfig_password(rName, "valid-password-1"),
@@ -4748,7 +4748,7 @@ func TestAccRDSInstance_BlueGreenDeployment_updateParameterGroup(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "backup_retention_period", "1"),
 					// TODO: This should be a TestCheckResourceAttrPair against a parameter group data source.
 					// https://github.com/hashicorp/terraform-provider-aws/pull/13718
-					resource.TestMatchResourceAttr(resourceName, "parameter_group_name", regexp.MustCompile(`^default\.mysql`)),
+					resource.TestMatchResourceAttr(resourceName, "parameter_group_name", regexache.MustCompile(`^default\.mysql`)),
 				),
 			},
 			{
@@ -5954,6 +5954,9 @@ func testAccInstanceConfig_kmsKeyID(rName string) string {
 	return acctest.ConfigCompose(
 		testAccInstanceConfig_orderableClassMySQL(),
 		fmt.Sprintf(`
+data "aws_caller_identity" "current" {}
+data "aws_partition" "current" {}
+
 resource "aws_kms_key" "test" {
   description = %[1]q
 
@@ -5966,7 +5969,7 @@ resource "aws_kms_key" "test" {
       "Sid": "Enable IAM User Permissions",
       "Effect": "Allow",
       "Principal": {
-        "AWS": "*"
+        "AWS": "arn:${data.aws_partition.current.partition}:iam::${data.aws_caller_identity.current.account_id}:root"
       },
       "Action": "kms:*",
       "Resource": "*"
@@ -9931,6 +9934,9 @@ resource "aws_db_instance" "test" {
 
 func testAccInstanceConfig_ReplicateSourceDB_performanceInsightsEnabled(rName string) string {
 	return fmt.Sprintf(`
+data "aws_caller_identity" "current" {}
+data "aws_partition" "current" {}
+
 resource "aws_kms_key" "test" {
   description = "Terraform acc test"
 
@@ -9943,7 +9949,7 @@ resource "aws_kms_key" "test" {
       "Sid": "Enable IAM User Permissions",
       "Effect": "Allow",
       "Principal": {
-        "AWS": "*"
+        "AWS": "arn:${data.aws_partition.current.partition}:iam::${data.aws_caller_identity.current.account_id}:root"
       },
       "Action": "kms:*",
       "Resource": "*"
@@ -9992,6 +9998,9 @@ resource "aws_db_instance" "test" {
 
 func testAccInstanceConfig_SnapshotID_performanceInsightsEnabled(rName string) string {
 	return fmt.Sprintf(`
+data "aws_caller_identity" "current" {}
+data "aws_partition" "current" {}
+
 resource "aws_kms_key" "test" {
   description = "Terraform acc test"
 
@@ -10004,7 +10013,7 @@ resource "aws_kms_key" "test" {
       "Sid": "Enable IAM User Permissions",
       "Effect": "Allow",
       "Principal": {
-        "AWS": "*"
+        "AWS": "arn:${data.aws_partition.current.partition}:iam::${data.aws_caller_identity.current.account_id}:root"
       },
       "Action": "kms:*",
       "Resource": "*"

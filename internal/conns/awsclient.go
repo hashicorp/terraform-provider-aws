@@ -33,14 +33,15 @@ type AWSClient struct {
 	Session                 *session_sdkv1.Session
 	TerraformVersion        string
 
-	awsConfig      *aws_sdkv2.Config
-	clients        map[string]any
-	conns          map[string]any
-	endpoints      map[string]string // From provider configuration.
-	httpClient     *http.Client
-	lock           sync.Mutex
-	s3UsePathStyle bool   // From provider configuration.
-	stsRegion      string // From provider configuration.
+	awsConfig                 *aws_sdkv2.Config
+	clients                   map[string]any
+	conns                     map[string]any
+	endpoints                 map[string]string // From provider configuration.
+	httpClient                *http.Client
+	lock                      sync.Mutex
+	s3UsePathStyle            bool                                      // From provider configuration.
+	s3UsEast1RegionalEndpoint endpoints_sdkv1.S3UsEast1RegionalEndpoint // From provider configuration.
+	stsRegion                 string                                    // From provider configuration.
 }
 
 // PartitionHostname returns a hostname with the provider domain suffix for the partition
@@ -145,6 +146,7 @@ func (client *AWSClient) apiClientConfig(servicePackageName string) map[string]a
 	switch servicePackageName {
 	case names.S3:
 		m["s3_use_path_style"] = client.s3UsePathStyle
+		m["s3_us_east_1_regional_endpoint"] = client.s3UsEast1RegionalEndpoint
 	case names.STS:
 		m["sts_region"] = client.stsRegion
 	}

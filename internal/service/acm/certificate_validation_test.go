@@ -6,10 +6,10 @@ package acm_test
 import (
 	"context"
 	"fmt"
-	"regexp"
 	"strconv"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
@@ -56,7 +56,7 @@ func TestAccACMCertificateValidation_timeout(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccCertificateValidationConfig_timeout(domain),
-				ExpectError: regexp.MustCompile(`timeout while waiting for state to become 'ISSUED' \(last state: 'PENDING_VALIDATION'`),
+				ExpectError: regexache.MustCompile(`timeout while waiting for state to become 'ISSUED' \(last state: 'PENDING_VALIDATION'`),
 			},
 		},
 	})
@@ -78,7 +78,7 @@ func TestAccACMCertificateValidation_validationRecordFQDNS(t *testing.T) {
 			// Test that validation fails if given validation_fqdns don't match
 			{
 				Config:      testAccCertificateValidationConfig_recordFQDNsWrongFQDN(domain),
-				ExpectError: regexp.MustCompile("missing .+ DNS validation record: .+"),
+				ExpectError: regexache.MustCompile("missing .+ DNS validation record: .+"),
 			},
 			// Test that validation succeeds with validation
 			{
@@ -105,7 +105,7 @@ func TestAccACMCertificateValidation_validationRecordFQDNSEmail(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccCertificateValidationConfig_recordFQDNsEmail(domain),
-				ExpectError: regexp.MustCompile("validation_record_fqdns is not valid for EMAIL validation"),
+				ExpectError: regexache.MustCompile("validation_record_fqdns is not valid for EMAIL validation"),
 			},
 		},
 	})

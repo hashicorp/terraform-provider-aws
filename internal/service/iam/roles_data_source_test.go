@@ -5,10 +5,10 @@ package iam_test
 
 import (
 	"fmt"
-	"regexp"
 	"strconv"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/service/iam"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -27,7 +27,7 @@ func TestAccIAMRolesDataSource_basic(t *testing.T) {
 			{
 				Config: testAccRolesDataSourceConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestMatchResourceAttr(dataSourceName, "names.#", regexp.MustCompile("[^0].*$")),
+					resource.TestMatchResourceAttr(dataSourceName, "names.#", regexache.MustCompile("[^0].*$")),
 				),
 			},
 		},

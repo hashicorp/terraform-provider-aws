@@ -6,6 +6,12 @@ package dms
 const (
 	endpointStatusDeleting = "deleting"
 
+	replicationInstanceStatusAvailable = "available"
+	replicationInstanceStatusCreating  = "creating"
+	replicationInstanceStatusDeleting  = "deleting"
+	replicationInstanceStatusModifying = "modifying"
+	replicationInstanceStatusUpgrading = "upgrading"
+
 	replicationTaskStatusCreating  = "creating"
 	replicationTaskStatusDeleting  = "deleting"
 	replicationTaskStatusFailed    = "failed"
@@ -24,6 +30,7 @@ const (
 	engineNameAuroraServerless           = "aurora-serverless"
 	engineNameAzuredb                    = "azuredb"
 	engineNameAzureSQLManagedInstance    = "azure-sql-managed-instance"
+	engineNameBabelfish                  = "babelfish"
 	engineNameDB2                        = "db2"
 	engineNameDB2zOS                     = "db2-zos"
 	engineNameTransfer                   = "dms-transfer"
@@ -54,6 +61,7 @@ func engineName_Values() []string {
 		engineNameAuroraServerless,
 		engineNameAzuredb,
 		engineNameAzureSQLManagedInstance,
+		engineNameBabelfish,
 		engineNameDB2,
 		engineNameDB2zOS,
 		engineNameTransfer,
@@ -121,5 +129,17 @@ func encryptionMode_Values() []string {
 	return []string{
 		encryptionModeSseKMS,
 		encryptionModeSseS3,
+	}
+}
+
+const (
+	networkTypeDual = "DUAL"
+	networkTypeIPv4 = "IPV4"
+)
+
+func networkType_Values() []string {
+	return []string{
+		networkTypeDual,
+		networkTypeIPv4,
 	}
 }

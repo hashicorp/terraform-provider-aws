@@ -6,9 +6,9 @@ package wafregional_test
 import (
 	"fmt"
 	"os"
-	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/service/wafregional"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
@@ -38,7 +38,7 @@ func TestAccWAFRegionalSubscribedRuleGroupDataSource_basic(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccSubscribedRuleGroupDataSourceConfig_nonexistent,
-				ExpectError: regexp.MustCompile(`no matches found`),
+				ExpectError: regexache.MustCompile(`no matches found`),
 			},
 			{
 				Config: testAccSubscribedRuleGroupDataSourceConfig_name(ruleGroupName),
@@ -63,7 +63,7 @@ func TestAccWAFRegionalSubscribedRuleGroupDataSource_basic(t *testing.T) {
 			},
 			{
 				Config:      testAccDataSourceSubscribedRuleGroupDataSourceConfig_nameAndMismatchingMetricName(ruleGroupName),
-				ExpectError: regexp.MustCompile(`no matches found`),
+				ExpectError: regexache.MustCompile(`no matches found`),
 			},
 		},
 	})

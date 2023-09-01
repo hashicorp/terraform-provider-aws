@@ -6,9 +6,9 @@ package s3_test
 import (
 	"context"
 	"fmt"
-	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
@@ -450,7 +450,7 @@ func TestAccS3BucketVersioning_Status_enabledToDisabled(t *testing.T) {
 			},
 			{
 				Config:      testAccBucketVersioningConfig_basic(rName, tfs3.BucketVersioningStatusDisabled),
-				ExpectError: regexp.MustCompile(`versioning_configuration.status cannot be updated from 'Enabled' to 'Disabled'`),
+				ExpectError: regexache.MustCompile(`versioning_configuration.status cannot be updated from 'Enabled' to 'Disabled'`),
 			},
 		},
 	})
@@ -477,7 +477,7 @@ func TestAccS3BucketVersioning_Status_suspendedToDisabled(t *testing.T) {
 			},
 			{
 				Config:      testAccBucketVersioningConfig_basic(rName, tfs3.BucketVersioningStatusDisabled),
-				ExpectError: regexp.MustCompile(`versioning_configuration.status cannot be updated from 'Suspended' to 'Disabled'`),
+				ExpectError: regexache.MustCompile(`versioning_configuration.status cannot be updated from 'Suspended' to 'Disabled'`),
 			},
 		},
 	})

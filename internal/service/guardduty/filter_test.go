@@ -6,9 +6,9 @@ package guardduty_test
 import (
 	"context"
 	"fmt"
-	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/acmpca"
 	"github.com/aws/aws-sdk-go/service/guardduty"
@@ -44,7 +44,7 @@ func testAccFilter_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "action", "ARCHIVE"),
 					resource.TestCheckResourceAttr(resourceName, "description", ""),
 					resource.TestCheckResourceAttr(resourceName, "rank", "1"),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "guardduty", regexp.MustCompile("detector/[a-z0-9]{32}/filter/test-filter$")),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "guardduty", regexache.MustCompile("detector/[a-z0-9]{32}/filter/test-filter$")),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "finding_criteria.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "finding_criteria.0.criterion.#", "3"),

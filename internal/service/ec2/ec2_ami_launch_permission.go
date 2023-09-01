@@ -7,9 +7,9 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"regexp"
 	"strings"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/ec2"
@@ -168,7 +168,7 @@ func resourceAMILaunchPermissionImport(ctx context.Context, d *schema.ResourceDa
 	var ok bool
 	if n := len(parts); n >= 2 {
 		if permissionID, imageID := strings.Join(parts[:n-1], importIDSeparator), parts[n-1]; permissionID != "" && imageID != "" {
-			if regexp.MustCompile(`^\d{12}$`).MatchString(permissionID) {
+			if regexache.MustCompile(`^\d{12}$`).MatchString(permissionID) {
 				// AWS account ID.
 				d.SetId(AMILaunchPermissionCreateResourceID(imageID, permissionID, "", "", ""))
 				ok = true

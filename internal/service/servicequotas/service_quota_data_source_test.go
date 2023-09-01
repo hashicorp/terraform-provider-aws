@@ -5,9 +5,9 @@ package servicequotas_test
 
 import (
 	"fmt"
-	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/service/servicequotas"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
@@ -38,7 +38,7 @@ func TestAccServiceQuotasServiceQuotaDataSource_quotaCode(t *testing.T) {
 					resource.TestCheckResourceAttr(dataSourceName, "service_code", setQuotaServiceCode),
 					resource.TestCheckResourceAttr(dataSourceName, "service_name", "Amazon Virtual Private Cloud (Amazon VPC)"),
 					resource.TestCheckResourceAttr(dataSourceName, "usage_metric.#", "0"),
-					resource.TestMatchResourceAttr(dataSourceName, "value", regexp.MustCompile(`^\d+$`)),
+					resource.TestMatchResourceAttr(dataSourceName, "value", regexache.MustCompile(`^\d+$`)),
 				),
 			},
 		},
@@ -63,14 +63,14 @@ func TestAccServiceQuotasServiceQuotaDataSource_quotaCode_Unset(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					acctest.CheckResourceAttrRegionalARNNoAccount(dataSourceName, "arn", "servicequotas", fmt.Sprintf("%s/%s", unsetQuotaServiceCode, unsetQuotaQuotaCode)),
 					resource.TestCheckResourceAttr(dataSourceName, "adjustable", "true"),
-					resource.TestMatchResourceAttr(dataSourceName, "default_value", regexp.MustCompile(`^\d+$`)),
+					resource.TestMatchResourceAttr(dataSourceName, "default_value", regexache.MustCompile(`^\d+$`)),
 					resource.TestCheckResourceAttr(dataSourceName, "global_quota", "false"),
 					resource.TestCheckResourceAttr(dataSourceName, "quota_code", unsetQuotaQuotaCode),
 					resource.TestCheckResourceAttr(dataSourceName, "quota_name", unsetQuotaQuotaName),
 					resource.TestCheckResourceAttr(dataSourceName, "service_code", unsetQuotaServiceCode),
 					resource.TestCheckResourceAttr(dataSourceName, "service_name", "Amazon Simple Storage Service (Amazon S3)"),
 					resource.TestCheckResourceAttr(dataSourceName, "usage_metric.#", "0"),
-					resource.TestMatchResourceAttr(dataSourceName, "value", regexp.MustCompile(`^\d+$`)),
+					resource.TestMatchResourceAttr(dataSourceName, "value", regexache.MustCompile(`^\d+$`)),
 					resource.TestCheckResourceAttrPair(dataSourceName, "value", dataSourceName, "default_value"),
 				),
 			},
@@ -111,7 +111,7 @@ func TestAccServiceQuotasServiceQuotaDataSource_quotaCode_hasUsageMetric(t *test
 					resource.TestCheckResourceAttr(dataSourceName, "usage_metric.0.metric_dimensions.0.class", "None"),
 					resource.TestCheckResourceAttr(dataSourceName, "usage_metric.0.metric_dimensions.0.type", "Resource"),
 					resource.TestCheckResourceAttr(dataSourceName, "usage_metric.0.metric_dimensions.0.resource", "NumberOfAutoScalingGroup"),
-					resource.TestMatchResourceAttr(dataSourceName, "value", regexp.MustCompile(`^\d+$`)),
+					resource.TestMatchResourceAttr(dataSourceName, "value", regexache.MustCompile(`^\d+$`)),
 				),
 			},
 		},
@@ -132,7 +132,7 @@ func TestAccServiceQuotasServiceQuotaDataSource_PermissionError_quotaCode(t *tes
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccServiceQuotaDataSourceConfig_permissionErrorCode("elasticloadbalancing", "L-53DA6B97"),
-				ExpectError: regexp.MustCompile(`DEPENDENCY_ACCESS_DENIED_ERROR`),
+				ExpectError: regexache.MustCompile(`DEPENDENCY_ACCESS_DENIED_ERROR`),
 			},
 		},
 	})
@@ -163,7 +163,7 @@ func TestAccServiceQuotasServiceQuotaDataSource_quotaName(t *testing.T) {
 					resource.TestCheckResourceAttr(dataSourceName, "service_code", setQuotaServiceCode),
 					resource.TestCheckResourceAttr(dataSourceName, "service_name", "Amazon Virtual Private Cloud (Amazon VPC)"),
 					resource.TestCheckResourceAttr(dataSourceName, "usage_metric.#", "0"),
-					resource.TestMatchResourceAttr(dataSourceName, "value", regexp.MustCompile(`^\d+$`)),
+					resource.TestMatchResourceAttr(dataSourceName, "value", regexache.MustCompile(`^\d+$`)),
 				),
 			},
 		},
@@ -188,14 +188,14 @@ func TestAccServiceQuotasServiceQuotaDataSource_quotaName_Unset(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					acctest.CheckResourceAttrRegionalARNNoAccount(dataSourceName, "arn", "servicequotas", fmt.Sprintf("%s/%s", unsetQuotaServiceCode, unsetQuotaQuotaCode)),
 					resource.TestCheckResourceAttr(dataSourceName, "adjustable", "true"),
-					resource.TestMatchResourceAttr(dataSourceName, "default_value", regexp.MustCompile(`^\d+$`)),
+					resource.TestMatchResourceAttr(dataSourceName, "default_value", regexache.MustCompile(`^\d+$`)),
 					resource.TestCheckResourceAttr(dataSourceName, "global_quota", "false"),
 					resource.TestCheckResourceAttr(dataSourceName, "quota_code", unsetQuotaQuotaCode),
 					resource.TestCheckResourceAttr(dataSourceName, "quota_name", unsetQuotaQuotaName),
 					resource.TestCheckResourceAttr(dataSourceName, "service_code", unsetQuotaServiceCode),
 					resource.TestCheckResourceAttr(dataSourceName, "service_name", "Amazon Simple Storage Service (Amazon S3)"),
 					resource.TestCheckResourceAttr(dataSourceName, "usage_metric.#", "0"),
-					resource.TestMatchResourceAttr(dataSourceName, "value", regexp.MustCompile(`^\d+$`)),
+					resource.TestMatchResourceAttr(dataSourceName, "value", regexache.MustCompile(`^\d+$`)),
 					resource.TestCheckResourceAttrPair(dataSourceName, "value", dataSourceName, "default_value"),
 				),
 			},
@@ -236,7 +236,7 @@ func TestAccServiceQuotasServiceQuotaDataSource_quotaName_hasUsageMetric(t *test
 					resource.TestCheckResourceAttr(dataSourceName, "usage_metric.0.metric_dimensions.0.class", "None"),
 					resource.TestCheckResourceAttr(dataSourceName, "usage_metric.0.metric_dimensions.0.type", "Resource"),
 					resource.TestCheckResourceAttr(dataSourceName, "usage_metric.0.metric_dimensions.0.resource", "NumberOfAutoScalingGroup"),
-					resource.TestMatchResourceAttr(dataSourceName, "value", regexp.MustCompile(`^\d+$`)),
+					resource.TestMatchResourceAttr(dataSourceName, "value", regexache.MustCompile(`^\d+$`)),
 				),
 			},
 		},
@@ -257,7 +257,7 @@ func TestAccServiceQuotasServiceQuotaDataSource_PermissionError_quotaName(t *tes
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccServiceQuotaDataSourceConfig_permissionErrorName("elasticloadbalancing", "Application Load Balancers per Region"),
-				ExpectError: regexp.MustCompile(`DEPENDENCY_ACCESS_DENIED_ERROR`),
+				ExpectError: regexache.MustCompile(`DEPENDENCY_ACCESS_DENIED_ERROR`),
 			},
 		},
 	})

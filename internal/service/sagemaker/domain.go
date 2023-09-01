@@ -6,9 +6,9 @@ package sagemaker
 import (
 	"context"
 	"log"
-	"regexp"
 	"strings"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/sagemaker"
@@ -273,7 +273,7 @@ func ResourceDomain() *schema.Resource {
 													Type:     schema.TypeString,
 													Optional: true,
 													ValidateFunc: validation.All(
-														validation.StringMatch(regexp.MustCompile(`^(https|s3)://([^/])/?(.*)$`), ""),
+														validation.StringMatch(regexache.MustCompile(`^(https|s3)://([^/])/?(.*)$`), ""),
 														validation.StringLenBetween(1, 1024),
 													),
 												},
@@ -512,9 +512,8 @@ func ResourceDomain() *schema.Resource {
 										ValidateFunc: validation.StringInSlice(sagemaker.NotebookOutputOption_Values(), false),
 									},
 									"s3_kms_key_id": {
-										Type:         schema.TypeString,
-										Optional:     true,
-										ValidateFunc: verify.ValidARN,
+										Type:     schema.TypeString,
+										Optional: true,
 									},
 									"s3_output_path": {
 										Type:     schema.TypeString,
@@ -570,7 +569,7 @@ func ResourceDomain() *schema.Resource {
 				ForceNew: true,
 				ValidateFunc: validation.All(
 					validation.StringLenBetween(1, 63),
-					validation.StringMatch(regexp.MustCompile(`^[a-zA-Z0-9](-*[a-zA-Z0-9])*$`), "Valid characters are a-z, A-Z, 0-9, and - (hyphen)."),
+					validation.StringMatch(regexache.MustCompile(`^[a-zA-Z0-9](-*[a-zA-Z0-9])*$`), "Valid characters are a-z, A-Z, 0-9, and - (hyphen)."),
 				),
 			},
 			"domain_settings": {
@@ -650,10 +649,9 @@ func ResourceDomain() *schema.Resource {
 				Computed: true,
 			},
 			"kms_key_id": {
-				Type:         schema.TypeString,
-				ForceNew:     true,
-				Optional:     true,
-				ValidateFunc: verify.ValidARN,
+				Type:     schema.TypeString,
+				ForceNew: true,
+				Optional: true,
 			},
 			"retention_policy": {
 				Type:     schema.TypeList,

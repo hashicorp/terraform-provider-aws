@@ -158,7 +158,7 @@ func ResourceFleet() *schema.Resource {
 				Type:         schema.TypeInt,
 				Optional:     true,
 				Computed:     true,
-				ValidateFunc: validation.IntBetween(600, 360000),
+				ValidateFunc: validation.IntBetween(600, 432000),
 			},
 			"name": {
 				Type:     schema.TypeString,
@@ -273,6 +273,10 @@ func resourceFleetCreate(ctx context.Context, d *schema.ResourceData, meta inter
 				return retry.RetryableError(err)
 			}
 
+			if tfawserr.ErrCodeEquals(err, appstream.ErrCodeConcurrentModificationException) {
+				return retry.RetryableError(err)
+			}
+
 			// Retry for IAM eventual consistency on error:
 			if tfawserr.ErrMessageContains(err, appstream.ErrCodeInvalidRoleException, "encountered an error because your IAM role") {
 				return retry.RetryableError(err)
@@ -288,7 +292,7 @@ func resourceFleetCreate(ctx context.Context, d *schema.ResourceData, meta inter
 		output, err = conn.CreateFleetWithContext(ctx, input)
 	}
 	if err != nil {
-		return diag.Errorf("creating Appstream Fleet (%s): %s", d.Id(), err)
+		return diag.Errorf("creating Appstream Fleet (%s): %s", d.Get("name").(string), err)
 	}
 
 	d.SetId(aws.StringValue(output.Fleet.Name))
