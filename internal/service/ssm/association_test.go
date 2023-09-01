@@ -623,16 +623,18 @@ func TestAccSSMAssociation_syncCompliance(t *testing.T) {
 		CheckDestroy:             testAccCheckAssociationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAssociationSyncComplianceConfig(rName),
+				Config: testAccAssociationSyncComplianceConfig(rName, "MANUAL"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAssociationExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "sync_compliance", "MANUAL"),
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				Config: testAccAssociationSyncComplianceConfig(rName, "AUTO"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAssociationExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "sync_compliance", "AUTO"),
+				),
 			},
 		},
 	})
@@ -1599,7 +1601,7 @@ resource "aws_ssm_association" "test" {
 `, rName, rate)
 }
 
-func testAccAssociationSyncComplianceConfig(rName string) string {
+func testAccAssociationSyncComplianceConfig(rName, syncCompliance string) string {
 	return fmt.Sprintf(`
 resource "aws_ssm_association" "test" {
   name = %[1]q
@@ -1608,7 +1610,7 @@ resource "aws_ssm_association" "test" {
     values = ["*"]
   }
   apply_only_at_cron_interval = false
-  sync_compliance             = "MANUAL"
+  sync_compliance             = %[2]q
   parameters = {
     Operation    = "Scan"
     RebootOption = "NoReboot"
@@ -1620,7 +1622,7 @@ resource "aws_ssm_association" "test" {
     ]
   }
 }
-`, rName)
+`, rName, syncCompliance)
 }
 
 func testAccAssociationConfig_outputLocationAndWaitForSuccess(rName string) string {
