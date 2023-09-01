@@ -26,24 +26,16 @@ func DataSourceObjects() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"prefix": {
-				Type:     schema.TypeString,
-				Optional: true,
+			"common_prefixes": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 			"delimiter": {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
 			"encoding_type": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"max_keys": {
-				Type:     schema.TypeInt,
-				Optional: true,
-				Default:  1000,
-			},
-			"start_after": {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
@@ -56,15 +48,23 @@ func DataSourceObjects() *schema.Resource {
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"common_prefixes": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
+			"max_keys": {
+				Type:     schema.TypeInt,
+				Optional: true,
+				Default:  1000,
 			},
 			"owners": {
 				Type:     schema.TypeList,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
+			},
+			"prefix": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
+			"start_after": {
+				Type:     schema.TypeString,
+				Optional: true,
 			},
 		},
 	}
