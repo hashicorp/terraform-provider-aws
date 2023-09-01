@@ -22,7 +22,7 @@ func TestAccS3CanonicalUserIDDataSource_basic(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCanonicalUserIDDataSourceConfig_basic,
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrSet(dataSourceName, "display_name"),
 					resource.TestCheckResourceAttrSet(dataSourceName, "id"),
 				),
