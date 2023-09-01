@@ -75,61 +75,62 @@ func dataSourceObjectsRead(ctx context.Context, d *schema.ResourceData, meta int
 	conn := meta.(*conns.AWSClient).S3Conn(ctx)
 
 	bucket := d.Get("bucket").(string)
-	prefix := d.Get("prefix").(string)
-
-	listInput := s3.ListObjectsV2Input{
+	input := s3.ListObjectsV2Input{
 		Bucket: aws.String(bucket),
 	}
 
-	if prefix != "" {
-		listInput.Prefix = aws.String(prefix)
+	if v, ok := d.GetOk("delimiter"); ok {
+		input.Delimiter = aws.String(v.(string))
 	}
 
-	if s, ok := d.GetOk("delimiter"); ok {
-		listInput.Delimiter = aws.String(s.(string))
+	if v, ok := d.GetOk("encoding_type"); ok {
+		input.EncodingType = aws.String(v.(string))
 	}
 
-	if s, ok := d.GetOk("encoding_type"); ok {
-		listInput.EncodingType = aws.String(s.(string))
+	if v, ok := d.GetOk("fetch_owner"); ok {
+		input.FetchOwner = aws.Bool(v.(bool))
 	}
 
-	// "listInput.MaxKeys" refers to max keys returned in a single request
-	// (i.e., page size), not the total number of keys returned if you page
-	// through the results. "maxKeys" does refer to total keys returned.
+	// "input.MaxKeys" refers to max keys returned in a single request
+	// (i.e. page size), not the total number of keys returned if you page
+	// through the results. "max_keys" does refer to total keys returned.
 	maxKeys := int64(d.Get("max_keys").(int))
 	if maxKeys <= keyRequestPageSize {
-		listInput.MaxKeys = aws.Int64(maxKeys)
+		input.MaxKeys = aws.Int64(maxKeys)
 	}
 
-	if s, ok := d.GetOk("start_after"); ok {
-		listInput.StartAfter = aws.String(s.(string))
+	if v, ok := d.GetOk("prefix"); ok {
+		input.Prefix = aws.String(v.(string))
 	}
 
-	if b, ok := d.GetOk("fetch_owner"); ok {
-		listInput.FetchOwner = aws.Bool(b.(bool))
+	if v, ok := d.GetOk("start_after"); ok {
+		input.StartAfter = aws.String(v.(string))
 	}
 
-	var commonPrefixes []string
-	var keys []string
-	var owners []string
+	var commonPrefixes, keys, owners []string
 
-	err := conn.ListObjectsV2PagesWithContext(ctx, &listInput, func(page *s3.ListObjectsV2Output, lastPage bool) bool {
-		for _, commonPrefix := range page.CommonPrefixes {
-			commonPrefixes = append(commonPrefixes, aws.StringValue(commonPrefix.Prefix))
+	err := conn.ListObjectsV2PagesWithContext(ctx, &input, func(page *s3.ListObjectsV2Output, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
 		}
 
-		for _, object := range page.Contents {
-			keys = append(keys, aws.StringValue(object.Key))
+		for _, v := range page.CommonPrefixes {
+			commonPrefixes = append(commonPrefixes, aws.StringValue(v.Prefix))
+		}
 
-			if object.Owner != nil {
-				owners = append(owners, aws.StringValue(object.Owner.ID))
+		for _, v := range page.Contents {
+			keys = append(keys, aws.StringValue(v.Key))
+
+			if v := v.Owner; v != nil {
+				owners = append(owners, aws.StringValue(v.ID))
 			}
 		}
 
 		maxKeys = maxKeys - aws.Int64Value(page.KeyCount)
-
-		if maxKeys <= keyRequestPageSize {
-			listInput.MaxKeys = aws.Int64(maxKeys)
+		if maxKeys <= 0 {
+			return false
+		} else if maxKeys <= keyRequestPageSize {
+			input.MaxKeys = aws.Int64(maxKeys)
 		}
 
 		return !lastPage
@@ -140,18 +141,9 @@ func dataSourceObjectsRead(ctx context.Context, d *schema.ResourceData, meta int
 	}
 
 	d.SetId(bucket)
-
-	if err := d.Set("common_prefixes", commonPrefixes); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting common_prefixes: %s", err)
-	}
-
-	if err := d.Set("keys", keys); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting keys: %s", err)
-	}
-
-	if err := d.Set("owners", owners); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting owners: %s", err)
-	}
+	d.Set("common_prefixes", commonPrefixes)
+	d.Set("keys", keys)
+	d.Set("owners", owners)
 
 	return diags
 }
