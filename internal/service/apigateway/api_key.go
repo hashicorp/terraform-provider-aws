@@ -38,34 +38,38 @@ func ResourceAPIKey() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"name": {
+			"arn": {
 				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
+				Computed: true,
 			},
-
+			"created_date": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"customer_id": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
 			"description": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Default:  "Managed by Terraform",
 			},
-
 			"enabled": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  true,
 			},
-
-			"created_date": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-
 			"last_updated_date": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
+			"name": {
+				Type:     schema.TypeString,
+				Required: true,
+			},
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			"value": {
 				Type:         schema.TypeString,
 				Optional:     true,
@@ -74,12 +78,6 @@ func ResourceAPIKey() *schema.Resource {
 				Sensitive:    true,
 				ValidateFunc: validation.StringLenBetween(20, 128),
 			},
-			"arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
 
 		CustomizeDiff: verify.SetTagsDiff,
@@ -97,6 +95,10 @@ func resourceAPIKeyCreate(ctx context.Context, d *schema.ResourceData, meta inte
 		Name:        aws.String(name),
 		Tags:        getTagsIn(ctx),
 		Value:       aws.String(d.Get("value").(string)),
+	}
+
+	if v, ok := d.GetOk("customer_id"); ok && v.(string) != "" {
+		input.CustomerId = aws.String(v.(string))
 	}
 
 	apiKey, err := conn.CreateApiKeyWithContext(ctx, input)
@@ -171,6 +173,22 @@ func resourceAPIKeyUpdateOperations(d *schema.ResourceData) []*apigateway.PatchO
 			Op:    aws.String(apigateway.OpReplace),
 			Path:  aws.String("/description"),
 			Value: aws.String(d.Get("description").(string)),
+		})
+	}
+
+	if d.HasChange("name") {
+		operations = append(operations, &apigateway.PatchOperation{
+			Op:    aws.String(apigateway.OpReplace),
+			Path:  aws.String("/name"),
+			Value: aws.String(d.Get("name").(string)),
+		})
+	}
+
+	if d.HasChange("customerId") {
+		operations = append(operations, &apigateway.PatchOperation{
+			Op:    aws.String(apigateway.OpReplace),
+			Path:  aws.String("/name"),
+			Value: aws.String(d.Get("customer_id").(string)),
 		})
 	}
 
