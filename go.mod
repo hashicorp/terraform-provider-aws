@@ -5,7 +5,7 @@ go 1.20
 require (
 	github.com/ProtonMail/go-crypto v0.0.0-20230717121422-5aa5874ade95
 	github.com/YakDriver/regexache v0.7.0
-	github.com/aws/aws-sdk-go v1.44.334
+	github.com/aws/aws-sdk-go v1.45.1
 	github.com/aws/aws-sdk-go-v2 v1.21.0
 	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.13.11
 	github.com/aws/aws-sdk-go-v2/service/accessanalyzer v1.20.5
@@ -13,7 +13,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/acm v1.18.5
 	github.com/aws/aws-sdk-go-v2/service/appconfig v1.18.5
 	github.com/aws/aws-sdk-go-v2/service/auditmanager v1.26.5
-	github.com/aws/aws-sdk-go-v2/service/cleanrooms v1.3.5
+	github.com/aws/aws-sdk-go-v2/service/cleanrooms v1.4.0
 	github.com/aws/aws-sdk-go-v2/service/cloudcontrol v1.12.5
 	github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs v1.23.5
 	github.com/aws/aws-sdk-go-v2/service/codecatalyst v1.5.5
