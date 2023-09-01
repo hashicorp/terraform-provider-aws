@@ -391,52 +391,46 @@ func resourceWindowsFileSystemRead(ctx context.Context, d *schema.ResourceData, 
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).FSxConn(ctx)
 
-	filesystem, err := FindFileSystemByID(ctx, conn, d.Id())
+	filesystem, err := FindWindowsFileSystemByID(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
-		log.Printf("[WARN] FSx Windows File System (%s) not found, removing from state", d.Id())
+		log.Printf("[WARN] FSx for Windows File Server File System (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
 	}
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading FSx Windows File System (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading FSx for Windows File Server File System (%s): %s", d.Id(), err)
 	}
 
-	if filesystem.LustreConfiguration != nil {
-		return sdkdiag.AppendErrorf(diags, "expected FSx Windows File System, found FSx Lustre File System: %s", d.Id())
-	}
+	windowsConfig := filesystem.WindowsConfiguration
 
-	if filesystem.WindowsConfiguration == nil {
-		return sdkdiag.AppendErrorf(diags, "reading FSx Windows File System (%s): empty WindowsConfiguration", d.Id())
-	}
-
-	d.Set("active_directory_id", filesystem.WindowsConfiguration.ActiveDirectoryId)
-	d.Set("aliases", aws.StringValueSlice(expandAliasValues(filesystem.WindowsConfiguration.Aliases)))
+	d.Set("active_directory_id", windowsConfig.ActiveDirectoryId)
+	d.Set("aliases", aws.StringValueSlice(expandAliasValues(windowsConfig.Aliases)))
 	d.Set("arn", filesystem.ResourceARN)
-	if err := d.Set("audit_log_configuration", flattenWindowsAuditLogConfiguration(filesystem.WindowsConfiguration.AuditLogConfiguration)); err != nil {
+	if err := d.Set("audit_log_configuration", flattenWindowsAuditLogConfiguration(windowsConfig.AuditLogConfiguration)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting audit_log_configuration: %s", err)
 	}
-	d.Set("automatic_backup_retention_days", filesystem.WindowsConfiguration.AutomaticBackupRetentionDays)
-	d.Set("copy_tags_to_backups", filesystem.WindowsConfiguration.CopyTagsToBackups)
-	d.Set("daily_automatic_backup_start_time", filesystem.WindowsConfiguration.DailyAutomaticBackupStartTime)
-	d.Set("deployment_type", filesystem.WindowsConfiguration.DeploymentType)
+	d.Set("automatic_backup_retention_days", windowsConfig.AutomaticBackupRetentionDays)
+	d.Set("copy_tags_to_backups", windowsConfig.CopyTagsToBackups)
+	d.Set("daily_automatic_backup_start_time", windowsConfig.DailyAutomaticBackupStartTime)
+	d.Set("deployment_type", windowsConfig.DeploymentType)
 	d.Set("dns_name", filesystem.DNSName)
 	d.Set("kms_key_id", filesystem.KmsKeyId)
 	d.Set("network_interface_ids", aws.StringValueSlice(filesystem.NetworkInterfaceIds))
 	d.Set("owner_id", filesystem.OwnerId)
-	d.Set("preferred_subnet_id", filesystem.WindowsConfiguration.PreferredSubnetId)
-	d.Set("preferred_file_server_ip", filesystem.WindowsConfiguration.PreferredFileServerIp)
-	d.Set("remote_administration_endpoint", filesystem.WindowsConfiguration.RemoteAdministrationEndpoint)
-	if err := d.Set("self_managed_active_directory", flattenSelfManagedActiveDirectoryConfiguration(d, filesystem.WindowsConfiguration.SelfManagedActiveDirectoryConfiguration)); err != nil {
+	d.Set("preferred_subnet_id", windowsConfig.PreferredSubnetId)
+	d.Set("preferred_file_server_ip", windowsConfig.PreferredFileServerIp)
+	d.Set("remote_administration_endpoint", windowsConfig.RemoteAdministrationEndpoint)
+	if err := d.Set("self_managed_active_directory", flattenSelfManagedActiveDirectoryConfiguration(d, windowsConfig.SelfManagedActiveDirectoryConfiguration)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting self_managed_active_directory: %s", err)
 	}
 	d.Set("storage_capacity", filesystem.StorageCapacity)
 	d.Set("storage_type", filesystem.StorageType)
 	d.Set("subnet_ids", aws.StringValueSlice(filesystem.SubnetIds))
-	d.Set("throughput_capacity", filesystem.WindowsConfiguration.ThroughputCapacity)
+	d.Set("throughput_capacity", windowsConfig.ThroughputCapacity)
 	d.Set("vpc_id", filesystem.VpcId)
-	d.Set("weekly_maintenance_start_time", filesystem.WindowsConfiguration.WeeklyMaintenanceStartTime)
+	d.Set("weekly_maintenance_start_time", windowsConfig.WeeklyMaintenanceStartTime)
 
 	setTagsOut(ctx, filesystem.Tags)
 
@@ -724,4 +718,18 @@ func windowsAuditLogStateFunc(v interface{}) string {
 		}
 	}
 	return value
+}
+
+func FindWindowsFileSystemByID(ctx context.Context, conn *fsx.FSx, id string) (*fsx.FileSystem, error) {
+	output, err := findFileSystemByIDAndType(ctx, conn, id, fsx.FileSystemTypeWindows)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output.OpenZFSConfiguration == nil {
+		return nil, tfresource.NewEmptyResultError(nil)
+	}
+
+	return output, nil
 }
