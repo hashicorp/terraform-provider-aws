@@ -727,7 +727,7 @@ func FindWindowsFileSystemByID(ctx context.Context, conn *fsx.FSx, id string) (*
 		return nil, err
 	}
 
-	if output.OpenZFSConfiguration == nil {
+	if output.WindowsConfiguration == nil {
 		return nil, tfresource.NewEmptyResultError(nil)
 	}
 
