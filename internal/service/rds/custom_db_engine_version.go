@@ -60,11 +60,13 @@ func ResourceCustomDBEngineVersion() *schema.Resource {
 			"database_installation_files_s3_bucket_name": {
 				Type:         schema.TypeString,
 				Optional:     true,
+				ForceNew:     true,
 				ValidateFunc: validation.StringLenBetween(3, 63),
 			},
 			"database_installation_files_s3_prefix": {
 				Type:         schema.TypeString,
 				Optional:     true,
+				ForceNew:     true,
 				ValidateFunc: validation.StringLenBetween(1, 255),
 			},
 			"db_parameter_group_family": {
@@ -94,18 +96,19 @@ func ResourceCustomDBEngineVersion() *schema.Resource {
 			"filename": {
 				Type:          schema.TypeString,
 				Optional:      true,
+				ForceNew:      true,
 				ConflictsWith: []string{"manifest"},
 			},
+			//API returns created image_id of the newly created image.
 			"image_id": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringLenBetween(1, 255),
+				Type:     schema.TypeString,
+				Computed: true,
 			},
 			"kms_key_id": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
+				ForceNew:     true,
 				ValidateFunc: verify.ValidARN,
 			},
 			"major_engine_version": {
@@ -115,7 +118,6 @@ func ResourceCustomDBEngineVersion() *schema.Resource {
 			"manifest": {
 				Type:     schema.TypeString,
 				Optional: true,
-				Computed: true,
 				ForceNew: true,
 				ValidateFunc: validation.All(
 					validation.StringIsJSON,
@@ -128,6 +130,11 @@ func ResourceCustomDBEngineVersion() *schema.Resource {
 					return json
 				},
 			},
+			//API returns manifest with service added additions, non-determinestic.
+			"manifest_computed": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"manifest_hash": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -137,6 +144,14 @@ func ResourceCustomDBEngineVersion() *schema.Resource {
 				Optional:     true,
 				Computed:     true,
 				ValidateFunc: validation.StringInSlice(rds.CustomEngineVersionStatus_Values(), false),
+			},
+			// Allow CEV creation from a source AMI ID.
+			// implicit state passthrough, virtual attribute
+			"source_image_id": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.StringLenBetween(1, 255),
 			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
@@ -171,7 +186,7 @@ func resourceCustomDBEngineVersionCreate(ctx context.Context, d *schema.Resource
 		input.Description = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("image_id"); ok {
+	if v, ok := d.GetOk("source_image_id"); ok {
 		input.ImageId = aws.String(v.(string))
 	}
 
@@ -243,7 +258,7 @@ func resourceCustomDBEngineVersionRead(ctx context.Context, d *schema.ResourceDa
 		d.Set("kms_key_id", out.KMSKeyId)
 	}
 	d.Set("major_engine_version", out.MajorEngineVersion)
-	d.Set("manifest", out.CustomDBEngineVersionManifest)
+	d.Set("manifest_computed", out.CustomDBEngineVersionManifest)
 	d.Set("status", out.Status)
 
 	setTagsOut(ctx, out.TagList)

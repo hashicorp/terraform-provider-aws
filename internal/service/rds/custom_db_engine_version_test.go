@@ -30,6 +30,7 @@ func TestAccRDSCustomDBEngineVersion_sqlServer(t *testing.T) {
 	}
 
 	// Requires an existing Windows SQL Server AMI owned by operating account set as environmental variable
+	// Blog: https://aws.amazon.com/blogs/database/persist-your-os-level-customization-within-amazon-rds-custom-for-sql-server-using-custom-engine-version-cev/
 	key := "RDS_CUSTOM_WINDOWS_SQLSERVER_AMI"
 	ami := os.Getenv(key)
 	if ami == "" {
@@ -63,7 +64,7 @@ func TestAccRDSCustomDBEngineVersion_sqlServer(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"filename", "manifest_hash", "manifest"},
+				ImportStateVerifyIgnore: []string{"filename", "manifest_hash", "manifest", "source_image_id"},
 			},
 		},
 	})
@@ -85,7 +86,7 @@ func TestAccRDSCustomDBEngineVersion_sqlServerUpdate(t *testing.T) {
 	rName := fmt.Sprintf("%s%s%d", "15.00.4249.2.", acctest.ResourcePrefix, sdkacctest.RandIntRange(100, 999))
 	resourceName := "aws_rds_custom_db_engine_version.test"
 	status := "pending-validation"
-	status2 := "inactive"
+	description2 := "inactive"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
@@ -110,14 +111,14 @@ func TestAccRDSCustomDBEngineVersion_sqlServerUpdate(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"filename", "manifest_hash", "manifest"},
+				ImportStateVerifyIgnore: []string{"filename", "manifest_hash", "manifest", "source_image_id"},
 			},
 			{
-				Config: testAccCustomDBEngineVersionConfig_sqlServerUpdate(rName, ami, status2),
+				Config: testAccCustomDBEngineVersionConfig_sqlServerUpdate(rName, ami, description2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCustomDBEngineVersionExists(ctx, resourceName, &customdbengineversion),
 					resource.TestCheckResourceAttr(resourceName, "engine_version", rName),
-					resource.TestCheckResourceAttr(resourceName, "status", status2),
+					resource.TestCheckResourceAttr(resourceName, "description", description2),
 				),
 			},
 		},
@@ -131,6 +132,7 @@ func TestAccRDSCustomDBEngineVersion_oracle(t *testing.T) {
 	}
 
 	// Requires an existing Oracle installation media in S3 bucket owned (bucket must be in operating region) by operating account set as environmental variable
+	// Pre-requisite: https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/custom-cev.preparing.html
 	key := "RDS_CUSTOM_ORACLE_S3_BUCKET"
 	bucket := os.Getenv(key)
 	if bucket == "" {
@@ -176,6 +178,7 @@ func TestAccRDSCustomDBEngineVersion_manifestFile(t *testing.T) {
 	}
 
 	// Requires an existing Oracle installation media in S3 bucket owned (bucket must be in operating region) by operating account set as environmental variable
+	// Pre-requisite: https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/custom-cev.preparing.html
 	key := "RDS_CUSTOM_ORACLE_S3_BUCKET"
 	bucket := os.Getenv(key)
 	if bucket == "" {
@@ -328,14 +331,14 @@ resource "aws_ami_copy" "test" {
 }
 
 resource "aws_rds_custom_db_engine_version" "test" {
-  engine         = "custom-sqlserver-se"
-  engine_version = %[1]q
-  image_id       = aws_ami_copy.test.id
+  engine          = "custom-sqlserver-se"
+  engine_version  = %[1]q
+  source_image_id = aws_ami_copy.test.id
 }
 `, rName, ami)
 }
 
-func testAccCustomDBEngineVersionConfig_sqlServerUpdate(rName, ami, status string) string {
+func testAccCustomDBEngineVersionConfig_sqlServerUpdate(rName, ami, description string) string {
 	return fmt.Sprintf(`
 data "aws_region" "current" {}
 
@@ -347,12 +350,12 @@ resource "aws_ami_copy" "test" {
 }
 
 resource "aws_rds_custom_db_engine_version" "test" {
-  engine         = "custom-sqlserver-se"
-  engine_version = %[1]q
-  image_id       = aws_ami_copy.test.id
-  status         = %[3]q
+  description     = %[3]q
+  engine          = "custom-sqlserver-se"
+  engine_version  = %[1]q
+  source_image_id = aws_ami_copy.test.id
 }
-`, rName, ami, status)
+`, rName, ami, description)
 }
 
 func testAccCustomDBEngineVersionConfig_oracle(rName, bucket string) string {
