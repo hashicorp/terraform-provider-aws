@@ -256,9 +256,13 @@ resource "aws_security_group" "test" {
 
 resource "aws_fsx_openzfs_file_system" "test" {
   storage_capacity    = 64
-  subnet_ids          = [aws_subnet.test.id]
+  subnet_ids          = aws_subnet.test[*].id
   deployment_type     = "SINGLE_AZ_1"
   throughput_capacity = 64
+
+  tags = {
+    Name = %[1]q
+  }
 }
 `, rName))
 }
