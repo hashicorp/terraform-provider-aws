@@ -2438,11 +2438,11 @@ func testNoMatchResourceAttr(is *terraform.InstanceState, name string, key strin
 }
 
 // checkIfIndexesIntoTypeSet is copied from
-// github.com/hashicorp/terraform-plugin-testing/helper/resource
+// https://github.com/hashicorp/terraform-plugin-testing/blob/dee4bfbbfd4911cf69a6c9917a37ecd8faa41ae9/helper/resource/testing.go#L1689
 func checkIfIndexesIntoTypeSet(key string, f resource.TestCheckFunc) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		err := f(s)
-		if err != nil && s.IsBinaryDrivenTest && indexesIntoTypeSet(key) {
+		if err != nil && indexesIntoTypeSet(key) {
 			return fmt.Errorf("Error in test check: %s\nTest check address %q likely indexes into TypeSet\nThis is currently not possible in the SDK", err, key)
 		}
 		return err
@@ -2450,7 +2450,7 @@ func checkIfIndexesIntoTypeSet(key string, f resource.TestCheckFunc) resource.Te
 }
 
 // indexesIntoTypeSet is copied from
-// github.com/hashicorp/terraform-plugin-testing/helper/resource
+// https://github.com/hashicorp/terraform-plugin-testing/blob/dee4bfbbfd4911cf69a6c9917a37ecd8faa41ae9/helper/resource/testing.go#L1680
 func indexesIntoTypeSet(key string) bool {
 	for _, part := range strings.Split(key, ".") {
 		if i, err := strconv.Atoi(part); err == nil && i > 100 {
@@ -2461,14 +2461,14 @@ func indexesIntoTypeSet(key string) bool {
 }
 
 // primaryInstanceState is copied from
-// github.com/hashicorp/terraform-plugin-testing/helper/resource
+// https://github.com/hashicorp/terraform-plugin-testing/blob/dee4bfbbfd4911cf69a6c9917a37ecd8faa41ae9/helper/resource/testing.go#L1672
 func primaryInstanceState(s *terraform.State, name string) (*terraform.InstanceState, error) {
 	ms := s.RootModule()
 	return modulePrimaryInstanceState(ms, name)
 }
 
 // modulePrimaryInstanceState is copied from
-// github.com/hashicorp/terraform-plugin-testing/helper/resource
+// https://github.com/hashicorp/terraform-plugin-testing/blob/dee4bfbbfd4911cf69a6c9917a37ecd8faa41ae9/helper/resource/testing.go#L1645
 func modulePrimaryInstanceState(ms *terraform.ModuleState, name string) (*terraform.InstanceState, error) {
 	rs, ok := ms.Resources[name]
 	if !ok {
