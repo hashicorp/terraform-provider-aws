@@ -465,7 +465,7 @@ func resourceCatalogTableRead(ctx context.Context, d *schema.ResourceData, meta 
 	d.Set("view_expanded_text", table.ViewExpandedText)
 	d.Set("table_type", table.TableType)
 
-	if err := d.Set("parameters", fetchNonManagedProperties(table)); err != nil {
+	if err := d.Set("parameters", flattenNonManagedParameters(table)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting parameters: %s", err)
 	}
 
@@ -1091,9 +1091,9 @@ func flattenTableTargetTable(apiObject *glue.TableIdentifier) map[string]interfa
 	return tfMap
 }
 
-func fetchNonManagedProperties(table *glue.TableData) map[string]string {
+func flattenNonManagedParameters(table *glue.TableData) map[string]string {
 	allParameters := table.Parameters
-	if string("ICEBERG") == *table.Parameters["table_type"] {
+	if "ICEBERG" == aws.StringValue(allParameters["table_type"]) {
 		delete(allParameters, "table_type")
 		delete(allParameters, "metadata_location")
 	}
