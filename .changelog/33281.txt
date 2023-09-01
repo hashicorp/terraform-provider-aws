@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/aws_api_gateway_api_key: Add support `customer_id` argument
+```
+
+```release-note:enhancement
+resource/aws_api_gateway_api_key: Allow updating `name`
+```
