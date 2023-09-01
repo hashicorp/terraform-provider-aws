@@ -44,6 +44,8 @@ github.com/aws/aws-sdk-go-v2/internal/endpoints/v2 v2.4.35 h1:SijA0mgjV8E+8G45lt
 github.com/aws/aws-sdk-go-v2/internal/endpoints/v2 v2.4.35/go.mod h1:SJC1nEVVva1g3pHAIdCp7QsRIkMmLAgoDquQ9Rr8kYw=
 github.com/aws/aws-sdk-go-v2/internal/ini v1.3.39 h1:fc0ukRAiP1syoSGZYu+DaE+FulSYhTiJ8WpVu5jElU4=
 github.com/aws/aws-sdk-go-v2/internal/ini v1.3.39/go.mod h1:WLAW8PT7+JhjZfLSWe7WEJaJu0GNo0cKc2Zyo003RBs=
+github.com/aws/aws-sdk-go-v2/internal/v4a v1.1.4 h1:6lJvvkQ9HmbHZ4h/IEwclwv2mrTW8Uq1SOB/kXy0mfw=
+github.com/aws/aws-sdk-go-v2/internal/v4a v1.1.4/go.mod h1:1PrKYwxTM+zjpw9Y41KFtoJCQrJ34Z47Y4VgVbfndjo=
 github.com/aws/aws-sdk-go-v2/service/accessanalyzer v1.20.5 h1:1w0ELQMC3AptxEFS4A+vJuhyIuC9IoNN2YxNKK5pSYQ=
 github.com/aws/aws-sdk-go-v2/service/accessanalyzer v1.20.5/go.mod h1:zwKhX2c7u7XDz2ToVE+qunfyoy9+3AO0rZynN5TwXCc=
 github.com/aws/aws-sdk-go-v2/service/account v1.11.5 h1:UX7HDdPZwTmrr1zu1j8e9QNINZS2YSJ+DoxhnnPyJY8=
@@ -92,6 +94,10 @@ github.com/aws/aws-sdk-go-v2/service/identitystore v1.17.6 h1:1+CSnP3TCGEnv6D12I
 github.com/aws/aws-sdk-go-v2/service/identitystore v1.17.6/go.mod h1:uP4598oNnSTY5AClqIoK6QHQnwz7cuRS8CBkVMXuxOU=
 github.com/aws/aws-sdk-go-v2/service/inspector2 v1.16.6 h1:HhLDyWzcq1QAQM9/D6r49CA1NX7mSuE77XruZ/GM0tI=
 github.com/aws/aws-sdk-go-v2/service/inspector2 v1.16.6/go.mod h1:ZThso1NAB0Pt7ZHiE8QjGxZsdSq3yE3IHTO8DSsIj0Y=
+github.com/aws/aws-sdk-go-v2/service/internal/accept-encoding v1.9.14 h1:m0QTSI6pZYJTk5WSKx3fm5cNW/DCicVzULBgU/6IyD0=
+github.com/aws/aws-sdk-go-v2/service/internal/accept-encoding v1.9.14/go.mod h1:dDilntgHy9WnHXsh7dDtUPgHKEfTJIBUTHM8OWm0f/0=
+github.com/aws/aws-sdk-go-v2/service/internal/checksum v1.1.36 h1:eev2yZX7esGRjqRbnVk1UxMLw4CyVZDpZXRCcy75oQk=
+github.com/aws/aws-sdk-go-v2/service/internal/checksum v1.1.36/go.mod h1:lGnOkH9NJATw0XEPcAknFBj3zzNTEGRHtSw+CwC1YTg=
 github.com/aws/aws-sdk-go-v2/service/internal/endpoint-discovery v1.7.35 h1:UKjpIDLVF90RfV88XurdduMoTxPqtGHZMIDYZQM7RO4=
 github.com/aws/aws-sdk-go-v2/service/internal/endpoint-discovery v1.7.35/go.mod h1:B3dUg0V6eJesUTi+m27NUkj7n8hdDKYUpxj8f4+TqaQ=
 github.com/aws/aws-sdk-go-v2/service/internal/presigned-url v1.9.32/go.mod h1:4jwAWKEkCR0anWk5+1RbfSg1R5Gzld7NLiuaq5bTR/Y=
@@ -141,6 +147,8 @@ github.com/aws/aws-sdk-go-v2/service/rolesanywhere v1.3.5 h1:tfmJZFDrma1cgraLRuE
 github.com/aws/aws-sdk-go-v2/service/rolesanywhere v1.3.5/go.mod h1:vXPkNV5GGPdMjRRNzO45nX3qsNTgB5lP19Tk4Go30xQ=
 github.com/aws/aws-sdk-go-v2/service/route53domains v1.17.3 h1:aaHlZb06fyEQ3uqEVJiN3hLt8syCzX+tWZiz40S4c0Y=
 github.com/aws/aws-sdk-go-v2/service/route53domains v1.17.3/go.mod h1:SK+5R1cYgVgSfBGi9T/gPGNIuLInF3eIRYNruia62rg=
+github.com/aws/aws-sdk-go-v2/service/s3 v1.38.5 h1:A42xdtStObqy7NGvzZKpnyNXvoOmm+FENobZ0/ssHWk=
+github.com/aws/aws-sdk-go-v2/service/s3 v1.38.5/go.mod h1:rDGMZA7f4pbmTtPOk5v5UM2lmX6UAbRnMDJeDvnH7AM=
 github.com/aws/aws-sdk-go-v2/service/s3control v1.33.0 h1:f4qHghGTcns4L4F7u8AHH6pcVLwgtTMNkNZeRJZ5xlA=
 github.com/aws/aws-sdk-go-v2/service/s3control v1.33.0/go.mod h1:YSdqo9knBVm5H3JVmWDhx9Wts9828nColUJzL3OKXDk=
 github.com/aws/aws-sdk-go-v2/service/scheduler v1.2.5 h1:AGRPn7Hef59Eb9zfXjf6MGn0xRPpO73dIV8u8pfo5Z8=
