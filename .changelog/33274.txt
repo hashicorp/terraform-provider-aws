@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/aws_glue_catalog_table: Add `open_table_format_input` arguments to support open table formats such as Iceberg (https://aws.amazon.com/blogs/big-data/introducing-aws-glue-crawler-and-create-table-support-for-apache-iceberg-format/)
+```
