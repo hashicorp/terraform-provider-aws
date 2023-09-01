@@ -59,11 +59,15 @@ func ResourceAssociation() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"instance_id": {
-				Type:       schema.TypeString,
-				ForceNew:   true,
-				Optional:   true,
-				Deprecated: "use 'targets' argument instead. https://docs.aws.amazon.com/systems-manager/latest/APIReference/API_CreateAssociation.html#systemsmanager-CreateAssociation-request-InstanceId",
+			"automation_target_parameter_name": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ValidateFunc: validation.StringLenBetween(1, 50),
+			},
+			"compliance_severity": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ValidateFunc: validation.StringInSlice(ssm.ComplianceSeverity_Values(), false),
 			},
 			"document_version": {
 				Type:         schema.TypeString,
@@ -86,21 +90,11 @@ func ResourceAssociation() *schema.Resource {
 				ForceNew: true,
 				Required: true,
 			},
-			"parameters": {
-				Type:     schema.TypeMap,
-				Optional: true,
-				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			"schedule_expression": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validation.StringLenBetween(1, 256),
-			},
-			"sync_compliance": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validation.StringInSlice(ssm.AssociationSyncCompliance_Values(), false),
+			"instance_id": {
+				Type:       schema.TypeString,
+				ForceNew:   true,
+				Optional:   true,
+				Deprecated: "use 'targets' argument instead. https://docs.aws.amazon.com/systems-manager/latest/APIReference/API_CreateAssociation.html#systemsmanager-CreateAssociation-request-InstanceId",
 			},
 			"output_location": {
 				Type:     schema.TypeList,
@@ -126,6 +120,22 @@ func ResourceAssociation() *schema.Resource {
 					},
 				},
 			},
+			"parameters": {
+				Type:     schema.TypeMap,
+				Optional: true,
+				Computed: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+			},
+			"schedule_expression": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ValidateFunc: validation.StringLenBetween(1, 256),
+			},
+			"sync_compliance": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ValidateFunc: validation.StringInSlice(ssm.AssociationSyncCompliance_Values(), false),
+			},
 			"targets": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -146,16 +156,6 @@ func ResourceAssociation() *schema.Resource {
 						},
 					},
 				},
-			},
-			"compliance_severity": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validation.StringInSlice(ssm.ComplianceSeverity_Values(), false),
-			},
-			"automation_target_parameter_name": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validation.StringLenBetween(1, 50),
 			},
 			"wait_for_success_timeout_seconds": {
 				Type:     schema.TypeInt,
