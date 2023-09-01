@@ -49,6 +49,10 @@ func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (
 	return s3_sdkv2.NewFromConfig(cfg, func(o *s3_sdkv2.Options) {
 		if endpoint := config["endpoint"].(string); endpoint != "" {
 			o.BaseEndpoint = aws_sdkv2.String(endpoint)
+		} else if o.Region == endpoints_sdkv1.UsEast1RegionID && config["s3_us_east_1_regional_endpoint"].(endpoints_sdkv1.S3UsEast1RegionalEndpoint) != endpoints_sdkv1.RegionalS3UsEast1Endpoint {
+			// Maintain the AWS SDK for Go v1 default of using the global endpoint in us-east-1.
+			// See https://github.com/hashicorp/terraform-provider-aws/issues/33028.
+			o.Region = "aws-global"
 		}
 		o.UsePathStyle = config["s3_use_path_style"].(bool)
 	}), nil
