@@ -612,19 +612,20 @@ func TestAccSSMAssociation_rateControl(t *testing.T) {
 }
 
 func TestAccSSMAssociation_syncCompliance(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := "AWS-RunPatchBaselineAssociation"
 	resourceName := "aws_ssm_association.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ssm.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAssociationDestroy,
+		CheckDestroy:             testAccCheckAssociationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAssociationSyncComplianceConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAssociationExists(resourceName),
+					testAccCheckAssociationExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "sync_compliance", "MANUAL"),
 				),
 			},
