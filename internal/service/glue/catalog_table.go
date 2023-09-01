@@ -1093,7 +1093,7 @@ func flattenTableTargetTable(apiObject *glue.TableIdentifier) map[string]interfa
 
 func flattenNonManagedParameters(table *glue.TableData) map[string]string {
 	allParameters := table.Parameters
-	if "ICEBERG" == aws.StringValue(allParameters["table_type"]) {
+	if aws.StringValue(allParameters["table_type"]) == "ICEBERG" {
 		delete(allParameters, "table_type")
 		delete(allParameters, "metadata_location")
 	}
