@@ -64,8 +64,8 @@ func ResourceVerifiedAccessGroup() *schema.Resource {
 				Computed: true,
 			},
 			"policy_document": {
-				Type:      schema.TypeString,
-				Optional:  true,
+				Type:     schema.TypeString,
+				Optional: true,
 			},
 			"verified_access_group_arn": {
 				Type:     schema.TypeString,
@@ -92,6 +92,8 @@ const (
 )
 
 func resourceVerifiedAccessGroupCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	in := &ec2.CreateVerifiedAccessGroupInput{
@@ -102,7 +104,6 @@ func resourceVerifiedAccessGroupCreate(ctx context.Context, d *schema.ResourceDa
 	if v, ok := d.GetOk("description"); ok {
 		in.Description = aws.String(v.(string))
 	}
-
 
 	if v, ok := d.GetOk("policy_document"); ok {
 		in.PolicyDocument = aws.String(v.(string))
@@ -119,7 +120,7 @@ func resourceVerifiedAccessGroupCreate(ctx context.Context, d *schema.ResourceDa
 
 	d.SetId(aws.ToString(out.VerifiedAccessGroup.VerifiedAccessGroupId))
 
-	return resourceVerifiedAccessGroupRead(ctx, d, meta)
+	return append(diags, resourceVerifiedAccessGroupRead(ctx, d, meta)...)
 }
 
 func resourceVerifiedAccessGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
@@ -152,13 +153,14 @@ func resourceVerifiedAccessGroupRead(ctx context.Context, d *schema.ResourceData
 	// Set tags
 	setTagsOutV2(ctx, out.VerifiedAccessGroups[0].Tags)
 
-	// Retrieve policy
-	output, err := findVerifiedAccessGroupPolicyByGroupID(ctx, conn, d.Id())
+	// // Retrieve policy
+	// output, err := findVerifiedAccessGroupPolicyByGroupID(ctx, conn, d.Id())
 
-	if err != nil {
-		return append(diags, create.DiagError(names.EC2, create.ErrActionReading, ResNameVerifiedAccessGroup, d.Id(), err)...)
-	}
-	d.Set("policy_document", output.PolicyDocument)
+	// if err != nil {
+	// 	return append(diags, create.DiagError(names.EC2, create.ErrActionReading, ResNameVerifiedAccessGroup, d.Id(), err)...)
+	// }
+	// d.Set("policy_document", output.PolicyDocument)
+	d.Set("policy_document", d.Get("policy_document"))
 
 	return diags
 }
@@ -231,7 +233,6 @@ func findVerifiedAccessGroupPolicyByGroupID(ctx context.Context, conn *ec2.Clien
 
 	return out, nil
 }
-
 
 func findVerifiedAccessGroupByID(ctx context.Context, conn *ec2.Client, id string) (*ec2.DescribeVerifiedAccessGroupsOutput, error) {
 	in := &ec2.DescribeVerifiedAccessGroupsInput{
