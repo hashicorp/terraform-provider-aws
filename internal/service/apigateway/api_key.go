@@ -97,7 +97,7 @@ func resourceAPIKeyCreate(ctx context.Context, d *schema.ResourceData, meta inte
 		Value:       aws.String(d.Get("value").(string)),
 	}
 
-	if v, ok := d.GetOk("customer_id"); ok && v.(string) != "" {
+	if v, ok := d.GetOk("customer_id"); ok {
 		input.CustomerId = aws.String(v.(string))
 	}
 
