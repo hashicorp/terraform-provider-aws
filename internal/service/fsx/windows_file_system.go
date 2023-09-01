@@ -459,7 +459,7 @@ func resourceWindowsFileSystemUpdate(ctx context.Context, d *schema.ResourceData
 			}
 
 			if _, err := waitAdministrativeActionCompleted(ctx, conn, d.Id(), fsx.AdministrativeActionTypeFileSystemAliasAssociation, d.Timeout(schema.TimeoutUpdate)); err != nil {
-				return sdkdiag.AppendErrorf(diags, "waiting for FSx for Windows File Server File System (%s) administrative action complete: %s", d.Id(), err)
+				return sdkdiag.AppendErrorf(diags, "waiting for FSx for Windows File Server File System (%s) administrative action (%s) complete: %s", d.Id(), fsx.AdministrativeActionTypeFileSystemAliasAssociation, err)
 			}
 		}
 
@@ -476,7 +476,7 @@ func resourceWindowsFileSystemUpdate(ctx context.Context, d *schema.ResourceData
 			}
 
 			if _, err := waitAdministrativeActionCompleted(ctx, conn, d.Id(), fsx.AdministrativeActionTypeFileSystemAliasDisassociation, d.Timeout(schema.TimeoutUpdate)); err != nil {
-				return sdkdiag.AppendErrorf(diags, "waiting for FSx for Windows File Server File System (%s) administrative action complete: %s", d.Id(), err)
+				return sdkdiag.AppendErrorf(diags, "waiting for FSx for Windows File Server File System (%s) administrative action (%s) complete: %s", d.Id(), fsx.AdministrativeActionTypeFileSystemAliasDisassociation, err)
 			}
 		}
 	}
@@ -503,7 +503,7 @@ func resourceWindowsFileSystemUpdate(ctx context.Context, d *schema.ResourceData
 			// TODO: waitFileSystemUpdated?
 
 			if _, err := waitAdministrativeActionCompleted(ctx, conn, d.Id(), fsx.AdministrativeActionTypeFileSystemUpdate, d.Timeout(schema.TimeoutUpdate)); err != nil {
-				return sdkdiag.AppendErrorf(diags, "waiting for FSx for Windows File Server File System (%s) administrative action complete: %s", d.Id(), err)
+				return sdkdiag.AppendErrorf(diags, "waiting for FSx for Windows File Server File System (%s) administrative action (%s) complete: %s", d.Id(), fsx.AdministrativeActionTypeFileSystemUpdate, err)
 			}
 		}
 	}
@@ -552,7 +552,7 @@ func resourceWindowsFileSystemUpdate(ctx context.Context, d *schema.ResourceData
 		// TODO: waitFileSystemUpdated?
 
 		if _, err := waitAdministrativeActionCompleted(ctx, conn, d.Id(), fsx.AdministrativeActionTypeFileSystemUpdate, d.Timeout(schema.TimeoutUpdate)); err != nil {
-			return sdkdiag.AppendErrorf(diags, "waiting for FSx for Windows File Server File System (%s) administrative action complete: %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "waiting for FSx for Windows File Server File System (%s) administrative action (%s) complete: %s", d.Id(), fsx.AdministrativeActionTypeFileSystemUpdate, err)
 		}
 	}
 

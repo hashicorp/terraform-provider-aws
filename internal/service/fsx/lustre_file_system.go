@@ -544,7 +544,7 @@ func resourceLustreFileSystemUpdate(ctx context.Context, d *schema.ResourceData,
 
 		if waitAdminAction {
 			if _, err := waitAdministrativeActionCompleted(ctx, conn, d.Id(), fsx.AdministrativeActionTypeFileSystemUpdate, d.Timeout(schema.TimeoutUpdate)); err != nil {
-				return sdkdiag.AppendErrorf(diags, "waiting for FSx for Lustre File System (%s) administrative action complete: %s", d.Id(), err)
+				return sdkdiag.AppendErrorf(diags, "waiting for FSx for Lustre File System (%s) administrative action (%s) complete: %s", d.Id(), fsx.AdministrativeActionTypeFileSystemUpdate, err)
 			}
 		}
 	}
