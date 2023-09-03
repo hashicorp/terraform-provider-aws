@@ -1,3 +1,7 @@
 ```release-note:enhancement
 data-source/aws_s3_objects: Add `request_payer` argument and `request_charged` attribute
 ```
+
+```release-note:enhancement
+data-source/aws_s3_objects: Add plan-time validation of `encoding_type`
+```
