@@ -75,6 +75,22 @@ func DataSourceWindowsFileSystem() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"disk_iops_configuration": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"iops": {
+							Type:     schema.TypeInt,
+							Computed: true,
+						},
+						"mode": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+					},
+				},
+			},
 			"dns_name": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -176,13 +192,16 @@ func dataSourceWindowsFileSystemRead(ctx context.Context, d *schema.ResourceData
 	d.Set("copy_tags_to_backups", windowsConfig.CopyTagsToBackups)
 	d.Set("daily_automatic_backup_start_time", windowsConfig.DailyAutomaticBackupStartTime)
 	d.Set("deployment_type", windowsConfig.DeploymentType)
+	if err := d.Set("disk_iops_configuration", flattenWindowsDiskIopsConfiguration(windowsConfig.DiskIopsConfiguration)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting disk_iops_configuration: %s", err)
+	}
 	d.Set("dns_name", filesystem.DNSName)
 	d.Set("id", filesystem.FileSystemId)
 	d.Set("kms_key_id", filesystem.KmsKeyId)
 	d.Set("network_interface_ids", aws.StringValueSlice(filesystem.NetworkInterfaceIds))
 	d.Set("owner_id", filesystem.OwnerId)
-	d.Set("preferred_subnet_id", windowsConfig.PreferredSubnetId)
 	d.Set("preferred_file_server_ip", windowsConfig.PreferredFileServerIp)
+	d.Set("preferred_subnet_id", windowsConfig.PreferredSubnetId)
 	d.Set("storage_capacity", filesystem.StorageCapacity)
 	d.Set("storage_type", filesystem.StorageType)
 	d.Set("subnet_ids", aws.StringValueSlice(filesystem.SubnetIds))

@@ -449,8 +449,8 @@ func resourceWindowsFileSystemRead(ctx context.Context, d *schema.ResourceData, 
 	d.Set("kms_key_id", filesystem.KmsKeyId)
 	d.Set("network_interface_ids", aws.StringValueSlice(filesystem.NetworkInterfaceIds))
 	d.Set("owner_id", filesystem.OwnerId)
-	d.Set("preferred_subnet_id", windowsConfig.PreferredSubnetId)
 	d.Set("preferred_file_server_ip", windowsConfig.PreferredFileServerIp)
+	d.Set("preferred_subnet_id", windowsConfig.PreferredSubnetId)
 	d.Set("remote_administration_endpoint", windowsConfig.RemoteAdministrationEndpoint)
 	if err := d.Set("self_managed_active_directory", flattenSelfManagedActiveDirectoryConfiguration(d, windowsConfig.SelfManagedActiveDirectoryConfiguration)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting self_managed_active_directory: %s", err)
