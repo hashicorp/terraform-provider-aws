@@ -46,6 +46,9 @@ func TestAccFSxWindowsFileSystem_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "copy_tags_to_backups", "false"),
 					resource.TestMatchResourceAttr(resourceName, "daily_automatic_backup_start_time", regexache.MustCompile(`^\d\d:\d\d$`)),
 					resource.TestCheckResourceAttr(resourceName, "deployment_type", "SINGLE_AZ_1"),
+					resource.TestCheckResourceAttr(resourceName, "disk_iops_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "disk_iops_configuration.0.iops", "96"),
+					resource.TestCheckResourceAttr(resourceName, "disk_iops_configuration.0.mode", "AUTOMATIC"),
 					resource.TestMatchResourceAttr(resourceName, "dns_name", regexache.MustCompile(`fs-.+\..+`)),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "kms_key_id", "kms", regexache.MustCompile(`key/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "network_interface_ids.#", "1"),
@@ -836,6 +839,51 @@ func TestAccFSxWindowsFileSystem_audit(t *testing.T) {
 	})
 }
 
+func TestAccFSxWindowsFileSystem_diskIops(t *testing.T) {
+	ctx := acctest.Context(t)
+	var filesystem1, filesystem2 fsx.FileSystem
+	resourceName := "aws_fsx_windows_file_system.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	domainName := acctest.RandomDomainName()
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, fsx.EndpointsID) },
+		ErrorCheck:               acctest.ErrorCheck(t, fsx.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckWindowsFileSystemDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccWindowsFileSystemConfig_diskIOPSConfiguration(rName, domainName, 192),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckWindowsFileSystemExists(ctx, resourceName, &filesystem1),
+					resource.TestCheckResourceAttr(resourceName, "disk_iops_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "disk_iops_configuration.0.mode", "USER_PROVISIONED"),
+					resource.TestCheckResourceAttr(resourceName, "disk_iops_configuration.0.iops", "192"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"security_group_ids",
+					"skip_final_backup",
+				},
+			},
+			{
+				Config: testAccWindowsFileSystemConfig_diskIOPSConfiguration(rName, domainName, 256),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckWindowsFileSystemExists(ctx, resourceName, &filesystem2),
+					testAccCheckWindowsFileSystemNotRecreated(&filesystem1, &filesystem2),
+					resource.TestCheckResourceAttr(resourceName, "disk_iops_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "disk_iops_configuration.0.mode", "USER_PROVISIONED"),
+					resource.TestCheckResourceAttr(resourceName, "disk_iops_configuration.0.iops", "256"),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckWindowsFileSystemExists(ctx context.Context, n string, v *fsx.FileSystem) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -1403,4 +1451,26 @@ resource "aws_fsx_windows_file_system" "test" {
   }
 }
 `, rName, status))
+}
+
+func testAccWindowsFileSystemConfig_diskIOPSConfiguration(rName, domain string, iops int) string {
+	return acctest.ConfigCompose(testAccWindowsFileSystemConfig_base(rName, domain), fmt.Sprintf(`
+resource "aws_fsx_windows_file_system" "test" {
+  active_directory_id           = aws_directory_service_directory.test.id
+  skip_final_backup             = true
+  storage_capacity              = 64
+  storage_type                  = "SSD"
+  subnet_ids                    = [aws_subnet.test[0].id]
+  throughput_capacity           = 8
+
+  disk_iops_configuration {
+    mode = "USER_PROVISIONED"
+    iops = %[2]d
+  }
+
+  tags = {
+    Name = %[1]q
+  }
+}
+`, rName, iops))
 }
