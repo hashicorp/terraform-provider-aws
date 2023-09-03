@@ -139,6 +139,28 @@ func ResourceWindowsFileSystem() *schema.Resource {
 				Default:      fsx.WindowsDeploymentTypeSingleAz1,
 				ValidateFunc: validation.StringInSlice(fsx.WindowsDeploymentType_Values(), false),
 			},
+			"disk_iops_configuration": {
+				Type:     schema.TypeList,
+				Optional: true,
+				Computed: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"iops": {
+							Type:         schema.TypeInt,
+							Optional:     true,
+							Computed:     true,
+							ValidateFunc: validation.IntBetween(0, 350000),
+						},
+						"mode": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							Default:      fsx.DiskIopsConfigurationModeAutomatic,
+							ValidateFunc: validation.StringInSlice(fsx.DiskIopsConfigurationMode_Values(), false),
+						},
+					},
+				},
+			},
 			"dns_name": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -324,6 +346,11 @@ func resourceWindowsFileSystemCreate(ctx context.Context, d *schema.ResourceData
 		inputB.WindowsConfiguration.DailyAutomaticBackupStartTime = aws.String(v.(string))
 	}
 
+	if v, ok := d.GetOk("disk_iops_configuration"); ok && len(v.([]interface{})) > 0 {
+		inputC.WindowsConfiguration.DiskIopsConfiguration = expandWindowsDiskIopsConfiguration(v.([]interface{}))
+		inputB.WindowsConfiguration.DiskIopsConfiguration = expandWindowsDiskIopsConfiguration(v.([]interface{}))
+	}
+
 	if v, ok := d.GetOk("deployment_type"); ok {
 		inputC.WindowsConfiguration.DeploymentType = aws.String(v.(string))
 		inputB.WindowsConfiguration.DeploymentType = aws.String(v.(string))
@@ -415,6 +442,9 @@ func resourceWindowsFileSystemRead(ctx context.Context, d *schema.ResourceData, 
 	d.Set("copy_tags_to_backups", windowsConfig.CopyTagsToBackups)
 	d.Set("daily_automatic_backup_start_time", windowsConfig.DailyAutomaticBackupStartTime)
 	d.Set("deployment_type", windowsConfig.DeploymentType)
+	if err := d.Set("disk_iops_configuration", flattenWindowsDiskIopsConfiguration(windowsConfig.DiskIopsConfiguration)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting disk_iops_configuration: %s", err)
+	}
 	d.Set("dns_name", filesystem.DNSName)
 	d.Set("kms_key_id", filesystem.KmsKeyId)
 	d.Set("network_interface_ids", aws.StringValueSlice(filesystem.NetworkInterfaceIds))
@@ -527,6 +557,10 @@ func resourceWindowsFileSystemUpdate(ctx context.Context, d *schema.ResourceData
 			input.WindowsConfiguration.DailyAutomaticBackupStartTime = aws.String(d.Get("daily_automatic_backup_start_time").(string))
 		}
 
+		if d.HasChange("disk_iops_configuration") {
+			input.WindowsConfiguration.DiskIopsConfiguration = expandWindowsDiskIopsConfiguration(d.Get("disk_iops_configuration").([]interface{}))
+		}
+
 		if d.HasChange("self_managed_active_directory") {
 			input.WindowsConfiguration.SelfManagedActiveDirectoryConfiguration = expandSelfManagedActiveDirectoryConfigurationUpdate(d.Get("self_managed_active_directory").([]interface{}))
 		}
@@ -554,6 +588,9 @@ func resourceWindowsFileSystemUpdate(ctx context.Context, d *schema.ResourceData
 		if _, err := waitAdministrativeActionCompleted(ctx, conn, d.Id(), fsx.AdministrativeActionTypeFileSystemUpdate, d.Timeout(schema.TimeoutUpdate)); err != nil {
 			return sdkdiag.AppendErrorf(diags, "waiting for FSx for Windows File Server File System (%s) administrative action (%s) complete: %s", d.Id(), fsx.AdministrativeActionTypeFileSystemUpdate, err)
 		}
+
+		// TODO: https://docs.aws.amazon.com/fsx/latest/WindowsGuide/managing-provisioned-ssd-iops.html
+		// TODO: https://docs.aws.amazon.com/fsx/latest/APIReference/API_AdministrativeAction.html#API_AdministrativeAction_Contents
 	}
 
 	return append(diags, resourceWindowsFileSystemRead(ctx, d, meta)...)
@@ -703,6 +740,42 @@ func flattenWindowsAuditLogConfiguration(adopts *fsx.WindowsAuditLogConfiguratio
 	}
 
 	return []map[string]interface{}{m}
+}
+
+func expandWindowsDiskIopsConfiguration(l []interface{}) *fsx.DiskIopsConfiguration {
+	if len(l) == 0 || l[0] == nil {
+		return nil
+	}
+
+	data := l[0].(map[string]interface{})
+	req := &fsx.DiskIopsConfiguration{}
+
+	if v, ok := data["iops"].(int); ok {
+		req.Iops = aws.Int64(int64(v))
+	}
+
+	if v, ok := data["mode"].(string); ok && v != "" {
+		req.Mode = aws.String(v)
+	}
+
+	return req
+}
+
+func flattenWindowsDiskIopsConfiguration(rs *fsx.DiskIopsConfiguration) []interface{} {
+	if rs == nil {
+		return []interface{}{}
+	}
+
+	m := map[string]interface{}{}
+
+	if rs.Iops != nil {
+		m["iops"] = aws.Int64Value(rs.Iops)
+	}
+	if rs.Mode != nil {
+		m["mode"] = aws.StringValue(rs.Mode)
+	}
+
+	return []interface{}{m}
 }
 
 func windowsAuditLogStateFunc(v interface{}) string {
