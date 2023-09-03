@@ -530,7 +530,9 @@ func resourceWindowsFileSystemUpdate(ctx context.Context, d *schema.ResourceData
 				return sdkdiag.AppendErrorf(diags, "updating FSx for Windows File Server File System (%s) ThroughputCapacity: %s", d.Id(), err)
 			}
 
-			// TODO: waitFileSystemUpdated?
+			if _, err := waitFileSystemUpdated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
+				return sdkdiag.AppendErrorf(diags, "waiting for FSx Windows File Server File System (%s) update: %s", d.Id(), err)
+			}
 
 			if _, err := waitAdministrativeActionCompleted(ctx, conn, d.Id(), fsx.AdministrativeActionTypeFileSystemUpdate, d.Timeout(schema.TimeoutUpdate)); err != nil {
 				return sdkdiag.AppendErrorf(diags, "waiting for FSx for Windows File Server File System (%s) administrative action (%s) complete: %s", d.Id(), fsx.AdministrativeActionTypeFileSystemUpdate, err)
@@ -583,14 +585,13 @@ func resourceWindowsFileSystemUpdate(ctx context.Context, d *schema.ResourceData
 			return sdkdiag.AppendErrorf(diags, "updating FSx for Windows File Server File System (%s): %s", d.Id(), err)
 		}
 
-		// TODO: waitFileSystemUpdated?
+		if _, err := waitFileSystemUpdated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "waiting for FSx Windows File Server File System (%s) update: %s", d.Id(), err)
+		}
 
 		if _, err := waitAdministrativeActionCompleted(ctx, conn, d.Id(), fsx.AdministrativeActionTypeFileSystemUpdate, d.Timeout(schema.TimeoutUpdate)); err != nil {
 			return sdkdiag.AppendErrorf(diags, "waiting for FSx for Windows File Server File System (%s) administrative action (%s) complete: %s", d.Id(), fsx.AdministrativeActionTypeFileSystemUpdate, err)
 		}
-
-		// TODO: https://docs.aws.amazon.com/fsx/latest/WindowsGuide/managing-provisioned-ssd-iops.html
-		// TODO: https://docs.aws.amazon.com/fsx/latest/APIReference/API_AdministrativeAction.html#API_AdministrativeAction_Contents
 	}
 
 	return append(diags, resourceWindowsFileSystemRead(ctx, d, meta)...)
