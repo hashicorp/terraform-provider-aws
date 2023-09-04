@@ -138,6 +138,7 @@ func resourceAPIKeyRead(ctx context.Context, d *schema.ResourceData, meta interf
 	}.String()
 	d.Set("arn", arn)
 	d.Set("created_date", apiKey.CreatedDate.Format(time.RFC3339))
+	d.Set("customer_id", apiKey.CustomerId)
 	d.Set("description", apiKey.Description)
 	d.Set("enabled", apiKey.Enabled)
 	d.Set("last_updated_date", apiKey.LastUpdatedDate.Format(time.RFC3339))
