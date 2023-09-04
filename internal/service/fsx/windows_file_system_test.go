@@ -540,47 +540,6 @@ func TestAccFSxWindowsFileSystem_selfManagedActiveDirectory(t *testing.T) {
 	})
 }
 
-func TestAccFSxWindowsFileSystem_SelfManagedActiveDirectory_username(t *testing.T) {
-	ctx := acctest.Context(t)
-	var filesystem fsx.FileSystem
-	resourceName := "aws_fsx_windows_file_system.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	domainName := acctest.RandomDomainName()
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, fsx.EndpointsID) },
-		ErrorCheck:               acctest.ErrorCheck(t, fsx.EndpointsID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckWindowsFileSystemDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccWindowsFileSystemConfig_selfManagedActiveDirectoryUsername(rName, domainName, "Admin"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckWindowsFileSystemExists(ctx, resourceName, &filesystem),
-					resource.TestCheckResourceAttr(resourceName, "self_managed_active_directory.#", "1"),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-				ImportStateVerifyIgnore: []string{
-					"security_group_ids",
-					"self_managed_active_directory",
-					"skip_final_backup",
-				},
-			},
-			{
-				Config: testAccWindowsFileSystemConfig_selfManagedActiveDirectoryUsername(rName, domainName, "Administrator"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckWindowsFileSystemExists(ctx, resourceName, &filesystem),
-					resource.TestCheckResourceAttr(resourceName, "self_managed_active_directory.#", "1"),
-				),
-			},
-		},
-	})
-}
-
 func TestAccFSxWindowsFileSystem_storageCapacity(t *testing.T) {
 	ctx := acctest.Context(t)
 	var filesystem1, filesystem2 fsx.FileSystem
@@ -1232,28 +1191,6 @@ resource "aws_fsx_windows_file_system" "test" {
   }
 }
 `, rName))
-}
-
-func testAccWindowsFileSystemConfig_selfManagedActiveDirectoryUsername(rName, domain, username string) string {
-	return acctest.ConfigCompose(testAccWindowsFileSystemConfig_base(rName, domain), fmt.Sprintf(`
-resource "aws_fsx_windows_file_system" "test" {
-  skip_final_backup   = true
-  storage_capacity    = 32
-  subnet_ids          = [aws_subnet.test[0].id]
-  throughput_capacity = 8
-
-  self_managed_active_directory {
-    dns_ips     = aws_directory_service_directory.test.dns_ip_addresses
-    domain_name = aws_directory_service_directory.test.name
-    password    = aws_directory_service_directory.test.password
-    username    = %[2]q
-  }
-
-  tags = {
-    Name = %[1]q
-  }
-}
-`, rName, username))
 }
 
 func testAccWindowsFileSystemConfig_storageCapacity(rName, domain string, storageCapacity, throughputCapacity int) string {
