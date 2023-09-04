@@ -820,9 +820,10 @@ func waitFileSystemUpdated(ctx context.Context, conn *fsx.FSx, id string, startT
 	if output, ok := outputRaw.(*fsx.FileSystem); ok {
 		switch status := aws.StringValue(output.Lifecycle); status {
 		case fsx.FileSystemLifecycleFailed, fsx.FileSystemLifecycleMisconfigured, fsx.FileSystemLifecycleMisconfiguredUnavailable:
-			// Report any failed administrative actions.
+			// Report any failed non-FILE_SYSTEM_UPDATE administrative actions.
+			// See https://docs.aws.amazon.com/fsx/latest/APIReference/API_AdministrativeAction.html#FSx-Type-AdministrativeAction-AdministrativeActionType.
 			administrativeActions := tfslices.Filter(output.AdministrativeActions, func(v *fsx.AdministrativeAction) bool {
-				return v != nil && aws.StringValue(v.Status) == fsx.StatusFailed && v.FailureDetails != nil && startTime.Before(aws.TimeValue(v.RequestTime))
+				return v != nil && aws.StringValue(v.Status) == fsx.StatusFailed && aws.StringValue(v.AdministrativeActionType) != fsx.AdministrativeActionTypeFileSystemUpdate && v.FailureDetails != nil && startTime.Before(aws.TimeValue(v.RequestTime))
 			})
 			administrativeActionsError := errors.Join(tfslices.ApplyToAll(administrativeActions, func(v *fsx.AdministrativeAction) error {
 				return fmt.Errorf("%s: %s", aws.StringValue(v.AdministrativeActionType), aws.StringValue(v.FailureDetails.Message))
