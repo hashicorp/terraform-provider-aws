@@ -416,13 +416,14 @@ func resourceOntapFileSystemUpdate(ctx context.Context, d *schema.ResourceData, 
 			}
 		}
 
+		startTime := time.Now()
 		_, err := conn.UpdateFileSystemWithContext(ctx, input)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating FSx ONTAP File System (%s): %s", d.Id(), err)
 		}
 
-		if _, err := waitFileSystemUpdated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
+		if _, err := waitFileSystemUpdated(ctx, conn, d.Id(), startTime, d.Timeout(schema.TimeoutUpdate)); err != nil {
 			return sdkdiag.AppendErrorf(diags, "waiting for FSx ONTAP File System (%s) update: %s", d.Id(), err)
 		}
 

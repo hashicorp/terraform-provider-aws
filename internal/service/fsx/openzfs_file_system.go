@@ -572,13 +572,14 @@ func resourceOpenZFSFileSystemUpdate(ctx context.Context, d *schema.ResourceData
 			input.OpenZFSConfiguration.WeeklyMaintenanceStartTime = aws.String(d.Get("weekly_maintenance_start_time").(string))
 		}
 
+		startTime := time.Now()
 		_, err := conn.UpdateFileSystemWithContext(ctx, input)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating FSx for OpenZFS File System (%s): %s", d.Id(), err)
 		}
 
-		if _, err := waitFileSystemUpdated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
+		if _, err := waitFileSystemUpdated(ctx, conn, d.Id(), startTime, d.Timeout(schema.TimeoutUpdate)); err != nil {
 			return sdkdiag.AppendErrorf(diags, "waiting for FSx for OpenZFS File System (%s) update: %s", d.Id(), err)
 		}
 
