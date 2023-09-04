@@ -73,7 +73,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `arn` - Amazon Resource Name (ARN) of the collection.
 * `collection_endpoint` - Collection-specific endpoint used to submit index, search, and data upload requests to an OpenSearch Serverless collection.
-* `dashboard_endpont` - Collection-specific endpoint used to access OpenSearch Dashboards.
+* `dashboard_endpoint` - Collection-specific endpoint used to access OpenSearch Dashboards.
 * `kms_key_arn` - The ARN of the Amazon Web Services KMS key used to encrypt the collection.
 * `id` - Unique identifier for the collection.
 
@@ -103,4 +103,4 @@ Using `terraform import`, import OpenSearchServerless Collection using the `id`.
 % terraform import aws_opensearchserverless_collection.example example
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-475396311487557d22c5534382d5736d4e65c807a5cf88e21160ae601e59f980 -->
+<!-- cache-key: cdktf-0.18.0 input-6228d2d8e91060f7235e5e926282f581119f807883b0fd65b2ee82f2cc330709 -->
