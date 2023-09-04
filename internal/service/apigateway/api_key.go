@@ -137,25 +137,19 @@ func resourceAPIKeyRead(ctx context.Context, d *schema.ResourceData, meta interf
 		Resource:  fmt.Sprintf("/apikeys/%s", d.Id()),
 	}.String()
 	d.Set("arn", arn)
-
-	d.Set("name", apiKey.Name)
+	d.Set("created_date", apiKey.CreatedDate.Format(time.RFC3339))
 	d.Set("description", apiKey.Description)
 	d.Set("enabled", apiKey.Enabled)
+	d.Set("last_updated_date", apiKey.LastUpdatedDate.Format(time.RFC3339))
+	d.Set("name", apiKey.Name)
 	d.Set("value", apiKey.Value)
-
-	if err := d.Set("created_date", apiKey.CreatedDate.Format(time.RFC3339)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting created_date: %s", err)
-	}
-
-	if err := d.Set("last_updated_date", apiKey.LastUpdatedDate.Format(time.RFC3339)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting last_updated_date: %s", err)
-	}
 
 	return diags
 }
 
 func resourceAPIKeyUpdateOperations(d *schema.ResourceData) []*apigateway.PatchOperation {
 	operations := make([]*apigateway.PatchOperation, 0)
+
 	if d.HasChange("enabled") {
 		isEnabled := "false"
 		if d.Get("enabled").(bool) {
@@ -184,10 +178,10 @@ func resourceAPIKeyUpdateOperations(d *schema.ResourceData) []*apigateway.PatchO
 		})
 	}
 
-	if d.HasChange("customerId") {
+	if d.HasChange("customer_id") {
 		operations = append(operations, &apigateway.PatchOperation{
 			Op:    aws.String(apigateway.OpReplace),
-			Path:  aws.String("/name"),
+			Path:  aws.String("/customerId"),
 			Value: aws.String(d.Get("customer_id").(string)),
 		})
 	}
