@@ -124,9 +124,8 @@ func resourceAccountRead(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 
 	d.Set("api_key_version", account.ApiKeyVersion)
-	d.Set("features", flex.FlattenStringSet(account.Features))
 	d.Set("cloudwatch_role_arn", account.CloudwatchRoleArn)
-
+	d.Set("features", flex.FlattenStringSet(account.Features))
 	if err := d.Set("throttle_settings", flattenThrottleSettings(account.ThrottleSettings)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting throttle_settings: %s", err)
 	}
