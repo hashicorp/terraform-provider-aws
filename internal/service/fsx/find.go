@@ -13,27 +13,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func FindAdministrativeActionByFileSystemIDAndActionType(ctx context.Context, conn *fsx.FSx, fsID, actionType string) (*fsx.AdministrativeAction, error) {
-	fileSystem, err := FindFileSystemByID(ctx, conn, fsID)
-
-	if err != nil {
-		return nil, err
-	}
-
-	for _, administrativeAction := range fileSystem.AdministrativeActions {
-		if administrativeAction == nil {
-			continue
-		}
-
-		if aws.StringValue(administrativeAction.AdministrativeActionType) == actionType {
-			return administrativeAction, nil
-		}
-	}
-
-	// If the administrative action isn't found, assume it's complete.
-	return &fsx.AdministrativeAction{Status: aws.String(fsx.StatusCompleted)}, nil
-}
-
 func FindBackupByID(ctx context.Context, conn *fsx.FSx, id string) (*fsx.Backup, error) {
 	input := &fsx.DescribeBackupsInput{
 		BackupIds: aws.StringSlice([]string{id}),
