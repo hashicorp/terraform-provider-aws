@@ -948,6 +948,14 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			TypeName: "aws_volume_attachment",
 		},
 		{
+			Factory:  ResourceVerifiedAccessGroup,
+			TypeName: "aws_verifiedaccess_access_group",
+			Name:     "Verified Access Access Group",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "id",
+			},
+		},
+		{
 			Factory:  ResourceVPC,
 			TypeName: "aws_vpc",
 			Name:     "VPC",
