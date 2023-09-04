@@ -9,9 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	"github.com/aws/aws-sdk-go-v2/service/ec2/types"
-	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
@@ -128,7 +126,7 @@ func resourceVerifiedAccessGroupRead(ctx context.Context, d *schema.ResourceData
 
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
-	out, err := findVerifiedAccessGroupByID(ctx, conn, d.Id())
+	out, err := FindVerifiedAccessGroupByID(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] EC2 VerifiedAccessGroup (%s) not found, removing from state", d.Id())
@@ -153,14 +151,13 @@ func resourceVerifiedAccessGroupRead(ctx context.Context, d *schema.ResourceData
 	// Set tags
 	setTagsOutV2(ctx, out.VerifiedAccessGroups[0].Tags)
 
-	// // Retrieve policy
-	// output, err := findVerifiedAccessGroupPolicyByGroupID(ctx, conn, d.Id())
+	// Retrieve policy
+	output, err := FindVerifiedAccessGroupPolicyByGroupID(ctx, conn, d.Id())
 
-	// if err != nil {
-	// 	return append(diags, create.DiagError(names.EC2, create.ErrActionReading, ResNameVerifiedAccessGroup, d.Id(), err)...)
-	// }
-	// d.Set("policy_document", output.PolicyDocument)
-	d.Set("policy_document", d.Get("policy_document"))
+	if err != nil {
+		return append(diags, create.DiagError(names.EC2, create.ErrActionReading, ResNameVerifiedAccessGroup, d.Id(), err)...)
+	}
+	d.Set("policy_document", output.PolicyDocument)
 
 	return diags
 }
@@ -171,8 +168,13 @@ func resourceVerifiedAccessGroupUpdate(ctx context.Context, d *schema.ResourceDa
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	update := false
+	update_policy := false
 
 	in := &ec2.ModifyVerifiedAccessGroupInput{
+		VerifiedAccessGroupId: aws.String(d.Id()),
+	}
+
+	in_policy := &ec2.ModifyVerifiedAccessGroupPolicyInput{
 		VerifiedAccessGroupId: aws.String(d.Id()),
 	}
 
@@ -190,6 +192,13 @@ func resourceVerifiedAccessGroupUpdate(ctx context.Context, d *schema.ResourceDa
 		}
 	}
 
+	if d.HasChange("policy_document") {
+		if v, ok := d.GetOk("policy_document"); ok {
+			in_policy.PolicyDocument = aws.String(v.(string))
+			update_policy = true
+		}
+	}
+
 	if !update {
 		return diags
 	}
@@ -199,6 +208,15 @@ func resourceVerifiedAccessGroupUpdate(ctx context.Context, d *schema.ResourceDa
 
 	if err != nil {
 		return append(diags, create.DiagError(names.EC2, create.ErrActionUpdating, ResNameVerifiedAccessGroup, d.Id(), err)...)
+	}
+
+	if update_policy {
+		log.Printf("[DEBUG] Updating EC2 VerifiedAccessGroupPolicy (%s): %#v", d.Id(), in_policy)
+		_, err := conn.ModifyVerifiedAccessGroupPolicy(ctx, in_policy)
+
+		if err != nil {
+			return append(diags, create.DiagError(names.EC2, create.ErrActionUpdating, ResNameVerifiedAccessGroup, d.Id(), err)...)
+		}
 	}
 
 	return append(diags, resourceVerifiedAccessGroupRead(ctx, d, meta)...)
@@ -219,41 +237,4 @@ func resourceVerifiedAccessGroupDelete(ctx context.Context, d *schema.ResourceDa
 	}
 
 	return diags
-}
-
-func findVerifiedAccessGroupPolicyByGroupID(ctx context.Context, conn *ec2.Client, id string) (*ec2.GetVerifiedAccessGroupPolicyOutput, error) {
-	in := &ec2.GetVerifiedAccessGroupPolicyInput{
-		VerifiedAccessGroupId: &id,
-	}
-	out, err := conn.GetVerifiedAccessGroupPolicy(ctx, in)
-
-	if err != nil {
-		return nil, err
-	}
-
-	return out, nil
-}
-
-func findVerifiedAccessGroupByID(ctx context.Context, conn *ec2.Client, id string) (*ec2.DescribeVerifiedAccessGroupsOutput, error) {
-	in := &ec2.DescribeVerifiedAccessGroupsInput{
-		VerifiedAccessGroupIds: []string{id},
-	}
-	out, err := conn.DescribeVerifiedAccessGroups(ctx, in)
-
-	if tfawserr.ErrCodeEquals(err, errCodeInvalidVerifiedAccessGroupIdNotFound) {
-		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: in,
-		}
-	}
-
-	if err != nil {
-		return nil, err
-	}
-
-	if out == nil || out.VerifiedAccessGroups == nil {
-		return nil, tfresource.NewEmptyResultError(in)
-	}
-
-	return out, nil
 }

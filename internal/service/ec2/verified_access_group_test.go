@@ -2,14 +2,20 @@ package ec2_test
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"testing"
+
+	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -34,12 +40,13 @@ func TestAccVerifiedAccessAccessGroup_basic(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		//CheckDestroy:             testAccCheckVerifiedAccessAccessGroupDestroy(ctx),
+		CheckDestroy:             testAccCheckVerifiedAccessAccessGroupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVerifiedAccessGroupConfig_basic(rName, description),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "description", description),
+					resource.TestCheckResourceAttr(resourceName, "policy_document", ""),
 				),
 			},
 			{
@@ -52,30 +59,102 @@ func TestAccVerifiedAccessAccessGroup_basic(t *testing.T) {
 	})
 }
 
-// func testAccCheckVerifiedAccessAccessGroupDestroy(ctx context.Context) resource.TestCheckFunc {
-// 	return func(s *terraform.State) error {
-// 		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
+func TestAccVerifiedAccessAccessGroup_policy(t *testing.T) {
+	ctx := acctest.Context(t)
 
-// 		for _, rs := range s.RootModule().Resources {
-// 			if rs.Type != "aws_verifiedaccess_access_group" {
-// 				continue
-// 			}
+	description := sdkacctest.RandString(100)
+	policyDoc := "permit(principal, action, resource) \nwhen {\ncontext.http_request.method == \"GET\"\n};"
+	rName := "test"
+	resourceName := "aws_verifiedaccess_access_group." + rName
 
-// 			_, err := tfec2.findVerifiedAccessGroupByID(ctx, conn, rs.Primary.ID)
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.EC2)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckVerifiedAccessAccessGroupDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVerifiedAccessGroupConfig_policy(rName, description, policyDoc),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "description", description),
+					resource.TestCheckResourceAttr(resourceName, "policy_document", policyDoc),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}
 
-// 			if tfresource.NotFound(err) {
-// 				continue
-// 			}
+func TestAccVerifiedAccessAccessGroup_tags(t *testing.T) {
+	ctx := acctest.Context(t)
 
-// 			if err != nil {
-// 				return err
-// 			}
+	description := sdkacctest.RandString(100)
+	rName := "test"
+	resourceName := "aws_verifiedaccess_access_group." + rName
+	tag1 := sdkacctest.RandString(10)
+	value1 := sdkacctest.RandString(10)
 
-// 			return create.Error(names.EC2, create.ErrActionCheckingDestroyed, tfec2.ResNameVerifiedAccessGroup, rs.Primary.ID, errors.New("not destroyed"))
-// 		}
-// 		return nil
-// 	}
-// }
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.EC2)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckVerifiedAccessAccessGroupDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVerifiedAccessGroupConfig_tags(rName, description, tag1, value1),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "description", description),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags."+tag1, value1),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}
+
+func testAccCheckVerifiedAccessAccessGroupDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
+
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_verifiedaccess_access_group" {
+				continue
+			}
+
+			_, err := tfec2.FindVerifiedAccessGroupByID(ctx, conn, rs.Primary.ID)
+
+			if tfresource.NotFound(err) {
+				continue
+			}
+
+			if err != nil {
+				return err
+			}
+
+			return create.Error(names.EC2, create.ErrActionCheckingDestroyed, tfec2.ResNameVerifiedAccessGroup, rs.Primary.ID, errors.New("not destroyed"))
+		}
+		return nil
+	}
+}
 
 func testAccPreCheck(ctx context.Context, t *testing.T) {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
@@ -91,6 +170,7 @@ func testAccPreCheck(ctx context.Context, t *testing.T) {
 		t.Fatalf("unexpected PreCheck error: %s", err)
 	}
 }
+
 func testAccVerifiedAccessGroupConfig_basic(rName, description string) string {
 	return fmt.Sprintf(`
 resource "aws_verifiedaccess_access_group" %[1]q {
@@ -98,4 +178,26 @@ resource "aws_verifiedaccess_access_group" %[1]q {
   verified_access_instance_id = "vai-014ba03ba2d7c6a6f"
 }
 `, rName, description)
+}
+
+func testAccVerifiedAccessGroupConfig_tags(rName, description, tag1, val1 string) string {
+	return fmt.Sprintf(`
+resource "aws_verifiedaccess_access_group" %[1]q {
+  description = %[2]q
+  verified_access_instance_id = "vai-014ba03ba2d7c6a6f"
+  tags = {
+	%[3]q = %[4]q
+  }
+}
+`, rName, description, tag1, val1)
+}
+
+func testAccVerifiedAccessGroupConfig_policy(rName, description, policy string) string {
+	return acctest.ConfigCompose(fmt.Sprintf(`
+resource "aws_verifiedaccess_access_group" %[1]q {
+	description = %[2]q
+	verified_access_instance_id = "vai-014ba03ba2d7c6a6f"
+	policy_document = %[3]q
+}
+`, rName, description, policy))
 }

@@ -905,6 +905,43 @@ func FindImages(ctx context.Context, conn *ec2.EC2, input *ec2.DescribeImagesInp
 	return output, nil
 }
 
+func FindVerifiedAccessGroupPolicyByGroupID(ctx context.Context, conn *ec2_sdkv2.Client, id string) (*ec2_sdkv2.GetVerifiedAccessGroupPolicyOutput, error) {
+	in := &ec2_sdkv2.GetVerifiedAccessGroupPolicyInput{
+		VerifiedAccessGroupId: &id,
+	}
+	out, err := conn.GetVerifiedAccessGroupPolicy(ctx, in)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return out, nil
+}
+
+func FindVerifiedAccessGroupByID(ctx context.Context, conn *ec2_sdkv2.Client, id string) (*ec2_sdkv2.DescribeVerifiedAccessGroupsOutput, error) {
+	in := &ec2_sdkv2.DescribeVerifiedAccessGroupsInput{
+		VerifiedAccessGroupIds: []string{id},
+	}
+	out, err := conn.DescribeVerifiedAccessGroups(ctx, in)
+
+	if tfawserr_sdkv2.ErrCodeEquals(err, errCodeInvalidVerifiedAccessGroupIdNotFound) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: in,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if out == nil || out.VerifiedAccessGroups == nil {
+		return nil, tfresource.NewEmptyResultError(in)
+	}
+
+	return out, nil
+}
+
 func FindImage(ctx context.Context, conn *ec2.EC2, input *ec2.DescribeImagesInput) (*ec2.Image, error) {
 	output, err := FindImages(ctx, conn, input)
 
