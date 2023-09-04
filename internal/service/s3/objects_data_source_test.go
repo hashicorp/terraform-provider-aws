@@ -107,7 +107,7 @@ func TestAccS3ObjectsDataSource_encoded(t *testing.T) {
 	})
 }
 
-func TestAccS3ObjectsDataSource_maxKeys(t *testing.T) {
+func TestAccS3ObjectsDataSource_maxKeysSmall(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	dataSourceName := "data.aws_s3_objects.test"
@@ -119,7 +119,7 @@ func TestAccS3ObjectsDataSource_maxKeys(t *testing.T) {
 		PreventPostDestroyRefresh: true,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccObjectsDataSourceConfig_maxKeys(rName, 1, 5),
+				Config: testAccObjectsDataSourceConfig_maxKeysSmall(rName, 1, 5),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceName, "common_prefixes.#", "0"),
 					resource.TestCheckResourceAttr(dataSourceName, "keys.#", "3"),
@@ -127,10 +127,46 @@ func TestAccS3ObjectsDataSource_maxKeys(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccObjectsDataSourceConfig_maxKeys(rName, 2, 5),
+				Config: testAccObjectsDataSourceConfig_maxKeysSmall(rName, 2, 5),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceName, "common_prefixes.#", "0"),
 					resource.TestCheckResourceAttr(dataSourceName, "keys.#", "5"),
+					resource.TestCheckResourceAttr(dataSourceName, "owners.#", "0"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccS3ObjectsDataSource_maxKeysLarge(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	dataSourceName := "data.aws_s3_objects.test"
+	var keys []string
+	for i := 0; i < 1500; i++ {
+		keys = append(keys, fmt.Sprintf("data%d", i))
+	}
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                  func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:                acctest.ErrorCheck(t, names.S3EndpointID),
+		ProtoV5ProviderFactories:  acctest.ProtoV5ProviderFactories,
+		PreventPostDestroyRefresh: true,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccObjectsDataSourceConfig_maxKeysLarge(rName, 1002),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr(dataSourceName, "common_prefixes.#", "0"),
+					resource.TestCheckResourceAttr(dataSourceName, "keys.#", "0"),
+					resource.TestCheckResourceAttr(dataSourceName, "owners.#", "0"),
+					testAccCheckBucketAddObjects(ctx, "aws_s3_bucket.test", keys...),
+				),
+			},
+			{
+				Config: testAccObjectsDataSourceConfig_maxKeysLarge(rName, 1002),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr(dataSourceName, "common_prefixes.#", "0"),
+					resource.TestCheckResourceAttr(dataSourceName, "keys.#", "1002"),
 					resource.TestCheckResourceAttr(dataSourceName, "owners.#", "0"),
 				),
 			},
@@ -274,7 +310,7 @@ data "aws_s3_objects" "test" {
 `, rName)
 }
 
-func testAccObjectsDataSourceConfig_maxKeys(rName string, n, maxKeys int) string {
+func testAccObjectsDataSourceConfig_maxKeysSmall(rName string, n, maxKeys int) string {
 	return acctest.ConfigCompose(testAccObjectsDataSourceConfig_base(rName, n), fmt.Sprintf(`
 data "aws_s3_objects" "test" {
   bucket   = aws_s3_bucket.test.id
@@ -283,6 +319,21 @@ data "aws_s3_objects" "test" {
   depends_on = [aws_s3_object.test1, aws_s3_object.test2, aws_s3_object.test3]
 }
 `, maxKeys))
+}
+
+// Objects are added to the bucket outside this configuration.
+func testAccObjectsDataSourceConfig_maxKeysLarge(rName string, maxKeys int) string {
+	return fmt.Sprintf(`
+resource "aws_s3_bucket" "test" {
+  bucket        = %[1]q
+  force_destroy = true
+}
+
+data "aws_s3_objects" "test" {
+  bucket   = aws_s3_bucket.test.id
+  max_keys = %[2]d
+}
+`, rName, maxKeys)
 }
 
 func testAccObjectsDataSourceConfig_startAfter(rName string, n int, startAfter string) string {

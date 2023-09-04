@@ -123,10 +123,12 @@ func dataSourceObjectsRead(ctx context.Context, d *schema.ResourceData, meta int
 		input.StartAfter = aws.String(v.(string))
 	}
 
+	var nKeys int64
 	var commonPrefixes, keys, owners []string
 	var requestCharged string
 
 	pages := s3.NewListObjectsV2Paginator(conn, input)
+pageLoop:
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
 
@@ -141,18 +143,17 @@ func dataSourceObjectsRead(ctx context.Context, d *schema.ResourceData, meta int
 		}
 
 		for _, v := range page.Contents {
+			if nKeys >= maxKeys {
+				break pageLoop
+			}
+
 			keys = append(keys, aws.ToString(v.Key))
 
 			if v := v.Owner; v != nil {
 				owners = append(owners, aws.ToString(v.ID))
 			}
-		}
 
-		maxKeys = maxKeys - int64(page.KeyCount)
-		if maxKeys <= 0 {
-			break
-		} else if maxKeys <= keyRequestPageSize {
-			input.MaxKeys = int32(maxKeys) // TODO Fix this
+			nKeys++
 		}
 	}
 

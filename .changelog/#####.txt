@@ -5,3 +5,7 @@ data-source/aws_s3_objects: Add `request_payer` argument and `request_charged` a
 ```release-note:enhancement
 data-source/aws_s3_objects: Add plan-time validation of `encoding_type`
 ```
+
+```release-note:bug
+data-source/aws_s3_objects: Respect configured `max_keys` value if it's greater than `1000`
+```
