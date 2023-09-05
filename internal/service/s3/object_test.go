@@ -1416,7 +1416,7 @@ func testAccCheckObjectDestroy(ctx context.Context) resource.TestCheckFunc {
 				continue
 			}
 
-			_, err := tfs3.FindObjectByThreePartKey(ctx, conn, rs.Primary.Attributes["bucket"], rs.Primary.Attributes["key"], rs.Primary.Attributes["etag"])
+			_, err := tfs3.FindObjectByThreePartKeyV1(ctx, conn, rs.Primary.Attributes["bucket"], rs.Primary.Attributes["key"], rs.Primary.Attributes["etag"])
 
 			if tfresource.NotFound(err) {
 				continue
@@ -1533,7 +1533,7 @@ func testAccCheckObjectStorageClass(ctx context.Context, n, expectedClass string
 		rs := s.RootModule().Resources[n]
 		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Conn(ctx)
 
-		out, err := tfs3.FindObjectByThreePartKey(ctx, conn, rs.Primary.Attributes["bucket"], rs.Primary.Attributes["key"], "")
+		out, err := tfs3.FindObjectByThreePartKeyV1(ctx, conn, rs.Primary.Attributes["bucket"], rs.Primary.Attributes["key"], "")
 
 		if err != nil {
 			return err
@@ -1560,7 +1560,7 @@ func testAccCheckObjectSSE(ctx context.Context, n, expectedSSE string) resource.
 		rs := s.RootModule().Resources[n]
 		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Conn(ctx)
 
-		out, err := tfs3.FindObjectByThreePartKey(ctx, conn, rs.Primary.Attributes["bucket"], rs.Primary.Attributes["key"], "")
+		out, err := tfs3.FindObjectByThreePartKeyV1(ctx, conn, rs.Primary.Attributes["bucket"], rs.Primary.Attributes["key"], "")
 
 		if err != nil {
 			return err
