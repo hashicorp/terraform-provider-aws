@@ -1,12 +1,12 @@
 ---
 subcategory: "EC2 (Elastic Compute Cloud)"
 layout: "aws"
-page_title: "AWS: aws_ec2_verified_access_group"
+page_title: "AWS: aws_verifiedaccess_access_group"
 description: |-
   Terraform resource for managing an AWS EC2 (Elastic Compute Cloud) Verified Access Group.
 ---
 
-# Resource: aws_ec2_verified_access_group
+# Resource: aws_verifiedaccess_access_group
 
 Terraform resource for managing an AWS EC2 (Elastic Compute Cloud) Verified Access Group.
 
@@ -15,7 +15,8 @@ Terraform resource for managing an AWS EC2 (Elastic Compute Cloud) Verified Acce
 ### Basic Usage
 
 ```terraform
-resource "aws_ec2_verified_access_group" "example" {
+resource "aws_verifiedaccess_access_group" "example" {
+  verified_access_instance_id = ""
 }
 ```
 
@@ -23,18 +24,24 @@ resource "aws_ec2_verified_access_group" "example" {
 
 The following arguments are required:
 
-* `example_arg` - (Required) Concise argument description. Do not begin the description with "An", "The", "Defines", "Indicates", or "Specifies," as these are verbose. In other words, "Indicates the amount of storage," can be rewritten as "Amount of storage," without losing any information.
+* `verified_access_instance_id` - (Required) The id of the verified access instance this group is associated with.
 
 The following arguments are optional:
 
-* `optional_arg` - (Optional) Concise argument description. Do not begin the description with "An", "The", "Defines", "Indicates", or "Specifies," as these are verbose. In other words, "Indicates the amount of storage," can be rewritten as "Amount of storage," without losing any information.
+* `description` - (Optional) Description of the verified access group.
+* `tags` - (Optional) Key-value mapping of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `policy_docment` - (Optional) The policy document that is associated with this resource.
 
 ## Attributes Reference
 
 In addition to all arguments above, the following attributes are exported:
 
-* `arn` - ARN of the Verified Access Group. Do not begin the description with "An", "The", "Defines", "Indicates", or "Specifies," as these are verbose. In other words, "Indicates the amount of storage," can be rewritten as "Amount of storage," without losing any information.
-* `example_attribute` - Concise description. Do not begin the description with "An", "The", "Defines", "Indicates", or "Specifies," as these are verbose. In other words, "Indicates the amount of storage," can be rewritten as "Amount of storage," without losing any information.
+* `creation_time` - Timestamp when the access group was created.
+* `deletion_time` - Timestamp when the access group was deleted.
+* `last_updated_time` - Timestamp when the access group was last updated.
+* `owner` - AWS account number owning this resource.
+* `verified_access_group_arn` - ARN of this verified acess group.
+* `verified_access_group_id` - ID of this verified access group.
 
 ## Timeouts
 
@@ -43,11 +50,3 @@ In addition to all arguments above, the following attributes are exported:
 * `create` - (Default `60m`)
 * `update` - (Default `180m`)
 * `delete` - (Default `90m`)
-
-## Import
-
-EC2 (Elastic Compute Cloud) Verified Access Group can be imported using the `example_id_arg`, e.g.,
-
-```
-$ terraform import aws_ec2_verified_access_group.example rft-8012925589
-```
