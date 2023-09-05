@@ -629,7 +629,7 @@ func resourceObjectCopyDoCopy(ctx context.Context, d *schema.ResourceData, meta 
 	d.Set("expiration", output.Expiration)
 	d.Set("kms_encryption_context", output.SSEKMSEncryptionContext)
 	d.Set("kms_key_id", output.SSEKMSKeyId)
-	d.Set("request_charged", output.RequestCharged)
+	d.Set("request_charged", output.RequestCharged == types.RequestChargedRequester)
 	d.Set("server_side_encryption", output.ServerSideEncryption)
 	d.Set("source_version_id", output.CopySourceVersionId)
 	d.Set("version_id", output.VersionId)
