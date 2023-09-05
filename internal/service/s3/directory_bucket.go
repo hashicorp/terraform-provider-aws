@@ -7,7 +7,6 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -69,14 +68,7 @@ func (r *resourceDirectoryBucket) Create(ctx context.Context, request resource.C
 	}
 
 	// Set values for unknowns.
-	arn := arn.ARN{
-		Partition: r.Meta().Partition,
-		Service:   "s3beta2022a",
-		Region:    r.Meta().Region,
-		AccountID: r.Meta().AccountID,
-		Resource:  data.Bucket.ValueString(),
-	}.String()
-	data.ARN = types.StringValue(arn)
+	data.ARN = types.StringValue(r.RegionalARN("s3beta2022a", data.Bucket.ValueString()))
 	data.ID = data.Bucket
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
@@ -104,6 +96,10 @@ func (r *resourceDirectoryBucket) Read(ctx context.Context, request resource.Rea
 
 		return
 	}
+
+	// Set attributes for import.
+	data.ARN = types.StringValue(r.RegionalARN("s3beta2022a", data.ID.ValueString()))
+	data.Bucket = data.ID
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
