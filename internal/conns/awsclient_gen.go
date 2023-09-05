@@ -48,6 +48,7 @@ import (
 	resourceexplorer2_sdkv2 "github.com/aws/aws-sdk-go-v2/service/resourceexplorer2"
 	rolesanywhere_sdkv2 "github.com/aws/aws-sdk-go-v2/service/rolesanywhere"
 	route53domains_sdkv2 "github.com/aws/aws-sdk-go-v2/service/route53domains"
+	s3_sdkv2 "github.com/aws/aws-sdk-go-v2/service/s3"
 	s3control_sdkv2 "github.com/aws/aws-sdk-go-v2/service/s3control"
 	scheduler_sdkv2 "github.com/aws/aws-sdk-go-v2/service/scheduler"
 	securitylake_sdkv2 "github.com/aws/aws-sdk-go-v2/service/securitylake"
@@ -907,6 +908,10 @@ func (c *AWSClient) Route53ResolverConn(ctx context.Context) *route53resolver_sd
 
 func (c *AWSClient) S3Conn(ctx context.Context) *s3_sdkv1.S3 {
 	return errs.Must(conn[*s3_sdkv1.S3](ctx, c, names.S3))
+}
+
+func (c *AWSClient) S3Client(ctx context.Context) *s3_sdkv2.Client {
+	return errs.Must(client[*s3_sdkv2.Client](ctx, c, names.S3))
 }
 
 func (c *AWSClient) S3ControlConn(ctx context.Context) *s3control_sdkv1.S3Control {
