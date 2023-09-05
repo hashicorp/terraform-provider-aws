@@ -5,7 +5,7 @@ go 1.20
 require (
 	github.com/ProtonMail/go-crypto v0.0.0-20230217124315-7d5c6f04bbb8
 	github.com/aws/aws-sdk-go v1.44.302
-	github.com/aws/aws-sdk-go-v2 v1.19.0
+	github.com/aws/aws-sdk-go-v2 v1.20.1
 	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.13.5
 	github.com/aws/aws-sdk-go-v2/service/accessanalyzer v1.19.15
 	github.com/aws/aws-sdk-go-v2/service/account v1.10.9
@@ -47,6 +47,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/scheduler v1.1.14
 	github.com/aws/aws-sdk-go-v2/service/securitylake v1.4.4
 	github.com/aws/aws-sdk-go-v2/service/sesv2 v1.18.3
+	github.com/aws/aws-sdk-go-v2/service/shield v1.19.2
 	github.com/aws/aws-sdk-go-v2/service/ssm v1.36.8
 	github.com/aws/aws-sdk-go-v2/service/ssmcontacts v1.15.8
 	github.com/aws/aws-sdk-go-v2/service/ssmincidents v1.21.7
@@ -57,7 +58,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/vpclattice v1.0.8
 	github.com/aws/aws-sdk-go-v2/service/workspaces v1.28.16
 	github.com/aws/aws-sdk-go-v2/service/xray v1.16.14
-	github.com/aws/smithy-go v1.13.5
+	github.com/aws/smithy-go v1.14.1
 	github.com/beevik/etree v1.2.0
 	github.com/google/go-cmp v0.5.9
 	github.com/hashicorp/aws-cloudformation-resource-schema-sdk-go v0.21.0
@@ -105,8 +106,8 @@ require (
 	github.com/aws/aws-sdk-go-v2/aws/protocol/eventstream v1.4.10 // indirect
 	github.com/aws/aws-sdk-go-v2/config v1.18.27 // indirect
 	github.com/aws/aws-sdk-go-v2/credentials v1.13.26 // indirect
-	github.com/aws/aws-sdk-go-v2/internal/configsources v1.1.35 // indirect
-	github.com/aws/aws-sdk-go-v2/internal/endpoints/v2 v2.4.29 // indirect
+	github.com/aws/aws-sdk-go-v2/internal/configsources v1.1.38 // indirect
+	github.com/aws/aws-sdk-go-v2/internal/endpoints/v2 v2.4.32 // indirect
 	github.com/aws/aws-sdk-go-v2/internal/ini v1.3.35 // indirect
 	github.com/aws/aws-sdk-go-v2/service/iam v1.21.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/internal/endpoint-discovery v1.7.29 // indirect

@@ -23,7 +23,7 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 			Name:    "DRT Access Log Bucket Association",
 		},
 		{
-			Factory: newResourceDRTAccessRoleArnAssociation,
+			Factory: newResourceDRTAccessRoleARNAssociation,
 			Name:    "DRT Access Role Arn Association",
 		},
 	}

@@ -28,9 +28,9 @@ import (
 )
 
 // Function annotations are used for resource registration to the Provider. DO NOT EDIT.
-// @FrameworkResource(name="DRT Access Role Arn Association")
-func newResourceDRTAccessRoleArnAssociation(_ context.Context) (resource.ResourceWithConfigure, error) {
-	r := &resourceDRTAccessRoleArnAssociation{}
+// @FrameworkResource(name="DRT Access Role ARN Association")
+func newResourceDRTAccessRoleARNAssociation(_ context.Context) (resource.ResourceWithConfigure, error) {
+	r := &resourceDRTAccessRoleARNAssociation{}
 
 	r.SetDefaultCreateTimeout(30 * time.Minute)
 	r.SetDefaultUpdateTimeout(30 * time.Minute)
@@ -40,19 +40,19 @@ func newResourceDRTAccessRoleArnAssociation(_ context.Context) (resource.Resourc
 }
 
 const (
-	ResNameDRTAccessRoleArnAssociation = "DRT Access Role Arn Association"
+	ResNameDRTAccessRoleARNAssociation = "DRT Access Role ARN Association"
 )
 
-type resourceDRTAccessRoleArnAssociation struct {
+type resourceDRTAccessRoleARNAssociation struct {
 	framework.ResourceWithConfigure
 	framework.WithTimeouts
 }
 
-func (r *resourceDRTAccessRoleArnAssociation) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
+func (r *resourceDRTAccessRoleARNAssociation) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
 	resp.TypeName = "aws_shield_drt_access_role_arn_association"
 }
 
-func (r *resourceDRTAccessRoleArnAssociation) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
+func (r *resourceDRTAccessRoleARNAssociation) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			"id": schema.StringAttribute{ // required by hashicorps terraform plugin testing framework
@@ -84,54 +84,54 @@ func (r *resourceDRTAccessRoleArnAssociation) Schema(ctx context.Context, req re
 	}
 }
 
-func (r *resourceDRTAccessRoleArnAssociation) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+func (r *resourceDRTAccessRoleARNAssociation) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	conn := r.Meta().ShieldConn(ctx)
 
-	var plan resourceDRTAccessRoleArnAssociationData
+	var plan resourceDRTAccessRoleARNAssociationData
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
 	in := &shield.AssociateDRTRoleInput{
-		RoleArn: aws.String(plan.RoleArn.ValueString()),
+		RoleArn: aws.String(plan.RoleARN.ValueString()),
 	}
 
 	out, err := conn.AssociateDRTRoleWithContext(ctx, in)
 	if err != nil {
 		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.Shield, create.ErrActionCreating, ResNameDRTAccessRoleArnAssociation, plan.RoleArn.String(), err),
+			create.ProblemStandardMessage(names.Shield, create.ErrActionCreating, ResNameDRTAccessRoleARNAssociation, plan.RoleARN.String(), err),
 			err.Error(),
 		)
 		return
 	}
 	if out == nil {
 		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.Shield, create.ErrActionCreating, ResNameDRTAccessRoleArnAssociation, plan.RoleArn.String(), nil),
+			create.ProblemStandardMessage(names.Shield, create.ErrActionCreating, ResNameDRTAccessRoleARNAssociation, plan.RoleARN.String(), nil),
 			errors.New("empty output").Error(),
 		)
 		return
 	}
 
 	createTimeout := r.CreateTimeout(ctx, plan.Timeouts)
-	_, err = waitDRTAccessRoleArnAssociationCreated(ctx, conn, plan.RoleArn.ValueString(), createTimeout)
+	_, err = waitDRTAccessRoleARNAssociationCreated(ctx, conn, plan.RoleARN.ValueString(), createTimeout)
 	if err != nil {
 		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.Shield, create.ErrActionWaitingForCreation, ResNameDRTAccessRoleArnAssociation, plan.RoleArn.String(), err),
+			create.ProblemStandardMessage(names.Shield, create.ErrActionWaitingForCreation, ResNameDRTAccessRoleARNAssociation, plan.RoleARN.String(), err),
 			err.Error(),
 		)
 		return
 	}
 
-	plan.ID = types.StringValue(plan.RoleArn.ValueString())
+	plan.ID = types.StringValue(plan.RoleARN.ValueString())
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
 }
 
-func (r *resourceDRTAccessRoleArnAssociation) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+func (r *resourceDRTAccessRoleARNAssociation) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	conn := r.Meta().ShieldConn(ctx)
 
-	var state resourceDRTAccessRoleArnAssociationData
+	var state resourceDRTAccessRoleARNAssociationData
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -146,47 +146,47 @@ func (r *resourceDRTAccessRoleArnAssociation) Read(ctx context.Context, req reso
 	}
 	if err != nil {
 		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.Shield, create.ErrActionSetting, ResNameDRTAccessRoleArnAssociation, state.RoleArn.String(), err),
+			create.ProblemStandardMessage(names.Shield, create.ErrActionSetting, ResNameDRTAccessRoleARNAssociation, state.RoleARN.String(), err),
 			err.Error(),
 		)
 		return
 	}
 	if state.ID.IsNull() || state.ID.IsUnknown() {
 		// Setting ID of state - required by hashicorps terraform plugin testing framework for Import. See issue https://github.com/hashicorp/terraform-plugin-testing/issues/84
-		state.ID = types.StringValue(state.RoleArn.ValueString())
+		state.ID = types.StringValue(state.RoleARN.ValueString())
 	}
 
-	state.RoleArn = flex.StringToFramework(ctx, out.RoleArn)
+	state.RoleARN = flex.StringToFramework(ctx, out.RoleArn)
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
 
-func (r *resourceDRTAccessRoleArnAssociation) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+func (r *resourceDRTAccessRoleARNAssociation) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
 	conn := r.Meta().ShieldConn(ctx)
 
 	// TIP: -- 2. Fetch the plan
-	var plan, state resourceDRTAccessRoleArnAssociationData
+	var plan, state resourceDRTAccessRoleARNAssociationData
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	if !plan.RoleArn.Equal(state.RoleArn) {
+	if !plan.RoleARN.Equal(state.RoleARN) {
 		in := &shield.AssociateDRTRoleInput{
-			RoleArn: aws.String(plan.RoleArn.ValueString()),
+			RoleArn: aws.String(plan.RoleARN.ValueString()),
 		}
 
 		out, err := conn.AssociateDRTRoleWithContext(ctx, in)
 		if err != nil {
 			resp.Diagnostics.AddError(
-				create.ProblemStandardMessage(names.Shield, create.ErrActionUpdating, ResNameDRTAccessRoleArnAssociation, plan.RoleArn.String(), err),
+				create.ProblemStandardMessage(names.Shield, create.ErrActionUpdating, ResNameDRTAccessRoleARNAssociation, plan.RoleARN.String(), err),
 				err.Error(),
 			)
 			return
 		}
 		if out == nil {
 			resp.Diagnostics.AddError(
-				create.ProblemStandardMessage(names.Shield, create.ErrActionUpdating, ResNameDRTAccessRoleArnAssociation, plan.RoleArn.String(), nil),
+				create.ProblemStandardMessage(names.Shield, create.ErrActionUpdating, ResNameDRTAccessRoleARNAssociation, plan.RoleARN.String(), nil),
 				errors.New("empty output").Error(),
 			)
 			return
@@ -194,10 +194,10 @@ func (r *resourceDRTAccessRoleArnAssociation) Update(ctx context.Context, req re
 	}
 
 	updateTimeout := r.UpdateTimeout(ctx, plan.Timeouts)
-	_, err := waitDRTAccessRoleArnAssociationUpdated(ctx, conn, plan.RoleArn.ValueString(), updateTimeout)
+	_, err := waitDRTAccessRoleARNAssociationUpdated(ctx, conn, plan.RoleARN.ValueString(), updateTimeout)
 	if err != nil {
 		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.Shield, create.ErrActionWaitingForUpdate, ResNameDRTAccessRoleArnAssociation, plan.RoleArn.String(), err),
+			create.ProblemStandardMessage(names.Shield, create.ErrActionWaitingForUpdate, ResNameDRTAccessRoleARNAssociation, plan.RoleARN.String(), err),
 			err.Error(),
 		)
 		return
@@ -206,10 +206,10 @@ func (r *resourceDRTAccessRoleArnAssociation) Update(ctx context.Context, req re
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 }
 
-func (r *resourceDRTAccessRoleArnAssociation) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+func (r *resourceDRTAccessRoleARNAssociation) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	conn := r.Meta().ShieldConn(ctx)
 
-	var state resourceDRTAccessRoleArnAssociationData
+	var state resourceDRTAccessRoleARNAssociationData
 
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
@@ -225,29 +225,29 @@ func (r *resourceDRTAccessRoleArnAssociation) Delete(ctx context.Context, req re
 		}
 
 		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.Shield, create.ErrActionDeleting, ResNameDRTAccessRoleArnAssociation, state.RoleArn.String(), err),
+			create.ProblemStandardMessage(names.Shield, create.ErrActionDeleting, ResNameDRTAccessRoleARNAssociation, state.RoleARN.String(), err),
 			err.Error(),
 		)
 		return
 	}
 
 	deleteTimeout := r.DeleteTimeout(ctx, state.Timeouts)
-	_, err = waitDRTAccessRoleArnAssociationDeleted(ctx, conn, state.RoleArn.ValueString(), deleteTimeout)
+	_, err = waitDRTAccessRoleARNAssociationDeleted(ctx, conn, state.RoleARN.ValueString(), deleteTimeout)
 
 	if err != nil {
 		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.Shield, create.ErrActionWaitingForDeletion, ResNameDRTAccessRoleArnAssociation, state.RoleArn.String(), err),
+			create.ProblemStandardMessage(names.Shield, create.ErrActionWaitingForDeletion, ResNameDRTAccessRoleARNAssociation, state.RoleARN.String(), err),
 			err.Error(),
 		)
 		return
 	}
 }
 
-func waitDRTAccessRoleArnAssociationCreated(ctx context.Context, conn *shield.Shield, roleArn string, timeout time.Duration) (*shield.DescribeDRTAccessOutput, error) {
+func waitDRTAccessRoleARNAssociationCreated(ctx context.Context, conn *shield.Shield, roleARN string, timeout time.Duration) (*shield.DescribeDRTAccessOutput, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending:                   []string{},
 		Target:                    []string{statusNormal},
-		Refresh:                   statusDRTAccessRoleArnAssociation(ctx, conn, roleArn),
+		Refresh:                   statusDRTAccessRoleARNAssociation(ctx, conn, roleARN),
 		Timeout:                   timeout,
 		NotFoundChecks:            20,
 		ContinuousTargetOccurence: 2,
@@ -261,11 +261,11 @@ func waitDRTAccessRoleArnAssociationCreated(ctx context.Context, conn *shield.Sh
 	return nil, err
 }
 
-func waitDRTAccessRoleArnAssociationUpdated(ctx context.Context, conn *shield.Shield, roleArn string, timeout time.Duration) (*shield.DescribeDRTAccessOutput, error) {
+func waitDRTAccessRoleARNAssociationUpdated(ctx context.Context, conn *shield.Shield, roleARN string, timeout time.Duration) (*shield.DescribeDRTAccessOutput, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending:                   []string{statusChangePending},
 		Target:                    []string{statusUpdated},
-		Refresh:                   statusDRTAccessRoleArnAssociation(ctx, conn, roleArn),
+		Refresh:                   statusDRTAccessRoleARNAssociation(ctx, conn, roleARN),
 		Timeout:                   timeout,
 		NotFoundChecks:            20,
 		ContinuousTargetOccurence: 2,
@@ -279,11 +279,11 @@ func waitDRTAccessRoleArnAssociationUpdated(ctx context.Context, conn *shield.Sh
 	return nil, err
 }
 
-func waitDRTAccessRoleArnAssociationDeleted(ctx context.Context, conn *shield.Shield, roleArn string, timeout time.Duration) (*shield.DescribeDRTAccessOutput, error) {
+func waitDRTAccessRoleARNAssociationDeleted(ctx context.Context, conn *shield.Shield, roleARN string, timeout time.Duration) (*shield.DescribeDRTAccessOutput, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending: []string{statusDeleting, statusNormal},
 		Target:  []string{},
-		Refresh: statusDRTAccessRoleArnAssociationDeleted(ctx, conn, roleArn),
+		Refresh: statusDRTAccessRoleARNAssociationDeleted(ctx, conn, roleARN),
 		Timeout: timeout,
 	}
 
@@ -296,9 +296,9 @@ func waitDRTAccessRoleArnAssociationDeleted(ctx context.Context, conn *shield.Sh
 	return nil, err
 }
 
-func statusDRTAccessRoleArnAssociation(ctx context.Context, conn *shield.Shield, roleArn string) retry.StateRefreshFunc {
+func statusDRTAccessRoleARNAssociation(ctx context.Context, conn *shield.Shield, roleARN string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		out, err := describeDRTAccessRoleArnAssociation(ctx, conn, roleArn)
+		out, err := describeDRTAccessRoleARNAssociation(ctx, conn, roleARN)
 		if tfresource.NotFound(err) {
 			return nil, "", nil
 		}
@@ -311,9 +311,9 @@ func statusDRTAccessRoleArnAssociation(ctx context.Context, conn *shield.Shield,
 	}
 }
 
-func statusDRTAccessRoleArnAssociationDeleted(ctx context.Context, conn *shield.Shield, roleArn string) retry.StateRefreshFunc {
+func statusDRTAccessRoleARNAssociationDeleted(ctx context.Context, conn *shield.Shield, roleARN string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		out, err := describeDRTAccessRoleArnAssociation(ctx, conn, roleArn)
+		out, err := describeDRTAccessRoleARNAssociation(ctx, conn, roleARN)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil
@@ -323,7 +323,7 @@ func statusDRTAccessRoleArnAssociationDeleted(ctx context.Context, conn *shield.
 			return nil, "", err
 		}
 
-		if out.RoleArn != nil && aws.ToString(out.RoleArn) == roleArn {
+		if out.RoleArn != nil && aws.ToString(out.RoleArn) == roleARN {
 			return out, statusDeleting, nil
 		}
 
@@ -331,7 +331,7 @@ func statusDRTAccessRoleArnAssociationDeleted(ctx context.Context, conn *shield.
 	}
 }
 
-func describeDRTAccessRoleArnAssociation(ctx context.Context, conn *shield.Shield, roleArn string) (*shield.DescribeDRTAccessOutput, error) {
+func describeDRTAccessRoleARNAssociation(ctx context.Context, conn *shield.Shield, roleARN string) (*shield.DescribeDRTAccessOutput, error) {
 	in := &shield.DescribeDRTAccessInput{}
 
 	out, err := conn.DescribeDRTAccessWithContext(ctx, in)
@@ -345,15 +345,15 @@ func describeDRTAccessRoleArnAssociation(ctx context.Context, conn *shield.Shiel
 		}
 	}
 
-	if out == nil || out.RoleArn == nil || aws.ToString(out.RoleArn) != roleArn {
+	if out == nil || out.RoleArn == nil || aws.ToString(out.RoleArn) != roleARN {
 		return nil, tfresource.NewEmptyResultError(in)
 	}
 
 	return out, nil
 }
 
-type resourceDRTAccessRoleArnAssociationData struct {
+type resourceDRTAccessRoleARNAssociationData struct {
 	ID       types.String   `tfsdk:"id"`
-	RoleArn  types.String   `tfsdk:"role_arn"`
+	RoleARN  types.String   `tfsdk:"role_arn"`
 	Timeouts timeouts.Value `tfsdk:"timeouts"`
 }
