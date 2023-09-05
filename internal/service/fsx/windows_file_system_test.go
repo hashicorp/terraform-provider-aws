@@ -1393,12 +1393,12 @@ resource "aws_fsx_windows_file_system" "test" {
 func testAccWindowsFileSystemConfig_diskIOPSConfiguration(rName, domain string, iops int) string {
 	return acctest.ConfigCompose(testAccWindowsFileSystemConfig_base(rName, domain), fmt.Sprintf(`
 resource "aws_fsx_windows_file_system" "test" {
-  active_directory_id           = aws_directory_service_directory.test.id
-  skip_final_backup             = true
-  storage_capacity              = 64
-  storage_type                  = "SSD"
-  subnet_ids                    = [aws_subnet.test[0].id]
-  throughput_capacity           = 8
+  active_directory_id = aws_directory_service_directory.test.id
+  skip_final_backup   = true
+  storage_capacity    = 64
+  storage_type        = "SSD"
+  subnet_ids          = [aws_subnet.test[0].id]
+  throughput_capacity = 8
 
   disk_iops_configuration {
     mode = "USER_PROVISIONED"
