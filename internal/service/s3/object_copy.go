@@ -8,6 +8,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"net/http"
 	"net/url"
 	"strings"
 	"time"
@@ -16,7 +17,9 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/aws/aws-sdk-go-v2/service/s3/types"
+	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -648,13 +651,12 @@ func FindObjectByThreePartKey(ctx context.Context, conn *s3.Client, bucket, key,
 
 	output, err := conn.HeadObject(ctx, input)
 
-	// TODO https://github.com/aws/smithy-go/blob/main/transport/http/response.go
-	// if tfawserr.ErrStatusCodeEquals(err, http.StatusNotFound) {
-	// 	return nil, &retry.NotFoundError{
-	// 		LastError:   err,
-	// 		LastRequest: input,
-	// 	}
-	// }
+	if tfawserr.ErrHTTPStatusCodeEquals(err, http.StatusNotFound) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
 
 	if err != nil {
 		return nil, err
