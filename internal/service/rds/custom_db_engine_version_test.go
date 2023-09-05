@@ -218,6 +218,44 @@ func TestAccRDSCustomDBEngineVersion_manifestFile(t *testing.T) {
 	})
 }
 
+func TestAccRDSCustomDBEngineVersion_tags(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	// Requires an existing Windows SQL Server AMI owned by operating account set as environmental variable
+	key := "RDS_CUSTOM_WINDOWS_SQLSERVER_AMI"
+	ami := os.Getenv(key)
+	if ami == "" {
+		t.Skipf("Environment variable %s is not set", key)
+	}
+	var customdbengineversion rds.DBEngineVersion
+	rName := fmt.Sprintf("%s%s%d", "15.00.4249.2.", acctest.ResourcePrefix, sdkacctest.RandIntRange(100, 999))
+	resourceName := "aws_rds_custom_db_engine_version.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, rds.EndpointsID)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckCustomDBEngineVersionDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCustomDBEngineVersionConfig_tags(rName, ami, "key1", "value1"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckCustomDBEngineVersionExists(ctx, resourceName, &customdbengineversion),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccRDSCustomDBEngineVersion_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
@@ -393,4 +431,27 @@ resource "aws_rds_custom_db_engine_version" "test" {
   manifest_hash                              = filebase64sha256(%[3]q)
 }
 `, rName, bucket, filename)
+}
+
+func testAccCustomDBEngineVersionConfig_tags(rName, ami, key, value string) string {
+	return fmt.Sprintf(`
+data "aws_region" "current" {}
+
+# Copy the Amazon AMI for Windows SQL Server, CEV creation requires an AMI owned by the operator
+resource "aws_ami_copy" "test" {
+  name              = %[1]q
+  source_ami_id     = %[2]q
+  source_ami_region = data.aws_region.current.name
+}
+
+resource "aws_rds_custom_db_engine_version" "test" {
+  engine          = "custom-sqlserver-se"
+  engine_version  = %[1]q
+  source_image_id = aws_ami_copy.test.id
+
+  tags = {
+    %[3]q = %[4]q
+  }
+}
+`, rName, ami, key, value)
 }
