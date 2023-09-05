@@ -7,6 +7,7 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -35,6 +36,7 @@ func (r *resourceDirectoryBucket) Metadata(_ context.Context, request resource.M
 func (r *resourceDirectoryBucket) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
+			names.AttrARN: framework.ARNAttributeComputedOnly(),
 			"bucket": schema.StringAttribute{
 				Required: true,
 			},
@@ -67,6 +69,14 @@ func (r *resourceDirectoryBucket) Create(ctx context.Context, request resource.C
 	}
 
 	// Set values for unknowns.
+	arn := arn.ARN{
+		Partition: r.Meta().Partition,
+		Service:   "s3beta2022a",
+		Region:    r.Meta().Region,
+		AccountID: r.Meta().AccountID,
+		Resource:  data.Bucket.ValueString(),
+	}.String()
+	data.ARN = types.StringValue(arn)
 	data.ID = data.Bucket
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
@@ -139,6 +149,7 @@ func (r *resourceDirectoryBucket) Delete(ctx context.Context, request resource.D
 }
 
 type resourceDirectoryBucketData struct {
+	ARN    types.String `tfsdk:"arn"`
 	Bucket types.String `tfsdk:"bucket"`
 	ID     types.String `tfsdk:"id"`
 }
