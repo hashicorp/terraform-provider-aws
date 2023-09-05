@@ -10,10 +10,11 @@ description: |-
 
 Provides an custom engine version (CEV) resource for Amazon RDS Custom. For additional information, see [Working with CEVs for RDS Custom for Oracle](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/custom-cev.html) and [Working with CEVs for RDS Custom for SQL Server](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/custom-cev-sqlserver.html) in the the [RDS User Guide](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/Welcome.html).
 
-## RDS Custom for Oracle Usage
+## Example Usage
+
+### RDS Custom for Oracle Usage
 
 ```terraform
-
 resource "aws_kms_key" "example" {
   description = "KMS symmetric key for RDS Custom for Oracle"
 }
@@ -35,10 +36,9 @@ resource "aws_rds_custom_db_engine_version" "example" {
     Key  = "value"
   }
 }
-
 ```
 
-## RDS Custom for Oracle External Manifest Usage
+### RDS Custom for Oracle External Manifest Usage
 
 ```terraform
 resource "aws_kms_key" "example" {
@@ -59,13 +59,11 @@ resource "aws_rds_custom_db_engine_version" "example" {
     Key  = "value"
   }
 }
-
 ```
 
-## RDS Custom for SQL Server Usage
+### RDS Custom for SQL Server Usage
 
 ```terraform
-
 # CEV creation requires an AMI owned by the operator
 resource "aws_rds_custom_db_engine_version" "test" {
   engine          = "custom-sqlserver-se"
@@ -91,7 +89,6 @@ resource "aws_rds_custom_db_engine_version" "test" {
   engine_version  = "15.00.4249.2.cev-1"
   source_image_id = aws_ami_copy.example.id
 }
-
 ```
 
 ## Argument Reference
