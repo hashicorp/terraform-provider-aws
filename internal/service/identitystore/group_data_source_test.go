@@ -146,6 +146,7 @@ data "aws_identitystore_group" "test" {
     attribute_path  = "DisplayName"
     attribute_value = aws_identitystore_group.test.display_name
   }
+
   identity_store_id = tolist(data.aws_ssoadmin_instances.test.identity_store_ids)[0]
 }
 `)
@@ -173,7 +174,8 @@ data "aws_identitystore_group" "test" {
     attribute_path  = "DisplayName"
     attribute_value = aws_identitystore_group.test.display_name
   }
-  group_id = aws_identitystore_group.test.group_id
+
+  group_id          = aws_identitystore_group.test.group_id
   identity_store_id = tolist(data.aws_ssoadmin_instances.test.identity_store_ids)[0]
 }
 `)
