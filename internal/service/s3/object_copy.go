@@ -335,25 +335,29 @@ func resourceObjectCopyRead(ctx context.Context, d *schema.ResourceData, meta in
 	d.Set("content_encoding", output.ContentEncoding)
 	d.Set("content_language", output.ContentLanguage)
 	d.Set("content_type", output.ContentType)
+	d.Set("customer_algorithm", output.SSECustomerAlgorithm)
+	d.Set("customer_key_md5", output.SSECustomerKeyMD5)
 	// See https://forums.aws.amazon.com/thread.jspa?threadID=44003
 	d.Set("etag", strings.Trim(aws.ToString(output.ETag), `"`))
+	d.Set("expiration", output.Expiration)
+	d.Set("kms_key_id", output.SSEKMSKeyId)
+	d.Set("last_modified", flattenObjectDate(output.LastModified))
 	d.Set("metadata", output.Metadata)
 	d.Set("object_lock_legal_hold_status", output.ObjectLockLegalHoldStatus)
 	d.Set("object_lock_mode", output.ObjectLockMode)
 	d.Set("object_lock_retain_until_date", flattenObjectDate(output.ObjectLockRetainUntilDate))
-	d.Set("version_id", output.VersionId)
 	d.Set("server_side_encryption", output.ServerSideEncryption)
-	d.Set("website_redirect", output.WebsiteRedirectLocation)
-
-	if err := resourceObjectSetKMS(ctx, d, meta, output.SSEKMSKeyId); err != nil {
-		return sdkdiag.AppendFromErr(diags, err)
-	}
-
 	// The "STANDARD" (which is also the default) storage
 	// class when set would not be included in the results.
 	d.Set("storage_class", types.ObjectStorageClassStandard)
 	if output.StorageClass != "" {
 		d.Set("storage_class", output.StorageClass)
+	}
+	d.Set("version_id", output.VersionId)
+	d.Set("website_redirect", output.WebsiteRedirectLocation)
+
+	if err := resourceObjectSetKMS(ctx, d, meta, output.SSEKMSKeyId); err != nil {
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	// Retry due to S3 eventual consistency
@@ -623,21 +627,12 @@ func resourceObjectCopyDoCopy(ctx context.Context, d *schema.ResourceData, meta 
 		d.SetId(d.Get("key").(string))
 	}
 
-	d.Set("customer_algorithm", output.SSECustomerAlgorithm)
-	d.Set("customer_key_md5", output.SSECustomerKeyMD5)
-	if output.CopyObjectResult != nil {
-		d.Set("etag", strings.Trim(aws.ToString(output.CopyObjectResult.ETag), `"`))
-		d.Set("last_modified", flattenObjectDate(output.CopyObjectResult.LastModified))
-	}
-	d.Set("expiration", output.Expiration)
+	// These attributes aren't returned from HeadObject.
 	d.Set("kms_encryption_context", output.SSEKMSEncryptionContext)
-	d.Set("kms_key_id", output.SSEKMSKeyId)
 	d.Set("request_charged", output.RequestCharged == types.RequestChargedRequester)
-	d.Set("server_side_encryption", output.ServerSideEncryption)
 	d.Set("source_version_id", output.CopySourceVersionId)
-	d.Set("version_id", output.VersionId)
 
-	return append(diags, resourceObjectRead(ctx, d, meta)...)
+	return append(diags, resourceObjectCopyRead(ctx, d, meta)...)
 }
 
 func FindObjectByThreePartKey(ctx context.Context, conn *s3.Client, bucket, key, etag string) (*s3.HeadObjectOutput, error) {
