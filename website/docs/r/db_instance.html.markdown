@@ -126,6 +126,45 @@ resource "aws_db_instance" "test-replica" {
 }
 ```
 
+### RDS Custom for SQL Server
+
+```terraform
+# Lookup the available instance classes for the custom engine for the region being operated in
+data "aws_rds_orderable_db_instance" "custom-sqlserver" {
+  engine                     = "custom-sqlserver-se" # CEV engine to be used
+  engine_version             = "115.00.4249.2.cev1"  # CEV engine version to be used
+  storage_type               = "gp3"
+  preferred_instance_classes = ["db.r5.24xlarge", "db.r5.16xlarge", "db.r5.12xlarge"]
+}
+
+# The RDS instance resource requires an ARN. Look up the ARN of the KMS key.
+data "aws_kms_key" "by_id" {
+  key_id = "example-ef278353ceba4a5a97de6784565b9f78" # KMS key
+}
+
+resource "aws_db_instance" "example" {
+  allocated_storage           = 500
+  auto_minor_version_upgrade  = false  # Custom for Oracle not support minor version upgrades
+  custom_iam_instance_profile = "AWSRDSCustomSQLServerInstanceRole" # Instance profile is required for Custom for SQL Server. See: https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/custom-setup-sqlserver.html#custom-setup-sqlserver.iam
+  backup_retention_period     = 7
+  db_subnet_group_name        = local.db_subnet_group_name
+  engine                      = data.aws_rds_orderable_db_instance.custom-sqlserver.engine
+  engine_version              = data.aws_rds_orderable_db_instance.custom-sqlserver.engine_version
+  identifier                  = "sql-instance-demo"
+  instance_class              = data.aws_rds_orderable_db_instance.custom-sqlserver.instance_class
+  kms_key_id                  = data.aws_kms_key.by_id.arn
+  multi_az                    = false # Custom for SQL Server does not support multi-az
+  password                    = "avoid-plaintext-passwords"
+  username                    = "test"
+
+  timeouts {
+    create = "3h"
+    delete = "3h"
+    update = "3h"
+  }
+}
+```
+
 ### Storage Autoscaling
 
 To enable Storage Autoscaling with instances that support the feature, define the `max_allocated_storage` argument higher than the `allocated_storage` argument. Terraform will automatically hide differences with the `allocated_storage` argument value if autoscaling occurs.
