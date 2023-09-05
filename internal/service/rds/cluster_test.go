@@ -7,10 +7,10 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"regexp"
 	"strings"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/rds"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -169,7 +169,7 @@ func TestAccRDSCluster_identifierGenerated(t *testing.T) {
 				Config: testAccClusterConfig_identifierGenerated(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &v),
-					resource.TestMatchResourceAttr(resourceName, "cluster_identifier", regexp.MustCompile("^tf-")),
+					resource.TestMatchResourceAttr(resourceName, "cluster_identifier", regexache.MustCompile("^tf-")),
 				),
 			},
 		},
@@ -191,7 +191,7 @@ func TestAccRDSCluster_identifierPrefix(t *testing.T) {
 				Config: testAccClusterConfig_identifierPrefix("tf-test-"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &v),
-					resource.TestMatchResourceAttr(resourceName, "cluster_identifier", regexp.MustCompile("^tf-test-")),
+					resource.TestMatchResourceAttr(resourceName, "cluster_identifier", regexache.MustCompile("^tf-test-")),
 				),
 			},
 		},
@@ -923,7 +923,7 @@ func TestAccRDSCluster_missingUserNameCausesError(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccClusterConfig_withoutUserNameAndPassword(sdkacctest.RandInt()),
-				ExpectError: regexp.MustCompile(`InvalidParameterValue: The parameter MasterUsername must be provided`),
+				ExpectError: regexache.MustCompile(`InvalidParameterValue: The parameter MasterUsername must be provided`),
 			},
 		},
 	})
@@ -1360,7 +1360,7 @@ func TestAccRDSCluster_engineVersion(t *testing.T) {
 			},
 			{
 				Config:      testAccClusterConfig_engineVersion(rName, true),
-				ExpectError: regexp.MustCompile(`Cannot modify engine version without a healthy primary instance in DB cluster`),
+				ExpectError: regexache.MustCompile(`Cannot modify engine version without a healthy primary instance in DB cluster`),
 			},
 		},
 	})
@@ -1451,7 +1451,7 @@ func TestAccRDSCluster_GlobalClusterIdentifierEngineModeGlobal_add(t *testing.T)
 			},
 			{
 				Config:      testAccClusterConfig_GlobalClusterID_EngineMode_global(rName),
-				ExpectError: regexp.MustCompile(`(?i)Existing RDS Clusters cannot be added to an existing RDS Global Cluster`),
+				ExpectError: regexache.MustCompile(`(?i)Existing RDS Clusters cannot be added to an existing RDS Global Cluster`),
 			},
 		},
 	})
@@ -1513,7 +1513,7 @@ func TestAccRDSCluster_GlobalClusterIdentifierEngineModeGlobal_update(t *testing
 			},
 			{
 				Config:      testAccClusterConfig_GlobalClusterID_EngineMode_globalUpdate(rName, globalClusterResourceName2),
-				ExpectError: regexp.MustCompile(`(?i)Existing RDS Clusters cannot be migrated between existing RDS Global Clusters`),
+				ExpectError: regexache.MustCompile(`(?i)Existing RDS Clusters cannot be migrated between existing RDS Global Clusters`),
 			},
 		},
 	})

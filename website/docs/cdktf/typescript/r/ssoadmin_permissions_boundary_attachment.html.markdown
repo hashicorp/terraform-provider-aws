@@ -146,6 +146,13 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `id` - Permission Set Amazon Resource Name (ARN) and SSO Instance ARN, separated by a comma (`,`).
 
+## Timeouts
+
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
+
+- `create` - (Default `10M`)
+- `delete` - (Default `10M`)
+
 ## Import
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import SSO Admin Permissions Boundary Attachments using the `permissionSetArn` and `instanceArn`, separated by a comma (`,`). For example:
@@ -168,4 +175,4 @@ Using `terraform import`, import SSO Admin Permissions Boundary Attachments usin
 % terraform import aws_ssoadmin_permissions_boundary_attachment.example arn:aws:sso:::permissionSet/ssoins-2938j0x8920sbj72/ps-80383020jr9302rk,arn:aws:sso:::instance/ssoins-2938j0x8920sbj72
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-95bb6767bb38c80b9a4e1b6387ef28cdfc43fb8b75c62aeb968db325390bfc1b -->
+<!-- cache-key: cdktf-0.18.0 input-b18b40e74ac6a4c483e12a6c4261d755ba4289cd16e5a156898b6ed4b6af7691 -->

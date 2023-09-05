@@ -7,12 +7,12 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"regexp"
 	"strconv"
 	"strings"
 	"testing"
 	"time"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/elasticache"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
@@ -160,7 +160,7 @@ func TestAccElastiCacheReplicationGroup_EngineVersion_v7(t *testing.T) {
 					testAccCheckReplicationGroupExists(ctx, resourceName, &rg),
 					resource.TestCheckResourceAttr(resourceName, "engine", "redis"),
 					resource.TestCheckResourceAttr(resourceName, "engine_version", "7.0"),
-					resource.TestMatchResourceAttr(resourceName, "engine_version_actual", regexp.MustCompile(`^7\.[[:digit:]]+\.[[:digit:]]+$`)),
+					resource.TestMatchResourceAttr(resourceName, "engine_version_actual", regexache.MustCompile(`^7\.[[:digit:]]+\.[[:digit:]]+$`)),
 				),
 			},
 			{
@@ -227,7 +227,7 @@ func TestAccElastiCacheReplicationGroup_EngineVersion_update(t *testing.T) {
 					testAccCheckReplicationGroupExists(ctx, resourceName, &v4),
 					testAccCheckReplicationGroupNotRecreated(&v3, &v4),
 					resource.TestCheckResourceAttr(resourceName, "engine_version", "6.0"),
-					resource.TestMatchResourceAttr(resourceName, "engine_version_actual", regexp.MustCompile(`^6\.0\.[[:digit:]]+$`)),
+					resource.TestMatchResourceAttr(resourceName, "engine_version_actual", regexache.MustCompile(`^6\.0\.[[:digit:]]+$`)),
 				),
 			},
 			{
@@ -236,7 +236,7 @@ func TestAccElastiCacheReplicationGroup_EngineVersion_update(t *testing.T) {
 					testAccCheckReplicationGroupExists(ctx, resourceName, &v5),
 					testAccCheckReplicationGroupNotRecreated(&v4, &v5),
 					resource.TestCheckResourceAttr(resourceName, "engine_version", "6.2"),
-					resource.TestMatchResourceAttr(resourceName, "engine_version_actual", regexp.MustCompile(`^6\.2\.[[:digit:]]+$`)),
+					resource.TestMatchResourceAttr(resourceName, "engine_version_actual", regexache.MustCompile(`^6\.2\.[[:digit:]]+$`)),
 				),
 			},
 			{
@@ -260,7 +260,7 @@ func TestAccElastiCacheReplicationGroup_EngineVersion_update(t *testing.T) {
 					testAccCheckReplicationGroupExists(ctx, resourceName, &v7),
 					testAccCheckReplicationGroupNotRecreated(&v6, &v7),
 					resource.TestCheckResourceAttr(resourceName, "engine_version", "6.x"),
-					resource.TestMatchResourceAttr(resourceName, "engine_version_actual", regexp.MustCompile(`^6\.[[:digit:]]+\.[[:digit:]]+$`)),
+					resource.TestMatchResourceAttr(resourceName, "engine_version_actual", regexache.MustCompile(`^6\.[[:digit:]]+\.[[:digit:]]+$`)),
 				),
 			},
 			{
@@ -269,7 +269,7 @@ func TestAccElastiCacheReplicationGroup_EngineVersion_update(t *testing.T) {
 					testAccCheckReplicationGroupExists(ctx, resourceName, &v8),
 					testAccCheckReplicationGroupRecreated(&v7, &v8),
 					resource.TestCheckResourceAttr(resourceName, "engine_version", "6.0"),
-					resource.TestMatchResourceAttr(resourceName, "engine_version_actual", regexp.MustCompile(`^6\.0\.[[:digit:]]+$`)),
+					resource.TestMatchResourceAttr(resourceName, "engine_version_actual", regexache.MustCompile(`^6\.0\.[[:digit:]]+$`)),
 				),
 			},
 		},
@@ -696,11 +696,11 @@ func TestAccElastiCacheReplicationGroup_multiAzInVPC(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "snapshot_retention_limit", "7"),
 					resource.TestCheckResourceAttrSet(resourceName, "primary_endpoint_address"),
 					func(s *terraform.State) error {
-						return resource.TestMatchResourceAttr(resourceName, "primary_endpoint_address", regexp.MustCompile(fmt.Sprintf("%s\\..+\\.%s", aws.StringValue(rg.ReplicationGroupId), acctest.PartitionDNSSuffix())))(s)
+						return resource.TestMatchResourceAttr(resourceName, "primary_endpoint_address", regexache.MustCompile(fmt.Sprintf("%s\\..+\\.%s", aws.StringValue(rg.ReplicationGroupId), acctest.PartitionDNSSuffix())))(s)
 					},
 					resource.TestCheckResourceAttrSet(resourceName, "reader_endpoint_address"),
 					func(s *terraform.State) error {
-						return resource.TestMatchResourceAttr(resourceName, "reader_endpoint_address", regexp.MustCompile(fmt.Sprintf("%s-ro\\..+\\.%s", aws.StringValue(rg.ReplicationGroupId), acctest.PartitionDNSSuffix())))(s)
+						return resource.TestMatchResourceAttr(resourceName, "reader_endpoint_address", regexache.MustCompile(fmt.Sprintf("%s-ro\\..+\\.%s", aws.StringValue(rg.ReplicationGroupId), acctest.PartitionDNSSuffix())))(s)
 					},
 				),
 			},
@@ -741,11 +741,11 @@ func TestAccElastiCacheReplicationGroup_deprecatedAvailabilityZones_multiAzInVPC
 					resource.TestCheckResourceAttr(resourceName, "snapshot_retention_limit", "7"),
 					resource.TestCheckResourceAttrSet(resourceName, "primary_endpoint_address"),
 					func(s *terraform.State) error {
-						return resource.TestMatchResourceAttr(resourceName, "primary_endpoint_address", regexp.MustCompile(fmt.Sprintf("%s\\..+\\.%s", aws.StringValue(rg.ReplicationGroupId), acctest.PartitionDNSSuffix())))(s)
+						return resource.TestMatchResourceAttr(resourceName, "primary_endpoint_address", regexache.MustCompile(fmt.Sprintf("%s\\..+\\.%s", aws.StringValue(rg.ReplicationGroupId), acctest.PartitionDNSSuffix())))(s)
 					},
 					resource.TestCheckResourceAttrSet(resourceName, "reader_endpoint_address"),
 					func(s *terraform.State) error {
-						return resource.TestMatchResourceAttr(resourceName, "reader_endpoint_address", regexp.MustCompile(fmt.Sprintf("%s-ro\\..+\\.%s", aws.StringValue(rg.ReplicationGroupId), acctest.PartitionDNSSuffix())))(s)
+						return resource.TestMatchResourceAttr(resourceName, "reader_endpoint_address", regexache.MustCompile(fmt.Sprintf("%s-ro\\..+\\.%s", aws.StringValue(rg.ReplicationGroupId), acctest.PartitionDNSSuffix())))(s)
 					},
 				),
 			},
@@ -771,7 +771,7 @@ func TestAccElastiCacheReplicationGroup_ValidationMultiAz_noAutomaticFailover(t 
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccReplicationGroupConfig_multiAZNoAutomaticFailover(rName),
-				ExpectError: regexp.MustCompile("automatic_failover_enabled must be true if multi_az_enabled is true"),
+				ExpectError: regexache.MustCompile("automatic_failover_enabled must be true if multi_az_enabled is true"),
 			},
 		},
 	})
@@ -843,7 +843,7 @@ func TestAccElastiCacheReplicationGroup_ClusterMode_nonClusteredParameterGroup(t
 					resource.TestCheckResourceAttr(resourceName, "parameter_group_name", "default.redis6.x"),
 					resource.TestCheckResourceAttr(resourceName, "num_node_groups", "1"),
 					resource.TestCheckResourceAttr(resourceName, "replicas_per_node_group", "1"),
-					resource.TestMatchResourceAttr(resourceName, "primary_endpoint_address", regexp.MustCompile(fmt.Sprintf("%s\\..+\\.%s", rName, acctest.PartitionDNSSuffix()))),
+					resource.TestMatchResourceAttr(resourceName, "primary_endpoint_address", regexache.MustCompile(fmt.Sprintf("%s\\..+\\.%s", rName, acctest.PartitionDNSSuffix()))),
 					resource.TestCheckNoResourceAttr(resourceName, "configuration_endpoint_address"),
 					resource.TestCheckResourceAttr(resourceName, "num_cache_clusters", "2"),
 					resource.TestCheckResourceAttr(resourceName, "member_clusters.#", "2"),
@@ -1155,7 +1155,7 @@ func TestAccElastiCacheReplicationGroup_clusteringAndCacheNodesCausesError(t *te
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccReplicationGroupConfig_nativeRedisClusterError(rName),
-				ExpectError: regexp.MustCompile(`"num_node_groups": conflicts with num_cache_clusters`),
+				ExpectError: regexache.MustCompile(`"num_node_groups": conflicts with num_cache_clusters`),
 			},
 		},
 	})
@@ -1927,7 +1927,7 @@ func TestAccElastiCacheReplicationGroup_Validation_noNodeType(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccReplicationGroupConfig_validationNoNodeType(rName),
-				ExpectError: regexp.MustCompile(`"node_type" is required unless "global_replication_group_id" is set.`),
+				ExpectError: regexache.MustCompile(`"node_type" is required unless "global_replication_group_id" is set.`),
 			},
 		},
 	})
@@ -1952,7 +1952,7 @@ func TestAccElastiCacheReplicationGroup_Validation_globalReplicationGroupIdAndNo
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccReplicationGroupConfig_validationGlobalIdAndNodeType(rName),
-				ExpectError: regexp.MustCompile(`"global_replication_group_id": conflicts with node_type`),
+				ExpectError: regexache.MustCompile(`"global_replication_group_id": conflicts with node_type`),
 			},
 		},
 	})
@@ -1991,7 +1991,7 @@ func TestAccElastiCacheReplicationGroup_GlobalReplicationGroupID_basic(t *testin
 					resource.TestCheckResourceAttrPair(resourceName, "node_type", primaryGroupResourceName, "node_type"),
 					resource.TestCheckResourceAttrPair(resourceName, "engine", primaryGroupResourceName, "engine"),
 					resource.TestCheckResourceAttrPair(resourceName, "engine_version", primaryGroupResourceName, "engine_version"),
-					resource.TestMatchResourceAttr(resourceName, "parameter_group_name", regexp.MustCompile(fmt.Sprintf("^global-datastore-%s-", rName))),
+					resource.TestMatchResourceAttr(resourceName, "parameter_group_name", regexache.MustCompile(fmt.Sprintf("^global-datastore-%s-", rName))),
 					resource.TestCheckResourceAttr(resourceName, "num_cache_clusters", "1"),
 					resource.TestCheckResourceAttr(primaryGroupResourceName, "num_cache_clusters", "2"),
 				),
@@ -2044,7 +2044,7 @@ func TestAccElastiCacheReplicationGroup_GlobalReplicationGroupID_full(t *testing
 					resource.TestCheckResourceAttrPair(resourceName, "node_type", primaryGroupResourceName, "node_type"),
 					resource.TestCheckResourceAttrPair(resourceName, "engine", primaryGroupResourceName, "engine"),
 					resource.TestCheckResourceAttrPair(resourceName, "engine_version", primaryGroupResourceName, "engine_version"),
-					resource.TestMatchResourceAttr(resourceName, "parameter_group_name", regexp.MustCompile(fmt.Sprintf("^global-datastore-%s-", rName))),
+					resource.TestMatchResourceAttr(resourceName, "parameter_group_name", regexache.MustCompile(fmt.Sprintf("^global-datastore-%s-", rName))),
 
 					resource.TestCheckResourceAttr(resourceName, "num_cache_clusters", strconv.Itoa(initialNumCacheClusters)),
 					resource.TestCheckResourceAttrPair(resourceName, "multi_az_enabled", primaryGroupResourceName, "multi_az_enabled"),
@@ -2141,7 +2141,7 @@ func TestAccElastiCacheReplicationGroup_GlobalReplicationGroupIDClusterMode_basi
 					resource.TestCheckResourceAttr(resourceName, "num_node_groups", "2"),
 					resource.TestCheckResourceAttr(resourceName, "replicas_per_node_group", "1"),
 					resource.TestCheckResourceAttr(resourceName, "automatic_failover_enabled", "true"),
-					resource.TestMatchResourceAttr(resourceName, "parameter_group_name", regexp.MustCompile(fmt.Sprintf("^global-datastore-%s-", rName))),
+					resource.TestMatchResourceAttr(resourceName, "parameter_group_name", regexache.MustCompile(fmt.Sprintf("^global-datastore-%s-", rName))),
 
 					resource.TestCheckResourceAttr(primaryGroupResourceName, "num_node_groups", "2"),
 					resource.TestCheckResourceAttr(primaryGroupResourceName, "replicas_per_node_group", "2"),
@@ -2189,7 +2189,7 @@ func TestAccElastiCacheReplicationGroup_GlobalReplicationGroupIDClusterModeValid
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccReplicationGroupConfig_globalIDClusterModeNumNodeOnSecondary(rName),
-				ExpectError: regexp.MustCompile(`"global_replication_group_id": conflicts with num_node_groups`),
+				ExpectError: regexache.MustCompile(`"global_replication_group_id": conflicts with num_node_groups`),
 			},
 		},
 	})
@@ -2583,7 +2583,7 @@ func testCheckEngineStuffDefault(ctx context.Context, resourceName string) resou
 			return resource.TestCheckResourceAttr(resourceName, "engine_version", *version.EngineVersion)(s)
 		},
 		func(s *terraform.State) error {
-			return resource.TestMatchResourceAttr(resourceName, "engine_version_actual", regexp.MustCompile(fmt.Sprintf(`^%s\.[[:digit:]]+$`, *version.EngineVersion)))(s)
+			return resource.TestMatchResourceAttr(resourceName, "engine_version_actual", regexache.MustCompile(fmt.Sprintf(`^%s\.[[:digit:]]+$`, *version.EngineVersion)))(s)
 		},
 		func(s *terraform.State) error {
 			return resource.TestCheckResourceAttr(resourceName, "parameter_group_name", *parameterGroup.CacheParameterGroupName)(s)
@@ -2648,7 +2648,7 @@ func testCheckEngineStuffClusterEnabledDefault(ctx context.Context, resourceName
 			return resource.TestCheckResourceAttr(resourceName, "engine_version", *version.EngineVersion)(s)
 		},
 		func(s *terraform.State) error {
-			return resource.TestMatchResourceAttr(resourceName, "engine_version_actual", regexp.MustCompile(fmt.Sprintf(`^%s\.[[:digit:]]+$`, *version.EngineVersion)))(s)
+			return resource.TestMatchResourceAttr(resourceName, "engine_version_actual", regexache.MustCompile(fmt.Sprintf(`^%s\.[[:digit:]]+$`, *version.EngineVersion)))(s)
 		},
 		func(s *terraform.State) error {
 			return resource.TestCheckResourceAttr(resourceName, "parameter_group_name", *parameterGroup.CacheParameterGroupName)(s)

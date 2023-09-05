@@ -8,9 +8,9 @@ import (
 	"errors"
 	"fmt"
 	"log"
-	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/docdb"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
@@ -48,7 +48,7 @@ func TestAccDocDBCluster_basic(t *testing.T) {
 				Config: testAccClusterConfig_basic(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "rds", regexp.MustCompile(`cluster:.+`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "rds", regexache.MustCompile(`cluster:.+`)),
 					resource.TestCheckResourceAttr(resourceName, "storage_encrypted", "false"),
 					resource.TestCheckResourceAttr(resourceName, "db_cluster_parameter_group_name", "default.docdb4.0"),
 					resource.TestCheckResourceAttrSet(resourceName, "reader_endpoint"),
@@ -94,7 +94,7 @@ func TestAccDocDBCluster_namePrefix(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, "aws_docdb_cluster.test", &v),
 					resource.TestMatchResourceAttr(
-						"aws_docdb_cluster.test", "cluster_identifier", regexp.MustCompile("^tf-test-")),
+						"aws_docdb_cluster.test", "cluster_identifier", regexache.MustCompile("^tf-test-")),
 				),
 			},
 			{
@@ -128,7 +128,7 @@ func TestAccDocDBCluster_generatedName(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, "aws_docdb_cluster.test", &v),
 					resource.TestMatchResourceAttr(
-						"aws_docdb_cluster.test", "cluster_identifier", regexp.MustCompile("^tf-")),
+						"aws_docdb_cluster.test", "cluster_identifier", regexache.MustCompile("^tf-")),
 				),
 			},
 			{
@@ -222,7 +222,7 @@ func TestAccDocDBCluster_GlobalClusterIdentifier_Add(t *testing.T) {
 			},
 			{
 				Config:      testAccClusterConfig_globalIdentifier(rName),
-				ExpectError: regexp.MustCompile(`existing DocumentDB Clusters cannot be added to an existing DocumentDB Global Cluster`),
+				ExpectError: regexache.MustCompile(`existing DocumentDB Clusters cannot be added to an existing DocumentDB Global Cluster`),
 			},
 		},
 	})
@@ -308,7 +308,7 @@ func TestAccDocDBCluster_GlobalClusterIdentifier_Update(t *testing.T) {
 			},
 			{
 				Config:      testAccClusterConfig_globalIdentifierUpdate(rName, globalClusterResourceName2),
-				ExpectError: regexp.MustCompile(`existing DocumentDB Clusters cannot be migrated between existing DocumentDB Global Clusters`),
+				ExpectError: regexache.MustCompile(`existing DocumentDB Clusters cannot be migrated between existing DocumentDB Global Clusters`),
 			},
 		},
 	})
@@ -392,7 +392,7 @@ func TestAccDocDBCluster_missingUserNameCausesError(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccClusterConfig_noUsernameOrPassword(sdkacctest.RandInt()),
-				ExpectError: regexp.MustCompile(`required field is not set`),
+				ExpectError: regexache.MustCompile(`required field is not set`),
 			},
 		},
 	})

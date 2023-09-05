@@ -9,9 +9,9 @@ import (
 	"fmt"
 	"log"
 	"reflect"
-	"regexp"
 	"strings"
 
+	"github.com/YakDriver/regexache"
 	awspolicy "github.com/hashicorp/awspolicyequivalence"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
@@ -73,7 +73,7 @@ func NormalizeJSONOrYAMLString(templateString interface{}) (string, error) {
 }
 
 func looksLikeJSONString(s interface{}) bool {
-	return regexp.MustCompile(`^\s*{`).MatchString(s.(string))
+	return regexache.MustCompile(`^\s*{`).MatchString(s.(string))
 }
 
 func JSONStringsEqual(s1, s2 string) bool {
@@ -162,7 +162,7 @@ func LegacyPolicyNormalize(policy interface{}) (string, error) {
 		return policy.(string), fmt.Errorf("legacy policy (%s) is invalid JSON: %w", policy, err)
 	}
 
-	m := regexp.MustCompile(`(?s)^(\{\n?)(.*?)(,\s*)?(  )?("Version":\s*"2012-10-17")(,)?(\n)?(.*?)(\})`)
+	m := regexache.MustCompile(`(?s)^(\{\n?)(.*?)(,\s*)?(  )?("Version":\s*"2012-10-17")(,)?(\n)?(.*?)(\})`)
 
 	n := m.ReplaceAllString(np, `$1$4$5$3$2$6$7$8$9`)
 

@@ -6,9 +6,9 @@ package cloud9_test
 import (
 	"context"
 	"fmt"
-	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/service/cloud9"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -36,7 +36,7 @@ func TestAccCloud9EnvironmentEC2_basic(t *testing.T) {
 				Config: testAccEnvironmentEC2Config_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEnvironmentEC2Exists(ctx, resourceName, &conf),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "cloud9", regexp.MustCompile(`environment:.+$`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "cloud9", regexache.MustCompile(`environment:.+$`)),
 					resource.TestCheckResourceAttr(resourceName, "connection_type", "CONNECT_SSH"),
 					resource.TestCheckResourceAttr(resourceName, "instance_type", "t2.micro"),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),

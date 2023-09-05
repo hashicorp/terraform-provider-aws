@@ -13,7 +13,7 @@ Use the Amazon Web Services (AWS) provider to interact with the
 many resources supported by AWS. You must configure the provider
 with the proper credentials before you can use it.
 
-Use the navigation to the left to read about the available resources. There are currently 1243 resources and 513 data sources available in the provider.
+Use the navigation to the left to read about the available resources. There are currently 1248 resources and 513 data sources available in the provider.
 
 To learn the basics of Terraform using this provider, follow the
 hands-on [get started tutorials](https://learn.hashicorp.com/tutorials/terraform/infrastructure-as-code?in=terraform/aws-get-started&utm_source=WEBSITE&utm_medium=WEB_IO&utm_offer=ARTICLE_PAGE&utm_content=DOCS). Interact with AWS services,
@@ -345,6 +345,7 @@ credential_process = custom-process --username jdoe
 |Retry Mode|`retryMode`|`awsRetryMode`|`retryMode`|
 |Shared Config Files|`sharedConfigFiles`|`awsConfigFile`|N/A|
 |Shared Credentials Files|`sharedCredentialsFiles`|`awsSharedCredentialsFile`|N/A|
+|S3 Use Regional Endpoint for `usEast1`|`s3UsEast1RegionalEndpoint`|`awsS3UsEast1RegionalEndpoint`|`s3UsEast1RegionalEndpoint`|
 |Use DualStack Endpoints|`useDualstackEndpoint`|`awsUseDualstackEndpoint`|`useDualstackEndpoint`|
 |Use FIPS Endpoints|`useFipsEndpoint`|`awsUseFipsEndpoint`|`useFipsEndpoint`|
 
@@ -430,7 +431,13 @@ In addition to [generic `provider` arguments](https://www.terraform.io/docs/conf
 * `retryMode` - (Optional) Specifies how retries are attempted.
   Valid values are `standard` and `adaptive`.
   Can also be configured using the `awsRetryMode` environment variable or the shared config file parameter `retryMode`.
-* `s3UsePathStyle` - (Optional) Whether to enable the request to use path-style addressing, i.e., `https://s3AmazonawsCom/bucket/key`. By default, the S3 client will use virtual hosted bucket addressing, `https://bucketS3AmazonawsCom/key`, when possible. Specific to the Amazon S3 service.
+* `s3UsePathStyle` - (Optional) Whether to enable the request to use path-style addressing, i.e., `https://s3AmazonawsCom/bucket/key`.
+  By default, the S3 client will use virtual hosted bucket addressing, `https://bucketS3AmazonawsCom/key`, when possible.
+  Specific to the Amazon S3 service.
+* `s3UsEast1RegionalEndpoint` - (Optional) Specifies whether S3 API calls in the `usEast1` region use the legacy global endpoint or a regional endpoint.
+  Valid values are `legacy` or `regional`.
+  Can also be configured using the `awsS3UsEast1RegionalEndpoint` environment variable or the `s3UsEast1RegionalEndpoint` shared config file parameter.
+  Specific to the Amazon S3 service.
 * `secretKey` - (Optional) AWS secret key. Can also be set with the `awsSecretAccessKey` environment variable, or via a shared configuration and credentials files if `profile` is used. See also `accessKey`.
 * `sharedConfigFiles` - (Optional) List of paths to AWS shared config files. If not set, the default is `[~/Aws/config]`. A single value can also be set with the `awsConfigFile` environment variable.
 * `sharedCredentialsFiles` - (Optional) List of paths to the shared credentials file. If not set and a profile is used, the default value is `[~/Aws/credentials]`. A single value can also be set with the `awsSharedCredentialsFile` environment variable.
@@ -820,4 +827,4 @@ Approaches differ per authentication providers:
       There used to be no better way to get account ID out of the API
       when using the federated account until `sts:getCallerIdentity` was introduced.
 
-<!-- cache-key: cdktf-0.18.0 input-0a975c869cb168c1a1c68d976082a828e30e926fcd3bef9666993e410522dc28 -->
+<!-- cache-key: cdktf-0.18.0 input-39ce8f656c02038ebd768d32b389b4dc2f7ee37785c96943b49d045f754827a0 -->

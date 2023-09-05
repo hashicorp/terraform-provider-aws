@@ -6,9 +6,9 @@ package sagemaker_test
 import (
 	"context"
 	"fmt"
-	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/service/sagemaker"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -38,7 +38,7 @@ func TestAccSageMakerPipeline_basic(t *testing.T) {
 					testAccCheckPipelineExists(ctx, resourceName, &pipeline),
 					resource.TestCheckResourceAttr(resourceName, "pipeline_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "pipeline_display_name", rName),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "sagemaker", regexp.MustCompile(`pipeline/.+`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "sagemaker", regexache.MustCompile(`pipeline/.+`)),
 					resource.TestCheckResourceAttrPair(resourceName, "role_arn", "aws_iam_role.test", "arn"),
 					resource.TestCheckResourceAttr(resourceName, "parallelism_configuration.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
@@ -55,7 +55,7 @@ func TestAccSageMakerPipeline_basic(t *testing.T) {
 					testAccCheckPipelineExists(ctx, resourceName, &pipeline),
 					resource.TestCheckResourceAttr(resourceName, "pipeline_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "pipeline_display_name", rNameUpdated),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "sagemaker", regexp.MustCompile(`pipeline/.+`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "sagemaker", regexache.MustCompile(`pipeline/.+`)),
 					resource.TestCheckResourceAttrPair(resourceName, "role_arn", "aws_iam_role.test", "arn"),
 					resource.TestCheckResourceAttr(resourceName, "parallelism_configuration.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),

@@ -7,9 +7,9 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"regexp"
 	"strings"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/glue"
@@ -61,7 +61,7 @@ func ResourceCatalogTable() *schema.Resource {
 				Required: true,
 				ValidateFunc: validation.All(
 					validation.StringLenBetween(1, 255),
-					validation.StringDoesNotMatch(regexp.MustCompile(`[A-Z]`), "uppercase characters cannot be used"),
+					validation.StringDoesNotMatch(regexache.MustCompile(`[A-Z]`), "uppercase characters cannot be used"),
 				),
 			},
 			"owner": {
@@ -293,6 +293,34 @@ func ResourceCatalogTable() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
+			"open_table_format_input": {
+				Type:     schema.TypeList,
+				Optional: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"iceberg_input": {
+							Type:     schema.TypeList,
+							Required: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"metadata_operation": {
+										Type:         schema.TypeString,
+										Required:     true,
+										ValidateFunc: validation.StringInSlice([]string{"CREATE"}, false),
+									},
+									"version": {
+										Type:         schema.TypeString,
+										Optional:     true,
+										ValidateFunc: validation.StringLenBetween(1, 255),
+									},
+								},
+							},
+						},
+					},
+				},
+			},
 			"target_table": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -371,10 +399,11 @@ func resourceCatalogTableCreate(ctx context.Context, d *schema.ResourceData, met
 	name := d.Get("name").(string)
 
 	input := &glue.CreateTableInput{
-		CatalogId:        aws.String(catalogID),
-		DatabaseName:     aws.String(dbName),
-		TableInput:       expandTableInput(d),
-		PartitionIndexes: expandTablePartitionIndexes(d.Get("partition_index").([]interface{})),
+		CatalogId:            aws.String(catalogID),
+		DatabaseName:         aws.String(dbName),
+		OpenTableFormatInput: expandOpenTableFormat(d),
+		TableInput:           expandTableInput(d),
+		PartitionIndexes:     expandTablePartitionIndexes(d.Get("partition_index").([]interface{})),
 	}
 
 	_, err := conn.CreateTableWithContext(ctx, input)
@@ -436,7 +465,7 @@ func resourceCatalogTableRead(ctx context.Context, d *schema.ResourceData, meta 
 	d.Set("view_expanded_text", table.ViewExpandedText)
 	d.Set("table_type", table.TableType)
 
-	if err := d.Set("parameters", aws.StringValueMap(table.Parameters)); err != nil {
+	if err := d.Set("parameters", flattenNonManagedParameters(table)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting parameters: %s", err)
 	}
 
@@ -536,7 +565,7 @@ func expandTableInput(d *schema.ResourceData) *glue.TableInput {
 
 	if v, ok := d.GetOk("partition_keys"); ok {
 		tableInput.PartitionKeys = expandColumns(v.([]interface{}))
-	} else {
+	} else if _, ok = d.GetOk("open_table_format_input"); !ok {
 		tableInput.PartitionKeys = []*glue.Column{}
 	}
 
@@ -561,6 +590,27 @@ func expandTableInput(d *schema.ResourceData) *glue.TableInput {
 	}
 
 	return tableInput
+}
+
+func expandOpenTableFormat(s *schema.ResourceData) *glue.OpenTableFormatInput_ {
+	if v, ok := s.GetOk("open_table_format_input"); ok {
+		openTableFormatInput := &glue.OpenTableFormatInput_{
+			IcebergInput: expandIcebergInput(v.([]interface{})[0].(map[string]interface{})),
+		}
+		return openTableFormatInput
+	}
+	return nil
+}
+
+func expandIcebergInput(s map[string]interface{}) *glue.IcebergInput_ {
+	var iceberg = s["iceberg_input"].([]interface{})[0].(map[string]interface{})
+	icebergInput := &glue.IcebergInput_{
+		MetadataOperation: aws.String(iceberg["metadata_operation"].(string)),
+	}
+	if v, ok := iceberg["version"].(string); ok && v != "" {
+		icebergInput.Version = aws.String(v)
+	}
+	return icebergInput
 }
 
 func expandTablePartitionIndexes(a []interface{}) []*glue.PartitionIndex {
@@ -1039,4 +1089,13 @@ func flattenTableTargetTable(apiObject *glue.TableIdentifier) map[string]interfa
 	}
 
 	return tfMap
+}
+
+func flattenNonManagedParameters(table *glue.TableData) map[string]string {
+	allParameters := table.Parameters
+	if aws.StringValue(allParameters["table_type"]) == "ICEBERG" {
+		delete(allParameters, "table_type")
+		delete(allParameters, "metadata_location")
+	}
+	return aws.StringValueMap(allParameters)
 }

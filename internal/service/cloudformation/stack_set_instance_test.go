@@ -38,12 +38,15 @@ func TestAccCloudFormationStackSetInstance_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckStackSetInstanceExists(ctx, resourceName, &stackInstance1),
 					acctest.CheckResourceAttrAccountID(resourceName, "account_id"),
+					resource.TestCheckResourceAttr(resourceName, "call_as", "SELF"),
 					resource.TestCheckResourceAttr(resourceName, "deployment_targets.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "operation_preferences.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "organizational_unit_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "parameter_overrides.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "region", acctest.Region()),
 					resource.TestCheckResourceAttr(resourceName, "retain_stack", "false"),
 					resource.TestCheckResourceAttrSet(resourceName, "stack_id"),
+					resource.TestCheckResourceAttr(resourceName, "stack_instance_summaries.#", "0"),
 					resource.TestCheckResourceAttrPair(resourceName, "stack_set_name", cloudformationStackSetResourceName, "name"),
 				),
 			},
@@ -54,6 +57,23 @@ func TestAccCloudFormationStackSetInstance_basic(t *testing.T) {
 				ImportStateVerifyIgnore: []string{
 					"retain_stack",
 					"call_as",
+				},
+			},
+			// Test import with call_as.
+			{
+				ResourceName: resourceName,
+				ImportStateIdFunc: func(s *terraform.State) (string, error) {
+					rs, ok := s.RootModule().Resources[resourceName]
+					if !ok {
+						return "", fmt.Errorf("Not found: %s", resourceName)
+					}
+
+					return fmt.Sprintf("%s,SELF", rs.Primary.ID), nil
+				},
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"retain_stack",
 				},
 			},
 		},

@@ -494,7 +494,7 @@ The `abortIncompleteMultipartUpload` configuration block supports the following 
 
 The `expiration` configuration block supports the following arguments:
 
-* `date` - (Optional) Date the object is to be moved or deleted. Should be in [RFC3339 format](https://tools.ietf.org/html/rfc3339#section-5.8).
+* `date` - (Optional) Date the object is to be moved or deleted. The date value must be in [RFC3339 full-date format](https://datatracker.ietf.org/doc/html/rfc3339#section-5.6) e.g. `20230822`.
 * `days` - (Optional) Lifetime, in days, of the objects that are subject to the rule. The value must be a non-zero positive integer.
 * `expiredObjectDeleteMarker` - (Optional, Conflicts with `date` and `days`) Indicates whether Amazon S3 will remove a delete marker with no noncurrent versions. If set to `true`, the delete marker will be expired; if set to `false` the policy takes no action.
 
@@ -531,7 +531,7 @@ The `transition` configuration block supports the following arguments:
 
 ~> **Note:** Only one of `date` or `days` should be specified. If neither are specified, the `transition` will default to 0 `days`.
 
-* `date` - (Optional, Conflicts with `days`) Date objects are transitioned to the specified storage class. The date value must be in [RFC3339 format](https://tools.ietf.org/html/rfc3339#section-5.8) and set to midnight UTC e.g. `20230113T00:00:00Z`.
+* `date` - (Optional, Conflicts with `days`) Date objects are transitioned to the specified storage class. The date value must be in [RFC3339 full-date format](https://datatracker.ietf.org/doc/html/rfc3339#section-5.6) e.g. `20230822`.
 * `days` - (Optional, Conflicts with `date`) Number of days after creation when objects are transitioned to the specified storage class. The value must be a positive integer. If both `days` and `date` are not specified, defaults to `0`. Valid values depend on `storageClass`, see [Transition objects using Amazon S3 Lifecycle](https://docs.aws.amazon.com/AmazonS3/latest/userguide/lifecycle-transition-general-considerations.html) for more details.
 * `storageClass` - Class of storage used to store the object. Valid Values: `glacier`, `standardIa`, `onezoneIa`, `intelligentTiering`, `deepArchive`, `glacierIr`.
 
@@ -603,4 +603,4 @@ If the owner (account ID) of the source bucket differs from the account used to 
 % terraform import aws_s3_bucket_lifecycle_configuration.example bucket-name,123456789012
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-ce79846a5381bab37eb5912b72d3f0b6f183e5a2acb8240fe74355dc829ed9b5 -->
+<!-- cache-key: cdktf-0.18.0 input-ebcc41b345ec5d3bba0fcf9e93a6e372a400f2139471f2e6a527ebe13fe61bd7 -->

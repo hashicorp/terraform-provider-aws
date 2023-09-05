@@ -6,9 +6,9 @@ package cloudformation_test
 import (
 	"context"
 	"fmt"
-	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/service/cloudformation"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -71,7 +71,7 @@ func TestAccCloudFormationStack_CreationFailure_doNothing(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccStackConfig_creationFailure(rName, cloudformation.OnFailureDoNothing),
-				ExpectError: regexp.MustCompile(`failed to create CloudFormation stack \(CREATE_FAILED\).*The following resource\(s\) failed to create.*This is not a valid CIDR block`),
+				ExpectError: regexache.MustCompile(`failed to create CloudFormation stack \(CREATE_FAILED\).*The following resource\(s\) failed to create.*This is not a valid CIDR block`),
 			},
 		},
 	})
@@ -89,7 +89,7 @@ func TestAccCloudFormationStack_CreationFailure_delete(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccStackConfig_creationFailure(rName, cloudformation.OnFailureDelete),
-				ExpectError: regexp.MustCompile(`failed to create CloudFormation stack, delete requested \(DELETE_COMPLETE\).*The following resource\(s\) failed to create.*This is not a valid CIDR block`),
+				ExpectError: regexache.MustCompile(`failed to create CloudFormation stack, delete requested \(DELETE_COMPLETE\).*The following resource\(s\) failed to create.*This is not a valid CIDR block`),
 			},
 		},
 	})
@@ -107,7 +107,7 @@ func TestAccCloudFormationStack_CreationFailure_rollback(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccStackConfig_creationFailure(rName, cloudformation.OnFailureRollback),
-				ExpectError: regexp.MustCompile(`failed to create CloudFormation stack, rollback requested \(ROLLBACK_COMPLETE\).*The following resource\(s\) failed to create.*This is not a valid CIDR block`),
+				ExpectError: regexache.MustCompile(`failed to create CloudFormation stack, rollback requested \(ROLLBACK_COMPLETE\).*The following resource\(s\) failed to create.*This is not a valid CIDR block`),
 			},
 		},
 	})
@@ -136,7 +136,7 @@ func TestAccCloudFormationStack_updateFailure(t *testing.T) {
 			},
 			{
 				Config:      testAccStackConfig_params(rName, vpcCidrInvalid),
-				ExpectError: regexp.MustCompile(`failed to update CloudFormation stack \(UPDATE_ROLLBACK_COMPLETE\).*This is not a valid CIDR block`),
+				ExpectError: regexache.MustCompile(`failed to update CloudFormation stack \(UPDATE_ROLLBACK_COMPLETE\).*This is not a valid CIDR block`),
 			},
 		},
 	})

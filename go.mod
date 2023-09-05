@@ -105,6 +105,7 @@ require (
 	github.com/Masterminds/goutils v1.1.1 // indirect
 	github.com/Masterminds/semver/v3 v3.2.1 // indirect
 	github.com/Masterminds/sprig/v3 v3.2.3 // indirect
+	github.com/YakDriver/regexache v0.7.0 // indirect
 	github.com/agext/levenshtein v1.2.3 // indirect
 	github.com/apparentlymart/go-textseg/v13 v13.0.0 // indirect
 	github.com/armon/go-radix v1.0.0 // indirect
@@ -115,12 +116,15 @@ require (
 	github.com/aws/aws-sdk-go-v2/internal/endpoints/v2 v2.4.35 // indirect
 	github.com/aws/aws-sdk-go-v2/internal/ini v1.3.39 // indirect
 	github.com/aws/aws-sdk-go-v2/internal/v4a v1.1.4 // indirect
+	github.com/aws/aws-sdk-go-v2/service/codestarconnections v1.15.5 // indirect
 	github.com/aws/aws-sdk-go-v2/service/iam v1.22.2 // indirect
 	github.com/aws/aws-sdk-go-v2/service/internal/accept-encoding v1.9.14 // indirect
 	github.com/aws/aws-sdk-go-v2/service/internal/checksum v1.1.36 // indirect
 	github.com/aws/aws-sdk-go-v2/service/internal/endpoint-discovery v1.7.33 // indirect
 	github.com/aws/aws-sdk-go-v2/service/internal/presigned-url v1.9.35 // indirect
 	github.com/aws/aws-sdk-go-v2/service/internal/s3shared v1.15.4 // indirect
+	github.com/aws/aws-sdk-go-v2/service/lexmodelsv2 v1.32.5 // indirect
+	github.com/aws/aws-sdk-go-v2/service/redshiftdata v1.20.5 // indirect
 	github.com/aws/aws-sdk-go-v2/service/sso v1.13.2 // indirect
 	github.com/aws/aws-sdk-go-v2/service/ssooidc v1.15.2 // indirect
 	github.com/aws/aws-sdk-go-v2/service/sts v1.21.2 // indirect
@@ -196,6 +200,8 @@ replace github.com/aws/aws-sdk-go-v2/internal/endpoints/v2 => /Users/ewbankkit/D
 
 replace github.com/aws/aws-sdk-go-v2/internal/ini => /Users/ewbankkit/Downloads/aws-sdk-go-v2/internal/ini
 
+replace github.com/aws/aws-sdk-go-v2/internal/v4a => /Users/ewbankkit/Downloads/aws-sdk-go-v2/internal/v4a
+
 replace github.com/aws/aws-sdk-go-v2/service/accessanalyzer => /Users/ewbankkit/Downloads/aws-sdk-go-v2/service/accessanalyzer
 
 replace github.com/aws/aws-sdk-go-v2/service/account => /Users/ewbankkit/Downloads/aws-sdk-go-v2/service/account
@@ -213,6 +219,8 @@ replace github.com/aws/aws-sdk-go-v2/service/cloudcontrol => /Users/ewbankkit/Do
 replace github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs => /Users/ewbankkit/Downloads/aws-sdk-go-v2/service/cloudwatchlogs
 
 replace github.com/aws/aws-sdk-go-v2/service/codecatalyst => /Users/ewbankkit/Downloads/aws-sdk-go-v2/service/codecatalyst
+
+replace github.com/aws/aws-sdk-go-v2/service/codestarconnections => /Users/ewbankkit/Downloads/aws-sdk-go-v2/service/codestarconnections
 
 replace github.com/aws/aws-sdk-go-v2/service/codestarnotifications => /Users/ewbankkit/Downloads/aws-sdk-go-v2/service/codestarnotifications
 
@@ -242,6 +250,10 @@ replace github.com/aws/aws-sdk-go-v2/service/identitystore => /Users/ewbankkit/D
 
 replace github.com/aws/aws-sdk-go-v2/service/inspector2 => /Users/ewbankkit/Downloads/aws-sdk-go-v2/service/inspector2
 
+replace github.com/aws/aws-sdk-go-v2/service/internal/accept-encoding => /Users/ewbankkit/Downloads/aws-sdk-go-v2/service/internal/accept-encoding
+
+replace github.com/aws/aws-sdk-go-v2/service/internal/checksum => /Users/ewbankkit/Downloads/aws-sdk-go-v2/service/internal/checksum
+
 replace github.com/aws/aws-sdk-go-v2/service/internal/endpoint-discovery => /Users/ewbankkit/Downloads/aws-sdk-go-v2/service/internal/endpoint-discovery
 
 replace github.com/aws/aws-sdk-go-v2/service/internal/presigned-url => /Users/ewbankkit/Downloads/aws-sdk-go-v2/service/internal/presigned-url
@@ -259,6 +271,8 @@ replace github.com/aws/aws-sdk-go-v2/service/kendra => /Users/ewbankkit/Download
 replace github.com/aws/aws-sdk-go-v2/service/keyspaces => /Users/ewbankkit/Downloads/aws-sdk-go-v2/service/keyspaces
 
 replace github.com/aws/aws-sdk-go-v2/service/lambda => /Users/ewbankkit/Downloads/aws-sdk-go-v2/service/lambda
+
+replace github.com/aws/aws-sdk-go-v2/service/lexmodelsv2 => /Users/ewbankkit/Downloads/aws-sdk-go-v2/service/lexmodelsv2
 
 replace github.com/aws/aws-sdk-go-v2/service/lightsail => /Users/ewbankkit/Downloads/aws-sdk-go-v2/service/lightsail
 
@@ -280,11 +294,15 @@ replace github.com/aws/aws-sdk-go-v2/service/rbin => /Users/ewbankkit/Downloads/
 
 replace github.com/aws/aws-sdk-go-v2/service/rds => /Users/ewbankkit/Downloads/aws-sdk-go-v2/service/rds
 
+replace github.com/aws/aws-sdk-go-v2/service/redshiftdata => /Users/ewbankkit/Downloads/aws-sdk-go-v2/service/redshiftdata
+
 replace github.com/aws/aws-sdk-go-v2/service/resourceexplorer2 => /Users/ewbankkit/Downloads/aws-sdk-go-v2/service/resourceexplorer2
 
 replace github.com/aws/aws-sdk-go-v2/service/rolesanywhere => /Users/ewbankkit/Downloads/aws-sdk-go-v2/service/rolesanywhere
 
 replace github.com/aws/aws-sdk-go-v2/service/route53domains => /Users/ewbankkit/Downloads/aws-sdk-go-v2/service/route53domains
+
+replace github.com/aws/aws-sdk-go-v2/service/s3 => /Users/ewbankkit/Downloads/aws-sdk-go-v2/service/s3
 
 replace github.com/aws/aws-sdk-go-v2/service/s3control => /Users/ewbankkit/Downloads/aws-sdk-go-v2/service/s3control
 
@@ -321,11 +339,3 @@ replace github.com/aws/aws-sdk-go-v2/service/vpclattice => /Users/ewbankkit/Down
 replace github.com/aws/aws-sdk-go-v2/service/workspaces => /Users/ewbankkit/Downloads/aws-sdk-go-v2/service/workspaces
 
 replace github.com/aws/aws-sdk-go-v2/service/xray => /Users/ewbankkit/Downloads/aws-sdk-go-v2/service/xray
-
-replace github.com/aws/aws-sdk-go-v2/internal/v4a => /Users/ewbankkit/Downloads/aws-sdk-go-v2/internal/v4a
-
-replace github.com/aws/aws-sdk-go-v2/service/internal/accept-encoding => /Users/ewbankkit/Downloads/aws-sdk-go-v2/service/internal/accept-encoding
-
-replace github.com/aws/aws-sdk-go-v2/service/internal/checksum => /Users/ewbankkit/Downloads/aws-sdk-go-v2/service/internal/checksum
-
-replace github.com/aws/aws-sdk-go-v2/service/s3 => /Users/ewbankkit/Downloads/aws-sdk-go-v2/service/s3

@@ -11,6 +11,7 @@ import (
 	"sort"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/codedeploy"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
@@ -386,7 +387,7 @@ func TestAccDeployDeploymentGroup_Trigger_multiple(t *testing.T) {
 						"InstanceFailure",
 					}),
 					testAccCheckDeploymentGroupTriggerTargetARN(&group, "test-trigger-2",
-						regexp.MustCompile(fmt.Sprintf("^arn:%s:sns:[^:]+:[0-9]{12}:tf-acc-test-2-%s$", acctest.Partition(), rName))),
+						regexache.MustCompile(fmt.Sprintf("^arn:%s:sns:[^:]+:[0-9]{12}:tf-acc-test-2-%s$", acctest.Partition(), rName))),
 				),
 			},
 			{
@@ -407,7 +408,7 @@ func TestAccDeployDeploymentGroup_Trigger_multiple(t *testing.T) {
 						"InstanceFailure",
 					}),
 					testAccCheckDeploymentGroupTriggerTargetARN(&group, "test-trigger-2",
-						regexp.MustCompile(fmt.Sprintf("^arn:%s:sns:[^:]+:[0-9]{12}:tf-acc-test-3-%s$", acctest.Partition(), rName))),
+						regexache.MustCompile(fmt.Sprintf("^arn:%s:sns:[^:]+:[0-9]{12}:tf-acc-test-3-%s$", acctest.Partition(), rName))),
 				),
 			},
 			{

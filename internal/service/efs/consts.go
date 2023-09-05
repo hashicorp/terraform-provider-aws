@@ -1,8 +1,12 @@
 // Copyright (c) HashiCorp, Inc.
 // SPDX-License-Identifier: MPL-2.0
 
-package codestarconnections
+package efs
+
+import (
+	"time"
+)
 
 const (
-	ResNameConnection = "Connection"
+	propagationTimeout = 2 * time.Minute
 )
