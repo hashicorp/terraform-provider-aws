@@ -5,7 +5,7 @@ go 1.20
 require (
 	github.com/ProtonMail/go-crypto v0.0.0-20230717121422-5aa5874ade95
 	github.com/YakDriver/regexache v0.7.0
-	github.com/aws/aws-sdk-go v1.45.1
+	github.com/aws/aws-sdk-go v1.45.2
 	github.com/aws/aws-sdk-go-v2 v1.21.0
 	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.13.11
 	github.com/aws/aws-sdk-go-v2/service/accessanalyzer v1.20.5
@@ -29,7 +29,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/fis v1.15.5
 	github.com/aws/aws-sdk-go-v2/service/glacier v1.15.5
 	github.com/aws/aws-sdk-go-v2/service/healthlake v1.17.5
-	github.com/aws/aws-sdk-go-v2/service/identitystore v1.17.6
+	github.com/aws/aws-sdk-go-v2/service/identitystore v1.18.0
 	github.com/aws/aws-sdk-go-v2/service/inspector2 v1.16.6
 	github.com/aws/aws-sdk-go-v2/service/internetmonitor v1.5.4
 	github.com/aws/aws-sdk-go-v2/service/ivschat v1.5.5
