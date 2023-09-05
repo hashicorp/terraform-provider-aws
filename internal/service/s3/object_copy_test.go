@@ -24,8 +24,8 @@ func TestAccS3ObjectCopy_basic(t *testing.T) {
 	rName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_s3_object_copy.test"
 	sourceName := "aws_s3_object.source"
-	key := "HundBegraven"
-	sourceKey := "WshngtnNtnls"
+	sourceKey := "source"
+	targetKey := "target"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -34,13 +34,53 @@ func TestAccS3ObjectCopy_basic(t *testing.T) {
 		CheckDestroy:             testAccCheckObjectCopyDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccObjectCopyConfig_basic(rName1, sourceKey, rName2, key),
-				Check: resource.ComposeTestCheckFunc(
+				Config: testAccObjectCopyConfig_basic(rName1, sourceKey, rName2, targetKey),
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckObjectCopyExists(ctx, resourceName),
+					resource.TestCheckNoResourceAttr(resourceName, "acl"),
 					resource.TestCheckResourceAttr(resourceName, "bucket", rName2),
-					resource.TestCheckResourceAttr(resourceName, "key", key),
-					resource.TestCheckResourceAttr(resourceName, "source", fmt.Sprintf("%s/%s", rName1, sourceKey)),
+					resource.TestCheckResourceAttr(resourceName, "bucket_key_enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "cache_control", ""),
+					resource.TestCheckResourceAttr(resourceName, "content_disposition", ""),
+					resource.TestCheckResourceAttr(resourceName, "content_encoding", ""),
+					resource.TestCheckResourceAttr(resourceName, "content_language", ""),
+					resource.TestCheckResourceAttr(resourceName, "content_type", "binary/octet-stream"),
+					resource.TestCheckNoResourceAttr(resourceName, "copy_if_match"),
+					resource.TestCheckNoResourceAttr(resourceName, "copy_if_modified_since"),
+					resource.TestCheckNoResourceAttr(resourceName, "copy_if_none_match"),
+					resource.TestCheckNoResourceAttr(resourceName, "copy_if_unmodified_since"),
+					resource.TestCheckResourceAttr(resourceName, "customer_algorithm", ""),
+					resource.TestCheckNoResourceAttr(resourceName, "customer_key"),
+					resource.TestCheckResourceAttr(resourceName, "customer_key_md5", ""),
 					resource.TestCheckResourceAttrPair(resourceName, "etag", sourceName, "etag"),
+					resource.TestCheckNoResourceAttr(resourceName, "expected_bucket_owner"),
+					resource.TestCheckNoResourceAttr(resourceName, "expected_source_bucket_owner"),
+					resource.TestCheckResourceAttr(resourceName, "expiration", ""),
+					resource.TestCheckNoResourceAttr(resourceName, "expires"),
+					resource.TestCheckResourceAttr(resourceName, "force_destroy", "false"),
+					resource.TestCheckResourceAttr(resourceName, "grant.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "key", targetKey),
+					resource.TestCheckResourceAttr(resourceName, "kms_encryption_context", ""),
+					resource.TestCheckResourceAttr(resourceName, "kms_key_id", ""),
+					resource.TestCheckResourceAttrSet(resourceName, "last_modified"),
+					resource.TestCheckResourceAttr(resourceName, "metadata.%", "0"),
+					resource.TestCheckNoResourceAttr(resourceName, "metadata_directive"),
+					resource.TestCheckResourceAttr(resourceName, "object_lock_legal_hold_status", ""),
+					resource.TestCheckResourceAttr(resourceName, "object_lock_mode", ""),
+					resource.TestCheckResourceAttr(resourceName, "object_lock_retain_until_date", ""),
+					resource.TestCheckResourceAttr(resourceName, "request_charged", "false"),
+					resource.TestCheckNoResourceAttr(resourceName, "request_payer"),
+					resource.TestCheckResourceAttr(resourceName, "server_side_encryption", "AES256"),
+					resource.TestCheckResourceAttr(resourceName, "source", fmt.Sprintf("%s/%s", rName1, sourceKey)),
+					resource.TestCheckNoResourceAttr(resourceName, "source_customer_algorithm"),
+					resource.TestCheckNoResourceAttr(resourceName, "source_customer_key"),
+					resource.TestCheckNoResourceAttr(resourceName, "source_customer_key_md5"),
+					resource.TestCheckResourceAttr(resourceName, "source_version_id", ""),
+					resource.TestCheckResourceAttr(resourceName, "storage_class", "STANDARD"),
+					resource.TestCheckNoResourceAttr(resourceName, "tagging_directive"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "version_id", ""),
+					resource.TestCheckResourceAttr(resourceName, "website_redirect", ""),
 				),
 			},
 		},
@@ -132,7 +172,35 @@ func testAccCheckObjectCopyExists(ctx context.Context, n string) resource.TestCh
 	}
 }
 
-func testAccObjectCopyConfig_basic(rName1, sourceKey, rName2, key string) string {
+func testAccObjectCopyConfig_base(sourceBucket, sourceKey, targetBucket string) string {
+	return fmt.Sprintf(`
+resource "aws_s3_bucket" "source" {
+  bucket = %[1]q
+}
+
+resource "aws_s3_object" "source" {
+  bucket  = aws_s3_bucket.source.bucket
+  key     = %[2]q
+  content = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
+}
+
+resource "aws_s3_bucket" "target" {
+  bucket = %[3]q
+}
+`, sourceBucket, sourceKey, targetBucket)
+}
+
+func testAccObjectCopyConfig_basic(sourceBucket, sourceKey, targetBucket, targetKey string) string {
+	return acctest.ConfigCompose(testAccObjectCopyConfig_base(sourceBucket, sourceKey, targetBucket), fmt.Sprintf(`
+resource "aws_s3_object_copy" "test" {
+  bucket = aws_s3_bucket.target.bucket
+  key    = %[1]q
+  source = "${aws_s3_bucket.source.bucket}/${aws_s3_object.source.key}"
+}
+`, targetKey))
+}
+
+func testAccObjectCopyConfig_grant(rName1, sourceKey, rName2, key string) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "source" {
   bucket = %[1]q
