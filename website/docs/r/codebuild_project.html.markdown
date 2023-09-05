@@ -418,8 +418,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import CodeBuild Project using the `name`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import CodeBuild Project using the `name`. For example:
 
+```terraform
+import {
+  to = aws_codebuild_project.name
+  id = "project-name"
+}
 ```
-$ terraform import aws_codebuild_project.name project-name
+
+Using `terraform import`, import CodeBuild Project using the `name`. For example:
+
+```console
+% terraform import aws_codebuild_project.name project-name
 ```

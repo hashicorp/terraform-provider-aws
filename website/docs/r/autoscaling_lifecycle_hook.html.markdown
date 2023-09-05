@@ -73,8 +73,17 @@ This resource exports no additional attributes.
 
 ## Import
 
-Import AutoScaling Lifecycle Hooks using the role autoscaling_group_name and name separated by `/`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import AutoScaling Lifecycle Hooks using the role autoscaling_group_name and name separated by `/`. For example:
 
+```terraform
+import {
+  to = aws_autoscaling_lifecycle_hook.test-lifecycle-hook
+  id = "asg-name/lifecycle-hook-name"
+}
 ```
-$ terraform import aws_autoscaling_lifecycle_hook.test-lifecycle-hook asg-name/lifecycle-hook-name
+
+Using `terraform import`, import AutoScaling Lifecycle Hooks using the role autoscaling_group_name and name separated by `/`. For example:
+
+```console
+% terraform import aws_autoscaling_lifecycle_hook.test-lifecycle-hook asg-name/lifecycle-hook-name
 ```

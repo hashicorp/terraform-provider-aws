@@ -48,8 +48,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import API Gateway documentation versions using `REST-API-ID/VERSION`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import API Gateway documentation versions using `REST-API-ID/VERSION`. For example:
 
+```terraform
+import {
+  to = aws_api_gateway_documentation_version.example
+  id = "5i4e1ko720/example-version"
+}
 ```
-$ terraform import aws_api_gateway_documentation_version.example 5i4e1ko720/example-version
+
+Using `terraform import`, import API Gateway documentation versions using `REST-API-ID/VERSION`. For example:
+
+```console
+% terraform import aws_api_gateway_documentation_version.example 5i4e1ko720/example-version
 ```

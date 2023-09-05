@@ -143,8 +143,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import GuardDuty PublishingDestination using the master GuardDuty detector ID and PublishingDestinationID. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import GuardDuty PublishingDestination using the master GuardDuty detector ID and PublishingDestinationID. For example:
 
+```terraform
+import {
+  to = aws_guardduty_publishing_destination.test
+  id = "a4b86f26fa42e7e7cf0d1c333ea77777:a4b86f27a0e464e4a7e0516d242f1234"
+}
 ```
-$ terraform import aws_guardduty_publishing_destination.test a4b86f26fa42e7e7cf0d1c333ea77777:a4b86f27a0e464e4a7e0516d242f1234
+
+Using `terraform import`, import GuardDuty PublishingDestination using the master GuardDuty detector ID and PublishingDestinationID. For example:
+
+```console
+% terraform import aws_guardduty_publishing_destination.test a4b86f26fa42e7e7cf0d1c333ea77777:a4b86f27a0e464e4a7e0516d242f1234
 ```

@@ -48,7 +48,7 @@ resource "aws_vpc_ipam_pool" "parent" {
 
 resource "aws_vpc_ipam_pool_cidr" "parent_test" {
   ipam_pool_id = aws_vpc_ipam_pool.parent.id
-  cidr         = "172.2.0.0/16"
+  cidr         = "172.20.0.0/16"
 }
 
 resource "aws_vpc_ipam_pool" "child" {
@@ -61,7 +61,7 @@ resource "aws_vpc_ipam_pool" "child" {
 
 resource "aws_vpc_ipam_pool_cidr" "child_test" {
   ipam_pool_id = aws_vpc_ipam_pool.child.id
-  cidr         = "172.2.0.0/24"
+  cidr         = "172.20.0.0/24"
 }
 ```
 
@@ -96,8 +96,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import IPAMs using the `ipam pool id`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import IPAMs using the IPAM pool `id`. For example:
 
+```terraform
+import {
+  to = aws_vpc_ipam_pool.example
+  id = "ipam-pool-0958f95207d978e1e"
+}
 ```
-$ terraform import aws_vpc_ipam_pool.example ipam-pool-0958f95207d978e1e
+
+Using `terraform import`, import IPAMs using the IPAM pool `id`. For example:
+
+```console
+% terraform import aws_vpc_ipam_pool.example ipam-pool-0958f95207d978e1e
 ```

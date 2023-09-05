@@ -72,8 +72,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import Glue Catalog Databases using the `catalog_id:name`. If you have not set a Catalog ID specify the AWS Account ID that the database is in. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Glue Catalog Databases using the `catalog_id:name`. If you have not set a Catalog ID specify the AWS Account ID that the database is in. For example:
 
+```terraform
+import {
+  to = aws_glue_catalog_database.database
+  id = "123456789012:my_database"
+}
 ```
-$ terraform import aws_glue_catalog_database.database 123456789012:my_database
+
+Using `terraform import`, import Glue Catalog Databases using the `catalog_id:name`. If you have not set a Catalog ID specify the AWS Account ID that the database is in. For example:
+
+```console
+% terraform import aws_glue_catalog_database.database 123456789012:my_database
 ```

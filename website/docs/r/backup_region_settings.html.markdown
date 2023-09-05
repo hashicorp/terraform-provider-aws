@@ -50,8 +50,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import Backup Region Settings using the `region`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Backup Region Settings using the `region`. For example:
 
+```terraform
+import {
+  to = aws_backup_region_settings.test
+  id = "us-west-2"
+}
 ```
-$ terraform import aws_backup_region_settings.test us-west-2
+
+Using `terraform import`, import Backup Region Settings using the `region`. For example:
+
+```console
+% terraform import aws_backup_region_settings.test us-west-2
 ```

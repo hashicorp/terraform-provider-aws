@@ -52,8 +52,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import Neptune Cluster Parameter Groups using the `name`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Neptune Cluster Parameter Groups using the `name`. For example:
 
+```terraform
+import {
+  to = aws_neptune_cluster_parameter_group.cluster_pg
+  id = "production-pg-1"
+}
 ```
-$ terraform import aws_neptune_cluster_parameter_group.cluster_pg production-pg-1
+
+Using `terraform import`, import Neptune Cluster Parameter Groups using the `name`. For example:
+
+```console
+% terraform import aws_neptune_cluster_parameter_group.cluster_pg production-pg-1
 ```

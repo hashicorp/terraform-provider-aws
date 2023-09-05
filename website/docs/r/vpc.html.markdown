@@ -52,7 +52,7 @@ resource "aws_vpc_ipam_pool" "test" {
 
 resource "aws_vpc_ipam_pool_cidr" "test" {
   ipam_pool_id = aws_vpc_ipam_pool.test.id
-  cidr         = "172.2.0.0/16"
+  cidr         = "172.20.0.0/16"
 }
 
 resource "aws_vpc" "test" {
@@ -105,8 +105,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import VPCs using the `vpc id`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import VPCs using the VPC `id`. For example:
 
+```terraform
+import {
+  to = aws_vpc.test_vpc
+  id = "vpc-a01106c2"
+}
 ```
-$ terraform import aws_vpc.test_vpc vpc-a01106c2
+
+Using `terraform import`, import VPCs using the VPC `id`. For example:
+
+```console
+% terraform import aws_vpc.test_vpc vpc-a01106c2
 ```

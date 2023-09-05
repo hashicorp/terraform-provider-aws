@@ -51,8 +51,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import GameLift Aliases using the ID. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import GameLift Aliases using the ID. For example:
 
+```terraform
+import {
+  to = aws_gamelift_alias.example
+  id = "<alias-id>"
+}
 ```
-$ terraform import aws_gamelift_alias.example <alias-id>
+
+Using `terraform import`, import GameLift Aliases using the ID. For example:
+
+```console
+% terraform import aws_gamelift_alias.example <alias-id>
 ```

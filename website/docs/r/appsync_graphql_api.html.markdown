@@ -267,8 +267,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import AppSync GraphQL API using the GraphQL API ID. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import AppSync GraphQL API using the GraphQL API ID. For example:
 
+```terraform
+import {
+  to = aws_appsync_graphql_api.example
+  id = "0123456789"
+}
 ```
-$ terraform import aws_appsync_graphql_api.example 0123456789
+
+Using `terraform import`, import AppSync GraphQL API using the GraphQL API ID. For example:
+
+```console
+% terraform import aws_appsync_graphql_api.example 0123456789
 ```
