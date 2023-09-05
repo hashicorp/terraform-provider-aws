@@ -136,7 +136,8 @@ pageLoop:
 			return sdkdiag.AppendErrorf(diags, "listing S3 Bucket (%s) Objects: %s", bucket, err)
 		}
 
-		requestCharged = string(page.RequestCharged)
+		// TODO Restore for GA.
+		// requestCharged = string(page.RequestCharged)
 
 		for _, v := range page.CommonPrefixes {
 			commonPrefixes = append(commonPrefixes, aws.ToString(v.Prefix))
