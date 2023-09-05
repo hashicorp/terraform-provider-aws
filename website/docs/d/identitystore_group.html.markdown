@@ -39,7 +39,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
-* `alternate_identifier` (Optional) A unique identifier for the group that is not the primary identifier. Conflicts with `group_id`. Detailed below.
+* `alternate_identifier` (Optional) A unique identifier for the group that is not the primary identifier. Conflicts with `group_id` and `filter`. Detailed below.
 * `filter` - (Optional, **Deprecated** use the `alternate_identifier` attribute instead) Configuration block for filtering by a unique attribute of the group. Detailed below.
 * `group_id` - (Optional) The identifier for a group in the Identity Store.
 
