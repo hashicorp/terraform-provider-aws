@@ -48,6 +48,7 @@ const (
 	engineNamePostgres                   = "postgres"
 	engineNameRedis                      = "redis"
 	engineNameRedshift                   = "redshift"
+	engineNameRedshiftServerless         = "redshift-serverless"
 	engineNameS3                         = "s3"
 	engineNameSQLServer                  = "sqlserver"
 	engineNameSybase                     = "sybase"
@@ -79,6 +80,7 @@ func engineName_Values() []string {
 		engineNamePostgres,
 		engineNameRedis,
 		engineNameRedshift,
+		engineNameRedshiftServerless,
 		engineNameS3,
 		engineNameSQLServer,
 		engineNameSybase,
