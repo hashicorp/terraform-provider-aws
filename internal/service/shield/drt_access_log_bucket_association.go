@@ -1,292 +1,379 @@
-package shield_test
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
+package shield
 
 import (
 	"context"
 	"errors"
-	"fmt"
+	"time"
 
-	//"regexp"
-	"testing"
-
-	"github.com/aws/aws-sdk-go-v2/service/shield/types"
+	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go/service/shield"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
-	"github.com/hashicorp/terraform-plugin-testing/terraform"
-	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
+	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
+	"github.com/hashicorp/terraform-plugin-framework/resource"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
+	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/framework"
+	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
-
-	tfshield "github.com/hashicorp/terraform-provider-aws/internal/service/shield"
 )
 
-func TestAccShieldDRTAccessLogBucketAssociation_basic(t *testing.T) {
-	ctx := acctest.Context(t)
+// @FrameworkResource(name="DRT Access Log Bucket Association")
+func newResourceDRTAccessLogBucketAssociation(_ context.Context) (resource.ResourceWithConfigure, error) {
+	r := &resourceDRTAccessLogBucketAssociation{}
 
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
-	var drtaccesslogbucketassociation shield.DescribeDRTAccessOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	bucketName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_shield_drt_access_log_bucket_association.test"
+	r.SetDefaultCreateTimeout(30 * time.Minute)
+	r.SetDefaultUpdateTimeout(30 * time.Minute)
+	r.SetDefaultDeleteTimeout(30 * time.Minute)
 
-	resource.Test(t, resource.TestCase{
-		PreCheck: func() {
-			acctest.PreCheck(ctx, t)
-			testAccPreCheckLogBucket(ctx, t)
-		},
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDRTAccessLogBucketAssociationDestroy(ctx, t),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccDRTAccessLogBucketAssociationConfig_basic(rName, bucketName, t),
-				Check:  testAccCheckDRTAccessLogBucketAssociationExists(ctx, resourceName, &drtaccesslogbucketassociation, t),
+	return r, nil
+}
+
+const (
+	ResNameDRTAccessLogBucketAssociation = "DRT Access Log Bucket Association"
+)
+
+type resourceDRTAccessLogBucketAssociation struct {
+	framework.ResourceWithConfigure
+	framework.WithTimeouts
+}
+
+func (r *resourceDRTAccessLogBucketAssociation) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
+	resp.TypeName = "aws_shield_drt_access_log_bucket_association"
+}
+
+func (r *resourceDRTAccessLogBucketAssociation) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
+	resp.Schema = schema.Schema{
+		Attributes: map[string]schema.Attribute{
+			"id": schema.StringAttribute{ // required by hashicorps terraform plugin testing framework
+				DeprecationMessage:  "id is only for framework compatibility and not used by the provider",
+				MarkdownDescription: "The ID of the directory.",
+				Computed:            true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
+			},
+			"log_bucket": schema.StringAttribute{
+				Required: true,
+				Validators: []validator.String{
+					// Validate string value length must be at least 3 characters and max 63.
+					stringvalidator.LengthBetween(3, 63),
+				},
+			},
+			"role_arn_association_id": schema.StringAttribute{
+				Required: true,
 			},
 		},
-	})
-}
-
-func TestAccShieldDRTAccessLogBucketAssociation_multibucket(t *testing.T) {
-	ctx := acctest.Context(t)
-
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
-	var drtaccesslogbucketassociation shield.DescribeDRTAccessOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	var buckets = []string{}
-	for i := 0; i < 2; i++ {
-		buckets = append(buckets, sdkacctest.RandomWithPrefix(acctest.ResourcePrefix))
-	}
-	resourceName1 := "aws_shield_drt_access_log_bucket_association.test1"
-	resourceName2 := "aws_shield_drt_access_log_bucket_association.test2"
-
-	resource.Test(t, resource.TestCase{
-		PreCheck: func() {
-			acctest.PreCheck(ctx, t)
-			testAccPreCheckLogBucket(ctx, t)
+		Blocks: map[string]schema.Block{
+			"timeouts": timeouts.Block(ctx, timeouts.Opts{
+				Create: true,
+				Delete: true,
+				Read:   true,
+			}),
 		},
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDRTAccessLogBucketAssociationDestroy(ctx, t),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccDRTAccessLogBucketAssociationConfig_multibucket(rName, buckets, t),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDRTAccessLogBucketAssociationExists(ctx, resourceName1, &drtaccesslogbucketassociation, t),
-					testAccCheckDRTAccessLogBucketAssociationExists(ctx, resourceName2, &drtaccesslogbucketassociation, t),
-				),
-			},
-		},
-	})
-}
-
-func TestAccShieldDRTAccessLogBucketAssociation_disappears(t *testing.T) {
-	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
-	var drtaccesslogbucketassociation shield.DescribeDRTAccessOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	bucketName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_shield_drt_access_log_bucket_association.test"
-
-	resource.Test(t, resource.TestCase{
-		PreCheck: func() {
-			acctest.PreCheck(ctx, t)
-			testAccPreCheckLogBucket(ctx, t)
-		},
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDRTAccessLogBucketAssociationDestroy(ctx, t),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccDRTAccessLogBucketAssociationConfig_basic(rName, bucketName, t),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDRTAccessLogBucketAssociationExists(ctx, resourceName, &drtaccesslogbucketassociation, t),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfshield.ResourceDRTAccessLogBucketAssociation, resourceName),
-				),
-				ExpectNonEmptyPlan: true,
-			},
-		},
-	})
-}
-
-func testAccCheckDRTAccessLogBucketAssociationDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ShieldConn(ctx)
-
-		for _, rs := range s.RootModule().Resources {
-			if rs.Type != "aws_shield_drt_access_log_bucket_association" {
-				continue
-			}
-
-			input := &shield.DescribeDRTAccessInput{}
-			resp, err := conn.DescribeDRTAccessWithContext(ctx, input)
-
-			if errs.IsA[*types.ResourceNotFoundException](err) {
-				return nil
-			}
-			if err != nil {
-				return nil
-			}
-			if resp != nil {
-				if resp.LogBucketList != nil && len(resp.LogBucketList) > 0 {
-					for _, bucket := range resp.LogBucketList {
-
-						if *bucket == rs.Primary.Attributes["log_bucket"] {
-							return create.Error(names.Shield, create.ErrActionCheckingDestroyed, tfshield.ResNameDRTAccessLogBucketAssociation, rs.Primary.ID, errors.New("bucket association not destroyed"))
-						}
-					}
-
-				}
-				return nil
-			}
-
-			return create.Error(names.Shield, create.ErrActionCheckingDestroyed, tfshield.ResNameDRTAccessLogBucketAssociation, rs.Primary.ID, errors.New("not destroyed"))
-		}
-
-		return nil
 	}
 }
 
-func testAccCheckDRTAccessLogBucketAssociationExists(ctx context.Context, name string, drtaccesslogbucketassociation *shield.DescribeDRTAccessOutput, t *testing.T) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[name]
+func (r *resourceDRTAccessLogBucketAssociation) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+	conn := r.Meta().ShieldConn(ctx)
 
-		if !ok {
-			return create.Error(names.Shield, create.ErrActionCheckingExistence, tfshield.ResNameDRTAccessLogBucketAssociation, name, errors.New("not found"))
-		}
-
-		if rs.Primary.ID == "" {
-			return create.Error(names.Shield, create.ErrActionCheckingExistence, tfshield.ResNameDRTAccessLogBucketAssociation, name, errors.New("not set"))
-		}
-
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ShieldConn(ctx)
-		resp, err := conn.DescribeDRTAccessWithContext(ctx, &shield.DescribeDRTAccessInput{})
-		if err != nil {
-			return create.Error(names.Shield, create.ErrActionCheckingExistence, tfshield.ResNameDRTAccessLogBucketAssociation, rs.Primary.ID, err)
-		}
-
-		*drtaccesslogbucketassociation = *resp
-
-		return nil
+	var plan resourceDRTAccessLogBucketAssociationData
+	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
+	if resp.Diagnostics.HasError() {
+		return
 	}
-}
 
-func testAccPreCheckLogBucket(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).ShieldConn(ctx)
-
-	input := &shield.DescribeDRTAccessInput{}
-	_, err := conn.DescribeDRTAccessWithContext(ctx, input)
-
-	if acctest.PreCheckSkipError(err) {
-		t.Skipf("skipping acceptance testing: %s", err)
+	in := &shield.AssociateDRTLogBucketInput{
+		LogBucket: aws.String(plan.LogBucket.ValueString()),
 	}
+	out, err := conn.AssociateDRTLogBucketWithContext(ctx, in)
 	if err != nil {
-		t.Fatalf("unexpected PreCheck error: %s", err)
+		resp.Diagnostics.AddError(
+			create.ProblemStandardMessage(names.Shield, create.ErrActionCreating, ResNameDRTAccessLogBucketAssociation, plan.LogBucket.String(), err),
+			err.Error(),
+		)
+		return
+	}
+	if out == nil {
+		resp.Diagnostics.AddError(
+			create.ProblemStandardMessage(names.Shield, create.ErrActionCreating, ResNameDRTAccessLogBucketAssociation, plan.LogBucket.String(), nil),
+			errors.New("empty output").Error(),
+		)
+		return
+	}
+
+	createTimeout := r.CreateTimeout(ctx, plan.Timeouts)
+	_, err = waitDRTAccessLogBucketAssociationCreated(ctx, conn, plan.LogBucket.ValueString(), createTimeout)
+	if err != nil {
+		resp.Diagnostics.AddError(
+			create.ProblemStandardMessage(names.Shield, create.ErrActionWaitingForCreation, ResNameDRTAccessLogBucketAssociation, plan.LogBucket.String(), err),
+			err.Error(),
+		)
+		return
+	}
+	plan.ID = types.StringValue(plan.LogBucket.ValueString())
+
+	resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
+}
+
+func (r *resourceDRTAccessLogBucketAssociation) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+	conn := r.Meta().ShieldConn(ctx)
+
+	var state resourceDRTAccessLogBucketAssociationData
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	in := &shield.DescribeDRTAccessInput{}
+
+	out, err := conn.DescribeDRTAccessWithContext(ctx, in)
+	if tfresource.NotFound(err) {
+		resp.State.RemoveResource(ctx)
+		return
+	}
+
+	if err != nil {
+		resp.Diagnostics.AddError(
+			create.ProblemStandardMessage(names.Shield, create.ErrActionSetting, ResNameDRTAccessLogBucketAssociation, state.LogBucket.String(), err),
+			err.Error(),
+		)
+		return
+	}
+	var associatedLogBucket *string
+	if out != nil {
+		associatedLogBucket = getAssociatedLogBucket(state.LogBucket.ValueString(), out.LogBucketList)
+		if len(out.LogBucketList) > 0 && associatedLogBucket == nil {
+			resp.Diagnostics.AddError(
+				create.ProblemStandardMessage(names.Shield, create.ErrActionSetting, ResNameDRTAccessLogBucketAssociation, state.LogBucket.String(), nil),
+				errors.New("Log Bucket not in list").Error(),
+			)
+		}
+	}
+
+	if state.ID.IsNull() || state.ID.IsUnknown() {
+		// Setting ID of state - required by hashicorps terraform plugin testing framework for Import. See issue https://github.com/hashicorp/terraform-plugin-testing/issues/84
+		state.ID = types.StringValue(state.LogBucket.ValueString())
+	}
+	state.LogBucket = flex.StringToFramework(ctx, associatedLogBucket)
+
+	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
+}
+
+func getAssociatedLogBucket(bucket string, bucketList []*string) *string {
+	for _, bkt := range bucketList {
+		if aws.ToString(bkt) == bucket {
+			return bkt
+		}
+	}
+	return nil
+}
+
+func (r *resourceDRTAccessLogBucketAssociation) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+	conn := r.Meta().ShieldConn(ctx)
+
+	var plan, state resourceDRTAccessLogBucketAssociationData
+	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	if !plan.LogBucket.Equal(state.LogBucket) {
+		in := &shield.AssociateDRTLogBucketInput{
+			LogBucket: aws.String(plan.LogBucket.ValueString()),
+		}
+		out, err := conn.AssociateDRTLogBucketWithContext(ctx, in)
+		if err != nil {
+			resp.Diagnostics.AddError(
+				create.ProblemStandardMessage(names.Shield, create.ErrActionUpdating, ResNameDRTAccessLogBucketAssociation, plan.LogBucket.String(), err),
+				err.Error(),
+			)
+			return
+		}
+		if out == nil {
+			resp.Diagnostics.AddError(
+				create.ProblemStandardMessage(names.Shield, create.ErrActionUpdating, ResNameDRTAccessLogBucketAssociation, plan.LogBucket.String(), nil),
+				errors.New("empty output").Error(),
+			)
+			return
+		}
+	}
+
+	updateTimeout := r.UpdateTimeout(ctx, plan.Timeouts)
+	_, err := waitDRTAccessLogBucketAssociationUpdated(ctx, conn, plan.LogBucket.ValueString(), updateTimeout)
+	if err != nil {
+		resp.Diagnostics.AddError(
+			create.ProblemStandardMessage(names.Shield, create.ErrActionWaitingForUpdate, ResNameDRTAccessLogBucketAssociation, plan.LogBucket.String(), err),
+			err.Error(),
+		)
+		return
+	}
+
+	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
+}
+
+func (r *resourceDRTAccessLogBucketAssociation) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+	conn := r.Meta().ShieldConn(ctx)
+
+	var state resourceDRTAccessLogBucketAssociationData
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	if state.LogBucket.ValueString() == "" {
+		return
+	}
+
+	in := &shield.DisassociateDRTLogBucketInput{
+		LogBucket: aws.String(state.LogBucket.ValueString()),
+	}
+
+	_, err := conn.DisassociateDRTLogBucketWithContext(ctx, in)
+	if err != nil {
+		var nfe *shield.ResourceNotFoundException
+		if errors.As(err, &nfe) {
+			return
+		}
+		resp.Diagnostics.AddError(
+			create.ProblemStandardMessage(names.Shield, create.ErrActionDeleting, ResNameDRTAccessLogBucketAssociation, state.LogBucket.String(), err),
+			err.Error(),
+		)
+		return
+	}
+	deleteTimeout := r.DeleteTimeout(ctx, state.Timeouts)
+	_, err = waitDRTAccessLogBucketAssociationDeleted(ctx, conn, state.LogBucket.ValueString(), deleteTimeout)
+	if err != nil {
+		resp.Diagnostics.AddError(
+			create.ProblemStandardMessage(names.Shield, create.ErrActionWaitingForDeletion, ResNameDRTAccessLogBucketAssociation, state.LogBucket.String(), err),
+			err.Error(),
+		)
+		return
 	}
 }
 
-func testAccDRTAccessLogBucketAssociationConfig_basic(rName string, bucket string, t *testing.T) string {
+const (
+	statusChangePending = "Pending"
+	statusDeleting      = "Deleting"
+	statusNormal        = "Normal"
+	statusUpdated       = "Updated"
+)
 
-	return fmt.Sprintf(`
-	resource "aws_s3_bucket" "test" {
-		bucket = %[2]q
-	}
-
-	resource "aws_iam_role" "test" {
-		name = %[1]q
-		assume_role_policy = jsonencode({
-			Version = "2012-10-17"
-			Statement = [
-				{
-					"Sid": "",
-					"Effect": "Allow",
-					"Principal": {
-							"Service": "drt.shield.amazonaws.com"
-					},
-					"Action": "sts:AssumeRole"
-				},
-			]
-		})
-	}
-	
-	resource "aws_iam_role_policy_attachment" "test" {
-		role       = aws_iam_role.test.name
-		policy_arn = "arn:aws:iam::aws:policy/service-role/AWSShieldDRTAccessPolicy"
+func waitDRTAccessLogBucketAssociationCreated(ctx context.Context, conn *shield.Shield, bucket string, timeout time.Duration) (*shield.DescribeDRTAccessOutput, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending:                   []string{},
+		Target:                    []string{statusNormal},
+		Refresh:                   statusDRTAccessLogBucketAssociation(ctx, conn, bucket),
+		Timeout:                   timeout,
+		NotFoundChecks:            2,
+		ContinuousTargetOccurence: 2,
 	}
 
-	resource "aws_shield_protection_group" "test" {
-		protection_group_id = %[1]q
-		aggregation         = "MAX"
-		pattern             = "ALL"
-	}
-	
-	resource "aws_shield_drt_access_role_arn_association" "test" {
-		role_arn             = aws_iam_role.test.arn
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+	if out, ok := outputRaw.(*shield.DescribeDRTAccessOutput); ok {
+		return out, err
 	}
 
-	resource "aws_shield_drt_access_log_bucket_association" "test" {
-		log_bucket = aws_s3_bucket.test.id
-		role_arn_association_id = aws_shield_drt_access_role_arn_association.test.id
-	}
-`, rName, bucket)
+	return nil, err
 }
 
-func testAccDRTAccessLogBucketAssociationConfig_multibucket(rName string, buckets []string, t *testing.T) string {
-
-	return fmt.Sprintf(`
-	resource "aws_s3_bucket" "test1" {
-		bucket = %[2]q
-	}
-	resource "aws_s3_bucket" "test2" {
-		bucket =  %[3]q 
-	}
-
-	resource "aws_iam_role" "test" {
-		name = %[1]q
-		assume_role_policy = jsonencode({
-			Version = "2012-10-17"
-			Statement = [
-				{
-					"Sid": "",
-					"Effect": "Allow",
-					"Principal": {
-							"Service": "drt.shield.amazonaws.com"
-					},
-					"Action": "sts:AssumeRole"
-				},
-			]
-		})
-	}
-	
-	resource "aws_iam_role_policy_attachment" "test" {
-		role       = aws_iam_role.test.name
-		policy_arn = "arn:aws:iam::aws:policy/service-role/AWSShieldDRTAccessPolicy"
+func waitDRTAccessLogBucketAssociationUpdated(ctx context.Context, conn *shield.Shield, bucket string, timeout time.Duration) (*shield.DescribeDRTAccessOutput, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending:                   []string{statusChangePending},
+		Target:                    []string{statusUpdated},
+		Refresh:                   statusDRTAccessLogBucketAssociation(ctx, conn, bucket),
+		Timeout:                   timeout,
+		NotFoundChecks:            2,
+		ContinuousTargetOccurence: 2,
 	}
 
-	resource "aws_shield_protection_group" "test" {
-		protection_group_id = %[1]q
-		aggregation         = "MAX"
-		pattern             = "ALL"
-	}
-	
-	resource "aws_shield_drt_access_role_arn_association" "test" {
-		role_arn             = aws_iam_role.test.arn
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+	if out, ok := outputRaw.(*shield.DescribeDRTAccessOutput); ok {
+		return out, err
 	}
 
-	resource "aws_shield_drt_access_log_bucket_association" "test1" {
-		log_bucket = aws_s3_bucket.test1.id
-		role_arn_association_id = aws_shield_drt_access_role_arn_association.test.id
+	return nil, err
+}
+
+func waitDRTAccessLogBucketAssociationDeleted(ctx context.Context, conn *shield.Shield, bucket string, timeout time.Duration) (*shield.DescribeDRTAccessOutput, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending: []string{statusDeleting, statusNormal},
+		Target:  []string{},
+		Refresh: statusDRTAccessLogBucketAssociation(ctx, conn, bucket),
+		Timeout: timeout,
 	}
-	resource "aws_shield_drt_access_log_bucket_association" "test2" {
-		log_bucket = aws_s3_bucket.test2.id
-		role_arn_association_id = aws_shield_drt_access_role_arn_association.test.id
-		depends_on = [
-			aws_shield_drt_access_log_bucket_association.test1
-		]
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+	if out, ok := outputRaw.(*shield.DescribeDRTAccessOutput); ok {
+		return out, err
 	}
-`, rName, buckets[0], buckets[1])
+
+	return nil, err
+}
+
+func statusDRTAccessLogBucketAssociation(ctx context.Context, conn *shield.Shield, bucket string) retry.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		out, err := describeDRTAccessLogBucketAssociation(ctx, conn, bucket)
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+		if out == nil || out.LogBucketList == nil || len(out.LogBucketList) == 0 {
+			return nil, "", nil
+		}
+
+		if out != nil && len(out.LogBucketList) > 0 {
+			for _, bkt := range out.LogBucketList {
+				if aws.ToString(bkt) == bucket {
+					return out, statusNormal, nil
+				}
+			}
+			return nil, "", nil
+		}
+
+		return out, statusNormal, nil
+	}
+}
+
+func describeDRTAccessLogBucketAssociation(ctx context.Context, conn *shield.Shield, bucketName string) (*shield.DescribeDRTAccessOutput, error) {
+	in := &shield.DescribeDRTAccessInput{}
+
+	out, err := conn.DescribeDRTAccessWithContext(ctx, in)
+	if err != nil {
+		var nfe *shield.ResourceNotFoundException
+		if errors.As(err, &nfe) {
+			return nil, &retry.NotFoundError{
+				LastError:   err,
+				LastRequest: in,
+			}
+		}
+	}
+
+	if out == nil || out.LogBucketList == nil || len(out.LogBucketList) == 0 {
+		return nil, tfresource.NewEmptyResultError(in)
+	}
+
+	for _, bucket := range out.LogBucketList {
+		if aws.ToString(bucket) == bucketName {
+			return out, nil
+		}
+	}
+	return nil, err
+}
+
+type resourceDRTAccessLogBucketAssociationData struct {
+	ID                   types.String   `tfsdk:"id"`
+	RoleArnAssociationID types.String   `tfsdk:"role_arn_association_id"`
+	LogBucket            types.String   `tfsdk:"log_bucket"`
+	Timeouts             timeouts.Value `tfsdk:"timeouts"`
 }
