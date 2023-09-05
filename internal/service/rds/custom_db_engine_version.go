@@ -254,9 +254,7 @@ func resourceCustomDBEngineVersionRead(ctx context.Context, d *schema.ResourceDa
 	d.Set("engine", out.Engine)
 	d.Set("engine_version", out.EngineVersion)
 	d.Set("image_id", out.Image.ImageId)
-	if out.KMSKeyId != nil {
-		d.Set("kms_key_id", out.KMSKeyId)
-	}
+	d.Set("kms_key_id", out.KMSKeyId)
 	d.Set("major_engine_version", out.MajorEngineVersion)
 	d.Set("manifest_computed", out.CustomDBEngineVersionManifest)
 	d.Set("status", out.Status)
