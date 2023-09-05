@@ -13,6 +13,7 @@ Provides an custom engine version (CEV) resource for Amazon RDS Custom. For addi
 ## RDS Custom for Oracle Usage
 
 ```terraform
+
 resource "aws_kms_key" "example" {
   description = "KMS symmetric key for RDS Custom for Oracle"
 }
@@ -64,6 +65,7 @@ resource "aws_rds_custom_db_engine_version" "example" {
 ## RDS Custom for SQL Server Usage
 
 ```terraform
+
 # CEV creation requires an AMI owned by the operator
 resource "aws_rds_custom_db_engine_version" "test" {
   engine          = "custom-sqlserver-se"
@@ -76,6 +78,7 @@ resource "aws_rds_custom_db_engine_version" "test" {
 ## RDS Custom for SQL Server Usage with AMI from another region
 
 ```terraform
+
 resource "aws_ami_copy" "example" {
   name              = "sqlserver-se-2019-15.00.4249.2"
   description       = "A copy of ami-xxxxxxxx"
@@ -88,6 +91,7 @@ resource "aws_rds_custom_db_engine_version" "test" {
   engine_version  = "15.00.4249.2.cev-1"
   source_image_id = aws_ami_copy.example.id
 }
+
 ```
 
 ## Argument Reference
@@ -132,14 +136,18 @@ This resource exports the following attributes in addition to the arguments abov
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Amazon Connect Contact Flow Modules using the `engine` and `engine_version` separated by a colon (`:`). For example:
 
 ```terraform
+
 import {
   to = aws_rds_custom_db_engine_version.example
   id = "custom-oracle-ee-cdb:19.cdb_cev1"
 }
+
 ```
 
 Using `terraform import`, import Amazon Connect Contact Flow Modules using the `engine` and `engine_version` separated by a colon (`:`). For example:
 
 ```console
+
+
 % terraform import aws_rds_custom_db_engine_version.example custom-oracle-ee-cdb:19.cdb_cev1
 ```
