@@ -1610,7 +1610,7 @@ func testAccCheckObjectCheckTags(ctx context.Context, n string, expectedTags map
 		rs := s.RootModule().Resources[n]
 		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Conn(ctx)
 
-		got, err := tfs3.ObjectListTags(ctx, conn, rs.Primary.Attributes["bucket"], rs.Primary.Attributes["key"])
+		got, err := tfs3.ObjectListTagsV1(ctx, conn, rs.Primary.Attributes["bucket"], rs.Primary.Attributes["key"])
 		if err != nil {
 			return err
 		}

@@ -101,7 +101,7 @@ func testAccCheckObjectCopyDestroy(ctx context.Context) resource.TestCheckFunc {
 				continue
 			}
 
-			_, err := tfs3.FindObjectByThreePartKey(ctx, conn, rs.Primary.Attributes["bucket"], rs.Primary.Attributes["key"], rs.Primary.Attributes["etag"])
+			_, err := tfs3.FindObjectByThreePartKeyV1(ctx, conn, rs.Primary.Attributes["bucket"], rs.Primary.Attributes["key"], rs.Primary.Attributes["etag"])
 
 			if tfresource.NotFound(err) {
 				continue
