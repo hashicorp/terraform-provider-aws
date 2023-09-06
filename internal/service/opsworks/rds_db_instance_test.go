@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package opsworks_test
 
 import (
@@ -98,7 +101,7 @@ func testAccCheckRDSDBInstanceExists(ctx context.Context, n string, v *opsworks.
 			return fmt.Errorf("No OpsWorks RDS DB Instance ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).OpsWorksConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).OpsWorksConn(ctx)
 
 		output, err := tfopsworks.FindRDSDBInstanceByTwoPartKey(ctx, conn, rs.Primary.Attributes["rds_db_instance_arn"], rs.Primary.Attributes["stack_id"])
 
@@ -114,7 +117,7 @@ func testAccCheckRDSDBInstanceExists(ctx context.Context, n string, v *opsworks.
 
 func testAccCheckRDSDBInstanceDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).OpsWorksConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).OpsWorksConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_opsworks_rds_db_instance" {
@@ -140,9 +143,13 @@ func testAccCheckRDSDBInstanceDestroy(ctx context.Context) resource.TestCheckFun
 
 func testAccRDSDBInstanceConfig_basic(rName, userName, password string) string {
 	return acctest.ConfigCompose(testAccStackConfig_basic(rName), fmt.Sprintf(`
+data "aws_rds_engine_version" "default" {
+  engine = "mysql"
+}
+
 data "aws_rds_orderable_db_instance" "test" {
-  engine         = "mysql"
-  engine_version = "8.0.25"
+  engine         = data.aws_rds_engine_version.default.engine
+  engine_version = data.aws_rds_engine_version.default.version
   license_model  = "general-public-license"
   storage_type   = "standard"
 
@@ -168,8 +175,8 @@ resource "aws_opsworks_rds_db_instance" "test" {
   stack_id = aws_opsworks_stack.test.id
 
   rds_db_instance_arn = aws_db_instance.test.arn
-  db_user             = %[1]q
-  db_password         = %[2]q
+  db_user             = %[2]q
+  db_password         = %[3]q
 }
-`, userName, password))
+`, rName, userName, password))
 }

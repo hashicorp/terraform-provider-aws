@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package sns
 
 import (
@@ -7,6 +10,7 @@ import (
 	"regexp"
 	"time"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/sns"
@@ -236,7 +240,7 @@ func ResourceTopic() *schema.Resource {
 
 func resourceTopicCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SNSConn()
+	conn := meta.(*conns.AWSClient).SNSConn(ctx)
 
 	var name string
 	fifoTopic := d.Get("fifo_topic").(bool)
@@ -248,7 +252,7 @@ func resourceTopicCreate(ctx context.Context, d *schema.ResourceData, meta inter
 
 	input := &sns.CreateTopicInput{
 		Name: aws.String(name),
-		Tags: GetTagsIn(ctx),
+		Tags: getTagsIn(ctx),
 	}
 
 	attributes, err := topicAttributeMap.ResourceDataToAPIAttributesCreate(d)
@@ -293,7 +297,7 @@ func resourceTopicCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 
 	// For partitions not supporting tag-on-create, attempt tag after create.
-	if tags := GetTagsIn(ctx); input.Tags == nil && len(tags) > 0 {
+	if tags := getTagsIn(ctx); input.Tags == nil && len(tags) > 0 {
 		err := createTags(ctx, conn, d.Id(), tags)
 
 		// If default tags only, continue. Otherwise, error.
@@ -311,7 +315,7 @@ func resourceTopicCreate(ctx context.Context, d *schema.ResourceData, meta inter
 
 func resourceTopicRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SNSConn()
+	conn := meta.(*conns.AWSClient).SNSConn(ctx)
 
 	attributes, err := FindTopicAttributesByARN(ctx, conn, d.Id())
 
@@ -348,7 +352,7 @@ func resourceTopicRead(ctx context.Context, d *schema.ResourceData, meta any) di
 }
 
 func resourceTopicUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).SNSConn()
+	conn := meta.(*conns.AWSClient).SNSConn(ctx)
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		attributes, err := topicAttributeMap.ResourceDataToAPIAttributesUpdate(d)
@@ -368,7 +372,7 @@ func resourceTopicUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 }
 
 func resourceTopicDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).SNSConn()
+	conn := meta.(*conns.AWSClient).SNSConn(ctx)
 
 	log.Printf("[DEBUG] Deleting SNS Topic: %s", d.Id())
 	_, err := conn.DeleteTopicWithContext(ctx, &sns.DeleteTopicInput{
@@ -404,9 +408,9 @@ func resourceTopicCustomizeDiff(_ context.Context, diff *schema.ResourceDiff, me
 		var re *regexp.Regexp
 
 		if fifoTopic {
-			re = regexp.MustCompile(`^[a-zA-Z0-9_-]{1,251}\.fifo$`)
+			re = regexache.MustCompile(`^[a-zA-Z0-9_-]{1,251}\.fifo$`)
 		} else {
-			re = regexp.MustCompile(`^[a-zA-Z0-9_-]{1,256}$`)
+			re = regexache.MustCompile(`^[a-zA-Z0-9_-]{1,256}$`)
 		}
 
 		if !re.MatchString(name) {

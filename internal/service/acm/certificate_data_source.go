@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package acm
 
 import (
@@ -70,7 +73,7 @@ func dataSourceCertificate() *schema.Resource {
 }
 
 func dataSourceCertificateRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ACMClient()
+	conn := meta.(*conns.AWSClient).ACMClient(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	domain := d.Get("domain")
@@ -211,7 +214,7 @@ func dataSourceCertificateRead(ctx context.Context, d *schema.ResourceData, meta
 	d.Set("arn", matchedCertificate.CertificateArn)
 	d.Set("status", matchedCertificate.Status)
 
-	tags, err := ListTags(ctx, conn, aws.ToString(matchedCertificate.CertificateArn))
+	tags, err := listTags(ctx, conn, aws.ToString(matchedCertificate.CertificateArn))
 
 	if err != nil {
 		return diag.Errorf("listing tags for ACM Certificate (%s): %s", d.Id(), err)

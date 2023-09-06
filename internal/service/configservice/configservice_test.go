@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package configservice_test
 
 import (
@@ -27,14 +30,15 @@ func TestAccConfigService_serial(t *testing.T) {
 			"importBasic":  testAccConfigurationRecorderStatus_importBasic,
 		},
 		"ConfigurationRecorder": {
-			"basic":       testAccConfigurationRecorder_basic,
-			"allParams":   testAccConfigurationRecorder_allParams,
-			"importBasic": testAccConfigurationRecorder_importBasic,
+			"basic":          testAccConfigurationRecorder_basic,
+			"allParams":      testAccConfigurationRecorder_allParams,
+			"recordStrategy": testAccConfigurationRecorder_recordStrategy,
+			"disappears":     testAccConfigurationRecorder_disappears,
 		},
 		"ConformancePack": {
 			"basic":                     testAccConformancePack_basic,
 			"disappears":                testAccConformancePack_disappears,
-			"forceNew":                  testAccConformancePack_forceNew,
+			"updateName":                testAccConformancePack_updateName,
 			"inputParameters":           testAccConformancePack_inputParameters,
 			"S3Delivery":                testAccConformancePack_S3Delivery,
 			"S3Template":                testAccConformancePack_S3Template,
@@ -53,7 +57,7 @@ func TestAccConfigService_serial(t *testing.T) {
 			"basic":                 testAccOrganizationConformancePack_basic,
 			"disappears":            testAccOrganizationConformancePack_disappears,
 			"excludedAccounts":      testAccOrganizationConformancePack_excludedAccounts,
-			"forceNew":              testAccOrganizationConformancePack_forceNew,
+			"updateName":            testAccOrganizationConformancePack_updateName,
 			"inputParameters":       testAccOrganizationConformancePack_inputParameters,
 			"S3Delivery":            testAccOrganizationConformancePack_S3Delivery,
 			"S3Template":            testAccOrganizationConformancePack_S3Template,

@@ -1,11 +1,14 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package s3control_test
 
 import (
 	"context"
 	"fmt"
-	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/s3control"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
@@ -33,7 +36,7 @@ func TestAccS3ControlBucketPolicy_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketPolicyExists(ctx, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "bucket", "aws_s3control_bucket.test", "arn"),
-					resource.TestMatchResourceAttr(resourceName, "policy", regexp.MustCompile(`s3-outposts:\*`)),
+					resource.TestMatchResourceAttr(resourceName, "policy", regexache.MustCompile(`s3-outposts:\*`)),
 				),
 			},
 			{
@@ -83,7 +86,7 @@ func TestAccS3ControlBucketPolicy_policy(t *testing.T) {
 				Config: testAccBucketPolicyConfig_basic(rName, "s3-outposts:GetObject"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketPolicyExists(ctx, resourceName),
-					resource.TestMatchResourceAttr(resourceName, "policy", regexp.MustCompile(`s3-outposts:GetObject`)),
+					resource.TestMatchResourceAttr(resourceName, "policy", regexache.MustCompile(`s3-outposts:GetObject`)),
 				),
 			},
 			{
@@ -95,7 +98,7 @@ func TestAccS3ControlBucketPolicy_policy(t *testing.T) {
 				Config: testAccBucketPolicyConfig_basic(rName, "s3-outposts:PutObject"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketPolicyExists(ctx, resourceName),
-					resource.TestMatchResourceAttr(resourceName, "policy", regexp.MustCompile(`s3-outposts:PutObject`)),
+					resource.TestMatchResourceAttr(resourceName, "policy", regexache.MustCompile(`s3-outposts:PutObject`)),
 				),
 			},
 		},
@@ -104,7 +107,7 @@ func TestAccS3ControlBucketPolicy_policy(t *testing.T) {
 
 func testAccCheckBucketPolicyDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).S3ControlConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).S3ControlConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_s3control_bucket_policy" {
@@ -145,7 +148,7 @@ func testAccCheckBucketPolicyExists(ctx context.Context, n string) resource.Test
 			return fmt.Errorf("No S3 Control Bucket Policy ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).S3ControlConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).S3ControlConn(ctx)
 
 		parsedArn, err := arn.Parse(rs.Primary.ID)
 

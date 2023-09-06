@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ec2_test
 
 import (
@@ -198,7 +201,7 @@ func TestAccEC2EIPDataSource_customerOwnedIPv4Pool(t *testing.T) {
 func testAccEIPDataSourceConfig_filter(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_eip" "test" {
-  vpc = true
+  domain = "vpc"
 
   tags = {
     Name = %[1]q
@@ -217,7 +220,7 @@ data "aws_eip" "test" {
 func testAccEIPDataSourceConfig_id(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_eip" "test" {
-  vpc = true
+  domain = "vpc"
 
   tags = {
     Name = %[1]q
@@ -233,7 +236,7 @@ data "aws_eip" "test" {
 func testAccEIPDataSourceConfig_publicIP(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_eip" "test" {
-  vpc = true
+  domain = "vpc"
 
   tags = {
     Name = %[1]q
@@ -249,7 +252,7 @@ data "aws_eip" "test" {
 func testAccEIPDataSourceConfig_tags(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_eip" "test" {
-  vpc = true
+  domain = "vpc"
 
   tags = {
     Name = %[1]q

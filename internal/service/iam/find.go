@@ -1,9 +1,12 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package iam
 
 import (
 	"context"
-	"regexp"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/iam"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
@@ -98,7 +101,7 @@ func FindUsers(ctx context.Context, conn *iam.IAM, nameRegex, pathPrefix string)
 				continue
 			}
 
-			if nameRegex != "" && !regexp.MustCompile(nameRegex).MatchString(aws.StringValue(user.UserName)) {
+			if nameRegex != "" && !regexache.MustCompile(nameRegex).MatchString(aws.StringValue(user.UserName)) {
 				continue
 			}
 

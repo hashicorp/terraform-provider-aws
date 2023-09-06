@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package wafv2_test
 
 import (
@@ -5,15 +8,14 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/wafv2"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfwafv2 "github.com/hashicorp/terraform-provider-aws/internal/service/wafv2"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func TestAccWAFV2WebACLLoggingConfiguration_basic(t *testing.T) {
@@ -623,25 +625,19 @@ func testAccCheckWebACLLoggingConfigurationDestroy(ctx context.Context) resource
 				continue
 			}
 
-			conn := acctest.Provider.Meta().(*conns.AWSClient).WAFV2Conn()
-			resp, err := conn.GetLoggingConfigurationWithContext(ctx, &wafv2.GetLoggingConfigurationInput{
-				ResourceArn: aws.String(rs.Primary.ID),
-			})
+			conn := acctest.Provider.Meta().(*conns.AWSClient).WAFV2Conn(ctx)
+
+			_, err := tfwafv2.FindLoggingConfigurationByARN(ctx, conn, rs.Primary.ID)
+
+			if tfresource.NotFound(err) {
+				continue
+			}
 
 			if err != nil {
-				// Continue checking resources in state if a WebACL Logging Configuration is already destroyed
-				if tfawserr.ErrCodeEquals(err, wafv2.ErrCodeWAFNonexistentItemException) {
-					continue
-				}
 				return err
 			}
 
-			if resp == nil || resp.LoggingConfiguration == nil {
-				return fmt.Errorf("Error getting WAFv2 WebACL Logging Configuration")
-			}
-			if aws.StringValue(resp.LoggingConfiguration.ResourceArn) == rs.Primary.ID {
-				return fmt.Errorf("WAFv2 WebACL Logging Configuration for WebACL ARN %s still exists", rs.Primary.ID)
-			}
+			return fmt.Errorf("WAFv2 WebACL Logging Configuration  %s still exists", rs.Primary.ID)
 		}
 
 		return nil
@@ -659,36 +655,28 @@ func testAccCheckWebACLLoggingConfigurationExists(ctx context.Context, n string,
 			return fmt.Errorf("No WAFv2 WebACL Logging Configuration ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).WAFV2Conn()
-		resp, err := conn.GetLoggingConfigurationWithContext(ctx, &wafv2.GetLoggingConfigurationInput{
-			ResourceArn: aws.String(rs.Primary.ID),
-		})
+		conn := acctest.Provider.Meta().(*conns.AWSClient).WAFV2Conn(ctx)
+
+		output, err := tfwafv2.FindLoggingConfigurationByARN(ctx, conn, rs.Primary.ID)
 
 		if err != nil {
 			return err
 		}
 
-		if resp == nil || resp.LoggingConfiguration == nil {
-			return fmt.Errorf("Error getting WAFv2 WebACL Logging Configuration")
-		}
+		*v = *output
 
-		if aws.StringValue(resp.LoggingConfiguration.ResourceArn) == rs.Primary.ID {
-			*v = *resp.LoggingConfiguration
-			return nil
-		}
-
-		return fmt.Errorf("WAFv2 WebACL Logging Configuration (%s) not found", rs.Primary.ID)
+		return nil
 	}
 }
 
-func testAccWebACLLoggingConfigurationDependenciesConfig(rName string) string {
+func testAccWebACLLoggingConfigurationConfig_base(rName string) string {
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
 
 data "aws_caller_identity" "current" {}
 
 resource "aws_iam_role" "firehose" {
-  name = "%[1]s"
+  name = %[1]q
 
   assume_role_policy = <<EOF
 {
@@ -714,16 +702,11 @@ EOF
 }
 
 resource "aws_s3_bucket" "test" {
-  bucket = "%[1]s"
-}
-
-resource "aws_s3_bucket_acl" "test" {
-  bucket = aws_s3_bucket.test.id
-  acl    = "private"
+  bucket = %[1]q
 }
 
 resource "aws_iam_role_policy" "test" {
-  name = "%[1]s"
+  name = %[1]q
   role = aws_iam_role.firehose.id
 
   policy = <<EOF
@@ -763,8 +746,8 @@ EOF
 }
 
 resource "aws_wafv2_web_acl" "test" {
-  name        = "%[1]s"
-  description = "%[1]s"
+  name        = %[1]q
+  description = "test"
   scope       = "REGIONAL"
 
   default_action {
@@ -780,14 +763,14 @@ resource "aws_wafv2_web_acl" "test" {
 `, rName)
 }
 
-func testAccWebACLLoggingConfigurationKinesisDependencyConfig(rName string) string {
+func testAccWebACLLoggingConfigurationConfig_baseKinesis(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_kinesis_firehose_delivery_stream" "test" {
   depends_on  = [aws_iam_role_policy.test]
-  name        = "aws-waf-logs-%s"
-  destination = "s3"
+  name        = "aws-waf-logs-%[1]s"
+  destination = "extended_s3"
 
-  s3_configuration {
+  extended_s3_configuration {
     role_arn   = aws_iam_role.firehose.arn
     bucket_arn = aws_s3_bucket.test.arn
   }
@@ -980,77 +963,77 @@ resource "aws_wafv2_web_acl_logging_configuration" "test" {
 
 func testAccWebACLLoggingConfigurationConfig_basic(rName string) string {
 	return acctest.ConfigCompose(
-		testAccWebACLLoggingConfigurationDependenciesConfig(rName),
-		testAccWebACLLoggingConfigurationKinesisDependencyConfig(rName),
+		testAccWebACLLoggingConfigurationConfig_base(rName),
+		testAccWebACLLoggingConfigurationConfig_baseKinesis(rName),
 		testAccWebACLLoggingConfigurationResourceConfig)
 }
 
 func testAccWebACLLoggingConfigurationConfig_updateLogDestination(rName, rNameNew string) string {
 	return acctest.ConfigCompose(
-		testAccWebACLLoggingConfigurationDependenciesConfig(rName),
-		testAccWebACLLoggingConfigurationKinesisDependencyConfig(rNameNew),
+		testAccWebACLLoggingConfigurationConfig_base(rName),
+		testAccWebACLLoggingConfigurationConfig_baseKinesis(rNameNew),
 		testAccWebACLLoggingConfigurationResourceConfig)
 }
 
 func testAccWebACLLoggingConfigurationConfig_updateTwoSingleHeaderRedactedFields(rName string) string {
 	return acctest.ConfigCompose(
-		testAccWebACLLoggingConfigurationDependenciesConfig(rName),
-		testAccWebACLLoggingConfigurationKinesisDependencyConfig(rName),
+		testAccWebACLLoggingConfigurationConfig_base(rName),
+		testAccWebACLLoggingConfigurationConfig_baseKinesis(rName),
 		testAccWebACLLoggingConfigurationResource_updateTwoSingleHeaderRedactedFieldsConfig)
 }
 
 func testAccWebACLLoggingConfigurationConfig_updateSingleHeaderRedactedField(rName string) string {
 	return acctest.ConfigCompose(
-		testAccWebACLLoggingConfigurationDependenciesConfig(rName),
-		testAccWebACLLoggingConfigurationKinesisDependencyConfig(rName),
+		testAccWebACLLoggingConfigurationConfig_base(rName),
+		testAccWebACLLoggingConfigurationConfig_baseKinesis(rName),
 		testAccWebACLLoggingConfigurationResource_updateSingleHeaderRedactedFieldConfig)
 }
 
 func testAccWebACLLoggingConfigurationConfig_updateRedactedField(rName, field string) string {
 	return acctest.ConfigCompose(
-		testAccWebACLLoggingConfigurationDependenciesConfig(rName),
-		testAccWebACLLoggingConfigurationKinesisDependencyConfig(rName),
+		testAccWebACLLoggingConfigurationConfig_base(rName),
+		testAccWebACLLoggingConfigurationConfig_baseKinesis(rName),
 		testAccWebACLLoggingConfigurationResource_updateRedactedFieldConfig(field))
 }
 
 func testAccWebACLLoggingConfigurationConfig_updateTwoRedactedFields(rName string) string {
 	return acctest.ConfigCompose(
-		testAccWebACLLoggingConfigurationDependenciesConfig(rName),
-		testAccWebACLLoggingConfigurationKinesisDependencyConfig(rName),
+		testAccWebACLLoggingConfigurationConfig_base(rName),
+		testAccWebACLLoggingConfigurationConfig_baseKinesis(rName),
 		testAccWebACLLoggingConfigurationResource_updateTwoRedactedFieldsConfig)
 }
 
 func testAccWebACLLoggingConfigurationConfig_updateThreeRedactedFields(rName string) string {
 	return acctest.ConfigCompose(
-		testAccWebACLLoggingConfigurationDependenciesConfig(rName),
-		testAccWebACLLoggingConfigurationKinesisDependencyConfig(rName),
+		testAccWebACLLoggingConfigurationConfig_base(rName),
+		testAccWebACLLoggingConfigurationConfig_baseKinesis(rName),
 		testAccWebACLLoggingConfigurationResource_updateThreeRedactedFieldsConfig)
 }
 
 func testAccWebACLLoggingConfigurationConfig_emptyRedactedField(rName string) string {
 	return acctest.ConfigCompose(
-		testAccWebACLLoggingConfigurationDependenciesConfig(rName),
-		testAccWebACLLoggingConfigurationKinesisDependencyConfig(rName),
+		testAccWebACLLoggingConfigurationConfig_base(rName),
+		testAccWebACLLoggingConfigurationConfig_baseKinesis(rName),
 		testAccWebACLLoggingConfigurationResource_emptyRedactedFieldsConfig)
 }
 
 func testAccWebACLLoggingConfigurationConfig_filter(rName string) string {
 	return acctest.ConfigCompose(
-		testAccWebACLLoggingConfigurationDependenciesConfig(rName),
-		testAccWebACLLoggingConfigurationKinesisDependencyConfig(rName),
+		testAccWebACLLoggingConfigurationConfig_base(rName),
+		testAccWebACLLoggingConfigurationConfig_baseKinesis(rName),
 		testAccWebACLLoggingConfigurationResource_loggingFilterConfig)
 }
 
 func testAccWebACLLoggingConfigurationConfig_updateFilterTwoFilters(rName string) string {
 	return acctest.ConfigCompose(
-		testAccWebACLLoggingConfigurationDependenciesConfig(rName),
-		testAccWebACLLoggingConfigurationKinesisDependencyConfig(rName),
+		testAccWebACLLoggingConfigurationConfig_base(rName),
+		testAccWebACLLoggingConfigurationConfig_baseKinesis(rName),
 		testAccWebACLLoggingConfigurationResource_loggingFilterConfig_twoFilters)
 }
 
 func testAccWebACLLoggingConfigurationConfig_updateFilterOneFilter(rName string) string {
 	return acctest.ConfigCompose(
-		testAccWebACLLoggingConfigurationDependenciesConfig(rName),
-		testAccWebACLLoggingConfigurationKinesisDependencyConfig(rName),
+		testAccWebACLLoggingConfigurationConfig_base(rName),
+		testAccWebACLLoggingConfigurationConfig_baseKinesis(rName),
 		testAccWebACLLoggingConfigurationResource_loggingFilterConfig_oneFilter)
 }

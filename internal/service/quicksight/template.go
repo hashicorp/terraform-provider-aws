@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package quicksight
 
 import (
@@ -42,80 +45,83 @@ func ResourceTemplate() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: map[string]*schema.Schema{
-			"arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"aws_account_id": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ForceNew:     true,
-				ValidateFunc: verify.ValidAccountID,
-			},
-			"created_time": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"definition": quicksightschema.DefinitionSchema(),
-			"last_updated_time": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"name": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: validation.StringLenBetween(1, 2048),
-			},
-			"permissions": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MinItems: 1,
-				MaxItems: 64,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"actions": {
-							Type:     schema.TypeSet,
-							Required: true,
-							MinItems: 1,
-							MaxItems: 16,
-							Elem:     &schema.Schema{Type: schema.TypeString},
-						},
-						"principal": {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: validation.StringLenBetween(1, 256),
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"arn": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"aws_account_id": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					Computed:     true,
+					ForceNew:     true,
+					ValidateFunc: verify.ValidAccountID,
+				},
+				"created_time": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"definition": quicksightschema.TemplateDefinitionSchema(),
+				"last_updated_time": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"name": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ValidateFunc: validation.StringLenBetween(1, 2048),
+				},
+				"permissions": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					MinItems: 1,
+					MaxItems: 64,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"actions": {
+								Type:     schema.TypeSet,
+								Required: true,
+								MinItems: 1,
+								MaxItems: 16,
+								Elem:     &schema.Schema{Type: schema.TypeString},
+							},
+							"principal": {
+								Type:         schema.TypeString,
+								Required:     true,
+								ValidateFunc: validation.StringLenBetween(1, 256),
+							},
 						},
 					},
 				},
-			},
-			"source_entity": quicksightschema.SourceEntitySchema(),
-			"source_entity_arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"status": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			"template_id": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"version_description": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: validation.StringLenBetween(1, 512),
-			},
-			"version_number": {
-				Type:     schema.TypeInt,
-				Computed: true,
-			},
+				"source_entity": quicksightschema.TemplateSourceEntitySchema(),
+				"source_entity_arn": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"status": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				"template_id": {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				"version_description": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ValidateFunc: validation.StringLenBetween(1, 512),
+				},
+				"version_number": {
+					Type:     schema.TypeInt,
+					Computed: true,
+				},
+			}
 		},
+
 		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
@@ -125,7 +131,7 @@ const (
 )
 
 func resourceTemplateCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).QuickSightConn()
+	conn := meta.(*conns.AWSClient).QuickSightConn(ctx)
 
 	awsAccountId := meta.(*conns.AWSClient).AccountID
 	if v, ok := d.GetOk("aws_account_id"); ok {
@@ -139,7 +145,7 @@ func resourceTemplateCreate(ctx context.Context, d *schema.ResourceData, meta in
 		AwsAccountId: aws.String(awsAccountId),
 		TemplateId:   aws.String(templateId),
 		Name:         aws.String(d.Get("name").(string)),
-		Tags:         GetTagsIn(ctx),
+		Tags:         getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("version_description"); ok {
@@ -147,15 +153,15 @@ func resourceTemplateCreate(ctx context.Context, d *schema.ResourceData, meta in
 	}
 
 	if v, ok := d.GetOk("source_entity"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.SourceEntity = quicksightschema.ExpandSourceEntity(v.([]interface{}))
+		input.SourceEntity = quicksightschema.ExpandTemplateSourceEntity(v.([]interface{}))
 	}
 
 	if v, ok := d.GetOk("definition"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.Definition = quicksightschema.ExpandDefinition(d.Get("definition").([]interface{}))
+		input.Definition = quicksightschema.ExpandTemplateDefinition(d.Get("definition").([]interface{}))
 	}
 
-	if v, ok := d.GetOk("permissions"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.Permissions = expandResourcePermissions(v.([]interface{}))
+	if v, ok := d.Get("permissions").(*schema.Set); ok && v.Len() > 0 {
+		input.Permissions = expandResourcePermissions(v.List())
 	}
 
 	_, err := conn.CreateTemplateWithContext(ctx, input)
@@ -171,7 +177,7 @@ func resourceTemplateCreate(ctx context.Context, d *schema.ResourceData, meta in
 }
 
 func resourceTemplateRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).QuickSightConn()
+	conn := meta.(*conns.AWSClient).QuickSightConn(ctx)
 
 	awsAccountId, templateId, err := ParseTemplateId(d.Id())
 	if err != nil {
@@ -208,11 +214,11 @@ func resourceTemplateRead(ctx context.Context, d *schema.ResourceData, meta inte
 	})
 
 	if err != nil {
-		return diag.Errorf("error describing QuickSight Template (%s) Definition: %s", d.Id(), err)
+		return diag.Errorf("describing QuickSight Template (%s) Definition: %s", d.Id(), err)
 	}
 
 	if err := d.Set("definition", quicksightschema.FlattenTemplateDefinition(descResp.Definition)); err != nil {
-		return diag.Errorf("error setting definition: %s", err)
+		return diag.Errorf("setting definition: %s", err)
 	}
 
 	permsResp, err := conn.DescribeTemplatePermissionsWithContext(ctx, &quicksight.DescribeTemplatePermissionsInput{
@@ -221,18 +227,18 @@ func resourceTemplateRead(ctx context.Context, d *schema.ResourceData, meta inte
 	})
 
 	if err != nil {
-		return diag.Errorf("error describing QuickSight Template (%s) Permissions: %s", d.Id(), err)
+		return diag.Errorf("describing QuickSight Template (%s) Permissions: %s", d.Id(), err)
 	}
 
 	if err := d.Set("permissions", flattenPermissions(permsResp.Permissions)); err != nil {
-		return diag.Errorf("error setting permissions: %s", err)
+		return diag.Errorf("setting permissions: %s", err)
 	}
 
 	return nil
 }
 
 func resourceTemplateUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).QuickSightConn()
+	conn := meta.(*conns.AWSClient).QuickSightConn(ctx)
 
 	awsAccountId, templateId, err := ParseTemplateId(d.Id())
 	if err != nil {
@@ -247,12 +253,11 @@ func resourceTemplateUpdate(ctx context.Context, d *schema.ResourceData, meta in
 			VersionDescription: aws.String(d.Get("version_description").(string)),
 		}
 
-		if d.HasChange("source_entity") {
-			in.SourceEntity = quicksightschema.ExpandSourceEntity(d.Get("source_entity").([]interface{}))
-		}
-
-		if d.HasChange("definition") {
-			in.Definition = quicksightschema.ExpandDefinition(d.Get("definition").([]interface{}))
+		// One of source_entity or definition is required for update
+		if _, ok := d.GetOk("source_entity"); ok {
+			in.SourceEntity = quicksightschema.ExpandTemplateSourceEntity(d.Get("source_entity").([]interface{}))
+		} else {
+			in.Definition = quicksightschema.ExpandTemplateDefinition(d.Get("definition").([]interface{}))
 		}
 
 		log.Printf("[DEBUG] Updating QuickSight Template (%s): %#v", d.Id(), in)
@@ -268,10 +273,10 @@ func resourceTemplateUpdate(ctx context.Context, d *schema.ResourceData, meta in
 
 	if d.HasChange("permissions") {
 		oraw, nraw := d.GetChange("permissions")
-		o := oraw.([]interface{})
-		n := nraw.([]interface{})
+		o := oraw.(*schema.Set)
+		n := nraw.(*schema.Set)
 
-		toGrant, toRevoke := DiffPermissions(o, n)
+		toGrant, toRevoke := DiffPermissions(o.List(), n.List())
 
 		params := &quicksight.UpdateTemplatePermissionsInput{
 			AwsAccountId: aws.String(awsAccountId),
@@ -289,7 +294,7 @@ func resourceTemplateUpdate(ctx context.Context, d *schema.ResourceData, meta in
 		_, err = conn.UpdateTemplatePermissionsWithContext(ctx, params)
 
 		if err != nil {
-			return diag.Errorf("error updating QuickSight Template (%s) permissions: %s", templateId, err)
+			return diag.Errorf("updating QuickSight Template (%s) permissions: %s", templateId, err)
 		}
 	}
 
@@ -297,7 +302,7 @@ func resourceTemplateUpdate(ctx context.Context, d *schema.ResourceData, meta in
 }
 
 func resourceTemplateDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).QuickSightConn()
+	conn := meta.(*conns.AWSClient).QuickSightConn(ctx)
 
 	awsAccountId, templateId, err := ParseTemplateId(d.Id())
 	if err != nil {

@@ -133,6 +133,8 @@ service/codeartifact:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_codeartifact_'
 service/codebuild:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_codebuild_'
+service/codecatalyst:
+  - '((\*|-)\s*`?|(data|resource)\s+"?)aws_codecatalyst_'
 service/codecommit:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_codecommit_'
 service/codeguruprofiler:
@@ -376,7 +378,7 @@ service/lambda:
 service/lexmodels:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_lex_'
 service/lexmodelsv2:
-  - '((\*|-)\s*`?|(data|resource)\s+"?)aws_lexmodelsv2_'
+  - '((\*|-)\s*`?|(data|resource)\s+"?)aws_lexv2models_'
 service/lexruntime:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_lexruntime_'
 service/lexruntimev2:
@@ -643,6 +645,8 @@ service/translate:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_translate_'
 service/verifiedaccess:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_verifiedaccess'
+service/verifiedpermissions:
+  - '((\*|-)\s*`?|(data|resource)\s+"?)aws_verifiedpermissions_'
 service/voiceid:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_voiceid_'
 service/vpc:

@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package apprunner
 
 import (
@@ -72,13 +75,13 @@ func ResourceVPCConnector() *schema.Resource {
 }
 
 func resourceVPCConnectorCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).AppRunnerConn()
+	conn := meta.(*conns.AWSClient).AppRunnerConn(ctx)
 
 	vpcConnectorName := d.Get("vpc_connector_name").(string)
 	input := &apprunner.CreateVpcConnectorInput{
 		SecurityGroups:   flex.ExpandStringSet(d.Get("security_groups").(*schema.Set)),
 		Subnets:          flex.ExpandStringSet(d.Get("subnets").(*schema.Set)),
-		Tags:             GetTagsIn(ctx),
+		Tags:             getTagsIn(ctx),
 		VpcConnectorName: aws.String(vpcConnectorName),
 	}
 
@@ -98,7 +101,7 @@ func resourceVPCConnectorCreate(ctx context.Context, d *schema.ResourceData, met
 }
 
 func resourceVPCConnectorRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).AppRunnerConn()
+	conn := meta.(*conns.AWSClient).AppRunnerConn(ctx)
 
 	vpcConnector, err := FindVPCConnectorByARN(ctx, conn, d.Id())
 
@@ -128,7 +131,7 @@ func resourceVPCConnectorUpdate(ctx context.Context, d *schema.ResourceData, met
 }
 
 func resourceVPCConnectorDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).AppRunnerConn()
+	conn := meta.(*conns.AWSClient).AppRunnerConn(ctx)
 
 	log.Printf("[DEBUG] Deleting App Runner VPC Connector: %s", d.Id())
 	_, err := conn.DeleteVpcConnectorWithContext(ctx, &apprunner.DeleteVpcConnectorInput{

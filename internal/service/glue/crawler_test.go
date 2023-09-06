@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package glue_test
 
 import (
@@ -207,6 +210,7 @@ func TestAccGlueCrawler_jdbcTarget(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "jdbc_target.0.connection_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "jdbc_target.0.exclusions.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "jdbc_target.0.path", "database-name/%"),
+					resource.TestCheckResourceAttr(resourceName, "jdbc_target.0.enable_additional_metadata.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "role", rName),
 					resource.TestCheckResourceAttr(resourceName, "s3_target.#", "0"),
@@ -232,6 +236,7 @@ func TestAccGlueCrawler_jdbcTarget(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "jdbc_target.0.connection_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "jdbc_target.0.exclusions.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "jdbc_target.0.path", "database-name/table-name"),
+					resource.TestCheckResourceAttr(resourceName, "jdbc_target.0.enable_additional_metadata.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "role", rName),
 					resource.TestCheckResourceAttr(resourceName, "s3_target.#", "0"),
@@ -247,6 +252,32 @@ func TestAccGlueCrawler_jdbcTarget(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+			},
+			{
+				Config: testAccCrawlerConfig_jdbcTargetMetadata(rName, jdbcConnectionUrl, "database-name/table-name"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCrawlerExists(ctx, resourceName, &crawler),
+					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "glue", fmt.Sprintf("crawler/%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, "classifiers.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "configuration", ""),
+					resource.TestCheckResourceAttr(resourceName, "database_name", rName),
+					resource.TestCheckResourceAttr(resourceName, "description", ""),
+					resource.TestCheckResourceAttr(resourceName, "dynamodb_target.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "jdbc_target.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "jdbc_target.0.connection_name", rName),
+					resource.TestCheckResourceAttr(resourceName, "jdbc_target.0.exclusions.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "jdbc_target.0.path", "database-name/table-name"),
+					resource.TestCheckResourceAttr(resourceName, "jdbc_target.0.enable_additional_metadata.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "role", rName),
+					resource.TestCheckResourceAttr(resourceName, "s3_target.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "schedule", ""),
+					resource.TestCheckResourceAttr(resourceName, "schema_change_policy.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "schema_change_policy.0.delete_behavior", "DEPRECATE_IN_DATABASE"),
+					resource.TestCheckResourceAttr(resourceName, "schema_change_policy.0.update_behavior", "UPDATE_IN_DATABASE"),
+					resource.TestCheckResourceAttr(resourceName, "table_prefix", ""),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+				),
 			},
 		},
 	})
@@ -554,6 +585,96 @@ func TestAccGlueCrawler_deltaTarget(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "delta_target.0.delta_tables.#", "1"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "delta_target.0.delta_tables.*", "s3://table2"),
 					resource.TestCheckResourceAttr(resourceName, "delta_target.0.write_manifest", "false"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccGlueCrawler_hudiTarget(t *testing.T) {
+	ctx := acctest.Context(t)
+	var crawler glue.Crawler
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_glue_crawler.test"
+
+	connectionUrl := fmt.Sprintf("mongodb://%s:27017/testdatabase", acctest.RandomDomainName())
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, glue.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckCrawlerDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCrawlerConfig_hudiTarget(rName, connectionUrl, "s3://table1", 1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCrawlerExists(ctx, resourceName, &crawler),
+					resource.TestCheckResourceAttr(resourceName, "hudi_target.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "hudi_target.0.connection_name", rName),
+					resource.TestCheckResourceAttr(resourceName, "hudi_target.0.maximum_traversal_depth", "1"),
+					resource.TestCheckResourceAttr(resourceName, "hudi_target.0.paths.#", "1"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "hudi_target.0.paths.*", "s3://table1"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccCrawlerConfig_hudiTarget(rName, connectionUrl, "s3://table2", 2),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCrawlerExists(ctx, resourceName, &crawler),
+					resource.TestCheckResourceAttr(resourceName, "hudi_target.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "hudi_target.0.connection_name", rName),
+					resource.TestCheckResourceAttr(resourceName, "hudi_target.0.maximum_traversal_depth", "2"),
+					resource.TestCheckResourceAttr(resourceName, "hudi_target.0.paths.#", "1"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "hudi_target.0.paths.*", "s3://table2"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccGlueCrawler_icebergTarget(t *testing.T) {
+	ctx := acctest.Context(t)
+	var crawler glue.Crawler
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_glue_crawler.test"
+
+	connectionUrl := fmt.Sprintf("mongodb://%s:27017/testdatabase", acctest.RandomDomainName())
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, glue.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckCrawlerDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCrawlerConfig_icebergTarget(rName, connectionUrl, "s3://table1", 1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCrawlerExists(ctx, resourceName, &crawler),
+					resource.TestCheckResourceAttr(resourceName, "iceberg_target.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "iceberg_target.0.connection_name", rName),
+					resource.TestCheckResourceAttr(resourceName, "iceberg_target.0.maximum_traversal_depth", "1"),
+					resource.TestCheckResourceAttr(resourceName, "iceberg_target.0.paths.#", "1"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "iceberg_target.0.paths.*", "s3://table1"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccCrawlerConfig_icebergTarget(rName, connectionUrl, "s3://table2", 2),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCrawlerExists(ctx, resourceName, &crawler),
+					resource.TestCheckResourceAttr(resourceName, "iceberg_target.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "iceberg_target.0.connection_name", rName),
+					resource.TestCheckResourceAttr(resourceName, "iceberg_target.0.maximum_traversal_depth", "2"),
+					resource.TestCheckResourceAttr(resourceName, "iceberg_target.0.paths.#", "1"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "iceberg_target.0.paths.*", "s3://table2"),
 				),
 			},
 		},
@@ -1620,7 +1741,7 @@ func testAccCheckCrawlerExists(ctx context.Context, resourceName string, crawler
 			return fmt.Errorf("no ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).GlueConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).GlueConn(ctx)
 		output, err := tfglue.FindCrawlerByName(ctx, conn, rs.Primary.ID)
 
 		if err != nil {
@@ -1640,7 +1761,7 @@ func testAccCheckCrawlerDestroy(ctx context.Context) resource.TestCheckFunc {
 				continue
 			}
 
-			conn := acctest.Provider.Meta().(*conns.AWSClient).GlueConn()
+			conn := acctest.Provider.Meta().(*conns.AWSClient).GlueConn(ctx)
 			_, err := tfglue.FindCrawlerByName(ctx, conn, rs.Primary.ID)
 
 			if tfresource.NotFound(err) {
@@ -1937,6 +2058,38 @@ resource "aws_glue_crawler" "test" {
   jdbc_target {
     connection_name = aws_glue_connection.test.name
     path            = %[3]q
+  }
+}
+`, rName, jdbcConnectionUrl, path))
+}
+
+func testAccCrawlerConfig_jdbcTargetMetadata(rName, jdbcConnectionUrl, path string) string {
+	return acctest.ConfigCompose(testAccCrawlerConfig_base(rName), fmt.Sprintf(`
+resource "aws_glue_catalog_database" "test" {
+  name = %[1]q
+}
+
+resource "aws_glue_connection" "test" {
+  name = %[1]q
+
+  connection_properties = {
+    JDBC_CONNECTION_URL = %[1]q
+    PASSWORD            = "testpassword"
+    USERNAME            = "testusername"
+  }
+}
+
+resource "aws_glue_crawler" "test" {
+  depends_on = [aws_iam_role_policy_attachment.test-AWSGlueServiceRole]
+
+  database_name = aws_glue_catalog_database.test.name
+  name          = %[1]q
+  role          = aws_iam_role.test.name
+
+  jdbc_target {
+    connection_name            = aws_glue_connection.test.name
+    path                       = %[3]q
+    enable_additional_metadata = ["COMMENTS"]
   }
 }
 `, rName, jdbcConnectionUrl, path))
@@ -2965,6 +3118,114 @@ resource "aws_glue_crawler" "test" {
   }
 }
 `, rName, connectionUrl, tableName, createNativeDeltaTable))
+}
+
+func testAccCrawlerConfig_hudiTarget(rName, connectionUrl, tableName string, depth int) string {
+	return acctest.ConfigCompose(testAccCrawlerConfig_base(rName), acctest.ConfigVPCWithSubnets(rName, 2), fmt.Sprintf(`
+resource "aws_security_group" "test" {
+  name   = %[1]q
+  vpc_id = aws_vpc.test.id
+
+  ingress {
+    from_port = 1
+    protocol  = "tcp"
+    self      = true
+    to_port   = 65535
+  }
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_glue_catalog_database" "test" {
+  name = %[1]q
+}
+
+resource "aws_glue_connection" "test" {
+  connection_properties = {
+    JDBC_ENFORCE_SSL = false
+  }
+
+  connection_type = "NETWORK"
+
+  name = %[1]q
+
+  physical_connection_requirements {
+    availability_zone      = aws_subnet.test[0].availability_zone
+    security_group_id_list = [aws_security_group.test.id]
+    subnet_id              = aws_subnet.test[0].id
+  }
+}
+
+resource "aws_glue_crawler" "test" {
+  depends_on = [aws_iam_role_policy_attachment.test-AWSGlueServiceRole]
+
+  database_name = aws_glue_catalog_database.test.name
+  name          = %[1]q
+  role          = aws_iam_role.test.name
+
+  hudi_target {
+    connection_name         = aws_glue_connection.test.name
+    paths                   = [%[3]q]
+    maximum_traversal_depth = %[4]d
+  }
+}
+`, rName, connectionUrl, tableName, depth))
+}
+
+func testAccCrawlerConfig_icebergTarget(rName, connectionUrl, tableName string, depth int) string {
+	return acctest.ConfigCompose(testAccCrawlerConfig_base(rName), acctest.ConfigVPCWithSubnets(rName, 2), fmt.Sprintf(`
+resource "aws_security_group" "test" {
+  name   = %[1]q
+  vpc_id = aws_vpc.test.id
+
+  ingress {
+    from_port = 1
+    protocol  = "tcp"
+    self      = true
+    to_port   = 65535
+  }
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_glue_catalog_database" "test" {
+  name = %[1]q
+}
+
+resource "aws_glue_connection" "test" {
+  connection_properties = {
+    JDBC_ENFORCE_SSL = false
+  }
+
+  connection_type = "NETWORK"
+
+  name = %[1]q
+
+  physical_connection_requirements {
+    availability_zone      = aws_subnet.test[0].availability_zone
+    security_group_id_list = [aws_security_group.test.id]
+    subnet_id              = aws_subnet.test[0].id
+  }
+}
+
+resource "aws_glue_crawler" "test" {
+  depends_on = [aws_iam_role_policy_attachment.test-AWSGlueServiceRole]
+
+  database_name = aws_glue_catalog_database.test.name
+  name          = %[1]q
+  role          = aws_iam_role.test.name
+
+  iceberg_target {
+    connection_name         = aws_glue_connection.test.name
+    paths                   = [%[3]q]
+    maximum_traversal_depth = %[4]d
+  }
+}
+`, rName, connectionUrl, tableName, depth))
 }
 
 func testAccCrawlerConfig_lakeformation(rName string, use bool) string {

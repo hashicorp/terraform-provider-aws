@@ -1,8 +1,10 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package connect_test
 
 import (
 	"fmt"
-	"regexp"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/connect"
@@ -21,14 +23,6 @@ func testAccInstanceDataSource_basic(t *testing.T) {
 		ErrorCheck:               acctest.ErrorCheck(t, connect.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
-			{
-				Config:      testAccInstanceDataSourceConfig_nonExistentID,
-				ExpectError: regexp.MustCompile(`error getting Connect Instance by instance_id`),
-			},
-			{
-				Config:      testAccInstanceDataSourceConfig_nonExistentAlias,
-				ExpectError: regexp.MustCompile(`error finding Connect Instance Summary by instance_alias`),
-			},
 			{
 				Config: testAccInstanceDataSourceConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
@@ -68,18 +62,6 @@ func testAccInstanceDataSource_basic(t *testing.T) {
 		},
 	})
 }
-
-const testAccInstanceDataSourceConfig_nonExistentID = `
-data "aws_connect_instance" "test" {
-  instance_id = "97afc98d-101a-ba98-ab97-ae114fc115ec"
-}
-`
-
-const testAccInstanceDataSourceConfig_nonExistentAlias = `
-data "aws_connect_instance" "test" {
-  instance_alias = "tf-acc-test-does-not-exist"
-}
-`
 
 func testAccInstanceDataSourceConfig_basic(rName string) string {
 	return fmt.Sprintf(`

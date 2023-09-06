@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ec2
 
 import (
@@ -1401,7 +1404,7 @@ var networkInsightsAnalysisExplanationsSchema = &schema.Schema{
 }
 
 func resourceNetworkInsightsAnalysisCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	input := &ec2.StartNetworkInsightsAnalysisInput{
 		NetworkInsightsPathId: aws.String(d.Get("network_insights_path_id").(string)),
@@ -1416,14 +1419,14 @@ func resourceNetworkInsightsAnalysisCreate(ctx context.Context, d *schema.Resour
 	output, err := conn.StartNetworkInsightsAnalysisWithContext(ctx, input)
 
 	if err != nil {
-		return diag.Errorf("error creating EC2 Network Insights Analysis: %s", err)
+		return diag.Errorf("creating EC2 Network Insights Analysis: %s", err)
 	}
 
 	d.SetId(aws.StringValue(output.NetworkInsightsAnalysis.NetworkInsightsAnalysisId))
 
 	if d.Get("wait_for_completion").(bool) {
 		if _, err := WaitNetworkInsightsAnalysisCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
-			return diag.Errorf("error waiting for EC2 Network Insights Analysis (%s) create: %s", d.Id(), err)
+			return diag.Errorf("waiting for EC2 Network Insights Analysis (%s) create: %s", d.Id(), err)
 		}
 	}
 
@@ -1431,7 +1434,7 @@ func resourceNetworkInsightsAnalysisCreate(ctx context.Context, d *schema.Resour
 }
 
 func resourceNetworkInsightsAnalysisRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	output, err := FindNetworkInsightsAnalysisByID(ctx, conn, d.Id())
 
@@ -1466,7 +1469,7 @@ func resourceNetworkInsightsAnalysisRead(ctx context.Context, d *schema.Resource
 	d.Set("status_message", output.StatusMessage)
 	d.Set("warning_message", output.WarningMessage)
 
-	SetTagsOut(ctx, output.Tags)
+	setTagsOut(ctx, output.Tags)
 
 	return nil
 }
@@ -1477,7 +1480,7 @@ func resourceNetworkInsightsAnalysisUpdate(ctx context.Context, d *schema.Resour
 }
 
 func resourceNetworkInsightsAnalysisDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	log.Printf("[DEBUG] Deleting EC2 Network Insights Analysis: %s", d.Id())
 	_, err := conn.DeleteNetworkInsightsAnalysisWithContext(ctx, &ec2.DeleteNetworkInsightsAnalysisInput{
@@ -2167,7 +2170,7 @@ func flattenTransitGatewayRouteTableRoute(apiObject *ec2.TransitGatewayRouteTabl
 	}
 
 	if v := apiObject.RouteOrigin; v != nil {
-		tfMap["route_orign"] = aws.StringValue(v)
+		tfMap["route_origin"] = aws.StringValue(v)
 	}
 
 	if v := apiObject.State; v != nil {

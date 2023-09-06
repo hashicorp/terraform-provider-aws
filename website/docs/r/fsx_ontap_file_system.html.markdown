@@ -25,7 +25,7 @@ resource "aws_fsx_ontap_file_system" "test" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `storage_capacity` - (Optional) The storage capacity (GiB) of the file system. Valid values between `1024` and `196608`.
 * `subnet_ids` - (Required) A list of IDs for the subnets that the file system will be accessible from. Upto 2 subnets can be provided.
@@ -49,9 +49,9 @@ The following arguments are supported:
 * `iops` - (Optional) - The total number of SSD IOPS provisioned for the file system.
 * `mode` - (Optional) - Specifies whether the number of IOPS for the file system is using the system. Valid values are `AUTOMATIC` and `USER_PROVISIONED`. Default value is `AUTOMATIC`.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - Amazon Resource Name of the file system.
 * `dns_name` - DNS name for the file system, e.g., `fs-12345678.fsx.us-west-2.amazonaws.com`
@@ -82,13 +82,22 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-FSx File Systems can be imported using the `id`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import FSx File Systems using the `id`. For example:
 
-```
-$ terraform import aws_fsx_ontap_file_system.example fs-543ab12b1ca672f33
+```terraform
+import {
+  to = aws_fsx_ontap_file_system.example
+  id = "fs-543ab12b1ca672f33"
+}
 ```
 
-Certain resource arguments, like `security_group_ids`, do not have a FSx API method for reading the information after creation. If the argument is set in the Terraform configuration on an imported resource, Terraform will always show a difference. To workaround this behavior, either omit the argument from the Terraform configuration or use [`ignore_changes`](https://www.terraform.io/docs/configuration/meta-arguments/lifecycle.html#ignore_changes) to hide the difference, e.g.,
+Using `terraform import`, import FSx File Systems using the `id`. For example:
+
+```console
+% terraform import aws_fsx_ontap_file_system.example fs-543ab12b1ca672f33
+```
+
+Certain resource arguments, like `security_group_ids`, do not have a FSx API method for reading the information after creation. If the argument is set in the Terraform configuration on an imported resource, Terraform will always show a difference. To workaround this behavior, either omit the argument from the Terraform configuration or use [`ignore_changes`](https://www.terraform.io/docs/configuration/meta-arguments/lifecycle.html#ignore_changes) to hide the difference. For example:
 
 ```terraform
 resource "aws_fsx_ontap_file_system" "example" {
