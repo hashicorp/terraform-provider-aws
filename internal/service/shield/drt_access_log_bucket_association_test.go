@@ -190,6 +190,8 @@ func testAccPreCheckLogBucket(ctx context.Context, t *testing.T) {
 
 func testAccDRTAccessLogBucketAssociationConfig_basic(rName string, bucket string, t *testing.T) string {
 	return fmt.Sprintf(`
+data "aws_partition" "current" {}
+
 resource "aws_s3_bucket" "test" {
   bucket = %[2]q
 }
@@ -212,7 +214,7 @@ resource "aws_iam_role" "test" {
 
 resource "aws_iam_role_policy_attachment" "test" {
   role       = aws_iam_role.test.name
-  policy_arn = "arn:aws:iam::aws:policy/service-role/AWSShieldDRTAccessPolicy"
+  policy_arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/service-role/AWSShieldDRTAccessPolicy"
 }
 
 resource "aws_shield_protection_group" "test" {
@@ -234,6 +236,8 @@ resource "aws_shield_drt_access_log_bucket_association" "test" {
 
 func testAccDRTAccessLogBucketAssociationConfig_multibucket(rName string, buckets []string, t *testing.T) string {
 	return fmt.Sprintf(`
+data "aws_partition" "current" {}
+
 resource "aws_s3_bucket" "test1" {
   bucket = %[2]q
 }
@@ -260,7 +264,7 @@ resource "aws_iam_role" "test" {
 
 resource "aws_iam_role_policy_attachment" "test" {
   role       = aws_iam_role.test.name
-  policy_arn = "arn:aws:iam::aws:policy/service-role/AWSShieldDRTAccessPolicy"
+  policy_arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/service-role/AWSShieldDRTAccessPolicy"
 }
 
 resource "aws_shield_protection_group" "test" {
