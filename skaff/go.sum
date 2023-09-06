@@ -1,6 +1,8 @@
-github.com/YakDriver/regexache v0.7.0 h1:Mo0i2uUsRVbK+waHJ4+QPh/l7WknyQzCgAlMViSKa8w=
-github.com/YakDriver/regexache v0.7.0/go.mod h1:mD8oVCndzUi1Qig4J/wY6aF5SOdqyyGopfTjP8ePBP8=
+github.com/YakDriver/regexache v0.17.0 h1:jgJn5PfavtNZehkP+p1qcVZsZyd44c7yEO5VD/X9Gew=
+github.com/YakDriver/regexache v0.17.0/go.mod h1:K4BZ3MYKAqSFbYWqmbsG+OzYUDyJjnMEr27DJEsVG3U=
 github.com/cpuguy83/go-md2man/v2 v2.0.2/go.mod h1:tgQtvFlXSQOSOSIRvRPT7W67SCa46tRHOmNcaadrF8o=
+github.com/google/uuid v1.3.1 h1:KjJaJ9iWZ3jOFZIf1Lqf4laDRCasjl0BCmnEGxkdLb4=
+github.com/google/uuid v1.3.1/go.mod h1:TIyPZe4MgqvfeYDBFedMoGGpEw/LqOeaOT+nhxU+yHo=
 github.com/inconshreveable/mousetrap v1.1.0 h1:wN+x4NVGpMsO7ErUn/mUI3vEoE6Jt13X2s0bqwp9tc8=
 github.com/inconshreveable/mousetrap v1.1.0/go.mod h1:vpF70FUmC8bwa3OWnCshd2FqLfsEA9PFc4w1p2J65bw=
 github.com/russross/blackfriday/v2 v2.1.0/go.mod h1:+Rmxgy9KzJVeS9/2gXHxylqXiyQDYRxCVz55jmeOWTM=
