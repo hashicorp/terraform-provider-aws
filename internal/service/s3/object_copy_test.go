@@ -186,6 +186,36 @@ func TestAccS3ObjectCopy_metadata(t *testing.T) {
 	})
 }
 
+func TestAccS3ObjectCopy_grant(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName1 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_s3_object_copy.test"
+	sourceKey := "source"
+	targetKey := "target"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3EndpointID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckObjectCopyDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccObjectCopyConfig_grant(rName1, sourceKey, rName2, targetKey),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckObjectCopyExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "grant.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "grant.*", map[string]string{
+						"permissions.#": "1",
+						"type":          "Group",
+						"uri":           "http://acs.amazonaws.com/groups/global/AllUsers",
+					}),
+				),
+			},
+		},
+	})
+}
+
 func TestAccS3ObjectCopy_BucketKeyEnabled_bucket(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -348,22 +378,8 @@ resource "aws_s3_object_copy" "test" {
 `, targetKey))
 }
 
-func testAccObjectCopyConfig_grant(rName1, sourceKey, rName2, key string) string {
-	return fmt.Sprintf(`
-resource "aws_s3_bucket" "source" {
-  bucket = %[1]q
-}
-
-resource "aws_s3_object" "source" {
-  bucket  = aws_s3_bucket.source.bucket
-  key     = %[2]q
-  content = "Ingen ko på isen"
-}
-
-resource "aws_s3_bucket" "target" {
-  bucket = %[3]q
-}
-
+func testAccObjectCopyConfig_grant(sourceBucket, sourceKey, targetBucket, targetKey string) string {
+	return acctest.ConfigCompose(testAccObjectCopyConfig_base(sourceBucket, sourceKey, targetBucket), fmt.Sprintf(`
 resource "aws_s3_bucket_public_access_block" "target" {
   bucket = aws_s3_bucket.target.id
 
@@ -387,7 +403,7 @@ resource "aws_s3_object_copy" "test" {
   ]
 
   bucket = aws_s3_bucket.target.bucket
-  key    = %[4]q
+  key    = %[1]q
   source = "${aws_s3_bucket.source.bucket}/${aws_s3_object.source.key}"
 
   grant {
@@ -396,7 +412,7 @@ resource "aws_s3_object_copy" "test" {
     permissions = ["READ"]
   }
 }
-`, rName1, sourceKey, rName2, key)
+`, targetKey))
 }
 
 func testAccObjectCopyConfig_bucketKeyEnabledBucket(rName string) string {
