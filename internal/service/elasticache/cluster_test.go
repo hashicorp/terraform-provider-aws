@@ -1253,7 +1253,12 @@ func TestAccElastiCacheCluster_TransitEncryption(t *testing.T) {
 			},
 			{
 				Config: testAccClusterConfig_transitEncryption(rName, "memcached", "1.6.12"),
-				Check:  testAccCheckClusterExists(ctx, resourceName, &cluster),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckClusterExists(ctx, resourceName, &cluster),
+					resource.TestCheckResourceAttr(resourceName, "engine", "memcached"),
+					resource.TestCheckResourceAttr(resourceName, "engine_version", "1.6.12"),
+					resource.TestCheckResourceAttr(resourceName, "transit_encryption_enabled", "true"),
+				),
 			},
 		},
 	})
