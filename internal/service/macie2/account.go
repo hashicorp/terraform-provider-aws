@@ -1,8 +1,10 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package macie2
 
 import (
 	"context"
-	"fmt"
 	"log"
 	"time"
 
@@ -59,7 +61,7 @@ func ResourceAccount() *schema.Resource {
 }
 
 func resourceAccountCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).Macie2Conn()
+	conn := meta.(*conns.AWSClient).Macie2Conn(ctx)
 
 	input := &macie2.EnableMacieInput{
 		ClientToken: aws.String(id.UniqueId()),
@@ -90,7 +92,7 @@ func resourceAccountCreate(ctx context.Context, d *schema.ResourceData, meta int
 	}
 
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error enabling Macie Account: %w", err))
+		return diag.Errorf("enabling Macie Account: %s", err)
 	}
 
 	d.SetId(meta.(*conns.AWSClient).AccountID)
@@ -99,7 +101,7 @@ func resourceAccountCreate(ctx context.Context, d *schema.ResourceData, meta int
 }
 
 func resourceAccountRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).Macie2Conn()
+	conn := meta.(*conns.AWSClient).Macie2Conn(ctx)
 
 	input := &macie2.GetMacieSessionInput{}
 
@@ -113,7 +115,7 @@ func resourceAccountRead(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error reading Macie Account (%s): %w", d.Id(), err))
+		return diag.Errorf("reading Macie Account (%s): %s", d.Id(), err)
 	}
 
 	d.Set("status", resp.Status)
@@ -126,7 +128,7 @@ func resourceAccountRead(ctx context.Context, d *schema.ResourceData, meta inter
 }
 
 func resourceAccountUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).Macie2Conn()
+	conn := meta.(*conns.AWSClient).Macie2Conn(ctx)
 
 	input := &macie2.UpdateMacieSessionInput{}
 
@@ -140,14 +142,14 @@ func resourceAccountUpdate(ctx context.Context, d *schema.ResourceData, meta int
 
 	_, err := conn.UpdateMacieSessionWithContext(ctx, input)
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error updating Macie Account (%s): %w", d.Id(), err))
+		return diag.Errorf("updating Macie Account (%s): %s", d.Id(), err)
 	}
 
 	return resourceAccountRead(ctx, d, meta)
 }
 
 func resourceAccountDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).Macie2Conn()
+	conn := meta.(*conns.AWSClient).Macie2Conn(ctx)
 
 	input := &macie2.DisableMacieInput{}
 
@@ -178,7 +180,7 @@ func resourceAccountDelete(ctx context.Context, d *schema.ResourceData, meta int
 			tfawserr.ErrMessageContains(err, macie2.ErrCodeAccessDeniedException, "Macie is not enabled") {
 			return nil
 		}
-		return diag.FromErr(fmt.Errorf("error disabling Macie Account (%s): %w", d.Id(), err))
+		return diag.Errorf("disabling Macie Account (%s): %s", d.Id(), err)
 	}
 
 	return nil

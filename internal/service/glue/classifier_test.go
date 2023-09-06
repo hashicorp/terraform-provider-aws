@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package glue_test
 
 import (
@@ -451,7 +454,7 @@ func testAccCheckClassifierExists(ctx context.Context, resourceName string, clas
 			return fmt.Errorf("No Glue Classifier ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).GlueConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).GlueConn(ctx)
 
 		output, err := tfglue.FindClassifierByName(ctx, conn, rs.Primary.ID)
 
@@ -471,7 +474,7 @@ func testAccCheckClassifierDestroy(ctx context.Context) resource.TestCheckFunc {
 				continue
 			}
 
-			conn := acctest.Provider.Meta().(*conns.AWSClient).GlueConn()
+			conn := acctest.Provider.Meta().(*conns.AWSClient).GlueConn(ctx)
 
 			_, err := tfglue.FindClassifierByName(ctx, conn, rs.Primary.ID)
 

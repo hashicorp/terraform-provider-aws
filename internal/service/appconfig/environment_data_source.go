@@ -1,12 +1,14 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package appconfig
 
 import (
 	"context"
 	"fmt"
-	"regexp"
 
-	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go/aws/arn"
+	"github.com/YakDriver/regexache"
+	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/appconfig"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -25,12 +27,12 @@ func DataSourceEnvironment() *schema.Resource {
 			"application_id": {
 				Type:         schema.TypeString,
 				Required:     true,
-				ValidateFunc: validation.StringMatch(regexp.MustCompile(`[a-z\d]{4,7}`), ""),
+				ValidateFunc: validation.StringMatch(regexache.MustCompile(`[a-z\d]{4,7}`), ""),
 			},
 			"environment_id": {
 				Type:         schema.TypeString,
 				Required:     true,
-				ValidateFunc: validation.StringMatch(regexp.MustCompile(`[a-z\d]{4,7}`), ""),
+				ValidateFunc: validation.StringMatch(regexache.MustCompile(`[a-z\d]{4,7}`), ""),
 			},
 			"arn": {
 				Type:     schema.TypeString,
@@ -74,7 +76,7 @@ const (
 )
 
 func dataSourceEnvironmentRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).AppConfigConn()
+	conn := meta.(*conns.AWSClient).AppConfigConn(ctx)
 
 	appID := d.Get("application_id").(string)
 	envID := d.Get("environment_id").(string)
@@ -97,17 +99,11 @@ func dataSourceEnvironmentRead(ctx context.Context, d *schema.ResourceData, meta
 		return create.DiagError(names.AppConfig, create.ErrActionReading, DSNameEnvironment, ID, err)
 	}
 
-	arn := arn.ARN{
-		AccountID: meta.(*conns.AWSClient).AccountID,
-		Partition: meta.(*conns.AWSClient).Partition,
-		Region:    meta.(*conns.AWSClient).Region,
-		Resource:  fmt.Sprintf("application/%s/environment/%s", appID, envID),
-		Service:   "appconfig",
-	}.String()
+	arn := environmentARN(meta.(*conns.AWSClient), appID, envID).String()
 
 	d.Set("arn", arn)
 
-	tags, err := ListTags(ctx, conn, arn)
+	tags, err := listTags(ctx, conn, arn)
 
 	if err != nil {
 		return create.DiagError(names.AppConfig, create.ErrActionReading, DSNameEnvironment, ID, err)
@@ -135,4 +131,40 @@ func findEnvironmentByApplicationAndEnvironment(ctx context.Context, conn *appco
 	}
 
 	return res, nil
+}
+
+func flattenEnvironmentMonitors(monitors []*appconfig.Monitor) []interface{} {
+	if len(monitors) == 0 {
+		return nil
+	}
+
+	var tfList []interface{}
+
+	for _, monitor := range monitors {
+		if monitor == nil {
+			continue
+		}
+
+		tfList = append(tfList, flattenEnvironmentMonitor(monitor))
+	}
+
+	return tfList
+}
+
+func flattenEnvironmentMonitor(monitor *appconfig.Monitor) map[string]interface{} {
+	if monitor == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if v := monitor.AlarmArn; v != nil {
+		tfMap["alarm_arn"] = aws.StringValue(v)
+	}
+
+	if v := monitor.AlarmRoleArn; v != nil {
+		tfMap["alarm_role_arn"] = aws.StringValue(v)
+	}
+
+	return tfMap
 }

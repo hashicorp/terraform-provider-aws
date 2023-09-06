@@ -1,0 +1,9 @@
+```release-note:bug
+resource/aws_quicksight_analysis: Convert `permissions` argument to TypeSet, preventing persistent differences
+```
+```release-note:bug
+resource/aws_quicksight_dashboard: Convert `permissions` argument to TypeSet, preventing persistent differences
+```
+```release-note:bug
+resource/aws_quicksight_template: Convert `permissions` argument to TypeSet, preventing persistent differences
+```

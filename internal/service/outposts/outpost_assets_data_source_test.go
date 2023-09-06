@@ -1,11 +1,14 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package outposts_test
 
 import (
 	"fmt"
 	"os"
-	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/service/outposts"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
@@ -28,7 +31,7 @@ func TestAccOutpostsAssetsDataSource_id(t *testing.T) {
 			{
 				Config: testAccOutpostAssetsDataSourceConfig_id(),
 				Check: resource.ComposeTestCheckFunc(
-					acctest.MatchResourceAttrRegionalARN(dataSourceName, "arn", "outposts", regexp.MustCompile(`outpost/.+`)),
+					acctest.MatchResourceAttrRegionalARN(dataSourceName, "arn", "outposts", regexache.MustCompile(`outpost/.+`)),
 				),
 			},
 		},

@@ -7,16 +7,18 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/medialive"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/logging"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// ListTags lists medialive service tags.
+// listTags lists medialive service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func ListTags(ctx context.Context, conn *medialive.Client, identifier string) (tftags.KeyValueTags, error) {
+func listTags(ctx context.Context, conn *medialive.Client, identifier string) (tftags.KeyValueTags, error) {
 	input := &medialive.ListTagsForResourceInput{
 		ResourceArn: aws.String(identifier),
 	}
@@ -33,7 +35,7 @@ func ListTags(ctx context.Context, conn *medialive.Client, identifier string) (t
 // ListTags lists medialive service tags and set them in Context.
 // It is called from outside this package.
 func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier string) error {
-	tags, err := ListTags(ctx, meta.(*conns.AWSClient).MediaLiveClient(), identifier)
+	tags, err := listTags(ctx, meta.(*conns.AWSClient).MediaLiveClient(ctx), identifier)
 
 	if err != nil {
 		return err
@@ -53,14 +55,14 @@ func Tags(tags tftags.KeyValueTags) map[string]string {
 	return tags.Map()
 }
 
-// KeyValueTags creates KeyValueTags from medialive service tags.
+// KeyValueTags creates tftags.KeyValueTags from medialive service tags.
 func KeyValueTags(ctx context.Context, tags map[string]string) tftags.KeyValueTags {
 	return tftags.New(ctx, tags)
 }
 
-// GetTagsIn returns medialive service tags from Context.
+// getTagsIn returns medialive service tags from Context.
 // nil is returned if there are no input tags.
-func GetTagsIn(ctx context.Context) map[string]string {
+func getTagsIn(ctx context.Context) map[string]string {
 	if inContext, ok := tftags.FromContext(ctx); ok {
 		if tags := Tags(inContext.TagsIn.UnwrapOrDefault()); len(tags) > 0 {
 			return tags
@@ -70,19 +72,21 @@ func GetTagsIn(ctx context.Context) map[string]string {
 	return nil
 }
 
-// SetTagsOut sets medialive service tags in Context.
-func SetTagsOut(ctx context.Context, tags map[string]string) {
+// setTagsOut sets medialive service tags in Context.
+func setTagsOut(ctx context.Context, tags map[string]string) {
 	if inContext, ok := tftags.FromContext(ctx); ok {
 		inContext.TagsOut = types.Some(KeyValueTags(ctx, tags))
 	}
 }
 
-// UpdateTags updates medialive service tags.
+// updateTags updates medialive service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func UpdateTags(ctx context.Context, conn *medialive.Client, identifier string, oldTagsMap, newTagsMap any) error {
+func updateTags(ctx context.Context, conn *medialive.Client, identifier string, oldTagsMap, newTagsMap any) error {
 	oldTags := tftags.New(ctx, oldTagsMap)
 	newTags := tftags.New(ctx, newTagsMap)
+
+	ctx = tflog.SetField(ctx, logging.KeyResourceId, identifier)
 
 	removedTags := oldTags.Removed(newTags)
 	removedTags = removedTags.IgnoreSystem(names.MediaLive)
@@ -120,5 +124,5 @@ func UpdateTags(ctx context.Context, conn *medialive.Client, identifier string, 
 // UpdateTags updates medialive service tags.
 // It is called from outside this package.
 func (p *servicePackage) UpdateTags(ctx context.Context, meta any, identifier string, oldTags, newTags any) error {
-	return UpdateTags(ctx, meta.(*conns.AWSClient).MediaLiveClient(), identifier, oldTags, newTags)
+	return updateTags(ctx, meta.(*conns.AWSClient).MediaLiveClient(ctx), identifier, oldTags, newTags)
 }

@@ -1,12 +1,15 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package appsync_test
 
 import (
 	"context"
 	"fmt"
-	"regexp"
 	"testing"
 	"time"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/appsync"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
@@ -37,7 +40,7 @@ func testAccAPIKey_basic(t *testing.T) {
 					testAccCheckAPIKeyExists(ctx, resourceName, &apiKey),
 					resource.TestCheckResourceAttr(resourceName, "description", "Managed by Terraform"),
 					testAccCheckAPIKeyExpiresDate(&apiKey, dateAfterSevenDays),
-					resource.TestMatchResourceAttr(resourceName, "key", regexp.MustCompile(`.+`)),
+					resource.TestMatchResourceAttr(resourceName, "key", regexache.MustCompile(`.+`)),
 				),
 			},
 			{
@@ -123,7 +126,7 @@ func testAccAPIKey_expires(t *testing.T) {
 
 func testAccCheckAPIKeyDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AppSyncConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AppSyncConn(ctx)
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_appsync_api_key" {
 				continue
@@ -164,7 +167,7 @@ func testAccCheckAPIKeyExists(ctx context.Context, resourceName string, apiKey *
 			return err
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AppSyncConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AppSyncConn(ctx)
 		key, err := tfappsync.GetAPIKey(ctx, apiID, keyID, conn)
 		if err != nil {
 			return err

@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package iot_test
 
 import (
@@ -1798,7 +1801,7 @@ func TestAccIoTTopicRule_updateKinesisErrorAction(t *testing.T) {
 
 func testAccCheckTopicRuleDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).IoTConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).IoTConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_iot_topic_rule" {
@@ -1833,7 +1836,7 @@ func testAccCheckTopicRuleExists(ctx context.Context, n string) resource.TestChe
 			return fmt.Errorf("No IoT Topic Rule ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).IoTConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).IoTConn(ctx)
 
 		_, err := tfiot.FindTopicRuleByName(ctx, conn, rs.Primary.ID)
 

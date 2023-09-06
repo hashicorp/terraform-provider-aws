@@ -1,8 +1,12 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package route53resolver
 
 import (
 	"fmt"
-	"regexp"
+
+	"github.com/YakDriver/regexache"
 )
 
 func validResolverName(v interface{}, k string) (ws []string, errors []error) {
@@ -12,11 +16,11 @@ func validResolverName(v interface{}, k string) (ws []string, errors []error) {
 	value := v.(string)
 
 	// re2 doesn't support negative lookaheads so check for single numeric character explicitly.
-	if regexp.MustCompile(`^[0-9]$`).MatchString(value) {
+	if regexache.MustCompile(`^[0-9]$`).MatchString(value) {
 		errors = append(errors, fmt.Errorf(
 			"%q cannot be a single digit", k))
 	}
-	if !regexp.MustCompile(`^[a-zA-Z0-9-_' ']+$`).MatchString(value) {
+	if !regexache.MustCompile(`^[a-zA-Z0-9-_' ']+$`).MatchString(value) {
 		errors = append(errors, fmt.Errorf(
 			"only alphanumeric characters, '-', '_' and ' ' are allowed in %q", k))
 	}

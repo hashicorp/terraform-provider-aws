@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package verify
 
 import (
@@ -36,7 +39,7 @@ func SetTagsDiff(ctx context.Context, diff *schema.ResourceDiff, meta interface{
 
 	if !diff.GetRawPlan().GetAttr("tags").IsWhollyKnown() {
 		if err := diff.SetNewComputed("tags_all"); err != nil {
-			return fmt.Errorf("error setting tags_all to computed: %w", err)
+			return fmt.Errorf("setting tags_all to computed: %w", err)
 		}
 		return nil
 	}
@@ -47,25 +50,25 @@ func SetTagsDiff(ctx context.Context, diff *schema.ResourceDiff, meta interface{
 
 		if newTags.HasZeroValue() {
 			if err := diff.SetNewComputed("tags_all"); err != nil {
-				return fmt.Errorf("error setting tags_all to computed: %w", err)
+				return fmt.Errorf("setting tags_all to computed: %w", err)
 			}
 		}
 
 		if len(allTags) > 0 && (!newTags.HasZeroValue() || !allTags.HasZeroValue()) {
 			if err := diff.SetNew("tags_all", allTags.Map()); err != nil {
-				return fmt.Errorf("error setting new tags_all diff: %w", err)
+				return fmt.Errorf("setting new tags_all diff: %w", err)
 			}
 		}
 
 		if len(allTags) == 0 {
 			if err := diff.SetNewComputed("tags_all"); err != nil {
-				return fmt.Errorf("error setting tags_all to computed: %w", err)
+				return fmt.Errorf("setting tags_all to computed: %w", err)
 			}
 		}
 	} else if !diff.HasChange("tags") {
 		if len(allTags) > 0 && !allTags.HasZeroValue() {
 			if err := diff.SetNew("tags_all", allTags.Map()); err != nil {
-				return fmt.Errorf("error setting new tags_all diff: %w", err)
+				return fmt.Errorf("setting new tags_all diff: %w", err)
 			}
 			return nil
 		}
@@ -76,7 +79,7 @@ func SetTagsDiff(ctx context.Context, diff *schema.ResourceDiff, meta interface{
 		}
 		if len(allTags) > 0 && !ta.DeepEqual(allTags) && allTags.HasZeroValue() {
 			if err := diff.SetNewComputed("tags_all"); err != nil {
-				return fmt.Errorf("error setting tags_all to computed: %w", err)
+				return fmt.Errorf("setting tags_all to computed: %w", err)
 			}
 			return nil
 		}
@@ -85,17 +88,17 @@ func SetTagsDiff(ctx context.Context, diff *schema.ResourceDiff, meta interface{
 		if !ta.DeepEqual(allTags) {
 			if allTags.HasZeroValue() {
 				if err := diff.SetNewComputed("tags_all"); err != nil {
-					return fmt.Errorf("error setting tags_all to computed: %w", err)
+					return fmt.Errorf("setting tags_all to computed: %w", err)
 				}
 			}
 		}
 	} else if len(diff.Get("tags_all").(map[string]interface{})) > 0 {
 		if err := diff.SetNewComputed("tags_all"); err != nil {
-			return fmt.Errorf("error setting tags_all to computed: %w", err)
+			return fmt.Errorf("setting tags_all to computed: %w", err)
 		}
 	} else if diff.HasChange("tags_all") {
 		if err := diff.SetNewComputed("tags_all"); err != nil {
-			return fmt.Errorf("error setting tags_all to computed: %w", err)
+			return fmt.Errorf("setting tags_all to computed: %w", err)
 		}
 	}
 

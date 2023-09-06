@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package schema
 
 import (
@@ -229,7 +232,7 @@ func expandKPIFieldWells(tfList []interface{}) *quicksight.KPIFieldWells {
 		config.TrendGroups = expandDimensionFields(v)
 	}
 	if v, ok := tfMap["target_values"].([]interface{}); ok && len(v) > 0 {
-		config.Values = expandMeasureFields(v)
+		config.TargetValues = expandMeasureFields(v)
 	}
 	if v, ok := tfMap["values"].([]interface{}); ok && len(v) > 0 {
 		config.Values = expandMeasureFields(v)

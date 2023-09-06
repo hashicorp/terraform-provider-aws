@@ -30,7 +30,7 @@ resource "aws_networkfirewall_firewall" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `delete_protection` - (Optional) A boolean flag indicating whether it is possible to delete the firewall. Defaults to `false`.
 
@@ -66,9 +66,9 @@ The `subnet_mapping` block supports the following arguments:
 * `ip_address_type` - (Optional) The subnet's IP address type. Valida values: `"DUALSTACK"`, `"IPV4"`.
 * `subnet_id` - (Required) The unique identifier for the subnet.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The Amazon Resource Name (ARN) that identifies the firewall.
 
@@ -87,8 +87,17 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Network Firewall Firewalls can be imported using their `ARN`.
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Network Firewall Firewalls using their `arn`. For example:
 
+```terraform
+import {
+  to = aws_networkfirewall_firewall.example
+  id = "arn:aws:network-firewall:us-west-1:123456789012:firewall/example"
+}
 ```
-$ terraform import aws_networkfirewall_firewall.example arn:aws:network-firewall:us-west-1:123456789012:firewall/example
+
+Using `terraform import`, import Network Firewall Firewalls using their `arn`. For example:
+
+```console
+% terraform import aws_networkfirewall_firewall.example arn:aws:network-firewall:us-west-1:123456789012:firewall/example
 ```

@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package rds_test
 
 import (
@@ -87,7 +90,7 @@ func testAccCheckClusterActivityStreamExists(ctx context.Context, n string, v *r
 			return fmt.Errorf("RDS Cluster Activity Stream ID is not set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn(ctx)
 
 		output, err := tfrds.FindDBClusterWithActivityStream(ctx, conn, rs.Primary.ID)
 		if err != nil {
@@ -102,7 +105,7 @@ func testAccCheckClusterActivityStreamExists(ctx context.Context, n string, v *r
 
 func testAccCheckClusterActivityStreamDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_rds_cluster_activity_stream" {

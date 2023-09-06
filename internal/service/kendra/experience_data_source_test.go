@@ -1,10 +1,13 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package kendra_test
 
 import (
 	"fmt"
-	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/service/backup"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -33,7 +36,7 @@ func TestAccKendraExperienceDataSource_basic(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccExperienceDataSourceConfig_nonExistent,
-				ExpectError: regexp.MustCompile(`reading Kendra Experience`),
+				ExpectError: regexache.MustCompile(`reading Kendra Experience`),
 			},
 			{
 				Config: testAccExperienceDataSourceConfig_basic(rName, rName2),

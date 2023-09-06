@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package efs
 
 import (
@@ -96,6 +99,10 @@ func ResourceFileSystem() *schema.Resource {
 					},
 				},
 			},
+			"name": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"number_of_mount_targets": {
 				Type:     schema.TypeInt,
 				Computed: true,
@@ -148,19 +155,18 @@ func ResourceFileSystem() *schema.Resource {
 }
 
 func resourceFileSystemCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).EFSConn()
+	conn := meta.(*conns.AWSClient).EFSConn(ctx)
 
-	creationToken := ""
+	var creationToken string
 	if v, ok := d.GetOk("creation_token"); ok {
 		creationToken = v.(string)
 	} else {
 		creationToken = id.UniqueId()
 	}
 	throughputMode := d.Get("throughput_mode").(string)
-
 	input := &efs.CreateFileSystemInput{
 		CreationToken:  aws.String(creationToken),
-		Tags:           GetTagsIn(ctx),
+		Tags:           getTagsIn(ctx),
 		ThroughputMode: aws.String(throughputMode),
 	}
 
@@ -218,7 +224,7 @@ func resourceFileSystemCreate(ctx context.Context, d *schema.ResourceData, meta 
 }
 
 func resourceFileSystemRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).EFSConn()
+	conn := meta.(*conns.AWSClient).EFSConn(ctx)
 
 	fs, err := FindFileSystemByID(ctx, conn, d.Id())
 
@@ -239,17 +245,17 @@ func resourceFileSystemRead(ctx context.Context, d *schema.ResourceData, meta in
 	d.Set("dns_name", meta.(*conns.AWSClient).RegionalHostname(fmt.Sprintf("%s.efs", aws.StringValue(fs.FileSystemId))))
 	d.Set("encrypted", fs.Encrypted)
 	d.Set("kms_key_id", fs.KmsKeyId)
+	d.Set("name", fs.Name)
 	d.Set("number_of_mount_targets", fs.NumberOfMountTargets)
 	d.Set("owner_id", fs.OwnerId)
 	d.Set("performance_mode", fs.PerformanceMode)
 	d.Set("provisioned_throughput_in_mibps", fs.ProvisionedThroughputInMibps)
-	d.Set("throughput_mode", fs.ThroughputMode)
-
-	SetTagsOut(ctx, fs.Tags)
-
 	if err := d.Set("size_in_bytes", flattenFileSystemSizeInBytes(fs.SizeInBytes)); err != nil {
 		return diag.Errorf("setting size_in_bytes: %s", err)
 	}
+	d.Set("throughput_mode", fs.ThroughputMode)
+
+	setTagsOut(ctx, fs.Tags)
 
 	output, err := conn.DescribeLifecycleConfigurationWithContext(ctx, &efs.DescribeLifecycleConfigurationInput{
 		FileSystemId: aws.String(d.Id()),
@@ -267,11 +273,10 @@ func resourceFileSystemRead(ctx context.Context, d *schema.ResourceData, meta in
 }
 
 func resourceFileSystemUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).EFSConn()
+	conn := meta.(*conns.AWSClient).EFSConn(ctx)
 
 	if d.HasChanges("provisioned_throughput_in_mibps", "throughput_mode") {
 		throughputMode := d.Get("throughput_mode").(string)
-
 		input := &efs.UpdateFileSystemInput{
 			FileSystemId:   aws.String(d.Id()),
 			ThroughputMode: aws.String(throughputMode),
@@ -316,7 +321,7 @@ func resourceFileSystemUpdate(ctx context.Context, d *schema.ResourceData, meta 
 }
 
 func resourceFileSystemDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).EFSConn()
+	conn := meta.(*conns.AWSClient).EFSConn(ctx)
 
 	log.Printf("[DEBUG] Deleting EFS file system: %s", d.Id())
 	_, err := conn.DeleteFileSystemWithContext(ctx, &efs.DeleteFileSystemInput{

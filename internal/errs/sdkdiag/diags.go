@@ -1,10 +1,12 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package sdkdiag
 
 import (
 	"errors"
 	"fmt"
 
-	multierror "github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 )
@@ -21,23 +23,21 @@ func Warnings(diags diag.Diagnostics) diag.Diagnostics {
 	return tfslices.Filter(diags, severityFilter(diag.Warning))
 }
 
-func severityFilter(s diag.Severity) tfslices.FilterFunc[diag.Diagnostic] {
+func severityFilter(s diag.Severity) tfslices.Predicate[diag.Diagnostic] {
 	return func(d diag.Diagnostic) bool {
 		return d.Severity == s
 	}
 }
 
 // DiagnosticsError returns an error containing all Diagnostic with SeverityError
-func DiagnosticsError(diags diag.Diagnostics) (errs error) {
-	if !diags.HasError() {
-		return
-	}
+func DiagnosticsError(diags diag.Diagnostics) error {
+	var errs []error
 
 	for _, d := range Errors(diags) {
-		errs = multierror.Append(errs, errors.New(DiagnosticString(d)))
+		errs = append(errs, errors.New(DiagnosticString(d)))
 	}
 
-	return
+	return errors.Join(errs...)
 }
 
 // DiagnosticString formats a Diagnostic

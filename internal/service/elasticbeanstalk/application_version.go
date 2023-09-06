@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package elasticbeanstalk
 
 import (
@@ -70,7 +73,7 @@ func ResourceApplicationVersion() *schema.Resource {
 
 func resourceApplicationVersionCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ElasticBeanstalkConn()
+	conn := meta.(*conns.AWSClient).ElasticBeanstalkConn(ctx)
 
 	application := d.Get("application").(string)
 	description := d.Get("description").(string)
@@ -87,7 +90,7 @@ func resourceApplicationVersionCreate(ctx context.Context, d *schema.ResourceDat
 		ApplicationName: aws.String(application),
 		Description:     aws.String(description),
 		SourceBundle:    &s3Location,
-		Tags:            GetTagsIn(ctx),
+		Tags:            getTagsIn(ctx),
 		VersionLabel:    aws.String(name),
 	}
 
@@ -103,7 +106,7 @@ func resourceApplicationVersionCreate(ctx context.Context, d *schema.ResourceDat
 
 func resourceApplicationVersionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ElasticBeanstalkConn()
+	conn := meta.(*conns.AWSClient).ElasticBeanstalkConn(ctx)
 
 	resp, err := conn.DescribeApplicationVersionsWithContext(ctx, &elasticbeanstalk.DescribeApplicationVersionsInput{
 		ApplicationName: aws.String(d.Get("application").(string)),
@@ -133,7 +136,7 @@ func resourceApplicationVersionRead(ctx context.Context, d *schema.ResourceData,
 
 func resourceApplicationVersionUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ElasticBeanstalkConn()
+	conn := meta.(*conns.AWSClient).ElasticBeanstalkConn(ctx)
 
 	if d.HasChange("description") {
 		if err := resourceApplicationVersionDescriptionUpdate(ctx, conn, d); err != nil {
@@ -146,7 +149,7 @@ func resourceApplicationVersionUpdate(ctx context.Context, d *schema.ResourceDat
 
 func resourceApplicationVersionDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ElasticBeanstalkConn()
+	conn := meta.(*conns.AWSClient).ElasticBeanstalkConn(ctx)
 
 	application := d.Get("application").(string)
 	name := d.Id()

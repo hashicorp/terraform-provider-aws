@@ -2,12 +2,21 @@ name: Community Check
 
 on:
   workflow_call:
+    inputs:
+      username:
+        description: The username to check the association of
+        type: string
+        required: true
+
     outputs:
       core_contributor:
+        description: Whether or not the user is a core contributor
         value: ${{ jobs.community_check.outputs.is_core_contributor }}
       maintainer:
+        description: Whether or not the user is a maintainer
         value: ${{ jobs.community_check.outputs.is_maintainer }}
       partner:
+        description: Whether or not the user is a partner
         value: ${{ jobs.community_check.outputs.is_partner }}
 
 jobs:
@@ -40,13 +49,10 @@ jobs:
           echo "core_contributors_list=$CORE_CONTRIBUTORS_DECODED" >> $GITHUB_OUTPUT
           echo "maintainers_list=$MAINTAINERS_DECODED" >> $GITHUB_OUTPUT
           echo "partners_list=$PARTNERS_DECODED" >> $GITHUB_OUTPUT
+
       - name: Determine if user is in lists
         id: determination
-        env:
-          IS_CORE_CONTRIBUTOR: ${{ contains(fromJSON(steps.decode.outputs.core_contributors_list), github.actor) }}
-          IS_MAINTAINER: ${{ contains(fromJSON(steps.decode.outputs.maintainers_list), github.actor) }}
-          IS_PARTNER: ${{ contains(fromJSON(steps.decode.outputs.partners_list), github.actor) }}
         run: |
-          echo "is_core_contributor=$IS_CORE_CONTRIBUTOR" >> $GITHUB_OUTPUT
-          echo "is_maintainer=$IS_MAINTAINER" >> $GITHUB_OUTPUT
-          echo "is_partner=$IS_PARTNER" >> $GITHUB_OUTPUT
+          echo "is_core_contributor="${{ contains(fromJSON(steps.decode.outputs.core_contributors_list), inputs.username) }} >> $GITHUB_OUTPUT
+          echo "is_maintainer="${{ contains(fromJSON(steps.decode.outputs.maintainers_list), inputs.username) }} >> $GITHUB_OUTPUT
+          echo "is_partner="${{ contains(fromJSON(steps.decode.outputs.partners_list), inputs.username) }} >> $GITHUB_OUTPUT
