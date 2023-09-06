@@ -5,6 +5,9 @@ package codestarconnections
 import (
 	"context"
 
+	aws_sdkv2 "github.com/aws/aws-sdk-go-v2/aws"
+	codestarconnections_sdkv2 "github.com/aws/aws-sdk-go-v2/service/codestarconnections"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -22,7 +25,7 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePackageSDKDataSource {
 	return []*types.ServicePackageSDKDataSource{
 		{
-			Factory:  DataSourceConnection,
+			Factory:  dataSourceConnection,
 			TypeName: "aws_codestarconnections_connection",
 		},
 	}
@@ -31,7 +34,7 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePackageSDKResource {
 	return []*types.ServicePackageSDKResource{
 		{
-			Factory:  ResourceConnection,
+			Factory:  resourceConnection,
 			TypeName: "aws_codestarconnections_connection",
 			Name:     "Connection",
 			Tags: &types.ServicePackageResourceTags{
@@ -39,8 +42,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceHost,
+			Factory:  resourceHost,
 			TypeName: "aws_codestarconnections_host",
+			Name:     "Host",
 		},
 	}
 }
@@ -49,4 +53,17 @@ func (p *servicePackage) ServicePackageName() string {
 	return names.CodeStarConnections
 }
 
-var ServicePackage = &servicePackage{}
+// NewClient returns a new AWS SDK for Go v2 client for this service package's AWS API.
+func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (*codestarconnections_sdkv2.Client, error) {
+	cfg := *(config["aws_sdkv2_config"].(*aws_sdkv2.Config))
+
+	return codestarconnections_sdkv2.NewFromConfig(cfg, func(o *codestarconnections_sdkv2.Options) {
+		if endpoint := config["endpoint"].(string); endpoint != "" {
+			o.BaseEndpoint = aws_sdkv2.String(endpoint)
+		}
+	}), nil
+}
+
+func ServicePackage(ctx context.Context) conns.ServicePackage {
+	return &servicePackage{}
+}

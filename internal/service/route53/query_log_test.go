@@ -1,11 +1,14 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package route53_test
 
 import (
 	"context"
 	"fmt"
-	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws/endpoints"
 	"github.com/aws/aws-sdk-go/service/route53"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
@@ -42,7 +45,7 @@ func TestAccRoute53QueryLog_basic(t *testing.T) {
 				Config: testAccQueryLogConfig_basic(rName, domainName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckQueryLogExists(ctx, resourceName, &v),
-					acctest.MatchResourceAttrGlobalARNNoAccount(resourceName, "arn", "route53", regexp.MustCompile("queryloggingconfig/.+")),
+					acctest.MatchResourceAttrGlobalARNNoAccount(resourceName, "arn", "route53", regexache.MustCompile("queryloggingconfig/.+")),
 					resource.TestCheckResourceAttrPair(resourceName, "cloudwatch_log_group_arn", cloudwatchLogGroupResourceName, "arn"),
 					resource.TestCheckResourceAttrPair(resourceName, "zone_id", route53ZoneResourceName, "zone_id"),
 				),
@@ -118,7 +121,7 @@ func testAccCheckQueryLogExists(ctx context.Context, n string, v *route53.QueryL
 			return fmt.Errorf("No Route53 Query Logging Config ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).Route53Conn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).Route53Conn(ctx)
 
 		output, err := tfroute53.FindQueryLoggingConfigByID(ctx, conn, rs.Primary.ID)
 
@@ -134,7 +137,7 @@ func testAccCheckQueryLogExists(ctx context.Context, n string, v *route53.QueryL
 
 func testAccCheckQueryLogDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).Route53Conn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).Route53Conn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_route53_query_log" {

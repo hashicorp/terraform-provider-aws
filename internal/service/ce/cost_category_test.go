@@ -1,11 +1,14 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ce_test
 
 import (
 	"context"
 	"fmt"
-	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/service/costexplorer"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -34,7 +37,7 @@ func TestAccCECostCategory_basic(t *testing.T) {
 					testAccCheckCostCategoryExists(ctx, resourceName, &output),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttrSet(resourceName, "effective_start"),
-					acctest.MatchResourceAttrGlobalARN(resourceName, "arn", "ce", regexp.MustCompile(`costcategory/.+$`)),
+					acctest.MatchResourceAttrGlobalARN(resourceName, "arn", "ce", regexache.MustCompile(`costcategory/.+$`)),
 				),
 			},
 			{
@@ -234,7 +237,7 @@ func testAccCheckCostCategoryExists(ctx context.Context, n string, v *costexplor
 			return fmt.Errorf("No CE Cost Category ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CEConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CEConn(ctx)
 
 		output, err := tfce.FindCostCategoryByARN(ctx, conn, rs.Primary.ID)
 
@@ -250,7 +253,7 @@ func testAccCheckCostCategoryExists(ctx context.Context, n string, v *costexplor
 
 func testAccCheckCostCategoryDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CEConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CEConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_ce_cost_category" {

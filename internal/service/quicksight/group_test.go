@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package quicksight_test
 
 import (
@@ -127,7 +130,7 @@ func testAccCheckGroupExists(ctx context.Context, resourceName string, group *qu
 			return err
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).QuickSightConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).QuickSightConn(ctx)
 
 		input := &quicksight.DescribeGroupInput{
 			AwsAccountId: aws.String(awsAccountID),
@@ -153,7 +156,7 @@ func testAccCheckGroupExists(ctx context.Context, resourceName string, group *qu
 
 func testAccCheckGroupDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).QuickSightConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).QuickSightConn(ctx)
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_quicksight_group" {
 				continue
@@ -186,7 +189,7 @@ func testAccCheckGroupDestroy(ctx context.Context) resource.TestCheckFunc {
 
 func testAccCheckGroupDisappears(ctx context.Context, v *quicksight.Group) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).QuickSightConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).QuickSightConn(ctx)
 
 		arn, err := arn.Parse(aws.StringValue(v.Arn))
 		if err != nil {

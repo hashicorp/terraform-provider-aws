@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package s3_test
 
 import (
@@ -6,6 +9,7 @@ import (
 	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/s3"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
@@ -408,7 +412,7 @@ func TestAccS3BucketACL_migrate_grantsWithChange(t *testing.T) {
 						"permission":     s3.PermissionReadAcp,
 					}),
 					resource.TestMatchTypeSetElemNestedAttrs(resourceName, "access_control_policy.0.grant.*", map[string]*regexp.Regexp{
-						"grantee.0.uri": regexp.MustCompile(`http://acs.*/groups/s3/LogDelivery`),
+						"grantee.0.uri": regexache.MustCompile(`http://acs.*/groups/s3/LogDelivery`),
 					}),
 					resource.TestCheckResourceAttr(resourceName, "access_control_policy.0.owner.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "access_control_policy.0.owner.0.id", "data.aws_canonical_user_id.current", "id"),
@@ -507,7 +511,7 @@ func TestAccS3BucketACL_updateGrant(t *testing.T) {
 						"permission":     s3.PermissionReadAcp,
 					}),
 					resource.TestMatchTypeSetElemNestedAttrs(resourceName, "access_control_policy.0.grant.*", map[string]*regexp.Regexp{
-						"grantee.0.uri": regexp.MustCompile(`http://acs.*/groups/s3/LogDelivery`),
+						"grantee.0.uri": regexache.MustCompile(`http://acs.*/groups/s3/LogDelivery`),
 					}),
 					resource.TestCheckResourceAttr(resourceName, "access_control_policy.0.owner.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "access_control_policy.0.owner.0.id", "data.aws_canonical_user_id.current", "id"),
@@ -605,7 +609,7 @@ func testAccCheckBucketACLExists(ctx context.Context, n string) resource.TestChe
 			return fmt.Errorf("No ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Conn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Conn(ctx)
 
 		bucket, expectedBucketOwner, _, err := tfs3.BucketACLParseResourceID(rs.Primary.ID)
 		if err != nil {

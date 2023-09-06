@@ -1,11 +1,14 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ec2_test
 
 import (
 	"context"
 	"fmt"
-	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -31,7 +34,7 @@ func TestAccVPCNetworkInsightsAnalysis_basic(t *testing.T) {
 				Config: testAccVPCNetworkInsightsAnalysisConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckNetworkInsightsAnalysisExists(ctx, resourceName),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "ec2", regexp.MustCompile(`network-insights-analysis/.+$`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "ec2", regexache.MustCompile(`network-insights-analysis/.+$`)),
 					resource.TestCheckResourceAttr(resourceName, "filter_in_arns.#", "0"),
 					resource.TestCheckResourceAttrPair(resourceName, "network_insights_path_id", "aws_ec2_network_insights_path.test", "id"),
 					resource.TestCheckResourceAttr(resourceName, "path_found", "true"),
@@ -135,7 +138,7 @@ func TestAccVPCNetworkInsightsAnalysis_filterInARNs(t *testing.T) {
 				Config: testAccVPCNetworkInsightsAnalysisConfig_filterInARNs(rName, "vpc-peering-connection/pcx-fakearn1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNetworkInsightsAnalysisExists(ctx, resourceName),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "filter_in_arns.0", "ec2", regexp.MustCompile(`vpc-peering-connection/pcx-fakearn1$`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "filter_in_arns.0", "ec2", regexache.MustCompile(`vpc-peering-connection/pcx-fakearn1$`)),
 				),
 			},
 			{
@@ -148,7 +151,7 @@ func TestAccVPCNetworkInsightsAnalysis_filterInARNs(t *testing.T) {
 				Config: testAccVPCNetworkInsightsAnalysisConfig_filterInARNs(rName, "vpc-peering-connection/pcx-fakearn2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNetworkInsightsAnalysisExists(ctx, resourceName),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "filter_in_arns.0", "ec2", regexp.MustCompile(`vpc-peering-connection/pcx-fakearn2$`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "filter_in_arns.0", "ec2", regexache.MustCompile(`vpc-peering-connection/pcx-fakearn2$`)),
 				),
 			},
 		},
@@ -175,12 +178,6 @@ func TestAccVPCNetworkInsightsAnalysis_waitForCompletion(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"wait_for_completion"},
-			},
-			{
 				Config: testAccVPCNetworkInsightsAnalysisConfig_waitForCompletion(rName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNetworkInsightsAnalysisExists(ctx, resourceName),
@@ -202,7 +199,7 @@ func testAccCheckNetworkInsightsAnalysisExists(ctx context.Context, n string) re
 			return fmt.Errorf("No EC2 Network Insights Analysis ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
 
 		_, err := tfec2.FindNetworkInsightsAnalysisByID(ctx, conn, rs.Primary.ID)
 
@@ -212,7 +209,7 @@ func testAccCheckNetworkInsightsAnalysisExists(ctx context.Context, n string) re
 
 func testAccCheckNetworkInsightsAnalysisDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_ec2_network_insights_analysis" {

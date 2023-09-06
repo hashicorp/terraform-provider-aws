@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package servicecatalog_test
 
 import (
@@ -182,7 +185,7 @@ func testAccPortfolioShare_disappears(t *testing.T) {
 
 func testAccCheckPortfolioShareDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ServiceCatalogConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ServiceCatalogConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_servicecatalog_portfolio_share" {
@@ -221,7 +224,7 @@ func testAccCheckPortfolioShareExists(ctx context.Context, n string) resource.Te
 			return fmt.Errorf("No Service Catalog Portfolio Share ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ServiceCatalogConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ServiceCatalogConn(ctx)
 
 		_, err := tfservicecatalog.FindPortfolioShare(ctx, conn,
 			rs.Primary.Attributes["portfolio_id"],

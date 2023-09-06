@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package kafka
 
 import (
@@ -65,7 +68,7 @@ func findVersion(preferredVersions []interface{}, versions []*kafka.KafkaVersion
 
 func dataSourceVersionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).KafkaConn()
+	conn := meta.(*conns.AWSClient).KafkaConn(ctx)
 
 	var kafkaVersions []*kafka.KafkaVersion
 

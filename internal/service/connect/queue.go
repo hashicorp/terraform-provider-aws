@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package connect
 
 import (
@@ -26,9 +29,7 @@ func ResourceQueue() *schema.Resource {
 		CreateWithoutTimeout: resourceQueueCreate,
 		ReadWithoutTimeout:   resourceQueueRead,
 		UpdateWithoutTimeout: resourceQueueUpdate,
-		// Queues do not support deletion today. NoOp the Delete method.
-		// Users can rename their queues manually if they want.
-		DeleteWithoutTimeout: schema.NoopContext,
+		DeleteWithoutTimeout: resourceQueueDelete,
 
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
@@ -112,14 +113,14 @@ func ResourceQueue() *schema.Resource {
 }
 
 func resourceQueueCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ConnectConn()
+	conn := meta.(*conns.AWSClient).ConnectConn(ctx)
 
 	instanceID := d.Get("instance_id").(string)
 	name := d.Get("name").(string)
 	input := &connect.CreateQueueInput{
 		InstanceId: aws.String(instanceID),
 		Name:       aws.String(name),
-		Tags:       GetTagsIn(ctx),
+		Tags:       getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("description"); ok {
@@ -146,11 +147,11 @@ func resourceQueueCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	output, err := conn.CreateQueueWithContext(ctx, input)
 
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error creating Connect Queue (%s): %w", name, err))
+		return diag.Errorf("creating Connect Queue (%s): %s", name, err)
 	}
 
 	if output == nil {
-		return diag.FromErr(fmt.Errorf("error creating Connect Queue (%s): empty output", name))
+		return diag.Errorf("creating Connect Queue (%s): empty output", name)
 	}
 
 	d.SetId(fmt.Sprintf("%s:%s", instanceID, aws.StringValue(output.QueueId)))
@@ -159,7 +160,7 @@ func resourceQueueCreate(ctx context.Context, d *schema.ResourceData, meta inter
 }
 
 func resourceQueueRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ConnectConn()
+	conn := meta.(*conns.AWSClient).ConnectConn(ctx)
 
 	instanceID, queueID, err := QueueParseID(d.Id())
 
@@ -179,11 +180,11 @@ func resourceQueueRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	}
 
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error getting Connect Queue (%s): %w", d.Id(), err))
+		return diag.Errorf("getting Connect Queue (%s): %s", d.Id(), err)
 	}
 
 	if resp == nil || resp.Queue == nil {
-		return diag.FromErr(fmt.Errorf("error getting Connect Queue (%s): empty response", d.Id()))
+		return diag.Errorf("getting Connect Queue (%s): empty response", d.Id())
 	}
 
 	if err := d.Set("outbound_caller_config", flattenOutboundCallerConfig(resp.Queue.OutboundCallerConfig)); err != nil {
@@ -203,18 +204,18 @@ func resourceQueueRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	quickConnectIds, err := getQueueQuickConnectIDs(ctx, conn, instanceID, queueID)
 
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error finding Connect Queue Quick Connect ID for Queue (%s): %w", queueID, err))
+		return diag.Errorf("finding Connect Queue Quick Connect ID for Queue (%s): %s", queueID, err)
 	}
 
 	d.Set("quick_connect_ids", aws.StringValueSlice(quickConnectIds))
 
-	SetTagsOut(ctx, resp.Queue.Tags)
+	setTagsOut(ctx, resp.Queue.Tags)
 
 	return nil
 }
 
 func resourceQueueUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ConnectConn()
+	conn := meta.(*conns.AWSClient).ConnectConn(ctx)
 
 	instanceID, queueID, err := QueueParseID(d.Id())
 
@@ -240,7 +241,7 @@ func resourceQueueUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 		_, err = conn.UpdateQueueHoursOfOperationWithContext(ctx, input)
 
 		if err != nil {
-			return diag.FromErr(fmt.Errorf("updating Queue Hours of Operation (%s): %w", d.Id(), err))
+			return diag.Errorf("updating Queue Hours of Operation (%s): %s", d.Id(), err)
 		}
 	}
 
@@ -254,7 +255,7 @@ func resourceQueueUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 		_, err = conn.UpdateQueueMaxContactsWithContext(ctx, input)
 
 		if err != nil {
-			return diag.FromErr(fmt.Errorf("updating Queue Max Contacts (%s): %w", d.Id(), err))
+			return diag.Errorf("updating Queue Max Contacts (%s): %s", d.Id(), err)
 		}
 	}
 
@@ -269,7 +270,7 @@ func resourceQueueUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 		_, err = conn.UpdateQueueNameWithContext(ctx, input)
 
 		if err != nil {
-			return diag.FromErr(fmt.Errorf("updating Queue Name and/or Description (%s): %w", d.Id(), err))
+			return diag.Errorf("updating Queue Name and/or Description (%s): %s", d.Id(), err)
 		}
 	}
 
@@ -283,7 +284,7 @@ func resourceQueueUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 		_, err = conn.UpdateQueueOutboundCallerConfigWithContext(ctx, input)
 
 		if err != nil {
-			return diag.FromErr(fmt.Errorf("updating Queue Outbound Caller Config (%s): %w", d.Id(), err))
+			return diag.Errorf("updating Queue Outbound Caller Config (%s): %s", d.Id(), err)
 		}
 	}
 
@@ -297,7 +298,7 @@ func resourceQueueUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 		_, err = conn.UpdateQueueStatusWithContext(ctx, input)
 
 		if err != nil {
-			return diag.FromErr(fmt.Errorf("updating Queue Status (%s): %w", d.Id(), err))
+			return diag.Errorf("updating Queue Status (%s): %s", d.Id(), err)
 		}
 	}
 
@@ -341,6 +342,27 @@ func resourceQueueUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 
 	return resourceQueueRead(ctx, d, meta)
+}
+
+func resourceQueueDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	conn := meta.(*conns.AWSClient).ConnectConn(ctx)
+
+	instanceID, queueID, err := QueueParseID(d.Id())
+
+	if err != nil {
+		return diag.FromErr(err)
+	}
+
+	_, err = conn.DeleteQueueWithContext(ctx, &connect.DeleteQueueInput{
+		InstanceId: aws.String(instanceID),
+		QueueId:    aws.String(queueID),
+	})
+
+	if err != nil {
+		return diag.Errorf("deleting Queue (%s): %s", d.Id(), err)
+	}
+
+	return nil
 }
 
 func expandOutboundCallerConfig(outboundCallerConfig []interface{}) *connect.OutboundCallerConfig {

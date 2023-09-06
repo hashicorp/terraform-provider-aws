@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package lakeformation_test
 
 import (
@@ -173,7 +176,7 @@ func TestAccLakeFormationResource_updateSLRToRole(t *testing.T) {
 
 func testAccCheckResourceDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).LakeFormationConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).LakeFormationConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_lakeformation_resource" {
@@ -206,7 +209,7 @@ func testAccCheckResourceExists(ctx context.Context, resourceName string) resour
 			return fmt.Errorf("resource not found: %s", resourceName)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).LakeFormationConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).LakeFormationConn(ctx)
 
 		input := &lakeformation.DescribeResourceInput{
 			ResourceArn: aws.String(rs.Primary.ID),

@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package pinpoint
 
 import (
@@ -64,7 +67,7 @@ func ResourceEmailChannel() *schema.Resource {
 
 func resourceEmailChannelUpsert(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).PinpointConn()
+	conn := meta.(*conns.AWSClient).PinpointConn(ctx)
 
 	applicationId := d.Get("application_id").(string)
 
@@ -99,7 +102,7 @@ func resourceEmailChannelUpsert(ctx context.Context, d *schema.ResourceData, met
 
 func resourceEmailChannelRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).PinpointConn()
+	conn := meta.(*conns.AWSClient).PinpointConn(ctx)
 
 	log.Printf("[INFO] Reading Pinpoint Email Channel for application %s", d.Id())
 
@@ -130,7 +133,7 @@ func resourceEmailChannelRead(ctx context.Context, d *schema.ResourceData, meta 
 
 func resourceEmailChannelDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).PinpointConn()
+	conn := meta.(*conns.AWSClient).PinpointConn(ctx)
 
 	log.Printf("[DEBUG] Deleting Pinpoint Email Channel for application %s", d.Id())
 	_, err := conn.DeleteEmailChannelWithContext(ctx, &pinpoint.DeleteEmailChannelInput{

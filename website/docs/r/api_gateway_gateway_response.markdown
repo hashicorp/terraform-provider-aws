@@ -34,7 +34,7 @@ resource "aws_api_gateway_gateway_response" "test" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `rest_api_id` - (Required) String identifier of the associated REST API.
 * `response_type` - (Required) Response type of the associated GatewayResponse.
@@ -42,14 +42,23 @@ The following arguments are supported:
 * `response_templates` - (Optional) Map of templates used to transform the response body.
 * `response_parameters` - (Optional) Map of parameters (paths, query strings and headers) of the Gateway Response.
 
-## Attributes Reference
+## Attribute Reference
 
-No additional attributes are exported.
+This resource exports no additional attributes.
 
 ## Import
 
-`aws_api_gateway_gateway_response` can be imported using `REST-API-ID/RESPONSE-TYPE`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_api_gateway_gateway_response` using `REST-API-ID/RESPONSE-TYPE`. For example:
 
+```terraform
+import {
+  to = aws_api_gateway_gateway_response.example
+  id = "12345abcde/UNAUTHORIZED"
+}
 ```
-$ terraform import aws_api_gateway_gateway_response.example 12345abcde/UNAUTHORIZED
+
+Using `terraform import`, import `aws_api_gateway_gateway_response` using `REST-API-ID/RESPONSE-TYPE`. For example:
+
+```console
+% terraform import aws_api_gateway_gateway_response.example 12345abcde/UNAUTHORIZED
 ```

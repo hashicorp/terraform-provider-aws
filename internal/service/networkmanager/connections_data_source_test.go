@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package networkmanager_test
 
 import (
@@ -24,7 +27,7 @@ func TestAccNetworkManagerConnectionsDataSource_basic(t *testing.T) {
 			{
 				Config: testAccConnectionsDataSourceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					acctest.CheckResourceAttrGreaterThanValue(dataSourceAllName, "ids.#", "1"),
+					acctest.CheckResourceAttrGreaterThanValue(dataSourceAllName, "ids.#", 1),
 					resource.TestCheckResourceAttr(dataSourceByTagsName, "ids.#", "1"),
 				),
 			},

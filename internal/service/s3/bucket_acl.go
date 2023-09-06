@@ -1,13 +1,16 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package s3
 
 import (
 	"context"
 	"fmt"
 	"log"
-	"regexp"
 	"strings"
 	"time"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
@@ -128,7 +131,7 @@ func ResourceBucketACL() *schema.Resource {
 }
 
 func resourceBucketACLCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).S3Conn()
+	conn := meta.(*conns.AWSClient).S3Conn(ctx)
 
 	bucket := d.Get("bucket").(string)
 	expectedBucketOwner := d.Get("expected_bucket_owner").(string)
@@ -155,7 +158,7 @@ func resourceBucketACLCreate(ctx context.Context, d *schema.ResourceData, meta i
 	}, s3.ErrCodeNoSuchBucket)
 
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error creating S3 bucket ACL for %s: %w", bucket, err))
+		return diag.Errorf("creating S3 bucket ACL for %s: %s", bucket, err)
 	}
 
 	d.SetId(BucketACLCreateResourceID(bucket, expectedBucketOwner, acl))
@@ -164,7 +167,7 @@ func resourceBucketACLCreate(ctx context.Context, d *schema.ResourceData, meta i
 }
 
 func resourceBucketACLRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).S3Conn()
+	conn := meta.(*conns.AWSClient).S3Conn(ctx)
 
 	bucket, expectedBucketOwner, acl, err := BucketACLParseResourceID(d.Id())
 	if err != nil {
@@ -188,25 +191,25 @@ func resourceBucketACLRead(ctx context.Context, d *schema.ResourceData, meta int
 	}
 
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error getting S3 bucket ACL (%s): %w", d.Id(), err))
+		return diag.Errorf("getting S3 bucket ACL (%s): %s", d.Id(), err)
 	}
 
 	if output == nil {
-		return diag.FromErr(fmt.Errorf("error getting S3 bucket ACL (%s): empty output", d.Id()))
+		return diag.Errorf("getting S3 bucket ACL (%s): empty output", d.Id())
 	}
 
 	d.Set("acl", acl)
 	d.Set("bucket", bucket)
 	d.Set("expected_bucket_owner", expectedBucketOwner)
 	if err := d.Set("access_control_policy", flattenBucketACLAccessControlPolicy(output)); err != nil {
-		return diag.FromErr(fmt.Errorf("error setting access_control_policy: %w", err))
+		return diag.Errorf("setting access_control_policy: %s", err)
 	}
 
 	return nil
 }
 
 func resourceBucketACLUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).S3Conn()
+	conn := meta.(*conns.AWSClient).S3Conn(ctx)
 
 	bucket, expectedBucketOwner, acl, err := BucketACLParseResourceID(d.Id())
 	if err != nil {
@@ -233,7 +236,7 @@ func resourceBucketACLUpdate(ctx context.Context, d *schema.ResourceData, meta i
 	_, err = conn.PutBucketAclWithContext(ctx, input)
 
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error updating S3 bucket ACL (%s): %w", d.Id(), err))
+		return diag.Errorf("updating S3 bucket ACL (%s): %s", d.Id(), err)
 	}
 
 	if d.HasChange("acl") {
@@ -465,15 +468,15 @@ func BucketACLParseResourceID(id string) (string, string, string, error) {
 	// ~> On or after 3/1/2018: Bucket names can consist of only lowercase letters, numbers, dots, and hyphens; Max 63 characters
 	// ~> Before 3/1/2018: Bucket names could consist of uppercase letters and underscores if in us-east-1; Max 255 characters
 	// Reference: https://docs.aws.amazon.com/AmazonS3/latest/userguide/bucketnamingrules.html
-	bucketRegex := regexp.MustCompile(`^([a-z0-9.-]{1,63}|[a-zA-Z0-9.\-_]{1,255})$`)
+	bucketRegex := regexache.MustCompile(`^([a-z0-9.-]{1,63}|[a-zA-Z0-9.\-_]{1,255})$`)
 	// For bucket and accountID in the ID e.g. bucket,123456789101
 	// ~> Account IDs must consist of 12 digits
-	bucketAndOwnerRegex := regexp.MustCompile(`^([a-z0-9.-]{1,63}|[a-zA-Z0-9.\-_]{1,255}),\d{12}$`)
+	bucketAndOwnerRegex := regexache.MustCompile(`^([a-z0-9.-]{1,63}|[a-zA-Z0-9.\-_]{1,255}),\d{12}$`)
 	// For bucket and ACL in the ID e.g. bucket,public-read
 	// ~> (Canned) ACL values include: private, public-read, public-read-write, authenticated-read, aws-exec-read, and log-delivery-write
-	bucketAndAclRegex := regexp.MustCompile(`^([a-z0-9.-]{1,63}|[a-zA-Z0-9.\-_]{1,255}),[a-z-]+$`)
+	bucketAndAclRegex := regexache.MustCompile(`^([a-z0-9.-]{1,63}|[a-zA-Z0-9.\-_]{1,255}),[a-z-]+$`)
 	// For bucket, accountID, and ACL in the ID e.g. bucket,123456789101,public-read
-	bucketOwnerAclRegex := regexp.MustCompile(`^([a-z0-9.-]{1,63}|[a-zA-Z0-9.\-_]{1,255}),\d{12},[a-z-]+$`)
+	bucketOwnerAclRegex := regexache.MustCompile(`^([a-z0-9.-]{1,63}|[a-zA-Z0-9.\-_]{1,255}),\d{12},[a-z-]+$`)
 
 	// Bucket name ONLY
 	if bucketRegex.MatchString(id) {

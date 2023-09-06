@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package docdb
 
 import (
@@ -178,7 +181,7 @@ func ResourceClusterInstance() *schema.Resource {
 
 func resourceClusterInstanceCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DocDBConn()
+	conn := meta.(*conns.AWSClient).DocDBConn(ctx)
 
 	input := &docdb.CreateDBInstanceInput{
 		DBInstanceClass:         aws.String(d.Get("instance_class").(string)),
@@ -186,7 +189,7 @@ func resourceClusterInstanceCreate(ctx context.Context, d *schema.ResourceData, 
 		Engine:                  aws.String(d.Get("engine").(string)),
 		PromotionTier:           aws.Int64(int64(d.Get("promotion_tier").(int))),
 		AutoMinorVersionUpgrade: aws.Bool(d.Get("auto_minor_version_upgrade").(bool)),
-		Tags:                    GetTagsIn(ctx),
+		Tags:                    getTagsIn(ctx),
 	}
 
 	if attr, ok := d.GetOk("availability_zone"); ok {
@@ -257,7 +260,7 @@ func resourceClusterInstanceCreate(ctx context.Context, d *schema.ResourceData, 
 
 func resourceClusterInstanceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DocDBConn()
+	conn := meta.(*conns.AWSClient).DocDBConn(ctx)
 
 	db, err := resourceInstanceRetrieve(ctx, conn, d.Id())
 	if !d.IsNewResource() && tfresource.NotFound(err) {
@@ -333,7 +336,7 @@ func resourceClusterInstanceRead(ctx context.Context, d *schema.ResourceData, me
 
 func resourceClusterInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DocDBConn()
+	conn := meta.(*conns.AWSClient).DocDBConn(ctx)
 	requestUpdate := false
 
 	req := &docdb.ModifyDBInstanceInput{
@@ -391,7 +394,7 @@ func resourceClusterInstanceUpdate(ctx context.Context, d *schema.ResourceData, 
 			_, err = conn.ModifyDBInstanceWithContext(ctx, req)
 		}
 		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "Error modifying DB Instance %s: %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "modifying DB Instance %s: %s", d.Id(), err)
 		}
 
 		// reuse db_instance refresh func
@@ -416,7 +419,7 @@ func resourceClusterInstanceUpdate(ctx context.Context, d *schema.ResourceData, 
 
 func resourceClusterInstanceDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DocDBConn()
+	conn := meta.(*conns.AWSClient).DocDBConn(ctx)
 
 	opts := docdb.DeleteDBInstanceInput{DBInstanceIdentifier: aws.String(d.Id())}
 

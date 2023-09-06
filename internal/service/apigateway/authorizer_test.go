@@ -1,12 +1,15 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package apigateway_test
 
 import (
 	"context"
 	"fmt"
-	"regexp"
 	"strconv"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/service/apigateway"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -35,7 +38,7 @@ func TestAccAPIGatewayAuthorizer_basic(t *testing.T) {
 				Config: testAccAuthorizerConfig_lambda(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAuthorizerExists(ctx, resourceName, &conf),
-					acctest.MatchResourceAttrRegionalARNNoAccount(resourceName, "arn", "apigateway", regexp.MustCompile(`/restapis/.+/authorizers/.+`)),
+					acctest.MatchResourceAttrRegionalARNNoAccount(resourceName, "arn", "apigateway", regexache.MustCompile(`/restapis/.+/authorizers/.+`)),
 					resource.TestCheckResourceAttrPair(resourceName, "authorizer_uri", lambdaResourceName, "invoke_arn"),
 					resource.TestCheckResourceAttr(resourceName, "identity_source", "method.request.header.Authorization"),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
@@ -248,15 +251,15 @@ func TestAccAPIGatewayAuthorizer_authTypeValidation(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccAuthorizerConfig_authTypeValidationDefaultToken(rName),
-				ExpectError: regexp.MustCompile(`authorizer_uri must be set non-empty when authorizer type is TOKEN`),
+				ExpectError: regexache.MustCompile(`authorizer_uri must be set non-empty when authorizer type is TOKEN`),
 			},
 			{
 				Config:      testAccAuthorizerConfig_authTypeValidationRequest(rName),
-				ExpectError: regexp.MustCompile(`authorizer_uri must be set non-empty when authorizer type is REQUEST`),
+				ExpectError: regexache.MustCompile(`authorizer_uri must be set non-empty when authorizer type is REQUEST`),
 			},
 			{
 				Config:      testAccAuthorizerConfig_authTypeValidationCognito(rName),
-				ExpectError: regexp.MustCompile(`provider_arns must be set non-empty when authorizer type is COGNITO_USER_POOLS`),
+				ExpectError: regexache.MustCompile(`provider_arns must be set non-empty when authorizer type is COGNITO_USER_POOLS`),
 			},
 		},
 	})
@@ -326,7 +329,7 @@ func testAccCheckAuthorizerExists(ctx context.Context, n string, v *apigateway.A
 			return fmt.Errorf("No API Gateway Authorizer ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayConn(ctx)
 
 		output, err := tfapigateway.FindAuthorizerByTwoPartKey(ctx, conn, rs.Primary.ID, rs.Primary.Attributes["rest_api_id"])
 
@@ -342,7 +345,7 @@ func testAccCheckAuthorizerExists(ctx context.Context, n string, v *apigateway.A
 
 func testAccCheckAuthorizerDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_api_gateway_authorizer" {

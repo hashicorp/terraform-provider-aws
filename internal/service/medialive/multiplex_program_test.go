@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package medialive_test
 
 import (
@@ -187,7 +190,7 @@ func testAccMultiplexProgram_disappears(t *testing.T) {
 
 func testAccCheckMultiplexProgramDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).MediaLiveClient()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).MediaLiveClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_medialive_multiplex_program" {
@@ -228,7 +231,7 @@ func testAccCheckMultiplexProgramExists(ctx context.Context, name string, multip
 			return create.Error(names.MediaLive, create.ErrActionCheckingExistence, tfmedialive.ResNameMultiplexProgram, rs.Primary.ID, err)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).MediaLiveClient()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).MediaLiveClient(ctx)
 
 		resp, err := tfmedialive.FindMultiplexProgramByID(ctx, conn, multiplexId, programName)
 

@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package apigatewayv2_test
 
 import (
@@ -490,7 +493,7 @@ func TestAccAPIGatewayV2Route_updateRouteKey(t *testing.T) {
 
 func testAccCheckRouteDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayV2Conn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayV2Conn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_apigatewayv2_route" {
@@ -526,7 +529,7 @@ func testAccCheckRouteExists(ctx context.Context, n string, vApiId *string, v *a
 			return fmt.Errorf("No API Gateway v2 route ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayV2Conn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayV2Conn(ctx)
 
 		apiId := aws.String(rs.Primary.Attributes["api_id"])
 		resp, err := conn.GetRouteWithContext(ctx, &apigatewayv2.GetRouteInput{

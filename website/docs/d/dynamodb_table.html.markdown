@@ -20,11 +20,11 @@ data "aws_dynamodb_table" "tableName" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This data source supports the following arguments:
 
 * `name` - (Required) Name of the DynamoDB table.
 
-## Attributes Reference
+## Attribute Reference
 
 See the [DynamoDB Table Resource](/docs/providers/aws/r/dynamodb_table.html) for details on the
 returned attributes - they are identical.

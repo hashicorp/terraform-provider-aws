@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package amp
 
 import (
@@ -46,7 +49,7 @@ func DataSourceWorkspace() *schema.Resource {
 }
 
 func dataSourceWorkspaceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).AMPConn()
+	conn := meta.(*conns.AWSClient).AMPConn(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	workspaceID := d.Get("workspace_id").(string)

@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package route53
 
 import (
@@ -176,7 +179,7 @@ func ResourceHealthCheck() *schema.Resource {
 
 func resourceHealthCheckCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).Route53Conn()
+	conn := meta.(*conns.AWSClient).Route53Conn(ctx)
 
 	healthCheckType := d.Get("type").(string)
 	healthCheckConfig := &route53.HealthCheckConfig{
@@ -280,7 +283,7 @@ func resourceHealthCheckCreate(ctx context.Context, d *schema.ResourceData, meta
 
 	d.SetId(aws.StringValue(output.HealthCheck.Id))
 
-	if err := createTags(ctx, conn, d.Id(), route53.TagResourceTypeHealthcheck, GetTagsIn(ctx)); err != nil {
+	if err := createTags(ctx, conn, d.Id(), route53.TagResourceTypeHealthcheck, getTagsIn(ctx)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting Route53 Health Check (%s) tags: %s", d.Id(), err)
 	}
 
@@ -289,7 +292,7 @@ func resourceHealthCheckCreate(ctx context.Context, d *schema.ResourceData, meta
 
 func resourceHealthCheckRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).Route53Conn()
+	conn := meta.(*conns.AWSClient).Route53Conn(ctx)
 
 	output, err := FindHealthCheckByID(ctx, conn, d.Id())
 
@@ -337,7 +340,7 @@ func resourceHealthCheckRead(ctx context.Context, d *schema.ResourceData, meta i
 
 func resourceHealthCheckUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).Route53Conn()
+	conn := meta.(*conns.AWSClient).Route53Conn(ctx)
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		input := &route53.UpdateHealthCheckInput{
@@ -417,7 +420,7 @@ func resourceHealthCheckUpdate(ctx context.Context, d *schema.ResourceData, meta
 
 func resourceHealthCheckDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).Route53Conn()
+	conn := meta.(*conns.AWSClient).Route53Conn(ctx)
 
 	log.Printf("[DEBUG] Deleting Route53 Health Check: %s", d.Id())
 	_, err := conn.DeleteHealthCheckWithContext(ctx, &route53.DeleteHealthCheckInput{

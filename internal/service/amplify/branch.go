@@ -1,10 +1,13 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package amplify
 
 import (
 	"context"
 	"log"
-	"regexp"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/amplify"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
@@ -77,7 +80,7 @@ func ResourceBranch() *schema.Resource {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
-				ValidateFunc: validation.StringMatch(regexp.MustCompile(`^[0-9A-Za-z/_.-]{1,255}$`), "should be not be more than 255 letters, numbers, and the symbols /_.-"),
+				ValidateFunc: validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z/_.-]{1,255}$`), "should be not be more than 255 letters, numbers, and the symbols /_.-"),
 			},
 
 			"custom_domains": {
@@ -101,7 +104,7 @@ func ResourceBranch() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
-				ValidateFunc: validation.StringMatch(regexp.MustCompile(`^[0-9a-z-]{1,255}$`), "should be not be more than 255 lowercase alphanumeric or hyphen characters"),
+				ValidateFunc: validation.StringMatch(regexache.MustCompile(`^[0-9a-z-]{1,255}$`), "should be not be more than 255 lowercase alphanumeric or hyphen characters"),
 			},
 
 			"enable_auto_build": {
@@ -189,7 +192,7 @@ func ResourceBranch() *schema.Resource {
 
 func resourceBranchCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).AmplifyConn()
+	conn := meta.(*conns.AWSClient).AmplifyConn(ctx)
 
 	appID := d.Get("app_id").(string)
 	branchName := d.Get("branch_name").(string)
@@ -199,7 +202,7 @@ func resourceBranchCreate(ctx context.Context, d *schema.ResourceData, meta inte
 		AppId:           aws.String(appID),
 		BranchName:      aws.String(branchName),
 		EnableAutoBuild: aws.Bool(d.Get("enable_auto_build").(bool)),
-		Tags:            GetTagsIn(ctx),
+		Tags:            getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("backend_environment_arn"); ok {
@@ -268,7 +271,7 @@ func resourceBranchCreate(ctx context.Context, d *schema.ResourceData, meta inte
 
 func resourceBranchRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).AmplifyConn()
+	conn := meta.(*conns.AWSClient).AmplifyConn(ctx)
 
 	appID, branchName, err := BranchParseResourceID(d.Id())
 
@@ -310,14 +313,14 @@ func resourceBranchRead(ctx context.Context, d *schema.ResourceData, meta interf
 	d.Set("stage", branch.Stage)
 	d.Set("ttl", branch.Ttl)
 
-	SetTagsOut(ctx, branch.Tags)
+	setTagsOut(ctx, branch.Tags)
 
 	return diags
 }
 
 func resourceBranchUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).AmplifyConn()
+	conn := meta.(*conns.AWSClient).AmplifyConn(ctx)
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		appID, branchName, err := BranchParseResourceID(d.Id())
@@ -403,7 +406,7 @@ func resourceBranchUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 
 func resourceBranchDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).AmplifyConn()
+	conn := meta.(*conns.AWSClient).AmplifyConn(ctx)
 
 	appID, branchName, err := BranchParseResourceID(d.Id())
 

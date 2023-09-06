@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package networkmanager
 
 import (
@@ -54,7 +57,7 @@ func ResourceLinkAssociation() *schema.Resource {
 }
 
 func resourceLinkAssociationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).NetworkManagerConn()
+	conn := meta.(*conns.AWSClient).NetworkManagerConn(ctx)
 
 	globalNetworkID := d.Get("global_network_id").(string)
 	linkID := d.Get("link_id").(string)
@@ -70,20 +73,20 @@ func resourceLinkAssociationCreate(ctx context.Context, d *schema.ResourceData, 
 	_, err := conn.AssociateLinkWithContext(ctx, input)
 
 	if err != nil {
-		return diag.Errorf("error creating Network Manager Link Association (%s): %s", id, err)
+		return diag.Errorf("creating Network Manager Link Association (%s): %s", id, err)
 	}
 
 	d.SetId(id)
 
 	if _, err := waitLinkAssociationCreated(ctx, conn, globalNetworkID, linkID, deviceID, d.Timeout(schema.TimeoutCreate)); err != nil {
-		return diag.Errorf("error waiting for Network Manager Link Association (%s) create: %s", d.Id(), err)
+		return diag.Errorf("waiting for Network Manager Link Association (%s) create: %s", d.Id(), err)
 	}
 
 	return resourceLinkAssociationRead(ctx, d, meta)
 }
 
 func resourceLinkAssociationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).NetworkManagerConn()
+	conn := meta.(*conns.AWSClient).NetworkManagerConn(ctx)
 
 	globalNetworkID, linkID, deviceID, err := LinkAssociationParseResourceID(d.Id())
 
@@ -100,7 +103,7 @@ func resourceLinkAssociationRead(ctx context.Context, d *schema.ResourceData, me
 	}
 
 	if err != nil {
-		return diag.Errorf("error reading Network Manager Link Association (%s): %s", d.Id(), err)
+		return diag.Errorf("reading Network Manager Link Association (%s): %s", d.Id(), err)
 	}
 
 	d.Set("device_id", output.DeviceId)
@@ -111,7 +114,7 @@ func resourceLinkAssociationRead(ctx context.Context, d *schema.ResourceData, me
 }
 
 func resourceLinkAssociationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).NetworkManagerConn()
+	conn := meta.(*conns.AWSClient).NetworkManagerConn(ctx)
 
 	globalNetworkID, linkID, deviceID, err := LinkAssociationParseResourceID(d.Id())
 
@@ -131,11 +134,11 @@ func resourceLinkAssociationDelete(ctx context.Context, d *schema.ResourceData, 
 	}
 
 	if err != nil {
-		return diag.Errorf("error deleting Network Manager Link Association (%s): %s", d.Id(), err)
+		return diag.Errorf("deleting Network Manager Link Association (%s): %s", d.Id(), err)
 	}
 
 	if _, err := waitLinkAssociationDeleted(ctx, conn, globalNetworkID, linkID, deviceID, d.Timeout(schema.TimeoutCreate)); err != nil {
-		return diag.Errorf("error waiting for Network Manager Link Association (%s) delete: %s", d.Id(), err)
+		return diag.Errorf("waiting for Network Manager Link Association (%s) delete: %s", d.Id(), err)
 	}
 
 	return nil

@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package autoscaling
 
 import (
@@ -71,7 +74,7 @@ func ResourceLifecycleHook() *schema.Resource {
 
 func resourceLifecycleHookPut(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).AutoScalingConn()
+	conn := meta.(*conns.AWSClient).AutoScalingConn(ctx)
 
 	input := getPutLifecycleHookInput(d)
 	name := d.Get("name").(string)
@@ -94,7 +97,7 @@ func resourceLifecycleHookPut(ctx context.Context, d *schema.ResourceData, meta 
 
 func resourceLifecycleHookRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).AutoScalingConn()
+	conn := meta.(*conns.AWSClient).AutoScalingConn(ctx)
 
 	p, err := FindLifecycleHook(ctx, conn, d.Get("autoscaling_group_name").(string), d.Id())
 
@@ -121,7 +124,7 @@ func resourceLifecycleHookRead(ctx context.Context, d *schema.ResourceData, meta
 
 func resourceLifecycleHookDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).AutoScalingConn()
+	conn := meta.(*conns.AWSClient).AutoScalingConn(ctx)
 
 	log.Printf("[INFO] Deleting Auto Scaling Lifecycle Hook: %s", d.Id())
 	_, err := conn.DeleteLifecycleHookWithContext(ctx, &autoscaling.DeleteLifecycleHookInput{

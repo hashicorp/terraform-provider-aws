@@ -40,9 +40,9 @@ The following arguments are optional:
 
 * `cidr` (Required) - The IPv4 CIDR that's whitelisted.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - InputSecurityGroup Id.
 * `arn` - ARN of the InputSecurityGroup.
@@ -58,8 +58,17 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-MediaLive InputSecurityGroup can be imported using the `id`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import MediaLive InputSecurityGroup using the `id`. For example:
 
+```terraform
+import {
+  to = aws_medialive_input_security_group.example
+  id = "123456"
+}
 ```
-$ terraform import aws_medialive_input_security_group.example 123456
+
+Using `terraform import`, import MediaLive InputSecurityGroup using the `id`. For example:
+
+```console
+% terraform import aws_medialive_input_security_group.example 123456
 ```

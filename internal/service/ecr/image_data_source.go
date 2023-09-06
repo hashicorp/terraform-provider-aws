@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ecr
 
 import (
@@ -68,7 +71,7 @@ func DataSourceImage() *schema.Resource {
 
 func dataSourceImageRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ECRConn()
+	conn := meta.(*conns.AWSClient).ECRConn(ctx)
 
 	input := &ecr.DescribeImagesInput{
 		RepositoryName: aws.String(d.Get("repository_name").(string)),
@@ -113,8 +116,14 @@ func dataSourceImageRead(ctx context.Context, d *schema.ResourceData, meta inter
 			return sdkdiag.AppendErrorf(diags, "Your query returned more than one result. Please try a more specific search criteria, or set `most_recent` attribute to true.")
 		}
 
-		slices.SortFunc(imageDetails, func(a, b *ecr.ImageDetail) bool {
-			return aws.TimeValue(a.ImagePushedAt).After(aws.TimeValue(b.ImagePushedAt))
+		slices.SortFunc(imageDetails, func(a, b *ecr.ImageDetail) int {
+			if aws.TimeValue(a.ImagePushedAt).After(aws.TimeValue(b.ImagePushedAt)) {
+				return -1
+			}
+			if aws.TimeValue(a.ImagePushedAt).Before(aws.TimeValue(b.ImagePushedAt)) {
+				return 1
+			}
+			return 0
 		})
 	}
 

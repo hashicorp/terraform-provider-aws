@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package chime
 
 import (
@@ -76,7 +79,7 @@ func ResourceVoiceConnectorOrigination() *schema.Resource {
 }
 
 func resourceVoiceConnectorOriginationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ChimeConn()
+	conn := meta.(*conns.AWSClient).ChimeConn(ctx)
 
 	vcId := d.Get("voice_connector_id").(string)
 
@@ -92,7 +95,7 @@ func resourceVoiceConnectorOriginationCreate(ctx context.Context, d *schema.Reso
 	}
 
 	if _, err := conn.PutVoiceConnectorOriginationWithContext(ctx, input); err != nil {
-		return diag.Errorf("error creating Chime Voice Connector (%s) origination: %s", vcId, err)
+		return diag.Errorf("creating Chime Voice Connector (%s) origination: %s", vcId, err)
 	}
 
 	d.SetId(vcId)
@@ -101,7 +104,7 @@ func resourceVoiceConnectorOriginationCreate(ctx context.Context, d *schema.Reso
 }
 
 func resourceVoiceConnectorOriginationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ChimeConn()
+	conn := meta.(*conns.AWSClient).ChimeConn(ctx)
 
 	input := &chime.GetVoiceConnectorOriginationInput{
 		VoiceConnectorId: aws.String(d.Id()),
@@ -116,25 +119,25 @@ func resourceVoiceConnectorOriginationRead(ctx context.Context, d *schema.Resour
 	}
 
 	if err != nil {
-		return diag.Errorf("error getting Chime Voice Connector (%s) origination: %s", d.Id(), err)
+		return diag.Errorf("getting Chime Voice Connector (%s) origination: %s", d.Id(), err)
 	}
 
 	if resp == nil || resp.Origination == nil {
-		return diag.Errorf("error getting Chime Voice Connector (%s) origination: empty response", d.Id())
+		return diag.Errorf("getting Chime Voice Connector (%s) origination: empty response", d.Id())
 	}
 
 	d.Set("disabled", resp.Origination.Disabled)
 	d.Set("voice_connector_id", d.Id())
 
 	if err := d.Set("route", flattenOriginationRoutes(resp.Origination.Routes)); err != nil {
-		return diag.Errorf("error setting Chime Voice Connector (%s) origination routes: %s", d.Id(), err)
+		return diag.Errorf("setting Chime Voice Connector (%s) origination routes: %s", d.Id(), err)
 	}
 
 	return nil
 }
 
 func resourceVoiceConnectorOriginationUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ChimeConn()
+	conn := meta.(*conns.AWSClient).ChimeConn(ctx)
 
 	if d.HasChanges("route", "disabled") {
 		input := &chime.PutVoiceConnectorOriginationInput{
@@ -151,7 +154,7 @@ func resourceVoiceConnectorOriginationUpdate(ctx context.Context, d *schema.Reso
 		_, err := conn.PutVoiceConnectorOriginationWithContext(ctx, input)
 
 		if err != nil {
-			return diag.Errorf("error updating Chime Voice Connector (%s) origination: %s", d.Id(), err)
+			return diag.Errorf("updating Chime Voice Connector (%s) origination: %s", d.Id(), err)
 		}
 	}
 
@@ -159,7 +162,7 @@ func resourceVoiceConnectorOriginationUpdate(ctx context.Context, d *schema.Reso
 }
 
 func resourceVoiceConnectorOriginationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ChimeConn()
+	conn := meta.(*conns.AWSClient).ChimeConn(ctx)
 
 	input := &chime.DeleteVoiceConnectorOriginationInput{
 		VoiceConnectorId: aws.String(d.Id()),
@@ -172,7 +175,7 @@ func resourceVoiceConnectorOriginationDelete(ctx context.Context, d *schema.Reso
 	}
 
 	if err != nil {
-		return diag.Errorf("error deleting Chime Voice Connector (%s) origination: %s", d.Id(), err)
+		return diag.Errorf("deleting Chime Voice Connector (%s) origination: %s", d.Id(), err)
 	}
 
 	return nil

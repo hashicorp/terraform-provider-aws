@@ -1,11 +1,14 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package fsx
 
 import (
 	"context"
 	"log"
-	"regexp"
 	"time"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/fsx"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
@@ -79,7 +82,7 @@ func ResourceOpenzfsVolume() *schema.Resource {
 										Required: true,
 										ValidateFunc: validation.All(
 											validation.StringLenBetween(1, 128),
-											validation.StringMatch(regexp.MustCompile(`^[ -~]{1,128}$`), "must be either IP Address or CIDR"),
+											validation.StringMatch(regexache.MustCompile(`^[ -~]{1,128}$`), "must be either IP Address or CIDR"),
 										),
 									},
 									"options": {
@@ -114,7 +117,7 @@ func ResourceOpenzfsVolume() *schema.Resource {
 							Required: true,
 							ValidateFunc: validation.All(
 								validation.StringLenBetween(8, 512),
-								validation.StringMatch(regexp.MustCompile(`^arn:.*`), "must specify the full ARN of the snapshot"),
+								validation.StringMatch(regexache.MustCompile(`^arn:.*`), "must specify the full ARN of the snapshot"),
 							),
 						},
 					},
@@ -125,7 +128,7 @@ func ResourceOpenzfsVolume() *schema.Resource {
 				Required: true,
 				ValidateFunc: validation.All(
 					validation.StringLenBetween(23, 23),
-					validation.StringMatch(regexp.MustCompile(`^(fsvol-[0-9a-f]{17,})$`), "must specify a filesystem id i.e. fs-12345678"),
+					validation.StringMatch(regexache.MustCompile(`^(fsvol-[0-9a-f]{17,})$`), "must specify a filesystem id i.e. fs-12345678"),
 				),
 			},
 			"read_only": {
@@ -192,7 +195,7 @@ func ResourceOpenzfsVolume() *schema.Resource {
 
 func resourceOpenzfsVolumeCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).FSxConn()
+	conn := meta.(*conns.AWSClient).FSxConn(ctx)
 
 	input := &fsx.CreateVolumeInput{
 		ClientRequestToken: aws.String(id.UniqueId()),
@@ -201,7 +204,7 @@ func resourceOpenzfsVolumeCreate(ctx context.Context, d *schema.ResourceData, me
 		OpenZFSConfiguration: &fsx.CreateOpenZFSVolumeConfiguration{
 			ParentVolumeId: aws.String(d.Get("parent_volume_id").(string)),
 		},
-		Tags: GetTagsIn(ctx),
+		Tags: getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("copy_tags_to_snapshots"); ok {
@@ -267,7 +270,7 @@ func resourceOpenzfsVolumeCreate(ctx context.Context, d *schema.ResourceData, me
 
 func resourceOpenzfsVolumeRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).FSxConn()
+	conn := meta.(*conns.AWSClient).FSxConn(ctx)
 
 	volume, err := FindVolumeByID(ctx, conn, d.Id())
 	if !d.IsNewResource() && tfresource.NotFound(err) {
@@ -318,7 +321,7 @@ func resourceOpenzfsVolumeRead(ctx context.Context, d *schema.ResourceData, meta
 
 func resourceOpenzfsVolumeUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).FSxConn()
+	conn := meta.(*conns.AWSClient).FSxConn(ctx)
 
 	if d.HasChangesExcept("tags_all", "tags") {
 		input := &fsx.UpdateVolumeInput{
@@ -375,7 +378,7 @@ func resourceOpenzfsVolumeUpdate(ctx context.Context, d *schema.ResourceData, me
 
 func resourceOpenzfsVolumeDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).FSxConn()
+	conn := meta.(*conns.AWSClient).FSxConn(ctx)
 
 	log.Printf("[DEBUG] Deleting FSx OpenZFS Volume: %s", d.Id())
 	_, err := conn.DeleteVolumeWithContext(ctx, &fsx.DeleteVolumeInput{

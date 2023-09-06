@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package connect
 
 import (
@@ -59,7 +62,7 @@ func DataSourceContactFlowModule() *schema.Resource {
 }
 
 func dataSourceContactFlowModuleRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ConnectConn()
+	conn := meta.(*conns.AWSClient).ConnectConn(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	instanceID := d.Get("instance_id").(string)
@@ -75,11 +78,11 @@ func dataSourceContactFlowModuleRead(ctx context.Context, d *schema.ResourceData
 		contactFlowModuleSummary, err := dataSourceGetContactFlowModuleSummaryByName(ctx, conn, instanceID, name)
 
 		if err != nil {
-			return diag.FromErr(fmt.Errorf("error finding Connect Contact Flow Module Summary by name (%s): %w", name, err))
+			return diag.Errorf("finding Connect Contact Flow Module Summary by name (%s): %s", name, err)
 		}
 
 		if contactFlowModuleSummary == nil {
-			return diag.FromErr(fmt.Errorf("error finding Connect Contact Flow Module Summary by name (%s): not found", name))
+			return diag.Errorf("finding Connect Contact Flow Module Summary by name (%s): not found", name)
 		}
 
 		input.ContactFlowModuleId = contactFlowModuleSummary.Id
@@ -88,11 +91,11 @@ func dataSourceContactFlowModuleRead(ctx context.Context, d *schema.ResourceData
 	resp, err := conn.DescribeContactFlowModuleWithContext(ctx, input)
 
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error getting Connect Contact Flow Module: %w", err))
+		return diag.Errorf("getting Connect Contact Flow Module: %s", err)
 	}
 
 	if resp == nil || resp.ContactFlowModule == nil {
-		return diag.FromErr(fmt.Errorf("error getting Connect Contact Flow Module: empty response"))
+		return diag.Errorf("getting Connect Contact Flow Module: empty response")
 	}
 
 	contactFlowModule := resp.ContactFlowModule
@@ -106,7 +109,7 @@ func dataSourceContactFlowModuleRead(ctx context.Context, d *schema.ResourceData
 	d.Set("status", contactFlowModule.Status)
 
 	if err := d.Set("tags", KeyValueTags(ctx, contactFlowModule.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return diag.FromErr(fmt.Errorf("error setting tags: %s", err))
+		return diag.Errorf("setting tags: %s", err)
 	}
 
 	d.SetId(fmt.Sprintf("%s:%s", instanceID, aws.StringValue(contactFlowModule.Id)))

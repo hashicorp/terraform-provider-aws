@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package iam_test
 
 import (
@@ -89,7 +92,7 @@ func TestAccIAMGroupMembership_paginatedUserList(t *testing.T) {
 
 func testAccCheckGroupMembershipDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_iam_group_membership" {
@@ -128,7 +131,7 @@ func testAccCheckGroupMembershipExists(ctx context.Context, n string, g *iam.Get
 			return fmt.Errorf("No User name is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn(ctx)
 		gn := rs.Primary.Attributes["group"]
 
 		resp, err := conn.GetGroupWithContext(ctx, &iam.GetGroupInput{

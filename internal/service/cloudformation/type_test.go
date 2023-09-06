@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package cloudformation_test
 
 import (
@@ -8,11 +11,11 @@ import (
 	"io"
 	"os"
 	"path/filepath"
-	"regexp"
 	"runtime"
 	"strings"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/service/cloudformation"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -40,7 +43,7 @@ func TestAccCloudFormationType_basic(t *testing.T) {
 				Config: testAccTypeConfig_name(rName, zipPath, typeName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTypeExists(ctx, resourceName),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "cloudformation", regexp.MustCompile(fmt.Sprintf("type/resource/%s/.+", strings.ReplaceAll(typeName, "::", "-")))),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "cloudformation", regexache.MustCompile(fmt.Sprintf("type/resource/%s/.+", strings.ReplaceAll(typeName, "::", "-")))),
 					resource.TestCheckResourceAttr(resourceName, "default_version_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "deprecated_status", cloudformation.DeprecatedStatusLive),
 					resource.TestCheckResourceAttr(resourceName, "description", "An example resource schema demonstrating some basic constructs and validation rules."),
@@ -49,13 +52,13 @@ func TestAccCloudFormationType_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "logging_config.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "provisioning_type", cloudformation.ProvisioningTypeFullyMutable),
 					resource.TestCheckResourceAttr(resourceName, "schema_handler_package", fmt.Sprintf("s3://%s/test", rName)),
-					resource.TestMatchResourceAttr(resourceName, "schema", regexp.MustCompile(`^\{.*`)),
+					resource.TestMatchResourceAttr(resourceName, "schema", regexache.MustCompile(`^\{.*`)),
 					resource.TestCheckResourceAttr(resourceName, "source_url", "https://github.com/aws-cloudformation/aws-cloudformation-rpdk.git"),
 					resource.TestCheckResourceAttr(resourceName, "type", cloudformation.RegistryTypeResource),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "type_arn", "cloudformation", fmt.Sprintf("type/resource/%s", strings.ReplaceAll(typeName, "::", "-"))),
 					resource.TestCheckResourceAttr(resourceName, "type_name", typeName),
 					resource.TestCheckResourceAttr(resourceName, "visibility", cloudformation.VisibilityPrivate),
-					resource.TestMatchResourceAttr(resourceName, "version_id", regexp.MustCompile(`.+`)),
+					resource.TestMatchResourceAttr(resourceName, "version_id", regexache.MustCompile(`.+`)),
 				),
 			},
 		},
@@ -153,7 +156,7 @@ func testAccCheckTypeExists(ctx context.Context, resourceName string) resource.T
 			return fmt.Errorf("No CloudFormation Type ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudFormationConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudFormationConn(ctx)
 
 		_, err := tfcloudformation.FindTypeByARN(ctx, conn, rs.Primary.ID)
 
@@ -163,7 +166,7 @@ func testAccCheckTypeExists(ctx context.Context, resourceName string) resource.T
 
 func testAccCheckTypeDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudFormationConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudFormationConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_cloudformation_stack_set" {

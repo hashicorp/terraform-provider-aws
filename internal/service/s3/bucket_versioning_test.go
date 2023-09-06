@@ -1,11 +1,14 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package s3_test
 
 import (
 	"context"
 	"fmt"
-	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
@@ -447,7 +450,7 @@ func TestAccS3BucketVersioning_Status_enabledToDisabled(t *testing.T) {
 			},
 			{
 				Config:      testAccBucketVersioningConfig_basic(rName, tfs3.BucketVersioningStatusDisabled),
-				ExpectError: regexp.MustCompile(`versioning_configuration.status cannot be updated from 'Enabled' to 'Disabled'`),
+				ExpectError: regexache.MustCompile(`versioning_configuration.status cannot be updated from 'Enabled' to 'Disabled'`),
 			},
 		},
 	})
@@ -474,7 +477,7 @@ func TestAccS3BucketVersioning_Status_suspendedToDisabled(t *testing.T) {
 			},
 			{
 				Config:      testAccBucketVersioningConfig_basic(rName, tfs3.BucketVersioningStatusDisabled),
-				ExpectError: regexp.MustCompile(`versioning_configuration.status cannot be updated from 'Suspended' to 'Disabled'`),
+				ExpectError: regexache.MustCompile(`versioning_configuration.status cannot be updated from 'Suspended' to 'Disabled'`),
 			},
 		},
 	})
@@ -482,7 +485,7 @@ func TestAccS3BucketVersioning_Status_suspendedToDisabled(t *testing.T) {
 
 func testAccCheckBucketVersioningDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Conn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Conn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_s3_bucket_versioning" {
@@ -523,7 +526,7 @@ func testAccCheckBucketVersioningExists(ctx context.Context, resourceName string
 			return fmt.Errorf("Resource (%s) ID not set", resourceName)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Conn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Conn(ctx)
 
 		input := &s3.GetBucketVersioningInput{
 			Bucket: aws.String(rs.Primary.ID),

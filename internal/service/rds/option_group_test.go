@@ -1,12 +1,15 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package rds_test
 
 import (
 	"context"
 	"errors"
 	"fmt"
-	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/rds"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
@@ -33,7 +36,7 @@ func TestAccRDSOptionGroup_basic(t *testing.T) {
 				Config: testAccOptionGroupConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOptionGroupExists(ctx, resourceName, &v),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "rds", regexp.MustCompile(`og:.+`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "rds", regexache.MustCompile(`og:.+`)),
 					resource.TestCheckResourceAttr(resourceName, "engine_name", "mysql"),
 					resource.TestCheckResourceAttr(resourceName, "major_engine_version", "8.0"),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
@@ -95,7 +98,7 @@ func TestAccRDSOptionGroup_namePrefix(t *testing.T) {
 				Config: testAccOptionGroupConfig_namePrefix,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOptionGroupExists(ctx, "aws_db_option_group.test", &v),
-					resource.TestMatchResourceAttr("aws_db_option_group.test", "name", regexp.MustCompile("^tf-test-")),
+					resource.TestMatchResourceAttr("aws_db_option_group.test", "name", regexache.MustCompile("^tf-test-")),
 				),
 			},
 			{
@@ -536,7 +539,7 @@ func testAccCheckOptionGroupOptionSettingsIAMRole(optionGroup *rds.OptionGroup) 
 		}
 
 		settingValue := aws.StringValue(optionGroup.Options[0].OptionSettings[0].Value)
-		iamArnRegExp := regexp.MustCompile(fmt.Sprintf(`^arn:%s:iam::\d{12}:role/.+`, acctest.Partition()))
+		iamArnRegExp := regexache.MustCompile(fmt.Sprintf(`^arn:%s:iam::\d{12}:role/.+`, acctest.Partition()))
 		if !iamArnRegExp.MatchString(settingValue) {
 			return fmt.Errorf("Expected option setting to be a valid IAM role but received %s", settingValue)
 		}
@@ -571,7 +574,7 @@ func testAccCheckOptionGroupExists(ctx context.Context, n string, v *rds.OptionG
 			return fmt.Errorf("No DB Option Group Name is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn(ctx)
 
 		opts := rds.DescribeOptionGroupsInput{
 			OptionGroupName: aws.String(rs.Primary.ID),
@@ -595,7 +598,7 @@ func testAccCheckOptionGroupExists(ctx context.Context, n string, v *rds.OptionG
 
 func testAccCheckOptionGroupDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_db_option_group" {

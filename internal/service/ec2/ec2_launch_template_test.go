@@ -1,12 +1,15 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ec2_test
 
 import (
 	"context"
 	"fmt"
-	"regexp"
 	"strconv"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -33,7 +36,7 @@ func TestAccEC2LaunchTemplate_basic(t *testing.T) {
 				Config: testAccLaunchTemplateConfig_name(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckLaunchTemplateExists(ctx, resourceName, &template),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "ec2", regexp.MustCompile(`launch-template/.+`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "ec2", regexache.MustCompile(`launch-template/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "block_device_mappings.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "capacity_reservation_specification.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "cpu_options.#", "0"),
@@ -3190,7 +3193,7 @@ func testAccCheckLaunchTemplateExists(ctx context.Context, n string, v *ec2.Laun
 			return fmt.Errorf("No EC2 Launch Template ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
 
 		output, err := tfec2.FindLaunchTemplateByID(ctx, conn, rs.Primary.ID)
 
@@ -3206,7 +3209,7 @@ func testAccCheckLaunchTemplateExists(ctx context.Context, n string, v *ec2.Laun
 
 func testAccCheckLaunchTemplateDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_launch_template" {

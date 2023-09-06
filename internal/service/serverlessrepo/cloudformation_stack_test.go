@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package serverlessrepo_test
 
 import (
@@ -281,7 +284,7 @@ func testAccCheckCloudFormationStackExists(ctx context.Context, n string, stack 
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudFormationConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudFormationConn(ctx)
 		params := &cloudformation.DescribeStacksInput{
 			StackName: aws.String(rs.Primary.ID),
 		}
@@ -546,7 +549,7 @@ resource "aws_serverlessapplicationrepository_cloudformation_stack" "postgres-ro
 
 func testAccCheckAMIDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_ami" {
@@ -579,7 +582,7 @@ func testAccCheckAMIDestroy(ctx context.Context) resource.TestCheckFunc {
 
 func testAccCheckCloudFormationDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudFormationConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudFormationConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_cloudformation_stack" {

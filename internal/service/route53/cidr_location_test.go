@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package route53_test
 
 import (
@@ -125,7 +128,7 @@ func TestAccRoute53CIDRLocation_update(t *testing.T) {
 
 func testAccCheckCIDRLocationDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).Route53Conn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).Route53Conn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_route53_cidr_location" {
@@ -172,7 +175,7 @@ func testAccCheckCIDRLocationExists(ctx context.Context, n string) resource.Test
 			return err
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).Route53Conn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).Route53Conn(ctx)
 
 		_, err = tfroute53.FindCIDRLocationByTwoPartKey(ctx, conn, collectionID, name)
 

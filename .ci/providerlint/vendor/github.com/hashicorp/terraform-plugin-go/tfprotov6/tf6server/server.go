@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package tf6server
 
 import (
@@ -578,7 +581,7 @@ func (s *server) stop() {
 	s.stopCh = make(chan struct{})
 }
 
-func (s *server) Stop(ctx context.Context, req *tfplugin6.StopProvider_Request) (*tfplugin6.StopProvider_Response, error) {
+func (s *server) StopProvider(ctx context.Context, req *tfplugin6.StopProvider_Request) (*tfplugin6.StopProvider_Response, error) {
 	rpc := "StopProvider"
 	ctx = s.loggingContext(ctx)
 	ctx = logging.RpcContext(ctx, rpc)

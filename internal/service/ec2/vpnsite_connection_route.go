@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ec2
 
 import (
@@ -40,7 +43,7 @@ func ResourceVPNConnectionRoute() *schema.Resource {
 
 func resourceVPNConnectionRouteCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	cidrBlock := d.Get("destination_cidr_block").(string)
 	vpnConnectionID := d.Get("vpn_connection_id").(string)
@@ -68,7 +71,7 @@ func resourceVPNConnectionRouteCreate(ctx context.Context, d *schema.ResourceDat
 
 func resourceVPNConnectionRouteRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	cidrBlock, vpnConnectionID, err := VPNConnectionRouteParseResourceID(d.Id())
 
@@ -96,7 +99,7 @@ func resourceVPNConnectionRouteRead(ctx context.Context, d *schema.ResourceData,
 
 func resourceVPNConnectionRouteDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	cidrBlock, vpnConnectionID, err := VPNConnectionRouteParseResourceID(d.Id())
 

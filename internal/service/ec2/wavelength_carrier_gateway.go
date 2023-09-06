@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ec2
 
 import (
@@ -56,7 +59,7 @@ func ResourceCarrierGateway() *schema.Resource {
 
 func resourceCarrierGatewayCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	input := &ec2.CreateCarrierGatewayInput{
 		TagSpecifications: getTagSpecificationsIn(ctx, ec2.ResourceTypeCarrierGateway),
@@ -82,7 +85,7 @@ func resourceCarrierGatewayCreate(ctx context.Context, d *schema.ResourceData, m
 
 func resourceCarrierGatewayRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	carrierGateway, err := FindCarrierGatewayByID(ctx, conn, d.Id())
 
@@ -108,7 +111,7 @@ func resourceCarrierGatewayRead(ctx context.Context, d *schema.ResourceData, met
 	d.Set("owner_id", ownerID)
 	d.Set("vpc_id", carrierGateway.VpcId)
 
-	SetTagsOut(ctx, carrierGateway.Tags)
+	setTagsOut(ctx, carrierGateway.Tags)
 
 	return diags
 }
@@ -123,7 +126,7 @@ func resourceCarrierGatewayUpdate(ctx context.Context, d *schema.ResourceData, m
 
 func resourceCarrierGatewayDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn()
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	log.Printf("[INFO] Deleting EC2 Carrier Gateway (%s)", d.Id())
 	_, err := conn.DeleteCarrierGatewayWithContext(ctx, &ec2.DeleteCarrierGatewayInput{

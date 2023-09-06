@@ -1,11 +1,14 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package eks_test
 
 import (
 	"context"
 	"fmt"
-	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/service/eks"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -31,13 +34,13 @@ func TestAccEKSIdentityProviderConfig_basic(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccIdentityProviderConfigConfig_issuerURL(rName, "http://example.com"),
-				ExpectError: regexp.MustCompile(`expected .* to have a url with schema of: "https", got http://example.com`),
+				ExpectError: regexache.MustCompile(`expected .* to have a url with schema of: "https", got http://example.com`),
 			},
 			{
 				Config: testAccIdentityProviderConfigConfig_name(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIdentityProviderExistsConfig(ctx, resourceName, &config),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "eks", regexp.MustCompile(fmt.Sprintf("identityproviderconfig/%[1]s/oidc/%[1]s/.+", rName))),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "eks", regexache.MustCompile(fmt.Sprintf("identityproviderconfig/%[1]s/oidc/%[1]s/.+", rName))),
 					resource.TestCheckResourceAttrPair(resourceName, "cluster_name", eksClusterResourceName, "name"),
 					resource.TestCheckResourceAttr(resourceName, "oidc.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "oidc.0.client_id", "example.net"),
@@ -185,7 +188,7 @@ func testAccCheckIdentityProviderExistsConfig(ctx context.Context, resourceName 
 			return err
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EKSConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EKSConn(ctx)
 
 		output, err := tfeks.FindOIDCIdentityProviderConfigByClusterNameAndConfigName(ctx, conn, clusterName, configName)
 
@@ -201,7 +204,7 @@ func testAccCheckIdentityProviderExistsConfig(ctx context.Context, resourceName 
 
 func testAccCheckIdentityProviderConfigDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EKSConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EKSConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_eks_identity_provider_config" {

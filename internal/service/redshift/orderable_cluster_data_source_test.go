@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package redshift_test
 
 import (
@@ -95,7 +98,7 @@ func TestAccRedshiftOrderableClusterDataSource_preferredNodeTypes(t *testing.T) 
 }
 
 func testAccOrderableClusterPreCheck(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftConn()
+	conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftConn(ctx)
 
 	input := &redshift.DescribeOrderableClusterOptionsInput{
 		MaxRecords: aws.Int64(20),
