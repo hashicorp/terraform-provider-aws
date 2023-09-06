@@ -96,6 +96,41 @@ func TestAccServiceCatalogPrincipalPortfolioAssociation_disappears(t *testing.T)
 	})
 }
 
+func TestAccServiceCatalogPrincipalPortfolioAssociation_migrateV0(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName := "aws_servicecatalog_principal_portfolio_association.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:   acctest.ErrorCheck(t, servicecatalog.EndpointsID),
+		CheckDestroy: testAccCheckPrincipalPortfolioAssociationDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"aws": {
+						Source:            "hashicorp/aws",
+						VersionConstraint: "5.15.0",
+					},
+				},
+				Config: testAccPrincipalPortfolioAssociationConfig_basic(rName),
+				Check: resource.ComposeTestCheckFunc(
+					// Can't call this as the old ID format is invalid.
+					// testAccCheckPrincipalPortfolioAssociationExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "principal_type", "IAM"),
+				),
+			},
+			{
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				Config:                   testAccPrincipalPortfolioAssociationConfig_basic(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckPrincipalPortfolioAssociationExists(ctx, resourceName),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckPrincipalPortfolioAssociationDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).ServiceCatalogConn(ctx)
