@@ -38,11 +38,11 @@ func TestAccShieldDRTAccessLogBucketAssociation_basic(t *testing.T) {
 			testAccPreCheckLogBucket(ctx, t)
 		},
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDRTAccessLogBucketAssociationDestroy(ctx, t),
+		CheckDestroy:             testAccCheckDRTAccessLogBucketAssociationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDRTAccessLogBucketAssociationConfig_basic(rName, bucketName, t),
-				Check:  testAccCheckDRTAccessLogBucketAssociationExists(ctx, resourceName, &drtaccesslogbucketassociation, t),
+				Config: testAccDRTAccessLogBucketAssociationConfig_basic(rName, bucketName),
+				Check:  testAccCheckDRTAccessLogBucketAssociationExists(ctx, resourceName, &drtaccesslogbucketassociation),
 			},
 		},
 	})
@@ -69,13 +69,13 @@ func TestAccShieldDRTAccessLogBucketAssociation_multibucket(t *testing.T) {
 			testAccPreCheckLogBucket(ctx, t)
 		},
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDRTAccessLogBucketAssociationDestroy(ctx, t),
+		CheckDestroy:             testAccCheckDRTAccessLogBucketAssociationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDRTAccessLogBucketAssociationConfig_multibucket(rName, buckets, t),
+				Config: testAccDRTAccessLogBucketAssociationConfig_multibucket(rName, buckets),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDRTAccessLogBucketAssociationExists(ctx, resourceName1, &drtaccesslogbucketassociation, t),
-					testAccCheckDRTAccessLogBucketAssociationExists(ctx, resourceName2, &drtaccesslogbucketassociation, t),
+					testAccCheckDRTAccessLogBucketAssociationExists(ctx, resourceName1, &drtaccesslogbucketassociation),
+					testAccCheckDRTAccessLogBucketAssociationExists(ctx, resourceName2, &drtaccesslogbucketassociation),
 				),
 			},
 		},
@@ -98,12 +98,12 @@ func TestAccShieldDRTAccessLogBucketAssociation_disappears(t *testing.T) {
 			testAccPreCheckLogBucket(ctx, t)
 		},
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDRTAccessLogBucketAssociationDestroy(ctx, t),
+		CheckDestroy:             testAccCheckDRTAccessLogBucketAssociationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDRTAccessLogBucketAssociationConfig_basic(rName, bucketName, t),
+				Config: testAccDRTAccessLogBucketAssociationConfig_basic(rName, bucketName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDRTAccessLogBucketAssociationExists(ctx, resourceName, &drtaccesslogbucketassociation, t),
+					testAccCheckDRTAccessLogBucketAssociationExists(ctx, resourceName, &drtaccesslogbucketassociation),
 					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfshield.ResourceDRTAccessLogBucketAssociation, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -112,7 +112,7 @@ func TestAccShieldDRTAccessLogBucketAssociation_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckDRTAccessLogBucketAssociationDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
+func testAccCheckDRTAccessLogBucketAssociationDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).ShieldConn(ctx)
 
@@ -128,17 +128,15 @@ func testAccCheckDRTAccessLogBucketAssociationDestroy(ctx context.Context, t *te
 				return nil
 			}
 			if err != nil {
-				return nil
+				return err
 			}
 			if resp != nil {
 				if resp.LogBucketList != nil && len(resp.LogBucketList) > 0 {
 					for _, bucket := range resp.LogBucketList {
-
 						if *bucket == rs.Primary.Attributes["log_bucket"] {
 							return create.Error(names.Shield, create.ErrActionCheckingDestroyed, tfshield.ResNameDRTAccessLogBucketAssociation, rs.Primary.ID, errors.New("bucket association not destroyed"))
 						}
 					}
-
 				}
 				return nil
 			}
@@ -150,7 +148,7 @@ func testAccCheckDRTAccessLogBucketAssociationDestroy(ctx context.Context, t *te
 	}
 }
 
-func testAccCheckDRTAccessLogBucketAssociationExists(ctx context.Context, name string, drtaccesslogbucketassociation *shield.DescribeDRTAccessOutput, t *testing.T) resource.TestCheckFunc {
+func testAccCheckDRTAccessLogBucketAssociationExists(ctx context.Context, name string, drtaccesslogbucketassociation *shield.DescribeDRTAccessOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 
@@ -188,7 +186,7 @@ func testAccPreCheckLogBucket(ctx context.Context, t *testing.T) {
 	}
 }
 
-func testAccDRTAccessLogBucketAssociationConfig_basic(rName string, bucket string, t *testing.T) string {
+func testAccDRTAccessLogBucketAssociationConfig_basic(rName string, bucket string) string {
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
 
@@ -234,7 +232,7 @@ resource "aws_shield_drt_access_log_bucket_association" "test" {
 `, rName, bucket)
 }
 
-func testAccDRTAccessLogBucketAssociationConfig_multibucket(rName string, buckets []string, t *testing.T) string {
+func testAccDRTAccessLogBucketAssociationConfig_multibucket(rName string, buckets []string) string {
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
 
