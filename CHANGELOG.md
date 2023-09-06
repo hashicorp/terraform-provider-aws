@@ -4,6 +4,11 @@ NOTES:
 
 * provider: Performance regression introduced in v5.14.0 should be largely mitigated ([#33317](https://github.com/hashicorp/terraform-provider-aws/issues/33317))
 
+FEATURES:
+
+* **New Resource:** `aws_shield_drt_access_log_bucket_association` ([#33328](https://github.com/hashicorp/terraform-provider-aws/issues/33328))
+* **New Resource:** `aws_shield_drt_access_role_arn_association` ([#33328](https://github.com/hashicorp/terraform-provider-aws/issues/33328))
+
 ENHANCEMENTS:
 
 * data-source/aws_api_gateway_api_key: Add `customer_id` attribute ([#33281](https://github.com/hashicorp/terraform-provider-aws/issues/33281))
