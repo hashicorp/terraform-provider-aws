@@ -65,11 +65,13 @@ func (c *Config) ConfigureProvider(ctx context.Context, client *AWSClient) (*AWS
 
 	awsbaseConfig := awsbase.Config{
 		AccessKey:                     c.AccessKey,
+		AllowedAccountIds:             c.AllowedAccountIds,
 		APNInfo:                       StdUserAgentProducts(c.TerraformVersion),
 		AssumeRoleWithWebIdentity:     c.AssumeRoleWithWebIdentity,
 		CallerDocumentationURL:        "https://registry.terraform.io/providers/hashicorp/aws",
 		CallerName:                    "Terraform AWS Provider",
 		EC2MetadataServiceEnableState: c.EC2MetadataServiceEnableState,
+		ForbiddenAccountIds:           c.ForbiddenAccountIds,
 		IamEndpoint:                   c.Endpoints[names.IAM],
 		Insecure:                      c.Insecure,
 		HTTPClient:                    client.HTTPClient(),
@@ -167,24 +169,9 @@ func (c *Config) ConfigureProvider(ctx context.Context, client *AWSClient) (*AWS
 			"See https://www.terraform.io/docs/providers/aws/index.html#skip_requesting_account_id for implications."))
 	}
 
-	if len(c.ForbiddenAccountIds) > 0 {
-		for _, forbiddenAccountID := range c.ForbiddenAccountIds {
-			if accountID == forbiddenAccountID {
-				return nil, sdkdiag.AppendErrorf(diags, "AWS account ID not allowed: %s", accountID)
-			}
-		}
-	}
-	if len(c.AllowedAccountIds) > 0 {
-		found := false
-		for _, allowedAccountID := range c.AllowedAccountIds {
-			if accountID == allowedAccountID {
-				found = true
-				break
-			}
-		}
-		if !found {
-			return nil, sdkdiag.AppendErrorf(diags, "AWS account ID not allowed: %s", accountID)
-		}
+	err := awsbaseConfig.VerifyAccountIDAllowed(accountID)
+	if err != nil {
+		return nil, sdkdiag.AppendErrorf(diags, err.Error())
 	}
 
 	DNSSuffix := "amazonaws.com"
