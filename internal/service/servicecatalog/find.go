@@ -149,36 +149,3 @@ func FindTagOptionResourceAssociation(ctx context.Context, conn *servicecatalog.
 
 	return result, err
 }
-
-func FindPrincipalPortfolioAssociation(ctx context.Context, conn *servicecatalog.ServiceCatalog, acceptLanguage, principalARN, portfolioID string, principalType string) (*servicecatalog.Principal, error) {
-	input := &servicecatalog.ListPrincipalsForPortfolioInput{
-		PortfolioId: aws.String(portfolioID),
-	}
-
-	if acceptLanguage != "" {
-		input.AcceptLanguage = aws.String(acceptLanguage)
-	}
-
-	var result *servicecatalog.Principal
-
-	err := conn.ListPrincipalsForPortfolioPagesWithContext(ctx, input, func(page *servicecatalog.ListPrincipalsForPortfolioOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
-		}
-
-		for _, deet := range page.Principals {
-			if deet == nil {
-				continue
-			}
-
-			if aws.StringValue(deet.PrincipalARN) == principalARN {
-				result = deet
-				return false
-			}
-		}
-
-		return !lastPage
-	})
-
-	return result, err
-}

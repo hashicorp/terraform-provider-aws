@@ -9,7 +9,6 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/servicecatalog"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -18,8 +17,6 @@ import (
 	tfservicecatalog "github.com/hashicorp/terraform-provider-aws/internal/service/servicecatalog"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
-
-// add sweeper to delete known test servicecat principal portfolio associations
 
 func TestAccServiceCatalogPrincipalPortfolioAssociation_basic(t *testing.T) {
 	ctx := acctest.Context(t)
@@ -109,49 +106,44 @@ func testAccCheckPrincipalPortfolioAssociationDestroy(ctx context.Context) resou
 			}
 
 			acceptLanguage, principalARN, portfolioID, principalType, err := tfservicecatalog.PrincipalPortfolioAssociationParseResourceID(rs.Primary.ID)
-
 			if err != nil {
-				return fmt.Errorf("could not parse ID (%s): %w", rs.Primary.ID, err)
+				return err
 			}
 
-			err = tfservicecatalog.WaitPrincipalPortfolioAssociationDeleted(ctx, conn, acceptLanguage, principalARN, portfolioID, principalType, tfservicecatalog.PrincipalPortfolioAssociationDeleteTimeout)
+			_, err = tfservicecatalog.FindPrincipalPortfolioAssociation(ctx, conn, acceptLanguage, principalARN, portfolioID, principalType)
 
-			if tfresource.NotFound(err) || tfawserr.ErrCodeEquals(err, servicecatalog.ErrCodeResourceNotFoundException) {
+			if tfresource.NotFound(err) {
 				continue
 			}
 
 			if err != nil {
-				return fmt.Errorf("waiting for Service Catalog Principal Portfolio Association to be destroyed (%s): %w", rs.Primary.ID, err)
+				return err
 			}
+
+			return fmt.Errorf("Service Catalog Principal Portfolio Association (%s) still exists", rs.Primary.ID)
 		}
 
 		return nil
 	}
 }
 
-func testAccCheckPrincipalPortfolioAssociationExists(ctx context.Context, resourceName string) resource.TestCheckFunc {
+func testAccCheckPrincipalPortfolioAssociationExists(ctx context.Context, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[resourceName]
-
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return fmt.Errorf("resource not found: %s", resourceName)
+			return fmt.Errorf("Not found: %s", n)
 		}
 
 		acceptLanguage, principalARN, portfolioID, principalType, err := tfservicecatalog.PrincipalPortfolioAssociationParseResourceID(rs.Primary.ID)
-
 		if err != nil {
-			return fmt.Errorf("could not parse ID (%s): %w", rs.Primary.ID, err)
+			return err
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).ServiceCatalogConn(ctx)
 
-		_, err = tfservicecatalog.WaitPrincipalPortfolioAssociationReady(ctx, conn, acceptLanguage, principalARN, portfolioID, principalType, tfservicecatalog.PrincipalPortfolioAssociationReadyTimeout)
+		_, err = tfservicecatalog.FindPrincipalPortfolioAssociation(ctx, conn, acceptLanguage, principalARN, portfolioID, principalType)
 
-		if err != nil {
-			return fmt.Errorf("waiting for Service Catalog Principal Portfolio Association existence (%s): %w", rs.Primary.ID, err)
-		}
-
-		return nil
+		return err
 	}
 }
 
