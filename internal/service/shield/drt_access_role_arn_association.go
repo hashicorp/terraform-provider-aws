@@ -6,9 +6,9 @@ package shield
 import (
 	"context"
 	"errors"
-	"regexp"
 	"time"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/shield"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
@@ -68,7 +68,7 @@ func (r *resourceDRTAccessRoleARNAssociation) Schema(ctx context.Context, req re
 				Validators: []validator.String{
 					stringvalidator.LengthBetween(1, 2048),
 					stringvalidator.RegexMatches(
-						regexp.MustCompile(`^arn:?[a-zA-Z\-]+:iam::\d{12}:role/?[a-zA-Z_0-9+=,.@\-_/]+`),
+						regexache.MustCompile(`^arn:?[a-zA-Z\-]+:iam::\d{12}:role/?[a-zA-Z_0-9+=,.@\-_/]+`),
 						"must match arn pattern",
 					),
 				},
