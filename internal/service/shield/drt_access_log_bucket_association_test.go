@@ -7,11 +7,8 @@ import (
 	"context"
 	"errors"
 	"fmt"
-
-	//"regexp"
 	"testing"
 
-	"github.com/aws/aws-sdk-go-v2/service/shield/types"
 	"github.com/aws/aws-sdk-go/service/shield"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -128,7 +125,7 @@ func testAccCheckDRTAccessLogBucketAssociationDestroy(ctx context.Context, t *te
 			input := &shield.DescribeDRTAccessInput{}
 			resp, err := conn.DescribeDRTAccessWithContext(ctx, input)
 
-			if errs.IsA[*types.ResourceNotFoundException](err) {
+			if errs.IsA[*shield.ResourceNotFoundException](err) {
 				return nil
 			}
 			if err != nil {

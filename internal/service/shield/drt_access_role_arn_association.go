@@ -9,7 +9,7 @@ import (
 	"regexp"
 	"time"
 
-	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/shield"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
@@ -323,7 +323,7 @@ func statusDRTAccessRoleARNAssociationDeleted(ctx context.Context, conn *shield.
 			return nil, "", err
 		}
 
-		if out.RoleArn != nil && aws.ToString(out.RoleArn) == roleARN {
+		if out.RoleArn != nil && aws.StringValue(out.RoleArn) == roleARN {
 			return out, statusDeleting, nil
 		}
 
@@ -345,7 +345,7 @@ func describeDRTAccessRoleARNAssociation(ctx context.Context, conn *shield.Shiel
 		}
 	}
 
-	if out == nil || out.RoleArn == nil || aws.ToString(out.RoleArn) != roleARN {
+	if out == nil || out.RoleArn == nil || aws.StringValue(out.RoleArn) != roleARN {
 		return nil, tfresource.NewEmptyResultError(in)
 	}
 

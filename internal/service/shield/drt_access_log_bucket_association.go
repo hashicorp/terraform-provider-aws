@@ -8,7 +8,7 @@ import (
 	"errors"
 	"time"
 
-	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/shield"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
@@ -169,7 +169,7 @@ func (r *resourceDRTAccessLogBucketAssociation) Read(ctx context.Context, req re
 
 func getAssociatedLogBucket(bucket string, bucketList []*string) *string {
 	for _, bkt := range bucketList {
-		if aws.ToString(bkt) == bucket {
+		if aws.StringValue(bkt) == bucket {
 			return bkt
 		}
 	}
@@ -334,7 +334,7 @@ func statusDRTAccessLogBucketAssociation(ctx context.Context, conn *shield.Shiel
 
 		if out != nil && len(out.LogBucketList) > 0 {
 			for _, bkt := range out.LogBucketList {
-				if aws.ToString(bkt) == bucket {
+				if aws.StringValue(bkt) == bucket {
 					return out, statusNormal, nil
 				}
 			}
@@ -364,7 +364,7 @@ func describeDRTAccessLogBucketAssociation(ctx context.Context, conn *shield.Shi
 	}
 
 	for _, bucket := range out.LogBucketList {
-		if aws.ToString(bucket) == bucketName {
+		if aws.StringValue(bucket) == bucketName {
 			return out, nil
 		}
 	}
