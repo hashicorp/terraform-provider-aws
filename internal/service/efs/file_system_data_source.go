@@ -116,21 +116,27 @@ func dataSourceFileSystemRead(ctx context.Context, d *schema.ResourceData, meta 
 		describeEfsOpts.FileSystemId = aws.String(v.(string))
 	}
 
-	describeResp, err := conn.DescribeFileSystemsWithContext(ctx, describeEfsOpts)
+	var results []*efs.FileSystemDescription
+	err := conn.DescribeFileSystemsPagesWithContext(
+		ctx,
+		describeEfsOpts,
+		func(page *efs.DescribeFileSystemsOutput, lastPage bool) bool {
+			results = append(results, page.FileSystems...)
+			return true
+		})
+
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading EFS FileSystem: %s", err)
 	}
 
-	if describeResp == nil || len(describeResp.FileSystems) == 0 {
+	if len(results) == 0 {
 		return sdkdiag.AppendErrorf(diags, "reading EFS FileSystem: empty output")
 	}
-
-	results := describeResp.FileSystems
 
 	if len(tagsToMatch) > 0 {
 		var fileSystems []*efs.FileSystemDescription
 
-		for _, fileSystem := range describeResp.FileSystems {
+		for _, fileSystem := range results {
 			tags := KeyValueTags(ctx, fileSystem.Tags)
 
 			if !tags.ContainsAll(tagsToMatch) {
