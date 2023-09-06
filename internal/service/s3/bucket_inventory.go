@@ -232,7 +232,7 @@ func resourceBucketInventoryPut(ctx context.Context, d *schema.ResourceData, met
 	}
 
 	log.Printf("[DEBUG] Putting S3 bucket inventory configuration: %s", input)
-	err := retry.RetryContext(ctx, propagationTimeout, func() *retry.RetryError {
+	err := retry.RetryContext(ctx, s3BucketPropagationTimeout, func() *retry.RetryError {
 		_, err := conn.PutBucketInventoryConfigurationWithContext(ctx, input)
 
 		if tfawserr.ErrCodeEquals(err, s3.ErrCodeNoSuchBucket) {
@@ -310,7 +310,7 @@ func resourceBucketInventoryRead(ctx context.Context, d *schema.ResourceData, me
 
 	log.Printf("[DEBUG] Reading S3 bucket inventory configuration: %s", input)
 	var output *s3.GetBucketInventoryConfigurationOutput
-	err = retry.RetryContext(ctx, propagationTimeout, func() *retry.RetryError {
+	err = retry.RetryContext(ctx, s3BucketPropagationTimeout, func() *retry.RetryError {
 		var err error
 		output, err = conn.GetBucketInventoryConfigurationWithContext(ctx, input)
 
