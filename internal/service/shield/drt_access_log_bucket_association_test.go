@@ -243,7 +243,7 @@ resource "aws_s3_bucket" "test1" {
 }
 
 resource "aws_s3_bucket" "test2" {
-  bucket = %[3]q 
+  bucket = %[3]q
 }
 
 resource "aws_iam_role" "test" {
@@ -281,6 +281,7 @@ resource "aws_shield_drt_access_log_bucket_association" "test1" {
   log_bucket              = aws_s3_bucket.test1.id
   role_arn_association_id = aws_shield_drt_access_role_arn_association.test.id
 }
+
 resource "aws_shield_drt_access_log_bucket_association" "test2" {
   log_bucket              = aws_s3_bucket.test2.id
   role_arn_association_id = aws_shield_drt_access_role_arn_association.test.id
