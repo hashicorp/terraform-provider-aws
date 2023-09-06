@@ -1245,11 +1245,11 @@ func TestAccElastiCacheCluster_TransitEncryption(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccClusterConfig_transitEncryption(rName, "memcached", "1.6.11"),
-				ExpectError: regexp.MustCompile(`Transit encryption is not supported for memcached version 1.6.11`),
+				ExpectError: regexache.MustCompile(`Transit encryption is not supported for memcached version 1.6.11`),
 			},
 			{
 				Config:      testAccClusterConfig_transitEncryption(rName, "redis", "6.2"),
-				ExpectError: regexp.MustCompile(`aws_elasticache_cluster does not support transit encryption using the redis engine, use aws_elasticache_replication_group instead`),
+				ExpectError: regexache.MustCompile(`aws_elasticache_cluster does not support transit encryption using the redis engine, use aws_elasticache_replication_group instead`),
 			},
 			{
 				Config: testAccClusterConfig_transitEncryption(rName, "memcached", "1.6.12"),
