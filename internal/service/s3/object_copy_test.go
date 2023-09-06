@@ -218,8 +218,11 @@ func TestAccS3ObjectCopy_grant(t *testing.T) {
 
 func TestAccS3ObjectCopy_BucketKeyEnabled_bucket(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName1 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_s3_object_copy.test"
+	sourceKey := "source"
+	targetKey := "target"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -228,7 +231,7 @@ func TestAccS3ObjectCopy_BucketKeyEnabled_bucket(t *testing.T) {
 		CheckDestroy:             testAccCheckObjectCopyDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccObjectCopyConfig_bucketKeyEnabledBucket(rName),
+				Config: testAccObjectCopyConfig_bucketKeyEnabledBucket(rName1, sourceKey, rName2, targetKey),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckObjectCopyExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "bucket_key_enabled", "true"),
@@ -240,8 +243,11 @@ func TestAccS3ObjectCopy_BucketKeyEnabled_bucket(t *testing.T) {
 
 func TestAccS3ObjectCopy_BucketKeyEnabled_object(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName1 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_s3_object_copy.test"
+	sourceKey := "source"
+	targetKey := "target"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -250,7 +256,7 @@ func TestAccS3ObjectCopy_BucketKeyEnabled_object(t *testing.T) {
 		CheckDestroy:             testAccCheckObjectCopyDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccObjectCopyConfig_bucketKeyEnabled(rName),
+				Config: testAccObjectCopyConfig_bucketKeyEnabledObject(rName1, sourceKey, rName2, targetKey),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckObjectCopyExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "bucket_key_enabled", "true"),
@@ -415,28 +421,18 @@ resource "aws_s3_object_copy" "test" {
 `, targetKey))
 }
 
-func testAccObjectCopyConfig_bucketKeyEnabledBucket(rName string) string {
-	return fmt.Sprintf(`
+func testAccObjectCopyConfig_baseBucketKeyEnabled(sourceBucket, sourceKey, targetBucket string) string {
+	return acctest.ConfigCompose(testAccObjectCopyConfig_base(sourceBucket, sourceKey, targetBucket), fmt.Sprintf(`
 resource "aws_kms_key" "test" {
-  description             = "Encrypts test objects"
+  description             = %[1]q
   deletion_window_in_days = 7
 }
-
-resource "aws_s3_bucket" "source" {
-  bucket = "%[1]s-source"
+`, targetBucket))
 }
 
-resource "aws_s3_object" "source" {
-  bucket  = aws_s3_bucket.source.bucket
-  content = "Ingen ko på isen"
-  key     = "test"
-}
-
-resource "aws_s3_bucket" "target" {
-  bucket = "%[1]s-target"
-}
-
-resource "aws_s3_bucket_server_side_encryption_configuration" "test" {
+func testAccObjectCopyConfig_bucketKeyEnabledBucket(sourceBucket, sourceKey, targetBucket, targetKey string) string {
+	return acctest.ConfigCompose(testAccObjectCopyConfig_baseBucketKeyEnabled(sourceBucket, sourceKey, targetBucket), fmt.Sprintf(`
+resource "aws_s3_bucket_server_side_encryption_configuration" "target" {
   bucket = aws_s3_bucket.target.id
 
   rule {
@@ -450,42 +446,23 @@ resource "aws_s3_bucket_server_side_encryption_configuration" "test" {
 
 resource "aws_s3_object_copy" "test" {
   # Must have bucket SSE enabled first
-  depends_on = [aws_s3_bucket_server_side_encryption_configuration.test]
+  depends_on = [aws_s3_bucket_server_side_encryption_configuration.target]
 
   bucket = aws_s3_bucket.target.bucket
-  key    = "test"
+  key    = %[1]q
   source = "${aws_s3_bucket.source.bucket}/${aws_s3_object.source.key}"
 }
-`, rName)
+`, targetKey))
 }
 
-func testAccObjectCopyConfig_bucketKeyEnabled(rName string) string {
-	return fmt.Sprintf(`
-resource "aws_kms_key" "test" {
-  description             = "Encrypts test objects"
-  deletion_window_in_days = 7
-}
-
-resource "aws_s3_bucket" "source" {
-  bucket = "%[1]s-source"
-}
-
-resource "aws_s3_object" "source" {
-  bucket  = aws_s3_bucket.source.bucket
-  content = "Ingen ko på isen"
-  key     = "test"
-}
-
-resource "aws_s3_bucket" "target" {
-  bucket = "%[1]s-target"
-}
-
+func testAccObjectCopyConfig_bucketKeyEnabledObject(sourceBucket, sourceKey, targetBucket, targetKey string) string {
+	return acctest.ConfigCompose(testAccObjectCopyConfig_baseBucketKeyEnabled(sourceBucket, sourceKey, targetBucket), fmt.Sprintf(`
 resource "aws_s3_object_copy" "test" {
   bucket             = aws_s3_bucket.target.bucket
   bucket_key_enabled = true
-  key                = "test"
+  key                = %[1]q
   kms_key_id         = aws_kms_key.test.arn
   source             = "${aws_s3_bucket.source.bucket}/${aws_s3_object.source.key}"
 }
-`, rName)
+`, targetKey))
 }
