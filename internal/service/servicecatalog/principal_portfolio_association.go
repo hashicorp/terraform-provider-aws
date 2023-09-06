@@ -40,6 +40,15 @@ func ResourcePrincipalPortfolioAssociation() *schema.Resource {
 			Delete: schema.DefaultTimeout(3 * time.Minute),
 		},
 
+		SchemaVersion: 1,
+		StateUpgraders: []schema.StateUpgrader{
+			{
+				Type:    resourcePrincipalPortfolioAssociationV0().CoreConfigSchema().ImpliedType(),
+				Upgrade: principalPortfolioAssociationUpgradeV0,
+				Version: 0,
+			},
+		},
+
 		Schema: map[string]*schema.Schema{
 			"accept_language": {
 				Type:         schema.TypeString,
@@ -237,4 +246,48 @@ func FindPrincipalPortfolioAssociation(ctx context.Context, conn *servicecatalog
 	}
 
 	return findPrincipalForPortfolio(ctx, conn, input, filter)
+}
+
+// aws_autoscaling_group aws_servicecatalog_principal_portfolio_association's Schema @v5.15.0 minus validators.
+func resourcePrincipalPortfolioAssociationV0() *schema.Resource {
+	return &schema.Resource{
+		Schema: map[string]*schema.Schema{
+			"accept_language": {
+				Type:     schema.TypeString,
+				Optional: true,
+				ForceNew: true,
+				Default:  AcceptLanguageEnglish,
+			},
+			"portfolio_id": {
+				Type:     schema.TypeString,
+				Required: true,
+				ForceNew: true,
+			},
+			"principal_arn": {
+				Type:     schema.TypeString,
+				Required: true,
+				ForceNew: true,
+			},
+			"principal_type": {
+				Type:     schema.TypeString,
+				Optional: true,
+				ForceNew: true,
+				Default:  servicecatalog.PrincipalTypeIam,
+			},
+		},
+	}
+}
+
+func principalPortfolioAssociationUpgradeV0(_ context.Context, rawState map[string]interface{}, meta interface{}) (map[string]interface{}, error) {
+	if rawState == nil {
+		rawState = map[string]interface{}{}
+	}
+
+	// Is resource ID in the correct format?
+	if _, _, _, _, err := PrincipalPortfolioAssociationParseResourceID(rawState["id"].(string)); err != nil {
+		acceptLanguage, principalARN, portfolioID, principalType := rawState["accept_language"].(string), rawState["principal_arn"].(string), rawState["portfolio_id"].(string), rawState["principal_type"].(string)
+		rawState["id"] = PrincipalPortfolioAssociationCreateResourceID(acceptLanguage, principalARN, portfolioID, principalType)
+	}
+
+	return rawState, nil
 }
