@@ -4,8 +4,8 @@ go 1.20
 
 require (
 	github.com/ProtonMail/go-crypto v0.0.0-20230717121422-5aa5874ade95
-	github.com/YakDriver/regexache v0.7.0
-	github.com/aws/aws-sdk-go v1.45.1
+	github.com/YakDriver/regexache v0.17.0
+	github.com/aws/aws-sdk-go v1.45.2
 	github.com/aws/aws-sdk-go-v2 v1.21.0
 	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.13.11
 	github.com/aws/aws-sdk-go-v2/service/accessanalyzer v1.20.5
@@ -29,7 +29,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/fis v1.15.5
 	github.com/aws/aws-sdk-go-v2/service/glacier v1.15.5
 	github.com/aws/aws-sdk-go-v2/service/healthlake v1.17.5
-	github.com/aws/aws-sdk-go-v2/service/identitystore v1.17.6
+	github.com/aws/aws-sdk-go-v2/service/identitystore v1.18.0
 	github.com/aws/aws-sdk-go-v2/service/inspector2 v1.16.6
 	github.com/aws/aws-sdk-go-v2/service/internetmonitor v1.5.4
 	github.com/aws/aws-sdk-go-v2/service/ivschat v1.5.5
@@ -71,8 +71,8 @@ require (
 	github.com/beevik/etree v1.2.0
 	github.com/google/go-cmp v0.5.9
 	github.com/hashicorp/aws-cloudformation-resource-schema-sdk-go v0.21.0
-	github.com/hashicorp/aws-sdk-go-base/v2 v2.0.0-beta.34
-	github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2 v2.0.0-beta.35
+	github.com/hashicorp/aws-sdk-go-base/v2 v2.0.0-beta.35
+	github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2 v2.0.0-beta.36
 	github.com/hashicorp/awspolicyequivalence v1.6.0
 	github.com/hashicorp/go-cleanhttp v0.5.2
 	github.com/hashicorp/go-cty v1.4.1-0.20200414143053-d3edf31b6320
@@ -98,8 +98,8 @@ require (
 	github.com/pquerna/otp v1.4.0
 	github.com/shopspring/decimal v1.3.1
 	golang.org/x/crypto v0.12.0
-	golang.org/x/exp v0.0.0-20230811145659-89c5cff77bcb
-	golang.org/x/tools v0.12.0
+	golang.org/x/exp v0.0.0-20230817173708-d852ddb80c63
+	golang.org/x/tools v0.12.1-0.20230815132531-74c255bcf846
 	gopkg.in/dnaeon/go-vcr.v3 v3.1.2
 	gopkg.in/yaml.v2 v2.4.0
 	syreclabs.com/go/faker v1.2.3
@@ -139,7 +139,7 @@ require (
 	github.com/go-git/go-git/v5 v5.8.1 // indirect
 	github.com/go-test/deep v1.1.0 // indirect
 	github.com/golang/protobuf v1.5.3 // indirect
-	github.com/google/uuid v1.3.0 // indirect
+	github.com/google/uuid v1.3.1 // indirect
 	github.com/hashicorp/errwrap v1.1.0 // indirect
 	github.com/hashicorp/go-checkpoint v0.5.0 // indirect
 	github.com/hashicorp/go-hclog v1.5.0 // indirect

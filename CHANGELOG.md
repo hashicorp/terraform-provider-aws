@@ -9,6 +9,7 @@ ENHANCEMENTS:
 * resource/aws_api_gateway_account: Add `api_key_version` and `features` attributes ([#33279](https://github.com/hashicorp/terraform-provider-aws/issues/33279))
 * resource/aws_api_gateway_api_key: Add `customer_id` argument ([#33281](https://github.com/hashicorp/terraform-provider-aws/issues/33281))
 * resource/aws_api_gateway_api_key: Allow updating `name` ([#33281](https://github.com/hashicorp/terraform-provider-aws/issues/33281))
+* resource/aws_autoscaling_group: Add `scale_in_protected_instances` and `standby_instances` attributes to `instance_refresh.preferences` configuration block ([#33310](https://github.com/hashicorp/terraform-provider-aws/issues/33310))
 * resource/aws_fsx_windows_file_system: Add `disk_iops_configuration` configuration block ([#33303](https://github.com/hashicorp/terraform-provider-aws/issues/33303))
 * resource/aws_glue_catalog_table: Add `open_table_format_input` configuration block to support open table formats such as [Apache Iceberg](https://iceberg.apache.org/) ([#33274](https://github.com/hashicorp/terraform-provider-aws/issues/33274))
 * resource/aws_medialive_channel: Implement expand/flatten functions for `automatic_input_failover_settings` in `input_attachments` ([#33129](https://github.com/hashicorp/terraform-provider-aws/issues/33129))
@@ -16,6 +17,8 @@ ENHANCEMENTS:
 
 BUG FIXES:
 
+* data-source/aws_identitystore_group: Restore `filter` argument to prevent `UnknownOperationException` errors in certain Regions ([#33311](https://github.com/hashicorp/terraform-provider-aws/issues/33311))
+* data-source/aws_identitystore_user: Restore `filter` argument to prevent `UnknownOperationException` errors in certain Regions ([#33311](https://github.com/hashicorp/terraform-provider-aws/issues/33311))
 * data-source/aws_s3_objects: Respect configured `max_keys` value if it's greater than `1000` ([#33304](https://github.com/hashicorp/terraform-provider-aws/issues/33304))
 * resource/aws_api_gateway_account: Allow setting `cloudwatch_role_arn` to an empty value and set it correctly on Read, allowing its value to be determined on import ([#33279](https://github.com/hashicorp/terraform-provider-aws/issues/33279))
 * resource/aws_fsx_ontap_file_system: Increase maximum value of `disk_iops_configuration.iops` to `160000` ([#33263](https://github.com/hashicorp/terraform-provider-aws/issues/33263))
