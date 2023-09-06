@@ -133,18 +133,14 @@ This resource exports the following attributes in addition to the arguments abov
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Amazon Connect Contact Flow Modules using the `engine` and `engine_version` separated by a colon (`:`). For example:
 
 ```terraform
-
 import {
   to = aws_rds_custom_db_engine_version.example
   id = "custom-oracle-ee-cdb:19.cdb_cev1"
 }
-
 ```
 
 Using `terraform import`, import Amazon Connect Contact Flow Modules using the `engine` and `engine_version` separated by a colon (`:`). For example:
 
 ```console
-
-
 % terraform import aws_rds_custom_db_engine_version.example custom-oracle-ee-cdb:19.cdb_cev1
 ```
