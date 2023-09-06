@@ -32,4 +32,5 @@ The following arguments are required:
 * `role_arn_association_id` - (Required) The ID of the Role Arn association used for allowing Shield DRT Access.
 
 ## Attribute Reference
+
 This resource exports no additional attributes.

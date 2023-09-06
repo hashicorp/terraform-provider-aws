@@ -48,4 +48,5 @@ The following arguments are required:
 * `role_arn` - (Required) The Amazon Resource Name (ARN) of the role the SRT will use to access your AWS account. Prior to making the AssociateDRTRole request, you must attach the `AWSShieldDRTAccessPolicy` managed policy to this role.
 
 ## Attribute Reference
+
 This resource exports no additional attributes.
