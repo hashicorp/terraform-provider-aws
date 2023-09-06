@@ -470,8 +470,8 @@ func resourceObjectCopyDoCopy(ctx context.Context, d *schema.ResourceData, meta 
 
 	input := &s3.CopyObjectInput{
 		Bucket:     aws.String(d.Get("bucket").(string)),
-		Key:        aws.String(d.Get("key").(string)),
 		CopySource: aws.String(url.QueryEscape(d.Get("source").(string))),
+		Key:        aws.String(d.Get("key").(string)),
 	}
 
 	if v, ok := d.GetOk("acl"); ok {

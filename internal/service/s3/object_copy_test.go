@@ -113,6 +113,52 @@ func TestAccS3ObjectCopy_disappears(t *testing.T) {
 	})
 }
 
+func TestAccS3ObjectCopy_tags(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName1 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_s3_object_copy.test"
+	sourceKey := "source"
+	targetKey := "target"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3EndpointID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckObjectCopyDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccObjectCopyConfig_tags1(rName1, sourceKey, rName2, targetKey, "key1", "value1"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckObjectCopyExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "tagging_directive", "REPLACE"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+				),
+			},
+			{
+				Config: testAccObjectCopyConfig_tags2(rName1, sourceKey, rName2, targetKey, "key1", "value1updated", "key2", "value2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckObjectCopyExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "tagging_directive", "REPLACE"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+				),
+			},
+			{
+				Config: testAccObjectCopyConfig_tags1(rName1, sourceKey, rName2, targetKey, "key2", "value2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckObjectCopyExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "tagging_directive", "REPLACE"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccS3ObjectCopy_BucketKeyEnabled_bucket(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -224,6 +270,39 @@ resource "aws_s3_object_copy" "test" {
   source = "${aws_s3_bucket.source.bucket}/${aws_s3_object.source.key}"
 }
 `, targetKey))
+}
+
+func testAccObjectCopyConfig_tags1(sourceBucket, sourceKey, targetBucket, targetKey, tagKey1, tagValue1 string) string {
+	return acctest.ConfigCompose(testAccObjectCopyConfig_base(sourceBucket, sourceKey, targetBucket), fmt.Sprintf(`
+resource "aws_s3_object_copy" "test" {
+  bucket = aws_s3_bucket.target.bucket
+  key    = %[1]q
+  source = "${aws_s3_bucket.source.bucket}/${aws_s3_object.source.key}"
+
+  tagging_directive = "REPLACE"
+
+  tags = {
+    %[2]q = %[3]q
+  }
+}
+`, targetKey, tagKey1, tagValue1))
+}
+
+func testAccObjectCopyConfig_tags2(sourceBucket, sourceKey, targetBucket, targetKey, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+	return acctest.ConfigCompose(testAccObjectCopyConfig_base(sourceBucket, sourceKey, targetBucket), fmt.Sprintf(`
+resource "aws_s3_object_copy" "test" {
+  bucket = aws_s3_bucket.target.bucket
+  key    = %[1]q
+  source = "${aws_s3_bucket.source.bucket}/${aws_s3_object.source.key}"
+
+  tagging_directive = "REPLACE"
+
+  tags = {
+    %[2]q = %[3]q
+    %[4]q = %[5]q
+  }
+}
+`, targetKey, tagKey1, tagValue1, tagKey2, tagValue2))
 }
 
 func testAccObjectCopyConfig_grant(rName1, sourceKey, rName2, key string) string {
