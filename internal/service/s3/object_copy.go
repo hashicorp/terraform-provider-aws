@@ -11,7 +11,6 @@ import (
 	"net/http"
 	"net/url"
 	"strings"
-	"time"
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -360,19 +359,10 @@ func resourceObjectCopyRead(ctx context.Context, d *schema.ResourceData, meta in
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	// Retry due to S3 eventual consistency
-	tagsRaw, err := tfresource.RetryWhenIsA[*types.NoSuchBucket](ctx, 2*time.Minute, func() (interface{}, error) {
-		return ObjectListTags(ctx, conn, bucket, key)
-	})
+	tags, err := ObjectListTags(ctx, conn, bucket, key)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "listing tags for S3 Bucket (%s) Object (%s): %s", bucket, key, err)
-	}
-
-	tags, ok := tagsRaw.(tftags.KeyValueTags)
-
-	if !ok {
-		return sdkdiag.AppendErrorf(diags, "listing tags for S3 Bucket (%s) Object (%s): unable to convert tags", bucket, key)
 	}
 
 	setTagsOut(ctx, Tags(tags))
