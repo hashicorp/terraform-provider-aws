@@ -266,13 +266,13 @@ func TestAccS3ObjectCopy_BucketKeyEnabled_object(t *testing.T) {
 	})
 }
 
-func TestAccS3ObjectCopy_sourceAndTargetWithSlashes(t *testing.T) {
+func TestAccS3ObjectCopy_sourceWithSlashes(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName1 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_s3_object_copy.test"
 	sourceKey := "dir1/dir2/source"
-	targetKey := "dir3/target"
+	targetKey := "target"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -281,7 +281,13 @@ func TestAccS3ObjectCopy_sourceAndTargetWithSlashes(t *testing.T) {
 		CheckDestroy:             testAccCheckObjectCopyDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccObjectCopyConfig_basic(rName1, sourceKey, rName2, targetKey),
+				Config: testAccObjectCopyConfig_baseSourceAndTargetBuckets(rName1, rName2),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckBucketAddObjects(ctx, "aws_s3_bucket.source", sourceKey),
+				),
+			},
+			{
+				Config: testAccObjectCopyConfig_externalSourceObject(rName1, sourceKey, rName2, targetKey),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckObjectCopyExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "source", fmt.Sprintf("%s/%s", rName1, sourceKey)),
@@ -332,26 +338,34 @@ func testAccCheckObjectCopyExists(ctx context.Context, n string) resource.TestCh
 	}
 }
 
-func testAccObjectCopyConfig_base(sourceBucket, sourceKey, targetBucket string) string {
+func testAccObjectCopyConfig_baseSourceAndTargetBuckets(sourceBucket, targetBucket string) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "source" {
   bucket = %[1]q
-}
 
-resource "aws_s3_object" "source" {
-  bucket  = aws_s3_bucket.source.bucket
-  key     = %[2]q
-  content = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
+  force_destroy = true
 }
 
 resource "aws_s3_bucket" "target" {
-  bucket = %[3]q
+  bucket = %[2]q
+
+  force_destroy = true
 }
-`, sourceBucket, sourceKey, targetBucket)
+`, sourceBucket, targetBucket)
+}
+
+func testAccObjectCopyConfig_baseSourceObject(sourceBucket, sourceKey, targetBucket string) string {
+	return acctest.ConfigCompose(testAccObjectCopyConfig_baseSourceAndTargetBuckets(sourceBucket, targetBucket), fmt.Sprintf(`
+resource "aws_s3_object" "source" {
+  bucket  = aws_s3_bucket.source.bucket
+  key     = %[1]q
+  content = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
+}
+`, sourceKey))
 }
 
 func testAccObjectCopyConfig_basic(sourceBucket, sourceKey, targetBucket, targetKey string) string {
-	return acctest.ConfigCompose(testAccObjectCopyConfig_base(sourceBucket, sourceKey, targetBucket), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccObjectCopyConfig_baseSourceObject(sourceBucket, sourceKey, targetBucket), fmt.Sprintf(`
 resource "aws_s3_object_copy" "test" {
   bucket = aws_s3_bucket.target.bucket
   key    = %[1]q
@@ -361,7 +375,7 @@ resource "aws_s3_object_copy" "test" {
 }
 
 func testAccObjectCopyConfig_tags1(sourceBucket, sourceKey, targetBucket, targetKey, tagKey1, tagValue1 string) string {
-	return acctest.ConfigCompose(testAccObjectCopyConfig_base(sourceBucket, sourceKey, targetBucket), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccObjectCopyConfig_baseSourceObject(sourceBucket, sourceKey, targetBucket), fmt.Sprintf(`
 resource "aws_s3_object_copy" "test" {
   bucket = aws_s3_bucket.target.bucket
   key    = %[1]q
@@ -377,7 +391,7 @@ resource "aws_s3_object_copy" "test" {
 }
 
 func testAccObjectCopyConfig_tags2(sourceBucket, sourceKey, targetBucket, targetKey, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
-	return acctest.ConfigCompose(testAccObjectCopyConfig_base(sourceBucket, sourceKey, targetBucket), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccObjectCopyConfig_baseSourceObject(sourceBucket, sourceKey, targetBucket), fmt.Sprintf(`
 resource "aws_s3_object_copy" "test" {
   bucket = aws_s3_bucket.target.bucket
   key    = %[1]q
@@ -394,7 +408,7 @@ resource "aws_s3_object_copy" "test" {
 }
 
 func testAccObjectCopyConfig_metadata(sourceBucket, sourceKey, targetBucket, targetKey string) string {
-	return acctest.ConfigCompose(testAccObjectCopyConfig_base(sourceBucket, sourceKey, targetBucket), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccObjectCopyConfig_baseSourceObject(sourceBucket, sourceKey, targetBucket), fmt.Sprintf(`
 resource "aws_s3_object_copy" "test" {
   bucket = aws_s3_bucket.target.bucket
   key    = %[1]q
@@ -410,7 +424,7 @@ resource "aws_s3_object_copy" "test" {
 }
 
 func testAccObjectCopyConfig_grant(sourceBucket, sourceKey, targetBucket, targetKey string) string {
-	return acctest.ConfigCompose(testAccObjectCopyConfig_base(sourceBucket, sourceKey, targetBucket), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccObjectCopyConfig_baseSourceObject(sourceBucket, sourceKey, targetBucket), fmt.Sprintf(`
 resource "aws_s3_bucket_public_access_block" "target" {
   bucket = aws_s3_bucket.target.id
 
@@ -447,7 +461,7 @@ resource "aws_s3_object_copy" "test" {
 }
 
 func testAccObjectCopyConfig_baseBucketKeyEnabled(sourceBucket, sourceKey, targetBucket string) string {
-	return acctest.ConfigCompose(testAccObjectCopyConfig_base(sourceBucket, sourceKey, targetBucket), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccObjectCopyConfig_baseSourceObject(sourceBucket, sourceKey, targetBucket), fmt.Sprintf(`
 resource "aws_kms_key" "test" {
   description             = %[1]q
   deletion_window_in_days = 7
@@ -490,4 +504,14 @@ resource "aws_s3_object_copy" "test" {
   source             = "${aws_s3_bucket.source.bucket}/${aws_s3_object.source.key}"
 }
 `, targetKey))
+}
+
+func testAccObjectCopyConfig_externalSourceObject(sourceBucket, sourceKey, targetBucket, targetKey string) string {
+	return acctest.ConfigCompose(testAccObjectCopyConfig_baseSourceAndTargetBuckets(sourceBucket, targetBucket), fmt.Sprintf(`
+resource "aws_s3_object_copy" "test" {
+  bucket = aws_s3_bucket.target.bucket
+  key    = %[2]q
+  source = "${aws_s3_bucket.source.bucket}/%[1]s"
+}
+`, sourceKey, targetKey))
 }
