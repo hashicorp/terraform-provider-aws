@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"log"
 	"strings"
+	"encoding/json"
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/service/ssm/types"
@@ -220,6 +221,10 @@ func ResourcePatchBaseline() *schema.Resource {
 					},
 				},
 			},
+			"json": {
+				Type: schema.TypeString,
+				Computed: true,
+			},
 
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
@@ -313,6 +318,15 @@ func resourcePatchBaselineRead(ctx context.Context, d *schema.ResourceData, meta
 		AccountID: meta.(*conns.AWSClient).AccountID,
 		Resource:  fmt.Sprintf("patchbaseline/%s", strings.TrimPrefix(d.Id(), "/")),
 	}
+
+	jsonDoc, err := json.MarshalIndent(resp, "", "  ")
+	if err != nil {
+		// should never happen if the above code is correct
+		return sdkdiag.AppendErrorf(diags, "Formatting json representation: formatting JSON: %s", err)
+	}
+	jsonString := string(jsonDoc)
+
+	d.Set("json", jsonString)
 	d.Set("arn", arn.String())
 	d.Set("name", resp.Name)
 	d.Set("description", resp.Description)
