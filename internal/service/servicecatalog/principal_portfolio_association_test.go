@@ -108,7 +108,7 @@ func testAccCheckPrincipalPortfolioAssociationDestroy(ctx context.Context) resou
 				continue
 			}
 
-			acceptLanguage, principalARN, portfolioID, principalType, err := tfservicecatalog.PrincipalPortfolioAssociationParseID(rs.Primary.ID)
+			acceptLanguage, principalARN, portfolioID, principalType, err := tfservicecatalog.PrincipalPortfolioAssociationParseResourceID(rs.Primary.ID)
 
 			if err != nil {
 				return fmt.Errorf("could not parse ID (%s): %w", rs.Primary.ID, err)
@@ -137,7 +137,7 @@ func testAccCheckPrincipalPortfolioAssociationExists(ctx context.Context, resour
 			return fmt.Errorf("resource not found: %s", resourceName)
 		}
 
-		acceptLanguage, principalARN, portfolioID, principalType, err := tfservicecatalog.PrincipalPortfolioAssociationParseID(rs.Primary.ID)
+		acceptLanguage, principalARN, portfolioID, principalType, err := tfservicecatalog.PrincipalPortfolioAssociationParseResourceID(rs.Primary.ID)
 
 		if err != nil {
 			return fmt.Errorf("could not parse ID (%s): %w", rs.Primary.ID, err)

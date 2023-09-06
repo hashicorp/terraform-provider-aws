@@ -5,7 +5,9 @@ package servicecatalog
 
 import (
 	"context"
+	"fmt"
 	"log"
+	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/servicecatalog"
@@ -25,6 +27,7 @@ func ResourcePrincipalPortfolioAssociation() *schema.Resource {
 		CreateWithoutTimeout: resourcePrincipalPortfolioAssociationCreate,
 		ReadWithoutTimeout:   resourcePrincipalPortfolioAssociationRead,
 		DeleteWithoutTimeout: resourcePrincipalPortfolioAssociationDelete,
+
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
@@ -111,7 +114,7 @@ func resourcePrincipalPortfolioAssociationCreate(ctx context.Context, d *schema.
 		return sdkdiag.AppendErrorf(diags, "creating Service Catalog Principal Portfolio Association: empty response")
 	}
 
-	d.SetId(PrincipalPortfolioAssociationID(d.Get("accept_language").(string), d.Get("principal_arn").(string), d.Get("portfolio_id").(string), d.Get("principal_type").(string)))
+	d.SetId(PrincipalPortfolioAssociationCreateResourceID(d.Get("accept_language").(string), d.Get("principal_arn").(string), d.Get("portfolio_id").(string), d.Get("principal_type").(string)))
 
 	return append(diags, resourcePrincipalPortfolioAssociationRead(ctx, d, meta)...)
 }
@@ -120,7 +123,7 @@ func resourcePrincipalPortfolioAssociationRead(ctx context.Context, d *schema.Re
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ServiceCatalogConn(ctx)
 
-	acceptLanguage, principalARN, portfolioID, principalType, err := PrincipalPortfolioAssociationParseID(d.Id())
+	acceptLanguage, principalARN, portfolioID, principalType, err := PrincipalPortfolioAssociationParseResourceID(d.Id())
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "could not parse ID (%s): %s", d.Id(), err)
@@ -158,7 +161,7 @@ func resourcePrincipalPortfolioAssociationDelete(ctx context.Context, d *schema.
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ServiceCatalogConn(ctx)
 
-	acceptLanguage, principalARN, portfolioID, principalType, err := PrincipalPortfolioAssociationParseID(d.Id())
+	acceptLanguage, principalARN, portfolioID, principalType, err := PrincipalPortfolioAssociationParseResourceID(d.Id())
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "could not parse ID (%s): %s", d.Id(), err)
@@ -196,4 +199,20 @@ func resourcePrincipalPortfolioAssociationDelete(ctx context.Context, d *schema.
 	}
 
 	return diags
+}
+
+const principalPortfolioAssociationResourceIDSeparator = ","
+
+func PrincipalPortfolioAssociationParseResourceID(id string) (string, string, string, string, error) {
+	parts := strings.SplitN(id, principalPortfolioAssociationResourceIDSeparator, 4)
+
+	if len(parts) != 4 || parts[0] == "" || parts[1] == "" || parts[2] == "" || parts[3] == "" {
+		return "", "", "", "", fmt.Errorf("unexpected format of ID (%[1]s), expected acceptLanguage%[2]sprincipalARN%[2]sportfolioID%[2]sprincipalType", id, principalPortfolioAssociationResourceIDSeparator)
+	}
+
+	return parts[0], parts[1], parts[2], parts[3], nil
+}
+
+func PrincipalPortfolioAssociationCreateResourceID(acceptLanguage, principalARN, portfolioID, principalType string) string {
+	return strings.Join([]string{acceptLanguage, principalARN, portfolioID, principalType}, principalPortfolioAssociationResourceIDSeparator)
 }
