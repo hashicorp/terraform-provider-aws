@@ -1,12 +1,15 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ec2_test
 
 import (
 	"context"
 	"fmt"
-	"regexp"
 	"strconv"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -21,7 +24,8 @@ func TestAccVPCTrafficMirrorFilterRule_basic(t *testing.T) {
 	resourceName := "aws_ec2_traffic_mirror_filter_rule.test"
 	dstCidr := "10.0.0.0/8"
 	srcCidr := "0.0.0.0/0"
-	ruleNum := 1
+	ruleNum1 := 1
+	ruleNum2 := 2
 	action := "accept"
 	direction := "ingress"
 	description := "test rule"
@@ -42,14 +46,14 @@ func TestAccVPCTrafficMirrorFilterRule_basic(t *testing.T) {
 		Steps: []resource.TestStep{
 			//create
 			{
-				Config: testAccVPCTrafficMirrorFilterRuleConfig_basic(dstCidr, srcCidr, action, direction, ruleNum),
+				Config: testAccVPCTrafficMirrorFilterRuleConfig_basic(dstCidr, srcCidr, action, direction, ruleNum1),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTrafficMirrorFilterRuleExists(ctx, resourceName),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", ec2.ServiceName, regexp.MustCompile(`traffic-mirror-filter-rule/tmfr-.+`)),
-					resource.TestMatchResourceAttr(resourceName, "traffic_mirror_filter_id", regexp.MustCompile("tmf-.*")),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", ec2.ServiceName, regexache.MustCompile(`traffic-mirror-filter-rule/tmfr-.+`)),
+					resource.TestMatchResourceAttr(resourceName, "traffic_mirror_filter_id", regexache.MustCompile("tmf-.*")),
 					resource.TestCheckResourceAttr(resourceName, "destination_cidr_block", dstCidr),
 					resource.TestCheckResourceAttr(resourceName, "rule_action", action),
-					resource.TestCheckResourceAttr(resourceName, "rule_number", strconv.Itoa(ruleNum)),
+					resource.TestCheckResourceAttr(resourceName, "rule_number", strconv.Itoa(ruleNum1)),
 					resource.TestCheckResourceAttr(resourceName, "source_cidr_block", srcCidr),
 					resource.TestCheckResourceAttr(resourceName, "traffic_direction", direction),
 					resource.TestCheckResourceAttr(resourceName, "description", ""),
@@ -60,13 +64,34 @@ func TestAccVPCTrafficMirrorFilterRule_basic(t *testing.T) {
 			},
 			// Add all optionals
 			{
-				Config: testAccVPCTrafficMirrorFilterRuleConfig_full(dstCidr, srcCidr, action, direction, description, ruleNum, srcPortFrom, srcPortTo, dstPortFrom, dstPortTo, protocol),
+				Config: testAccVPCTrafficMirrorFilterRuleConfig_full(dstCidr, srcCidr, action, direction, description, ruleNum1, srcPortFrom, srcPortTo, dstPortFrom, dstPortTo, protocol),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTrafficMirrorFilterRuleExists(ctx, resourceName),
-					resource.TestMatchResourceAttr(resourceName, "traffic_mirror_filter_id", regexp.MustCompile("tmf-.*")),
+					resource.TestMatchResourceAttr(resourceName, "traffic_mirror_filter_id", regexache.MustCompile("tmf-.*")),
 					resource.TestCheckResourceAttr(resourceName, "destination_cidr_block", dstCidr),
 					resource.TestCheckResourceAttr(resourceName, "rule_action", action),
-					resource.TestCheckResourceAttr(resourceName, "rule_number", strconv.Itoa(ruleNum)),
+					resource.TestCheckResourceAttr(resourceName, "rule_number", strconv.Itoa(ruleNum1)),
+					resource.TestCheckResourceAttr(resourceName, "source_cidr_block", srcCidr),
+					resource.TestCheckResourceAttr(resourceName, "traffic_direction", direction),
+					resource.TestCheckResourceAttr(resourceName, "description", description),
+					resource.TestCheckResourceAttr(resourceName, "destination_port_range.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "destination_port_range.0.from_port", strconv.Itoa(dstPortFrom)),
+					resource.TestCheckResourceAttr(resourceName, "destination_port_range.0.to_port", strconv.Itoa(dstPortTo)),
+					resource.TestCheckResourceAttr(resourceName, "source_port_range.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "source_port_range.0.from_port", strconv.Itoa(srcPortFrom)),
+					resource.TestCheckResourceAttr(resourceName, "source_port_range.0.to_port", strconv.Itoa(srcPortTo)),
+					resource.TestCheckResourceAttr(resourceName, "protocol", strconv.Itoa(protocol)),
+				),
+			},
+			// Updates
+			{
+				Config: testAccVPCTrafficMirrorFilterRuleConfig_full(dstCidr, srcCidr, action, direction, description, ruleNum2, srcPortFrom, srcPortTo, dstPortFrom, dstPortTo, protocol),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckTrafficMirrorFilterRuleExists(ctx, resourceName),
+					resource.TestMatchResourceAttr(resourceName, "traffic_mirror_filter_id", regexache.MustCompile("tmf-.*")),
+					resource.TestCheckResourceAttr(resourceName, "destination_cidr_block", dstCidr),
+					resource.TestCheckResourceAttr(resourceName, "rule_action", action),
+					resource.TestCheckResourceAttr(resourceName, "rule_number", strconv.Itoa(ruleNum2)),
 					resource.TestCheckResourceAttr(resourceName, "source_cidr_block", srcCidr),
 					resource.TestCheckResourceAttr(resourceName, "traffic_direction", direction),
 					resource.TestCheckResourceAttr(resourceName, "description", description),
@@ -81,13 +106,13 @@ func TestAccVPCTrafficMirrorFilterRule_basic(t *testing.T) {
 			},
 			// remove optionals
 			{
-				Config: testAccVPCTrafficMirrorFilterRuleConfig_basic(dstCidr, srcCidr, action, direction, ruleNum),
+				Config: testAccVPCTrafficMirrorFilterRuleConfig_basic(dstCidr, srcCidr, action, direction, ruleNum1),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTrafficMirrorFilterRuleExists(ctx, resourceName),
-					resource.TestMatchResourceAttr(resourceName, "traffic_mirror_filter_id", regexp.MustCompile("tmf-.*")),
+					resource.TestMatchResourceAttr(resourceName, "traffic_mirror_filter_id", regexache.MustCompile("tmf-.*")),
 					resource.TestCheckResourceAttr(resourceName, "destination_cidr_block", dstCidr),
 					resource.TestCheckResourceAttr(resourceName, "rule_action", action),
-					resource.TestCheckResourceAttr(resourceName, "rule_number", strconv.Itoa(ruleNum)),
+					resource.TestCheckResourceAttr(resourceName, "rule_number", strconv.Itoa(ruleNum1)),
 					resource.TestCheckResourceAttr(resourceName, "source_cidr_block", srcCidr),
 					resource.TestCheckResourceAttr(resourceName, "traffic_direction", direction),
 					resource.TestCheckResourceAttr(resourceName, "description", ""),

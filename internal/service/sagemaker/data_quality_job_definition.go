@@ -1,10 +1,13 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package sagemaker
 
 import (
 	"context"
 	"log"
-	"regexp"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/sagemaker"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
@@ -65,7 +68,7 @@ func ResourceDataQualityJobDefinition() *schema.Resource {
 							Optional: true,
 							ForceNew: true,
 							ValidateFunc: validation.All(
-								validation.StringMatch(regexp.MustCompile(`^(https|s3)://([^/])/?(.*)$`), ""),
+								validation.StringMatch(regexache.MustCompile(`^(https|s3)://([^/])/?(.*)$`), ""),
 								validation.StringLenBetween(1, 512),
 							),
 						},
@@ -74,7 +77,7 @@ func ResourceDataQualityJobDefinition() *schema.Resource {
 							Optional: true,
 							ForceNew: true,
 							ValidateFunc: validation.All(
-								validation.StringMatch(regexp.MustCompile(`^(https|s3)://([^/])/?(.*)$`), ""),
+								validation.StringMatch(regexache.MustCompile(`^(https|s3)://([^/])/?(.*)$`), ""),
 								validation.StringLenBetween(1, 512),
 							),
 						},
@@ -100,7 +103,7 @@ func ResourceDataQualityJobDefinition() *schema.Resource {
 										Optional: true,
 										ForceNew: true,
 										ValidateFunc: validation.All(
-											validation.StringMatch(regexp.MustCompile(`^(https|s3)://([^/])/?(.*)$`), ""),
+											validation.StringMatch(regexache.MustCompile(`^(https|s3)://([^/])/?(.*)$`), ""),
 											validation.StringLenBetween(1, 512),
 										),
 									},
@@ -119,7 +122,7 @@ func ResourceDataQualityJobDefinition() *schema.Resource {
 										Optional: true,
 										ForceNew: true,
 										ValidateFunc: validation.All(
-											validation.StringMatch(regexp.MustCompile(`^(https|s3)://([^/])/?(.*)$`), ""),
+											validation.StringMatch(regexache.MustCompile(`^(https|s3)://([^/])/?(.*)$`), ""),
 											validation.StringLenBetween(1, 512),
 										),
 									},
@@ -148,7 +151,7 @@ func ResourceDataQualityJobDefinition() *schema.Resource {
 										Required: true,
 										ForceNew: true,
 										ValidateFunc: validation.All(
-											validation.StringMatch(regexp.MustCompile(`^(https|s3)://([^/])/?(.*)$`), ""),
+											validation.StringMatch(regexache.MustCompile(`^(https|s3)://([^/])/?(.*)$`), ""),
 											validation.StringLenBetween(1, 512),
 										),
 									},
@@ -199,7 +202,7 @@ func ResourceDataQualityJobDefinition() *schema.Resource {
 										ForceNew: true,
 										ValidateFunc: validation.All(
 											validation.StringLenBetween(1, 1024),
-											validation.StringMatch(regexp.MustCompile(`^\/opt\/ml\/processing\/.*`), "Must start with `/opt/ml/processing`."),
+											validation.StringMatch(regexache.MustCompile(`^\/opt\/ml\/processing\/.*`), "Must start with `/opt/ml/processing`."),
 										),
 									},
 									"s3_data_distribution_type": {
@@ -239,7 +242,7 @@ func ResourceDataQualityJobDefinition() *schema.Resource {
 										ForceNew: true,
 										ValidateFunc: validation.All(
 											validation.StringLenBetween(1, 1024),
-											validation.StringMatch(regexp.MustCompile(`^\/opt\/ml\/processing\/.*`), "Must start with `/opt/ml/processing`."),
+											validation.StringMatch(regexache.MustCompile(`^\/opt\/ml\/processing\/.*`), "Must start with `/opt/ml/processing`."),
 										),
 									},
 									"s3_data_distribution_type": {
@@ -296,7 +299,7 @@ func ResourceDataQualityJobDefinition() *schema.Resource {
 													ForceNew: true,
 													ValidateFunc: validation.All(
 														validation.StringLenBetween(1, 1024),
-														validation.StringMatch(regexp.MustCompile(`^\/opt\/ml\/processing\/.*`), "Must start with `/opt/ml/processing`."),
+														validation.StringMatch(regexache.MustCompile(`^\/opt\/ml\/processing\/.*`), "Must start with `/opt/ml/processing`."),
 													),
 												},
 												"s3_upload_mode": {
@@ -311,7 +314,7 @@ func ResourceDataQualityJobDefinition() *schema.Resource {
 													Required: true,
 													ForceNew: true,
 													ValidateFunc: validation.All(
-														validation.StringMatch(regexp.MustCompile(`^(https|s3)://([^/])/?(.*)$`), ""),
+														validation.StringMatch(regexache.MustCompile(`^(https|s3)://([^/])/?(.*)$`), ""),
 														validation.StringLenBetween(1, 512),
 													),
 												},

@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package apigateway
 
 import (
@@ -16,12 +19,13 @@ import (
 func DataSourceAPIKey() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceAPIKeyRead,
+
 		Schema: map[string]*schema.Schema{
-			"id": {
+			"created_date": {
 				Type:     schema.TypeString,
-				Required: true,
+				Computed: true,
 			},
-			"name": {
+			"customer_id": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -29,24 +33,28 @@ func DataSourceAPIKey() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"created_date": {
-				Type:     schema.TypeString,
+			"enabled": {
+				Type:     schema.TypeBool,
 				Computed: true,
+			},
+			"id": {
+				Type:     schema.TypeString,
+				Required: true,
 			},
 			"last_updated_date": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"enabled": {
-				Type:     schema.TypeBool,
+			"name": {
+				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"tags": tftags.TagsSchemaComputed(),
 			"value": {
 				Type:      schema.TypeString,
 				Computed:  true,
 				Sensitive: true,
 			},
-			"tags": tftags.TagsSchemaComputed(),
 		},
 	}
 }
@@ -64,12 +72,13 @@ func dataSourceAPIKeyRead(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 
 	d.SetId(aws.StringValue(apiKey.Id))
-	d.Set("name", apiKey.Name)
-	d.Set("value", apiKey.Value)
 	d.Set("created_date", aws.TimeValue(apiKey.CreatedDate).Format(time.RFC3339))
+	d.Set("customer_id", apiKey.CustomerId)
 	d.Set("description", apiKey.Description)
 	d.Set("enabled", apiKey.Enabled)
 	d.Set("last_updated_date", aws.TimeValue(apiKey.LastUpdatedDate).Format(time.RFC3339))
+	d.Set("name", apiKey.Name)
+	d.Set("value", apiKey.Value)
 
 	if err := d.Set("tags", KeyValueTags(ctx, apiKey.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)

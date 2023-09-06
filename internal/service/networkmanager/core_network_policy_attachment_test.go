@@ -1,11 +1,14 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package networkmanager_test
 
 import (
 	"context"
 	"fmt"
-	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/service/networkmanager"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -73,7 +76,7 @@ func TestAccNetworkManagerCoreNetworkPolicyAttachment_vpcAttachment(t *testing.T
 				Config: testAccCoreNetworkPolicyAttachmentConfig_vpcAttachmentCreate(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCoreNetworkPolicyAttachmentExists(ctx, resourceName),
-					resource.TestMatchResourceAttr(resourceName, "policy_document", regexp.MustCompile(fmt.Sprintf(`{"core-network-configuration":{"asn-ranges":\["65022-65534"\],"edge-locations":\[{"location":"%s"}\],"vpn-ecmp-support":true},"segment-actions":\[{"action":"create-route","destination-cidr-blocks":\["0.0.0.0/0"\],"destinations":\["attachment-.+"\],"segment":"segment"}\],"segments":\[{"isolate-attachments":false,"name":"segment","require-attachment-acceptance":true}\],"version":"2021.12"}`, acctest.Region()))),
+					resource.TestMatchResourceAttr(resourceName, "policy_document", regexache.MustCompile(fmt.Sprintf(`{"core-network-configuration":{"asn-ranges":\["65022-65534"\],"edge-locations":\[{"location":"%s"}\],"vpn-ecmp-support":true},"segment-actions":\[{"action":"create-route","destination-cidr-blocks":\["0.0.0.0/0"\],"destinations":\["attachment-.+"\],"segment":"segment"}\],"segments":\[{"isolate-attachments":false,"name":"segment","require-attachment-acceptance":true}\],"version":"2021.12"}`, acctest.Region()))),
 					resource.TestCheckResourceAttrPair(resourceName, "core_network_id", "aws_networkmanager_core_network.test", "id"),
 					resource.TestCheckResourceAttrPair(resourceName, "id", "aws_networkmanager_core_network.test", "id"),
 					resource.TestCheckResourceAttr(resourceName, "state", networkmanager.CoreNetworkStateAvailable),
@@ -116,7 +119,7 @@ func TestAccNetworkManagerCoreNetworkPolicyAttachment_vpcAttachmentMultiRegion(t
 				Config: testAccCoreNetworkPolicyAttachmentConfig_vpcAttachmentMultiRegionCreate(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCoreNetworkPolicyAttachmentExists(ctx, resourceName),
-					resource.TestMatchResourceAttr(resourceName, "policy_document", regexp.MustCompile(fmt.Sprintf(`{"core-network-configuration":{"asn-ranges":\["65022-65534"\],"edge-locations":\[{"location":"%s"},{"location":"%s"}\],"vpn-ecmp-support":true},"segment-actions":\[{"action":"create-route","destination-cidr-blocks":\["10.0.0.0/16"\],"destinations":\["attachment-.+"\],"segment":"segment"},{"action":"create-route","destination-cidr-blocks":\["10.1.0.0/16"\],"destinations":\["attachment-.+"\],"segment":"segment2"}\],"segments":\[{"isolate-attachments":false,"name":"segment","require-attachment-acceptance":true},{"isolate-attachments":false,"name":"segment2","require-attachment-acceptance":true}\],"version":"2021.12"}`, acctest.Region(), acctest.AlternateRegion()))),
+					resource.TestMatchResourceAttr(resourceName, "policy_document", regexache.MustCompile(fmt.Sprintf(`{"core-network-configuration":{"asn-ranges":\["65022-65534"\],"edge-locations":\[{"location":"%s"},{"location":"%s"}\],"vpn-ecmp-support":true},"segment-actions":\[{"action":"create-route","destination-cidr-blocks":\["10.0.0.0/16"\],"destinations":\["attachment-.+"\],"segment":"segment"},{"action":"create-route","destination-cidr-blocks":\["10.1.0.0/16"\],"destinations":\["attachment-.+"\],"segment":"segment2"}\],"segments":\[{"isolate-attachments":false,"name":"segment","require-attachment-acceptance":true},{"isolate-attachments":false,"name":"segment2","require-attachment-acceptance":true}\],"version":"2021.12"}`, acctest.Region(), acctest.AlternateRegion()))),
 					// use test below if the order of locations is unordered
 					// resource.TestCheckResourceAttr(resourceName, "policy_document", fmt.Sprintf("{\"core-network-configuration\":{\"asn-ranges\":[\"65022-65534\"],\"edge-locations\":[{\"location\":\"%s\"},{\"location\":\"%s\"}],\"vpn-ecmp-support\":true},\"segments\":[{\"description\":\"base-policy\",\"isolate-attachments\":false,\"name\":\"segment\",\"require-attachment-acceptance\":false}],\"version\":\"2021.12\"}", acctest.AlternateRegion(), acctest.Region())),
 					resource.TestCheckResourceAttrPair(resourceName, "core_network_id", "aws_networkmanager_core_network.test", "id"),
@@ -145,7 +148,7 @@ func TestAccNetworkManagerCoreNetworkPolicyAttachment_expectPolicyErrorInvalidAS
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccCoreNetworkPolicyAttachmentConfig_expectPolicyErrorInvalidASNRange(),
-				ExpectError: regexp.MustCompile("INVALID_ASN_RANGE"),
+				ExpectError: regexache.MustCompile("INVALID_ASN_RANGE"),
 			},
 		},
 	})

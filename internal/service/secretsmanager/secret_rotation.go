@@ -1,11 +1,14 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package secretsmanager
 
 import (
 	"context"
 	"log"
-	"regexp"
 	"time"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/secretsmanager"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -58,14 +61,14 @@ func ResourceSecretRotation() *schema.Resource {
 						"duration": {
 							Type:         schema.TypeString,
 							Optional:     true,
-							ValidateFunc: validation.StringMatch(regexp.MustCompile(`[0-9h]+`), ""),
+							ValidateFunc: validation.StringMatch(regexache.MustCompile(`[0-9h]+`), ""),
 						},
 						"schedule_expression": {
 							Type:          schema.TypeString,
 							Optional:      true,
 							ConflictsWith: []string{"rotation_rules.0.automatically_after_days"},
 							ExactlyOneOf:  []string{"rotation_rules.0.automatically_after_days", "rotation_rules.0.schedule_expression"},
-							ValidateFunc:  validation.StringMatch(regexp.MustCompile(`[0-9A-Za-z\(\)#\?\*\-\/, ]+`), ""),
+							ValidateFunc:  validation.StringMatch(regexache.MustCompile(`[0-9A-Za-z\(\)#\?\*\-\/, ]+`), ""),
 						},
 					},
 				},
@@ -182,7 +185,6 @@ func resourceSecretRotationDelete(ctx context.Context, d *schema.ResourceData, m
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SecretsManagerConn(ctx)
 
-	log.Printf("[DEBUG] Deleting Secrets Manager Rotation: %s", d.Id())
 	_, err := conn.CancelRotateSecretWithContext(ctx, &secretsmanager.CancelRotateSecretInput{
 		SecretId: aws.String(d.Get("secret_id").(string)),
 	})
@@ -224,7 +226,8 @@ func flattenRotationRules(rules *secretsmanager.RotationRulesType) []interface{}
 
 	m := map[string]interface{}{}
 
-	if v := rules.AutomaticallyAfterDays; v != nil {
+	if v := rules.AutomaticallyAfterDays; v != nil && rules.ScheduleExpression == nil {
+		// Only populate automatically_after_days if schedule_expression is not set, otherwise we won't be able to update the resource
 		m["automatically_after_days"] = int(aws.Int64Value(v))
 	}
 

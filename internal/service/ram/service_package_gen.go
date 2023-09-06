@@ -26,8 +26,9 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePackageSDKDataSource {
 	return []*types.ServicePackageSDKDataSource{
 		{
-			Factory:  DataSourceResourceShare,
+			Factory:  dataSourceResourceShare,
 			TypeName: "aws_ram_resource_share",
+			Tags:     &types.ServicePackageResourceTags{},
 		},
 	}
 }
@@ -53,6 +54,10 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  ResourceResourceShareAccepter,
 			TypeName: "aws_ram_resource_share_accepter",
+		},
+		{
+			Factory:  ResourceSharingWithOrganization,
+			TypeName: "aws_ram_sharing_with_organization",
 		},
 	}
 }

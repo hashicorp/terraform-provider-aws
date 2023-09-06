@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package appstream_test
 
 import (
@@ -128,11 +131,11 @@ func testAccCheckFleetStackAssociationDestroy(ctx context.Context) resource.Test
 }
 
 func testAccFleetStackAssociationConfig_basic(name string) string {
-	// "Amazon-AppStream2-Sample-Image-02-04-2019" is not available in GovCloud
+	// "Amazon-AppStream2-Sample-Image-03-11-2023" is not available in GovCloud
 	return fmt.Sprintf(`
 resource "aws_appstream_fleet" "test" {
   name          = %[1]q
-  image_name    = "Amazon-AppStream2-Sample-Image-02-04-2019"
+  image_name    = "Amazon-AppStream2-Sample-Image-03-11-2023"
   instance_type = "stream.standard.small"
 
   compute_capacity {

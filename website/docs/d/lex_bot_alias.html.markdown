@@ -21,14 +21,14 @@ data "aws_lex_bot_alias" "order_flowers_prod" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This data source supports the following arguments:
 
 * `bot_name` - (Required) Name of the bot.
 * `name` - (Required) Name of the bot alias. The name is case sensitive.
 
-## Attributes Reference
+## Attribute Reference
 
-The following attributes are exported.
+This data source exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the bot alias.
 * `bot_name` - Name of the bot.

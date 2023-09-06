@@ -1,11 +1,14 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package s3control_test
 
 import (
 	"context"
 	"fmt"
-	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/endpoints"
 	"github.com/aws/aws-sdk-go/service/s3control"
@@ -36,9 +39,9 @@ func TestAccS3ControlMultiRegionAccessPoint_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMultiRegionAccessPointExists(ctx, resourceName, &v),
 					acctest.CheckResourceAttrAccountID(resourceName, "account_id"),
-					resource.TestMatchResourceAttr(resourceName, "alias", regexp.MustCompile(`^[a-z][a-z0-9]*[.]mrap$`)),
-					acctest.MatchResourceAttrGlobalARN(resourceName, "arn", "s3", regexp.MustCompile(`accesspoint\/[a-z][a-z0-9]*[.]mrap$`)),
-					acctest.MatchResourceAttrGlobalHostname(resourceName, "domain_name", "accesspoint.s3-global", regexp.MustCompile(`^[a-z][a-z0-9]*[.]mrap`)),
+					resource.TestMatchResourceAttr(resourceName, "alias", regexache.MustCompile(`^[a-z][a-z0-9]*[.]mrap$`)),
+					acctest.MatchResourceAttrGlobalARN(resourceName, "arn", "s3", regexache.MustCompile(`accesspoint\/[a-z][a-z0-9]*[.]mrap$`)),
+					acctest.MatchResourceAttrGlobalHostname(resourceName, "domain_name", "accesspoint.s3-global", regexache.MustCompile(`^[a-z][a-z0-9]*[.]mrap`)),
 					resource.TestCheckResourceAttr(resourceName, "details.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "details.0.name", rName),
 					resource.TestCheckResourceAttr(resourceName, "details.0.public_access_block.#", "1"),

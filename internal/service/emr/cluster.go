@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package emr
 
 import (
@@ -1737,7 +1740,7 @@ func expandBootstrapActions(bootstrapActions []interface{}) []*emr.BootstrapActi
 			Name: aws.String(actionName),
 			ScriptBootstrapAction: &emr.ScriptBootstrapActionConfig{
 				Path: aws.String(actionPath),
-				Args: flex.ExpandStringList(actionArgs),
+				Args: flex.ExpandStringListEmpty(actionArgs),
 			},
 		}
 		actionsOut = append(actionsOut, action)

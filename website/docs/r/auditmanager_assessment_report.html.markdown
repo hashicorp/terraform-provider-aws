@@ -32,9 +32,9 @@ The following arguments are optional:
 
 * `description` - (Optional) Description of the assessment report.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `author` - Name of the user who created the assessment report.
 * `id` - Unique identifier for the assessment report.
@@ -42,8 +42,17 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Audit Manager Assessment Reports can be imported using the assessment report `id`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Audit Manager Assessment Reports using the assessment report `id`. For example:
 
+```terraform
+import {
+  to = aws_auditmanager_assessment_report.example
+  id = "abc123-de45"
+}
 ```
-$ terraform import aws_auditmanager_assessment_report.example abc123-de45
+
+Using `terraform import`, import Audit Manager Assessment Reports using the assessment report `id`. For example:
+
+```console
+% terraform import aws_auditmanager_assessment_report.example abc123-de45
 ```

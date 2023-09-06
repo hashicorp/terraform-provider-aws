@@ -1,13 +1,16 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package opensearch
 
 import (
 	"context"
 	"fmt"
 	"log"
-	"regexp"
 	"strings"
 	"time"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/opensearchservice"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
@@ -246,7 +249,7 @@ func ResourceDomain() *schema.Resource {
 						"dedicated_master_count": {
 							Type:             schema.TypeInt,
 							Optional:         true,
-							DiffSuppressFunc: isDedicatedMasterDisabled,
+							DiffSuppressFunc: suppressComputedDedicatedMaster,
 						},
 						"dedicated_master_enabled": {
 							Type:     schema.TypeBool,
@@ -256,7 +259,7 @@ func ResourceDomain() *schema.Resource {
 						"dedicated_master_type": {
 							Type:             schema.TypeString,
 							Optional:         true,
-							DiffSuppressFunc: isDedicatedMasterDisabled,
+							DiffSuppressFunc: suppressComputedDedicatedMaster,
 						},
 						"instance_count": {
 							Type:     schema.TypeInt,
@@ -267,6 +270,10 @@ func ResourceDomain() *schema.Resource {
 							Type:     schema.TypeString,
 							Optional: true,
 							Default:  opensearchservice.OpenSearchPartitionInstanceTypeM3MediumSearch,
+						},
+						"multi_az_with_standby_enabled": {
+							Type:     schema.TypeBool,
+							Optional: true,
 						},
 						"warm_count": {
 							Type:         schema.TypeInt,
@@ -382,7 +389,7 @@ func ResourceDomain() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
-				ValidateFunc: validation.StringMatch(regexp.MustCompile(`^[a-z][0-9a-z\-]{2,27}$`),
+				ValidateFunc: validation.StringMatch(regexache.MustCompile(`^[a-z][0-9a-z\-]{2,27}$`),
 					"must start with a lowercase alphabet and be at least 3 and no more than 28 characters long."+
 						" Valid characters are a-z (lowercase letters), 0-9, and - (hyphen)."),
 			},
@@ -893,7 +900,7 @@ func resourceDomainRead(ctx context.Context, d *schema.ResourceData, meta interf
 	}
 
 	if ds.VPCOptions != nil {
-		if err := d.Set("vpc_options", flattenVPCDerivedInfo(ds.VPCOptions)); err != nil {
+		if err := d.Set("vpc_options", []interface{}{flattenVPCDerivedInfo(ds.VPCOptions)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting vpc_options: %s", err)
 		}
 
@@ -1142,7 +1149,7 @@ func getKibanaEndpoint(d *schema.ResourceData) string {
 	return d.Get("endpoint").(string) + "/_plugin/kibana/"
 }
 
-func isDedicatedMasterDisabled(k, old, new string, d *schema.ResourceData) bool {
+func suppressComputedDedicatedMaster(k, old, new string, d *schema.ResourceData) bool {
 	v, ok := d.GetOk("cluster_config")
 	if ok {
 		clusterConfig := v.([]interface{})[0].(map[string]interface{})
@@ -1185,6 +1192,10 @@ func flattenNodeToNodeEncryptionOptions(o *opensearchservice.NodeToNodeEncryptio
 func expandClusterConfig(m map[string]interface{}) *opensearchservice.ClusterConfig {
 	config := opensearchservice.ClusterConfig{}
 
+	if v, ok := m["cold_storage_options"]; ok {
+		config.ColdStorageOptions = expandColdStorageOptions(v.([]interface{}))
+	}
+
 	if v, ok := m["dedicated_master_enabled"]; ok {
 		isEnabled := v.(bool)
 		config.DedicatedMasterEnabled = aws.Bool(isEnabled)
@@ -1202,23 +1213,13 @@ func expandClusterConfig(m map[string]interface{}) *opensearchservice.ClusterCon
 	if v, ok := m["instance_count"]; ok {
 		config.InstanceCount = aws.Int64(int64(v.(int)))
 	}
+
 	if v, ok := m["instance_type"]; ok {
 		config.InstanceType = aws.String(v.(string))
 	}
 
-	if v, ok := m["zone_awareness_enabled"]; ok {
-		isEnabled := v.(bool)
-		config.ZoneAwarenessEnabled = aws.Bool(isEnabled)
-
-		if isEnabled {
-			if v, ok := m["zone_awareness_config"]; ok {
-				config.ZoneAwarenessConfig = expandZoneAwarenessConfig(v.([]interface{}))
-			}
-		}
-	}
-
-	if v, ok := m["cold_storage_options"]; ok {
-		config.ColdStorageOptions = expandColdStorageOptions(v.([]interface{}))
+	if v, ok := m["multi_az_with_standby_enabled"]; ok {
+		config.MultiAZWithStandbyEnabled = aws.Bool(v.(bool))
 	}
 
 	if v, ok := m["warm_enabled"]; ok {
@@ -1232,6 +1233,17 @@ func expandClusterConfig(m map[string]interface{}) *opensearchservice.ClusterCon
 
 			if v, ok := m["warm_type"]; ok {
 				config.WarmType = aws.String(v.(string))
+			}
+		}
+	}
+
+	if v, ok := m["zone_awareness_enabled"]; ok {
+		isEnabled := v.(bool)
+		config.ZoneAwarenessEnabled = aws.Bool(isEnabled)
+
+		if isEnabled {
+			if v, ok := m["zone_awareness_config"]; ok {
+				config.ZoneAwarenessConfig = expandZoneAwarenessConfig(v.([]interface{}))
 			}
 		}
 	}
@@ -1294,6 +1306,9 @@ func flattenClusterConfig(c *opensearchservice.ClusterConfig) []map[string]inter
 	}
 	if c.InstanceType != nil {
 		m["instance_type"] = aws.StringValue(c.InstanceType)
+	}
+	if c.MultiAZWithStandbyEnabled != nil {
+		m["multi_az_with_standby_enabled"] = aws.BoolValue(c.MultiAZWithStandbyEnabled)
 	}
 	if c.WarmEnabled != nil {
 		m["warm_enabled"] = aws.BoolValue(c.WarmEnabled)

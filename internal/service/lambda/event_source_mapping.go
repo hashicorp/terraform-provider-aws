@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package lambda
 
 import (
@@ -161,7 +164,7 @@ func ResourceEventSourceMapping() *schema.Resource {
 						"filter": {
 							Type:     schema.TypeSet,
 							Optional: true,
-							MaxItems: 5,
+							MaxItems: 10,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"pattern": {

@@ -1,11 +1,14 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package lightsail_test
 
 import (
 	"fmt"
-	"regexp"
 	"strings"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/service/lightsail"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -29,7 +32,7 @@ func testAccLoadBalancerHTTPSRedirectionPolicy_basic(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccLoadBalancerHTTPSRedirectionPolicyConfig_basic(rName, enabled),
-				ExpectError: regexp.MustCompile(`cannot enable https redirection while https is disabled.`),
+				ExpectError: regexache.MustCompile(`cannot enable https redirection while https is disabled.`),
 			},
 		},
 	})

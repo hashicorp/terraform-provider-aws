@@ -1,3 +1,6 @@
+# Copyright (c) HashiCorp, Inc.
+# SPDX-License-Identifier: MPL-2.0
+
 variable "community_list_repo" {
   type        = string
   description = "The name of the repository containing the lists of users. Value set in TFC."

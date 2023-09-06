@@ -1,8 +1,10 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package mq
 
 import (
-	"regexp"
-
+	"github.com/YakDriver/regexache"
 	"github.com/beevik/etree"
 )
 
@@ -20,7 +22,7 @@ func CanonicalXML(s string) (string, error) {
 		return "", err
 	}
 
-	re := regexp.MustCompile(`\s`)
+	re := regexache.MustCompile(`\s`)
 	results := re.ReplaceAllString(rawString, "")
 	return results, nil
 }

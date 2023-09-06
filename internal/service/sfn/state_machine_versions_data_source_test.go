@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package sfn_test
 
 import (
@@ -35,8 +38,6 @@ func testAccStateMachineVersionsDataSourceConfig_basic(rName string) string {
 	return acctest.ConfigCompose(testAccStateMachineAliasConfig_base(rName, 5), `
 data "aws_sfn_state_machine_versions" "test" {
   statemachine_arn = aws_sfn_state_machine.test.arn
-
-  depends_on = [aws_sfn_state_machine.test]
 }
 `)
 }

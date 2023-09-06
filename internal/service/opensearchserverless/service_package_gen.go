@@ -15,7 +15,20 @@ import (
 type servicePackage struct{}
 
 func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.ServicePackageFrameworkDataSource {
-	return []*types.ServicePackageFrameworkDataSource{}
+	return []*types.ServicePackageFrameworkDataSource{
+		{
+			Factory: newDataSourceAccessPolicy,
+			Name:    "Access Policy",
+		},
+		{
+			Factory: newDataSourceCollection,
+			Name:    "Collection",
+		},
+		{
+			Factory: newDataSourceSecurityConfig,
+			Name:    "Security Config",
+		},
+	}
 }
 
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.ServicePackageFrameworkResource {
@@ -43,7 +56,16 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 }
 
 func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePackageSDKDataSource {
-	return []*types.ServicePackageSDKDataSource{}
+	return []*types.ServicePackageSDKDataSource{
+		{
+			Factory:  DataSourceSecurityPolicy,
+			TypeName: "aws_opensearchserverless_security_policy",
+		},
+		{
+			Factory:  DataSourceVPCEndpoint,
+			TypeName: "aws_opensearchserverless_vpc_endpoint",
+		},
+	}
 }
 
 func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePackageSDKResource {
@@ -60,7 +82,7 @@ func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (
 
 	return opensearchserverless_sdkv2.NewFromConfig(cfg, func(o *opensearchserverless_sdkv2.Options) {
 		if endpoint := config["endpoint"].(string); endpoint != "" {
-			o.EndpointResolver = opensearchserverless_sdkv2.EndpointResolverFromURL(endpoint)
+			o.BaseEndpoint = aws_sdkv2.String(endpoint)
 		}
 	}), nil
 }

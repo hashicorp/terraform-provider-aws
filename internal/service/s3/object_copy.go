@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package s3
 
 import (
@@ -6,10 +9,10 @@ import (
 	"fmt"
 	"log"
 	"net/url"
-	"regexp"
 	"strings"
 	"time"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -38,6 +41,7 @@ func ResourceObjectCopy() *schema.Resource {
 			"acl": {
 				Type:          schema.TypeString,
 				Optional:      true,
+				Computed:      true,
 				ValidateFunc:  validation.StringInSlice(s3.ObjectCannedACL_Values(), false),
 				ConflictsWith: []string{"grant"},
 			},
@@ -447,7 +451,7 @@ func resourceObjectCopyDelete(ctx context.Context, d *schema.ResourceData, meta 
 	// We are effectively ignoring all leading '/'s in the key name and
 	// treating multiple '/'s as a single '/' as aws.Config.DisableRestProtocolURICleaning is false
 	key = strings.TrimLeft(key, "/")
-	key = regexp.MustCompile(`/+`).ReplaceAllString(key, "/")
+	key = regexache.MustCompile(`/+`).ReplaceAllString(key, "/")
 
 	var err error
 	if _, ok := d.GetOk("version_id"); ok {

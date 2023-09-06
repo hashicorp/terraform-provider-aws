@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 //go:build sweep
 // +build sweep
 
@@ -68,7 +71,7 @@ func sweepDatabases(region string) error {
 		return nil
 	}
 
-	err = sweep.SweepOrchestratorWithContext(ctx, sweepResources)
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
 
 	if err != nil {
 		errs = multierror.Append(errs, fmt.Errorf("error sweeping Athena Databases (%s): %w", region, err))

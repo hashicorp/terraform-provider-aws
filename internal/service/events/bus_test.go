@@ -1,12 +1,15 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package events_test
 
 import (
 	"context"
 	"fmt"
 	"os"
-	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/eventbridge"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
@@ -129,7 +132,7 @@ func TestAccEventsBus_default(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccBusConfig_basic("default"),
-				ExpectError: regexp.MustCompile(`cannot be 'default'`),
+				ExpectError: regexache.MustCompile(`cannot be 'default'`),
 			},
 		},
 	})

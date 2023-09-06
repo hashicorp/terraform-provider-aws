@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package mq
 
 import (
@@ -222,7 +225,6 @@ func DataSourceBroker() *schema.Resource {
 			"user": {
 				Type:     schema.TypeSet,
 				Computed: true,
-				Set:      resourceUserHash,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"console_access": {
@@ -234,9 +236,13 @@ func DataSourceBroker() *schema.Resource {
 							Elem:     &schema.Schema{Type: schema.TypeString},
 							Computed: true,
 						},
+						"replication_user": {
+							Type:     schema.TypeBool,
+							Computed: true,
+						},
 						"username": {
 							Type:     schema.TypeString,
-							Required: true,
+							Computed: true,
 						},
 					},
 				},

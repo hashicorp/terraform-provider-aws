@@ -41,7 +41,7 @@ resource "aws_iam_role" "r" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `name` - (Optional) The name of the recorder. Defaults to `default`. Changing it recreates the resource.
 * `role_arn` - (Required) Amazon Resource Name (ARN) of the IAM role. Used to make read or write requests to the delivery channel and to describe the AWS resources associated with the account. See [AWS Docs](http://docs.aws.amazon.com/config/latest/developerguide/iamrole-permissions.html) for more details.
@@ -59,16 +59,25 @@ The following arguments are supported:
 
 * ` use_only` - (Optional) The recording strategy for the configuration recorder.See [relevant part of AWS Docs](https://docs.aws.amazon.com/config/latest/APIReference/API_RecordingStrategy.html)
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - Name of the recorder
 
 ## Import
 
-Configuration Recorder can be imported using the name, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Configuration Recorder using the name. For example:
 
+```terraform
+import {
+  to = aws_config_configuration_recorder.foo
+  id = "example"
+}
 ```
-$ terraform import aws_config_configuration_recorder.foo example
+
+Using `terraform import`, import Configuration Recorder using the name. For example:
+
+```console
+% terraform import aws_config_configuration_recorder.foo example
 ```

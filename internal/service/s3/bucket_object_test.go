@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package s3_test
 
 // WARNING: This code is DEPRECATED and will be removed in a future release!!
@@ -11,11 +14,11 @@ import (
 	"io"
 	"os"
 	"reflect"
-	"regexp"
 	"sort"
 	"testing"
 	"time"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
@@ -32,8 +35,8 @@ import (
 
 func TestAccS3BucketObject_noNameNoKey(t *testing.T) {
 	ctx := acctest.Context(t)
-	bucketError := regexp.MustCompile(`bucket must not be empty`)
-	keyError := regexp.MustCompile(`key must not be empty`)
+	bucketError := regexache.MustCompile(`bucket must not be empty`)
+	keyError := regexache.MustCompile(`key must not be empty`)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },

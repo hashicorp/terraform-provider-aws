@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 //go:build sweep
 // +build sweep
 
@@ -7,10 +10,10 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"regexp"
 	"strings"
 	"time"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/request"
 	"github.com/aws/aws-sdk-go/service/s3"
@@ -92,7 +95,7 @@ func sweepObjects(region string) error {
 		})
 	}
 
-	if err := sweep.SweepOrchestratorWithContext(ctx, sweepables); err != nil {
+	if err := sweep.SweepOrchestrator(ctx, sweepables); err != nil {
 		errs = multierror.Append(errs, fmt.Errorf("sweeping DynamoDB Backups for %s: %w", region, err))
 	}
 
@@ -163,7 +166,7 @@ func sweepBuckets(region string) error {
 		sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 	}
 
-	if err := sweep.SweepOrchestratorWithContext(ctx, sweepResources); err != nil {
+	if err := sweep.SweepOrchestrator(ctx, sweepResources); err != nil {
 		errs = multierror.Append(errs, fmt.Errorf("sweeping S3 Buckets for %s: %w", region, err))
 	}
 
@@ -240,7 +243,7 @@ func bucketNameFilter(bucket *s3.Bucket) (bool, error) {
 }
 
 var (
-	defaultNameRegexp = regexp.MustCompile(fmt.Sprintf(`^%s\d+$`, id.UniqueIdPrefix))
+	defaultNameRegexp = regexache.MustCompile(fmt.Sprintf(`^%s\d+$`, id.UniqueIdPrefix))
 )
 
 func bucketRegionFilter(ctx context.Context, conn *s3.S3, region string) bucketFilter {

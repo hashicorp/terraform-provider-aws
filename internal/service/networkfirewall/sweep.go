@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 //go:build sweep
 // +build sweep
 
@@ -79,7 +82,7 @@ func sweepFirewallPolicies(region string) error {
 		return fmt.Errorf("error listing NetworkFirewall Firewall Policies (%s): %w", region, err)
 	}
 
-	err = sweep.SweepOrchestratorWithContext(ctx, sweepResources)
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
 
 	if err != nil {
 		return fmt.Errorf("error sweeping NetworkFirewall Firewall Policies (%s): %w", region, err)
@@ -123,7 +126,7 @@ func sweepFirewalls(region string) error {
 		return fmt.Errorf("error listing NetworkFirewall Firewalls (%s): %w", region, err)
 	}
 
-	err = sweep.SweepOrchestratorWithContext(ctx, sweepResources)
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
 
 	if err != nil {
 		return fmt.Errorf("error sweeping NetworkFirewall Firewalls (%s): %w", region, err)
@@ -167,7 +170,7 @@ func sweepLoggingConfigurations(region string) error {
 		return fmt.Errorf("error listing NetworkFirewall Firewalls (%s): %w", region, err)
 	}
 
-	err = sweep.SweepOrchestratorWithContext(ctx, sweepResources)
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
 
 	if err != nil {
 		return fmt.Errorf("error sweeping NetworkFirewall Logging Configurations (%s): %w", region, err)
@@ -211,7 +214,7 @@ func sweepRuleGroups(region string) error {
 		return fmt.Errorf("error listing NetworkFirewall Rule Groups (%s): %w", region, err)
 	}
 
-	err = sweep.SweepOrchestratorWithContext(ctx, sweepResources)
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
 
 	if err != nil {
 		return fmt.Errorf("error sweeping NetworkFirewall Rule Groups (%s): %w", region, err)

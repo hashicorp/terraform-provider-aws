@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 //go:build sweep
 // +build sweep
 
@@ -241,7 +244,7 @@ func sweepDBInstances(region string) error {
 		errs = multierror.Append(errs, fmt.Errorf("listing DocumentDB Instances for %s: %w", region, err))
 	}
 
-	if err = sweep.SweepOrchestratorWithContext(ctx, sweepResources); err != nil {
+	if err = sweep.SweepOrchestrator(ctx, sweepResources); err != nil {
 		errs = multierror.Append(errs, fmt.Errorf("sweeping DocumentDB Instances for %s: %w", region, err))
 	}
 

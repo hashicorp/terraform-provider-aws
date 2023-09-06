@@ -1,12 +1,15 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package appflow_test
 
 import (
 	"context"
 	"fmt"
-	"regexp"
 	"testing"
 	"time"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/service/appflow"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -37,7 +40,7 @@ func TestAccAppFlowFlow_basic(t *testing.T) {
 				Config: testAccFlowConfig_basic(rSourceName, rDestinationName, rFlowName, scheduleStartTime),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckFlowExists(ctx, resourceName, &flowOutput),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "appflow", regexp.MustCompile(`flow/.+`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "appflow", regexache.MustCompile(`flow/.+`)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rFlowName),
 					resource.TestCheckResourceAttrSet(resourceName, "destination_flow_config.#"),
 					resource.TestCheckResourceAttrSet(resourceName, "destination_flow_config.0.connector_type"),

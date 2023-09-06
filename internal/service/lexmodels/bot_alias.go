@@ -1,13 +1,16 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package lexmodels
 
 import (
 	"context"
 	"fmt"
 	"log"
-	"regexp"
 	"strings"
 	"time"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/lexmodelbuildingservice"
@@ -116,7 +119,7 @@ func ResourceBotAlias() *schema.Resource {
 
 var validBotAliasName = validation.All(
 	validation.StringLenBetween(1, 100),
-	validation.StringMatch(regexp.MustCompile(`^([A-Za-z]_?)+$`), ""),
+	validation.StringMatch(regexache.MustCompile(`^([A-Za-z]_?)+$`), ""),
 )
 
 func resourceBotAliasCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {

@@ -1,12 +1,15 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ssmcontacts_test
 
 import (
 	"context"
 	"errors"
 	"fmt"
-	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ssmcontacts"
 	"github.com/aws/aws-sdk-go-v2/service/ssmcontacts/types"
@@ -49,7 +52,7 @@ func testContactChannel_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(channelResourceName, "name", rName),
 					resource.TestCheckResourceAttr(channelResourceName, "type", "EMAIL"),
 					resource.TestCheckResourceAttrPair(channelResourceName, "contact_id", contactResourceName, "arn"),
-					acctest.MatchResourceAttrRegionalARN(channelResourceName, "arn", "ssm-contacts", regexp.MustCompile("contact-channel/test-contact-for-"+rName+"/.")),
+					acctest.MatchResourceAttrRegionalARN(channelResourceName, "arn", "ssm-contacts", regexache.MustCompile("contact-channel/test-contact-for-"+rName+"/.")),
 				),
 			},
 			{

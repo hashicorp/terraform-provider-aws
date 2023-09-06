@@ -1,11 +1,14 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package dataexchange_test
 
 import (
 	"context"
 	"fmt"
-	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/service/dataexchange"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -36,7 +39,7 @@ func TestAccDataExchangeDataSet_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "description", rName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "dataexchange", regexp.MustCompile(`data-sets/.+`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "dataexchange", regexache.MustCompile(`data-sets/.+`)),
 				),
 			},
 			{
@@ -50,7 +53,7 @@ func TestAccDataExchangeDataSet_basic(t *testing.T) {
 					testAccCheckDataSetExists(ctx, resourceName, &proj),
 					resource.TestCheckResourceAttr(resourceName, "name", rNameUpdated),
 					resource.TestCheckResourceAttr(resourceName, "description", rNameUpdated),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "dataexchange", regexp.MustCompile(`data-sets/.+`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "dataexchange", regexache.MustCompile(`data-sets/.+`)),
 				),
 			},
 		},

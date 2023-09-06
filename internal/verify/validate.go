@@ -1,14 +1,17 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package verify
 
 import (
 	"encoding/json"
 	"fmt"
 	"net"
-	"regexp"
 	"strconv"
 	"strings"
 	"time"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -20,9 +23,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/types/timestamp"
 )
 
-var accountIDRegexp = regexp.MustCompile(`^(aws|aws-managed|third-party|\d{12}|cw.{10})$`)
-var partitionRegexp = regexp.MustCompile(`^aws(-[a-z]+)*$`)
-var regionRegexp = regexp.MustCompile(`^[a-z]{2}(-[a-z]+)+-\d$`)
+var accountIDRegexp = regexache.MustCompile(`^(aws|aws-managed|third-party|\d{12}|cw.{10})$`)
+var partitionRegexp = regexache.MustCompile(`^aws(-[a-z]+)*$`)
+var regionRegexp = regexache.MustCompile(`^[a-z]{2}(-[a-z]+)+-\d$`)
+
+// validates all listed in https://gist.github.com/shortjared/4c1e3fe52bdfa47522cfe5b41e5d6f22
+var servicePrincipalRegexp = regexache.MustCompile(`^([a-z0-9-]+\.){1,4}(amazonaws|amazon)\.com$`)
 
 func Valid4ByteASN(v interface{}, k string) (ws []string, errors []error) {
 	value := v.(string)
@@ -125,7 +131,7 @@ func ValidAccountID(v interface{}, k string) (ws []string, errors []error) {
 
 	// http://docs.aws.amazon.com/lambda/latest/dg/API_AddPermission.html
 	pattern := `^\d{12}$`
-	if !regexp.MustCompile(pattern).MatchString(value) {
+	if !regexache.MustCompile(pattern).MatchString(value) {
 		errors = append(errors, fmt.Errorf(
 			"%q doesn't look like AWS Account ID (exactly 12 digits): %q",
 			k, value))
@@ -284,7 +290,7 @@ func ValidLaunchTemplateID(v interface{}, k string) (ws []string, errors []error
 		errors = append(errors, fmt.Errorf("%q cannot be shorter than 1 character", k))
 	} else if len(value) > 255 {
 		errors = append(errors, fmt.Errorf("%q cannot be longer than 255 characters", k))
-	} else if !regexp.MustCompile(`^lt\-[a-z0-9]+$`).MatchString(value) {
+	} else if !regexache.MustCompile(`^lt\-[a-z0-9]+$`).MatchString(value) {
 		errors = append(errors, fmt.Errorf(
 			"%q must begin with 'lt-' and be comprised of only alphanumeric characters: %v", k, value))
 	}
@@ -299,7 +305,7 @@ func ValidLaunchTemplateName(v interface{}, k string) (ws []string, errors []err
 		errors = append(errors, fmt.Errorf("%q cannot be longer than 99 characters, name is limited to 125", k))
 	} else if !strings.HasSuffix(k, "prefix") && len(value) > 125 {
 		errors = append(errors, fmt.Errorf("%q cannot be longer than 125 characters", k))
-	} else if !regexp.MustCompile(`^[0-9a-zA-Z()./_\-]+$`).MatchString(value) {
+	} else if !regexache.MustCompile(`^[0-9a-zA-Z()./_\-]+$`).MatchString(value) {
 		errors = append(errors, fmt.Errorf("%q can only alphanumeric characters and ()./_- symbols", k))
 	}
 	return
@@ -417,7 +423,7 @@ func ValidUTCTimestamp(v interface{}, k string) (ws []string, errors []error) {
 
 var ValidStringDateOrPositiveInt = validation.Any(
 	validation.IsRFC3339Time,
-	validation.StringMatch(regexp.MustCompile(`^\d+$`), "must be a positive integer value"),
+	validation.StringMatch(regexache.MustCompile(`^\d+$`), "must be a positive integer value"),
 )
 
 func ValidDuration(v interface{}, k string) (ws []string, errors []error) {
@@ -475,4 +481,22 @@ func ValidAnyDiag(validators ...schema.SchemaValidateDiagFunc) schema.SchemaVali
 		}
 		return results
 	}
+}
+
+func ValidServicePrincipal(v interface{}, k string) (ws []string, errors []error) {
+	value := v.(string)
+
+	if value == "" {
+		return ws, errors
+	}
+
+	if !IsServicePrincipal(value) {
+		errors = append(errors, fmt.Errorf("%q (%s) is an invalid Service Principal: invalid prefix value (expecting to match regular expression: %s)", k, value, servicePrincipalRegexp))
+	}
+
+	return ws, errors
+}
+
+func IsServicePrincipal(value string) (valid bool) {
+	return servicePrincipalRegexp.MatchString(value)
 }

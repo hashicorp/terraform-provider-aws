@@ -1,11 +1,14 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package securityhub_test
 
 import (
 	"context"
 	"fmt"
-	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/service/securityhub"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -78,7 +81,7 @@ func testAccStandardsControl_enabledControlStatusAndDisabledReason(t *testing.T)
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccStandardsControlConfig_enabledStatus(),
-				ExpectError: regexp.MustCompile("InvalidInputException: DisabledReason should not be given for action other than disabling control"),
+				ExpectError: regexache.MustCompile("InvalidInputException: DisabledReason should not be given for action other than disabling control"),
 			},
 		},
 	})

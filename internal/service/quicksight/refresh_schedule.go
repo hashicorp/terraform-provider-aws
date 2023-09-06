@@ -1,13 +1,16 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package quicksight
 
 import (
 	"context"
 	"errors"
 	"fmt"
-	"regexp"
 	"strings"
 	"time"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/quicksight"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
@@ -137,7 +140,7 @@ func (r *resourceRefreshSchedule) Schema(ctx context.Context, req resource.Schem
 												"day_of_month": schema.StringAttribute{
 													Optional: true,
 													Validators: []validator.String{
-														stringvalidator.RegexMatches(regexp.MustCompile(dayOfMonthRegex), "day of month must match regex: "+dayOfMonthRegex),
+														stringvalidator.RegexMatches(regexache.MustCompile(dayOfMonthRegex), "day of month must match regex: "+dayOfMonthRegex),
 														stringvalidator.ConflictsWith(
 															path.MatchRelative().AtParent().AtName("day_of_week"),
 														),

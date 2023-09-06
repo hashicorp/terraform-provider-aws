@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package apigateway
 
 import (
@@ -35,34 +38,38 @@ func ResourceAPIKey() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"name": {
+			"arn": {
 				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
+				Computed: true,
 			},
-
+			"created_date": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"customer_id": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
 			"description": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Default:  "Managed by Terraform",
 			},
-
 			"enabled": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  true,
 			},
-
-			"created_date": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-
 			"last_updated_date": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
+			"name": {
+				Type:     schema.TypeString,
+				Required: true,
+			},
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			"value": {
 				Type:         schema.TypeString,
 				Optional:     true,
@@ -71,12 +78,6 @@ func ResourceAPIKey() *schema.Resource {
 				Sensitive:    true,
 				ValidateFunc: validation.StringLenBetween(20, 128),
 			},
-			"arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
 
 		CustomizeDiff: verify.SetTagsDiff,
@@ -94,6 +95,10 @@ func resourceAPIKeyCreate(ctx context.Context, d *schema.ResourceData, meta inte
 		Name:        aws.String(name),
 		Tags:        getTagsIn(ctx),
 		Value:       aws.String(d.Get("value").(string)),
+	}
+
+	if v, ok := d.GetOk("customer_id"); ok {
+		input.CustomerId = aws.String(v.(string))
 	}
 
 	apiKey, err := conn.CreateApiKeyWithContext(ctx, input)
@@ -132,25 +137,20 @@ func resourceAPIKeyRead(ctx context.Context, d *schema.ResourceData, meta interf
 		Resource:  fmt.Sprintf("/apikeys/%s", d.Id()),
 	}.String()
 	d.Set("arn", arn)
-
-	d.Set("name", apiKey.Name)
+	d.Set("created_date", apiKey.CreatedDate.Format(time.RFC3339))
+	d.Set("customer_id", apiKey.CustomerId)
 	d.Set("description", apiKey.Description)
 	d.Set("enabled", apiKey.Enabled)
+	d.Set("last_updated_date", apiKey.LastUpdatedDate.Format(time.RFC3339))
+	d.Set("name", apiKey.Name)
 	d.Set("value", apiKey.Value)
-
-	if err := d.Set("created_date", apiKey.CreatedDate.Format(time.RFC3339)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting created_date: %s", err)
-	}
-
-	if err := d.Set("last_updated_date", apiKey.LastUpdatedDate.Format(time.RFC3339)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting last_updated_date: %s", err)
-	}
 
 	return diags
 }
 
 func resourceAPIKeyUpdateOperations(d *schema.ResourceData) []*apigateway.PatchOperation {
 	operations := make([]*apigateway.PatchOperation, 0)
+
 	if d.HasChange("enabled") {
 		isEnabled := "false"
 		if d.Get("enabled").(bool) {
@@ -168,6 +168,22 @@ func resourceAPIKeyUpdateOperations(d *schema.ResourceData) []*apigateway.PatchO
 			Op:    aws.String(apigateway.OpReplace),
 			Path:  aws.String("/description"),
 			Value: aws.String(d.Get("description").(string)),
+		})
+	}
+
+	if d.HasChange("name") {
+		operations = append(operations, &apigateway.PatchOperation{
+			Op:    aws.String(apigateway.OpReplace),
+			Path:  aws.String("/name"),
+			Value: aws.String(d.Get("name").(string)),
+		})
+	}
+
+	if d.HasChange("customer_id") {
+		operations = append(operations, &apigateway.PatchOperation{
+			Op:    aws.String(apigateway.OpReplace),
+			Path:  aws.String("/customerId"),
+			Value: aws.String(d.Get("customer_id").(string)),
 		})
 	}
 

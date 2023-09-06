@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ec2
 
 import (
@@ -5,12 +8,12 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"regexp"
 	"sort"
 	"strconv"
 	"strings"
 	"time"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/ec2"
@@ -73,7 +76,7 @@ func ResourceSecurityGroup() *schema.Resource {
 				ConflictsWith: []string{"name_prefix"},
 				ValidateFunc: validation.All(
 					validation.StringLenBetween(0, 255),
-					validation.StringDoesNotMatch(regexp.MustCompile(`^sg-`), "cannot begin with sg-"),
+					validation.StringDoesNotMatch(regexache.MustCompile(`^sg-`), "cannot begin with sg-"),
 				),
 			},
 			"name_prefix": {
@@ -84,7 +87,7 @@ func ResourceSecurityGroup() *schema.Resource {
 				ConflictsWith: []string{"name"},
 				ValidateFunc: validation.All(
 					validation.StringLenBetween(0, 255-id.UniqueIDSuffixLength),
-					validation.StringDoesNotMatch(regexp.MustCompile(`^sg-`), "cannot begin with sg-"),
+					validation.StringDoesNotMatch(regexache.MustCompile(`^sg-`), "cannot begin with sg-"),
 				),
 			},
 			"owner_id": {

@@ -1,10 +1,13 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package waf_test
 
 import (
 	"fmt"
-	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/service/waf"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -24,7 +27,7 @@ func TestAccWAFWebACLDataSource_basic(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccWebACLDataSourceConfig_nonExistent,
-				ExpectError: regexp.MustCompile(`web ACLs not found`),
+				ExpectError: regexache.MustCompile(`web ACLs not found`),
 			},
 			{
 				Config: testAccWebACLDataSourceConfig_name(name),

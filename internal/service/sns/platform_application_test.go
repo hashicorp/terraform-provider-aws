@@ -1,14 +1,17 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package sns_test
 
 import (
 	"context"
 	"fmt"
 	"os"
-	"regexp"
 	"strconv"
 	"strings"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/service/sns"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -334,7 +337,7 @@ func TestAccSNSPlatformApplication_basic(t *testing.T) {
 						Config: testAccPlatformApplicationConfig_basic(name, platform),
 						Check: resource.ComposeTestCheckFunc(
 							testAccCheckPlatformApplicationExists(ctx, resourceName),
-							acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "sns", regexp.MustCompile(fmt.Sprintf("app/%s/%s$", platform.Name, name))),
+							acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "sns", regexache.MustCompile(fmt.Sprintf("app/%s/%s$", platform.Name, name))),
 							resource.TestCheckResourceAttr(resourceName, "name", name),
 							resource.TestCheckResourceAttr(resourceName, "platform", platform.Name),
 							resource.TestCheckResourceAttrSet(resourceName, "platform_credential"),

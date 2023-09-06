@@ -1,12 +1,15 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package lexmodels
 
 import (
 	"context"
 	"fmt"
 	"log"
-	"regexp"
 	"time"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/lexmodelbuildingservice"
@@ -117,7 +120,7 @@ func ResourceBot() *schema.Resource {
 							Required: true,
 							ValidateFunc: validation.All(
 								validation.StringLenBetween(1, 100),
-								validation.StringMatch(regexp.MustCompile(`^([A-Za-z]_?)+$`), ""),
+								validation.StringMatch(regexache.MustCompile(`^([A-Za-z]_?)+$`), ""),
 							),
 						},
 						"intent_version": {
@@ -125,7 +128,7 @@ func ResourceBot() *schema.Resource {
 							Required: true,
 							ValidateFunc: validation.All(
 								validation.StringLenBetween(1, 64),
-								validation.StringMatch(regexp.MustCompile(`\$LATEST|[0-9]+`), ""),
+								validation.StringMatch(regexache.MustCompile(`\$LATEST|[0-9]+`), ""),
 							),
 						},
 					},
@@ -211,12 +214,12 @@ func hasBotConfigChanges(d verify.ResourceDiffer) bool {
 
 var validBotName = validation.All(
 	validation.StringLenBetween(2, 50),
-	validation.StringMatch(regexp.MustCompile(`^([A-Za-z]_?)+$`), ""),
+	validation.StringMatch(regexache.MustCompile(`^([A-Za-z]_?)+$`), ""),
 )
 
 var validBotVersion = validation.All(
 	validation.StringLenBetween(1, 64),
-	validation.StringMatch(regexp.MustCompile(`\$LATEST|[0-9]+`), ""),
+	validation.StringMatch(regexache.MustCompile(`\$LATEST|[0-9]+`), ""),
 )
 
 func resourceBotCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
