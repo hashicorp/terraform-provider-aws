@@ -96,7 +96,7 @@ func testAccCheckDRTAccessRoleARNAssociationDestroy(ctx context.Context) resourc
 				return nil
 			}
 
-			if resp != nil && (resp.RoleARN == nil || *resp.RoleARN == "") {
+			if resp != nil && (resp.RoleArn == nil || *resp.RoleArn == "") {
 				return nil
 			}
 
