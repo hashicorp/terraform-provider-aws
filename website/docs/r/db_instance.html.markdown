@@ -83,7 +83,7 @@ data "aws_kms_key" "by_id" {
 
 resource "aws_db_instance" "default" {
   allocated_storage           = 50
-  auto_minor_version_upgrade  = false # Custom for SQL Server not support minor version upgrades
+  auto_minor_version_upgrade  = false                         # Custom for SQL Server not support minor version upgrades
   custom_iam_instance_profile = "AWSRDSCustomInstanceProfile" # Instance profile is required for Custom for SQL Server. See: https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/custom-setup-orcl.html#custom-setup-orcl.iam-vpc
   backup_retention_period     = 7
   db_subnet_group_name        = local.db_subnet_group_name
@@ -144,7 +144,7 @@ data "aws_kms_key" "by_id" {
 
 resource "aws_db_instance" "example" {
   allocated_storage           = 500
-  auto_minor_version_upgrade  = false  # Custom for Oracle not support minor version upgrades
+  auto_minor_version_upgrade  = false                               # Custom for Oracle not support minor version upgrades
   custom_iam_instance_profile = "AWSRDSCustomSQLServerInstanceRole" # Instance profile is required for Custom for SQL Server. See: https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/custom-setup-sqlserver.html#custom-setup-sqlserver.iam
   backup_retention_period     = 7
   db_subnet_group_name        = local.db_subnet_group_name
