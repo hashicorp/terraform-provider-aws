@@ -18,7 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
-// @SDKResource("aws_opensearch_vpc_endpoint")
+// @SDKResource("aws_opensearch_package")
 func ResourcePackage() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: ResourcePackageCreate,
@@ -52,7 +52,7 @@ func ResourcePackage() *schema.Resource {
 			},
 			"package_description": {
 				Type:     schema.TypeString,
-				Required: true,
+				Optional: true,
 			},
 			"package_type": {
 				Type:         schema.TypeString,
@@ -134,7 +134,7 @@ func ResourcePackageRead(ctx context.Context, d *schema.ResourceData, meta inter
 	d.Set("package_name", aws.StringValue(output.PackageDetailsList[0].PackageName))
 	d.Set("package_description", aws.StringValue(output.PackageDetailsList[0].PackageDescription))
 	d.Set("package_type", aws.StringValue(output.PackageDetailsList[0].PackageType))
-	d.Set("available_package_version", aws.StringValue(output.PackageDetailsList[0].AvailablePackageVersion)
+	d.Set("available_package_version", aws.StringValue(output.PackageDetailsList[0].AvailablePackageVersion))
 
 	return diags
 }
