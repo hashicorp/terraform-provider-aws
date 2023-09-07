@@ -715,8 +715,6 @@ func DeleteAllObjectVersions(ctx context.Context, conn *s3.Client, bucketName, k
 		if !ignoreObjectErrors {
 			return nObjects, fmt.Errorf("deleting at least one S3 Object delete marker, last error: %w", lastErr)
 		}
-
-		lastErr = nil
 	}
 
 	return nObjects, nil
