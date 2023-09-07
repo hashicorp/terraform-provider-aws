@@ -13,8 +13,6 @@ import (
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws/arn"
-	"github.com/hashicorp/go-cty/cty"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -454,17 +452,6 @@ func FloatGreaterThan(threshold float64) schema.SchemaValidateFunc {
 		}
 
 		return
-	}
-}
-
-// https://github.com/hashicorp/terraform-plugin-sdk/issues/780.
-func ValidAllDiag(validators ...schema.SchemaValidateDiagFunc) schema.SchemaValidateDiagFunc {
-	return func(i any, path cty.Path) diag.Diagnostics {
-		var results diag.Diagnostics
-		for _, validator := range validators {
-			results = append(results, validator(i, path)...)
-		}
-		return results
 	}
 }
 
