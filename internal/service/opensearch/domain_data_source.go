@@ -15,7 +15,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // @SDKDataSource("aws_opensearch_domain")
@@ -364,16 +363,13 @@ func DataSourceDomain() *schema.Resource {
 				},
 			},
 			"software_update_options": {
-				Type:             schema.TypeList,
-				Optional:         true,
-				MaxItems:         1,
-				DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
+				Type:     schema.TypeList,
+				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"auto_software_update_enabled": {
 							Type:     schema.TypeBool,
-							Optional: true,
-							Default:  false,
+							Computed: true,
 						},
 					},
 				},
