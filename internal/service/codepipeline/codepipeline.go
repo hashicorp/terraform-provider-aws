@@ -126,7 +126,7 @@ func ResourcePipeline() *schema.Resource {
 									"configuration": {
 										Type:     schema.TypeMap,
 										Optional: true,
-										ValidateDiagFunc: verify.ValidAllDiag(
+										ValidateDiagFunc: validation.AllDiag(
 											validation.MapKeyLenBetween(1, 50),
 											validation.MapKeyLenBetween(1, 1000),
 										),
