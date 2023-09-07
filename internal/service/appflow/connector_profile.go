@@ -161,7 +161,7 @@ func ResourceConnectorProfile() *schema.Resource {
 																Type:      schema.TypeMap,
 																Optional:  true,
 																Sensitive: true,
-																ValidateDiagFunc: verify.ValidAllDiag(
+																ValidateDiagFunc: validation.AllDiag(
 																	validation.MapKeyLenBetween(1, 128),
 																	validation.MapKeyMatch(regexache.MustCompile(`[\w]+`), "must contain only alphanumeric and underscore (_) characters"),
 																),
@@ -962,7 +962,7 @@ func ResourceConnectorProfile() *schema.Resource {
 															"token_url_custom_properties": {
 																Type:     schema.TypeMap,
 																Optional: true,
-																ValidateDiagFunc: verify.ValidAllDiag(
+																ValidateDiagFunc: validation.AllDiag(
 																	validation.MapKeyLenBetween(1, 128),
 																	validation.MapKeyMatch(regexache.MustCompile(`[\w]+`), "must contain only alphanumeric and underscore (_) characters"),
 																),
@@ -980,7 +980,7 @@ func ResourceConnectorProfile() *schema.Resource {
 												"profile_properties": {
 													Type:     schema.TypeMap,
 													Optional: true,
-													ValidateDiagFunc: verify.ValidAllDiag(
+													ValidateDiagFunc: validation.AllDiag(
 														validation.MapKeyLenBetween(1, 128),
 														validation.MapKeyMatch(regexache.MustCompile(`[\w]+`), "must contain only alphanumeric and underscore (_) characters"),
 													),

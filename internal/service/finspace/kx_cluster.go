@@ -186,7 +186,7 @@ func ResourceKxCluster() *schema.Resource {
 				Optional: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 				ForceNew: true,
-				ValidateDiagFunc: verify.ValidAllDiag(
+				ValidateDiagFunc: validation.AllDiag(
 					validation.MapKeyLenBetween(1, 50),
 					validation.MapValueLenBetween(1, 50),
 				),

@@ -72,7 +72,7 @@ func ResourceFeature() *schema.Resource {
 			"entity_overrides": {
 				Type:     schema.TypeMap,
 				Optional: true,
-				ValidateDiagFunc: verify.ValidAllDiag(
+				ValidateDiagFunc: validation.AllDiag(
 					validation.MapKeyLenBetween(1, 512),
 					validation.MapValueLenBetween(1, 127),
 					validation.MapValueMatch(regexache.MustCompile(`^[-a-zA-Z0-9._]*$`), "alphanumeric and can contain hyphens, underscores, and periods"),

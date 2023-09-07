@@ -218,7 +218,7 @@ func ResourceLaunch() *schema.Resource {
 									"group_weights": {
 										Type:     schema.TypeMap,
 										Required: true,
-										ValidateDiagFunc: verify.ValidAllDiag(
+										ValidateDiagFunc: validation.AllDiag(
 											validation.MapKeyLenBetween(1, 127),
 											validation.MapKeyMatch(regexache.MustCompile(`^[-a-zA-Z0-9._]*$`), "alphanumeric and can contain hyphens, underscores, and periods"),
 										),
@@ -254,7 +254,7 @@ func ResourceLaunch() *schema.Resource {
 												"weights": {
 													Type:     schema.TypeMap,
 													Required: true,
-													ValidateDiagFunc: verify.ValidAllDiag(
+													ValidateDiagFunc: validation.AllDiag(
 														validation.MapKeyLenBetween(1, 127),
 														validation.MapKeyMatch(regexache.MustCompile(`^[-a-zA-Z0-9._]*$`), "alphanumeric and can contain hyphens, underscores, and periods"),
 													),
