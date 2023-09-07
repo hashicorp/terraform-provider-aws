@@ -19,7 +19,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // @SDKResource("aws_service_discovery_instance")
@@ -39,7 +38,7 @@ func ResourceInstance() *schema.Resource {
 				Type:     schema.TypeMap,
 				Required: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
-				ValidateDiagFunc: verify.ValidAllDiag(
+				ValidateDiagFunc: validation.AllDiag(
 					validation.MapKeyLenBetween(1, 255),
 					validation.MapKeyMatch(regexache.MustCompile(`^[a-zA-Z0-9!-~]+$`), ""),
 					validation.MapValueLenBetween(0, 1024),
