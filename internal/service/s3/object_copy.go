@@ -430,7 +430,7 @@ func resourceObjectCopyUpdate(ctx context.Context, d *schema.ResourceData, meta 
 
 func resourceObjectCopyDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).S3Conn(ctx)
+	conn := meta.(*conns.AWSClient).S3Client(ctx)
 
 	bucket := d.Get("bucket").(string)
 	key := d.Get("key").(string)
