@@ -9,7 +9,6 @@ import (
 	"fmt"
 	"io"
 	"os"
-	"reflect"
 	"sort"
 	"testing"
 	"time"
@@ -18,6 +17,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/aws/aws-sdk-go-v2/service/s3/types"
+	"github.com/google/go-cmp/cmp"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -1496,8 +1496,8 @@ func testAccCheckObjectACL(ctx context.Context, n string, expectedPerms []string
 		}
 		sort.Strings(perms)
 
-		if !reflect.DeepEqual(perms, expectedPerms) {
-			return fmt.Errorf("Expected ACL permissions to be %v, got %v", expectedPerms, perms)
+		if diff := cmp.Diff(perms, expectedPerms); diff != "" {
+			return fmt.Errorf("unexpected diff (+wanted, -got): %s", diff)
 		}
 
 		return nil
@@ -1588,8 +1588,8 @@ func testAccCheckObjectCheckTags(ctx context.Context, n string, expectedTags map
 		}
 
 		want := tftags.New(ctx, expectedTags)
-		if !reflect.DeepEqual(want, got) {
-			return fmt.Errorf("Incorrect tags, want: %v got: %v", want, got)
+		if diff := cmp.Diff(got, want); diff != "" {
+			return fmt.Errorf("unexpected diff (+wanted, -got): %s", diff)
 		}
 
 		return nil
