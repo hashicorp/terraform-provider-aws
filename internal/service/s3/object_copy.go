@@ -610,7 +610,7 @@ func resourceObjectCopyDoCopy(ctx context.Context, d *schema.ResourceData, meta 
 	output, err := conn.CopyObject(ctx, input)
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "copying S3 object (bucket: %s; key: %s; source: %s): %s", aws.ToString(input.Bucket), aws.ToString(input.Key), aws.ToString(input.CopySource), err)
+		return sdkdiag.AppendErrorf(diags, "copying %s to S3 Bucket (%s) Object (%s): %s", aws.ToString(input.CopySource), aws.ToString(input.Bucket), aws.ToString(input.Key), err)
 	}
 
 	if d.IsNewResource() {
