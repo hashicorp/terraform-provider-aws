@@ -4,7 +4,7 @@
 //go:build !windows
 // +build !windows
 
-package plugin
+package cmdrunner
 
 import (
 	"os"
