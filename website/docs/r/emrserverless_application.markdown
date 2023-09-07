@@ -115,9 +115,9 @@ The following arguments are required:
 * `disk` - (Optional) The disk requirements for every worker instance of the worker type.
 * `memory` - (Required) The memory requirements for every worker instance of the worker type.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the cluster.
 * `id` - The ID of the cluster.
@@ -125,8 +125,17 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-EMR Severless applications can be imported using the `id`, e.g.
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import EMR Severless applications using the `id`. For example:
 
+```terraform
+import {
+  to = aws_emrserverless_application.example
+  id = "id"
+}
 ```
-$ terraform import aws_emrserverless_application.example id
+
+Using `terraform import`, import EMR Severless applications using the `id`. For example:
+
+```console
+% terraform import aws_emrserverless_application.example id
 ```

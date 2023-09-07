@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package s3_test
 
 // WARNING: This code is DEPRECATED and will be removed in a future release!!
@@ -11,11 +14,11 @@ import (
 	"io"
 	"os"
 	"reflect"
-	"regexp"
 	"sort"
 	"testing"
 	"time"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
@@ -32,8 +35,8 @@ import (
 
 func TestAccS3BucketObject_noNameNoKey(t *testing.T) {
 	ctx := acctest.Context(t)
-	bucketError := regexp.MustCompile(`bucket must not be empty`)
-	keyError := regexp.MustCompile(`key must not be empty`)
+	bucketError := regexache.MustCompile(`bucket must not be empty`)
+	keyError := regexache.MustCompile(`key must not be empty`)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -1385,7 +1388,7 @@ func testAccCheckBucketObjectDestroy(ctx context.Context) resource.TestCheckFunc
 				continue
 			}
 
-			_, err := tfs3.FindObjectByThreePartKey(ctx, conn, rs.Primary.Attributes["bucket"], rs.Primary.Attributes["key"], rs.Primary.Attributes["etag"])
+			_, err := tfs3.FindObjectByThreePartKeyV1(ctx, conn, rs.Primary.Attributes["bucket"], rs.Primary.Attributes["key"], rs.Primary.Attributes["etag"])
 
 			if tfresource.NotFound(err) {
 				continue
@@ -1502,7 +1505,7 @@ func testAccCheckBucketObjectStorageClass(ctx context.Context, n, expectedClass 
 		rs := s.RootModule().Resources[n]
 		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Conn(ctx)
 
-		out, err := tfs3.FindObjectByThreePartKey(ctx, conn, rs.Primary.Attributes["bucket"], rs.Primary.Attributes["key"], "")
+		out, err := tfs3.FindObjectByThreePartKeyV1(ctx, conn, rs.Primary.Attributes["bucket"], rs.Primary.Attributes["key"], "")
 
 		if err != nil {
 			return err
@@ -1529,7 +1532,7 @@ func testAccCheckBucketObjectSSE(ctx context.Context, n, expectedSSE string) res
 		rs := s.RootModule().Resources[n]
 		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Conn(ctx)
 
-		out, err := tfs3.FindObjectByThreePartKey(ctx, conn, rs.Primary.Attributes["bucket"], rs.Primary.Attributes["key"], "")
+		out, err := tfs3.FindObjectByThreePartKeyV1(ctx, conn, rs.Primary.Attributes["bucket"], rs.Primary.Attributes["key"], "")
 
 		if err != nil {
 			return err
@@ -1579,7 +1582,7 @@ func testAccCheckBucketObjectCheckTags(ctx context.Context, n string, expectedTa
 		rs := s.RootModule().Resources[n]
 		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Conn(ctx)
 
-		got, err := tfs3.ObjectListTags(ctx, conn, rs.Primary.Attributes["bucket"], rs.Primary.Attributes["key"])
+		got, err := tfs3.ObjectListTagsV1(ctx, conn, rs.Primary.Attributes["bucket"], rs.Primary.Attributes["key"])
 		if err != nil {
 			return err
 		}

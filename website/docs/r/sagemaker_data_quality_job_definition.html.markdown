@@ -46,7 +46,7 @@ resource "aws_sagemaker_data_quality_job_definition" "test" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `data_quality_app_specification` - (Required) Specifies the container that runs the monitoring job. Fields are documented below.
 * `data_quality_baseline_config` - (Optional) Configures the constraints and baselines for the monitoring job. Fields are documented below.
@@ -153,9 +153,9 @@ The following arguments are supported:
 
 * `max_runtime_in_seconds` - (Required) The maximum runtime allowed in seconds.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - The Amazon Resource Name (ARN) assigned by AWS to this data quality job definition.
 * `name` - The name of the data quality job definition.
@@ -163,8 +163,17 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Data quality job definitions can be imported using the `name`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import data quality job definitions using the `name`. For example:
 
+```terraform
+import {
+  to = aws_sagemaker_data_quality_job_definition.test_data_quality_job_definition
+  id = "data-quality-job-definition-foo"
+}
 ```
-$ terraform import aws_sagemaker_data_quality_job_definition.test_data_quality_job_definition data-quality-job-definition-foo
+
+Using `terraform import`, import data quality job definitions using the `name`. For example:
+
+```console
+% terraform import aws_sagemaker_data_quality_job_definition.test_data_quality_job_definition data-quality-job-definition-foo
 ```

@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package connect
 
 import (
@@ -31,9 +34,7 @@ func ResourceRoutingProfile() *schema.Resource {
 		CreateWithoutTimeout: resourceRoutingProfileCreate,
 		ReadWithoutTimeout:   resourceRoutingProfileRead,
 		UpdateWithoutTimeout: resourceRoutingProfileUpdate,
-		// Routing profiles do not support deletion today. NoOp the Delete method.
-		// Users can rename their routing profiles manually if they want.
-		DeleteWithoutTimeout: schema.NoopContext,
+		DeleteWithoutTimeout: resourceRoutingProfileDelete,
 
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
@@ -370,26 +371,26 @@ func updateQueueConfigs(ctx context.Context, conn *connect.Connect, instanceID, 
 	return nil
 }
 
-// func resourceRoutingProfileDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-// 	conn := meta.(*conns.AWSClient).ConnectConn(ctx)
+func resourceRoutingProfileDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	conn := meta.(*conns.AWSClient).ConnectConn(ctx)
 
-// 	instanceID, routingProfileID, err := RoutingProfileParseID(d.Id())
+	instanceID, routingProfileID, err := RoutingProfileParseID(d.Id())
 
-// 	if err != nil {
-// 		return diag.FromErr(err)
-// 	}
+	if err != nil {
+		return diag.FromErr(err)
+	}
 
-// 	_, err = conn.DeleteRoutingProfileWithContext(ctx, &connect.DeleteRoutingProfileInput{
-// 		InstanceId:       aws.String(instanceID),
-// 		RoutingProfileId: aws.String(routingProfileID),
-// 	})
+	_, err = conn.DeleteRoutingProfileWithContext(ctx, &connect.DeleteRoutingProfileInput{
+		InstanceId:       aws.String(instanceID),
+		RoutingProfileId: aws.String(routingProfileID),
+	})
 
-// 	if err != nil {
-// 		return diag.Errorf("deleting RoutingProfile (%s): %s", d.Id(), err)
-// 	}
+	if err != nil {
+		return diag.Errorf("deleting RoutingProfile (%s): %s", d.Id(), err)
+	}
 
-// 	return nil
-// }
+	return nil
+}
 
 func expandRoutingProfileMediaConcurrencies(mediaConcurrencies []interface{}) []*connect.MediaConcurrency {
 	if len(mediaConcurrencies) == 0 {

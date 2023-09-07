@@ -1,12 +1,15 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package cognitoidentity_test
 
 import (
 	"context"
 	"errors"
 	"fmt"
-	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cognitoidentity"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
@@ -146,7 +149,7 @@ func TestAccCognitoIdentityPoolRolesAttachment_roleMappingsWithAmbiguousRoleReso
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccPoolRolesAttachmentConfig_roleMappingsWithAmbiguousRoleResolutionError(name),
-				ExpectError: regexp.MustCompile(`validating ambiguous role resolution`),
+				ExpectError: regexache.MustCompile(`validating ambiguous role resolution`),
 			},
 		},
 	})
@@ -164,7 +167,7 @@ func TestAccCognitoIdentityPoolRolesAttachment_roleMappingsWithRulesTypeError(t 
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccPoolRolesAttachmentConfig_roleMappingsWithRulesTypeError(name),
-				ExpectError: regexp.MustCompile(`mapping_rule is required for Rules`),
+				ExpectError: regexache.MustCompile(`mapping_rule is required for Rules`),
 			},
 		},
 	})
@@ -182,7 +185,7 @@ func TestAccCognitoIdentityPoolRolesAttachment_roleMappingsWithTokenTypeError(t 
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccPoolRolesAttachmentConfig_roleMappingsWithTokenTypeError(name),
-				ExpectError: regexp.MustCompile(`mapping_rule must not be set for Token based role mapping`),
+				ExpectError: regexache.MustCompile(`mapping_rule must not be set for Token based role mapping`),
 			},
 		},
 	})

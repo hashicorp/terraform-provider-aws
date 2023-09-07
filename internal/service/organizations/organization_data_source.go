@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package organizations
 
 import (
@@ -10,7 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
-	"github.com/hashicorp/terraform-provider-aws/internal/slices"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 )
 
 // @SDKDataSource("aws_organizations_organization")
@@ -171,40 +174,31 @@ func dataSourceOrganizationRead(ctx context.Context, d *schema.ResourceData, met
 
 	if err != nil {
 		if isManagementAccount || !tfawserr.ErrCodeEquals(err, organizations.ErrCodeAccessDeniedException) {
-			return sdkdiag.AppendErrorf(diags, "reading Organizations Accounts: %s", err)
+			return sdkdiag.AppendErrorf(diags, "reading Organization (%s) accounts: %s", d.Id(), err)
 		}
 
 		isDelegatedAdministrator = false
 	}
 
 	if isManagementAccount || isDelegatedAdministrator {
-		nonManagementAccounts := slices.Filter(accounts, func(v *organizations.Account) bool {
+		nonManagementAccounts := tfslices.Filter(accounts, func(v *organizations.Account) bool {
 			return aws.StringValue(v.Id) != managementAccountID
 		})
 
-		var roots []*organizations.Root
-
-		err = conn.ListRootsPagesWithContext(ctx, &organizations.ListRootsInput{}, func(page *organizations.ListRootsOutput, lastPage bool) bool {
-			roots = append(roots, page.Roots...)
-			return !lastPage
-		})
+		roots, err := findRoots(ctx, conn)
 
 		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "reading Organizations roots: %s", err)
+			return sdkdiag.AppendErrorf(diags, "reading Organization (%s) roots: %s", d.Id(), err)
 		}
 
-		awsServiceAccessPrincipals := make([]string, 0)
+		var awsServiceAccessPrincipals []string
+
 		// ConstraintViolationException: The request failed because the organization does not have all features enabled. Please enable all features in your organization and then retry.
 		if aws.StringValue(org.FeatureSet) == organizations.OrganizationFeatureSetAll {
-			err := conn.ListAWSServiceAccessForOrganizationPagesWithContext(ctx, &organizations.ListAWSServiceAccessForOrganizationInput{}, func(page *organizations.ListAWSServiceAccessForOrganizationOutput, lastPage bool) bool {
-				for _, enabledServicePrincipal := range page.EnabledServicePrincipals {
-					awsServiceAccessPrincipals = append(awsServiceAccessPrincipals, aws.StringValue(enabledServicePrincipal.ServicePrincipal))
-				}
-				return !lastPage
-			})
+			awsServiceAccessPrincipals, err = FindEnabledServicePrincipalNames(ctx, conn)
 
 			if err != nil {
-				return sdkdiag.AppendErrorf(diags, "reading Organizations AWS service access: %s", err)
+				return sdkdiag.AppendErrorf(diags, "reading Organization (%s) service principals: %s", d.Id(), err)
 			}
 		}
 
@@ -219,20 +213,12 @@ func dataSourceOrganizationRead(ctx context.Context, d *schema.ResourceData, met
 		if err := d.Set("accounts", flattenAccounts(accounts)); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting accounts: %s", err)
 		}
-
-		if err := d.Set("aws_service_access_principals", awsServiceAccessPrincipals); err != nil {
-			return sdkdiag.AppendErrorf(diags, "setting aws_service_access_principals: %s", err)
-		}
-
-		if err := d.Set("enabled_policy_types", enabledPolicyTypes); err != nil {
-			return sdkdiag.AppendErrorf(diags, "setting enabled_policy_types: %s", err)
-		}
-
+		d.Set("aws_service_access_principals", awsServiceAccessPrincipals)
+		d.Set("enabled_policy_types", enabledPolicyTypes)
 		if err := d.Set("non_master_accounts", flattenAccounts(nonManagementAccounts)); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting non_master_accounts: %s", err)
 		}
-
-		if err := d.Set("roots", FlattenRoots(roots)); err != nil {
+		if err := d.Set("roots", flattenRoots(roots)); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting roots: %s", err)
 		}
 	}

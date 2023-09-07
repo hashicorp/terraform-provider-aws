@@ -1,11 +1,14 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package resourcegroups_test
 
 import (
 	"context"
 	"fmt"
-	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/service/resourcegroups"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -180,7 +183,7 @@ func TestAccResourceGroupsGroup_Configuration(t *testing.T) {
 			// Check that trying to change the configuration group to a resource-query group fails
 			{
 				Config:      testAccGroupConfig_basic(rName, desc1, testAccResourceGroupQueryConfig),
-				ExpectError: regexp.MustCompile(`conversion between resource-query and configuration group types is not possible`),
+				ExpectError: regexache.MustCompile(`conversion between resource-query and configuration group types is not possible`),
 			},
 		},
 	})
@@ -212,6 +215,40 @@ func TestAccResourceGroupsGroup_configurationParametersOptional(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "configuration.1.type", configType2),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.parameters.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.1.parameters.#", "0"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccResourceGroupsGroup_resourceQueryAndConfiguration(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v resourcegroups.Group
+	resourceName := "aws_resourcegroups_group.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	configType := "AWS::NetworkFirewall::RuleGroup"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, resourcegroups.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckResourceGroupDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccGroupConfig_resourceQueryAndConfiguration(rName, testAccResourceGroupQueryConfig, configType),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckResourceGroupExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttrSet(resourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "resource_query.0.query", testAccResourceGroupQueryConfig+"\n"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.type", configType),
 				),
 			},
 			{
@@ -424,4 +461,23 @@ resource "aws_resourcegroups_group" "test" {
   }
 }
 `, rName, configType1, configType2)
+}
+
+func testAccGroupConfig_resourceQueryAndConfiguration(rName, query, configType string) string {
+	return fmt.Sprintf(`
+resource "aws_resourcegroups_group" "test" {
+  name = %[1]q
+
+  resource_query {
+    query = <<JSON
+%[2]s
+JSON
+
+  }
+
+  configuration {
+    type = %[3]q
+  }
+}
+`, rName, query, configType)
 }

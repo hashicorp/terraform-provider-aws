@@ -1,11 +1,14 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package dms_test
 
 import (
 	"context"
 	"fmt"
-	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	dms "github.com/aws/aws-sdk-go/service/databasemigrationservice"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -81,8 +84,8 @@ func TestAccDMSReplicationTask_update(t *testing.T) {
 					testAccCheckReplicationTaskExists(ctx, resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "replication_task_arn"),
 					resource.TestCheckResourceAttr(resourceName, "migration_type", "full-load"),
-					resource.TestMatchResourceAttr(resourceName, "replication_task_settings", regexp.MustCompile("MemoryLimitTotal\":1024")),
-					resource.TestMatchResourceAttr(resourceName, "table_mappings", regexp.MustCompile("rule-name\":\"ZedsDead")),
+					resource.TestMatchResourceAttr(resourceName, "replication_task_settings", regexache.MustCompile("MemoryLimitTotal\":1024")),
+					resource.TestMatchResourceAttr(resourceName, "table_mappings", regexache.MustCompile("rule-name\":\"ZedsDead")),
 				),
 			},
 			{
@@ -90,8 +93,8 @@ func TestAccDMSReplicationTask_update(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckReplicationTaskExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "migration_type", "full-load"),
-					resource.TestMatchResourceAttr(resourceName, "replication_task_settings", regexp.MustCompile("MemoryLimitTotal\":1024")),
-					resource.TestMatchResourceAttr(resourceName, "table_mappings", regexp.MustCompile("rule-name\":\"EMBRZ")),
+					resource.TestMatchResourceAttr(resourceName, "replication_task_settings", regexache.MustCompile("MemoryLimitTotal\":1024")),
+					resource.TestMatchResourceAttr(resourceName, "table_mappings", regexache.MustCompile("rule-name\":\"EMBRZ")),
 				),
 			},
 			{
@@ -105,8 +108,8 @@ func TestAccDMSReplicationTask_update(t *testing.T) {
 					testAccCheckReplicationTaskExists(ctx, resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "replication_task_arn"),
 					resource.TestCheckResourceAttr(resourceName, "migration_type", "full-load"),
-					resource.TestMatchResourceAttr(resourceName, "replication_task_settings", regexp.MustCompile("MemoryLimitTotal\":1248")),
-					resource.TestMatchResourceAttr(resourceName, "table_mappings", regexp.MustCompile("rule-name\":\"ZedsDead")),
+					resource.TestMatchResourceAttr(resourceName, "replication_task_settings", regexache.MustCompile("MemoryLimitTotal\":1248")),
+					resource.TestMatchResourceAttr(resourceName, "table_mappings", regexache.MustCompile("rule-name\":\"ZedsDead")),
 				),
 			},
 			{
@@ -114,8 +117,8 @@ func TestAccDMSReplicationTask_update(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckReplicationTaskExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "migration_type", "full-load"),
-					resource.TestMatchResourceAttr(resourceName, "replication_task_settings", regexp.MustCompile("MemoryLimitTotal\":1024")),
-					resource.TestMatchResourceAttr(resourceName, "table_mappings", regexp.MustCompile("rule-name\":\"ZedsDead")),
+					resource.TestMatchResourceAttr(resourceName, "replication_task_settings", regexache.MustCompile("MemoryLimitTotal\":1024")),
+					resource.TestMatchResourceAttr(resourceName, "table_mappings", regexache.MustCompile("rule-name\":\"ZedsDead")),
 				),
 			},
 			{
@@ -129,8 +132,8 @@ func TestAccDMSReplicationTask_update(t *testing.T) {
 					testAccCheckReplicationTaskExists(ctx, resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "replication_task_arn"),
 					resource.TestCheckResourceAttr(resourceName, "migration_type", "full-load"),
-					resource.TestMatchResourceAttr(resourceName, "replication_task_settings", regexp.MustCompile("MemoryLimitTotal\":1248")),
-					resource.TestMatchResourceAttr(resourceName, "table_mappings", regexp.MustCompile("rule-name\":\"ZedsDead")),
+					resource.TestMatchResourceAttr(resourceName, "replication_task_settings", regexache.MustCompile("MemoryLimitTotal\":1248")),
+					resource.TestMatchResourceAttr(resourceName, "table_mappings", regexache.MustCompile("rule-name\":\"ZedsDead")),
 				),
 			},
 			{
@@ -138,8 +141,8 @@ func TestAccDMSReplicationTask_update(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckReplicationTaskExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "migration_type", "full-load"),
-					resource.TestMatchResourceAttr(resourceName, "replication_task_settings", regexp.MustCompile("MemoryLimitTotal\":1024")),
-					resource.TestMatchResourceAttr(resourceName, "table_mappings", regexp.MustCompile("rule-name\":\"EMBRZ")),
+					resource.TestMatchResourceAttr(resourceName, "replication_task_settings", regexache.MustCompile("MemoryLimitTotal\":1024")),
+					resource.TestMatchResourceAttr(resourceName, "table_mappings", regexache.MustCompile("rule-name\":\"EMBRZ")),
 				),
 			},
 			{

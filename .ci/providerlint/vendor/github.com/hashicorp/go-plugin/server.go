@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package plugin
 
 import (
@@ -8,10 +11,10 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"net"
 	"os"
 	"os/signal"
+	"os/user"
 	"runtime"
 	"sort"
 	"strconv"
@@ -270,7 +273,7 @@ func Serve(opts *ServeConfig) {
 	}
 
 	// Register a listener so we can accept a connection
-	listener, err := serverListener()
+	listener, err := serverListener(unixSocketConfigFromEnv())
 	if err != nil {
 		logger.Error("plugin init error", "error", err)
 		return
@@ -493,12 +496,12 @@ func Serve(opts *ServeConfig) {
 	}
 }
 
-func serverListener() (net.Listener, error) {
+func serverListener(unixSocketCfg UnixSocketConfig) (net.Listener, error) {
 	if runtime.GOOS == "windows" {
 		return serverListener_tcp()
 	}
 
-	return serverListener_unix()
+	return serverListener_unix(unixSocketCfg)
 }
 
 func serverListener_tcp() (net.Listener, error) {
@@ -543,8 +546,8 @@ func serverListener_tcp() (net.Listener, error) {
 	return nil, errors.New("Couldn't bind plugin TCP listener")
 }
 
-func serverListener_unix() (net.Listener, error) {
-	tf, err := ioutil.TempFile("", "plugin")
+func serverListener_unix(unixSocketCfg UnixSocketConfig) (net.Listener, error) {
+	tf, err := os.CreateTemp(unixSocketCfg.directory, "plugin")
 	if err != nil {
 		return nil, err
 	}
@@ -564,12 +567,47 @@ func serverListener_unix() (net.Listener, error) {
 		return nil, err
 	}
 
+	// By default, unix sockets are only writable by the owner. Set up a custom
+	// group owner and group write permissions if configured.
+	if unixSocketCfg.Group != "" {
+		err = setGroupWritable(path, unixSocketCfg.Group, 0o660)
+		if err != nil {
+			return nil, err
+		}
+	}
+
 	// Wrap the listener in rmListener so that the Unix domain socket file
 	// is removed on close.
 	return &rmListener{
 		Listener: l,
 		Path:     path,
 	}, nil
+}
+
+func setGroupWritable(path, groupString string, mode os.FileMode) error {
+	groupID, err := strconv.Atoi(groupString)
+	if err != nil {
+		group, err := user.LookupGroup(groupString)
+		if err != nil {
+			return fmt.Errorf("failed to find gid from %q: %w", groupString, err)
+		}
+		groupID, err = strconv.Atoi(group.Gid)
+		if err != nil {
+			return fmt.Errorf("failed to parse %q group's gid as an integer: %w", groupString, err)
+		}
+	}
+
+	err = os.Chown(path, -1, groupID)
+	if err != nil {
+		return err
+	}
+
+	err = os.Chmod(path, mode)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 // rmListener is an implementation of net.Listener that forwards most

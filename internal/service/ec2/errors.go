@@ -1,15 +1,19 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ec2
 
 import (
+	"errors"
 	"fmt"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/ec2"
-	multierror "github.com/hashicorp/go-multierror"
 )
 
 const (
+	errCodeAnalysisExistsForNetworkInsightsPath              = "AnalysisExistsForNetworkInsightsPath"
 	errCodeAuthFailure                                       = "AuthFailure"
 	errCodeClientInvalidHostIDNotFound                       = "Client.InvalidHostID.NotFound"
 	errCodeConcurrentMutationLimitExceeded                   = "ConcurrentMutationLimitExceeded"
@@ -88,6 +92,7 @@ const (
 	errCodeInvalidSubnetIDNotFound                           = "InvalidSubnetID.NotFound"
 	errCodeInvalidSubnetIdNotFound                           = "InvalidSubnetId.NotFound"
 	errCodeInvalidTrafficMirrorFilterIdNotFound              = "InvalidTrafficMirrorFilterId.NotFound"
+	errCodeInvalidTrafficMirrorFilterRuleIdNotFound          = "InvalidTrafficMirrorFilterRuleId.NotFound"
 	errCodeInvalidTrafficMirrorSessionIdNotFound             = "InvalidTrafficMirrorSessionId.NotFound"
 	errCodeInvalidTrafficMirrorTargetIdNotFound              = "InvalidTrafficMirrorTargetId.NotFound"
 	errCodeInvalidTransitGatewayAttachmentIDNotFound         = "InvalidTransitGatewayAttachmentID.NotFound"
@@ -125,15 +130,15 @@ func CancelSpotFleetRequestError(apiObject *ec2.CancelSpotFleetRequestsErrorItem
 }
 
 func CancelSpotFleetRequestsError(apiObjects []*ec2.CancelSpotFleetRequestsErrorItem) error {
-	var errors *multierror.Error
+	var errs []error
 
 	for _, apiObject := range apiObjects {
 		if err := CancelSpotFleetRequestError(apiObject); err != nil {
-			errors = multierror.Append(errors, fmt.Errorf("%s: %w", aws.StringValue(apiObject.SpotFleetRequestId), err))
+			errs = append(errs, fmt.Errorf("%s: %w", aws.StringValue(apiObject.SpotFleetRequestId), err))
 		}
 	}
 
-	return errors.ErrorOrNil()
+	return errors.Join(errs...)
 }
 
 func DeleteFleetError(apiObject *ec2.DeleteFleetErrorItem) error {
@@ -145,15 +150,15 @@ func DeleteFleetError(apiObject *ec2.DeleteFleetErrorItem) error {
 }
 
 func DeleteFleetsError(apiObjects []*ec2.DeleteFleetErrorItem) error {
-	var errors *multierror.Error
+	var errs []error
 
 	for _, apiObject := range apiObjects {
 		if err := DeleteFleetError(apiObject); err != nil {
-			errors = multierror.Append(errors, fmt.Errorf("%s: %w", aws.StringValue(apiObject.FleetId), err))
+			errs = append(errs, fmt.Errorf("%s: %w", aws.StringValue(apiObject.FleetId), err))
 		}
 	}
 
-	return errors.ErrorOrNil()
+	return errors.Join(errs...)
 }
 
 func UnsuccessfulItemError(apiObject *ec2.UnsuccessfulItemError) error {
@@ -165,19 +170,17 @@ func UnsuccessfulItemError(apiObject *ec2.UnsuccessfulItemError) error {
 }
 
 func UnsuccessfulItemsError(apiObjects []*ec2.UnsuccessfulItem) error {
-	var errors *multierror.Error
+	var errs []error
 
 	for _, apiObject := range apiObjects {
 		if apiObject == nil {
 			continue
 		}
 
-		err := UnsuccessfulItemError(apiObject.Error)
-
-		if err != nil {
-			errors = multierror.Append(errors, fmt.Errorf("%s: %w", aws.StringValue(apiObject.ResourceId), err))
+		if err := UnsuccessfulItemError(apiObject.Error); err != nil {
+			errs = append(errs, fmt.Errorf("%s: %w", aws.StringValue(apiObject.ResourceId), err))
 		}
 	}
 
-	return errors.ErrorOrNil()
+	return errors.Join(errs...)
 }

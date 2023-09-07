@@ -1,11 +1,14 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package athena
 
 import (
 	"context"
 	"fmt"
 	"log"
-	"regexp"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/athena"
@@ -51,7 +54,7 @@ func ResourceDataCatalog() *schema.Resource {
 				ForceNew: true,
 				ValidateFunc: validation.All(
 					validation.StringLenBetween(1, 129),
-					validation.StringMatch(regexp.MustCompile(`[\w@-]*`), ""),
+					validation.StringMatch(regexache.MustCompile(`[\w@-]*`), ""),
 				),
 			},
 			"parameters": {

@@ -1,8 +1,13 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package provider
 
 import (
 	"regexp"
 	"testing"
+
+	"github.com/YakDriver/regexache"
 )
 
 func TestValidAssumeRoleDuration(t *testing.T) {
@@ -14,19 +19,19 @@ func TestValidAssumeRoleDuration(t *testing.T) {
 	}{
 		{
 			val:         "",
-			expectedErr: regexp.MustCompile(`cannot be parsed as a duration`),
+			expectedErr: regexache.MustCompile(`cannot be parsed as a duration`),
 		},
 		{
 			val:         "1",
-			expectedErr: regexp.MustCompile(`cannot be parsed as a duration`),
+			expectedErr: regexache.MustCompile(`cannot be parsed as a duration`),
 		},
 		{
 			val:         "10m",
-			expectedErr: regexp.MustCompile(`must be between 15 minutes \(15m\) and 12 hours \(12h\)`),
+			expectedErr: regexache.MustCompile(`must be between 15 minutes \(15m\) and 12 hours \(12h\)`),
 		},
 		{
 			val:         "12h30m",
-			expectedErr: regexp.MustCompile(`must be between 15 minutes \(15m\) and 12 hours \(12h\)`),
+			expectedErr: regexache.MustCompile(`must be between 15 minutes \(15m\) and 12 hours \(12h\)`),
 		},
 		{
 

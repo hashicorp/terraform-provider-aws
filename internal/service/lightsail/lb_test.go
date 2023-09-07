@@ -1,14 +1,17 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package lightsail_test
 
 import (
 	"context"
 	"errors"
 	"fmt"
-	"regexp"
 	"strings"
 	"testing"
 	"time"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/lightsail"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
@@ -114,11 +117,11 @@ func testAccLoadBalancer_name(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccLoadBalancerConfig_basic(lightsailNameWithSpaces),
-				ExpectError: regexp.MustCompile(`must contain only alphanumeric characters, underscores, hyphens, and dots`),
+				ExpectError: regexache.MustCompile(`must contain only alphanumeric characters, underscores, hyphens, and dots`),
 			},
 			{
 				Config:      testAccLoadBalancerConfig_basic(lightsailNameWithStartingDigit),
-				ExpectError: regexp.MustCompile(`must begin with an alphabetic character`),
+				ExpectError: regexache.MustCompile(`must begin with an alphabetic character`),
 			},
 			{
 				Config: testAccLoadBalancerConfig_basic(rName),

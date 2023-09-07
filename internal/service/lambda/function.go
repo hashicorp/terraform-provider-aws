@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package lambda
 
 import (
@@ -6,10 +9,10 @@ import (
 	"fmt"
 	"log"
 	"os"
-	"regexp"
 	"strings"
 	"time"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/lambda"
@@ -158,7 +161,7 @@ func ResourceFunction() *schema.Resource {
 						"local_mount_path": {
 							Type:         schema.TypeString,
 							Required:     true,
-							ValidateFunc: validation.StringMatch(regexp.MustCompile(`^/mnt/[a-zA-Z0-9-_.]+$`), "must start with '/mnt/'"),
+							ValidateFunc: validation.StringMatch(regexache.MustCompile(`^/mnt/[a-zA-Z0-9-_.]+$`), "must start with '/mnt/'"),
 						},
 					},
 				},
@@ -1286,6 +1289,7 @@ func SignerServiceIsAvailable(region string) bool {
 		endpoints.UsWest1RegionID:      {},
 		endpoints.UsWest2RegionID:      {},
 		endpoints.AfSouth1RegionID:     {},
+		endpoints.ApEast1RegionID:      {},
 		endpoints.ApSouth1RegionID:     {},
 		endpoints.ApNortheast2RegionID: {},
 		endpoints.ApSoutheast1RegionID: {},

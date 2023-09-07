@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ec2
 
 import (
@@ -142,10 +145,13 @@ func (r *resourceInstanceConnectEndpoint) Create(ctx context.Context, request re
 
 	input := &ec2.CreateInstanceConnectEndpointInput{
 		ClientToken:       aws.String(id.UniqueId()),
-		PreserveClientIp:  aws.Bool(data.PreserveClientIp.ValueBool()),
-		SecurityGroupIds:  flex.ExpandFrameworkStringValueSet(ctx, data.SecurityGroupIds),
-		SubnetId:          aws.String(data.SubnetId.ValueString()),
 		TagSpecifications: getTagSpecificationsInV2(ctx, awstypes.ResourceTypeInstanceConnectEndpoint),
+	}
+
+	response.Diagnostics.Append(flex.Expand(ctx, &data, input)...)
+
+	if response.Diagnostics.HasError() {
+		return
 	}
 
 	output, err := conn.CreateInstanceConnectEndpoint(ctx, input)
@@ -168,9 +174,9 @@ func (r *resourceInstanceConnectEndpoint) Create(ctx context.Context, request re
 	}
 
 	// Set values for unknowns.
-	if err := flex.Flatten(ctx, instanceConnectEndpoint, &data); err != nil {
-		response.Diagnostics.AddError("flattening data", err.Error())
+	response.Diagnostics.Append(flex.Flatten(ctx, instanceConnectEndpoint, &data)...)
 
+	if response.Diagnostics.HasError() {
 		return
 	}
 
@@ -204,9 +210,9 @@ func (r *resourceInstanceConnectEndpoint) Read(ctx context.Context, request reso
 		return
 	}
 
-	if err := flex.Flatten(ctx, instanceConnectEndpoint, &data); err != nil {
-		response.Diagnostics.AddError("flattening data", err.Error())
+	response.Diagnostics.Append(flex.Flatten(ctx, instanceConnectEndpoint, &data)...)
 
+	if response.Diagnostics.HasError() {
 		return
 	}
 

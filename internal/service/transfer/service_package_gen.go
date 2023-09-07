@@ -39,6 +39,38 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			TypeName: "aws_transfer_access",
 		},
 		{
+			Factory:  ResourceAgreement,
+			TypeName: "aws_transfer_agreement",
+			Name:     "Agreement",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
+		},
+		{
+			Factory:  ResourceCertificate,
+			TypeName: "aws_transfer_certificate",
+			Name:     "Certificate",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
+		},
+		{
+			Factory:  ResourceConnector,
+			TypeName: "aws_transfer_connector",
+			Name:     "Connector",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
+		},
+		{
+			Factory:  ResourceProfile,
+			TypeName: "aws_transfer_profile",
+			Name:     "Profile",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
+		},
+		{
 			Factory:  ResourceServer,
 			TypeName: "aws_transfer_server",
 			Name:     "Server",

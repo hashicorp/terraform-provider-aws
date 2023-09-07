@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package quicksight
 
 import (
@@ -12,7 +15,6 @@ import (
 	"github.com/aws/aws-sdk-go/service/quicksight"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -44,94 +46,94 @@ func ResourceDashboard() *schema.Resource {
 			Delete: schema.DefaultTimeout(5 * time.Minute),
 		},
 
-		Schema: map[string]*schema.Schema{
-			"arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"aws_account_id": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ForceNew:     true,
-				ValidateFunc: verify.ValidAccountID,
-			},
-			"created_time": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"dashboard_id": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"dashboard_publish_options": quicksightschema.DashboardPublishOptionsSchema(),
-			"definition":                quicksightschema.DashboardDefinitionSchema(),
-			"last_updated_time": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"last_published_time": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"name": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: validation.StringLenBetween(1, 2048),
-			},
-			"parameters": quicksightschema.ParametersSchema(),
-			"permissions": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MinItems: 1,
-				MaxItems: 64,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"actions": {
-							Type:     schema.TypeSet,
-							Required: true,
-							MinItems: 1,
-							MaxItems: 16,
-							Elem:     &schema.Schema{Type: schema.TypeString},
-						},
-						"principal": {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: validation.StringLenBetween(1, 256),
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"arn": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"aws_account_id": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					Computed:     true,
+					ForceNew:     true,
+					ValidateFunc: verify.ValidAccountID,
+				},
+				"created_time": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"dashboard_id": {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				"dashboard_publish_options": quicksightschema.DashboardPublishOptionsSchema(),
+				"definition":                quicksightschema.DashboardDefinitionSchema(),
+				"last_updated_time": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"last_published_time": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"name": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ValidateFunc: validation.StringLenBetween(1, 2048),
+				},
+				"parameters": quicksightschema.ParametersSchema(),
+				"permissions": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					MinItems: 1,
+					MaxItems: 64,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"actions": {
+								Type:     schema.TypeSet,
+								Required: true,
+								MinItems: 1,
+								MaxItems: 16,
+								Elem:     &schema.Schema{Type: schema.TypeString},
+							},
+							"principal": {
+								Type:         schema.TypeString,
+								Required:     true,
+								ValidateFunc: validation.StringLenBetween(1, 256),
+							},
 						},
 					},
 				},
-			},
-			"source_entity": quicksightschema.DashboardSourceEntitySchema(),
-			"source_entity_arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"status": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			"theme_arn": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"version_description": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: validation.StringLenBetween(1, 512),
-			},
-			"version_number": {
-				Type:     schema.TypeInt,
-				Computed: true,
-			},
+				"source_entity": quicksightschema.DashboardSourceEntitySchema(),
+				"source_entity_arn": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"status": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				"theme_arn": {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				"version_description": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ValidateFunc: validation.StringLenBetween(1, 512),
+				},
+				"version_number": {
+					Type:     schema.TypeInt,
+					Computed: true,
+				},
+			}
 		},
-		CustomizeDiff: customdiff.All(
-			refreshOutputsDiff,
-			verify.SetTagsDiff,
-		),
+
+		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
@@ -177,8 +179,8 @@ func resourceDashboardCreate(ctx context.Context, d *schema.ResourceData, meta i
 		input.Parameters = quicksightschema.ExpandParameters(d.Get("parameters").([]interface{}))
 	}
 
-	if v, ok := d.GetOk("permissions"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.Permissions = expandResourcePermissions(v.([]interface{}))
+	if v, ok := d.Get("permissions").(*schema.Set); ok && v.Len() > 0 {
+		input.Permissions = expandResourcePermissions(v.List())
 	}
 
 	_, err := conn.CreateDashboardWithContext(ctx, input)
@@ -312,10 +314,10 @@ func resourceDashboardUpdate(ctx context.Context, d *schema.ResourceData, meta i
 
 	if d.HasChange("permissions") {
 		oraw, nraw := d.GetChange("permissions")
-		o := oraw.([]interface{})
-		n := nraw.([]interface{})
+		o := oraw.(*schema.Set)
+		n := nraw.(*schema.Set)
 
-		toGrant, toRevoke := DiffPermissions(o, n)
+		toGrant, toRevoke := DiffPermissions(o.List(), n.List())
 
 		params := &quicksight.UpdateDashboardPermissionsInput{
 			AwsAccountId: aws.String(awsAccountId),
@@ -411,14 +413,4 @@ func createDashboardId(awsAccountID, dashboardId string) string {
 func extractVersionFromARN(arn string) *int64 {
 	version, _ := strconv.Atoi(arn[strings.LastIndex(arn, "/")+1:])
 	return aws.Int64(int64(version))
-}
-
-func refreshOutputsDiff(_ context.Context, diff *schema.ResourceDiff, meta interface{}) error {
-	if diff.HasChanges("name", "definition", "source_entity", "theme_arn", "version_description", "parameters", "dashboard_publish_options") {
-		if err := diff.SetNewComputed("version_number"); err != nil {
-			return err
-		}
-	}
-
-	return nil
 }

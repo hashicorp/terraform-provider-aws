@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package s3
 
 import (
@@ -9,6 +12,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -235,7 +239,7 @@ func dataSourceObjectRead(ctx context.Context, d *schema.ResourceData, meta inte
 		log.Printf("[INFO] Ignoring body of S3 object %s with Content-Type %q", uniqueId, contentType)
 	}
 
-	tags, err := ObjectListTags(ctx, conn, bucket, key)
+	tags, err := ObjectListTagsV1(ctx, conn, bucket, key)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "listing tags for S3 Bucket (%s) Object (%s): %s", bucket, key, err)
@@ -257,15 +261,15 @@ func isContentTypeAllowed(contentType *string) bool {
 	}
 
 	allowedContentTypes := []*regexp.Regexp{
-		regexp.MustCompile(`^application/atom\+xml$`),
-		regexp.MustCompile(`^application/json$`),
-		regexp.MustCompile(`^application/ld\+json$`),
-		regexp.MustCompile(`^application/x-csh$`),
-		regexp.MustCompile(`^application/x-httpd-php$`),
-		regexp.MustCompile(`^application/x-sh$`),
-		regexp.MustCompile(`^application/xhtml\+xml$`),
-		regexp.MustCompile(`^application/xml$`),
-		regexp.MustCompile(`^text/.+`),
+		regexache.MustCompile(`^application/atom\+xml$`),
+		regexache.MustCompile(`^application/json$`),
+		regexache.MustCompile(`^application/ld\+json$`),
+		regexache.MustCompile(`^application/x-csh$`),
+		regexache.MustCompile(`^application/x-httpd-php$`),
+		regexache.MustCompile(`^application/x-sh$`),
+		regexache.MustCompile(`^application/xhtml\+xml$`),
+		regexache.MustCompile(`^application/xml$`),
+		regexache.MustCompile(`^text/.+`),
 	}
 
 	for _, r := range allowedContentTypes {

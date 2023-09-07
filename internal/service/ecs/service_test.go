@@ -1,13 +1,16 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ecs_test
 
 import (
 	"context"
 	"fmt"
 	"math"
-	"regexp"
 	"testing"
 	"time"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ecs"
 	"github.com/aws/aws-sdk-go/service/servicediscovery"
@@ -153,7 +156,7 @@ func TestAccECSService_basicImport(t *testing.T) {
 				ImportStateId:     fmt.Sprintf("%s/nonexistent", rName),
 				ImportState:       true,
 				ImportStateVerify: false,
-				ExpectError:       regexp.MustCompile(`Cannot import non-existent remote object`),
+				ExpectError:       regexache.MustCompile(`Cannot import non-existent remote object`),
 			},
 		},
 	})
@@ -350,11 +353,11 @@ func TestAccECSService_healthCheckGracePeriodSeconds(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccServiceConfig_healthCheckGracePeriodSeconds(rName, -1),
-				ExpectError: regexp.MustCompile(`expected health_check_grace_period_seconds to be in the range`),
+				ExpectError: regexache.MustCompile(`expected health_check_grace_period_seconds to be in the range`),
 			},
 			{
 				Config:      testAccServiceConfig_healthCheckGracePeriodSeconds(rName, math.MaxInt32+1),
-				ExpectError: regexp.MustCompile(`expected health_check_grace_period_seconds to be in the range`),
+				ExpectError: regexache.MustCompile(`expected health_check_grace_period_seconds to be in the range`),
 			},
 			{
 				Config: testAccServiceConfig_healthCheckGracePeriodSeconds(rName, 300),
@@ -886,7 +889,7 @@ func TestAccECSService_PlacementStrategy_missing(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccServiceConfig_placementStrategyType(rName, ""),
-				ExpectError: regexp.MustCompile(`expected ordered_placement_strategy.0.type to be one of`),
+				ExpectError: regexache.MustCompile(`expected ordered_placement_strategy.0.type to be one of`),
 			},
 		},
 	})

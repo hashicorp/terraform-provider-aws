@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package rds
 
 import (
@@ -8,9 +11,10 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/generate/namevaluesfilters"
-	"github.com/hashicorp/terraform-provider-aws/names"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
 // @SDKDataSource("aws_db_instances")
@@ -19,6 +23,7 @@ func DataSourceInstances() *schema.Resource {
 		ReadWithoutTimeout: dataSourceInstancesRead,
 
 		Schema: map[string]*schema.Schema{
+			"filter": namevaluesfilters.Schema(),
 			"instance_arns": {
 				Type:     schema.TypeList,
 				Computed: true,
@@ -29,16 +34,13 @@ func DataSourceInstances() *schema.Resource {
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"filter": namevaluesfilters.Schema(),
+			"tags": tftags.TagsSchemaComputed(),
 		},
 	}
 }
 
-const (
-	DSNameInstances = "Instances Data Source"
-)
-
 func dataSourceInstancesRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RDSConn(ctx)
 
 	input := &rds.DescribeDBInstancesInput{}
@@ -47,32 +49,30 @@ func dataSourceInstancesRead(ctx context.Context, d *schema.ResourceData, meta i
 		input.Filters = namevaluesfilters.New(v.(*schema.Set)).RDSFilters()
 	}
 
+	filter := tfslices.PredicateTrue[*rds.DBInstance]()
+	if v, ok := d.GetOk("tags"); ok {
+		filter = func(x *rds.DBInstance) bool {
+			return KeyValueTags(ctx, x.TagList).ContainsAll(tftags.New(ctx, v.(map[string]interface{})))
+		}
+	}
+
+	instances, err := findDBInstancesSDKv1(ctx, conn, input, filter)
+
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "reading RDS DB Instances: %s", err)
+	}
+
 	var instanceARNS []string
 	var instanceIdentifiers []string
 
-	err := conn.DescribeDBInstancesPagesWithContext(ctx, input, func(page *rds.DescribeDBInstancesOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
-		}
-
-		for _, dbInstance := range page.DBInstances {
-			if dbInstance == nil {
-				continue
-			}
-
-			instanceARNS = append(instanceARNS, aws.StringValue(dbInstance.DBInstanceArn))
-			instanceIdentifiers = append(instanceIdentifiers, aws.StringValue(dbInstance.DBInstanceIdentifier))
-		}
-
-		return !lastPage
-	})
-	if err != nil {
-		return create.DiagError(names.RDS, create.ErrActionReading, DSNameInstances, "", err)
+	for _, instance := range instances {
+		instanceARNS = append(instanceARNS, aws.StringValue(instance.DBInstanceArn))
+		instanceIdentifiers = append(instanceIdentifiers, aws.StringValue(instance.DBInstanceIdentifier))
 	}
 
 	d.SetId(meta.(*conns.AWSClient).Region)
 	d.Set("instance_arns", instanceARNS)
 	d.Set("instance_identifiers", instanceIdentifiers)
 
-	return nil
+	return diags
 }

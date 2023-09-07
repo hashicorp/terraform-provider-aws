@@ -1,11 +1,14 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package kinesis_test
 
 import (
 	"context"
 	"fmt"
-	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/kinesis"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
@@ -141,7 +144,7 @@ func TestAccKinesisStream_encryptionWithoutKMSKeyThrowsError(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccStreamConfig_encryptionAndNoKMSKey(rName),
-				ExpectError: regexp.MustCompile("KMS Key Id required when setting encryption_type is not set as NONE"),
+				ExpectError: regexache.MustCompile("KMS Key Id required when setting encryption_type is not set as NONE"),
 			},
 		},
 	})
@@ -568,12 +571,12 @@ func TestAccKinesisStream_failOnBadStreamCountAndStreamModeCombination(t *testin
 			// Check that we can't create an invalid combination
 			{
 				Config:      testAccStreamConfig_failOnBadCountAndModeCombinationNothingSet(rName),
-				ExpectError: regexp.MustCompile(`shard_count must be at least 1 when stream_mode is PROVISIONED`),
+				ExpectError: regexache.MustCompile(`shard_count must be at least 1 when stream_mode is PROVISIONED`),
 			},
 			// Check that we can't create an invalid combination
 			{
 				Config:      testAccStreamConfig_failOnBadCountAndModeCombinationShardCountWhenOnDemand(rName),
-				ExpectError: regexp.MustCompile(`shard_count must not be set when stream_mode is ON_DEMAND`),
+				ExpectError: regexache.MustCompile(`shard_count must not be set when stream_mode is ON_DEMAND`),
 			},
 			// Prepare for updates...
 			{
@@ -587,12 +590,12 @@ func TestAccKinesisStream_failOnBadStreamCountAndStreamModeCombination(t *testin
 			// Check that we can't update to an invalid combination
 			{
 				Config:      testAccStreamConfig_failOnBadCountAndModeCombinationNothingSet(rName),
-				ExpectError: regexp.MustCompile(`shard_count must be at least 1 when stream_mode is PROVISIONED`),
+				ExpectError: regexache.MustCompile(`shard_count must be at least 1 when stream_mode is PROVISIONED`),
 			},
 			// Check that we can't update to an invalid combination
 			{
 				Config:      testAccStreamConfig_failOnBadCountAndModeCombinationShardCountWhenOnDemand(rName),
-				ExpectError: regexp.MustCompile(`shard_count must not be set when stream_mode is ON_DEMAND`),
+				ExpectError: regexache.MustCompile(`shard_count must not be set when stream_mode is ON_DEMAND`),
 			},
 		},
 	})

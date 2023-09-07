@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package plugin
 
 import (
@@ -12,6 +15,7 @@ import (
 	"time"
 
 	"github.com/hashicorp/go-plugin/internal/plugin"
+	"github.com/hashicorp/go-plugin/runner"
 
 	"github.com/oklog/run"
 	"google.golang.org/grpc"
@@ -264,6 +268,9 @@ type GRPCBroker struct {
 	doneCh   chan struct{}
 	o        sync.Once
 
+	unixSocketCfg  UnixSocketConfig
+	addrTranslator runner.AddrTranslator
+
 	sync.Mutex
 }
 
@@ -272,12 +279,15 @@ type gRPCBrokerPending struct {
 	doneCh chan struct{}
 }
 
-func newGRPCBroker(s streamer, tls *tls.Config) *GRPCBroker {
+func newGRPCBroker(s streamer, tls *tls.Config, unixSocketCfg UnixSocketConfig, addrTranslator runner.AddrTranslator) *GRPCBroker {
 	return &GRPCBroker{
 		streamer: s,
 		streams:  make(map[uint32]*gRPCBrokerPending),
 		tls:      tls,
 		doneCh:   make(chan struct{}),
+
+		unixSocketCfg:  unixSocketCfg,
+		addrTranslator: addrTranslator,
 	}
 }
 
@@ -285,15 +295,23 @@ func newGRPCBroker(s streamer, tls *tls.Config) *GRPCBroker {
 //
 // This should not be called multiple times with the same ID at one time.
 func (b *GRPCBroker) Accept(id uint32) (net.Listener, error) {
-	listener, err := serverListener()
+	listener, err := serverListener(b.unixSocketCfg)
 	if err != nil {
 		return nil, err
 	}
 
+	advertiseNet := listener.Addr().Network()
+	advertiseAddr := listener.Addr().String()
+	if b.addrTranslator != nil {
+		advertiseNet, advertiseAddr, err = b.addrTranslator.HostToPlugin(advertiseNet, advertiseAddr)
+		if err != nil {
+			return nil, err
+		}
+	}
 	err = b.streamer.Send(&plugin.ConnInfo{
 		ServiceId: id,
-		Network:   listener.Addr().Network(),
-		Address:   listener.Addr().String(),
+		Network:   advertiseNet,
+		Address:   advertiseAddr,
 	})
 	if err != nil {
 		return nil, err
@@ -376,12 +394,20 @@ func (b *GRPCBroker) Dial(id uint32) (conn *grpc.ClientConn, err error) {
 		return nil, fmt.Errorf("timeout waiting for connection info")
 	}
 
+	network, address := c.Network, c.Address
+	if b.addrTranslator != nil {
+		network, address, err = b.addrTranslator.PluginToHost(network, address)
+		if err != nil {
+			return nil, err
+		}
+	}
+
 	var addr net.Addr
-	switch c.Network {
+	switch network {
 	case "tcp":
-		addr, err = net.ResolveTCPAddr("tcp", c.Address)
+		addr, err = net.ResolveTCPAddr("tcp", address)
 	case "unix":
-		addr, err = net.ResolveUnixAddr("unix", c.Address)
+		addr, err = net.ResolveUnixAddr("unix", address)
 	default:
 		err = fmt.Errorf("Unknown address type: %s", c.Address)
 	}

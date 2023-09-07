@@ -1,13 +1,16 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package firehose
 
 import (
 	"context"
 	"fmt"
 	"log"
-	"regexp"
 	"strings"
 	"time"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/firehose"
@@ -1689,7 +1692,7 @@ func ResourceDeliveryStream() *schema.Resource {
 							Required: true,
 							ValidateFunc: validation.All(
 								validation.StringLenBetween(1, 1000),
-								validation.StringMatch(regexp.MustCompile(`^https://.*$`), ""),
+								validation.StringMatch(regexache.MustCompile(`^https://.*$`), ""),
 							),
 						},
 

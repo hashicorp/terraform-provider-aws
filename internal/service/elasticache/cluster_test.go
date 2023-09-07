@@ -1,14 +1,17 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package elasticache_test
 
 import (
 	"context"
 	"errors"
 	"fmt"
-	"regexp"
 	"strconv"
 	"strings"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/elasticache"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
@@ -94,7 +97,7 @@ func TestAccElastiCacheCluster_Engine_redis(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "cache_nodes.0.id", "0001"),
 					resource.TestCheckResourceAttr(resourceName, "cache_nodes.0.outpost_arn", ""),
 					resource.TestCheckResourceAttr(resourceName, "engine", "redis"),
-					resource.TestMatchResourceAttr(resourceName, "engine_version_actual", regexp.MustCompile(`^7\.[[:digit:]]+\.[[:digit:]]+$`)),
+					resource.TestMatchResourceAttr(resourceName, "engine_version_actual", regexache.MustCompile(`^7\.[[:digit:]]+\.[[:digit:]]+$`)),
 					resource.TestCheckResourceAttr(resourceName, "ip_discovery", "ipv4"),
 					resource.TestCheckResourceAttr(resourceName, "network_type", "ipv4"),
 					resource.TestCheckNoResourceAttr(resourceName, "outpost_mode"),
@@ -165,7 +168,7 @@ func TestAccElastiCacheCluster_Engine_None(t *testing.T) {
 				Config: testAccClusterConfig_engineNone(rName),
 				// Verify "ExactlyOneOf" in the schema for "engine" and "replication_group_id"
 				// throws a plan-time error when neither are configured.
-				ExpectError: regexp.MustCompile(`Invalid combination of arguments`),
+				ExpectError: regexache.MustCompile(`Invalid combination of arguments`),
 			},
 		},
 	})
@@ -525,11 +528,11 @@ func TestAccElastiCacheCluster_AZMode_memcached(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccClusterConfig_azModeMemcached(rName, "unknown"),
-				ExpectError: regexp.MustCompile(`expected az_mode to be one of .*, got unknown`),
+				ExpectError: regexache.MustCompile(`expected az_mode to be one of .*, got unknown`),
 			},
 			{
 				Config:      testAccClusterConfig_azModeMemcached(rName, "cross-az"),
-				ExpectError: regexp.MustCompile(`az_mode "cross-az" is not supported with num_cache_nodes = 1`),
+				ExpectError: regexache.MustCompile(`az_mode "cross-az" is not supported with num_cache_nodes = 1`),
 			},
 			{
 				Config: testAccClusterConfig_azModeMemcached(rName, "single-az"),
@@ -540,7 +543,7 @@ func TestAccElastiCacheCluster_AZMode_memcached(t *testing.T) {
 			},
 			{
 				Config:      testAccClusterConfig_azModeMemcached(rName, "cross-az"),
-				ExpectError: regexp.MustCompile(`az_mode "cross-az" is not supported with num_cache_nodes = 1`),
+				ExpectError: regexache.MustCompile(`az_mode "cross-az" is not supported with num_cache_nodes = 1`),
 			},
 		},
 	})
@@ -564,11 +567,11 @@ func TestAccElastiCacheCluster_AZMode_redis(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccClusterConfig_azModeRedis(rName, "unknown"),
-				ExpectError: regexp.MustCompile(`expected az_mode to be one of .*, got unknown`),
+				ExpectError: regexache.MustCompile(`expected az_mode to be one of .*, got unknown`),
 			},
 			{
 				Config:      testAccClusterConfig_azModeRedis(rName, "cross-az"),
-				ExpectError: regexp.MustCompile(`az_mode "cross-az" is not supported with num_cache_nodes = 1`),
+				ExpectError: regexache.MustCompile(`az_mode "cross-az" is not supported with num_cache_nodes = 1`),
 			},
 			{
 				Config: testAccClusterConfig_azModeRedis(rName, "single-az"),
@@ -675,7 +678,7 @@ func TestAccElastiCacheCluster_EngineVersion_redis(t *testing.T) {
 					testAccCheckClusterExists(ctx, resourceName, &v4),
 					testAccCheckClusterNotRecreated(&v3, &v4),
 					resource.TestCheckResourceAttr(resourceName, "engine_version", "6.0"),
-					resource.TestMatchResourceAttr(resourceName, "engine_version_actual", regexp.MustCompile(`^6\.0\.[[:digit:]]+$`)),
+					resource.TestMatchResourceAttr(resourceName, "engine_version_actual", regexache.MustCompile(`^6\.0\.[[:digit:]]+$`)),
 				),
 			},
 			{
@@ -684,7 +687,7 @@ func TestAccElastiCacheCluster_EngineVersion_redis(t *testing.T) {
 					testAccCheckClusterExists(ctx, resourceName, &v5),
 					testAccCheckClusterNotRecreated(&v4, &v5),
 					resource.TestCheckResourceAttr(resourceName, "engine_version", "6.2"),
-					resource.TestMatchResourceAttr(resourceName, "engine_version_actual", regexp.MustCompile(`^6\.2\.[[:digit:]]+$`)),
+					resource.TestMatchResourceAttr(resourceName, "engine_version_actual", regexache.MustCompile(`^6\.2\.[[:digit:]]+$`)),
 				),
 			},
 			{
@@ -702,7 +705,7 @@ func TestAccElastiCacheCluster_EngineVersion_redis(t *testing.T) {
 					testAccCheckClusterExists(ctx, resourceName, &v7),
 					testAccCheckClusterNotRecreated(&v6, &v7),
 					resource.TestCheckResourceAttr(resourceName, "engine_version", "6.x"),
-					resource.TestMatchResourceAttr(resourceName, "engine_version_actual", regexp.MustCompile(`^6\.[[:digit:]]+\.[[:digit:]]+$`)),
+					resource.TestMatchResourceAttr(resourceName, "engine_version_actual", regexache.MustCompile(`^6\.[[:digit:]]+\.[[:digit:]]+$`)),
 				),
 			},
 			{
@@ -711,7 +714,7 @@ func TestAccElastiCacheCluster_EngineVersion_redis(t *testing.T) {
 					testAccCheckClusterExists(ctx, resourceName, &v8),
 					testAccCheckClusterRecreated(&v7, &v8),
 					resource.TestCheckResourceAttr(resourceName, "engine_version", "6.0"),
-					resource.TestMatchResourceAttr(resourceName, "engine_version_actual", regexp.MustCompile(`^6\.0\.[[:digit:]]+$`)),
+					resource.TestMatchResourceAttr(resourceName, "engine_version_actual", regexache.MustCompile(`^6\.0\.[[:digit:]]+$`)),
 				),
 			},
 		},
@@ -800,7 +803,7 @@ func TestAccElastiCacheCluster_NumCacheNodes_redis(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccClusterConfig_numCacheNodesRedis(rName, 2),
-				ExpectError: regexp.MustCompile(`engine "redis" does not support num_cache_nodes > 1`),
+				ExpectError: regexache.MustCompile(`engine "redis" does not support num_cache_nodes > 1`),
 			},
 		},
 	})
@@ -922,7 +925,7 @@ func TestAccElastiCacheCluster_Memcached_finalSnapshot(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccClusterConfig_memcachedFinalSnapshot(rName),
-				ExpectError: regexp.MustCompile(`engine "memcached" does not support final_snapshot_identifier`),
+				ExpectError: regexache.MustCompile(`engine "memcached" does not support final_snapshot_identifier`),
 			},
 		},
 	})
@@ -1225,6 +1228,42 @@ func TestAccElastiCacheCluster_tagWithOtherModification(t *testing.T) {
 	})
 }
 
+func TestAccElastiCacheCluster_TransitEncryption(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+	var cluster elasticache.CacheCluster
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_elasticache_cluster.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, elasticache.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckClusterDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccClusterConfig_transitEncryption(rName, "memcached", "1.6.11"),
+				ExpectError: regexache.MustCompile(`Transit encryption is not supported for memcached version 1.6.11`),
+			},
+			{
+				Config:      testAccClusterConfig_transitEncryption(rName, "redis", "6.2"),
+				ExpectError: regexache.MustCompile(`aws_elasticache_cluster does not support transit encryption using the redis engine, use aws_elasticache_replication_group instead`),
+			},
+			{
+				Config: testAccClusterConfig_transitEncryption(rName, "memcached", "1.6.12"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckClusterExists(ctx, resourceName, &cluster),
+					resource.TestCheckResourceAttr(resourceName, "engine", "memcached"),
+					resource.TestCheckResourceAttr(resourceName, "engine_version", "1.6.12"),
+					resource.TestCheckResourceAttr(resourceName, "transit_encryption_enabled", "true"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccElastiCacheCluster_outpost_memcached(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
@@ -1288,7 +1327,7 @@ func TestAccElastiCacheCluster_outpost_redis(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "cache_nodes.0.id", "0001"),
 					resource.TestCheckResourceAttrSet(resourceName, "cache_nodes.0.outpost_arn"),
 					resource.TestCheckResourceAttr(resourceName, "engine", "redis"),
-					resource.TestMatchResourceAttr(resourceName, "engine_version_actual", regexp.MustCompile(`^7\.[[:digit:]]+\.[[:digit:]]+$`)),
+					resource.TestMatchResourceAttr(resourceName, "engine_version_actual", regexache.MustCompile(`^7\.[[:digit:]]+\.[[:digit:]]+$`)),
 					resource.TestCheckResourceAttr(resourceName, "port", "6379"),
 					resource.TestCheckResourceAttr(resourceName, "auto_minor_version_upgrade", "true"),
 				),
@@ -2149,4 +2188,18 @@ resource "aws_elasticache_cluster" "test" {
   }
 }
 `, rName, version, tagKey1, tagValue1)
+}
+
+func testAccClusterConfig_transitEncryption(rName, engine, version string) string {
+	return fmt.Sprintf(`
+resource "aws_elasticache_cluster" "test" {
+  apply_immediately          = true
+  cluster_id                 = "%[1]s"
+  engine                     = "%[2]s"
+  engine_version             = "%[3]s"
+  node_type                  = "cache.t3.medium"
+  num_cache_nodes            = 1
+  transit_encryption_enabled = true
+}
+`, rName, engine, version)
 }

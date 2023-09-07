@@ -1,10 +1,14 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package nullable
 
 import (
 	"errors"
-	"regexp"
 	"strconv"
 	"testing"
+
+	"github.com/YakDriver/regexache"
 )
 
 func TestNullableBool(t *testing.T) {
@@ -85,17 +89,17 @@ func TestValidationBool(t *testing.T) {
 		{
 			val:             "1",
 			f:               ValidateTypeStringNullableBool,
-			expectedWarning: regexp.MustCompile(`^\w+: the use of values other than "true" and "false" is deprecated and will be removed in a future version of the provider$`),
+			expectedWarning: regexache.MustCompile(`^\w+: the use of values other than "true" and "false" is deprecated and will be removed in a future version of the provider$`),
 		},
 		{
 			val:         "A",
 			f:           ValidateTypeStringNullableBool,
-			expectedErr: regexp.MustCompile(`^\w+: cannot parse 'A' as boolean: .+$`),
+			expectedErr: regexache.MustCompile(`^\w+: cannot parse 'A' as boolean: .+$`),
 		},
 		{
 			val:         1,
 			f:           ValidateTypeStringNullableBool,
-			expectedErr: regexp.MustCompile(`^expected type of \w+ to be string$`),
+			expectedErr: regexache.MustCompile(`^expected type of \w+ to be string$`),
 		},
 	})
 }

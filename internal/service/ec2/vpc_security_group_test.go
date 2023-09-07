@@ -1,14 +1,17 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ec2_test
 
 import (
 	"context"
 	"fmt"
 	"reflect"
-	"regexp"
 	"strconv"
 	"strings"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
@@ -886,7 +889,7 @@ func TestAccVPCSecurityGroup_basic(t *testing.T) {
 				Config: testAccVPCSecurityGroupConfig_name(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSecurityGroupExists(ctx, resourceName, &group),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "ec2", regexp.MustCompile(`security-group/.+$`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "ec2", regexache.MustCompile(`security-group/.+$`)),
 					resource.TestCheckResourceAttr(resourceName, "description", "Managed by Terraform"),
 					resource.TestCheckResourceAttr(resourceName, "egress.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "ingress.#", "0"),
@@ -1483,7 +1486,7 @@ func TestAccVPCSecurityGroup_forceRevokeRulesTrue(t *testing.T) {
 			// DependencyViolation error
 			{
 				Config:      testAccVPCSecurityGroupConfig_revokeBaseRemoved(rName),
-				ExpectError: regexp.MustCompile("DependencyViolation"),
+				ExpectError: regexache.MustCompile("DependencyViolation"),
 			},
 			// Restore the config (a no-op plan) but also remove the dependencies
 			// between the groups with testRemoveCycle
@@ -1571,7 +1574,7 @@ func TestAccVPCSecurityGroup_forceRevokeRulesFalse(t *testing.T) {
 			// DependencyViolation error
 			{
 				Config:      testAccVPCSecurityGroupConfig_revokeBaseRemoved(rName),
-				ExpectError: regexp.MustCompile("DependencyViolation"),
+				ExpectError: regexache.MustCompile("DependencyViolation"),
 			},
 			// Restore the config (a no-op plan) but also remove the dependencies
 			// between the groups with testRemoveCycle
@@ -2178,19 +2181,19 @@ func TestAccVPCSecurityGroup_invalidCIDRBlock(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccVPCSecurityGroupConfig_invalidIngressCIDR,
-				ExpectError: regexp.MustCompile("invalid CIDR address: 1.2.3.4/33"),
+				ExpectError: regexache.MustCompile("invalid CIDR address: 1.2.3.4/33"),
 			},
 			{
 				Config:      testAccVPCSecurityGroupConfig_invalidEgressCIDR,
-				ExpectError: regexp.MustCompile("invalid CIDR address: 1.2.3.4/33"),
+				ExpectError: regexache.MustCompile("invalid CIDR address: 1.2.3.4/33"),
 			},
 			{
 				Config:      testAccVPCSecurityGroupConfig_invalidIPv6IngressCIDR,
-				ExpectError: regexp.MustCompile("invalid CIDR address: ::/244"),
+				ExpectError: regexache.MustCompile("invalid CIDR address: ::/244"),
 			},
 			{
 				Config:      testAccVPCSecurityGroupConfig_invalidIPv6EgressCIDR,
-				ExpectError: regexp.MustCompile("invalid CIDR address: ::/244"),
+				ExpectError: regexache.MustCompile("invalid CIDR address: ::/244"),
 			},
 		},
 	})
@@ -2466,7 +2469,7 @@ func TestAccVPCSecurityGroup_RuleLimit_exceededAppend(t *testing.T) {
 			// append a rule to step over the limit
 			{
 				Config:      testAccVPCSecurityGroupConfig_ruleLimit(rName, 0, ruleLimit+1),
-				ExpectError: regexp.MustCompile("RulesPerSecurityGroupLimitExceeded"),
+				ExpectError: regexache.MustCompile("RulesPerSecurityGroupLimitExceeded"),
 			},
 			{
 				PreConfig: func() {
@@ -2515,7 +2518,7 @@ func TestAccVPCSecurityGroup_RuleLimit_cidrBlockExceededAppend(t *testing.T) {
 			// append a rule to step over the limit
 			{
 				Config:      testAccVPCSecurityGroupConfig_cidrBlockRuleLimit(rName, 0, ruleLimit+1),
-				ExpectError: regexp.MustCompile("RulesPerSecurityGroupLimitExceeded"),
+				ExpectError: regexache.MustCompile("RulesPerSecurityGroupLimitExceeded"),
 			},
 			{
 				PreConfig: func() {
@@ -2579,7 +2582,7 @@ func TestAccVPCSecurityGroup_RuleLimit_exceededPrepend(t *testing.T) {
 			// prepend a rule to step over the limit
 			{
 				Config:      testAccVPCSecurityGroupConfig_ruleLimit(rName, 1, ruleLimit+1),
-				ExpectError: regexp.MustCompile("RulesPerSecurityGroupLimitExceeded"),
+				ExpectError: regexache.MustCompile("RulesPerSecurityGroupLimitExceeded"),
 			},
 			{
 				PreConfig: func() {
@@ -2627,7 +2630,7 @@ func TestAccVPCSecurityGroup_RuleLimit_exceededAllNew(t *testing.T) {
 			// add a rule to step over the limit with entirely new rules
 			{
 				Config:      testAccVPCSecurityGroupConfig_ruleLimit(rName, 100, ruleLimit+1),
-				ExpectError: regexp.MustCompile("RulesPerSecurityGroupLimitExceeded"),
+				ExpectError: regexache.MustCompile("RulesPerSecurityGroupLimitExceeded"),
 			},
 			{
 				// all the rules should have been revoked and the add failed
@@ -2670,7 +2673,7 @@ func TestAccVPCSecurityGroup_rulesDropOnError(t *testing.T) {
 			// Add a bad rule to trigger API error
 			{
 				Config:      testAccVPCSecurityGroupConfig_rulesDropOnErrorAddBadRule(rName),
-				ExpectError: regexp.MustCompile("InvalidGroupId.Malformed"),
+				ExpectError: regexache.MustCompile("InvalidGroupId.Malformed"),
 			},
 			// All originally added rules must survive. This will return non-empty plan if anything changed.
 			{
@@ -2706,7 +2709,7 @@ func TestAccVPCSecurityGroup_emrDependencyViolation(t *testing.T) {
 				Config: testAccVPCSecurityGroupConfig_emrLinkedRulesDestroy(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSecurityGroupExists(ctx, resourceName, &group),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "ec2", regexp.MustCompile(`security-group/.+$`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "ec2", regexache.MustCompile(`security-group/.+$`)),
 					resource.TestCheckResourceAttr(resourceName, "egress.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "ingress.#", "1"),
 					acctest.CheckResourceAttrAccountID(resourceName, "owner_id"),
@@ -2714,7 +2717,7 @@ func TestAccVPCSecurityGroup_emrDependencyViolation(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "vpc_id", "aws_vpc.test", "id"),
 				),
-				ExpectError: regexp.MustCompile("unexpected state"),
+				ExpectError: regexache.MustCompile("unexpected state"),
 			},
 		},
 	})
