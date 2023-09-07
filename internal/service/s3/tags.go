@@ -134,7 +134,7 @@ func ObjectUpdateTags(ctx context.Context, conn *s3_sdkv2.Client, bucket, key st
 			Bucket: aws_sdkv2.String(bucket),
 			Key:    aws_sdkv2.String(key),
 			Tagging: &s3types_sdkv2.Tagging{
-				TagSet: Tags(newTags.Merge(ignoredTags)),
+				TagSet: tagsV2(newTags.Merge(ignoredTags)),
 			},
 		}
 
