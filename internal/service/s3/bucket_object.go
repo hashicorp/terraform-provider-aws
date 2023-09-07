@@ -349,7 +349,7 @@ func resourceBucketObjectUpdate(ctx context.Context, d *schema.ResourceData, met
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := ObjectUpdateTags(ctx, conn, bucket, key, o, n); err != nil {
+		if err := ObjectUpdateTagsV1(ctx, conn, bucket, key, o, n); err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating S3 Bucket (%s) Object (%s) tags: %s", bucket, key, err)
 		}
 	}

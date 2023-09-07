@@ -135,8 +135,8 @@ func ObjectListTagsV1(ctx context.Context, conn s3iface_sdkv1.S3API, bucket, key
 	return KeyValueTags(ctx, outputRaw.(*s3_sdkv1.GetObjectTaggingOutput).TagSet), nil
 }
 
-// ObjectUpdateTags updates S3 object tags.
-func ObjectUpdateTags(ctx context.Context, conn s3iface_sdkv1.S3API, bucket, key string, oldTagsMap, newTagsMap any) error {
+// ObjectUpdateTagsV1 updates S3 object tags.
+func ObjectUpdateTagsV1(ctx context.Context, conn s3iface_sdkv1.S3API, bucket, key string, oldTagsMap, newTagsMap any) error {
 	oldTags := tftags.New(ctx, oldTagsMap)
 	newTags := tftags.New(ctx, newTagsMap)
 

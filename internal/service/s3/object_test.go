@@ -1342,7 +1342,7 @@ func TestAccS3Object_ignoreTags(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckObjectExists(ctx, resourceName, &obj),
 					testAccCheckObjectBody(&obj, "stuff"),
-					testAccCheckObjectUpdateTags(ctx, resourceName, nil, map[string]string{"ignorekey1": "ignorevalue1"}),
+					testAccCheckObjectUpdateTagsV1(ctx, resourceName, nil, map[string]string{"ignorekey1": "ignorevalue1"}),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					testAccCheckObjectCheckTags(ctx, resourceName, map[string]string{
 						"ignorekey1": "ignorevalue1",
@@ -1596,12 +1596,12 @@ func testAccObjectCreateTempFile(t *testing.T, data string) string {
 	return filename
 }
 
-func testAccCheckObjectUpdateTags(ctx context.Context, n string, oldTags, newTags map[string]string) resource.TestCheckFunc {
+func testAccCheckObjectUpdateTagsV1(ctx context.Context, n string, oldTags, newTags map[string]string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs := s.RootModule().Resources[n]
 		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Conn(ctx)
 
-		return tfs3.ObjectUpdateTags(ctx, conn, rs.Primary.Attributes["bucket"], rs.Primary.Attributes["key"], oldTags, newTags)
+		return tfs3.ObjectUpdateTagsV1(ctx, conn, rs.Primary.Attributes["bucket"], rs.Primary.Attributes["key"], oldTags, newTags)
 	}
 }
 
