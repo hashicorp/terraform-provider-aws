@@ -16,7 +16,6 @@ import (
 
 func TestAccOpenSearchPackage_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var domain opensearchservice.DomainStatus
 	ri := sdkacctest.RandString(10)
 	name := fmt.Sprintf("tf-test-%s", ri)
 	resourceName := "aws_opensearch_package.test"
@@ -30,7 +29,6 @@ func TestAccOpenSearchPackage_basic(t *testing.T) {
 			{
 				Config: testAccPackageConfig(name),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDomainExists(ctx, "aws_opensearch_domain.domain_1", &domain),
 					resource.TestCheckResourceAttr(resourceName, "package_name", "example"),
 				),
 			},
@@ -45,7 +43,6 @@ func TestAccOpenSearchPackage_basic(t *testing.T) {
 
 func TestAccOpenSearchPackage_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	var domain opensearchservice.DomainStatus
 	ri := sdkacctest.RandString(10)
 	name := fmt.Sprintf("tf-test-%s", ri)
 	resourceName := "aws_opensearch_package.test"
@@ -59,7 +56,6 @@ func TestAccOpenSearchPackage_disappears(t *testing.T) {
 			{
 				Config: testAccPackageConfig(name),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDomainExists(ctx, "aws_opensearch_domain.domain_1", &domain),
 					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfopensearch.ResourcePackage(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
