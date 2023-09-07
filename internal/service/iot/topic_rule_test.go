@@ -1351,7 +1351,7 @@ func TestAccIoTTopicRule_kafka(t *testing.T) {
 		CheckDestroy:             testAccCheckTopicRuleDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTopicRuleConfig_kafka(rName, "fake_topic"),
+				Config: testAccTopicRuleConfig_kafka(rName, "fake_topic", "b-1.localhost:9094"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTopicRuleExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "cloudwatch_alarm.#", "0"),
@@ -1388,7 +1388,7 @@ func TestAccIoTTopicRule_kafka(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccTopicRuleConfig_kafka(rName, "different_topic"),
+				Config: testAccTopicRuleConfig_kafka(rName, "different_topic", "b-2.localhost:9094"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTopicRuleExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "cloudwatch_alarm.#", "0"),
@@ -1406,7 +1406,45 @@ func TestAccIoTTopicRule_kafka(t *testing.T) {
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "kafka.*", map[string]string{
 						"client_properties.%":                     "8",
 						"client_properties.acks":                  "1",
-						"client_properties.bootstrap.servers":     "b-1.localhost:9094",
+						"client_properties.bootstrap.servers":     "b-2.localhost:9094",
+						"client_properties.compression.type":      "none",
+						"client_properties.key.serializer":        "org.apache.kafka.common.serialization.StringSerializer",
+						"client_properties.security.protocol":     "SSL",
+						"client_properties.ssl.keystore.password": "password",
+						"client_properties.value.serializer":      "org.apache.kafka.common.serialization.ByteBufferSerializer",
+						"topic":                                   "different_topic",
+					}),
+					resource.TestCheckResourceAttr(resourceName, "kinesis.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "lambda.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "republish.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "s3.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "sns.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "sqs.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "step_functions.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "timestream.#", "0"),
+				),
+			},
+			// Validate that updates only to a value inside the schema-less client_properties also works
+			{
+				Config: testAccTopicRuleConfig_kafka(rName, "different_topic", "b-3.localhost:9094"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckTopicRuleExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "cloudwatch_alarm.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "cloudwatch_logs.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "cloudwatch_metric.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "dynamodb.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "dynamodbv2.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "elasticsearch.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "error_action.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "firehose.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "iot_analytics.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "iot_events.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "http.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "kafka.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "kafka.*", map[string]string{
+						"client_properties.%":                     "8",
+						"client_properties.acks":                  "1",
+						"client_properties.bootstrap.servers":     "b-3.localhost:9094",
 						"client_properties.compression.type":      "none",
 						"client_properties.key.serializer":        "org.apache.kafka.common.serialization.StringSerializer",
 						"client_properties.security.protocol":     "SSL",
@@ -2798,7 +2836,7 @@ resource "aws_iot_topic_rule" "test" {
 `, rName, batchMode))
 }
 
-func testAccTopicRuleConfig_kafka(rName string, topic string) string {
+func testAccTopicRuleConfig_kafka(rName string, topic string, broker string) string {
 	// Making a topic rule destination takes several minutes, as it requires creating many networking resources.
 	// It's far faster to simply use a properly-formatted but nonexistent ARN for the destination.
 	return acctest.ConfigCompose(
@@ -2819,7 +2857,7 @@ resource "aws_iot_topic_rule" "test" {
 
     client_properties = {
       "acks"                  = "1"
-      "bootstrap.servers"     = "b-1.localhost:9094"
+      "bootstrap.servers"     = "%s"
       "compression.type"      = "none"
       "key.serializer"        = "org.apache.kafka.common.serialization.StringSerializer"
       "security.protocol"     = "SSL"
@@ -2829,7 +2867,7 @@ resource "aws_iot_topic_rule" "test" {
     }
   }
 }
-`, rName, topic))
+`, rName, topic, broker))
 }
 
 func testAccTopicRuleConfig_kinesis(rName string, streamName string) string {
