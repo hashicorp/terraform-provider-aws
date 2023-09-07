@@ -14,6 +14,7 @@ import (
 	"time"
 
 	"github.com/YakDriver/regexache"
+	s3_sdkv2 "github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/request"
 	"github.com/aws/aws-sdk-go/service/s3"
@@ -50,6 +51,7 @@ func sweepObjects(region string) error {
 	}
 
 	conn := client.S3ConnURICleaningDisabled(ctx)
+	connV2 := client.S3Client(ctx)
 	input := &s3.ListBucketsInput{}
 
 	output, err := conn.ListBucketsWithContext(ctx, input)
@@ -89,7 +91,7 @@ func sweepObjects(region string) error {
 		}
 
 		sweepables = append(sweepables, objectSweeper{
-			conn:   conn,
+			conn:   connV2,
 			name:   bucketName,
 			locked: objectLockEnabled,
 		})
@@ -103,7 +105,7 @@ func sweepObjects(region string) error {
 }
 
 type objectSweeper struct {
-	conn   *s3.S3
+	conn   *s3_sdkv2.Client
 	name   string
 	locked bool
 }
