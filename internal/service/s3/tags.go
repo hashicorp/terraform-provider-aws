@@ -98,6 +98,8 @@ func ObjectListTags(ctx context.Context, conn *s3_sdkv2.Client, bucket, key stri
 		Key:    aws_sdkv2.String(key),
 	}
 
+	// TODO Is this retry still necessary with strong read consistency for read operations on Amazon S3 Object Tags?
+	// https://docs.aws.amazon.com/AmazonS3/latest/userguide/Welcome.html#ConsistencyModel.
 	outputRaw, err := tfresource.RetryWhenIsA[*s3types_sdkv2.NoSuchKey](ctx, 1*time.Minute, func() (interface{}, error) {
 		return conn.GetObjectTagging(ctx, input)
 	})
@@ -111,6 +113,50 @@ func ObjectListTags(ctx context.Context, conn *s3_sdkv2.Client, bucket, key stri
 	}
 
 	return keyValueTagsV2(ctx, outputRaw.(*s3_sdkv2.GetObjectTaggingOutput).TagSet), nil
+}
+
+// ObjectUpdateTags updates S3 object tags.
+func ObjectUpdateTags(ctx context.Context, conn *s3_sdkv2.Client, bucket, key string, oldTagsMap, newTagsMap any) error {
+	oldTags := tftags.New(ctx, oldTagsMap)
+	newTags := tftags.New(ctx, newTagsMap)
+
+	// We need to also consider any existing ignored tags.
+	allTags, err := ObjectListTags(ctx, conn, bucket, key)
+
+	if err != nil {
+		return fmt.Errorf("listing resource tags (%s/%s): %w", bucket, key, err)
+	}
+
+	ignoredTags := allTags.Ignore(oldTags).Ignore(newTags)
+
+	if len(newTags)+len(ignoredTags) > 0 {
+		input := &s3_sdkv2.PutObjectTaggingInput{
+			Bucket: aws_sdkv2.String(bucket),
+			Key:    aws_sdkv2.String(key),
+			Tagging: &s3types_sdkv2.Tagging{
+				TagSet: Tags(newTags.Merge(ignoredTags)),
+			},
+		}
+
+		_, err := conn.PutObjectTagging(ctx, input)
+
+		if err != nil {
+			return fmt.Errorf("setting resource tags (%s/%s): %w", bucket, key, err)
+		}
+	} else if len(oldTags) > 0 && len(ignoredTags) == 0 {
+		input := &s3_sdkv2.DeleteObjectTaggingInput{
+			Bucket: aws_sdkv2.String(bucket),
+			Key:    aws_sdkv2.String(key),
+		}
+
+		_, err := conn.DeleteObjectTagging(ctx, input)
+
+		if err != nil {
+			return fmt.Errorf("deleting resource tags (%s/%s): %w", bucket, key, err)
+		}
+	}
+
+	return nil
 }
 
 // ObjectListTagsV1 lists S3 object tags (AWS SDK for Go v1).
@@ -135,7 +181,7 @@ func ObjectListTagsV1(ctx context.Context, conn s3iface_sdkv1.S3API, bucket, key
 	return KeyValueTags(ctx, outputRaw.(*s3_sdkv1.GetObjectTaggingOutput).TagSet), nil
 }
 
-// ObjectUpdateTagsV1 updates S3 object tags.
+// ObjectUpdateTagsV1 updates S3 object tags (AWS SDK for Go v1).
 func ObjectUpdateTagsV1(ctx context.Context, conn s3iface_sdkv1.S3API, bucket, key string, oldTagsMap, newTagsMap any) error {
 	oldTags := tftags.New(ctx, oldTagsMap)
 	newTags := tftags.New(ctx, newTagsMap)
