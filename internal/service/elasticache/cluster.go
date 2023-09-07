@@ -554,6 +554,7 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta inter
 	d.Set("ip_discovery", c.IpDiscovery)
 	d.Set("network_type", c.NetworkType)
 	d.Set("preferred_outpost_arn", c.PreferredOutpostArn)
+	d.Set("transit_encryption_enabled", c.TransitEncryptionEnabled)
 
 	return diags
 }
