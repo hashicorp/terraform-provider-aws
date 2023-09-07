@@ -98,11 +98,7 @@ func ObjectListTags(ctx context.Context, conn *s3_sdkv2.Client, bucket, key stri
 		Key:    aws_sdkv2.String(key),
 	}
 
-	// TODO Is this retry still necessary with strong read consistency for read operations on Amazon S3 Object Tags?
-	// https://docs.aws.amazon.com/AmazonS3/latest/userguide/Welcome.html#ConsistencyModel.
-	outputRaw, err := tfresource.RetryWhenIsA[*s3types_sdkv2.NoSuchKey](ctx, 1*time.Minute, func() (interface{}, error) {
-		return conn.GetObjectTagging(ctx, input)
-	})
+	output, err := conn.GetObjectTagging(ctx, input)
 
 	if tfawserr_sdkv2.ErrCodeEquals(err, errCodeNoSuchTagSet, errCodeNoSuchTagSetError) {
 		return tftags.New(ctx, nil), nil
@@ -112,7 +108,7 @@ func ObjectListTags(ctx context.Context, conn *s3_sdkv2.Client, bucket, key stri
 		return tftags.New(ctx, nil), err
 	}
 
-	return keyValueTagsV2(ctx, outputRaw.(*s3_sdkv2.GetObjectTaggingOutput).TagSet), nil
+	return keyValueTagsV2(ctx, output.TagSet), nil
 }
 
 // ObjectUpdateTags updates S3 object tags.
