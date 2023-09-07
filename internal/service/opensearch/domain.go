@@ -562,6 +562,7 @@ func ResourceDomain() *schema.Resource {
 			"software_update_options": {
 				Type:             schema.TypeList,
 				Optional:         true,
+				Computed:         true,
 				MaxItems:         1,
 				DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
 				Elem: &schema.Resource{
@@ -569,7 +570,7 @@ func ResourceDomain() *schema.Resource {
 						"auto_software_update_enabled": {
 							Type:     schema.TypeBool,
 							Optional: true,
-							Default:  false,
+							Computed: true,
 						},
 					},
 				},
@@ -722,21 +723,7 @@ func resourceDomainCreate(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 
 	if v, ok := d.GetOk("software_update_options"); ok {
-		options := v.([]interface{})
-
-		if len(options) == 1 {
-			if options[0] == nil {
-				return sdkdiag.AppendErrorf(diags, "At least one field is expected inside software_update_options")
-			}
-
-			o := options[0].(map[string]interface{})
-
-			softwareUpdateOptions := opensearchservice.SoftwareUpdateOptions{
-				AutoSoftwareUpdateEnabled: aws.Bool(o["auto_software_update_enabled"].(bool)),
-			}
-
-			input.SoftwareUpdateOptions = &softwareUpdateOptions
-		}
+		input.SoftwareUpdateOptions = expandSoftwareUpdateOptions(v.([]interface{}))
 	}
 
 	if v, ok := d.GetOk("vpc_options"); ok {
@@ -1095,17 +1082,7 @@ func resourceDomainUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 		}
 
 		if d.HasChange("software_update_options") {
-			options := d.Get("software_update_options").([]interface{})
-
-			if len(options) == 1 {
-				o := options[0].(map[string]interface{})
-
-				softwareUpdateOptions := opensearchservice.SoftwareUpdateOptions{
-					AutoSoftwareUpdateEnabled: aws.Bool(o["auto_software_update_enabled"].(bool)),
-				}
-
-				input.SoftwareUpdateOptions = &softwareUpdateOptions
-			}
+			input.SoftwareUpdateOptions = expandSoftwareUpdateOptions(d.Get("software_update_options").([]interface{}))
 		}
 
 		if d.HasChange("vpc_options") {
