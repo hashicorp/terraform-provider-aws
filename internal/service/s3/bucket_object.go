@@ -206,6 +206,9 @@ func resourceBucketObjectCreate(ctx context.Context, d *schema.ResourceData, met
 }
 
 func resourceBucketObjectRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	const (
+		objectCreationTimeout = 2 * time.Minute
+	)
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).S3Conn(ctx)
 

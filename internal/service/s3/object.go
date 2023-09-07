@@ -36,8 +36,6 @@ import (
 	"github.com/mitchellh/go-homedir"
 )
 
-const objectCreationTimeout = 2 * time.Minute
-
 // @SDKResource("aws_s3_object", name="Object")
 // @Tags
 func ResourceObject() *schema.Resource {
@@ -205,11 +203,7 @@ func resourceObjectRead(ctx context.Context, d *schema.ResourceData, meta interf
 
 	bucket := d.Get("bucket").(string)
 	key := d.Get("key").(string)
-	// TODO Is this retry still necessary with strong read-after-write consistency for PUT and DELETE requests of objects?
-	// https://docs.aws.amazon.com/AmazonS3/latest/userguide/Welcome.html#ConsistencyModel.
-	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(ctx, objectCreationTimeout, func() (interface{}, error) {
-		return FindObjectByThreePartKey(ctx, conn, bucket, key, "")
-	}, d.IsNewResource())
+	output, err := FindObjectByThreePartKey(ctx, conn, bucket, key, "")
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] S3 Object (%s) not found, removing from state", d.Id())
@@ -220,8 +214,6 @@ func resourceObjectRead(ctx context.Context, d *schema.ResourceData, meta interf
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading S3 Object (%s): %s", d.Id(), err)
 	}
-
-	output := outputRaw.(*s3.HeadObjectOutput)
 
 	d.Set("bucket_key_enabled", output.BucketKeyEnabled)
 	d.Set("cache_control", output.CacheControl)
