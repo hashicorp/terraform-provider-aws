@@ -37,6 +37,10 @@ func ResourcePackage() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
+			"available_package_version": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"package_id": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -64,12 +68,10 @@ func ResourcePackage() *schema.Resource {
 					Schema: map[string]*schema.Schema{
 						"s3_bucket_name": {
 							Type:     schema.TypeString,
-							Computed: true,
 							Required: true,
 						},
 						"s3_key": {
 							Type:     schema.TypeString,
-							Computed: true,
 							Required: true,
 						},
 					},
@@ -132,6 +134,7 @@ func ResourcePackageRead(ctx context.Context, d *schema.ResourceData, meta inter
 	d.Set("package_name", aws.StringValue(output.PackageDetailsList[0].PackageName))
 	d.Set("package_description", aws.StringValue(output.PackageDetailsList[0].PackageDescription))
 	d.Set("package_type", aws.StringValue(output.PackageDetailsList[0].PackageType))
+	d.Set("available_package_version", aws.StringValue(output.PackageDetailsList[0].AvailablePackageVersion)
 
 	return diags
 }
