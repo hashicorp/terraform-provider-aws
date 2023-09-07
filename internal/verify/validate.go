@@ -468,21 +468,6 @@ func ValidAllDiag(validators ...schema.SchemaValidateDiagFunc) schema.SchemaVali
 	}
 }
 
-// https://github.com/hashicorp/terraform-plugin-sdk/issues/780.
-func ValidAnyDiag(validators ...schema.SchemaValidateDiagFunc) schema.SchemaValidateDiagFunc {
-	return func(i any, path cty.Path) diag.Diagnostics {
-		var results diag.Diagnostics
-		for _, validator := range validators {
-			diags := validator(i, path)
-			if len(diags) == 0 {
-				return diag.Diagnostics{}
-			}
-			results = append(results, diags...)
-		}
-		return results
-	}
-}
-
 func ValidServicePrincipal(v interface{}, k string) (ws []string, errors []error) {
 	value := v.(string)
 
