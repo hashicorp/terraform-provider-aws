@@ -70,20 +70,15 @@ func TestAccOpenSearchPackage_disappears(t *testing.T) {
 
 func testAccPackageConfig(name string) string {
 	return fmt.Sprintf(`
-resource "local_file" "test" {
-  content  = "test"
-  filename = "${path.module}/test.txt"
-}
-
 resource "aws_s3_bucket" "opensearch_packages" {
   bucket = "%s-1"
 }
 
 resource "aws_s3_object" "example_txt" {
   bucket = aws_s3_bucket.opensearch_packages.bucket
-  key    = "example.txt"
-  source = local_file.test.filename
-  etag = filemd5(local_file.test.filename)
+  key    = "example-opensearch-custom-package.txt"
+  source = "./test-fixtures/example-opensearch-custom-package.txt"
+  etag = filemd5("./test-fixtures/example-opensearch-custom-package.txt")
 }
 
 resource "aws_opensearch_package" "example_txt" {
