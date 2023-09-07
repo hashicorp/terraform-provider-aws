@@ -26,7 +26,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/kms"
@@ -602,7 +601,7 @@ func DeleteAllObjectVersions(ctx context.Context, conn *s3.Client, bucketName, k
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
 
-		if errs.IsA[*types.NoSuchBucket](err) {
+		if tfawserr.ErrCodeEquals(err, errCodeNoSuchBucket) {
 			break
 		}
 
@@ -693,7 +692,7 @@ func DeleteAllObjectVersions(ctx context.Context, conn *s3.Client, bucketName, k
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
 
-		if errs.IsA[*types.NoSuchBucket](err) {
+		if tfawserr.ErrCodeEquals(err, errCodeNoSuchBucket) {
 			break
 		}
 
@@ -753,7 +752,7 @@ func deleteObjectVersion(ctx context.Context, conn *s3.Client, b, k, v string, f
 		log.Printf("[WARN] Deleting S3 Bucket (%s) Object (%s) Version (%s): %s", b, k, v, err)
 	}
 
-	if errs.IsA[*types.NoSuchBucket](err) || errs.IsA[*types.NoSuchKey](err) {
+	if tfawserr.ErrCodeEquals(err, errCodeNoSuchBucket, errCodeNoSuchKey) {
 		return nil
 	}
 
