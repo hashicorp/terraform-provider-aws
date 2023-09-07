@@ -38,7 +38,7 @@ func TestAccS3BucketObjectDataSource_basic(t *testing.T) {
 			{
 				Config: testAccBucketObjectDataSourceConfig_basic(rInt),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckObjectExists(ctx, resourceName, &rObj),
+					testAccCheckBucketObjectExists(ctx, resourceName, &rObj),
 					testAccCheckObjectExistsDataSource(ctx, dataSourceName, &dsObj),
 					resource.TestCheckResourceAttr(dataSourceName, "content_length", "11"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "content_type", resourceName, "content_type"),
@@ -71,9 +71,9 @@ func TestAccS3BucketObjectDataSource_basicViaAccessPoint(t *testing.T) {
 			{
 				Config: testAccBucketObjectDataSourceConfig_basicViaAccessPoint(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckObjectExists(ctx, resourceName, &rObj),
+					testAccCheckBucketObjectExists(ctx, resourceName, &rObj),
 					testAccCheckObjectExistsDataSource(ctx, dataSourceName, &dsObj),
-					testAccCheckObjectExists(ctx, resourceName, &rObj),
+					testAccCheckBucketObjectExists(ctx, resourceName, &rObj),
 					resource.TestCheckResourceAttrPair(dataSourceName, "bucket", accessPointResourceName, "arn"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "key", resourceName, "key"),
 				),
@@ -101,7 +101,7 @@ func TestAccS3BucketObjectDataSource_readableBody(t *testing.T) {
 			{
 				Config: testAccBucketObjectDataSourceConfig_readableBody(rInt),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckObjectExists(ctx, resourceName, &rObj),
+					testAccCheckBucketObjectExists(ctx, resourceName, &rObj),
 					testAccCheckObjectExistsDataSource(ctx, dataSourceName, &dsObj),
 					resource.TestCheckResourceAttr(dataSourceName, "content_length", "3"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "content_type", resourceName, "content_type"),
@@ -136,7 +136,7 @@ func TestAccS3BucketObjectDataSource_kmsEncrypted(t *testing.T) {
 			{
 				Config: testAccBucketObjectDataSourceConfig_kmsEncrypted(rInt),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckObjectExists(ctx, resourceName, &rObj),
+					testAccCheckBucketObjectExists(ctx, resourceName, &rObj),
 					testAccCheckObjectExistsDataSource(ctx, dataSourceName, &dsObj),
 					resource.TestCheckResourceAttr(dataSourceName, "content_length", "22"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "content_type", resourceName, "content_type"),
@@ -173,7 +173,7 @@ func TestAccS3BucketObjectDataSource_bucketKeyEnabled(t *testing.T) {
 			{
 				Config: testAccBucketObjectDataSourceConfig_keyEnabled(rInt),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckObjectExists(ctx, resourceName, &rObj),
+					testAccCheckBucketObjectExists(ctx, resourceName, &rObj),
 					testAccCheckObjectExistsDataSource(ctx, dataSourceName, &dsObj),
 					resource.TestCheckResourceAttr(dataSourceName, "content_length", "22"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "content_type", resourceName, "content_type"),
@@ -211,7 +211,7 @@ func TestAccS3BucketObjectDataSource_allParams(t *testing.T) {
 			{
 				Config: testAccBucketObjectDataSourceConfig_allParams(rInt),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckObjectExists(ctx, resourceName, &rObj),
+					testAccCheckBucketObjectExists(ctx, resourceName, &rObj),
 					testAccCheckObjectExistsDataSource(ctx, dataSourceName, &dsObj),
 					resource.TestCheckResourceAttr(dataSourceName, "content_length", "25"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "content_type", resourceName, "content_type"),
@@ -263,7 +263,7 @@ func TestAccS3BucketObjectDataSource_objectLockLegalHoldOff(t *testing.T) {
 			{
 				Config: testAccBucketObjectDataSourceConfig_lockLegalHoldOff(rInt),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckObjectExists(ctx, resourceName, &rObj),
+					testAccCheckBucketObjectExists(ctx, resourceName, &rObj),
 					testAccCheckObjectExistsDataSource(ctx, dataSourceName, &dsObj),
 					resource.TestCheckResourceAttr(dataSourceName, "content_length", "11"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "content_type", resourceName, "content_type"),
@@ -299,7 +299,7 @@ func TestAccS3BucketObjectDataSource_objectLockLegalHoldOn(t *testing.T) {
 			{
 				Config: testAccBucketObjectDataSourceConfig_lockLegalHoldOn(rInt, retainUntilDate),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckObjectExists(ctx, resourceName, &rObj),
+					testAccCheckBucketObjectExists(ctx, resourceName, &rObj),
 					testAccCheckObjectExistsDataSource(ctx, dataSourceName, &dsObj),
 					resource.TestCheckResourceAttr(dataSourceName, "content_length", "11"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "content_type", resourceName, "content_type"),
@@ -337,7 +337,7 @@ func TestAccS3BucketObjectDataSource_leadingSlash(t *testing.T) {
 			{ // nosemgrep:ci.test-config-funcs-correct-form
 				Config: resourceOnlyConf,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckObjectExists(ctx, resourceName, &rObj),
+					testAccCheckBucketObjectExists(ctx, resourceName, &rObj),
 				),
 			},
 			{ // nosemgrep:ci.test-config-funcs-correct-form
@@ -392,8 +392,8 @@ func TestAccS3BucketObjectDataSource_multipleSlashes(t *testing.T) {
 			{ // nosemgrep:ci.test-config-funcs-correct-form
 				Config: resourceOnlyConf,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckObjectExists(ctx, resourceName1, &rObj1),
-					testAccCheckObjectExists(ctx, resourceName2, &rObj2),
+					testAccCheckBucketObjectExists(ctx, resourceName1, &rObj1),
+					testAccCheckBucketObjectExists(ctx, resourceName2, &rObj2),
 				),
 			},
 			{ // nosemgrep:ci.test-config-funcs-correct-form

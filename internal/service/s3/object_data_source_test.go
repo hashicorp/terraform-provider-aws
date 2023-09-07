@@ -25,7 +25,6 @@ func TestAccS3ObjectDataSource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	rInt := sdkacctest.RandInt()
 
-	var rObj s3.GetObjectOutput
 	var dsObj s3.GetObjectOutput
 
 	resourceName := "aws_s3_object.object"
@@ -40,7 +39,6 @@ func TestAccS3ObjectDataSource_basic(t *testing.T) {
 			{
 				Config: testAccObjectDataSourceConfig_basic(rInt),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckObjectExists(ctx, resourceName, &rObj),
 					testAccCheckObjectExistsDataSource(ctx, dataSourceName, &dsObj),
 					resource.TestCheckResourceAttr(dataSourceName, "content_length", "11"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "content_type", resourceName, "content_type"),
@@ -58,8 +56,9 @@ func TestAccS3ObjectDataSource_basic(t *testing.T) {
 
 func TestAccS3ObjectDataSource_basicViaAccessPoint(t *testing.T) {
 	ctx := acctest.Context(t)
-	var dsObj, rObj s3.GetObjectOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	var dsObj s3.GetObjectOutput
 
 	dataSourceName := "data.aws_s3_object.test"
 	resourceName := "aws_s3_object.test"
@@ -73,9 +72,7 @@ func TestAccS3ObjectDataSource_basicViaAccessPoint(t *testing.T) {
 			{
 				Config: testAccObjectDataSourceConfig_basicViaAccessPoint(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckObjectExists(ctx, resourceName, &rObj),
 					testAccCheckObjectExistsDataSource(ctx, dataSourceName, &dsObj),
-					testAccCheckObjectExists(ctx, resourceName, &rObj),
 					resource.TestCheckResourceAttrPair(dataSourceName, "bucket", accessPointResourceName, "arn"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "key", resourceName, "key"),
 				),
@@ -88,7 +85,6 @@ func TestAccS3ObjectDataSource_readableBody(t *testing.T) {
 	ctx := acctest.Context(t)
 	rInt := sdkacctest.RandInt()
 
-	var rObj s3.GetObjectOutput
 	var dsObj s3.GetObjectOutput
 
 	resourceName := "aws_s3_object.object"
@@ -103,7 +99,6 @@ func TestAccS3ObjectDataSource_readableBody(t *testing.T) {
 			{
 				Config: testAccObjectDataSourceConfig_readableBody(rInt),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckObjectExists(ctx, resourceName, &rObj),
 					testAccCheckObjectExistsDataSource(ctx, dataSourceName, &dsObj),
 					resource.TestCheckResourceAttr(dataSourceName, "content_length", "3"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "content_type", resourceName, "content_type"),
@@ -123,7 +118,6 @@ func TestAccS3ObjectDataSource_kmsEncrypted(t *testing.T) {
 	ctx := acctest.Context(t)
 	rInt := sdkacctest.RandInt()
 
-	var rObj s3.GetObjectOutput
 	var dsObj s3.GetObjectOutput
 
 	resourceName := "aws_s3_object.object"
@@ -138,7 +132,6 @@ func TestAccS3ObjectDataSource_kmsEncrypted(t *testing.T) {
 			{
 				Config: testAccObjectDataSourceConfig_kmsEncrypted(rInt),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckObjectExists(ctx, resourceName, &rObj),
 					testAccCheckObjectExistsDataSource(ctx, dataSourceName, &dsObj),
 					resource.TestCheckResourceAttr(dataSourceName, "content_length", "22"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "content_type", resourceName, "content_type"),
@@ -160,7 +153,6 @@ func TestAccS3ObjectDataSource_bucketKeyEnabled(t *testing.T) {
 	ctx := acctest.Context(t)
 	rInt := sdkacctest.RandInt()
 
-	var rObj s3.GetObjectOutput
 	var dsObj s3.GetObjectOutput
 
 	resourceName := "aws_s3_object.object"
@@ -175,7 +167,6 @@ func TestAccS3ObjectDataSource_bucketKeyEnabled(t *testing.T) {
 			{
 				Config: testAccObjectDataSourceConfig_bucketKeyEnabled(rInt),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckObjectExists(ctx, resourceName, &rObj),
 					testAccCheckObjectExistsDataSource(ctx, dataSourceName, &dsObj),
 					resource.TestCheckResourceAttr(dataSourceName, "content_length", "22"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "content_type", resourceName, "content_type"),
@@ -198,7 +189,6 @@ func TestAccS3ObjectDataSource_allParams(t *testing.T) {
 	ctx := acctest.Context(t)
 	rInt := sdkacctest.RandInt()
 
-	var rObj s3.GetObjectOutput
 	var dsObj s3.GetObjectOutput
 
 	resourceName := "aws_s3_object.object"
@@ -213,7 +203,6 @@ func TestAccS3ObjectDataSource_allParams(t *testing.T) {
 			{
 				Config: testAccObjectDataSourceConfig_allParams(rInt),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckObjectExists(ctx, resourceName, &rObj),
 					testAccCheckObjectExistsDataSource(ctx, dataSourceName, &dsObj),
 					resource.TestCheckResourceAttr(dataSourceName, "content_length", "25"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "content_type", resourceName, "content_type"),
@@ -250,7 +239,6 @@ func TestAccS3ObjectDataSource_objectLockLegalHoldOff(t *testing.T) {
 	ctx := acctest.Context(t)
 	rInt := sdkacctest.RandInt()
 
-	var rObj s3.GetObjectOutput
 	var dsObj s3.GetObjectOutput
 
 	resourceName := "aws_s3_object.object"
@@ -265,7 +253,6 @@ func TestAccS3ObjectDataSource_objectLockLegalHoldOff(t *testing.T) {
 			{
 				Config: testAccObjectDataSourceConfig_lockLegalHoldOff(rInt),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckObjectExists(ctx, resourceName, &rObj),
 					testAccCheckObjectExistsDataSource(ctx, dataSourceName, &dsObj),
 					resource.TestCheckResourceAttr(dataSourceName, "content_length", "11"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "content_type", resourceName, "content_type"),
@@ -286,7 +273,6 @@ func TestAccS3ObjectDataSource_objectLockLegalHoldOn(t *testing.T) {
 	rInt := sdkacctest.RandInt()
 	retainUntilDate := time.Now().UTC().AddDate(0, 0, 10).Format(time.RFC3339)
 
-	var rObj s3.GetObjectOutput
 	var dsObj s3.GetObjectOutput
 
 	resourceName := "aws_s3_object.object"
@@ -301,7 +287,6 @@ func TestAccS3ObjectDataSource_objectLockLegalHoldOn(t *testing.T) {
 			{
 				Config: testAccObjectDataSourceConfig_lockLegalHoldOn(rInt, retainUntilDate),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckObjectExists(ctx, resourceName, &rObj),
 					testAccCheckObjectExistsDataSource(ctx, dataSourceName, &dsObj),
 					resource.TestCheckResourceAttr(dataSourceName, "content_length", "11"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "content_type", resourceName, "content_type"),
@@ -319,7 +304,6 @@ func TestAccS3ObjectDataSource_objectLockLegalHoldOn(t *testing.T) {
 
 func TestAccS3ObjectDataSource_leadingSlash(t *testing.T) {
 	ctx := acctest.Context(t)
-	var rObj s3.GetObjectOutput
 	var dsObj1, dsObj2, dsObj3 s3.GetObjectOutput
 
 	resourceName := "aws_s3_object.object"
@@ -338,9 +322,6 @@ func TestAccS3ObjectDataSource_leadingSlash(t *testing.T) {
 		Steps: []resource.TestStep{
 			{ // nosemgrep:ci.test-config-funcs-correct-form
 				Config: resourceOnlyConf,
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckObjectExists(ctx, resourceName, &rObj),
-				),
 			},
 			{ // nosemgrep:ci.test-config-funcs-correct-form
 				Config: conf,
@@ -373,7 +354,6 @@ func TestAccS3ObjectDataSource_leadingSlash(t *testing.T) {
 
 func TestAccS3ObjectDataSource_multipleSlashes(t *testing.T) {
 	ctx := acctest.Context(t)
-	var rObj1, rObj2 s3.GetObjectOutput
 	var dsObj1, dsObj2, dsObj3 s3.GetObjectOutput
 
 	resourceName1 := "aws_s3_object.object1"
@@ -393,10 +373,6 @@ func TestAccS3ObjectDataSource_multipleSlashes(t *testing.T) {
 		Steps: []resource.TestStep{
 			{ // nosemgrep:ci.test-config-funcs-correct-form
 				Config: resourceOnlyConf,
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckObjectExists(ctx, resourceName1, &rObj1),
-					testAccCheckObjectExists(ctx, resourceName2, &rObj2),
-				),
 			},
 			{ // nosemgrep:ci.test-config-funcs-correct-form
 				Config: conf,
