@@ -41,7 +41,7 @@ The following arguments are required:
 * `account_ids` - (Required) Set of account IDs.
   Can contain one of: the Organization's Administrator Account, or one or more Member Accounts.
 * `resource_types` - (Required) Type of resources to scan.
-  Valid values are `EC2`, `ECR`, and `LAMBDA`.
+  Valid values are `EC2`, `ECR`, `LAMBDA` and `LAMBDA_CODE`.
   At least one item is required.
 
 ## Attribute Reference
