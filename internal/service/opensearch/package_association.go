@@ -21,6 +21,7 @@ import (
 func ResourcePackageAssociation() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: ResourcePackageAssociationCreate,
+		ReadWithoutTimeout:   ResourcePackageAssociationRead,
 		DeleteWithoutTimeout: ResourcePackageAssociationDelete,
 
 		Importer: &schema.ResourceImporter{
@@ -58,6 +59,14 @@ func ResourcePackageAssociationCreate(ctx context.Context, d *schema.ResourceDat
 	}
 
 	d.SetId(fmt.Sprintf("package-association:%s-%s", aws.StringValue(output.DomainPackageDetails.DomainName), aws.StringValue(output.DomainPackageDetails.PackageID)))
+
+	return diags
+}
+
+func ResourcePackageAssociationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
+	// TODO: Implement read?
 
 	return diags
 }
