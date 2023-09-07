@@ -1817,6 +1817,39 @@ func TestAccOpenSearchDomain_versionUpdate(t *testing.T) {
 		}})
 }
 
+func TestAccOpenSearchDomain_softwareUpdateOptions(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var domain opensearchservice.DomainStatus
+	rName := testAccRandomDomainName()
+	resourceName := "aws_opensearch_domain.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckIAMServiceLinkedRole(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, opensearchservice.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDomainDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDomainConfig_softwareUpdateOptions(rName, false),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDomainExists(ctx, resourceName, &domain),
+					resource.TestCheckResourceAttr(resourceName, "software_update_options.0.auto_software_update_enabled", "false"),
+				),
+			},
+			{
+				Config: testAccDomainConfig_softwareUpdateOptions(rName, true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDomainExists(ctx, resourceName, &domain),
+					resource.TestCheckResourceAttr(resourceName, "software_update_options.0.auto_software_update_enabled", "true"),
+				),
+			},
+		},
+	})
+}
 func TestAccOpenSearchDomain_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
@@ -3502,4 +3535,21 @@ resource "aws_opensearch_domain" "test" {
   }
 }
 `, rName, h, m)
+}
+
+func testAccDomainConfig_softwareUpdateOptions(rName string, option bool) string {
+	return fmt.Sprintf(`
+resource "aws_opensearch_domain" "test" {
+  domain_name = %[1]q
+
+  ebs_options {
+    ebs_enabled = true
+    volume_size = 10
+  }
+
+  software_update_options {
+    auto_software_update_enabled = %[2]t
+  }
+}
+`, rName, option)
 }
