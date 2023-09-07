@@ -26,7 +26,7 @@ var partitionRegexp = regexache.MustCompile(`^aws(-[a-z]+)*$`)
 var regionRegexp = regexache.MustCompile(`^[a-z]{2}(-[a-z]+)+-\d$`)
 
 // validates all listed in https://gist.github.com/shortjared/4c1e3fe52bdfa47522cfe5b41e5d6f22
-var servicePrincipalRegexp = regexache.MustCompile(`^([a-z0-9-]+\.){1,4}(amazonaws|amazon)\.com$`)
+var servicePrincipalRegexp = regexache.MustCompile(`^([0-9a-z-]+\.){1,4}(amazonaws|amazon)\.com$`)
 
 func Valid4ByteASN(v interface{}, k string) (ws []string, errors []error) {
 	value := v.(string)
@@ -288,7 +288,7 @@ func ValidLaunchTemplateID(v interface{}, k string) (ws []string, errors []error
 		errors = append(errors, fmt.Errorf("%q cannot be shorter than 1 character", k))
 	} else if len(value) > 255 {
 		errors = append(errors, fmt.Errorf("%q cannot be longer than 255 characters", k))
-	} else if !regexache.MustCompile(`^lt\-[a-z0-9]+$`).MatchString(value) {
+	} else if !regexache.MustCompile(`^lt\-[0-9a-z]+$`).MatchString(value) {
 		errors = append(errors, fmt.Errorf(
 			"%q must begin with 'lt-' and be comprised of only alphanumeric characters: %v", k, value))
 	}
@@ -303,7 +303,7 @@ func ValidLaunchTemplateName(v interface{}, k string) (ws []string, errors []err
 		errors = append(errors, fmt.Errorf("%q cannot be longer than 99 characters, name is limited to 125", k))
 	} else if !strings.HasSuffix(k, "prefix") && len(value) > 125 {
 		errors = append(errors, fmt.Errorf("%q cannot be longer than 125 characters", k))
-	} else if !regexache.MustCompile(`^[0-9a-zA-Z()./_\-]+$`).MatchString(value) {
+	} else if !regexache.MustCompile(`^[0-9A-Za-z()./_\-]+$`).MatchString(value) {
 		errors = append(errors, fmt.Errorf("%q can only alphanumeric characters and ()./_- symbols", k))
 	}
 	return

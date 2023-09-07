@@ -275,7 +275,7 @@ func targetParametersSchema() *schema.Schema {
 															Type: schema.TypeString,
 															ValidateFunc: validation.All(
 																validation.StringLenBetween(1, 1024),
-																validation.StringMatch(regexache.MustCompile(`^sg-[0-9a-zA-Z]*|(\$(\.[\w/_-]+(\[(\d+|\*)\])*)*)$`), ""),
+																validation.StringMatch(regexache.MustCompile(`^sg-[0-9A-Za-z]*|(\$(\.[\w/_-]+(\[(\d+|\*)\])*)*)$`), ""),
 															),
 														},
 													},
@@ -529,7 +529,7 @@ func targetParametersSchema() *schema.Schema {
 								Optional: true,
 								ValidateFunc: validation.All(
 									validation.StringLenBetween(1, 50),
-									validation.StringMatch(regexache.MustCompile(`^[A-Za-z0-9\-]+[\.][A-Za-z0-9\-]+$`), ""),
+									validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z-]+[\.][0-9A-Za-z-]+$`), ""),
 								),
 							},
 							"resources": {
@@ -737,7 +737,7 @@ func targetParametersSchema() *schema.Schema {
 											Required: true,
 											ValidateFunc: validation.All(
 												validation.StringLenBetween(1, 256),
-												validation.StringMatch(regexache.MustCompile(`^[a-zA-Z0-9](-*[a-zA-Z0-9])*|(\$(\.[\w/_-]+(\[(\d+|\*)\])*)*)$`), ""),
+												validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z](-*[0-9A-Za-z])*|(\$(\.[\w/_-]+(\[(\d+|\*)\])*)*)$`), ""),
 											),
 										},
 										"value": {

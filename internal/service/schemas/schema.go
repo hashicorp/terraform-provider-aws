@@ -64,7 +64,7 @@ func ResourceSchema() *schema.Resource {
 				ForceNew: true,
 				ValidateFunc: validation.All(
 					validation.StringLenBetween(1, 385),
-					validation.StringMatch(regexache.MustCompile(`^[\.\-_A-Za-z@]+`), ""),
+					validation.StringMatch(regexache.MustCompile(`^[A-Za-z_.@-]+`), ""),
 				),
 			},
 

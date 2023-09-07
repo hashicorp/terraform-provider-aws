@@ -40,9 +40,9 @@ func ResourceInstance() *schema.Resource {
 				Elem:     &schema.Schema{Type: schema.TypeString},
 				ValidateDiagFunc: validation.AllDiag(
 					validation.MapKeyLenBetween(1, 255),
-					validation.MapKeyMatch(regexache.MustCompile(`^[a-zA-Z0-9!-~]+$`), ""),
+					validation.MapKeyMatch(regexache.MustCompile(`^[0-9A-Za-z!~-]+$`), ""),
 					validation.MapValueLenBetween(0, 1024),
-					validation.MapValueMatch(regexache.MustCompile(`^([a-zA-Z0-9!-~][ \ta-zA-Z0-9!-~]*){0,1}[a-zA-Z0-9!-~]{0,1}$`), ""),
+					validation.MapValueMatch(regexache.MustCompile(`^([0-9A-Za-z!~-][0-9A-Za-z \t!~-]*){0,1}[0-9A-Za-z!~-]{0,1}$`), ""),
 				),
 			},
 			"instance_id": {
@@ -51,7 +51,7 @@ func ResourceInstance() *schema.Resource {
 				ForceNew: true,
 				ValidateFunc: validation.All(
 					validation.StringLenBetween(1, 64),
-					validation.StringMatch(regexache.MustCompile(`^[0-9a-zA-Z_/:.@-]+$`), ""),
+					validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_/:.@-]+$`), ""),
 				),
 			},
 			"service_id": {
