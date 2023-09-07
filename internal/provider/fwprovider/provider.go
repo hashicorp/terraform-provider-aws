@@ -262,7 +262,8 @@ func (p *fwprovider) Schema(ctx context.Context, req provider.SchemaRequest, res
 						"tags": schema.MapAttribute{
 							ElementType: types.StringType,
 							Optional:    true,
-							Description: "Resource tags to default across all resources",
+							Description: "Resource tags to default across all resources. " +
+								"Can also be configured with environment variables like `" + tftags.DefaultTagsEnvVarPrefix + "<tag_name>`.",
 						},
 					},
 				},

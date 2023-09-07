@@ -24,6 +24,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/provider"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -103,6 +104,32 @@ func TestAccProvider_DefaultTagsTags_multiple(t *testing.T) {
 					testAccCheckProviderDefaultTags_Tags(ctx, t, &provider, map[string]string{
 						"test1": "value1",
 						"test2": "value2",
+					}),
+				),
+			},
+		},
+	})
+}
+
+func TestAccProvider_DefaultTagsTags_env_vars(t *testing.T) {
+	ctx := acctest.Context(t)
+	var p *schema.Provider
+
+	t.Setenv(tftags.DefaultTagsEnvVarPrefix+"test1", "envValue1")
+	t.Setenv(tftags.DefaultTagsEnvVarPrefix+"test2", "envValue2")
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t),
+		ProtoV5ProviderFactories: testAccProtoV5ProviderFactoriesInternal(ctx, t, &p),
+		CheckDestroy:             nil,
+		Steps: []resource.TestStep{
+			{ // nosemgrep:ci.test-config-funcs-correct-form
+				Config: acctest.ConfigDefaultTags_Tags1("test1", "value1"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckProviderDefaultTags_Tags(ctx, t, &p, map[string]string{
+						"test1": "value1",
+						"test2": "envValue2",
 					}),
 				),
 			},
