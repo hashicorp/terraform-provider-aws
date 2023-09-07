@@ -1,0 +1,70 @@
+---
+subcategory: "OpenSearch"
+layout: "aws"
+page_title: "AWS: aws_opensearch_package_association"
+description: |-
+  Terraform resource for managing an AWS OpenSearch package association.
+---
+
+# Resource: aws_opensearch_package_association
+
+Manages an AWS Opensearch Package Association.
+
+## Example Usage
+
+### Basic Usage
+
+```terraform
+resource "aws_opensearch_domain" "my_domain" {
+  domain_name    = "my-opensearch-domain"
+  engine_version = "Elasticsearch_7.10"
+
+  cluster_config {
+    instance_type = "r4.large.search"
+  }
+}
+
+resource "aws_opensearch_package" "example" {
+  package_name = "example-txt"
+  package_source {
+    s3_bucket_name = aws_s3_bucket.my_opensearch_packages.bucket
+    s3_key = aws_s3_object.example.key
+  }
+  package_type = "TXT-DICTIONARY"
+}
+
+resource "aws_opensearch_package_association" "example" {
+  package_id = aws_opensearch_package.example.id
+  domain_name = aws_opensearch_domain.my_domain.domain_name
+}
+```
+
+## Argument Reference
+
+This resource supports the following arguments:
+
+* `package_id` - (Required, Forces new resource) Internal ID of the package to associate with a domain.
+* `domain_name` - (Required, Forces new resource) Name of the domain to associate the package with.
+
+## Attribute Reference
+
+This resource exports the following attributes in addition to the arguments above:
+
+* `id` - The Id of the package association.
+
+## Import
+
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import AWS Opensearch Package Associations using the Package Association ID. For example:
+
+```terraform
+import {
+  to = aws_opensearch_package_association.foo
+  id = "package-association-id"
+}
+```
+
+Using `terraform import`, import AWS Opensearch Package Associations using the Package Association ID. For example:
+
+```console
+% terraform import aws_opensearch_package_association.foo package-association-id
+```
