@@ -29,13 +29,16 @@ func TestAccOpenSearchPackage_basic(t *testing.T) {
 			{
 				Config: testAccPackageConfig(name),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "package_name", "example"),
+					resource.TestCheckResourceAttr(resourceName, "package_name", name),
 				),
 			},
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"package_source", // This isn't returned by the API
+				},
 			},
 		},
 	})
@@ -67,23 +70,23 @@ func TestAccOpenSearchPackage_disappears(t *testing.T) {
 func testAccPackageConfig(name string) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "opensearch_packages" {
-  bucket = "%s-1"
+  bucket = "%s"
 }
 
 resource "aws_s3_object" "example_txt" {
   bucket = aws_s3_bucket.opensearch_packages.bucket
-  key    = "example-opensearch-custom-package.txt"
+  key    = "%s"
   source = "./test-fixtures/example-opensearch-custom-package.txt"
   etag = filemd5("./test-fixtures/example-opensearch-custom-package.txt")
 }
 
 resource "aws_opensearch_package" "test" {
-  package_name = "example"
+  package_name = "%s"
   package_source {
     s3_bucket_name = aws_s3_bucket.opensearch_packages.bucket
     s3_key = aws_s3_object.example_txt.key
   }
   package_type = "TXT-DICTIONARY"
 }
-`, name)
+`, name, name, name)
 }
