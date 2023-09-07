@@ -77,7 +77,7 @@ resource "aws_s3_object" "example_txt" {
   etag = filemd5("./test-fixtures/example-opensearch-custom-package.txt")
 }
 
-resource "aws_opensearch_package" "example_txt" {
+resource "aws_opensearch_package" "test" {
   package_name = "example"
   package_source {
     s3_bucket_name = aws_s3_bucket.opensearch_packages.bucket
