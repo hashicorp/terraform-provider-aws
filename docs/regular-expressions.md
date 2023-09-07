@@ -10,11 +10,13 @@ Regular expressions are a powerful tool. However, they are also very expensive i
     4. Underscore (`_`)
     5. Everything else (except dash, `-`) in ASCII order: `\t\n\r !"#$%&()*+,./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\]^abcdefghijklmnopqrstuvwxyz{|}~`
     6. _Last_, dash (`-`)
-    7. Example 1, both equivalent, Wrong order: `[_a-zA-Z0-9-,.]`, Correct: `[0-9A-Za-z_,.-]`
-    8. Example 2, both equivalent, Wrong order: `[;a-z0-9]`, Correct: `[0-9a-z;]`
+    - Example 1, both equivalent, Wrong order: `[_a-zA-Z0-9-,.]`, Correct: `[0-9A-Za-z_,.-]`
+    - Example 2, both equivalent, Wrong order: `[;a-z0-9]`, Correct: `[0-9a-z;]`
 * **Inside character classes, avoid unnecessary character escaping.** Go does not complain about extra character escaping but avoid it to improve cache performance. Inside a character class, _most_ characters do not need to be escaped, as Go assumes you mean the literal character.
     * These characters which normally have special meaning in regular expressions, _inside character classes_ do **not** need to be escaped: `$`, `(`, `)`, `*`, `+`, `.`, `?`, `^`, `{`, `|`, `}`.
     * Dash (`-`), when it is last in the character class or otherwise unambiguously not part of a range, does not need to be escaped. If in doubt, place the dash _last_ in the character class (_e.g._, `[a-c-]`) or escape the dash (_e.g._, `\-`).
     * Angle brackets (`[`, `]`) always need to be escaped in a character class.
     * Example 1, both equivalent, Unnecessary escapes: `[\$\(\.\?\|]`, Correct: `[$(.?|]`
     * Example 2, both equivalent, Unnecessary escapes, wrong order: `[a-z\-0-9_A-Z\.]`, Correct: `[0-9A-Za-z_.-]`
+
+<!-- Add links to standard validators to use instead of custom -->
