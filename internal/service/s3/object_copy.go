@@ -634,6 +634,10 @@ func findObjectByThreePartKey(ctx context.Context, conn *s3.Client, bucket, key,
 		input.IfMatch = aws.String(etag)
 	}
 
+	return findObject(ctx, conn, input)
+}
+
+func findObject(ctx context.Context, conn *s3.Client, input *s3.HeadObjectInput) (*s3.HeadObjectOutput, error) {
 	output, err := conn.HeadObject(ctx, input)
 
 	if tfawserr.ErrHTTPStatusCodeEquals(err, http.StatusNotFound) {
