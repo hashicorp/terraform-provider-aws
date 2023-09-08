@@ -3,7 +3,6 @@ package kafka
 import (
 	"context"
 	"errors"
-	// "fmt"
 	"log"
 	"time"
 

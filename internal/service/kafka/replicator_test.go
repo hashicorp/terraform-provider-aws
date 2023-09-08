@@ -134,8 +134,13 @@ func TestAccKafkaReplicator_update(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "replication_info_list.0.target_compression_type", "NONE"),
 					resource.TestCheckResourceAttr(resourceName, "replication_info_list.0.topic_replication.0.topics_to_replicate.#", "3"),
 					resource.TestCheckResourceAttr(resourceName, "replication_info_list.0.topic_replication.0.topics_to_exclude.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "replication_info_list.0.topic_replication.0.copy_topic_configurations", "false"),
+					resource.TestCheckResourceAttr(resourceName, "replication_info_list.0.topic_replication.0.copy_access_control_lists_for_topics", "false"),
+					resource.TestCheckResourceAttr(resourceName, "replication_info_list.0.topic_replication.0.detect_and_copy_new_topics", "false"),
 					resource.TestCheckResourceAttr(resourceName, "replication_info_list.0.consumer_group_replication.0.consumer_groups_to_replicate.#", "3"),
 					resource.TestCheckResourceAttr(resourceName, "replication_info_list.0.consumer_group_replication.0.consumer_groups_to_exclude.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "replication_info_list.0.consumer_group_replication.0.synchronise_consumer_group_offsets", "false"),
+					resource.TestCheckResourceAttr(resourceName, "replication_info_list.0.consumer_group_replication.0.detect_and_copy_new_consumer_groups", "false"),
 				),
 			},
 			{
@@ -515,11 +520,16 @@ resource "aws_msk_replicator" "test" {
     topic_replication {
       topics_to_replicate = ["topic1", "topic2", "topic3"]
 	  topics_to_exclude   = ["topic-4"]
+	  detect_and_copy_new_topics = false
+	  copy_access_control_lists_for_topics = false
+	  copy_topic_configurations = false
     }
 
     consumer_group_replication {
       consumer_groups_to_replicate = ["group1", "group2", "group3"]
 	  consumer_groups_to_exclude   = ["group-4"]
+	  synchronise_consumer_group_offsets = false
+	  detect_and_copy_new_consumer_groups = false
     }
   }
 }
