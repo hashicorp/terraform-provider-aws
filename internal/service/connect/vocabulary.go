@@ -81,7 +81,7 @@ func ResourceVocabulary() *schema.Resource {
 				ForceNew: true,
 				ValidateFunc: validation.All(
 					validation.StringLenBetween(1, 140),
-					validation.StringMatch(regexache.MustCompile(`^[0-9a-zA-Z._-]+`), "must contain only alphanumeric, period, underscore, and hyphen characters"),
+					validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_.-]+`), "must contain only alphanumeric, period, underscore, and hyphen characters"),
 				),
 			},
 			"state": {

@@ -19,7 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-const rfc1123RegexPattern = `^[a-zA-Z]{3}, [0-9]+ [a-zA-Z]+ [0-9]{4} [0-9:]+ [A-Z]+$`
+const rfc1123RegexPattern = `^[A-Za-z]{3}, [0-9]+ [A-Za-z]+ [0-9]{4} [0-9:]+ [A-Z]+$`
 
 func TestAccS3ObjectDataSource_basic(t *testing.T) {
 	ctx := acctest.Context(t)

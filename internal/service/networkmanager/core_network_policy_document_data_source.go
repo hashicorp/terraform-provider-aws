@@ -111,7 +111,7 @@ func DataSourceCoreNetworkPolicyDocument() *schema.Resource {
 									"segment": {
 										Type:     schema.TypeString,
 										Optional: true,
-										ValidateFunc: validation.StringMatch(regexache.MustCompile(`^[a-zA-Z][A-Za-z0-9]{0,63}$`),
+										ValidateFunc: validation.StringMatch(regexache.MustCompile(`^[A-Za-z][0-9A-Za-z]{0,63}$`),
 											"must begin with a letter and contain only alphanumeric characters"),
 									},
 									"tag_value_of_key": {
@@ -197,7 +197,7 @@ func DataSourceCoreNetworkPolicyDocument() *schema.Resource {
 							Optional: true,
 							Elem: &schema.Schema{
 								Type: schema.TypeString,
-								ValidateFunc: validation.StringMatch(regexache.MustCompile(`^[a-zA-Z][A-Za-z0-9]{0,63}$`),
+								ValidateFunc: validation.StringMatch(regexache.MustCompile(`^[A-Za-z][0-9A-Za-z]{0,63}$`),
 									"must begin with a letter and contain only alphanumeric characters"),
 							},
 						},
@@ -206,14 +206,14 @@ func DataSourceCoreNetworkPolicyDocument() *schema.Resource {
 							Optional: true,
 							Elem: &schema.Schema{
 								Type: schema.TypeString,
-								ValidateFunc: validation.StringMatch(regexache.MustCompile(`^[a-zA-Z][A-Za-z0-9]{0,63}$`),
+								ValidateFunc: validation.StringMatch(regexache.MustCompile(`^[A-Za-z][0-9A-Za-z]{0,63}$`),
 									"must begin with a letter and contain only alphanumeric characters"),
 							},
 						},
 						"name": {
 							Type:     schema.TypeString,
 							Required: true,
-							ValidateFunc: validation.StringMatch(regexache.MustCompile(`^[a-zA-Z][A-Za-z0-9]{0,63}$`),
+							ValidateFunc: validation.StringMatch(regexache.MustCompile(`^[A-Za-z][0-9A-Za-z]{0,63}$`),
 								"must begin with a letter and contain only alphanumeric characters"),
 						},
 						"description": {
@@ -294,7 +294,7 @@ func DataSourceCoreNetworkPolicyDocument() *schema.Resource {
 						"segment": {
 							Type:     schema.TypeString,
 							Required: true,
-							ValidateFunc: validation.StringMatch(regexache.MustCompile(`^[a-zA-Z][A-Za-z0-9]{0,63}$`),
+							ValidateFunc: validation.StringMatch(regexache.MustCompile(`^[A-Za-z][0-9A-Za-z]{0,63}$`),
 								"must begin with a letter and contain only alphanumeric characters"),
 						},
 						"share_with":        setOfString,

@@ -270,7 +270,7 @@ func parseVirtualMFADeviceARN(s string) (path, name string, err error) {
 		return "", "", err
 	}
 
-	re := regexache.MustCompile(`^mfa(/|/[\x{0021}-\x{007E}]+/)([-A-Za-z0-9_+=,.@]+)$`)
+	re := regexache.MustCompile(`^mfa(/|/[\x{0021}-\x{007E}]+/)([0-9A-Za-z_+=,.@-]+)$`)
 	matches := re.FindStringSubmatch(arn.Resource)
 	if len(matches) != 3 {
 		return "", "", fmt.Errorf("IAM Virtual MFA Device ARN: invalid resource section (%s)", arn.Resource)
