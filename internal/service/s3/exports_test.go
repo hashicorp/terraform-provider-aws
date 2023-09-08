@@ -6,5 +6,5 @@ package s3
 // Exports for use in tests only.
 var (
 	DeleteAllObjectVersions  = deleteAllObjectVersions
-	FindObjectByThreePartKey = findObjectByThreePartKey
+	FindObjectByBucketAndKey = findObjectByBucketAndKey
 )

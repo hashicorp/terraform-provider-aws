@@ -306,7 +306,7 @@ func testAccCheckObjectCopyDestroy(ctx context.Context) resource.TestCheckFunc {
 				continue
 			}
 
-			_, err := tfs3.FindObjectByThreePartKey(ctx, conn, rs.Primary.Attributes["bucket"], rs.Primary.Attributes["key"], rs.Primary.Attributes["etag"])
+			_, err := tfs3.FindObjectByBucketAndKey(ctx, conn, rs.Primary.Attributes["bucket"], rs.Primary.Attributes["key"], rs.Primary.Attributes["etag"], "")
 
 			if tfresource.NotFound(err) {
 				continue
@@ -332,7 +332,7 @@ func testAccCheckObjectCopyExists(ctx context.Context, n string) resource.TestCh
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Client(ctx)
 
-		_, err := tfs3.FindObjectByThreePartKey(ctx, conn, rs.Primary.Attributes["bucket"], rs.Primary.Attributes["key"], rs.Primary.Attributes["etag"])
+		_, err := tfs3.FindObjectByBucketAndKey(ctx, conn, rs.Primary.Attributes["bucket"], rs.Primary.Attributes["key"], rs.Primary.Attributes["etag"], "")
 
 		return err
 	}

@@ -76,6 +76,27 @@ func ResourceObject() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
+			"checksum_algorithm": {
+				Type:             schema.TypeString,
+				Optional:         true,
+				ValidateDiagFunc: enum.Validate[types.ChecksumAlgorithm](),
+			},
+			"checksum_crc32": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"checksum_crc32c": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"checksum_sha1": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"checksum_sha256": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"content": {
 				Type:          schema.TypeString,
 				Optional:      true,
@@ -203,7 +224,7 @@ func resourceObjectRead(ctx context.Context, d *schema.ResourceData, meta interf
 
 	bucket := d.Get("bucket").(string)
 	key := d.Get("key").(string)
-	output, err := findObjectByThreePartKey(ctx, conn, bucket, key, "")
+	output, err := findObjectByBucketAndKey(ctx, conn, bucket, key, "", d.Get("checksum_algorithm").(string))
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] S3 Object (%s) not found, removing from state", d.Id())
@@ -217,6 +238,10 @@ func resourceObjectRead(ctx context.Context, d *schema.ResourceData, meta interf
 
 	d.Set("bucket_key_enabled", output.BucketKeyEnabled)
 	d.Set("cache_control", output.CacheControl)
+	d.Set("checksum_crc32", output.ChecksumCRC32)
+	d.Set("checksum_crc32c", output.ChecksumCRC32C)
+	d.Set("checksum_sha1", output.ChecksumSHA1)
+	d.Set("checksum_sha256", output.ChecksumSHA256)
 	d.Set("content_disposition", output.ContentDisposition)
 	d.Set("content_encoding", output.ContentEncoding)
 	d.Set("content_language", output.ContentLanguage)
@@ -438,6 +463,10 @@ func resourceObjectUpload(ctx context.Context, d *schema.ResourceData, meta inte
 		input.CacheControl = aws.String(v.(string))
 	}
 
+	if v, ok := d.GetOk("checksum_algorithm"); ok {
+		input.ChecksumAlgorithm = types.ChecksumAlgorithm(v.(string))
+	}
+
 	if v, ok := d.GetOk("content_disposition"); ok {
 		input.ContentDisposition = aws.String(v.(string))
 	}
@@ -551,6 +580,7 @@ func hasObjectContentChanges(d verify.ResourceDiffer) bool {
 	for _, key := range []string{
 		"bucket_key_enabled",
 		"cache_control",
+		"checksum_algorithm",
 		"content_base64",
 		"content_disposition",
 		"content_encoding",
