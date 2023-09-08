@@ -248,7 +248,7 @@ The following arguments are optional:
 
 ### Network Input Settings
 
-* `hls_input_settings` - (Optional) Specifies HLS input settings when the uri is for a HLS manifest. See [HLS Input Settings](#hls-input-settings) for more details.
+* `hls_input_settings` - (Optional) Specifies HLS input settings when the URI is for a HLS manifest. See [HLS Input Settings](#hls-input-settings) for more details.
 * `server_validation` - (Optional) Check HTTPS server certificates.
 
 ### HLS Input Settings
@@ -352,6 +352,7 @@ The following arguments are optional:
 
 ### AC3 Settings
 
+* `attenuation_control` - (Optional) Sets the attenuation control.
 * `bitrate` - (Optional) Average bitrate in bits/second.
 * `bitstream_mode` - (Optional) Specifies the bitstream mode (bsmod) for the emitted AC-3 stream.
 * `coding_mode` - (Optional) Dolby Digital coding mode.
@@ -393,6 +394,7 @@ The following arguments are optional:
 
 * `check_digit` - (Required) Check digit string for the watermark.
 * `sid` - (Required) The Nielsen Source ID to include in the watermark.
+* `timezone` - (Optional) Choose the timezone for the time stamps in the watermark. If not provided, the timestamps will be in Coordinated Universal Time (UTC).
 
 ### Output Groups
 
@@ -403,6 +405,9 @@ The following arguments are optional:
 ### Output Group Settings
 
 * `archive_group_settings` - (Optional) Archive group settings. See [Archive Group Settings](#archive-group-settings) for more details.
+* `frame_capture_group_settings` - (Optional) Frame Capture Group Settings. See [Frame Capture Group Settings](#frame-capture-group-settings) for more details.
+* `hls_group_settings` - (Optional) HLS Group Settings. See [HLS Group Settings](#hls-group-settings) for more details.
+* `ms_smooth_group_settings` - (Optional) MS Smooth Group Settings. See [MS Smooth Group Settings](#ms-smooth-group-settings) for more details.
 * `media_package_group_settings` - (Optional) Media package group settings. See [Media Package Group Settings](#media-package-group-settings) for more details.
 * `multiplex_group_sttings` - (Optional) Multiplex group settings. Attribute can be passed as an empty block.
 * `rtmp_group_settings` - (Optional) RTMP group settings. See [RTMP Group Settings](#rtmp-group-settings) for more details.
@@ -440,6 +445,7 @@ The following arguments are optional:
 
 * `capture_interval` - (Optional) The frequency at which to capture frames for inclusion in the output.
 * `capture_interval_units` - (Optional) Unit for the frame capture interval.
+* `timecode_burnin_settings` - (Optional) Apply a burned in timecode. See [Timecode Burnin Settings](#timecode-burnin-settings) for more details.
 
 ### H264 Settings
 
@@ -449,6 +455,7 @@ The following arguments are optional:
 * `buf_fil_pct` - (Optional) Percentage of the buffer that should initially be filled.
 * `buf_size` - (Optional) Size of buffer in bits.
 * `color_metadata` - (Optional) Includes color space metadata in the output.
+* `color_space_settings` (Optional) Define the color metadata for the output. [H264 Color Space Settings](#h264-color-space-settings) for more details.
 * `entropy_encoding` - (Optional) Entropy encoding mode.
 * `filter_settings` - (Optional) Filters to apply to an encode. See [H264 Filter Settings](#h264-filter-settings) for more details.
 * `fixed_afd` - (Optional) Four bit AFD value to write on all frames of video in the output stream.
@@ -482,7 +489,14 @@ The following arguments are optional:
 * `subgop_length` - (Optional) Subgop length.
 * `syntax` - (Optional) Produces a bitstream compliant with SMPTE RP-2027.
 * `temporal_aq` - (Optional) Makes adjustments within each frame based on temporal variation of content complexity.
+* `timecode_burnin_settings` - (Optional) Apply a burned in timecode. See [Timecode Burnin Settings](#timecode-burnin-settings) for more details.
 * `timecode_insertion` - (Optional) Determines how timecodes should be inserted into the video elementary stream.
+
+### H264 Color Space Settings
+
+* `color_space_passthrough_settings` - (Optional) Sets the colorspace metadata to be passed through.
+* `rec601_settings` - (Optional) Set the colorspace to Rec. 601.
+* `rec709_settings` - (Optional) Set the colorspace to Rec. 709.
 
 ### H264 Filter Settings
 
@@ -518,8 +532,8 @@ The following arguments are optional:
 * `scene_change_detect` - (Optional) Scene change detection.
 * `slices` - (Optional) Number of slices per picture.
 * `tier` - (Optional) Set the H265 tier in the output.
-* `timecode_burnin_settings` - (Optional) Apply a burned in timecode. See [H265 Timecode Burnin Settings](#h265-timecode-burnin-settings) for more details.
-* `timecode_insertion` - (Optional) Determines how timecodes should be inserted into the video elementary stream.
+* `timecode_burnin_settings` - (Optional) Apply a burned in timecode. See [Timecode Burnin Settings](#timecode-burnin-settings) for more details.
+* `timecode_insertion` = (Optional) Determines how timecodes should be inserted into the video elementary stream.
 
 ### H265 Color Space Settings
 
@@ -538,7 +552,7 @@ The following arguments are optional:
 
 * `temporal_filter_settings` - (Optional) Temporal filter settings. See [Temporal Filter Settings](#temporal-filter-settings)
 
-### H265 Timecode Burnin Settings
+### Timecode Burnin Settings
 
 * `timecode_burnin_font_size` - (Optional) Sets the size of the burned in timecode.
 * `timecode_burnin_position` - (Optional) Sets the position of the burned in timecode.
@@ -641,6 +655,7 @@ The following arguments are optional:
 * `input_end_action` – (Optional) Indicates the action to take when the current input completes (e.g. end-of-file). When switchAndLoopInputs is configured the encoder will restart at the beginning of the first input. When “none” is configured the encoder will transcode either black, a solid color, or a user specified slate images per the “Input Loss Behavior” configuration until the next input switch occurs (which is controlled through the Channel Schedule API).
 * `input_loss_behavior` - (Optional) Settings for system actions when input is lost. See [Input Loss Behavior](#input-loss-behavior) for more details.
 * `output_locking_mode` – (Optional) Indicates how MediaLive pipelines are synchronized. PIPELINE\_LOCKING - MediaLive will attempt to synchronize the output of each pipeline to the other. EPOCH\_LOCKING - MediaLive will attempt to synchronize the output of each pipeline to the Unix epoch.
+* `output_locking_settings` - (Optional) Advanced output locking settings. See [Output Locking Settings](#output-locking-settings) for more details.
 * `output_timing_source` – (Optional) Indicates whether the rate of frames emitted by the Live encoder should be paced by its system clock (which optionally may be locked to another source via NTP) or should be locked to the clock of the source that is providing the input stream.
 * `support_low_framerate_inputs` – (Optional) Adjusts video input buffer for streams with very low video framerates. This is commonly set to enabled for music channels with less than one video frame per second.
 
@@ -649,6 +664,16 @@ The following arguments are optional:
 * `password_param` – (Optional) Key used to extract the password from EC2 Parameter store.
 * `uri` – (Required) Path to a file accessible to the live stream.
 * `username` – (Optional) Username to be used.
+
+### Output Locking Settings
+
+* `epoch_locking_settings` - (Optional) Epoch Locking Settings. See [Epoch Locking Settings](#epoch-locking-settings) for more details.
+* `pipeline_locking_settings` - (Optional) Pipeline Locking Settings.
+
+### Epoch Locking Settings
+
+* `custom_epoch` - (Optional) Enter a value here to use a custom epoch, instead of the standard epoch (which started at 1970-01-01T00:00:00 UTC). Specify the start time of the custom epoch, in YYYY-MM-DDTHH:MM:SS in UTC. The time must be 2000-01-01T00:00:00 or later. Always set the MM:SS portion to 00:00.
+* `jam_sync_time` - (Optional) Enter a time for the jam sync. The default is midnight UTC. When epoch locking is enabled, MediaLive performs a daily jam sync on every output encode to ensure timecodes don’t diverge from the wall clock. The jam sync applies only to encodes with frame rate of 29.97 or 59.94 FPS. To override, enter a time in HH:MM:SS in UTC. Always set the MM:SS portion to 00:00.
 
 ### Motion Graphics Configuration
 
@@ -681,6 +706,151 @@ The following arguments are optional:
 * `archive_cdn_settings` - (Optional) Parameters that control the interactions with the CDN. See [Archive CDN Settings](#archive-cdn-settings) for more details.
 * `rollover_interval` - (Optional) Number of seconds to write to archive file before closing and starting a new one.
 
+### Frame Capture Group Settings
+
+* `destination` - (Required) A director and base filename where archive files should be written. See [Destination](#destination) for more details.
+* `frame_capture_cdn_settings` - (Optional) Parameters that control interactions with the CDN. See [Frame Capture CDN Settings](#frame-capture-cdn-settings) for more details.
+
+### Frame Capture CDN Settings
+
+* `frame_capture_s3_settings` - (Optional) Frame Capture S3 Settings. See [Frame Capture S3 Settings](#frame-capture-s3-settings) for more details.
+
+### Frame Capture S3 Settings
+
+* `canned_acl` - (Optional) Specify the canned ACL to apply to each S3 request. Defaults to none.
+
+### HLS Group Settings
+
+* `destination` - (Required) A director and base filename where archive files should be written. See [Destination](#destination) for more details.
+* `ad_markers` - (Optional) Choose one or more ad marker types to pass SCTE35 signals through to this group of Apple HLS outputs.
+* `base_url_content` - (Optional) A partial URI prefix that will be prepended to each output in the media .m3u8 file. Can be used if base manifest is delivered from a different URL than the main .m3u8 file.
+* `base_url_content1` - (Optional) One value per output group. This field is required only if you are completing Base URL content A, and the downstream system has notified you that the media files for pipeline 1 of all outputs are in a location different from the media files for pipeline 0.
+* `base_url_manifest` - (Optional) A partial URI prefix that will be prepended to each output in the media .m3u8 file. Can be used if base manifest is delivered from a different URL than the main .m3u8 file.
+* `base_url_manifest1` - (Optional) One value per output group. Complete this field only if you are completing Base URL manifest A, and the downstream system has notified you that the child manifest files for pipeline 1 of all outputs are in a location different from the child manifest files for pipeline 0.
+* `caption_language_mappings` - (Optional) Mapping of up to 4 caption channels to caption languages. Is only meaningful if captionLanguageSetting is set to "insert". See [Caption Language Mappings](#caption-language-mappings) for more details.
+* `caption_language_setting` - (Optional) Applies only to 608 Embedded output captions. insert: Include CLOSED-CAPTIONS lines in the manifest. Specify at least one language in the CC1 Language Code field. One CLOSED-CAPTION line is added for each Language Code you specify. Make sure to specify the languages in the order in which they appear in the original source (if the source is embedded format) or the order of the caption selectors (if the source is other than embedded). Otherwise, languages in the manifest will not match up properly with the output captions. none: Include CLOSED-CAPTIONS=NONE line in the manifest. omit: Omit any CLOSED-CAPTIONS line from the manifest.
+* `client_cache` - (Optional) When set to "disabled", sets the #EXT-X-ALLOW-CACHE:no tag in the manifest, which prevents clients from saving media segments for later replay.
+* `codec_specification - (Optional) Specification to use (RFC-6381 or the default RFC-4281) during m3u8 playlist generation.
+* `constant_iv` - (Optional) For use with encryptionType. This is a 128-bit, 16-byte hex value represented by a 32-character text string. If ivSource is set to "explicit" then this parameter is required and is used as the IV for encryption.
+* `directory_structure` - (Optional) Place segments in subdirectories.
+* `discontinuity_tags` - (Optional) Specifies whether to insert EXT-X-DISCONTINUITY tags in the HLS child manifests for this output group. Typically, choose Insert because these tags are required in the manifest (according to the HLS specification) and serve an important purpose. Choose Never Insert only if the downstream system is doing real-time failover (without using the MediaLive automatic failover feature) and only if that downstream system has advised you to exclude the tags.
+* `encryption_type` - (Optional) Encrypts the segments with the given encryption scheme. Exclude this parameter if no encryption is desired.
+* `hls_cdn_settings` - (Optional) Parameters that control interactions with the CDN. See [HLS CDN Settings](#hls-cdn-settings) for more details.
+* `hls_id3_segment_tagging` - (Optional) State of HLS ID3 Segment Tagging.
+* `iframe_only_playlists` - (Optional) DISABLED: Do not create an I-frame-only manifest, but do create the master and media manifests (according to the Output Selection field). STANDARD: Create an I-frame-only manifest for each output that contains video, as well as the other manifests (according to the Output Selection field). The I-frame manifest contains a #EXT-X-I-FRAMES-ONLY tag to indicate it is I-frame only, and one or more #EXT-X-BYTERANGE entries identifying the I-frame position. For example, #EXT-X-BYTERANGE:160364@1461888".
+* `incomplete_segment_behavior` - (Optional) Specifies whether to include the final (incomplete) segment in the media output when the pipeline stops producing output because of a channel stop, a channel pause or a loss of input to the pipeline. Auto means that MediaLive decides whether to include the final segment, depending on the channel class and the types of output groups. Suppress means to never include the incomplete segment. We recommend you choose Auto and let MediaLive control the behavior.
+* `index_n_segments` - (Optional) Applies only if Mode field is LIVE. Specifies the maximum number of segments in the media manifest file. After this maximum, older segments are removed from the media manifest. This number must be smaller than the number in the Keep Segments field.
+* `input_loss_action` - (Optional) Parameter that control output group behavior on input loss.
+* `iv_in_manifest` - (Optional) For use with encryptionType. The IV (Initialization Vector) is a 128-bit number used in conjunction with the key for encrypting blocks. If set to "include", IV is listed in the manifest, otherwise the IV is not in the manifest.
+* `iv_source` - (Optional) For use with encryptionType. The IV (Initialization Vector) is a 128-bit number used in conjunction with the key for encrypting blocks. If this setting is "followsSegmentNumber", it will cause the IV to change every segment (to match the segment number). If this is set to "explicit", you must enter a constantIv value.
+* `keep_segments` - (Optional) Applies only if Mode field is LIVE. Specifies the number of media segments to retain in the destination directory. This number should be bigger than indexNSegments (Num segments). We recommend (value = (2 x indexNsegments) + 1). If this "keep segments" number is too low, the following might happen: the player is still reading a media manifest file that lists this segment, but that segment has been removed from the destination directory (as directed by indexNSegments). This situation would result in a 404 HTTP error on the player.
+* `key_format` - (Optional) The value specifies how the key is represented in the resource identified by the URI. If parameter is absent, an implicit value of "identity" is used. A reverse DNS string can also be given.
+* `key_format_versions` - (Optional) Either a single positive integer version value or a slash delimited list of version values (1/2/3).
+* `key_provider_settings` - (Optional) The key provider settings. See [Key Provider Settings](#key-provider-settings) for more details.
+* `manifest_compression` - (Optional) When set to gzip, compresses HLS playlist.
+* `manifest_duration_format` - (Optional) Indicates whether the output manifest should use floating point or integer values for segment duration.
+* `min_segment_length` - (Optional) Minimum length of MPEG-2 Transport Stream segments in seconds. When set, minimum segment length is enforced by looking ahead and back within the specified range for a nearby avail and extending the segment size if needed.
+* `mode` - (Optional) If "vod", all segments are indexed and kept permanently in the destination and manifest. If "live", only the number segments specified in keepSegments and indexNSegments are kept; newer segments replace older segments, which may prevent players from rewinding all the way to the beginning of the event. VOD mode uses HLS EXT-X-PLAYLIST-TYPE of EVENT while the channel is running, converting it to a "VOD" type manifest on completion of the stream.
+* `output_selection` - (Optional) MANIFESTS\_AND\_SEGMENTS: Generates manifests (master manifest, if applicable, and media manifests) for this output group. VARIANT\_MANIFESTS\_AND\_SEGMENTS: Generates media manifests for this output group, but not a master manifest. SEGMENTS\_ONLY: Does not generate any manifests for this output group.
+* `program_date_time` - (Optional) Includes or excludes EXT-X-PROGRAM-DATE-TIME tag in .m3u8 manifest files. The value is calculated using the program date time clock.
+* `program_date_time_clock` - (Optional) Specifies the algorithm used to drive the HLS EXT-X-PROGRAM-DATE-TIME clock. Options include: INITIALIZE\_FROM\_OUTPUT\_TIMECODE: The PDT clock is initialized as a function of the first output timecode, then incremented by the EXTINF duration of each encoded segment. SYSTEM\_CLOCK: The PDT clock is initialized as a function of the UTC wall clock, then incremented by the EXTINF duration of each encoded segment. If the PDT clock diverges from the wall clock by more than 500ms, it is resynchronized to the wall clock.
+* `program_date_time_period` - (Optional) Period of insertion of EXT-X-PROGRAM-DATE-TIME entry, in seconds.
+* `redundant_manifest` - (Optional) ENABLED: The master manifest (.m3u8 file) for each pipeline includes information about both pipelines: first its own media files, then the media files of the other pipeline. This feature allows playout device that support stale manifest detection to switch from one manifest to the other, when the current manifest seems to be stale. There are still two destinations and two master manifests, but both master manifests reference the media files from both pipelines. DISABLED: The master manifest (.m3u8 file) for each pipeline includes information about its own pipeline only. For an HLS output group with MediaPackage as the destination, the DISABLED behavior is always followed. MediaPackage regenerates the manifests it serves to players so a redundant manifest from MediaLive is irrelevant.
+* `segment_length` - (Optional) Length of MPEG-2 Transport Stream segments to create in seconds. Note that segments will end on the next keyframe after this duration, so actual segment length may be longer.
+* `segments_per_subdirectory` - (Optional) Number of segments to write to a subdirectory before starting a new one. directoryStructure must be subdirectoryPerStream for this setting to have an effect.
+* `stream_inf_resolution` - (Optional) Include or exclude RESOLUTION attribute for video in EXT-X-STREAM-INF tag of variant manifest.
+* `timed_metadata_id3_frame` - (Optional) Indicates ID3 frame that has the timecode.
+* `timed_metadata_id3_period` - (Optional) Timed Metadata interval in seconds.
+* `timestamp_delta_milliseconds` - (Optional) Provides an extra millisecond delta offset to fine tune the timestamps.
+* `ts_file_mode` - (Optional) SEGMENTED\_FILES: Emit the program as segments - multiple .ts media files. SINGLE\_FILE: Applies only if Mode field is VOD. Emit the program as a single .ts media file. The media manifest includes #EXT-X-BYTERANGE tags to index segments for playback. A typical use for this value is when sending the output to AWS Elemental MediaConvert, which can accept only a single media file. Playback while the channel is running is not guaranteed due to HTTP server caching.
+
+### HLS CDN Settings
+
+* `hls_akamai_settings` - (Optional) HLS Akamai Settings. See [HLS Akamai Settings](#hls-akamai-settings) for more details.
+* `hls_basic_put_settings` - (Optional) HLS Basic Put Settings. See [HLS Basic Put Settings](#hls-basic-put-settings) for more details.
+* `hls_media_store_settings` - (Optional) HLS Media Store Settings. See [HLS Media Store Settings](#hls-media-store-settings) for more details.
+* `hls_s3_settings` - (Optional) HLS S3 Settings. See [HLS S3 Settings](#hls-s3-settings) for more details.
+* `hls_webdav_settings` - (Optional) HLS WebDAV Settings. See [HLS WebDAV Settings](#hls-webdav-settings) for more details.
+
+### HLS Akamai Settings
+
+* `connection_retry_interval` - (Optional) Number of seconds to wait before retrying connection to the CDN if the connection is lost.
+* `filecache_duration` - (Optional) Size in seconds of file cache for streaming outputs.
+* `http_transfer_mode` - (Optional) Specify whether or not to use chunked transfer encoding to Akamai. User should contact Akamai to enable this feature.
+* `num_retries` - (Optional) Number of retry attempts that will be made before the Live Event is put into an error state. Applies only if the CDN destination URI begins with "s3" or "mediastore". For other URIs, the value is always 3.
+* `restart_delay` - (Optional) If a streaming output fails, number of seconds to wait until a restart is initiated. A value of 0 means never restart.
+* `salt` - (Optional) Salt for authenticated Akamai.
+* `token` - (Optional) Token parameter for authenticated akamai. If not specified, gda is used.
+
+### HLS Basic Put Settings
+
+* `connection_retry_interval` - (Optional) Number of seconds to wait before retrying connection to the CDN if the connection is lost.
+* `filecache_duration` - (Optional) Size in seconds of file cache for streaming outputs.
+* `num_retries` - (Optional) Number of retry attempts that will be made before the Live Event is put into an error state. Applies only if the CDN destination URI begins with "s3" or "mediastore". For other URIs, the value is always 3.
+* `restart_delay` - (Optional) If a streaming output fails, number of seconds to wait until a restart is initiated. A value of 0 means never restart.
+
+### HLS Media Store Settings
+
+* `connection_retry_interval` - (Optional) Number of seconds to wait before retrying connection to the CDN if the connection is lost.
+* `filecache_duration` - (Optional) Size in seconds of file cache for streaming outputs.
+* `media_store_storage_class` - (Optional) When set to temporal, output files are stored in non-persistent memory for faster reading and writing.
+* `num_retries` - (Optional) Number of retry attempts that will be made before the Live Event is put into an error state. Applies only if the CDN destination URI begins with "s3" or "mediastore". For other URIs, the value is always 3.
+* `restart_delay` - (Optional) If a streaming output fails, number of seconds to wait until a restart is initiated. A value of 0 means never restart.
+
+### HLS S3 Settings
+
+* `canned_acl` - (Optional) Specify the canned ACL to apply to each S3 request. Defaults to none.
+
+### HLS WebDAV Settings
+
+* `connection_retry_interval` - (Optional) Number of seconds to wait before retrying connection to the CDN if the connection is lost.
+* `filecache_duration` - (Optional) Size in seconds of file cache for streaming outputs.
+* `http_transfer_mode` - (Optional) Specify whether or not to use chunked transfer encoding to WebDAV.
+* `num_retries` - (Optional) Number of retry attempts that will be made before the Live Event is put into an error state. Applies only if the CDN destination URI begins with "s3" or "mediastore". For other URIs, the value is always 3.
+* `restart_delay` - (Optional) If a streaming output fails, number of seconds to wait until a restart is initiated. A value of 0 means never restart.
+
+### Key Provider Settings
+
+* `static_key_settings` - (Optional) Static Key Settings. See [Static Key Settings](#static-key-settings) for more details.
+
+### Static Key Settings
+
+* `static_key_value` - (Required) Static key value as a 32 character hexadecimal string.
+* `key_provider_server` - (Optional) The URL of the license server used for protecting content. See [Key Provider Server](#key-provider-server) for more details.
+
+### Key Provider Server
+
+* `password_param` – (Optional) Key used to extract the password from EC2 Parameter store.
+* `uri` – (Required) Path to a file accessible to the live stream.
+* `username` – (Optional) Username to be used.
+
+### MS Smooth Group Settings
+
+* `destination` - (Required) Smooth Streaming publish point on an IIS server. Elemental Live acts as a "Push" encoder to IIS. See [Destination](#destination) for more details.
+* `acquisition_point_id` - (Optional) The ID to include in each message in the sparse track. Ignored if sparseTrackType is NONE.
+* `audio_only_timecode_control` - (Optional) If set to passthrough for an audio-only MS Smooth output, the fragment absolute time will be set to the current timecode. This option does not write timecodes to the audio elementary stream.
+* `certificate_mode` - (Optional) If set to verifyAuthenticity, verify the https certificate chain to a trusted Certificate Authority (CA). This will cause https outputs to self-signed certificates to fail.
+* `connection_retry_interval` - (Optional) Number of seconds to wait before retrying connection to the IIS server if the connection is lost. Content will be cached during this time and the cache will be be delivered to the IIS server once the connection is re-established.
+* `event_id` - (Optional) MS Smooth event ID to be sent to the IIS server. Should only be specified if eventIdMode is set to useConfigured.
+* `event_id_mode` - (Optional) Specifies whether or not to send an event ID to the IIS server. If no event ID is sent and the same Live Event is used without changing the publishing point, clients might see cached video from the previous run. Options: - "useConfigured" - use the value provided in eventId. - "useTimestamp" - generate and send an event ID based on the current timestamp. - "noEventId" - do not send an event ID to the IIS server.
+* `event_stop_behavior` - (Optional) When set to sendEos, send EOS signal to IIS server when stopping the event.
+* `filecache_duration` - (Optional) Size in seconds of file cache for streaming outputs.
+* `fragment_length` - (Optional) Length of mp4 fragments to generate (in seconds). Fragment length must be compatible with GOP size and framerate.
+* `input_loss_action` - (Optional) Parameter that control output group behavior on input loss.
+* `num_retries` - (Optional) Number of retry attempts.
+* `restart_delay` - (Optional) Number of seconds before initiating a restart due to output failure, due to exhausting the numRetries on one segment, or exceeding filecacheDuration.
+* `send_delay_ms` - (Optional) Number of milliseconds to delay the output from the second pipeline.
+* `sparse_track_type` - (Optional) Identifies the type of data to place in the sparse track: - SCTE35: Insert SCTE-35 messages from the source content. With each message, insert an IDR frame to start a new segment. - SCTE35\_WITHOUT\_SEGMENTATION: Insert SCTE-35 messages from the source content. With each message, insert an IDR frame but don't start a new segment. - NONE: Don't generate a sparse track for any outputs in this output group.
+* `stream_manifest_behavior` - (Optional) When set to send, send stream manifest so publishing point doesn't start until all streams start.
+* `timestamp_offset` - (Optional) Timestamp offset for the event. Only used if timestampOffsetMode is set to useConfiguredOffset.
+* `timestamp_offset_mode` - (Optional) Type of timestamp date offset to use. - useEventStartDate: Use the date the event was started as the offset. - useConfiguredOffset: Use an explicitly configured date as the offset.
+
+### Caption Language Mappings
+
+* `caption_channel` - (Required) The closed caption channel being described by this CaptionLanguageMapping. Each channel mapping must have a unique channel number (maximum of 4).
+* `language_code` - (Required) Three character ISO 639-2 language code (see http://www.loc.gov/standards/iso639-2).
+* `language_description` - (Required) Textual description of language.
+
 ### Media Package Group Settings
 
 * `destination` - (Required) A director and base filename where archive files should be written. See [Destination](#destination) for more details.
@@ -692,6 +862,7 @@ The following arguments are optional:
 * `cache_full_behavior` - (Optional) Controls behavior when content cache fills up.
 * `cache_length` - (Optional) Cache length in seconds, is used to calculate buffer size.
 * `caption_data` - (Optional) Controls the types of data that passes to onCaptionInfo outputs.
+* `include_filler_nal_units` - (Optional) Applies only when the rate control mode (in the codec settings) is CBR (constant bit rate). Controls whether the RTMP output stream is padded (with FILL NAL units) in order to achieve a constant bit rate that is truly constant. When there is no padding, the bandwidth varies (up to the bitrate value in the codec settings). We recommend that you choose Auto.
 * `input_loss_action` - (Optional) Controls the behavior of the RTMP group if input becomes unavailable.
 * `restart_delay` - (Optional) Number of seconds to wait until a restart is initiated.
 
@@ -716,6 +887,8 @@ The following arguments are optional:
 ### Output Settings
 
 * `archive_output_settings` - (Optional) Archive output settings. See [Archive Output Settings](#archive-output-settings) for more details.
+* `frame_capture_output_settings` - (Optional) Frame capture output settings. See [Frame Capture Output Settings](#frame-capture-output-settings) for more details.
+* `hls_output_settings` - (Optional) HLS output settings. See [HLS Output Settings](#hls-output-settings) for more details.
 * `media_package_output_settings` - (Optional) Media package output settings. This can be set as an empty block.
 * `multiplex_output_settings` - (Optional) Multiplex output settings. See [Multiplex Output Settings](#multiplex-output-settings) for more details.
 * `rtmp_output_settings` - (Optional) RTMP output settings. See [RTMP Output Settings](#rtmp-output-settings) for more details.
@@ -726,6 +899,63 @@ The following arguments are optional:
 * `container_settings` - (Required) Settings specific to the container type of the file. See [Container Settings](#container-settings) for more details.
 * `extension` - (Optional) Output file extension.
 * `name_modifier` - (Optional) String concatenated to the end of the destination filename. Required for multiple outputs of the same type.
+
+### Frame Capture Output Settings
+
+* `name_modifier` - (Optional) Required if the output group contains more than one output. This modifier forms part of the output file name.
+
+### HLS Output Settings
+
+* `hls_settings` - (Required) Settings regarding the underlying stream. These settings are different for audio-only outputs. See [HLS Settings](#hls-settings) for more details.
+* `h265_packaging_type` - (Optional) Only applicable when this output is referencing an H.265 video description. Specifies whether MP4 segments should be packaged as HEV1 or HVC1.
+* `name_modifier` - (Optional) String concatenated to the end of the destination filename. Accepts "Format Identifiers":#formatIdentifierParameters.
+* `segment_modifier` - (Optional) String concatenated to end of segment filenames.
+
+### HLS Settings
+
+* `audio_only_hls_settings` - (Optional) Audio Only HLS Settings. See [Audio Only HLS Settings](#audio-only-hls-settings) for more details.
+* `fmp4_hls_settings` - (Optional) FMP4 HLS Settings. See [FMP4 HLS Settings](#fmp4-hls-settings) for more details.
+* `frame_capture_hls_settings` - (Optional) Frame Capture HLS Settings.
+* `standard_hls_settings` - (Optional) Standard HLS Settings. See [Standard HLS Settings](#standard-hls-settings) for more details.
+
+### Audio Only HLS Settings
+
+* `audio_group_id` - (Optional) Specifies the group to which the audio Rendition belongs.
+* `audio_only_image` - (Optional) Specifies the .jpg or .png image to use as the cover art for an audio-only output. We recommend a low bit-size file because the image increases the output audio bandwidth. The image is attached to the audio as an ID3 tag, frame type APIC, picture type 0x10, as per the "ID3 tag version 2.4.0 - Native Frames" standard.
+* `audio_track_type` - (Optional) Four types of audio-only tracks are supported: Audio-Only Variant Stream The client can play back this audio-only stream instead of video in low-bandwidth scenarios. Represented as an EXT-X-STREAM-INF in the HLS manifest. Alternate Audio, Auto Select, Default Alternate rendition that the client should try to play back by default. Represented as an EXT-X-MEDIA in the HLS manifest with DEFAULT=YES, AUTOSELECT=YES Alternate Audio, Auto Select, Not Default Alternate rendition that the client may try to play back by default. Represented as an EXT-X-MEDIA in the HLS manifest with DEFAULT=NO, AUTOSELECT=YES Alternate Audio, not Auto Select Alternate rendition that the client will not try to play back by default. Represented as an EXT-X-MEDIA in the HLS manifest with DEFAULT=NO, AUTOSELECT=NO
+* `segment_type` - (Optional) Specifies the segment type.
+
+### FMP4 HLS Settings
+
+* `audio_rendition_sets` - (Optional) List all the audio groups that are used with the video output stream. Input all the audio GROUP-IDs that are associated to the video, separate by ','.
+* `nielsen_id3_behavior` - (Optional) If set to passthrough, Nielsen inaudible tones for media tracking will be detected in the input audio and an equivalent ID3 tag will be inserted in the output.
+* `timed_metadata_behavior` - (Optional) When set to passthrough, timed metadata is passed through from input to output.
+
+### Standard HLS Settings
+
+* `m3u8_settings` - (Required) Settings information for the .m3u8 container. See [M3U8 Settings](#m3u8-settings) for more details.
+* `audio_rendition_sets` - (Optional) List all the audio groups that are used with the video output stream. Input all the audio GROUP-IDs that are associated to the video, separate by ','.
+
+### M3U8 Settings
+
+* `audio_frames_per_pes` - (Optional) The number of audio frames to insert for each PES packet.
+* `audio_pids` - (Optional) Packet Identifier (PID) of the elementary audio stream(s) in the transport stream. Multiple values are accepted, and can be entered in ranges and/or by comma separation. Can be entered as decimal or hexadecimal values.
+* `klv_behavior` - (Optional) If set to passthrough, passes any KLV data from the input source to this output.
+* `klv_data_pids` - (Optional) Packet Identifier (PID) for input source KLV data to this output. Multiple values are accepted, and can be entered in ranges and/or by comma separation. Can be entered as decimal or hexadecimal values. Each PID specified must be in the range of 32 (or 0x20)..8182 (or 0x1ff6).
+* `nielsen_id3_behavior` - (Optional) If set to passthrough, Nielsen inaudible tones for media tracking will be detected in the input audio and an equivalent ID3 tag will be inserted in the output.
+* `pat_interval` - (Optional) The number of milliseconds between instances of this table in the output transport stream. A value of "0" writes out the PMT once per segment file.
+* `pcr_control` - (Optional) When set to pcrEveryPesPacket, a Program Clock Reference value is inserted for every Packetized Elementary Stream (PES) header. This parameter is effective only when the PCR PID is the same as the video or audio elementary stream.
+* `pcr_period` - (Optional) Maximum time in milliseconds between Program Clock References (PCRs) inserted into the transport stream.
+* `pcr_pid` - (Optional) Packet Identifier (PID) of the Program Clock Reference (PCR) in the transport stream. When no value is given, the encoder will assign the same value as the Video PID. Can be entered as a decimal or hexadecimal value.
+* `pmt_interval` - (Optional) The number of milliseconds between instances of this table in the output transport stream. A value of "0" writes out the PMT once per segment file.
+* `pmt_pid` - (Optional) Packet Identifier (PID) for the Program Map Table (PMT) in the transport stream. Can be entered as a decimal or hexadecimal value.
+* `program_num` - (Optional) The value of the program number field in the Program Map Table.
+* `scte35_behavior` - (Optional) If set to passthrough, passes any SCTE-35 signals from the input source to this output.
+* `scte35_pid` - (Optional) Packet Identifier (PID) of the SCTE-35 stream in the transport stream. Can be entered as a decimal or hexadecimal value.
+* `timed_metadata_behavior` - (Optional) When set to passthrough, timed metadata is passed through from input to output.
+* `timed_metadata_pid` - (Optional) Packet Identifier (PID) of the timed metadata stream in the transport stream. Can be entered as a decimal or hexadecimal value. Valid values are 32 (or 0x20)..8182 (or 0x1ff6).
+* `transport_stream_id` - (Optional) The value of the transport stream ID field in the Program Map Table.
+* `video_pid` - (Optional) Packet Identifier (PID) of the elementary video stream in the transport stream. Can be entered as a decimal or hexadecimal value.
 
 ### Multiplex Output Settings
 
