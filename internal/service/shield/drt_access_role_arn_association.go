@@ -68,7 +68,7 @@ func (r *resourceDRTAccessRoleARNAssociation) Schema(ctx context.Context, req re
 				Validators: []validator.String{
 					stringvalidator.LengthBetween(1, 2048),
 					stringvalidator.RegexMatches(
-						regexache.MustCompile(`^arn:?[A-Za-z-]+:iam::\d{12}:role/?[0-9A-Za-z_+=,.@_/-]+`),
+						regexache.MustCompile(`^arn:?[A-Za-z-]+:iam::\d{12}:role/?[0-9A-Za-z_+,./=@-]+`),
 						"must match arn pattern",
 					),
 				},

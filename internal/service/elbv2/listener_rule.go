@@ -385,7 +385,7 @@ func ResourceListenerRule() *schema.Resource {
 									"http_header_name": {
 										Type:         schema.TypeString,
 										Required:     true,
-										ValidateFunc: validation.StringMatch(regexache.MustCompile("^[0-9A-Za-z_!#$%&'*+.^`|~-]{1,40}$"), ""),
+										ValidateFunc: validation.StringMatch(regexache.MustCompile("^[0-9A-Za-z_!#$%&'*+,.^`|~-]{1,40}$"), ""), // was "," meant to be included? +-. creates a range including: +,-.
 									},
 									"values": {
 										Type: schema.TypeSet,
