@@ -247,7 +247,7 @@ func ResourceTarget() *schema.Resource {
 							Optional: true,
 							ValidateDiagFunc: allDiagFunc(
 								validation.MapKeyLenBetween(0, 512),
-								validation.MapKeyMatch(regexache.MustCompile(`^[0-9A-Za-z_!#$%&'*+.^|~-]+$`), ""),
+								validation.MapKeyMatch(regexache.MustCompile(`^[0-9A-Za-z_!#$%&'*+,.^|~-]+$`), ""), // was "," meant to be included? +-. creates a range including: +,-.
 								validation.MapValueLenBetween(0, 512),
 								validation.MapValueMatch(regexache.MustCompile(`^[ \t]*[\x20-\x7E]+([ \t]+[\x20-\x7E]+)*[ \t]*$`), ""),
 							),
