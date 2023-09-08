@@ -5,7 +5,6 @@ package ec2
 
 import (
 	"context"
-	"errors"
 	"log"
 	"time"
 
@@ -16,8 +15,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -26,12 +25,12 @@ import (
 
 // @SDKResource("aws_verifiedaccess_trust_provider", name="Verified Access Trust Provider")
 // @Tags(identifierAttribute="id")
-func ResourceVerifiedaccessTrustProvider() *schema.Resource {
+func ResourceVerifiedAccessTrustProvider() *schema.Resource {
 	return &schema.Resource{
-		CreateWithoutTimeout: resourceVerifiedaccessTrustProviderCreate,
-		ReadWithoutTimeout:   resourceVerifiedaccessTrustProviderRead,
-		UpdateWithoutTimeout: resourceVerifiedaccessTrustProviderUpdate,
-		DeleteWithoutTimeout: resourceVerifiedaccessTrustProviderDelete,
+		CreateWithoutTimeout: resourceVerifiedAccessTrustProviderCreate,
+		ReadWithoutTimeout:   resourceVerifiedAccessTrustProviderRead,
+		UpdateWithoutTimeout: resourceVerifiedAccessTrustProviderUpdate,
+		DeleteWithoutTimeout: resourceVerifiedAccessTrustProviderDelete,
 
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
@@ -140,146 +139,128 @@ func ResourceVerifiedaccessTrustProvider() *schema.Resource {
 	}
 }
 
-const (
-	ResNameVerifiedAccessTrustProvider = "Verified Access Trust Provider"
-)
-
-func resourceVerifiedaccessTrustProviderCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceVerifiedAccessTrustProviderCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
-	in := &ec2.CreateVerifiedAccessTrustProviderInput{
+	input := &ec2.CreateVerifiedAccessTrustProviderInput{
 		PolicyReferenceName: aws.String(d.Get("policy_reference_name").(string)),
-		TrustProviderType:   types.TrustProviderType(d.Get("trust_provider_type").(string)),
 		TagSpecifications:   getTagSpecificationsInV2(ctx, types.ResourceTypeVerifiedAccessTrustProvider),
+		TrustProviderType:   types.TrustProviderType(d.Get("trust_provider_type").(string)),
 	}
 
 	if v, ok := d.GetOk("description"); ok {
-		in.Description = aws.String(v.(string))
+		input.Description = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("device_options"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		in.DeviceOptions = expandCreateVerifiedAccessTrustProviderDeviceOptions(v.([]interface{})[0].(map[string]interface{}))
+		input.DeviceOptions = expandCreateVerifiedAccessTrustProviderDeviceOptions(v.([]interface{})[0].(map[string]interface{}))
 	}
 
 	if v, ok := d.GetOk("device_trust_provider_type"); ok {
-		in.DeviceTrustProviderType = types.DeviceTrustProviderType(v.(string))
-	}
-
-	if v, ok := d.GetOk("user_trust_provider_type"); ok {
-		in.UserTrustProviderType = types.UserTrustProviderType(v.(string))
+		input.DeviceTrustProviderType = types.DeviceTrustProviderType(v.(string))
 	}
 
 	if v, ok := d.GetOk("oidc_options"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		in.OidcOptions = expandCreateVerifiedAccessTrustProviderOIDCOptions(v.([]interface{})[0].(map[string]interface{}))
+		input.OidcOptions = expandCreateVerifiedAccessTrustProviderOIDCOptions(v.([]interface{})[0].(map[string]interface{}))
 	}
 
-	out, err := conn.CreateVerifiedAccessTrustProvider(ctx, in)
+	if v, ok := d.GetOk("user_trust_provider_type"); ok {
+		input.UserTrustProviderType = types.UserTrustProviderType(v.(string))
+	}
+
+	output, err := conn.CreateVerifiedAccessTrustProvider(ctx, input)
+
 	if err != nil {
-		return append(diags, create.DiagError(names.EC2, create.ErrActionCreating, ResNameVerifiedAccessTrustProvider, "", err)...)
+		return sdkdiag.AppendErrorf(diags, "creating Verified Access Trust Provider: %s", err)
 	}
 
-	if out == nil {
-		return append(diags, create.DiagError(names.EC2, create.ErrActionCreating, ResNameVerifiedAccessTrustProvider, "", errors.New("empty output"))...)
-	}
+	d.SetId(aws.ToString(output.VerifiedAccessTrustProvider.VerifiedAccessTrustProviderId))
 
-	d.SetId(aws.ToString(out.VerifiedAccessTrustProvider.VerifiedAccessTrustProviderId))
-
-	return append(diags, resourceVerifiedaccessTrustProviderRead(ctx, d, meta)...)
+	return append(diags, resourceVerifiedAccessTrustProviderRead(ctx, d, meta)...)
 }
 
-func resourceVerifiedaccessTrustProviderRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceVerifiedAccessTrustProviderRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
-	output, err := FindVerifiedaccessTrustProviderByID(ctx, conn, d.Id())
+	output, err := FindVerifiedAccessTrustProviderByID(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
-		log.Printf("[WARN] EC2 VerifiedaccessTrustProvider (%s) not found, removing from state", d.Id())
+		log.Printf("[WARN] EC2 Verified Access Trust Provider (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
 	}
 
 	if err != nil {
-		return append(diags, create.DiagError(names.EC2, create.ErrActionReading, ResNameVerifiedAccessTrustProvider, d.Id(), err)...)
+		return sdkdiag.AppendErrorf(diags, "reading Verified Access Trust Provider (%s): %s", d.Id(), err)
 	}
 
-	d.Set("description", output.VerifiedAccessTrustProviders[0].Description)
-
-	if v := output.VerifiedAccessTrustProviders[0].DeviceOptions; v != nil {
+	d.Set("description", output.Description)
+	if v := output.DeviceOptions; v != nil {
 		if err := d.Set("device_options", flattenDeviceOptions(v)); err != nil {
-			return create.DiagError(names.EC2, create.ErrActionSetting, ResNameVerifiedAccessTrustProvider, d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "setting device_options: %s", err)
 		}
+	} else {
+		d.Set("device_options", nil)
 	}
-
-	d.Set("device_trust_provider_type", output.VerifiedAccessTrustProviders[0].DeviceTrustProviderType)
-
-	if v := output.VerifiedAccessTrustProviders[0].OidcOptions; v != nil {
+	d.Set("device_trust_provider_type", output.DeviceTrustProviderType)
+	if v := output.OidcOptions; v != nil {
 		if err := d.Set("oidc_options", flattenOIDCOptions(v, d.Get("oidc_options.0.client_secret").(string))); err != nil {
-			return create.DiagError(names.EC2, create.ErrActionSetting, ResNameVerifiedAccessTrustProvider, d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "setting oidc_options: %s", err)
 		}
+	} else {
+		d.Set("oidc_options", nil)
 	}
+	d.Set("policy_reference_name", output.PolicyReferenceName)
+	d.Set("trust_provider_type", output.TrustProviderType)
+	d.Set("user_trust_provider_type", output.UserTrustProviderType)
 
-	d.Set("policy_reference_name", output.VerifiedAccessTrustProviders[0].PolicyReferenceName)
-	d.Set("trust_provider_type", output.VerifiedAccessTrustProviders[0].TrustProviderType)
-	d.Set("user_trust_provider_type", output.VerifiedAccessTrustProviders[0].UserTrustProviderType)
-	setTagsOutV2(ctx, output.VerifiedAccessTrustProviders[0].Tags)
+	setTagsOutV2(ctx, output.Tags)
+
 	return diags
 }
 
-func resourceVerifiedaccessTrustProviderUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceVerifiedAccessTrustProviderUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
-	update := false
+	if d.HasChangesExcept("tags", "tags_all") {
+		input := &ec2.ModifyVerifiedAccessTrustProviderInput{
+			VerifiedAccessTrustProviderId: aws.String(d.Id()),
+		}
 
-	in := &ec2.ModifyVerifiedAccessTrustProviderInput{
-		VerifiedAccessTrustProviderId: aws.String(d.Id()),
-	}
+		if d.HasChanges("description") {
+			input.Description = aws.String(d.Get("description").(string))
+		}
 
-	if d.HasChanges("description") {
-		if v, ok := d.GetOk("description"); ok {
-			in.Description = aws.String(v.(string))
-			update = true
+		if d.HasChanges("oidc_options") {
+			if v, ok := d.GetOk("oidc_options"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+				input.OidcOptions = expandModifyVerifiedAccessTrustProviderOIDCOptions(v.([]interface{})[0].(map[string]interface{}))
+			}
+		}
+
+		_, err := conn.ModifyVerifiedAccessTrustProvider(ctx, input)
+
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating Verified Access Trust Provider (%s): %s", d.Id(), err)
 		}
 	}
 
-	if d.HasChanges("oidc_options") {
-		if v, ok := d.GetOk("oidc_options"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-			in.OidcOptions = expandModifyVerifiedAccessTrustProviderOIDCOptions(v.([]interface{})[0].(map[string]interface{}))
-			update = true
-		}
-	}
-
-	if !update {
-		return diags
-	}
-
-	log.Printf("[DEBUG] Updating EC2 VerifiedaccessTrustProvider (%s): %#v", d.Id(), in)
-	_, err := conn.ModifyVerifiedAccessTrustProvider(ctx, in)
-	if err != nil {
-		return append(diags, create.DiagError(names.EC2, create.ErrActionUpdating, ResNameVerifiedAccessTrustProvider, d.Id(), err)...)
-	}
-
-	return append(diags, resourceVerifiedaccessTrustProviderRead(ctx, d, meta)...)
+	return append(diags, resourceVerifiedAccessTrustProviderRead(ctx, d, meta)...)
 }
 
-func resourceVerifiedaccessTrustProviderDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceVerifiedAccessTrustProviderDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
-	log.Printf("[INFO] Deleting EC2 VerifiedaccessTrustProvider %s", d.Id())
-
+	log.Printf("[INFO] Deleting Verified Access Trust Provider: %s", d.Id())
 	_, err := conn.DeleteVerifiedAccessTrustProvider(ctx, &ec2.DeleteVerifiedAccessTrustProviderInput{
 		VerifiedAccessTrustProviderId: aws.String(d.Id()),
 	})
 
 	if err != nil {
-		return append(diags, create.DiagError(names.EC2, create.ErrActionDeleting, ResNameVerifiedAccessTrustProvider, d.Id(), err)...)
+		return sdkdiag.AppendErrorf(diags, "deleting Verified Access Trust Provider (%s): %s", d.Id(), err)
 	}
 
 	return diags

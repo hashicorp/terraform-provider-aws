@@ -944,7 +944,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceVerifiedaccessTrustProvider,
+			Factory:  ResourceVerifiedAccessTrustProvider,
 			TypeName: "aws_verifiedaccess_trust_provider",
 			Name:     "Verified Access Trust Provider",
 			Tags: &types.ServicePackageResourceTags{

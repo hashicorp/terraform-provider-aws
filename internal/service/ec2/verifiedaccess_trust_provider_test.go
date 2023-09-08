@@ -5,17 +5,16 @@ package ec2_test
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
+	"github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -28,7 +27,7 @@ func TestAccVerifiedAccessTrustProvider_basic(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var verifiedaccesstrustprovider ec2.DescribeVerifiedAccessTrustProvidersOutput
+	var v types.VerifiedAccessTrustProvider
 	resourceName := "aws_verifiedaccess_trust_provider.test"
 	policyReferenceName := "test"
 	trustProviderType := "user"
@@ -49,7 +48,7 @@ func TestAccVerifiedAccessTrustProvider_basic(t *testing.T) {
 			{
 				Config: testAccVerifiedAccessTrustProviderConfig_basic(policyReferenceName, trustProviderType, userTrustProviderType, description),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVerifiedAccessTrustProviderExists(ctx, resourceName, &verifiedaccesstrustprovider),
+					testAccCheckVerifiedAccessTrustProviderExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "description", description),
 					resource.TestCheckResourceAttr(resourceName, "policy_reference_name", policyReferenceName),
 					resource.TestCheckResourceAttr(resourceName, "trust_provider_type", trustProviderType),
@@ -68,7 +67,7 @@ func TestAccVerifiedAccessTrustProvider_basic(t *testing.T) {
 
 func TestAccVerifiedAccessTrustProvider_deviceOptions(t *testing.T) {
 	ctx := acctest.Context(t)
-	var verifiedaccesstrustprovider ec2.DescribeVerifiedAccessTrustProvidersOutput
+	var v types.VerifiedAccessTrustProvider
 	resourceName := "aws_verifiedaccess_trust_provider.test"
 	policyReferenceName := "test"
 	trustProviderType := "device"
@@ -87,7 +86,7 @@ func TestAccVerifiedAccessTrustProvider_deviceOptions(t *testing.T) {
 			{
 				Config: testAccVerifiedAccessTrustProviderConfig_deviceOptions(policyReferenceName, trustProviderType, deviceTrustProviderType, tenantId),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVerifiedAccessTrustProviderExists(ctx, resourceName, &verifiedaccesstrustprovider),
+					testAccCheckVerifiedAccessTrustProviderExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "device_options.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "device_options.0.tenant_id", tenantId),
 					resource.TestCheckResourceAttr(resourceName, "device_trust_provider_type", deviceTrustProviderType),
@@ -111,7 +110,7 @@ func TestAccVerifiedAccessTrustProvider_disappears(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var verifiedaccesstrustprovider ec2.DescribeVerifiedAccessTrustProvidersOutput
+	var v types.VerifiedAccessTrustProvider
 	resourceName := "aws_verifiedaccess_trust_provider.test"
 	policyReferenceName := "test"
 	trustProviderType := "user"
@@ -132,8 +131,8 @@ func TestAccVerifiedAccessTrustProvider_disappears(t *testing.T) {
 			{
 				Config: testAccVerifiedAccessTrustProviderConfig_basic(policyReferenceName, trustProviderType, userTrustProviderType, description),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVerifiedAccessTrustProviderExists(ctx, resourceName, &verifiedaccesstrustprovider),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfec2.ResourceVerifiedaccessTrustProvider(), resourceName),
+					testAccCheckVerifiedAccessTrustProviderExists(ctx, resourceName, &v),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfec2.ResourceVerifiedAccessTrustProvider(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -141,34 +140,9 @@ func TestAccVerifiedAccessTrustProvider_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckVerifiedAccessTrustProviderDestroy(ctx context.Context) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
-
-		for _, rs := range s.RootModule().Resources {
-			if rs.Type != "aws_verifiedaccess_trust_provider" {
-				continue
-			}
-
-			_, err := tfec2.FindVerifiedaccessTrustProviderByID(ctx, conn, rs.Primary.ID)
-			if tfresource.NotFound(err) {
-				continue
-			}
-
-			if err != nil {
-				return err
-			}
-
-			return create.Error(names.EC2, create.ErrActionCheckingDestroyed, tfec2.ResNameVerifiedAccessTrustProvider, rs.Primary.ID, errors.New("not destroyed"))
-		}
-
-		return nil
-	}
-}
-
 func TestAccVerifiedAccessTrustProvider_oidcOptions(t *testing.T) {
 	ctx := acctest.Context(t)
-	var verifiedaccesstrustprovider ec2.DescribeVerifiedAccessTrustProvidersOutput
+	var v types.VerifiedAccessTrustProvider
 	resourceName := "aws_verifiedaccess_trust_provider.test"
 	policyReferenceName := "test"
 	trustProviderType := "user"
@@ -193,7 +167,7 @@ func TestAccVerifiedAccessTrustProvider_oidcOptions(t *testing.T) {
 			{
 				Config: testAccVerifiedAccessTrustProviderConfig_oidcOptions(policyReferenceName, trustProviderType, userTrustProviderType, authorizationEndpoint, clientId, clientSecret, issuer, scope, tokenEndpoint, userInfoEndpoint),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVerifiedAccessTrustProviderExists(ctx, resourceName, &verifiedaccesstrustprovider),
+					testAccCheckVerifiedAccessTrustProviderExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "oidc_options.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "oidc_options.0.authorization_endpoint", authorizationEndpoint),
 					resource.TestCheckResourceAttr(resourceName, "oidc_options.0.client_id", clientId),
@@ -219,7 +193,7 @@ func TestAccVerifiedAccessTrustProvider_oidcOptions(t *testing.T) {
 
 func TestAccVerifiedAccessTrustProvider_tags(t *testing.T) {
 	ctx := acctest.Context(t)
-	var verifiedaccesstrustprovider ec2.DescribeVerifiedAccessTrustProvidersOutput
+	var v types.VerifiedAccessTrustProvider
 	resourceName := "aws_verifiedaccess_trust_provider.test"
 	policyReferenceName := "test"
 	trustProviderType := "user"
@@ -239,7 +213,7 @@ func TestAccVerifiedAccessTrustProvider_tags(t *testing.T) {
 			{
 				Config: testAccVerifiedAccessTrustProviderConfig_tags1(policyReferenceName, trustProviderType, userTrustProviderType, description, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVerifiedAccessTrustProviderExists(ctx, resourceName, &verifiedaccesstrustprovider),
+					testAccCheckVerifiedAccessTrustProviderExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
@@ -247,7 +221,7 @@ func TestAccVerifiedAccessTrustProvider_tags(t *testing.T) {
 			{
 				Config: testAccVerifiedAccessTrustProviderConfig_tags2(policyReferenceName, trustProviderType, userTrustProviderType, description, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVerifiedAccessTrustProviderExists(ctx, resourceName, &verifiedaccesstrustprovider),
+					testAccCheckVerifiedAccessTrustProviderExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
@@ -256,7 +230,7 @@ func TestAccVerifiedAccessTrustProvider_tags(t *testing.T) {
 			{
 				Config: testAccVerifiedAccessTrustProviderConfig_tags1(policyReferenceName, trustProviderType, userTrustProviderType, description, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVerifiedAccessTrustProviderExists(ctx, resourceName, &verifiedaccesstrustprovider),
+					testAccCheckVerifiedAccessTrustProviderExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
@@ -271,24 +245,48 @@ func TestAccVerifiedAccessTrustProvider_tags(t *testing.T) {
 	})
 }
 
-func testAccCheckVerifiedAccessTrustProviderExists(ctx context.Context, name string, verifiedaccesstrustprovider *ec2.DescribeVerifiedAccessTrustProvidersOutput) resource.TestCheckFunc {
+func testAccCheckVerifiedAccessTrustProviderExists(ctx context.Context, n string, v *types.VerifiedAccessTrustProvider) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[name]
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return create.Error(names.EC2, create.ErrActionCheckingExistence, tfec2.ResNameVerifiedAccessTrustProvider, name, errors.New("not found"))
-		}
-		if rs.Primary.ID == "" {
-			return create.Error(names.EC2, create.ErrActionCheckingExistence, tfec2.ResNameVerifiedAccessTrustProvider, name, errors.New("not set"))
+			return fmt.Errorf("Not found: %s", n)
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
-		resp, err := tfec2.FindVerifiedaccessTrustProviderByID(ctx, conn, rs.Primary.ID)
+		output, err := tfec2.FindVerifiedAccessTrustProviderByID(ctx, conn, rs.Primary.ID)
+
 		if err != nil {
-			return create.Error(names.EC2, create.ErrActionCheckingExistence, tfec2.ResNameVerifiedAccessTrustProvider, rs.Primary.ID, err)
+			return err
 		}
 
-		*verifiedaccesstrustprovider = *resp
+		*v = *output
+
+		return nil
+	}
+}
+
+func testAccCheckVerifiedAccessTrustProviderDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
+
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_verifiedaccess_trust_provider" {
+				continue
+			}
+
+			_, err := tfec2.FindVerifiedAccessTrustProviderByID(ctx, conn, rs.Primary.ID)
+
+			if tfresource.NotFound(err) {
+				continue
+			}
+
+			if err != nil {
+				return err
+			}
+
+			return fmt.Errorf("Verified Access Trust Provider %s still exists", rs.Primary.ID)
+		}
 
 		return nil
 	}
