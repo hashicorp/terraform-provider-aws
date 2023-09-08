@@ -2470,7 +2470,7 @@ resource "aws_iot_topic_rule" "test" {
   sql_version = "2015-10-08"
 
   cloudwatch_alarm {
-    alarm_name   = "%s"
+    alarm_name   = %[2]q
     role_arn     = aws_iam_role.test.arn
     state_reason = "test"
     state_value  = "OK"
@@ -2490,7 +2490,7 @@ resource "aws_iot_topic_rule" "test" {
   sql_version = "2015-10-08"
 
   cloudwatch_logs {
-    log_group_name = "%s"
+    log_group_name = %[2]q
     role_arn       = aws_iam_role.test.arn
   }
 
@@ -2513,7 +2513,7 @@ resource "aws_iot_topic_rule" "test" {
   sql_version = "2015-10-08"
 
   cloudwatch_metric {
-    metric_name      = "%s"
+    metric_name      = %[2]q
     metric_namespace = "TestNS"
     metric_value     = "10"
     metric_unit      = "s"
@@ -2539,7 +2539,7 @@ resource "aws_iot_topic_rule" "test" {
     hash_key_value = "hkv"
     payload_field  = "pf"
     role_arn       = aws_iam_role.test.arn
-    table_name     = "%s"
+    table_name     = %[2]q
   }
 }
 `, rName, tableName))
@@ -2564,7 +2564,7 @@ resource "aws_iot_topic_rule" "test" {
     range_key_value = "rkv"
     range_key_type  = "STRING"
     role_arn        = aws_iam_role.test.arn
-    table_name      = "%s"
+    table_name      = %[2]q
     operation       = "INSERT"
   }
 }
@@ -2583,7 +2583,7 @@ resource "aws_iot_topic_rule" "test" {
 
   dynamodbv2 {
     put_item {
-      table_name = "%s"
+      table_name = %[2]q
     }
 
     role_arn = aws_iam_role.test.arn
@@ -2607,7 +2607,7 @@ resource "aws_iot_topic_rule" "test" {
   elasticsearch {
     endpoint = "https://domain.${data.aws_region.current.name}.es.${data.aws_partition.current.dns_suffix}"
     id       = "myIdentifier"
-    index    = "%s"
+    index    = %[2]q
     type     = "mydocument"
     role_arn = aws_iam_role.test.arn
   }
@@ -2626,7 +2626,7 @@ resource "aws_iot_topic_rule" "test" {
   sql_version = "2015-10-08"
 
   firehose {
-    delivery_stream_name = "%s"
+    delivery_stream_name = %[2]q
     role_arn             = aws_iam_role.test.arn
   }
 
@@ -2771,7 +2771,7 @@ resource "aws_iot_topic_rule" "test" {
   sql_version = "2015-10-08"
 
   iot_analytics {
-    channel_name = "%s"
+    channel_name = %[2]q
     role_arn     = aws_iam_role.test.arn
   }
 }
@@ -2853,11 +2853,11 @@ resource "aws_iot_topic_rule" "test" {
 
   kafka {
     destination_arn = "arn:${data.aws_partition.current.partition}:iot:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:ruledestination/vpc/pretend-this-is-a-uuid"
-    topic           = "%s"
+    topic           = %[2]q
 
     client_properties = {
       "acks"                  = "1"
-      "bootstrap.servers"     = "%s"
+      "bootstrap.servers"     = %[3]q
       "compression.type"      = "none"
       "key.serializer"        = "org.apache.kafka.common.serialization.StringSerializer"
       "security.protocol"     = "SSL"
@@ -2881,7 +2881,7 @@ resource "aws_iot_topic_rule" "test" {
   sql_version = "2015-10-08"
 
   kinesis {
-    stream_name = "%s"
+    stream_name = %[2]q
     role_arn    = aws_iam_role.test.arn
   }
 }
@@ -2919,7 +2919,7 @@ resource "aws_iot_topic_rule" "test" {
 
   republish {
     role_arn = aws_iam_role.test.arn
-    topic    = "%s"
+    topic    = %[2]q
   }
 }
 `, rName, topic))
@@ -2955,7 +2955,7 @@ resource "aws_iot_topic_rule" "test" {
   sql_version = "2015-10-08"
 
   s3 {
-    bucket_name = "%s"
+    bucket_name = %[2]q
     canned_acl  = "private"
     key         = "mykey"
     role_arn    = aws_iam_role.test.arn
@@ -2996,7 +2996,7 @@ resource "aws_iot_topic_rule" "test" {
   sql_version = "2015-10-08"
 
   sqs {
-    queue_url  = "%s"
+    queue_url  = %[2]q
     role_arn   = aws_iam_role.test.arn
     use_base64 = false
   }
@@ -3016,7 +3016,7 @@ resource "aws_iot_topic_rule" "test" {
 
   step_functions {
     execution_name_prefix = "myprefix"
-    state_machine_name    = "%s"
+    state_machine_name    = %[2]q
     role_arn              = aws_iam_role.test.arn
   }
 }
@@ -3039,8 +3039,8 @@ resource "aws_iot_topic_rule" "test" {
     table_name    = "test_table"
 
     dimension {
-      name  = "%s"
-      value = "$${%s}"
+      name  = %[2]q
+      value = "$${%[2]s}"
     }
 
     dimension {
@@ -3054,7 +3054,7 @@ resource "aws_iot_topic_rule" "test" {
     }
   }
 }
-`, rName, dimName, dimName))
+`, rName, dimName))
 }
 
 func testAccTopicRuleConfig_kinesisErrorAction(rName string) string {
