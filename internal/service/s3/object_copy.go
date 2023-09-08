@@ -316,7 +316,7 @@ func resourceObjectCopyRead(ctx context.Context, d *schema.ResourceData, meta in
 
 	bucket := d.Get("bucket").(string)
 	key := d.Get("key").(string)
-	output, err := FindObjectByThreePartKey(ctx, conn, bucket, key, "")
+	output, err := findObjectByThreePartKey(ctx, conn, bucket, key, "")
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] S3 Object (%s) not found, removing from state", d.Id())
@@ -625,7 +625,7 @@ func resourceObjectCopyDoCopy(ctx context.Context, d *schema.ResourceData, meta 
 	return append(diags, resourceObjectCopyRead(ctx, d, meta)...)
 }
 
-func FindObjectByThreePartKey(ctx context.Context, conn *s3.Client, bucket, key, etag string) (*s3.HeadObjectOutput, error) {
+func findObjectByThreePartKey(ctx context.Context, conn *s3.Client, bucket, key, etag string) (*s3.HeadObjectOutput, error) {
 	input := &s3.HeadObjectInput{
 		Bucket: aws.String(bucket),
 		Key:    aws.String(key),
