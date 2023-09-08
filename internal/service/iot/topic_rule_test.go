@@ -2977,7 +2977,7 @@ resource "aws_iot_topic_rule" "test" {
   sql_version = "2015-10-08"
 
   sns {
-	message_format = "%s"
+    message_format = %[2]q
     role_arn       = aws_iam_role.test.arn
     target_arn     = "arn:${data.aws_partition.current.partition}:sns:${data.aws_region.current.name}:123456789012:my_corporate_topic"
   }
