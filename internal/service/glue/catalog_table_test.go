@@ -8,14 +8,15 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/glue"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfglue "github.com/hashicorp/terraform-provider-aws/internal/service/glue"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func init() {
@@ -1167,45 +1168,57 @@ func testAccCheckTableDestroy(ctx context.Context) resource.TestCheckFunc {
 				continue
 			}
 
-			catalogID, dbName, name, err := tfglue.ReadTableID(rs.Primary.ID)
+			catalogId, dbName, resourceName, err := tfglue.ReadTableID(rs.Primary.ID)
 			if err != nil {
 				return err
 			}
 
-			_, err = tfglue.FindTableByName(ctx, conn, catalogID, dbName, name)
+			if _, err := tfglue.FindTableByName(ctx, conn, catalogId, dbName, resourceName); err != nil {
+				//Verify the error is what we want
+				if tfawserr.ErrCodeEquals(err, glue.ErrCodeEntityNotFoundException) {
+					continue
+				}
 
-			if tfresource.NotFound(err) {
-				continue
-			}
-
-			if err != nil {
 				return err
 			}
-
-			return fmt.Errorf("Glue Catalog Table %s still exists", rs.Primary.ID)
+			return fmt.Errorf("still exists")
 		}
-
 		return nil
 	}
 }
 
-func testAccCheckCatalogTableExists(ctx context.Context, n string) resource.TestCheckFunc {
+func testAccCheckCatalogTableExists(ctx context.Context, name string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[n]
+		rs, ok := s.RootModule().Resources[name]
 		if !ok {
-			return fmt.Errorf("Not found: %s", n)
+			return fmt.Errorf("Not found: %s", name)
 		}
 
-		catalogID, dbName, name, err := tfglue.ReadTableID(rs.Primary.ID)
+		if rs.Primary.ID == "" {
+			return fmt.Errorf("No ID is set")
+		}
+
+		catalogId, dbName, resourceName, err := tfglue.ReadTableID(rs.Primary.ID)
 		if err != nil {
 			return err
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).GlueConn(ctx)
+		out, err := tfglue.FindTableByName(ctx, conn, catalogId, dbName, resourceName)
+		if err != nil {
+			return err
+		}
 
-		_, err = tfglue.FindTableByName(ctx, conn, catalogID, dbName, name)
+		if out.Table == nil {
+			return fmt.Errorf("No Glue Table Found")
+		}
 
-		return err
+		if aws.StringValue(out.Table.Name) != resourceName {
+			return fmt.Errorf("Glue Table Mismatch - existing: %q, state: %q",
+				aws.StringValue(out.Table.Name), resourceName)
+		}
+
+		return nil
 	}
 }
 
