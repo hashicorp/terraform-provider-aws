@@ -65,6 +65,27 @@ func ResourceObjectCopy() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
+			"checksum_algorithm": {
+				Type:             schema.TypeString,
+				Optional:         true,
+				ValidateDiagFunc: enum.Validate[types.ChecksumAlgorithm](),
+			},
+			"checksum_crc32": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"checksum_crc32c": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"checksum_sha1": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"checksum_sha256": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"content_disposition": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -316,7 +337,7 @@ func resourceObjectCopyRead(ctx context.Context, d *schema.ResourceData, meta in
 
 	bucket := d.Get("bucket").(string)
 	key := d.Get("key").(string)
-	output, err := findObjectByBucketAndKey(ctx, conn, bucket, key, "", "")
+	output, err := findObjectByBucketAndKey(ctx, conn, bucket, key, "", d.Get("checksum_algorithm").(string))
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] S3 Object (%s) not found, removing from state", d.Id())
@@ -330,6 +351,10 @@ func resourceObjectCopyRead(ctx context.Context, d *schema.ResourceData, meta in
 
 	d.Set("bucket_key_enabled", output.BucketKeyEnabled)
 	d.Set("cache_control", output.CacheControl)
+	d.Set("checksum_crc32", output.ChecksumCRC32)
+	d.Set("checksum_crc32c", output.ChecksumCRC32C)
+	d.Set("checksum_sha1", output.ChecksumSHA1)
+	d.Set("checksum_sha256", output.ChecksumSHA256)
 	d.Set("content_disposition", output.ContentDisposition)
 	d.Set("content_encoding", output.ContentEncoding)
 	d.Set("content_language", output.ContentLanguage)
@@ -390,6 +415,7 @@ func resourceObjectCopyUpdate(ctx context.Context, d *schema.ResourceData, meta 
 		"bucket",
 		"bucket_key_enabled",
 		"cache_control",
+		"checksum_algorithm",
 		"content_disposition",
 		"content_encoding",
 		"content_language",
@@ -474,6 +500,10 @@ func resourceObjectCopyDoCopy(ctx context.Context, d *schema.ResourceData, meta 
 
 	if v, ok := d.GetOk("cache_control"); ok {
 		input.CacheControl = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("checksum_algorithm"); ok {
+		input.ChecksumAlgorithm = types.ChecksumAlgorithm(v.(string))
 	}
 
 	if v, ok := d.GetOk("content_disposition"); ok {

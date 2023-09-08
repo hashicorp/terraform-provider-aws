@@ -41,6 +41,11 @@ func TestAccS3ObjectCopy_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "bucket", rName2),
 					resource.TestCheckResourceAttr(resourceName, "bucket_key_enabled", "false"),
 					resource.TestCheckResourceAttr(resourceName, "cache_control", ""),
+					resource.TestCheckNoResourceAttr(resourceName, "checksum_algorithm"),
+					resource.TestCheckResourceAttr(resourceName, "checksum_crc32", ""),
+					resource.TestCheckResourceAttr(resourceName, "checksum_crc32c", ""),
+					resource.TestCheckResourceAttr(resourceName, "checksum_sha1", ""),
+					resource.TestCheckResourceAttr(resourceName, "checksum_sha256", ""),
 					resource.TestCheckResourceAttr(resourceName, "content_disposition", ""),
 					resource.TestCheckResourceAttr(resourceName, "content_encoding", ""),
 					resource.TestCheckResourceAttr(resourceName, "content_language", ""),
@@ -297,6 +302,46 @@ func TestAccS3ObjectCopy_sourceWithSlashes(t *testing.T) {
 	})
 }
 
+func TestAccS3ObjectCopy_checksumAlgorithm(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName1 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_s3_object_copy.test"
+	sourceKey := "source"
+	targetKey := "target"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3EndpointID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckObjectCopyDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccObjectCopyConfig_checksumAlgorithm(rName1, sourceKey, rName2, targetKey, "CRC32C"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckObjectCopyExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "checksum_algorithm", "CRC32C"),
+					resource.TestCheckResourceAttr(resourceName, "checksum_crc32", ""),
+					resource.TestCheckResourceAttr(resourceName, "checksum_crc32c", "7y1BJA=="),
+					resource.TestCheckResourceAttr(resourceName, "checksum_sha1", ""),
+					resource.TestCheckResourceAttr(resourceName, "checksum_sha256", ""),
+				),
+			},
+			{
+				Config: testAccObjectCopyConfig_checksumAlgorithm(rName1, sourceKey, rName2, targetKey, "SHA1"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckObjectCopyExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "checksum_algorithm", "SHA1"),
+					resource.TestCheckResourceAttr(resourceName, "checksum_crc32", ""),
+					resource.TestCheckResourceAttr(resourceName, "checksum_crc32c", ""),
+					resource.TestCheckResourceAttr(resourceName, "checksum_sha1", "7MuLDoLjuZB9Uv63Krr4E7U5x30="),
+					resource.TestCheckResourceAttr(resourceName, "checksum_sha256", ""),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckObjectCopyDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Client(ctx)
@@ -514,4 +559,16 @@ resource "aws_s3_object_copy" "test" {
   source = "${aws_s3_bucket.source.bucket}/%[1]s"
 }
 `, sourceKey, targetKey))
+}
+
+func testAccObjectCopyConfig_checksumAlgorithm(sourceBucket, sourceKey, targetBucket, targetKey, checksumAlgorithm string) string {
+	return acctest.ConfigCompose(testAccObjectCopyConfig_baseSourceObject(sourceBucket, sourceKey, targetBucket), fmt.Sprintf(`
+resource "aws_s3_object_copy" "test" {
+  bucket = aws_s3_bucket.target.bucket
+  key    = %[1]q
+  source = "${aws_s3_bucket.source.bucket}/${aws_s3_object.source.key}"
+
+  checksum_algorithm = %[2]q
+}
+`, targetKey, checksumAlgorithm))
 }
