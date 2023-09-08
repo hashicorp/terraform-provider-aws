@@ -521,6 +521,12 @@ func resourceObjectUpload(ctx context.Context, d *schema.ResourceData, meta inte
 		input.WebsiteRedirectLocation = aws.String(v.(string))
 	}
 
+	if (input.ObjectLockLegalHoldStatus != "" || input.ObjectLockMode != "" || input.ObjectLockRetainUntilDate != nil) && input.ChecksumAlgorithm == "" {
+		// "Content-MD5 OR x-amz-checksum- HTTP header is required for Put Object requests with Object Lock parameters".
+		// AWS SDK for Go v1 transparently added a Content-MD4 header.
+		input.ChecksumAlgorithm = types.ChecksumAlgorithmCrc32
+	}
+
 	if _, err := uploader.Upload(ctx, input); err != nil {
 		return sdkdiag.AppendErrorf(diags, "uploading S3 Object (%s) to Bucket (%s): %s", key, bucket, err)
 	}
