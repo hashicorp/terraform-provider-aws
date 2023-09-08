@@ -693,7 +693,7 @@ func TestAccGlueCatalogTable_openTableFormat(t *testing.T) {
 		CheckDestroy:             testAccCheckTableDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config:  testAccCatalogTableConfig_openTableFormat(rName),
+				Config:  testAccCatalogTableConfig_openTableFormat(rName, "comment1"),
 				Destroy: false,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCatalogTableExists(ctx, resourceName),
@@ -708,6 +708,17 @@ func TestAccGlueCatalogTable_openTableFormat(t *testing.T) {
 				ImportState:             true,
 				ImportStateVerify:       true,
 				ImportStateVerifyIgnore: []string{"open_table_format_input"},
+			},
+			{
+				Config:  testAccCatalogTableConfig_openTableFormat(rName, "comment2"),
+				Destroy: false,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCatalogTableExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "open_table_format_input.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "open_table_format_input.0.iceberg_input.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "open_table_format_input.0.iceberg_input.0.metadata_operation", "CREATE"),
+					resource.TestCheckResourceAttr(resourceName, "open_table_format_input.0.iceberg_input.0.version", "2"),
+				),
 			},
 		},
 	})
@@ -1430,8 +1441,7 @@ resource "aws_glue_catalog_table" "test2" {
 `, rName)
 }
 
-func testAccCatalogTableConfig_openTableFormat(rName string) string {
-	//var trimmed_name = strings.Trim(rName, "\"")
+func testAccCatalogTableConfig_openTableFormat(rName, columnComment string) string {
 	return fmt.Sprintf(`
 resource "aws_glue_catalog_database" "test" {
   name = %[1]q
@@ -1460,15 +1470,15 @@ resource "aws_glue_catalog_table" "test" {
     columns {
       name    = "my_column_1"
       type    = "int"
-      comment = "my_column1_comment"
+      comment = %[2]q
     }
 
     columns {
       name    = "my_column_2"
       type    = "string"
-      comment = "my_column2_comment"
+      comment = %[2]q
     }
   }
 }
-`, rName)
+`, rName, columnComment)
 }
