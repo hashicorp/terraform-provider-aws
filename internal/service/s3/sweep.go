@@ -112,7 +112,7 @@ type objectSweeper struct {
 
 func (os objectSweeper) Delete(ctx context.Context, timeout time.Duration, optFns ...tfresource.OptionsFunc) error {
 	// Delete everything including locked objects
-	_, err := DeleteAllObjectVersions(ctx, os.conn, os.name, "", os.locked, true)
+	_, err := deleteAllObjectVersions(ctx, os.conn, os.name, "", os.locked, true)
 	if err != nil {
 		return fmt.Errorf("deleting S3 Bucket (%s) contents: %w", os.name, err)
 	}

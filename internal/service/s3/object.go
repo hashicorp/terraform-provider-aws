@@ -344,7 +344,7 @@ func resourceObjectDelete(ctx context.Context, d *schema.ResourceData, meta inte
 
 	var err error
 	if _, ok := d.GetOk("version_id"); ok {
-		_, err = DeleteAllObjectVersions(ctx, conn, bucket, key, d.Get("force_destroy").(bool), false)
+		_, err = deleteAllObjectVersions(ctx, conn, bucket, key, d.Get("force_destroy").(bool), false)
 	} else {
 		err = deleteObjectVersion(ctx, conn, bucket, key, "", false)
 	}
@@ -573,11 +573,11 @@ func hasObjectContentChanges(d verify.ResourceDiffer) bool {
 	return false
 }
 
-// DeleteAllObjectVersions deletes all versions of a specified key from an S3 bucket.
+// deleteAllObjectVersions deletes all versions of a specified key from an S3 bucket.
 // If key is empty then all versions of all objects are deleted.
 // Set force to true to override any S3 object lock protections on object lock enabled buckets.
 // Returns the number of objects deleted.
-func DeleteAllObjectVersions(ctx context.Context, conn *s3.Client, bucketName, key string, force, ignoreObjectErrors bool) (int64, error) {
+func deleteAllObjectVersions(ctx context.Context, conn *s3.Client, bucketName, key string, force, ignoreObjectErrors bool) (int64, error) {
 	var nObjects int64
 
 	input := &s3.ListObjectVersionsInput{
