@@ -342,6 +342,38 @@ func TestAccS3ObjectCopy_checksumAlgorithm(t *testing.T) {
 	})
 }
 
+func TestAccS3ObjectCopy_objectLockLegalHold(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName1 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_s3_object_copy.test"
+	sourceKey := "source"
+	targetKey := "target"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3EndpointID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckObjectCopyDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccObjectCopyConfig_lockLegalHold(rName1, sourceKey, rName2, targetKey, "ON"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckObjectCopyExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "object_lock_legal_hold_status", "ON"),
+				),
+			},
+			{
+				Config: testAccObjectCopyConfig_lockLegalHold(rName1, sourceKey, rName2, targetKey, "OFF"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckObjectCopyExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "object_lock_legal_hold_status", "OFF"),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckObjectCopyDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Client(ctx)
@@ -571,4 +603,45 @@ resource "aws_s3_object_copy" "test" {
   checksum_algorithm = %[2]q
 }
 `, targetKey, checksumAlgorithm))
+}
+
+func testAccObjectCopyConfig_lockLegalHold(sourceBucket, sourceKey, targetBucket, targetKey, legalHoldStatus string) string {
+	return fmt.Sprintf(`
+resource "aws_s3_bucket" "source" {
+  bucket = %[1]q
+
+  force_destroy = true
+}
+
+resource "aws_s3_bucket" "target" {
+  bucket = %[3]q
+
+  object_lock_enabled = true
+
+  force_destroy = true
+}
+
+resource "aws_s3_bucket_versioning" "target" {
+  bucket = aws_s3_bucket.target.id
+  versioning_configuration {
+    status = "Enabled"
+  }
+}
+
+resource "aws_s3_object" "source" {
+  bucket  = aws_s3_bucket.source.bucket
+  key     = %[2]q
+  content = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
+}
+
+resource "aws_s3_object_copy" "test" {
+  # Must have bucket versioning enabled first
+  bucket = aws_s3_bucket_versioning.target.bucket
+  key    = %[4]q
+  source = "${aws_s3_bucket.source.bucket}/${aws_s3_object.source.key}"
+
+  object_lock_legal_hold_status = %[5]q
+  force_destroy                 = true
+}
+`, sourceBucket, sourceKey, targetBucket, targetKey, legalHoldStatus)
 }
