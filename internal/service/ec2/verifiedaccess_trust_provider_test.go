@@ -38,7 +38,7 @@ func TestAccVerifiedAccessTrustProvider_basic(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.EC2)
-			testAccPreCheck(ctx, t)
+			testAccPreCheckVerifiedAccess(ctx, t)
 			acctest.PreCheckIAMServiceLinkedRole(ctx, t, "/aws-service-role/sso.amazonaws.com")
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2),
@@ -77,7 +77,7 @@ func TestAccVerifiedAccessTrustProvider_deviceOptions(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			testAccPreCheck(ctx, t)
+			testAccPreCheckVerifiedAccess(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -122,7 +122,7 @@ func TestAccVerifiedAccessTrustProvider_disappears(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.EC2)
 			acctest.PreCheckIAMServiceLinkedRole(ctx, t, "/aws-service-role/sso.amazonaws.com")
-			testAccPreCheck(ctx, t)
+			testAccPreCheckVerifiedAccess(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -158,7 +158,7 @@ func TestAccVerifiedAccessTrustProvider_oidcOptions(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			testAccPreCheck(ctx, t)
+			testAccPreCheckVerifiedAccess(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -203,7 +203,7 @@ func TestAccVerifiedAccessTrustProvider_tags(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			testAccPreCheck(ctx, t)
+			testAccPreCheckVerifiedAccess(ctx, t)
 			acctest.PreCheckIAMServiceLinkedRole(ctx, t, "/aws-service-role/sso.amazonaws.com")
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2),
@@ -292,7 +292,7 @@ func testAccCheckVerifiedAccessTrustProviderDestroy(ctx context.Context) resourc
 	}
 }
 
-func testAccPreCheck(ctx context.Context, t *testing.T) {
+func testAccPreCheckVerifiedAccess(ctx context.Context, t *testing.T) {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
 	input := &ec2.DescribeVerifiedAccessTrustProvidersInput{}
