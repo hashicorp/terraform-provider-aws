@@ -64,7 +64,7 @@ func resourceNotificationRule() *schema.Resource {
 				Required: true,
 				ValidateFunc: validation.All(
 					validation.StringLenBetween(1, 64),
-					validation.StringMatch(regexache.MustCompile(`^[A-Za-z0-9\-_ ]+$`), "must be one or more alphanumeric, hyphen, underscore or space characters"),
+					validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_ -]+$`), "must be one or more alphanumeric, hyphen, underscore or space characters"),
 				),
 			},
 			"resource": {

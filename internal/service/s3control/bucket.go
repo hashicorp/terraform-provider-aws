@@ -55,9 +55,9 @@ func resourceBucket() *schema.Resource {
 				ForceNew: true,
 				ValidateFunc: validation.All(
 					validation.StringLenBetween(3, 63),
-					validation.StringMatch(regexache.MustCompile(`^[a-z0-9.-]+$`), "must contain only lowercase letters, numbers, periods, and hyphens"),
-					validation.StringMatch(regexache.MustCompile(`^[a-z0-9]`), "must begin with lowercase letter or number"),
-					validation.StringMatch(regexache.MustCompile(`[a-z0-9]$`), "must end with lowercase letter or number"),
+					validation.StringMatch(regexache.MustCompile(`^[0-9a-z.-]+$`), "must contain only lowercase letters, numbers, periods, and hyphens"),
+					validation.StringMatch(regexache.MustCompile(`^[0-9a-z]`), "must begin with lowercase letter or number"),
+					validation.StringMatch(regexache.MustCompile(`[0-9a-z]$`), "must end with lowercase letter or number"),
 				),
 			},
 			"creation_date": {

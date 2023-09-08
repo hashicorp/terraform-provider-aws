@@ -54,7 +54,7 @@ func ResourceModel() *schema.Resource {
 				Required: true,
 				ValidateFunc: validation.All(
 					validation.StringLenBetween(1, 128),
-					validation.StringMatch(regexache.MustCompile(`^[a-zA-Z0-9]+$`), "must be alphanumeric"),
+					validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z]+$`), "must be alphanumeric"),
 				),
 			},
 			"schema": {

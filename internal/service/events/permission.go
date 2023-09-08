@@ -269,7 +269,7 @@ func validatePermissionAction(v interface{}, k string) (ws []string, es []error)
 		es = append(es, fmt.Errorf("%q must be between 1 and 64 characters", k))
 	}
 
-	if !regexache.MustCompile(`^events:[a-zA-Z]+$`).MatchString(value) {
+	if !regexache.MustCompile(`^events:[A-Za-z]+$`).MatchString(value) {
 		es = append(es, fmt.Errorf("%q must be: events: followed by one or more alphabetic characters", k))
 	}
 	return
@@ -291,7 +291,7 @@ func validatePermissionStatementID(v interface{}, k string) (ws []string, es []e
 		es = append(es, fmt.Errorf("%q must be between 1 and 64 characters", k))
 	}
 
-	if !regexache.MustCompile(`^[a-zA-Z0-9-_]+$`).MatchString(value) {
+	if !regexache.MustCompile(`^[0-9A-Za-z_-]+$`).MatchString(value) {
 		es = append(es, fmt.Errorf("%q must be one or more alphanumeric, hyphen, or underscore characters", k))
 	}
 	return
