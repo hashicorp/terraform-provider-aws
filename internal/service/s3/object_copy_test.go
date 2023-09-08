@@ -49,7 +49,7 @@ func TestAccS3ObjectCopy_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "content_disposition", ""),
 					resource.TestCheckResourceAttr(resourceName, "content_encoding", ""),
 					resource.TestCheckResourceAttr(resourceName, "content_language", ""),
-					resource.TestCheckResourceAttr(resourceName, "content_type", "binary/octet-stream"),
+					resource.TestCheckResourceAttr(resourceName, "content_type", "application/octet-stream"),
 					resource.TestCheckNoResourceAttr(resourceName, "copy_if_match"),
 					resource.TestCheckNoResourceAttr(resourceName, "copy_if_modified_since"),
 					resource.TestCheckNoResourceAttr(resourceName, "copy_if_none_match"),
