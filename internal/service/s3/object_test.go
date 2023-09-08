@@ -81,7 +81,7 @@ func TestAccS3Object_basic(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"acl", "force_destroy"},
+				ImportStateVerifyIgnore: []string{"force_destroy"},
 				ImportStateId:           fmt.Sprintf("s3://%s/test-key", rName),
 			},
 		},
@@ -146,7 +146,7 @@ func TestAccS3Object_source(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"acl", "source", "force_destroy"},
+				ImportStateVerifyIgnore: []string{"force_destroy", "source"},
 				ImportStateId:           fmt.Sprintf("s3://%s/test-key", rName),
 			},
 		},
@@ -176,7 +176,7 @@ func TestAccS3Object_content(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"acl", "content", "content_base64", "force_destroy"},
+				ImportStateVerifyIgnore: []string{"content", "content_base64", "force_destroy"},
 				ImportStateId:           fmt.Sprintf("s3://%s/test-key", rName),
 			},
 		},
@@ -209,7 +209,7 @@ func TestAccS3Object_etagEncryption(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"acl", "source", "force_destroy"},
+				ImportStateVerifyIgnore: []string{"force_destroy", "source"},
 				ImportStateId:           fmt.Sprintf("s3://%s/test-key", rName),
 			},
 		},
@@ -287,7 +287,7 @@ func TestAccS3Object_sourceHashTrigger(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"acl", "content", "content_base64", "force_destroy", "source", "source_hash"},
+				ImportStateVerifyIgnore: []string{"content", "content_base64", "force_destroy", "source", "source_hash"},
 				ImportStateId:           fmt.Sprintf("s3://%s/test-key", rName),
 			},
 		},
@@ -348,7 +348,7 @@ func TestAccS3Object_nonVersioned(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"acl", "source", "force_destroy"},
+				ImportStateVerifyIgnore: []string{"force_destroy", "source"},
 				ImportStateId:           fmt.Sprintf("s3://%s/updateable-key", rName),
 			},
 		},
@@ -398,7 +398,7 @@ func TestAccS3Object_updates(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"acl", "source", "force_destroy"},
+				ImportStateVerifyIgnore: []string{"force_destroy", "source"},
 				ImportStateId:           fmt.Sprintf("s3://%s/updateable-key", rName),
 			},
 		},
@@ -491,7 +491,7 @@ func TestAccS3Object_updatesWithVersioning(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"acl", "source", "force_destroy"},
+				ImportStateVerifyIgnore: []string{"force_destroy", "source"},
 				ImportStateId:           fmt.Sprintf("s3://%s/updateable-key", rName),
 			},
 		},
@@ -565,7 +565,7 @@ func TestAccS3Object_kms(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"acl", "source", "force_destroy"},
+				ImportStateVerifyIgnore: []string{"force_destroy", "source"},
 				ImportStateId:           fmt.Sprintf("s3://%s/test-key", rName),
 			},
 		},
@@ -599,7 +599,7 @@ func TestAccS3Object_sse(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"acl", "source", "force_destroy"},
+				ImportStateVerifyIgnore: []string{"force_destroy", "source"},
 				ImportStateId:           fmt.Sprintf("s3://%s/test-key", rName),
 			},
 		},
@@ -699,7 +699,7 @@ func TestAccS3Object_metadata(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"acl", "force_destroy"},
+				ImportStateVerifyIgnore: []string{"force_destroy"},
 				ImportStateId:           fmt.Sprintf("s3://%s/test-key", rName),
 			},
 		},
@@ -762,7 +762,7 @@ func TestAccS3Object_storageClass(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"content", "acl", "force_destroy"},
+				ImportStateVerifyIgnore: []string{"content", "force_destroy"},
 				ImportStateId:           fmt.Sprintf("s3://%s/test-key", rName),
 			},
 		},
@@ -831,7 +831,7 @@ func TestAccS3Object_tags(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"content", "acl", "force_destroy"},
+				ImportStateVerifyIgnore: []string{"content", "force_destroy"},
 				ImportStateId:           fmt.Sprintf("s3://%s/%s", rName, key),
 			},
 		},
@@ -900,7 +900,7 @@ func TestAccS3Object_tagsLeadingSingleSlash(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"content", "acl", "force_destroy"},
+				ImportStateVerifyIgnore: []string{"content", "force_destroy"},
 				ImportStateId:           fmt.Sprintf("s3://%s/%s", rName, key),
 			},
 		},
@@ -1344,6 +1344,53 @@ func TestAccS3Object_ignoreTags(t *testing.T) {
 						"Key2":       "BBB",
 						"Key3":       "CCC",
 					}),
+				),
+			},
+		},
+	})
+}
+
+func TestAccS3Object_checksumAlgorithm(t *testing.T) {
+	ctx := acctest.Context(t)
+	var obj s3.GetObjectOutput
+	resourceName := "aws_s3_object.object"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3EndpointID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckObjectDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccObjectConfig_checksumAlgorithm(rName, "CRC32"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckObjectExists(ctx, resourceName, &obj),
+					testAccCheckObjectBody(&obj, "ABCDEFGHIJKLMNOPQRSTUVWXYZ"),
+					resource.TestCheckResourceAttr(resourceName, "checksum_algorithm", "CRC32"),
+					resource.TestCheckResourceAttr(resourceName, "checksum_crc32", "q/d4Ig=="),
+					resource.TestCheckResourceAttr(resourceName, "checksum_crc32c", ""),
+					resource.TestCheckResourceAttr(resourceName, "checksum_sha1", ""),
+					resource.TestCheckResourceAttr(resourceName, "checksum_sha256", ""),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"checksum_algorithm", "checksum_crc32", "content", "force_destroy"},
+				ImportStateId:           fmt.Sprintf("s3://%s/test-key", rName),
+			},
+			{
+				Config: testAccObjectConfig_checksumAlgorithm(rName, "SHA256"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckObjectExists(ctx, resourceName, &obj),
+					testAccCheckObjectBody(&obj, "ABCDEFGHIJKLMNOPQRSTUVWXYZ"),
+					resource.TestCheckResourceAttr(resourceName, "checksum_algorithm", "SHA256"),
+					resource.TestCheckResourceAttr(resourceName, "checksum_crc32", ""),
+					resource.TestCheckResourceAttr(resourceName, "checksum_crc32c", ""),
+					resource.TestCheckResourceAttr(resourceName, "checksum_sha1", ""),
+					resource.TestCheckResourceAttr(resourceName, "checksum_sha256", "1uxomN6H3axuWzYRcIp6ocLSmCkzScwabCmaHbcUnTg="),
 				),
 			},
 		},
@@ -2144,4 +2191,20 @@ resource "aws_s3_object" "object" {
   content = %[2]q
 }
 `, rName, content)
+}
+
+func testAccObjectConfig_checksumAlgorithm(rName, checksumAlgorithm string) string {
+	return fmt.Sprintf(`
+resource "aws_s3_bucket" "test" {
+  bucket = %[1]q
+}
+
+resource "aws_s3_object" "object" {
+  bucket  = aws_s3_bucket.test.bucket
+  key     = "test-key"
+  content = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+
+  checksum_algorithm = %[2]q
+}
+`, rName, checksumAlgorithm)
 }
