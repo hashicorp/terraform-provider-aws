@@ -159,9 +159,9 @@ func ResourceObject() *schema.Resource {
 			},
 			"metadata": {
 				Type:         schema.TypeMap,
-				ValidateFunc: validateMetadataIsLowerCase,
 				Optional:     true,
 				Elem:         &schema.Schema{Type: schema.TypeString},
+				ValidateFunc: validateMetadataIsLowerCase,
 			},
 			"object_lock_legal_hold_status": {
 				Type:             schema.TypeString,
@@ -181,8 +181,8 @@ func ResourceObject() *schema.Resource {
 			"server_side_encryption": {
 				Type:             schema.TypeString,
 				Optional:         true,
-				ValidateDiagFunc: enum.Validate[types.ServerSideEncryption](),
 				Computed:         true,
+				ValidateDiagFunc: enum.Validate[types.ServerSideEncryption](),
 			},
 			"source": {
 				Type:          schema.TypeString,

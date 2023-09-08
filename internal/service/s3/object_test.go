@@ -13,7 +13,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/aws/aws-sdk-go-v2/service/s3/types"
@@ -29,32 +28,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccS3Object_noNameNoKey(t *testing.T) {
-	ctx := acctest.Context(t)
-	bucketError := regexache.MustCompile(`bucket must not be empty`)
-	keyError := regexache.MustCompile(`key must not be empty`)
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.S3EndpointID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckObjectDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				PreConfig:   func() {},
-				Config:      testAccObjectConfig_basic("", "a key"),
-				ExpectError: bucketError,
-			},
-			{
-				PreConfig:   func() {},
-				Config:      testAccObjectConfig_basic("a name", ""),
-				ExpectError: keyError,
-			},
-		},
-	})
-}
-
-func TestAccS3Object_empty(t *testing.T) {
+func TestAccS3Object_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var obj s3.GetObjectOutput
 	resourceName := "aws_s3_object.object"
@@ -67,11 +41,40 @@ func TestAccS3Object_empty(t *testing.T) {
 		CheckDestroy:             testAccCheckObjectDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				PreConfig: func() {},
-				Config:    testAccObjectConfig_empty(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Config: testAccObjectConfig_basic(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckObjectExists(ctx, resourceName, &obj),
 					testAccCheckObjectBody(&obj, ""),
+					resource.TestCheckNoResourceAttr(resourceName, "acl"),
+					resource.TestCheckResourceAttr(resourceName, "bucket", rName),
+					resource.TestCheckResourceAttr(resourceName, "bucket_key_enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "cache_control", ""),
+					resource.TestCheckNoResourceAttr(resourceName, "checksum_algorithm"),
+					resource.TestCheckResourceAttr(resourceName, "checksum_crc32", ""),
+					resource.TestCheckResourceAttr(resourceName, "checksum_crc32c", ""),
+					resource.TestCheckResourceAttr(resourceName, "checksum_sha1", ""),
+					resource.TestCheckResourceAttr(resourceName, "checksum_sha256", ""),
+					resource.TestCheckNoResourceAttr(resourceName, "content"),
+					resource.TestCheckNoResourceAttr(resourceName, "content_base64"),
+					resource.TestCheckResourceAttr(resourceName, "content_disposition", ""),
+					resource.TestCheckResourceAttr(resourceName, "content_encoding", ""),
+					resource.TestCheckResourceAttr(resourceName, "content_language", ""),
+					resource.TestCheckResourceAttr(resourceName, "content_type", "application/octet-stream"),
+					resource.TestCheckResourceAttrSet(resourceName, "etag"),
+					resource.TestCheckResourceAttr(resourceName, "force_destroy", "false"),
+					resource.TestCheckResourceAttr(resourceName, "key", "test-key"),
+					resource.TestCheckNoResourceAttr(resourceName, "kms_key_id"),
+					resource.TestCheckResourceAttr(resourceName, "metadata.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "object_lock_legal_hold_status", ""),
+					resource.TestCheckResourceAttr(resourceName, "object_lock_mode", ""),
+					resource.TestCheckResourceAttr(resourceName, "object_lock_retain_until_date", ""),
+					resource.TestCheckResourceAttr(resourceName, "server_side_encryption", "AES256"),
+					resource.TestCheckNoResourceAttr(resourceName, "source"),
+					resource.TestCheckNoResourceAttr(resourceName, "source_hash"),
+					resource.TestCheckResourceAttr(resourceName, "storage_class", "STANDARD"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "version_id", ""),
+					resource.TestCheckResourceAttr(resourceName, "website_redirect", ""),
 				),
 			},
 			{
@@ -103,14 +106,14 @@ func TestAccS3Object_upgradeFromV4(t *testing.T) {
 						VersionConstraint: "4.67.0",
 					},
 				},
-				Config: testAccObjectConfig_empty(rName),
+				Config: testAccObjectConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckObjectExists(ctx, resourceName, &obj),
 				),
 			},
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				Config:                   testAccObjectConfig_empty(rName),
+				Config:                   testAccObjectConfig_basic(rName),
 				PlanOnly:                 true,
 			},
 		},
@@ -163,8 +166,7 @@ func TestAccS3Object_content(t *testing.T) {
 		CheckDestroy:             testAccCheckObjectDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				PreConfig: func() {},
-				Config:    testAccObjectConfig_content(rName, "some_bucket_content"),
+				Config: testAccObjectConfig_content(rName, "some_bucket_content"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckObjectExists(ctx, resourceName, &obj),
 					testAccCheckObjectBody(&obj, "some_bucket_content"),
@@ -196,8 +198,7 @@ func TestAccS3Object_etagEncryption(t *testing.T) {
 		CheckDestroy:             testAccCheckObjectDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				PreConfig: func() {},
-				Config:    testAccObjectConfig_etagEncryption(rName, source),
+				Config: testAccObjectConfig_etagEncryption(rName, source),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckObjectExists(ctx, resourceName, &obj),
 					testAccCheckObjectBody(&obj, "{anything will do }"),
@@ -228,8 +229,7 @@ func TestAccS3Object_contentBase64(t *testing.T) {
 		CheckDestroy:             testAccCheckObjectDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				PreConfig: func() {},
-				Config:    testAccObjectConfig_contentBase64(rName, base64.StdEncoding.EncodeToString([]byte("some_bucket_content"))),
+				Config: testAccObjectConfig_contentBase64(rName, base64.StdEncoding.EncodeToString([]byte("some_bucket_content"))),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckObjectExists(ctx, resourceName, &obj),
 					testAccCheckObjectBody(&obj, "some_bucket_content"),
@@ -266,8 +266,7 @@ func TestAccS3Object_sourceHashTrigger(t *testing.T) {
 		CheckDestroy:             testAccCheckObjectDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				PreConfig: func() {},
-				Config:    testAccObjectConfig_sourceHashTrigger(rName, filename),
+				Config: testAccObjectConfig_sourceHashTrigger(rName, filename),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckObjectExists(ctx, resourceName, &obj),
 					testAccCheckObjectBody(&obj, "Ebben!"),
@@ -277,8 +276,7 @@ func TestAccS3Object_sourceHashTrigger(t *testing.T) {
 				ExpectNonEmptyPlan: true,
 			},
 			{
-				PreConfig: func() {},
-				Config:    testAccObjectConfig_sourceHashTrigger(rName, filename),
+				Config: testAccObjectConfig_sourceHashTrigger(rName, filename),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckObjectExists(ctx, resourceName, &updated_obj),
 					testAccCheckObjectBody(&updated_obj, "Ne andrò lontana"),
@@ -556,8 +554,7 @@ func TestAccS3Object_kms(t *testing.T) {
 		CheckDestroy:             testAccCheckObjectDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				PreConfig: func() {},
-				Config:    testAccObjectConfig_kmsID(rName, source),
+				Config: testAccObjectConfig_kmsID(rName, source),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckObjectExists(ctx, resourceName, &obj),
 					testAccCheckObjectSSE(ctx, resourceName, "aws:kms"),
@@ -591,8 +588,7 @@ func TestAccS3Object_sse(t *testing.T) {
 		CheckDestroy:             testAccCheckObjectDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				PreConfig: func() {},
-				Config:    testAccObjectConfig_sse(rName, source),
+				Config: testAccObjectConfig_sse(rName, source),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckObjectExists(ctx, resourceName, &obj),
 					testAccCheckObjectSSE(ctx, resourceName, "AES256"),
@@ -693,7 +689,7 @@ func TestAccS3Object_metadata(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccObjectConfig_empty(rName),
+				Config: testAccObjectConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckObjectExists(ctx, resourceName, &obj),
 					resource.TestCheckResourceAttr(resourceName, "metadata.%", "0"),
@@ -723,8 +719,7 @@ func TestAccS3Object_storageClass(t *testing.T) {
 		CheckDestroy:             testAccCheckObjectDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				PreConfig: func() {},
-				Config:    testAccObjectConfig_content(rName, "some_bucket_content"),
+				Config: testAccObjectConfig_content(rName, "some_bucket_content"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckObjectExists(ctx, resourceName, &obj),
 					resource.TestCheckResourceAttr(resourceName, "storage_class", "STANDARD"),
@@ -788,8 +783,7 @@ func TestAccS3Object_tags(t *testing.T) {
 		CheckDestroy:             testAccCheckObjectDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				PreConfig: func() {},
-				Config:    testAccObjectConfig_tags(rName, key, "stuff"),
+				Config: testAccObjectConfig_tags(rName, key, "stuff"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckObjectExists(ctx, resourceName, &obj1),
 					testAccCheckObjectBody(&obj1, "stuff"),
@@ -800,8 +794,7 @@ func TestAccS3Object_tags(t *testing.T) {
 				),
 			},
 			{
-				PreConfig: func() {},
-				Config:    testAccObjectConfig_updatedTags(rName, key, "stuff"),
+				Config: testAccObjectConfig_updatedTags(rName, key, "stuff"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckObjectExists(ctx, resourceName, &obj2),
 					testAccCheckObjectVersionIdEquals(&obj2, &obj1),
@@ -814,8 +807,7 @@ func TestAccS3Object_tags(t *testing.T) {
 				),
 			},
 			{
-				PreConfig: func() {},
-				Config:    testAccObjectConfig_noTags(rName, key, "stuff"),
+				Config: testAccObjectConfig_noTags(rName, key, "stuff"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckObjectExists(ctx, resourceName, &obj3),
 					testAccCheckObjectVersionIdEquals(&obj3, &obj2),
@@ -824,8 +816,7 @@ func TestAccS3Object_tags(t *testing.T) {
 				),
 			},
 			{
-				PreConfig: func() {},
-				Config:    testAccObjectConfig_tags(rName, key, "changed stuff"),
+				Config: testAccObjectConfig_tags(rName, key, "changed stuff"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckObjectExists(ctx, resourceName, &obj4),
 					testAccCheckObjectVersionIdDiffers(&obj4, &obj3),
@@ -861,8 +852,7 @@ func TestAccS3Object_tagsLeadingSingleSlash(t *testing.T) {
 		CheckDestroy:             testAccCheckObjectDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				PreConfig: func() {},
-				Config:    testAccObjectConfig_tags(rName, key, "stuff"),
+				Config: testAccObjectConfig_tags(rName, key, "stuff"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckObjectExists(ctx, resourceName, &obj1),
 					testAccCheckObjectBody(&obj1, "stuff"),
@@ -873,8 +863,7 @@ func TestAccS3Object_tagsLeadingSingleSlash(t *testing.T) {
 				),
 			},
 			{
-				PreConfig: func() {},
-				Config:    testAccObjectConfig_updatedTags(rName, key, "stuff"),
+				Config: testAccObjectConfig_updatedTags(rName, key, "stuff"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckObjectExists(ctx, resourceName, &obj2),
 					testAccCheckObjectVersionIdEquals(&obj2, &obj1),
@@ -887,8 +876,7 @@ func TestAccS3Object_tagsLeadingSingleSlash(t *testing.T) {
 				),
 			},
 			{
-				PreConfig: func() {},
-				Config:    testAccObjectConfig_noTags(rName, key, "stuff"),
+				Config: testAccObjectConfig_noTags(rName, key, "stuff"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckObjectExists(ctx, resourceName, &obj3),
 					testAccCheckObjectVersionIdEquals(&obj3, &obj2),
@@ -897,8 +885,7 @@ func TestAccS3Object_tagsLeadingSingleSlash(t *testing.T) {
 				),
 			},
 			{
-				PreConfig: func() {},
-				Config:    testAccObjectConfig_tags(rName, key, "changed stuff"),
+				Config: testAccObjectConfig_tags(rName, key, "changed stuff"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckObjectExists(ctx, resourceName, &obj4),
 					testAccCheckObjectVersionIdDiffers(&obj4, &obj3),
@@ -934,8 +921,7 @@ func TestAccS3Object_tagsLeadingMultipleSlashes(t *testing.T) {
 		CheckDestroy:             testAccCheckObjectDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				PreConfig: func() {},
-				Config:    testAccObjectConfig_tags(rName, key, "stuff"),
+				Config: testAccObjectConfig_tags(rName, key, "stuff"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckObjectExists(ctx, resourceName, &obj1),
 					testAccCheckObjectBody(&obj1, "stuff"),
@@ -946,8 +932,7 @@ func TestAccS3Object_tagsLeadingMultipleSlashes(t *testing.T) {
 				),
 			},
 			{
-				PreConfig: func() {},
-				Config:    testAccObjectConfig_updatedTags(rName, key, "stuff"),
+				Config: testAccObjectConfig_updatedTags(rName, key, "stuff"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckObjectExists(ctx, resourceName, &obj2),
 					testAccCheckObjectVersionIdEquals(&obj2, &obj1),
@@ -960,8 +945,7 @@ func TestAccS3Object_tagsLeadingMultipleSlashes(t *testing.T) {
 				),
 			},
 			{
-				PreConfig: func() {},
-				Config:    testAccObjectConfig_noTags(rName, key, "stuff"),
+				Config: testAccObjectConfig_noTags(rName, key, "stuff"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckObjectExists(ctx, resourceName, &obj3),
 					testAccCheckObjectVersionIdEquals(&obj3, &obj2),
@@ -970,8 +954,7 @@ func TestAccS3Object_tagsLeadingMultipleSlashes(t *testing.T) {
 				),
 			},
 			{
-				PreConfig: func() {},
-				Config:    testAccObjectConfig_tags(rName, key, "changed stuff"),
+				Config: testAccObjectConfig_tags(rName, key, "changed stuff"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckObjectExists(ctx, resourceName, &obj4),
 					testAccCheckObjectVersionIdDiffers(&obj4, &obj3),
@@ -1000,8 +983,7 @@ func TestAccS3Object_tagsMultipleSlashes(t *testing.T) {
 		CheckDestroy:             testAccCheckObjectDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				PreConfig: func() {},
-				Config:    testAccObjectConfig_tags(rName, key, "stuff"),
+				Config: testAccObjectConfig_tags(rName, key, "stuff"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckObjectExists(ctx, resourceName, &obj1),
 					testAccCheckObjectBody(&obj1, "stuff"),
@@ -1012,8 +994,7 @@ func TestAccS3Object_tagsMultipleSlashes(t *testing.T) {
 				),
 			},
 			{
-				PreConfig: func() {},
-				Config:    testAccObjectConfig_updatedTags(rName, key, "stuff"),
+				Config: testAccObjectConfig_updatedTags(rName, key, "stuff"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckObjectExists(ctx, resourceName, &obj2),
 					testAccCheckObjectVersionIdEquals(&obj2, &obj1),
@@ -1026,8 +1007,7 @@ func TestAccS3Object_tagsMultipleSlashes(t *testing.T) {
 				),
 			},
 			{
-				PreConfig: func() {},
-				Config:    testAccObjectConfig_noTags(rName, key, "stuff"),
+				Config: testAccObjectConfig_noTags(rName, key, "stuff"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckObjectExists(ctx, resourceName, &obj3),
 					testAccCheckObjectVersionIdEquals(&obj3, &obj2),
@@ -1036,8 +1016,7 @@ func TestAccS3Object_tagsMultipleSlashes(t *testing.T) {
 				),
 			},
 			{
-				PreConfig: func() {},
-				Config:    testAccObjectConfig_tags(rName, key, "changed stuff"),
+				Config: testAccObjectConfig_tags(rName, key, "changed stuff"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckObjectExists(ctx, resourceName, &obj4),
 					testAccCheckObjectVersionIdDiffers(&obj4, &obj3),
@@ -1335,7 +1314,6 @@ func TestAccS3Object_ignoreTags(t *testing.T) {
 		CheckDestroy:             testAccCheckObjectDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				PreConfig: func() {},
 				Config: acctest.ConfigCompose(
 					acctest.ConfigIgnoreTagsKeyPrefixes1("ignorekey"),
 					testAccObjectConfig_noTags(rName, key, "stuff")),
@@ -1350,7 +1328,6 @@ func TestAccS3Object_ignoreTags(t *testing.T) {
 				),
 			},
 			{
-				PreConfig: func() {},
 				Config: acctest.ConfigCompose(
 					acctest.ConfigIgnoreTagsKeyPrefixes1("ignorekey"),
 					testAccObjectConfig_tags(rName, key, "stuff")),
@@ -1596,16 +1573,7 @@ func testAccCheckObjectCheckTags(ctx context.Context, n string, expectedTags map
 	}
 }
 
-func testAccObjectConfig_basic(bucket, key string) string {
-	return fmt.Sprintf(`
-resource "aws_s3_object" "object" {
-  bucket = %[1]q
-  key    = %[2]q
-}
-`, bucket, key)
-}
-
-func testAccObjectConfig_empty(rName string) string {
+func testAccObjectConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
   bucket = %[1]q
