@@ -12,6 +12,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/datasync"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -153,7 +154,6 @@ func resourceLocationNFSRead(ctx context.Context, d *schema.ResourceData, meta i
 
 	uri := aws.StringValue(output.LocationUri)
 	subdirectory, err := subdirectoryFromLocationURI(uri)
-
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
@@ -175,7 +175,7 @@ func resourceLocationNFSUpdate(ctx context.Context, d *schema.ResourceData, meta
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DataSyncConn(ctx)
 
-	if d.HasChangesExcept("tags_all", "tags") {
+	if d.HasChangesExcept("tags", "tags_all") {
 		input := &datasync.UpdateLocationNfsInput{
 			LocationArn:  aws.String(d.Id()),
 			OnPremConfig: expandOnPremConfig(d.Get("on_prem_config").([]interface{})),
@@ -214,6 +214,31 @@ func resourceLocationNFSDelete(ctx context.Context, d *schema.ResourceData, meta
 	}
 
 	return diags
+}
+
+func FindLocationNFSByARN(ctx context.Context, conn *datasync.DataSync, arn string) (*datasync.DescribeLocationNfsOutput, error) {
+	input := &datasync.DescribeLocationNfsInput{
+		LocationArn: aws.String(arn),
+	}
+
+	output, err := conn.DescribeLocationNfsWithContext(ctx, input)
+
+	if tfawserr.ErrMessageContains(err, datasync.ErrCodeInvalidRequestException, "not found") {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output, nil
 }
 
 func expandNFSMountOptions(l []interface{}) *datasync.NfsMountOptions {

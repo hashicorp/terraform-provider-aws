@@ -11,10 +11,10 @@ import (
 	"io/fs"
 	"os"
 	"path/filepath"
-	"regexp"
 	"strings"
 	"text/template"
 
+	"github.com/YakDriver/regexache"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -52,18 +52,18 @@ func ToSnakeCase(upper string, snakeName string) string {
 		return snakeName
 	}
 
-	re := regexp.MustCompile(`([a-z])([A-Z]{2,})`)
+	re := regexache.MustCompile(`([a-z])([A-Z]{2,})`)
 	upper = re.ReplaceAllString(upper, `${1}_${2}`)
 
-	re2 := regexp.MustCompile(`([A-Z][a-z])`)
+	re2 := regexache.MustCompile(`([A-Z][a-z])`)
 	return strings.TrimPrefix(strings.ToLower(re2.ReplaceAllString(upper, `_$1`)), "_")
 }
 
 func HumanResName(upper string) string {
-	re := regexp.MustCompile(`([a-z])([A-Z]{2,})`)
+	re := regexache.MustCompile(`([a-z])([A-Z]{2,})`)
 	upper = re.ReplaceAllString(upper, `${1} ${2}`)
 
-	re2 := regexp.MustCompile(`([A-Z][a-z])`)
+	re2 := regexache.MustCompile(`([A-Z][a-z])`)
 	return strings.TrimPrefix(re2.ReplaceAllString(upper, ` $1`), " ")
 }
 

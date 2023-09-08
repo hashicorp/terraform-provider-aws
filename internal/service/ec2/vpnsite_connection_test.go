@@ -7,9 +7,9 @@ import (
 	"context"
 	"fmt"
 	"reflect"
-	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
@@ -171,7 +171,7 @@ func TestAccSiteVPNConnection_basic(t *testing.T) {
 				Config: testAccSiteVPNConnectionConfig_basic(rName, rBgpAsn),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccVPNConnectionExists(ctx, resourceName, &vpn),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "ec2", regexp.MustCompile(`vpn-connection/vpn-.+`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "ec2", regexache.MustCompile(`vpn-connection/vpn-.+`)),
 					resource.TestCheckResourceAttr(resourceName, "core_network_arn", ""),
 					resource.TestCheckResourceAttr(resourceName, "core_network_attachment_arn", ""),
 					resource.TestCheckResourceAttrSet(resourceName, "customer_gateway_configuration"),
@@ -267,7 +267,7 @@ func TestAccSiteVPNConnection_withoutTGWorVGW(t *testing.T) {
 				Config: testAccSiteVPNConnectionConfig_withoutTGWorVGW(rName, rBgpAsn),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccVPNConnectionExists(ctx, resourceName, &vpn),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "ec2", regexp.MustCompile(`vpn-connection/vpn-.+`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "ec2", regexache.MustCompile(`vpn-connection/vpn-.+`)),
 					resource.TestCheckResourceAttr(resourceName, "core_network_arn", ""),
 					resource.TestCheckResourceAttr(resourceName, "core_network_attachment_arn", ""),
 					resource.TestCheckResourceAttrSet(resourceName, "customer_gateway_configuration"),
@@ -411,7 +411,7 @@ func TestAccSiteVPNConnection_transitGatewayID(t *testing.T) {
 				Config: testAccSiteVPNConnectionConfig_transitGateway(rName, rBgpAsn),
 				Check: resource.ComposeTestCheckFunc(
 					testAccVPNConnectionExists(ctx, resourceName, &vpn),
-					resource.TestMatchResourceAttr(resourceName, "transit_gateway_attachment_id", regexp.MustCompile(`tgw-attach-.+`)),
+					resource.TestMatchResourceAttr(resourceName, "transit_gateway_attachment_id", regexache.MustCompile(`tgw-attach-.+`)),
 					resource.TestCheckResourceAttrPair(resourceName, "transit_gateway_id", transitGatewayResourceName, "id"),
 				),
 			},
@@ -517,7 +517,7 @@ func TestAccSiteVPNConnection_tunnel1PreSharedKey(t *testing.T) {
 func TestAccSiteVPNConnection_tunnelOptions(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	badCidrRangeErr := regexp.MustCompile(`expected \w+ to not be any of \[[\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}\/30\s?]+\]`)
+	badCidrRangeErr := regexache.MustCompile(`expected \w+ to not be any of \[[\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}\/30\s?]+\]`)
 	rBgpAsn := sdkacctest.RandIntRange(64512, 65534)
 	resourceName := "aws_vpn_connection.test"
 	var vpn ec2.VpnConnection
@@ -572,15 +572,15 @@ func TestAccSiteVPNConnection_tunnelOptions(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccSiteVPNConnectionConfig_singleTunnelOptions(rName, rBgpAsn, "12345678", "not-a-cidr"),
-				ExpectError: regexp.MustCompile(`invalid CIDR address: not-a-cidr`),
+				ExpectError: regexache.MustCompile(`invalid CIDR address: not-a-cidr`),
 			},
 			{
 				Config:      testAccSiteVPNConnectionConfig_singleTunnelOptions(rName, rBgpAsn, "12345678", "169.254.254.0/31"),
-				ExpectError: regexp.MustCompile(`expected "\w+" to contain a network Value with between 30 and 30 significant bits`),
+				ExpectError: regexache.MustCompile(`expected "\w+" to contain a network Value with between 30 and 30 significant bits`),
 			},
 			{
 				Config:      testAccSiteVPNConnectionConfig_singleTunnelOptions(rName, rBgpAsn, "12345678", "172.16.0.0/30"),
-				ExpectError: regexp.MustCompile(`must be within 169.254.0.0/16`),
+				ExpectError: regexache.MustCompile(`must be within 169.254.0.0/16`),
 			},
 			{
 				Config:      testAccSiteVPNConnectionConfig_singleTunnelOptions(rName, rBgpAsn, "12345678", "169.254.0.0/30"),
@@ -612,19 +612,19 @@ func TestAccSiteVPNConnection_tunnelOptions(t *testing.T) {
 			},
 			{
 				Config:      testAccSiteVPNConnectionConfig_singleTunnelOptions(rName, rBgpAsn, "1234567", "169.254.254.0/30"),
-				ExpectError: regexp.MustCompile(`expected length of \w+ to be in the range \(8 - 64\)`),
+				ExpectError: regexache.MustCompile(`expected length of \w+ to be in the range \(8 - 64\)`),
 			},
 			{
 				Config:      testAccSiteVPNConnectionConfig_singleTunnelOptions(rName, rBgpAsn, sdkacctest.RandStringFromCharSet(65, sdkacctest.CharSetAlpha), "169.254.254.0/30"),
-				ExpectError: regexp.MustCompile(`expected length of \w+ to be in the range \(8 - 64\)`),
+				ExpectError: regexache.MustCompile(`expected length of \w+ to be in the range \(8 - 64\)`),
 			},
 			{
 				Config:      testAccSiteVPNConnectionConfig_singleTunnelOptions(rName, rBgpAsn, "01234567", "169.254.254.0/30"),
-				ExpectError: regexp.MustCompile(`cannot start with zero character`),
+				ExpectError: regexache.MustCompile(`cannot start with zero character`),
 			},
 			{
 				Config:      testAccSiteVPNConnectionConfig_singleTunnelOptions(rName, rBgpAsn, "1234567!", "169.254.254.0/30"),
-				ExpectError: regexp.MustCompile(`can only contain alphanumeric, period and underscore characters`),
+				ExpectError: regexache.MustCompile(`can only contain alphanumeric, period and underscore characters`),
 			},
 			{
 				Config: testAccSiteVPNConnectionConfig_tunnelOptions(rName, rBgpAsn, "192.168.1.1/32", "192.168.1.2/32", tunnel1, tunnel2),

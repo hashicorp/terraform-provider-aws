@@ -5,13 +5,17 @@ package flex_test
 
 import (
 	"context"
-	"strings"
 	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/google/go-cmp/cmp"
+	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 )
 
 func TestStringFromFramework(t *testing.T) {
@@ -126,42 +130,6 @@ func TestStringToFrameworkLegacy(t *testing.T) {
 	}
 }
 
-func TestStringToFrameworkWithTransform(t *testing.T) {
-	t.Parallel()
-
-	type testCase struct {
-		input    *string
-		expected types.String
-	}
-	tests := map[string]testCase{
-		"valid string": {
-			input:    aws.String("TEST"),
-			expected: types.StringValue("test"),
-		},
-		"empty string": {
-			input:    aws.String(""),
-			expected: types.StringValue(""),
-		},
-		"nil string": {
-			input:    nil,
-			expected: types.StringNull(),
-		},
-	}
-
-	for name, test := range tests {
-		name, test := name, test
-		t.Run(name, func(t *testing.T) {
-			t.Parallel()
-
-			got := flex.StringToFrameworkWithTransform(context.Background(), test.input, strings.ToLower)
-
-			if diff := cmp.Diff(got, test.expected); diff != "" {
-				t.Errorf("unexpected diff (+wanted, -got): %s", diff)
-			}
-		})
-	}
-}
-
 func TestStringValueToFramework(t *testing.T) {
 	t.Parallel()
 
@@ -226,6 +194,77 @@ func TestStringValueToFrameworkLegacy(t *testing.T) {
 			got := flex.StringValueToFrameworkLegacy(context.Background(), test.input)
 
 			if diff := cmp.Diff(got, test.expected); diff != "" {
+				t.Errorf("unexpected diff (+wanted, -got): %s", diff)
+			}
+		})
+	}
+}
+
+func TestARNStringFromFramework(t *testing.T) {
+	t.Parallel()
+
+	type testCase struct {
+		input    fwtypes.ARN
+		expected *string
+	}
+	tests := map[string]testCase{
+		"valid ARN": {
+			input:    fwtypes.ARNValue(errs.Must(arn.Parse("arn:aws:iam::123456789012:user/David"))),
+			expected: aws.String("arn:aws:iam::123456789012:user/David"),
+		},
+		"null ARN": {
+			input:    fwtypes.ARNNull(),
+			expected: nil,
+		},
+		"unknown ARN": {
+			input:    fwtypes.ARNUnknown(),
+			expected: nil,
+		},
+	}
+
+	for name, test := range tests {
+		name, test := name, test
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
+			got := flex.ARNStringFromFramework(context.Background(), test.input)
+
+			if diff := cmp.Diff(got, test.expected); diff != "" {
+				t.Errorf("unexpected diff (+wanted, -got): %s", diff)
+			}
+		})
+	}
+}
+
+func TestStringToFrameworkARN(t *testing.T) {
+	t.Parallel()
+
+	type testCase struct {
+		input    *string
+		expected fwtypes.ARN
+	}
+	tests := map[string]testCase{
+		"valid ARN": {
+			input:    aws.String("arn:aws:iam::123456789012:user/David"),
+			expected: fwtypes.ARNValue(errs.Must(arn.Parse("arn:aws:iam::123456789012:user/David"))),
+		},
+		"null ARN": {
+			input:    nil,
+			expected: fwtypes.ARNNull(),
+		},
+	}
+
+	for name, test := range tests {
+		name, test := name, test
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
+			var diags diag.Diagnostics
+			got := flex.StringToFrameworkARN(context.Background(), test.input, &diags)
+
+			if err := fwdiag.DiagnosticsError(diags); err != nil {
+				t.Errorf("err %q", err)
+			} else if diff := cmp.Diff(got, test.expected); diff != "" {
 				t.Errorf("unexpected diff (+wanted, -got): %s", diff)
 			}
 		})

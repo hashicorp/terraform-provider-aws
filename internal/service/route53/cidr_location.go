@@ -6,9 +6,9 @@ package route53
 import (
 	"context"
 	"fmt"
-	"regexp"
 	"strings"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/route53"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
@@ -66,7 +66,7 @@ func (r *resourceCIDRLocation) Schema(ctx context.Context, req resource.SchemaRe
 				},
 				Validators: []validator.String{
 					stringvalidator.LengthAtMost(16),
-					stringvalidator.RegexMatches(regexp.MustCompile(`^[a-zA-Z0-9_\-]+$`), `can include letters, digits, underscore (_) and the dash (-) character`),
+					stringvalidator.RegexMatches(regexache.MustCompile(`^[0-9A-Za-z_-]+$`), `can include letters, digits, underscore (_) and the dash (-) character`),
 				},
 			},
 		},

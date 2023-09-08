@@ -4,8 +4,7 @@
 package schema
 
 import (
-	"regexp"
-
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/quicksight"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -217,7 +216,7 @@ func idSchema() *schema.Schema {
 		Required: true,
 		ValidateFunc: validation.All(
 			validation.StringLenBetween(1, 512),
-			validation.StringMatch(regexp.MustCompile(`[\w\-]+`), "must contain only alphanumeric, hyphen, and underscore characters"),
+			validation.StringMatch(regexache.MustCompile(`[\w\-]+`), "must contain only alphanumeric, hyphen, and underscore characters"),
 		),
 	}
 }
@@ -491,8 +490,8 @@ func ExpandTemplateDefinition(tfList []interface{}) *quicksight.TemplateVersionD
 	if v, ok := tfMap["filter_groups"].([]interface{}); ok && len(v) > 0 {
 		definition.FilterGroups = expandFilterGroups(v)
 	}
-	if v, ok := tfMap["parameters_declarations"].([]interface{}); ok && len(v) > 0 {
-		definition.ParameterDeclarations = expandParameterDeclarations(v)
+	if v, ok := tfMap["parameters_declarations"].(*schema.Set); ok && v.Len() > 0 {
+		definition.ParameterDeclarations = expandParameterDeclarations(v.List())
 	}
 	if v, ok := tfMap["sheets"].([]interface{}); ok && len(v) > 0 {
 		definition.Sheets = expandSheetDefinitions(v)

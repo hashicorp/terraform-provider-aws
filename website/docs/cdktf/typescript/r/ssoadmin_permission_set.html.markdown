@@ -71,6 +71,12 @@ This resource exports the following attributes in addition to the arguments abov
 * `createdDate` - The date the Permission Set was created in [RFC3339 format](https://tools.ietf.org/html/rfc3339#section-5.8).
 * `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
+## Timeouts
+
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
+
+- `update` - (Default `10M`)
+
 ## Import
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import SSO Permission Sets using the `arn` and `instanceArn` separated by a comma (`,`). For example:
@@ -93,4 +99,4 @@ Using `terraform import`, import SSO Permission Sets using the `arn` and `instan
 % terraform import aws_ssoadmin_permission_set.example arn:aws:sso:::permissionSet/ssoins-2938j0x8920sbj72/ps-80383020jr9302rk,arn:aws:sso:::instance/ssoins-2938j0x8920sbj72
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-ee5b91eba62be041d41c2d59dc20efed6c06355820165d0e4bc07edf2ab9da95 -->
+<!-- cache-key: cdktf-0.18.0 input-2c1f2076ed612356260a73ee4a57bd14c4cf5a5dd7d59da0d248e8cda59c8f43 -->

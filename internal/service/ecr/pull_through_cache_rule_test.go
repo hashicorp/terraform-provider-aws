@@ -6,9 +6,9 @@ package ecr_test
 import (
 	"context"
 	"fmt"
-	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/service/ecr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -91,7 +91,7 @@ func TestAccECRPullThroughCacheRule_failWhenAlreadyExists(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPullThroughCacheRuleExists(ctx, resourceName),
 				),
-				ExpectError: regexp.MustCompile(`PullThroughCacheRuleAlreadyExistsException`),
+				ExpectError: regexache.MustCompile(`PullThroughCacheRuleAlreadyExistsException`),
 			},
 		},
 	})

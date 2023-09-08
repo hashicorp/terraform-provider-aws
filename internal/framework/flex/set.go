@@ -11,50 +11,36 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 )
 
-func ExpandFrameworkStringSet(ctx context.Context, set types.Set) []*string {
-	if set.IsNull() || set.IsUnknown() {
-		return nil
-	}
+func ExpandFrameworkStringSet(ctx context.Context, v types.Set) []*string {
+	var output []*string
 
-	var vs []*string
+	panicOnError(Expand(ctx, v, &output))
 
-	if set.ElementsAs(ctx, &vs, false).HasError() {
-		return nil
-	}
-
-	return vs
+	return output
 }
 
-func ExpandFrameworkStringValueSet(ctx context.Context, set types.Set) Set[string] {
-	if set.IsNull() || set.IsUnknown() {
-		return nil
-	}
+func ExpandFrameworkStringValueSet(ctx context.Context, v types.Set) Set[string] {
+	var output []string
 
-	var vs []string
+	panicOnError(Expand(ctx, v, &output))
 
-	if set.ElementsAs(ctx, &vs, false).HasError() {
-		return nil
-	}
-
-	return vs
+	return output
 }
 
 // FlattenFrameworkStringSet converts a slice of string pointers to a framework Set value.
 //
 // A nil slice is converted to a null Set.
 // An empty slice is converted to a null Set.
-func FlattenFrameworkStringSet(_ context.Context, vs []*string) types.Set {
-	if len(vs) == 0 {
+func FlattenFrameworkStringSet(ctx context.Context, v []*string) types.Set {
+	if len(v) == 0 {
 		return types.SetNull(types.StringType)
 	}
 
-	elems := make([]attr.Value, len(vs))
+	var output types.Set
 
-	for i, v := range vs {
-		elems[i] = types.StringValue(aws.ToString(v))
-	}
+	panicOnError(Flatten(ctx, v, &output))
 
-	return types.SetValueMust(types.StringType, elems)
+	return output
 }
 
 // FlattenFrameworkStringSetLegacy converts a slice of string pointers to a framework Set value.
@@ -74,18 +60,16 @@ func FlattenFrameworkStringSetLegacy(_ context.Context, vs []*string) types.Set 
 //
 // A nil slice is converted to a null Set.
 // An empty slice is converted to a null Set.
-func FlattenFrameworkStringValueSet(_ context.Context, vs []string) types.Set {
-	if len(vs) == 0 {
+func FlattenFrameworkStringValueSet(ctx context.Context, v []string) types.Set {
+	if len(v) == 0 {
 		return types.SetNull(types.StringType)
 	}
 
-	elems := make([]attr.Value, len(vs))
+	var output types.Set
 
-	for i, v := range vs {
-		elems[i] = types.StringValue(v)
-	}
+	panicOnError(Flatten(ctx, v, &output))
 
-	return types.SetValueMust(types.StringType, elems)
+	return output
 }
 
 // FlattenFrameworkStringValueSetLegacy is the Plugin Framework variant of FlattenStringValueSet.

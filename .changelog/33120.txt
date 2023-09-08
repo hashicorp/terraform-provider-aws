@@ -1,0 +1,9 @@
+```release-note:bug
+resource/aws_quicksight_analysis: Change `definition.*.parameter_declarations` to a set type, preventing persistent differences
+```
+```release-note:bug
+resource/aws_quicksight_dashboard: Change `definition.*.parameter_declarations` to a set type, preventing persistent differences
+```
+```release-note:bug
+resource/aws_quicksight_template: Change `definition.*.parameter_declarations` to a set type, preventing persistent differences
+```

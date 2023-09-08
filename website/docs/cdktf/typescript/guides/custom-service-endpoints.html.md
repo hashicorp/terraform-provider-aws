@@ -222,6 +222,7 @@ class MyConvertedCode extends TerraformStack {
   <li><code>lakeformation</code></li>
   <li><code>lambda</code></li>
   <li><code>lexmodels</code> (or <code>lexmodelbuilding</code> or <code>lexmodelbuildingservice</code> or <code>lex</code>)</li>
+  <li><code>lexmodelsv2</code> (or <code>lexv2models</code>)</li>
   <li><code>licensemanager</code></li>
   <li><code>lightsail</code></li>
   <li><code>location</code> (or <code>locationservice</code>)</li>
@@ -412,4 +413,4 @@ class MyConvertedCode extends TerraformStack {
 
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-b2fcb16e84e9dbfd67c4547c88042b39237751644d2e58aee980b6edbeb4ae6a -->
+<!-- cache-key: cdktf-0.18.0 input-0e72515780da7c763f9925a06d3dc7ad20f226e97dfad11a5f0f13a369388d29 -->

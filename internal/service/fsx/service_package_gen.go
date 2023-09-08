@@ -95,7 +95,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceOpenzfsFileSystem,
+			Factory:  ResourceOpenZFSFileSystem,
 			TypeName: "aws_fsx_openzfs_file_system",
 			Name:     "OpenZFS File System",
 			Tags: &types.ServicePackageResourceTags{

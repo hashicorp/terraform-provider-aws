@@ -6,9 +6,9 @@ package kafka_test
 import (
 	"context"
 	"fmt"
-	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/service/kafka"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -41,7 +41,7 @@ func TestAccKafkaClusterPolicy_basic(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckClusterPolicyExists(ctx, resourceName, &clusterpolicy),
 					resource.TestCheckResourceAttrSet(resourceName, "current_version"),
-					resource.TestMatchResourceAttr(resourceName, "policy", regexp.MustCompile(`"kafka:CreateVpcConnection","kafka:GetBootstrapBrokers"`)),
+					resource.TestMatchResourceAttr(resourceName, "policy", regexache.MustCompile(`"kafka:Get\*","kafka:CreateVpcConnection"`)),
 				),
 			},
 			{
@@ -76,6 +76,42 @@ func TestAccKafkaClusterPolicy_disappears(t *testing.T) {
 					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfkafka.ResourceClusterPolicy(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
+func TestAccKafkaClusterPolicy_update(t *testing.T) {
+	ctx := acctest.Context(t)
+	var clusterpolicy kafka.GetClusterPolicyOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_msk_cluster_policy.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.Kafka)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.Kafka),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckClusterPolicyDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccClusterPolicyConfig_basic(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckClusterPolicyExists(ctx, resourceName, &clusterpolicy),
+					resource.TestCheckResourceAttrSet(resourceName, "current_version"),
+					resource.TestMatchResourceAttr(resourceName, "policy", regexache.MustCompile(`"kafka:Get\*","kafka:CreateVpcConnection"`)),
+				),
+			},
+			{
+				Config: testAccClusterPolicyConfig_updated(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckClusterPolicyExists(ctx, resourceName, &clusterpolicy),
+					resource.TestCheckResourceAttrSet(resourceName, "current_version"),
+					resource.TestMatchResourceAttr(resourceName, "policy", regexache.MustCompile(`"kafka:DescribeCluster","kafka:DescribeClusterV2"`)),
+				),
 			},
 		},
 	})
@@ -148,7 +184,37 @@ resource "aws_msk_cluster_policy" "test" {
         "kafka:Describe*",
         "kafka:Get*",
         "kafka:CreateVpcConnection",
+      ]
+      Resource = aws_msk_cluster.test.arn
+    }]
+  })
+
+  depends_on = [aws_msk_vpc_connection.test]
+}
+`)
+}
+
+func testAccClusterPolicyConfig_updated(rName string) string {
+	return acctest.ConfigCompose(testAccVPCConnectionConfig_basic(rName), `
+data "aws_caller_identity" "current" {}
+data "aws_partition" "current" {}
+
+resource "aws_msk_cluster_policy" "test" {
+  cluster_arn = aws_msk_cluster.test.arn
+
+  policy = jsonencode({
+    Version = "2012-10-17",
+    Statement = [{
+      Sid    = "testMskClusterPolicy"
+      Effect = "Allow"
+      Principal = {
+        "AWS" = "arn:${data.aws_partition.current.partition}:iam::${data.aws_caller_identity.current.account_id}:root"
+      }
+      Action = [
+        "kafka:CreateVpcConnection",
         "kafka:GetBootstrapBrokers",
+        "kafka:DescribeCluster",
+        "kafka:DescribeClusterV2",
       ]
       Resource = aws_msk_cluster.test.arn
     }]

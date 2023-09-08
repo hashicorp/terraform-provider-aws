@@ -378,7 +378,7 @@ service/lambda:
 service/lexmodels:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_lex_'
 service/lexmodelsv2:
-  - '((\*|-)\s*`?|(data|resource)\s+"?)aws_lexmodelsv2_'
+  - '((\*|-)\s*`?|(data|resource)\s+"?)aws_lexv2models_'
 service/lexruntime:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_lexruntime_'
 service/lexruntimev2:

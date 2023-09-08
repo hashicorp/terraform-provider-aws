@@ -7,9 +7,9 @@ import (
 	"context"
 	"fmt"
 	"os"
-	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/service/rds"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -43,7 +43,7 @@ func TestAccRDSReservedInstance_basic(t *testing.T) {
 				Config: testAccReservedInstanceConfig_basic(rName, instanceCount),
 				Check: resource.ComposeTestCheckFunc(
 					testAccReservedInstanceExists(ctx, resourceName, &reservation),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "rds", regexp.MustCompile(`ri:.+`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "rds", regexache.MustCompile(`ri:.+`)),
 					resource.TestCheckResourceAttrPair(dataSourceName, "currency_code", resourceName, "currency_code"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "db_instance_class", resourceName, "db_instance_class"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "duration", resourceName, "duration"),

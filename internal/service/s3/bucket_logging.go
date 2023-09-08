@@ -135,7 +135,7 @@ func resourceBucketLoggingCreate(ctx context.Context, d *schema.ResourceData, me
 
 	d.SetId(CreateResourceID(bucket, expectedBucketOwner))
 
-	_, err = tfresource.RetryWhenNotFound(ctx, propagationTimeout, func() (interface{}, error) {
+	_, err = tfresource.RetryWhenNotFound(ctx, s3BucketPropagationTimeout, func() (interface{}, error) {
 		return FindBucketLogging(ctx, conn, bucket, expectedBucketOwner)
 	})
 

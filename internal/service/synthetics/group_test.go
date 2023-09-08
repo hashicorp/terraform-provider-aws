@@ -6,9 +6,9 @@ package synthetics_test
 import (
 	"context"
 	"fmt"
-	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/service/synthetics"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -35,7 +35,7 @@ func TestAccSyntheticsGroup_basic(t *testing.T) {
 				Config: testAccGroupConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGroupExists(ctx, resourceName, &group),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", synthetics.ServiceName, regexp.MustCompile(`group:.+`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", synthetics.ServiceName, regexache.MustCompile(`group:.+`)),
 					resource.TestCheckResourceAttrSet(resourceName, "group_id"),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 				),

@@ -6,8 +6,8 @@ package cloudformation
 import (
 	"context"
 	"log"
-	"regexp"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cloudformation"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
@@ -72,7 +72,7 @@ func ResourceType() *schema.Resource {
 							ForceNew: true,
 							ValidateFunc: validation.All(
 								validation.StringLenBetween(1, 512),
-								validation.StringMatch(regexp.MustCompile(`[\.\-_/#A-Za-z0-9]+`), "must contain only alphanumeric, period, hyphen, forward slash, and octothorp characters"),
+								validation.StringMatch(regexache.MustCompile(`[0-9A-Za-z_./#-]+`), "must contain only alphanumeric, period, hyphen, forward slash, and octothorp characters"),
 							),
 						},
 						"log_role_arn": {
@@ -100,7 +100,7 @@ func ResourceType() *schema.Resource {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
-				ValidateFunc: validation.StringMatch(regexp.MustCompile(`^(https|s3)\:\/\/.+`), "must begin with s3:// or https://"),
+				ValidateFunc: validation.StringMatch(regexache.MustCompile(`^(https|s3)\:\/\/.+`), "must begin with s3:// or https://"),
 			},
 			"type": {
 				Type:         schema.TypeString,
@@ -119,7 +119,7 @@ func ResourceType() *schema.Resource {
 				ForceNew: true,
 				ValidateFunc: validation.All(
 					validation.StringLenBetween(10, 204),
-					validation.StringMatch(regexp.MustCompile(`[A-Za-z0-9]{2,64}::[A-Za-z0-9]{2,64}::[A-Za-z0-9]{2,64}(::MODULE){0,1}`), "three alphanumeric character sections separated by double colons (::)"),
+					validation.StringMatch(regexache.MustCompile(`[0-9A-Za-z]{2,64}::[0-9A-Za-z]{2,64}::[0-9A-Za-z]{2,64}(::MODULE){0,1}`), "three alphanumeric character sections separated by double colons (::)"),
 				),
 			},
 			"version_id": {
