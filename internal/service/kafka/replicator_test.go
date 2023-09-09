@@ -60,10 +60,9 @@ func TestAccKafkaReplicator_basic(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{},
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -108,10 +107,9 @@ func TestAccKafkaReplicator_update(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{},
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 			{
 				Config: testAccReplicatorConfig_update(rName, sourceCluster, targetCluster),
@@ -138,10 +136,70 @@ func TestAccKafkaReplicator_update(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{},
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccKafkaReplicator_tags(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var replicator kafka.DescribeReplicatorOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	sourceCluster := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	targetCluster := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_msk_replicator.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.Kafka)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.Kafka),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckReplicatorDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccReplicatorConfig_tags1(rName, "key1", "value1", sourceCluster, targetCluster),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckReplicatorExists(ctx, resourceName, &replicator),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccReplicatorConfig_tags2(rName, "key1", "value1updated", "key2", "value2", sourceCluster, targetCluster),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckReplicatorExists(ctx, resourceName, &replicator),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccReplicatorConfig_tags1(rName, "key2", "value2", sourceCluster, targetCluster),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckReplicatorExists(ctx, resourceName, &replicator),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+				),
 			},
 		},
 	})
@@ -545,9 +603,6 @@ func testAccReplicatorConfig_update(rName, sourceCluster, targetCluster string) 
 		testAccReplicatorConfig_target(targetCluster),
 		fmt.Sprintf(`
 
-
-
-
 resource "aws_msk_replicator" "test" {
   replicator_name            = %[1]q
   description                = "test-description"
@@ -597,4 +652,115 @@ resource "aws_msk_replicator" "test" {
   }
 }
 `, rName, sourceCluster, targetCluster))
+}
+
+func testAccReplicatorConfig_tags1(rName, tagKey1, tagValue1, sourceCluster, targetCluster string) string {
+	return acctest.ConfigCompose(
+		testAccReplicatorConfig_source(sourceCluster),
+		testAccReplicatorConfig_target(targetCluster),
+		fmt.Sprintf(`
+
+resource "aws_msk_replicator" "test" {
+  replicator_name            = %[1]q
+  description                = "test-description"
+  service_execution_role_arn = aws_iam_role.source.arn
+
+  kafka_clusters {
+    amazon_msk_cluster {
+      msk_cluster_arn = aws_msk_cluster.source.arn
+    }
+
+    vpc_config {
+      subnet_ids          = aws_subnet.source[*].id
+      security_groups_ids = [aws_security_group.source.id]
+    }
+  }
+
+  kafka_clusters {
+    amazon_msk_cluster {
+      msk_cluster_arn = aws_msk_cluster.target.arn
+    }
+
+    vpc_config {
+      subnet_ids          = aws_subnet.target[*].id
+      security_groups_ids = [aws_security_group.target.id]
+    }
+  }
+
+  replication_info_list {
+    target_kafka_cluster_arn = aws_msk_cluster.source.arn
+    source_kafka_cluster_arn = aws_msk_cluster.target.arn
+    target_compression_type  = "NONE"
+
+
+    topic_replication {
+      topics_to_replicate = [".*"]
+    }
+
+    consumer_group_replication {
+      consumer_groups_to_replicate = [".*"]
+    }
+  }
+
+  tags = {
+    %[2]q = %[3]q
+  }
+}
+`, rName, tagKey1, tagValue1, sourceCluster, targetCluster))
+}
+
+func testAccReplicatorConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2, sourceCluster, targetCluster string) string {
+	return acctest.ConfigCompose(
+		testAccReplicatorConfig_source(sourceCluster),
+		testAccReplicatorConfig_target(targetCluster),
+		fmt.Sprintf(`
+
+resource "aws_msk_replicator" "test" {
+  replicator_name            = %[1]q
+  description                = "test-description"
+  service_execution_role_arn = aws_iam_role.source.arn
+
+  kafka_clusters {
+    amazon_msk_cluster {
+      msk_cluster_arn = aws_msk_cluster.source.arn
+    }
+
+    vpc_config {
+      subnet_ids          = aws_subnet.source[*].id
+      security_groups_ids = [aws_security_group.source.id]
+    }
+  }
+
+  kafka_clusters {
+    amazon_msk_cluster {
+      msk_cluster_arn = aws_msk_cluster.target.arn
+    }
+
+    vpc_config {
+      subnet_ids          = aws_subnet.target[*].id
+      security_groups_ids = [aws_security_group.target.id]
+    }
+  }
+
+  replication_info_list {
+    target_kafka_cluster_arn = aws_msk_cluster.source.arn
+    source_kafka_cluster_arn = aws_msk_cluster.target.arn
+    target_compression_type  = "NONE"
+
+
+    topic_replication {
+      topics_to_replicate = [".*"]
+    }
+
+    consumer_group_replication {
+      consumer_groups_to_replicate = [".*"]
+    }
+  }
+
+  tags = {
+    %[2]q = %[3]q
+    %[4]q = %[5]q
+  }
+}
+`, rName, tagKey1, tagValue1, tagKey2, tagValue2, sourceCluster, targetCluster))
 }

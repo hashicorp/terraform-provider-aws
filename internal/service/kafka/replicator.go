@@ -60,6 +60,7 @@ func ResourceReplicator() *schema.Resource {
 			},
 			"service_execution_role_arn": {
 				Type:     schema.TypeString,
+				ValidateFunc: verify.ValidARN,
 				Required: true,
 			},
 			"kafka_clusters": {
@@ -78,6 +79,7 @@ func ResourceReplicator() *schema.Resource {
 									"msk_cluster_arn": {
 										Type:     schema.TypeString,
 										Required: true,
+										ValidateFunc: verify.ValidARN,
 									},
 								},
 							},
@@ -120,6 +122,7 @@ func ResourceReplicator() *schema.Resource {
 							Type:     schema.TypeString,
 							Required: true,
 							ForceNew: true,
+							ValidateFunc: verify.ValidARN,
 						},
 						"source_kafka_cluster_alias": {
 							Type:     schema.TypeString,
@@ -129,6 +132,7 @@ func ResourceReplicator() *schema.Resource {
 							Type:     schema.TypeString,
 							Required: true,
 							ForceNew: true,
+							ValidateFunc: verify.ValidARN,
 						},
 						"target_kafka_cluster_alias": {
 							Type:     schema.TypeString,
