@@ -4,19 +4,15 @@
 package s3_test
 
 import (
-	"context"
 	"fmt"
 	"testing"
 	"time"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/s3"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
-	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 const rfc1123RegexPattern = `^[a-zA-Z]{3}, [0-9]+ [a-zA-Z]+ [0-9]{4} [0-9:]+ [A-Z]+$`
@@ -25,21 +21,18 @@ func TestAccS3ObjectDataSource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	rInt := sdkacctest.RandInt()
 
-	var dsObj s3.GetObjectOutput
-
 	resourceName := "aws_s3_object.object"
 	dataSourceName := "data.aws_s3_object.obj"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                  func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:                acctest.ErrorCheck(t, s3.EndpointsID),
+		ErrorCheck:                acctest.ErrorCheck(t, names.S3EndpointID),
 		ProtoV5ProviderFactories:  acctest.ProtoV5ProviderFactories,
 		PreventPostDestroyRefresh: true,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccObjectDataSourceConfig_basic(rInt),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckObjectExistsDataSource(ctx, dataSourceName, &dsObj),
 					resource.TestCheckResourceAttr(dataSourceName, "content_length", "11"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "content_type", resourceName, "content_type"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "etag", resourceName, "etag"),
@@ -58,21 +51,18 @@ func TestAccS3ObjectDataSource_basicViaAccessPoint(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
-	var dsObj s3.GetObjectOutput
-
 	dataSourceName := "data.aws_s3_object.test"
 	resourceName := "aws_s3_object.test"
 	accessPointResourceName := "aws_s3_access_point.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, s3.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3EndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccObjectDataSourceConfig_basicViaAccessPoint(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckObjectExistsDataSource(ctx, dataSourceName, &dsObj),
 					resource.TestCheckResourceAttrPair(dataSourceName, "bucket", accessPointResourceName, "arn"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "key", resourceName, "key"),
 				),
@@ -85,21 +75,18 @@ func TestAccS3ObjectDataSource_readableBody(t *testing.T) {
 	ctx := acctest.Context(t)
 	rInt := sdkacctest.RandInt()
 
-	var dsObj s3.GetObjectOutput
-
 	resourceName := "aws_s3_object.object"
 	dataSourceName := "data.aws_s3_object.obj"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                  func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:                acctest.ErrorCheck(t, s3.EndpointsID),
+		ErrorCheck:                acctest.ErrorCheck(t, names.S3EndpointID),
 		ProtoV5ProviderFactories:  acctest.ProtoV5ProviderFactories,
 		PreventPostDestroyRefresh: true,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccObjectDataSourceConfig_readableBody(rInt),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckObjectExistsDataSource(ctx, dataSourceName, &dsObj),
 					resource.TestCheckResourceAttr(dataSourceName, "content_length", "3"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "content_type", resourceName, "content_type"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "etag", resourceName, "etag"),
@@ -118,21 +105,18 @@ func TestAccS3ObjectDataSource_kmsEncrypted(t *testing.T) {
 	ctx := acctest.Context(t)
 	rInt := sdkacctest.RandInt()
 
-	var dsObj s3.GetObjectOutput
-
 	resourceName := "aws_s3_object.object"
 	dataSourceName := "data.aws_s3_object.obj"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                  func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:                acctest.ErrorCheck(t, s3.EndpointsID),
+		ErrorCheck:                acctest.ErrorCheck(t, names.S3EndpointID),
 		ProtoV5ProviderFactories:  acctest.ProtoV5ProviderFactories,
 		PreventPostDestroyRefresh: true,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccObjectDataSourceConfig_kmsEncrypted(rInt),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckObjectExistsDataSource(ctx, dataSourceName, &dsObj),
 					resource.TestCheckResourceAttr(dataSourceName, "content_length", "22"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "content_type", resourceName, "content_type"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "etag", resourceName, "etag"),
@@ -153,21 +137,18 @@ func TestAccS3ObjectDataSource_bucketKeyEnabled(t *testing.T) {
 	ctx := acctest.Context(t)
 	rInt := sdkacctest.RandInt()
 
-	var dsObj s3.GetObjectOutput
-
 	resourceName := "aws_s3_object.object"
 	dataSourceName := "data.aws_s3_object.obj"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                  func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:                acctest.ErrorCheck(t, s3.EndpointsID),
+		ErrorCheck:                acctest.ErrorCheck(t, names.S3EndpointID),
 		ProtoV5ProviderFactories:  acctest.ProtoV5ProviderFactories,
 		PreventPostDestroyRefresh: true,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccObjectDataSourceConfig_bucketKeyEnabled(rInt),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckObjectExistsDataSource(ctx, dataSourceName, &dsObj),
 					resource.TestCheckResourceAttr(dataSourceName, "content_length", "22"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "content_type", resourceName, "content_type"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "etag", resourceName, "etag"),
@@ -189,21 +170,18 @@ func TestAccS3ObjectDataSource_allParams(t *testing.T) {
 	ctx := acctest.Context(t)
 	rInt := sdkacctest.RandInt()
 
-	var dsObj s3.GetObjectOutput
-
 	resourceName := "aws_s3_object.object"
 	dataSourceName := "data.aws_s3_object.obj"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                  func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:                acctest.ErrorCheck(t, s3.EndpointsID),
+		ErrorCheck:                acctest.ErrorCheck(t, names.S3EndpointID),
 		ProtoV5ProviderFactories:  acctest.ProtoV5ProviderFactories,
 		PreventPostDestroyRefresh: true,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccObjectDataSourceConfig_allParams(rInt),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckObjectExistsDataSource(ctx, dataSourceName, &dsObj),
 					resource.TestCheckResourceAttr(dataSourceName, "content_length", "25"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "content_type", resourceName, "content_type"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "etag", resourceName, "etag"),
@@ -239,21 +217,18 @@ func TestAccS3ObjectDataSource_objectLockLegalHoldOff(t *testing.T) {
 	ctx := acctest.Context(t)
 	rInt := sdkacctest.RandInt()
 
-	var dsObj s3.GetObjectOutput
-
 	resourceName := "aws_s3_object.object"
 	dataSourceName := "data.aws_s3_object.obj"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                  func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:                acctest.ErrorCheck(t, s3.EndpointsID),
+		ErrorCheck:                acctest.ErrorCheck(t, names.S3EndpointID),
 		ProtoV5ProviderFactories:  acctest.ProtoV5ProviderFactories,
 		PreventPostDestroyRefresh: true,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccObjectDataSourceConfig_lockLegalHoldOff(rInt),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckObjectExistsDataSource(ctx, dataSourceName, &dsObj),
 					resource.TestCheckResourceAttr(dataSourceName, "content_length", "11"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "content_type", resourceName, "content_type"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "etag", resourceName, "etag"),
@@ -273,21 +248,18 @@ func TestAccS3ObjectDataSource_objectLockLegalHoldOn(t *testing.T) {
 	rInt := sdkacctest.RandInt()
 	retainUntilDate := time.Now().UTC().AddDate(0, 0, 10).Format(time.RFC3339)
 
-	var dsObj s3.GetObjectOutput
-
 	resourceName := "aws_s3_object.object"
 	dataSourceName := "data.aws_s3_object.obj"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                  func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:                acctest.ErrorCheck(t, s3.EndpointsID),
+		ErrorCheck:                acctest.ErrorCheck(t, names.S3EndpointID),
 		ProtoV5ProviderFactories:  acctest.ProtoV5ProviderFactories,
 		PreventPostDestroyRefresh: true,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccObjectDataSourceConfig_lockLegalHoldOn(rInt, retainUntilDate),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckObjectExistsDataSource(ctx, dataSourceName, &dsObj),
 					resource.TestCheckResourceAttr(dataSourceName, "content_length", "11"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "content_type", resourceName, "content_type"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "etag", resourceName, "etag"),
@@ -304,7 +276,6 @@ func TestAccS3ObjectDataSource_objectLockLegalHoldOn(t *testing.T) {
 
 func TestAccS3ObjectDataSource_leadingSlash(t *testing.T) {
 	ctx := acctest.Context(t)
-	var dsObj1, dsObj2, dsObj3 s3.GetObjectOutput
 
 	resourceName := "aws_s3_object.object"
 	dataSourceName1 := "data.aws_s3_object.obj1"
@@ -316,7 +287,7 @@ func TestAccS3ObjectDataSource_leadingSlash(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                  func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:                acctest.ErrorCheck(t, s3.EndpointsID),
+		ErrorCheck:                acctest.ErrorCheck(t, names.S3EndpointID),
 		ProtoV5ProviderFactories:  acctest.ProtoV5ProviderFactories,
 		PreventPostDestroyRefresh: true,
 		Steps: []resource.TestStep{
@@ -326,21 +297,18 @@ func TestAccS3ObjectDataSource_leadingSlash(t *testing.T) {
 			{ // nosemgrep:ci.test-config-funcs-correct-form
 				Config: conf,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckObjectExistsDataSource(ctx, dataSourceName1, &dsObj1),
 					resource.TestCheckResourceAttr(dataSourceName1, "content_length", "3"),
 					resource.TestCheckResourceAttrPair(dataSourceName1, "content_type", resourceName, "content_type"),
 					resource.TestCheckResourceAttrPair(dataSourceName1, "etag", resourceName, "etag"),
 					resource.TestMatchResourceAttr(dataSourceName1, "last_modified", regexache.MustCompile(rfc1123RegexPattern)),
 					resource.TestCheckResourceAttr(dataSourceName1, "body", "yes"),
 
-					testAccCheckObjectExistsDataSource(ctx, dataSourceName2, &dsObj2),
 					resource.TestCheckResourceAttr(dataSourceName2, "content_length", "3"),
 					resource.TestCheckResourceAttrPair(dataSourceName2, "content_type", resourceName, "content_type"),
 					resource.TestCheckResourceAttrPair(dataSourceName2, "etag", resourceName, "etag"),
 					resource.TestMatchResourceAttr(dataSourceName2, "last_modified", regexache.MustCompile(rfc1123RegexPattern)),
 					resource.TestCheckResourceAttr(dataSourceName2, "body", "yes"),
 
-					testAccCheckObjectExistsDataSource(ctx, dataSourceName3, &dsObj3),
 					resource.TestCheckResourceAttr(dataSourceName3, "content_length", "3"),
 					resource.TestCheckResourceAttrPair(dataSourceName3, "content_type", resourceName, "content_type"),
 					resource.TestCheckResourceAttrPair(dataSourceName3, "etag", resourceName, "etag"),
@@ -354,7 +322,6 @@ func TestAccS3ObjectDataSource_leadingSlash(t *testing.T) {
 
 func TestAccS3ObjectDataSource_multipleSlashes(t *testing.T) {
 	ctx := acctest.Context(t)
-	var dsObj1, dsObj2, dsObj3 s3.GetObjectOutput
 
 	resourceName1 := "aws_s3_object.object1"
 	resourceName2 := "aws_s3_object.object2"
@@ -367,7 +334,7 @@ func TestAccS3ObjectDataSource_multipleSlashes(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                  func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:                acctest.ErrorCheck(t, s3.EndpointsID),
+		ErrorCheck:                acctest.ErrorCheck(t, names.S3EndpointID),
 		ProtoV5ProviderFactories:  acctest.ProtoV5ProviderFactories,
 		PreventPostDestroyRefresh: true,
 		Steps: []resource.TestStep{
@@ -378,17 +345,14 @@ func TestAccS3ObjectDataSource_multipleSlashes(t *testing.T) {
 				Config: conf,
 				Check: resource.ComposeTestCheckFunc(
 
-					testAccCheckObjectExistsDataSource(ctx, dataSourceName1, &dsObj1),
 					resource.TestCheckResourceAttr(dataSourceName1, "content_length", "3"),
 					resource.TestCheckResourceAttrPair(dataSourceName1, "content_type", resourceName1, "content_type"),
 					resource.TestCheckResourceAttr(dataSourceName1, "body", "yes"),
 
-					testAccCheckObjectExistsDataSource(ctx, dataSourceName2, &dsObj2),
 					resource.TestCheckResourceAttr(dataSourceName2, "content_length", "3"),
 					resource.TestCheckResourceAttrPair(dataSourceName2, "content_type", resourceName1, "content_type"),
 					resource.TestCheckResourceAttr(dataSourceName2, "body", "yes"),
 
-					testAccCheckObjectExistsDataSource(ctx, dataSourceName3, &dsObj3),
 					resource.TestCheckResourceAttr(dataSourceName3, "content_length", "2"),
 					resource.TestCheckResourceAttrPair(dataSourceName3, "content_type", resourceName2, "content_type"),
 					resource.TestCheckResourceAttr(dataSourceName3, "body", "no"),
@@ -400,51 +364,20 @@ func TestAccS3ObjectDataSource_multipleSlashes(t *testing.T) {
 
 func TestAccS3ObjectDataSource_singleSlashAsKey(t *testing.T) {
 	ctx := acctest.Context(t)
-	var dsObj s3.GetObjectOutput
-	dataSourceName := "data.aws_s3_object.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                  func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:                acctest.ErrorCheck(t, s3.EndpointsID),
+		ErrorCheck:                acctest.ErrorCheck(t, names.S3EndpointID),
 		ProtoV5ProviderFactories:  acctest.ProtoV5ProviderFactories,
 		PreventPostDestroyRefresh: true,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccObjectDataSourceConfig_singleSlashAsKey(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckObjectExistsDataSource(ctx, dataSourceName, &dsObj),
-				),
+				// TODO
 			},
 		},
 	})
-}
-
-func testAccCheckObjectExistsDataSource(ctx context.Context, n string, obj *s3.GetObjectOutput) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[n]
-		if !ok {
-			return fmt.Errorf("Can't find S3 object data source: %s", n)
-		}
-
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("S3 object data source ID not set")
-		}
-
-		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Conn(ctx)
-		out, err := conn.GetObjectWithContext(ctx, &s3.GetObjectInput{
-			Bucket: aws.String(rs.Primary.Attributes["bucket"]),
-			Key:    aws.String(rs.Primary.Attributes["key"]),
-		})
-		if err != nil {
-			return fmt.Errorf("Failed getting S3 Object from %s: %s",
-				rs.Primary.Attributes["bucket"]+"/"+rs.Primary.Attributes["key"], err)
-		}
-
-		*obj = *out
-
-		return nil
-	}
 }
 
 func testAccObjectDataSourceConfig_basic(randInt int) string {
