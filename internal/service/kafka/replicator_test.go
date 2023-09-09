@@ -16,9 +16,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
-	"github.com/hashicorp/terraform-provider-aws/names"
-
 	tfkafka "github.com/hashicorp/terraform-provider-aws/internal/service/kafka"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccKafkaReplicator_basic(t *testing.T) {
@@ -29,6 +28,8 @@ func TestAccKafkaReplicator_basic(t *testing.T) {
 
 	var replicator kafka.DescribeReplicatorOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	sourceCluster := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	targetCluster := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_msk_replicator.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -42,20 +43,17 @@ func TestAccKafkaReplicator_basic(t *testing.T) {
 		CheckDestroy:             testAccCheckReplicatorDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccReplicatorConfig_basic(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Config: testAccReplicatorConfig_basic(rName, sourceCluster, targetCluster),
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckReplicatorExists(ctx, resourceName, &replicator),
+					resource.TestCheckResourceAttrSet(resourceName, "arn"),
 					resource.TestCheckResourceAttr(resourceName, "replicator_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "description", "test-description"),
 					resource.TestCheckResourceAttr(resourceName, "kafka_clusters.#", "2"),
-					resource.TestCheckResourceAttr(resourceName, "kafka_clusters.0.amazon_msk_cluster.0.msk_cluster_arn", "arn:aws:kafka:us-east-1:926562225508:cluster/Target-MSK-Replicator/e1289fbf-e895-464a-afba-e2aa0735cfd2-14"),
 					resource.TestCheckResourceAttr(resourceName, "kafka_clusters.0.vpc_config.0.subnet_ids.#", "3"),
 					resource.TestCheckResourceAttr(resourceName, "kafka_clusters.0.vpc_config.0.security_groups_ids.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "kafka_clusters.1.amazon_msk_cluster.0.msk_cluster_arn", "arn:aws:kafka:us-east-1:926562225508:cluster/Source-MSK-Replicator/9127030a-2c7b-4aea-a5a0-49f978b72f7d-14"),
 					resource.TestCheckResourceAttr(resourceName, "kafka_clusters.1.vpc_config.0.subnet_ids.#", "3"),
 					resource.TestCheckResourceAttr(resourceName, "kafka_clusters.1.vpc_config.0.security_groups_ids.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "replication_info_list.0.target_kafka_cluster_arn", "arn:aws:kafka:us-east-1:926562225508:cluster/Target-MSK-Replicator/e1289fbf-e895-464a-afba-e2aa0735cfd2-14"),
-					resource.TestCheckResourceAttr(resourceName, "replication_info_list.0.source_kafka_cluster_arn", "arn:aws:kafka:us-east-1:926562225508:cluster/Source-MSK-Replicator/9127030a-2c7b-4aea-a5a0-49f978b72f7d-14"),
 					resource.TestCheckResourceAttr(resourceName, "replication_info_list.0.target_compression_type", "NONE"),
 					resource.TestCheckResourceAttr(resourceName, "replication_info_list.0.topic_replication.0.topics_to_replicate.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "replication_info_list.0.consumer_group_replication.0.consumer_groups_to_replicate.#", "1"),
@@ -78,6 +76,8 @@ func TestAccKafkaReplicator_update(t *testing.T) {
 
 	var replicator kafka.DescribeReplicatorOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	sourceCluster := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	targetCluster := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_msk_replicator.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -91,20 +91,17 @@ func TestAccKafkaReplicator_update(t *testing.T) {
 		CheckDestroy:             testAccCheckReplicatorDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccReplicatorConfig_basic(rName),
+				Config: testAccReplicatorConfig_basic(rName, sourceCluster, targetCluster),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckReplicatorExists(ctx, resourceName, &replicator),
+					resource.TestCheckResourceAttrSet(resourceName, "arn"),
 					resource.TestCheckResourceAttr(resourceName, "replicator_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "description", "test-description"),
 					resource.TestCheckResourceAttr(resourceName, "kafka_clusters.#", "2"),
-					resource.TestCheckResourceAttr(resourceName, "kafka_clusters.0.amazon_msk_cluster.0.msk_cluster_arn", "arn:aws:kafka:us-east-1:926562225508:cluster/Target-MSK-Replicator/e1289fbf-e895-464a-afba-e2aa0735cfd2-14"),
 					resource.TestCheckResourceAttr(resourceName, "kafka_clusters.0.vpc_config.0.subnet_ids.#", "3"),
 					resource.TestCheckResourceAttr(resourceName, "kafka_clusters.0.vpc_config.0.security_groups_ids.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "kafka_clusters.1.amazon_msk_cluster.0.msk_cluster_arn", "arn:aws:kafka:us-east-1:926562225508:cluster/Source-MSK-Replicator/9127030a-2c7b-4aea-a5a0-49f978b72f7d-14"),
 					resource.TestCheckResourceAttr(resourceName, "kafka_clusters.1.vpc_config.0.subnet_ids.#", "3"),
 					resource.TestCheckResourceAttr(resourceName, "kafka_clusters.1.vpc_config.0.security_groups_ids.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "replication_info_list.0.target_kafka_cluster_arn", "arn:aws:kafka:us-east-1:926562225508:cluster/Target-MSK-Replicator/e1289fbf-e895-464a-afba-e2aa0735cfd2-14"),
-					resource.TestCheckResourceAttr(resourceName, "replication_info_list.0.source_kafka_cluster_arn", "arn:aws:kafka:us-east-1:926562225508:cluster/Source-MSK-Replicator/9127030a-2c7b-4aea-a5a0-49f978b72f7d-14"),
 					resource.TestCheckResourceAttr(resourceName, "replication_info_list.0.target_compression_type", "NONE"),
 					resource.TestCheckResourceAttr(resourceName, "replication_info_list.0.topic_replication.0.topics_to_replicate.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "replication_info_list.0.consumer_group_replication.0.consumer_groups_to_replicate.#", "1"),
@@ -117,20 +114,17 @@ func TestAccKafkaReplicator_update(t *testing.T) {
 				ImportStateVerifyIgnore: []string{},
 			},
 			{
-				Config: testAccReplicatorConfig_update(rName),
+				Config: testAccReplicatorConfig_update(rName, sourceCluster, targetCluster),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckReplicatorExists(ctx, resourceName, &replicator),
+					resource.TestCheckResourceAttrSet(resourceName, "arn"),
 					resource.TestCheckResourceAttr(resourceName, "replicator_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "description", "test-description"),
 					resource.TestCheckResourceAttr(resourceName, "kafka_clusters.#", "2"),
-					resource.TestCheckResourceAttr(resourceName, "kafka_clusters.0.amazon_msk_cluster.0.msk_cluster_arn", "arn:aws:kafka:us-east-1:926562225508:cluster/Target-MSK-Replicator/e1289fbf-e895-464a-afba-e2aa0735cfd2-14"),
 					resource.TestCheckResourceAttr(resourceName, "kafka_clusters.0.vpc_config.0.subnet_ids.#", "3"),
 					resource.TestCheckResourceAttr(resourceName, "kafka_clusters.0.vpc_config.0.security_groups_ids.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "kafka_clusters.1.amazon_msk_cluster.0.msk_cluster_arn", "arn:aws:kafka:us-east-1:926562225508:cluster/Source-MSK-Replicator/9127030a-2c7b-4aea-a5a0-49f978b72f7d-14"),
 					resource.TestCheckResourceAttr(resourceName, "kafka_clusters.1.vpc_config.0.subnet_ids.#", "3"),
 					resource.TestCheckResourceAttr(resourceName, "kafka_clusters.1.vpc_config.0.security_groups_ids.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "replication_info_list.0.target_kafka_cluster_arn", "arn:aws:kafka:us-east-1:926562225508:cluster/Target-MSK-Replicator/e1289fbf-e895-464a-afba-e2aa0735cfd2-14"),
-					resource.TestCheckResourceAttr(resourceName, "replication_info_list.0.source_kafka_cluster_arn", "arn:aws:kafka:us-east-1:926562225508:cluster/Source-MSK-Replicator/9127030a-2c7b-4aea-a5a0-49f978b72f7d-14"),
 					resource.TestCheckResourceAttr(resourceName, "replication_info_list.0.target_compression_type", "NONE"),
 					resource.TestCheckResourceAttr(resourceName, "replication_info_list.0.topic_replication.0.topics_to_replicate.#", "3"),
 					resource.TestCheckResourceAttr(resourceName, "replication_info_list.0.topic_replication.0.topics_to_exclude.#", "1"),
@@ -153,204 +147,6 @@ func TestAccKafkaReplicator_update(t *testing.T) {
 	})
 }
 
-func TestAccKafkaReplicator_GZIP(t *testing.T) {
-	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
-
-	var replicator kafka.DescribeReplicatorOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_msk_replicator.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck: func() {
-			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, names.Kafka)
-			testAccPreCheck(ctx, t)
-		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.Kafka),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckReplicatorDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccReplicatorConfig_GZIP(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckReplicatorExists(ctx, resourceName, &replicator),
-					resource.TestCheckResourceAttr(resourceName, "replicator_name", rName),
-					resource.TestCheckResourceAttr(resourceName, "description", "test-description"),
-					resource.TestCheckResourceAttr(resourceName, "kafka_clusters.#", "2"),
-					resource.TestCheckResourceAttr(resourceName, "kafka_clusters.0.amazon_msk_cluster.0.msk_cluster_arn", "arn:aws:kafka:us-east-1:926562225508:cluster/Target-MSK-Replicator/e1289fbf-e895-464a-afba-e2aa0735cfd2-14"),
-					resource.TestCheckResourceAttr(resourceName, "kafka_clusters.0.vpc_config.0.subnet_ids.#", "3"),
-					resource.TestCheckResourceAttr(resourceName, "kafka_clusters.0.vpc_config.0.security_groups_ids.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "kafka_clusters.1.amazon_msk_cluster.0.msk_cluster_arn", "arn:aws:kafka:us-east-1:926562225508:cluster/Source-MSK-Replicator/9127030a-2c7b-4aea-a5a0-49f978b72f7d-14"),
-					resource.TestCheckResourceAttr(resourceName, "kafka_clusters.1.vpc_config.0.subnet_ids.#", "3"),
-					resource.TestCheckResourceAttr(resourceName, "kafka_clusters.1.vpc_config.0.security_groups_ids.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "replication_info_list.0.target_kafka_cluster_arn", "arn:aws:kafka:us-east-1:926562225508:cluster/Target-MSK-Replicator/e1289fbf-e895-464a-afba-e2aa0735cfd2-14"),
-					resource.TestCheckResourceAttr(resourceName, "replication_info_list.0.source_kafka_cluster_arn", "arn:aws:kafka:us-east-1:926562225508:cluster/Source-MSK-Replicator/9127030a-2c7b-4aea-a5a0-49f978b72f7d-14"),
-					resource.TestCheckResourceAttr(resourceName, "replication_info_list.0.target_compression_type", "GZIP"),
-					resource.TestCheckResourceAttr(resourceName, "replication_info_list.0.topic_replication.0.topics_to_replicate.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "replication_info_list.0.consumer_group_replication.0.consumer_groups_to_replicate.#", "1"),
-				),
-			},
-			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{},
-			},
-		},
-	})
-}
-func TestAccKafkaReplicator_LZ4(t *testing.T) {
-	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
-
-	var replicator kafka.DescribeReplicatorOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_msk_replicator.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck: func() {
-			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, names.Kafka)
-			testAccPreCheck(ctx, t)
-		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.Kafka),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckReplicatorDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccReplicatorConfig_LZ4(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckReplicatorExists(ctx, resourceName, &replicator),
-					resource.TestCheckResourceAttr(resourceName, "replicator_name", rName),
-					resource.TestCheckResourceAttr(resourceName, "description", "test-description"),
-					resource.TestCheckResourceAttr(resourceName, "kafka_clusters.#", "2"),
-					resource.TestCheckResourceAttr(resourceName, "kafka_clusters.0.amazon_msk_cluster.0.msk_cluster_arn", "arn:aws:kafka:us-east-1:926562225508:cluster/Target-MSK-Replicator/e1289fbf-e895-464a-afba-e2aa0735cfd2-14"),
-					resource.TestCheckResourceAttr(resourceName, "kafka_clusters.0.vpc_config.0.subnet_ids.#", "3"),
-					resource.TestCheckResourceAttr(resourceName, "kafka_clusters.0.vpc_config.0.security_groups_ids.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "kafka_clusters.1.amazon_msk_cluster.0.msk_cluster_arn", "arn:aws:kafka:us-east-1:926562225508:cluster/Source-MSK-Replicator/9127030a-2c7b-4aea-a5a0-49f978b72f7d-14"),
-					resource.TestCheckResourceAttr(resourceName, "kafka_clusters.1.vpc_config.0.subnet_ids.#", "3"),
-					resource.TestCheckResourceAttr(resourceName, "kafka_clusters.1.vpc_config.0.security_groups_ids.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "replication_info_list.0.target_kafka_cluster_arn", "arn:aws:kafka:us-east-1:926562225508:cluster/Target-MSK-Replicator/e1289fbf-e895-464a-afba-e2aa0735cfd2-14"),
-					resource.TestCheckResourceAttr(resourceName, "replication_info_list.0.source_kafka_cluster_arn", "arn:aws:kafka:us-east-1:926562225508:cluster/Source-MSK-Replicator/9127030a-2c7b-4aea-a5a0-49f978b72f7d-14"),
-					resource.TestCheckResourceAttr(resourceName, "replication_info_list.0.target_compression_type", "LZ4"),
-					resource.TestCheckResourceAttr(resourceName, "replication_info_list.0.topic_replication.0.topics_to_replicate.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "replication_info_list.0.consumer_group_replication.0.consumer_groups_to_replicate.#", "1"),
-				),
-			},
-			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{},
-			},
-		},
-	})
-}
-func TestAccKafkaReplicator_SNAPPY(t *testing.T) {
-	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
-
-	var replicator kafka.DescribeReplicatorOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_msk_replicator.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck: func() {
-			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, names.Kafka)
-			testAccPreCheck(ctx, t)
-		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.Kafka),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckReplicatorDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccReplicatorConfig_SNAPPY(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckReplicatorExists(ctx, resourceName, &replicator),
-					resource.TestCheckResourceAttr(resourceName, "replicator_name", rName),
-					resource.TestCheckResourceAttr(resourceName, "description", "test-description"),
-					resource.TestCheckResourceAttr(resourceName, "kafka_clusters.#", "2"),
-					resource.TestCheckResourceAttr(resourceName, "kafka_clusters.0.amazon_msk_cluster.0.msk_cluster_arn", "arn:aws:kafka:us-east-1:926562225508:cluster/Target-MSK-Replicator/e1289fbf-e895-464a-afba-e2aa0735cfd2-14"),
-					resource.TestCheckResourceAttr(resourceName, "kafka_clusters.0.vpc_config.0.subnet_ids.#", "3"),
-					resource.TestCheckResourceAttr(resourceName, "kafka_clusters.0.vpc_config.0.security_groups_ids.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "kafka_clusters.1.amazon_msk_cluster.0.msk_cluster_arn", "arn:aws:kafka:us-east-1:926562225508:cluster/Source-MSK-Replicator/9127030a-2c7b-4aea-a5a0-49f978b72f7d-14"),
-					resource.TestCheckResourceAttr(resourceName, "kafka_clusters.1.vpc_config.0.subnet_ids.#", "3"),
-					resource.TestCheckResourceAttr(resourceName, "kafka_clusters.1.vpc_config.0.security_groups_ids.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "replication_info_list.0.target_kafka_cluster_arn", "arn:aws:kafka:us-east-1:926562225508:cluster/Target-MSK-Replicator/e1289fbf-e895-464a-afba-e2aa0735cfd2-14"),
-					resource.TestCheckResourceAttr(resourceName, "replication_info_list.0.source_kafka_cluster_arn", "arn:aws:kafka:us-east-1:926562225508:cluster/Source-MSK-Replicator/9127030a-2c7b-4aea-a5a0-49f978b72f7d-14"),
-					resource.TestCheckResourceAttr(resourceName, "replication_info_list.0.target_compression_type", "SNAPPY"),
-					resource.TestCheckResourceAttr(resourceName, "replication_info_list.0.topic_replication.0.topics_to_replicate.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "replication_info_list.0.consumer_group_replication.0.consumer_groups_to_replicate.#", "1"),
-				),
-			},
-			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{},
-			},
-		},
-	})
-}
-
-func TestAccKafkaReplicator_ZSTD(t *testing.T) {
-	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
-
-	var replicator kafka.DescribeReplicatorOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_msk_replicator.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck: func() {
-			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, names.Kafka)
-			testAccPreCheck(ctx, t)
-		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.Kafka),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckReplicatorDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccReplicatorConfig_ZSTD(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckReplicatorExists(ctx, resourceName, &replicator),
-					resource.TestCheckResourceAttr(resourceName, "replicator_name", rName),
-					resource.TestCheckResourceAttr(resourceName, "description", "test-description"),
-					resource.TestCheckResourceAttr(resourceName, "kafka_clusters.#", "2"),
-					resource.TestCheckResourceAttr(resourceName, "kafka_clusters.0.amazon_msk_cluster.0.msk_cluster_arn", "arn:aws:kafka:us-east-1:926562225508:cluster/Target-MSK-Replicator/e1289fbf-e895-464a-afba-e2aa0735cfd2-14"),
-					resource.TestCheckResourceAttr(resourceName, "kafka_clusters.0.vpc_config.0.subnet_ids.#", "3"),
-					resource.TestCheckResourceAttr(resourceName, "kafka_clusters.0.vpc_config.0.security_groups_ids.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "kafka_clusters.1.amazon_msk_cluster.0.msk_cluster_arn", "arn:aws:kafka:us-east-1:926562225508:cluster/Source-MSK-Replicator/9127030a-2c7b-4aea-a5a0-49f978b72f7d-14"),
-					resource.TestCheckResourceAttr(resourceName, "kafka_clusters.1.vpc_config.0.subnet_ids.#", "3"),
-					resource.TestCheckResourceAttr(resourceName, "kafka_clusters.1.vpc_config.0.security_groups_ids.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "replication_info_list.0.target_kafka_cluster_arn", "arn:aws:kafka:us-east-1:926562225508:cluster/Target-MSK-Replicator/e1289fbf-e895-464a-afba-e2aa0735cfd2-14"),
-					resource.TestCheckResourceAttr(resourceName, "replication_info_list.0.source_kafka_cluster_arn", "arn:aws:kafka:us-east-1:926562225508:cluster/Source-MSK-Replicator/9127030a-2c7b-4aea-a5a0-49f978b72f7d-14"),
-					resource.TestCheckResourceAttr(resourceName, "replication_info_list.0.target_compression_type", "ZSTD"),
-					resource.TestCheckResourceAttr(resourceName, "replication_info_list.0.topic_replication.0.topics_to_replicate.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "replication_info_list.0.consumer_group_replication.0.consumer_groups_to_replicate.#", "1"),
-				),
-			},
-			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{},
-			},
-		},
-	})
-}
-
 func TestAccKafkaReplicator_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
@@ -359,6 +155,8 @@ func TestAccKafkaReplicator_disappears(t *testing.T) {
 
 	var replicator kafka.DescribeReplicatorOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	sourceCluster := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	targetCluster := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_msk_replicator.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -372,7 +170,7 @@ func TestAccKafkaReplicator_disappears(t *testing.T) {
 		CheckDestroy:             testAccCheckReplicatorDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccReplicatorConfig_basic(rName),
+				Config: testAccReplicatorConfig_basic(rName, sourceCluster, targetCluster),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckReplicatorExists(ctx, resourceName, &replicator),
 					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfkafka.ResourceReplicator(), resourceName),
@@ -396,10 +194,10 @@ func testAccCheckReplicatorDestroy(ctx context.Context) resource.TestCheckFunc {
 				ReplicatorArn: aws.String(rs.Primary.ID),
 			})
 			if errs.IsA[*types.NotFoundException](err) {
-				return nil
+				continue
 			}
 			if err != nil {
-				return nil
+				return err
 			}
 
 			return create.Error(names.Kafka, create.ErrActionCheckingDestroyed, tfkafka.ResNameReplicator, rs.Primary.ID, errors.New("not destroyed"))
@@ -435,38 +233,297 @@ func testAccCheckReplicatorExists(ctx context.Context, name string, replicator *
 	}
 }
 
-func testAccReplicatorConfig_basic(rName string) string {
-	return fmt.Sprintf(`
+func testAccReplicatorConfig_source(rName string) string {
+	return acctest.ConfigCompose(
+		testAccClusterConfig_allowEveryoneNoACLFoundFalse(rName),
+		acctest.ConfigAvailableAZsNoOptIn(),
+		fmt.Sprintf(`
+
+
+data "aws_caller_identity" "current" {}
+
+resource "aws_msk_cluster" "source" {
+  cluster_name           = %[1]q
+  kafka_version          = "2.8.1"
+  number_of_broker_nodes = 3
+
+  broker_node_group_info {
+    client_subnets  = aws_subnet.source[*].id
+    instance_type   = "kafka.m5.large"
+    security_groups = [aws_security_group.source.id]
+
+    connectivity_info {
+      vpc_connectivity {
+        client_authentication {
+          sasl {
+            iam = true
+          }
+        }
+      }
+    }
+
+    storage_info {
+      ebs_storage_info {
+        volume_size = 10
+      }
+    }
+  }
+
+  configuration_info {
+    arn      = aws_msk_configuration.test.arn
+    revision = aws_msk_configuration.test.latest_revision
+  }
+
+  client_authentication {
+    sasl {
+      iam = true
+    }
+  }
+}
+
+resource "aws_msk_cluster_policy" "source" {
+  cluster_arn = aws_msk_cluster.source.arn
+
+  policy = jsonencode({
+    Version = "2012-10-17",
+    Statement = [{
+      Sid    = "testMskClusterPolicy"
+      Effect = "Allow"
+      Principal = {
+        "Service" = "kafka.amazonaws.com"
+      }
+      Action = [
+        "kafka:CreateVpcConnection",
+        "kafka:GetBootstrapBrokers",
+        "kafka:DescribeCluster",
+        "kafka:DescribeClusterV2"
+      ]
+      Resource = aws_msk_cluster.source.arn
+    }]
+  })
+
+  depends_on = [aws_msk_cluster.source]
+}
+
+resource "aws_iam_role" "source" {
+  name = "%[1]s"
+
+  assume_role_policy = jsonencode({
+    "Version" : "2012-10-17",
+    "Statement" : [
+      {
+        "Effect" : "Allow",
+        "Principal" : {
+          "Service" : "kafka.amazonaws.com"
+        },
+        "Action" : "sts:AssumeRole",
+        "Condition" : {
+          "StringEquals" : {
+            "aws:SourceAccount" : "${data.aws_caller_identity.current.account_id}"
+          }
+        }
+      }
+    ]
+  })
+}
+
+resource "aws_iam_role_policy" "source" {
+  name = %[1]q
+  role = aws_iam_role.source.name
+
+  policy = jsonencode({
+    "Version" : "2012-10-17",
+    "Statement" : [
+      {
+        "Effect" : "Allow",
+        "Resource" : "*",
+        "Action" : [
+          "kafka-cluster:Connect",
+          "kafka-cluster:DescribeCluster",
+          "kafka-cluster:AlterCluster",
+          "kafka-cluster:ReadData",
+          "kafka-cluster:WriteData",
+          "kafka-cluster:DescribeTopic",
+          "kafka-cluster:CreateTopic",
+          "kafka-cluster:AlterTopic",
+          "kafka-cluster:AlterGroup",
+          "kafka-cluster:DescribeGroup",
+          "kafka-cluster:DescribeTopicDynamicConfiguration",
+          "kafka-cluster:AlterTopicDynamicConfiguration"
+        ]
+      }
+    ]
+  })
+}
+
+resource "aws_security_group" "source" {
+  name   = %[1]q
+  vpc_id = aws_vpc.source.id
+
+  ingress {
+    from_port = 0
+    to_port   = 0
+    protocol  = -1
+    self      = true
+  }
+
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  tags = {
+    Name = %[1]q
+  }
+}
+resource "aws_vpc" "source" {
+  cidr_block = "10.0.0.0/16"
+
+  enable_dns_support   = true
+  enable_dns_hostnames = true
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_subnet" "source" {
+  count = 3
+
+  vpc_id            = aws_vpc.source.id
+  availability_zone = data.aws_availability_zones.available.names[count.index]
+  cidr_block        = cidrsubnet(aws_vpc.source.cidr_block, 8, count.index)
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+
+
+
+`, rName))
+}
+
+func testAccReplicatorConfig_target(rName string) string {
+	return acctest.ConfigCompose(
+		fmt.Sprintf(`
+resource "aws_msk_cluster" "target" {
+  cluster_name           = %[1]q
+  kafka_version          = "2.8.1"
+  number_of_broker_nodes = 3
+
+  broker_node_group_info {
+    client_subnets  = aws_subnet.target[*].id
+    instance_type   = "kafka.m5.large"
+    security_groups = [aws_security_group.target.id]
+
+    storage_info {
+      ebs_storage_info {
+        volume_size = 10
+      }
+    }
+  }
+  configuration_info {
+    arn      = aws_msk_configuration.test.arn
+    revision = aws_msk_configuration.test.latest_revision
+  }
+
+  client_authentication {
+    sasl {
+      iam = true
+    }
+  }
+}
+
+resource "aws_security_group" "target" {
+  name   = %[1]q
+  vpc_id = aws_vpc.target.id
+
+  ingress {
+    from_port = 0
+    to_port   = 0
+    protocol  = -1
+    self      = true
+  }
+
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_vpc" "target" {
+  cidr_block = "10.1.0.0/16"
+
+  enable_dns_support   = true
+  enable_dns_hostnames = true
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_subnet" "target" {
+  count = 3
+
+  vpc_id            = aws_vpc.target.id
+  availability_zone = data.aws_availability_zones.available.names[count.index]
+  cidr_block        = cidrsubnet(aws_vpc.target.cidr_block, 8, count.index)
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+
+`, rName))
+}
+
+func testAccReplicatorConfig_basic(rName, sourceCluster, targetCluster string) string {
+	return acctest.ConfigCompose(
+		testAccReplicatorConfig_source(sourceCluster),
+		testAccReplicatorConfig_target(targetCluster),
+		fmt.Sprintf(`
 
 resource "aws_msk_replicator" "test" {
   replicator_name            = %[1]q
   description                = "test-description"
-  service_execution_role_arn = "arn:aws:iam::926562225508:role/MaskReplicatorRole"
+  service_execution_role_arn = aws_iam_role.source.arn
 
   kafka_clusters {
     amazon_msk_cluster {
-      msk_cluster_arn = "arn:aws:kafka:us-east-1:926562225508:cluster/Target-MSK-Replicator/e1289fbf-e895-464a-afba-e2aa0735cfd2-14"
+      msk_cluster_arn = aws_msk_cluster.source.arn
     }
 
     vpc_config {
-      subnet_ids         = ["subnet-0fa0375b5a6300678", "subnet-0940965bc06ac84a0", "subnet-00b61c8bfca665931"]
-      security_groups_ids = ["sg-09c6ec0f574d9eb13"]
+      subnet_ids          = aws_subnet.source[*].id
+      security_groups_ids = [aws_security_group.source.id]
     }
   }
+
   kafka_clusters {
     amazon_msk_cluster {
-      msk_cluster_arn = "arn:aws:kafka:us-east-1:926562225508:cluster/Source-MSK-Replicator/9127030a-2c7b-4aea-a5a0-49f978b72f7d-14"
+      msk_cluster_arn = aws_msk_cluster.target.arn
     }
 
     vpc_config {
-      subnet_ids         = ["subnet-0c428011e6bef0a18", "subnet-0ab47999ff2951ab5", "subnet-0f80dda415ee7d008"]
-      security_groups_ids = ["sg-03377f7d2be71cdb6"]
+      subnet_ids          = aws_subnet.target[*].id
+      security_groups_ids = [aws_security_group.target.id]
     }
   }
 
   replication_info_list {
-	target_kafka_cluster_arn = 	"arn:aws:kafka:us-east-1:926562225508:cluster/Target-MSK-Replicator/e1289fbf-e895-464a-afba-e2aa0735cfd2-14"
-    source_kafka_cluster_arn = "arn:aws:kafka:us-east-1:926562225508:cluster/Source-MSK-Replicator/9127030a-2c7b-4aea-a5a0-49f978b72f7d-14"
+    target_kafka_cluster_arn = aws_msk_cluster.source.arn
+    source_kafka_cluster_arn = aws_msk_cluster.target.arn
     target_compression_type  = "NONE"
 
 
@@ -479,243 +536,65 @@ resource "aws_msk_replicator" "test" {
     }
   }
 }
-`, rName)
+`, rName, sourceCluster, targetCluster))
 }
 
-func testAccReplicatorConfig_update(rName string) string {
-	return fmt.Sprintf(`
+func testAccReplicatorConfig_update(rName, sourceCluster, targetCluster string) string {
+	return acctest.ConfigCompose(
+		testAccReplicatorConfig_source(sourceCluster),
+		testAccReplicatorConfig_target(targetCluster),
+		fmt.Sprintf(`
+
+
+
 
 resource "aws_msk_replicator" "test" {
   replicator_name            = %[1]q
   description                = "test-description"
-  service_execution_role_arn = "arn:aws:iam::926562225508:role/MaskReplicatorRole"
+  service_execution_role_arn = aws_iam_role.source.arn
 
   kafka_clusters {
     amazon_msk_cluster {
-      msk_cluster_arn = "arn:aws:kafka:us-east-1:926562225508:cluster/Target-MSK-Replicator/e1289fbf-e895-464a-afba-e2aa0735cfd2-14"
+      msk_cluster_arn = aws_msk_cluster.source.arn
     }
 
     vpc_config {
-      subnet_ids         = ["subnet-0fa0375b5a6300678", "subnet-0940965bc06ac84a0", "subnet-00b61c8bfca665931"]
-      security_groups_ids = ["sg-09c6ec0f574d9eb13"]
+      subnet_ids          = aws_subnet.source[*].id
+      security_groups_ids = [aws_security_group.source.id]
     }
   }
+
   kafka_clusters {
     amazon_msk_cluster {
-      msk_cluster_arn = "arn:aws:kafka:us-east-1:926562225508:cluster/Source-MSK-Replicator/9127030a-2c7b-4aea-a5a0-49f978b72f7d-14"
+      msk_cluster_arn = aws_msk_cluster.target.arn
     }
 
     vpc_config {
-      subnet_ids         = ["subnet-0c428011e6bef0a18", "subnet-0ab47999ff2951ab5", "subnet-0f80dda415ee7d008"]
-      security_groups_ids = ["sg-03377f7d2be71cdb6"]
+      subnet_ids          = aws_subnet.target[*].id
+      security_groups_ids = [aws_security_group.target.id]
     }
   }
 
   replication_info_list {
-	target_kafka_cluster_arn = 	"arn:aws:kafka:us-east-1:926562225508:cluster/Target-MSK-Replicator/e1289fbf-e895-464a-afba-e2aa0735cfd2-14"
-    source_kafka_cluster_arn = "arn:aws:kafka:us-east-1:926562225508:cluster/Source-MSK-Replicator/9127030a-2c7b-4aea-a5a0-49f978b72f7d-14"
+    target_kafka_cluster_arn = aws_msk_cluster.source.arn
+    source_kafka_cluster_arn = aws_msk_cluster.target.arn
     target_compression_type  = "NONE"
 
-
     topic_replication {
-      topics_to_replicate = ["topic1", "topic2", "topic3"]
-	  topics_to_exclude   = ["topic-4"]
-	  detect_and_copy_new_topics = false
-	  copy_access_control_lists_for_topics = false
-	  copy_topic_configurations = false
+      detect_and_copy_new_topics           = false
+      copy_access_control_lists_for_topics = false
+      copy_topic_configurations            = false
+      topics_to_replicate                  = ["topic1", "topic2", "topic3"]
+      topics_to_exclude                    = ["topic-4"]
     }
 
     consumer_group_replication {
-      consumer_groups_to_replicate = ["group1", "group2", "group3"]
-	  consumer_groups_to_exclude   = ["group-4"]
-	  synchronise_consumer_group_offsets = false
-	  detect_and_copy_new_consumer_groups = false
+      synchronise_consumer_group_offsets  = false
+      detect_and_copy_new_consumer_groups = false
+      consumer_groups_to_replicate        = ["group1", "group2", "group3"]
+      consumer_groups_to_exclude          = ["group-4"]
     }
   }
 }
-`, rName)
-}
-
-func testAccReplicatorConfig_GZIP(rName string) string {
-	return fmt.Sprintf(`
-
-resource "aws_msk_replicator" "test" {
-  replicator_name            = %[1]q
-  description                = "test-description"
-  service_execution_role_arn = "arn:aws:iam::926562225508:role/MaskReplicatorRole"
-
-  kafka_clusters {
-    amazon_msk_cluster {
-      msk_cluster_arn = "arn:aws:kafka:us-east-1:926562225508:cluster/Target-MSK-Replicator/e1289fbf-e895-464a-afba-e2aa0735cfd2-14"
-    }
-
-    vpc_config {
-      subnet_ids         = ["subnet-0fa0375b5a6300678", "subnet-0940965bc06ac84a0", "subnet-00b61c8bfca665931"]
-      security_groups_ids = ["sg-09c6ec0f574d9eb13"]
-    }
-  }
-  kafka_clusters {
-    amazon_msk_cluster {
-      msk_cluster_arn = "arn:aws:kafka:us-east-1:926562225508:cluster/Source-MSK-Replicator/9127030a-2c7b-4aea-a5a0-49f978b72f7d-14"
-    }
-
-    vpc_config {
-      subnet_ids         = ["subnet-0c428011e6bef0a18", "subnet-0ab47999ff2951ab5", "subnet-0f80dda415ee7d008"]
-      security_groups_ids = ["sg-03377f7d2be71cdb6"]
-    }
-  }
-
-  replication_info_list {
-	target_kafka_cluster_arn = 	"arn:aws:kafka:us-east-1:926562225508:cluster/Target-MSK-Replicator/e1289fbf-e895-464a-afba-e2aa0735cfd2-14"
-    source_kafka_cluster_arn = "arn:aws:kafka:us-east-1:926562225508:cluster/Source-MSK-Replicator/9127030a-2c7b-4aea-a5a0-49f978b72f7d-14"
-    target_compression_type  = "GZIP"
-
-    topic_replication {
-      topics_to_replicate = ["test-topic"]
-    }
-
-    consumer_group_replication {
-      consumer_groups_to_replicate = ["test-consumer"]
-    }
-  }
-}
-`, rName)
-}
-
-func testAccReplicatorConfig_LZ4(rName string) string {
-	return fmt.Sprintf(`
-
-resource "aws_msk_replicator" "test" {
-  replicator_name            = %[1]q
-  description                = "test-description"
-  service_execution_role_arn = "arn:aws:iam::926562225508:role/MaskReplicatorRole"
-
-  kafka_clusters {
-    amazon_msk_cluster {
-      msk_cluster_arn = "arn:aws:kafka:us-east-1:926562225508:cluster/Target-MSK-Replicator/e1289fbf-e895-464a-afba-e2aa0735cfd2-14"
-    }
-
-    vpc_config {
-      subnet_ids         = ["subnet-0fa0375b5a6300678", "subnet-0940965bc06ac84a0", "subnet-00b61c8bfca665931"]
-      security_groups_ids = ["sg-09c6ec0f574d9eb13"]
-    }
-  }
-  kafka_clusters {
-    amazon_msk_cluster {
-      msk_cluster_arn = "arn:aws:kafka:us-east-1:926562225508:cluster/Source-MSK-Replicator/9127030a-2c7b-4aea-a5a0-49f978b72f7d-14"
-    }
-
-    vpc_config {
-      subnet_ids         = ["subnet-0c428011e6bef0a18", "subnet-0ab47999ff2951ab5", "subnet-0f80dda415ee7d008"]
-      security_groups_ids = ["sg-03377f7d2be71cdb6"]
-    }
-  }
-
-  replication_info_list {
-	target_kafka_cluster_arn = 	"arn:aws:kafka:us-east-1:926562225508:cluster/Target-MSK-Replicator/e1289fbf-e895-464a-afba-e2aa0735cfd2-14"
-    source_kafka_cluster_arn = "arn:aws:kafka:us-east-1:926562225508:cluster/Source-MSK-Replicator/9127030a-2c7b-4aea-a5a0-49f978b72f7d-14"
-    target_compression_type  = "LZ4"
-
-    topic_replication {
-      topics_to_replicate = ["test-topic"]
-    }
-
-    consumer_group_replication {
-      consumer_groups_to_replicate = ["test-consumer"]
-    }
-  }
-}
-`, rName)
-}
-
-func testAccReplicatorConfig_SNAPPY(rName string) string {
-	return fmt.Sprintf(`
-
-resource "aws_msk_replicator" "test" {
-  replicator_name            = %[1]q
-  description                = "test-description"
-  service_execution_role_arn = "arn:aws:iam::926562225508:role/MaskReplicatorRole"
-
-  kafka_clusters {
-    amazon_msk_cluster {
-      msk_cluster_arn = "arn:aws:kafka:us-east-1:926562225508:cluster/Target-MSK-Replicator/e1289fbf-e895-464a-afba-e2aa0735cfd2-14"
-    }
-
-    vpc_config {
-      subnet_ids         = ["subnet-0fa0375b5a6300678", "subnet-0940965bc06ac84a0", "subnet-00b61c8bfca665931"]
-      security_groups_ids = ["sg-09c6ec0f574d9eb13"]
-    }
-  }
-  kafka_clusters {
-    amazon_msk_cluster {
-      msk_cluster_arn = "arn:aws:kafka:us-east-1:926562225508:cluster/Source-MSK-Replicator/9127030a-2c7b-4aea-a5a0-49f978b72f7d-14"
-    }
-
-    vpc_config {
-      subnet_ids         = ["subnet-0c428011e6bef0a18", "subnet-0ab47999ff2951ab5", "subnet-0f80dda415ee7d008"]
-      security_groups_ids = ["sg-03377f7d2be71cdb6"]
-    }
-  }
-
-  replication_info_list {
-	target_kafka_cluster_arn = 	"arn:aws:kafka:us-east-1:926562225508:cluster/Target-MSK-Replicator/e1289fbf-e895-464a-afba-e2aa0735cfd2-14"
-    source_kafka_cluster_arn = "arn:aws:kafka:us-east-1:926562225508:cluster/Source-MSK-Replicator/9127030a-2c7b-4aea-a5a0-49f978b72f7d-14"
-    target_compression_type  = "SNAPPY"
-
-    topic_replication {
-      topics_to_replicate = ["test-topic"]
-    }
-
-    consumer_group_replication {
-      consumer_groups_to_replicate = ["test-consumer"]
-    }
-  }
-}
-`, rName)
-}
-
-func testAccReplicatorConfig_ZSTD(rName string) string {
-	return fmt.Sprintf(`
-
-resource "aws_msk_replicator" "test" {
-  replicator_name            = %[1]q
-  description                = "test-description"
-  service_execution_role_arn = "arn:aws:iam::926562225508:role/MaskReplicatorRole"
-
-  kafka_clusters {
-    amazon_msk_cluster {
-      msk_cluster_arn = "arn:aws:kafka:us-east-1:926562225508:cluster/Target-MSK-Replicator/e1289fbf-e895-464a-afba-e2aa0735cfd2-14"
-    }
-
-    vpc_config {
-      subnet_ids         = ["subnet-0fa0375b5a6300678", "subnet-0940965bc06ac84a0", "subnet-00b61c8bfca665931"]
-      security_groups_ids = ["sg-09c6ec0f574d9eb13"]
-    }
-  }
-  kafka_clusters {
-    amazon_msk_cluster {
-      msk_cluster_arn = "arn:aws:kafka:us-east-1:926562225508:cluster/Source-MSK-Replicator/9127030a-2c7b-4aea-a5a0-49f978b72f7d-14"
-    }
-
-    vpc_config {
-      subnet_ids         = ["subnet-0c428011e6bef0a18", "subnet-0ab47999ff2951ab5", "subnet-0f80dda415ee7d008"]
-      security_groups_ids = ["sg-03377f7d2be71cdb6"]
-    }
-  }
-
-  replication_info_list {
-	target_kafka_cluster_arn = 	"arn:aws:kafka:us-east-1:926562225508:cluster/Target-MSK-Replicator/e1289fbf-e895-464a-afba-e2aa0735cfd2-14"
-    source_kafka_cluster_arn = "arn:aws:kafka:us-east-1:926562225508:cluster/Source-MSK-Replicator/9127030a-2c7b-4aea-a5a0-49f978b72f7d-14"
-    target_compression_type  = "ZSTD"
-
-    topic_replication {
-      topics_to_replicate = ["test-topic"]
-    }
-
-    consumer_group_replication {
-      consumer_groups_to_replicate = ["test-consumer"]
-    }
-  }
-}
-`, rName)
+`, rName, sourceCluster, targetCluster))
 }

@@ -12,9 +12,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-
-	// "github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
-	// "github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
@@ -235,7 +232,7 @@ func resourceReplicatorCreate(ctx context.Context, d *schema.ResourceData, meta 
 	conn := meta.(*conns.AWSClient).KafkaClient(ctx)
 
 	in := &kafka.CreateReplicatorInput{
-		KafkaClusters:           expandKafkaClusters(d.Get("kafka_clusters").([]interface{})),
+		KafkaClusters:           expandClusters(d.Get("kafka_clusters").([]interface{})),
 		ReplicationInfoList:     expandReplicationInfoList(d.Get("replication_info_list").([]interface{})),
 		ReplicatorName:          aws.String(d.Get("replicator_name").(string)),
 		ServiceExecutionRoleArn: aws.String(d.Get("service_execution_role_arn").(string)),
@@ -257,7 +254,7 @@ func resourceReplicatorCreate(ctx context.Context, d *schema.ResourceData, meta 
 
 	d.SetId(aws.ToString(out.ReplicatorArn))
 
-	if _, err := waitReplicatorCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)*2); err != nil {
+	if _, err := waitReplicatorCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
 		return append(diags, create.DiagError(names.Kafka, create.ErrActionWaitingForCreation, ResNameReplicator, d.Id(), err)...)
 	}
 
@@ -297,7 +294,7 @@ func resourceReplicatorRead(ctx context.Context, d *schema.ResourceData, meta in
 	d.Set("replicator_name", out.ReplicatorName)
 	d.Set("description", out.ReplicatorDescription)
 	d.Set("service_execution_role_arn", out.ServiceExecutionRoleArn)
-	d.Set("kafka_clusters", flattenKafkaClusters(out.KafkaClusters))
+	d.Set("kafka_clusters", flattenClusters(out.KafkaClusters))
 	d.Set("replication_info_list", flattenReplicationInfoList(out.ReplicationInfoList, sourceClusterArn, targetClusterArn))
 
 	return diags
@@ -428,12 +425,11 @@ func statusReplicator(ctx context.Context, conn *kafka.Client, arn string) retry
 }
 
 func findReplicatorByARN(ctx context.Context, conn *kafka.Client, arn string) (*kafka.DescribeReplicatorOutput, error) {
-
 	in := &kafka.DescribeReplicatorInput{
 		ReplicatorArn: aws.String(arn),
 	}
 
-	out, err := conn.DescribeReplicator(context.TODO(), in)
+	out, err := conn.DescribeReplicator(ctx, in)
 
 	if errs.IsA[*types.NotFoundException](err) {
 		return nil, &retry.NotFoundError{
@@ -461,7 +457,6 @@ func flattenReplicationInfoList(apiObjects []types.ReplicationInfoDescription, s
 	var tfList []interface{}
 
 	for _, apiObject := range apiObjects {
-
 		tfList = append(tfList, flattenReplicationInfo(apiObject, sourceCluster, targetCluster))
 	}
 
@@ -469,7 +464,6 @@ func flattenReplicationInfoList(apiObjects []types.ReplicationInfoDescription, s
 }
 
 func flattenReplicationInfo(apiObject types.ReplicationInfoDescription, sourceCluster, targetCluster *string) map[string]interface{} {
-
 	tfMap := map[string]interface{}{
 		"source_kafka_cluster_arn": aws.ToString(sourceCluster),
 		"target_kafka_cluster_arn": aws.ToString(targetCluster),
@@ -554,7 +548,7 @@ func flattenTopicReplication(apiObject *types.TopicReplication) map[string]inter
 	return tfMap
 }
 
-func flattenKafkaClusters(apiObjects []types.KafkaClusterDescription) []interface{} {
+func flattenClusters(apiObjects []types.KafkaClusterDescription) []interface{} {
 	if len(apiObjects) == 0 {
 		return nil
 	}
@@ -562,27 +556,27 @@ func flattenKafkaClusters(apiObjects []types.KafkaClusterDescription) []interfac
 	var tfList []interface{}
 
 	for _, apiObject := range apiObjects {
-		tfList = append(tfList, flattenKafkaCluster(apiObject))
+		tfList = append(tfList, flattenCluster(apiObject))
 	}
 
 	return tfList
 }
 
-func flattenKafkaCluster(apiObject types.KafkaClusterDescription) map[string]interface{} {
+func flattenCluster(apiObject types.KafkaClusterDescription) map[string]interface{} {
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.AmazonMskCluster; v != nil {
-		tfMap["amazon_msk_cluster"] = []interface{}{flattenMskCluster(v)}
+		tfMap["amazon_msk_cluster"] = []interface{}{flattenAmazonCluster(v)}
 	}
 
 	if v := apiObject.VpcConfig; v != nil {
-		tfMap["vpc_config"] = []interface{}{flattenKafkaClusterClientVpcConfig(v)}
+		tfMap["vpc_config"] = []interface{}{flattenClusterClientVPCConfig(v)}
 	}
 
 	return tfMap
 }
 
-func flattenKafkaClusterClientVpcConfig(apiObject *types.KafkaClusterClientVpcConfig) map[string]interface{} {
+func flattenClusterClientVPCConfig(apiObject *types.KafkaClusterClientVpcConfig) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -600,7 +594,7 @@ func flattenKafkaClusterClientVpcConfig(apiObject *types.KafkaClusterClientVpcCo
 	return tfMap
 }
 
-func flattenMskCluster(apiObject *types.AmazonMskCluster) map[string]interface{} {
+func flattenAmazonCluster(apiObject *types.AmazonMskCluster) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -756,7 +750,7 @@ func expandTopicReplication(tfMap map[string]interface{}) *types.TopicReplicatio
 	return apiObject
 }
 
-func expandKafkaClusters(tfList []interface{}) []types.KafkaCluster {
+func expandClusters(tfList []interface{}) []types.KafkaCluster {
 	if len(tfList) == 0 {
 		return nil
 	}
@@ -770,7 +764,7 @@ func expandKafkaClusters(tfList []interface{}) []types.KafkaCluster {
 			continue
 		}
 
-		apiObject := expandKafkaCluster(tfMap)
+		apiObject := expandCluster(tfMap)
 
 		apiObjects = append(apiObjects, apiObject)
 	}
@@ -778,21 +772,21 @@ func expandKafkaClusters(tfList []interface{}) []types.KafkaCluster {
 	return apiObjects
 }
 
-func expandKafkaCluster(tfMap map[string]interface{}) types.KafkaCluster {
+func expandCluster(tfMap map[string]interface{}) types.KafkaCluster {
 	apiObject := types.KafkaCluster{}
 
 	if v, ok := tfMap["vpc_config"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		apiObject.VpcConfig = expandKafkaClusterClientVpcConfig(v[0].(map[string]interface{}))
+		apiObject.VpcConfig = expandClusterClientVPCConfig(v[0].(map[string]interface{}))
 	}
 
 	if v, ok := tfMap["amazon_msk_cluster"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		apiObject.AmazonMskCluster = expandMskCluster(v[0].(map[string]interface{}))
+		apiObject.AmazonMskCluster = expandAmazonCluster(v[0].(map[string]interface{}))
 	}
 
 	return apiObject
 }
 
-func expandKafkaClusterClientVpcConfig(tfMap map[string]interface{}) *types.KafkaClusterClientVpcConfig {
+func expandClusterClientVPCConfig(tfMap map[string]interface{}) *types.KafkaClusterClientVpcConfig {
 	apiObject := &types.KafkaClusterClientVpcConfig{}
 
 	if v, ok := tfMap["security_groups_ids"].(*schema.Set); ok && v.Len() > 0 {
@@ -806,7 +800,7 @@ func expandKafkaClusterClientVpcConfig(tfMap map[string]interface{}) *types.Kafk
 	return apiObject
 }
 
-func expandMskCluster(tfMap map[string]interface{}) *types.AmazonMskCluster {
+func expandAmazonCluster(tfMap map[string]interface{}) *types.AmazonMskCluster {
 	apiObject := &types.AmazonMskCluster{}
 
 	if v, ok := tfMap["msk_cluster_arn"].(string); ok && v != "" {
