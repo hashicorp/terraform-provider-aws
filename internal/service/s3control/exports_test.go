@@ -16,4 +16,7 @@ var (
 	ResourceObjectLambdaAccessPoint       = resourceObjectLambdaAccessPoint
 	ResourceObjectLambdaAccessPointPolicy = resourceObjectLambdaAccessPointPolicy
 	ResourceStorageLensConfiguration      = resourceStorageLensConfiguration
+
+	FindAccessPointByTwoPartKey                = findAccessPointByTwoPartKey
+	FindAccessPointPolicyAndStatusByTwoPartKey = findAccessPointPolicyAndStatusByTwoPartKey
 )
