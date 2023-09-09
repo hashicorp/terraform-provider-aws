@@ -65,11 +65,11 @@ func TestAccTransferConnector_sftpConfig(t *testing.T) {
 	var conf transfer.DescribedConnector
 	resourceName := "aws_transfer_connector.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	//publicKey, _, err := sdkacctest.RandSSHKeyPair(acctest.DefaultEmailAddress)
-	//if err != nil {
-	//	t.Fatalf("error generating random SSH key: %s", err)
-	//}
-	publicKey := "test-fixtures/transfer-ssh-rsa-key"
+	publicKey, _, err := sdkacctest.RandSSHKeyPair(acctest.DefaultEmailAddress)
+	if err != nil {
+		t.Fatalf("error generating random SSH key: %s", err)
+	}
+	//privateKey := "test-fixtures/transfer-ssh-rsa-key"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
@@ -314,7 +314,7 @@ resource "aws_transfer_connector" "test" {
   access_role = aws_iam_role.test.arn
 
   sftp_config {
-	trusted_host_keys = [file(%[3]q)]
+	trusted_host_keys = [%[3]q]
 	user_secretid     = aws_secretsmanager_secret.test.id
   }
 
