@@ -8,8 +8,8 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/arn"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -97,8 +97,7 @@ func dataSourceMultiRegionAccessPoint() *schema.Resource {
 }
 
 func dataSourceMultiRegionAccessPointBlockRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn, err := ConnForMRAP(ctx, meta.(*conns.AWSClient))
-
+	conn, err := connForMRAP(ctx, meta.(*conns.AWSClient))
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -109,7 +108,7 @@ func dataSourceMultiRegionAccessPointBlockRead(ctx context.Context, d *schema.Re
 	}
 	name := d.Get("name").(string)
 
-	accessPoint, err := FindMultiRegionAccessPointByTwoPartKey(ctx, conn, accountID, name)
+	accessPoint, err := findMultiRegionAccessPointByTwoPartKey(ctx, conn, accountID, name)
 
 	if err != nil {
 		return diag.Errorf("reading S3 Multi Region Access Point (%s): %s", name, err)
@@ -117,7 +116,7 @@ func dataSourceMultiRegionAccessPointBlockRead(ctx context.Context, d *schema.Re
 
 	d.SetId(MultiRegionAccessPointCreateResourceID(accountID, name))
 
-	alias := aws.StringValue(accessPoint.Alias)
+	alias := aws.ToString(accessPoint.Alias)
 	arn := arn.ARN{
 		Partition: meta.(*conns.AWSClient).Partition,
 		Service:   "s3",
@@ -127,7 +126,7 @@ func dataSourceMultiRegionAccessPointBlockRead(ctx context.Context, d *schema.Re
 	d.Set("account_id", accountID)
 	d.Set("alias", alias)
 	d.Set("arn", arn)
-	d.Set("created_at", aws.TimeValue(accessPoint.CreatedAt).Format(time.RFC3339))
+	d.Set("created_at", aws.ToTime(accessPoint.CreatedAt).Format(time.RFC3339))
 	// https://docs.aws.amazon.com/AmazonS3/latest/userguide//MultiRegionAccessPointRequests.html#MultiRegionAccessPointHostnames.
 	d.Set("domain_name", meta.(*conns.AWSClient).PartitionHostname(fmt.Sprintf("%s.accesspoint.s3-global", alias)))
 	d.Set("name", accessPoint.Name)

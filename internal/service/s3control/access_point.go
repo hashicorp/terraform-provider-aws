@@ -164,7 +164,6 @@ func resourceAccessPointCreate(ctx context.Context, d *schema.ResourceData, meta
 		accountID = v.(string)
 	}
 	name := d.Get("name").(string)
-
 	input := &s3control.CreateAccessPointInput{
 		AccountId: aws.String(accountID),
 		Bucket:    aws.String(d.Get("bucket").(string)),

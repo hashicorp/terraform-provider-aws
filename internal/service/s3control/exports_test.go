@@ -17,7 +17,10 @@ var (
 	ResourceObjectLambdaAccessPointPolicy = resourceObjectLambdaAccessPointPolicy
 	ResourceStorageLensConfiguration      = resourceStorageLensConfiguration
 
-	FindAccessPointByTwoPartKey                = findAccessPointByTwoPartKey
-	FindAccessPointPolicyAndStatusByTwoPartKey = findAccessPointPolicyAndStatusByTwoPartKey
-	FindPublicAccessBlockByAccountID           = findPublicAccessBlockByAccountID
+	ConnForMRAP                                          = connForMRAP
+	FindAccessPointByTwoPartKey                          = findAccessPointByTwoPartKey
+	FindAccessPointPolicyAndStatusByTwoPartKey           = findAccessPointPolicyAndStatusByTwoPartKey
+	FindMultiRegionAccessPointByTwoPartKey               = findMultiRegionAccessPointByTwoPartKey
+	FindMultiRegionAccessPointPolicyDocumentByTwoPartKey = findMultiRegionAccessPointPolicyDocumentByTwoPartKey
+	FindPublicAccessBlockByAccountID                     = findPublicAccessBlockByAccountID
 )
