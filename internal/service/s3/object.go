@@ -362,10 +362,13 @@ func resourceObjectDelete(ctx context.Context, d *schema.ResourceData, meta inte
 
 	bucket := d.Get("bucket").(string)
 	key := d.Get("key").(string)
+	// ****************
+	// TODO: REVIEW
 	// We are effectively ignoring all leading '/'s in the key name and
 	// treating multiple '/'s as a single '/' as aws.Config.DisableRestProtocolURICleaning is false
 	key = strings.TrimLeft(key, "/")
 	key = regexache.MustCompile(`/+`).ReplaceAllString(key, "/")
+	// ****************
 
 	var err error
 	if _, ok := d.GetOk("version_id"); ok {

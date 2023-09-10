@@ -58,6 +58,10 @@ func (client *AWSClient) RegionalHostname(prefix string) string {
 	return fmt.Sprintf("%s.%s.%s", prefix, client.Region, client.DNSSuffix)
 }
 
+// ****************
+// TODO: REVIEW
+// TODO: AWS SDK for Go v2 does NO URL cleaning.
+// ****************
 func (client *AWSClient) S3ConnURICleaningDisabled(ctx context.Context) *s3_sdkv1.S3 {
 	config := client.S3Conn(ctx).Config
 	config.DisableRestProtocolURICleaning = aws_sdkv1.Bool(true)
