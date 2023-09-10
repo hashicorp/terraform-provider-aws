@@ -122,6 +122,10 @@ func resourceObjectLambdaAccessPoint() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
+			"alias": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 		},
 	}
 }
@@ -165,7 +169,7 @@ func resourceObjectLambdaAccessPointRead(ctx context.Context, d *schema.Resource
 		return diag.FromErr(err)
 	}
 
-	output, err := FindObjectLambdaAccessPointByTwoPartKey(ctx, conn, accountID, name)
+	output, err := FindObjectLambdaAccessPointConfigurationByTwoPartKey(ctx, conn, accountID, name)
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] S3 Object Lambda Access Point (%s) not found, removing from state", d.Id())
@@ -191,6 +195,14 @@ func resourceObjectLambdaAccessPointRead(ctx context.Context, d *schema.Resource
 		return diag.Errorf("setting configuration: %s", err)
 	}
 	d.Set("name", name)
+
+	output, err := FindObjectLambdaAccessPointAliasByTwoPartKey(ctx, conn, accountID, name)
+
+	if err != nil {
+		return diag.Errorf("reading S3 Object Lambda Access Point (%s): %s", d.Id(), err)
+	}
+
+	d.Set("alias", output.Value)
 
 	return nil
 }
@@ -248,7 +260,7 @@ func resourceObjectLambdaAccessPointDelete(ctx context.Context, d *schema.Resour
 	return nil
 }
 
-func FindObjectLambdaAccessPointByTwoPartKey(ctx context.Context, conn *s3control.S3Control, accountID string, name string) (*s3control.ObjectLambdaConfiguration, error) {
+func FindObjectLambdaAccessPointConfigurationByTwoPartKey(ctx context.Context, conn *s3control.S3Control, accountID string, name string) (*s3control.ObjectLambdaConfiguration, error) {
 	input := &s3control.GetAccessPointConfigurationForObjectLambdaInput{
 		AccountId: aws.String(accountID),
 		Name:      aws.String(name),
@@ -272,6 +284,32 @@ func FindObjectLambdaAccessPointByTwoPartKey(ctx context.Context, conn *s3contro
 	}
 
 	return output.Configuration, nil
+}
+
+func FindObjectLambdaAccessPointAliasByTwoPartKey(ctx context.Context, conn *s3control.S3Control, accountID string, name string) (*s3control.ObjectLambdaAccessPoint, error) {
+	input := &s3control.GetAccessPointForObjectLambdaInput{
+		AccountId: aws.String(accountID),
+		Name:      aws.String(name),
+	}
+
+	output, err := conn.GetAccessPointForObjectLambdaWithContext(ctx, input)
+
+	if tfawserr.ErrCodeEquals(err, errCodeNoSuchAccessPoint) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || output.Alias == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output.Alias, nil
 }
 
 const objectLambdaAccessPointResourceIDSeparator = ":"
