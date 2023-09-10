@@ -97,10 +97,7 @@ func dataSourceMultiRegionAccessPoint() *schema.Resource {
 }
 
 func dataSourceMultiRegionAccessPointBlockRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn, err := connForMRAP(ctx, meta.(*conns.AWSClient))
-	if err != nil {
-		return diag.FromErr(err)
-	}
+	conn := meta.(*conns.AWSClient).S3ControlClient(ctx)
 
 	accountID := meta.(*conns.AWSClient).AccountID
 	if v, ok := d.GetOk("account_id"); ok {

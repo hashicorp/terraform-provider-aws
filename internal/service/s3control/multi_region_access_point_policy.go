@@ -87,10 +87,7 @@ func resourceMultiRegionAccessPointPolicy() *schema.Resource {
 }
 
 func resourceMultiRegionAccessPointPolicyCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn, err := connForMRAP(ctx, meta.(*conns.AWSClient))
-	if err != nil {
-		return diag.FromErr(err)
-	}
+	conn := meta.(*conns.AWSClient).S3ControlClient(ctx)
 
 	accountID := meta.(*conns.AWSClient).AccountID
 	if v, ok := d.GetOk("account_id"); ok {
@@ -106,7 +103,10 @@ func resourceMultiRegionAccessPointPolicyCreate(ctx context.Context, d *schema.R
 
 	id := MultiRegionAccessPointCreateResourceID(accountID, aws.ToString(input.Details.Name))
 
-	output, err := conn.PutMultiRegionAccessPointPolicy(ctx, input)
+	output, err := conn.PutMultiRegionAccessPointPolicy(ctx, input, func(o *s3control.Options) {
+		// All Multi-Region Access Point actions are routed to the US West (Oregon) Region.
+		o.Region = "us-west-2"
+	})
 
 	if err != nil {
 		return diag.Errorf("creating S3 Multi-Region Access Point (%s) Policy: %s", id, err)
@@ -122,10 +122,7 @@ func resourceMultiRegionAccessPointPolicyCreate(ctx context.Context, d *schema.R
 }
 
 func resourceMultiRegionAccessPointPolicyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn, err := connForMRAP(ctx, meta.(*conns.AWSClient))
-	if err != nil {
-		return diag.FromErr(err)
-	}
+	conn := meta.(*conns.AWSClient).S3ControlClient(ctx)
 
 	accountID, name, err := MultiRegionAccessPointParseResourceID(d.Id())
 	if err != nil {
@@ -172,10 +169,7 @@ func resourceMultiRegionAccessPointPolicyRead(ctx context.Context, d *schema.Res
 }
 
 func resourceMultiRegionAccessPointPolicyUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn, err := connForMRAP(ctx, meta.(*conns.AWSClient))
-	if err != nil {
-		return diag.FromErr(err)
-	}
+	conn := meta.(*conns.AWSClient).S3ControlClient(ctx)
 
 	accountID, _, err := MultiRegionAccessPointParseResourceID(d.Id())
 	if err != nil {
@@ -190,7 +184,10 @@ func resourceMultiRegionAccessPointPolicyUpdate(ctx context.Context, d *schema.R
 		input.Details = expandPutMultiRegionAccessPointPolicyInput_(v.([]interface{})[0].(map[string]interface{}))
 	}
 
-	output, err := conn.PutMultiRegionAccessPointPolicy(ctx, input)
+	output, err := conn.PutMultiRegionAccessPointPolicy(ctx, input, func(o *s3control.Options) {
+		// All Multi-Region Access Point actions are routed to the US West (Oregon) Region.
+		o.Region = "us-west-2"
+	})
 
 	if err != nil {
 		return diag.Errorf("updating S3 Multi-Region Access Point Policy (%s): %s", d.Id(), err)
@@ -209,7 +206,10 @@ func findMultiRegionAccessPointPolicyDocumentByTwoPartKey(ctx context.Context, c
 		Name:      aws.String(name),
 	}
 
-	output, err := conn.GetMultiRegionAccessPointPolicy(ctx, input)
+	output, err := conn.GetMultiRegionAccessPointPolicy(ctx, input, func(o *s3control.Options) {
+		// All Multi-Region Access Point actions are routed to the US West (Oregon) Region.
+		o.Region = "us-west-2"
+	})
 
 	if tfawserr.ErrCodeEquals(err, errCodeNoSuchMultiRegionAccessPoint) {
 		return nil, &retry.NotFoundError{
