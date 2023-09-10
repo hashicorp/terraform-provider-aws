@@ -44,14 +44,14 @@ func dataSourceAccountPublicAccessBlock() *schema.Resource {
 }
 
 func dataSourceAccountPublicAccessBlockRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).S3ControlConn(ctx)
+	conn := meta.(*conns.AWSClient).S3ControlClient(ctx)
 
 	accountID := meta.(*conns.AWSClient).AccountID
 	if v, ok := d.GetOk("account_id"); ok {
 		accountID = v.(string)
 	}
 
-	output, err := FindPublicAccessBlockByAccountID(ctx, conn, accountID)
+	output, err := findPublicAccessBlockByAccountID(ctx, conn, accountID)
 
 	if err != nil {
 		return diag.Errorf("reading S3 Account Public Access Block (%s): %s", accountID, err)

@@ -19,4 +19,5 @@ var (
 
 	FindAccessPointByTwoPartKey                = findAccessPointByTwoPartKey
 	FindAccessPointPolicyAndStatusByTwoPartKey = findAccessPointPolicyAndStatusByTwoPartKey
+	FindPublicAccessBlockByAccountID           = findPublicAccessBlockByAccountID
 )
