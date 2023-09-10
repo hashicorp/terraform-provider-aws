@@ -76,7 +76,7 @@ This resource exports the following attributes in addition to the arguments abov
 * `id` - The id of the collaboration.
 * `create_time` - The date and time the collaboration was created.
 * `member status` - For each member included in the collaboration an additional computed attribute of status is added. These values [may be found here](https://docs.aws.amazon.com/clean-rooms/latest/apireference/API_MemberSummary.html#API-Type-MemberSummary-status).
-* `updated_time` - The date and time he collaboration was last updated.
+* `updated_time` - The date and time the collaboration was last updated.
 
 ## Timeouts
 
