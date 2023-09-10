@@ -6,6 +6,7 @@ package s3control_test
 import (
 	"context"
 	"fmt"
+	"regexp"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/s3control"
@@ -39,6 +40,7 @@ func TestAccS3ControlObjectLambdaAccessPoint_basic(t *testing.T) {
 					acctest.CheckResourceAttrAccountID(resourceName, "account_id"),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "s3-object-lambda", fmt.Sprintf("accesspoint/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
+					resource.TestMatchResourceAttr(resourceName, "alias", regexp.MustCompile("^.{1,20}-.*--ol-s3$")),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.allowed_features.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.cloud_watch_metrics_enabled", "false"),
 					resource.TestCheckResourceAttrPair(resourceName, "configuration.0.supporting_access_point", accessPointResourceName, "arn"),
@@ -168,7 +170,7 @@ func testAccCheckObjectLambdaAccessPointDestroy(ctx context.Context) resource.Te
 				return err
 			}
 
-			_, err = tfs3control.FindObjectLambdaAccessPointByTwoPartKey(ctx, conn, accountID, name)
+			_, err = tfs3control.FindObjectLambdaAccessPointConfigurationByTwoPartKey(ctx, conn, accountID, name)
 
 			if tfresource.NotFound(err) {
 				continue
@@ -204,7 +206,7 @@ func testAccCheckObjectLambdaAccessPointExists(ctx context.Context, n string, v 
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).S3ControlConn(ctx)
 
-		output, err := tfs3control.FindObjectLambdaAccessPointByTwoPartKey(ctx, conn, accountID, name)
+		output, err := tfs3control.FindObjectLambdaAccessPointConfigurationByTwoPartKey(ctx, conn, accountID, name)
 
 		if err != nil {
 			return err
