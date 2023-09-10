@@ -169,7 +169,7 @@ func resourceObjectLambdaAccessPointRead(ctx context.Context, d *schema.Resource
 		return diag.FromErr(err)
 	}
 
-	output, err := FindObjectLambdaAccessPointConfigurationByTwoPartKey(ctx, conn, accountID, name)
+	outputConfiguration, err := FindObjectLambdaAccessPointConfigurationByTwoPartKey(ctx, conn, accountID, name)
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] S3 Object Lambda Access Point (%s) not found, removing from state", d.Id())
@@ -191,18 +191,18 @@ func resourceObjectLambdaAccessPointRead(ctx context.Context, d *schema.Resource
 		Resource:  fmt.Sprintf("accesspoint/%s", name),
 	}.String()
 	d.Set("arn", arn)
-	if err := d.Set("configuration", []interface{}{flattenObjectLambdaConfiguration(output)}); err != nil {
+	if err := d.Set("configuration", []interface{}{flattenObjectLambdaConfiguration(outputConfiguration)}); err != nil {
 		return diag.Errorf("setting configuration: %s", err)
 	}
 	d.Set("name", name)
 
-	output, err := FindObjectLambdaAccessPointAliasByTwoPartKey(ctx, conn, accountID, name)
+	outputAlias, err := FindObjectLambdaAccessPointAliasByTwoPartKey(ctx, conn, accountID, name)
 
 	if err != nil {
 		return diag.Errorf("reading S3 Object Lambda Access Point (%s): %s", d.Id(), err)
 	}
 
-	d.Set("alias", output.Value)
+	d.Set("alias", outputAlias.Value)
 
 	return nil
 }
@@ -286,7 +286,7 @@ func FindObjectLambdaAccessPointConfigurationByTwoPartKey(ctx context.Context, c
 	return output.Configuration, nil
 }
 
-func FindObjectLambdaAccessPointAliasByTwoPartKey(ctx context.Context, conn *s3control.S3Control, accountID string, name string) (*s3control.ObjectLambdaAccessPoint, error) {
+func FindObjectLambdaAccessPointAliasByTwoPartKey(ctx context.Context, conn *s3control.S3Control, accountID string, name string) (*s3control.ObjectLambdaAccessPointAlias, error) {
 	input := &s3control.GetAccessPointForObjectLambdaInput{
 		AccountId: aws.String(accountID),
 		Name:      aws.String(name),
