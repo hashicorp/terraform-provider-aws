@@ -57,6 +57,7 @@ const (
 	Route53DomainsEndpointID             = "route53domains"
 	SchedulerEndpointID                  = "scheduler"
 	S3EndpointID                         = "s3"
+	S3ControlEndpointID                  = "s3-control"
 	SESV2EndpointID                      = "sesv2"
 	SSMEndpointID                        = "ssm"
 	SSMContactsEndpointID                = "ssm-contacts"
