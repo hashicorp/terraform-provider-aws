@@ -445,13 +445,13 @@ func testAccObjectCopyConfig_baseSourceAndTargetBuckets(sourceBucket, targetBuck
 resource "aws_s3_bucket" "source" {
   bucket = %[1]q
 
-  force_destroy = true
+  # force_destroy = true
 }
 
 resource "aws_s3_bucket" "target" {
   bucket = %[2]q
 
-  force_destroy = true
+  # force_destroy = true
 }
 `, sourceBucket, targetBucket)
 }
