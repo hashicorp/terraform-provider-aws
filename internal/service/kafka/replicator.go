@@ -282,15 +282,15 @@ func resourceReplicatorRead(ctx context.Context, d *schema.ResourceData, meta in
 		return append(diags, create.DiagError(names.Kafka, create.ErrActionReading, ResNameReplicator, d.Id(), err)...)
 	}
 
-	var sourceClusterArn *string
-	var targetClusterArn *string
 
-	if d.Get("replication_info_list.0.source_kafka_cluster_arn") == out.KafkaClusters[0].AmazonMskCluster.MskClusterArn {
-		sourceClusterArn = out.KafkaClusters[0].AmazonMskCluster.MskClusterArn
-		targetClusterArn = out.KafkaClusters[1].AmazonMskCluster.MskClusterArn
-	} else {
-		sourceClusterArn = out.KafkaClusters[1].AmazonMskCluster.MskClusterArn
-		targetClusterArn = out.KafkaClusters[0].AmazonMskCluster.MskClusterArn
+	sourceClusterArnFromState, ok:= d.GetOk("replication_info_list.0.source_kafka_cluster_arn")
+	if !ok {
+		return append(diags, create.DiagError(names.Kafka, create.ErrActionReading, ResNameReplicator, d.Id(), errors.New("source cluster not found in state"))...)
+	}
+
+	targetClusterArnFromState, ok := d.GetOk("replication_info_list.0.target_kafka_cluster_arn")
+	if !ok {
+		return append(diags, create.DiagError(names.Kafka, create.ErrActionReading, ResNameReplicator, d.Id(), errors.New("target cluster not found in state"))...)
 	}
 
 	d.Set("arn", out.ReplicatorArn)
@@ -299,7 +299,7 @@ func resourceReplicatorRead(ctx context.Context, d *schema.ResourceData, meta in
 	d.Set("description", out.ReplicatorDescription)
 	d.Set("service_execution_role_arn", out.ServiceExecutionRoleArn)
 	d.Set("kafka_clusters", flattenClusters(out.KafkaClusters))
-	d.Set("replication_info_list", flattenReplicationInfoList(out.ReplicationInfoList, sourceClusterArn, targetClusterArn))
+	d.Set("replication_info_list", flattenReplicationInfoList(out.ReplicationInfoList, aws.String(sourceClusterArnFromState.(string)), aws.String(targetClusterArnFromState.(string))))
 
 	return diags
 }
