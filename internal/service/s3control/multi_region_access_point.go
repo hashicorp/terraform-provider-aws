@@ -339,8 +339,13 @@ const (
 )
 
 func waitMultiRegionAccessPointRequestSucceeded(ctx context.Context, conn *s3control.Client, accountID, requestTokenARN string, timeout time.Duration) (*types.AsyncOperation, error) { //nolint:unparam
+	const (
+		// AsyncOperation.RequestStatus values.
+		asyncOperationRequestStatusFailed    = "FAILED"
+		asyncOperationRequestStatusSucceeded = "SUCCEEDED"
+	)
 	stateConf := &retry.StateChangeConf{
-		Target:     []string{RequestStatusSucceeded},
+		Target:     []string{asyncOperationRequestStatusSucceeded},
 		Timeout:    timeout,
 		Refresh:    statusMultiRegionAccessPointRequest(ctx, conn, accountID, requestTokenARN),
 		MinTimeout: multiRegionAccessPointRequestSucceededMinTimeout,
@@ -350,7 +355,7 @@ func waitMultiRegionAccessPointRequestSucceeded(ctx context.Context, conn *s3con
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*types.AsyncOperation); ok {
-		if status, responseDetails := aws.ToString(output.RequestStatus), output.ResponseDetails; status == RequestStatusFailed && responseDetails != nil && responseDetails.ErrorDetails != nil {
+		if status, responseDetails := aws.ToString(output.RequestStatus), output.ResponseDetails; status == asyncOperationRequestStatusFailed && responseDetails != nil && responseDetails.ErrorDetails != nil {
 			tfresource.SetLastError(err, fmt.Errorf("%s: %s", aws.ToString(responseDetails.ErrorDetails.Code), aws.ToString(responseDetails.ErrorDetails.Message)))
 		}
 
