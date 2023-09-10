@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
@@ -43,7 +44,27 @@ func DataSourceObject() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			// TODO checksum_mode etc.
+			"checksum_mode": {
+				Type:             schema.TypeString,
+				Optional:         true,
+				ValidateDiagFunc: enum.Validate[types.ChecksumMode](),
+			},
+			"checksum_crc32": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"checksum_crc32c": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"checksum_sha1": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"checksum_sha256": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"content_disposition": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -142,6 +163,9 @@ func dataSourceObjectRead(ctx context.Context, d *schema.ResourceData, meta inte
 		Bucket: aws.String(bucket),
 		Key:    aws.String(key),
 	}
+	if v, ok := d.GetOk("checksum_mode"); ok {
+		input.ChecksumMode = types.ChecksumMode(v.(string))
+	}
 	if v, ok := d.GetOk("range"); ok {
 		input.Range = aws.String(v.(string))
 	}
@@ -167,6 +191,10 @@ func dataSourceObjectRead(ctx context.Context, d *schema.ResourceData, meta inte
 
 	d.Set("bucket_key_enabled", output.BucketKeyEnabled)
 	d.Set("cache_control", output.CacheControl)
+	d.Set("checksum_crc32", output.ChecksumCRC32)
+	d.Set("checksum_crc32c", output.ChecksumCRC32C)
+	d.Set("checksum_sha1", output.ChecksumSHA1)
+	d.Set("checksum_sha256", output.ChecksumSHA256)
 	d.Set("content_disposition", output.ContentDisposition)
 	d.Set("content_encoding", output.ContentEncoding)
 	d.Set("content_language", output.ContentLanguage)

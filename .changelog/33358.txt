@@ -5,3 +5,7 @@ resource/aws_s3_object: Add `checksum_algorithm` argument and `checksum_crc32`, 
 ```release-note:enhancement
 resource/aws_s3_object_copy: Add `checksum_algorithm` argument and `checksum_crc32`, `checksum_crc32c`, `checksum_sha1` and `checksum_sha256` attributes
 ```
+
+```release-note:enhancement
+data-source/aws_s3_object: Add `checksum_mode` argument and `checksum_crc32`, `checksum_crc32c`, `checksum_sha1` and `checksum_sha256` attributes
+```

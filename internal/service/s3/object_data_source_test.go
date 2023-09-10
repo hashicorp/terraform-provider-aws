@@ -31,8 +31,13 @@ func TestAccS3ObjectDataSource_basic(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccObjectDataSourceConfig_basic(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckNoResourceAttr(dataSourceName, "body"),
+					resource.TestCheckNoResourceAttr(dataSourceName, "checksum_mode"),
+					resource.TestCheckResourceAttr(resourceName, "checksum_crc32", ""),
+					resource.TestCheckResourceAttr(resourceName, "checksum_crc32c", ""),
+					resource.TestCheckResourceAttr(resourceName, "checksum_sha1", ""),
+					resource.TestCheckResourceAttr(resourceName, "checksum_sha256", ""),
 					resource.TestCheckResourceAttr(dataSourceName, "content_length", "11"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "content_type", resourceName, "content_type"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "etag", resourceName, "etag"),
@@ -372,6 +377,33 @@ func TestAccS3ObjectDataSource_singleSlashAsKey(t *testing.T) {
 	})
 }
 
+func TestAccS3ObjectDataSource_checksumMode(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_s3_object.test"
+	dataSourceName := "data.aws_s3_object.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                  func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:                acctest.ErrorCheck(t, names.S3EndpointID),
+		ProtoV5ProviderFactories:  acctest.ProtoV5ProviderFactories,
+		PreventPostDestroyRefresh: true,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccObjectDataSourceConfig_checksumMode(rName),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(dataSourceName, "checksum_mode", "ENABLED"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "checksum_crc32", resourceName, "checksum_crc32"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "checksum_crc32c", resourceName, "checksum_crc32c"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "checksum_sha1", resourceName, "checksum_sha1"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "checksum_sha256", resourceName, "checksum_sha256"),
+					resource.TestCheckResourceAttrSet(dataSourceName, "checksum_sha256"),
+				),
+			},
+		},
+	})
+}
+
 func testAccObjectDataSourceConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
@@ -683,6 +715,29 @@ resource "aws_s3_bucket" "test" {
 data "aws_s3_object" "test" {
   bucket = aws_s3_bucket.test.bucket
   key    = "/"
+}
+`, rName)
+}
+
+func testAccObjectDataSourceConfig_checksumMode(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_s3_bucket" "test" {
+  bucket = %[1]q
+}
+
+resource "aws_s3_object" "test" {
+  bucket       = aws_s3_bucket.test.bucket
+  key          = "%[1]s-key"
+  content      = "Keep Calm and Carry On"
+
+  checksum_algorithm = "SHA256"
+}
+
+data "aws_s3_object" "test" {
+  bucket = aws_s3_bucket.test.bucket
+  key    = aws_s3_object.test.key
+
+  checksum_mode = "ENABLED"
 }
 `, rName)
 }
