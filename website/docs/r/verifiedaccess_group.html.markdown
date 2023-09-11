@@ -1,22 +1,22 @@
 ---
 subcategory: "EC2 (Elastic Compute Cloud)"
 layout: "aws"
-page_title: "AWS: aws_verifiedaccess_access_group"
+page_title: "AWS: aws_verifiedaccess_group"
 description: |-
-  Terraform resource for managing an AWS EC2 (Elastic Compute Cloud) Verified Access Group.
+  Terraform resource for managing a Verified Access Group.
 ---
 
-# Resource: aws_verifiedaccess_access_group
+# Resource: aws_verifiedaccess_group
 
-Terraform resource for managing an AWS EC2 (Elastic Compute Cloud) Verified Access Group.
+Terraform resource for managing a Verified Access Group.
 
 ## Example Usage
 
 ### Basic Usage
 
 ```terraform
-resource "aws_verifiedaccess_access_group" "example" {
-  verified_access_instance_id = ""
+resource "aws_verifiedaccess_group" "example" {
+  verifiedaccess_instance_id = ""
 }
 ```
 
@@ -24,7 +24,7 @@ resource "aws_verifiedaccess_access_group" "example" {
 
 The following arguments are required:
 
-* `verified_access_instance_id` - (Required) The id of the verified access instance this group is associated with.
+* `verifiedaccess_instance_id` - (Required) The id of the verified access instance this group is associated with.
 
 The following arguments are optional:
 
@@ -40,8 +40,8 @@ In addition to all arguments above, the following attributes are exported:
 * `deletion_time` - Timestamp when the access group was deleted.
 * `last_updated_time` - Timestamp when the access group was last updated.
 * `owner` - AWS account number owning this resource.
-* `verified_access_group_arn` - ARN of this verified acess group.
-* `verified_access_group_id` - ID of this verified access group.
+* `verifiedaccess_group_arn` - ARN of this verified acess group.
+* `verifiedaccess_group_id` - ID of this verified access group.
 
 ## Timeouts
 

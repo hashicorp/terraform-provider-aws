@@ -944,6 +944,14 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
+			Factory:  ResourceVerifiedAccessGroup,
+			TypeName: "aws_verifiedaccess_group",
+			Name:     "Verified Access Group",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "id",
+			},
+		},
+		{
 			Factory:  ResourceVerifiedAccessTrustProvider,
 			TypeName: "aws_verifiedaccess_trust_provider",
 			Name:     "Verified Access Trust Provider",
@@ -954,14 +962,6 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  ResourceVolumeAttachment,
 			TypeName: "aws_volume_attachment",
-		},
-		{
-			Factory:  ResourceVerifiedAccessGroup,
-			TypeName: "aws_verifiedaccess_access_group",
-			Name:     "Verified Access Access Group",
-			Tags: &types.ServicePackageResourceTags{
-				IdentifierAttribute: "id",
-			},
 		},
 		{
 			Factory:  ResourceVPC,

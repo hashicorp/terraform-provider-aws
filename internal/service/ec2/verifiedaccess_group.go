@@ -19,8 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// Function annotations are used for resource registration to the Provider. DO NOT EDIT.
-// @SDKResource("aws_verifiedaccess_access_group", name="Verified Access Access Group")
+// @SDKResource("aws_verifiedaccess_group", name="Verified Access Group")
 // @Tags(identifierAttribute="id")
 func ResourceVerifiedAccessGroup() *schema.Resource {
 	return &schema.Resource{
@@ -65,15 +64,15 @@ func ResourceVerifiedAccessGroup() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			"verified_access_group_arn": {
+			"verifiedaccess_group_arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"verified_access_group_id": {
+			"verifiedaccess_group_id": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"verified_access_instance_id": {
+			"verifiedaccess_instance_id": {
 				Type:     schema.TypeString,
 				Required: true,
 			},
