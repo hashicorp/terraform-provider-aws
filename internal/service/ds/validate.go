@@ -13,8 +13,8 @@ import (
 var (
 	directoryIDRegex = regexache.MustCompile(`^d-[0-9a-f]{10}$`)
 
-	domain                = regexache.MustCompile(`^([a-zA-Z0-9]+[\\.-])+([a-zA-Z0-9])+$`)
-	domainWithTrailingDot = regexache.MustCompile(`^([a-zA-Z0-9]+[\\.-])+([a-zA-Z0-9])+[.]?$`)
+	domain                = regexache.MustCompile(`^([0-9A-Za-z]+[\\.-])+([0-9A-Za-z])+$`)
+	domainWithTrailingDot = regexache.MustCompile(`^([0-9A-Za-z]+[\\.-])+([0-9A-Za-z])+[.]?$`)
 )
 
 var directoryIDValidator validator.String = stringvalidator.RegexMatches(directoryIDRegex, "must be a valid Directory Service Directory ID")

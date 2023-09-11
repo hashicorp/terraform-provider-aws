@@ -192,7 +192,7 @@ func ResourceGateway() *schema.Resource {
 							Elem: &schema.Schema{
 								Type: schema.TypeString,
 								ValidateFunc: validation.All(
-									validation.StringMatch(regexache.MustCompile(`^(([a-zA-Z0-9\-]*[a-zA-Z0-9])\.)*([A-Za-z0-9\-]*[A-Za-z0-9])(:(\d+))?$`), ""),
+									validation.StringMatch(regexache.MustCompile(`^(([0-9A-Za-z-]*[0-9A-Za-z])\.)*([0-9A-Za-z-]*[0-9A-Za-z])(:(\d+))?$`), ""),
 									validation.StringLenBetween(6, 1024),
 								),
 							},
@@ -201,7 +201,7 @@ func ResourceGateway() *schema.Resource {
 							Type:     schema.TypeString,
 							Required: true,
 							ValidateFunc: validation.All(
-								validation.StringMatch(regexache.MustCompile(`^([a-z0-9]+(-[a-z0-9]+)*\.)+[a-z]{2,}$`), ""),
+								validation.StringMatch(regexache.MustCompile(`^([0-9a-z]+(-[0-9a-z]+)*\.)+[a-z]{2,}$`), ""),
 								validation.StringLenBetween(1, 1024),
 							),
 						},

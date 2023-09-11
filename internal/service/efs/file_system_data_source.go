@@ -14,7 +14,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 // @SDKDataSource("aws_efs_file_system")
@@ -104,50 +106,29 @@ func dataSourceFileSystemRead(ctx context.Context, d *schema.ResourceData, meta 
 	conn := meta.(*conns.AWSClient).EFSConn(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	tagsToMatch := tftags.New(ctx, d.Get("tags").(map[string]interface{})).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	describeEfsOpts := &efs.DescribeFileSystemsInput{}
+	input := &efs.DescribeFileSystemsInput{}
 
 	if v, ok := d.GetOk("creation_token"); ok {
-		describeEfsOpts.CreationToken = aws.String(v.(string))
+		input.CreationToken = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("file_system_id"); ok {
-		describeEfsOpts.FileSystemId = aws.String(v.(string))
+		input.FileSystemId = aws.String(v.(string))
 	}
 
-	describeResp, err := conn.DescribeFileSystemsWithContext(ctx, describeEfsOpts)
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading EFS FileSystem: %s", err)
-	}
+	filter := tfslices.PredicateTrue[*efs.FileSystemDescription]()
 
-	if describeResp == nil || len(describeResp.FileSystems) == 0 {
-		return sdkdiag.AppendErrorf(diags, "reading EFS FileSystem: empty output")
-	}
-
-	results := describeResp.FileSystems
-
-	if len(tagsToMatch) > 0 {
-		var fileSystems []*efs.FileSystemDescription
-
-		for _, fileSystem := range describeResp.FileSystems {
-			tags := KeyValueTags(ctx, fileSystem.Tags)
-
-			if !tags.ContainsAll(tagsToMatch) {
-				continue
-			}
-
-			fileSystems = append(fileSystems, fileSystem)
+	if tagsToMatch := tftags.New(ctx, d.Get("tags").(map[string]interface{})).IgnoreAWS().IgnoreConfig(ignoreTagsConfig); len(tagsToMatch) > 0 {
+		filter = func(v *efs.FileSystemDescription) bool {
+			return KeyValueTags(ctx, v.Tags).ContainsAll(tagsToMatch)
 		}
-
-		results = fileSystems
 	}
 
-	if count := len(results); count != 1 {
-		return sdkdiag.AppendErrorf(diags, "Search returned %d results, please revise so only one is returned", count)
-	}
+	fs, err := findFileSystem(ctx, conn, input, filter)
 
-	fs := results[0]
+	if err != nil {
+		return sdkdiag.AppendFromErr(diags, tfresource.SingularDataSourceFindError("EFS file system", err))
+	}
 
 	d.SetId(aws.StringValue(fs.FileSystemId))
 	d.Set("arn", fs.FileSystemArn)

@@ -335,7 +335,7 @@ func FindDefaultDefaultPatchBaselineIDForOS(ctx context.Context, conn *ssm.Clien
 		operatingSystemFilter(os),
 		ownerIsAWSFilter(),
 	)
-	re := regexache.MustCompile(`^AWS-[A-Za-z0-9]+PatchBaseline$`)
+	re := regexache.MustCompile(`^AWS-[0-9A-Za-z]+PatchBaseline$`)
 	var baselineIdentityIDs []string
 	for paginator.HasMorePages() {
 		page, err := paginator.NextPage(ctx)

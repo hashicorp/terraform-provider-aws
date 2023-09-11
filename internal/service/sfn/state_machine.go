@@ -95,7 +95,7 @@ func ResourceStateMachine() *schema.Resource {
 				ConflictsWith: []string{"name_prefix"},
 				ValidateFunc: validation.All(
 					validation.StringLenBetween(1, 80),
-					validation.StringMatch(regexache.MustCompile(`^[a-zA-Z0-9-_]+$`), "the name should only contain 0-9, A-Z, a-z, - and _"),
+					validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_-]+$`), "the name should only contain 0-9, A-Z, a-z, - and _"),
 				),
 			},
 			"name_prefix": {
@@ -106,7 +106,7 @@ func ResourceStateMachine() *schema.Resource {
 				ConflictsWith: []string{"name"},
 				ValidateFunc: validation.All(
 					validation.StringLenBetween(1, 80-id.UniqueIDSuffixLength),
-					validation.StringMatch(regexache.MustCompile(`^[a-zA-Z0-9-_]+$`), "the name should only contain 0-9, A-Z, a-z, - and _"),
+					validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_-]+$`), "the name should only contain 0-9, A-Z, a-z, - and _"),
 				),
 			},
 			"publish": {

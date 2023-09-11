@@ -53,7 +53,7 @@ func ResourceConnectorProfile() *schema.Resource {
 				Optional: true,
 				ForceNew: true,
 				ValidateFunc: validation.All(
-					validation.StringMatch(regexache.MustCompile(`[a-zA-Z0-9][\w!@#.-]+`), "must contain only alphanumeric, exclamation point (!), at sign (@), number sign (#), period (.), and hyphen (-) characters"),
+					validation.StringMatch(regexache.MustCompile(`[0-9A-Za-z][\w!@#.-]+`), "must contain only alphanumeric, exclamation point (!), at sign (@), number sign (#), period (.), and hyphen (-) characters"),
 					validation.StringLenBetween(1, 256),
 				),
 			},
@@ -161,7 +161,7 @@ func ResourceConnectorProfile() *schema.Resource {
 																Type:      schema.TypeMap,
 																Optional:  true,
 																Sensitive: true,
-																ValidateDiagFunc: verify.ValidAllDiag(
+																ValidateDiagFunc: validation.AllDiag(
 																	validation.MapKeyLenBetween(1, 128),
 																	validation.MapKeyMatch(regexache.MustCompile(`[\w]+`), "must contain only alphanumeric and underscore (_) characters"),
 																),
@@ -956,13 +956,13 @@ func ResourceConnectorProfile() *schema.Resource {
 																Required: true,
 																ValidateFunc: validation.All(
 																	validation.StringLenBetween(1, 256),
-																	validation.StringMatch(regexache.MustCompile(`^(https?)://[-a-zA-Z0-9+&@#/%?=~_|!:,.;]*[-a-zA-Z0-9+&@#/%=~_|]`), "must provide a valid HTTPS url"),
+																	validation.StringMatch(regexache.MustCompile(`^(https?)://[0-9A-Za-z-+&@#/%?=~_|!:,.;]*[0-9A-Za-z-+&@#/%=~_|]`), "must provide a valid HTTPS url"),
 																),
 															},
 															"token_url_custom_properties": {
 																Type:     schema.TypeMap,
 																Optional: true,
-																ValidateDiagFunc: verify.ValidAllDiag(
+																ValidateDiagFunc: validation.AllDiag(
 																	validation.MapKeyLenBetween(1, 128),
 																	validation.MapKeyMatch(regexache.MustCompile(`[\w]+`), "must contain only alphanumeric and underscore (_) characters"),
 																),
@@ -980,7 +980,7 @@ func ResourceConnectorProfile() *schema.Resource {
 												"profile_properties": {
 													Type:     schema.TypeMap,
 													Optional: true,
-													ValidateDiagFunc: verify.ValidAllDiag(
+													ValidateDiagFunc: validation.AllDiag(
 														validation.MapKeyLenBetween(1, 128),
 														validation.MapKeyMatch(regexache.MustCompile(`[\w]+`), "must contain only alphanumeric and underscore (_) characters"),
 													),
@@ -1156,7 +1156,7 @@ func ResourceConnectorProfile() *schema.Resource {
 													Required: true,
 													ValidateFunc: validation.All(
 														validation.StringLenBetween(1, 256),
-														validation.StringMatch(regexache.MustCompile(`^(https?)://[-a-zA-Z0-9+&@#/%?=~_|!:,.;]*[-a-zA-Z0-9+&@#/%=~_|]`), "must provide a valid HTTPS url"),
+														validation.StringMatch(regexache.MustCompile(`^(https?)://[0-9A-Za-z-+&@#/%?=~_|!:,.;]*[0-9A-Za-z-+&@#/%=~_|]`), "must provide a valid HTTPS url"),
 													),
 												},
 												"application_service_path": {
@@ -1180,7 +1180,7 @@ func ResourceConnectorProfile() *schema.Resource {
 													Optional: true,
 													ValidateFunc: validation.All(
 														validation.StringLenBetween(0, 2),
-														validation.StringMatch(regexache.MustCompile(`^[a-zA-Z0-9_]*$`), "must contain only alphanumeric characters and the underscore (_) character"),
+														validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_]*$`), "must contain only alphanumeric characters and the underscore (_) character"),
 													),
 												},
 												"oauth_properties": {
@@ -1194,7 +1194,7 @@ func ResourceConnectorProfile() *schema.Resource {
 																Required: true,
 																ValidateFunc: validation.All(
 																	validation.StringLenBetween(1, 256),
-																	validation.StringMatch(regexache.MustCompile(`^(https?)://[-a-zA-Z0-9+&@#/%?=~_|!:,.;]*[-a-zA-Z0-9+&@#/%=~_|]`), "must provide a valid HTTPS url"),
+																	validation.StringMatch(regexache.MustCompile(`^(https?)://[0-9A-Za-z-+&@#/%?=~_|!:,.;]*[0-9A-Za-z-+&@#/%=~_|]`), "must provide a valid HTTPS url"),
 																),
 															},
 															"oauth_scopes": {
@@ -1213,7 +1213,7 @@ func ResourceConnectorProfile() *schema.Resource {
 																Required: true,
 																ValidateFunc: validation.All(
 																	validation.StringLenBetween(1, 256),
-																	validation.StringMatch(regexache.MustCompile(`^(https?)://[-a-zA-Z0-9+&@#/%?=~_|!:,.;]*[-a-zA-Z0-9+&@#/%=~_|]`), "must provide a valid HTTPS url"),
+																	validation.StringMatch(regexache.MustCompile(`^(https?)://[0-9A-Za-z-+&@#/%?=~_|!:,.;]*[0-9A-Za-z-+&@#/%=~_|]`), "must provide a valid HTTPS url"),
 																),
 															},
 														},

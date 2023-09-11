@@ -1228,6 +1228,42 @@ func TestAccElastiCacheCluster_tagWithOtherModification(t *testing.T) {
 	})
 }
 
+func TestAccElastiCacheCluster_TransitEncryption(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+	var cluster elasticache.CacheCluster
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_elasticache_cluster.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, elasticache.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckClusterDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccClusterConfig_transitEncryption(rName, "memcached", "1.6.11"),
+				ExpectError: regexache.MustCompile(`Transit encryption is not supported for memcached version 1.6.11`),
+			},
+			{
+				Config:      testAccClusterConfig_transitEncryption(rName, "redis", "6.2"),
+				ExpectError: regexache.MustCompile(`aws_elasticache_cluster does not support transit encryption using the redis engine, use aws_elasticache_replication_group instead`),
+			},
+			{
+				Config: testAccClusterConfig_transitEncryption(rName, "memcached", "1.6.12"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckClusterExists(ctx, resourceName, &cluster),
+					resource.TestCheckResourceAttr(resourceName, "engine", "memcached"),
+					resource.TestCheckResourceAttr(resourceName, "engine_version", "1.6.12"),
+					resource.TestCheckResourceAttr(resourceName, "transit_encryption_enabled", "true"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccElastiCacheCluster_outpost_memcached(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
@@ -2152,4 +2188,18 @@ resource "aws_elasticache_cluster" "test" {
   }
 }
 `, rName, version, tagKey1, tagValue1)
+}
+
+func testAccClusterConfig_transitEncryption(rName, engine, version string) string {
+	return fmt.Sprintf(`
+resource "aws_elasticache_cluster" "test" {
+  apply_immediately          = true
+  cluster_id                 = "%[1]s"
+  engine                     = "%[2]s"
+  engine_version             = "%[3]s"
+  node_type                  = "cache.t3.medium"
+  num_cache_nodes            = 1
+  transit_encryption_enabled = true
+}
+`, rName, engine, version)
 }

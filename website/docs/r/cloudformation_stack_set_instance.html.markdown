@@ -152,6 +152,7 @@ import {
   to = aws_cloudformation_stack_set_instance.example
   id = "example,ou-sdas-123123123/ou-sdas-789789789,us-east-1"
 }
+```
 
 Import CloudFormation StackSet Instances when acting a delegated administrator in a member account using the StackSet name, target AWS account ID or slash (`/`) separated list of organizational unit IDs, target AWS Region and `call_as` value separated by commas (`,`). For example:
 

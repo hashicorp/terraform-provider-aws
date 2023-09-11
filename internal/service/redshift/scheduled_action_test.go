@@ -488,7 +488,7 @@ resource "aws_redshift_scheduled_action" "test" {
 func TestAccRedshiftScheduledAction_validScheduleName(t *testing.T) {
 	t.Parallel()
 
-	var f = validation.StringMatch(regexache.MustCompile(`^[a-z0-9-]{1,63}$`), "")
+	var f = validation.StringMatch(regexache.MustCompile(`^[0-9a-z-]{1,63}$`), "")
 
 	validIds := []string{
 		"tf-test-schedule-action-1",

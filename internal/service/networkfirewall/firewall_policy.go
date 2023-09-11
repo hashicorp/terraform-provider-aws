@@ -71,7 +71,7 @@ func ResourceFirewallPolicy() *schema.Resource {
 													ValidateFunc: validation.All(
 														validation.StringLenBetween(1, 32),
 														validation.StringMatch(regexache.MustCompile(`^[A-Za-z]`), "must begin with alphabetic character"),
-														validation.StringMatch(regexache.MustCompile(`^[A-Za-z0-9_]+$`), "must contain only alphanumeric and underscore characters"),
+														validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_]+$`), "must contain only alphanumeric and underscore characters"),
 													),
 												},
 												"ip_set": {

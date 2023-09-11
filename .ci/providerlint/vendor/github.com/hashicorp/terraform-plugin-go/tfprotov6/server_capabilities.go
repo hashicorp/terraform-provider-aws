@@ -9,6 +9,11 @@ package tfprotov6
 // This information is used in GetProviderSchemaResponse as capabilities are
 // static features which must be known upfront in the provider server.
 type ServerCapabilities struct {
+	// GetProviderSchemaOptional signals that this provider does not require
+	// having the GetProviderSchema RPC called first to operate normally. This
+	// means the caller can use a cached copy of the provider's schema instead.
+	GetProviderSchemaOptional bool
+
 	// PlanDestroy signals that a provider expects a call to
 	// PlanResourceChange when a resource is going to be destroyed. This is
 	// opt-in to prevent unexpected errors or panics since the
