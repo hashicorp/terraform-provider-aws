@@ -88,6 +88,7 @@ const (
 	errCodeInvalidSpotFleetRequestConfig                     = "InvalidSpotFleetRequestConfig"
 	errCodeInvalidSpotFleetRequestIdNotFound                 = "InvalidSpotFleetRequestId.NotFound"
 	errCodeInvalidSpotInstanceRequestIDNotFound              = "InvalidSpotInstanceRequestID.NotFound"
+	errCodeIncorrectSpotRequestRate                          = "IncorrectSpotRequestState"
 	errCodeInvalidSubnetCIDRReservationIDNotFound            = "InvalidSubnetCidrReservationID.NotFound"
 	errCodeInvalidSubnetIDNotFound                           = "InvalidSubnetID.NotFound"
 	errCodeInvalidSubnetIdNotFound                           = "InvalidSubnetId.NotFound"

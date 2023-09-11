@@ -78,13 +78,25 @@ func RetryWhenAWSErrCodeEqualsV2(ctx context.Context, timeout time.Duration, f f
 	})
 }
 
+type ErrKey struct {
+	Code    string
+	Message string
+}
+
 // RetryWhenAWSErrMessageContains retries the specified function when it returns an AWS error containing the specified message.
 func RetryWhenAWSErrMessageContains(ctx context.Context, timeout time.Duration, f func() (interface{}, error), code, message string) (interface{}, error) { // nosemgrep:ci.aws-in-func-name
-	return RetryWhen(ctx, timeout, f, func(err error) (bool, error) {
-		if tfawserr.ErrMessageContains(err, code, message) {
-			return true, err
-		}
+	return RetryWhenAWSErrMessageContainsOneOfErrs(ctx, timeout, f, []ErrKey{
+		{Code: code, Message: message},
+	})
+}
 
+func RetryWhenAWSErrMessageContainsOneOfErrs(ctx context.Context, timeout time.Duration, f func() (interface{}, error), keys []ErrKey) (interface{}, error) { // nosemgrep:ci.aws-in-func-name
+	return RetryWhen(ctx, timeout, f, func(err error) (bool, error) {
+		for _, key := range keys {
+			if tfawserr.ErrMessageContains(err, key.Code, key.Message) {
+				return true, err
+			}
+		}
 		return false, err
 	})
 }
