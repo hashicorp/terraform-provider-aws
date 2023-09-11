@@ -444,7 +444,7 @@ func testAccCheckObjectCopyDestroy(ctx context.Context) resource.TestCheckFunc {
 				continue
 			}
 
-			_, err := tfs3.FindObjectByBucketAndKey(ctx, conn, rs.Primary.Attributes["bucket"], rs.Primary.Attributes["key"], rs.Primary.Attributes["etag"], "")
+			_, err := tfs3.FindObjectByBucketAndKey(ctx, conn, rs.Primary.Attributes["bucket"], tfs3.SDKv1CompatibleCleanKey(rs.Primary.Attributes["key"]), rs.Primary.Attributes["etag"], "")
 
 			if tfresource.NotFound(err) {
 				continue
@@ -470,7 +470,7 @@ func testAccCheckObjectCopyExists(ctx context.Context, n string) resource.TestCh
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Client(ctx)
 
-		_, err := tfs3.FindObjectByBucketAndKey(ctx, conn, rs.Primary.Attributes["bucket"], rs.Primary.Attributes["key"], rs.Primary.Attributes["etag"], "")
+		_, err := tfs3.FindObjectByBucketAndKey(ctx, conn, rs.Primary.Attributes["bucket"], tfs3.SDKv1CompatibleCleanKey(rs.Primary.Attributes["key"]), rs.Primary.Attributes["etag"], "")
 
 		return err
 	}
@@ -481,13 +481,11 @@ func testAccObjectCopyConfig_baseSourceAndTargetBuckets(sourceBucket, targetBuck
 resource "aws_s3_bucket" "source" {
   bucket = %[1]q
 
-  # force_destroy = true
+  force_destroy = true
 }
 
 resource "aws_s3_bucket" "target" {
   bucket = %[2]q
-
-  # force_destroy = true
 }
 `, sourceBucket, targetBucket)
 }
