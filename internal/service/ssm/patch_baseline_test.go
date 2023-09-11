@@ -5,7 +5,6 @@ package ssm_test
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"testing"
 
