@@ -17,14 +17,15 @@ var (
 	ResourceObjectLambdaAccessPointPolicy = resourceObjectLambdaAccessPointPolicy
 	ResourceStorageLensConfiguration      = resourceStorageLensConfiguration
 
-	FindAccessPointByTwoPartKey                          = findAccessPointByTwoPartKey
-	FindAccessPointPolicyAndStatusByTwoPartKey           = findAccessPointPolicyAndStatusByTwoPartKey
-	FindBucketByTwoPartKey                               = findBucketByTwoPartKey
-	FindBucketLifecycleConfigurationByTwoPartKey         = findBucketLifecycleConfigurationByTwoPartKey
-	FindBucketPolicyByTwoPartKey                         = findBucketPolicyByTwoPartKey
-	FindMultiRegionAccessPointByTwoPartKey               = findMultiRegionAccessPointByTwoPartKey
-	FindMultiRegionAccessPointPolicyDocumentByTwoPartKey = findMultiRegionAccessPointPolicyDocumentByTwoPartKey
-	FindObjectLambdaAccessPointAliasByTwoPartKey         = findObjectLambdaAccessPointAliasByTwoPartKey
-	FindObjectLambdaAccessPointConfigurationByTwoPartKey = findObjectLambdaAccessPointConfigurationByTwoPartKey
-	FindPublicAccessBlockByAccountID                     = findPublicAccessBlockByAccountID
+	FindAccessPointByTwoPartKey                            = findAccessPointByTwoPartKey
+	FindAccessPointPolicyAndStatusByTwoPartKey             = findAccessPointPolicyAndStatusByTwoPartKey
+	FindBucketByTwoPartKey                                 = findBucketByTwoPartKey
+	FindBucketLifecycleConfigurationByTwoPartKey           = findBucketLifecycleConfigurationByTwoPartKey
+	FindBucketPolicyByTwoPartKey                           = findBucketPolicyByTwoPartKey
+	FindMultiRegionAccessPointByTwoPartKey                 = findMultiRegionAccessPointByTwoPartKey
+	FindMultiRegionAccessPointPolicyDocumentByTwoPartKey   = findMultiRegionAccessPointPolicyDocumentByTwoPartKey
+	FindObjectLambdaAccessPointAliasByTwoPartKey           = findObjectLambdaAccessPointAliasByTwoPartKey
+	FindObjectLambdaAccessPointConfigurationByTwoPartKey   = findObjectLambdaAccessPointConfigurationByTwoPartKey
+	FindObjectLambdaAccessPointPolicyAndStatusByTwoPartKey = findObjectLambdaAccessPointPolicyAndStatusByTwoPartKey
+	FindPublicAccessBlockByAccountID                       = findPublicAccessBlockByAccountID
 )
