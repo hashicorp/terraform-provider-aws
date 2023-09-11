@@ -69,3 +69,4 @@ This data source exports the following attributes in addition to the arguments a
     * `configuration` - The value of the yum repo configuration.
     * `name` - The name specified to identify the patch source.
     * `products` - The specific operating system versions a patch repository applies to.
+* `json` - The json representation of the patchbaseline
