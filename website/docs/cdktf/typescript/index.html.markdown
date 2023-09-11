@@ -349,27 +349,29 @@ credential_process = custom-process --username jdoe
 |Use DualStack Endpoints|`useDualstackEndpoint`|`awsUseDualstackEndpoint`|`useDualstackEndpoint`|
 |Use FIPS Endpoints|`useFipsEndpoint`|`awsUseFipsEndpoint`|`useFipsEndpoint`|
 
+[envvars]: https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-envvars.html
+[config]: https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-files.html#cli-configure-files-settings
+
 ### Assume Role Configuration Reference
 
 Configuation for assuming an IAM role can be done using provider configuration or a named profile in shared configuration files.
 In the provider, all parameters for assuming an IAM role are set in the `assumeRole` block.
 
+Note that environment variables are not supported for assuming IAM roles.
+
 See the [assume role documentation](https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-role.html) for more information.
 
-|Setting|Provider|[Environment Variable][envvars]|[Shared Config][config]|
-|-------|--------|--------|-----------------------|
-|Role ARN|`roleArn`|`awsRoleArn`|`roleArn`|
-|Duration|`duration`|N/A|`durationSeconds`|
-|External ID|`externalId`|N/A|`externalId`|
-|Policy|`policy`|N/A|N/A|
-|Policy ARNs|`policyArns`|N/A|N/A|
-|Session Name|`sessionName`|`awsRoleSessionName`|`roleSessionName`|
-|Source Identity|`sourceIdentity`|N/A|N/A|
-|Tags|`tags`|N/A|N/A|
-|Transitive Tag Keys|`transitiveTagKeys`|N/A|N/A|
-
-[envvars]: https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-envvars.html
-[config]: https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-files.html#cli-configure-files-settings
+|Setting|Provider|[Shared Config][config]|
+|-------|--------|-----------------------|
+|Role ARN|`roleArn`|`roleArn`|
+|Duration|`duration`|`durationSeconds`|
+|External ID|`externalId`|`externalId`|
+|Policy|`policy`|N/A|
+|Policy ARNs|`policyArns`|N/A|
+|Session Name|`sessionName`|`roleSessionName`|
+|Source Identity|`sourceIdentity`|N/A|
+|Tags|`tags`|N/A|
+|Transitive Tag Keys|`transitiveTagKeys`|N/A|
 
 ### Assume Role with Web Identity Configuration Reference
 
@@ -827,4 +829,4 @@ Approaches differ per authentication providers:
       There used to be no better way to get account ID out of the API
       when using the federated account until `sts:getCallerIdentity` was introduced.
 
-<!-- cache-key: cdktf-0.18.0 input-39ce8f656c02038ebd768d32b389b4dc2f7ee37785c96943b49d045f754827a0 -->
+<!-- cache-key: cdktf-0.18.0 input-997d49a5e9b14290a258799c973e3b57322743f49198bb46198f8e84b9d20ed4 -->

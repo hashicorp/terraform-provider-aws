@@ -109,6 +109,8 @@ This data source exports the following attributes in addition to the arguments a
 * `processing` – Status of a configuration change in the domain.
 * `snapshotOptions` – Domain snapshot related options.
     * `automatedSnapshotStartHour` - Hour during which the service takes an automated daily snapshot of the indices in the domain.
+* `softwareUpdateOptions` - Software update options for the domain
+    * `autoSoftwareUpdateEnabled` - Enabled or disabled.
 * `tags` - Tags assigned to the domain.
 * `vpcOptions` - VPC Options for private OpenSearch domains.
     * `availabilityZones` - Availability zones used by the domain.
@@ -116,4 +118,4 @@ This data source exports the following attributes in addition to the arguments a
     * `subnetIds` - Subnets used by the domain.
     * `vpcId` - VPC used by the domain.
 
-<!-- cache-key: cdktf-0.18.0 input-966cae8c8e20f502dc0b60f89ebead2a1a9377d9593bb41596387511857f2361 -->
+<!-- cache-key: cdktf-0.18.0 input-4b1000ae383db531a922afd36d146f59e8c9e92158fd3664a1e082f23a890d8d -->
