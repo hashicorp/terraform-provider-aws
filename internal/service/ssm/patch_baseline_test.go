@@ -43,7 +43,12 @@ func TestAccSSMPatchBaseline_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "description", "Baseline containing all updates approved for production systems"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "approved_patches_enable_non_security", "false"),
-					acctest.CheckResourceAttrJMESPair(resourceName, "json", "ApprovedPatches", resourceName, "approved_patches"),
+					acctest.CheckResourceAttrJMES(resourceName, "json", "ApprovedPatches|length(@)", "1"),
+					acctest.CheckResourceAttrJMESPair(resourceName, "json", "ApprovedPatches[0]", resourceName, "approved_patches.0"),
+					acctest.CheckResourceAttrJMESPair(resourceName, "json", "Name", resourceName, "name"),
+					acctest.CheckResourceAttrJMESPair(resourceName, "json", "Description", resourceName, "description"),
+					acctest.CheckResourceAttrJMESPair(resourceName, "json", "ApprovedPatchesEnableNonSecurity", resourceName, "approved_patches_enable_non_security"),
+					acctest.CheckResourceAttrJMESPair(resourceName, "json", "OperatingSystem", resourceName, "operating_system"),
 				),
 			},
 			{
@@ -63,7 +68,9 @@ func TestAccSSMPatchBaseline_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "approved_patches_compliance_level", ssm.PatchComplianceLevelHigh),
 					resource.TestCheckResourceAttr(resourceName, "description", "Baseline containing all updates approved for production systems - August 2017"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-					acctest.CheckResourceAttrJMESPair(resourceName, "json", "ApprovedPatches", resourceName, "approved_patches"),
+					acctest.CheckResourceAttrJMESPair(resourceName, "json", "ApprovedPatches[0]", resourceName, "approved_patches.1"),
+					acctest.CheckResourceAttrJMESPair(resourceName, "json", "ApprovedPatches[1]", resourceName, "approved_patches.0"),
+					acctest.CheckResourceAttrJMES(resourceName, "json", "ApprovedPatches|length(@)", "2"),
 					func(*terraform.State) error {
 						if aws.StringValue(before.BaselineId) != aws.StringValue(after.BaselineId) {
 							t.Fatal("Baseline IDs changed unexpectedly")
@@ -280,7 +287,7 @@ func TestAccSSMPatchBaseline_sources(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "source.1.configuration", "[amzn-main] \nname=amzn-main-Base\nmirrorlist=http://repo./$awsregion./$awsdomain//$releasever/main/mirror.list //nmirrorlist_expire=300//nmetadata_expire=300 \npriority=10 \nfailovermethod=priority \nfastestmirror_enabled=0 \ngpgcheck=1 \ngpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-amazon-ga \nenabled=1 \nretries=3 \ntimeout=5\nreport_instanceid=yes"),
 					resource.TestCheckResourceAttr(resourceName, "source.1.products.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "source.1.products.0", "AmazonLinux2018.03"),
-			
+
 					func(*terraform.State) error {
 						if aws.StringValue(before.BaselineId) != aws.StringValue(after.BaselineId) {
 							t.Fatal("Baseline IDs changed unexpectedly")
@@ -447,19 +454,14 @@ func testAccCheckJsonVersionOfPatchBaselineResource(n string) resource.TestCheck
 		fmt.Printf("attrr: %v", rs.Primary.Attributes)
 		fmt.Printf("eph: %v", rs.Primary.Ephemeral)
 
-
-
-
-	//	if jsonUnmarshalled["Name"].(string) != rs.Primary.Attributes["name"] {
-			//return fmt.Errorf("name attribute is not properly encoded in json")
+		//	if jsonUnmarshalled["Name"].(string) != rs.Primary.Attributes["name"] {
+		//return fmt.Errorf("name attribute is not properly encoded in json")
 		//}
 		//if jsonUnmarshalled["BaselineId"].(string) != rs.Primary.Attributes["name"] {
-			//return fmt.Errorf("name attribute is not properly encoded in json")
+		//return fmt.Errorf("name attribute is not properly encoded in json")
 		//}
 
 		return nil
-
-
 
 	}
 }
