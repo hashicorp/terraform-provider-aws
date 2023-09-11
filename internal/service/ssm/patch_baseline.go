@@ -326,10 +326,10 @@ func resourcePatchBaselineRead(ctx context.Context, d *schema.ResourceData, meta
 	}
 	jsonString := string(jsonDoc)
 
-	d.Set("json", jsonString)
 	d.Set("arn", arn.String())
 	d.Set("name", resp.Name)
 	d.Set("description", resp.Description)
+	d.Set("json", jsonString)
 	d.Set("operating_system", resp.OperatingSystem)
 	d.Set("approved_patches_compliance_level", resp.ApprovedPatchesComplianceLevel)
 	d.Set("approved_patches", flex.FlattenStringList(resp.ApprovedPatches))
