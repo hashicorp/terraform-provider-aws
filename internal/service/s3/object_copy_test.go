@@ -380,7 +380,7 @@ func TestAccS3ObjectCopy_targetWithMultipleSlashes(t *testing.T) {
 	rName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_s3_object_copy.test"
 	sourceKey := "source"
-	targetKey := "/dir/target//"
+	targetKey := "/dir//target/"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -394,6 +394,42 @@ func TestAccS3ObjectCopy_targetWithMultipleSlashes(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "key", targetKey),
 					resource.TestCheckResourceAttr(resourceName, "source", fmt.Sprintf("%s/%s", rName1, sourceKey)),
 				),
+			},
+		},
+	})
+}
+
+func TestAccS3ObjectCopy_targetWithMultipleSlashesMigrated(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName1 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_s3_object_copy.test"
+	sourceKey := "source"
+	targetKey := "/dir//target/"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:   acctest.ErrorCheck(t, names.S3EndpointID),
+		CheckDestroy: testAccCheckObjectCopyDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					// Final version for aws_s3_object_copy using AWS SDK for Go v1.
+					"aws": {
+						Source:            "hashicorp/aws",
+						VersionConstraint: "5.15.0",
+					},
+				},
+				Config: testAccObjectCopyConfig_basic(rName1, sourceKey, rName2, targetKey),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "key", targetKey),
+					resource.TestCheckResourceAttr(resourceName, "source", fmt.Sprintf("%s/%s", rName1, sourceKey)),
+				),
+			},
+			{
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				Config:                   testAccObjectCopyConfig_basic(rName1, sourceKey, rName2, targetKey),
+				PlanOnly:                 true,
 			},
 		},
 	})
