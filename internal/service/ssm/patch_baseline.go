@@ -5,10 +5,10 @@ package ssm
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"log"
 	"strings"
-	"encoding/json"
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/service/ssm/types"
@@ -222,7 +222,7 @@ func ResourcePatchBaseline() *schema.Resource {
 				},
 			},
 			"json": {
-				Type: schema.TypeString,
+				Type:     schema.TypeString,
 				Computed: true,
 			},
 
