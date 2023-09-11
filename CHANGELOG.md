@@ -1,4 +1,13 @@
 ## 5.17.0 (Unreleased)
+
+FEATURES:
+
+* **New Resource:** `aws_verifiedaccess_trust_provider` ([#33195](https://github.com/hashicorp/terraform-provider-aws/issues/33195))
+
+BUG FIXES:
+
+* resource/aws_iot_topic_rule: Fix `InvalidParameter` errors on Update with Kafka destinations ([#33360](https://github.com/hashicorp/terraform-provider-aws/issues/33360))
+
 ## 5.16.1 (September  8, 2023)
 
 BUG FIXES:
