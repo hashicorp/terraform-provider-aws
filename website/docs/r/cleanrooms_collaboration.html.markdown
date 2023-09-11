@@ -88,7 +88,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Clean Rooms collaboration using the `id`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_cleanrooms_collaboration` using the `id`. For example:
 
 ```terraform
 import {
@@ -97,7 +97,7 @@ import {
 }
 ```
 
-Using `terraform import`, import Clean Rooms collaboration using the `id`. For example:
+Using `terraform import`, import `aws_cleanrooms_collaboration` using the `id`. For example:
 
 ```console
 % terraform import aws_cleanrooms_collaboration.collaboration 1234abcd-12ab-34cd-56ef-1234567890ab
