@@ -1045,7 +1045,7 @@ service/translate:
   - 'website/**/translate_*'
 service/verifiedaccess:
   - 'internal/service/ec2/**/verifiedaccess_*'
-  - 'website/**/verifiedaccess*'
+  - 'website/**/verifiedaccess_*'
 service/verifiedpermissions:
   - 'internal/service/verifiedpermissions/**/*'
   - 'website/**/verifiedpermissions_*'
