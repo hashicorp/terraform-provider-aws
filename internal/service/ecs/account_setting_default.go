@@ -42,9 +42,8 @@ func ResourceAccountSettingDefault() *schema.Resource {
 				Computed: true,
 			},
 			"value": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: validation.StringInSlice([]string{"enabled", "disabled"}, false),
+				Type:     schema.TypeString,
+				Required: true,
 			},
 		},
 	}
