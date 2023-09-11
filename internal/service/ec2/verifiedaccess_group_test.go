@@ -154,8 +154,8 @@ func testAccCheckVerifiedAccessGroupDestroy(ctx context.Context) resource.TestCh
 func testAccVerifiedAccessGroupConfig_basic(rName, description string) string {
 	return fmt.Sprintf(`
 resource "aws_verifiedaccess_group" %[1]q {
-  description = %[2]q
-  verified_access_instance_id = "vai-014ba03ba2d7c6a6f"
+  description                = %[2]q
+  verifiedaccess_instance_id = "vai-014ba03ba2d7c6a6f"
 }
 `, rName, description)
 }
@@ -163,8 +163,8 @@ resource "aws_verifiedaccess_group" %[1]q {
 func testAccVerifiedAccessGroupConfig_tags(rName, description, tag1, val1 string) string {
 	return fmt.Sprintf(`
 resource "aws_verifiedaccess_group" %[1]q {
-  description = %[2]q
-  verified_access_instance_id = "vai-014ba03ba2d7c6a6f"
+  description                = %[2]q
+  verifiedaccess_instance_id = "vai-014ba03ba2d7c6a6f"
   tags = {
 	%[3]q = %[4]q
   }
@@ -175,9 +175,9 @@ resource "aws_verifiedaccess_group" %[1]q {
 func testAccVerifiedAccessGroupConfig_policy(rName, description, policy string) string {
 	return acctest.ConfigCompose(fmt.Sprintf(`
 resource "aws_verifiedaccess_group" %[1]q {
-	description = %[2]q
-	verified_access_instance_id = "vai-014ba03ba2d7c6a6f"
-	policy_document = %[3]q
+  description                = %[2]q
+  verifiedaccess_instance_id = "vai-014ba03ba2d7c6a6f"
+  policy_document            = %[3]q
 }
 `, rName, description, policy))
 }
