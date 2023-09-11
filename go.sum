@@ -22,8 +22,8 @@ github.com/apparentlymart/go-textseg/v15 v15.0.0/go.mod h1:K8XmNZdhEBkdlyDdvbmms
 github.com/armon/go-radix v0.0.0-20180808171621-7fddfc383310/go.mod h1:ufUuZ+zHj4x4TnLV4JWEpy2hxWSpsRywHrMgIH9cCH8=
 github.com/armon/go-radix v1.0.0 h1:F4z6KzEeeQIMeLFa97iZU6vupzoecKdU5TX24SNppXI=
 github.com/armon/go-radix v1.0.0/go.mod h1:ufUuZ+zHj4x4TnLV4JWEpy2hxWSpsRywHrMgIH9cCH8=
-github.com/aws/aws-sdk-go v1.45.4 h1:6B8oTYNEncxga8EV1C6Q4iJNnpDIqLEigy0v0oh2qYw=
-github.com/aws/aws-sdk-go v1.45.4/go.mod h1:aVsgQcEevwlmQ7qHE9I3h+dtQgpqhFB+i8Phjh7fkwI=
+github.com/aws/aws-sdk-go v1.45.6 h1:Y2isQQBZsnO15dzUQo9YQRThtHgrV200XCH05BRHVJI=
+github.com/aws/aws-sdk-go v1.45.6/go.mod h1:aVsgQcEevwlmQ7qHE9I3h+dtQgpqhFB+i8Phjh7fkwI=
 github.com/aws/aws-sdk-go-v2 v1.20.1/go.mod h1:NU06lETsFm8fUC6ZjhgDpVBcGZTFQ6XM+LZWZxMI4ac=
 github.com/aws/aws-sdk-go-v2 v1.21.0 h1:gMT0IW+03wtYJhRqTVYn0wLzwdnK9sRMcxmtfGzRdJc=
 github.com/aws/aws-sdk-go-v2 v1.21.0/go.mod h1:/RfNgGmRxI+iFOB1OeJUyxiU+9s88k3pfHvDagGEp0M=
@@ -90,8 +90,8 @@ github.com/aws/aws-sdk-go-v2/service/healthlake v1.17.5 h1:1Le4qAgyQeFC16PG+Yjkw
 github.com/aws/aws-sdk-go-v2/service/healthlake v1.17.5/go.mod h1:adcoUzvmADFsiroi4JC+krUZldrWM7qRD65QtFb1Cm8=
 github.com/aws/aws-sdk-go-v2/service/iam v1.22.5 h1:qGv+oW4uV1T3kbE9uSYEfdZbo38OqxgRxxfStfDr4BU=
 github.com/aws/aws-sdk-go-v2/service/iam v1.22.5/go.mod h1:8lyPrjQczmx72ac9s82zTjf9xLqs7uuFMG9TVEZ07XU=
-github.com/aws/aws-sdk-go-v2/service/identitystore v1.18.1 h1:TNH/Y0rxJ70ZUmJGilaX211KtJWAbct1+1oJVKeTgZ8=
-github.com/aws/aws-sdk-go-v2/service/identitystore v1.18.1/go.mod h1:uP4598oNnSTY5AClqIoK6QHQnwz7cuRS8CBkVMXuxOU=
+github.com/aws/aws-sdk-go-v2/service/identitystore v1.18.2 h1:O7WJ9/aC2kKzZ5hF41ZILnO17v6+7mgBpTzeVjPqk+U=
+github.com/aws/aws-sdk-go-v2/service/identitystore v1.18.2/go.mod h1:uP4598oNnSTY5AClqIoK6QHQnwz7cuRS8CBkVMXuxOU=
 github.com/aws/aws-sdk-go-v2/service/inspector2 v1.16.6 h1:HhLDyWzcq1QAQM9/D6r49CA1NX7mSuE77XruZ/GM0tI=
 github.com/aws/aws-sdk-go-v2/service/inspector2 v1.16.6/go.mod h1:ZThso1NAB0Pt7ZHiE8QjGxZsdSq3yE3IHTO8DSsIj0Y=
 github.com/aws/aws-sdk-go-v2/service/internal/accept-encoding v1.9.14 h1:m0QTSI6pZYJTk5WSKx3fm5cNW/DCicVzULBgU/6IyD0=
@@ -184,8 +184,8 @@ github.com/aws/aws-sdk-go-v2/service/verifiedpermissions v1.2.1 h1:EzuBm6kVbBJz/
 github.com/aws/aws-sdk-go-v2/service/verifiedpermissions v1.2.1/go.mod h1:Gms6hFsMoL+YRK+iz4F9Wj+0kD36Ubl6bybgn6LYSWQ=
 github.com/aws/aws-sdk-go-v2/service/vpclattice v1.2.0 h1:0Y3YrUdOj269PHsmfWRPN6unDyTDWiJan/x0UN5QA00=
 github.com/aws/aws-sdk-go-v2/service/vpclattice v1.2.0/go.mod h1:oWjSy90mvTKVnVg2PwxA5hKVijL8Jy7A5ZC53zi/pOQ=
-github.com/aws/aws-sdk-go-v2/service/workspaces v1.29.5 h1:WE+Y5exd/Jowh2eVl2vmdmAlyyscE3Q7vvkKXMNGKAM=
-github.com/aws/aws-sdk-go-v2/service/workspaces v1.29.5/go.mod h1:AVjfc8q87mKUZgiW4NjqJgG1OzcFIO6OHyfkOQSrPSY=
+github.com/aws/aws-sdk-go-v2/service/workspaces v1.30.0 h1:1GTubIlhB61KhkJAyCU6WrkGWaORev9medal9jaKFoE=
+github.com/aws/aws-sdk-go-v2/service/workspaces v1.30.0/go.mod h1:AVjfc8q87mKUZgiW4NjqJgG1OzcFIO6OHyfkOQSrPSY=
 github.com/aws/aws-sdk-go-v2/service/xray v1.17.5 h1:fJ7KMcuZXBfmK0A8ZfMZIKle0/WuiZwOl+JDpR+LV4I=
 github.com/aws/aws-sdk-go-v2/service/xray v1.17.5/go.mod h1:aE2t25bCn8YrfL6faz73m5Q/7gKa25HjCoa+z6OQMG4=
 github.com/aws/smithy-go v1.14.1/go.mod h1:Tg+OJXh4MB2R/uN61Ko2f6hTZwB/ZYGOtib8J3gBHzA=
