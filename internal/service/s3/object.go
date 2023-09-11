@@ -225,7 +225,7 @@ func resourceObjectRead(ctx context.Context, d *schema.ResourceData, meta interf
 	conn := meta.(*conns.AWSClient).S3Client(ctx)
 
 	bucket := d.Get("bucket").(string)
-	key := d.Get("key").(string)
+	key := sdkv1CompatibleCleanKey(d.Get("key").(string))
 	output, err := findObjectByBucketAndKey(ctx, conn, bucket, key, "", d.Get("checksum_algorithm").(string))
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
@@ -288,7 +288,7 @@ func resourceObjectUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 	conn := meta.(*conns.AWSClient).S3Client(ctx)
 
 	bucket := d.Get("bucket").(string)
-	key := d.Get("key").(string)
+	key := sdkv1CompatibleCleanKey(d.Get("key").(string))
 
 	if d.HasChange("acl") {
 		input := &s3.PutObjectAclInput{
@@ -363,14 +363,7 @@ func resourceObjectDelete(ctx context.Context, d *schema.ResourceData, meta inte
 	conn := meta.(*conns.AWSClient).S3Client(ctx)
 
 	bucket := d.Get("bucket").(string)
-	key := d.Get("key").(string)
-	// ****************
-	// TODO: REVIEW
-	// We are effectively ignoring all leading '/'s in the key name and
-	// treating multiple '/'s as a single '/' as aws.Config.DisableRestProtocolURICleaning is false
-	key = strings.TrimLeft(key, "/")
-	key = regexache.MustCompile(`/+`).ReplaceAllString(key, "/")
-	// ****************
+	key := sdkv1CompatibleCleanKey(d.Get("key").(string))
 
 	var err error
 	if _, ok := d.GetOk("version_id"); ok {
@@ -448,12 +441,10 @@ func resourceObjectUpload(ctx context.Context, d *schema.ResourceData, meta inte
 		body = bytes.NewReader([]byte{})
 	}
 
-	bucket := d.Get("bucket").(string)
-	key := d.Get("key").(string)
 	input := &s3.PutObjectInput{
 		Body:   body,
-		Bucket: aws.String(bucket),
-		Key:    aws.String(key),
+		Bucket: aws.String(d.Get("bucket").(string)),
+		Key:    aws.String(sdkv1CompatibleCleanKey(d.Get("key").(string))),
 	}
 
 	if v, ok := d.GetOk("acl"); ok {
@@ -533,11 +524,11 @@ func resourceObjectUpload(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 
 	if _, err := uploader.Upload(ctx, input); err != nil {
-		return sdkdiag.AppendErrorf(diags, "uploading S3 Object (%s) to Bucket (%s): %s", key, bucket, err)
+		return sdkdiag.AppendErrorf(diags, "uploading S3 Object (%s) to Bucket (%s): %s", aws.ToString(input.Key), aws.ToString(input.Bucket), err)
 	}
 
 	if d.IsNewResource() {
-		d.SetId(key)
+		d.SetId(d.Get("key").(string))
 	}
 
 	return append(diags, resourceObjectRead(ctx, d, meta)...)

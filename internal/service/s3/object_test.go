@@ -1470,7 +1470,7 @@ func TestAccS3Object_checksumAlgorithm(t *testing.T) {
 
 func TestAccS3Object_keyWithSlashesMigrated(t *testing.T) {
 	ctx := acctest.Context(t)
-	// var obj s3.GetObjectOutput
+	var obj s3.GetObjectOutput
 	resourceName := "aws_s3_object.object"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -1489,8 +1489,7 @@ func TestAccS3Object_keyWithSlashesMigrated(t *testing.T) {
 				},
 				Config: testAccObjectConfig_keyWithSlashes(rName),
 				Check: resource.ComposeTestCheckFunc(
-					// Currently fails as we need to wrap key with SDKv1CompatibleCleanKey.
-					// testAccCheckObjectExists(ctx, resourceName, &obj),
+					testAccCheckObjectExists(ctx, resourceName, &obj),
 					resource.TestCheckResourceAttr(resourceName, "bucket", rName),
 					resource.TestCheckResourceAttr(resourceName, "key", "/a/b//c///d/////e/"),
 				),
@@ -1533,7 +1532,7 @@ func testAccCheckObjectDestroy(ctx context.Context) resource.TestCheckFunc {
 				continue
 			}
 
-			_, err := tfs3.FindObjectByBucketAndKey(ctx, conn, rs.Primary.Attributes["bucket"], rs.Primary.Attributes["key"], rs.Primary.Attributes["etag"], rs.Primary.Attributes["checksum_algorithm"])
+			_, err := tfs3.FindObjectByBucketAndKey(ctx, conn, rs.Primary.Attributes["bucket"], tfs3.SDKv1CompatibleCleanKey(rs.Primary.Attributes["key"]), rs.Primary.Attributes["etag"], rs.Primary.Attributes["checksum_algorithm"])
 
 			if tfresource.NotFound(err) {
 				continue
@@ -1561,7 +1560,7 @@ func testAccCheckObjectExists(ctx context.Context, n string, v *s3.GetObjectOutp
 
 		input := &s3.GetObjectInput{
 			Bucket:  aws.String(rs.Primary.Attributes["bucket"]),
-			Key:     aws.String(rs.Primary.Attributes["key"]),
+			Key:     aws.String(tfs3.SDKv1CompatibleCleanKey(rs.Primary.Attributes["key"])),
 			IfMatch: aws.String(rs.Primary.Attributes["etag"]),
 		}
 
@@ -1600,7 +1599,7 @@ func testAccCheckObjectACL(ctx context.Context, n string, want []string) resourc
 
 		output, err := conn.GetObjectAcl(ctx, &s3.GetObjectAclInput{
 			Bucket: aws.String(rs.Primary.Attributes["bucket"]),
-			Key:    aws.String(rs.Primary.Attributes["key"]),
+			Key:    aws.String(tfs3.SDKv1CompatibleCleanKey(rs.Primary.Attributes["key"])),
 		})
 
 		if err != nil {
@@ -1626,7 +1625,7 @@ func testAccCheckObjectStorageClass(ctx context.Context, n, want string) resourc
 		rs := s.RootModule().Resources[n]
 		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Client(ctx)
 
-		output, err := tfs3.FindObjectByBucketAndKey(ctx, conn, rs.Primary.Attributes["bucket"], rs.Primary.Attributes["key"], "", "")
+		output, err := tfs3.FindObjectByBucketAndKey(ctx, conn, rs.Primary.Attributes["bucket"], tfs3.SDKv1CompatibleCleanKey(rs.Primary.Attributes["key"]), "", "")
 
 		if err != nil {
 			return err
@@ -1652,7 +1651,7 @@ func testAccCheckObjectSSE(ctx context.Context, n, want string) resource.TestChe
 		rs := s.RootModule().Resources[n]
 		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Client(ctx)
 
-		output, err := tfs3.FindObjectByBucketAndKey(ctx, conn, rs.Primary.Attributes["bucket"], rs.Primary.Attributes["key"], "", "")
+		output, err := tfs3.FindObjectByBucketAndKey(ctx, conn, rs.Primary.Attributes["bucket"], tfs3.SDKv1CompatibleCleanKey(rs.Primary.Attributes["key"]), "", "")
 
 		if err != nil {
 			return err
@@ -1687,7 +1686,7 @@ func testAccCheckObjectUpdateTags(ctx context.Context, n string, oldTags, newTag
 		rs := s.RootModule().Resources[n]
 		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Client(ctx)
 
-		return tfs3.ObjectUpdateTags(ctx, conn, rs.Primary.Attributes["bucket"], rs.Primary.Attributes["key"], oldTags, newTags)
+		return tfs3.ObjectUpdateTags(ctx, conn, rs.Primary.Attributes["bucket"], tfs3.SDKv1CompatibleCleanKey(rs.Primary.Attributes["key"]), oldTags, newTags)
 	}
 }
 
@@ -1696,7 +1695,7 @@ func testAccCheckObjectCheckTags(ctx context.Context, n string, expectedTags map
 		rs := s.RootModule().Resources[n]
 		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Client(ctx)
 
-		got, err := tfs3.ObjectListTags(ctx, conn, rs.Primary.Attributes["bucket"], rs.Primary.Attributes["key"])
+		got, err := tfs3.ObjectListTags(ctx, conn, rs.Primary.Attributes["bucket"], tfs3.SDKv1CompatibleCleanKey(rs.Primary.Attributes["key"]))
 		if err != nil {
 			return err
 		}
