@@ -2084,14 +2084,21 @@ func modifyInstanceAttributeWithStopStart(ctx context.Context, conn *ec2.EC2, in
 	}
 
 	// Reference: https://github.com/hashicorp/terraform-provider-aws/issues/16433.
-	_, err := tfresource.RetryWhenAWSErrMessageContains(ctx, ec2PropagationTimeout,
+	_, err := tfresource.RetryWhenAWSErrMessageContainsOneOfErrs(ctx, ec2PropagationTimeout,
 		func() (interface{}, error) {
 			return conn.StartInstancesWithContext(ctx, &ec2.StartInstancesInput{
 				InstanceIds: aws.StringSlice([]string{id}),
 			})
 		},
-		errCodeInvalidParameterValue, "LaunchPlan instance type does not match attribute value",
-	)
+		[]tfresource.ErrKey {
+			{ 
+				Code: errCodeIncorrectSpotRequestRate, 
+				Message: fmt.Sprintf("You can't start the Spot Instance '%s' because the associated Spot Instance request is not in an appropriate state to support start", id),
+			},
+			{ 
+				Code: errCodeInvalidParameterValue, 
+				Message: "LaunchPlan instance type does not match attribute value",
+			}})
 
 	if err != nil {
 		return fmt.Errorf("starting EC2 Instance (%s): %w", id, err)
