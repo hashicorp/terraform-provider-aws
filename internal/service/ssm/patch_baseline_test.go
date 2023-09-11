@@ -439,33 +439,6 @@ func testAccCheckPatchBaselineExists(ctx context.Context, n string, patch *ssm.P
 	}
 }
 
-func testAccCheckJsonVersionOfPatchBaselineResource(n string) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[n]
-		if !ok {
-			return fmt.Errorf("Not found: %s", n)
-		}
-
-		var jsonUnmarshalled map[string]interface{}
-
-		json.Unmarshal([]byte(rs.Primary.Attributes["json"]), &jsonUnmarshalled)
-
-		fmt.Printf("json: %v", jsonUnmarshalled)
-		fmt.Printf("attrr: %v", rs.Primary.Attributes)
-		fmt.Printf("eph: %v", rs.Primary.Ephemeral)
-
-		//	if jsonUnmarshalled["Name"].(string) != rs.Primary.Attributes["name"] {
-		//return fmt.Errorf("name attribute is not properly encoded in json")
-		//}
-		//if jsonUnmarshalled["BaselineId"].(string) != rs.Primary.Attributes["name"] {
-		//return fmt.Errorf("name attribute is not properly encoded in json")
-		//}
-
-		return nil
-
-	}
-}
-
 func testAccCheckPatchBaselineDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).SSMConn(ctx)
