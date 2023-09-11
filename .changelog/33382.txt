@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_autoscaling_group: Fix `ValidationError` errors when starting Auto Scaling group instance refresh
+```
