@@ -211,7 +211,7 @@ func ResourceGroup() *schema.Resource {
 									"scale_in_protected_instances": {
 										Type:         schema.TypeString,
 										Optional:     true,
-										Default:      "Ignore",
+										Default:      autoscaling.ScaleInProtectedInstancesIgnore,
 										ValidateFunc: validation.StringInSlice(autoscaling.ScaleInProtectedInstances_Values(), false),
 									},
 									"skip_matching": {
@@ -222,7 +222,7 @@ func ResourceGroup() *schema.Resource {
 									"standby_instances": {
 										Type:         schema.TypeString,
 										Optional:     true,
-										Default:      "Ignore",
+										Default:      autoscaling.StandbyInstancesIgnore,
 										ValidateFunc: validation.StringInSlice(autoscaling.StandbyInstances_Values(), false),
 									},
 								},
