@@ -19,6 +19,9 @@ var (
 
 	FindAccessPointByTwoPartKey                          = findAccessPointByTwoPartKey
 	FindAccessPointPolicyAndStatusByTwoPartKey           = findAccessPointPolicyAndStatusByTwoPartKey
+	FindBucketByTwoPartKey                               = findBucketByTwoPartKey
+	FindBucketLifecycleConfigurationByTwoPartKey         = findBucketLifecycleConfigurationByTwoPartKey
+	FindBucketPolicyByTwoPartKey                         = findBucketPolicyByTwoPartKey
 	FindMultiRegionAccessPointByTwoPartKey               = findMultiRegionAccessPointByTwoPartKey
 	FindMultiRegionAccessPointPolicyDocumentByTwoPartKey = findMultiRegionAccessPointPolicyDocumentByTwoPartKey
 	FindPublicAccessBlockByAccountID                     = findPublicAccessBlockByAccountID
