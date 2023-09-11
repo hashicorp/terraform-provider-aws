@@ -27,17 +27,18 @@ func DataSourcePool() *schema.Resource {
 		ReadWithoutTimeout: dataSourcePoolRead,
 
 		Schema: map[string]*schema.Schema{
-			"identity_pool_name": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: validIdentityPoolName,
+			"allow_classic_flow": {
+				Type:     schema.TypeBool,
+				Computed: true,
 			},
-
+			"allow_unauthenticated_identities": {
+				Type:     schema.TypeBool,
+				Computed: true,
+			},
 			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
 			"cognito_identity_providers": {
 				Type:     schema.TypeSet,
 				Computed: true,
@@ -58,22 +59,15 @@ func DataSourcePool() *schema.Resource {
 					},
 				},
 			},
-
 			"developer_provider_name": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
-			"allow_unauthenticated_identities": {
-				Type:     schema.TypeBool,
-				Computed: true,
+			"identity_pool_name": {
+				Type:         schema.TypeString,
+				Required:     true,
+				ValidateFunc: validIdentityPoolName,
 			},
-
-			"allow_classic_flow": {
-				Type:     schema.TypeBool,
-				Computed: true,
-			},
-
 			"openid_connect_provider_arns": {
 				Type:     schema.TypeSet,
 				Computed: true,
@@ -81,7 +75,6 @@ func DataSourcePool() *schema.Resource {
 					Type: schema.TypeString,
 				},
 			},
-
 			"saml_provider_arns": {
 				Type:     schema.TypeList,
 				Computed: true,
@@ -89,7 +82,6 @@ func DataSourcePool() *schema.Resource {
 					Type: schema.TypeString,
 				},
 			},
-
 			"supported_login_providers": {
 				Type:     schema.TypeMap,
 				Computed: true,
@@ -97,8 +89,7 @@ func DataSourcePool() *schema.Resource {
 					Type: schema.TypeString,
 				},
 			},
-
-			"tags": tftags.TagsSchemaComputed(), // TIP: Many, but not all, data sources have `tags` attributes.
+			"tags": tftags.TagsSchemaComputed(),
 		},
 	}
 }
