@@ -4,7 +4,6 @@
 package s3
 
 import (
-	"bytes"
 	"context"
 	"regexp"
 	"strings"
@@ -12,6 +11,7 @@ import (
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/feature/s3/manager"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/aws/aws-sdk-go-v2/service/s3/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -229,6 +229,8 @@ func dataSourceObjectRead(ctx context.Context, d *schema.ResourceData, meta inte
 	d.Set("website_redirect_location", output.WebsiteRedirectLocation)
 
 	if isContentTypeAllowed(output.ContentType) {
+		downloader := manager.NewDownloader(conn)
+		buf := manager.NewWriteAtBuffer(make([]byte, 0))
 		input := &s3.GetObjectInput{
 			Bucket:    aws.String(bucket),
 			Key:       aws.String(key),
@@ -238,19 +240,13 @@ func dataSourceObjectRead(ctx context.Context, d *schema.ResourceData, meta inte
 			input.Range = aws.String(v.(string))
 		}
 
-		output, err := conn.GetObject(ctx, input)
+		_, err := downloader.Download(ctx, buf, input)
 
 		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "getting S3 Bucket (%s) Object (%s): %s", bucket, key, err)
+			return sdkdiag.AppendErrorf(diags, "downloading S3 Bucket (%s) Object (%s): %s", bucket, key, err)
 		}
 
-		buf := new(bytes.Buffer)
-		_, err = buf.ReadFrom(output.Body)
-		if err != nil {
-			return sdkdiag.AppendFromErr(diags, err)
-		}
-
-		d.Set("body", buf.String())
+		d.Set("body", string(buf.Bytes()))
 	}
 
 	tags, err := ObjectListTags(ctx, conn, bucket, key)
