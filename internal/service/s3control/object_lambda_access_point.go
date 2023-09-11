@@ -43,6 +43,10 @@ func resourceObjectLambdaAccessPoint() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: verify.ValidAccountID,
 			},
+			"alias": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -121,10 +125,6 @@ func resourceObjectLambdaAccessPoint() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
-			},
-			"alias": {
-				Type:     schema.TypeString,
-				Computed: true,
 			},
 		},
 	}
