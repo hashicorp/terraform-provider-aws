@@ -6,6 +6,7 @@ package s3_test
 import (
 	"context"
 	"encoding/base64"
+	"errors"
 	"fmt"
 	"io"
 	"os"
@@ -484,7 +485,7 @@ func TestAccS3Object_updatesWithVersioning(t *testing.T) {
 					testAccCheckObjectExists(ctx, resourceName, &modifiedObj),
 					testAccCheckObjectBody(&modifiedObj, "modified versioned object"),
 					resource.TestCheckResourceAttr(resourceName, "etag", "00b8c73b1b50e7cc932362c7225b8e29"),
-					testAccCheckObjectVersionIdDiffers(&modifiedObj, &originalObj),
+					testAccCheckObjectVersionIDDiffers(&modifiedObj, &originalObj),
 				),
 			},
 			{
@@ -531,7 +532,7 @@ func TestAccS3Object_updatesWithVersioningViaAccessPoint(t *testing.T) {
 					testAccCheckObjectExists(ctx, resourceName, &modifiedObj),
 					testAccCheckObjectBody(&modifiedObj, "modified versioned object"),
 					resource.TestCheckResourceAttr(resourceName, "etag", "00b8c73b1b50e7cc932362c7225b8e29"),
-					testAccCheckObjectVersionIdDiffers(&modifiedObj, &originalObj),
+					testAccCheckObjectVersionIDDiffers(&modifiedObj, &originalObj),
 				),
 			},
 		},
@@ -631,7 +632,7 @@ func TestAccS3Object_acl(t *testing.T) {
 				Config: testAccObjectConfig_acl(rName, "some_bucket_content", string(types.BucketCannedACLPublicRead), false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckObjectExists(ctx, resourceName, &obj2),
-					testAccCheckObjectVersionIdEquals(&obj2, &obj1),
+					testAccCheckObjectVersionIDEquals(&obj2, &obj1),
 					testAccCheckObjectBody(&obj2, "some_bucket_content"),
 					resource.TestCheckResourceAttr(resourceName, "acl", string(types.BucketCannedACLPublicRead)),
 					testAccCheckObjectACL(ctx, resourceName, []string{"FULL_CONTROL", "READ"}),
@@ -641,7 +642,7 @@ func TestAccS3Object_acl(t *testing.T) {
 				Config: testAccObjectConfig_acl(rName, "changed_some_bucket_content", string(types.BucketCannedACLPrivate), true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckObjectExists(ctx, resourceName, &obj3),
-					testAccCheckObjectVersionIdDiffers(&obj3, &obj2),
+					testAccCheckObjectVersionIDDiffers(&obj3, &obj2),
 					testAccCheckObjectBody(&obj3, "changed_some_bucket_content"),
 					resource.TestCheckResourceAttr(resourceName, "acl", string(types.BucketCannedACLPrivate)),
 					testAccCheckObjectACL(ctx, resourceName, []string{"FULL_CONTROL"}),
@@ -797,7 +798,7 @@ func TestAccS3Object_tags(t *testing.T) {
 				Config: testAccObjectConfig_updatedTags(rName, key, "stuff"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckObjectExists(ctx, resourceName, &obj2),
-					testAccCheckObjectVersionIdEquals(&obj2, &obj1),
+					testAccCheckObjectVersionIDEquals(&obj2, &obj1),
 					testAccCheckObjectBody(&obj2, "stuff"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "4"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key2", "B@BB"),
@@ -810,7 +811,7 @@ func TestAccS3Object_tags(t *testing.T) {
 				Config: testAccObjectConfig_noTags(rName, key, "stuff"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckObjectExists(ctx, resourceName, &obj3),
-					testAccCheckObjectVersionIdEquals(&obj3, &obj2),
+					testAccCheckObjectVersionIDEquals(&obj3, &obj2),
 					testAccCheckObjectBody(&obj3, "stuff"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
@@ -819,7 +820,7 @@ func TestAccS3Object_tags(t *testing.T) {
 				Config: testAccObjectConfig_tags(rName, key, "changed stuff"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckObjectExists(ctx, resourceName, &obj4),
-					testAccCheckObjectVersionIdDiffers(&obj4, &obj3),
+					testAccCheckObjectVersionIDDiffers(&obj4, &obj3),
 					testAccCheckObjectBody(&obj4, "changed stuff"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "3"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key1", "A@AA"),
@@ -866,7 +867,7 @@ func TestAccS3Object_tagsLeadingSingleSlash(t *testing.T) {
 				Config: testAccObjectConfig_updatedTags(rName, key, "stuff"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckObjectExists(ctx, resourceName, &obj2),
-					testAccCheckObjectVersionIdEquals(&obj2, &obj1),
+					testAccCheckObjectVersionIDEquals(&obj2, &obj1),
 					testAccCheckObjectBody(&obj2, "stuff"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "4"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key2", "B@BB"),
@@ -879,7 +880,7 @@ func TestAccS3Object_tagsLeadingSingleSlash(t *testing.T) {
 				Config: testAccObjectConfig_noTags(rName, key, "stuff"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckObjectExists(ctx, resourceName, &obj3),
-					testAccCheckObjectVersionIdEquals(&obj3, &obj2),
+					testAccCheckObjectVersionIDEquals(&obj3, &obj2),
 					testAccCheckObjectBody(&obj3, "stuff"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
@@ -888,7 +889,7 @@ func TestAccS3Object_tagsLeadingSingleSlash(t *testing.T) {
 				Config: testAccObjectConfig_tags(rName, key, "changed stuff"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckObjectExists(ctx, resourceName, &obj4),
-					testAccCheckObjectVersionIdDiffers(&obj4, &obj3),
+					testAccCheckObjectVersionIDDiffers(&obj4, &obj3),
 					testAccCheckObjectBody(&obj4, "changed stuff"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "3"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key1", "A@AA"),
@@ -935,7 +936,7 @@ func TestAccS3Object_tagsLeadingMultipleSlashes(t *testing.T) {
 				Config: testAccObjectConfig_updatedTags(rName, key, "stuff"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckObjectExists(ctx, resourceName, &obj2),
-					testAccCheckObjectVersionIdEquals(&obj2, &obj1),
+					testAccCheckObjectVersionIDEquals(&obj2, &obj1),
 					testAccCheckObjectBody(&obj2, "stuff"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "4"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key2", "B@BB"),
@@ -948,7 +949,7 @@ func TestAccS3Object_tagsLeadingMultipleSlashes(t *testing.T) {
 				Config: testAccObjectConfig_noTags(rName, key, "stuff"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckObjectExists(ctx, resourceName, &obj3),
-					testAccCheckObjectVersionIdEquals(&obj3, &obj2),
+					testAccCheckObjectVersionIDEquals(&obj3, &obj2),
 					testAccCheckObjectBody(&obj3, "stuff"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
@@ -957,7 +958,7 @@ func TestAccS3Object_tagsLeadingMultipleSlashes(t *testing.T) {
 				Config: testAccObjectConfig_tags(rName, key, "changed stuff"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckObjectExists(ctx, resourceName, &obj4),
-					testAccCheckObjectVersionIdDiffers(&obj4, &obj3),
+					testAccCheckObjectVersionIDDiffers(&obj4, &obj3),
 					testAccCheckObjectBody(&obj4, "changed stuff"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "3"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key1", "A@AA"),
@@ -997,7 +998,7 @@ func TestAccS3Object_tagsMultipleSlashes(t *testing.T) {
 				Config: testAccObjectConfig_updatedTags(rName, key, "stuff"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckObjectExists(ctx, resourceName, &obj2),
-					testAccCheckObjectVersionIdEquals(&obj2, &obj1),
+					testAccCheckObjectVersionIDEquals(&obj2, &obj1),
 					testAccCheckObjectBody(&obj2, "stuff"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "4"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key2", "B@BB"),
@@ -1010,7 +1011,7 @@ func TestAccS3Object_tagsMultipleSlashes(t *testing.T) {
 				Config: testAccObjectConfig_noTags(rName, key, "stuff"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckObjectExists(ctx, resourceName, &obj3),
-					testAccCheckObjectVersionIdEquals(&obj3, &obj2),
+					testAccCheckObjectVersionIDEquals(&obj3, &obj2),
 					testAccCheckObjectBody(&obj3, "stuff"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
@@ -1019,7 +1020,7 @@ func TestAccS3Object_tagsMultipleSlashes(t *testing.T) {
 				Config: testAccObjectConfig_tags(rName, key, "changed stuff"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckObjectExists(ctx, resourceName, &obj4),
-					testAccCheckObjectVersionIdDiffers(&obj4, &obj3),
+					testAccCheckObjectVersionIDDiffers(&obj4, &obj3),
 					testAccCheckObjectBody(&obj4, "changed stuff"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "3"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key1", "A@AA"),
@@ -1057,7 +1058,7 @@ func TestAccS3Object_objectLockLegalHoldStartWithNone(t *testing.T) {
 				Config: testAccObjectConfig_lockLegalHold(rName, "stuff", "ON"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckObjectExists(ctx, resourceName, &obj2),
-					testAccCheckObjectVersionIdEquals(&obj2, &obj1),
+					testAccCheckObjectVersionIDEquals(&obj2, &obj1),
 					testAccCheckObjectBody(&obj2, "stuff"),
 					resource.TestCheckResourceAttr(resourceName, "object_lock_legal_hold_status", "ON"),
 					resource.TestCheckResourceAttr(resourceName, "object_lock_mode", ""),
@@ -1069,7 +1070,7 @@ func TestAccS3Object_objectLockLegalHoldStartWithNone(t *testing.T) {
 				Config: testAccObjectConfig_lockLegalHold(rName, "changed stuff", "OFF"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckObjectExists(ctx, resourceName, &obj3),
-					testAccCheckObjectVersionIdDiffers(&obj3, &obj2),
+					testAccCheckObjectVersionIDDiffers(&obj3, &obj2),
 					testAccCheckObjectBody(&obj3, "changed stuff"),
 					resource.TestCheckResourceAttr(resourceName, "object_lock_legal_hold_status", "OFF"),
 					resource.TestCheckResourceAttr(resourceName, "object_lock_mode", ""),
@@ -1106,7 +1107,7 @@ func TestAccS3Object_objectLockLegalHoldStartWithOn(t *testing.T) {
 				Config: testAccObjectConfig_lockLegalHold(rName, "stuff", "OFF"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckObjectExists(ctx, resourceName, &obj2),
-					testAccCheckObjectVersionIdEquals(&obj2, &obj1),
+					testAccCheckObjectVersionIDEquals(&obj2, &obj1),
 					testAccCheckObjectBody(&obj2, "stuff"),
 					resource.TestCheckResourceAttr(resourceName, "object_lock_legal_hold_status", "OFF"),
 					resource.TestCheckResourceAttr(resourceName, "object_lock_mode", ""),
@@ -1144,7 +1145,7 @@ func TestAccS3Object_objectLockRetentionStartWithNone(t *testing.T) {
 				Config: testAccObjectConfig_lockRetention(rName, "stuff", retainUntilDate),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckObjectExists(ctx, resourceName, &obj2),
-					testAccCheckObjectVersionIdEquals(&obj2, &obj1),
+					testAccCheckObjectVersionIDEquals(&obj2, &obj1),
 					testAccCheckObjectBody(&obj2, "stuff"),
 					resource.TestCheckResourceAttr(resourceName, "object_lock_legal_hold_status", ""),
 					resource.TestCheckResourceAttr(resourceName, "object_lock_mode", "GOVERNANCE"),
@@ -1156,7 +1157,7 @@ func TestAccS3Object_objectLockRetentionStartWithNone(t *testing.T) {
 				Config: testAccObjectConfig_noLockRetention(rName, "changed stuff"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckObjectExists(ctx, resourceName, &obj3),
-					testAccCheckObjectVersionIdDiffers(&obj3, &obj2),
+					testAccCheckObjectVersionIDDiffers(&obj3, &obj2),
 					testAccCheckObjectBody(&obj3, "changed stuff"),
 					resource.TestCheckResourceAttr(resourceName, "object_lock_legal_hold_status", ""),
 					resource.TestCheckResourceAttr(resourceName, "object_lock_mode", ""),
@@ -1196,7 +1197,7 @@ func TestAccS3Object_objectLockRetentionStartWithSet(t *testing.T) {
 				Config: testAccObjectConfig_lockRetention(rName, "stuff", retainUntilDate2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckObjectExists(ctx, resourceName, &obj2),
-					testAccCheckObjectVersionIdEquals(&obj2, &obj1),
+					testAccCheckObjectVersionIDEquals(&obj2, &obj1),
 					testAccCheckObjectBody(&obj2, "stuff"),
 					resource.TestCheckResourceAttr(resourceName, "object_lock_legal_hold_status", ""),
 					resource.TestCheckResourceAttr(resourceName, "object_lock_mode", "GOVERNANCE"),
@@ -1207,7 +1208,7 @@ func TestAccS3Object_objectLockRetentionStartWithSet(t *testing.T) {
 				Config: testAccObjectConfig_lockRetention(rName, "stuff", retainUntilDate3),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckObjectExists(ctx, resourceName, &obj3),
-					testAccCheckObjectVersionIdEquals(&obj3, &obj2),
+					testAccCheckObjectVersionIDEquals(&obj3, &obj2),
 					testAccCheckObjectBody(&obj3, "stuff"),
 					resource.TestCheckResourceAttr(resourceName, "object_lock_legal_hold_status", ""),
 					resource.TestCheckResourceAttr(resourceName, "object_lock_mode", "GOVERNANCE"),
@@ -1218,7 +1219,7 @@ func TestAccS3Object_objectLockRetentionStartWithSet(t *testing.T) {
 				Config: testAccObjectConfig_noLockRetention(rName, "stuff"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckObjectExists(ctx, resourceName, &obj4),
-					testAccCheckObjectVersionIdEquals(&obj4, &obj3),
+					testAccCheckObjectVersionIDEquals(&obj4, &obj3),
 					testAccCheckObjectBody(&obj4, "stuff"),
 					resource.TestCheckResourceAttr(resourceName, "object_lock_legal_hold_status", ""),
 					resource.TestCheckResourceAttr(resourceName, "object_lock_mode", ""),
@@ -1320,7 +1321,7 @@ func TestAccS3Object_ignoreTags(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckObjectExists(ctx, resourceName, &obj),
 					testAccCheckObjectBody(&obj, "stuff"),
-					testAccCheckObjectUpdateTagsV1(ctx, resourceName, nil, map[string]string{"ignorekey1": "ignorevalue1"}),
+					testAccCheckObjectUpdateTags(ctx, resourceName, nil, map[string]string{"ignorekey1": "ignorevalue1"}),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					testAccCheckObjectCheckTags(ctx, resourceName, map[string]string{
 						"ignorekey1": "ignorevalue1",
@@ -1397,34 +1398,20 @@ func TestAccS3Object_checksumAlgorithm(t *testing.T) {
 	})
 }
 
-func testAccCheckObjectVersionIdDiffers(first, second *s3.GetObjectOutput) resource.TestCheckFunc {
+func testAccCheckObjectVersionIDDiffers(first, second *s3.GetObjectOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		if first.VersionId == nil {
-			return fmt.Errorf("Expected first object to have VersionId: %v", first)
-		}
-		if second.VersionId == nil {
-			return fmt.Errorf("Expected second object to have VersionId: %v", second)
-		}
-
-		if *first.VersionId == *second.VersionId {
-			return fmt.Errorf("Expected Version IDs to differ, but they are equal (%s)", *first.VersionId)
+		if aws.ToString(first.VersionId) == aws.ToString(second.VersionId) {
+			return errors.New("S3 Object version IDs are equal")
 		}
 
 		return nil
 	}
 }
 
-func testAccCheckObjectVersionIdEquals(first, second *s3.GetObjectOutput) resource.TestCheckFunc {
+func testAccCheckObjectVersionIDEquals(first, second *s3.GetObjectOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		if first.VersionId == nil {
-			return fmt.Errorf("Expected first object to have VersionId: %v", first)
-		}
-		if second.VersionId == nil {
-			return fmt.Errorf("Expected second object to have VersionId: %v", second)
-		}
-
-		if *first.VersionId != *second.VersionId {
-			return fmt.Errorf("Expected Version IDs to be equal, but they differ (%s, %s)", *first.VersionId, *second.VersionId)
+		if aws.ToString(first.VersionId) != aws.ToString(second.VersionId) {
+			return errors.New("S3 Object version IDs differ")
 		}
 
 		return nil
@@ -1488,19 +1475,19 @@ func testAccCheckObjectBody(obj *s3.GetObjectOutput, want string) resource.TestC
 	return func(s *terraform.State) error {
 		body, err := io.ReadAll(obj.Body)
 		if err != nil {
-			return fmt.Errorf("failed to read body: %s", err)
+			return err
 		}
 		obj.Body.Close()
 
 		if got := string(body); got != want {
-			return fmt.Errorf("wrong result body %q; want %q", got, want)
+			return fmt.Errorf("S3 Object body = %v, want %v", got, want)
 		}
 
 		return nil
 	}
 }
 
-func testAccCheckObjectACL(ctx context.Context, n string, expectedPerms []string) resource.TestCheckFunc {
+func testAccCheckObjectACL(ctx context.Context, n string, want []string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs := s.RootModule().Resources[n]
 		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Client(ctx)
@@ -1514,21 +1501,21 @@ func testAccCheckObjectACL(ctx context.Context, n string, expectedPerms []string
 			return err
 		}
 
-		var perms []string
+		var got []string
 		for _, v := range output.Grants {
-			perms = append(perms, string(v.Permission))
+			got = append(got, string(v.Permission))
 		}
-		sort.Strings(perms)
+		sort.Strings(got)
 
-		if diff := cmp.Diff(perms, expectedPerms); diff != "" {
-			return fmt.Errorf("unexpected diff (+wanted, -got): %s", diff)
+		if diff := cmp.Diff(got, want); diff != "" {
+			return fmt.Errorf("unexpected S3 Object ACL diff (+wanted, -got): %s", diff)
 		}
 
 		return nil
 	}
 }
 
-func testAccCheckObjectStorageClass(ctx context.Context, n, expectedClass string) resource.TestCheckFunc {
+func testAccCheckObjectStorageClass(ctx context.Context, n, want string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs := s.RootModule().Resources[n]
 		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Client(ctx)
@@ -1546,16 +1533,15 @@ func testAccCheckObjectStorageClass(ctx context.Context, n, expectedClass string
 			storageClass = output.StorageClass
 		}
 
-		if string(storageClass) != expectedClass {
-			return fmt.Errorf("Expected Storage Class to be %v, got %v",
-				expectedClass, storageClass)
+		if got := string(storageClass); got != want {
+			return fmt.Errorf("S3 Object storage class = %v, want %v", got, want)
 		}
 
 		return nil
 	}
 }
 
-func testAccCheckObjectSSE(ctx context.Context, n, expectedSSE string) resource.TestCheckFunc {
+func testAccCheckObjectSSE(ctx context.Context, n, want string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs := s.RootModule().Resources[n]
 		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Client(ctx)
@@ -1566,10 +1552,8 @@ func testAccCheckObjectSSE(ctx context.Context, n, expectedSSE string) resource.
 			return err
 		}
 
-		sse := output.ServerSideEncryption
-		if string(sse) != expectedSSE {
-			return fmt.Errorf("Expected Server Side Encryption %v, got %v.",
-				expectedSSE, sse)
+		if got := string(output.ServerSideEncryption); got != want {
+			return fmt.Errorf("S3 Object server-side encryption = %v, want %v", got, want)
 		}
 
 		return nil
@@ -1592,7 +1576,7 @@ func testAccObjectCreateTempFile(t *testing.T, data string) string {
 	return filename
 }
 
-func testAccCheckObjectUpdateTagsV1(ctx context.Context, n string, oldTags, newTags map[string]string) resource.TestCheckFunc {
+func testAccCheckObjectUpdateTags(ctx context.Context, n string, oldTags, newTags map[string]string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs := s.RootModule().Resources[n]
 		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Client(ctx)
@@ -1613,7 +1597,7 @@ func testAccCheckObjectCheckTags(ctx context.Context, n string, expectedTags map
 
 		want := tftags.New(ctx, expectedTags)
 		if diff := cmp.Diff(got, want); diff != "" {
-			return fmt.Errorf("unexpected diff (+wanted, -got): %s", diff)
+			return fmt.Errorf("unexpected S3 Object tags diff (+wanted, -got): %s", diff)
 		}
 
 		return nil
