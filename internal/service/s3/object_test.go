@@ -1468,6 +1468,42 @@ func TestAccS3Object_checksumAlgorithm(t *testing.T) {
 	})
 }
 
+func TestAccS3Object_keyWithSlashesMigrated(t *testing.T) {
+	ctx := acctest.Context(t)
+	// var obj s3.GetObjectOutput
+	resourceName := "aws_s3_object.object"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:   acctest.ErrorCheck(t, names.S3EndpointID),
+		CheckDestroy: testAccCheckObjectDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					// Final version for aws_s3_object_copy using AWS SDK for Go v1.
+					"aws": {
+						Source:            "hashicorp/aws",
+						VersionConstraint: "5.16.0",
+					},
+				},
+				Config: testAccObjectConfig_keyWithSlashes(rName),
+				Check: resource.ComposeTestCheckFunc(
+					// Currently fails as we need to wrap key with SDKv1CompatibleCleanKey.
+					// testAccCheckObjectExists(ctx, resourceName, &obj),
+					resource.TestCheckResourceAttr(resourceName, "bucket", rName),
+					resource.TestCheckResourceAttr(resourceName, "key", "/a/b//c///d/////e/"),
+				),
+			},
+			{
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				Config:                   testAccObjectConfig_keyWithSlashes(rName),
+				PlanOnly:                 true,
+			},
+		},
+	})
+}
+
 func testAccCheckObjectVersionIDDiffers(first, second *s3.GetObjectOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		if aws.ToString(first.VersionId) == aws.ToString(second.VersionId) {
@@ -2261,4 +2297,17 @@ resource "aws_s3_object" "object" {
   checksum_algorithm = %[2]q
 }
 `, rName, checksumAlgorithm)
+}
+
+func testAccObjectConfig_keyWithSlashes(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_s3_bucket" "test" {
+  bucket = %[1]q
+}
+
+resource "aws_s3_object" "object" {
+  bucket = aws_s3_bucket.test.bucket
+  key    = "/a/b//c///d/////e/"
+}
+`, rName)
 }
