@@ -61,6 +61,7 @@ This data source exports the following attributes in addition to the arguments a
     * `key` - The key for the filter.
     * `values` - The value for the filter.
 * `id` - ID of the baseline.
+* `json` - The json representation of the patchbaseline
 * `name` - Name of the baseline.
 * `description` - Description of the baseline.
 * `rejected_patches` - List of rejected patches.
@@ -69,4 +70,3 @@ This data source exports the following attributes in addition to the arguments a
     * `configuration` - The value of the yum repo configuration.
     * `name` - The name specified to identify the patch source.
     * `products` - The specific operating system versions a patch repository applies to.
-* `json` - The json representation of the patchbaseline

@@ -241,8 +241,8 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `id` - The ID of the patch baseline.
 * `arn` - The ARN of the patch baseline.
+* `json` - The json definition of the patch baselin
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
-* `json` - The json definition of the patch baseline
 
 ## Import
 
