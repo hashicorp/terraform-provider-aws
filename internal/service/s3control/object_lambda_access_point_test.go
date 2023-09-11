@@ -6,9 +6,9 @@ package s3control_test
 import (
 	"context"
 	"fmt"
-	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/service/s3control"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -38,9 +38,9 @@ func TestAccS3ControlObjectLambdaAccessPoint_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckObjectLambdaAccessPointExists(ctx, resourceName, &v),
 					acctest.CheckResourceAttrAccountID(resourceName, "account_id"),
+					resource.TestMatchResourceAttr(resourceName, "alias", regexache.MustCompile("^.{1,20}-.*--ol-s3$")),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "s3-object-lambda", fmt.Sprintf("accesspoint/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
-					resource.TestMatchResourceAttr(resourceName, "alias", regexp.MustCompile("^.{1,20}-.*--ol-s3$")),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.allowed_features.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.cloud_watch_metrics_enabled", "false"),
 					resource.TestCheckResourceAttrPair(resourceName, "configuration.0.supporting_access_point", accessPointResourceName, "arn"),
