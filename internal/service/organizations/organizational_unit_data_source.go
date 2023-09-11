@@ -7,6 +7,7 @@ import (
 	"context"
 
 	"github.com/YakDriver/regexache"
+	"github.com/aws/aws-sdk-go/aws"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -67,8 +68,8 @@ func dataSourceOrganizationalUnitRead(ctx context.Context, d *schema.ResourceDat
 	}
 
 	for _, v := range output {
-		if v.Name != nil && *v.Name == name && v.Id != nil {
-			d.SetId(*v.Id)
+		if v.Name != nil && aws.StringValue(v.Name) == name && v.Id != nil {
+			d.SetId(aws.StringValue(v.Id))
 			d.Set("arn", v.Arn)
 			d.Set("name", v.Name)
 			return diags
