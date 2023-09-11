@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/service/organizations"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -30,7 +29,7 @@ func testAccOrganizationalUnitAccountsDataSource_basic(t *testing.T) {
 			{
 				Config: testAccOrganizationalUnitAccountsDataSource(rName),
 				Check: resource.ComposeTestCheckFunc(
-					acctest.CheckResourceAttrRegionalARNIgnoreRegionAndAccount(dataSourceName, "arn", "organizations", regexache.MustCompile("organization/.+$")),
+					acctest.CheckResourceAttrRegionalARNIgnoreRegionAndAccount(dataSourceName, "arn", "organizations", "organization/.+$"),
 				),
 			},
 		},
