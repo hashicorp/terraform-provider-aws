@@ -14,6 +14,16 @@ BUG FIXES:
 
 * resource/aws_autoscaling_group: Fix `ValidationError` errors when starting Auto Scaling group instance refresh ([#33382](https://github.com/hashicorp/terraform-provider-aws/issues/33382))
 * resource/aws_iot_topic_rule: Fix `InvalidParameter` errors on Update with Kafka destinations ([#33360](https://github.com/hashicorp/terraform-provider-aws/issues/33360))
+* resource/aws_lightsail_certificate: Fix validation of `name` ([#33405](https://github.com/hashicorp/terraform-provider-aws/issues/33405))
+* resource/aws_lightsail_database: Fix validation of `name` ([#33405](https://github.com/hashicorp/terraform-provider-aws/issues/33405))
+* resource/aws_lightsail_disk: Fix validation of `name` ([#33405](https://github.com/hashicorp/terraform-provider-aws/issues/33405))
+* resource/aws_lightsail_instance: Fix validation of `name` ([#33405](https://github.com/hashicorp/terraform-provider-aws/issues/33405))
+* resource/aws_lightsail_lb: Fix validation of `lb_name` ([#33405](https://github.com/hashicorp/terraform-provider-aws/issues/33405))
+* resource/aws_lightsail_lb_attachment: Fix validation of `lb_name` ([#33405](https://github.com/hashicorp/terraform-provider-aws/issues/33405))
+* resource/aws_lightsail_lb_certificate: Fix validation of `lb_name` ([#33405](https://github.com/hashicorp/terraform-provider-aws/issues/33405))
+* resource/aws_lightsail_lb_certificate_attachment: Fix validation of `lb_name` ([#33405](https://github.com/hashicorp/terraform-provider-aws/issues/33405))
+* resource/aws_lightsail_lb_https_redirection_policy: Fix validation of `lb_name` ([#33405](https://github.com/hashicorp/terraform-provider-aws/issues/33405))
+* resource/aws_lightsail_lb_stickiness_policy: Fix validation of `lb_name` ([#33405](https://github.com/hashicorp/terraform-provider-aws/issues/33405))
 
 ## 5.16.1 (September  8, 2023)
 
