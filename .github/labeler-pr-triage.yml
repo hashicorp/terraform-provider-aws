@@ -623,15 +623,15 @@ service/lambda:
 service/lexmodels:
   - 'internal/service/lexmodels/**/*'
   - 'website/**/lex_*'
-service/lexmodelsv2:
-  - 'internal/service/lexmodelsv2/**/*'
-  - 'website/**/lexmodelsv2_*'
 service/lexruntime:
   - 'internal/service/lexruntime/**/*'
   - 'website/**/lexruntime_*'
 service/lexruntimev2:
   - 'internal/service/lexruntimev2/**/*'
   - 'website/**/lexruntimev2_*'
+service/lexv2models:
+  - 'internal/service/lexv2models/**/*'
+  - 'website/**/lexv2models_*'
 service/licensemanager:
   - 'internal/service/licensemanager/**/*'
   - 'website/**/licensemanager_*'
