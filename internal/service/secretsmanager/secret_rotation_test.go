@@ -53,7 +53,7 @@ func TestAccSecretsManagerSecretRotation_basic(t *testing.T) {
 					Check: resource.ComposeTestCheckFunc(
 						testAccCheckSecretRotationExists(resourceName, &secret),
 						resource.TestCheckResourceAttr(resourceName, "rotation_enabled", "true"),
-						resource.TestMatchResourceAttr(resourceName, "rotation_lambda_arn", regexp.MustCompile(fmt.Sprintf("^arn:[^:]+:lambda:[^:]+:[^:]+:function:%s-2$", rName))),
+						resource.TestMatchResourceAttr(resourceName, "rotation_lambda_arn", regexache.MustCompile(fmt.Sprintf("^arn:[^:]+:lambda:[^:]+:[^:]+:function:%s-2$", rName))),
 					),
 				},
 			*/

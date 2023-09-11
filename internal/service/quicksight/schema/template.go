@@ -4,8 +4,7 @@
 package schema
 
 import (
-	"regexp"
-
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/quicksight"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -167,7 +166,7 @@ func aggregationFunctionSchema(required bool) *schema.Schema {
 
 func calculatedFieldsSchema() *schema.Schema {
 	return &schema.Schema{ // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_CalculatedField.html
-		Type:     schema.TypeList,
+		Type:     schema.TypeSet,
 		MinItems: 1,
 		MaxItems: 500,
 		Optional: true,
@@ -217,7 +216,7 @@ func idSchema() *schema.Schema {
 		Required: true,
 		ValidateFunc: validation.All(
 			validation.StringLenBetween(1, 512),
-			validation.StringMatch(regexp.MustCompile(`[\w\-]+`), "must contain only alphanumeric, hyphen, and underscore characters"),
+			validation.StringMatch(regexache.MustCompile(`[\w\-]+`), "must contain only alphanumeric, hyphen, and underscore characters"),
 		),
 	}
 }
@@ -479,8 +478,8 @@ func ExpandTemplateDefinition(tfList []interface{}) *quicksight.TemplateVersionD
 	if v, ok := tfMap["analysis_defaults"].([]interface{}); ok && len(v) > 0 {
 		definition.AnalysisDefaults = expandAnalysisDefaults(v)
 	}
-	if v, ok := tfMap["calculated_fields"].([]interface{}); ok && len(v) > 0 {
-		definition.CalculatedFields = expandCalculatedFields(v)
+	if v, ok := tfMap["calculated_fields"].(*schema.Set); ok && v.Len() > 0 {
+		definition.CalculatedFields = expandCalculatedFields(v.List())
 	}
 	if v, ok := tfMap["column_configurations"].([]interface{}); ok && len(v) > 0 {
 		definition.ColumnConfigurations = expandColumnConfigurations(v)
@@ -491,8 +490,8 @@ func ExpandTemplateDefinition(tfList []interface{}) *quicksight.TemplateVersionD
 	if v, ok := tfMap["filter_groups"].([]interface{}); ok && len(v) > 0 {
 		definition.FilterGroups = expandFilterGroups(v)
 	}
-	if v, ok := tfMap["parameters_declarations"].([]interface{}); ok && len(v) > 0 {
-		definition.ParameterDeclarations = expandParameterDeclarations(v)
+	if v, ok := tfMap["parameters_declarations"].(*schema.Set); ok && v.Len() > 0 {
+		definition.ParameterDeclarations = expandParameterDeclarations(v.List())
 	}
 	if v, ok := tfMap["sheets"].([]interface{}); ok && len(v) > 0 {
 		definition.Sheets = expandSheetDefinitions(v)

@@ -6,13 +6,15 @@ package cloudformation_test
 import (
 	"context"
 	"fmt"
-	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/service/cloudformation"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfcloudformation "github.com/hashicorp/terraform-provider-aws/internal/service/cloudformation"
@@ -33,16 +35,25 @@ func TestAccCloudFormationStack_basic(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccStackConfig_basic(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckStackExists(ctx, resourceName, &stack),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckNoResourceAttr(resourceName, "on_failure"),
+					resource.TestCheckResourceAttr(resourceName, "outputs.%", "2"),
+					resource.TestCheckResourceAttrSet(resourceName, "outputs.DefaultSgId"),
+					resource.TestCheckResourceAttrSet(resourceName, "outputs.VpcID"),
+					resource.TestCheckResourceAttr(resourceName, "parameters.%", "0"),
+					resource.TestCheckNoResourceAttr(resourceName, "template_url"),
 				),
 			},
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+			},
+			{
+				Config:   testAccStackConfig_basic(rName),
+				PlanOnly: true,
 			},
 		},
 	})
@@ -60,7 +71,7 @@ func TestAccCloudFormationStack_CreationFailure_doNothing(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccStackConfig_creationFailure(rName, cloudformation.OnFailureDoNothing),
-				ExpectError: regexp.MustCompile(`failed to create CloudFormation stack \(CREATE_FAILED\).*The following resource\(s\) failed to create.*This is not a valid CIDR block`),
+				ExpectError: regexache.MustCompile(`failed to create CloudFormation stack \(CREATE_FAILED\).*The following resource\(s\) failed to create.*This is not a valid CIDR block`),
 			},
 		},
 	})
@@ -78,7 +89,7 @@ func TestAccCloudFormationStack_CreationFailure_delete(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccStackConfig_creationFailure(rName, cloudformation.OnFailureDelete),
-				ExpectError: regexp.MustCompile(`failed to create CloudFormation stack, delete requested \(DELETE_COMPLETE\).*The following resource\(s\) failed to create.*This is not a valid CIDR block`),
+				ExpectError: regexache.MustCompile(`failed to create CloudFormation stack, delete requested \(DELETE_COMPLETE\).*The following resource\(s\) failed to create.*This is not a valid CIDR block`),
 			},
 		},
 	})
@@ -96,7 +107,7 @@ func TestAccCloudFormationStack_CreationFailure_rollback(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccStackConfig_creationFailure(rName, cloudformation.OnFailureRollback),
-				ExpectError: regexp.MustCompile(`failed to create CloudFormation stack, rollback requested \(ROLLBACK_COMPLETE\).*The following resource\(s\) failed to create.*This is not a valid CIDR block`),
+				ExpectError: regexache.MustCompile(`failed to create CloudFormation stack, rollback requested \(ROLLBACK_COMPLETE\).*The following resource\(s\) failed to create.*This is not a valid CIDR block`),
 			},
 		},
 	})
@@ -119,13 +130,13 @@ func TestAccCloudFormationStack_updateFailure(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccStackConfig_params(rName, vpcCidrInitial),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckStackExists(ctx, resourceName, &stack),
 				),
 			},
 			{
 				Config:      testAccStackConfig_params(rName, vpcCidrInvalid),
-				ExpectError: regexp.MustCompile(`failed to update CloudFormation stack \(UPDATE_ROLLBACK_COMPLETE\).*This is not a valid CIDR block`),
+				ExpectError: regexache.MustCompile(`failed to update CloudFormation stack \(UPDATE_ROLLBACK_COMPLETE\).*This is not a valid CIDR block`),
 			},
 		},
 	})
@@ -145,7 +156,7 @@ func TestAccCloudFormationStack_disappears(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccStackConfig_basic(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckStackExists(ctx, resourceName, &stack),
 					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfcloudformation.ResourceStack(), resourceName),
 				),
@@ -169,7 +180,7 @@ func TestAccCloudFormationStack_yaml(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccStackConfig_yaml(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckStackExists(ctx, resourceName, &stack),
 				),
 			},
@@ -196,7 +207,7 @@ func TestAccCloudFormationStack_defaultParams(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccStackConfig_defaultParams(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckStackExists(ctx, resourceName, &stack),
 				),
 			},
@@ -225,7 +236,7 @@ func TestAccCloudFormationStack_allAttributes(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccStackConfig_allAttributesBodies(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckStackExists(ctx, resourceName, &stack),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "capabilities.#", "1"),
@@ -249,7 +260,7 @@ func TestAccCloudFormationStack_allAttributes(t *testing.T) {
 			},
 			{
 				Config: testAccStackConfig_allAttributesBodiesModified(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckStackExists(ctx, resourceName, &stack),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "capabilities.#", "1"),
@@ -287,10 +298,11 @@ func TestAccCloudFormationStack_withParams(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccStackConfig_params(rName, vpcCidrInitial),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckStackExists(ctx, resourceName, &stack),
 					resource.TestCheckResourceAttr(resourceName, "parameters.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "parameters.VpcCIDR", vpcCidrInitial),
+					resource.TestCheckResourceAttr(resourceName, "outputs.%", "0"),
 				),
 			},
 			{
@@ -301,10 +313,11 @@ func TestAccCloudFormationStack_withParams(t *testing.T) {
 			},
 			{
 				Config: testAccStackConfig_params(rName, vpcCidrUpdated),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckStackExists(ctx, resourceName, &stack),
 					resource.TestCheckResourceAttr(resourceName, "parameters.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "parameters.VpcCIDR", vpcCidrUpdated),
+					resource.TestCheckResourceAttr(resourceName, "outputs.%", "0"),
 				),
 			},
 		},
@@ -326,7 +339,7 @@ func TestAccCloudFormationStack_WithURL_withParams(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccStackConfig_templateURLParams(rName, "tf-cf-stack.json", "11.0.0.0/16"),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckStackExists(ctx, resourceName, &stack),
 				),
 			},
@@ -338,7 +351,7 @@ func TestAccCloudFormationStack_WithURL_withParams(t *testing.T) {
 			},
 			{
 				Config: testAccStackConfig_templateURLParams(rName, "tf-cf-stack.json", "13.0.0.0/16"),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckStackExists(ctx, resourceName, &stack),
 				),
 			},
@@ -360,7 +373,7 @@ func TestAccCloudFormationStack_WithURLWithParams_withYAML(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccStackConfig_templateURLParamsYAML(rName, "tf-cf-stack.test", "13.0.0.0/16"),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckStackExists(ctx, resourceName, &stack),
 				),
 			},
@@ -389,7 +402,7 @@ func TestAccCloudFormationStack_WithURLWithParams_noUpdate(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccStackConfig_templateURLParams(rName, "tf-cf-stack-1.json", "11.0.0.0/16"),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckStackExists(ctx, resourceName, &stack),
 				),
 			},
@@ -401,7 +414,7 @@ func TestAccCloudFormationStack_WithURLWithParams_noUpdate(t *testing.T) {
 			},
 			{
 				Config: testAccStackConfig_templateURLParams(rName, "tf-cf-stack-2.json", "11.0.0.0/16"),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckStackExists(ctx, resourceName, &stack),
 				),
 			},
@@ -423,14 +436,14 @@ func TestAccCloudFormationStack_withTransform(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccStackConfig_transform(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckStackExists(ctx, resourceName, &stack),
 				),
 			},
 			{
 				PlanOnly: true,
 				Config:   testAccStackConfig_transform(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckStackExists(ctx, resourceName, &stack),
 				),
 			},
@@ -453,7 +466,7 @@ func TestAccCloudFormationStack_onFailure(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccStackConfig_onFailure(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckStackExists(ctx, resourceName, &stack),
 					resource.TestCheckResourceAttr(resourceName, "disable_rollback", "false"),
 					resource.TestCheckResourceAttr(resourceName, "on_failure", cloudformation.OnFailureDoNothing),
@@ -477,23 +490,82 @@ func TestAccCloudFormationStack_outputsUpdated(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccStackConfig_parametersAndOutputs(rName, "in1"),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckStackExists(ctx, resourceName, &stack),
 					resource.TestCheckResourceAttr(resourceName, "parameters.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "parameters.DataIn", "in1"),
 					resource.TestCheckResourceAttr(resourceName, "outputs.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "outputs.DataOut", "pre-in1-post"),
+					resource.TestCheckOutput("stack_DataOut", "pre-in1-post"),
 				),
 			},
 			{
 				Config: testAccStackConfig_parametersAndOutputs(rName, "in2"),
-				Check: resource.ComposeTestCheckFunc(
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+						plancheck.ExpectUnknownValue(resourceName, tfjsonpath.New("outputs")),
+					},
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckStackExists(ctx, resourceName, &stack),
 					resource.TestCheckResourceAttr(resourceName, "parameters.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "parameters.DataIn", "in2"),
 					resource.TestCheckResourceAttr(resourceName, "outputs.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "outputs.DataOut", "pre-in2-post"),
+					resource.TestCheckOutput("stack_DataOut", "pre-in2-post"),
 				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"parameters"},
+			},
+		},
+	})
+}
+
+func TestAccCloudFormationStack_templateUpdate(t *testing.T) {
+	ctx := acctest.Context(t)
+	var stack cloudformation.Stack
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_cloudformation_stack.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, cloudformation.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckStackDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccStackConfig_templateUpdate(rName, "out1", "value1"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckStackExists(ctx, resourceName, &stack),
+					resource.TestCheckResourceAttr(resourceName, "outputs.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "outputs.out1", "value1"),
+					resource.TestCheckOutput("stack_output", "out1:value1"),
+				),
+			},
+			{
+				Config: testAccStackConfig_templateUpdate(rName, "out2", "value2"),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+						plancheck.ExpectUnknownValue(resourceName, tfjsonpath.New("outputs")),
+					},
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckStackExists(ctx, resourceName, &stack),
+					resource.TestCheckResourceAttr(resourceName, "outputs.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "outputs.out2", "value2"),
+					resource.TestCheckOutput("stack_output", "out2:value2"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -1109,5 +1181,54 @@ STACK
     DataIn = %[2]q
   }
 }
+
+output "stack_DataOut" {
+  value = aws_cloudformation_stack.test.outputs["DataOut"]
+}
 `, rName, dataIn)
+}
+
+func testAccStackConfig_templateUpdate(rName, name, value string) string {
+	return fmt.Sprintf(`
+resource "aws_cloudformation_stack" "test" {
+  name = %[1]q
+
+  template_body = jsonencode(
+    merge(
+      jsondecode(local.template),
+      { "Outputs" = local.outputs },
+    )
+  )
+}
+
+locals {
+  template = <<STACK
+{
+  "AWSTemplateFormatVersion": "2010-09-09",
+  "Description": "AWS CloudFormation template that returns a constant value",
+  "Conditions": {
+	  "NeverTrue": {"Fn::Equals": ["true","false"]}
+  },
+  "Resources": {
+	  "nullRes": {
+		  "Type": "Custom::NullResource",
+		  "Condition": "NeverTrue",
+		  "Properties": {
+			  "ServiceToken": ""
+		  }
+	  }
+  }
+}
+STACK
+  outputs = {
+    %[2]s = {
+      Value = %[3]q
+    }
+  }
+}
+
+output "stack_output" {
+  value = format("%%s:%%s", %[2]q, aws_cloudformation_stack.test.outputs[%[2]q])
+}
+`, rName, name, value)
 }

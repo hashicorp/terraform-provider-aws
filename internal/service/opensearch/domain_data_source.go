@@ -141,6 +141,10 @@ func DataSourceDomain() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
+						"multi_az_with_standby_enabled": {
+							Type:     schema.TypeBool,
+							Computed: true,
+						},
 						"warm_count": {
 							Type:     schema.TypeInt,
 							Computed: true,
@@ -358,6 +362,18 @@ func DataSourceDomain() *schema.Resource {
 					},
 				},
 			},
+			"software_update_options": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"auto_software_update_enabled": {
+							Type:     schema.TypeBool,
+							Computed: true,
+						},
+					},
+				},
+			},
 			"tags": tftags.TagsSchemaComputed(),
 			"vpc_options": {
 				Type:     schema.TypeList,
@@ -463,6 +479,10 @@ func dataSourceDomainRead(ctx context.Context, d *schema.ResourceData, meta inte
 
 	if err := d.Set("snapshot_options", flattenSnapshotOptions(ds.SnapshotOptions)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting snapshot_options: %s", err)
+	}
+
+	if err := d.Set("software_update_options", flattenSoftwareUpdateOptions(ds.SoftwareUpdateOptions)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting software_update_options: %s", err)
 	}
 
 	if ds.VPCOptions != nil {

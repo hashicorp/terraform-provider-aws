@@ -17,7 +17,10 @@ const (
 	lifecycleConfigurationExtraRetryDelay         = 5 * time.Second
 	lifecycleConfigurationRulesPropagationTimeout = 3 * time.Minute
 	lifecycleConfigurationRulesSteadyTimeout      = 2 * time.Minute
-	propagationTimeout                            = 1 * time.Minute
+
+	// General timeout for S3 bucket changes to propagate.
+	// See https://docs.aws.amazon.com/AmazonS3/latest/userguide/Welcome.html#ConsistencyModel.
+	s3BucketPropagationTimeout = 1 * time.Minute // nosemgrep:ci.s3-in-const-name, ci.s3-in-var-name
 
 	// LifecycleConfigurationRulesStatusReady occurs when all configured rules reach their desired state (Enabled or Disabled)
 	LifecycleConfigurationRulesStatusReady = "READY"
@@ -26,7 +29,7 @@ const (
 )
 
 func retryWhenBucketNotFound(ctx context.Context, f func() (interface{}, error)) (interface{}, error) {
-	return tfresource.RetryWhenAWSErrCodeEquals(ctx, propagationTimeout, f, s3.ErrCodeNoSuchBucket)
+	return tfresource.RetryWhenAWSErrCodeEquals(ctx, s3BucketPropagationTimeout, f, s3.ErrCodeNoSuchBucket)
 }
 
 func waitForLifecycleConfigurationRulesStatus(ctx context.Context, conn *s3.S3, bucket, expectedBucketOwner string, rules []*s3.LifecycleRule) error {

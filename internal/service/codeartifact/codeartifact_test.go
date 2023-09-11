@@ -19,10 +19,11 @@ func TestAccCodeArtifact_serial(t *testing.T) {
 			"owner":    testAccAuthorizationTokenDataSource_owner,
 		},
 		"Domain": {
-			"basic":                testAccDomain_basic,
-			"defaultEncryptionKey": testAccDomain_defaultEncryptionKey,
-			"disappears":           testAccDomain_disappears,
-			"tags":                 testAccDomain_tags,
+			"basic":                         testAccDomain_basic,
+			"defaultEncryptionKey":          testAccDomain_defaultEncryptionKey,
+			"disappears":                    testAccDomain_disappears,
+			"migrateAssetSizeBytesToString": testAccDomain_MigrateAssetSizeBytesToString,
+			"tags":                          testAccDomain_tags,
 		},
 		"DomainPermissionsPolicy": {
 			"basic":            testAccDomainPermissionsPolicy_basic,

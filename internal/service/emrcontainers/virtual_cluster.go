@@ -6,9 +6,9 @@ package emrcontainers
 import (
 	"context"
 	"log"
-	"regexp"
 	"time"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/emrcontainers"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
@@ -99,7 +99,7 @@ func ResourceVirtualCluster() *schema.Resource {
 				ForceNew: true,
 				ValidateFunc: validation.All(
 					validation.StringLenBetween(1, 64),
-					validation.StringMatch(regexp.MustCompile(`[.\-_/#A-Za-z0-9]+`), "must contain only alphanumeric, hyphen, underscore, dot and # characters"),
+					validation.StringMatch(regexache.MustCompile(`[0-9A-Za-z_./#-]+`), "must contain only alphanumeric, hyphen, underscore, dot and # characters"),
 				),
 			},
 			names.AttrTags:    tftags.TagsSchema(),

@@ -47,8 +47,8 @@ func TestAccOrganizations_serial(t *testing.T) {
 		"OrganizationalUnit": {
 			"basic":                        testAccOrganizationalUnit_basic,
 			"disappears":                   testAccOrganizationalUnit_disappears,
-			"Name":                         testAccOrganizationalUnit_Name,
-			"Tags":                         testAccOrganizationalUnit_Tags,
+			"update":                       testAccOrganizationalUnit_update,
+			"tags":                         testAccOrganizationalUnit_tags,
 			"ChildAccountsDataSource":      testAccOrganizationalUnitChildAccountsDataSource_basic,
 			"DescendantAccountsDataSource": testAccOrganizationalUnitDescendantAccountsDataSource_basic,
 			"PluralDataSource":             testAccOrganizationalUnitsDataSource_basic,

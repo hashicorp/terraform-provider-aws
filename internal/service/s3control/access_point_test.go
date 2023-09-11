@@ -6,9 +6,9 @@ package s3control_test
 import (
 	"context"
 	"fmt"
-	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/service/s3control"
 	awspolicy "github.com/hashicorp/awspolicyequivalence"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
@@ -39,11 +39,11 @@ func TestAccS3ControlAccessPoint_basic(t *testing.T) {
 					testAccCheckAccessPointExists(ctx, resourceName, &v),
 					acctest.CheckResourceAttrAccountID(resourceName, "account_id"),
 					// https://docs.aws.amazon.com/AmazonS3/latest/userguide/access-points-alias.html:
-					resource.TestMatchResourceAttr(resourceName, "alias", regexp.MustCompile(`^.*-s3alias$`)),
+					resource.TestMatchResourceAttr(resourceName, "alias", regexache.MustCompile(`^.*-s3alias$`)),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "s3", fmt.Sprintf("accesspoint/%s", accessPointName)),
 					resource.TestCheckResourceAttr(resourceName, "bucket", bucketName),
 					acctest.CheckResourceAttrAccountID(resourceName, "bucket_account_id"),
-					acctest.MatchResourceAttrRegionalHostname(resourceName, "domain_name", "s3-accesspoint", regexp.MustCompile(fmt.Sprintf("^%s-\\d{12}", accessPointName))),
+					acctest.MatchResourceAttrRegionalHostname(resourceName, "domain_name", "s3-accesspoint", regexache.MustCompile(fmt.Sprintf("^%s-\\d{12}", accessPointName))),
 					resource.TestCheckResourceAttr(resourceName, "endpoints.%", "4"),
 					resource.TestCheckResourceAttr(resourceName, "has_public_access_policy", "false"),
 					resource.TestCheckResourceAttr(resourceName, "name", accessPointName),
@@ -110,7 +110,7 @@ func TestAccS3ControlAccessPoint_Bucket_arn(t *testing.T) {
 					acctest.CheckResourceAttrAccountID(resourceName, "account_id"),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "s3-outposts", fmt.Sprintf("outpost/[^/]+/accesspoint/%s", rName)),
 					resource.TestCheckResourceAttrPair(resourceName, "bucket", "aws_s3control_bucket.test", "arn"),
-					acctest.MatchResourceAttrRegionalHostname(resourceName, "domain_name", "s3-accesspoint", regexp.MustCompile(fmt.Sprintf("^%s-\\d{12}", rName))),
+					acctest.MatchResourceAttrRegionalHostname(resourceName, "domain_name", "s3-accesspoint", regexache.MustCompile(fmt.Sprintf("^%s-\\d{12}", rName))),
 					resource.TestCheckResourceAttr(resourceName, "has_public_access_policy", "false"),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "network_origin", "Vpc"),

@@ -7,9 +7,9 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ssmcontacts"
 	"github.com/aws/aws-sdk-go-v2/service/ssmcontacts/types"
@@ -47,7 +47,7 @@ func testContact_basic(t *testing.T) {
 					testAccCheckContactExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "alias", rName),
 					resource.TestCheckResourceAttr(resourceName, "type", "PERSONAL"),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "ssm-contacts", regexp.MustCompile(`contact/+.`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "ssm-contacts", regexache.MustCompile(`contact/+.`)),
 				),
 			},
 			{

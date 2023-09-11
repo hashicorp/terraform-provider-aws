@@ -6,9 +6,9 @@ package fsx
 import (
 	"context"
 	"log"
-	"regexp"
 	"time"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/fsx"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
@@ -119,7 +119,7 @@ func ResourceFileCache() *schema.Resource {
 											Type: schema.TypeString,
 											ValidateFunc: validation.All(
 												validation.StringLenBetween(7, 15),
-												validation.StringMatch(regexp.MustCompile(`^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])$`), "invalid pattern"),
+												validation.StringMatch(regexache.MustCompile(`^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])$`), "invalid pattern"),
 											),
 										},
 									},
@@ -170,7 +170,7 @@ func ResourceFileCache() *schema.Resource {
 				ForceNew: true,
 				ValidateFunc: validation.All(
 					validation.StringLenBetween(1, 20),
-					validation.StringMatch(regexp.MustCompile(`^[0-9](.[0-9]*)*$`), "invalid pattern"),
+					validation.StringMatch(regexache.MustCompile(`^[0-9](.[0-9]*)*$`), "invalid pattern"),
 				),
 			},
 			"kms_key_id": {
@@ -244,7 +244,7 @@ func ResourceFileCache() *schema.Resource {
 							Optional: true,
 							ValidateFunc: validation.All(
 								validation.StringLenBetween(7, 7),
-								validation.StringMatch(regexp.MustCompile(`^[1-7]:([01]\d|2[0-3]):?([0-5]\d)$`), "invalid pattern"),
+								validation.StringMatch(regexache.MustCompile(`^[1-7]:([01]\d|2[0-3]):?([0-5]\d)$`), "invalid pattern"),
 							),
 						},
 					},
@@ -366,9 +366,8 @@ func resourceFileCacheRead(ctx context.Context, d *schema.ResourceData, meta int
 	d.Set("subnet_ids", aws.StringValueSlice(filecache.SubnetIds))
 	d.Set("vpc_id", filecache.VpcId)
 
-	if err := d.Set("data_repository_association_ids", filecache.DataRepositoryAssociationIds); err != nil {
-		return create.DiagError(names.FSx, create.ErrActionSetting, ResNameFileCache, d.Id(), err)
-	}
+	dataRepositoryAssociationIDs := aws.StringValueSlice(filecache.DataRepositoryAssociationIds)
+	d.Set("data_repository_association_ids", dataRepositoryAssociationIDs)
 	if err := d.Set("lustre_configuration", flattenFileCacheLustreConfiguration(filecache.LustreConfiguration)); err != nil {
 		return create.DiagError(names.FSx, create.ErrActionSetting, ResNameFileCache, d.Id(), err)
 	}
@@ -381,7 +380,7 @@ func resourceFileCacheRead(ctx context.Context, d *schema.ResourceData, meta int
 
 	// Lookup and set Data Repository Associations
 
-	dataRepositoryAssociations, _ := findDataRepositoryAssociationsByIDs(ctx, conn, filecache.DataRepositoryAssociationIds)
+	dataRepositoryAssociations, _ := findDataRepositoryAssociationsByIDs(ctx, conn, dataRepositoryAssociationIDs)
 
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
@@ -615,4 +614,12 @@ func expandFileCacheLustreMetadataConfiguration(l []interface{}) *fsx.FileCacheL
 		req.StorageCapacity = aws.Int64(int64(v))
 	}
 	return req
+}
+
+func findDataRepositoryAssociationsByIDs(ctx context.Context, conn *fsx.FSx, ids []string) ([]*fsx.DataRepositoryAssociation, error) {
+	input := &fsx.DescribeDataRepositoryAssociationsInput{
+		AssociationIds: aws.StringSlice(ids),
+	}
+
+	return findDataRepositoryAssociations(ctx, conn, input)
 }

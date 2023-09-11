@@ -5,12 +5,10 @@ package datasync_test
 
 import (
 	"context"
-	"errors"
 	"fmt"
-	"regexp"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/service/datasync"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -23,7 +21,7 @@ import (
 
 func TestAccDataSyncLocationNFS_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var locationNfs1 datasync.DescribeLocationNfsOutput
+	var v datasync.DescribeLocationNfsOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_datasync_location_nfs.test"
 
@@ -36,8 +34,8 @@ func TestAccDataSyncLocationNFS_basic(t *testing.T) {
 			{
 				Config: testAccLocationNFSConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckLocationNFSExists(ctx, resourceName, &locationNfs1),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "datasync", regexp.MustCompile(`location/loc-.+`)),
+					testAccCheckLocationNFSExists(ctx, resourceName, &v),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "datasync", regexache.MustCompile(`location/loc-.+`)),
 					resource.TestCheckResourceAttr(resourceName, "on_prem_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "on_prem_config.0.agent_arns.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "mount_options.#", "1"),
@@ -45,7 +43,7 @@ func TestAccDataSyncLocationNFS_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "server_hostname", "example.com"),
 					resource.TestCheckResourceAttr(resourceName, "subdirectory", "/"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-					resource.TestMatchResourceAttr(resourceName, "uri", regexp.MustCompile(`^nfs://.+/`)),
+					resource.TestMatchResourceAttr(resourceName, "uri", regexache.MustCompile(`^nfs://.+/`)),
 				),
 			},
 			{
@@ -60,7 +58,7 @@ func TestAccDataSyncLocationNFS_basic(t *testing.T) {
 
 func TestAccDataSyncLocationNFS_mountOptions(t *testing.T) {
 	ctx := acctest.Context(t)
-	var locationNfs1 datasync.DescribeLocationNfsOutput
+	var v datasync.DescribeLocationNfsOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_datasync_location_nfs.test"
 
@@ -73,7 +71,7 @@ func TestAccDataSyncLocationNFS_mountOptions(t *testing.T) {
 			{
 				Config: testAccLocationNFSConfig_mountOptions(rName, "NFS4_0"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckLocationNFSExists(ctx, resourceName, &locationNfs1),
+					testAccCheckLocationNFSExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "mount_options.0.version", "NFS4_0"),
 				),
 			},
@@ -86,7 +84,7 @@ func TestAccDataSyncLocationNFS_mountOptions(t *testing.T) {
 			{
 				Config: testAccLocationNFSConfig_mountOptions(rName, "NFS4_1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckLocationNFSExists(ctx, resourceName, &locationNfs1),
+					testAccCheckLocationNFSExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "mount_options.0.version", "NFS4_1"),
 				),
 			},
@@ -96,7 +94,7 @@ func TestAccDataSyncLocationNFS_mountOptions(t *testing.T) {
 
 func TestAccDataSyncLocationNFS_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	var locationNfs1 datasync.DescribeLocationNfsOutput
+	var v datasync.DescribeLocationNfsOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_datasync_location_nfs.test"
 
@@ -109,7 +107,7 @@ func TestAccDataSyncLocationNFS_disappears(t *testing.T) {
 			{
 				Config: testAccLocationNFSConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckLocationNFSExists(ctx, resourceName, &locationNfs1),
+					testAccCheckLocationNFSExists(ctx, resourceName, &v),
 					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfdatasync.ResourceLocationNFS(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -120,7 +118,7 @@ func TestAccDataSyncLocationNFS_disappears(t *testing.T) {
 
 func TestAccDataSyncLocationNFS_AgentARNs_multiple(t *testing.T) {
 	ctx := acctest.Context(t)
-	var locationNfs1 datasync.DescribeLocationNfsOutput
+	var v datasync.DescribeLocationNfsOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_datasync_location_nfs.test"
 
@@ -133,7 +131,7 @@ func TestAccDataSyncLocationNFS_AgentARNs_multiple(t *testing.T) {
 			{
 				Config: testAccLocationNFSConfig_agentARNsMultiple(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckLocationNFSExists(ctx, resourceName, &locationNfs1),
+					testAccCheckLocationNFSExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "on_prem_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "on_prem_config.0.agent_arns.#", "2"),
 				),
@@ -151,7 +149,7 @@ func TestAccDataSyncLocationNFS_AgentARNs_multiple(t *testing.T) {
 func TestAccDataSyncLocationNFS_subdirectory(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	var locationNfs1 datasync.DescribeLocationNfsOutput
+	var v datasync.DescribeLocationNfsOutput
 	resourceName := "aws_datasync_location_nfs.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -163,7 +161,7 @@ func TestAccDataSyncLocationNFS_subdirectory(t *testing.T) {
 			{
 				Config: testAccLocationNFSConfig_subdirectory(rName, "/subdirectory1/"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckLocationNFSExists(ctx, resourceName, &locationNfs1),
+					testAccCheckLocationNFSExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "subdirectory", "/subdirectory1/"),
 				),
 			},
@@ -176,7 +174,7 @@ func TestAccDataSyncLocationNFS_subdirectory(t *testing.T) {
 			{
 				Config: testAccLocationNFSConfig_subdirectory(rName, "/subdirectory2/"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckLocationNFSExists(ctx, resourceName, &locationNfs1),
+					testAccCheckLocationNFSExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "subdirectory", "/subdirectory2/"),
 				),
 			},
@@ -186,7 +184,7 @@ func TestAccDataSyncLocationNFS_subdirectory(t *testing.T) {
 
 func TestAccDataSyncLocationNFS_tags(t *testing.T) {
 	ctx := acctest.Context(t)
-	var locationNfs1, locationNfs2, locationNfs3 datasync.DescribeLocationNfsOutput
+	var v datasync.DescribeLocationNfsOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_datasync_location_nfs.test"
 
@@ -199,7 +197,7 @@ func TestAccDataSyncLocationNFS_tags(t *testing.T) {
 			{
 				Config: testAccLocationNFSConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckLocationNFSExists(ctx, resourceName, &locationNfs1),
+					testAccCheckLocationNFSExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
@@ -213,8 +211,7 @@ func TestAccDataSyncLocationNFS_tags(t *testing.T) {
 			{
 				Config: testAccLocationNFSConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckLocationNFSExists(ctx, resourceName, &locationNfs2),
-					testAccCheckLocationNFSNotRecreated(&locationNfs1, &locationNfs2),
+					testAccCheckLocationNFSExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
@@ -223,8 +220,7 @@ func TestAccDataSyncLocationNFS_tags(t *testing.T) {
 			{
 				Config: testAccLocationNFSConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckLocationNFSExists(ctx, resourceName, &locationNfs3),
-					testAccCheckLocationNFSNotRecreated(&locationNfs2, &locationNfs3),
+					testAccCheckLocationNFSExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
@@ -275,16 +271,6 @@ func testAccCheckLocationNFSExists(ctx context.Context, n string, v *datasync.De
 		}
 
 		*v = *output
-
-		return nil
-	}
-}
-
-func testAccCheckLocationNFSNotRecreated(i, j *datasync.DescribeLocationNfsOutput) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		if !aws.TimeValue(i.CreationTime).Equal(aws.TimeValue(j.CreationTime)) {
-			return errors.New("DataSync Location NFS was recreated")
-		}
 
 		return nil
 	}

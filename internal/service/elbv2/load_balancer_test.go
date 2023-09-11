@@ -10,6 +10,7 @@ import (
 	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/elbv2"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
@@ -84,7 +85,7 @@ func TestAccELBV2LoadBalancer_ALB_basic(t *testing.T) {
 					testAccCheckLoadBalancerExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "access_logs.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "access_logs.0.enabled", "false"),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "elasticloadbalancing", regexp.MustCompile(fmt.Sprintf("loadbalancer/app/%s/.+", rName))),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "elasticloadbalancing", regexache.MustCompile(fmt.Sprintf("loadbalancer/app/%s/.+", rName))),
 					resource.TestCheckResourceAttr(resourceName, "desync_mitigation_mode", "defensive"),
 					resource.TestCheckResourceAttrSet(resourceName, "dns_name"),
 					resource.TestCheckResourceAttr(resourceName, "enable_deletion_protection", "false"),
@@ -125,7 +126,7 @@ func TestAccELBV2LoadBalancer_NLB_basic(t *testing.T) {
 					testAccCheckLoadBalancerExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "access_logs.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "access_logs.0.enabled", "false"),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "elasticloadbalancing", regexp.MustCompile(fmt.Sprintf("loadbalancer/net/%s/.+", rName))),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "elasticloadbalancing", regexache.MustCompile(fmt.Sprintf("loadbalancer/net/%s/.+", rName))),
 					resource.TestCheckResourceAttrSet(resourceName, "dns_name"),
 					resource.TestCheckResourceAttr(resourceName, "enable_deletion_protection", "false"),
 					resource.TestCheckResourceAttr(resourceName, "internal", "true"),
@@ -157,7 +158,7 @@ func TestAccELBV2LoadBalancer_LoadBalancerType_gateway(t *testing.T) {
 				Config: testAccLoadBalancerConfig_typeGateway(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckLoadBalancerExists(ctx, resourceName, &conf),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "elasticloadbalancing", regexp.MustCompile(fmt.Sprintf("loadbalancer/gwy/%s/.+", rName))),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "elasticloadbalancing", regexache.MustCompile(fmt.Sprintf("loadbalancer/gwy/%s/.+", rName))),
 					resource.TestCheckResourceAttr(resourceName, "load_balancer_type", elbv2.LoadBalancerTypeEnumGateway),
 				),
 			},
@@ -217,7 +218,7 @@ func TestAccELBV2LoadBalancer_ipv6SubnetMapping(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckLoadBalancerExists(ctx, resourceName, &conf),
 					resource.TestMatchTypeSetElemNestedAttrs(resourceName, "subnet_mapping.*", map[string]*regexp.Regexp{
-						"ipv6_address": regexp.MustCompile("[a-f0-6]+:[a-f0-6:]+"),
+						"ipv6_address": regexache.MustCompile("[0-6a-f]+:[0-6a-f:]+"),
 					}),
 				),
 			},
@@ -251,7 +252,7 @@ func TestAccELBV2LoadBalancer_LoadBalancerTypeGateway_enableCrossZoneLoadBalanci
 				Config: testAccLoadBalancerConfig_typeGatewayEnableCrossZoneBalancing(rName, true),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckLoadBalancerExists(ctx, resourceName, &conf),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "elasticloadbalancing", regexp.MustCompile(fmt.Sprintf("loadbalancer/gwy/%s/.+", rName))),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "elasticloadbalancing", regexache.MustCompile(fmt.Sprintf("loadbalancer/gwy/%s/.+", rName))),
 					resource.TestCheckResourceAttr(resourceName, "load_balancer_type", elbv2.LoadBalancerTypeEnumGateway),
 					resource.TestCheckResourceAttr(resourceName, "enable_cross_zone_load_balancing", "true"),
 				),
@@ -271,7 +272,7 @@ func TestAccELBV2LoadBalancer_LoadBalancerTypeGateway_enableCrossZoneLoadBalanci
 				Config: testAccLoadBalancerConfig_typeGatewayEnableCrossZoneBalancing(rName, false),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckLoadBalancerExists(ctx, resourceName, &conf),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "elasticloadbalancing", regexp.MustCompile(fmt.Sprintf("loadbalancer/gwy/%s/.+", rName))),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "elasticloadbalancing", regexache.MustCompile(fmt.Sprintf("loadbalancer/gwy/%s/.+", rName))),
 					resource.TestCheckResourceAttr(resourceName, "load_balancer_type", elbv2.LoadBalancerTypeEnumGateway),
 					resource.TestCheckResourceAttr(resourceName, "enable_cross_zone_load_balancing", "false"),
 				),
@@ -298,7 +299,7 @@ func TestAccELBV2LoadBalancer_ALB_outpost(t *testing.T) {
 					testAccCheckLoadBalancerExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "access_logs.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "access_logs.0.enabled", "false"),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "elasticloadbalancing", regexp.MustCompile(fmt.Sprintf("loadbalancer/app/%s/.+", rName))),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "elasticloadbalancing", regexache.MustCompile(fmt.Sprintf("loadbalancer/app/%s/.+", rName))),
 					resource.TestCheckResourceAttrSet(resourceName, "dns_name"),
 					resource.TestCheckResourceAttr(resourceName, "enable_deletion_protection", "false"),
 					resource.TestCheckResourceAttr(resourceName, "idle_timeout", "30"),
@@ -481,7 +482,7 @@ func TestAccELBV2LoadBalancer_namePrefix(t *testing.T) {
 					testAccCheckLoadBalancerExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttrSet(resourceName, "name"),
 					resource.TestMatchResourceAttr(resourceName, "name",
-						regexp.MustCompile("^tf-lb-")),
+						regexache.MustCompile("^tf-lb-")),
 				),
 			},
 		},
@@ -509,7 +510,7 @@ func TestAccELBV2LoadBalancer_duplicateName(t *testing.T) {
 			},
 			{
 				Config:      testAccLoadBalancerConfig_duplicateName(rName),
-				ExpectError: regexp.MustCompile(`already exists`),
+				ExpectError: regexache.MustCompile(`already exists`),
 			},
 		},
 	})

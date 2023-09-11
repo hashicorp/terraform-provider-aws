@@ -30,7 +30,7 @@ jobs:
     steps:
       - name: 'Generate Token'
         id: token
-        uses: tibdex/github-app-token@b62528385c34dbc9f38e5f4225ac829252d1ea92 # v1.8.0
+        uses: tibdex/github-app-token@0d49dd721133f900ebd5e0dff2810704e8defbc6 # v1.8.2
         with:
           app_id: ${{ secrets.APP_ID }}
           installation_id: ${{ secrets.INSTALLATION_ID }}
@@ -80,7 +80,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: 'Checkout Repo'
-        uses: actions/checkout@c85c95e3d7251135ab7dc9ce3241c5835cc595a9 # v3.5.3
+        uses: actions/checkout@3df4ab11eba7bda6032a0b82a6bb43b11571feac # v4.0.0
 
       - name: 'Apply Labels'
         uses: actions/labeler@0967ca812e7fdc8f5f71402a1b486d5bd061fe20 # v4.2.0
@@ -122,7 +122,7 @@ jobs:
     steps:
       - name: 'Generate Token'
         id: token
-        uses: tibdex/github-app-token@b62528385c34dbc9f38e5f4225ac829252d1ea92 # v1.8.0
+        uses: tibdex/github-app-token@0d49dd721133f900ebd5e0dff2810704e8defbc6 # v1.8.2
         with:
           app_id: ${{ secrets.APP_ID }}
           installation_id: ${{ secrets.INSTALLATION_ID }}
@@ -185,7 +185,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: 'Checkout'
-        uses: actions/checkout@c85c95e3d7251135ab7dc9ce3241c5835cc595a9 # v3.5.3
+        uses: actions/checkout@3df4ab11eba7bda6032a0b82a6bb43b11571feac # v4.0.0
 
       - name: 'Get Current Milestone Name'
         id: get-current-milestone

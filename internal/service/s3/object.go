@@ -10,19 +10,17 @@ import (
 	"fmt"
 	"io"
 	"log"
-	"net/http"
 	"os"
-	"regexp"
 	"strings"
 	"time"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/aws/aws-sdk-go/service/s3/s3manager"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -60,6 +58,7 @@ func ResourceObject() *schema.Resource {
 			"acl": {
 				Type:         schema.TypeString,
 				Optional:     true,
+				Computed:     true,
 				ValidateFunc: validation.StringInSlice(s3.ObjectCannedACL_Values(), false),
 			},
 			"bucket": {
@@ -205,7 +204,7 @@ func resourceObjectRead(ctx context.Context, d *schema.ResourceData, meta interf
 	bucket := d.Get("bucket").(string)
 	key := d.Get("key").(string)
 	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(ctx, objectCreationTimeout, func() (interface{}, error) {
-		return FindObjectByThreePartKey(ctx, conn, bucket, key, "")
+		return FindObjectByThreePartKeyV1(ctx, conn, bucket, key, "")
 	}, d.IsNewResource())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
@@ -261,7 +260,7 @@ func resourceObjectRead(ctx context.Context, d *schema.ResourceData, meta interf
 
 	// Retry due to S3 eventual consistency
 	tagsRaw, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, 2*time.Minute, func() (interface{}, error) {
-		return ObjectListTags(ctx, conn, bucket, key)
+		return ObjectListTagsV1(ctx, conn, bucket, key)
 	}, s3.ErrCodeNoSuchBucket)
 
 	if err != nil {
@@ -360,7 +359,7 @@ func resourceObjectDelete(ctx context.Context, d *schema.ResourceData, meta inte
 	// We are effectively ignoring all leading '/'s in the key name and
 	// treating multiple '/'s as a single '/' as aws.Config.DisableRestProtocolURICleaning is false
 	key = strings.TrimLeft(key, "/")
-	key = regexp.MustCompile(`/+`).ReplaceAllString(key, "/")
+	key = regexache.MustCompile(`/+`).ReplaceAllString(key, "/")
 
 	var err error
 	if _, ok := d.GetOk("version_id"); ok {
@@ -787,33 +786,4 @@ func flattenObjectDate(t *time.Time) string {
 	}
 
 	return t.Format(time.RFC3339)
-}
-
-func FindObjectByThreePartKey(ctx context.Context, conn *s3.S3, bucket, key, etag string) (*s3.HeadObjectOutput, error) {
-	input := &s3.HeadObjectInput{
-		Bucket: aws.String(bucket),
-		Key:    aws.String(key),
-	}
-	if etag != "" {
-		input.IfMatch = aws.String(etag)
-	}
-
-	output, err := conn.HeadObjectWithContext(ctx, input)
-
-	if tfawserr.ErrStatusCodeEquals(err, http.StatusNotFound) {
-		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
-		}
-	}
-
-	if err != nil {
-		return nil, err
-	}
-
-	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
-	}
-
-	return output, nil
 }

@@ -8,9 +8,9 @@ import (
 	"errors"
 	"fmt"
 	"log"
-	"regexp"
 	"time"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/aws/ratelimit"
@@ -945,7 +945,7 @@ func EntityRecognizerParseARN(arnString string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	re := regexp.MustCompile(`^entity-recognizer/([[:alnum:]-]+)`)
+	re := regexache.MustCompile(`^entity-recognizer/([[:alnum:]-]+)`)
 	matches := re.FindStringSubmatch(arn.Resource)
 	if len(matches) != 2 {
 		return "", fmt.Errorf("unable to parse %q", arnString)

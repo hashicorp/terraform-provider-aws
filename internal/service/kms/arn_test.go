@@ -7,6 +7,7 @@ import (
 	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	tfkms "github.com/hashicorp/terraform-provider-aws/internal/service/kms"
 )
 
@@ -22,17 +23,17 @@ func TestAliasARNToKeyARN(t *testing.T) {
 		{
 			TestName:      "empty ARN",
 			InputARN:      "",
-			ExpectedError: regexp.MustCompile(`parsing ARN`),
+			ExpectedError: regexache.MustCompile(`parsing ARN`),
 		},
 		{
 			TestName:      "unparsable ARN",
 			InputARN:      "test",
-			ExpectedError: regexp.MustCompile(`parsing ARN`),
+			ExpectedError: regexache.MustCompile(`parsing ARN`),
 		},
 		{
 			TestName:      "invalid ARN service",
 			InputARN:      "arn:aws:ec2:us-west-2:123456789012:alias/test-alias", //lintignore:AWSAT003,AWSAT005
-			ExpectedError: regexp.MustCompile(`expected service kms`),
+			ExpectedError: regexache.MustCompile(`expected service kms`),
 		},
 		{
 			TestName:    "valid ARN",
