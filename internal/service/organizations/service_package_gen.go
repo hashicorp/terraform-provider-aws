@@ -50,6 +50,10 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 			TypeName: "aws_organizations_organizational_units",
 		},
 		{
+			Factory:  DataSourceOrganizationalUnit,
+			TypeName: "aws_organizations_organizational_unit",
+		},
+		{
 			Factory:  DataSourcePolicies,
 			TypeName: "aws_organizations_policies",
 		},

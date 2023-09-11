@@ -1,0 +1,79 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
+package organizations
+
+import (
+	"context"
+
+	"github.com/YakDriver/regexache"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/names"
+)
+
+// @SDKDataSource("aws_organizations_organizational_unit", name="Organizational Unit")
+func DataSourceOrganizationalUnit() *schema.Resource {
+	return &schema.Resource{
+		ReadWithoutTimeout: dataSourceOrganizationalUnitRead,
+		Schema: map[string]*schema.Schema{
+			"name": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"parent_id": {
+				Type:         schema.TypeString,
+				Required:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.StringMatch(regexache.MustCompile("^(r-[0-9a-z]{4,32})|(ou-[0-9a-z]{4,32}-[0-9a-z]{8,32})$"), "see https://docs.aws.amazon.com/organizations/latest/APIReference/API_CreateOrganizationalUnit.html#organizations-CreateOrganizationalUnit-request-ParentId"),
+			},
+			"arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"email": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"id": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+		},
+	}
+}
+
+const (
+	DSNameOrganizationalUnit = "Organizational Unit Data Source"
+)
+
+func dataSourceOrganizationalUnitRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).OrganizationsConn(ctx)
+
+	name := d.Get("name").(string)
+	parentID := d.Get("parent_id").(string)
+
+	output, err := findOrganizationalUnitsForParent(ctx, conn, parentID)
+	if err != nil {
+		return append(diags, create.DiagError(names.Organizations, create.ErrActionReading, DSNameOrganizationalUnit, name, err)...)
+	}
+	if output == nil || output.OrganizationalUnit == nil {
+		return sdkdiag.AppendErrorf(diags, "Organizational parent not found (%s)", parentID)
+	}
+
+	for _, v := range output.Children {
+		if v.Name == name {
+			d.SetId(v.ID)
+			d.Set("arn", v.Arn)
+			d.Set("email", v.Email)
+			return diags
+		}
+	}
+
+	return sdkdiag.AppendErrorf(diags, "No matching organization for (%s): %s", parentID, name)
+}
