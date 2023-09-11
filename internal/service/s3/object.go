@@ -804,3 +804,15 @@ func flattenObjectDate(t *time.Time) string {
 
 	return t.Format(time.RFC3339)
 }
+
+// sdkv1CompatibleCleanKey returns an AWS SDK for Go v1 compatible clean key.
+// DisableRestProtocolURICleaning was false on the standard S3Conn, so to ensure backwards
+// compatibility we must "clean" the configured key before passing to AWS SDK for Go v2 APIs.
+// See https://docs.aws.amazon.com/sdk-for-go/api/service/s3/#hdr-Automatic_URI_cleaning.
+// See https://github.com/aws/aws-sdk-go/blob/cf903c8c543034654bb8f53b5f9d6454fdb2117f/private/protocol/rest/build.go#L247-L258.
+func sdkv1CompatibleCleanKey(key string) string {
+	// We are effectively ignoring all leading '/'s and treating multiple '/'s as a single '/'.
+	key = strings.TrimLeft(key, "/")
+	key = regexache.MustCompile(`/+`).ReplaceAllString(key, "/")
+	return key
+}

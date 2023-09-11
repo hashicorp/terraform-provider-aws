@@ -7,4 +7,5 @@ package s3
 var (
 	DeleteAllObjectVersions  = deleteAllObjectVersions
 	FindObjectByBucketAndKey = findObjectByBucketAndKey
+	SDKv1CompatibleCleanKey  = sdkv1CompatibleCleanKey
 )

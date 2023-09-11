@@ -29,6 +29,76 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+func TestSDKv1CompatibleCleanKey(t *testing.T) {
+	t.Parallel()
+
+	testCases := []struct {
+		name string
+		key  string
+		want string
+	}{
+		{
+			name: "empty string",
+		},
+		{
+			name: "no slashes",
+			key:  "test-key",
+			want: "test-key",
+		},
+		{
+			name: "simple slashes",
+			key:  "dir1/dir2/test-key",
+			want: "dir1/dir2/test-key",
+		},
+		{
+			name: "trailing slash",
+			key:  "a/b/c/",
+			want: "a/b/c/",
+		},
+		{
+			name: "leading slash",
+			key:  "/a/b/c",
+			want: "a/b/c",
+		},
+		{
+			name: "leading and trailing slashes",
+			key:  "/a/b/c/",
+			want: "a/b/c/",
+		},
+		{
+			name: "multiple leading slashes",
+			key:  "/////a/b/c",
+			want: "a/b/c",
+		},
+		{
+			name: "multiple trailing slashes",
+			key:  "a/b/c/////",
+			want: "a/b/c/",
+		},
+		{
+			name: "repeated inner slashes",
+			key:  "a/b//c///d/////e",
+			want: "a/b/c/d/e",
+		},
+		{
+			name: "all the slashes",
+			key:  "/a/b//c///d/////e/",
+			want: "a/b/c/d/e/",
+		},
+	}
+
+	for _, testCase := range testCases {
+		testCase := testCase
+		t.Run(testCase.name, func(t *testing.T) {
+			t.Parallel()
+
+			if got, want := tfs3.SDKv1CompatibleCleanKey(testCase.key), testCase.want; got != want {
+				t.Errorf("SDKv1CompatibleCleanKey(%q) = %v, want %v", testCase.key, got, want)
+			}
+		})
+	}
+}
+
 func TestAccS3Object_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var obj s3.GetObjectOutput
