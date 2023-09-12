@@ -359,7 +359,6 @@ func TestAccS3ObjectDataSource_multipleSlashes(t *testing.T) {
 func TestAccS3ObjectDataSource_singleSlashAsKey(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	dataSourceName := "data.aws_s3_object.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                  func() { acctest.PreCheck(ctx, t) },
@@ -368,10 +367,8 @@ func TestAccS3ObjectDataSource_singleSlashAsKey(t *testing.T) {
 		PreventPostDestroyRefresh: true,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccObjectDataSourceConfig_singleSlashAsKey(rName),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckNoResourceAttr(dataSourceName, "body"),
-				),
+				Config:      testAccObjectDataSourceConfig_singleSlashAsKey(rName),
+				ExpectError: regexache.MustCompile(`input member Key must not be empty`),
 			},
 		},
 	})

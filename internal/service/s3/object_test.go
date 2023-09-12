@@ -46,6 +46,11 @@ func TestSDKv1CompatibleCleanKey(t *testing.T) {
 			want: "test-key",
 		},
 		{
+			name: "just a slash",
+			key:  "/",
+			want: "",
+		},
+		{
 			name: "simple slashes",
 			key:  "dir1/dir2/test-key",
 			want: "dir1/dir2/test-key",
