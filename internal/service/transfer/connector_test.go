@@ -65,11 +65,8 @@ func TestAccTransferConnector_sftpConfig(t *testing.T) {
 	var conf transfer.DescribedConnector
 	resourceName := "aws_transfer_connector.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	publicKey, _, err := sdkacctest.RandSSHKeyPair(acctest.DefaultEmailAddress)
-	if err != nil {
-		t.Fatalf("error generating random SSH key: %s", err)
-	}
-	//privateKey := "test-fixtures/transfer-ssh-rsa-key"
+
+	publicKey1 := "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDNt3kA/dBkS6ZyU/sVDiGMuWJQaRPmLNbs/25K/e/fIl07ZWUgqqsFkcycLLMNFGD30Cmgp6XCXfNlIjzFWhNam+4cBb4DPpvieUw44VgsHK5JQy3JKlUfglmH5rs4G5pLiVfZpFU6jqvTsu4mE1CHCP0sXJlJhGxMG3QbsqYWNKiqGFEhuzGMs6fQlMkNiXsFoDmh33HAcXCbaFSC7V7xIqT1hlKu0iOL+GNjMj4R3xy0o3jafhO4MG2s3TwCQQCyaa5oyjL8iP8p3L9yp6cbIcXaS72SIgbCSGCyrcQPIKP2lJJHvE1oVWzLVBhR4eSzrlFDv7K4IErzaJmHqdiz"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
@@ -82,12 +79,12 @@ func TestAccTransferConnector_sftpConfig(t *testing.T) {
 		CheckDestroy:             testAccCheckConnectorDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccConnectorConfig_sftpConfig(rName, "sftp://example.com", publicKey),
+				Config: testAccConnectorConfig_sftpConfig(rName, "sftp://s-fakeserver.server.transfer.us-east-1.amazonaws.com", publicKey1),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckConnectorExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttrSet(resourceName, "arn"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-					resource.TestCheckResourceAttr(resourceName, "url", "sftp://example.com"),
+					resource.TestCheckResourceAttr(resourceName, "url", "sftp://s-fakeserver.server.transfer.us-east-1.amazonaws.com"),
 				),
 			},
 			{
@@ -96,11 +93,11 @@ func TestAccTransferConnector_sftpConfig(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccConnectorConfig_sftpConfig(rName, "sftp://example.net", publicKey),
+				Config: testAccConnectorConfig_sftpConfig(rName, "sftp://s-fakeserver.server.transfer.us-east-1.amazonaws.com", publicKey1),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckConnectorExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-					resource.TestCheckResourceAttr(resourceName, "url", "sftp://example.net"),
+					resource.TestCheckResourceAttr(resourceName, "url", "sftp://s-fakeserver.server.transfer.us-east-1.amazonaws.com"),
 				),
 			},
 		},
