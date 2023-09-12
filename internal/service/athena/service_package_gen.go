@@ -46,6 +46,11 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			TypeName: "aws_athena_named_query",
 		},
 		{
+			Factory:  ResourcePreparedStatement,
+			TypeName: "aws_athena_prepared_statement",
+			Name:     "Prepared Statement",
+		},
+		{
 			Factory:  ResourceWorkGroup,
 			TypeName: "aws_athena_workgroup",
 			Name:     "WorkGroup",
