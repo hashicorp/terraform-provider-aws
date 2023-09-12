@@ -1,5 +1,5 @@
-github.com/YakDriver/regexache v0.17.0 h1:jgJn5PfavtNZehkP+p1qcVZsZyd44c7yEO5VD/X9Gew=
-github.com/YakDriver/regexache v0.17.0/go.mod h1:K4BZ3MYKAqSFbYWqmbsG+OzYUDyJjnMEr27DJEsVG3U=
+github.com/YakDriver/regexache v0.23.0 h1:kv3j4XKhbx/vqUilSBgizXDUXHvvH1KdYekdmGwz4C4=
+github.com/YakDriver/regexache v0.23.0/go.mod h1:K4BZ3MYKAqSFbYWqmbsG+OzYUDyJjnMEr27DJEsVG3U=
 github.com/cpuguy83/go-md2man/v2 v2.0.2/go.mod h1:tgQtvFlXSQOSOSIRvRPT7W67SCa46tRHOmNcaadrF8o=
 github.com/google/uuid v1.3.1 h1:KjJaJ9iWZ3jOFZIf1Lqf4laDRCasjl0BCmnEGxkdLb4=
 github.com/google/uuid v1.3.1/go.mod h1:TIyPZe4MgqvfeYDBFedMoGGpEw/LqOeaOT+nhxU+yHo=

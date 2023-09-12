@@ -13,8 +13,8 @@ import (
 )
 
 const (
-	aliasNameRegexPattern   = `alias/[a-zA-Z0-9/_-]+`
-	multiRegionKeyIdPattern = `mrk-[a-f0-9]{32}`
+	aliasNameRegexPattern   = `alias/[0-9A-Za-z_/-]+`
+	multiRegionKeyIdPattern = `mrk-[0-9a-f]{32}`
 )
 
 var (
@@ -30,8 +30,8 @@ func validGrantName(v interface{}, k string) (ws []string, es []error) {
 		es = append(es, fmt.Errorf("%s can not be greater than 256 characters", k))
 	}
 
-	if !regexache.MustCompile(`^[a-zA-Z0-9:/_-]+$`).MatchString(value) {
-		es = append(es, fmt.Errorf("%s must only contain [a-zA-Z0-9:/_-]", k))
+	if !regexache.MustCompile(`^[0-9A-Za-z_:/-]+$`).MatchString(value) {
+		es = append(es, fmt.Errorf("%s must only contain [0-9A-Za-z_:/-]", k))
 	}
 
 	return
@@ -42,7 +42,7 @@ func validNameForDataSource(v interface{}, k string) (ws []string, es []error) {
 
 	if !aliasNameRegex.MatchString(value) {
 		es = append(es, fmt.Errorf(
-			"%q must begin with 'alias/' and be comprised of only [a-zA-Z0-9/_-]", k))
+			"%q must begin with 'alias/' and be comprised of only [0-9A-Za-z_/-]", k))
 	}
 	return
 }
@@ -56,7 +56,7 @@ func validNameForResource(v interface{}, k string) (ws []string, es []error) {
 
 	if !aliasNameRegex.MatchString(value) {
 		es = append(es, fmt.Errorf(
-			"%q must begin with 'alias/' and be comprised of only [a-zA-Z0-9/_-]", k))
+			"%q must begin with 'alias/' and be comprised of only [0-9A-Za-z_/-]", k))
 	}
 	return
 }

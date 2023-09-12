@@ -114,7 +114,7 @@ func resourceBucketPublicAccessBlockRead(ctx context.Context, d *schema.Resource
 
 	// Retry for eventual consistency on creation
 	var output *s3.GetPublicAccessBlockOutput
-	err := retry.RetryContext(ctx, propagationTimeout, func() *retry.RetryError {
+	err := retry.RetryContext(ctx, s3BucketPropagationTimeout, func() *retry.RetryError {
 		var err error
 		output, err = conn.GetPublicAccessBlockWithContext(ctx, input)
 

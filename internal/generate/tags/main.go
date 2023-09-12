@@ -421,7 +421,7 @@ func main() {
 
 func toSnakeCase(str string) string {
 	result := regexache.MustCompile("(.)([A-Z][a-z]+)").ReplaceAllString(str, "${1}_${2}")
-	result = regexache.MustCompile("([a-z0-9])([A-Z])").ReplaceAllString(result, "${1}_${2}")
+	result = regexache.MustCompile("([0-9a-z])([A-Z])").ReplaceAllString(result, "${1}_${2}")
 	return strings.ToLower(result)
 }
 

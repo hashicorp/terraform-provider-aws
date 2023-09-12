@@ -6,10 +6,10 @@ package shield
 import (
 	"context"
 	"errors"
-	"regexp"
 	"time"
 
-	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/YakDriver/regexache"
+	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/shield"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
@@ -68,7 +68,7 @@ func (r *resourceDRTAccessRoleARNAssociation) Schema(ctx context.Context, req re
 				Validators: []validator.String{
 					stringvalidator.LengthBetween(1, 2048),
 					stringvalidator.RegexMatches(
-						regexp.MustCompile(`^arn:?[a-zA-Z\-]+:iam::\d{12}:role/?[a-zA-Z_0-9+=,.@\-_/]+`),
+						regexache.MustCompile(`^arn:?[A-Za-z-]+:iam::\d{12}:role/?[0-9A-Za-z_+,./=@-]+`),
 						"must match arn pattern",
 					),
 				},
@@ -323,7 +323,7 @@ func statusDRTAccessRoleARNAssociationDeleted(ctx context.Context, conn *shield.
 			return nil, "", err
 		}
 
-		if out.RoleArn != nil && aws.ToString(out.RoleArn) == roleARN {
+		if out.RoleArn != nil && aws.StringValue(out.RoleArn) == roleARN {
 			return out, statusDeleting, nil
 		}
 
@@ -345,7 +345,7 @@ func describeDRTAccessRoleARNAssociation(ctx context.Context, conn *shield.Shiel
 		}
 	}
 
-	if out == nil || out.RoleArn == nil || aws.ToString(out.RoleArn) != roleARN {
+	if out == nil || out.RoleArn == nil || aws.StringValue(out.RoleArn) != roleARN {
 		return nil, tfresource.NewEmptyResultError(in)
 	}
 

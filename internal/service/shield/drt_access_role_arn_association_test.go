@@ -174,6 +174,8 @@ resource "aws_iam_role_policy_attachment" "test" {
 
 resource "aws_shield_drt_access_role_arn_association" "test" {
   role_arn = aws_iam_role.test.arn
+
+  depends_on = [aws_iam_role_policy_attachment.test]
 }
 `, rName)
 }

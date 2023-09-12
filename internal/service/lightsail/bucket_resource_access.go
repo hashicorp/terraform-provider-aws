@@ -41,7 +41,7 @@ func ResourceBucketResourceAccess() *schema.Resource {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
-				ValidateFunc: validation.StringMatch(regexache.MustCompile(`^[a-z0-9][a-z0-9-]{1,52}[a-z0-9]$`), "Invalid Bucket name. Must match regex: ^[a-z0-9][a-z0-9-]{1,52}[a-z0-9]$"),
+				ValidateFunc: validation.StringMatch(regexache.MustCompile(`^[0-9a-z][0-9a-z-]{1,52}[0-9a-z]$`), "Invalid Bucket name. Must match regex: ^[0-9a-z][0-9a-z-]{1,52}[0-9a-z]$"),
 			},
 			"resource_name": {
 				Type:         schema.TypeString,

@@ -154,7 +154,7 @@ func ResourceEndpointConfiguration() *schema.Resource {
 										Elem: &schema.Schema{
 											Type: schema.TypeString,
 											ValidateFunc: validation.All(
-												validation.StringMatch(regexache.MustCompile(`^[a-zA-Z0-9](-*[a-zA-Z0-9])*\/[a-zA-Z0-9](-*[a-zA-Z0-9.])*`), ""),
+												validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z](-*[0-9A-Za-z])*\/[0-9A-Za-z](-*[0-9A-Za-z.])*`), ""),
 												validation.StringLenBetween(1, 256),
 											),
 										},
@@ -168,7 +168,7 @@ func ResourceEndpointConfiguration() *schema.Resource {
 										Elem: &schema.Schema{
 											Type: schema.TypeString,
 											ValidateFunc: validation.All(
-												validation.StringMatch(regexache.MustCompile(`^[a-zA-Z0-9](-*[a-zA-Z0-9])*\/[a-zA-Z0-9](-*[a-zA-Z0-9.])*`), ""),
+												validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z](-*[0-9A-Za-z])*\/[0-9A-Za-z](-*[0-9A-Za-z.])*`), ""),
 												validation.StringLenBetween(1, 256),
 											),
 										},

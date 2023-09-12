@@ -1,14 +1,14 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package shield_test
 
 import (
 	"context"
 	"errors"
 	"fmt"
-
-	//"regexp"
 	"testing"
 
-	"github.com/aws/aws-sdk-go-v2/service/shield/types"
 	"github.com/aws/aws-sdk-go/service/shield"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -17,9 +17,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
-	"github.com/hashicorp/terraform-provider-aws/names"
-
 	tfshield "github.com/hashicorp/terraform-provider-aws/internal/service/shield"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccShieldDRTAccessLogBucketAssociation_basic(t *testing.T) {
@@ -39,11 +38,11 @@ func TestAccShieldDRTAccessLogBucketAssociation_basic(t *testing.T) {
 			testAccPreCheckLogBucket(ctx, t)
 		},
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDRTAccessLogBucketAssociationDestroy(ctx, t),
+		CheckDestroy:             testAccCheckDRTAccessLogBucketAssociationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDRTAccessLogBucketAssociationConfig_basic(rName, bucketName, t),
-				Check:  testAccCheckDRTAccessLogBucketAssociationExists(ctx, resourceName, &drtaccesslogbucketassociation, t),
+				Config: testAccDRTAccessLogBucketAssociationConfig_basic(rName, bucketName),
+				Check:  testAccCheckDRTAccessLogBucketAssociationExists(ctx, resourceName, &drtaccesslogbucketassociation),
 			},
 		},
 	})
@@ -70,13 +69,13 @@ func TestAccShieldDRTAccessLogBucketAssociation_multibucket(t *testing.T) {
 			testAccPreCheckLogBucket(ctx, t)
 		},
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDRTAccessLogBucketAssociationDestroy(ctx, t),
+		CheckDestroy:             testAccCheckDRTAccessLogBucketAssociationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDRTAccessLogBucketAssociationConfig_multibucket(rName, buckets, t),
+				Config: testAccDRTAccessLogBucketAssociationConfig_multibucket(rName, buckets),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDRTAccessLogBucketAssociationExists(ctx, resourceName1, &drtaccesslogbucketassociation, t),
-					testAccCheckDRTAccessLogBucketAssociationExists(ctx, resourceName2, &drtaccesslogbucketassociation, t),
+					testAccCheckDRTAccessLogBucketAssociationExists(ctx, resourceName1, &drtaccesslogbucketassociation),
+					testAccCheckDRTAccessLogBucketAssociationExists(ctx, resourceName2, &drtaccesslogbucketassociation),
 				),
 			},
 		},
@@ -99,12 +98,12 @@ func TestAccShieldDRTAccessLogBucketAssociation_disappears(t *testing.T) {
 			testAccPreCheckLogBucket(ctx, t)
 		},
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDRTAccessLogBucketAssociationDestroy(ctx, t),
+		CheckDestroy:             testAccCheckDRTAccessLogBucketAssociationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDRTAccessLogBucketAssociationConfig_basic(rName, bucketName, t),
+				Config: testAccDRTAccessLogBucketAssociationConfig_basic(rName, bucketName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDRTAccessLogBucketAssociationExists(ctx, resourceName, &drtaccesslogbucketassociation, t),
+					testAccCheckDRTAccessLogBucketAssociationExists(ctx, resourceName, &drtaccesslogbucketassociation),
 					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfshield.ResourceDRTAccessLogBucketAssociation, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -113,7 +112,7 @@ func TestAccShieldDRTAccessLogBucketAssociation_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckDRTAccessLogBucketAssociationDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
+func testAccCheckDRTAccessLogBucketAssociationDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).ShieldConn(ctx)
 
@@ -125,21 +124,19 @@ func testAccCheckDRTAccessLogBucketAssociationDestroy(ctx context.Context, t *te
 			input := &shield.DescribeDRTAccessInput{}
 			resp, err := conn.DescribeDRTAccessWithContext(ctx, input)
 
-			if errs.IsA[*types.ResourceNotFoundException](err) {
+			if errs.IsA[*shield.ResourceNotFoundException](err) {
 				return nil
 			}
 			if err != nil {
-				return nil
+				return err
 			}
 			if resp != nil {
 				if resp.LogBucketList != nil && len(resp.LogBucketList) > 0 {
 					for _, bucket := range resp.LogBucketList {
-
 						if *bucket == rs.Primary.Attributes["log_bucket"] {
 							return create.Error(names.Shield, create.ErrActionCheckingDestroyed, tfshield.ResNameDRTAccessLogBucketAssociation, rs.Primary.ID, errors.New("bucket association not destroyed"))
 						}
 					}
-
 				}
 				return nil
 			}
@@ -151,7 +148,7 @@ func testAccCheckDRTAccessLogBucketAssociationDestroy(ctx context.Context, t *te
 	}
 }
 
-func testAccCheckDRTAccessLogBucketAssociationExists(ctx context.Context, name string, drtaccesslogbucketassociation *shield.DescribeDRTAccessOutput, t *testing.T) resource.TestCheckFunc {
+func testAccCheckDRTAccessLogBucketAssociationExists(ctx context.Context, name string, drtaccesslogbucketassociation *shield.DescribeDRTAccessOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 
@@ -189,104 +186,105 @@ func testAccPreCheckLogBucket(ctx context.Context, t *testing.T) {
 	}
 }
 
-func testAccDRTAccessLogBucketAssociationConfig_basic(rName string, bucket string, t *testing.T) string {
-
+func testAccDRTAccessLogBucketAssociationConfig_basic(rName string, bucket string) string {
 	return fmt.Sprintf(`
-	resource "aws_s3_bucket" "test" {
-		bucket = %[2]q
-	}
+data "aws_partition" "current" {}
 
-	resource "aws_iam_role" "test" {
-		name = %[1]q
-		assume_role_policy = jsonencode({
-			Version = "2012-10-17"
-			Statement = [
-				{
-					"Sid": "",
-					"Effect": "Allow",
-					"Principal": {
-							"Service": "drt.shield.amazonaws.com"
-					},
-					"Action": "sts:AssumeRole"
-				},
-			]
-		})
-	}
-	
-	resource "aws_iam_role_policy_attachment" "test" {
-		role       = aws_iam_role.test.name
-		policy_arn = "arn:aws:iam::aws:policy/service-role/AWSShieldDRTAccessPolicy"
-	}
+resource "aws_s3_bucket" "test" {
+  bucket = %[2]q
+}
 
-	resource "aws_shield_protection_group" "test" {
-		protection_group_id = %[1]q
-		aggregation         = "MAX"
-		pattern             = "ALL"
-	}
-	
-	resource "aws_shield_drt_access_role_arn_association" "test" {
-		role_arn             = aws_iam_role.test.arn
-	}
+resource "aws_iam_role" "test" {
+  name = %[1]q
 
-	resource "aws_shield_drt_access_log_bucket_association" "test" {
-		log_bucket = aws_s3_bucket.test.id
-		role_arn_association_id = aws_shield_drt_access_role_arn_association.test.id
-	}
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      "Sid" : "",
+      "Effect" : "Allow",
+      "Principal" : {
+        "Service" : "drt.shield.amazonaws.com"
+      },
+      "Action" : "sts:AssumeRole"
+    }]
+  })
+}
+
+resource "aws_iam_role_policy_attachment" "test" {
+  role       = aws_iam_role.test.name
+  policy_arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/service-role/AWSShieldDRTAccessPolicy"
+}
+
+resource "aws_shield_protection_group" "test" {
+  protection_group_id = %[1]q
+  aggregation         = "MAX"
+  pattern             = "ALL"
+}
+
+resource "aws_shield_drt_access_role_arn_association" "test" {
+  role_arn = aws_iam_role.test.arn
+}
+
+resource "aws_shield_drt_access_log_bucket_association" "test" {
+  log_bucket              = aws_s3_bucket.test.id
+  role_arn_association_id = aws_shield_drt_access_role_arn_association.test.id
+}
 `, rName, bucket)
 }
 
-func testAccDRTAccessLogBucketAssociationConfig_multibucket(rName string, buckets []string, t *testing.T) string {
-
+func testAccDRTAccessLogBucketAssociationConfig_multibucket(rName string, buckets []string) string {
 	return fmt.Sprintf(`
-	resource "aws_s3_bucket" "test1" {
-		bucket = %[2]q
-	}
-	resource "aws_s3_bucket" "test2" {
-		bucket =  %[3]q 
-	}
+data "aws_partition" "current" {}
 
-	resource "aws_iam_role" "test" {
-		name = %[1]q
-		assume_role_policy = jsonencode({
-			Version = "2012-10-17"
-			Statement = [
-				{
-					"Sid": "",
-					"Effect": "Allow",
-					"Principal": {
-							"Service": "drt.shield.amazonaws.com"
-					},
-					"Action": "sts:AssumeRole"
-				},
-			]
-		})
-	}
-	
-	resource "aws_iam_role_policy_attachment" "test" {
-		role       = aws_iam_role.test.name
-		policy_arn = "arn:aws:iam::aws:policy/service-role/AWSShieldDRTAccessPolicy"
-	}
+resource "aws_s3_bucket" "test1" {
+  bucket = %[2]q
+}
 
-	resource "aws_shield_protection_group" "test" {
-		protection_group_id = %[1]q
-		aggregation         = "MAX"
-		pattern             = "ALL"
-	}
-	
-	resource "aws_shield_drt_access_role_arn_association" "test" {
-		role_arn             = aws_iam_role.test.arn
-	}
+resource "aws_s3_bucket" "test2" {
+  bucket = %[3]q
+}
 
-	resource "aws_shield_drt_access_log_bucket_association" "test1" {
-		log_bucket = aws_s3_bucket.test1.id
-		role_arn_association_id = aws_shield_drt_access_role_arn_association.test.id
-	}
-	resource "aws_shield_drt_access_log_bucket_association" "test2" {
-		log_bucket = aws_s3_bucket.test2.id
-		role_arn_association_id = aws_shield_drt_access_role_arn_association.test.id
-		depends_on = [
-			aws_shield_drt_access_log_bucket_association.test1
-		]
-	}
+resource "aws_iam_role" "test" {
+  name = %[1]q
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      "Sid" : "",
+      "Effect" : "Allow",
+      "Principal" : {
+        "Service" : "drt.shield.amazonaws.com"
+      },
+      "Action" : "sts:AssumeRole"
+    }]
+  })
+}
+
+resource "aws_iam_role_policy_attachment" "test" {
+  role       = aws_iam_role.test.name
+  policy_arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/service-role/AWSShieldDRTAccessPolicy"
+}
+
+resource "aws_shield_protection_group" "test" {
+  protection_group_id = %[1]q
+  aggregation         = "MAX"
+  pattern             = "ALL"
+}
+
+resource "aws_shield_drt_access_role_arn_association" "test" {
+  role_arn = aws_iam_role.test.arn
+}
+
+resource "aws_shield_drt_access_log_bucket_association" "test1" {
+  log_bucket              = aws_s3_bucket.test1.id
+  role_arn_association_id = aws_shield_drt_access_role_arn_association.test.id
+}
+
+resource "aws_shield_drt_access_log_bucket_association" "test2" {
+  log_bucket              = aws_s3_bucket.test2.id
+  role_arn_association_id = aws_shield_drt_access_role_arn_association.test.id
+
+  depends_on = [aws_shield_drt_access_log_bucket_association.test1]
+}
 `, rName, buckets[0], buckets[1])
 }
