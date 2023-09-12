@@ -76,6 +76,13 @@ resource "aws_ssmcontacts_plan" "test" {
         contact_id   = aws_ssmcontacts_contact.contact_two.arn
       }
     }
+
+    target {
+      channel_target_info {
+        retry_interval_in_minutes = 2
+        contact_channel_id        = aws_ssmcontacts_contact_channel.channel.arn
+      }
+    }
   }
 }
 ```
@@ -84,8 +91,8 @@ resource "aws_ssmcontacts_plan" "test" {
 
 The following arguments are required:
 
-* `contact_id` - (Required) The Amazon Resource Name (ARN) of the contact or escalation plan.
-* `stage` - (Required) List of stages. A contact has an engagement plan with stages that contact specified contact channels. An escalation plan uses stages that contact specified contacts.
+- `contact_id` - (Required) The Amazon Resource Name (ARN) of the contact or escalation plan.
+- `stage` - (Required) List of stages. A contact has an engagement plan with stages that contact specified contact channels. An escalation plan uses stages that contact specified contacts.
 
 ## Attribute Reference
 
