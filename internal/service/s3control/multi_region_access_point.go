@@ -121,6 +121,17 @@ func resourceMultiRegionAccessPoint() *schema.Resource {
 										ForceNew:     true,
 										ValidateFunc: validation.StringLenBetween(3, 255),
 									},
+									"bucket_account_id": {
+										Type:         schema.TypeString,
+										Optional:     true,
+										Computed:     true,
+										ForceNew:     true,
+										ValidateFunc: verify.ValidAccountID,
+									},
+									"region": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
 								},
 							},
 						},
@@ -392,7 +403,7 @@ func expandCreateMultiRegionAccessPointInput_(tfMap map[string]interface{}) *typ
 
 	apiObject := &types.CreateMultiRegionAccessPointInput{}
 
-	if v, ok := tfMap["name"].(string); ok {
+	if v, ok := tfMap["name"].(string); ok && v != "" {
 		apiObject.Name = aws.String(v)
 	}
 
@@ -440,8 +451,12 @@ func expandRegion(tfMap map[string]interface{}) *types.Region {
 
 	apiObject := &types.Region{}
 
-	if v, ok := tfMap["bucket"].(string); ok {
+	if v, ok := tfMap["bucket"].(string); ok && v != "" {
 		apiObject.Bucket = aws.String(v)
+	}
+
+	if v, ok := tfMap["bucket_account_id"].(string); ok && v != "" {
+		apiObject.BucketAccountId = aws.String(v)
 	}
 
 	return apiObject
@@ -515,6 +530,14 @@ func flattenRegionReport(apiObject types.RegionReport) map[string]interface{} {
 
 	if v := apiObject.Bucket; v != nil {
 		tfMap["bucket"] = aws.ToString(v)
+	}
+
+	if v := apiObject.BucketAccountId; v != nil {
+		tfMap["bucket_account_id"] = aws.ToString(v)
+	}
+
+	if v := apiObject.Region; v != nil {
+		tfMap["region"] = aws.ToString(v)
 	}
 
 	return tfMap

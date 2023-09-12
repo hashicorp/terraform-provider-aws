@@ -51,7 +51,9 @@ func TestAccS3ControlMultiRegionAccessPoint_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "details.0.public_access_block.0.restrict_public_buckets", "true"),
 					resource.TestCheckResourceAttr(resourceName, "details.0.region.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "details.0.region.*", map[string]string{
-						"bucket": bucketName,
+						"bucket":            bucketName,
+						"bucket_account_id": acctest.AccountID(),
+						"region":            acctest.Region(),
 					}),
 					resource.TestCheckResourceAttr(resourceName, "status", string(types.MultiRegionAccessPointStatusReady)),
 				),

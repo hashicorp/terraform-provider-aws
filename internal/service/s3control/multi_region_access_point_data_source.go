@@ -81,6 +81,10 @@ func dataSourceMultiRegionAccessPoint() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
+						"bucket_account_id": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
 						"region": {
 							Type:     schema.TypeString,
 							Computed: true,
