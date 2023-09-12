@@ -33,6 +33,7 @@ func ResourceOntapFileSystem() *schema.Resource {
 		ReadWithoutTimeout:   resourceOntapFileSystemRead,
 		UpdateWithoutTimeout: resourceOntapFileSystemUpdate,
 		DeleteWithoutTimeout: resourceOntapFileSystemDelete,
+
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
@@ -173,17 +174,17 @@ func ResourceOntapFileSystem() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
-			"security_group_ids": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				ForceNew: true,
-				MaxItems: 50,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
 			"route_table_ids": {
 				Type:     schema.TypeSet,
 				Optional: true,
 				Computed: true,
+				MaxItems: 50,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+			},
+			"security_group_ids": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				ForceNew: true,
 				MaxItems: 50,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
