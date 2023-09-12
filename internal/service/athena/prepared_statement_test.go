@@ -30,7 +30,7 @@ func TestAccAthenaPreparedStatement_basic(t *testing.T) {
 	}
 
 	var preparedstatement athena.GetPreparedStatementOutput
-	rName := sdkacctest.RandString(5)
+	rName := sdkacctest.RandStringFromCharSet(8, sdkacctest.CharSetAlpha)
 	resourceName := "aws_athena_prepared_statement.test"
 	condition := "x = ?"
 
@@ -66,7 +66,7 @@ func TestAccAthenaPreparedStatement_update(t *testing.T) {
 	}
 
 	var preparedstatement1, preparedstatement2 athena.GetPreparedStatementOutput
-	rName := sdkacctest.RandString(5)
+	rName := sdkacctest.RandStringFromCharSet(8, sdkacctest.CharSetAlpha)
 	resourceName := "aws_athena_prepared_statement.test"
 	condition := "x = ?"
 	updated_condition := "y = ?"
@@ -110,7 +110,7 @@ func TestAccAthenaPreparedStatement_disappears(t *testing.T) {
 	}
 
 	var preparedstatement athena.GetPreparedStatementOutput
-	rName := sdkacctest.RandString(5)
+	rName := sdkacctest.RandStringFromCharSet(8, sdkacctest.CharSetAlpha)
 	resourceName := "aws_athena_prepared_statement.test"
 	condition := "x = ?"
 
