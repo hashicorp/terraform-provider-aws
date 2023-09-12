@@ -29,8 +29,8 @@ func TestAccKMSAliasDataSource_service(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "kms", rName),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "target_key_arn", "kms", regexache.MustCompile(`key/[a-z0-9]{8}-([a-z0-9]{4}-){3}[a-z0-9]{12}`)),
-					resource.TestMatchResourceAttr(resourceName, "target_key_id", regexache.MustCompile("^[a-z0-9]{8}-([a-z0-9]{4}-){3}[a-z0-9]{12}$")),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "target_key_arn", "kms", regexache.MustCompile(`key/[0-9a-z]{8}-([0-9a-z]{4}-){3}[0-9a-z]{12}`)),
+					resource.TestMatchResourceAttr(resourceName, "target_key_id", regexache.MustCompile("^[0-9a-z]{8}-([0-9a-z]{4}-){3}[0-9a-z]{12}$")),
 				),
 			},
 		},

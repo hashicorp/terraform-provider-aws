@@ -4,9 +4,10 @@ go 1.20
 
 require (
 	github.com/ProtonMail/go-crypto v0.0.0-20230717121422-5aa5874ade95
-	github.com/YakDriver/regexache v0.20.0
-	github.com/aws/aws-sdk-go v1.45.4
+	github.com/YakDriver/regexache v0.23.0
+	github.com/aws/aws-sdk-go v1.45.7
 	github.com/aws/aws-sdk-go-v2 v1.21.0
+	github.com/aws/aws-sdk-go-v2/config v1.18.39
 	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.13.11
 	github.com/aws/aws-sdk-go-v2/feature/s3/manager v1.11.83
 	github.com/aws/aws-sdk-go-v2/service/accessanalyzer v1.20.5
@@ -30,7 +31,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/fis v1.15.5
 	github.com/aws/aws-sdk-go-v2/service/glacier v1.15.5
 	github.com/aws/aws-sdk-go-v2/service/healthlake v1.17.5
-	github.com/aws/aws-sdk-go-v2/service/identitystore v1.18.1
+	github.com/aws/aws-sdk-go-v2/service/identitystore v1.18.2
 	github.com/aws/aws-sdk-go-v2/service/inspector2 v1.16.6
 	github.com/aws/aws-sdk-go-v2/service/internetmonitor v1.5.5
 	github.com/aws/aws-sdk-go-v2/service/ivschat v1.5.5
@@ -40,7 +41,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/lambda v1.39.5
 	github.com/aws/aws-sdk-go-v2/service/lexmodelsv2 v1.32.5
 	github.com/aws/aws-sdk-go-v2/service/lightsail v1.28.5
-	github.com/aws/aws-sdk-go-v2/service/medialive v1.36.0
+	github.com/aws/aws-sdk-go-v2/service/medialive v1.37.0
 	github.com/aws/aws-sdk-go-v2/service/mediapackage v1.23.3
 	github.com/aws/aws-sdk-go-v2/service/oam v1.2.5
 	github.com/aws/aws-sdk-go-v2/service/opensearchserverless v1.4.5
@@ -67,7 +68,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/transcribe v1.28.5
 	github.com/aws/aws-sdk-go-v2/service/verifiedpermissions v1.2.1
 	github.com/aws/aws-sdk-go-v2/service/vpclattice v1.2.0
-	github.com/aws/aws-sdk-go-v2/service/workspaces v1.29.5
+	github.com/aws/aws-sdk-go-v2/service/workspaces v1.30.0
 	github.com/aws/aws-sdk-go-v2/service/xray v1.17.5
 	github.com/beevik/etree v1.2.0
 	github.com/google/go-cmp v0.5.9
@@ -114,7 +115,6 @@ require (
 	github.com/apparentlymart/go-textseg/v15 v15.0.0 // indirect
 	github.com/armon/go-radix v1.0.0 // indirect
 	github.com/aws/aws-sdk-go-v2/aws/protocol/eventstream v1.4.13 // indirect
-	github.com/aws/aws-sdk-go-v2/config v1.18.39 // indirect
 	github.com/aws/aws-sdk-go-v2/credentials v1.13.37 // indirect
 	github.com/aws/aws-sdk-go-v2/internal/configsources v1.1.41 // indirect
 	github.com/aws/aws-sdk-go-v2/internal/endpoints/v2 v2.4.35 // indirect

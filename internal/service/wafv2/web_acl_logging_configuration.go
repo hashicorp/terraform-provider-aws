@@ -148,7 +148,7 @@ func ResourceWebACLLoggingConfiguration() *schema.Resource {
 												validation.StringLenBetween(1, 40),
 												// The value is returned in lower case by the API.
 												// Trying to solve it with StateFunc and/or DiffSuppressFunc resulted in hash problem of the rule field or didn't work.
-												validation.StringMatch(regexache.MustCompile(`^[a-z0-9-_]+$`), "must contain only lowercase alphanumeric characters, underscores, and hyphens"),
+												validation.StringMatch(regexache.MustCompile(`^[0-9a-z_-]+$`), "must contain only lowercase alphanumeric characters, underscores, and hyphens"),
 											),
 										},
 									},

@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/service/s3control"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -37,6 +38,7 @@ func TestAccS3ControlObjectLambdaAccessPoint_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckObjectLambdaAccessPointExists(ctx, resourceName, &v),
 					acctest.CheckResourceAttrAccountID(resourceName, "account_id"),
+					resource.TestMatchResourceAttr(resourceName, "alias", regexache.MustCompile("^.{1,20}-.*--ol-s3$")),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "s3-object-lambda", fmt.Sprintf("accesspoint/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.allowed_features.#", "0"),
@@ -168,7 +170,7 @@ func testAccCheckObjectLambdaAccessPointDestroy(ctx context.Context) resource.Te
 				return err
 			}
 
-			_, err = tfs3control.FindObjectLambdaAccessPointByTwoPartKey(ctx, conn, accountID, name)
+			_, err = tfs3control.FindObjectLambdaAccessPointConfigurationByTwoPartKey(ctx, conn, accountID, name)
 
 			if tfresource.NotFound(err) {
 				continue
@@ -204,7 +206,7 @@ func testAccCheckObjectLambdaAccessPointExists(ctx context.Context, n string, v 
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).S3ControlConn(ctx)
 
-		output, err := tfs3control.FindObjectLambdaAccessPointByTwoPartKey(ctx, conn, accountID, name)
+		output, err := tfs3control.FindObjectLambdaAccessPointConfigurationByTwoPartKey(ctx, conn, accountID, name)
 
 		if err != nil {
 			return err

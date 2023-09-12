@@ -851,7 +851,7 @@ func roleNameFilter(name string) bool {
 
 	// Some acceptance tests use sdkacctest.RandString(10) rather than sdkacctest.RandomWithPrefix()
 	// Others use other lengths, e.g. sdkacctest.RandString(8), but this one is risky enough, so leave it as-is
-	randString10 := regexache.MustCompile(`^[a-zA-Z0-9]{10}$`)
+	randString10 := regexache.MustCompile(`^[0-9A-Za-z]{10}$`)
 	if randString10.MatchString(name) {
 		return true
 	}

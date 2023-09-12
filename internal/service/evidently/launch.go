@@ -92,7 +92,7 @@ func ResourceLaunch() *schema.Resource {
 							Required: true,
 							ValidateFunc: validation.All(
 								validation.StringLenBetween(1, 127),
-								validation.StringMatch(regexache.MustCompile(`^[-a-zA-Z0-9._]*$`), "alphanumeric and can contain hyphens, underscores, and periods"),
+								validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_.-]*$`), "alphanumeric and can contain hyphens, underscores, and periods"),
 							),
 						},
 						"name": {
@@ -100,7 +100,7 @@ func ResourceLaunch() *schema.Resource {
 							Required: true,
 							ValidateFunc: validation.All(
 								validation.StringLenBetween(1, 127),
-								validation.StringMatch(regexache.MustCompile(`^[-a-zA-Z0-9._]*$`), "alphanumeric and can contain hyphens, underscores, and periods"),
+								validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_.-]*$`), "alphanumeric and can contain hyphens, underscores, and periods"),
 							),
 						},
 						"variation": {
@@ -108,7 +108,7 @@ func ResourceLaunch() *schema.Resource {
 							Required: true,
 							ValidateFunc: validation.All(
 								validation.StringLenBetween(1, 127),
-								validation.StringMatch(regexache.MustCompile(`^[-a-zA-Z0-9._]*$`), "alphanumeric and can contain hyphens, underscores, and periods"),
+								validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_.-]*$`), "alphanumeric and can contain hyphens, underscores, and periods"),
 							),
 						},
 					},
@@ -176,7 +176,7 @@ func ResourceLaunch() *schema.Resource {
 				ForceNew: true,
 				ValidateFunc: validation.All(
 					validation.StringLenBetween(1, 127),
-					validation.StringMatch(regexache.MustCompile(`^[-a-zA-Z0-9._]*$`), "alphanumeric and can contain hyphens, underscores, and periods"),
+					validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_.-]*$`), "alphanumeric and can contain hyphens, underscores, and periods"),
 				),
 			},
 			"project": {
@@ -185,7 +185,7 @@ func ResourceLaunch() *schema.Resource {
 				ForceNew: true,
 				ValidateFunc: validation.All(
 					validation.StringLenBetween(0, 2048),
-					validation.StringMatch(regexache.MustCompile(`(^[a-zA-Z0-9._-]*$)|(arn:[^:]*:[^:]*:[^:]*:[^:]*:project/[a-zA-Z0-9._-]*)`), "name or arn of the project"),
+					validation.StringMatch(regexache.MustCompile(`(^[0-9A-Za-z_.-]*$)|(arn:[^:]*:[^:]*:[^:]*:[^:]*:project/[0-9A-Za-z_.-]*)`), "name or arn of the project"),
 				),
 				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
 					// case 1: User-defined string (old) is a name and is the suffix of API-returned string (new). Check non-empty old in resoure creation scenario
@@ -218,9 +218,9 @@ func ResourceLaunch() *schema.Resource {
 									"group_weights": {
 										Type:     schema.TypeMap,
 										Required: true,
-										ValidateDiagFunc: verify.ValidAllDiag(
+										ValidateDiagFunc: validation.AllDiag(
 											validation.MapKeyLenBetween(1, 127),
-											validation.MapKeyMatch(regexache.MustCompile(`^[-a-zA-Z0-9._]*$`), "alphanumeric and can contain hyphens, underscores, and periods"),
+											validation.MapKeyMatch(regexache.MustCompile(`^[0-9A-Za-z_.-]*$`), "alphanumeric and can contain hyphens, underscores, and periods"),
 										),
 										Elem: &schema.Schema{
 											Type:         schema.TypeInt,
@@ -243,7 +243,7 @@ func ResourceLaunch() *schema.Resource {
 													Required: true,
 													ValidateFunc: validation.All(
 														validation.StringLenBetween(0, 2048),
-														validation.StringMatch(regexache.MustCompile(`(^[a-zA-Z0-9._-]*$)|(arn:[^:]*:[^:]*:[^:]*:[^:]*:segment/[a-zA-Z0-9._-]*)`), "name or arn of the segment"),
+														validation.StringMatch(regexache.MustCompile(`(^[0-9A-Za-z_.-]*$)|(arn:[^:]*:[^:]*:[^:]*:[^:]*:segment/[0-9A-Za-z._-]*)`), "name or arn of the segment"),
 													),
 													DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
 														// case 1: User-defined string (old) is a name and is the suffix of API-returned string (new). Check non-empty old in resoure creation scenario
@@ -254,9 +254,9 @@ func ResourceLaunch() *schema.Resource {
 												"weights": {
 													Type:     schema.TypeMap,
 													Required: true,
-													ValidateDiagFunc: verify.ValidAllDiag(
+													ValidateDiagFunc: validation.AllDiag(
 														validation.MapKeyLenBetween(1, 127),
-														validation.MapKeyMatch(regexache.MustCompile(`^[-a-zA-Z0-9._]*$`), "alphanumeric and can contain hyphens, underscores, and periods"),
+														validation.MapKeyMatch(regexache.MustCompile(`^[0-9A-Za-z_.-]*$`), "alphanumeric and can contain hyphens, underscores, and periods"),
 													),
 													Elem: &schema.Schema{
 														Type:         schema.TypeInt,
