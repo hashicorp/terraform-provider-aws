@@ -22,8 +22,8 @@ github.com/apparentlymart/go-textseg/v15 v15.0.0/go.mod h1:K8XmNZdhEBkdlyDdvbmms
 github.com/armon/go-radix v0.0.0-20180808171621-7fddfc383310/go.mod h1:ufUuZ+zHj4x4TnLV4JWEpy2hxWSpsRywHrMgIH9cCH8=
 github.com/armon/go-radix v1.0.0 h1:F4z6KzEeeQIMeLFa97iZU6vupzoecKdU5TX24SNppXI=
 github.com/armon/go-radix v1.0.0/go.mod h1:ufUuZ+zHj4x4TnLV4JWEpy2hxWSpsRywHrMgIH9cCH8=
-github.com/aws/aws-sdk-go v1.45.6 h1:Y2isQQBZsnO15dzUQo9YQRThtHgrV200XCH05BRHVJI=
-github.com/aws/aws-sdk-go v1.45.6/go.mod h1:aVsgQcEevwlmQ7qHE9I3h+dtQgpqhFB+i8Phjh7fkwI=
+github.com/aws/aws-sdk-go v1.45.7 h1:k4QsvWZhm8409TYeRuTV1P6+j3lLKoe+giFA/j3VAps=
+github.com/aws/aws-sdk-go v1.45.7/go.mod h1:aVsgQcEevwlmQ7qHE9I3h+dtQgpqhFB+i8Phjh7fkwI=
 github.com/aws/aws-sdk-go-v2 v1.20.1/go.mod h1:NU06lETsFm8fUC6ZjhgDpVBcGZTFQ6XM+LZWZxMI4ac=
 github.com/aws/aws-sdk-go-v2 v1.21.0 h1:gMT0IW+03wtYJhRqTVYn0wLzwdnK9sRMcxmtfGzRdJc=
 github.com/aws/aws-sdk-go-v2 v1.21.0/go.mod h1:/RfNgGmRxI+iFOB1OeJUyxiU+9s88k3pfHvDagGEp0M=
@@ -121,8 +121,8 @@ github.com/aws/aws-sdk-go-v2/service/lexmodelsv2 v1.32.5 h1:vI9ar8zMH9oJ0ywJU184
 github.com/aws/aws-sdk-go-v2/service/lexmodelsv2 v1.32.5/go.mod h1:BsjYt3w75hHFse6bzZt4Lvzdl2yKESDV6WIOOVOQsUU=
 github.com/aws/aws-sdk-go-v2/service/lightsail v1.28.5 h1:IFT75uoZ5Ohcpb0sf7NQTF0Tyx8SmfCMz9IQGjyztXQ=
 github.com/aws/aws-sdk-go-v2/service/lightsail v1.28.5/go.mod h1:nh/y5+FgVxvjrwd2myeB92rKKJVMkxZem3irP3/bT28=
-github.com/aws/aws-sdk-go-v2/service/medialive v1.36.0 h1:mRqlEFkUAvz0EIEwXA6Vxz94HiffbRKEI7hhhLislAo=
-github.com/aws/aws-sdk-go-v2/service/medialive v1.36.0/go.mod h1:oBjVE7s8Z2RQtKxCgHavkhkAu0m54h4YCjXivPR/BhQ=
+github.com/aws/aws-sdk-go-v2/service/medialive v1.37.0 h1:R5u3iuM07pN+lV4t3VHfr3kCByCnxZws1R5y875TuvQ=
+github.com/aws/aws-sdk-go-v2/service/medialive v1.37.0/go.mod h1:oBjVE7s8Z2RQtKxCgHavkhkAu0m54h4YCjXivPR/BhQ=
 github.com/aws/aws-sdk-go-v2/service/mediapackage v1.23.3 h1:lC+4aTyl6yZ59X2Ek0FBg2loD0R048dE/Hnje0tSg3s=
 github.com/aws/aws-sdk-go-v2/service/mediapackage v1.23.3/go.mod h1:GgF8CYrl3uUOa9NGOKLZUptq5A3hORrAG9rGR6KaHt0=
 github.com/aws/aws-sdk-go-v2/service/oam v1.2.5 h1:YTtQSRE+Rb4pXTCl+4VKWm+tEttGmTFVmq3uFKr4ZAY=
