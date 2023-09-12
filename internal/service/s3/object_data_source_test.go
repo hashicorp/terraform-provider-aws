@@ -630,8 +630,6 @@ func testAccObjectDataSourceConfig_leadingSlash(rName string) (string, string) {
 	resources := fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
   bucket = %[1]q
-
-  force_destroy = true
 }
 
 resource "aws_s3_object" "test" {
@@ -666,8 +664,6 @@ func testAccObjectDataSourceConfig_multipleSlashes(rName string) (string, string
 	resources := fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
   bucket = %[1]q
-
-  force_destroy = true
 }
 
 resource "aws_s3_object" "test1" {

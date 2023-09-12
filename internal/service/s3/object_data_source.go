@@ -158,7 +158,7 @@ func dataSourceObjectRead(ctx context.Context, d *schema.ResourceData, meta inte
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	bucket := d.Get("bucket").(string)
-	key := d.Get("key").(string)
+	key := sdkv1CompatibleCleanKey(d.Get("key").(string))
 	input := &s3.HeadObjectInput{
 		Bucket: aws.String(bucket),
 		Key:    aws.String(key),
@@ -183,7 +183,7 @@ func dataSourceObjectRead(ctx context.Context, d *schema.ResourceData, meta inte
 		return sdkdiag.AppendErrorf(diags, "S3 Bucket (%s) Object (%s) has been deleted", bucket, key)
 	}
 
-	id := bucket + "/" + key
+	id := bucket + "/" + d.Get("key").(string)
 	if v, ok := d.GetOk("version_id"); ok {
 		id += "@" + v.(string)
 	}
