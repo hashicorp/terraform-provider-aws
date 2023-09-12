@@ -492,3 +492,49 @@ object Sweeper : BuildType({
         }
     }
 })
+
+object Performance : BuildType({
+    name = "Performance"
+
+    vcs {
+        root(AbsoluteId(DslContext.getParameter("vcs_root_id")))
+
+        cleanCheckout = true
+    }
+
+    steps {
+        ConfigureGoEnv()
+        script {
+            name = "Performance"
+            scriptContent = File("./scripts/performance.sh").readText()
+        }
+    }
+
+    features {
+        val notifierConnectionID = DslContext.getParameter("notifier.id", "")
+        val notifier: Notifier? = if (notifierConnectionID != "") {
+            Notifier(notifierConnectionID, DslContext.getParameter("notifier.destination"))
+        } else {
+            null
+        }
+
+        if (notifier != null) {
+            val branchRef = DslContext.getParameter("branch_name", "")
+            notifications {
+                notifierSettings = slackNotifier {
+                    connection = notifier.connectionID
+                    sendTo = notifier.destination
+                    messageFormat = verboseMessageFormat {
+                        addBranch = branchRef != "refs/heads/main"
+                        addStatusText = true
+                    }
+                }
+                buildStarted = true
+                buildFailedToStart = true
+                buildFailed = true
+                buildFinishedSuccessfully = true
+                firstBuildErrorOccurs = true
+            }
+        }
+    }
+})
