@@ -71,7 +71,7 @@ The `domain_join_info` block supports the following arguments:
 The `vpc_config` block supports the following arguments:
 
 * `security_group_ids` - (Optional) Identifiers of the security groups for the image builder or image builder.
-* `subnet_ids` - (Optional) Identifiers of the subnets to which a network interface is attached from the image builder instance or image builder instance.
+* `subnet_ids` - (Optional) Identifier of the subnet to which a network interface is attached from the image builder instance.
 
 ## Attribute Reference
 
