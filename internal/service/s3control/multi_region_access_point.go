@@ -22,6 +22,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_s3control_multi_region_access_point")
@@ -157,7 +158,7 @@ func resourceMultiRegionAccessPointCreate(ctx context.Context, d *schema.Resourc
 
 	output, err := conn.CreateMultiRegionAccessPoint(ctx, input, func(o *s3control.Options) {
 		// All Multi-Region Access Point actions are routed to the US West (Oregon) Region.
-		o.Region = "us-west-2"
+		o.Region = names.USWest2RegionID
 	})
 
 	if err != nil {
@@ -231,7 +232,7 @@ func resourceMultiRegionAccessPointDelete(ctx context.Context, d *schema.Resourc
 	log.Printf("[DEBUG] Deleting S3 Multi-Region Access Point: %s", d.Id())
 	output, err := conn.DeleteMultiRegionAccessPoint(ctx, input, func(o *s3control.Options) {
 		// All Multi-Region Access Point actions are routed to the US West (Oregon) Region.
-		o.Region = "us-west-2"
+		o.Region = names.USWest2RegionID
 	})
 
 	if tfawserr.ErrCodeEquals(err, errCodeNoSuchMultiRegionAccessPoint) {
@@ -257,7 +258,7 @@ func findMultiRegionAccessPointByTwoPartKey(ctx context.Context, conn *s3control
 
 	output, err := conn.GetMultiRegionAccessPoint(ctx, input, func(o *s3control.Options) {
 		// All Multi-Region Access Point actions are routed to the US West (Oregon) Region.
-		o.Region = "us-west-2"
+		o.Region = names.USWest2RegionID
 	})
 
 	if tfawserr.ErrCodeEquals(err, errCodeNoSuchMultiRegionAccessPoint) {
@@ -286,7 +287,7 @@ func findMultiRegionAccessPointOperationByTwoPartKey(ctx context.Context, conn *
 
 	output, err := conn.DescribeMultiRegionAccessPointOperation(ctx, input, func(o *s3control.Options) {
 		// All Multi-Region Access Point actions are routed to the US West (Oregon) Region.
-		o.Region = "us-west-2"
+		o.Region = names.USWest2RegionID
 	})
 
 	if tfawserr.ErrCodeEquals(err, errCodeNoSuchAsyncRequest) {
