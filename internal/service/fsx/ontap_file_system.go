@@ -440,7 +440,7 @@ func resourceOntapFileSystemDelete(ctx context.Context, d *schema.ResourceData, 
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).FSxConn(ctx)
 
-	log.Printf("[DEBUG] Deleting FSx ONTAP File System: %s", d.Id())
+	log.Printf("[DEBUG] Deleting FSx for NetApp ONTAP File System: %s", d.Id())
 	_, err := conn.DeleteFileSystemWithContext(ctx, &fsx.DeleteFileSystemInput{
 		FileSystemId: aws.String(d.Id()),
 	})
@@ -450,11 +450,11 @@ func resourceOntapFileSystemDelete(ctx context.Context, d *schema.ResourceData, 
 	}
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "deleting FSx ONTAP File System (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting FSx for NetApp ONTAP File System (%s): %s", d.Id(), err)
 	}
 
 	if _, err := waitFileSystemDeleted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "waiting for FSx ONTAP File System (%s) delete: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for FSx for NetApp ONTAP File System (%s) delete: %s", d.Id(), err)
 	}
 
 	return diags
