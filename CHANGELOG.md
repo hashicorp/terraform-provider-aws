@@ -7,8 +7,11 @@ NOTES:
 ENHANCEMENTS:
 
 * data-source/aws_s3_object: Add `checksum_mode` argument and `checksum_crc32`, `checksum_crc32c`, `checksum_sha1` and `checksum_sha256` attributes ([#33358](https://github.com/hashicorp/terraform-provider-aws/issues/33358))
+* data-source/aws_s3control_multi_region_access_point: Add `details.region.bucket_account_id` attribute ([#33416](https://github.com/hashicorp/terraform-provider-aws/issues/33416))
 * resource/aws_s3_object: Add `checksum_algorithm` argument and `checksum_crc32`, `checksum_crc32c`, `checksum_sha1` and `checksum_sha256` attributes ([#33358](https://github.com/hashicorp/terraform-provider-aws/issues/33358))
 * resource/aws_s3_object_copy: Add `checksum_algorithm` argument and `checksum_crc32`, `checksum_crc32c`, `checksum_sha1` and `checksum_sha256` attributes ([#33358](https://github.com/hashicorp/terraform-provider-aws/issues/33358))
+* resource/aws_s3control_multi_region_access_point: Add `details.region.bucket_account_id` argument to support [cross-account Multi-Region Access Points](https://docs.aws.amazon.com/AmazonS3/latest/userguide/multi-region-access-point-buckets.html) ([#33416](https://github.com/hashicorp/terraform-provider-aws/issues/33416))
+* resource/aws_s3control_multi_region_access_point: Add `details.region.region` attribute ([#33416](https://github.com/hashicorp/terraform-provider-aws/issues/33416))
 
 ## 5.16.2 (September 11, 2023)
 
