@@ -366,15 +366,11 @@ func resourceOntapFileSystemUpdate(ctx context.Context, d *schema.ResourceData, 
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).FSxConn(ctx)
 
-	if d.HasChangesExcept("tags_all", "tags") {
+	if d.HasChangesExcept("tags", "tags_all") {
 		input := &fsx.UpdateFileSystemInput{
 			ClientRequestToken: aws.String(id.UniqueId()),
 			FileSystemId:       aws.String(d.Id()),
 			OntapConfiguration: &fsx.UpdateFileSystemOntapConfiguration{},
-		}
-
-		if d.HasChange("storage_capacity") {
-			input.StorageCapacity = aws.Int64(int64(d.Get("storage_capacity").(int)))
 		}
 
 		if d.HasChange("automatic_backup_retention_days") {
@@ -385,51 +381,49 @@ func resourceOntapFileSystemUpdate(ctx context.Context, d *schema.ResourceData, 
 			input.OntapConfiguration.DailyAutomaticBackupStartTime = aws.String(d.Get("daily_automatic_backup_start_time").(string))
 		}
 
+		if d.HasChange("disk_iops_configuration") {
+			input.OntapConfiguration.DiskIopsConfiguration = expandOntapFileDiskIopsConfiguration(d.Get("disk_iops_configuration").([]interface{}))
+		}
+
 		if d.HasChange("fsx_admin_password") {
 			input.OntapConfiguration.FsxAdminPassword = aws.String(d.Get("fsx_admin_password").(string))
 		}
 
-		if d.HasChange("weekly_maintenance_start_time") {
-			input.OntapConfiguration.WeeklyMaintenanceStartTime = aws.String(d.Get("weekly_maintenance_start_time").(string))
+		if d.HasChange("route_table_ids") {
+			o, n := d.GetChange("route_table_ids")
+			os, ns := o.(*schema.Set), n.(*schema.Set)
+			add, del := flex.ExpandStringValueSet(ns.Difference(os)), flex.ExpandStringValueSet(os.Difference(ns))
+
+			if len(add) > 0 {
+				input.OntapConfiguration.AddRouteTableIds = aws.StringSlice(add)
+			}
+
+			if len(del) > 0 {
+				input.OntapConfiguration.RemoveRouteTableIds = aws.StringSlice(del)
+			}
+		}
+
+		if d.HasChange("storage_capacity") {
+			input.StorageCapacity = aws.Int64(int64(d.Get("storage_capacity").(int)))
 		}
 
 		if d.HasChange("throughput_capacity") {
 			input.OntapConfiguration.ThroughputCapacity = aws.Int64(int64(d.Get("throughput_capacity").(int)))
 		}
 
-		if d.HasChange("disk_iops_configuration") {
-			input.OntapConfiguration.DiskIopsConfiguration = expandOntapFileDiskIopsConfiguration(d.Get("disk_iops_configuration").([]interface{}))
-		}
-
-		if d.HasChange("route_table_ids") {
-			o, n := d.GetChange("route_table_ids")
-			ns := n.(*schema.Set)
-			os := o.(*schema.Set)
-			added := ns.Difference(os)
-			removed := os.Difference(ns)
-
-			if added.Len() > 0 {
-				input.OntapConfiguration.AddRouteTableIds = flex.ExpandStringSet(added)
-			}
-
-			if removed.Len() > 0 {
-				input.OntapConfiguration.RemoveRouteTableIds = flex.ExpandStringSet(removed)
-			}
+		if d.HasChange("weekly_maintenance_start_time") {
+			input.OntapConfiguration.WeeklyMaintenanceStartTime = aws.String(d.Get("weekly_maintenance_start_time").(string))
 		}
 
 		startTime := time.Now()
 		_, err := conn.UpdateFileSystemWithContext(ctx, input)
 
 		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating FSx ONTAP File System (%s): %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "updating FSx for NetApp ONTAP File System (%s): %s", d.Id(), err)
 		}
 
 		if _, err := waitFileSystemUpdated(ctx, conn, d.Id(), startTime, d.Timeout(schema.TimeoutUpdate)); err != nil {
-			return sdkdiag.AppendErrorf(diags, "waiting for FSx ONTAP File System (%s) update: %s", d.Id(), err)
-		}
-
-		if _, err := waitAdministrativeActionCompleted(ctx, conn, d.Id(), fsx.AdministrativeActionTypeFileSystemUpdate, d.Timeout(schema.TimeoutUpdate)); err != nil {
-			return sdkdiag.AppendErrorf(diags, "waiting for FSx for NetApp ONTAP File System (%s) administrative action (%s) complete: %s", d.Id(), fsx.AdministrativeActionTypeFileSystemUpdate, err)
+			return sdkdiag.AppendErrorf(diags, "waiting for FSx for NetApp ONTAP File System (%s) update: %s", d.Id(), err)
 		}
 	}
 
