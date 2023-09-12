@@ -58,6 +58,11 @@ func (client *AWSClient) RegionalHostname(prefix string) string {
 	return fmt.Sprintf("%s.%s.%s", prefix, client.Region, client.DNSSuffix)
 }
 
+// S3UsePathStyle returns the s3_force_path_style provider configuration value.
+func (client *AWSClient) S3UsePathStyle() bool {
+	return client.s3UsePathStyle
+}
+
 // ****************
 // TODO: REVIEW
 // TODO: AWS SDK for Go v2 does NO URL cleaning.
