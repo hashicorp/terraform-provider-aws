@@ -20,7 +20,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func TestAccFSxOntapFileSystem_basic(t *testing.T) {
+func TestAccFSxONTAPFileSystem_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var filesystem fsx.FileSystem
 	resourceName := "aws_fsx_ontap_file_system.test"
@@ -75,7 +75,7 @@ func TestAccFSxOntapFileSystem_basic(t *testing.T) {
 	})
 }
 
-func TestAccFSxOntapFileSystem_fsxSingleAz(t *testing.T) {
+func TestAccFSxONTAPFileSystem_fsxSingleAz(t *testing.T) {
 	ctx := acctest.Context(t)
 	var filesystem fsx.FileSystem
 	resourceName := "aws_fsx_ontap_file_system.test"
@@ -105,7 +105,7 @@ func TestAccFSxOntapFileSystem_fsxSingleAz(t *testing.T) {
 	})
 }
 
-func TestAccFSxOntapFileSystem_fsxAdminPassword(t *testing.T) {
+func TestAccFSxONTAPFileSystem_fsxAdminPassword(t *testing.T) {
 	ctx := acctest.Context(t)
 	var filesystem1, filesystem2 fsx.FileSystem
 	resourceName := "aws_fsx_ontap_file_system.test"
@@ -136,7 +136,7 @@ func TestAccFSxOntapFileSystem_fsxAdminPassword(t *testing.T) {
 				Config: testAccONTAPFileSystemConfig_adminPassword(rName, pass2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckONTAPFileSystemExists(ctx, resourceName, &filesystem2),
-					testAccCheckOntapFileSystemNotRecreated(&filesystem1, &filesystem2),
+					testAccCheckONTAPFileSystemNotRecreated(&filesystem1, &filesystem2),
 					resource.TestCheckResourceAttr(resourceName, "fsx_admin_password", pass2),
 				),
 			},
@@ -144,7 +144,7 @@ func TestAccFSxOntapFileSystem_fsxAdminPassword(t *testing.T) {
 	})
 }
 
-func TestAccFSxOntapFileSystem_endpointIPAddressRange(t *testing.T) {
+func TestAccFSxONTAPFileSystem_endpointIPAddressRange(t *testing.T) {
 	ctx := acctest.Context(t)
 	var filesystem fsx.FileSystem
 	resourceName := "aws_fsx_ontap_file_system.test"
@@ -173,7 +173,7 @@ func TestAccFSxOntapFileSystem_endpointIPAddressRange(t *testing.T) {
 	})
 }
 
-func TestAccFSxOntapFileSystem_diskIops(t *testing.T) {
+func TestAccFSxONTAPFileSystem_diskIops(t *testing.T) {
 	ctx := acctest.Context(t)
 	var filesystem fsx.FileSystem
 	resourceName := "aws_fsx_ontap_file_system.test"
@@ -213,7 +213,7 @@ func TestAccFSxOntapFileSystem_diskIops(t *testing.T) {
 	})
 }
 
-func TestAccFSxOntapFileSystem_disappears(t *testing.T) {
+func TestAccFSxONTAPFileSystem_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var filesystem fsx.FileSystem
 	resourceName := "aws_fsx_ontap_file_system.test"
@@ -229,7 +229,7 @@ func TestAccFSxOntapFileSystem_disappears(t *testing.T) {
 				Config: testAccONTAPFileSystemConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckONTAPFileSystemExists(ctx, resourceName, &filesystem),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tffsx.ResourceOntapFileSystem(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tffsx.ResourceONTAPFileSystem(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -237,7 +237,7 @@ func TestAccFSxOntapFileSystem_disappears(t *testing.T) {
 	})
 }
 
-func TestAccFSxOntapFileSystem_securityGroupIDs(t *testing.T) {
+func TestAccFSxONTAPFileSystem_securityGroupIDs(t *testing.T) {
 	ctx := acctest.Context(t)
 	var filesystem1, filesystem2 fsx.FileSystem
 	resourceName := "aws_fsx_ontap_file_system.test"
@@ -266,7 +266,7 @@ func TestAccFSxOntapFileSystem_securityGroupIDs(t *testing.T) {
 				Config: testAccONTAPFileSystemConfig_securityGroupIDs2(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckONTAPFileSystemExists(ctx, resourceName, &filesystem2),
-					testAccCheckOntapFileSystemRecreated(&filesystem1, &filesystem2),
+					testAccCheckONTAPFileSystemRecreated(&filesystem1, &filesystem2),
 					resource.TestCheckResourceAttr(resourceName, "security_group_ids.#", "2"),
 				),
 			},
@@ -274,7 +274,7 @@ func TestAccFSxOntapFileSystem_securityGroupIDs(t *testing.T) {
 	})
 }
 
-func TestAccFSxOntapFileSystem_routeTableIDs(t *testing.T) {
+func TestAccFSxONTAPFileSystem_routeTableIDs(t *testing.T) {
 	ctx := acctest.Context(t)
 	var filesystem1 fsx.FileSystem
 	resourceName := "aws_fsx_ontap_file_system.test"
@@ -321,7 +321,7 @@ func TestAccFSxOntapFileSystem_routeTableIDs(t *testing.T) {
 	})
 }
 
-func TestAccFSxOntapFileSystem_tags(t *testing.T) {
+func TestAccFSxONTAPFileSystem_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 	var filesystem1, filesystem2, filesystem3 fsx.FileSystem
 	resourceName := "aws_fsx_ontap_file_system.test"
@@ -351,7 +351,7 @@ func TestAccFSxOntapFileSystem_tags(t *testing.T) {
 				Config: testAccONTAPFileSystemConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckONTAPFileSystemExists(ctx, resourceName, &filesystem2),
-					testAccCheckOntapFileSystemNotRecreated(&filesystem1, &filesystem2),
+					testAccCheckONTAPFileSystemNotRecreated(&filesystem1, &filesystem2),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
@@ -361,7 +361,7 @@ func TestAccFSxOntapFileSystem_tags(t *testing.T) {
 				Config: testAccONTAPFileSystemConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckONTAPFileSystemExists(ctx, resourceName, &filesystem3),
-					testAccCheckOntapFileSystemNotRecreated(&filesystem2, &filesystem3),
+					testAccCheckONTAPFileSystemNotRecreated(&filesystem2, &filesystem3),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
@@ -370,7 +370,7 @@ func TestAccFSxOntapFileSystem_tags(t *testing.T) {
 	})
 }
 
-func TestAccFSxOntapFileSystem_weeklyMaintenanceStartTime(t *testing.T) {
+func TestAccFSxONTAPFileSystem_weeklyMaintenanceStartTime(t *testing.T) {
 	ctx := acctest.Context(t)
 	var filesystem1, filesystem2 fsx.FileSystem
 	resourceName := "aws_fsx_ontap_file_system.test"
@@ -399,7 +399,7 @@ func TestAccFSxOntapFileSystem_weeklyMaintenanceStartTime(t *testing.T) {
 				Config: testAccONTAPFileSystemConfig_weeklyMaintenanceStartTime(rName, "2:02:02"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckONTAPFileSystemExists(ctx, resourceName, &filesystem2),
-					testAccCheckOntapFileSystemNotRecreated(&filesystem1, &filesystem2),
+					testAccCheckONTAPFileSystemNotRecreated(&filesystem1, &filesystem2),
 					resource.TestCheckResourceAttr(resourceName, "weekly_maintenance_start_time", "2:02:02"),
 				),
 			},
@@ -407,7 +407,7 @@ func TestAccFSxOntapFileSystem_weeklyMaintenanceStartTime(t *testing.T) {
 	})
 }
 
-func TestAccFSxOntapFileSystem_automaticBackupRetentionDays(t *testing.T) {
+func TestAccFSxONTAPFileSystem_automaticBackupRetentionDays(t *testing.T) {
 	ctx := acctest.Context(t)
 	var filesystem1, filesystem2 fsx.FileSystem
 	resourceName := "aws_fsx_ontap_file_system.test"
@@ -436,7 +436,7 @@ func TestAccFSxOntapFileSystem_automaticBackupRetentionDays(t *testing.T) {
 				Config: testAccONTAPFileSystemConfig_automaticBackupRetentionDays(rName, 0),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckONTAPFileSystemExists(ctx, resourceName, &filesystem2),
-					testAccCheckOntapFileSystemNotRecreated(&filesystem1, &filesystem2),
+					testAccCheckONTAPFileSystemNotRecreated(&filesystem1, &filesystem2),
 					resource.TestCheckResourceAttr(resourceName, "automatic_backup_retention_days", "0"),
 				),
 			},
@@ -451,7 +451,7 @@ func TestAccFSxOntapFileSystem_automaticBackupRetentionDays(t *testing.T) {
 	})
 }
 
-func TestAccFSxOntapFileSystem_kmsKeyID(t *testing.T) {
+func TestAccFSxONTAPFileSystem_kmsKeyID(t *testing.T) {
 	ctx := acctest.Context(t)
 	var filesystem fsx.FileSystem
 	resourceName := "aws_fsx_ontap_file_system.test"
@@ -480,7 +480,7 @@ func TestAccFSxOntapFileSystem_kmsKeyID(t *testing.T) {
 	})
 }
 
-func TestAccFSxOntapFileSystem_dailyAutomaticBackupStartTime(t *testing.T) {
+func TestAccFSxONTAPFileSystem_dailyAutomaticBackupStartTime(t *testing.T) {
 	ctx := acctest.Context(t)
 	var filesystem1, filesystem2 fsx.FileSystem
 	resourceName := "aws_fsx_ontap_file_system.test"
@@ -509,7 +509,7 @@ func TestAccFSxOntapFileSystem_dailyAutomaticBackupStartTime(t *testing.T) {
 				Config: testAccONTAPFileSystemConfig_dailyAutomaticBackupStartTime(rName, "02:02"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckONTAPFileSystemExists(ctx, resourceName, &filesystem2),
-					testAccCheckOntapFileSystemNotRecreated(&filesystem1, &filesystem2),
+					testAccCheckONTAPFileSystemNotRecreated(&filesystem1, &filesystem2),
 					resource.TestCheckResourceAttr(resourceName, "daily_automatic_backup_start_time", "02:02"),
 				),
 			},
@@ -517,7 +517,7 @@ func TestAccFSxOntapFileSystem_dailyAutomaticBackupStartTime(t *testing.T) {
 	})
 }
 
-func TestAccFSxOntapFileSystem_throughputCapacity(t *testing.T) {
+func TestAccFSxONTAPFileSystem_throughputCapacity(t *testing.T) {
 	ctx := acctest.Context(t)
 	var filesystem1, filesystem2 fsx.FileSystem
 	resourceName := "aws_fsx_ontap_file_system.test"
@@ -546,7 +546,7 @@ func TestAccFSxOntapFileSystem_throughputCapacity(t *testing.T) {
 				Config: testAccONTAPFileSystemConfig_throughputCapacity(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckONTAPFileSystemExists(ctx, resourceName, &filesystem2),
-					testAccCheckOntapFileSystemNotRecreated(&filesystem1, &filesystem2),
+					testAccCheckONTAPFileSystemNotRecreated(&filesystem1, &filesystem2),
 					resource.TestCheckResourceAttr(resourceName, "throughput_capacity", "256"),
 				),
 			},
@@ -554,7 +554,7 @@ func TestAccFSxOntapFileSystem_throughputCapacity(t *testing.T) {
 	})
 }
 
-func TestAccFSxOntapFileSystem_storageCapacity(t *testing.T) {
+func TestAccFSxONTAPFileSystem_storageCapacity(t *testing.T) {
 	ctx := acctest.Context(t)
 	var filesystem1, filesystem2 fsx.FileSystem
 	resourceName := "aws_fsx_ontap_file_system.test"
@@ -583,7 +583,7 @@ func TestAccFSxOntapFileSystem_storageCapacity(t *testing.T) {
 				Config: testAccONTAPFileSystemConfig_storageCapacity(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckONTAPFileSystemExists(ctx, resourceName, &filesystem2),
-					testAccCheckOntapFileSystemNotRecreated(&filesystem1, &filesystem2),
+					testAccCheckONTAPFileSystemNotRecreated(&filesystem1, &filesystem2),
 					resource.TestCheckResourceAttr(resourceName, "storage_capacity", "2048"),
 				),
 			},
@@ -638,7 +638,7 @@ func testAccCheckONTAPFileSystemDestroy(ctx context.Context) resource.TestCheckF
 	}
 }
 
-func testAccCheckOntapFileSystemNotRecreated(i, j *fsx.FileSystem) resource.TestCheckFunc {
+func testAccCheckONTAPFileSystemNotRecreated(i, j *fsx.FileSystem) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		if aws.StringValue(i.FileSystemId) != aws.StringValue(j.FileSystemId) {
 			return fmt.Errorf("FSx for NetApp ONTAP File System (%s) recreated", aws.StringValue(i.FileSystemId))
@@ -648,7 +648,7 @@ func testAccCheckOntapFileSystemNotRecreated(i, j *fsx.FileSystem) resource.Test
 	}
 }
 
-func testAccCheckOntapFileSystemRecreated(i, j *fsx.FileSystem) resource.TestCheckFunc {
+func testAccCheckONTAPFileSystemRecreated(i, j *fsx.FileSystem) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		if aws.StringValue(i.FileSystemId) == aws.StringValue(j.FileSystemId) {
 			return fmt.Errorf("FSx for NetApp ONTAP File System (%s) not recreated", aws.StringValue(i.FileSystemId))
@@ -658,12 +658,12 @@ func testAccCheckOntapFileSystemRecreated(i, j *fsx.FileSystem) resource.TestChe
 	}
 }
 
-func testAccOntapFileSystemConfig_base(rName string) string {
+func testAccONTAPFileSystemConfig_base(rName string) string {
 	return acctest.ConfigVPCWithSubnets(rName, 2)
 }
 
 func testAccONTAPFileSystemConfig_basic(rName string) string {
-	return acctest.ConfigCompose(testAccOntapFileSystemConfig_base(rName), `
+	return acctest.ConfigCompose(testAccONTAPFileSystemConfig_base(rName), `
 resource "aws_fsx_ontap_file_system" "test" {
   storage_capacity    = 1024
   subnet_ids          = aws_subnet.test[*].id
@@ -675,7 +675,7 @@ resource "aws_fsx_ontap_file_system" "test" {
 }
 
 func testAccONTAPFileSystemConfig_singleAz(rName string) string {
-	return acctest.ConfigCompose(testAccOntapFileSystemConfig_base(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccONTAPFileSystemConfig_base(rName), fmt.Sprintf(`
 resource "aws_fsx_ontap_file_system" "test" {
   storage_capacity    = 1024
   subnet_ids          = aws_subnet.test[*].id
@@ -691,7 +691,7 @@ resource "aws_fsx_ontap_file_system" "test" {
 }
 
 func testAccONTAPFileSystemConfig_adminPassword(rName, pass string) string {
-	return acctest.ConfigCompose(testAccOntapFileSystemConfig_base(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccONTAPFileSystemConfig_base(rName), fmt.Sprintf(`
 resource "aws_fsx_ontap_file_system" "test" {
   storage_capacity    = 1024
   subnet_ids          = aws_subnet.test[*].id
@@ -708,7 +708,7 @@ resource "aws_fsx_ontap_file_system" "test" {
 }
 
 func testAccONTAPFileSystemConfig_endpointIPAddressRange(rName string) string {
-	return acctest.ConfigCompose(testAccOntapFileSystemConfig_base(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccONTAPFileSystemConfig_base(rName), fmt.Sprintf(`
 resource "aws_fsx_ontap_file_system" "test" {
   storage_capacity          = 1024
   subnet_ids                = aws_subnet.test[*].id
@@ -725,7 +725,7 @@ resource "aws_fsx_ontap_file_system" "test" {
 }
 
 func testAccONTAPFileSystemConfig_diskIOPSConfiguration(rName string, iops int) string {
-	return acctest.ConfigCompose(testAccOntapFileSystemConfig_base(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccONTAPFileSystemConfig_base(rName), fmt.Sprintf(`
 resource "aws_fsx_ontap_file_system" "test" {
   storage_capacity    = 1024
   subnet_ids          = aws_subnet.test[*].id
@@ -746,7 +746,7 @@ resource "aws_fsx_ontap_file_system" "test" {
 }
 
 func testAccONTAPFileSystemConfig_routeTable(rName string, cnt int) string {
-	return acctest.ConfigCompose(testAccOntapFileSystemConfig_base(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccONTAPFileSystemConfig_base(rName), fmt.Sprintf(`
 resource "aws_internet_gateway" "test" {
   vpc_id = aws_vpc.test.id
 
@@ -786,7 +786,7 @@ resource "aws_fsx_ontap_file_system" "test" {
 }
 
 func testAccONTAPFileSystemConfig_securityGroupIDs1(rName string) string {
-	return acctest.ConfigCompose(testAccOntapFileSystemConfig_base(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccONTAPFileSystemConfig_base(rName), fmt.Sprintf(`
 resource "aws_security_group" "test1" {
   name   = "%[1]s-1"
   vpc_id = aws_vpc.test.id
@@ -826,7 +826,7 @@ resource "aws_fsx_ontap_file_system" "test" {
 }
 
 func testAccONTAPFileSystemConfig_securityGroupIDs2(rName string) string {
-	return acctest.ConfigCompose(testAccOntapFileSystemConfig_base(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccONTAPFileSystemConfig_base(rName), fmt.Sprintf(`
 resource "aws_security_group" "test1" {
   name   = "%[1]s-1"
   vpc_id = aws_vpc.test.id
@@ -889,7 +889,7 @@ resource "aws_fsx_ontap_file_system" "test" {
 }
 
 func testAccONTAPFileSystemConfig_tags1(rName, tagKey1, tagValue1 string) string {
-	return acctest.ConfigCompose(testAccOntapFileSystemConfig_base(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccONTAPFileSystemConfig_base(rName), fmt.Sprintf(`
 resource "aws_fsx_ontap_file_system" "test" {
   storage_capacity    = 1024
   subnet_ids          = aws_subnet.test[*].id
@@ -905,7 +905,7 @@ resource "aws_fsx_ontap_file_system" "test" {
 }
 
 func testAccONTAPFileSystemConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
-	return acctest.ConfigCompose(testAccOntapFileSystemConfig_base(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccONTAPFileSystemConfig_base(rName), fmt.Sprintf(`
 resource "aws_fsx_ontap_file_system" "test" {
   storage_capacity    = 1024
   subnet_ids          = aws_subnet.test[*].id
@@ -922,7 +922,7 @@ resource "aws_fsx_ontap_file_system" "test" {
 }
 
 func testAccONTAPFileSystemConfig_weeklyMaintenanceStartTime(rName, weeklyMaintenanceStartTime string) string {
-	return acctest.ConfigCompose(testAccOntapFileSystemConfig_base(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccONTAPFileSystemConfig_base(rName), fmt.Sprintf(`
 resource "aws_fsx_ontap_file_system" "test" {
   storage_capacity              = 1024
   subnet_ids                    = aws_subnet.test[*].id
@@ -939,7 +939,7 @@ resource "aws_fsx_ontap_file_system" "test" {
 }
 
 func testAccONTAPFileSystemConfig_dailyAutomaticBackupStartTime(rName, dailyAutomaticBackupStartTime string) string {
-	return acctest.ConfigCompose(testAccOntapFileSystemConfig_base(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccONTAPFileSystemConfig_base(rName), fmt.Sprintf(`
 resource "aws_fsx_ontap_file_system" "test" {
   storage_capacity                  = 1024
   subnet_ids                        = aws_subnet.test[*].id
@@ -957,7 +957,7 @@ resource "aws_fsx_ontap_file_system" "test" {
 }
 
 func testAccONTAPFileSystemConfig_automaticBackupRetentionDays(rName string, retention int) string {
-	return acctest.ConfigCompose(testAccOntapFileSystemConfig_base(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccONTAPFileSystemConfig_base(rName), fmt.Sprintf(`
 resource "aws_fsx_ontap_file_system" "test" {
   storage_capacity                = 1024
   subnet_ids                      = aws_subnet.test[*].id
@@ -974,7 +974,7 @@ resource "aws_fsx_ontap_file_system" "test" {
 }
 
 func testAccONTAPFileSystemConfig_kmsKeyID(rName string) string {
-	return acctest.ConfigCompose(testAccOntapFileSystemConfig_base(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccONTAPFileSystemConfig_base(rName), fmt.Sprintf(`
 resource "aws_kms_key" "test" {
   description             = %[1]q
   deletion_window_in_days = 7
@@ -996,7 +996,7 @@ resource "aws_fsx_ontap_file_system" "test" {
 }
 
 func testAccONTAPFileSystemConfig_throughputCapacity(rName string) string {
-	return acctest.ConfigCompose(testAccOntapFileSystemConfig_base(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccONTAPFileSystemConfig_base(rName), fmt.Sprintf(`
 resource "aws_fsx_ontap_file_system" "test" {
   storage_capacity    = 1024
   subnet_ids          = aws_subnet.test[*].id
@@ -1012,7 +1012,7 @@ resource "aws_fsx_ontap_file_system" "test" {
 }
 
 func testAccONTAPFileSystemConfig_storageCapacity(rName string) string {
-	return acctest.ConfigCompose(testAccOntapFileSystemConfig_base(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccONTAPFileSystemConfig_base(rName), fmt.Sprintf(`
 resource "aws_fsx_ontap_file_system" "test" {
   storage_capacity    = 2048
   subnet_ids          = aws_subnet.test[*].id

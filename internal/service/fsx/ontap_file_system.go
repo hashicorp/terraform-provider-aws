@@ -27,12 +27,12 @@ import (
 
 // @SDKResource("aws_fsx_ontap_file_system", name="ONTAP File System")
 // @Tags(identifierAttribute="arn")
-func ResourceOntapFileSystem() *schema.Resource {
+func ResourceONTAPFileSystem() *schema.Resource {
 	return &schema.Resource{
-		CreateWithoutTimeout: resourceOntapFileSystemCreate,
-		ReadWithoutTimeout:   resourceOntapFileSystemRead,
-		UpdateWithoutTimeout: resourceOntapFileSystemUpdate,
-		DeleteWithoutTimeout: resourceOntapFileSystemDelete,
+		CreateWithoutTimeout: resourceONTAPFileSystemCreate,
+		ReadWithoutTimeout:   resourceONTAPFileSystemRead,
+		UpdateWithoutTimeout: resourceONTAPFileSystemUpdate,
+		DeleteWithoutTimeout: resourceONTAPFileSystemDelete,
 
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
@@ -234,7 +234,7 @@ func ResourceOntapFileSystem() *schema.Resource {
 	}
 }
 
-func resourceOntapFileSystemCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceONTAPFileSystemCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).FSxConn(ctx)
 
@@ -297,10 +297,10 @@ func resourceOntapFileSystemCreate(ctx context.Context, d *schema.ResourceData, 
 		return sdkdiag.AppendErrorf(diags, "waiting for FSx for NetApp ONTAP File System (%s) create: %s", d.Id(), err)
 	}
 
-	return append(diags, resourceOntapFileSystemRead(ctx, d, meta)...)
+	return append(diags, resourceONTAPFileSystemRead(ctx, d, meta)...)
 }
 
-func resourceOntapFileSystemRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceONTAPFileSystemRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).FSxConn(ctx)
 
@@ -348,7 +348,7 @@ func resourceOntapFileSystemRead(ctx context.Context, d *schema.ResourceData, me
 	return diags
 }
 
-func resourceOntapFileSystemUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceONTAPFileSystemUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).FSxConn(ctx)
 
@@ -413,10 +413,10 @@ func resourceOntapFileSystemUpdate(ctx context.Context, d *schema.ResourceData, 
 		}
 	}
 
-	return append(diags, resourceOntapFileSystemRead(ctx, d, meta)...)
+	return append(diags, resourceONTAPFileSystemRead(ctx, d, meta)...)
 }
 
-func resourceOntapFileSystemDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceONTAPFileSystemDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).FSxConn(ctx)
 
