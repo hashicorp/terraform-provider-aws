@@ -2956,7 +2956,7 @@ such that they no longer return an error if zero results are found.
 * [aws_ec2_local_gateways](/docs/providers/aws/d/ec2_local_gateways.html)
 * [aws_ec2_transit_gateway_route_tables](/docs/providers/aws/d/ec2_transit_gateway_route_tables.html)
 * [aws_efs_access_points](/docs/providers/aws/d/efs_access_points.html)
-* [aws_emr_release_labels](/docs/providers/aws/d/emr_release_labels.markdown)
+* [aws_emr_release_labels](/docs/providers/aws/d/emr_release_labels.html)
 * [aws_inspector_rules_packages](/docs/providers/aws/d/inspector_rules_packages.html)
 * [aws_ip_ranges](/docs/providers/aws/d/ip_ranges.html)
 * [aws_network_acls](/docs/providers/aws/d/network_acls.html)

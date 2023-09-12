@@ -190,7 +190,7 @@ provider "aws" {
   <li><code>lakeformation</code></li>
   <li><code>lambda</code></li>
   <li><code>lexmodels</code> (or <code>lexmodelbuilding</code> or <code>lexmodelbuildingservice</code> or <code>lex</code>)</li>
-  <li><code>lexmodelsv2</code> (or <code>lexv2models</code>)</li>
+  <li><code>lexv2models</code> (or <code>lexmodelsv2</code>)</li>
   <li><code>licensemanager</code></li>
   <li><code>lightsail</code></li>
   <li><code>location</code> (or <code>locationservice</code>)</li>

@@ -213,7 +213,7 @@ lakeformation,lakeformation,lakeformation,lakeformation,,lakeformation,,,LakeFor
 lambda,lambda,lambda,lambda,,lambda,,,Lambda,Lambda,,1,2,,aws_lambda_,,lambda_,Lambda,AWS,,,,,,
 ,,,,,,,,,,,,,,,,,Launch Wizard,AWS,x,,,,,No SDK support
 lex-models,lexmodels,lexmodelbuildingservice,lexmodelbuildingservice,,lexmodels,,lexmodelbuilding;lexmodelbuildingservice;lex,LexModels,LexModelBuildingService,,1,,aws_lex_,aws_lexmodels_,,lex_,Lex Model Building,Amazon,,,,,,
-lexv2-models,lexv2models,lexmodelsv2,lexmodelsv2,,lexmodelsv2,,lexv2models,LexModelsV2,LexModelsV2,,,2,aws_lexv2models_,aws_lexmodelsv2_,,lexmodelsv2_,Lex Models V2,Amazon,,,,,,
+lexv2-models,lexv2models,lexmodelsv2,lexmodelsv2,,lexv2models,,lexmodelsv2,LexV2Models,LexModelsV2,,,2,,aws_lexv2models_,,lexv2models_,Lex V2 Models,Amazon,,,,,,
 lex-runtime,lexruntime,lexruntimeservice,lexruntimeservice,,lexruntime,,lexruntimeservice,LexRuntime,LexRuntimeService,,1,,,aws_lexruntime_,,lexruntime_,Lex Runtime,Amazon,,x,,,,
 lexv2-runtime,lexv2runtime,lexruntimev2,lexruntimev2,,lexruntimev2,,lexv2runtime,LexRuntimeV2,LexRuntimeV2,,1,,,aws_lexruntimev2_,,lexruntimev2_,Lex Runtime V2,Amazon,,x,,,,
 license-manager,licensemanager,licensemanager,licensemanager,,licensemanager,,,LicenseManager,LicenseManager,,1,,,aws_licensemanager_,,licensemanager_,License Manager,AWS,,,,,,
