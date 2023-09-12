@@ -7,8 +7,8 @@ import (
 	"flag"
 	"testing"
 
-	config_sdkv2 "github.com/aws/aws-sdk-go-v2/config"
-	s3_sdkv2 "github.com/aws/aws-sdk-go-v2/service/s3"
+	"github.com/aws/aws-sdk-go-v2/config"
+	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	tfs3 "github.com/hashicorp/terraform-provider-aws/internal/service/s3"
 )
@@ -27,12 +27,12 @@ func TestEmptyBucket(t *testing.T) {
 		t.Skip("bucket not specified")
 	}
 
-	cfg, err := config_sdkv2.LoadDefaultConfig(ctx)
+	cfg, err := config.LoadDefaultConfig(ctx)
 	if err != nil {
 		t.Fatalf("error loading default SDK config: %s", err)
 	}
 
-	client := s3_sdkv2.NewFromConfig(cfg)
+	client := s3.NewFromConfig(cfg)
 	n, err := tfs3.EmptyBucket(ctx, client, *bucket, *force)
 
 	if err != nil {
@@ -51,12 +51,12 @@ func TestDeleteAllObjectVersions(t *testing.T) {
 		t.Skip("bucket not specified")
 	}
 
-	cfg, err := config_sdkv2.LoadDefaultConfig(ctx)
+	cfg, err := config.LoadDefaultConfig(ctx)
 	if err != nil {
 		t.Fatalf("error loading default SDK config: %s", err)
 	}
 
-	client := s3_sdkv2.NewFromConfig(cfg)
+	client := s3.NewFromConfig(cfg)
 	n, err := tfs3.DeleteAllObjectVersions(ctx, client, *bucket, "", *force, false)
 
 	if err != nil {
