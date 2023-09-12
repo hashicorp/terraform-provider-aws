@@ -7,6 +7,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"net/http"
 	"strings"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -512,7 +513,7 @@ func resourceStorageLensConfigurationDelete(ctx context.Context, d *schema.Resou
 		ConfigId:  aws.String(configID),
 	})
 
-	if tfawserr.ErrCodeEquals(err, errCodeNoSuchConfiguration) {
+	if tfawserr.ErrHTTPStatusCodeEquals(err, http.StatusNotFound) {
 		return nil
 	}
 
@@ -550,7 +551,7 @@ func findStorageLensConfigurationByAccountIDAndConfigID(ctx context.Context, con
 
 	output, err := conn.GetStorageLensConfiguration(ctx, input)
 
-	if tfawserr.ErrCodeEquals(err, errCodeNoSuchConfiguration) {
+	if tfawserr.ErrHTTPStatusCodeEquals(err, http.StatusNotFound) {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
