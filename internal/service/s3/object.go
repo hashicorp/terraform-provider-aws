@@ -654,7 +654,6 @@ func deleteAllObjectVersions(ctx context.Context, conn *s3.Client, bucketName, k
 	if key != "" {
 		input.Prefix = aws.String(key)
 	}
-
 	var lastErr error
 
 	pages := s3.NewListObjectVersionsPaginator(conn, input)
