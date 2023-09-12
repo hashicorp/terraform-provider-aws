@@ -16,9 +16,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
-	"github.com/hashicorp/terraform-provider-aws/names"
-
 	tfshield "github.com/hashicorp/terraform-provider-aws/internal/service/shield"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccShieldApplicationLayerAutomaticResponse_basic(t *testing.T) {
@@ -184,9 +183,9 @@ resource "aws_cloudfront_distribution" "test" {
   }
   enabled             = false
   wait_for_deployment = false
-  web_acl_id 		  =  aws_wafv2_web_acl.test.arn
+  web_acl_id          = aws_wafv2_web_acl.test.arn
   default_cache_behavior {
-    allowed_methods  = ["HEAD", "DELETE", "POST", "GET", "OPTIONS", a"PUT", "PATCH"]
+    allowed_methods  = ["HEAD", "DELETE", "POST", "GET", "OPTIONS", "PUT", "PATCH"]
     cached_methods   = ["GET", "HEAD"]
     target_origin_id = %[1]q
     forwarded_values {
@@ -220,9 +219,9 @@ resource "aws_shield_protection" "test" {
 }
 resource "aws_shield_application_layer_automatic_response" "test" {
   resource_arn = aws_cloudfront_distribution.test.arn
-  action = "COUNT"
+  action       = "COUNT"
 
-  depends_on = [ 
+  depends_on = [
     aws_shield_protection.test,
     aws_cloudfront_distribution.test,
     aws_wafv2_web_acl.test
