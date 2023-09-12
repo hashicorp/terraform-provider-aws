@@ -65,7 +65,7 @@ func FindBucketPolicy(ctx context.Context, conn *s3.S3, name string) (*s3.GetBuc
 
 	out, err := conn.GetBucketPolicyWithContext(ctx, in)
 
-	if tfawserr.ErrCodeEquals(err, ErrCodeNoSuchBucketPolicy) {
+	if tfawserr.ErrCodeEquals(err, errCodeNoSuchBucketPolicy) {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: in,
