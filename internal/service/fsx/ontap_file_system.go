@@ -241,24 +241,16 @@ func resourceOntapFileSystemCreate(ctx context.Context, d *schema.ResourceData, 
 	input := &fsx.CreateFileSystemInput{
 		ClientRequestToken: aws.String(id.UniqueId()),
 		FileSystemType:     aws.String(fsx.FileSystemTypeOntap),
-		StorageCapacity:    aws.Int64(int64(d.Get("storage_capacity").(int))),
-		StorageType:        aws.String(d.Get("storage_type").(string)),
-		SubnetIds:          flex.ExpandStringList(d.Get("subnet_ids").([]interface{})),
 		OntapConfiguration: &fsx.CreateFileSystemOntapConfiguration{
-			DeploymentType:               aws.String(d.Get("deployment_type").(string)),
 			AutomaticBackupRetentionDays: aws.Int64(int64(d.Get("automatic_backup_retention_days").(int))),
-			ThroughputCapacity:           aws.Int64(int64(d.Get("throughput_capacity").(int))),
+			DeploymentType:               aws.String(d.Get("deployment_type").(string)),
 			PreferredSubnetId:            aws.String(d.Get("preferred_subnet_id").(string)),
+			ThroughputCapacity:           aws.Int64(int64(d.Get("throughput_capacity").(int))),
 		},
-		Tags: getTagsIn(ctx),
-	}
-
-	if v, ok := d.GetOk("kms_key_id"); ok {
-		input.KmsKeyId = aws.String(v.(string))
-	}
-
-	if v, ok := d.GetOk("endpoint_ip_address_range"); ok {
-		input.OntapConfiguration.EndpointIpAddressRange = aws.String(v.(string))
+		StorageCapacity: aws.Int64(int64(d.Get("storage_capacity").(int))),
+		StorageType:     aws.String(d.Get("storage_type").(string)),
+		SubnetIds:       flex.ExpandStringList(d.Get("subnet_ids").([]interface{})),
+		Tags:            getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("daily_automatic_backup_start_time"); ok {
@@ -269,8 +261,16 @@ func resourceOntapFileSystemCreate(ctx context.Context, d *schema.ResourceData, 
 		input.OntapConfiguration.DiskIopsConfiguration = expandOntapFileDiskIopsConfiguration(v.([]interface{}))
 	}
 
+	if v, ok := d.GetOk("endpoint_ip_address_range"); ok {
+		input.OntapConfiguration.EndpointIpAddressRange = aws.String(v.(string))
+	}
+
 	if v, ok := d.GetOk("fsx_admin_password"); ok {
 		input.OntapConfiguration.FsxAdminPassword = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("kms_key_id"); ok {
+		input.KmsKeyId = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("route_table_ids"); ok {
@@ -285,16 +285,16 @@ func resourceOntapFileSystemCreate(ctx context.Context, d *schema.ResourceData, 
 		input.OntapConfiguration.WeeklyMaintenanceStartTime = aws.String(v.(string))
 	}
 
-	result, err := conn.CreateFileSystemWithContext(ctx, input)
+	output, err := conn.CreateFileSystemWithContext(ctx, input)
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating FSx ONTAP File System: %s", err)
+		return sdkdiag.AppendErrorf(diags, "creating FSx for NetApp ONTAP File System: %s", err)
 	}
 
-	d.SetId(aws.StringValue(result.FileSystem.FileSystemId))
+	d.SetId(aws.StringValue(output.FileSystem.FileSystemId))
 
 	if _, err := waitFileSystemCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "waiting for FSx ONTAP File System (%s) create: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for FSx for NetApp ONTAP File System (%s) create: %s", d.Id(), err)
 	}
 
 	return append(diags, resourceOntapFileSystemRead(ctx, d, meta)...)
