@@ -1481,7 +1481,7 @@ func TestAccS3Object_keyWithSlashesMigrated(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				ExternalProviders: map[string]resource.ExternalProvider{
-					// Final version for aws_s3_object_copy using AWS SDK for Go v1.
+					// Final version for aws_s3_object using AWS SDK for Go v1.
 					"aws": {
 						Source:            "hashicorp/aws",
 						VersionConstraint: "5.16.0",
