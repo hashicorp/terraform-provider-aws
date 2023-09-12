@@ -12,6 +12,7 @@ const (
 	errCodeNoSuchAsyncRequest           = "NoSuchAsyncRequest"
 	errCodeNoSuchBucket                 = "NoSuchBucket"
 	errCodeNoSuchBucketPolicy           = "NoSuchBucketPolicy"
+	errCodeNoSuchConfiguration          = "NoSuchConfiguration"
 	errCodeNoSuchLifecycleConfiguration = "NoSuchLifecycleConfiguration"
 	errCodeNoSuchMultiRegionAccessPoint = "NoSuchMultiRegionAccessPoint"
 	errCodeNoSuchOutpost                = "NoSuchOutpost"
