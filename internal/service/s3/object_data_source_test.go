@@ -719,9 +719,9 @@ resource "aws_s3_bucket" "test" {
 }
 
 resource "aws_s3_object" "test" {
-  bucket       = aws_s3_bucket.test.bucket
-  key          = "%[1]s-key"
-  content      = "Keep Calm and Carry On"
+  bucket = aws_s3_bucket.test.bucket
+  key    = "%[1]s-key"
+  content = "Keep Calm and Carry On"
 
   checksum_algorithm = "SHA256"
 }
