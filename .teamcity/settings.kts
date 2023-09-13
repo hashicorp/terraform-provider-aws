@@ -129,14 +129,15 @@ object FullBuild : BuildType({
         cleanCheckout = true
     }
 
-    script {
-        name = "Configure Go"
-        scriptContent = File("./scripts/configure_goenv.sh").readText()
-    }
-
-    script {
-        name = "Performance"
-        scriptContent = File("./scripts/performance.sh").readText()
+    steps {
+        script {
+            name = "Configure Go"
+            scriptContent = File("./scripts/configure_goenv.sh").readText()
+        }
+        script {
+            name = "Performance"
+            scriptContent = File("./scripts/performance.sh").readText()
+        }
     }
 
     features {
