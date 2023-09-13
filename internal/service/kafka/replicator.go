@@ -3,6 +3,7 @@ package kafka
 import (
 	"context"
 	"errors"
+	"fmt"
 	"log"
 	"time"
 
@@ -59,9 +60,9 @@ func ResourceReplicator() *schema.Resource {
 				Optional: true,
 			},
 			"service_execution_role_arn": {
-				Type:     schema.TypeString,
+				Type:         schema.TypeString,
 				ValidateFunc: verify.ValidARN,
-				Required: true,
+				Required:     true,
 			},
 			"kafka_clusters": {
 				Type:     schema.TypeList,
@@ -77,8 +78,8 @@ func ResourceReplicator() *schema.Resource {
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"msk_cluster_arn": {
-										Type:     schema.TypeString,
-										Required: true,
+										Type:         schema.TypeString,
+										Required:     true,
 										ValidateFunc: verify.ValidARN,
 									},
 								},
@@ -119,9 +120,9 @@ func ResourceReplicator() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"source_kafka_cluster_arn": {
-							Type:     schema.TypeString,
-							Required: true,
-							ForceNew: true,
+							Type:         schema.TypeString,
+							Required:     true,
+							ForceNew:     true,
 							ValidateFunc: verify.ValidARN,
 						},
 						"source_kafka_cluster_alias": {
@@ -129,9 +130,9 @@ func ResourceReplicator() *schema.Resource {
 							Computed: true,
 						},
 						"target_kafka_cluster_arn": {
-							Type:     schema.TypeString,
-							Required: true,
-							ForceNew: true,
+							Type:         schema.TypeString,
+							Required:     true,
+							ForceNew:     true,
 							ValidateFunc: verify.ValidARN,
 						},
 						"target_kafka_cluster_alias": {
@@ -282,15 +283,21 @@ func resourceReplicatorRead(ctx context.Context, d *schema.ResourceData, meta in
 		return append(diags, create.DiagError(names.Kafka, create.ErrActionReading, ResNameReplicator, d.Id(), err)...)
 	}
 
+	sourceAlias	:= out.ReplicationInfoList[0].SourceKafkaClusterAlias
+	targetAlias := out.ReplicationInfoList[0].TargetKafkaClusterAlias
+	clustersArn := out.KafkaClusters
 
-	sourceClusterArnFromState, ok:= d.GetOk("replication_info_list.0.source_kafka_cluster_arn")
-	if !ok {
-		return append(diags, create.DiagError(names.Kafka, create.ErrActionReading, ResNameReplicator, d.Id(), errors.New("source cluster not found in state"))...)
-	}
+	var sourceARN *string
+	var targetARN *string
 
-	targetClusterArnFromState, ok := d.GetOk("replication_info_list.0.target_kafka_cluster_arn")
-	if !ok {
-		return append(diags, create.DiagError(names.Kafka, create.ErrActionReading, ResNameReplicator, d.Id(), errors.New("target cluster not found in state"))...)
+	for _,arn := range clustersArn {
+		fmt.Println(*arn.AmazonMskCluster.MskClusterArn)
+		clusterAlias := *arn.KafkaClusterAlias
+		if clusterAlias == *sourceAlias {
+			sourceARN = arn.AmazonMskCluster.MskClusterArn
+		} else if clusterAlias == *targetAlias {
+			targetARN = arn.AmazonMskCluster.MskClusterArn
+		}
 	}
 
 	d.Set("arn", out.ReplicatorArn)
@@ -299,7 +306,9 @@ func resourceReplicatorRead(ctx context.Context, d *schema.ResourceData, meta in
 	d.Set("description", out.ReplicatorDescription)
 	d.Set("service_execution_role_arn", out.ServiceExecutionRoleArn)
 	d.Set("kafka_clusters", flattenClusters(out.KafkaClusters))
-	d.Set("replication_info_list", flattenReplicationInfoList(out.ReplicationInfoList, aws.String(sourceClusterArnFromState.(string)), aws.String(targetClusterArnFromState.(string))))
+	d.Set("replication_info_list", flattenReplicationInfoList(out.ReplicationInfoList, sourceARN, targetARN))
+
+	setTagsOutV2(ctx, out.Tags)
 
 	return diags
 }
@@ -468,9 +477,14 @@ func flattenReplicationInfoList(apiObjects []types.ReplicationInfoDescription, s
 }
 
 func flattenReplicationInfo(apiObject types.ReplicationInfoDescription, sourceCluster, targetCluster *string) map[string]interface{} {
-	tfMap := map[string]interface{}{
-		"source_kafka_cluster_arn": aws.ToString(sourceCluster),
-		"target_kafka_cluster_arn": aws.ToString(targetCluster),
+	tfMap := map[string]interface{}{}
+
+	if v := sourceCluster; v != nil {
+		tfMap["source_kafka_cluster_arn"] = aws.ToString(v)
+	}
+
+	if v := targetCluster; v != nil {
+		tfMap["target_kafka_cluster_arn"] = aws.ToString(v)
 	}
 
 	if v := apiObject.SourceKafkaClusterAlias; v != nil {

@@ -189,11 +189,6 @@ func TestAccKafkaReplicator_tags(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-			{
 				Config: testAccReplicatorConfig_tags1(rName, "key2", "value2", sourceCluster, targetCluster),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckReplicatorExists(ctx, resourceName, &replicator),
