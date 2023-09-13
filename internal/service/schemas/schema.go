@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/YakDriver/regexache"
+	"github.com/aws/aws-sdk-go-v2/service/schemas/types"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/schemas"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
@@ -77,7 +78,7 @@ func ResourceSchema() *schema.Resource {
 			"type": {
 				Type:         schema.TypeString,
 				Required:     true,
-				ValidateFunc: validation.StringInSlice(schemas.Type_Values(), true),
+				ValidateFunc: validation.StringInSlice(schemaTypes(), true),
 			},
 
 			"version": {
@@ -233,4 +234,11 @@ func resourceSchemaDelete(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 
 	return diags
+}
+
+func schemaTypes() []string {
+	return []string{
+		string(types.TypeOpenApi3),
+		string(types.TypeJSONSchemaDraft4),
+	}
 }
