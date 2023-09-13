@@ -68,7 +68,7 @@ func TestAccServiceCatalogProduct_basic(t *testing.T) {
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
 					"accept_language",
-					"provisioning_artifact_parameters",
+					"provisioning_artifact_parameters.0.disable_template_validation",
 				},
 			},
 		},
@@ -208,7 +208,7 @@ func TestAccServiceCatalogProduct_physicalID(t *testing.T) {
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
 					"accept_language",
-					"provisioning_artifact_parameters",
+					"provisioning_artifact_parameters.0.disable_template_validation",
 				},
 			},
 		},

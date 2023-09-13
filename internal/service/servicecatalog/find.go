@@ -149,3 +149,24 @@ func FindTagOptionResourceAssociation(ctx context.Context, conn *servicecatalog.
 
 	return result, err
 }
+
+func findProductByID(ctx context.Context, conn *servicecatalog.ServiceCatalog, productID string) (*servicecatalog.DescribeProductAsAdminOutput, error) {
+	in := &servicecatalog.DescribeProductAsAdminInput{
+		Id: aws.String(productID),
+	}
+
+	out, err := conn.DescribeProductAsAdminWithContext(ctx, in)
+
+	if tfawserr.ErrCodeEquals(err, servicecatalog.ErrCodeResourceNotFoundException) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: in,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	return out, nil
+}
