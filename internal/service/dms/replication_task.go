@@ -235,7 +235,11 @@ func resourceReplicationTaskUpdate(ctx context.Context, d *schema.ResourceData, 
 		}
 
 		if d.HasChange("replication_task_settings") {
-			input.ReplicationTaskSettings = aws.String(d.Get("replication_task_settings").(string))
+			if v, ok := d.GetOk("replication_task_settings"); ok {
+				input.ReplicationTaskSettings = aws.String(v.(string))
+			} else {
+				input.ReplicationTaskSettings = nil
+			}
 		}
 
 		status := d.Get("status").(string)
