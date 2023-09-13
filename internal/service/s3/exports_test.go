@@ -5,6 +5,8 @@ package s3
 
 // Exports for use in tests only.
 var (
+	ResourceDirectoryBucket = newResourceDirectoryBucket
+
 	DeleteAllObjectVersions           = deleteAllObjectVersions
 	EmptyBucket                       = emptyBucket
 	FindBucket                        = findBucket

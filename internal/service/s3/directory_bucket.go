@@ -13,8 +13,10 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/booldefault"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -43,6 +45,7 @@ func (r *resourceDirectoryBucket) Schema(ctx context.Context, request resource.S
 			},
 			"force_destroy": schema.BoolAttribute{
 				Optional: true,
+				Computed: true,
 				Default:  booldefault.StaticBool(false),
 			},
 			names.AttrID: framework.IDAttribute(),
@@ -91,11 +94,14 @@ func (r *resourceDirectoryBucket) Read(ctx context.Context, request resource.Rea
 
 	conn := r.Meta().S3Client(ctx)
 
-	input := &s3.HeadBucketInput{
-		Bucket: flex.StringFromFramework(ctx, data.ID),
-	}
+	err := findBucket(ctx, conn, data.ID.ValueString())
 
-	_, err := conn.HeadBucket(ctx, input)
+	if tfresource.NotFound(err) {
+		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
+		response.State.RemoveResource(ctx)
+
+		return
+	}
 
 	if err != nil {
 		response.Diagnostics.AddError(fmt.Sprintf("reading S3 Directory Bucket (%s)", data.ID.ValueString()), err.Error())
