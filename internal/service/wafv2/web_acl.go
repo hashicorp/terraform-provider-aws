@@ -264,7 +264,7 @@ func resourceWebACLUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 	conn := meta.(*conns.AWSClient).WAFV2Conn(ctx)
 
 	if d.HasChangesExcept("tags", "tags_all") {
-		aclId := d.Id()
+		aclID := d.Id()
 		aclName := d.Get("name").(string)
 		aclScope := d.Get("scope").(string)
 		aclLockToken := d.Get("lock_token").(string)
@@ -272,9 +272,9 @@ func resourceWebACLUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 		// so that the provider will not remove the Shield rule when changes are applied to the WebACL.
 		rules := expandWebACLRules(d.Get("rule").(*schema.Set).List())
 		if sr := findShieldRule(rules); len(sr) == 0 {
-			output, err := FindWebACLByThreePartKey(ctx, conn, aclId, aclName, aclScope)
+			output, err := FindWebACLByThreePartKey(ctx, conn, aclID, aclName, aclScope)
 			if err != nil {
-				return diag.Errorf("reading WAFv2 WebACL (%s): %s", aclId, err)
+				return diag.Errorf("reading WAFv2 WebACL (%s): %s", aclID, err)
 			}
 			rules = append(rules, findShieldRule(output.WebACL.Rules)...)
 		}
@@ -283,7 +283,7 @@ func resourceWebACLUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 			AssociationConfig: expandAssociationConfig(d.Get("association_config").([]interface{})),
 			CaptchaConfig:     expandCaptchaConfig(d.Get("captcha_config").([]interface{})),
 			DefaultAction:     expandDefaultAction(d.Get("default_action").([]interface{})),
-			Id:                aws.String(aclId),
+			Id:                aws.String(aclID),
 			LockToken:         aws.String(aclLockToken),
 			Name:              aws.String(aclName),
 			Rules:             rules,
@@ -308,11 +308,7 @@ func resourceWebACLUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 		}, wafv2.ErrCodeWAFUnavailableEntityException)
 
 		if tfawserr.ErrCodeEquals(err, wafv2.ErrCodeWAFOptimisticLockException) {
-			return retryResourceWebACLUpdateOptmisticLockFailure(ctx, conn, aclId, aclName, aclScope, aclLockToken, input)
-		}
-
-		if tfawserr.ErrCodeEquals(err, wafv2.ErrCodeWAFOptimisticLockException) {
-			return diag.Errorf("updating WAFv2 WebACL (%s), resource has changed since last refresh please run a new plan before applying again: %s", d.Id(), err)
+			return retryResourceWebACLUpdateOptmisticLockFailure(ctx, conn, aclID, aclName, aclScope, aclLockToken, input)
 		}
 
 		if err != nil {
@@ -371,7 +367,6 @@ func resourceWebACLDelete(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 
 	if err != nil {
-		fmt.Printf("[INFO] Whoops didn't mean to get here: %s\n", err)
 		return diag.Errorf("deleting WAFv2 WebACL (%s): %s", d.Id(), err)
 	}
 
