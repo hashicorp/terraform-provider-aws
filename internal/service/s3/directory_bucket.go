@@ -8,8 +8,10 @@ import (
 	"fmt"
 
 	"github.com/aws/aws-sdk-go-v2/service/s3"
+	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/booldefault"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
@@ -38,6 +40,10 @@ func (r *resourceDirectoryBucket) Schema(ctx context.Context, request resource.S
 			names.AttrARN: framework.ARNAttributeComputedOnly(),
 			"bucket": schema.StringAttribute{
 				Required: true,
+			},
+			"force_destroy": schema.BoolAttribute{
+				Optional: true,
+				Default:  booldefault.StaticBool(false),
 			},
 			names.AttrID: framework.IDAttribute(),
 		},
@@ -137,6 +143,27 @@ func (r *resourceDirectoryBucket) Delete(ctx context.Context, request resource.D
 		Bucket: flex.StringFromFramework(ctx, data.ID),
 	})
 
+	if tfawserr.ErrCodeEquals(err, errCodeBucketNotEmpty) {
+		if data.ForceDestroy.ValueBool() {
+			// Empty the bucket and try again.
+			_, err = emptyBucket(ctx, conn, data.ID.ValueString(), false)
+
+			if err != nil {
+				response.Diagnostics.AddError(fmt.Sprintf("emptying S3 Directory Bucket (%s)", data.ID.ValueString()), err.Error())
+
+				return
+			}
+
+			_, err = conn.DeleteBucket(ctx, &s3.DeleteBucketInput{
+				Bucket: flex.StringFromFramework(ctx, data.ID),
+			})
+		}
+	}
+
+	if tfawserr.ErrCodeEquals(err, errCodeNoSuchBucket) {
+		return
+	}
+
 	if err != nil {
 		response.Diagnostics.AddError(fmt.Sprintf("deleting S3 Directory Bucket (%s)", data.ID.ValueString()), err.Error())
 
@@ -145,7 +172,8 @@ func (r *resourceDirectoryBucket) Delete(ctx context.Context, request resource.D
 }
 
 type resourceDirectoryBucketData struct {
-	ARN    types.String `tfsdk:"arn"`
-	Bucket types.String `tfsdk:"bucket"`
-	ID     types.String `tfsdk:"id"`
+	ARN          types.String `tfsdk:"arn"`
+	Bucket       types.String `tfsdk:"bucket"`
+	ForceDestroy types.Bool   `tfsdk:"force_destroy"`
+	ID           types.String `tfsdk:"id"`
 }

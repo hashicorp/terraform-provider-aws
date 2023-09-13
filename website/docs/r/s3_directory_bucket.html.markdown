@@ -23,6 +23,7 @@ resource "aws_s3_directory_bucket" "example" {
 This resource supports the following arguments:
 
 * `bucket` - (Required) Name of the bucket.
+* `force_destroy` - (Optional, Default:`false`) Boolean that indicates all objects should be deleted from the bucket *when the bucket is destroyed* so that the bucket can be destroyed without error. These objects are *not* recoverable. This only deletes objects when the bucket is destroyed, *not* when setting this parameter to `true`. Once this parameter is set to `true`, there must be a successful `terraform apply` run before a destroy is required to update this value in the resource state. Without a successful `terraform apply` after this parameter is set, this flag will have no effect. If setting this field in the same operation that would require replacing the bucket or destroying the bucket, this flag will not work. Additionally when importing a bucket, a successful `terraform apply` is required to set this value in state before it will take effect on a destroy operation.
 
 ## Attribute Reference
 
