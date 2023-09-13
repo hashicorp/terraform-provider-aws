@@ -21,6 +21,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -561,14 +562,32 @@ func FindStorageVirtualMachineByID(ctx context.Context, conn *fsx.FSx, id string
 		StorageVirtualMachineIds: []*string{aws.String(id)},
 	}
 
-	var storageVirtualMachines []*fsx.StorageVirtualMachine
+	return findStorageVirtualMachine(ctx, conn, input, tfslices.PredicateTrue[*fsx.StorageVirtualMachine]())
+}
+
+func findStorageVirtualMachine(ctx context.Context, conn *fsx.FSx, input *fsx.DescribeStorageVirtualMachinesInput, filter tfslices.Predicate[*fsx.StorageVirtualMachine]) (*fsx.StorageVirtualMachine, error) {
+	output, err := findStorageVirtualMachines(ctx, conn, input, filter)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSinglePtrResult(output)
+}
+
+func findStorageVirtualMachines(ctx context.Context, conn *fsx.FSx, input *fsx.DescribeStorageVirtualMachinesInput, filter tfslices.Predicate[*fsx.StorageVirtualMachine]) ([]*fsx.StorageVirtualMachine, error) {
+	var output []*fsx.StorageVirtualMachine
 
 	err := conn.DescribeStorageVirtualMachinesPagesWithContext(ctx, input, func(page *fsx.DescribeStorageVirtualMachinesOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
 
-		storageVirtualMachines = append(storageVirtualMachines, page.StorageVirtualMachines...)
+		for _, v := range page.StorageVirtualMachines {
+			if v != nil && filter(v) {
+				output = append(output, v)
+			}
+		}
 
 		return !lastPage
 	})
@@ -584,15 +603,7 @@ func FindStorageVirtualMachineByID(ctx context.Context, conn *fsx.FSx, id string
 		return nil, err
 	}
 
-	if len(storageVirtualMachines) == 0 || storageVirtualMachines[0] == nil {
-		return nil, tfresource.NewEmptyResultError(input)
-	}
-
-	if count := len(storageVirtualMachines); count > 1 {
-		return nil, tfresource.NewTooManyResultsError(count, input)
-	}
-
-	return storageVirtualMachines[0], nil
+	return output, nil
 }
 
 func statusStorageVirtualMachine(ctx context.Context, conn *fsx.FSx, id string) retry.StateRefreshFunc {
