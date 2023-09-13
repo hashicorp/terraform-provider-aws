@@ -13,7 +13,7 @@ if [[ -n "%ACCTEST_ROLE_ARN%" ]]; then
     touch "${conf}"
     chmod 600 "${conf}"
     cat <<EOF >"${conf}"
-[profile memtest]
+[profile perftest]
 role_arn       = %ACCTEST_ROLE_ARN%
 source_profile = source
 
@@ -26,7 +26,7 @@ EOF
     unset AWS_SECRET_ACCESS_KEY
 
     export AWS_CONFIG_FILE="${conf}"
-    export AWS_PROFILE=memtest
+    export AWS_PROFILE=perftest
 fi
 
 go install github.com/google/pprof@latest
