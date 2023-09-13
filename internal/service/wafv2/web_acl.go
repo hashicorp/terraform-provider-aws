@@ -323,7 +323,7 @@ func retryResourceWebACLUpdateOptmisticLockFailure(ctx context.Context, conn *wa
 	webAcl, err := FindWebACLByThreePartKey(ctx, conn, id, name, scope)
 	if err != nil {
 		return diag.Errorf("refreshing WAFv2 WebACL (%s), attempting to refresh WAFv2 WebACL to retrieve new LockToken: %s", id, err)
-	} else if webAcl.LockToken != nil && *webAcl.LockToken != lockToken {
+	} else if aws.StringValue(webAcl.LockToken) != lockToken {
 		// Retrieved a new lock token, retry due to other processes modifying the web acl out of band (See: https://docs.aws.amazon.com/sdk-for-go/api/service/shield/#Shield.EnableApplicationLayerAutomaticResponse)
 		input.LockToken = webAcl.LockToken
 		_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, webACLDeleteTimeout, func() (interface{}, error) {
@@ -377,7 +377,7 @@ func retryResourceWebACLDeleteOptmisticLockFailure(ctx context.Context, conn *wa
 	webAcl, err := FindWebACLByThreePartKey(ctx, conn, id, name, scope)
 	if err != nil {
 		return diag.Errorf("refreshing WAFv2 WebACL (%s), attempting to refresh WAFv2 WebACL to retrieve new LockToken: %s", id, err)
-	} else if webAcl.LockToken != nil && *webAcl.LockToken != lockToken {
+	} else if aws.StringValue(webAcl.LockToken) != lockToken {
 		// got a new lock token, retry due to other processes modifying the web acl out of band (See: https://docs.aws.amazon.com/sdk-for-go/api/service/shield/#Shield.EnableApplicationLayerAutomaticResponse)
 		retryInput := &wafv2.DeleteWebACLInput{
 			Id:        aws.String(id),
