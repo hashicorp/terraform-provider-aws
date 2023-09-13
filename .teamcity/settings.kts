@@ -135,9 +135,26 @@ object FullBuild : BuildType({
             scriptContent = File("./scripts/configure_goenv.sh").readText()
         }
         script {
-            name = "Performance"
+            name = "Performance 1"
             scriptContent = File("./scripts/performance.sh").readText()
         }
+        script {
+            name = "Performance 2"
+            scriptContent = File("./scripts/performance.sh").readText()
+        }
+        script {
+            name = "Performance 3"
+            scriptContent = File("./scripts/performance.sh").readText()
+        }
+        script {
+            name = "Performance 4"
+            scriptContent = File("./scripts/performance.sh").readText()
+        }
+        script {
+            name = "Analysis"
+            scriptContent = File("./scripts/performance.sh").readText()
+        }
+
     }
 
     features {
