@@ -245,9 +245,10 @@ func resourceOntapStorageVirtualMachineCreate(ctx context.Context, d *schema.Res
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).FSxConn(ctx)
 
+	name := d.Get("name").(string)
 	input := &fsx.CreateStorageVirtualMachineInput{
 		FileSystemId: aws.String(d.Get("file_system_id").(string)),
-		Name:         aws.String(d.Get("name").(string)),
+		Name:         aws.String(name),
 		Tags:         getTagsIn(ctx),
 	}
 
@@ -263,16 +264,16 @@ func resourceOntapStorageVirtualMachineCreate(ctx context.Context, d *schema.Res
 		input.SvmAdminPassword = aws.String(v.(string))
 	}
 
-	result, err := conn.CreateStorageVirtualMachineWithContext(ctx, input)
+	output, err := conn.CreateStorageVirtualMachineWithContext(ctx, input)
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating FSx Storage Virtual System: %s", err)
+		return sdkdiag.AppendErrorf(diags, "creating FSx ONTAP Storage Virtual Machine (%s): %s", name, err)
 	}
 
-	d.SetId(aws.StringValue(result.StorageVirtualMachine.StorageVirtualMachineId))
+	d.SetId(aws.StringValue(output.StorageVirtualMachine.StorageVirtualMachineId))
 
 	if _, err := waitStorageVirtualMachineCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "waiting for FSx Storage Virtual Machine (%s) create: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for FSx ONTAP Storage Virtual Machine (%s) create: %s", d.Id(), err)
 	}
 
 	return append(diags, resourceOntapStorageVirtualMachineRead(ctx, d, meta)...)
