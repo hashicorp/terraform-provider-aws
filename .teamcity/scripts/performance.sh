@@ -55,38 +55,22 @@ function ssmtest {
 }
 
 function analysis {
-    #perf_main_memalloc1=$( pprof -top -flat -sample_index=alloc_space -unit=mb memvpc1.prof | head -3 | tr '\n' ' ' | sed -E 's/.*% of ([0-9.]+)MB total.*/\1/g' )
-    #perf_main_meminuse1=$( pprof -top -flat -sample_index=inuse_space -unit=mb memvpc1.prof | head -3 | tr '\n' ' ' | sed -E 's/.*% of ([0-9.]+)MB total.*/\1/g' )
-    #perf_main_cputime1=$( pprof -top -flat -sample_index=cpu cpuvpc1.prof | head -5 | tr '\n' ' ' | sed -E 's/.*% of ([0-9.]+)s total.*/\1/g' ) 2>/dev/null
+    perf_main_memalloc1=$( pprof -top -flat -sample_index=alloc_space -unit=mb memvpc1.prof | head -3 | tr '\n' ' ' | sed -E 's/.*% of ([0-9.]+)MB total.*/\1/g' )
+    perf_main_meminuse1=$( pprof -top -flat -sample_index=inuse_space -unit=mb memvpc1.prof | head -3 | tr '\n' ' ' | sed -E 's/.*% of ([0-9.]+)MB total.*/\1/g' )
+    perf_main_cputime1=$( pprof -top -flat -sample_index=cpu cpuvpc1.prof | head -5 | tr '\n' ' ' | sed -E 's/.*% of ([0-9.]+)s total.*/\1/g' ) 2>/dev/null
 
-    #perf_main_memalloc2=$( pprof -top -flat -sample_index=alloc_space -unit=mb memssm1.prof | head -3 | tr '\n' ' ' | sed -E 's/.*% of ([0-9.]+)MB total.*/\1/g' )
-    #perf_main_meminuse2=$( pprof -top -flat -sample_index=inuse_space -unit=mb memssm1.prof | head -3 | tr '\n' ' ' | sed -E 's/.*% of ([0-9.]+)MB total.*/\1/g' )
-    #perf_main_cputime2=$( pprof -top -flat -sample_index=cpu cpussm1.prof | head -5 | tr '\n' ' ' | sed -E 's/.*% of ([0-9.]+)s total.*/\1/g' ) 2>/dev/null
+    perf_main_memalloc2=$( pprof -top -flat -sample_index=alloc_space -unit=mb memssm1.prof | head -3 | tr '\n' ' ' | sed -E 's/.*% of ([0-9.]+)MB total.*/\1/g' )
+    perf_main_meminuse2=$( pprof -top -flat -sample_index=inuse_space -unit=mb memssm1.prof | head -3 | tr '\n' ' ' | sed -E 's/.*% of ([0-9.]+)MB total.*/\1/g' )
+    perf_main_cputime2=$( pprof -top -flat -sample_index=cpu cpussm1.prof | head -5 | tr '\n' ' ' | sed -E 's/.*% of ([0-9.]+)s total.*/\1/g' ) 2>/dev/null
 
-    #perf_latest_memalloc1=$( pprof -top -flat -sample_index=alloc_space -unit=mb memvpc2.prof | head -3 | tr '\n' ' ' | sed -E 's/.*% of ([0-9.]+)MB total.*/\1/g' )
-    #perf_latest_meminuse1=$( pprof -top -flat -sample_index=inuse_space -unit=mb memvpc2.prof | head -3 | tr '\n' ' ' | sed -E 's/.*% of ([0-9.]+)MB total.*/\1/g' )
-    #perf_latest_cputime1=$( pprof -top -flat -sample_index=cpu cpuvpc2.prof | head -5 | tr '\n' ' ' | sed -E 's/.*% of ([0-9.]+)s total.*/\1/g' ) 2>/dev/null
+    perf_latest_memalloc1=$( pprof -top -flat -sample_index=alloc_space -unit=mb memvpc2.prof | head -3 | tr '\n' ' ' | sed -E 's/.*% of ([0-9.]+)MB total.*/\1/g' )
+    perf_latest_meminuse1=$( pprof -top -flat -sample_index=inuse_space -unit=mb memvpc2.prof | head -3 | tr '\n' ' ' | sed -E 's/.*% of ([0-9.]+)MB total.*/\1/g' )
+    perf_latest_cputime1=$( pprof -top -flat -sample_index=cpu cpuvpc2.prof | head -5 | tr '\n' ' ' | sed -E 's/.*% of ([0-9.]+)s total.*/\1/g' ) 2>/dev/null
 
-    #perf_latest_memalloc2=$( pprof -top -flat -sample_index=alloc_space -unit=mb memssm2.prof | head -3 | tr '\n' ' ' | sed -E 's/.*% of ([0-9.]+)MB total.*/\1/g' )
-    #perf_latest_meminuse2=$( pprof -top -flat -sample_index=inuse_space -unit=mb memssm2.prof | head -3 | tr '\n' ' ' | sed -E 's/.*% of ([0-9.]+)MB total.*/\1/g' )
-    #perf_latest_cputime2=$( pprof -top -flat -sample_index=cpu cpussm2.prof | head -5 | tr '\n' ' ' | sed -E 's/.*% of ([0-9.]+)s total.*/\1/g' ) 2>/dev/null
+    perf_latest_memalloc2=$( pprof -top -flat -sample_index=alloc_space -unit=mb memssm2.prof | head -3 | tr '\n' ' ' | sed -E 's/.*% of ([0-9.]+)MB total.*/\1/g' )
+    perf_latest_meminuse2=$( pprof -top -flat -sample_index=inuse_space -unit=mb memssm2.prof | head -3 | tr '\n' ' ' | sed -E 's/.*% of ([0-9.]+)MB total.*/\1/g' )
+    perf_latest_cputime2=$( pprof -top -flat -sample_index=cpu cpussm2.prof | head -5 | tr '\n' ' ' | sed -E 's/.*% of ([0-9.]+)s total.*/\1/g' ) 2>/dev/null
 
-    perf_main_memalloc1="2837.3"
-    perf_main_meminuse1="38.2"
-    perf_main_cputime1="281.23"
-
-    perf_main_memalloc2="341.2"
-    perf_main_meminuse2="9834"
-    perf_main_cputime2="34.23"
-
-    perf_latest_memalloc1="324.812"
-    perf_latest_meminuse1="324.56"
-    perf_latest_cputime1="7873.34"
-
-    perf_latest_memalloc2="3422.1"
-    perf_latest_meminuse2="11.11"
-    perf_latest_cputime2="31.11"
-    
     alloc=$( bc -l <<< "((${perf_main_memalloc1}/${perf_latest_memalloc1})-1) + ((${perf_main_memalloc2}/${perf_latest_memalloc2})-1)/2" )
     inuse=$( bc -l <<< "((${perf_main_meminuse1}/${perf_latest_meminuse1})-1) + ((${perf_main_meminuse2}/${perf_latest_meminuse2})-1)/2" )
     cputime=$( bc -l <<< "((${perf_main_cputime1}/${perf_latest_cputime1})-1) + ((${perf_main_cputime2}/${perf_latest_cputime2})-1)/2" )
@@ -95,9 +79,6 @@ function analysis {
     printf ";Inuse:%.4f%%%%" "${inuse}"
     printf ";CPUtime:%.4f%%%%\n" "${cputime}"
 }
-
-analysis
-exit 0
 
 if [ -f "memvpc1.prof" -a -f "memssm1.prof" -a -f "memvpc2.prof" -a -f "memssm2.prof" ]; then
     echo "Tests complete. Analyzing results..."
