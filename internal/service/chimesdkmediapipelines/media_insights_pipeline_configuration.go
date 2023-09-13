@@ -123,7 +123,7 @@ func AmazonTranscribeCallAnalyticsProcessorConfigurationSchema() *schema.Schema 
 						Type: schema.TypeString,
 						ValidateFunc: validation.All(
 							validation.StringLenBetween(1, 200),
-							validation.StringMatch(regexache.MustCompile(`^[0-9a-zA-Z._-]+`), "Must be a valid Category Name matching expression: ^[0-9a-zA-Z._-]+"),
+							validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_.-]+`), "Must be a valid Category Name matching expression: ^[0-9A-Za-z_.-]+"),
 						),
 					},
 				},
@@ -155,7 +155,7 @@ func AmazonTranscribeCallAnalyticsProcessorConfigurationSchema() *schema.Schema 
 					Optional: true,
 					ValidateFunc: validation.All(
 						validation.StringLenBetween(0, 200),
-						validation.StringMatch(regexache.MustCompile(`^[0-9a-zA-Z._-]+`), "Must be a valid language model name matching expression: ^[0-9a-zA-Z._-]+"),
+						validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_.-]+`), "Must be a valid language model name matching expression: ^[0-9A-Za-z_.-]+"),
 					),
 				},
 				"partial_results_stability": {
@@ -183,7 +183,7 @@ func AmazonTranscribeCallAnalyticsProcessorConfigurationSchema() *schema.Schema 
 					Optional: true,
 					ValidateFunc: validation.All(
 						validation.StringLenBetween(0, 200),
-						validation.StringMatch(regexache.MustCompile(`^[0-9a-zA-Z._-]+`), "Must be a valid vocabulary filter name matching expression: ^[0-9a-zA-Z._-]+"),
+						validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_.-]+`), "Must be a valid vocabulary filter name matching expression: ^[0-9A-Za-z_.-]+"),
 					),
 				},
 				"vocabulary_name": {
@@ -191,7 +191,7 @@ func AmazonTranscribeCallAnalyticsProcessorConfigurationSchema() *schema.Schema 
 					Optional: true,
 					ValidateFunc: validation.All(
 						validation.StringLenBetween(0, 200),
-						validation.StringMatch(regexache.MustCompile(`^[0-9a-zA-Z._-]+`), "Must be a valid vocabulary name matching expression: ^[0-9a-zA-Z._-]+"),
+						validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_.-]+`), "Must be a valid vocabulary name matching expression: ^[0-9A-Za-z_.-]+"),
 					),
 				},
 			},
@@ -266,7 +266,7 @@ func AmazonTranscribeProcessorConfigurationSchema() *schema.Schema {
 					Optional: true,
 					ValidateFunc: validation.All(
 						validation.StringLenBetween(0, 200),
-						validation.StringMatch(regexache.MustCompile(`^[0-9a-zA-Z._-]+`), "Must be a valid language model name matching expression: ^[0-9a-zA-Z._-]+"),
+						validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_.-]+`), "Must be a valid language model name matching expression: ^[0-9A-Za-z_.-]+"),
 					),
 				},
 				"partial_results_stability": {
@@ -297,7 +297,7 @@ func AmazonTranscribeProcessorConfigurationSchema() *schema.Schema {
 					Optional: true,
 					ValidateFunc: validation.All(
 						validation.StringLenBetween(0, 200),
-						validation.StringMatch(regexache.MustCompile(`^[0-9a-zA-Z._-]+`), "Must be a valid vocabulary filter name matching expression: ^[0-9a-zA-Z._-]+"),
+						validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_.-]+`), "Must be a valid vocabulary filter name matching expression: ^[0-9A-Za-z_.-]+"),
 					),
 				},
 				"vocabulary_name": {
@@ -305,7 +305,7 @@ func AmazonTranscribeProcessorConfigurationSchema() *schema.Schema {
 					Optional: true,
 					ValidateFunc: validation.All(
 						validation.StringLenBetween(0, 200),
-						validation.StringMatch(regexache.MustCompile(`^[0-9a-zA-Z._-]+`), "Must be a valid vocabulary name matching expression: ^[0-9a-zA-Z._-]+"),
+						validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_.-]+`), "Must be a valid vocabulary name matching expression: ^[0-9A-Za-z_.-]+"),
 					),
 				},
 			},
@@ -397,7 +397,7 @@ func RealTimeAlertConfigurationSchema() *schema.Schema {
 										"rule_name": {
 											Type:         schema.TypeString,
 											Required:     true,
-											ValidateFunc: validation.StringMatch(regexache.MustCompile(`^[0-9a-zA-Z._-]+`), "Must match the expression: ^[0-9a-zA-Z._-]+"),
+											ValidateFunc: validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_.-]+`), "Must match the expression: ^[0-9A-Za-z_.-]+"),
 										},
 									},
 								},
@@ -415,7 +415,7 @@ func RealTimeAlertConfigurationSchema() *schema.Schema {
 											MaxItems: 100,
 											Elem: &schema.Schema{
 												Type:         schema.TypeString,
-												ValidateFunc: validation.StringMatch(regexache.MustCompile(`^[\s0-9a-zA-Z'-]+`), "Must match the expression: ^[\\s0-9a-zA-Z'-]+"),
+												ValidateFunc: validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z\s'-]+`), "Must match the expression: ^[0-9A-Za-z\\s'-]+"),
 											},
 										},
 										"negate": {
@@ -426,7 +426,7 @@ func RealTimeAlertConfigurationSchema() *schema.Schema {
 										"rule_name": {
 											Type:         schema.TypeString,
 											Required:     true,
-											ValidateFunc: validation.StringMatch(regexache.MustCompile(`^[0-9a-zA-Z._-]+`), "Must match the expression: ^[0-9a-zA-Z._-]+"),
+											ValidateFunc: validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_.-]+`), "Must match the expression: ^[0-9A-Za-z_.-]+"),
 										},
 									},
 								},
@@ -440,7 +440,7 @@ func RealTimeAlertConfigurationSchema() *schema.Schema {
 										"rule_name": {
 											Type:         schema.TypeString,
 											Required:     true,
-											ValidateFunc: validation.StringMatch(regexache.MustCompile(`^[0-9a-zA-Z._-]+`), "Must match the expression: ^[0-9a-zA-Z._-]+"),
+											ValidateFunc: validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_.-]+`), "Must match the expression: ^[0-9A-Za-z_.-]+"),
 										},
 										"sentiment_type": {
 											Type:         schema.TypeString,

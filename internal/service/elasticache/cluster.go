@@ -326,6 +326,12 @@ func ResourceCluster() *schema.Resource {
 				Computed: true,
 				ForceNew: true,
 			},
+			"transit_encryption_enabled": {
+				Type:     schema.TypeBool,
+				ForceNew: true,
+				Optional: true,
+				Default:  false,
+			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
@@ -337,6 +343,7 @@ func ResourceCluster() *schema.Resource {
 			CustomizeDiffValidateClusterNumCacheNodes,
 			CustomizeDiffClusterMemcachedNodeType,
 			CustomizeDiffValidateClusterMemcachedSnapshotIdentifier,
+			CustomizeDiffValidateTransitEncryptionEnabled,
 			verify.SetTagsDiff,
 		),
 	}
@@ -435,6 +442,10 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 
 	if v, ok := d.GetOk("snapshot_name"); ok {
 		input.SnapshotName = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("transit_encryption_enabled"); ok {
+		input.TransitEncryptionEnabled = aws.Bool(v.(bool))
 	}
 
 	if v, ok := d.GetOk("az_mode"); ok {
@@ -543,6 +554,7 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta inter
 	d.Set("ip_discovery", c.IpDiscovery)
 	d.Set("network_type", c.NetworkType)
 	d.Set("preferred_outpost_arn", c.PreferredOutpostArn)
+	d.Set("transit_encryption_enabled", c.TransitEncryptionEnabled)
 
 	return diags
 }

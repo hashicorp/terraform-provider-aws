@@ -67,14 +67,47 @@ func (s *GRPCProviderServer) StopContext(ctx context.Context) context.Context {
 	return stoppable
 }
 
+func (s *GRPCProviderServer) serverCapabilities() *tfprotov5.ServerCapabilities {
+	return &tfprotov5.ServerCapabilities{
+		GetProviderSchemaOptional: true,
+	}
+}
+
+func (s *GRPCProviderServer) GetMetadata(ctx context.Context, req *tfprotov5.GetMetadataRequest) (*tfprotov5.GetMetadataResponse, error) {
+	ctx = logging.InitContext(ctx)
+
+	logging.HelperSchemaTrace(ctx, "Getting provider metadata")
+
+	resp := &tfprotov5.GetMetadataResponse{
+		DataSources:        make([]tfprotov5.DataSourceMetadata, 0, len(s.provider.DataSourcesMap)),
+		Resources:          make([]tfprotov5.ResourceMetadata, 0, len(s.provider.ResourcesMap)),
+		ServerCapabilities: s.serverCapabilities(),
+	}
+
+	for typeName := range s.provider.DataSourcesMap {
+		resp.DataSources = append(resp.DataSources, tfprotov5.DataSourceMetadata{
+			TypeName: typeName,
+		})
+	}
+
+	for typeName := range s.provider.ResourcesMap {
+		resp.Resources = append(resp.Resources, tfprotov5.ResourceMetadata{
+			TypeName: typeName,
+		})
+	}
+
+	return resp, nil
+}
+
 func (s *GRPCProviderServer) GetProviderSchema(ctx context.Context, req *tfprotov5.GetProviderSchemaRequest) (*tfprotov5.GetProviderSchemaResponse, error) {
 	ctx = logging.InitContext(ctx)
 
 	logging.HelperSchemaTrace(ctx, "Getting provider schema")
 
 	resp := &tfprotov5.GetProviderSchemaResponse{
-		ResourceSchemas:   make(map[string]*tfprotov5.Schema),
-		DataSourceSchemas: make(map[string]*tfprotov5.Schema),
+		DataSourceSchemas:  make(map[string]*tfprotov5.Schema, len(s.provider.DataSourcesMap)),
+		ResourceSchemas:    make(map[string]*tfprotov5.Schema, len(s.provider.ResourcesMap)),
+		ServerCapabilities: s.serverCapabilities(),
 	}
 
 	resp.Provider = &tfprotov5.Schema{

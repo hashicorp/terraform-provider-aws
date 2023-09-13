@@ -125,6 +125,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/lakeformation"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/lambda"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/lexmodels"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/lexv2models"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/licensemanager"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/lightsail"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/location"
@@ -332,6 +333,7 @@ func servicePackages(ctx context.Context) []conns.ServicePackage {
 		lakeformation.ServicePackage(ctx),
 		lambda.ServicePackage(ctx),
 		lexmodels.ServicePackage(ctx),
+		lexv2models.ServicePackage(ctx),
 		licensemanager.ServicePackage(ctx),
 		lightsail.ServicePackage(ctx),
 		location.ServicePackage(ctx),

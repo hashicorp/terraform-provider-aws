@@ -722,8 +722,8 @@ func (c *AWSClient) LexModelsConn(ctx context.Context) *lexmodelbuildingservice_
 	return errs.Must(conn[*lexmodelbuildingservice_sdkv1.LexModelBuildingService](ctx, c, names.LexModels))
 }
 
-func (c *AWSClient) LexModelsV2Client(ctx context.Context) *lexmodelsv2_sdkv2.Client {
-	return errs.Must(client[*lexmodelsv2_sdkv2.Client](ctx, c, names.LexModelsV2))
+func (c *AWSClient) LexV2ModelsClient(ctx context.Context) *lexmodelsv2_sdkv2.Client {
+	return errs.Must(client[*lexmodelsv2_sdkv2.Client](ctx, c, names.LexV2Models))
 }
 
 func (c *AWSClient) LicenseManagerConn(ctx context.Context) *licensemanager_sdkv1.LicenseManager {

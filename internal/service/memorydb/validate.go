@@ -41,7 +41,7 @@ func validateResourceNamePrefix(maxLength int) schema.SchemaValidateFunc {
 			regexache.MustCompile(`[-][-]`),
 			"The name may not contain two consecutive hyphens."),
 		validation.StringMatch(
-			regexache.MustCompile(`^[a-z0-9-]+$`),
+			regexache.MustCompile(`^[0-9a-z-]+$`),
 			"Only lowercase alphanumeric characters and hyphens are allowed."),
 	)
 }

@@ -149,7 +149,7 @@ var tmpl string
 
 // Annotation processing.
 var (
-	annotation = regexache.MustCompile(`^//\s*@([a-zA-Z0-9]+)(\(([^)]*)\))?\s*$`)
+	annotation = regexache.MustCompile(`^//\s*@([0-9A-Za-z]+)(\(([^)]*)\))?\s*$`)
 )
 
 type visitor struct {

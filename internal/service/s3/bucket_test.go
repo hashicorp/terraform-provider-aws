@@ -13,6 +13,8 @@ import (
 	"time"
 
 	"github.com/YakDriver/regexache"
+	aws_sdkv2 "github.com/aws/aws-sdk-go-v2/aws"
+	s3_sdkv2 "github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/endpoints"
 	"github.com/aws/aws-sdk-go/service/cloudformation"
@@ -2598,12 +2600,12 @@ func testAccCheckBucketExistsWithProvider(ctx context.Context, n string, provide
 func testAccCheckBucketAddObjects(ctx context.Context, n string, keys ...string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs := s.RootModule().Resources[n]
-		conn := acctest.Provider.Meta().(*conns.AWSClient).S3ConnURICleaningDisabled(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Client(ctx)
 
 		for _, key := range keys {
-			_, err := conn.PutObjectWithContext(ctx, &s3.PutObjectInput{
-				Bucket: aws.String(rs.Primary.ID),
-				Key:    aws.String(key),
+			_, err := conn.PutObject(ctx, &s3_sdkv2.PutObjectInput{
+				Bucket: aws_sdkv2.String(rs.Primary.ID),
+				Key:    aws_sdkv2.String(key),
 			})
 
 			if err != nil {

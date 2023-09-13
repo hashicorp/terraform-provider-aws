@@ -52,7 +52,7 @@ func ResourceRepository() *schema.Resource {
 				ForceNew: true,
 				ValidateFunc: validation.All(
 					validation.StringLenBetween(2, 205),
-					validation.StringMatch(regexache.MustCompile(`(?:[a-z0-9]+(?:[._-][a-z0-9]+)*/)*[a-z0-9]+(?:[._-][a-z0-9]+)*`), "see: https://docs.aws.amazon.com/AmazonECRPublic/latest/APIReference/API_CreateRepository.html#API_CreateRepository_RequestSyntax"),
+					validation.StringMatch(regexache.MustCompile(`(?:[0-9a-z]+(?:[._-][0-9a-z]+)*/)*[0-9a-z]+(?:[._-][0-9a-z]+)*`), "see: https://docs.aws.amazon.com/AmazonECRPublic/latest/APIReference/API_CreateRepository.html#API_CreateRepository_RequestSyntax"),
 				),
 			},
 			"catalog_data": {

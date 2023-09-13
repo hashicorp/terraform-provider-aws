@@ -188,8 +188,8 @@ func ResourceGraphQLAPI() *schema.Resource {
 				Required: true,
 				ValidateFunc: func(v interface{}, k string) (ws []string, errors []error) {
 					value := v.(string)
-					if !regexache.MustCompile(`[_A-Za-z][_0-9A-Za-z]*`).MatchString(value) {
-						errors = append(errors, fmt.Errorf("%q must match [_A-Za-z][_0-9A-Za-z]*", k))
+					if !regexache.MustCompile(`[A-Za-z_][0-9A-Za-z_]*`).MatchString(value) {
+						errors = append(errors, fmt.Errorf("%q must match [A-Za-z_][0-9A-Za-z_]*", k))
 					}
 					return
 				},

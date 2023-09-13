@@ -213,7 +213,7 @@ lakeformation,lakeformation,lakeformation,lakeformation,,lakeformation,,,LakeFor
 lambda,lambda,lambda,lambda,,lambda,,,Lambda,Lambda,,1,2,,aws_lambda_,,lambda_,Lambda,AWS,,,,,,
 ,,,,,,,,,,,,,,,,,Launch Wizard,AWS,x,,,,,No SDK support
 lex-models,lexmodels,lexmodelbuildingservice,lexmodelbuildingservice,,lexmodels,,lexmodelbuilding;lexmodelbuildingservice;lex,LexModels,LexModelBuildingService,,1,,aws_lex_,aws_lexmodels_,,lex_,Lex Model Building,Amazon,,,,,,
-lexv2-models,lexv2models,lexmodelsv2,lexmodelsv2,,lexmodelsv2,,lexv2models,LexModelsV2,LexModelsV2,,,2,aws_lexv2models_,aws_lexmodelsv2_,,lexmodelsv2_,Lex Models V2,Amazon,,,,,,
+lexv2-models,lexv2models,lexmodelsv2,lexmodelsv2,,lexv2models,,lexmodelsv2,LexV2Models,LexModelsV2,,,2,,aws_lexv2models_,,lexv2models_,Lex V2 Models,Amazon,,,,,,
 lex-runtime,lexruntime,lexruntimeservice,lexruntimeservice,,lexruntime,,lexruntimeservice,LexRuntime,LexRuntimeService,,1,,,aws_lexruntime_,,lexruntime_,Lex Runtime,Amazon,,x,,,,
 lexv2-runtime,lexv2runtime,lexruntimev2,lexruntimev2,,lexruntimev2,,lexv2runtime,LexRuntimeV2,LexRuntimeV2,,1,,,aws_lexruntimev2_,,lexruntimev2_,Lex Runtime V2,Amazon,,x,,,,
 license-manager,licensemanager,licensemanager,licensemanager,,licensemanager,,,LicenseManager,LicenseManager,,1,,,aws_licensemanager_,,licensemanager_,License Manager,AWS,,,,,,
@@ -302,7 +302,7 @@ route53-recovery-cluster,route53recoverycluster,route53recoverycluster,route53re
 route53-recovery-control-config,route53recoverycontrolconfig,route53recoverycontrolconfig,route53recoverycontrolconfig,,route53recoverycontrolconfig,,,Route53RecoveryControlConfig,Route53RecoveryControlConfig,x,1,,,aws_route53recoverycontrolconfig_,,route53recoverycontrolconfig_,Route 53 Recovery Control Config,Amazon,,,,,,
 route53-recovery-readiness,route53recoveryreadiness,route53recoveryreadiness,route53recoveryreadiness,,route53recoveryreadiness,,,Route53RecoveryReadiness,Route53RecoveryReadiness,x,1,,,aws_route53recoveryreadiness_,,route53recoveryreadiness_,Route 53 Recovery Readiness,Amazon,,,,,,
 route53resolver,route53resolver,route53resolver,route53resolver,,route53resolver,,,Route53Resolver,Route53Resolver,,1,,aws_route53_resolver_,aws_route53resolver_,,route53_resolver_,Route 53 Resolver,Amazon,,,,,,
-s3api,s3api,s3,s3,,s3,,s3api,S3,S3,x,1,2,aws_(canonical_user_id|s3_bucket|s3_object),aws_s3_,,s3_bucket;s3_object;canonical_user_id,S3 (Simple Storage),Amazon,,,,AWS_S3_ENDPOINT,TF_AWS_S3_ENDPOINT,
+s3api,s3api,s3,s3,,s3,,s3api,S3,S3,x,1,2,aws_(canonical_user_id|s3_bucket|s3_object|s3_directory_bucket),aws_s3_,,s3_bucket;s3_directory_bucket;s3_object;canonical_user_id,S3 (Simple Storage),Amazon,,,,AWS_S3_ENDPOINT,TF_AWS_S3_ENDPOINT,
 s3control,s3control,s3control,s3control,,s3control,,,S3Control,S3Control,,1,2,aws_(s3_account_|s3control_|s3_access_),aws_s3control_,,s3control;s3_account_;s3_access_,S3 Control,Amazon,,,,,,
 glacier,glacier,glacier,glacier,,glacier,,,Glacier,Glacier,,,2,,aws_glacier_,,glacier_,S3 Glacier,Amazon,,,,,,
 s3outposts,s3outposts,s3outposts,s3outposts,,s3outposts,,,S3Outposts,S3Outposts,,1,,,aws_s3outposts_,,s3outposts_,S3 on Outposts,Amazon,,,,,,
@@ -357,7 +357,7 @@ transfer,transfer,transfer,transfer,,transfer,,,Transfer,Transfer,,1,,,aws_trans
 ,,,,,transitgateway,ec2,,TransitGateway,,,,,aws_ec2_transit_gateway,aws_transitgateway_,transitgateway_,ec2_transit_gateway,Transit Gateway,AWS,x,,x,,,Part of EC2
 translate,translate,translate,translate,,translate,,,Translate,Translate,,1,,,aws_translate_,,translate_,Translate,Amazon,,x,,,,
 ,,,,,,,,,,,,,,,,,Trusted Advisor,AWS,x,,,,,Part of Support
-,,,,,verifiedaccess,ec2,,VerifiedAccess,,,,,aws_verifiedaccess,aws_verifiedaccess_,verifiedaccess_,verifiedaccess,Verified Access,AWS,x,,x,,,Part of EC2
+,,,,,verifiedaccess,ec2,,VerifiedAccess,,,,,aws_verifiedaccess,aws_verifiedaccess_,verifiedaccess_,verifiedaccess_,Verified Access,AWS,x,,x,,,Part of EC2
 ,,,,,vpc,ec2,,VPC,,,,,aws_((default_)?(network_acl|route_table|security_group|subnet|vpc(?!_ipam))|ec2_(managed|network|subnet|traffic)|egress_only_internet|flow_log|internet_gateway|main_route_table_association|nat_gateway|network_interface|prefix_list|route\b),aws_vpc_,vpc_,default_network_;default_route_;default_security_;default_subnet;default_vpc;ec2_managed_;ec2_network_;ec2_subnet_;ec2_traffic_;egress_only_;flow_log;internet_gateway;main_route_;nat_;network_;prefix_list;route_;route\.;security_group;subnet;vpc_dhcp_;vpc_endpoint;vpc_ipv;vpc_network_performance;vpc_peering_;vpc_security_group_;vpc\.;vpcs\.,VPC (Virtual Private Cloud),Amazon,x,,x,,,Part of EC2
 vpc-lattice,vpclattice,vpclattice,vpclattice,,vpclattice,,,VPCLattice,VPCLattice,,,2,,aws_vpclattice_,,vpclattice_,VPC Lattice,Amazon,,,,,,
 ,,,,,ipam,ec2,,IPAM,,,,,aws_vpc_ipam,aws_ipam_,ipam_,vpc_ipam,VPC IPAM (IP Address Manager),Amazon,x,,x,,,Part of EC2

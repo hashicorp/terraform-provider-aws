@@ -377,12 +377,12 @@ service/lambda:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_lambda_'
 service/lexmodels:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_lex_'
-service/lexmodelsv2:
-  - '((\*|-)\s*`?|(data|resource)\s+"?)aws_lexv2models_'
 service/lexruntime:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_lexruntime_'
 service/lexruntimev2:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_lexruntimev2_'
+service/lexv2models:
+  - '((\*|-)\s*`?|(data|resource)\s+"?)aws_lexv2models_'
 service/licensemanager:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_licensemanager_'
 service/lightsail:
@@ -546,7 +546,7 @@ service/route53resolver:
 service/rum:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_rum_'
 service/s3:
-  - '((\*|-)\s*`?|(data|resource)\s+"?)aws_(canonical_user_id|s3_bucket|s3_object)'
+  - '((\*|-)\s*`?|(data|resource)\s+"?)aws_(canonical_user_id|s3_bucket|s3_object|s3_directory_bucket)'
 service/s3control:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_(s3_account_|s3control_|s3_access_)'
 service/s3outposts:

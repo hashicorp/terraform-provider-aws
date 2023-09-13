@@ -96,7 +96,7 @@ func ResourceWebACL() *schema.Resource {
 					ForceNew: true,
 					ValidateFunc: validation.All(
 						validation.StringLenBetween(1, 128),
-						validation.StringMatch(regexache.MustCompile(`^[a-zA-Z0-9-_]+$`), "must contain only alphanumeric hyphen and underscore characters"),
+						validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_-]+$`), "must contain only alphanumeric hyphen and underscore characters"),
 					),
 				},
 				"rule": {

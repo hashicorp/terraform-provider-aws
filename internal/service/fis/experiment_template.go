@@ -62,7 +62,7 @@ func ResourceExperimentTemplate() *schema.Resource {
 							Required: true,
 							ValidateFunc: validation.All(
 								validation.StringLenBetween(0, 128),
-								validation.StringMatch(regexache.MustCompile(`^aws:[a-z0-9-]+:[a-zA-Z0-9/-]+$`), "must be in the format of aws:service-name:action-name"),
+								validation.StringMatch(regexache.MustCompile(`^aws:[0-9a-z-]+:[0-9A-Za-z/-]+$`), "must be in the format of aws:service-name:action-name"),
 							),
 						},
 						"description": {
