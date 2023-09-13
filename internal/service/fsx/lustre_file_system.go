@@ -492,11 +492,10 @@ func resourceLustreFileSystemUpdate(ctx context.Context, d *schema.ResourceData,
 	conn := meta.(*conns.AWSClient).FSxConn(ctx)
 
 	if d.HasChangesExcept("tags", "tags_all") {
-		waitAdminAction := false
 		input := &fsx.UpdateFileSystemInput{
 			ClientRequestToken:  aws.String(id.UniqueId()),
-			LustreConfiguration: &fsx.UpdateFileSystemLustreConfiguration{},
 			FileSystemId:        aws.String(d.Id()),
+			LustreConfiguration: &fsx.UpdateFileSystemLustreConfiguration{},
 		}
 
 		if d.HasChange("auto_import_policy") {
@@ -517,12 +516,10 @@ func resourceLustreFileSystemUpdate(ctx context.Context, d *schema.ResourceData,
 
 		if d.HasChange("log_configuration") {
 			input.LustreConfiguration.LogConfiguration = expandLustreLogCreateConfiguration(d.Get("log_configuration").([]interface{}))
-			waitAdminAction = true
 		}
 
 		if d.HasChange("root_squash_configuration") {
 			input.LustreConfiguration.RootSquashConfiguration = expandLustreRootSquashConfiguration(d.Get("root_squash_configuration").([]interface{}))
-			waitAdminAction = true
 		}
 
 		if d.HasChange("storage_capacity") {
@@ -544,10 +541,8 @@ func resourceLustreFileSystemUpdate(ctx context.Context, d *schema.ResourceData,
 			return sdkdiag.AppendErrorf(diags, "waiting for FSx for Lustre File System (%s) update: %s", d.Id(), err)
 		}
 
-		if waitAdminAction {
-			if _, err := waitAdministrativeActionCompleted(ctx, conn, d.Id(), fsx.AdministrativeActionTypeFileSystemUpdate, d.Timeout(schema.TimeoutUpdate)); err != nil {
-				return sdkdiag.AppendErrorf(diags, "waiting for FSx for Lustre File System (%s) administrative action (%s) complete: %s", d.Id(), fsx.AdministrativeActionTypeFileSystemUpdate, err)
-			}
+		if _, err := waitAdministrativeActionCompleted(ctx, conn, d.Id(), fsx.AdministrativeActionTypeFileSystemUpdate, d.Timeout(schema.TimeoutUpdate)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "waiting for FSx for Lustre File System (%s) administrative action (%s) complete: %s", d.Id(), fsx.AdministrativeActionTypeFileSystemUpdate, err)
 		}
 	}
 
