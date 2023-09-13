@@ -140,16 +140,6 @@ func testAccCheckApplicationLayerAutomaticResponseExists(ctx context.Context, na
 	}
 }
 
-func testAccCheckApplicationLayerAutomaticResponseNotRecreated(before, after *shield.DescribeProtectionOutput) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		if before, after := aws.StringValue(before.Protection.ApplicationLayerAutomaticResponseConfiguration.Status), aws.StringValue(after.Protection.ApplicationLayerAutomaticResponseConfiguration.Status); before != after {
-			return create.Error(names.Shield, create.ErrActionCheckingNotRecreated, tfshield.ResNameApplicationLayerAutomaticResponse, before, errors.New("recreated"))
-		}
-
-		return nil
-	}
-}
-
 func testAccApplicationLayerAutomaticResponseConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_wafv2_web_acl" "test" {
