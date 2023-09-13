@@ -30,12 +30,12 @@ import (
 
 // @SDKResource("aws_fsx_ontap_storage_virtual_machine", name="ONTAP Storage Virtual Machine")
 // @Tags(identifierAttribute="arn")
-func ResourceOntapStorageVirtualMachine() *schema.Resource {
+func ResourceONTAPStorageVirtualMachine() *schema.Resource {
 	return &schema.Resource{
-		CreateWithoutTimeout: resourceOntapStorageVirtualMachineCreate,
-		ReadWithoutTimeout:   resourceOntapStorageVirtualMachineRead,
-		UpdateWithoutTimeout: resourceOntapStorageVirtualMachineUpdate,
-		DeleteWithoutTimeout: resourceOntapStorageVirtualMachineDelete,
+		CreateWithoutTimeout: resourceONTAPStorageVirtualMachineCreate,
+		ReadWithoutTimeout:   resourceONTAPStorageVirtualMachineRead,
+		UpdateWithoutTimeout: resourceONTAPStorageVirtualMachineUpdate,
+		DeleteWithoutTimeout: resourceONTAPStorageVirtualMachineDelete,
 
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
@@ -50,8 +50,8 @@ func ResourceOntapStorageVirtualMachine() *schema.Resource {
 		SchemaVersion: 1,
 		StateUpgraders: []schema.StateUpgrader{
 			{
-				Type:    ResourceOntapStorageVirtualMachineV0().CoreConfigSchema().ImpliedType(),
-				Upgrade: ResourceOntapStorageVirtualMachineStateUpgradeV0,
+				Type:    ResourceONTAPStorageVirtualMachineV0().CoreConfigSchema().ImpliedType(),
+				Upgrade: ResourceONTAPStorageVirtualMachineStateUpgradeV0,
 				Version: 0,
 			},
 		},
@@ -241,7 +241,7 @@ func ResourceOntapStorageVirtualMachine() *schema.Resource {
 	}
 }
 
-func resourceOntapStorageVirtualMachineCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceONTAPStorageVirtualMachineCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).FSxConn(ctx)
 
@@ -276,10 +276,10 @@ func resourceOntapStorageVirtualMachineCreate(ctx context.Context, d *schema.Res
 		return sdkdiag.AppendErrorf(diags, "waiting for FSx ONTAP Storage Virtual Machine (%s) create: %s", d.Id(), err)
 	}
 
-	return append(diags, resourceOntapStorageVirtualMachineRead(ctx, d, meta)...)
+	return append(diags, resourceONTAPStorageVirtualMachineRead(ctx, d, meta)...)
 }
 
-func resourceOntapStorageVirtualMachineRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceONTAPStorageVirtualMachineRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).FSxConn(ctx)
 
@@ -313,7 +313,7 @@ func resourceOntapStorageVirtualMachineRead(ctx context.Context, d *schema.Resou
 	return diags
 }
 
-func resourceOntapStorageVirtualMachineUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceONTAPStorageVirtualMachineUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).FSxConn(ctx)
 
@@ -342,10 +342,10 @@ func resourceOntapStorageVirtualMachineUpdate(ctx context.Context, d *schema.Res
 		}
 	}
 
-	return append(diags, resourceOntapStorageVirtualMachineRead(ctx, d, meta)...)
+	return append(diags, resourceONTAPStorageVirtualMachineRead(ctx, d, meta)...)
 }
 
-func resourceOntapStorageVirtualMachineDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceONTAPStorageVirtualMachineDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).FSxConn(ctx)
 
