@@ -706,7 +706,7 @@ func resourceBucketCreate(ctx context.Context, d *schema.ResourceData, meta inte
 	// Special case: us-east-1 does not return error if the bucket already exists and is owned by
 	// current account. It also resets the Bucket ACLs.
 	if awsRegion == endpoints.UsEast1RegionID {
-		if err := FindBucket(ctx, conn, bucket); err == nil {
+		if err := FindBucketV1(ctx, conn, bucket); err == nil {
 			return create.DiagError(names.S3, create.ErrActionCreating, resNameBucket, bucket, errors.New(ErrMessageBucketAlreadyExists))
 		}
 	}
@@ -759,7 +759,7 @@ func resourceBucketCreate(ctx context.Context, d *schema.ResourceData, meta inte
 	d.SetId(bucket)
 
 	_, err = tfresource.RetryWhenNotFound(ctx, d.Timeout(schema.TimeoutCreate), func() (interface{}, error) {
-		return nil, FindBucket(ctx, conn, d.Id())
+		return nil, FindBucketV1(ctx, conn, d.Id())
 	})
 
 	if err != nil {
@@ -773,7 +773,7 @@ func resourceBucketRead(ctx context.Context, d *schema.ResourceData, meta interf
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).S3Conn(ctx)
 
-	err := FindBucket(ctx, conn, d.Id())
+	err := FindBucketV1(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] S3 Bucket (%s) not found, removing from state", d.Id())
@@ -1409,7 +1409,7 @@ func resourceBucketDelete(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 
 	_, err = tfresource.RetryUntilNotFound(ctx, 1*time.Minute, func() (interface{}, error) {
-		return nil, FindBucket(ctx, conn, d.Id())
+		return nil, FindBucketV1(ctx, conn, d.Id())
 	})
 
 	if err != nil {
@@ -1419,7 +1419,7 @@ func resourceBucketDelete(ctx context.Context, d *schema.ResourceData, meta inte
 	return nil
 }
 
-func FindBucket(ctx context.Context, conn *s3.S3, bucket string) error {
+func FindBucketV1(ctx context.Context, conn *s3.S3, bucket string) error {
 	input := &s3.HeadBucketInput{
 		Bucket: aws.String(bucket),
 	}

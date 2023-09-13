@@ -2559,7 +2559,7 @@ func testAccCheckBucketDestroyWithProvider(ctx context.Context) acctest.TestChec
 				continue
 			}
 
-			err := tfs3.FindBucket(ctx, conn, rs.Primary.ID)
+			err := tfs3.FindBucketV1(ctx, conn, rs.Primary.ID)
 
 			if tfresource.NotFound(err) {
 				continue
@@ -2593,7 +2593,7 @@ func testAccCheckBucketExistsWithProvider(ctx context.Context, n string, provide
 
 		conn := providerF().Meta().(*conns.AWSClient).S3Conn(ctx)
 
-		return tfs3.FindBucket(ctx, conn, rs.Primary.ID)
+		return tfs3.FindBucketV1(ctx, conn, rs.Primary.ID)
 	}
 }
 
