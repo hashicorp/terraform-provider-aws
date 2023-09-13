@@ -173,25 +173,27 @@ func resourceProductImport(ctx context.Context, d *schema.ResourceData, meta int
 		return []*schema.ResourceData{d}, err
 	}
 
-	sort.Slice(productData.ProvisioningArtifactSummaries, func(i, j int) bool {
-		return aws.TimeValue(productData.ProvisioningArtifactSummaries[i].CreatedTime).Before(aws.TimeValue(productData.ProvisioningArtifactSummaries[j].CreatedTime))
-	})
-
 	// import the last entry in the summary
-	provisioningArtifact := productData.ProvisioningArtifactSummaries[len(productData.ProvisioningArtifactSummaries)-1]
-	in := &servicecatalog.DescribeProvisioningArtifactInput{
-		ProductId:              aws.String(d.Id()),
-		ProvisioningArtifactId: provisioningArtifact.Id,
+	if len(productData.ProvisioningArtifactSummaries) > 0 {
+		sort.Slice(productData.ProvisioningArtifactSummaries, func(i, j int) bool {
+			return aws.TimeValue(productData.ProvisioningArtifactSummaries[i].CreatedTime).Before(aws.TimeValue(productData.ProvisioningArtifactSummaries[j].CreatedTime))
+		})
+		
+		provisioningArtifact := productData.ProvisioningArtifactSummaries[len(productData.ProvisioningArtifactSummaries)-1]
+		in := &servicecatalog.DescribeProvisioningArtifactInput{
+			ProductId:              aws.String(d.Id()),
+			ProvisioningArtifactId: provisioningArtifact.Id,
+		}
+
+		// Find additional artifact details.
+		artifactData, err := conn.DescribeProvisioningArtifactWithContext(ctx, in)
+
+		if err != nil {
+			return []*schema.ResourceData{d}, err
+		}
+
+		d.Set("provisioning_artifact_parameters", flattenProvisioningArtifactParameters(artifactData))
 	}
-
-	// Find additional artifact details.
-	artifactData, err := conn.DescribeProvisioningArtifactWithContext(ctx, in)
-
-	if err != nil {
-		return []*schema.ResourceData{d}, err
-	}
-
-	d.Set("provisioning_artifact_parameters", flattenProvisioningArtifactParameters(artifactData))
 
 	return []*schema.ResourceData{d}, nil
 }
