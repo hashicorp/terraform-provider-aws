@@ -20,8 +20,8 @@ data "aws_caller_identity" "current" {}
 data "aws_partition" "current" {}
 
 var "distribution_id" {
-  type         = "string"
-  description  = "The Cloudfront Distribution on which to enable the Application Layer Automatic Response."
+  type        = "string"
+  description = "The Cloudfront Distribution on which to enable the Application Layer Automatic Response."
 }
 
 resource "aws_shield_application_layer_automatic_response" "example" {
