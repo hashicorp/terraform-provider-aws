@@ -351,44 +351,14 @@ func testAccCheckONTAPStorageVirtualMachineRecreated(i, j *fsx.StorageVirtualMac
 	}
 }
 
-func testAccOntapStorageVirtualMachineBaseConfig(rName string) string {
-	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
-data "aws_partition" "current" {}
-
-resource "aws_vpc" "test" {
-  cidr_block = "10.0.0.0/16"
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_subnet" "test1" {
-  vpc_id            = aws_vpc.test.id
-  cidr_block        = "10.0.1.0/24"
-  availability_zone = data.aws_availability_zones.available.names[0]
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_subnet" "test2" {
-  vpc_id            = aws_vpc.test.id
-  cidr_block        = "10.0.2.0/24"
-  availability_zone = data.aws_availability_zones.available.names[1]
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
+func testAccONTAPStorageVirtualMachineConfig_base(rName string) string {
+	return acctest.ConfigCompose(testAccONTAPFileSystemConfig_base(rName), fmt.Sprintf(`
 resource "aws_fsx_ontap_file_system" "test" {
   storage_capacity    = 1024
-  subnet_ids          = [aws_subnet.test1.id, aws_subnet.test2.id]
+  subnet_ids          = aws_subnet.test[*].id
   deployment_type     = "MULTI_AZ_1"
   throughput_capacity = 512
-  preferred_subnet_id = aws_subnet.test1.id
+  preferred_subnet_id = aws_subnet.test[0].id
 
   tags = {
     Name = %[1]q
@@ -397,25 +367,24 @@ resource "aws_fsx_ontap_file_system" "test" {
 `, rName))
 }
 
-func testAccOntapStorageVirtualMachineADConfig(rName string, domainName string, domainPassword string) string {
-	return acctest.ConfigCompose(testAccOntapStorageVirtualMachineBaseConfig(rName), fmt.Sprintf(`
-
+func testAccONTAPStorageVirtualMachineADConfig_base(rName, domainName, domainPassword string) string {
+	return acctest.ConfigCompose(testAccONTAPStorageVirtualMachineConfig_base(rName), fmt.Sprintf(`
 resource "aws_directory_service_directory" "test" {
   edition  = "Standard"
-  name     = %[2]q
-  password = %[3]q
+  name     = %[1]q
+  password = %[2]q
   type     = "MicrosoftAD"
 
   vpc_settings {
-    subnet_ids = [aws_subnet.test1.id, aws_subnet.test2.id]
+    subnet_ids = aws_subnet.test[*].id
     vpc_id     = aws_vpc.test.id
   }
 }
-`, rName, domainName, domainPassword))
+`, domainName, domainPassword))
 }
 
 func testAccONTAPStorageVirtualMachineConfig_basic(rName string) string {
-	return acctest.ConfigCompose(testAccOntapStorageVirtualMachineBaseConfig(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccONTAPStorageVirtualMachineConfig_base(rName), fmt.Sprintf(`
 resource "aws_fsx_ontap_storage_virtual_machine" "test" {
   file_system_id = aws_fsx_ontap_file_system.test.id
   name           = %[1]q
@@ -424,7 +393,7 @@ resource "aws_fsx_ontap_storage_virtual_machine" "test" {
 }
 
 func testAccONTAPStorageVirtualMachineConfig_rootVolumeSecurityStyle(rName string) string {
-	return acctest.ConfigCompose(testAccOntapStorageVirtualMachineBaseConfig(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccONTAPStorageVirtualMachineConfig_base(rName), fmt.Sprintf(`
 resource "aws_fsx_ontap_storage_virtual_machine" "test" {
   file_system_id             = aws_fsx_ontap_file_system.test.id
   name                       = %[1]q
@@ -433,8 +402,8 @@ resource "aws_fsx_ontap_storage_virtual_machine" "test" {
 `, rName))
 }
 
-func testAccONTAPStorageVirtualMachineConfig_svmAdminPassword(rName string, pass string) string {
-	return acctest.ConfigCompose(testAccOntapStorageVirtualMachineBaseConfig(rName), fmt.Sprintf(`
+func testAccONTAPStorageVirtualMachineConfig_svmAdminPassword(rName, pass string) string {
+	return acctest.ConfigCompose(testAccONTAPStorageVirtualMachineConfig_base(rName), fmt.Sprintf(`
 resource "aws_fsx_ontap_storage_virtual_machine" "test" {
   file_system_id     = aws_fsx_ontap_file_system.test.id
   name               = %[1]q
@@ -444,7 +413,7 @@ resource "aws_fsx_ontap_storage_virtual_machine" "test" {
 }
 
 func testAccONTAPStorageVirtualMachineConfig_tags1(rName, tagKey1, tagValue1 string) string {
-	return acctest.ConfigCompose(testAccOntapStorageVirtualMachineBaseConfig(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccONTAPStorageVirtualMachineConfig_base(rName), fmt.Sprintf(`
 resource "aws_fsx_ontap_storage_virtual_machine" "test" {
   file_system_id = aws_fsx_ontap_file_system.test.id
   name           = %[1]q
@@ -457,7 +426,7 @@ resource "aws_fsx_ontap_storage_virtual_machine" "test" {
 }
 
 func testAccONTAPStorageVirtualMachineConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
-	return acctest.ConfigCompose(testAccOntapStorageVirtualMachineBaseConfig(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccONTAPStorageVirtualMachineConfig_base(rName), fmt.Sprintf(`
 resource "aws_fsx_ontap_storage_virtual_machine" "test" {
   file_system_id = aws_fsx_ontap_file_system.test.id
   name           = %[1]q
@@ -470,8 +439,8 @@ resource "aws_fsx_ontap_storage_virtual_machine" "test" {
 `, rName, tagKey1, tagValue1, tagKey2, tagValue2))
 }
 
-func testAccONTAPStorageVirtualMachineConfig_virutalSelfManagedActiveDirectory(rName string, netBiosName string, domainNetbiosName string, domainName string, domainPassword string) string {
-	return acctest.ConfigCompose(testAccOntapStorageVirtualMachineADConfig(rName, domainName, domainPassword), fmt.Sprintf(`
+func testAccONTAPStorageVirtualMachineConfig_virutalSelfManagedActiveDirectory(rName, netBiosName, domainNetbiosName, domainName, domainPassword string) string {
+	return acctest.ConfigCompose(testAccONTAPStorageVirtualMachineADConfig_base(rName, domainName, domainPassword), fmt.Sprintf(`
 resource "aws_fsx_ontap_storage_virtual_machine" "test" {
   file_system_id = aws_fsx_ontap_file_system.test.id
   name           = %[1]q
