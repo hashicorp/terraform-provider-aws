@@ -107,10 +107,10 @@ func ResourceConnector() *schema.Resource {
 						"trusted_host_keys": {
 							Type:     schema.TypeSet,
 							Optional: true,
+							MinItems: 1,
+							MaxItems: 10,
 							Elem: &schema.Schema{
 								Type:         schema.TypeString,
-								MinItems:     1,
-								MaxItems:     10,
 								ValidateFunc: validation.StringLenBetween(1, 2028),
 							},
 						},
@@ -140,9 +140,8 @@ func resourceConnectorCreate(ctx context.Context, d *schema.ResourceData, meta i
 
 	input := &transfer.CreateConnectorInput{
 		AccessRole: aws.String(d.Get("access_role").(string)),
-		//As2Config:  expandAs2Config(d.Get("as2_config").([]interface{})[0].(map[string]interface{})),
-		Tags: getTagsIn(ctx),
-		Url:  aws.String(d.Get("url").(string)),
+		Tags:       getTagsIn(ctx),
+		Url:        aws.String(d.Get("url").(string)),
 	}
 
 	if v, ok := d.GetOk("as2_config"); ok {
@@ -212,13 +211,7 @@ func resourceConnectorUpdate(ctx context.Context, d *schema.ResourceData, meta i
 		if d.HasChange("access_role") {
 			input.AccessRole = aws.String(d.Get("access_role").(string))
 		}
-		/*
-			if d.HasChange("as2_config") {
-				if v, ok := d.GetOk("as2_config"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-					input.As2Config = expandAs2Config(v.([]interface{})[0].(map[string]interface{}))
-				}
-			}
-		*/
+
 		if d.HasChange("as2_config") {
 			input.As2Config = expandAs2Config(d.Get("as2_config").([]interface{}))
 		}
@@ -265,49 +258,6 @@ func resourceConnectorDelete(ctx context.Context, d *schema.ResourceData, meta i
 	return diags
 }
 
-/*
-	func expandAs2Config(tfMap map[string]interface{}) *transfer.As2ConnectorConfig {
-		if tfMap == nil {
-			return nil
-		}
-
-		apiObject := &transfer.As2ConnectorConfig{}
-
-		if v, ok := tfMap["compression"].(string); ok && v != "" {
-			apiObject.Compression = aws.String(v)
-		}
-
-		if v, ok := tfMap["encryption_algorithm"].(string); ok && v != "" {
-			apiObject.EncryptionAlgorithm = aws.String(v)
-		}
-
-		if v, ok := tfMap["local_profile_id"].(string); ok && v != "" {
-			apiObject.LocalProfileId = aws.String(v)
-		}
-
-		if v, ok := tfMap["mdn_response"].(string); ok && v != "" {
-			apiObject.MdnResponse = aws.String(v)
-		}
-
-		if v, ok := tfMap["mdn_signing_algorithm"].(string); ok && v != "" {
-			apiObject.MdnSigningAlgorithm = aws.String(v)
-		}
-
-		if v, ok := tfMap["message_subject"].(string); ok && v != "" {
-			apiObject.MessageSubject = aws.String(v)
-		}
-
-		if v, ok := tfMap["partner_profile_id"].(string); ok && v != "" {
-			apiObject.PartnerProfileId = aws.String(v)
-		}
-
-		if v, ok := tfMap["signing_algorithm"].(string); ok && v != "" {
-			apiObject.SigningAlgorithm = aws.String(v)
-		}
-
-		return apiObject
-	}
-*/
 func expandAs2Config(pUser []interface{}) *transfer.As2ConnectorConfig {
 	if len(pUser) < 1 || pUser[0] == nil {
 		return nil

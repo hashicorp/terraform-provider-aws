@@ -30,14 +30,15 @@ resource "aws_transfer_connector" "example" {
   url = "http://www.test.com"
 }
 ```
+
 ### SFTP Connector
 
 ```terraform
 resource "aws_transfer_connector" "example" {
   access_role = aws_iam_role.test.arn
   sftp_config {
-    trusted_host_keys     = [path to where host keys are present]
-    user_secretid         = aws_secretsmanager_secret_version.example.id
+    trusted_host_keys     = ["ssh-rsa AAAAB3NYourKeysHere"]
+    user_secretid         = aws_secretsmanager_secret.example.id
   }
   url = "sftp://test.com"
 }

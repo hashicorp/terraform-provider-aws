@@ -79,12 +79,12 @@ func TestAccTransferConnector_sftpConfig(t *testing.T) {
 		CheckDestroy:             testAccCheckConnectorDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccConnectorConfig_sftpConfig(rName, "sftp://s-fakeserver.server.transfer.us-east-1.amazonaws.com", publicKey1),
+				Config: testAccConnectorConfig_sftpConfig(rName, "sftp://s-fakeserver.server.transfer.test.amazonaws.com", publicKey1),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckConnectorExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttrSet(resourceName, "arn"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-					resource.TestCheckResourceAttr(resourceName, "url", "sftp://s-fakeserver.server.transfer.us-east-1.amazonaws.com"),
+					resource.TestCheckResourceAttr(resourceName, "url", "sftp://s-fakeserver.server.transfer.test.amazonaws.com"),
 				),
 			},
 			{
@@ -93,11 +93,11 @@ func TestAccTransferConnector_sftpConfig(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccConnectorConfig_sftpConfig(rName, "sftp://s-fakeserver.server.transfer.us-east-1.amazonaws.com", publicKey1),
+				Config: testAccConnectorConfig_sftpConfig(rName, "sftp://s-fakeserver.server.transfer.test.amazonaws.com", publicKey1),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckConnectorExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-					resource.TestCheckResourceAttr(resourceName, "url", "sftp://s-fakeserver.server.transfer.us-east-1.amazonaws.com"),
+					resource.TestCheckResourceAttr(resourceName, "url", "sftp://s-fakeserver.server.transfer.test.amazonaws.com"),
 				),
 			},
 		},
@@ -311,15 +311,15 @@ resource "aws_transfer_connector" "test" {
   access_role = aws_iam_role.test.arn
 
   sftp_config {
-	trusted_host_keys = [%[3]q]
-	user_secretid     = aws_secretsmanager_secret.test.id
+    trusted_host_keys = [%[3]q]
+    user_secretid     = aws_secretsmanager_secret.test.id
   }
 
   url = %[2]q
 }
 
 resource "aws_secretsmanager_secret" "test" {
-	name = %[1]q
+  name = %[1]q
 }
 `, rName, url, publickey))
 }
