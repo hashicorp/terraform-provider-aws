@@ -588,8 +588,8 @@ func TestAccNeptuneCluster_restoreFromSnapshot(t *testing.T) {
 					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
 					resource.TestCheckResourceAttr(resourceName, "backup_retention_period", "5"),
 					resource.TestCheckResourceAttr(resourceName, "cluster_identifier", rName),
-					resource.TestCheckResourceAttrPair(resourceName, "neptune_cluster_parameter_group_name", parameterGroupResourceName, "id"),
 					resource.TestCheckResourceAttrPair(resourceName, "kms_key_arn", keyResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "neptune_cluster_parameter_group_name", parameterGroupResourceName, "id"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Name", rName),
 					resource.TestCheckResourceAttr(resourceName, "vpc_security_group_ids.#", "2"),
@@ -1360,8 +1360,8 @@ resource "aws_neptune_cluster" "source" {
   cluster_identifier                   = "%[1]s-src"
   neptune_cluster_parameter_group_name = "default.neptune1.2"
   skip_final_snapshot                  = true
-  storage_encrypted = true
-  kms_key_arn = aws_kms_key.test1.arn
+  storage_encrypted                    = true
+  kms_key_arn                          = aws_kms_key.test1.arn
 }
 
 resource "aws_neptune_cluster_snapshot" "test" {
@@ -1380,11 +1380,11 @@ resource "aws_neptune_cluster_parameter_group" "test" {
 }
 
 resource "aws_neptune_cluster" "test" {
-  cluster_identifier  = %[1]q
-  skip_final_snapshot = true
-  storage_encrypted = true
-  snapshot_identifier = aws_neptune_cluster_snapshot.test.id
-  kms_key_arn = aws_kms_key.test2.arn
+  cluster_identifier                   = %[1]q
+  skip_final_snapshot                  = true
+  storage_encrypted                    = true
+  snapshot_identifier                  = aws_neptune_cluster_snapshot.test.id
+  kms_key_arn                          = aws_kms_key.test2.arn
   backup_retention_period              = 5
   neptune_cluster_parameter_group_name = aws_neptune_cluster_parameter_group.test.id
   vpc_security_group_ids               = aws_security_group.test[*].id
