@@ -25,7 +25,7 @@ var "distribution_id" {
 }
 
 resource "aws_shield_application_layer_automatic_response" "example" {
-  resource_arn = "arn:${data.aws_partition.current.partition}:cloudfront:${data.aws_caller_identity.current.account_id}:distribution/${var.distribution_id}
+  resource_arn = "arn:${data.aws_partition.current.partition}:cloudfront:${data.aws_caller_identity.current.account_id}:distribution/${var.distribution_id}"
   action       = "COUNT"
 }
 ```
