@@ -23,23 +23,8 @@ val tfAccAssumeRoleArn = DslContext.getParameter("tf_acc_assume_role_arn", "")
 val awsAlternateAccountID = DslContext.getParameter("aws_alt_account.account_id", "")
 val tfLog = DslContext.getParameter("tf_log", "")
 
-// Legacy User credentials
-val legacyAWSAccessKeyID = DslContext.getParameter("aws_account.legacy_access_key_id", "")
-val legacyAWSSecretAccessKey = DslContext.getParameter("aws_account.legacy_secret_access_key", "")
-
-// Legacy Alternate User credentials
-val legacyAWSAlternateAccessKeyID = DslContext.getParameter("aws_alt_account.legacy_access_key_id", "")
-val legacyAWSAlternateSecretAccessKey = DslContext.getParameter("aws_alt_account.legacy_secret_access_key", "")
-
-// Assume Role credentials
-val accTestRoleARN = DslContext.getParameter("aws_account.role_arn", "")
-val awsAccessKeyID = if (accTestRoleARN != "") { DslContext.getParameter("aws_account.access_key_id") } else { "" }
-val awsSecretAccessKey = if (accTestRoleARN != "") { DslContext.getParameter("aws_account.secret_access_key") } else { "" }
-
-// Alternate Assume Role credentials
-val alternateAccTestRoleARN = DslContext.getParameter("aws_alt_account.role_arn", "")
-val alternateAWSAccessKeyID = if (alternateAccTestRoleARN != "") { DslContext.getParameter("aws_alt_account.access_key_id") } else { "" }
-val alternateAWSSecretAccessKey = if (alternateAccTestRoleARN != "") { DslContext.getParameter("aws_alt_account.secret_access_key") } else { "" }
+val aaki = DslContext.getParameter("AWS_ACCESS_KEY_ID", "")
+val asak = DslContext.getParameter("AWS_SECRET_ACCESS_KEY", "")
 
 project {
     if (DslContext.getParameter("build_full", "true").toBoolean()) {
@@ -51,22 +36,12 @@ project {
             text("ACCTEST_PARALLELISM", acctestParallelism, allowEmpty = false)
         }
         text("TEST_PATTERN", "TestAcc", display = ParameterDisplay.HIDDEN)
-        text("SWEEPER_REGIONS", sweeperRegions, display = ParameterDisplay.HIDDEN, allowEmpty = false)
         text("env.AWS_ACCOUNT_ID", awsAccountID, display = ParameterDisplay.HIDDEN, allowEmpty = false)
         text("env.AWS_DEFAULT_REGION", defaultRegion, allowEmpty = false)
         text("env.TF_LOG", tfLog)
 
         if (alternateRegion != "") {
             text("env.AWS_ALTERNATE_REGION", alternateRegion)
-        }
-
-        if (acmCertificateRootDomain != "") {
-            text("env.ACM_CERTIFICATE_ROOT_DOMAIN", acmCertificateRootDomain, display = ParameterDisplay.HIDDEN)
-        }
-
-        val securityGroupRulesPerGroup = DslContext.getParameter("security_group_rules_per_group", "")
-        if (securityGroupRulesPerGroup != "") {
-            text("env.EC2_SECURITY_GROUP_RULES_PER_GROUP_LIMIT", securityGroupRulesPerGroup)
         }
 
         val brancRef = DslContext.getParameter("branch_name", "")
@@ -78,24 +53,10 @@ project {
             text("env.TF_ACC_ASSUME_ROLE_ARN", tfAccAssumeRoleArn)
         }
 
-        // Legacy User credentials
-        if (legacyAWSAccessKeyID != "") {
-            password("env.AWS_ACCESS_KEY_ID", legacyAWSAccessKeyID, display = ParameterDisplay.HIDDEN)
-        }
-        if (legacyAWSSecretAccessKey != "") {
-            password("env.AWS_SECRET_ACCESS_KEY", legacyAWSSecretAccessKey, display = ParameterDisplay.HIDDEN)
-        }
-
-        // Legacy Alternate User credentials
-        if (awsAlternateAccountID != "" || legacyAWSAlternateAccessKeyID != "" || legacyAWSAlternateSecretAccessKey != "") {
-            text("env.AWS_ALTERNATE_ACCOUNT_ID", awsAlternateAccountID, display = ParameterDisplay.HIDDEN)
-            password("env.AWS_ALTERNATE_ACCESS_KEY_ID", legacyAWSAlternateAccessKeyID, display = ParameterDisplay.HIDDEN)
-            password("env.AWS_ALTERNATE_SECRET_ACCESS_KEY", legacyAWSAlternateSecretAccessKey, display = ParameterDisplay.HIDDEN)
-        }
 
         // Assume Role credentials
-        password("AWS_ACCESS_KEY_ID", awsAccessKeyID, display = ParameterDisplay.HIDDEN)
-        password("AWS_SECRET_ACCESS_KEY", awsSecretAccessKey, display = ParameterDisplay.HIDDEN)
+        password("AWS_ACCESS_KEY_ID", aaki, display = ParameterDisplay.HIDDEN)
+        password("AWS_SECRET_ACCESS_KEY", asak, display = ParameterDisplay.HIDDEN)
         text("ACCTEST_ROLE_ARN", accTestRoleARN, display = ParameterDisplay.HIDDEN)
 
         // Alternate Assume Role credentials
