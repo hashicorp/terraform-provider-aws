@@ -90,10 +90,8 @@ func (r *resourceApplicationLayerAutomaticResponse) Create(ctx context.Context, 
 	switch plan.Action.ValueString() {
 	case "BLOCK":
 		action.Block = &shield.BlockAction{}
-		break
 	case "COUNT":
 		action.Count = &shield.CountAction{}
-		break
 	}
 
 	in := &shield.EnableApplicationLayerAutomaticResponseInput{
@@ -179,10 +177,8 @@ func (r *resourceApplicationLayerAutomaticResponse) Update(ctx context.Context, 
 		switch plan.Action.ValueString() {
 		case "BLOCK":
 			action.Block = &shield.BlockAction{}
-			break
 		case "COUNT":
 			action.Count = &shield.CountAction{}
-			break
 		}
 		in := &shield.UpdateApplicationLayerAutomaticResponseInput{
 			ResourceArn: aws.String(plan.ResourceARN.ValueString()),
