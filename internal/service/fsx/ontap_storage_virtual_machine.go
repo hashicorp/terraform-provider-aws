@@ -295,22 +295,20 @@ func resourceOntapStorageVirtualMachineRead(ctx context.Context, d *schema.Resou
 		return sdkdiag.AppendErrorf(diags, "reading FSx ONTAP Storage Virtual Machine (%s): %s", d.Id(), err)
 	}
 
-	d.Set("arn", storageVirtualMachine.ResourceARN)
-	d.Set("name", storageVirtualMachine.Name)
-	d.Set("file_system_id", storageVirtualMachine.FileSystemId)
-	//RootVolumeSecurityStyle and SVMAdminPassword are write only properties so they don't get returned from the describe API so we just store the original setting to state
-	d.Set("root_volume_security_style", d.Get("root_volume_security_style").(string))
-	d.Set("svm_admin_password", d.Get("svm_admin_password").(string))
-	d.Set("subtype", storageVirtualMachine.Subtype)
-	d.Set("uuid", storageVirtualMachine.UUID)
-
 	if err := d.Set("active_directory_configuration", flattenOntapSvmActiveDirectoryConfiguration(d, storageVirtualMachine.ActiveDirectoryConfiguration)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting svm_active_directory: %s", err)
 	}
-
+	d.Set("arn", storageVirtualMachine.ResourceARN)
 	if err := d.Set("endpoints", flattenOntapStorageVirtualMachineEndpoints(storageVirtualMachine.Endpoints)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting endpoints: %s", err)
 	}
+	d.Set("file_system_id", storageVirtualMachine.FileSystemId)
+	d.Set("name", storageVirtualMachine.Name)
+	// RootVolumeSecurityStyle and SVMAdminPassword are write only properties so they don't get returned from the describe API so we just store the original setting to state
+	d.Set("root_volume_security_style", d.Get("root_volume_security_style").(string))
+	d.Set("subtype", storageVirtualMachine.Subtype)
+	d.Set("svm_admin_password", d.Get("svm_admin_password").(string))
+	d.Set("uuid", storageVirtualMachine.UUID)
 
 	return diags
 }
@@ -319,7 +317,7 @@ func resourceOntapStorageVirtualMachineUpdate(ctx context.Context, d *schema.Res
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).FSxConn(ctx)
 
-	if d.HasChangesExcept("tags_all", "tags") {
+	if d.HasChangesExcept("tags", "tags_all") {
 		input := &fsx.UpdateStorageVirtualMachineInput{
 			ClientRequestToken:      aws.String(id.UniqueId()),
 			StorageVirtualMachineId: aws.String(d.Id()),
