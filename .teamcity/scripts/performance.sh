@@ -80,29 +80,25 @@ function analysis {
     printf ";CPUtime:$%.4f%\n" "${cputime}"
 }
 
-if [ ! -f "memvpc1.prof" ]; then
-    echo "VPC 1 test not yet run. Running..."
-    vpctest vpc1
-    return
+if [ -f "memvpc1.prof" -a -f "memssm1.prof" -a -f "memvpc2.prof" -a ! -f "memssm2.prof" ]; then
+    echo "SSM 2 test not yet run. Running..."
+    ssmtest ssm2
 fi
 
-if [ ! -f "memssm1.prof" ]; then
-    echo "SSM 1 test not yet run. Running..."
-    ssmtest ssm1
-    return
-fi
-
-if [ ! -f "memvpc2.prof" ]; then
+if [ -f "memvpc1.prof" -a -f "memssm1.prof" -a ! -f "memvpc2.prof" ]; then
     echo "VPC 2 test not yet run. Running..."
     git checkout $(basename $(curl -Ls -o /dev/null -w %{url_effective} https://github.com/hashicorp/terraform-provider-aws/releases/latest))
     vpctest vpc2
-    return
 fi
 
-if [ ! -f "memssm2.prof" ]; then
-    echo "SSM 2 test not yet run. Running..."
-    ssmtest ssm2
-    return
+if [ -f "memvpc1.prof" -a ! -f "memssm1.prof" ]; then
+    echo "SSM 1 test not yet run. Running..."
+    ssmtest ssm1
+fi
+
+if [ ! -f "memvpc1.prof" ]; then
+    echo "VPC 1 test not yet run. Running..."
+    vpctest vpc1
 fi
 
 if [ -f "memvpc1.prof" -a -f "memssm1.prof" -a -f "memvpc2.prof" -a -f "memssm2.prof" ]; then
