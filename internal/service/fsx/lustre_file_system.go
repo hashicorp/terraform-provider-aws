@@ -663,43 +663,12 @@ func logStateFunc(v interface{}) string {
 	return value
 }
 
-func FindFileSystemByID(ctx context.Context, conn *fsx.FSx, id string) (*fsx.FileSystem, error) {
+func findFileSystemByID(ctx context.Context, conn *fsx.FSx, id string) (*fsx.FileSystem, error) {
 	input := &fsx.DescribeFileSystemsInput{
-		FileSystemIds: []*string{aws.String(id)},
+		FileSystemIds: aws.StringSlice([]string{id}),
 	}
 
-	var filesystems []*fsx.FileSystem
-
-	err := conn.DescribeFileSystemsPagesWithContext(ctx, input, func(page *fsx.DescribeFileSystemsOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
-		}
-
-		filesystems = append(filesystems, page.FileSystems...)
-
-		return !lastPage
-	})
-
-	if tfawserr.ErrCodeEquals(err, fsx.ErrCodeFileSystemNotFound) {
-		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
-		}
-	}
-
-	if err != nil {
-		return nil, err
-	}
-
-	if len(filesystems) == 0 || filesystems[0] == nil {
-		return nil, tfresource.NewEmptyResultError(input)
-	}
-
-	if count := len(filesystems); count > 1 {
-		return nil, tfresource.NewTooManyResultsError(count, input)
-	}
-
-	return filesystems[0], nil
+	return findFileSystem(ctx, conn, input, tfslices.PredicateTrue[*fsx.FileSystem]())
 }
 
 func FindLustreFileSystemByID(ctx context.Context, conn *fsx.FSx, id string) (*fsx.FileSystem, error) {
@@ -770,7 +739,7 @@ func findFileSystems(ctx context.Context, conn *fsx.FSx, input *fsx.DescribeFile
 
 func statusFileSystem(ctx context.Context, conn *fsx.FSx, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := FindFileSystemByID(ctx, conn, id)
+		output, err := findFileSystemByID(ctx, conn, id)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil
@@ -869,7 +838,7 @@ func waitFileSystemDeleted(ctx context.Context, conn *fsx.FSx, id string, timeou
 }
 
 func findAdministrativeAction(ctx context.Context, conn *fsx.FSx, fsID, actionType string) (*fsx.AdministrativeAction, error) {
-	output, err := FindFileSystemByID(ctx, conn, fsID)
+	output, err := findFileSystemByID(ctx, conn, fsID)
 
 	if err != nil {
 		return nil, err
