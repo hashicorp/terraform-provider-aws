@@ -59,7 +59,6 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/scheduler v1.2.5
 	github.com/aws/aws-sdk-go-v2/service/securitylake v1.7.0
 	github.com/aws/aws-sdk-go-v2/service/sesv2 v1.20.0
-	github.com/aws/aws-sdk-go-v2/service/shield v1.19.5
 	github.com/aws/aws-sdk-go-v2/service/signer v1.16.5
 	github.com/aws/aws-sdk-go-v2/service/ssm v1.37.5
 	github.com/aws/aws-sdk-go-v2/service/ssmcontacts v1.16.5
