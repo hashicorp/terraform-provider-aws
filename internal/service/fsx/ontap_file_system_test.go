@@ -34,35 +34,35 @@ func TestAccFSxONTAPFileSystem_basic(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccONTAPFileSystemConfig_basic(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckONTAPFileSystemExists(ctx, resourceName, &filesystem),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "fsx", regexache.MustCompile(`file-system/fs-.+`)),
-					resource.TestCheckResourceAttr(resourceName, "network_interface_ids.#", "2"),
-					acctest.CheckResourceAttrAccountID(resourceName, "owner_id"),
-					resource.TestCheckResourceAttr(resourceName, "storage_capacity", "1024"),
-					resource.TestCheckTypeSetElemAttrPair(resourceName, "subnet_ids.*", "aws_subnet.test1", "id"),
-					resource.TestCheckTypeSetElemAttrPair(resourceName, "subnet_ids.*", "aws_subnet.test2", "id"),
-					resource.TestCheckResourceAttr(resourceName, "security_group_ids.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-					resource.TestCheckResourceAttrPair(resourceName, "vpc_id", "aws_vpc.test", "id"),
-					resource.TestMatchResourceAttr(resourceName, "weekly_maintenance_start_time", regexache.MustCompile(`^\d:\d\d:\d\d$`)),
-					resource.TestCheckResourceAttr(resourceName, "deployment_type", fsx.OntapDeploymentTypeMultiAz1),
 					resource.TestCheckResourceAttr(resourceName, "automatic_backup_retention_days", "0"),
-					resource.TestCheckResourceAttr(resourceName, "storage_type", fsx.StorageTypeSsd),
-					resource.TestCheckResourceAttrSet(resourceName, "kms_key_id"),
+					resource.TestCheckResourceAttr(resourceName, "deployment_type", fsx.OntapDeploymentTypeMultiAz1),
+					resource.TestCheckResourceAttr(resourceName, "disk_iops_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "disk_iops_configuration.0.iops", "3072"),
+					resource.TestCheckResourceAttr(resourceName, "disk_iops_configuration.0.mode", "AUTOMATIC"),
 					resource.TestCheckResourceAttrSet(resourceName, "endpoint_ip_address_range"),
-					resource.TestCheckResourceAttr(resourceName, "route_table_ids.#", "1"),
-					resource.TestCheckTypeSetElemAttrPair(resourceName, "route_table_ids.*", "aws_vpc.test", "default_route_table_id"),
-					resource.TestCheckResourceAttr(resourceName, "throughput_capacity", "128"),
-					resource.TestCheckResourceAttrPair(resourceName, "preferred_subnet_id", "aws_subnet.test1", "id"),
 					resource.TestCheckResourceAttr(resourceName, "endpoints.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "endpoints.0.intercluster.#", "1"),
 					resource.TestCheckResourceAttrSet(resourceName, "endpoints.0.intercluster.0.dns_name"),
 					resource.TestCheckResourceAttr(resourceName, "endpoints.0.management.#", "1"),
 					resource.TestCheckResourceAttrSet(resourceName, "endpoints.0.management.0.dns_name"),
-					resource.TestCheckResourceAttr(resourceName, "disk_iops_configuration.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "disk_iops_configuration.0.mode", "AUTOMATIC"),
-					resource.TestCheckResourceAttr(resourceName, "disk_iops_configuration.0.iops", "3072"),
+					resource.TestCheckResourceAttrSet(resourceName, "kms_key_id"),
+					resource.TestCheckResourceAttr(resourceName, "network_interface_ids.#", "2"),
+					acctest.CheckResourceAttrAccountID(resourceName, "owner_id"),
+					resource.TestCheckResourceAttrPair(resourceName, "preferred_subnet_id", "aws_subnet.test.0", "id"),
+					resource.TestCheckResourceAttr(resourceName, "route_table_ids.#", "1"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "route_table_ids.*", "aws_vpc.test", "default_route_table_id"),
+					resource.TestCheckResourceAttr(resourceName, "security_group_ids.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "storage_capacity", "1024"),
+					resource.TestCheckResourceAttr(resourceName, "storage_type", fsx.StorageTypeSsd),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "subnet_ids.*", "aws_subnet.test.0", "id"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "subnet_ids.*", "aws_subnet.test.1", "id"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "throughput_capacity", "128"),
+					resource.TestCheckResourceAttrPair(resourceName, "vpc_id", "aws_vpc.test", "id"),
+					resource.TestMatchResourceAttr(resourceName, "weekly_maintenance_start_time", regexache.MustCompile(`^\d:\d\d:\d\d$`)),
 				),
 			},
 			{
@@ -75,7 +75,7 @@ func TestAccFSxONTAPFileSystem_basic(t *testing.T) {
 	})
 }
 
-func TestAccFSxONTAPFileSystem_fsxSingleAz(t *testing.T) {
+func TestAccFSxONTAPFileSystem_singleAZ(t *testing.T) {
 	ctx := acctest.Context(t)
 	var filesystem fsx.FileSystem
 	resourceName := "aws_fsx_ontap_file_system.test"
@@ -88,7 +88,7 @@ func TestAccFSxONTAPFileSystem_fsxSingleAz(t *testing.T) {
 		CheckDestroy:             testAccCheckONTAPFileSystemDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccONTAPFileSystemConfig_singleAz(rName),
+				Config: testAccONTAPFileSystemConfig_singleAZ(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckONTAPFileSystemExists(ctx, resourceName, &filesystem),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "fsx", regexache.MustCompile(`file-system/fs-.+`)),
@@ -173,7 +173,7 @@ func TestAccFSxONTAPFileSystem_endpointIPAddressRange(t *testing.T) {
 	})
 }
 
-func TestAccFSxONTAPFileSystem_diskIops(t *testing.T) {
+func TestAccFSxONTAPFileSystem_diskIOPS(t *testing.T) {
 	ctx := acctest.Context(t)
 	var filesystem fsx.FileSystem
 	resourceName := "aws_fsx_ontap_file_system.test"
@@ -674,11 +674,11 @@ resource "aws_fsx_ontap_file_system" "test" {
 `)
 }
 
-func testAccONTAPFileSystemConfig_singleAz(rName string) string {
+func testAccONTAPFileSystemConfig_singleAZ(rName string) string {
 	return acctest.ConfigCompose(testAccONTAPFileSystemConfig_base(rName), fmt.Sprintf(`
 resource "aws_fsx_ontap_file_system" "test" {
   storage_capacity    = 1024
-  subnet_ids          = aws_subnet.test[*].id
+  subnet_ids          = [aws_subnet.test[0].id]
   deployment_type     = "SINGLE_AZ_1"
   throughput_capacity = 128
   preferred_subnet_id = aws_subnet.test[0].id
@@ -1002,7 +1002,7 @@ resource "aws_fsx_ontap_file_system" "test" {
   subnet_ids          = aws_subnet.test[*].id
   deployment_type     = "MULTI_AZ_1"
   throughput_capacity = 256
-  preferred_subnet_id = aws_subnet.test1.id
+  preferred_subnet_id = aws_subnet.test[0].id
 
   tags = {
     Name = %[1]q
