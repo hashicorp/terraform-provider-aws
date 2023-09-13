@@ -35,7 +35,7 @@ resource "aws_shield_application_layer_automatic_response" "example" {
 The following arguments are required:
 
 * `resource_arn` - (Required) ARN of the resource to protect (Cloudfront Distributions and ALBs only at this time).
-* `action` - (Required) One of `COUNT` or `BLOCK` 
+* `action` - (Required) One of `COUNT` or `BLOCK`
 
 ## Attribute Reference
 
