@@ -42,16 +42,8 @@ val alternateAWSAccessKeyID = if (alternateAccTestRoleARN != "") { DslContext.ge
 val alternateAWSSecretAccessKey = if (alternateAccTestRoleARN != "") { DslContext.getParameter("aws_alt_account.secret_access_key") } else { "" }
 
 project {
-    if (DslContext.getParameter("build_full", "true").toBoolean()) {
-        buildType(FullBuild)
-    }
-
-    if (DslContext.getParameter("build_pullrequest", "").toBoolean() || DslContext.getParameter("pullrequest_build", "").toBoolean()) {
-        buildType(PullRequest)
-    }
-
-    if (DslContext.getParameter("build_sweeperonly", "").toBoolean()) {
-        buildType(Sweeper)
+    if (DslContext.getParameter("build_performanceonly", "").toBoolean()) {
+        buildType(Performance)
     }
 
     params {
