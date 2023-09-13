@@ -100,8 +100,8 @@ func testAccCheckApplicationLayerAutomaticResponseDestroy(ctx context.Context) r
 				return nil
 			}
 
-			if err != nil || resp == nil {
-				return nil
+			if err != nil {
+				return err
 			}
 
 			if resp != nil && *resp.Protection.ApplicationLayerAutomaticResponseConfiguration.Status == "DISABLED" {
