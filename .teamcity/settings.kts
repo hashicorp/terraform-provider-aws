@@ -19,7 +19,7 @@ val acmCertificateRootDomain = DslContext.getParameter("acm_certificate_root_dom
 val sweeperRegions = DslContext.getParameter("sweeper_regions")
 val awsAccountID = DslContext.getParameter("aws_account.account_id")
 val acctestParallelism = DslContext.getParameter("acctest_parallelism", "")
-val tfAccAssumeRoleArn = DslContext.getParameter("tf_acc_assume_role_arn", "")
+val accTestRoleARN = DslContext.getParameter("aws_account.role_arn", "")
 val awsAlternateAccountID = DslContext.getParameter("aws_alt_account.account_id", "")
 val tfLog = DslContext.getParameter("tf_log", "")
 
@@ -49,33 +49,13 @@ project {
             text("BRANCH_NAME", brancRef, display = ParameterDisplay.HIDDEN)
         }
 
-        if (tfAccAssumeRoleArn != "") {
-            text("env.TF_ACC_ASSUME_ROLE_ARN", tfAccAssumeRoleArn)
-        }
-
-
         // Assume Role credentials
         password("AWS_ACCESS_KEY_ID", aaki, display = ParameterDisplay.HIDDEN)
         password("AWS_SECRET_ACCESS_KEY", asak, display = ParameterDisplay.HIDDEN)
         text("ACCTEST_ROLE_ARN", accTestRoleARN, display = ParameterDisplay.HIDDEN)
 
-        // Alternate Assume Role credentials
-        password("AWS_ALTERNATE_ACCESS_KEY_ID", alternateAWSAccessKeyID, display = ParameterDisplay.HIDDEN)
-        password("AWS_ALTERNATE_SECRET_ACCESS_KEY", alternateAWSSecretAccessKey, display = ParameterDisplay.HIDDEN)
-        text("ACCTEST_ALTERNATE_ROLE_ARN", alternateAccTestRoleARN, display = ParameterDisplay.HIDDEN)
-
         // Define this parameter even when not set to allow individual builds to set the value
         text("env.TF_ACC_TERRAFORM_VERSION", DslContext.getParameter("terraform_version", ""))
-
-        // These overrides exist because of the inherited dependency in the existing project structure and can
-        // be removed when this is moved outside of it
-        val isOnPrem = DslContext.getParameter("is_on_prem", "true").equals("true", ignoreCase = true)
-        if (isOnPrem) {
-            // These should be overridden in the base AWS project
-            param("env.GOPATH", "")
-            param("env.GO111MODULE", "") // No longer needed as of Go 1.16
-            param("env.GO_VERSION", "") // We're using `goenv` and `.go-version`
-        }
     }
 
     // subProject(Services)
