@@ -5,6 +5,7 @@ package fsx
 
 import (
 	"context"
+	"errors"
 	"log"
 	"strings"
 	"time"
@@ -14,6 +15,7 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -552,4 +554,125 @@ func flattenOntapStorageVirtualMachineEndpoint(rs *fsx.SvmEndpoint) []interface{
 	}
 
 	return []interface{}{m}
+}
+
+func FindStorageVirtualMachineByID(ctx context.Context, conn *fsx.FSx, id string) (*fsx.StorageVirtualMachine, error) {
+	input := &fsx.DescribeStorageVirtualMachinesInput{
+		StorageVirtualMachineIds: []*string{aws.String(id)},
+	}
+
+	var storageVirtualMachines []*fsx.StorageVirtualMachine
+
+	err := conn.DescribeStorageVirtualMachinesPagesWithContext(ctx, input, func(page *fsx.DescribeStorageVirtualMachinesOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		storageVirtualMachines = append(storageVirtualMachines, page.StorageVirtualMachines...)
+
+		return !lastPage
+	})
+
+	if tfawserr.ErrCodeEquals(err, fsx.ErrCodeStorageVirtualMachineNotFound) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if len(storageVirtualMachines) == 0 || storageVirtualMachines[0] == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	if count := len(storageVirtualMachines); count > 1 {
+		return nil, tfresource.NewTooManyResultsError(count, input)
+	}
+
+	return storageVirtualMachines[0], nil
+}
+
+func statusStorageVirtualMachine(ctx context.Context, conn *fsx.FSx, id string) retry.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := FindStorageVirtualMachineByID(ctx, conn, id)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, aws.StringValue(output.Lifecycle), nil
+	}
+}
+
+func waitStorageVirtualMachineCreated(ctx context.Context, conn *fsx.FSx, id string, timeout time.Duration) (*fsx.StorageVirtualMachine, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending: []string{fsx.StorageVirtualMachineLifecycleCreating, fsx.StorageVirtualMachineLifecyclePending},
+		Target:  []string{fsx.StorageVirtualMachineLifecycleCreated, fsx.StorageVirtualMachineLifecycleMisconfigured},
+		Refresh: statusStorageVirtualMachine(ctx, conn, id),
+		Timeout: timeout,
+		Delay:   30 * time.Second,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*fsx.StorageVirtualMachine); ok {
+		if status, details := aws.StringValue(output.Lifecycle), output.LifecycleTransitionReason; status == fsx.FileSystemLifecycleFailed && details != nil {
+			tfresource.SetLastError(err, errors.New(aws.StringValue(output.LifecycleTransitionReason.Message)))
+		}
+
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitStorageVirtualMachineUpdated(ctx context.Context, conn *fsx.FSx, id string, timeout time.Duration) (*fsx.StorageVirtualMachine, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending: []string{fsx.StorageVirtualMachineLifecyclePending},
+		Target:  []string{fsx.StorageVirtualMachineLifecycleCreated, fsx.StorageVirtualMachineLifecycleMisconfigured},
+		Refresh: statusStorageVirtualMachine(ctx, conn, id),
+		Timeout: timeout,
+		Delay:   30 * time.Second,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*fsx.StorageVirtualMachine); ok {
+		if status, details := aws.StringValue(output.Lifecycle), output.LifecycleTransitionReason; status == fsx.FileSystemLifecycleFailed && details != nil {
+			tfresource.SetLastError(err, errors.New(aws.StringValue(output.LifecycleTransitionReason.Message)))
+		}
+
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitStorageVirtualMachineDeleted(ctx context.Context, conn *fsx.FSx, id string, timeout time.Duration) (*fsx.StorageVirtualMachine, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending: []string{fsx.StorageVirtualMachineLifecycleCreated, fsx.StorageVirtualMachineLifecycleDeleting},
+		Target:  []string{},
+		Refresh: statusStorageVirtualMachine(ctx, conn, id),
+		Timeout: timeout,
+		Delay:   30 * time.Second,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*fsx.StorageVirtualMachine); ok {
+		if status, details := aws.StringValue(output.Lifecycle), output.LifecycleTransitionReason; status == fsx.StorageVirtualMachineLifecycleFailed && details != nil {
+			tfresource.SetLastError(err, errors.New(aws.StringValue(output.LifecycleTransitionReason.Message)))
+		}
+
+		return output, err
+	}
+
+	return nil, err
 }
