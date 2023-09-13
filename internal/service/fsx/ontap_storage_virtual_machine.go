@@ -36,6 +36,7 @@ func ResourceOntapStorageVirtualMachine() *schema.Resource {
 		ReadWithoutTimeout:   resourceOntapStorageVirtualMachineRead,
 		UpdateWithoutTimeout: resourceOntapStorageVirtualMachineUpdate,
 		DeleteWithoutTimeout: resourceOntapStorageVirtualMachineDelete,
+
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
@@ -56,10 +57,6 @@ func ResourceOntapStorageVirtualMachine() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
 			"active_directory_configuration": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -124,6 +121,10 @@ func ResourceOntapStorageVirtualMachine() *schema.Resource {
 						},
 					},
 				},
+			},
+			"arn": {
+				Type:     schema.TypeString,
+				Computed: true,
 			},
 			"endpoints": {
 				Type:     schema.TypeList,
