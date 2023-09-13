@@ -91,9 +91,9 @@ function analysis {
     inuse=$( bc -l <<< "((${perf_main_meminuse1}/${perf_latest_meminuse1})-1) + ((${perf_main_meminuse2}/${perf_latest_meminuse2})-1)/2" )
     cputime=$( bc -l <<< "((${perf_main_cputime1}/${perf_latest_cputime1})-1) + ((${perf_main_cputime2}/${perf_latest_cputime2})-1)/2" )
 
-    printf "Alloc:%.4f%%" "${alloc}"
-    printf ";Inuse:%.4f%%" "${inuse}"
-    printf ";CPUtime:%.4f%%\n" "${cputime}"
+    printf "Alloc:%.4f%%%%" "${alloc}"
+    printf ";Inuse:%.4f%%%%" "${inuse}"
+    printf ";CPUtime:%.4f%%%%\n" "${cputime}"
 }
 
 analysis
