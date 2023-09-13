@@ -249,7 +249,7 @@ func (r *resourceApplicationLayerAutomaticResponse) Delete(ctx context.Context, 
 	}
 	if protectionOutput != nil {
 		if protectionOutput.Protection.ApplicationLayerAutomaticResponseConfiguration != nil && protectionOutput.Protection.ApplicationLayerAutomaticResponseConfiguration.Status != nil {
-			if *protectionOutput.Protection.ApplicationLayerAutomaticResponseConfiguration.Status == "DISABLED" {
+			if aws.StringValue(protectionOutput.Protection.ApplicationLayerAutomaticResponseConfiguration.Status) == "DISABLED" {
 				return
 			}
 		}
@@ -352,7 +352,7 @@ func statusApplicationLayerAutomaticResponse(ctx context.Context, conn *shield.S
 		if err != nil {
 			return nil, "", err
 		}
-		curStatus := *out.Protection.ApplicationLayerAutomaticResponseConfiguration.Status
+		curStatus := aws.StringValue(out.Protection.ApplicationLayerAutomaticResponseConfiguration.Status)
 
 		if curStatus == "ENABLED" {
 			return out, statusNormal, nil
@@ -371,7 +371,7 @@ func statusApplicationLayerAutomaticResponseDeleted(ctx context.Context, conn *s
 		if err != nil {
 			return nil, "", err
 		}
-		curStatus := *out.Protection.ApplicationLayerAutomaticResponseConfiguration.Status
+		curStatus := aws.StringValue(out.Protection.ApplicationLayerAutomaticResponseConfiguration.Status)
 
 		if curStatus == "DISABLED" {
 			return nil, "", nil
