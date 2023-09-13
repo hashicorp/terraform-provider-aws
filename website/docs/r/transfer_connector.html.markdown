@@ -37,8 +37,8 @@ resource "aws_transfer_connector" "example" {
 resource "aws_transfer_connector" "example" {
   access_role = aws_iam_role.test.arn
   sftp_config {
-    trusted_host_keys     = ["ssh-rsa AAAAB3NYourKeysHere"]
-    user_secretid         = aws_secretsmanager_secret.example.id
+    trusted_host_keys = ["ssh-rsa AAAAB3NYourKeysHere"]
+    user_secretid     = aws_secretsmanager_secret.example.id
   }
   url = "sftp://test.com"
 }
