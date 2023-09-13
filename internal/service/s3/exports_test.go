@@ -7,6 +7,7 @@ package s3
 var (
 	DeleteAllObjectVersions           = deleteAllObjectVersions
 	EmptyBucket                       = emptyBucket
+	FindBucket                        = findBucket
 	FindBucketAccelerateConfiguration = findBucketAccelerateConfiguration
 	FindBucketPolicy                  = findBucketPolicy
 	FindBucketVersioning              = findBucketVersioning

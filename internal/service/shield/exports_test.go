@@ -5,6 +5,7 @@ package shield
 
 // Exports for use in tests only.
 var (
-	ResourceDRTAccessRoleARNAssociation   = newResourceDRTAccessRoleARNAssociation
-	ResourceDRTAccessLogBucketAssociation = newResourceDRTAccessLogBucketAssociation
+	ResourceDRTAccessRoleARNAssociation       = newResourceDRTAccessRoleARNAssociation
+	ResourceDRTAccessLogBucketAssociation     = newResourceDRTAccessLogBucketAssociation
+	ResourceApplicationLayerAutomaticResponse = newResourceApplicationLayerAutomaticResponse
 )
