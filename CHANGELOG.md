@@ -13,6 +13,10 @@ ENHANCEMENTS:
 * resource/aws_s3control_multi_region_access_point: Add `details.region.bucket_account_id` argument to support [cross-account Multi-Region Access Points](https://docs.aws.amazon.com/AmazonS3/latest/userguide/multi-region-access-point-buckets.html) ([#33416](https://github.com/hashicorp/terraform-provider-aws/issues/33416))
 * resource/aws_s3control_multi_region_access_point: Add `details.region.region` attribute ([#33416](https://github.com/hashicorp/terraform-provider-aws/issues/33416))
 
+BUG FIXES:
+
+* resource/aws_subnet: Fix destroy error when there is a lingering ENI for DMS ([#33375](https://github.com/hashicorp/terraform-provider-aws/issues/33375))
+
 ## 5.16.2 (September 11, 2023)
 
 FEATURES:
