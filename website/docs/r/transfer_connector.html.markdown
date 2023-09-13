@@ -38,7 +38,7 @@ resource "aws_transfer_connector" "example" {
   access_role = aws_iam_role.test.arn
   sftp_config {
     trusted_host_keys = ["ssh-rsa AAAAB3NYourKeysHere"]
-    user_secretid     = aws_secretsmanager_secret.example.id
+    user_secret_id    = aws_secretsmanager_secret.example.id
   }
   url = "sftp://test.com"
 }
@@ -69,7 +69,7 @@ This resource supports the following arguments:
 ### SftpConfig Details
 
 * `trusted_host_keys` - (Required) A list of public portion of the host key, or keys, that are used to authenticate the user to the external server to which you are connecting.(https://docs.aws.amazon.com/transfer/latest/userguide/API_SftpConnectorConfig.html)
-* `user_secretid` - (Required) The identifier for the secret (in AWS Secrets Manager) that contains the SFTP user's private key, password, or both. The identifier can be either the Amazon Resource Name (ARN) or the name of the secret.
+* `user_secret_id` - (Required) The identifier for the secret (in AWS Secrets Manager) that contains the SFTP user's private key, password, or both. The identifier can be either the Amazon Resource Name (ARN) or the name of the secret.
 
 ## Attribute Reference
 

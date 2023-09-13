@@ -312,7 +312,7 @@ resource "aws_transfer_connector" "test" {
 
   sftp_config {
     trusted_host_keys = [%[3]q]
-    user_secretid     = aws_secretsmanager_secret.test.id
+    user_secret_id    = aws_secretsmanager_secret.test.id
   }
 
   url = %[2]q

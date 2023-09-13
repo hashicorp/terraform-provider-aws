@@ -114,7 +114,7 @@ func ResourceConnector() *schema.Resource {
 								ValidateFunc: validation.StringLenBetween(1, 2028),
 							},
 						},
-						"user_secretid": {
+						"user_secret_id": {
 							Type:         schema.TypeString,
 							Optional:     true,
 							ValidateFunc: validation.StringLenBetween(1, 2028),
@@ -287,7 +287,7 @@ func expandSftpConfig(pUser []interface{}) *transfer.SftpConnectorConfig {
 	m := pUser[0].(map[string]interface{})
 
 	sftpConfig := &transfer.SftpConnectorConfig{
-		UserSecretId: aws.String(m["user_secretid"].(string)),
+		UserSecretId: aws.String(m["user_secret_id"].(string)),
 	}
 
 	if v, ok := m["trusted_host_keys"].(*schema.Set); ok && len(v.List()) > 0 {
@@ -345,8 +345,8 @@ func flattenSftpConfig(posixUser *transfer.SftpConnectorConfig) []interface{} {
 	}
 
 	m := map[string]interface{}{
-		"user_secretid":     aws.StringValue(posixUser.UserSecretId),
 		"trusted_host_keys": aws.StringValueSlice(posixUser.TrustedHostKeys),
+		"user_secret_id":    aws.StringValue(posixUser.UserSecretId),
 	}
 
 	return []interface{}{m}
