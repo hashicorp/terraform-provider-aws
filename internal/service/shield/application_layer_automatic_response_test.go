@@ -9,8 +9,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/service/shield/types"
+	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/shield"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -94,7 +93,7 @@ func testAccCheckApplicationLayerAutomaticResponseDestroy(ctx context.Context) r
 				ResourceArn: aws.String(rs.Primary.ID),
 			}
 			resp, err := conn.DescribeProtectionWithContext(ctx, input)
-			if errs.IsA[*types.ResourceNotFoundException](err) {
+			if errs.IsA[*shield.ResourceNotFoundException](err) {
 				return nil
 			}
 
@@ -140,7 +139,7 @@ func testAccCheckApplicationLayerAutomaticResponseExists(ctx context.Context, na
 
 func testAccCheckApplicationLayerAutomaticResponseNotRecreated(before, after *shield.DescribeProtectionOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		if before, after := aws.ToString(before.Protection.ApplicationLayerAutomaticResponseConfiguration.Status), aws.ToString(after.Protection.ApplicationLayerAutomaticResponseConfiguration.Status); before != after {
+		if before, after := aws.StringValue(before.Protection.ApplicationLayerAutomaticResponseConfiguration.Status), aws.StringValue(after.Protection.ApplicationLayerAutomaticResponseConfiguration.Status); before != after {
 			return create.Error(names.Shield, create.ErrActionCheckingNotRecreated, tfshield.ResNameApplicationLayerAutomaticResponse, before, errors.New("recreated"))
 		}
 
