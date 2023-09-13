@@ -42,8 +42,8 @@ val alternateAWSAccessKeyID = if (alternateAccTestRoleARN != "") { DslContext.ge
 val alternateAWSSecretAccessKey = if (alternateAccTestRoleARN != "") { DslContext.getParameter("aws_alt_account.secret_access_key") } else { "" }
 
 project {
-    if (DslContext.getParameter("build_performanceonly", "").toBoolean()) {
-        buildType(Performance)
+    if (DslContext.getParameter("build_full", "true").toBoolean()) {
+        buildType(FullBuild)
     }
 
     params {
@@ -117,10 +117,10 @@ project {
         }
     }
 
-    //subProject(Services)
+    // subProject(Services)
 }
 
-object Performance : BuildType({
+object FullBuild : BuildType({
     name = "Performance"
 
     vcs {
@@ -152,7 +152,7 @@ object Performance : BuildType({
                     connection = notifier.connectionID
                     sendTo = notifier.destination
                     messageFormat = verboseMessageFormat {
-                        addBranch = branchRef != "refs/heads/main"
+                        addBranch = branchRef != "refs/heads/f-teamcity-memcpu-prof"
                         addStatusText = true
                     }
                 }
