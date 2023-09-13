@@ -154,7 +154,6 @@ func (r *resourceApplicationLayerAutomaticResponse) Read(ctx context.Context, re
 		out.Protection != nil &&
 		out.Protection.ApplicationLayerAutomaticResponseConfiguration != nil &&
 		out.Protection.ApplicationLayerAutomaticResponseConfiguration.Action != nil {
-
 		if out.Protection.ApplicationLayerAutomaticResponseConfiguration.Action.Block != nil {
 			state.Action = types.StringValue("BLOCK")
 		}
@@ -176,7 +175,6 @@ func (r *resourceApplicationLayerAutomaticResponse) Update(ctx context.Context, 
 	}
 
 	if !plan.Action.Equal(state.Action) {
-
 		action := &shield.ResponseAction{}
 		switch plan.Action.ValueString() {
 		case "BLOCK":
