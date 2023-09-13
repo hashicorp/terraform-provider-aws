@@ -16,6 +16,7 @@ ENHANCEMENTS:
 
 BUG FIXES:
 
+* resource/aws_servicecatalog_product: Allow import on `provisioning_artifact_parameters` attribute ([#33448](https://github.com/hashicorp/terraform-provider-aws/issues/33448))
 * resource/aws_subnet: Fix destroy error when there is a lingering ENI for DMS ([#33375](https://github.com/hashicorp/terraform-provider-aws/issues/33375))
 
 ## 5.16.2 (September 11, 2023)
