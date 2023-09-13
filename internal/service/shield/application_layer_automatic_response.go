@@ -8,8 +8,7 @@ import (
 	"errors"
 	"time"
 
-	"github.com/aws/aws-sdk-go-v2/aws"
-	awstypes "github.com/aws/aws-sdk-go-v2/service/shield/types"
+	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/shield"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
@@ -238,7 +237,7 @@ func (r *resourceApplicationLayerAutomaticResponse) Delete(ctx context.Context, 
 		ResourceArn: aws.String(state.ResourceARN.ValueString()),
 	})
 	if err != nil {
-		var nfe *awstypes.ResourceNotFoundException
+		var nfe *shield.ResourceNotFoundException
 		if errors.As(err, &nfe) {
 			return
 		}
@@ -263,7 +262,7 @@ func (r *resourceApplicationLayerAutomaticResponse) Delete(ctx context.Context, 
 
 	_, err = conn.DisableApplicationLayerAutomaticResponseWithContext(ctx, in)
 	if err != nil {
-		var nfe *awstypes.ResourceNotFoundException
+		var nfe *shield.ResourceNotFoundException
 		if errors.As(err, &nfe) {
 			return
 		}
