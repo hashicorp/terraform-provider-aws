@@ -4,6 +4,10 @@ NOTES:
 
 * data-source/aws_s3_object: Migration to [AWS SDK for Go v2](https://aws.github.io/aws-sdk-go-v2/) means that the edge case of specifying a single `/` as the value for `key` is no longer supported ([#33358](https://github.com/hashicorp/terraform-provider-aws/issues/33358))
 
+FEATURES:
+
+* **New Resource:** `aws_shield_application_layer_automatic_response` ([#33432](https://github.com/hashicorp/terraform-provider-aws/issues/33432))
+
 ENHANCEMENTS:
 
 * data-source/aws_s3_object: Add `checksum_mode` argument and `checksum_crc32`, `checksum_crc32c`, `checksum_sha1` and `checksum_sha256` attributes ([#33358](https://github.com/hashicorp/terraform-provider-aws/issues/33358))
@@ -13,9 +17,11 @@ ENHANCEMENTS:
 * resource/aws_s3control_multi_region_access_point: Add `details.region.bucket_account_id` argument to support [cross-account Multi-Region Access Points](https://docs.aws.amazon.com/AmazonS3/latest/userguide/multi-region-access-point-buckets.html) ([#33416](https://github.com/hashicorp/terraform-provider-aws/issues/33416))
 * resource/aws_s3control_multi_region_access_point: Add `details.region.region` attribute ([#33416](https://github.com/hashicorp/terraform-provider-aws/issues/33416))
 * resource/aws_transfer_connector: Add `sftp_config` argument and make `as2_config` optional ([#32741](https://github.com/hashicorp/terraform-provider-aws/issues/32741))
+* resource/aws_wafv2_web_acl: Retry resource Update on `WAFOptimisticLockException` errors ([#33432](https://github.com/hashicorp/terraform-provider-aws/issues/33432))
 
 BUG FIXES:
 
+* resource/aws_neptune_cluster: Fix ignored `kms_key_arn` on restore from DB cluster snapshot ([#33413](https://github.com/hashicorp/terraform-provider-aws/issues/33413))
 * resource/aws_servicecatalog_product: Allow import on `provisioning_artifact_parameters` attribute ([#33448](https://github.com/hashicorp/terraform-provider-aws/issues/33448))
 * resource/aws_subnet: Fix destroy error when there is a lingering ENI for DMS ([#33375](https://github.com/hashicorp/terraform-provider-aws/issues/33375))
 
