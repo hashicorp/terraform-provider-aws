@@ -21,6 +21,7 @@ ENHANCEMENTS:
 
 BUG FIXES:
 
+* resource/aws_dms_replication_task: Fix error when `replication_task_settings` is `nil` ([#33456](https://github.com/hashicorp/terraform-provider-aws/issues/33456))
 * resource/aws_neptune_cluster: Fix ignored `kms_key_arn` on restore from DB cluster snapshot ([#33413](https://github.com/hashicorp/terraform-provider-aws/issues/33413))
 * resource/aws_servicecatalog_product: Allow import on `provisioning_artifact_parameters` attribute ([#33448](https://github.com/hashicorp/terraform-provider-aws/issues/33448))
 * resource/aws_subnet: Fix destroy error when there is a lingering ENI for DMS ([#33375](https://github.com/hashicorp/terraform-provider-aws/issues/33375))
