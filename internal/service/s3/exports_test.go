@@ -9,6 +9,7 @@ var (
 	EmptyBucket                       = emptyBucket
 	FindBucketAccelerateConfiguration = findBucketAccelerateConfiguration
 	FindBucketPolicy                  = findBucketPolicy
+	FindBucketVersioning              = findBucketVersioning
 	FindObjectByBucketAndKey          = findObjectByBucketAndKey
 	SDKv1CompatibleCleanKey           = sdkv1CompatibleCleanKey
 )
