@@ -474,7 +474,7 @@ func flattenProvisioningArtifactParameters(apiObject *servicecatalog.DescribePro
 
 	m := map[string]interface{}{
 		"description":                 aws.StringValue(apiObject.ProvisioningArtifactDetail.Description),
-		"disable_template_validation": false,
+		"disable_template_validation": false, // set default because it cannot be read
 		"name":                        aws.StringValue(apiObject.ProvisioningArtifactDetail.Name),
 		"type":                        aws.StringValue(apiObject.ProvisioningArtifactDetail.Type),
 	}
