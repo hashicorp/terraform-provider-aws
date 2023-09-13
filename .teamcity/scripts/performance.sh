@@ -99,6 +99,11 @@ function analysis {
 analysis
 exit 0
 
+if [ -f "memvpc1.prof" -a -f "memssm1.prof" -a -f "memvpc2.prof" -a -f "memssm2.prof" ]; then
+    echo "Tests complete. Analyzing results..."
+    analysis
+fi
+
 if [ -f "memvpc1.prof" -a -f "memssm1.prof" -a -f "memvpc2.prof" -a ! -f "memssm2.prof" ]; then
     echo "SSM 2 test not yet run. Running..."
     ssmtest ssm2
@@ -118,9 +123,4 @@ fi
 if [ ! -f "memvpc1.prof" ]; then
     echo "VPC 1 test not yet run. Running..."
     vpctest vpc1
-fi
-
-if [ -f "memvpc1.prof" -a -f "memssm1.prof" -a -f "memvpc2.prof" -a -f "memssm2.prof" ]; then
-    echo "Tests complete. Analyzing results..."
-    analysis
 fi
