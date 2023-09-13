@@ -178,7 +178,7 @@ func resourceProductImport(ctx context.Context, d *schema.ResourceData, meta int
 		sort.Slice(productData.ProvisioningArtifactSummaries, func(i, j int) bool {
 			return aws.TimeValue(productData.ProvisioningArtifactSummaries[i].CreatedTime).Before(aws.TimeValue(productData.ProvisioningArtifactSummaries[j].CreatedTime))
 		})
-		
+
 		provisioningArtifact := productData.ProvisioningArtifactSummaries[len(productData.ProvisioningArtifactSummaries)-1]
 		in := &servicecatalog.DescribeProvisioningArtifactInput{
 			ProductId:              aws.String(d.Id()),
