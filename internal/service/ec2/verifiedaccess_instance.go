@@ -4,8 +4,17 @@
 package ec2
 
 import (
+	"context"
+	"log"
+
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/ec2/types"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -14,6 +23,8 @@ import (
 // @Tags(identifierAttribute="id")
 func ResourceVerifiedAccessInstance() *schema.Resource {
 	return &schema.Resource{
+		ReadWithoutTimeout: resourceVerifiedAccessInstanceRead,
+
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
@@ -65,4 +76,73 @@ func ResourceVerifiedAccessInstance() *schema.Resource {
 
 		CustomizeDiff: verify.SetTagsDiff,
 	}
+}
+
+func resourceVerifiedAccessInstanceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).EC2Client(ctx)
+
+	output, err := FindVerifiedAccessInstanceByID(ctx, conn, d.Id())
+
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] EC2 Verified Access Instance (%s) not found, removing from state", d.Id())
+		d.SetId("")
+		return diags
+	}
+
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "reading Verified Access Instance (%s): %s", d.Id(), err)
+	}
+
+	d.Set("description", output.Description)
+	d.Set("creation_time", output.CreationTime)
+	d.Set("last_updated_time", output.LastUpdatedTime)
+
+	if v := output.VerifiedAccessTrustProviders; v != nil {
+		if err := d.Set("verified_access_trust_providers", flattenVerifiedAccessTrustProviders(v)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting verified access trust providers: %s", err)
+		}
+	} else {
+		d.Set("verified_access_trust_providers", nil)
+	}
+
+	setTagsOutV2(ctx, output.Tags)
+
+	return diags
+}
+
+func flattenVerifiedAccessTrustProviders(apiObjects []types.VerifiedAccessTrustProviderCondensed) []interface{} {
+	if len(apiObjects) == 0 {
+		return nil
+	}
+
+	var tfList []interface{}
+
+	for _, apiObject := range apiObjects {
+		v := flattenVerifiedAccessTrustProvider(apiObject)
+
+		if len(v) > 0 {
+			tfList = append(tfList, v)
+		}
+	}
+
+	return tfList
+}
+
+func flattenVerifiedAccessTrustProvider(apiObject types.VerifiedAccessTrustProviderCondensed) map[string]interface{} {
+	tfMap := map[string]interface{}{
+		"device_trust_provider_type": string(apiObject.DeviceTrustProviderType),
+		"trust_provider_type":        string(apiObject.TrustProviderType),
+		"user_trust_provider_type":   string(apiObject.UserTrustProviderType),
+	}
+
+	if v := apiObject.Description; v != nil {
+		tfMap["description"] = aws.ToString(v)
+	}
+
+	if v := apiObject.VerifiedAccessTrustProviderId; v != nil {
+		tfMap["verified_access_trust_provider_id"] = aws.ToString(v)
+	}
+
+	return tfMap
 }
