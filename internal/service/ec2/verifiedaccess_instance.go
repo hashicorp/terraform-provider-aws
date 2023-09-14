@@ -27,6 +27,7 @@ func ResourceVerifiedAccessInstance() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceVerifiedAccessInstanceCreate,
 		ReadWithoutTimeout:   resourceVerifiedAccessInstanceRead,
+		UpdateWithoutTimeout: resourceVerifiedAccessInstanceUpdate,
 
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
@@ -136,6 +137,30 @@ func resourceVerifiedAccessInstanceRead(ctx context.Context, d *schema.ResourceD
 	setTagsOutV2(ctx, output.Tags)
 
 	return diags
+}
+
+func resourceVerifiedAccessInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).EC2Client(ctx)
+
+	if d.HasChangesExcept("tags", "tags_all") {
+		input := &ec2.ModifyVerifiedAccessInstanceInput{
+			ClientToken:              aws.String(id.UniqueId()),
+			VerifiedAccessInstanceId: aws.String(d.Id()),
+		}
+
+		if d.HasChanges("description") {
+			input.Description = aws.String(d.Get("description").(string))
+		}
+
+		_, err := conn.ModifyVerifiedAccessInstance(ctx, input)
+
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating Verified Access Instance (%s): %s", d.Id(), err)
+		}
+	}
+
+	return append(diags, resourceVerifiedAccessInstanceRead(ctx, d, meta)...)
 }
 
 func flattenVerifiedAccessTrustProviders(apiObjects []types.VerifiedAccessTrustProviderCondensed) []interface{} {
