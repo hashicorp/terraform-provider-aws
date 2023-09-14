@@ -86,6 +86,9 @@ function analysis {
     printf ";CPUtime:%%.4f%%%%\n" "${cputime}"
 }
 
+go install github.com/google/pprof@latest
+pprof help
+
 if [ -f "memvpcmain.prof" -a -f "memssmmain.prof" -a -f "memvpclatest.prof" -a -f "memssmlatest.prof" ]; then
     echo "Tests complete. Analyzing results..."
     analysis
