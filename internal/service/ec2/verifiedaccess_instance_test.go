@@ -95,6 +95,33 @@ func TestAccVerifiedAccessInstance_description(t *testing.T) {
 	})
 }
 
+func TestAccVerifiedAccessInstance_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	var v types.VerifiedAccessInstance
+	resourceName := "aws_verifiedaccess_instance.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheckVerifiedAccessInstance(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckVerifiedAccessInstanceDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVerifiedAccessInstanceConfig_basic(),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVerifiedAccessInstanceExists(ctx, resourceName, &v),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfec2.ResourceVerifiedAccessInstance(), resourceName),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
 func TestAccVerifiedAccessInstance_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 
