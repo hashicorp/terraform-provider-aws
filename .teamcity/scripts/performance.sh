@@ -29,7 +29,6 @@ EOF
     export AWS_PROFILE=perftest
 fi
 
-go install github.com/google/pprof@latest
 function vpctest {
     local suffix=$1
     TF_ACC=1 go test \
