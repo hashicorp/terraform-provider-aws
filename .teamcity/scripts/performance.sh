@@ -111,5 +111,5 @@ fi
 if [ ! -f "memvpcmain.prof" ]; then
     go install github.com/google/pprof@latest
     echo "Running VPC main branch test..."
-    #vpctest vpcmain
+    vpctest vpcmain
 fi
