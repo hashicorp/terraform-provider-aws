@@ -135,19 +135,19 @@ object FullBuild : BuildType({
             scriptContent = File("./scripts/configure_goenv.sh").readText()
         }
         script {
-            name = "Performance 1"
+            name = "VPC Main"
             scriptContent = File("./scripts/performance.sh").readText()
         }
         script {
-            name = "Performance 2"
+            name = "SSM Main"
             scriptContent = File("./scripts/performance.sh").readText()
         }
         script {
-            name = "Performance 3"
+            name = "VPC Latest Version"
             scriptContent = File("./scripts/performance.sh").readText()
         }
         script {
-            name = "Performance 4"
+            name = "SSM Latest Version"
             scriptContent = File("./scripts/performance.sh").readText()
         }
         script {

@@ -55,6 +55,7 @@ function ssmtest {
 }
 
 function analysis {
+    go install github.com/google/pprof@latest
     perf_main_memalloc1=$( pprof -top -flat -sample_index=alloc_space -unit=mb memvpc1.prof | head -3 | tr '\n' ' ' | sed -E 's/.*%% of ([0-9.]+)MB total.*/\1/g' )
     perf_main_meminuse1=$( pprof -top -flat -sample_index=inuse_space -unit=mb memvpc1.prof | head -3 | tr '\n' ' ' | sed -E 's/.*%% of ([0-9.]+)MB total.*/\1/g' )
     perf_main_cputime1=$( pprof -top -flat -sample_index=cpu cpuvpc1.prof | head -5 | tr '\n' ' ' | sed -E 's/.*%% of ([0-9.]+)s total.*/\1/g' ) 2>/dev/null
