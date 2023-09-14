@@ -172,10 +172,11 @@ object FullBuild : BuildType({
                     connection = notifier.connectionID
                     sendTo = notifier.destination
                     messageFormat = verboseMessageFormat {
-                        addBranch = branchRef != "refs/heads/f-teamcity-memcpu-prof"
+                        addBranch = branchRef != "refs/heads/main"
                         addStatusText = true
                     }
                 }
+                message = "This will not work!"
                 buildStarted = true
                 buildFailedToStart = true
                 buildFailed = true
