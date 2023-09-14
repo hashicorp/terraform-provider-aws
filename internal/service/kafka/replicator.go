@@ -3,7 +3,6 @@ package kafka
 import (
 	"context"
 	"errors"
-	"fmt"
 	"log"
 	"time"
 
@@ -283,15 +282,14 @@ func resourceReplicatorRead(ctx context.Context, d *schema.ResourceData, meta in
 		return append(diags, create.DiagError(names.Kafka, create.ErrActionReading, ResNameReplicator, d.Id(), err)...)
 	}
 
-	sourceAlias	:= out.ReplicationInfoList[0].SourceKafkaClusterAlias
+	sourceAlias := out.ReplicationInfoList[0].SourceKafkaClusterAlias
 	targetAlias := out.ReplicationInfoList[0].TargetKafkaClusterAlias
 	clustersArn := out.KafkaClusters
 
 	var sourceARN *string
 	var targetARN *string
 
-	for _,arn := range clustersArn {
-		fmt.Println(*arn.AmazonMskCluster.MskClusterArn)
+	for _, arn := range clustersArn {
 		clusterAlias := *arn.KafkaClusterAlias
 		if clusterAlias == *sourceAlias {
 			sourceARN = arn.AmazonMskCluster.MskClusterArn
@@ -318,33 +316,37 @@ func resourceReplicatorUpdate(ctx context.Context, d *schema.ResourceData, meta 
 
 	conn := meta.(*conns.AWSClient).KafkaClient(ctx)
 
-	in := &kafka.UpdateReplicationInfoInput{
-		ReplicatorArn:         aws.String(d.Id()),
-		CurrentVersion:        aws.String(d.Get("current_version").(string)),
-		SourceKafkaClusterArn: aws.String(d.Get("replication_info_list.0.source_kafka_cluster_arn").(string)),
-		TargetKafkaClusterArn: aws.String(d.Get("replication_info_list.0.target_kafka_cluster_arn").(string)),
-	}
-
-	if d.HasChanges("replication_info_list.0.consumer_group_replication") {
-		if v, ok := d.GetOk("replication_info_list.0.consumer_group_replication"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-			in.ConsumerGroupReplication = expandConsumerGroupReplicationUpdate(v.([]interface{})[0].(map[string]interface{}))
+	if d.HasChangesExcept("tags", "tags_all") {
+		in := &kafka.UpdateReplicationInfoInput{
+			ReplicatorArn:         aws.String(d.Id()),
+			CurrentVersion:        aws.String(d.Get("current_version").(string)),
+			SourceKafkaClusterArn: aws.String(d.Get("replication_info_list.0.source_kafka_cluster_arn").(string)),
+			TargetKafkaClusterArn: aws.String(d.Get("replication_info_list.0.target_kafka_cluster_arn").(string)),
 		}
-	}
 
-	if d.HasChanges("replication_info_list.0.topic_replication") {
-		if v, ok := d.GetOk("replication_info_list.0.topic_replication"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-			in.TopicReplication = expandTopicReplicationUpdate(v.([]interface{})[0].(map[string]interface{}))
+		if d.HasChanges("replication_info_list.0.consumer_group_replication") {
+			if v, ok := d.GetOk("replication_info_list.0.consumer_group_replication"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+				in.ConsumerGroupReplication = expandConsumerGroupReplicationUpdate(v.([]interface{})[0].(map[string]interface{}))
+			}
 		}
-	}
 
-	log.Printf("[DEBUG] Updating Kafka Replicator (%s): %#v", d.Id(), in)
-	out, err := conn.UpdateReplicationInfo(ctx, in)
-	if err != nil {
-		return append(diags, create.DiagError(names.Kafka, create.ErrActionUpdating, ResNameReplicator, d.Id(), err)...)
-	}
+		if d.HasChanges("replication_info_list.0.topic_replication") {
+			if v, ok := d.GetOk("replication_info_list.0.topic_replication"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+				in.TopicReplication = expandTopicReplicationUpdate(v.([]interface{})[0].(map[string]interface{}))
+			}
+		}
 
-	if _, err := waitReplicatorUpdated(ctx, conn, aws.ToString(out.ReplicatorArn), d.Timeout(schema.TimeoutUpdate)); err != nil {
-		return append(diags, create.DiagError(names.Kafka, create.ErrActionWaitingForUpdate, ResNameReplicator, d.Id(), err)...)
+		log.Printf("[DEBUG] Updating Kafka Replicator (%s): %#v", d.Id(), in)
+
+		out, err := conn.UpdateReplicationInfo(ctx, in)
+
+		if err != nil {
+			return append(diags, create.DiagError(names.Kafka, create.ErrActionUpdating, ResNameReplicator, d.Id(), err)...)
+		}
+
+		if _, err := waitReplicatorUpdated(ctx, conn, aws.ToString(out.ReplicatorArn), d.Timeout(schema.TimeoutUpdate)); err != nil {
+			return append(diags, create.DiagError(names.Kafka, create.ErrActionWaitingForUpdate, ResNameReplicator, d.Id(), err)...)
+		}
 	}
 
 	return append(diags, resourceReplicatorRead(ctx, d, meta)...)
