@@ -65,6 +65,7 @@ func ResourceONTAPStorageVirtualMachine() *schema.Resource {
 						"netbios_name": {
 							Type:             schema.TypeString,
 							Optional:         true,
+							ForceNew:         true,
 							DiffSuppressFunc: verify.SuppressEquivalentStringCaseInsensitive,
 							ValidateFunc:     validation.StringLenBetween(1, 15),
 						},
@@ -644,8 +645,8 @@ func waitStorageVirtualMachineCreated(ctx context.Context, conn *fsx.FSx, id str
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*fsx.StorageVirtualMachine); ok {
-		if status, details := aws.StringValue(output.Lifecycle), output.LifecycleTransitionReason; status == fsx.FileSystemLifecycleFailed && details != nil {
-			tfresource.SetLastError(err, errors.New(aws.StringValue(output.LifecycleTransitionReason.Message)))
+		if reason := output.LifecycleTransitionReason; reason != nil {
+			tfresource.SetLastError(err, errors.New(aws.StringValue(reason.Message)))
 		}
 
 		return output, err
@@ -666,8 +667,8 @@ func waitStorageVirtualMachineUpdated(ctx context.Context, conn *fsx.FSx, id str
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*fsx.StorageVirtualMachine); ok {
-		if status, details := aws.StringValue(output.Lifecycle), output.LifecycleTransitionReason; status == fsx.FileSystemLifecycleFailed && details != nil {
-			tfresource.SetLastError(err, errors.New(aws.StringValue(output.LifecycleTransitionReason.Message)))
+		if reason := output.LifecycleTransitionReason; reason != nil {
+			tfresource.SetLastError(err, errors.New(aws.StringValue(reason.Message)))
 		}
 
 		return output, err
@@ -688,8 +689,8 @@ func waitStorageVirtualMachineDeleted(ctx context.Context, conn *fsx.FSx, id str
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*fsx.StorageVirtualMachine); ok {
-		if status, details := aws.StringValue(output.Lifecycle), output.LifecycleTransitionReason; status == fsx.StorageVirtualMachineLifecycleFailed && details != nil {
-			tfresource.SetLastError(err, errors.New(aws.StringValue(output.LifecycleTransitionReason.Message)))
+		if reason := output.LifecycleTransitionReason; reason != nil {
+			tfresource.SetLastError(err, errors.New(aws.StringValue(reason.Message)))
 		}
 
 		return output, err
