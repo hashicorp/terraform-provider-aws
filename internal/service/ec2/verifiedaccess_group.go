@@ -2,17 +2,16 @@ package ec2
 
 import (
 	"context"
-	"errors"
 	"log"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	"github.com/aws/aws-sdk-go-v2/service/ec2/types"
+	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -85,38 +84,30 @@ func ResourceVerifiedAccessGroup() *schema.Resource {
 	}
 }
 
-const (
-	ResNameVerifiedAccessGroup = "Verified Access Group"
-)
-
 func resourceVerifiedAccessGroupCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
-	in := &ec2.CreateVerifiedAccessGroupInput{
-		VerifiedAccessInstanceId: aws.String(d.Get("verified_access_instance_id").(string)),
+	input := &ec2.CreateVerifiedAccessGroupInput{
 		TagSpecifications:        getTagSpecificationsInV2(ctx, types.ResourceTypeVerifiedAccessGroup),
+		VerifiedAccessInstanceId: aws.String(d.Get("verified_access_instance_id").(string)),
 	}
 
 	if v, ok := d.GetOk("description"); ok {
-		in.Description = aws.String(v.(string))
+		input.Description = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("policy_document"); ok {
-		in.PolicyDocument = aws.String(v.(string))
+		input.PolicyDocument = aws.String(v.(string))
 	}
 
-	out, err := conn.CreateVerifiedAccessGroup(ctx, in)
+	output, err := conn.CreateVerifiedAccessGroup(ctx, input)
+
 	if err != nil {
-		return create.DiagError(names.EC2, create.ErrActionCreating, ResNameVerifiedAccessGroup, "", err)
+		return sdkdiag.AppendErrorf(diags, "creating Verified Access Group: %s", err)
 	}
 
-	if out == nil || out.VerifiedAccessGroup == nil {
-		return create.DiagError(names.EC2, create.ErrActionCreating, ResNameVerifiedAccessGroup, "", errors.New("empty output"))
-	}
-
-	d.SetId(aws.ToString(out.VerifiedAccessGroup.VerifiedAccessGroupId))
+	d.SetId(aws.ToString(output.VerifiedAccessGroup.VerifiedAccessGroupId))
 
 	return append(diags, resourceVerifiedAccessGroupRead(ctx, d, meta)...)
 }
@@ -161,58 +152,38 @@ func resourceVerifiedAccessGroupRead(ctx context.Context, d *schema.ResourceData
 
 func resourceVerifiedAccessGroupUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
-	update := false
-	update_policy := false
-
-	in := &ec2.ModifyVerifiedAccessGroupInput{
-		VerifiedAccessGroupId: aws.String(d.Id()),
-	}
-
-	in_policy := &ec2.ModifyVerifiedAccessGroupPolicyInput{
-		VerifiedAccessGroupId: aws.String(d.Id()),
-	}
-
-	if d.HasChange("description") {
-		if v, ok := d.GetOk("description"); ok {
-			in.Description = aws.String(v.(string))
-			update = true
+	if d.HasChangesExcept("policy", "tags", "tags_all") {
+		input := &ec2.ModifyVerifiedAccessGroupInput{
+			VerifiedAccessGroupId: aws.String(d.Id()),
 		}
-	}
 
-	if d.HasChange("verified_access_instance_id") {
-		if v, ok := d.GetOk("verified_access_instance_id"); ok {
-			in.VerifiedAccessInstanceId = aws.String(v.(string))
-			update = true
+		if d.HasChange("description") {
+			input.Description = aws.String(d.Get("description").(string))
+		}
+
+		if d.HasChange("verified_access_instance_id") {
+			input.VerifiedAccessInstanceId = aws.String(d.Get("description").(string))
+		}
+
+		_, err := conn.ModifyVerifiedAccessGroup(ctx, input)
+
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating Verified Access Group (%s): %s", d.Id(), err)
 		}
 	}
 
 	if d.HasChange("policy_document") {
-		if v, ok := d.GetOk("policy_document"); ok {
-			in_policy.PolicyDocument = aws.String(v.(string))
-			update_policy = true
+		input := &ec2.ModifyVerifiedAccessGroupPolicyInput{
+			PolicyDocument:        aws.String(d.Get("policy_document").(string)),
+			VerifiedAccessGroupId: aws.String(d.Id()),
 		}
-	}
 
-	if !update {
-		return diags
-	}
-
-	log.Printf("[DEBUG] Updating EC2 VerifiedAccessGroup (%s): %#v", d.Id(), in)
-	_, err := conn.ModifyVerifiedAccessGroup(ctx, in)
-
-	if err != nil {
-		return append(diags, create.DiagError(names.EC2, create.ErrActionUpdating, ResNameVerifiedAccessGroup, d.Id(), err)...)
-	}
-
-	if update_policy {
-		log.Printf("[DEBUG] Updating EC2 VerifiedAccessGroupPolicy (%s): %#v", d.Id(), in_policy)
-		_, err := conn.ModifyVerifiedAccessGroupPolicy(ctx, in_policy)
+		_, err := conn.ModifyVerifiedAccessGroupPolicy(ctx, input)
 
 		if err != nil {
-			return append(diags, create.DiagError(names.EC2, create.ErrActionUpdating, ResNameVerifiedAccessGroup, d.Id(), err)...)
+			return sdkdiag.AppendErrorf(diags, "updating Verified Access Group (%s) policy: %s", d.Id(), err)
 		}
 	}
 
@@ -221,16 +192,19 @@ func resourceVerifiedAccessGroupUpdate(ctx context.Context, d *schema.ResourceDa
 
 func resourceVerifiedAccessGroupDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
-	log.Printf("[INFO] Deleting EC2 VerifiedAccessGroup %s", d.Id())
+	log.Printf("[INFO] Deleting Verified Access Group: %s", d.Id())
 	_, err := conn.DeleteVerifiedAccessGroup(ctx, &ec2.DeleteVerifiedAccessGroupInput{
 		VerifiedAccessGroupId: aws.String(d.Id()),
 	})
 
+	if tfawserr.ErrCodeEquals(err, errCodeInvalidVerifiedAccessGroupIdNotFound) {
+		return diags
+	}
+
 	if err != nil {
-		return append(diags, create.DiagError(names.EC2, create.ErrActionDeleting, ResNameVerifiedAccessGroup, d.Id(), err)...)
+		return sdkdiag.AppendErrorf(diags, "deleting Verified Access Group (%s): %s", d.Id(), err)
 	}
 
 	return diags
