@@ -5,7 +5,7 @@ go 1.20
 require (
 	github.com/ProtonMail/go-crypto v0.0.0-20230717121422-5aa5874ade95
 	github.com/YakDriver/regexache v0.23.0
-	github.com/aws/aws-sdk-go v1.45.8
+	github.com/aws/aws-sdk-go v1.45.9
 	github.com/aws/aws-sdk-go-v2 v1.21.0
 	github.com/aws/aws-sdk-go-v2/config v1.18.39
 	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.13.11
@@ -33,7 +33,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/healthlake v1.17.5
 	github.com/aws/aws-sdk-go-v2/service/identitystore v1.18.2
 	github.com/aws/aws-sdk-go-v2/service/inspector2 v1.16.6
-	github.com/aws/aws-sdk-go-v2/service/internetmonitor v1.5.5
+	github.com/aws/aws-sdk-go-v2/service/internetmonitor v1.6.0
 	github.com/aws/aws-sdk-go-v2/service/ivschat v1.5.5
 	github.com/aws/aws-sdk-go-v2/service/kafka v1.22.6
 	github.com/aws/aws-sdk-go-v2/service/kendra v1.43.0
@@ -69,7 +69,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/verifiedpermissions v1.2.1
 	github.com/aws/aws-sdk-go-v2/service/vpclattice v1.2.0
 	github.com/aws/aws-sdk-go-v2/service/workspaces v1.30.0
-	github.com/aws/aws-sdk-go-v2/service/xray v1.17.5
+	github.com/aws/aws-sdk-go-v2/service/xray v1.18.0
 	github.com/beevik/etree v1.2.0
 	github.com/google/go-cmp v0.5.9
 	github.com/hashicorp/aws-cloudformation-resource-schema-sdk-go v0.21.0
