@@ -123,10 +123,9 @@ func resourceVerifiedAccessInstanceRead(ctx context.Context, d *schema.ResourceD
 		return sdkdiag.AppendErrorf(diags, "reading Verified Access Instance (%s): %s", d.Id(), err)
 	}
 
-	d.Set("description", output.Description)
 	d.Set("creation_time", output.CreationTime)
+	d.Set("description", output.Description)
 	d.Set("last_updated_time", output.LastUpdatedTime)
-
 	if v := output.VerifiedAccessTrustProviders; v != nil {
 		if err := d.Set("verified_access_trust_providers", flattenVerifiedAccessTrustProviders(v)); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting verified access trust providers: %s", err)

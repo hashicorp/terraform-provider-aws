@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -122,40 +123,37 @@ func resourceVerifiedAccessGroupCreate(ctx context.Context, d *schema.ResourceDa
 
 func resourceVerifiedAccessGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
-	out, err := FindVerifiedAccessGroupByID(ctx, conn, d.Id())
+	group, err := FindVerifiedAccessGroupByID(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
-		log.Printf("[WARN] EC2 VerifiedAccessGroup (%s) not found, removing from state", d.Id())
+		log.Printf("[WARN] EC2 Verified Access Group (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
 	}
 
 	if err != nil {
-		return append(diags, create.DiagError(names.EC2, create.ErrActionReading, ResNameVerifiedAccessGroup, d.Id(), err)...)
+		return sdkdiag.AppendErrorf(diags, "reading Verified Access Group (%s): %s", d.Id(), err)
 	}
 
-	// Set simple properties
-	d.Set("creation_time", out.VerifiedAccessGroups[0].CreationTime)
-	d.Set("deletion_time", out.VerifiedAccessGroups[0].DeletionTime)
-	d.Set("description", out.VerifiedAccessGroups[0].Description)
-	d.Set("last_updated_time", out.VerifiedAccessGroups[0].LastUpdatedTime)
-	d.Set("owner", out.VerifiedAccessGroups[0].Owner)
-	d.Set("verified_access_group_arn", out.VerifiedAccessGroups[0].VerifiedAccessGroupArn)
-	d.Set("verified_access_group_id", out.VerifiedAccessGroups[0].VerifiedAccessGroupId)
-	d.Set("verified_access_instance_id", out.VerifiedAccessGroups[0].VerifiedAccessInstanceId)
+	d.Set("creation_time", group.CreationTime)
+	d.Set("deletion_time", group.DeletionTime)
+	d.Set("description", group.Description)
+	d.Set("last_updated_time", group.LastUpdatedTime)
+	d.Set("owner", group.Owner)
+	d.Set("verified_access_group_arn", group.VerifiedAccessGroupArn)
+	d.Set("verified_access_group_id", group.VerifiedAccessGroupId)
+	d.Set("verified_access_instance_id", group.VerifiedAccessInstanceId)
 
-	// Set tags
-	setTagsOutV2(ctx, out.VerifiedAccessGroups[0].Tags)
+	setTagsOutV2(ctx, group.Tags)
 
-	// Retrieve policy
-	output, err := FindVerifiedAccessGroupPolicyByGroupID(ctx, conn, d.Id())
+	output, err := FindVerifiedAccessGroupPolicyByID(ctx, conn, d.Id())
 
 	if err != nil {
-		return append(diags, create.DiagError(names.EC2, create.ErrActionReading, ResNameVerifiedAccessGroup, d.Id(), err)...)
+		return sdkdiag.AppendErrorf(diags, "reading Verified Access Group (%s) policy: %s", d.Id(), err)
 	}
+
 	d.Set("policy_document", output.PolicyDocument)
 
 	return diags

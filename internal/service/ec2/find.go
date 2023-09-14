@@ -905,43 +905,6 @@ func FindImages(ctx context.Context, conn *ec2.EC2, input *ec2.DescribeImagesInp
 	return output, nil
 }
 
-func FindVerifiedAccessGroupPolicyByGroupID(ctx context.Context, conn *ec2_sdkv2.Client, id string) (*ec2_sdkv2.GetVerifiedAccessGroupPolicyOutput, error) {
-	in := &ec2_sdkv2.GetVerifiedAccessGroupPolicyInput{
-		VerifiedAccessGroupId: &id,
-	}
-	out, err := conn.GetVerifiedAccessGroupPolicy(ctx, in)
-
-	if err != nil {
-		return nil, err
-	}
-
-	return out, nil
-}
-
-func FindVerifiedAccessGroupByID(ctx context.Context, conn *ec2_sdkv2.Client, id string) (*ec2_sdkv2.DescribeVerifiedAccessGroupsOutput, error) {
-	in := &ec2_sdkv2.DescribeVerifiedAccessGroupsInput{
-		VerifiedAccessGroupIds: []string{id},
-	}
-	out, err := conn.DescribeVerifiedAccessGroups(ctx, in)
-
-	if tfawserr_sdkv2.ErrCodeEquals(err, errCodeInvalidVerifiedAccessGroupIdNotFound) {
-		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: in,
-		}
-	}
-
-	if err != nil {
-		return nil, err
-	}
-
-	if out == nil || out.VerifiedAccessGroups == nil {
-		return nil, tfresource.NewEmptyResultError(in)
-	}
-
-	return out, nil
-}
-
 func FindImage(ctx context.Context, conn *ec2.EC2, input *ec2.DescribeImagesInput) (*ec2.Image, error) {
 	output, err := FindImages(ctx, conn, input)
 
@@ -7050,6 +7013,84 @@ func FindInstanceConnectEndpointByID(ctx context.Context, conn *ec2_sdkv2.Client
 
 	// Eventual consistency check.
 	if aws_sdkv2.ToString(output.InstanceConnectEndpointId) != id {
+		return nil, &retry.NotFoundError{
+			LastRequest: input,
+		}
+	}
+
+	return output, nil
+}
+
+func FindVerifiedAccessGroupPolicyByID(ctx context.Context, conn *ec2_sdkv2.Client, id string) (*ec2_sdkv2.GetVerifiedAccessGroupPolicyOutput, error) {
+	input := &ec2_sdkv2.GetVerifiedAccessGroupPolicyInput{
+		VerifiedAccessGroupId: &id,
+	}
+	output, err := conn.GetVerifiedAccessGroupPolicy(ctx, input)
+
+	if tfawserr_sdkv2.ErrCodeEquals(err, errCodeInvalidVerifiedAccessGroupIdNotFound) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output, nil
+}
+
+func FindVerifiedAccessGroup(ctx context.Context, conn *ec2_sdkv2.Client, input *ec2_sdkv2.DescribeVerifiedAccessGroupsInput) (*awstypes.VerifiedAccessGroup, error) {
+	output, err := FindVerifiedAccessGroups(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSingleValueResult(output)
+}
+
+func FindVerifiedAccessGroups(ctx context.Context, conn *ec2_sdkv2.Client, input *ec2_sdkv2.DescribeVerifiedAccessGroupsInput) ([]awstypes.VerifiedAccessGroup, error) {
+	var output []awstypes.VerifiedAccessGroup
+	paginator := ec2_sdkv2.NewDescribeVerifiedAccessGroupsPaginator(conn, input)
+
+	for paginator.HasMorePages() {
+		page, err := paginator.NextPage(ctx)
+
+		if tfawserr_sdkv2.ErrCodeEquals(err, errCodeInvalidVerifiedAccessGroupIdNotFound) {
+			return nil, &retry.NotFoundError{
+				LastError:   err,
+				LastRequest: input,
+			}
+		}
+
+		if err != nil {
+			return nil, err
+		}
+
+		output = append(output, page.VerifiedAccessGroups...)
+	}
+
+	return output, nil
+}
+
+func FindVerifiedAccessGroupByID(ctx context.Context, conn *ec2_sdkv2.Client, id string) (*awstypes.VerifiedAccessGroup, error) {
+	input := &ec2_sdkv2.DescribeVerifiedAccessGroupsInput{
+		VerifiedAccessGroupIds: []string{id},
+	}
+	output, err := FindVerifiedAccessGroup(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	// Eventual consistency check.
+	if aws_sdkv2.ToString(output.VerifiedAccessGroupId) != id {
 		return nil, &retry.NotFoundError{
 			LastRequest: input,
 		}
