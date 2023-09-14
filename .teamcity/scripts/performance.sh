@@ -74,9 +74,9 @@ function analysis {
     inuse=$( bc -l <<< "((${perf_main_meminuse1}/${perf_latest_meminuse1})-1) + ((${perf_main_meminuse2}/${perf_latest_meminuse2})-1)/2" )
     cputime=$( bc -l <<< "((${perf_main_cputime1}/${perf_latest_cputime1})-1) + ((${perf_main_cputime2}/${perf_latest_cputime2})-1)/2" )
 
-    printf "Alloc:%%.4f%%%%" "${alloc}"
-    printf ";Inuse:%%.4f%%%%" "${inuse}"
-    printf ";CPUtime:%%.4f%%%%\n" "${cputime}"
+    printf "##teamcity[notification notifier='slack' message='Change in allocated memory %%.4f%%%%|Change in in-use memory %%.4f%%%%|Change in CPU time %%.4f%%%%' sendTo='CN0G9S7M4' connectionId='PROJECT_EXT_8']\n" "${alloc}" "${inuse}" "${cputime}"
+    #printf "##teamcity[meminuse '%%.4f%%%%']\n" 
+    #printf "##teamcity[cputime '%%.4f%%%%']\n" 
 }
 
 if [ -f "memvpcmain.prof" -a -f "memssmmain.prof" -a -f "memvpclatest.prof" -a -f "memssmlatest.prof" ]; then

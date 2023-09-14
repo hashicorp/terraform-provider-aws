@@ -175,7 +175,6 @@ object FullBuild : BuildType({
                         addBranch = branchRef != "refs/heads/main"
                         addStatusText = true
                     }
-                    message = "This will not work!"
                 }
                 buildStarted = true
                 buildFailedToStart = true
