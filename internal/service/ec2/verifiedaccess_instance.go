@@ -8,8 +8,10 @@ import (
 	"log"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	"github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
@@ -23,7 +25,8 @@ import (
 // @Tags(identifierAttribute="id")
 func ResourceVerifiedAccessInstance() *schema.Resource {
 	return &schema.Resource{
-		ReadWithoutTimeout: resourceVerifiedAccessInstanceRead,
+		CreateWithoutTimeout: resourceVerifiedAccessInstanceCreate,
+		ReadWithoutTimeout:   resourceVerifiedAccessInstanceRead,
 
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
@@ -76,6 +79,30 @@ func ResourceVerifiedAccessInstance() *schema.Resource {
 
 		CustomizeDiff: verify.SetTagsDiff,
 	}
+}
+
+func resourceVerifiedAccessInstanceCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).EC2Client(ctx)
+
+	input := &ec2.CreateVerifiedAccessInstanceInput{
+		ClientToken:       aws.String(id.UniqueId()),
+		TagSpecifications: getTagSpecificationsInV2(ctx, types.ResourceTypeVerifiedAccessInstance),
+	}
+
+	if v, ok := d.GetOk("description"); ok {
+		input.Description = aws.String(v.(string))
+	}
+
+	output, err := conn.CreateVerifiedAccessInstance(ctx, input)
+
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "creating Verified Access Instance: %s", err)
+	}
+
+	d.SetId(aws.ToString(output.VerifiedAccessInstance.VerifiedAccessInstanceId))
+
+	return append(diags, resourceVerifiedAccessInstanceRead(ctx, d, meta)...)
 }
 
 func resourceVerifiedAccessInstanceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
