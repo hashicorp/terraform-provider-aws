@@ -5,7 +5,12 @@ package s3
 
 // Exports for use in tests only.
 var (
-	DeleteAllObjectVersions  = deleteAllObjectVersions
-	FindObjectByBucketAndKey = findObjectByBucketAndKey
-	SDKv1CompatibleCleanKey  = sdkv1CompatibleCleanKey
+	DeleteAllObjectVersions           = deleteAllObjectVersions
+	EmptyBucket                       = emptyBucket
+	FindBucket                        = findBucket
+	FindBucketAccelerateConfiguration = findBucketAccelerateConfiguration
+	FindBucketPolicy                  = findBucketPolicy
+	FindBucketVersioning              = findBucketVersioning
+	FindObjectByBucketAndKey          = findObjectByBucketAndKey
+	SDKv1CompatibleCleanKey           = sdkv1CompatibleCleanKey
 )

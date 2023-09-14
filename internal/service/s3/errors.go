@@ -14,7 +14,7 @@ const (
 	errCodeMalformedPolicy                      = "MalformedPolicy"
 	errCodeMethodNotAllowed                     = "MethodNotAllowed"
 	errCodeNoSuchBucket                         = "NoSuchBucket"
-	ErrCodeNoSuchBucketPolicy                   = "NoSuchBucketPolicy"
+	errCodeNoSuchBucketPolicy                   = "NoSuchBucketPolicy"
 	errCodeNoSuchConfiguration                  = "NoSuchConfiguration"
 	ErrCodeNoSuchCORSConfiguration              = "NoSuchCORSConfiguration"
 	ErrCodeNoSuchLifecycleConfiguration         = "NoSuchLifecycleConfiguration"
