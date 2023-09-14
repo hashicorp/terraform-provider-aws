@@ -86,9 +86,6 @@ function analysis {
     printf ";CPUtime:%%.4f%%%%\n" "${cputime}"
 }
 
-go install github.com/google/pprof@latest
-pprof help
-
 if [ -f "memvpcmain.prof" -a -f "memssmmain.prof" -a -f "memvpclatest.prof" -a -f "memssmlatest.prof" ]; then
     echo "Tests complete. Analyzing results..."
     analysis
@@ -107,10 +104,13 @@ fi
 
 if [ -f "memvpcmain.prof" -a ! -f "memssmmain.prof" ]; then
     echo "Running SSM main branch test..."
+    pprof
     ssmtest ssmmain
 fi
 
 if [ ! -f "memvpcmain.prof" ]; then
+    go install github.com/google/pprof@latest
+    pprof
     echo "Running VPC main branch test..."
     vpctest vpcmain
 fi
