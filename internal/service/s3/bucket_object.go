@@ -206,6 +206,9 @@ func resourceBucketObjectCreate(ctx context.Context, d *schema.ResourceData, met
 }
 
 func resourceBucketObjectRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	const (
+		objectCreationTimeout = 2 * time.Minute
+	)
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).S3Conn(ctx)
 
@@ -349,7 +352,7 @@ func resourceBucketObjectUpdate(ctx context.Context, d *schema.ResourceData, met
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := ObjectUpdateTags(ctx, conn, bucket, key, o, n); err != nil {
+		if err := ObjectUpdateTagsV1(ctx, conn, bucket, key, o, n); err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating S3 Bucket (%s) Object (%s) tags: %s", bucket, key, err)
 		}
 	}
@@ -359,7 +362,7 @@ func resourceBucketObjectUpdate(ctx context.Context, d *schema.ResourceData, met
 
 func resourceBucketObjectDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).S3Conn(ctx)
+	conn := meta.(*conns.AWSClient).S3Client(ctx)
 
 	bucket := d.Get("bucket").(string)
 	key := d.Get("key").(string)
@@ -370,7 +373,7 @@ func resourceBucketObjectDelete(ctx context.Context, d *schema.ResourceData, met
 
 	var err error
 	if _, ok := d.GetOk("version_id"); ok {
-		_, err = DeleteAllObjectVersions(ctx, conn, bucket, key, d.Get("force_destroy").(bool), false)
+		_, err = deleteAllObjectVersions(ctx, conn, bucket, key, d.Get("force_destroy").(bool), false)
 	} else {
 		err = deleteObjectVersion(ctx, conn, bucket, key, "", false)
 	}

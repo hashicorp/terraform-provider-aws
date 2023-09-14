@@ -122,7 +122,7 @@ const (
 	LakeFormation                = "lakeformation"
 	Lambda                       = "lambda"
 	LexModels                    = "lexmodels"
-	LexModelsV2                  = "lexmodelsv2"
+	LexV2Models                  = "lexv2models"
 	LicenseManager               = "licensemanager"
 	Lightsail                    = "lightsail"
 	Location                     = "location"
