@@ -1,4 +1,5 @@
-## 5.17.0 (Unreleased)
+## 5.18.0 (Unreleased)
+## 5.17.0 (September 14, 2023)
 
 NOTES:
 
