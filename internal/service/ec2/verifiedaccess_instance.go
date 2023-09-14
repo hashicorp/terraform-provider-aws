@@ -28,6 +28,7 @@ func ResourceVerifiedAccessInstance() *schema.Resource {
 		CreateWithoutTimeout: resourceVerifiedAccessInstanceCreate,
 		ReadWithoutTimeout:   resourceVerifiedAccessInstanceRead,
 		UpdateWithoutTimeout: resourceVerifiedAccessInstanceUpdate,
+		DeleteWithoutTimeout: resourceVerifiedAccessInstanceDelete,
 
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
@@ -161,6 +162,23 @@ func resourceVerifiedAccessInstanceUpdate(ctx context.Context, d *schema.Resourc
 	}
 
 	return append(diags, resourceVerifiedAccessInstanceRead(ctx, d, meta)...)
+}
+
+func resourceVerifiedAccessInstanceDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).EC2Client(ctx)
+
+	log.Printf("[INFO] Deleting Verified Access Instance: %s", d.Id())
+	_, err := conn.DeleteVerifiedAccessInstance(ctx, &ec2.DeleteVerifiedAccessInstanceInput{
+		ClientToken:              aws.String(id.UniqueId()),
+		VerifiedAccessInstanceId: aws.String(d.Id()),
+	})
+
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "deleting Verified Access Instance (%s): %s", d.Id(), err)
+	}
+
+	return diags
 }
 
 func flattenVerifiedAccessTrustProviders(apiObjects []types.VerifiedAccessTrustProviderCondensed) []interface{} {
