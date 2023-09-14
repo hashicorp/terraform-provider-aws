@@ -54,7 +54,6 @@ function ssmtest {
 }
 
 function analysis {
-    go install github.com/google/pprof@latest
     #perf_main_memalloc1=$( pprof -top -flat -sample_index=alloc_space -unit=mb memvpcmain.prof | head -3 | tr '\n' ' ' | sed -E 's/.*%% of ([0-9.]+)MB total.*/\1/g' )
     perf_main_memalloc1=$( pprof -top -flat -sample_index=alloc_space -unit=mb memvpcmain.prof | head -3 )
     echo "perf_main_memalloc1:$perf_main_memalloc1"
@@ -104,7 +103,6 @@ fi
 
 if [ -f "memvpcmain.prof" -a ! -f "memssmmain.prof" ]; then
     echo "Running SSM main branch test..."
-    pprof
     ssmtest ssmmain
 fi
 
