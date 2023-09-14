@@ -21,7 +21,6 @@ import (
 
 func TestAccVerifiedAccessInstance_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-
 	var v types.VerifiedAccessInstance
 	resourceName := "aws_verifiedaccess_instance.test"
 
@@ -55,7 +54,6 @@ func TestAccVerifiedAccessInstance_basic(t *testing.T) {
 
 func TestAccVerifiedAccessInstance_description(t *testing.T) {
 	ctx := acctest.Context(t)
-
 	var v types.VerifiedAccessInstance
 	resourceName := "aws_verifiedaccess_instance.test"
 
@@ -97,7 +95,6 @@ func TestAccVerifiedAccessInstance_description(t *testing.T) {
 
 func TestAccVerifiedAccessInstance_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-
 	var v types.VerifiedAccessInstance
 	resourceName := "aws_verifiedaccess_instance.test"
 
@@ -124,7 +121,6 @@ func TestAccVerifiedAccessInstance_disappears(t *testing.T) {
 
 func TestAccVerifiedAccessInstance_tags(t *testing.T) {
 	ctx := acctest.Context(t)
-
 	var v types.VerifiedAccessInstance
 	resourceName := "aws_verifiedaccess_instance.test"
 
