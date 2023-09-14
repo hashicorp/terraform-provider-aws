@@ -53,6 +53,48 @@ func TestAccVerifiedAccessInstance_basic(t *testing.T) {
 	})
 }
 
+func TestAccVerifiedAccessInstance_description(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	var v types.VerifiedAccessInstance
+	resourceName := "aws_verifiedaccess_instance.test"
+
+	originalDescription := "original description"
+	updatedDescription := "updated description"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheckVerifiedAccessInstance(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckVerifiedAccessInstanceDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVerifiedAccessInstanceConfig_description(originalDescription),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVerifiedAccessInstanceExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "description", originalDescription),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+			{
+				Config: testAccVerifiedAccessInstanceConfig_description(updatedDescription),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVerifiedAccessInstanceExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "description", updatedDescription),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckVerifiedAccessInstanceExists(ctx context.Context, n string, v *types.VerifiedAccessInstance) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -118,4 +160,12 @@ func testAccVerifiedAccessInstanceConfig_basic() string {
 	return `
 resource "aws_verifiedaccess_instance" "test" {}
 `
+}
+
+func testAccVerifiedAccessInstanceConfig_description(description string) string {
+	return fmt.Sprintf(`
+resource "aws_verifiedaccess_instance" "test" {
+  description = %[1]q
+}
+`, description)
 }
