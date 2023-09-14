@@ -249,13 +249,16 @@ func TestAccFSxONTAPStorageVirtualMachine_tags(t *testing.T) {
 
 func TestAccFSxONTAPStorageVirtualMachine_activeDirectory(t *testing.T) {
 	ctx := acctest.Context(t)
-	var storageVirtualMachine1 fsx.StorageVirtualMachine
+	var storageVirtualMachine1, storageVirtualMachine2 fsx.StorageVirtualMachine
 	resourceName := "aws_fsx_ontap_storage_virtual_machine.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	netBiosName := "tftest-" + sdkacctest.RandString(7)
-	domainNetbiosName := "tftestcorp"
-	domainName := "tftestcorp.local"
-	domainPassword1 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	netBiosName1 := "tftest-" + sdkacctest.RandString(7)
+	netBiosName2 := "tftest-" + sdkacctest.RandString(7)
+	domainNetbiosName1 := "tftest" + sdkacctest.RandString(4)
+	domainName1 := domainNetbiosName1 + ".local"
+	domainNetbiosName2 := "tftest" + sdkacctest.RandString(4)
+	domainName2 := domainNetbiosName2 + ".local"
+	domainPassword := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, fsx.EndpointsID) },
@@ -264,16 +267,16 @@ func TestAccFSxONTAPStorageVirtualMachine_activeDirectory(t *testing.T) {
 		CheckDestroy:             testAccCheckONTAPStorageVirtualMachineDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccONTAPStorageVirtualMachineConfig_virutalSelfManagedActiveDirectory(rName, netBiosName, domainNetbiosName, domainName, domainPassword1),
+				Config: testAccONTAPStorageVirtualMachineConfig_virutalSelfManagedActiveDirectory(rName, netBiosName1, domainNetbiosName1, domainName1, domainPassword),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckONTAPStorageVirtualMachineExists(ctx, resourceName, &storageVirtualMachine1),
 					resource.TestCheckResourceAttr(resourceName, "active_directory_configuration.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "active_directory_configuration.0.netbios_name", strings.ToUpper(netBiosName)),
-					resource.TestCheckResourceAttr(resourceName, "active_directory_configuration.0.self_managed_active_directory_configuration.0.domain_name", domainName),
+					resource.TestCheckResourceAttr(resourceName, "active_directory_configuration.0.netbios_name", strings.ToUpper(netBiosName1)),
+					resource.TestCheckResourceAttr(resourceName, "active_directory_configuration.0.self_managed_active_directory_configuration.0.domain_name", domainName1),
+					resource.TestCheckResourceAttr(resourceName, "active_directory_configuration.0.self_managed_active_directory_configuration.0.organizational_unit_distinguished_name", fmt.Sprintf("OU=computers,OU=%s", domainNetbiosName1)),
+					resource.TestCheckResourceAttr(resourceName, "active_directory_configuration.0.self_managed_active_directory_configuration.0.password", domainPassword),
 					resource.TestCheckResourceAttr(resourceName, "endpoints.0.smb.#", "1"),
 					resource.TestCheckResourceAttrSet(resourceName, "endpoints.0.smb.0.dns_name"),
-					resource.TestCheckResourceAttr(resourceName, "active_directory_configuration.0.self_managed_active_directory_configuration.0.organizational_unit_distinguished_name", fmt.Sprintf("OU=computers,OU=%s", domainNetbiosName)),
-					resource.TestCheckResourceAttr(resourceName, "active_directory_configuration.0.self_managed_active_directory_configuration.0.password", domainPassword1),
 				),
 			},
 			{
@@ -283,6 +286,20 @@ func TestAccFSxONTAPStorageVirtualMachine_activeDirectory(t *testing.T) {
 				ImportStateVerifyIgnore: []string{
 					"active_directory_configuration",
 				},
+			},
+			{
+				Config: testAccONTAPStorageVirtualMachineConfig_virutalSelfManagedActiveDirectory(rName, netBiosName2, domainNetbiosName2, domainName2, domainPassword),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckONTAPStorageVirtualMachineExists(ctx, resourceName, &storageVirtualMachine2),
+					testAccCheckONTAPStorageVirtualMachineNotRecreated(&storageVirtualMachine1, &storageVirtualMachine2),
+					resource.TestCheckResourceAttr(resourceName, "active_directory_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "active_directory_configuration.0.netbios_name", strings.ToUpper(netBiosName2)),
+					resource.TestCheckResourceAttr(resourceName, "active_directory_configuration.0.self_managed_active_directory_configuration.0.domain_name", domainName2),
+					resource.TestCheckResourceAttr(resourceName, "active_directory_configuration.0.self_managed_active_directory_configuration.0.organizational_unit_distinguished_name", fmt.Sprintf("OU=computers,OU=%s", domainNetbiosName2)),
+					resource.TestCheckResourceAttr(resourceName, "active_directory_configuration.0.self_managed_active_directory_configuration.0.password", domainPassword),
+					resource.TestCheckResourceAttr(resourceName, "endpoints.0.smb.#", "1"),
+					resource.TestCheckResourceAttrSet(resourceName, "endpoints.0.smb.0.dns_name"),
+				),
 			},
 		},
 	})

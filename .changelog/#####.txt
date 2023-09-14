@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/aws_fsx_ontap_storage_virtual_machine: `active_directory_configuration.netbios_name`, `active_directory_configuration.self_managed_active_directory_configuration.domain_name`, `active_directory_configuration.self_managed_active_directory_configuration.file_system_administrators_group` and `active_directory_configuration.self_managed_active_directory_configuration.organizational_unit_distinguished_name` can now be updated in-place
+```
