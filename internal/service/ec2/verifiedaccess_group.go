@@ -64,6 +64,8 @@ func ResourceVerifiedAccessGroup() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			"verifiedaccess_group_arn": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -76,8 +78,6 @@ func ResourceVerifiedAccessGroup() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
 
 		CustomizeDiff: verify.SetTagsDiff,
@@ -90,7 +90,7 @@ func resourceVerifiedAccessGroupCreate(ctx context.Context, d *schema.ResourceDa
 
 	input := &ec2.CreateVerifiedAccessGroupInput{
 		TagSpecifications:        getTagSpecificationsInV2(ctx, types.ResourceTypeVerifiedAccessGroup),
-		VerifiedAccessInstanceId: aws.String(d.Get("verified_access_instance_id").(string)),
+		VerifiedAccessInstanceId: aws.String(d.Get("verifiedaccess_instance_id").(string)),
 	}
 
 	if v, ok := d.GetOk("description"); ok {
@@ -133,9 +133,9 @@ func resourceVerifiedAccessGroupRead(ctx context.Context, d *schema.ResourceData
 	d.Set("description", group.Description)
 	d.Set("last_updated_time", group.LastUpdatedTime)
 	d.Set("owner", group.Owner)
-	d.Set("verified_access_group_arn", group.VerifiedAccessGroupArn)
-	d.Set("verified_access_group_id", group.VerifiedAccessGroupId)
-	d.Set("verified_access_instance_id", group.VerifiedAccessInstanceId)
+	d.Set("verifiedaccess_group_arn", group.VerifiedAccessGroupArn)
+	d.Set("verifiedaccess_group_id", group.VerifiedAccessGroupId)
+	d.Set("verifiedaccess_instance_id", group.VerifiedAccessInstanceId)
 
 	setTagsOutV2(ctx, group.Tags)
 
