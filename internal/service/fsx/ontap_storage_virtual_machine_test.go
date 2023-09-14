@@ -267,7 +267,7 @@ func TestAccFSxONTAPStorageVirtualMachine_activeDirectory(t *testing.T) {
 		CheckDestroy:             testAccCheckONTAPStorageVirtualMachineDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccONTAPStorageVirtualMachineConfig_virutalSelfManagedActiveDirectory(rName, netBiosName1, domainNetbiosName1, domainName1, domainPassword),
+				Config: testAccONTAPStorageVirtualMachineConfig_selfManagedActiveDirectory(rName, netBiosName1, domainNetbiosName1, domainName1, domainPassword),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckONTAPStorageVirtualMachineExists(ctx, resourceName, &storageVirtualMachine1),
 					resource.TestCheckResourceAttr(resourceName, "active_directory_configuration.#", "1"),
@@ -288,7 +288,7 @@ func TestAccFSxONTAPStorageVirtualMachine_activeDirectory(t *testing.T) {
 				},
 			},
 			{
-				Config: testAccONTAPStorageVirtualMachineConfig_virutalSelfManagedActiveDirectory(rName, netBiosName2, domainNetbiosName2, domainName2, domainPassword),
+				Config: testAccONTAPStorageVirtualMachineConfig_selfManagedActiveDirectory(rName, netBiosName2, domainNetbiosName2, domainName2, domainPassword),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckONTAPStorageVirtualMachineExists(ctx, resourceName, &storageVirtualMachine2),
 					testAccCheckONTAPStorageVirtualMachineNotRecreated(&storageVirtualMachine1, &storageVirtualMachine2),
@@ -456,7 +456,7 @@ resource "aws_fsx_ontap_storage_virtual_machine" "test" {
 `, rName, tagKey1, tagValue1, tagKey2, tagValue2))
 }
 
-func testAccONTAPStorageVirtualMachineConfig_virutalSelfManagedActiveDirectory(rName, netBiosName, domainNetbiosName, domainName, domainPassword string) string {
+func testAccONTAPStorageVirtualMachineConfig_selfManagedActiveDirectory(rName, netBiosName, domainNetbiosName, domainName, domainPassword string) string {
 	return acctest.ConfigCompose(testAccONTAPStorageVirtualMachineADConfig_base(rName, domainName, domainPassword), fmt.Sprintf(`
 resource "aws_fsx_ontap_storage_virtual_machine" "test" {
   file_system_id = aws_fsx_ontap_file_system.test.id
