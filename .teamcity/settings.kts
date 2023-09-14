@@ -174,8 +174,8 @@ object FullBuild : BuildType({
                     messageFormat = verboseMessageFormat {
                         addBranch = branchRef != "refs/heads/main"
                         addStatusText = true
-                        message = "This will not work!"
                     }
+                    message = "This will not work!"
                 }
                 buildStarted = true
                 buildFailedToStart = true
