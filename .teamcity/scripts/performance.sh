@@ -92,14 +92,14 @@ function analysis {
     local alloc_emoji=""
     if (( $( echo "${alloc} > 4.99999" | bc -l) )); then
         alloc_emoji=":x:"
-    else if (( $( echo "${alloc} < -4.99999" | bc -l) )); then
+    elif (( $( echo "${alloc} < -4.99999" | bc -l) )); then
         alloc_emoji=":white_check_mark:"
     fi
 
     local cputime_emoji=""
     if (( $( echo "${cputime} > 4.99999" | bc -l) )); then
         cputime_emoji=":x:"
-    else if (( $( echo "${cputime} < -4.99999" | bc -l) )); then
+    elif (( $( echo "${cputime} < -4.99999" | bc -l) )); then
         cputime_emoji=":white_check_mark:"
     fi
 
