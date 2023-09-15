@@ -93,7 +93,6 @@ func ResourceClusterInstance() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
-				ForceNew: true,
 			},
 			"identifier": {
 				Type:          schema.TypeString,
