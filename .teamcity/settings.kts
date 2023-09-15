@@ -612,10 +612,10 @@ object Sanity : BuildType({
                         addStatusText = true
                     }
                 }
-                buildStarted = true
+                buildStarted = false
                 buildFailedToStart = true
                 buildFailed = true
-                buildFinishedSuccessfully = true
+                buildFinishedSuccessfully = false
                 firstBuildErrorOccurs = true
             }
         }
