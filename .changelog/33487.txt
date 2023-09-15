@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_neptune_cluster_instance:  Remove engine_version as ForceNew parameter on aws_neptune_cluster_instance resource.
+```
