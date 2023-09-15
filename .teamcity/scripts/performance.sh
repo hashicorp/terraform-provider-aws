@@ -54,6 +54,21 @@ function ssmtest {
 }
 
 function analysis {
+    if ! command -v pprof &> /dev/null ; then
+        go install github.com/google/pprof@latest
+        goenv rehash
+        rehash
+    fi
+    if ! command -v pprof &> /dev/null ; then
+        go install github.com/google/pprof@latest
+        goenv rehash
+        rehash
+    fi
+    if ! command -v pprof &> /dev/null ; then
+        echo "pprof not found after 3 attempts to install"
+        exit 1
+    fi
+
     local perf_main_memalloc1=$( pprof -top -flat -sample_index=alloc_space -unit=mb memvpcmain.prof | head -5 | tr '\n' ' ' | sed -E 's/.*%% of ([0-9.]+)MB total.*/\1/g' )
     local perf_main_meminuse1=$( pprof -top -flat -sample_index=inuse_space -unit=mb memvpcmain.prof | head -5 | tr '\n' ' ' | sed -E 's/.*%% of ([0-9.]+)MB total.*/\1/g' )
     local perf_main_cputime1=$( pprof -top -flat -sample_index=cpu cpuvpcmain.prof | head -5 | tr '\n' ' ' | sed -E 's/.*%% of ([0-9.]+)s total.*/\1/g' ) 2>/dev/null
@@ -103,7 +118,7 @@ function analysis {
         cputime_emoji=":white_check_mark:"
     fi
 
-    printf "##teamcity[notification notifier='slack' message='**Performance changes from latest version (%%s) to main**\nAllocated memory: %%.4f%%%% (%%s) %%s\nIn-use memory: %%.4f%%%% (%%s) (wide-fluctuations normal)\nCPU time: %%.4f%%%% (%%s) %%s' sendTo='CN0G9S7M4' connectionId='PROJECT_EXT_8']\n" "$(basename $(curl -Ls -o /dev/null -w %%{url_effective} https://github.com/hashicorp/terraform-provider-aws/releases/latest))" "${alloc}" "${alloc_bw}" "${alloc_emoji}" "${inuse}" "${inuse_bw}" "${cputime}" "${cputime_bw}" "${cputime_emoji}"
+    printf "##teamcity[notification notifier='slack' message='**Performance changes from latest version (%%s) to main** |nAllocated memory: %%.4f%%%% (%%s) %%s |nIn-use memory: %%.4f%%%% (%%s) (wide-fluctuations normal) |nCPU time: %%.4f%%%% (%%s) %%s' sendTo='CN0G9S7M4' connectionId='PROJECT_EXT_8']\n" "$(basename $(curl -Ls -o /dev/null -w %%{url_effective} https://github.com/hashicorp/terraform-provider-aws/releases/latest))" "${alloc}" "${alloc_bw}" "${alloc_emoji}" "${inuse}" "${inuse_bw}" "${cputime}" "${cputime_bw}" "${cputime_emoji}"
 }
 
 if [ -f "memvpcmain.prof" -a -f "memssmmain.prof" -a -f "memvpclatest.prof" -a -f "memssmlatest.prof" ]; then
