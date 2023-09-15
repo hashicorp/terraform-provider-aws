@@ -492,3 +492,125 @@ object Sweeper : BuildType({
         }
     }
 })
+
+object Sanity : BuildType({
+    name = "Sanity"
+
+    vcs {
+        root(AbsoluteId(DslContext.getParameter("vcs_root_id")))
+
+        cleanCheckout = true
+    }
+
+    steps {
+        ConfigureGoEnv()
+        script {
+            name = "IAM"
+            scriptContent = File("./scripts/sanity.sh").readText()
+        }
+        script {
+            name = "Logs"
+            scriptContent = File("./scripts/sanity.sh").readText()
+        }
+        script {
+            name = "EC2"
+            scriptContent = File("./scripts/sanity.sh").readText()
+        }
+        script {
+            name = "ECS"
+            scriptContent = File("./scripts/sanity.sh").readText()
+        }
+        script {
+            name = "ELBv2"
+            scriptContent = File("./scripts/sanity.sh").readText()
+        }
+        script {
+            name = "KMS"
+            scriptContent = File("./scripts/sanity.sh").readText()
+        }
+        script {
+            name = "IAM"
+            scriptContent = File("./scripts/sanity.sh").readText()
+        }
+        script {
+            name = "Lambda"
+            scriptContent = File("./scripts/sanity.sh").readText()
+        }
+        script {
+            name = "Meta"
+            scriptContent = File("./scripts/sanity.sh").readText()
+        }
+        script {
+            name = "Route53"
+            scriptContent = File("./scripts/sanity.sh").readText()
+        }
+        script {
+            name = "S3"
+            scriptContent = File("./scripts/sanity.sh").readText()
+        }
+        script {
+            name = "Secrets Manager"
+            scriptContent = File("./scripts/sanity.sh").readText()
+        }
+        script {
+            name = "STS"
+            scriptContent = File("./scripts/sanity.sh").readText()
+        }  
+        script {
+            name = "Report Success"
+            scriptContent = File("./scripts/sanity.sh").readText()
+        }    
+    }
+
+    val triggerTimeRaw = DslContext.getParameter("sanity_trigger_time", "")
+    if (triggerTimeRaw != "") {
+        val formatter = DateTimeFormatter.ofPattern("HH':'mm' 'VV")
+        val triggerTime = formatter.parse(triggerTimeRaw)
+        val enableTestTriggersGlobally = DslContext.getParameter("enable_test_triggers_globally", "true").equals("true", ignoreCase = true)
+        if (enableTestTriggersGlobally) {
+            triggers {
+                schedule {
+                    schedulingPolicy = daily {
+                        val triggerHM = LocalTime.from(triggerTime)
+                        hour = triggerHM.getHour()
+                        minute = triggerHM.getMinute()
+                        timezone = ZoneId.from(triggerTime).toString()
+                    }
+                    branchFilter = "+:refs/heads/main"
+                    triggerBuild = always()
+                    withPendingChangesOnly = false
+                    enableQueueOptimization = false
+                    enforceCleanCheckoutForDependencies = true
+                }
+            }
+        }
+    }
+
+    features {
+        val notifierConnectionID = DslContext.getParameter("notifier.id", "")
+        val notifier: Notifier? = if (notifierConnectionID != "") {
+            Notifier(notifierConnectionID, DslContext.getParameter("notifier.destination"))
+        } else {
+            null
+        }
+
+        if (notifier != null) {
+            val branchRef = DslContext.getParameter("branch_name", "")
+            notifications {
+                notifierSettings = slackNotifier {
+                    connection = notifier.connectionID
+                    sendTo = notifier.destination
+                    messageFormat = verboseMessageFormat {
+                        addBranch = branchRef != "refs/heads/main"
+                        addStatusText = true
+                    }
+                }
+                buildStarted = true
+                buildFailedToStart = true
+                buildFailed = true
+                buildFinishedSuccessfully = true
+                firstBuildErrorOccurs = true
+            }
+        }
+    }
+})
