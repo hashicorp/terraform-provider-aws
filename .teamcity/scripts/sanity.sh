@@ -29,6 +29,8 @@ EOF
     export AWS_PROFILE=perftest
 fi
 
+unset TF_LOG
+
 if [ ! -f "iamsanity.test" ]; then
     TF_ACC=1 go test \
         ./internal/service/iam/... \
