@@ -14,7 +14,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
-func TestAccOrganizationsOrganizationalUnitDataSource_basic(t *testing.T) {
+func TestAccOrganizationalUnitDataSource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_organizations_organizational_unit.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -28,7 +28,7 @@ func TestAccOrganizationsOrganizationalUnitDataSource_basic(t *testing.T) {
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccOrganizationsOrganizationalUnit(rName),
+				Config: testAccOrganizationalUnit(rName),
 				Check: resource.ComposeTestCheckFunc(
 					acctest.MatchResourceAttrGlobalARN(dataSourceName, "arn", "organizations", regexp.MustCompile(".*/.+$")),
 				),
@@ -37,7 +37,7 @@ func TestAccOrganizationsOrganizationalUnitDataSource_basic(t *testing.T) {
 	})
 }
 
-func testAccOrganizationsOrganizationalUnit(rName string) string {
+func testAccOrganizationalUnit(rName string) string {
 	return fmt.Sprintf(`
 data "aws_organizations_organization" "current" {}
 
