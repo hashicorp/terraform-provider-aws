@@ -85,9 +85,9 @@ function analysis {
     local perf_latest_meminuse2=$( pprof -top -flat -sample_index=inuse_space -unit=mb memssmlatest.prof | head -5 | tr '\n' ' ' | sed -E 's/.*%% of ([0-9.]+)MB total.*/\1/g' )
     local perf_latest_cputime2=$( pprof -top -flat -sample_index=cpu cpussmlatest.prof | head -5 | tr '\n' ' ' | sed -E 's/.*%% of ([0-9.]+)s total.*/\1/g' ) 2>/dev/null
 
-    local alloc=$( bc -l <<< "(((${perf_main_memalloc1}/${perf_latest_memalloc1})-1) + ((${perf_main_memalloc2}/${perf_latest_memalloc2})-1)/2)*100" )
-    local inuse=$( bc -l <<< "(((${perf_main_meminuse1}/${perf_latest_meminuse1})-1) + ((${perf_main_meminuse2}/${perf_latest_meminuse2})-1)/2)*100" )
-    local cputime=$( bc -l <<< "(((${perf_main_cputime1}/${perf_latest_cputime1})-1) + ((${perf_main_cputime2}/${perf_latest_cputime2})-1)/2)*100" )
+    local alloc=$( bc -l <<< "(((${perf_main_memalloc1}+${perf_main_memalloc2})/2)/((${perf_latest_memalloc1}+${perf_latest_memalloc2})/2)-1)*100" )
+    local inuse=$( bc -l <<< "(((${perf_main_meminuse1}+${perf_main_meminuse2})/2)/((${perf_latest_meminuse1}+${perf_latest_meminuse2})/2)-1)*100" )
+    local cputime=$( bc -l <<< "(((${perf_main_cputime1}+${perf_main_cputime2})/2)/((${perf_latest_cputime1}+${perf_latest_cputime2})/2)-1)*100" )
 
     local alloc_mb_main=$( bc -l <<< "(${perf_main_memalloc1}+${perf_main_memalloc2})/2" )
     local alloc_mb_latest=$( bc -l <<< "(${perf_latest_memalloc1}+${perf_latest_memalloc2})/2" )
