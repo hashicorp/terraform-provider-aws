@@ -5,6 +5,7 @@ package organizations_test
 
 import (
 	"fmt"
+	"regexp"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/organizations"
@@ -29,7 +30,7 @@ func TestAccOrganizationalUnitAccountsDataSource_basic(t *testing.T) {
 			{
 				Config: testAccOrganizationalUnitAccountsDataSource(rName),
 				Check: resource.ComposeTestCheckFunc(
-					acctest.CheckResourceAttrRegionalARNIgnoreRegionAndAccount(dataSourceName, "arn", "organizations", "organization/.+$"),
+					acctest.MatchResourceAttrGlobalARN(dataSourceName, "arn", "organizations", regexp.MustCompile(".*/.+$")),
 				),
 			},
 		},
@@ -40,14 +41,19 @@ func testAccOrganizationalUnitAccountsDataSource(rName string) string {
 	return fmt.Sprintf(`
 data "aws_organizations_organization" "current" {}
 
-resource "aws_organizations_organizational_unit" "test" {
+resource "aws_organizations_organizational_unit" "parent" {
   name      = %[1]q
   parent_id = data.aws_organizations_organization.current.roots[0].id
 }
 
+resource "aws_organizations_organizational_unit" "child" {
+	name      = %[1]q
+	parent_id = aws_organizations_organizational_unit.parent.id
+}
+
 data "aws_organizations_organizational_unit" "test" {
-  name      = aws_organizations_organizational_unit.test.name
-  parent_id = data.aws_organizations_organization.current.roots[0].id
+  name      = aws_organizations_organizational_unit.child.name
+  parent_id = aws_organizations_organizational_unit.parent.id
 }
 `, rName)
 }
