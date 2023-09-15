@@ -67,6 +67,7 @@ func ResourceReplicator() *schema.Resource {
 				Type:     schema.TypeList,
 				Required: true,
 				ForceNew: true,
+				MinItems: 2,
 				MaxItems: 2,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
