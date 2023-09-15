@@ -24,7 +24,7 @@ func DataSourceOrganizationalUnit() *schema.Resource {
 		Schema: map[string]*schema.Schema{
 			"name": {
 				Type:     schema.TypeString,
-				Computed: true,
+				ForceNew: true,
 			},
 			"parent_id": {
 				Type:         schema.TypeString,
@@ -33,10 +33,6 @@ func DataSourceOrganizationalUnit() *schema.Resource {
 				ValidateFunc: validation.StringMatch(regexache.MustCompile("^(r-[0-9a-z]{4,32})|(ou-[0-9a-z]{4,32}-[0-9a-z]{8,32})$"), "see https://docs.aws.amazon.com/organizations/latest/APIReference/API_CreateOrganizationalUnit.html#organizations-CreateOrganizationalUnit-request-ParentId"),
 			},
 			"arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"email": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -71,7 +67,6 @@ func dataSourceOrganizationalUnitRead(ctx context.Context, d *schema.ResourceDat
 		if v.Name != nil && aws.StringValue(v.Name) == name && v.Id != nil {
 			d.SetId(aws.StringValue(v.Id))
 			d.Set("arn", v.Arn)
-			d.Set("name", v.Name)
 			return diags
 		}
 	}

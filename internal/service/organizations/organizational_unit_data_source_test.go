@@ -13,7 +13,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
-func testAccOrganizationalUnitAccountsDataSource_basic(t *testing.T) {
+func TestAccOrganizationalUnitAccountsDataSource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_organizations_organizational_unit.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
