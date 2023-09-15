@@ -54,6 +54,8 @@ project {
         buildType(Sweeper)
     }
 
+    buildType(Sanity)
+
     params {
         if (acctestParallelism != "") {
             text("ACCTEST_PARALLELISM", acctestParallelism, allowEmpty = false)
