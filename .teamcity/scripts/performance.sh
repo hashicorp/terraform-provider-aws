@@ -33,7 +33,7 @@ function vpctest {
     local suffix=$1
     TF_ACC=1 go test \
         ./internal/service/ec2/... \
-        -v -parallel 2 -count 2 \
+        -v \
         -run='^TestAccVPC_basic$' \
         -cpuprofile cpu"${suffix}".prof \
         -memprofile mem"${suffix}".prof \
@@ -45,7 +45,7 @@ function ssmtest {
     local suffix=$1
     TF_ACC=1 go test \
         ./internal/service/ssm/... \
-        -v -parallel 2 -count 2 \
+        -v \
         -run='^TestAccSSMParameter_basic$' \
         -cpuprofile cpu"${suffix}".prof \
         -memprofile mem"${suffix}".prof \
@@ -89,6 +89,13 @@ function analysis {
     local inuse=$( bc -l <<< "(((${perf_main_meminuse1}/${perf_latest_meminuse1})-1) + ((${perf_main_meminuse2}/${perf_latest_meminuse2})-1)/2)*100" )
     local cputime=$( bc -l <<< "(((${perf_main_cputime1}/${perf_latest_cputime1})-1) + ((${perf_main_cputime2}/${perf_latest_cputime2})-1)/2)*100" )
 
+    local alloc_mb_main=$( bc -l <<< "(${perf_main_memalloc1}+${perf_main_memalloc2})/2" )
+    local alloc_mb_latest=$( bc -l <<< "(${perf_latest_memalloc1}+${perf_latest_memalloc2})/2" )
+    local inuse_mb_main=$( bc -l <<< "(${perf_main_meminuse1}+${perf_main_meminuse2})/2" )
+    local inuse_mb_latest=$( bc -l <<< "(${perf_latest_meminuse1}+${perf_latest_meminuse2})/2" )
+    local cputime_s_main=$( bc -l <<< "(${perf_main_cputime1}+${perf_main_cputime2})/2" )
+    local cputime_s_latest=$( bc -l <<< "(${perf_latest_cputime1}+${perf_latest_cputime2})/2" )
+
     local alloc_bw="Worse"
     if (( $( echo "${alloc} < 0" | bc -l) )); then
         alloc_bw="Better"
@@ -118,7 +125,7 @@ function analysis {
         cputime_emoji=":white_check_mark:"
     fi
 
-    printf "##teamcity[notification notifier='slack' message='**Performance changes from latest version (%%s) to main** |nAllocated memory: %%.4f%%%% (%%s) %%s |nIn-use memory: %%.4f%%%% (%%s) (wide-fluctuations normal) |nCPU time: %%.4f%%%% (%%s) %%s' sendTo='CN0G9S7M4' connectionId='PROJECT_EXT_8']\n" "$(basename $(curl -Ls -o /dev/null -w %%{url_effective} https://github.com/hashicorp/terraform-provider-aws/releases/latest))" "${alloc}" "${alloc_bw}" "${alloc_emoji}" "${inuse}" "${inuse_bw}" "${cputime}" "${cputime_bw}" "${cputime_emoji}"
+    printf "##teamcity[notification notifier='slack' message='*Performance changes from latest version (%%s) to main* |nAllocated memory: %%.1f%%%% (%%.1fMB to %%.1fMB) (%%s) %%s |nIn-use memory: %%.1f%%%% (%%.1fMB to %%.1fMB) (%%s) (wide-fluctuations normal) |nCPU time: %%.1f%%%% (%%.1fs to %%.1fs) (%%s) %%s' sendTo='CN0G9S7M4' connectionId='PROJECT_EXT_8']\n" "$(basename $(curl -Ls -o /dev/null -w %%{url_effective} https://github.com/hashicorp/terraform-provider-aws/releases/latest))" "${alloc}" "${alloc_mb_latest}" "${alloc_mb_main}" "${alloc_bw}" "${alloc_emoji}" "${inuse}" "${inuse_mb_latest}" "${inuse_mb_main}" "${inuse_bw}" "${cputime}" "${cputime_s_latest}" "${cputime_s_main}" "${cputime_bw}" "${cputime_emoji}"
 }
 
 if [ -f "memvpcmain.prof" -a -f "memssmmain.prof" -a -f "memvpclatest.prof" -a -f "memssmlatest.prof" ]; then
