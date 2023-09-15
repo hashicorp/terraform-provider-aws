@@ -24,6 +24,7 @@ func DataSourceOrganizationalUnit() *schema.Resource {
 		Schema: map[string]*schema.Schema{
 			"name": {
 				Type:     schema.TypeString,
+				Required: true,
 				ForceNew: true,
 			},
 			"parent_id": {
