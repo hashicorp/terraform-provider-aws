@@ -28,7 +28,7 @@ func TestAccOrganizationalUnitDataSource_basic(t *testing.T) {
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccOrganizationalUnit(rName),
+				Config: testAccOrganizationalUnitDataSource(rName),
 				Check: resource.ComposeTestCheckFunc(
 					acctest.MatchResourceAttrGlobalARN(dataSourceName, "arn", "organizations", regexp.MustCompile(".*/.+$")),
 				),
@@ -37,7 +37,7 @@ func TestAccOrganizationalUnitDataSource_basic(t *testing.T) {
 	})
 }
 
-func testAccOrganizationalUnit(rName string) string {
+func testAccOrganizationalUnitDataSource(rName string) string {
 	return fmt.Sprintf(`
 data "aws_organizations_organization" "current" {}
 
