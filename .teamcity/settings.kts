@@ -589,6 +589,11 @@ object Sanity : BuildType({
     }
 
     features {
+        feature {
+            type = "JetBrains.SharedResources"
+            param("locks-param", "${DslContext.getParameter("aws_account.lock_id")} writeLock")
+        }
+        
         val notifierConnectionID = DslContext.getParameter("notifier.id", "")
         val notifier: Notifier? = if (notifierConnectionID != "") {
             Notifier(notifierConnectionID, DslContext.getParameter("notifier.destination"))
