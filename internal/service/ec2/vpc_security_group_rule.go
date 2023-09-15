@@ -302,6 +302,12 @@ func resourceSecurityGroupRuleRead(ctx context.Context, d *schema.ResourceData, 
 	// Attempt to find the single matching AWS Security Group Rule resource ID.
 	securityGroupRules, err := FindSecurityGroupRulesBySecurityGroupID(ctx, conn, securityGroupID)
 
+	// Ignore UnsupportedOperation errors for AWS China and GovCloud (US).
+	// Reference: https://github.com/hashicorp/terraform-provider-aws/pull/4362.
+	if tfawserr.ErrCodeEquals(err, errCodeUnsupportedOperation) {
+		return nil
+	}
+
 	if err != nil {
 		return diag.Errorf("reading Security Group (%s) Rules: %s", securityGroupID, err)
 	}
