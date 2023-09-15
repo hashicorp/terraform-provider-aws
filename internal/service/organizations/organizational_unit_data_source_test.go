@@ -47,8 +47,8 @@ resource "aws_organizations_organizational_unit" "parent" {
 }
 
 resource "aws_organizations_organizational_unit" "child" {
-	name      = %[1]q
-	parent_id = aws_organizations_organizational_unit.parent.id
+  name      = %[1]q
+  parent_id = aws_organizations_organizational_unit.parent.id
 }
 
 data "aws_organizations_organizational_unit" "test" {
