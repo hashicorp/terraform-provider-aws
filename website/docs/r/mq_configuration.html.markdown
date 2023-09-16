@@ -52,7 +52,6 @@ DATA
 }
 ```
 
-
 ## Argument Reference
 
 The following arguments are required:

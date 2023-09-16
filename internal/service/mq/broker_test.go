@@ -2032,12 +2032,12 @@ resource "aws_security_group" "test" {
 }
 
 resource "aws_mq_configuration" "test" {
-	description             = "TfAccTest MQ Configuration"
-	name                    = %[1]q
-	engine_type             = "RabbitMQ"
-	engine_version          = %[2]q
-  
-	data = <<DATA
+  description    = "TfAccTest MQ Configuration"
+  name           = %[1]q
+  engine_type    = "RabbitMQ"
+  engine_version = %[2]q
+
+  data = <<DATA
   # Default RabbitMQ delivery acknowledgement timeout is 30 minutes
   consumer_timeout = 1800000
   
@@ -2052,7 +2052,7 @@ resource "aws_mq_broker" "test" {
   security_groups    = [aws_security_group.test.id]
 
   configuration {
-	id       = aws_mq_configuration.test.id
+    id       = aws_mq_configuration.test.id
     revision = aws_mq_configuration.test.latest_revision
   }
 

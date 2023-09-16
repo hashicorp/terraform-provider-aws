@@ -346,10 +346,10 @@ DATA
 func testAccConfigurationConfig_rabbitMQData(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_mq_configuration" "test" {
-  description             = "TfAccTest MQ Configuration"
-  name                    = %[1]q
-  engine_type             = "RabbitMQ"
-  engine_version          = "3.11.16"
+  description    = "TfAccTest MQ Configuration"
+  name           = %[1]q
+  engine_type    = "RabbitMQ"
+  engine_version = "3.11.16"
 
   data = <<DATA
 consumer_timeout = 60000
