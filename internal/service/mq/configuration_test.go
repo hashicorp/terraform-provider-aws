@@ -165,6 +165,7 @@ func TestAccMQConfiguration_withRabbitMQData(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "engine_version", "3.11.16"),
 					resource.TestCheckResourceAttr(resourceName, "latest_revision", "2"),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "data", "consumer_timeout = 60000\n"),
 				),
 			},
 			{
@@ -351,9 +352,7 @@ resource "aws_mq_configuration" "test" {
   engine_version          = "3.11.16"
 
   data = <<DATA
-# Default RabbitMQ delivery acknowledgement timeout is 30 minutes
-consumer_timeout = 1800000
-
+consumer_timeout = 60000
 DATA
 }
 `, rName)
