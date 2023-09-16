@@ -38,15 +38,16 @@ function tester {
     local results=`TF_ACC=1 go test ./internal/service/"${service}"/... -v -parallel 4 -run="${tests}" -timeout 60m 2>&1`
     local exit_code=$?
 
+    echo "${results}"
+
     if [[ "${results}" == *"text file busy"* ]]; then
-        echo "FAILED attempt to run tests: ${results}"
+        echo "FAILED attempt to run tests"
         echo "Trying again..."
         sleep 5
         tester "${service}" "${tests}"
     fi
 
     if [ "${exit_code}" -ne 0 ]; then
-        echo "${results}"
         exit "${exit_code}"
     fi
 }
@@ -123,5 +124,5 @@ if [ ! -f "stssanity.test" ]; then
     exit 0
 fi
 
-oneliner=$( sort -R oneliners.txt | head -1 )
-echo "##teamcity[notification notifier='slack' message='**Sanity Tests Passed!**\n${oneliner}' sendTo='CN0G9S7M4' connectionId='PROJECT_EXT_8']\n"
+oneliner=$( sort -R ./oneliners.txt | head -1 )
+echo "##teamcity[notification notifier='slack' message='*Sanity Tests Passed!* |n${oneliner}' sendTo='CN0G9S7M4' connectionId='PROJECT_EXT_8']\n"
