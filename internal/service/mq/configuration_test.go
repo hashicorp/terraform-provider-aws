@@ -83,7 +83,7 @@ func TestAccMQConfiguration_withActiveMQData(t *testing.T) {
 		CheckDestroy:             acctest.CheckDestroyNoop,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccConfigurationConfig_activeMQData(rName),
+				Config: testAccConfigurationConfig_activeData(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConfigurationExists(ctx, resourceName),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "mq", regexache.MustCompile(`configuration:+.`)),
@@ -119,7 +119,7 @@ func TestAccMQConfiguration_withActiveMQLdapData(t *testing.T) {
 		CheckDestroy:             acctest.CheckDestroyNoop,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccConfigurationConfig_activeMQLdapData(rName),
+				Config: testAccConfigurationConfig_activeLdapData(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConfigurationExists(ctx, resourceName),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "mq", regexache.MustCompile(`configuration:+.`)),
@@ -156,7 +156,7 @@ func TestAccMQConfiguration_withRabbitMQData(t *testing.T) {
 		CheckDestroy:             acctest.CheckDestroyNoop,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccConfigurationConfig_rabbitMQData(rName),
+				Config: testAccConfigurationConfig_rabbitData(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConfigurationExists(ctx, resourceName),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "mq", regexache.MustCompile(`configuration:+.`)),
@@ -280,7 +280,7 @@ DATA
 `, rName)
 }
 
-func testAccConfigurationConfig_activeMQData(rName string) string {
+func testAccConfigurationConfig_activeData(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_mq_configuration" "test" {
   description    = "TfAccTest MQ Configuration"
@@ -315,7 +315,7 @@ DATA
 `, rName)
 }
 
-func testAccConfigurationConfig_activeMQLdapData(rName string) string {
+func testAccConfigurationConfig_activeLdapData(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_mq_configuration" "test" {
   description             = "TfAccTest MQ Configuration"
@@ -343,7 +343,7 @@ DATA
 `, rName)
 }
 
-func testAccConfigurationConfig_rabbitMQData(rName string) string {
+func testAccConfigurationConfig_rabbitData(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_mq_configuration" "test" {
   description    = "TfAccTest MQ Configuration"
