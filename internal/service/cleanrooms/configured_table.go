@@ -75,6 +75,7 @@ func ResourceConfiguredTable() *schema.Resource {
 				Type:     schema.TypeList,
 				Required: true,
 				ForceNew: true,
+				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"database_name": {
@@ -107,17 +108,18 @@ const (
 func resourceConfiguredTableCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).CleanRoomsClient(ctx)
 
-	glueTableReference := types.GlueTableReference{
-		DatabaseName: aws.String(d.Get("database_name").(string)),
-		TableName:    aws.String(d.Get("table_name").(string)),
-	}
-
 	input := &cleanrooms.CreateConfiguredTableInput{
 		Name:           aws.String(d.Get(names.AttrName).(string)),
 		AllowedColumns: flex.ExpandStringValueSet(d.Get("allowed_columns").(*schema.Set)),
-		TableReference: glueTableReference,
+		TableReference: expandTableReference(d.Get("table_reference").([]interface{})),
 		Tags:           getTagsIn(ctx),
 	}
+
+	analysisMethod, err := expandAnalysisMethod(d.Get("analysis_method").(string))
+	if err != nil {
+		return create.DiagError(names.CleanRooms, create.ErrActionCreating, ResNameConfiguredTable, d.Get("name").(string), err)
+	}
+	input.AnalysisMethod = analysisMethod
 
 	if v, ok := d.GetOk(names.AttrDescription); ok {
 		input.Description = aws.String(v.(string))
@@ -159,9 +161,9 @@ func resourceConfiguredTableRead(ctx context.Context, d *schema.ResourceData, me
 	d.Set("analysis_method", configuredTable.AnalysisMethod)
 	d.Set("create_time", configuredTable.CreateTime)
 
-	glueTable := configuredTable.TableReference.(types.TableReferenceMemberGlue).Value
-	d.Set("database_name", glueTable.DatabaseName)
-	d.Set("table_name", glueTable.TableName)
+	if err := d.Set("table_reference", flattenTableReference(configuredTable.TableReference)); err != nil {
+		return diag.Errorf("setting table_reference: %s", err)
+	}
 
 	return nil
 }
@@ -230,5 +232,28 @@ func expandAnalysisMethod(analysisMethod string) (types.AnalysisMethod, error) {
 		return types.AnalysisMethodDirectQuery, nil
 	default:
 		return types.AnalysisMethodDirectQuery, fmt.Errorf("Invalid analysis method. The only valid value is currently `DIRECT_QUERY`")
+	}
+}
+
+func expandTableReference(data []interface{}) types.TableReference {
+	tableReference := data[0].(map[string]interface{})
+	return &types.TableReferenceMemberGlue{
+		Value: types.GlueTableReference{
+			DatabaseName: aws.String(tableReference["database_name"].(string)),
+			TableName:    aws.String(tableReference["table_name"].(string)),
+		},
+	}
+}
+
+func flattenTableReference(tableReference types.TableReference) []interface{} {
+	switch v := tableReference.(type) {
+	case *types.TableReferenceMemberGlue:
+		m := map[string]interface{}{
+			"database_name": v.Value.DatabaseName,
+			"table_name":    v.Value.TableName,
+		}
+		return []interface{}{m}
+	default:
+		return nil
 	}
 }
