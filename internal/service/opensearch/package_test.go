@@ -4,14 +4,18 @@
 package opensearch_test
 
 import (
+	"context"
 	"fmt"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/opensearchservice"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfopensearch "github.com/hashicorp/terraform-provider-aws/internal/service/opensearch"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func TestAccOpenSearchPackage_basic(t *testing.T) {
@@ -24,7 +28,7 @@ func TestAccOpenSearchPackage_basic(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, opensearchservice.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDomainDestroy(ctx),
+		CheckDestroy:             testAccCheckPackageDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPackageConfig(name),
@@ -54,7 +58,7 @@ func TestAccOpenSearchPackage_disappears(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, opensearchservice.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDomainDestroy(ctx),
+		CheckDestroy:             testAccCheckPackageDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPackageConfig(name),
@@ -89,4 +93,28 @@ resource "aws_opensearch_package" "test" {
   package_type = "TXT-DICTIONARY"
 }
 `, name, name, name)
+}
+
+func testAccCheckPackageDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_opensearch_domain" {
+				continue
+			}
+
+			conn := acctest.Provider.Meta().(*conns.AWSClient).OpenSearchConn(ctx)
+			_, err := tfopensearch.FindPackageByName(ctx, conn, rs.Primary.Attributes["package_id"])
+
+			if tfresource.NotFound(err) {
+				continue
+			}
+
+			if err != nil {
+				return err
+			}
+
+			return fmt.Errorf("OpenSearch package %s still exists", rs.Primary.ID)
+		}
+		return nil
+	}
 }
