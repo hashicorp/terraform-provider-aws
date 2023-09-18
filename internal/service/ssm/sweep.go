@@ -31,7 +31,7 @@ import (
 func init() {
 	resource.AddTestSweepers("aws_ssm_default_patch_baseline", &resource.Sweeper{
 		Name: "aws_ssm_default_patch_baseline",
-		F:    sweepResourceDefaultPatchBaselines,
+		F:    sweepDefaultPatchBaselines,
 	})
 
 	resource.AddTestSweepers("aws_ssm_maintenance_window", &resource.Sweeper{
@@ -41,7 +41,7 @@ func init() {
 
 	resource.AddTestSweepers("aws_ssm_patch_baseline", &resource.Sweeper{
 		Name: "aws_ssm_patch_baseline",
-		F:    sweepResourcePatchBaselines,
+		F:    sweepPatchBaselines,
 		Dependencies: []string{
 			"aws_ssm_default_patch_baseline",
 			"aws_ssm_patch_group",
@@ -59,7 +59,7 @@ func init() {
 	})
 }
 
-func sweepResourceDefaultPatchBaselines(region string) error {
+func sweepDefaultPatchBaselines(region string) error {
 	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
@@ -179,7 +179,7 @@ func sweepMaintenanceWindows(region string) error {
 	return nil
 }
 
-func sweepResourcePatchBaselines(region string) error {
+func sweepPatchBaselines(region string) error {
 	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
