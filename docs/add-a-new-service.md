@@ -51,62 +51,36 @@ If an AWS service must be created in a non-standard way, for example the service
 
 1. Add a file `internal/<service>/service_package.go` that contains an API client factory function, for example:
 
-=== "framework / aws-go-sdk-v2"
+<!-- markdownlint-disable code-block-style -->
+=== "aws-go-sdk-v2"
 
     ```go
-    package globalaccelerator
+    package route53domains
     
     import (
-        "context"
+    	"context"
     
-        aws_sdkv1 "github.com/aws/aws-sdk-go/aws"
-        endpoints_sdkv1 "github.com/aws/aws-sdk-go/aws/endpoints"
-        session_sdkv1 "github.com/aws/aws-sdk-go/aws/session"
-        globalaccelerator_sdkv1 "github.com/aws/aws-sdk-go/service/globalaccelerator"
+    	aws_sdkv2 "github.com/aws/aws-sdk-go-v2/aws"
+    	route53domains_sdkv2 "github.com/aws/aws-sdk-go-v2/service/route53domains"
+    	endpoints_sdkv1 "github.com/aws/aws-sdk-go/aws/endpoints"
     )
     
-    // NewConn returns a new AWS SDK for Go v1 client for this service package's AWS API.
-    func (p *servicePackage) NewConn(ctx context.Context) (*globalaccelerator_sdkv1.GlobalAccelerator, error) {
-        sess := p.config["session"].(*session_sdkv1.Session)
-        config := &aws_sdkv1.Config{Endpoint: aws_sdkv1.String(p.config["endpoint"].(string))}
-    
-        // Force "global" services to correct Regions.
-        if p.config["partition"].(string) == endpoints_sdkv1.AwsPartitionID {
-            config.Region = aws_sdkv1.String(endpoints_sdkv1.UsWest2RegionID)
-        }
-    
-        return globalaccelerator_sdkv1.New(sess.Copy(config)), nil
-    }
-    ```
-
-=== "framework / aws-go-sdk"
-
-    ```go
-    package accessanalyzer
-    
-    import (
-        "context"
-  
-        aws_sdkv2 "github.com/aws/aws-sdk-go-v2/aws"
-        accessanalyzer_sdkv2 "github.com/aws/aws-sdk-go-v2/service/accessanalyzer"
-        "github.com/hashicorp/terraform-provider-aws/internal/conns"
-        "github.com/hashicorp/terraform-provider-aws/internal/types"
-        "github.com/hashicorp/terraform-provider-aws/names"
-    )
-
     // NewClient returns a new AWS SDK for Go v2 client for this service package's AWS API.
-    func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (*accessanalyzer_sdkv2.Client, error) {
-    cfg := *(config["aws_sdkv2_config"].(*aws_sdkv2.Config))
+    func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (*route53domains_sdkv2.Client, error) {
+    	cfg := *(config["aws_sdkv2_config"].(*aws_sdkv2.Config))
     
-        return accessanalyzer_sdkv2.NewFromConfig(cfg, func(o *accessanalyzer_sdkv2.Options) {
-            if endpoint := config["endpoint"].(string); endpoint != "" {
-                o.EndpointResolver = accessanalyzer_sdkv2.EndpointResolverFromURL(endpoint)
-            }
-        }), nil
+    	return route53domains_sdkv2.NewFromConfig(cfg, func(o *route53domains_sdkv2.Options) {
+    		if endpoint := config["endpoint"].(string); endpoint != "" {
+    			o.BaseEndpoint = aws_sdkv2.String(endpoint)
+    		} else if config["partition"].(string) == endpoints_sdkv1.AwsPartitionID {
+    			// Route 53 Domains is only available in AWS Commercial us-east-1 Region.
+    			o.Region = endpoints_sdkv1.UsEast1RegionID
+    		}
+    	}), nil
     }
     ```
 
-=== "sdk / aws-go-sdk-v2"
+=== "aws-go-sdk"
 
     ```go
     package globalaccelerator
@@ -133,34 +107,7 @@ If an AWS service must be created in a non-standard way, for example the service
         return globalaccelerator_sdkv1.New(sess.Copy(config)), nil
     }
     ```
-
-=== "sdk / aws-go-sdk"
-
-    ```go
-    package globalaccelerator
-    
-    import (
-        "context"
-    
-        aws_sdkv1 "github.com/aws/aws-sdk-go/aws"
-        endpoints_sdkv1 "github.com/aws/aws-sdk-go/aws/endpoints"
-        session_sdkv1 "github.com/aws/aws-sdk-go/aws/session"
-        globalaccelerator_sdkv1 "github.com/aws/aws-sdk-go/service/globalaccelerator"
-    )
-    
-    // NewConn returns a new AWS SDK for Go v1 client for this service package's AWS API.
-    func (p *servicePackage) NewConn(ctx context.Context) (*globalaccelerator_sdkv1.GlobalAccelerator, error) {
-        sess := p.config["session"].(*session_sdkv1.Session)
-        config := &aws_sdkv1.Config{Endpoint: aws_sdkv1.String(p.config["endpoint"].(string))}
-    
-        // Force "global" services to correct Regions.
-        if p.config["partition"].(string) == endpoints_sdkv1.AwsPartitionID {
-            config.Region = aws_sdkv1.String(endpoints_sdkv1.UsWest2RegionID)
-        }
-    
-        return globalaccelerator_sdkv1.New(sess.Copy(config)), nil
-    }
-    ```
+<!-- markdownlint-enable code-block-style -->
 
 ## Customizing a new Service Client
 
@@ -168,30 +115,34 @@ If an AWS service must be customized after creation, for example retry handling 
 
 1. Add a file `internal/<service>/service_package.go` that contains an API client customization function, for example:
 
-```go
-package chime
+<!-- markdownlint-disable code-block-style -->
+=== "aws-go-sdk"
 
-import (
-	"context"
-
-	aws_sdkv1 "github.com/aws/aws-sdk-go/aws"
-	request_sdkv1 "github.com/aws/aws-sdk-go/aws/request"
-	chime_sdkv1 "github.com/aws/aws-sdk-go/service/chime"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-)
-
-// CustomizeConn customizes a new AWS SDK for Go v1 client for this service package's AWS API.
-func (p *servicePackage) CustomizeConn(ctx context.Context, conn *chime_sdkv1.Chime) (*chime_sdkv1.Chime, error) {
-	conn.Handlers.Retry.PushBack(func(r *request_sdkv1.Request) {
-		// When calling CreateVoiceConnector across multiple resources,
-		// the API can randomly return a BadRequestException without explanation
-		if r.Operation.Name == "CreateVoiceConnector" {
-			if tfawserr.ErrMessageContains(r.Error, chime_sdkv1.ErrCodeBadRequestException, "Service received a bad request") {
-				r.Retryable = aws_sdkv1.Bool(true)
-			}
-		}
-	})
-
-	return conn, nil
-}
-```
+    ```go
+    package chime
+    
+    import (
+    	"context"
+    
+    	aws_sdkv1 "github.com/aws/aws-sdk-go/aws"
+    	request_sdkv1 "github.com/aws/aws-sdk-go/aws/request"
+    	chime_sdkv1 "github.com/aws/aws-sdk-go/service/chime"
+    	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+    )
+    
+    // CustomizeConn customizes a new AWS SDK for Go v1 client for this service package's AWS API.
+    func (p *servicePackage) CustomizeConn(ctx context.Context, conn *chime_sdkv1.Chime) (*chime_sdkv1.Chime, error) {
+    	conn.Handlers.Retry.PushBack(func(r *request_sdkv1.Request) {
+    		// When calling CreateVoiceConnector across multiple resources,
+    		// the API can randomly return a BadRequestException without explanation
+    		if r.Operation.Name == "CreateVoiceConnector" {
+    			if tfawserr.ErrMessageContains(r.Error, chime_sdkv1.ErrCodeBadRequestException, "Service received a bad request") {
+    				r.Retryable = aws_sdkv1.Bool(true)
+    			}
+    		}
+    	})
+    
+    	return conn, nil
+    }
+    ```
+<!-- markdownlint-enable code-block-style -->
