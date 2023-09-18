@@ -262,11 +262,11 @@ func flattenOptions(apiOptions []*rds.Option, optionConfigurations []*rds.Option
 			"vpc_security_group_memberships": schema.NewSet(schema.HashString, vpcSecurityGroupMemberships),
 		}
 
-		if apiOption.OptionVersion != nil && configuredOption.OptionVersion != nil {
+		if apiOption.OptionVersion != nil && configuredOption != nil && configuredOption.OptionVersion != nil {
 			r["version"] = aws.StringValue(apiOption.OptionVersion)
 		}
 
-		if apiOption.Port != nil && configuredOption.Port != nil {
+		if apiOption.Port != nil && configuredOption != nil && configuredOption.Port != nil {
 			r["port"] = aws.Int64Value(apiOption.Port)
 		}
 
