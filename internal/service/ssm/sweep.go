@@ -201,8 +201,8 @@ func sweepResourcePatchBaselines(region string) error {
 			baselineID := aws.ToString(identity.BaselineId)
 			r := ResourcePatchBaseline()
 			d := r.Data(nil)
-
 			d.SetId(baselineID)
+			d.Set("operating_system", identity.OperatingSystem)
 
 			sweepables = append(sweepables, sweep.NewSweepResource(r, d, client))
 		}
