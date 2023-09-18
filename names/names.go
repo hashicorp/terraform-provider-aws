@@ -46,6 +46,7 @@ const (
 	KeyspacesEndpointID                  = "keyspaces"
 	LambdaEndpointID                     = "lambda"
 	LexV2ModelsEndpointID                = "models-v2-lex"
+	MediaConnectEndpointID               = "mediaconnect"
 	MediaLiveEndpointID                  = "medialive"
 	ObservabilityAccessManagerEndpointID = "oam"
 	OpenSearchServerlessEndpointID       = "aoss"
