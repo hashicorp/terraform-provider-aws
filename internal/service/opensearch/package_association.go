@@ -79,9 +79,9 @@ func ResourcePackageAssociationRead(ctx context.Context, d *schema.ResourceData,
 		return sdkdiag.AppendErrorf(diags, "listing OpenSearch Package for domain (%s): %s", domainName, err)
 	}
 
-	d.Set("package_id", aws.StringValue(output.PackageID))
-	d.Set("package_type", aws.StringValue(output.ReferencePath))
-	d.Set("available_package_version", aws.StringValue(output.PackageVersion))
+	d.Set("package_id", output.PackageID)
+	d.Set("package_type", output.ReferencePath)
+	d.Set("available_package_version", output.PackageVersion)
 	return diags
 }
 

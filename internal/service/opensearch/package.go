@@ -126,11 +126,11 @@ func ResourcePackageRead(ctx context.Context, d *schema.ResourceData, meta inter
 		return sdkdiag.AppendErrorf(diags, "reading OpenSearch Package (%s): not found", d.Id())
 	}
 
-	d.Set("package_id", aws.StringValue(output.PackageDetailsList[0].PackageID))
-	d.Set("package_name", aws.StringValue(output.PackageDetailsList[0].PackageName))
-	d.Set("package_description", aws.StringValue(output.PackageDetailsList[0].PackageDescription))
-	d.Set("package_type", aws.StringValue(output.PackageDetailsList[0].PackageType))
-	d.Set("available_package_version", aws.StringValue(output.PackageDetailsList[0].AvailablePackageVersion))
+	d.Set("package_id", output.PackageDetailsList[0].PackageID)
+	d.Set("package_name", output.PackageDetailsList[0].PackageName)
+	d.Set("package_description", output.PackageDetailsList[0].PackageDescription)
+	d.Set("package_type", output.PackageDetailsList[0].PackageType)
+	d.Set("available_package_version", output.PackageDetailsList[0].AvailablePackageVersion)
 
 	return diags
 }
