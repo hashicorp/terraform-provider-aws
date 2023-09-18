@@ -66,5 +66,5 @@ import {
 Using `terraform import`, import AWS Opensearch Package Associations using the Package Association ID. For example:
 
 ```console
-% terraform import aws_opensearch_package_association.foo package-association-id
+% terraform import aws_opensearch_package_association.foo package-association:<domain-name>-<package-id>
 ```
