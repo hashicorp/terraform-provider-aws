@@ -1123,7 +1123,7 @@ resource "aws_db_option_group" "test" {
   engine_name              = data.aws_rds_engine_version.default.engine
   major_engine_version     = regex("^\\d+", data.aws_rds_engine_version.default.version)
 
-  option{
+  option {
     option_name = "S3_INTEGRATION"
   }
 
@@ -1182,7 +1182,7 @@ resource "aws_db_option_group" "test" {
   engine_name              = data.aws_rds_engine_version.default.engine
   major_engine_version     = regex("^\\d+", data.aws_rds_engine_version.default.version)
 
-  option{
+  option {
     option_name = "S3_INTEGRATION"
     version     = "1.0"
   }
