@@ -159,7 +159,8 @@ func resourceConfiguredTableRead(ctx context.Context, d *schema.ResourceData, me
 	d.Set(names.AttrDescription, configuredTable.Description)
 	d.Set("allowed_columns", configuredTable.AllowedColumns)
 	d.Set("analysis_method", configuredTable.AnalysisMethod)
-	d.Set("create_time", configuredTable.CreateTime)
+	d.Set("create_time", configuredTable.CreateTime.String())
+	d.Set("update_time", configuredTable.UpdateTime.String())
 
 	if err := d.Set("table_reference", flattenTableReference(configuredTable.TableReference)); err != nil {
 		return diag.Errorf("setting table_reference: %s", err)
