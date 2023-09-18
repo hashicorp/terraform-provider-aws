@@ -10,12 +10,10 @@ import (
 	"sync"
 
 	aws_sdkv2 "github.com/aws/aws-sdk-go-v2/aws"
-	aws_sdkv1 "github.com/aws/aws-sdk-go/aws"
 	endpoints_sdkv1 "github.com/aws/aws-sdk-go/aws/endpoints"
 	session_sdkv1 "github.com/aws/aws-sdk-go/aws/session"
 	apigatewayv2_sdkv1 "github.com/aws/aws-sdk-go/service/apigatewayv2"
 	mediaconvert_sdkv1 "github.com/aws/aws-sdk-go/service/mediaconvert"
-	s3_sdkv1 "github.com/aws/aws-sdk-go/service/s3"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -61,17 +59,6 @@ func (client *AWSClient) RegionalHostname(prefix string) string {
 // S3UsePathStyle returns the s3_force_path_style provider configuration value.
 func (client *AWSClient) S3UsePathStyle() bool {
 	return client.s3UsePathStyle
-}
-
-// ****************
-// TODO: REVIEW
-// TODO: AWS SDK for Go v2 does NO URL cleaning.
-// ****************
-func (client *AWSClient) S3ConnURICleaningDisabled(ctx context.Context) *s3_sdkv1.S3 {
-	config := client.S3Conn(ctx).Config
-	config.DisableRestProtocolURICleaning = aws_sdkv1.Bool(true)
-
-	return s3_sdkv1.New(client.Session.Copy(&config))
 }
 
 // SetHTTPClient sets the http.Client used for AWS API calls.

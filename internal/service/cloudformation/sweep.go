@@ -77,6 +77,7 @@ func sweepStackSetInstances(region string) error {
 						aws.StringValue(summary.Region),
 					)
 					d.SetId(id)
+					d.Set("call_as", "SELF")
 
 					sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 				}
@@ -135,6 +136,7 @@ func sweepStackSets(region string) error {
 			r := ResourceStackSet()
 			d := r.Data(nil)
 			d.SetId(aws.StringValue(summary.StackSetName))
+			d.Set("call_as", "SELF")
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}

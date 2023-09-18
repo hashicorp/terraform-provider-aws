@@ -14,6 +14,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/codestarconnections"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
+	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv2"
 )
 
 func init() {
@@ -45,7 +46,7 @@ func sweepConnections(region string) error {
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
 
-		if sweep.SkipSweepError(err) {
+		if awsv2.SkipSweepError(err) {
 			log.Printf("[WARN] Skipping CodeStar Connections Connection sweep for %s: %s", region, err)
 			return nil
 		}
@@ -86,7 +87,7 @@ func sweepHosts(region string) error {
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
 
-		if sweep.SkipSweepError(err) {
+		if awsv2.SkipSweepError(err) {
 			log.Printf("[WARN] Skipping CodeStar Connections Host sweep for %s: %s", region, err)
 			return nil
 		}

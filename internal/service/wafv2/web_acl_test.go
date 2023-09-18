@@ -12,7 +12,6 @@ import (
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/endpoints"
 	"github.com/aws/aws-sdk-go/service/wafv2"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -2385,8 +2384,7 @@ func TestAccWAFV2WebACL_associationConfig(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckRegion(t, testAccCloudFrontScopeRegion())
-			testAccPreCheckScopeCloudFront(ctx, t)
+			acctest.PreCheckWAFV2CloudFrontScope(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, wafv2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -2432,8 +2430,7 @@ func TestAccWAFV2WebACL_CloudFrontScope(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckRegion(t, testAccCloudFrontScopeRegion())
-			testAccPreCheckScopeCloudFront(ctx, t)
+			acctest.PreCheckWAFV2CloudFrontScope(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, wafv2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -2443,7 +2440,7 @@ func TestAccWAFV2WebACL_CloudFrontScope(t *testing.T) {
 				Config: testAccWebACLConfig_CloudFrontScope(webACLName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckWebACLExists(ctx, resourceName, &v),
-					acctest.MatchResourceAttrRegionalARNRegion(resourceName, "arn", "wafv2", testAccCloudFrontScopeRegion(), regexache.MustCompile(`global/webacl/.+$`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexache.MustCompile(`global/webacl/.+$`)),
 					resource.TestCheckResourceAttr(resourceName, "name", webACLName),
 					resource.TestCheckResourceAttr(resourceName, "scope", wafv2.ScopeCloudfront),
 					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
@@ -2476,35 +2473,6 @@ func TestAccWAFV2WebACL_CloudFrontScope(t *testing.T) {
 			},
 		},
 	})
-}
-
-func testAccCloudFrontScopeRegion() string {
-	switch acctest.Partition() {
-	case endpoints.AwsPartitionID:
-		return endpoints.UsEast1RegionID
-	case endpoints.AwsCnPartitionID:
-		return endpoints.CnNorthwest1RegionID
-	default:
-		return acctest.Region()
-	}
-}
-
-func testAccPreCheckScopeCloudFront(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).WAFV2Conn(ctx)
-
-	input := &wafv2.ListWebACLsInput{
-		Scope: aws.String(wafv2.ScopeCloudfront),
-	}
-
-	_, err := conn.ListWebACLsWithContext(ctx, input)
-
-	if acctest.PreCheckSkipError(err) {
-		t.Skipf("skipping acceptance testing: %s", err)
-	}
-
-	if err != nil {
-		t.Fatalf("unexpected PreCheck error: %s", err)
-	}
 }
 
 func testAccCheckWebACLDestroy(ctx context.Context) resource.TestCheckFunc {
