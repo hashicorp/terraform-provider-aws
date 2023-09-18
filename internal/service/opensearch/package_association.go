@@ -39,6 +39,10 @@ func ResourcePackageAssociation() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
+			"reference_path": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 		},
 	}
 }
@@ -65,9 +69,19 @@ func ResourcePackageAssociationCreate(ctx context.Context, d *schema.ResourceDat
 
 func ResourcePackageAssociationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).OpenSearchConn(ctx)
 
-	// TODO: Implement read?
+	var domainName = d.Get("domain_name").(string)
+	var packageID = d.Get("package_id").(string)
 
+	output, err := getAssociatedDomainPackage(ctx, domainName, packageID, conn)
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "listing OpenSearch Package for domain (%s): %s", domainName, err)
+	}
+
+	d.Set("package_id", aws.StringValue(output.PackageID))
+	d.Set("package_type", aws.StringValue(output.ReferencePath))
+	d.Set("available_package_version", aws.StringValue(output.PackageVersion))
 	return diags
 }
 
@@ -89,4 +103,29 @@ func ResourcePackageAssociationDelete(ctx context.Context, d *schema.ResourceDat
 	}
 
 	return diags
+}
+
+func getAssociatedDomainPackage(ctx context.Context, domainID, packageID string, conn *opensearchservice.OpenSearchService) (*opensearchservice.DomainPackageDetails, error) {
+	input := &opensearchservice.ListPackagesForDomainInput{
+		DomainName: aws.String(domainID),
+	}
+	for {
+		resp, err := conn.ListPackagesForDomainWithContext(ctx, input)
+		if err != nil {
+			return nil, err
+		}
+		if len(resp.DomainPackageDetailsList) == 0 {
+			return nil, fmt.Errorf("no packages found for domain %s", domainID)
+		}
+		for _, domainPackageDetails := range resp.DomainPackageDetailsList {
+			if aws.StringValue(domainPackageDetails.PackageID) == packageID {
+				return domainPackageDetails, nil
+			}
+		}
+		if resp.NextToken == nil {
+			break
+		}
+		input.NextToken = resp.NextToken
+	}
+	return nil, nil
 }
