@@ -51,6 +51,40 @@ func TestAccIAMRole_basic(t *testing.T) {
 	})
 }
 
+func TestAccIAMRole_basic_migration_sdk_to_framework(t *testing.T) {
+	ctx := acctest.Context(t)
+	var conf iam.Role
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_iam_role.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:   acctest.ErrorCheck(t, iam.EndpointsID),
+		CheckDestroy: testAccCheckRoleDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"<provider>": {
+						VersionConstraint: "5.17.0",
+						Source:            "hashicorp/terraform-provider-aws",
+					},
+				},
+				Config: testAccRoleConfig_basic(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRoleExists(ctx, resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "path", "/"),
+					resource.TestCheckResourceAttrSet(resourceName, "create_date"),
+				),
+			},
+			{
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				Config:                   testAccRoleConfig_basic(rName),
+				PlanOnly:                 true,
+			},
+		},
+	})
+}
+
 func TestAccIAMRole_description(t *testing.T) {
 	ctx := acctest.Context(t)
 	var conf iam.Role
