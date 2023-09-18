@@ -7,10 +7,10 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"regexp"
 	"strings"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/service/lightsail"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -44,7 +44,7 @@ func testAccLoadBalancerCertificate_basic(t *testing.T) {
 				Config: testAccLoadBalancerCertificateConfig_basic(rName, lbName, domainName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckLoadBalancerCertificateExists(ctx, resourceName),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "lightsail", regexp.MustCompile(`LoadBalancerTlsCertificate/.+`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "lightsail", regexache.MustCompile(`LoadBalancerTlsCertificate/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "domain_name", domainName),
 					resource.TestCheckResourceAttr(resourceName, "subject_alternative_names.#", "1"),

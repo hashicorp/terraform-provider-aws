@@ -13,10 +13,10 @@ import (
 	"go/parser"
 	"go/token"
 	"os"
-	"regexp"
 	"sort"
 	"strings"
 
+	"github.com/YakDriver/regexache"
 	multierror "github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-provider-aws/internal/generate/common"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -149,7 +149,7 @@ var tmpl string
 
 // Annotation processing.
 var (
-	annotation = regexp.MustCompile(`^//\s*@([a-zA-Z0-9]+)(\(([^)]*)\))?\s*$`)
+	annotation = regexache.MustCompile(`^//\s*@([0-9A-Za-z]+)(\(([^)]*)\))?\s*$`)
 )
 
 type visitor struct {

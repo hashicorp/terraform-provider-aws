@@ -8,10 +8,10 @@ import (
 	"errors"
 	"fmt"
 	"log"
-	"regexp"
 	"strings"
 	"time"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/aws/ratelimit"
@@ -742,7 +742,7 @@ func flattenDocumentClassifierOutputDataConfig(apiObject *types.DocumentClassifi
 		"output_s3_uri": s3Uri,
 	}
 
-	re := regexp.MustCompile(`^(s3://[-a-z0-9.]{3,63}(/.+)?/)[-a-zA-Z0-9]+/output/output\.tar\.gz`)
+	re := regexache.MustCompile(`^(s3://[0-9a-z.-]{3,63}(/.+)?/)[0-9A-Za-z-]+/output/output\.tar\.gz`)
 	match := re.FindStringSubmatch(s3Uri)
 	if match != nil && match[1] != "" {
 		m["s3_uri"] = match[1]
@@ -810,7 +810,7 @@ func DocumentClassifierParseARN(arnString string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	re := regexp.MustCompile(`^document-classifier/([[:alnum:]-]+)`)
+	re := regexache.MustCompile(`^document-classifier/([[:alnum:]-]+)`)
 	matches := re.FindStringSubmatch(arn.Resource)
 	if len(matches) != 2 {
 		return "", fmt.Errorf("unable to parse %q", arnString)

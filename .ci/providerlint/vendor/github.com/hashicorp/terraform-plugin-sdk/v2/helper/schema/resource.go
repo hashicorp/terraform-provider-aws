@@ -595,6 +595,51 @@ type Resource struct {
 	// See github.com/hashicorp/terraform-plugin-sdk/issues/655 for more
 	// details.
 	UseJSONNumber bool
+
+	// EnableLegacyTypeSystemApplyErrors when enabled will prevent the SDK from
+	// setting the legacy type system flag in the protocol during
+	// ApplyResourceChange (Create, Update, and Delete) operations. Before
+	// enabling this setting in a production release for a resource, the
+	// resource should be exhaustively acceptance tested with the setting
+	// enabled in an environment where it is easy to clean up resources,
+	// potentially outside of Terraform, since these errors may be unavoidable
+	// in certain cases.
+	//
+	// Disabling the legacy type system protocol flag is an unsafe operation
+	// when using this SDK as there are certain unavoidable behaviors imposed
+	// by the SDK, however this option is surfaced to allow provider developers
+	// to try to discover fixable data inconsistency errors more easily.
+	// Terraform, when encountering an enabled legacy type system protocol flag,
+	// will demote certain schema and data consistency errors into warning logs
+	// containing the text "legacy plugin SDK". Some errors for errant schema
+	// definitions, such as when an attribute is not marked as Computed as
+	// expected by Terraform, can only be resolved by migrating to
+	// terraform-plugin-framework since that SDK does not impose behavior
+	// changes with it enabled. However, data-based errors typically require
+	// logic fixes that should be applicable for both SDKs to be resolved.
+	EnableLegacyTypeSystemApplyErrors bool
+
+	// EnableLegacyTypeSystemPlanErrors when enabled will prevent the SDK from
+	// setting the legacy type system flag in the protocol during
+	// PlanResourceChange operations. Before enabling this setting in a
+	// production release for a resource, the resource should be exhaustively
+	// acceptance tested with the setting enabled in an environment where it is
+	// easy to clean up resources, potentially outside of Terraform, since these
+	// errors may be unavoidable in certain cases.
+	//
+	// Disabling the legacy type system protocol flag is an unsafe operation
+	// when using this SDK as there are certain unavoidable behaviors imposed
+	// by the SDK, however this option is surfaced to allow provider developers
+	// to try to discover fixable data inconsistency errors more easily.
+	// Terraform, when encountering an enabled legacy type system protocol flag,
+	// will demote certain schema and data consistency errors into warning logs
+	// containing the text "legacy plugin SDK". Some errors for errant schema
+	// definitions, such as when an attribute is not marked as Computed as
+	// expected by Terraform, can only be resolved by migrating to
+	// terraform-plugin-framework since that SDK does not impose behavior
+	// changes with it enabled. However, data-based errors typically require
+	// logic fixes that should be applicable for both SDKs to be resolved.
+	EnableLegacyTypeSystemPlanErrors bool
 }
 
 // SchemaMap returns the schema information for this Resource whether it is

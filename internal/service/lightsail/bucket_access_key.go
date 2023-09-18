@@ -5,9 +5,9 @@ package lightsail
 
 import (
 	"context"
-	"regexp"
 	"time"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/lightsail"
 	"github.com/aws/aws-sdk-go-v2/service/lightsail/types"
@@ -46,7 +46,7 @@ func ResourceBucketAccessKey() *schema.Resource {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
-				ValidateFunc: validation.StringMatch(regexp.MustCompile(`^[a-z0-9][a-z0-9-]{1,52}[a-z0-9]$`), "Invalid Bucket name. Must match regex: ^[a-z0-9][a-z0-9-]{1,52}[a-z0-9]$"),
+				ValidateFunc: validation.StringMatch(regexache.MustCompile(`^[0-9a-z][0-9a-z-]{1,52}[0-9a-z]$`), "Invalid Bucket name. Must match regex: ^[0-9a-z][0-9a-z-]{1,52}[0-9a-z]$"),
 			},
 			"created_at": {
 				Type:     schema.TypeString,

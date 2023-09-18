@@ -12,6 +12,9 @@ import (
 	cleanrooms_sdkv2 "github.com/aws/aws-sdk-go-v2/service/cleanrooms"
 	cloudcontrol_sdkv2 "github.com/aws/aws-sdk-go-v2/service/cloudcontrol"
 	cloudwatchlogs_sdkv2 "github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs"
+	codecatalyst_sdkv2 "github.com/aws/aws-sdk-go-v2/service/codecatalyst"
+	codestarconnections_sdkv2 "github.com/aws/aws-sdk-go-v2/service/codestarconnections"
+	codestarnotifications_sdkv2 "github.com/aws/aws-sdk-go-v2/service/codestarnotifications"
 	comprehend_sdkv2 "github.com/aws/aws-sdk-go-v2/service/comprehend"
 	computeoptimizer_sdkv2 "github.com/aws/aws-sdk-go-v2/service/computeoptimizer"
 	directoryservice_sdkv2 "github.com/aws/aws-sdk-go-v2/service/directoryservice"
@@ -26,9 +29,11 @@ import (
 	inspector2_sdkv2 "github.com/aws/aws-sdk-go-v2/service/inspector2"
 	internetmonitor_sdkv2 "github.com/aws/aws-sdk-go-v2/service/internetmonitor"
 	ivschat_sdkv2 "github.com/aws/aws-sdk-go-v2/service/ivschat"
+	kafka_sdkv2 "github.com/aws/aws-sdk-go-v2/service/kafka"
 	kendra_sdkv2 "github.com/aws/aws-sdk-go-v2/service/kendra"
 	keyspaces_sdkv2 "github.com/aws/aws-sdk-go-v2/service/keyspaces"
 	lambda_sdkv2 "github.com/aws/aws-sdk-go-v2/service/lambda"
+	lexmodelsv2_sdkv2 "github.com/aws/aws-sdk-go-v2/service/lexmodelsv2"
 	lightsail_sdkv2 "github.com/aws/aws-sdk-go-v2/service/lightsail"
 	medialive_sdkv2 "github.com/aws/aws-sdk-go-v2/service/medialive"
 	mediapackage_sdkv2 "github.com/aws/aws-sdk-go-v2/service/mediapackage"
@@ -39,9 +44,11 @@ import (
 	qldb_sdkv2 "github.com/aws/aws-sdk-go-v2/service/qldb"
 	rbin_sdkv2 "github.com/aws/aws-sdk-go-v2/service/rbin"
 	rds_sdkv2 "github.com/aws/aws-sdk-go-v2/service/rds"
+	redshiftdata_sdkv2 "github.com/aws/aws-sdk-go-v2/service/redshiftdata"
 	resourceexplorer2_sdkv2 "github.com/aws/aws-sdk-go-v2/service/resourceexplorer2"
 	rolesanywhere_sdkv2 "github.com/aws/aws-sdk-go-v2/service/rolesanywhere"
 	route53domains_sdkv2 "github.com/aws/aws-sdk-go-v2/service/route53domains"
+	s3_sdkv2 "github.com/aws/aws-sdk-go-v2/service/s3"
 	s3control_sdkv2 "github.com/aws/aws-sdk-go-v2/service/s3control"
 	scheduler_sdkv2 "github.com/aws/aws-sdk-go-v2/service/scheduler"
 	securitylake_sdkv2 "github.com/aws/aws-sdk-go-v2/service/securitylake"
@@ -95,8 +102,6 @@ import (
 	codedeploy_sdkv1 "github.com/aws/aws-sdk-go/service/codedeploy"
 	codegurureviewer_sdkv1 "github.com/aws/aws-sdk-go/service/codegurureviewer"
 	codepipeline_sdkv1 "github.com/aws/aws-sdk-go/service/codepipeline"
-	codestarconnections_sdkv1 "github.com/aws/aws-sdk-go/service/codestarconnections"
-	codestarnotifications_sdkv1 "github.com/aws/aws-sdk-go/service/codestarnotifications"
 	cognitoidentity_sdkv1 "github.com/aws/aws-sdk-go/service/cognitoidentity"
 	cognitoidentityprovider_sdkv1 "github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
 	configservice_sdkv1 "github.com/aws/aws-sdk-go/service/configservice"
@@ -179,7 +184,6 @@ import (
 	ram_sdkv1 "github.com/aws/aws-sdk-go/service/ram"
 	rds_sdkv1 "github.com/aws/aws-sdk-go/service/rds"
 	redshift_sdkv1 "github.com/aws/aws-sdk-go/service/redshift"
-	redshiftdataapiservice_sdkv1 "github.com/aws/aws-sdk-go/service/redshiftdataapiservice"
 	redshiftserverless_sdkv1 "github.com/aws/aws-sdk-go/service/redshiftserverless"
 	resourcegroups_sdkv1 "github.com/aws/aws-sdk-go/service/resourcegroups"
 	resourcegroupstaggingapi_sdkv1 "github.com/aws/aws-sdk-go/service/resourcegroupstaggingapi"
@@ -382,6 +386,10 @@ func (c *AWSClient) CodeBuildConn(ctx context.Context) *codebuild_sdkv1.CodeBuil
 	return errs.Must(conn[*codebuild_sdkv1.CodeBuild](ctx, c, names.CodeBuild))
 }
 
+func (c *AWSClient) CodeCatalystClient(ctx context.Context) *codecatalyst_sdkv2.Client {
+	return errs.Must(client[*codecatalyst_sdkv2.Client](ctx, c, names.CodeCatalyst))
+}
+
 func (c *AWSClient) CodeCommitConn(ctx context.Context) *codecommit_sdkv1.CodeCommit {
 	return errs.Must(conn[*codecommit_sdkv1.CodeCommit](ctx, c, names.CodeCommit))
 }
@@ -394,12 +402,12 @@ func (c *AWSClient) CodePipelineConn(ctx context.Context) *codepipeline_sdkv1.Co
 	return errs.Must(conn[*codepipeline_sdkv1.CodePipeline](ctx, c, names.CodePipeline))
 }
 
-func (c *AWSClient) CodeStarConnectionsConn(ctx context.Context) *codestarconnections_sdkv1.CodeStarConnections {
-	return errs.Must(conn[*codestarconnections_sdkv1.CodeStarConnections](ctx, c, names.CodeStarConnections))
+func (c *AWSClient) CodeStarConnectionsClient(ctx context.Context) *codestarconnections_sdkv2.Client {
+	return errs.Must(client[*codestarconnections_sdkv2.Client](ctx, c, names.CodeStarConnections))
 }
 
-func (c *AWSClient) CodeStarNotificationsConn(ctx context.Context) *codestarnotifications_sdkv1.CodeStarNotifications {
-	return errs.Must(conn[*codestarnotifications_sdkv1.CodeStarNotifications](ctx, c, names.CodeStarNotifications))
+func (c *AWSClient) CodeStarNotificationsClient(ctx context.Context) *codestarnotifications_sdkv2.Client {
+	return errs.Must(client[*codestarnotifications_sdkv2.Client](ctx, c, names.CodeStarNotifications))
 }
 
 func (c *AWSClient) CognitoIDPConn(ctx context.Context) *cognitoidentityprovider_sdkv1.CognitoIdentityProvider {
@@ -666,6 +674,10 @@ func (c *AWSClient) KafkaConn(ctx context.Context) *kafka_sdkv1.Kafka {
 	return errs.Must(conn[*kafka_sdkv1.Kafka](ctx, c, names.Kafka))
 }
 
+func (c *AWSClient) KafkaClient(ctx context.Context) *kafka_sdkv2.Client {
+	return errs.Must(client[*kafka_sdkv2.Client](ctx, c, names.Kafka))
+}
+
 func (c *AWSClient) KafkaConnectConn(ctx context.Context) *kafkaconnect_sdkv1.KafkaConnect {
 	return errs.Must(conn[*kafkaconnect_sdkv1.KafkaConnect](ctx, c, names.KafkaConnect))
 }
@@ -708,6 +720,10 @@ func (c *AWSClient) LambdaClient(ctx context.Context) *lambda_sdkv2.Client {
 
 func (c *AWSClient) LexModelsConn(ctx context.Context) *lexmodelbuildingservice_sdkv1.LexModelBuildingService {
 	return errs.Must(conn[*lexmodelbuildingservice_sdkv1.LexModelBuildingService](ctx, c, names.LexModels))
+}
+
+func (c *AWSClient) LexV2ModelsClient(ctx context.Context) *lexmodelsv2_sdkv2.Client {
+	return errs.Must(client[*lexmodelsv2_sdkv2.Client](ctx, c, names.LexV2Models))
 }
 
 func (c *AWSClient) LicenseManagerConn(ctx context.Context) *licensemanager_sdkv1.LicenseManager {
@@ -846,8 +862,8 @@ func (c *AWSClient) RedshiftConn(ctx context.Context) *redshift_sdkv1.Redshift {
 	return errs.Must(conn[*redshift_sdkv1.Redshift](ctx, c, names.Redshift))
 }
 
-func (c *AWSClient) RedshiftDataConn(ctx context.Context) *redshiftdataapiservice_sdkv1.RedshiftDataAPIService {
-	return errs.Must(conn[*redshiftdataapiservice_sdkv1.RedshiftDataAPIService](ctx, c, names.RedshiftData))
+func (c *AWSClient) RedshiftDataClient(ctx context.Context) *redshiftdata_sdkv2.Client {
+	return errs.Must(client[*redshiftdata_sdkv2.Client](ctx, c, names.RedshiftData))
 }
 
 func (c *AWSClient) RedshiftServerlessConn(ctx context.Context) *redshiftserverless_sdkv1.RedshiftServerless {
@@ -892,6 +908,10 @@ func (c *AWSClient) Route53ResolverConn(ctx context.Context) *route53resolver_sd
 
 func (c *AWSClient) S3Conn(ctx context.Context) *s3_sdkv1.S3 {
 	return errs.Must(conn[*s3_sdkv1.S3](ctx, c, names.S3))
+}
+
+func (c *AWSClient) S3Client(ctx context.Context) *s3_sdkv2.Client {
+	return errs.Must(client[*s3_sdkv2.Client](ctx, c, names.S3))
 }
 
 func (c *AWSClient) S3ControlConn(ctx context.Context) *s3control_sdkv1.S3Control {

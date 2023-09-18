@@ -6,10 +6,11 @@ package duration
 import (
 	"errors"
 	"fmt"
-	"regexp"
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/YakDriver/regexache"
 )
 
 var ErrSyntax = errors.New("invalid syntax")
@@ -31,7 +32,7 @@ func Parse(s string) (Duration, error) {
 		return Duration{}, ErrSyntax
 	}
 
-	re := regexp.MustCompile(pattern)
+	re := regexache.MustCompile(pattern)
 	match := re.FindStringSubmatch(s)
 	if match == nil {
 		return Duration{}, ErrSyntax

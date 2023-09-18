@@ -6,9 +6,9 @@ package ec2_test
 import (
 	"context"
 	"fmt"
-	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -36,7 +36,7 @@ func TestAccVPCManagedPrefixList_basic(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccManagedPrefixListExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "address_family", "IPv4"),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "ec2", regexp.MustCompile(`prefix-list/pl-[[:xdigit:]]+`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "ec2", regexache.MustCompile(`prefix-list/pl-[[:xdigit:]]+`)),
 					resource.TestCheckResourceAttr(resourceName, "entry.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "max_entries", "1"),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),

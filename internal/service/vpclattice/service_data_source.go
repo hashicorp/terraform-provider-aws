@@ -9,6 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/vpclattice"
 	"github.com/aws/aws-sdk-go-v2/service/vpclattice/types"
+	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -18,6 +19,7 @@ import (
 )
 
 // @SDKDataSource("aws_vpclattice_service")
+// @Tags
 func dataSourceService() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceServiceRead,
@@ -76,15 +78,11 @@ func dataSourceService() *schema.Resource {
 	}
 }
 
-const (
-	DSNameService = "Service Data Source"
-)
-
 func dataSourceServiceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	var out *vpclattice.GetServiceOutput
 	conn := meta.(*conns.AWSClient).VPCLatticeClient(ctx)
 
+	var out *vpclattice.GetServiceOutput
 	if v, ok := d.GetOk("service_identifier"); ok {
 		serviceID := v.(string)
 		service, err := findServiceByID(ctx, conn, serviceID)
@@ -113,16 +111,9 @@ func dataSourceServiceRead(ctx context.Context, d *schema.ResourceData, meta int
 		out = service
 	}
 
-	//
-	// If you don't set the ID, the data source will not be stored in state. In
-	// fact, that's how a resource can be removed from state - clearing its ID.
-	//
-	// If this data source is a companion to a resource, often both will use the
-	// same ID. Otherwise, the ID will be a unique identifier such as an AWS
-	// identifier, ARN, or name.
 	d.SetId(aws.ToString(out.Id))
-
-	d.Set("arn", out.Arn)
+	serviceARN := aws.ToString(out.Arn)
+	d.Set("arn", serviceARN)
 	d.Set("auth_type", out.AuthType)
 	d.Set("certificate_arn", out.CertificateArn)
 	d.Set("custom_domain_name", out.CustomDomainName)
@@ -134,7 +125,26 @@ func dataSourceServiceRead(ctx context.Context, d *schema.ResourceData, meta int
 		d.Set("dns_entry", nil)
 	}
 	d.Set("name", out.Name)
+	d.Set("service_identifier", out.Id)
 	d.Set("status", out.Status)
+
+	// https://docs.aws.amazon.com/vpc-lattice/latest/ug/sharing.html#sharing-perms
+	// Owners and consumers can list tags and can tag/untag resources in a service network that the account created.
+	// They can't list tags and tag/untag resources in a service network that aren't created by the account.
+	parsedARN, err := arn.Parse(serviceARN)
+	if err != nil {
+		return sdkdiag.AppendFromErr(diags, err)
+	}
+
+	if parsedARN.AccountID == meta.(*conns.AWSClient).AccountID {
+		tags, err := listTags(ctx, conn, serviceARN)
+
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "listing tags for VPC Lattice Service (%s): %s", serviceARN, err)
+		}
+
+		setTagsOut(ctx, Tags(tags))
+	}
 
 	return nil
 }

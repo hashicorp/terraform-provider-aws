@@ -6,9 +6,9 @@ package internetmonitor_test
 import (
 	"context"
 	"fmt"
-	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -34,7 +34,7 @@ func TestAccInternetMonitorMonitor_basic(t *testing.T) {
 				Config: testAccMonitorConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckMonitorExists(ctx, resourceName),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "internetmonitor", regexp.MustCompile(`monitor/.+$`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "internetmonitor", regexache.MustCompile(`monitor/.+$`)),
 					resource.TestCheckResourceAttr(resourceName, "health_events_config.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "internet_measurements_log_delivery.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "max_city_networks_to_monitor", "0"),

@@ -7,10 +7,10 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"regexp"
 	"strings"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/service/lightsail"
 	"github.com/aws/aws-sdk-go-v2/service/lightsail/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
@@ -71,7 +71,7 @@ func testAccDistribution_basic(t *testing.T) {
 					testAccCheckDistributionExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "alternative_domain_names.#", "0"),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "lightsail", regexp.MustCompile(`Distribution/*`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "lightsail", regexache.MustCompile(`Distribution/*`)),
 					resource.TestCheckResourceAttr(resourceName, "bundle_id", "small_1_0"),
 					resource.TestCheckResourceAttr(resourceName, "cache_behavior_settings.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "cache_behavior_settings.0.allowed_http_methods", "GET,HEAD,OPTIONS,PUT,PATCH,POST,DELETE"),

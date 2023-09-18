@@ -26,7 +26,7 @@ linter:
   - '.github/workflows/acctest-terraform-lint.yml'
   - '.github/workflows/providerlint.yml'
   - '.github/workflows/semgrep-ci.yml'
-  - '.github/workflows/terraform_provider.yml'
+  - '.github/workflows/provider.yml'
   - '.github/workflows/website.yml'
   - '.github/workflows/workflow-lint.yml'
 pre-service-packages:
@@ -226,6 +226,9 @@ service/codeartifact:
 service/codebuild:
   - 'internal/service/codebuild/**/*'
   - 'website/**/codebuild_*'
+service/codecatalyst:
+  - 'internal/service/codecatalyst/**/*'
+  - 'website/**/codecatalyst_*'
 service/codecommit:
   - 'internal/service/codecommit/**/*'
   - 'website/**/codecommit_*'
@@ -620,15 +623,15 @@ service/lambda:
 service/lexmodels:
   - 'internal/service/lexmodels/**/*'
   - 'website/**/lex_*'
-service/lexmodelsv2:
-  - 'internal/service/lexmodelsv2/**/*'
-  - 'website/**/lexmodelsv2_*'
 service/lexruntime:
   - 'internal/service/lexruntime/**/*'
   - 'website/**/lexruntime_*'
 service/lexruntimev2:
   - 'internal/service/lexruntimev2/**/*'
   - 'website/**/lexruntimev2_*'
+service/lexv2models:
+  - 'internal/service/lexv2models/**/*'
+  - 'website/**/lexv2models_*'
 service/licensemanager:
   - 'internal/service/licensemanager/**/*'
   - 'website/**/licensemanager_*'
@@ -1042,7 +1045,7 @@ service/translate:
   - 'website/**/translate_*'
 service/verifiedaccess:
   - 'internal/service/ec2/**/verifiedaccess_*'
-  - 'website/**/verifiedaccess*'
+  - 'website/**/verifiedaccess_*'
 service/verifiedpermissions:
   - 'internal/service/verifiedpermissions/**/*'
   - 'website/**/verifiedpermissions_*'
