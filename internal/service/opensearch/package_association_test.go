@@ -19,6 +19,8 @@ func TestAccOpenSearchPackageAssociation_basic(t *testing.T) {
 	ri := sdkacctest.RandString(10)
 	name := fmt.Sprintf("tf-test-%s", ri)
 	resourceName := "aws_opensearch_package_association.test"
+	packageResourceName := "aws_opensearch_package.test"
+	domainResourceName := "aws_opensearch_domain.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -30,6 +32,8 @@ func TestAccOpenSearchPackageAssociation_basic(t *testing.T) {
 				Config: testAccPackageAssociationConfig(name),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "package_name", name),
+					resource.TestCheckResourceAttrPair(resourceName, "package_id", packageResourceName, "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "domain_name", domainResourceName, "domain_name"),
 				),
 			},
 			{
