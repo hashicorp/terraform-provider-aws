@@ -1226,38 +1226,3 @@ resource "aws_db_option_group" "test" {
 }
 `, rName)
 }
-
-/*
-  option {
-    option_name = "Timezone"
-    option_settings {
-      name  = "TIME_ZONE"
-      value = "Europe/London"
-    }
-  }
-  option{
-    option_name = "UTL_MAIL"
-  }
-
-
-  option {
-    option_name = "NATIVE_NETWORK_ENCRYPTION"
-    option_settings {
-      name  = "SQLNET.ENCRYPTION_SERVER"
-      value = "REQUIRED"
-    }
-    option_settings{
-      name  = "SQLNET.ENCRYPTION_TYPES_SERVER"
-      value = "AES256,AES192,AES128,RC4_256,RC4_128,RC4_56,RC4_40"
-    }
-     option_settings{
-      name  = "SQLNET.CRYPTO_CHECKSUM_SERVER"
-      value = "ACCEPTED"
-    }
-    option_settings{
-      name  = "SQLNET.CRYPTO_CHECKSUM_TYPES_SERVER"
-      value = "SHA256,SHA384,SHA512,SHA1,MD5"
-    }
-  }
-
-*/
