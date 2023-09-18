@@ -74,7 +74,7 @@ This resource supports the following arguments:
 * `name` - (Required) The name of the schema. Maximum of 385 characters consisting of lower case letters, upper case letters, ., -, _, @.
 * `content` - (Required) The schema specification. Must be a valid Open API 3.0 spec.
 * `registryName` - (Required) The name of the registry in which this schema belongs.
-* `type` - (Required) The type of the schema. Valid values: `openApi3`.
+* `type` - (Required) The type of the schema. Valid values: `openApi3` or `jsonSchemaDraft4`.
 * `description` - (Optional) The description of the schema. Maximum of 256 characters.
 * `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
@@ -110,4 +110,4 @@ Using `terraform import`, import EventBridge schema using the `name` and `regist
 % terraform import aws_schemas_schema.test name/registry
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-b5062e39970675441bc62e305b78297425c3404cb52d58e1cd617c66ed0ac18e -->
+<!-- cache-key: cdktf-0.18.0 input-ebc2fd95aa82c21b5b6f551a7043512b14e59815f8ffb599ebc2d14cfbaf7eb8 -->
