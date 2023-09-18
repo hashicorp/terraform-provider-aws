@@ -3,5 +3,5 @@ resource/aws_fsx_ontap_storage_virtual_machine: `active_directory_configuration.
 ```
 
 ```release-note:bug
-resource/aws_fsx_ontap_storage_virtual_machine: Change `active_directory_configuration.netbios_name` to [ForceNew](https://developer.hashicorp.com/terraform/plugin/sdkv2/schemas/schema-behaviors#forcenew)
+resource/aws_fsx_ontap_storage_virtual_machine: Avoid recreating resource when `active_directory_configuration.self_managed_active_directory_configuration.file_system_administrators_group` is configured
 ```

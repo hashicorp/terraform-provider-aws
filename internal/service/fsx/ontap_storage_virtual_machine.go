@@ -65,7 +65,6 @@ func ResourceONTAPStorageVirtualMachine() *schema.Resource {
 						"netbios_name": {
 							Type:             schema.TypeString,
 							Optional:         true,
-							ForceNew:         true,
 							DiffSuppressFunc: verify.SuppressEquivalentStringCaseInsensitive,
 							ValidateFunc:     validation.StringLenBetween(1, 15),
 						},
@@ -507,10 +506,6 @@ func flattenSelfManagedActiveDirectoryAttributes(d *schema.ResourceData, rs *fsx
 		m["domain_name"] = aws.StringValue(rs.DomainName)
 	}
 
-	if rs.FileSystemAdministratorsGroup != nil {
-		m["file_system_administrators_group"] = aws.StringValue(rs.FileSystemAdministratorsGroup)
-	}
-
 	if rs.OrganizationalUnitDistinguishedName != nil {
 		if _, ok := d.GetOk("active_directory_configuration.0.self_managed_active_directory_configuration.0.organizational_unit_distinguished_name"); ok {
 			m["organizational_unit_distinguished_name"] = aws.StringValue(rs.OrganizationalUnitDistinguishedName)
@@ -522,10 +517,11 @@ func flattenSelfManagedActiveDirectoryAttributes(d *schema.ResourceData, rs *fsx
 	}
 
 	// Since we are in a configuration block and the FSx API does not return
-	// the password, we need to set the value if we can or Terraform will
-	// show a difference for the argument from empty string to the value.
+	// the password or file_system_administrators_group, we need to set the values
+	// if we can or Terraform will show a difference for the argument from empty string to the value.
 	// This is not a pattern that should be used normally.
 	// See also: flattenEmrKerberosAttributes
+	m["file_system_administrators_group"] = d.Get("active_directory_configuration.0.self_managed_active_directory_configuration.0.file_system_administrators_group").(string)
 	m["password"] = d.Get("active_directory_configuration.0.self_managed_active_directory_configuration.0.password").(string)
 
 	return []interface{}{m}
