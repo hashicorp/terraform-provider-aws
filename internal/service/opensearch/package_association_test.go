@@ -81,25 +81,25 @@ resource "aws_s3_object" "example_txt" {
   bucket = aws_s3_bucket.opensearch_packages.bucket
   key    = "%s"
   source = "./test-fixtures/example-opensearch-custom-package.txt"
-  etag = filemd5("./test-fixtures/example-opensearch-custom-package.txt")
+  etag   = filemd5("./test-fixtures/example-opensearch-custom-package.txt")
 }
 
 resource "aws_opensearch_package" "test" {
   package_name = "%s"
   package_source {
     s3_bucket_name = aws_s3_bucket.opensearch_packages.bucket
-    s3_key = aws_s3_object.example_txt.key
+    s3_key         = aws_s3_object.example_txt.key
   }
   package_type = "TXT-DICTIONARY"
 }
 
 resource "aws_opensearch_domain" "test" {
   domain_name = "%s"
-  
+
   cluster_config {
     instance_type = "t3.small.search" # supported in both aws and aws-us-gov
   }
-  
+
   ebs_options {
     ebs_enabled = true
     volume_size = 10

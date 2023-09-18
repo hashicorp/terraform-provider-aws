@@ -81,14 +81,14 @@ resource "aws_s3_object" "example_txt" {
   bucket = aws_s3_bucket.opensearch_packages.bucket
   key    = "%s"
   source = "./test-fixtures/example-opensearch-custom-package.txt"
-  etag = filemd5("./test-fixtures/example-opensearch-custom-package.txt")
+  etag   = filemd5("./test-fixtures/example-opensearch-custom-package.txt")
 }
 
 resource "aws_opensearch_package" "test" {
   package_name = "%s"
   package_source {
     s3_bucket_name = aws_s3_bucket.opensearch_packages.bucket
-    s3_key = aws_s3_object.example_txt.key
+    s3_key         = aws_s3_object.example_txt.key
   }
   package_type = "TXT-DICTIONARY"
 }
