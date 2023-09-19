@@ -5282,7 +5282,8 @@ func TestAccRDSInstance_gp3SQLServer(t *testing.T) {
 	})
 }
 
-func TestAccRDSInstance_storageThroughput(t *testing.T) {
+// // https://github.com/hashicorp/terraform-provider-aws/issues/33512
+func TestAccRDSInstance_storageChangeThroughput(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
@@ -5308,24 +5309,128 @@ func TestAccRDSInstance_storageThroughput(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-				ImportStateVerifyIgnore: []string{
-					"apply_immediately",
-					"final_snapshot_identifier",
-					"password",
-					"skip_final_snapshot",
-					"delete_automated_backups",
-					"blue_green_update",
-				},
-			},
-			{
-				Config: testAccInstanceConfig_storageThroughput(rName, 14000, 600),
+				Config: testAccInstanceConfig_storageThroughput(rName, 12000, 600),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "iops", "14000"),
+					resource.TestCheckResourceAttr(resourceName, "iops", "12000"),
 					resource.TestCheckResourceAttr(resourceName, "storage_throughput", "600"),
+					resource.TestCheckResourceAttr(resourceName, "storage_type", "gp3"),
+				),
+			},
+		},
+	})
+}
+
+// https://github.com/hashicorp/terraform-provider-aws/issues/33512
+func TestAccRDSInstance_storageChangeIOPSThroughput(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var v rds.DBInstance
+	resourceName := "aws_db_instance.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstanceConfig_storageThroughput(rName, 12000, 500),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckInstanceExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "iops", "12000"),
+					resource.TestCheckResourceAttr(resourceName, "storage_throughput", "500"),
+					resource.TestCheckResourceAttr(resourceName, "storage_type", "gp3"),
+				),
+			},
+			{
+				Config: testAccInstanceConfig_storageThroughput(rName, 13000, 600),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckInstanceExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "iops", "13000"),
+					resource.TestCheckResourceAttr(resourceName, "storage_throughput", "600"),
+					resource.TestCheckResourceAttr(resourceName, "storage_type", "gp3"),
+				),
+			},
+		},
+	})
+}
+
+// https://github.com/hashicorp/terraform-provider-aws/issues/33512
+func TestAccRDSInstance_storageChangeIOPS(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var v rds.DBInstance
+	resourceName := "aws_db_instance.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstanceConfig_storageThroughput(rName, 12000, 500),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckInstanceExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "iops", "12000"),
+					resource.TestCheckResourceAttr(resourceName, "storage_throughput", "500"),
+					resource.TestCheckResourceAttr(resourceName, "storage_type", "gp3"),
+				),
+			},
+			{
+				Config: testAccInstanceConfig_storageThroughput(rName, 13000, 500),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckInstanceExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "iops", "13000"),
+					resource.TestCheckResourceAttr(resourceName, "storage_throughput", "500"),
+					resource.TestCheckResourceAttr(resourceName, "storage_type", "gp3"),
+				),
+			},
+		},
+	})
+}
+
+// https://github.com/hashicorp/terraform-provider-aws/issues/33512
+func TestAccRDSInstance_storageThroughputSSE(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var v rds.DBInstance
+	resourceName := "aws_db_instance.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstanceConfig_storageThroughputSSE(rName, 4201, 125),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckInstanceExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "iops", "4201"),
+					resource.TestCheckResourceAttr(resourceName, "storage_throughput", "125"),
+					resource.TestCheckResourceAttr(resourceName, "storage_type", "gp3"),
+				),
+			},
+			{
+				Config: testAccInstanceConfig_storageThroughputSSE(rName, 4201, 126),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckInstanceExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "iops", "4201"),
+					resource.TestCheckResourceAttr(resourceName, "storage_throughput", "126"),
 					resource.TestCheckResourceAttr(resourceName, "storage_type", "gp3"),
 				),
 			},
@@ -10570,6 +10675,90 @@ resource "aws_db_instance" "test" {
 }
 `, rName, iops, throughput))
 }
+
+func testAccInstanceConfig_storageThroughputSSE(rName string, iops, throughput int) string {
+	return fmt.Sprintf(`
+data "aws_rds_engine_version" "default" {
+  engine             = "sqlserver-se"
+}
+
+data "aws_rds_orderable_db_instance" "test" {
+  engine         = data.aws_rds_engine_version.default.engine
+  engine_version = data.aws_rds_engine_version.default.version
+  license_model  = "license-included"
+  storage_type   = "gp3"
+
+  preferred_instance_classes = ["db.m5.medium", "db.m5.large"]
+}
+
+resource "aws_db_instance" "test" {
+  allocated_storage    = 400
+  apply_immediately    = true
+  engine               = data.aws_rds_engine_version.default.engine
+  engine_version       = data.aws_rds_engine_version.default.version
+  identifier           = %[1]q
+  instance_class       = data.aws_rds_orderable_db_instance.test.instance_class
+  iops                 = %[2]d
+  license_model        = data.aws_rds_orderable_db_instance.test.license_model
+  parameter_group_name = "default.${data.aws_rds_engine_version.default.parameter_group_family}"
+  password             = "avoid-plaintext-passwords"
+  skip_final_snapshot  = true
+  storage_throughput   = %[3]d
+  storage_type         = data.aws_rds_orderable_db_instance.test.storage_type
+  username             = "tfacctest"
+}
+`, rName, iops, throughput)
+}
+
+/*
+resource "aws_db_instance" "mssqlrds" {
+  enabled_cloudwatch_logs_exports = [
+    "agent",
+    "error",
+  ]
+  #ca_cert_identifier         = "rds-ca-2019"
+  #db_subnet_group_name       = "br_gtodev_npd_us-east-1_rds_sbtgrp"
+  #kms_key_id                            = "arn:aws:kms:us-east-1:070213819183:key/fe677803-1f5d-4faa-934c-59861a32834d"
+  #maintenance_window                    = "sun:00:01-sun:05:00"
+  #monitoring_interval                   = 30
+  #monitoring_role_arn                   = "arn:aws:iam::070213819183:role/rds-monitoring"
+  #option_group_name                     = "br-gtodev-revdb2nva-db-sql-rds-optiongrp"
+  #parameter_group_name                  = "br-gtodev-revdb2nva-rds-db-sqlserver-se-13-0-dbparameter-group"
+  #performance_insights_enabled          = true
+  #performance_insights_kms_key_id       = "arn:aws:kms:us-east-1:070213819183:key/fe677803-1f5d-4faa-934c-59861a32834d"
+  #performance_insights_retention_period = 7
+  #storage_encrypted                     = true
+  allocated_storage          = 8001
+  apply_immediately          = true
+  auto_minor_version_upgrade = true
+  availability_zone          = "us-west-2b"
+  backup_retention_period    = 1
+  backup_window              = "21:00-23:00"
+  character_set_name         = "SQL_Latin1_General_CP1_CI_AS"
+  copy_tags_to_snapshot      = true
+  customer_owned_ip_enabled  = false
+  delete_automated_backups   = true
+  deletion_protection        = false
+  engine                                = "sqlserver-se"
+  engine_version                        = "13.00.6300.2.v1"
+  final_snapshot_identifier             = "br-gtodev-revdb2nva-rds-db-rds-def1c186d52e691066ef07396f3011d6"
+  iam_database_authentication_enabled   = false
+  instance_class                        = "db.m5.large"
+  iops                                  = 4201
+  license_model                         = "license-included"
+  max_allocated_storage                 = 8051
+  multi_az                              = false
+  network_type                          = "IPV4"
+  password                              = "foobarbazqux"
+  port                                  = 1433
+  publicly_accessible                   = false
+  skip_final_snapshot                   = true
+  storage_throughput                    = 126 #125 #-> 126
+  storage_type                          = "gp3"
+  timezone = "UTC"
+  username = "DBAdmin"
+}
+*/
 
 func testAccInstanceConfig_storageTypePostgres(rName string, storageType string, allocatedStorage int) string {
 	return fmt.Sprintf(`
