@@ -35,6 +35,7 @@ import (
 	lambda_sdkv2 "github.com/aws/aws-sdk-go-v2/service/lambda"
 	lexmodelsv2_sdkv2 "github.com/aws/aws-sdk-go-v2/service/lexmodelsv2"
 	lightsail_sdkv2 "github.com/aws/aws-sdk-go-v2/service/lightsail"
+	mediaconnect_sdkv2 "github.com/aws/aws-sdk-go-v2/service/mediaconnect"
 	medialive_sdkv2 "github.com/aws/aws-sdk-go-v2/service/medialive"
 	mediapackage_sdkv2 "github.com/aws/aws-sdk-go-v2/service/mediapackage"
 	oam_sdkv2 "github.com/aws/aws-sdk-go-v2/service/oam"
@@ -165,7 +166,6 @@ import (
 	locationservice_sdkv1 "github.com/aws/aws-sdk-go/service/locationservice"
 	macie2_sdkv1 "github.com/aws/aws-sdk-go/service/macie2"
 	managedgrafana_sdkv1 "github.com/aws/aws-sdk-go/service/managedgrafana"
-	mediaconnect_sdkv1 "github.com/aws/aws-sdk-go/service/mediaconnect"
 	mediaconvert_sdkv1 "github.com/aws/aws-sdk-go/service/mediaconvert"
 	mediastore_sdkv1 "github.com/aws/aws-sdk-go/service/mediastore"
 	memorydb_sdkv1 "github.com/aws/aws-sdk-go/service/memorydb"
@@ -758,8 +758,8 @@ func (c *AWSClient) Macie2Conn(ctx context.Context) *macie2_sdkv1.Macie2 {
 	return errs.Must(conn[*macie2_sdkv1.Macie2](ctx, c, names.Macie2))
 }
 
-func (c *AWSClient) MediaConnectConn(ctx context.Context) *mediaconnect_sdkv1.MediaConnect {
-	return errs.Must(conn[*mediaconnect_sdkv1.MediaConnect](ctx, c, names.MediaConnect))
+func (c *AWSClient) MediaConnectClient(ctx context.Context) *mediaconnect_sdkv2.Client {
+	return errs.Must(client[*mediaconnect_sdkv2.Client](ctx, c, names.MediaConnect))
 }
 
 func (c *AWSClient) MediaConvertConn(ctx context.Context) *mediaconvert_sdkv1.MediaConvert {
