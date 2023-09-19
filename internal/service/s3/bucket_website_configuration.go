@@ -645,7 +645,7 @@ func normalizeRoutingRulesV2(w []types.RoutingRule) (string, error) {
 
 	var cleanRules []map[string]interface{}
 	for _, rule := range rules {
-		cleanRules = append(cleanRules, removeNil(rule))
+		cleanRules = append(cleanRules, removeNilOrEmptyProtocol(rule))
 	}
 
 	withoutNulls, err := json.Marshal(cleanRules)
@@ -654,6 +654,33 @@ func normalizeRoutingRulesV2(w []types.RoutingRule) (string, error) {
 	}
 
 	return string(withoutNulls), nil
+}
+
+// removeNilOrEmptyProtocol removes nils and empty ("") Protocol values from a RoutingRule JSON document.
+func removeNilOrEmptyProtocol(data map[string]interface{}) map[string]interface{} {
+	withoutNil := make(map[string]interface{})
+
+	for k, v := range data {
+		if v == nil {
+			continue
+		}
+
+		switch v := v.(type) {
+		case map[string]interface{}:
+			withoutNil[k] = removeNilOrEmptyProtocol(v)
+		case string:
+			// With AWS SDK for Go v2 Protocol changed type from *string to types.Protocol.
+			// An empty ("") value is equivalent to nil.
+			if k == "Protocol" && v == "" {
+				continue
+			}
+			withoutNil[k] = v
+		default:
+			withoutNil[k] = v
+		}
+	}
+
+	return withoutNil
 }
 
 func findBucketWebsite(ctx context.Context, conn *s3.Client, bucket, expectedBucketOwner string) (*s3.GetBucketWebsiteOutput, error) {
