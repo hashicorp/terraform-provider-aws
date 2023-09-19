@@ -3,6 +3,7 @@
 BUG FIXES:
 
 * data-source/aws_sesv2_email_identity: Mark `dkim_signing_attributes.domain_signing_private_key` as sensitive ([#33477](https://github.com/hashicorp/terraform-provider-aws/issues/33477))
+* resource/aws_db_option_group: Avoid erroneous differences being reported when an `option` `port` and/or `version` is not set ([#33511](https://github.com/hashicorp/terraform-provider-aws/issues/33511))
 * resource/aws_sesv2_email_identity: Mark `dkim_signing_attributes.domain_signing_private_key` as sensitive ([#33477](https://github.com/hashicorp/terraform-provider-aws/issues/33477))
 
 ## 5.17.0 (September 14, 2023)
