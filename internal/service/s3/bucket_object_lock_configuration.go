@@ -228,7 +228,7 @@ func resourceBucketObjectLockConfigurationDelete(ctx context.Context, d *schema.
 
 	_, err = conn.PutObjectLockConfiguration(ctx, input)
 
-	if tfawserr.ErrCodeEquals(err, errCodeNoSuchBucket, errCodeObjectLockConfigurationNotFound) {
+	if tfawserr.ErrCodeEquals(err, errCodeNoSuchBucket, errCodeObjectLockConfigurationNotFoundError) {
 		return nil
 	}
 
@@ -249,7 +249,7 @@ func findObjectLockConfiguration(ctx context.Context, conn *s3.Client, bucket, e
 
 	output, err := conn.GetObjectLockConfiguration(ctx, input)
 
-	if tfawserr.ErrCodeEquals(err, errCodeNoSuchBucket, errCodeObjectLockConfigurationNotFound) {
+	if tfawserr.ErrCodeEquals(err, errCodeNoSuchBucket, errCodeObjectLockConfigurationNotFoundError) {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,

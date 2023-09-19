@@ -27,6 +27,7 @@ const (
 	// errCodeObjectLockConfigurationNotFound should be used with tfawserr.ErrCodeContains, not tfawserr.ErrCodeEquals.
 	// Reference: https://github.com/hashicorp/terraform-provider-aws/pull/26317
 	errCodeObjectLockConfigurationNotFound           = "ObjectLockConfigurationNotFound"
+	errCodeObjectLockConfigurationNotFoundError      = "ObjectLockConfigurationNotFoundError"
 	errCodeOperationAborted                          = "OperationAborted"
 	ErrCodeReplicationConfigurationNotFound          = "ReplicationConfigurationNotFoundError"
 	errCodeServerSideEncryptionConfigurationNotFound = "ServerSideEncryptionConfigurationNotFoundError"
