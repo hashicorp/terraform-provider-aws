@@ -28,13 +28,13 @@ resource "aws_opensearch_package" "example" {
   package_name = "example-txt"
   package_source {
     s3_bucket_name = aws_s3_bucket.my_opensearch_packages.bucket
-    s3_key = aws_s3_object.example.key
+    s3_key         = aws_s3_object.example.key
   }
   package_type = "TXT-DICTIONARY"
 }
 
 resource "aws_opensearch_package_association" "example" {
-  package_id = aws_opensearch_package.example.id
+  package_id  = aws_opensearch_package.example.id
   domain_name = aws_opensearch_domain.my_domain.domain_name
 }
 ```
