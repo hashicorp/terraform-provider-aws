@@ -60,7 +60,7 @@ func dataSourceOrganizationalUnitRead(ctx context.Context, d *schema.ResourceDat
 	if err != nil {
 		return append(diags, create.DiagError(names.Organizations, create.ErrActionReading, DSNameOrganizationalUnit, name, err)...)
 	}
-	if output == nil || len(output) == 0 {
+	if len(output) == 0 {
 		return sdkdiag.AppendErrorf(diags, "Organizational parent not found (%s)", parentID)
 	}
 
