@@ -66,15 +66,11 @@ This resource supports the following arguments:
 
 * `name` - (Required) - The name of the collaboration.  Collaboration names do not need to be unique.
 * `description` - (Required) - A description for a collaboration.
-* `creatorMemberAbilities` - (Required -Forces new resource) - The list of member abilities for the creator of the collaboration.  Valid v
-lues [may be found here](https://docs.aws.amazon.com/clean-rooms/latest/apireference/API_CreateCollaboration.html#API-CreateCollaboration-re
-uest-creatorMemberAbilities)
+* `creatorMemberAbilities` - (Required - Forces new resource) - The list of member abilities for the creator of the collaboration.  Valid values [may be found here](https://docs.aws.amazon.com/clean-rooms/latest/apireference/API_CreateCollaboration.html#API-CreateCollaboration-request-creatorMemberAbilities).
 * `creatorDisplayName` - (Required - Forces new resource) - The name for the member record for the collaboration creator.
-* `queryLogStatus` - (Required - Forces new resource) - Determines if members of the collaboration can enable query logs within their own
-emberships. Valid values [may be found here](https://docs.aws.amazon.com/clean-rooms/latest/apireference/API_CreateCollaboration.html#API-Cr
-ateCollaboration-request-queryLogStatus).
-* `dataEncryptionMetadata` - (Required - Forces new resource) - a collection of settings which determine how the [c3r client](https://docs
-aws.amazon.com/clean-rooms/latest/userguide/crypto-computing.html) will encrypt data for use within this collaboration
+* `queryLogStatus` - (Required - Forces new resource) - Determines if members of the collaboration can enable query logs within their own.
+emberships. Valid values [may be found here](https://docs.aws.amazon.com/clean-rooms/latest/apireference/API_CreateCollaboration.html#API-CreateCollaboration-request-queryLogStatus).
+* `dataEncryptionMetadata` - (Required - Forces new resource) - a collection of settings which determine how the [c3r client](https://docs.aws.amazon.com/clean-rooms/latest/userguide/crypto-computing.html) will encrypt data for use within this collaboration.
 * `dataEncryptionMetadataAllowClearText` - (Required - Forces new resource) - Indicates whether encrypted tables can contain cleartext data. This is a boolea
  field.
 * `dataEncryptionMetadataAllowDuplicates` - (Required - Forces new resource ) - Indicates whether Fingerprint columns can contain duplicate entries. This is a
@@ -84,22 +80,20 @@ n any other Fingerprint column with a different name. This is a boolean field.
 * `dataEncryptionMetadataPreserveNulls` - (Required - Forces new resource) - Indicates whether NULL values are to be copied as NULL to encrypted tables (true)
 or cryptographically processed (false).
 * `member` - (Optional - Forces new resource) - Additional members of the collaboration which will be invited to join the collaboration.
-* `memberAccountId` - (Required - Forces new resource) - The account id for the invited member
-* `memberDisplayName` - (Required - Forces new resource) - The display name for the invited member
-* `memberMemberAbilities` - (Required - Forces new resource) - The list of abilities for the invited member. Valid values [may be found here](https://docs.aws.amazon.com/clean-rooms/latest/apireference/API_CreateCollaboration.html#API-CreateCollaboration-request-creatorMemberAbiliti
-s
+* `memberAccountId` - (Required - Forces new resource) - The account id for the invited member.
+* `memberDisplayName` - (Required - Forces new resource) - The display name for the invited member.
+* `memberMemberAbilities` - (Required - Forces new resource) - The list of abilities for the invited member. Valid values [may be found here](https://docs.aws.amazon.com/clean-rooms/latest/apireference/API_CreateCollaboration.html#API-CreateCollaboration-request-creatorMemberAbilities).
 * `tags` - (Optional) - Key value pairs which tag the collaboration.
 
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `arn` - The arn of the collaboration
-* `id` - The id of the collaboration
-* `createTime` - The date and time the collaboration was created
-* `member status` - For each member included in the collaboration an additional computed attribute of status is added. These values [may be
-ound here](https://docs.aws.amazon.com/clean-rooms/latest/apireference/API_MemberSummary.html#API-Type-MemberSummary-status)
-* `updatedTime` - The date and time he collaboration was last updated
+* `arn` - The arn of the collaboration.
+* `id` - The id of the collaboration.
+* `createTime` - The date and time the collaboration was created.
+* `member status` - For each member included in the collaboration an additional computed attribute of status is added. These values [may be found here](https://docs.aws.amazon.com/clean-rooms/latest/apireference/API_MemberSummary.html#API-Type-MemberSummary-status).
+* `updatedTime` - The date and time the collaboration was last updated.
 
 ## Timeouts
 
@@ -109,4 +103,26 @@ ound here](https://docs.aws.amazon.com/clean-rooms/latest/apireference/API_Membe
 - `update` - (Default `1M`)
 - `delete` - (Default `1M`)
 
-<!-- cache-key: cdktf-0.18.0 input-515e4b959fcb69397ab6ca0ac53e25d94d7171907727ee4cde93e45214e18fd9 -->
+## Import
+
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `awsCleanroomsCollaboration` using the `id`. For example:
+
+```typescript
+// DO NOT EDIT. Code generated by 'cdktf convert' - Please report bugs at https://cdk.tf/bug
+import { Construct } from "constructs";
+import { TerraformStack } from "cdktf";
+class MyConvertedCode extends TerraformStack {
+  constructor(scope: Construct, name: string) {
+    super(scope, name);
+  }
+}
+
+```
+
+Using `terraform import`, import `awsCleanroomsCollaboration` using the `id`. For example:
+
+```console
+% terraform import aws_cleanrooms_collaboration.collaboration 1234abcd-12ab-34cd-56ef-1234567890ab
+```
+
+<!-- cache-key: cdktf-0.18.0 input-395ee6487e82b1be6f52fee6f12058bc05b7b0fad6b5632c7701a3893516718e -->

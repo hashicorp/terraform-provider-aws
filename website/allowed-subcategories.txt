@@ -127,7 +127,7 @@ Kinesis Video
 Lake Formation
 Lambda
 Lex Model Building
-Lex Models V2
+Lex V2 Models
 License Manager
 Lightsail
 Location

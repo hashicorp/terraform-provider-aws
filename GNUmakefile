@@ -75,10 +75,10 @@ default: build
 
 # Please keep targets in alphabetical order
 
-build: fmtcheck
+build: fmtcheck ## Build provider
 	$(GO_VER) install
 
-cleango:
+cleango: ## Clean up Go cache
 	@echo "==> Cleaning Go..."
 	@echo "WARNING: This will kill gopls and clean Go caches"
 	@vscode=`ps -ef | grep Visual\ Studio\ Code | wc -l | xargs` ; \
@@ -92,18 +92,18 @@ cleango:
 	done ; \
 	go clean -modcache -testcache -cache ; \
 
-clean: cleango build tools
+clean: cleango build tools ## Clean up Go cache and re-install tools
 
-copyright:
+copyright: ## Run copywrite (generate source code headers)
 	@copywrite headers
 
-depscheck:
+depscheck: ## Verify dependencies are tidy
 	@echo "==> Checking source code with go mod tidy..."
 	@$(GO_VER) mod tidy
 	@git diff --exit-code -- go.mod go.sum || \
 		(echo; echo "Unexpected difference in go.mod/go.sum files. Run 'go mod tidy' command or revert any go.mod/go.sum changes and commit."; exit 1)
 
-docs-lint:
+docs-lint: ## Lint documentation
 	@echo "==> Checking docs against linters..."
 	@misspell -error -source=text docs/ || (echo; \
 		echo "Unexpected misspelling found in docs files."; \
@@ -114,12 +114,12 @@ docs-lint:
 		echo "To apply any automatic fixes, run 'make docs-lint-fix' and commit the changes."; \
 		exit 1)
 
-docs-lint-fix:
+docs-lint-fix: ## Fix documentation linter findings
 	@echo "==> Applying automatic docs linter fixes..."
 	@misspell -w -source=text docs/
 	@docker run --rm -v $(PWD):/markdown 06kellyjac/markdownlint-cli --fix docs/
 
-docscheck:
+docscheck: ## Check provider documentation
 	@tfproviderdocs check \
 		-allowed-resource-subcategories-file website/allowed-subcategories.txt \
 		-enable-contents-check \
@@ -129,19 +129,19 @@ docscheck:
 		-require-resource-subcategory
 	@misspell -error -source text CHANGELOG.md .changelog
 
-fmt:
+fmt: ## Fix Go source formatting
 	@echo "==> Fixing source code with gofmt..."
 	gofmt -s -w ./$(PKG_NAME) ./names $(filter-out ./.ci/providerlint/go% ./.ci/providerlint/README.md ./.ci/providerlint/vendor, $(wildcard ./.ci/providerlint/*))
 
 # Currently required by tf-deploy compile
-fmtcheck:
+fmtcheck: ## Verify Go source is formatted
 	@sh -c "'$(CURDIR)/.ci/scripts/gofmtcheck.sh'"
 
-fumpt:
+fumpt: ## Run gofumpt
 	@echo "==> Fixing source code with gofumpt..."
 	gofumpt -w ./$(PKG_NAME) ./names $(filter-out ./.ci/providerlint/go% ./.ci/providerlint/README.md ./.ci/providerlint/vendor, $(wildcard ./.ci/providerlint/*))
 
-gen:
+gen: ## Run all Go generators
 	rm -f .github/labeler-issue-triage.yml
 	rm -f .github/labeler-pr-triage.yml
 	rm -f infrastructure/repository/labels-service.tf
@@ -162,36 +162,39 @@ gen:
 	rm -f internal/sweep/sweep_test.go internal/sweep/service_packages_gen_test.go
 	$(GO_VER) generate ./internal/sweep
 
-gencheck:
+gencheck: ## Verify generated code is tidy
 	@echo "==> Checking generated source code..."
 	@$(MAKE) gen
 	@git diff --compact-summary --exit-code || \
 		(echo; echo "Unexpected difference in directories after code generation. Run 'make gen' command and commit."; exit 1)
 
-generate-changelog:
+generate-changelog: ## Generate changelog
 	@echo "==> Generating changelog..."
 	@sh -c "'$(CURDIR)/.ci/scripts/generate-changelog.sh'"
 
-gh-workflows-lint:
+gh-workflows-lint: ## Lint github workflows (via actionlint)
 	@echo "==> Checking github workflows with actionlint..."
 	@actionlint
 
-golangci-lint:
+golangci-lint: ## Lint Go source (via golangci-lint)
 	@echo "==> Checking source code with golangci-lint..."
 	@golangci-lint run \
 		--config .ci/.golangci.yml \
 		--config .ci/.golangci2.yml \
 		./$(PKG_NAME)/...
 
-importlint:
+help:
+	@grep -E '^[a-zA-Z0-9_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-23s\033[0m %s\n", $$1, $$2}'
+
+importlint: ## Lint imports (via impi)
 	@echo "==> Checking source code with importlint..."
 	@impi --local . --scheme stdThirdPartyLocal ./internal/...
 
-lint: golangci-lint providerlint importlint
+lint: golangci-lint providerlint importlint ## Run all linters
 
-lint-fix: testacc-lint-fix website-lint-fix docs-lint-fix
+lint-fix: testacc-lint-fix website-lint-fix docs-lint-fix ## Fix all linter findings
 
-providerlint:
+providerlint: ## Lint provider (via providerlint)
 	@echo "==> Checking source code with providerlint..."
 	@providerlint \
 		-c 1 \
@@ -218,7 +221,7 @@ providerlint:
 		-XS002=false \
 		./internal/service/... ./internal/provider/...
 
-sane:
+sane: ## Run sanity checks
 	@echo "==> Sane Check (48 tests of Top 30 resources)"
 	@echo "==> Like 'sanity' except full output and stops soon after 1st error"
 	@echo "==> NOTE: NOT an exhaustive set of tests! Finds big problems only."
@@ -241,7 +244,7 @@ sane:
 		./internal/service/sts/... \
 		-v -count $(TEST_COUNT) -parallel $(ACCTEST_PARALLELISM) -run='TestAccSTSCallerIdentityDataSource_basic|TestAccMetaRegionDataSource_basic|TestAccMetaRegionDataSource_endpoint|TestAccMetaPartitionDataSource_basic|TestAccS3Bucket_Basic_basic|TestAccS3Bucket_Security_corsUpdate|TestAccS3BucketPublicAccessBlock_basic|TestAccS3BucketPolicy_basic|TestAccS3BucketACL_updateACL|TestAccRoute53Record_basic|TestAccRoute53Record_Latency_basic|TestAccRoute53ZoneDataSource_name|TestAccLambdaFunction_basic|TestAccLambdaPermission_basic|TestAccSecretsManagerSecret_basic' -timeout $(ACCTEST_TIMEOUT)
 
-sanity:
+sanity: ## Run sanity checks with failures allowed
 	@echo "==> Sanity Check (48 tests of Top 30 resources)"
 	@echo "==> Like 'sane' but less output and runs all tests despite most errors"
 	@echo "==> NOTE: NOT an exhaustive set of tests! Finds big problems only."
@@ -279,7 +282,7 @@ sanity:
 		exit 1; \
 	fi
 
-semall: semgrep-validate
+semall: semgrep-validate ## Run semgrep on all files
 	@echo "==> Running Semgrep checks locally (must have semgrep installed)..."
 	@semgrep --error --metrics=off \
 		$(if $(filter-out $(origin PKG), undefined),--include $(PKG_NAME),) \
@@ -298,7 +301,7 @@ semall: semgrep-validate
 		--config 'r/dgryski.semgrep-go.oddifsequence' \
 		--config 'r/dgryski.semgrep-go.oserrors'
 
-semgrep-validate:
+semgrep-validate: ## Validate semgrep configuration files
 	@semgrep --error --validate \
 		--config .ci/.semgrep.yml \
 		--config .ci/.semgrep-caps-aws-ec2.yml \
@@ -309,30 +312,30 @@ semgrep-validate:
 		--config .ci/.semgrep-service-name3.yml \
 		--config .ci/semgrep/
 
-semgrep: semgrep-validate
+semgrep: semgrep-validate ## Run semgrep
 	@echo "==> Running Semgrep static analysis..."
 	@docker run --rm --volume "${PWD}:/src" returntocorp/semgrep semgrep --config .ci/.semgrep.yml
 
-skaff:
+skaff: ## Install skaff
 	cd skaff && $(GO_VER) install github.com/hashicorp/terraform-provider-aws/skaff
 
-sweep:
+sweep: ## Run sweepers
 	# make sweep SWEEPARGS=-sweep-run=aws_example_thing
 	# set SWEEPARGS=-sweep-allow-failures to continue after first failure
 	@echo "WARNING: This will destroy infrastructure. Use only in development accounts."
 	$(GO_VER) test $(SWEEP_DIR) -v -tags=sweep -sweep=$(SWEEP) $(SWEEPARGS) -timeout $(SWEEP_TIMEOUT)
 
-sweeper:
+sweeper: ## Run sweepers with failures allowed
 	@echo "WARNING: This will destroy infrastructure. Use only in development accounts."
 	$(GO_VER) test $(SWEEP_DIR) -v -tags=sweep -sweep=$(SWEEP) SWEEPARGS=-sweep-allow-failures -timeout $(SWEEP_TIMEOUT)
 
 t: fmtcheck
 	TF_ACC=1 $(GO_VER) test ./$(PKG_NAME)/... -v -count $(TEST_COUNT) -parallel $(ACCTEST_PARALLELISM) $(RUNARGS) $(TESTARGS) -timeout $(ACCTEST_TIMEOUT)
 
-test: fmtcheck
+test: fmtcheck ## Run unit tests
 	$(GO_VER) test $(TEST) $(TESTARGS) -timeout=5m
 
-test-compile:
+test-compile: ## Test package compilation
 	@if [ "$(TEST)" = "./..." ]; then \
 		echo "ERROR: Set TEST to a specific package. For example,"; \
 		echo "  make test-compile TEST=./$(PKG_NAME)"; \
@@ -340,7 +343,7 @@ test-compile:
 	fi
 	$(GO_VER) test -c $(TEST) $(TESTARGS)
 
-testacc: fmtcheck
+testacc: fmtcheck ## Run acceptance tests
 	@if [ "$(TESTARGS)" = "-run=TestAccXXX" ]; then \
 		echo ""; \
 		echo "Error: Skipping example acceptance testing pattern. Update PKG and TESTS for the relevant *_test.go file."; \
@@ -353,26 +356,26 @@ testacc: fmtcheck
 	fi
 	TF_ACC=1 $(GO_VER) test ./$(PKG_NAME)/... -v -count $(TEST_COUNT) -parallel $(ACCTEST_PARALLELISM) $(RUNARGS) $(TESTARGS) -timeout $(ACCTEST_TIMEOUT)
 
-testacc-lint:
+testacc-lint: ## Lint acceptance tests (via terrafmt)
 	@echo "Checking acceptance tests with terrafmt"
 	find $(SVC_DIR) -type f -name '*_test.go' \
     | sort -u \
     | xargs -I {} terrafmt diff --check --fmtcompat {}
 
-testacc-lint-fix:
+testacc-lint-fix: ## Fix acceptance test linter findings
 	@echo "Fixing acceptance tests with terrafmt"
 	find $(SVC_DIR) -type f -name '*_test.go' \
 	| sort -u \
 	| xargs -I {} terrafmt fmt  --fmtcompat {}
 
-testacc-short: fmtcheck
+testacc-short: fmtcheck ## Run acceptace tests with the -short flag
 	@echo "Running acceptance tests with -short flag"
 	TF_ACC=1 $(GO_VER) test ./$(PKG_NAME)/... -v -short -count $(TEST_COUNT) -parallel $(ACCTEST_PARALLELISM) $(RUNARGS) $(TESTARGS) -timeout $(ACCTEST_TIMEOUT)
 
-tfsdk2fw:
+tfsdk2fw: ## Install tfsdk2fw
 	cd tools/tfsdk2fw && $(GO_VER) install github.com/hashicorp/terraform-provider-aws/tools/tfsdk2fw
 
-tools:
+tools: ## Install tools
 	cd .ci/providerlint && $(GO_VER) install .
 	cd .ci/tools && $(GO_VER) install github.com/YakDriver/tfproviderdocs
 	cd .ci/tools && $(GO_VER) install github.com/client9/misspell/cmd/misspell
@@ -385,15 +388,15 @@ tools:
 	cd .ci/tools && $(GO_VER) install github.com/rhysd/actionlint/cmd/actionlint
 	cd .ci/tools && $(GO_VER) install mvdan.cc/gofumpt
 
-ts: testacc-short
+ts: testacc-short ## Alias to testacc-short
 
-website-link-check:
+website-link-check: ## Check website links
 	@.ci/scripts/markdown-link-check.sh
 
-website-link-check-ghrc:
+website-link-check-ghrc: ## Check website links with ghrc
 	@LINK_CHECK_CONTAINER="ghcr.io/tcort/markdown-link-check:stable" .ci/scripts/markdown-link-check.sh
 
-website-lint:
+website-lint: ## Lint website files
 	@echo "==> Checking website against linters..."
 	@misspell -error -source=text website/ || (echo; \
 		echo "Unexpected mispelling found in website files."; \
@@ -409,13 +412,13 @@ website-lint:
 		echo "To automatically fix the formatting, run 'make website-lint-fix' and commit the changes."; \
 		exit 1)
 
-website-lint-fix:
+website-lint-fix: ## Fix website linter findings
 	@echo "==> Applying automatic website linter fixes..."
 	@misspell -w -source=text website/
 	@docker run --rm -v $(PWD):/markdown 06kellyjac/markdownlint-cli --fix website/docs/
 	@terrafmt fmt ./website --pattern '*.markdown'
 
-yamllint:
+yamllint: ## Lint YAML files (via yamllint)
 	@yamllint .
 
 # Please keep targets in alphabetical order
@@ -428,6 +431,7 @@ yamllint:
 	fmt \
 	fmtcheck \
 	fumpt \
+	help \
 	gen \
 	gencheck \
 	generate-changelog \

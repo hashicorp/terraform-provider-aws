@@ -305,7 +305,7 @@ resource "aws_s3_bucket" "example" {
 
 resource "aws_s3_bucket_cors_configuration" "example" {
   bucket = aws_s3_bucket.example.id
-  
+
   cors_rule {
     allowed_headers = ["*"]
     allowed_methods = ["PUT", "POST"]
@@ -689,7 +689,7 @@ resource "aws_s3_bucket" "example" {
   lifecycle_rule {
     id      = "log"
     enabled = true
-    prefix = "log/"
+    prefix  = "log/"
 
     tags = {
       rule      = "log"
@@ -769,7 +769,7 @@ resource "aws_s3_bucket_lifecycle_configuration" "example" {
     id = "tmp"
 
     filter {
-      prefix  = "tmp/"
+      prefix = "tmp/"
     }
 
     expiration {
@@ -1903,7 +1903,7 @@ resource "aws_s3_bucket" "example" {
   lifecycle_rule {
     id      = "log"
     enabled = true
-    prefix = "log/"
+    prefix  = "log/"
 
     tags = {
       rule      = "log"
@@ -1996,7 +1996,7 @@ resource "aws_s3_bucket_lifecycle_configuration" "example" {
     id = "tmp"
 
     filter {
-      prefix  = "tmp/"
+      prefix = "tmp/"
     }
 
     expiration {
@@ -2956,7 +2956,7 @@ such that they no longer return an error if zero results are found.
 * [aws_ec2_local_gateways](/docs/providers/aws/d/ec2_local_gateways.html)
 * [aws_ec2_transit_gateway_route_tables](/docs/providers/aws/d/ec2_transit_gateway_route_tables.html)
 * [aws_efs_access_points](/docs/providers/aws/d/efs_access_points.html)
-* [aws_emr_release_labels](/docs/providers/aws/d/emr_release_labels.markdown)
+* [aws_emr_release_labels](/docs/providers/aws/d/emr_release_labels.html)
 * [aws_inspector_rules_packages](/docs/providers/aws/d/inspector_rules_packages.html)
 * [aws_ip_ranges](/docs/providers/aws/d/ip_ranges.html)
 * [aws_network_acls](/docs/providers/aws/d/network_acls.html)
@@ -3230,7 +3230,7 @@ We fix this configuration by removing `ipv6_cidr_block`:
 
 ```terraform
 resource "aws_vpc" "example" {
-  cidr_block      = "10.1.0.0/16"
+  cidr_block = "10.1.0.0/16"
 }
 ```
 
@@ -3270,7 +3270,7 @@ data "aws_iam_policy_document" "ad-log-policy" {
       type        = "Service"
     }
     resources = [data.aws_cloudwatch_log_group.example.arn]
-    effect = "Allow"
+    effect    = "Allow"
   }
 }
 ```
@@ -3289,7 +3289,7 @@ data "aws_iam_policy_document" "ad-log-policy" {
       type        = "Service"
     }
     resources = ["${data.aws_cloudwatch_log_group.example.arn}:*"]
-    effect = "Allow"
+    effect    = "Allow"
   }
 }
 ```
@@ -3490,9 +3490,9 @@ For example, this configuration is no longer valid:
 
 ```terraform
 resource "aws_lb_target_group" "test" {
-  port        = 25
-  protocol    = "TCP"
-  vpc_id      = aws_vpc.test.id
+  port     = 25
+  protocol = "TCP"
+  vpc_id   = aws_vpc.test.id
 
   stickiness {
     type    = "lb_cookie"
@@ -3505,9 +3505,9 @@ To fix this, we change the `stickiness.type` to `"source_ip"`.
 
 ```terraform
 resource "aws_lb_target_group" "test" {
-  port        = 25
-  protocol    = "TCP"
-  vpc_id      = aws_vpc.test.id
+  port     = 25
+  protocol = "TCP"
+  vpc_id   = aws_vpc.test.id
 
   stickiness {
     type    = "source_ip"

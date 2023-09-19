@@ -791,7 +791,7 @@ func TestAccFSxLustreFileSystem_kmsKeyID(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLustreFileSystemExists(ctx, resourceName, &filesystem2),
 					resource.TestCheckResourceAttr(resourceName, "deployment_type", fsx.LustreDeploymentTypePersistent1),
-					testAccCheckWindowsFileSystemRecreated(&filesystem1, &filesystem2),
+					testAccCheckLustreFileSystemRecreated(&filesystem1, &filesystem2),
 					resource.TestCheckResourceAttrPair(resourceName, "kms_key_id", kmsKeyResourceName2, "arn"),
 				),
 			},
