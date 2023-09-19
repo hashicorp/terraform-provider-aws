@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/service/organizations"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -16,6 +15,7 @@ import (
 
 func testAccOrganizationalUnitDataSource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
+	resourceName := "aws_organizations_organizational_unit.child"
 	dataSourceName := "data.aws_organizations_organizational_unit.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -29,8 +29,8 @@ func testAccOrganizationalUnitDataSource_basic(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccOrganizationalUnitDataSourceConfig_basic(rName),
-				Check: resource.ComposeTestCheckFunc(
-					acctest.MatchResourceAttrGlobalARN(dataSourceName, "arn", "organizations", regexache.MustCompile(".*/.+$")),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttrPair(dataSourceName, "arn", resourceName, "arn"),
 				),
 			},
 		},
