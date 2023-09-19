@@ -11,19 +11,21 @@ import (
 	"github.com/aws/aws-sdk-go/service/opensearchservice"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 // @SDKResource("aws_opensearch_package")
 func ResourcePackage() *schema.Resource {
 	return &schema.Resource{
-		CreateWithoutTimeout: ResourcePackageCreate,
-		ReadWithoutTimeout:   ResourcePackageRead,
-		UpdateWithoutTimeout: ResourcePackageUpdate,
-		DeleteWithoutTimeout: ResourcePackageDelete,
+		CreateWithoutTimeout: resourcePackageCreate,
+		ReadWithoutTimeout:   resourcePackageRead,
+		UpdateWithoutTimeout: resourcePackageUpdate,
+		DeleteWithoutTimeout: resourcePackageDelete,
 
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
@@ -77,13 +79,14 @@ func ResourcePackage() *schema.Resource {
 	}
 }
 
-func ResourcePackageCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourcePackageCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).OpenSearchConn(ctx)
 
+	name := d.Get("package_name").(string)
 	input := &opensearchservice.CreatePackageInput{
 		PackageDescription: aws.String(d.Get("package_description").(string)),
-		PackageName:        aws.String(d.Get("package_name").(string)),
+		PackageName:        aws.String(name),
 		PackageType:        aws.String(d.Get("package_type").(string)),
 	}
 
@@ -94,48 +97,40 @@ func ResourcePackageCreate(ctx context.Context, d *schema.ResourceData, meta int
 	output, err := conn.CreatePackageWithContext(ctx, input)
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating OpenSearch Package: %s", err)
+		return sdkdiag.AppendErrorf(diags, "creating OpenSearch Package (%s): %s", name, err)
 	}
 
 	d.SetId(aws.StringValue(output.PackageDetails.PackageID))
 
-	return append(diags, ResourcePackageRead(ctx, d, meta)...)
+	return append(diags, resourcePackageRead(ctx, d, meta)...)
 }
 
-func ResourcePackageRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourcePackageRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).OpenSearchConn(ctx)
 
-	input := &opensearchservice.DescribePackagesInput{
-		Filters: []*opensearchservice.DescribePackagesFilter{
-			{
-				Name:  aws.String("PackageID"),
-				Value: []*string{aws.String(d.Id())},
-			},
-		},
-	}
+	pkg, err := FindPackageByID(ctx, conn, d.Id())
 
-	output, err := conn.DescribePackagesWithContext(ctx, input)
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] OpenSearch Package (%s) not found, removing from state", d.Id())
+		d.SetId("")
+		return diags
+	}
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading OpenSearch Package (%s): %s", d.Id(), err)
 	}
 
-	if output == nil || len(output.PackageDetailsList) == 0 {
-		d.SetId("")
-		return sdkdiag.AppendErrorf(diags, "reading OpenSearch Package (%s): not found", d.Id())
-	}
-
-	d.Set("package_id", output.PackageDetailsList[0].PackageID)
-	d.Set("package_name", output.PackageDetailsList[0].PackageName)
-	d.Set("package_description", output.PackageDetailsList[0].PackageDescription)
-	d.Set("package_type", output.PackageDetailsList[0].PackageType)
-	d.Set("available_package_version", output.PackageDetailsList[0].AvailablePackageVersion)
+	d.Set("available_package_version", pkg.AvailablePackageVersion)
+	d.Set("package_description", pkg.PackageDescription)
+	d.Set("package_id", pkg.PackageID)
+	d.Set("package_name", pkg.PackageName)
+	d.Set("package_type", pkg.PackageType)
 
 	return diags
 }
 
-func ResourcePackageUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourcePackageUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).OpenSearchConn(ctx)
 
@@ -151,10 +146,10 @@ func ResourcePackageUpdate(ctx context.Context, d *schema.ResourceData, meta int
 		return sdkdiag.AppendErrorf(diags, "updating OpenSearch Package (%s): %s", d.Id(), err)
 	}
 
-	return append(diags, ResourcePackageRead(ctx, d, meta)...)
+	return append(diags, resourcePackageRead(ctx, d, meta)...)
 }
 
-func ResourcePackageDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourcePackageDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).OpenSearchConn(ctx)
 
@@ -172,6 +167,60 @@ func ResourcePackageDelete(ctx context.Context, d *schema.ResourceData, meta int
 	}
 
 	return diags
+}
+
+func FindPackageByID(ctx context.Context, conn *opensearchservice.OpenSearchService, id string) (*opensearchservice.PackageDetails, error) {
+	input := &opensearchservice.DescribePackagesInput{
+		Filters: []*opensearchservice.DescribePackagesFilter{
+			{
+				Name:  aws.String("PackageID"),
+				Value: aws.StringSlice([]string{id}),
+			},
+		},
+	}
+
+	return findPackage(ctx, conn, input)
+}
+
+func findPackage(ctx context.Context, conn *opensearchservice.OpenSearchService, input *opensearchservice.DescribePackagesInput) (*opensearchservice.PackageDetails, error) {
+	output, err := findPackages(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSinglePtrResult(output)
+}
+
+func findPackages(ctx context.Context, conn *opensearchservice.OpenSearchService, input *opensearchservice.DescribePackagesInput) ([]*opensearchservice.PackageDetails, error) {
+	var output []*opensearchservice.PackageDetails
+
+	err := conn.DescribePackagesPagesWithContext(ctx, input, func(page *opensearchservice.DescribePackagesOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, v := range page.PackageDetailsList {
+			if v != nil {
+				output = append(output, v)
+			}
+		}
+
+		return !lastPage
+	})
+
+	if tfawserr.ErrCodeEquals(err, opensearchservice.ErrCodeResourceNotFoundException) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	return output, nil
 }
 
 func expandPackageSource(v interface{}) *opensearchservice.PackageSource {

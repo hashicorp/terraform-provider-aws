@@ -20,8 +20,7 @@ import (
 
 func TestAccOpenSearchPackage_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	ri := sdkacctest.RandString(10)
-	name := fmt.Sprintf("tf-test-%s", ri)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_opensearch_package.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -31,9 +30,10 @@ func TestAccOpenSearchPackage_basic(t *testing.T) {
 		CheckDestroy:             testAccCheckPackageDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccPackageConfig(name),
+				Config: testAccPackageConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "package_name", name),
+					testAccCheckPackageExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "package_name", rName),
 				),
 			},
 			{
@@ -50,8 +50,7 @@ func TestAccOpenSearchPackage_basic(t *testing.T) {
 
 func TestAccOpenSearchPackage_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	ri := sdkacctest.RandString(10)
-	name := fmt.Sprintf("tf-test-%s", ri)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_opensearch_package.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -61,8 +60,9 @@ func TestAccOpenSearchPackage_disappears(t *testing.T) {
 		CheckDestroy:             testAccCheckPackageDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccPackageConfig(name),
+				Config: testAccPackageConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
+					testAccCheckPackageExists(ctx, resourceName),
 					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfopensearch.ResourcePackage(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -71,28 +71,19 @@ func TestAccOpenSearchPackage_disappears(t *testing.T) {
 	})
 }
 
-func testAccPackageConfig(name string) string {
-	return fmt.Sprintf(`
-resource "aws_s3_bucket" "opensearch_packages" {
-  bucket = "%s"
-}
+func testAccCheckPackageExists(ctx context.Context, n string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[n]
+		if !ok {
+			return fmt.Errorf("Not found: %s", n)
+		}
 
-resource "aws_s3_object" "example_txt" {
-  bucket = aws_s3_bucket.opensearch_packages.bucket
-  key    = "%s"
-  source = "./test-fixtures/example-opensearch-custom-package.txt"
-  etag   = filemd5("./test-fixtures/example-opensearch-custom-package.txt")
-}
+		conn := acctest.Provider.Meta().(*conns.AWSClient).OpenSearchConn(ctx)
 
-resource "aws_opensearch_package" "test" {
-  package_name = "%s"
-  package_source {
-    s3_bucket_name = aws_s3_bucket.opensearch_packages.bucket
-    s3_key         = aws_s3_object.example_txt.key
-  }
-  package_type = "TXT-DICTIONARY"
-}
-`, name, name, name)
+		_, err := tfopensearch.FindPackageByID(ctx, conn, rs.Primary.ID)
+
+		return err
+	}
 }
 
 func testAccCheckPackageDestroy(ctx context.Context) resource.TestCheckFunc {
@@ -103,7 +94,8 @@ func testAccCheckPackageDestroy(ctx context.Context) resource.TestCheckFunc {
 			}
 
 			conn := acctest.Provider.Meta().(*conns.AWSClient).OpenSearchConn(ctx)
-			_, err := tfopensearch.FindPackageByName(ctx, conn, rs.Primary.Attributes["package_id"])
+
+			_, err := tfopensearch.FindPackageByID(ctx, conn, rs.Primary.ID)
 
 			if tfresource.NotFound(err) {
 				continue
@@ -113,8 +105,33 @@ func testAccCheckPackageDestroy(ctx context.Context) resource.TestCheckFunc {
 				return err
 			}
 
-			return fmt.Errorf("OpenSearch package %s still exists", rs.Primary.ID)
+			return fmt.Errorf("OpenSearch Package %s still exists", rs.Primary.ID)
 		}
+
 		return nil
 	}
+}
+
+func testAccPackageConfig_basic(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_s3_bucket" "test" {
+  bucket = %[1]q
+}
+
+resource "aws_s3_object" "test" {
+  bucket = aws_s3_bucket.test.bucket
+  key    = %[1]q
+  source = "./test-fixtures/example-opensearch-custom-package.txt"
+  etag   = filemd5("./test-fixtures/example-opensearch-custom-package.txt")
+}
+
+resource "aws_opensearch_package" "test" {
+  package_name = %[1]q
+  package_source {
+    s3_bucket_name = aws_s3_bucket.test.bucket
+    s3_key         = aws_s3_object.test.key
+  }
+  package_type = "TXT-DICTIONARY"
+}
+`, rName)
 }

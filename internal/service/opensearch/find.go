@@ -36,32 +36,3 @@ func FindDomainByName(ctx context.Context, conn *opensearchservice.OpenSearchSer
 
 	return output.DomainStatus, nil
 }
-
-func FindPackageByName(ctx context.Context, conn *opensearchservice.OpenSearchService, id string) (*opensearchservice.PackageDetails, error) {
-	input := &opensearchservice.DescribePackagesInput{
-		Filters: []*opensearchservice.DescribePackagesFilter{
-			{
-				Name:  aws.String("PackageID"),
-				Value: []*string{aws.String(id)},
-			},
-		},
-	}
-
-	output, err := conn.DescribePackagesWithContext(ctx, input)
-	if tfawserr.ErrCodeEquals(err, opensearchservice.ErrCodeResourceNotFoundException) {
-		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
-		}
-	}
-
-	if err != nil {
-		return nil, err
-	}
-
-	if output == nil || len(output.PackageDetailsList) == 0 {
-		return nil, tfresource.NewEmptyResultError(input)
-	}
-
-	return output.PackageDetailsList[0], nil
-}
