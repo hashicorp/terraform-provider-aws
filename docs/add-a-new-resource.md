@@ -1,3 +1,4 @@
+<!-- markdownlint-configure-file { "code-block-style": false } -->
 # Adding a New Resource
 
 New resources are required when AWS adds a new service, or adds new features within an existing service which would require a new resource to manage in Terraform. Typically anything with a new set of CRUD API endpoints is a great candidate for a new resource.
@@ -36,20 +37,46 @@ These will map planned Terraform state to the AWS API call, or an AWS API respon
 
 ### Register Resource to the provider
 
-Resources use a self registration process that adds them to the provider using the `@SDKResource()` annotation in the resource's comments. Run `make gen` to register the resource. This will add an entry to the `service_package_gen.go` file located in the service package folder.
+Resources use a self registration process that adds them to the provider using the `@FrameworkResource()` or `@SDKResource()` annotation in the resource's comments. Run `make gen` to register the resource. This will add an entry to the `service_package_gen.go` file located in the service package folder.
 
-```
-package something
+=== "Terraform Plugin Framework (Preferred)"
 
-import "github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+    ```go
+    package something
 
-// @SDKResource("aws_something_example", name="Example)
-func ResourceExample() *schema.Resource {
-	return &schema.Resource{
-	    // some configuration
-	}
-}
-```
+    import (
+        "github.com/hashicorp/terraform-plugin-framework/resource"
+        "github.com/hashicorp/terraform-provider-aws/internal/framework"
+    )
+
+    // @FrameworkResource(name="Example")
+    func newResourceExample(_ context.Context) (resource.ResourceWithConfigure, error) {
+    	return &resourceExample{}, nil
+    }
+
+    type resourceExample struct {
+    	framework.ResourceWithConfigure
+    }
+
+    func (r *resourceExample) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
+    	response.TypeName = "aws_something_example"
+    }
+    ```
+
+=== "Terraform Plugin SDK V2"
+
+    ```go
+    package something
+
+    import "github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+
+    // @SDKResource("aws_something_example", name="Example)
+    func ResourceExample() *schema.Resource {
+    	return &schema.Resource{
+    	    // some configuration
+    	}
+    }
+    ```
 
 ### Write passing Acceptance Tests
 
