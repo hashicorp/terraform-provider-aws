@@ -11,6 +11,7 @@ var (
 	FindBucketAccelerateConfiguration = findBucketAccelerateConfiguration
 	FindBucketPolicy                  = findBucketPolicy
 	FindBucketVersioning              = findBucketVersioning
+	FindBucketWebsite                 = findBucketWebsite
 	FindObjectByBucketAndKey          = findObjectByBucketAndKey
 	SDKv1CompatibleCleanKey           = sdkv1CompatibleCleanKey
 )
