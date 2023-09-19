@@ -18,7 +18,7 @@ import (
 	// awstypes.<Type Name>.
 	"context"
 	"errors"
-	"time"
+	// "time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/lexv2models"
@@ -34,11 +34,12 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	// "github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -145,6 +146,8 @@ func (r *resourceBot) Schema(ctx context.Context, req resource.SchemaRequest, re
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
+			names.AttrTags:    tftags.TagsAttribute(),
+			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
 			"role_arn": schema.StringAttribute{
 				Required: true,
 			},
@@ -202,20 +205,6 @@ func (r *resourceBot) Schema(ctx context.Context, req resource.SchemaRequest, re
 }
 
 func (r *resourceBot) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-	// TIP: ==== RESOURCE CREATE ====
-	// Generally, the Create function should do the following things. Make
-	// sure there is a good reason if you don't do one of these.
-	//
-	// 1. Get a client connection to the relevant service
-	// 2. Fetch the plan
-	// 3. Populate a create input structure
-	// 4. Call the AWS create/put function
-	// 5. Using the output from the create function, set the minimum arguments
-	//    and attributes for the Read function to work, as well as any computed
-	//    only attributes.
-	// 6. Use a waiter to wait for create to complete
-	// 7. Save the request plan to response state
-
 	// TIP: -- 1. Get a client connection to the relevant service
 	conn := r.Meta().LexV2ModelsClient(ctx)
 
@@ -343,19 +332,8 @@ func (r *resourceBot) Read(ctx context.Context, req resource.ReadRequest, resp *
 	// complex data types (e.g., schema.ListAttribute, schema.SetAttribute). In
 	// these cases the flatten function may have a diagnostics return value, which
 	// should be appended to resp.Diagnostics.
-	state.RoleARN = flex.StringToFramework(ctx, out.RoleARN)
-	state.ID = flex.StringToFramework(ctx, out.BotId)
-	state.Name = flex.StringToFramework(ctx, out.BotName)
-	state.Type = flex.StringToFramework(ctx, out.BotType)
-	state.Description = flex.StringToFramework(ctx, out.Description)
-	state.Type = flex.StringToFramework(ctx, out.Type)
-	state.IdleSessionTTLInSeconds = flex.Int64ToFramework(ctx, out.IdleSessionTTLInSeconds)
 
-	// TIP: Setting a complex type.
-	datap, d := flattenDataPrivacy(ctx, out.DataPrivacy)
-	state.DataPrivacy = datap
-	setTagsOut(ctx, out.Tags)
-	resp.Diagnostics.Append(d...)
+	resp.Diagnostics.Append(state.refreshFromOutput(ctx, out)...)
 
 	// TIP: -- 6. Set the state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
@@ -384,7 +362,7 @@ func (r *resourceBot) Update(ctx context.Context, req resource.UpdateRequest, re
 	// 6. Save the request plan to response state
 	// TIP: -- 1. Get a client connection to the relevant service
 	conn := r.Meta().LexV2ModelsClient(ctx)
-	
+
 	// TIP: -- 2. Fetch the plan
 	var plan, state resourceBotData
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
@@ -392,38 +370,60 @@ func (r *resourceBot) Update(ctx context.Context, req resource.UpdateRequest, re
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	
+
 	// TIP: -- 3. Populate a modify input structure and check for changes
 	if !plan.Name.Equal(state.Name) ||
 		!plan.Description.Equal(state.Description) ||
-		!plan.ComplexArgument.Equal(state.ComplexArgument) ||
+		!plan.IdleSessionTTLInSeconds.Equal(state.IdleSessionTTLInSeconds) ||
+		!plan.RoleARN.Equal(state.RoleARN) ||
+		!plan.TestBotAliasTags.Equal(state.TestBotAliasTags) ||
+		!plan.DataPrivacy.Equal(state.DataPrivacy) ||
 		!plan.Type.Equal(state.Type) {
+
+		var dp []dataPrivacyData
+		resp.Diagnostics.Append(plan.DataPrivacy.ElementsAs(ctx, &dp, false)...)
+		if resp.Diagnostics.HasError() {
+			return
+		}
+
+		dpInput, d := expandDataPrivacy(ctx, dp)
+		resp.Diagnostics.Append(d...)
+		if resp.Diagnostics.HasError() {
+			return
+		}
 
 		in := &lexv2models.UpdateBotInput{
 			// TIP: Mandatory or fields that will always be present can be set when
 			// you create the Input structure. (Replace these with real fields.)
-			BotId:   aws.String(plan.ID.ValueString()),
-			BotName: aws.String(plan.Name.ValueString()),
-			BotType: aws.String(plan.Type.ValueString()),
+			Id:                      aws.String(plan.ID.ValueString()),
+			Name:                    aws.String(plan.Name.ValueString()),
+			Type:                    aws.String(plan.Type.ValueString()),
+			IdleSessionTTLInSeconds: aws.Int64(plan.IdleSessionTTLInSeconds.ValueInt64()),
+			DataPrivacy:             dpInput,
+			RoleARN:                 aws.String(plan.RoleARN.ValueString()),
 		}
 
 		if !plan.Description.IsNull() {
-			// TIP: Optional fields should be set based on whether or not they are
-			// used.
 			in.Description = aws.String(plan.Description.ValueString())
 		}
-		if !plan.ComplexArgument.IsNull() {
+		if !plan.Type.IsNull() {
+			in.Type = aws.String(plan.Type.ValueString())
+		}
+		if !plan.Members.IsNull() {
 			// TIP: Use an expander to assign a complex argument. The elements must be
 			// deserialized into the appropriate struct before being passed to the expander.
-			var tfList []complexArgumentData
-			resp.Diagnostics.Append(plan.ComplexArgument.ElementsAs(ctx, &tfList, false)...)
+			var tfList []membersData
+			resp.Diagnostics.Append(plan.Members.ElementsAs(ctx, &tfList, false)...)
 			if resp.Diagnostics.HasError() {
 				return
 			}
 
-			in.ComplexArgument = expandComplexArgument(tfList)
+			in.ComplexArgument, d = expandMembers(ctx, tfList)
+			resp.Diagnostics.Append(d...)
+			if resp.Diagnostics.HasError() {
+				return
+			}
 		}
-		
 		// TIP: -- 4. Call the AWS modify/update function
 		out, err := conn.UpdateBot(ctx, in)
 		if err != nil {
@@ -433,32 +433,29 @@ func (r *resourceBot) Update(ctx context.Context, req resource.UpdateRequest, re
 			)
 			return
 		}
-		if out == nil || out.Bot == nil {
+		if out == nil || out.BotId == nil {
 			resp.Diagnostics.AddError(
 				create.ProblemStandardMessage(names.LexV2Models, create.ErrActionUpdating, ResNameBot, plan.ID.String(), nil),
 				errors.New("empty output").Error(),
 			)
 			return
 		}
-		
 		// TIP: Using the output from the update function, re-set any computed attributes
-		plan.ARN = flex.StringToFramework(ctx, out.Bot.Arn)
-		plan.ID = flex.StringToFramework(ctx, out.Bot.BotId)
+		state.refreshFromOutput(ctx, out.BotId)
 	}
 
 	
 	// TIP: -- 5. Use a waiter to wait for update to complete
-	updateTimeout := r.UpdateTimeout(ctx, plan.Timeouts)
-	_, err := waitBotUpdated(ctx, conn, plan.ID.ValueString(), updateTimeout)
-	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.LexV2Models, create.ErrActionWaitingForUpdate, ResNameBot, plan.ID.String(), err),
-			err.Error(),
-		)
-		return
-	}
+	// updateTimeout := r.UpdateTimeout(ctx, plan.Timeouts)
+	// _, err := waitBotUpdated(ctx, conn, plan.ID.ValueString(), updateTimeout)
+	// if err != nil {
+	// 	resp.Diagnostics.AddError(
+	// 		create.ProblemStandardMessage(names.LexV2Models, create.ErrActionWaitingForUpdate, ResNameBot, plan.ID.String(), err),
+	// 		err.Error(),
+	// 	)
+	// 	return
+	// }
 
-	
 	// TIP: -- 6. Save the request plan to response state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 }
@@ -481,19 +478,19 @@ func (r *resourceBot) Delete(ctx context.Context, req resource.DeleteRequest, re
 	// 5. Use a waiter to wait for delete to complete
 	// TIP: -- 1. Get a client connection to the relevant service
 	conn := r.Meta().LexV2ModelsClient(ctx)
-	
+
 	// TIP: -- 2. Fetch the state
 	var state resourceBotData
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	
+
 	// TIP: -- 3. Populate a delete input structure
 	in := &lexv2models.DeleteBotInput{
 		BotId: aws.String(state.ID.ValueString()),
 	}
-	
+
 	// TIP: -- 4. Call the AWS delete function
 	_, err := conn.DeleteBot(ctx, in)
 	// TIP: On rare occassions, the API returns a not found error after deleting a
@@ -509,17 +506,17 @@ func (r *resourceBot) Delete(ctx context.Context, req resource.DeleteRequest, re
 		)
 		return
 	}
-	
+
 	// TIP: -- 5. Use a waiter to wait for delete to complete
-	deleteTimeout := r.DeleteTimeout(ctx, state.Timeouts)
-	_, err = waitBotDeleted(ctx, conn, state.ID.ValueString(), deleteTimeout)
-	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.LexV2Models, create.ErrActionWaitingForDeletion, ResNameBot, state.ID.String(), err),
-			err.Error(),
-		)
-		return
-	}
+	// deleteTimeout := r.DeleteTimeout(ctx, state.Timeouts)
+	// _, err = waitBotDeleted(ctx, conn, state.ID.ValueString(), deleteTimeout)
+	// if err != nil {
+	// 	resp.Diagnostics.AddError(
+	// 		create.ProblemStandardMessage(names.LexV2Models, create.ErrActionWaitingForDeletion, ResNameBot, state.ID.String(), err),
+	// 		err.Error(),
+	// 	)
+	// 	return
+	// }
 }
 
 // TIP: ==== TERRAFORM IMPORTING ====
@@ -558,63 +555,63 @@ const (
 // exported (i.e., capitalized).
 //
 // You will need to adjust the parameters and names to fit the service.
-func waitBotCreated(ctx context.Context, conn *lexv2models.Client, id string, timeout time.Duration) (*lexv2models.Bot, error) {
-	stateConf := &retry.StateChangeConf{
-		Pending:                   []string{},
-		Target:                    []string{statusNormal},
-		Refresh:                   statusBot(ctx, conn, id),
-		Timeout:                   timeout,
-		NotFoundChecks:            20,
-		ContinuousTargetOccurence: 2,
-	}
+// func waitBotCreated(ctx context.Context, conn *lexv2models.Client, id string, timeout time.Duration) (*lexv2models.Bot, error) {
+// 	stateConf := &retry.StateChangeConf{
+// 		Pending:                   []string{},
+// 		Target:                    []string{statusNormal},
+// 		Refresh:                   statusBot(ctx, conn, id),
+// 		Timeout:                   timeout,
+// 		NotFoundChecks:            20,
+// 		ContinuousTargetOccurence: 2,
+// 	}
 
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
-	if out, ok := outputRaw.(*lexv2models.Bot); ok {
-		return out, err
-	}
+// 	outputRaw, err := stateConf.WaitForStateContext(ctx)
+// 	if out, ok := outputRaw.(*lexv2models.Bot); ok {
+// 		return out, err
+// 	}
 
-	return nil, err
-}
+// 	return nil, err
+// }
 
 // TIP: It is easier to determine whether a resource is updated for some
 // resources than others. The best case is a status flag that tells you when
 // the update has been fully realized. Other times, you can check to see if a
 // key resource argument is updated to a new value or not.
-func waitBotUpdated(ctx context.Context, conn *lexv2models.Client, id string, timeout time.Duration) (*lexv2models.Bot, error) {
-	stateConf := &retry.StateChangeConf{
-		Pending:                   []string{statusChangePending},
-		Target:                    []string{statusUpdated},
-		Refresh:                   statusBot(ctx, conn, id),
-		Timeout:                   timeout,
-		NotFoundChecks:            20,
-		ContinuousTargetOccurence: 2,
-	}
+// func waitBotUpdated(ctx context.Context, conn *lexv2models.Client, id string, timeout time.Duration) (*lexv2models.Bot, error) {
+// 	stateConf := &retry.StateChangeConf{
+// 		Pending:                   []string{statusChangePending},
+// 		Target:                    []string{statusUpdated},
+// 		Refresh:                   statusBot(ctx, conn, id),
+// 		Timeout:                   timeout,
+// 		NotFoundChecks:            20,
+// 		ContinuousTargetOccurence: 2,
+// 	}
 
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
-	if out, ok := outputRaw.(*lexv2models.Bot); ok {
-		return out, err
-	}
+// 	outputRaw, err := stateConf.WaitForStateContext(ctx)
+// 	if out, ok := outputRaw.(*lexv2models.Bot); ok {
+// 		return out, err
+// 	}
 
-	return nil, err
-}
+// 	return nil, err
+// }
 
 // TIP: A deleted waiter is almost like a backwards created waiter. There may
 // be additional pending states, however.
-func waitBotDeleted(ctx context.Context, conn *lexv2models.Client, id string, timeout time.Duration) (*lexv2models.Bot, error) {
-	stateConf := &retry.StateChangeConf{
-		Pending:                   []string{statusDeleting, statusNormal},
-		Target:                    []string{},
-		Refresh:                   statusBot(ctx, conn, id),
-		Timeout:                   timeout,
-	}
+// func waitBotDeleted(ctx context.Context, conn *lexv2models.Client, id string, timeout time.Duration) (*lexv2models.Bot, error) {
+// 	stateConf := &retry.StateChangeConf{
+// 		Pending:                   []string{statusDeleting, statusNormal},
+// 		Target:                    []string{},
+// 		Refresh:                   statusBot(ctx, conn, id),
+// 		Timeout:                   timeout,
+// 	}
 
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
-	if out, ok := outputRaw.(*lexv2models.Bot); ok {
-		return out, err
-	}
+// 	outputRaw, err := stateConf.WaitForStateContext(ctx)
+// 	if out, ok := outputRaw.(*lexv2models.Bot); ok {
+// 		return out, err
+// 	}
 
-	return nil, err
-}
+// 	return nil, err
+// }
 
 // TIP: ==== STATUS ====
 // The status function can return an actual status when that field is
@@ -623,20 +620,20 @@ func waitBotDeleted(ctx context.Context, conn *lexv2models.Client, id string, ti
 //
 // Waiters consume the values returned by status functions. Design status so
 // that it can be reused by a create, update, and delete waiter, if possible.
-func statusBot(ctx context.Context, conn *lexv2models.Client, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-		out, err := findBotByID(ctx, conn, id)
-		if tfresource.NotFound(err) {
-			return nil, "", nil
-		}
+// func statusBot(ctx context.Context, conn *lexv2models.Client, id string) retry.StateRefreshFunc {
+// 	return func() (interface{}, string, error) {
+// 		out, err := findBotByID(ctx, conn, id)
+// 		if tfresource.NotFound(err) {
+// 			return nil, "", nil
+// 		}
 
-		if err != nil {
-			return nil, "", err
-		}
+// 		if err != nil {
+// 			return nil, "", err
+// 		}
 
-		return out, aws.ToString(out.Status), nil
-	}
-}
+// 		return out, aws.ToString(out.Status), nil
+// 	}
+// }
 
 // TIP: ==== FINDERS ====
 // The find function is not strictly necessary. You could do the API
@@ -735,6 +732,29 @@ func expandMembers(ctx context.Context, tfList []membersData) ([]*awstypes.Membe
 		Name: aws.String(mb.Name.ValueString()),
 		Version: aws.String(mb.Version.ValueString()),
 	}, diags
+}
+
+func (rd *resourceBotData) refreshFromOutput(ctx context.Context, out *awstypes.Bot) diag.Diagnostics {
+	var diags diag.Diagnostics
+
+	if out == nil {
+		return diags
+	}
+	rd.RoleARN = flex.StringToFramework(ctx, out.RoleARN)
+	rd.ID = flex.StringToFramework(ctx, out.BotId)
+	rd.Name = flex.StringToFramework(ctx, out.BotName)
+	rd.Type = flex.StringToFramework(ctx, out.BotType)
+	rd.Description = flex.StringToFramework(ctx, out.Description)
+	rd.Type = flex.StringToFramework(ctx, out.Type)
+	rd.IdleSessionTTLInSeconds = flex.Int64ToFramework(ctx, out.IdleSessionTTLInSeconds)
+
+	// TIP: Setting a complex type.
+	datap, d := flattenDataPrivacy(ctx, out.DataPrivacy)
+	diags.Append(d...)
+	rd.DataPrivacy = datap
+	setTagsOut(ctx, out.Tags)
+
+	return diags
 }
 
 // TIP: ==== DATA STRUCTURES ====
