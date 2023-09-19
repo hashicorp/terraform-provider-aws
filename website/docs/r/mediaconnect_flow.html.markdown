@@ -20,10 +20,10 @@ resource "aws_mediaconnect_flow" "example" {
   availability_zone = "us-west-2c"
 
   source {
-    description     = "A MediaConnect Flow"
-    protocol        = "rtp"
-    ingest_port     = 3010
-    whitelist_cidr  = "10.24.34.0/23"
+    description    = "A MediaConnect Flow"
+    protocol       = "rtp"
+    ingest_port    = 3010
+    whitelist_cidr = "10.24.34.0/23"
   }
 }
 ```
@@ -130,7 +130,7 @@ The following arguments are optional:
 * `fmtp` - (Optional) The settings that you want to use to define the media stream. See [Fmtp](#fmtp) for more details.
 * `lang` - (Optional} The audio language, in a format that is recognized by the receiver.
 
-# Fmtp
+### Fmtp
 
 * `channel_order` - (Optional) The format of the audio channel.
 * `colorimetry` - (Optional) The format that is used for the representation of color.
