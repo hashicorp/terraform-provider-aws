@@ -9,7 +9,6 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/opensearchservice"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
@@ -20,7 +19,7 @@ import (
 
 func TestAccOpenSearchPackage_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	pkgName := testAccRandomDomainName()
 	resourceName := "aws_opensearch_package.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -30,10 +29,15 @@ func TestAccOpenSearchPackage_basic(t *testing.T) {
 		CheckDestroy:             testAccCheckPackageDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccPackageConfig_basic(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Config: testAccPackageConfig_basic(pkgName),
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckPackageExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "package_name", rName),
+					resource.TestCheckResourceAttrSet(resourceName, "available_package_version"),
+					resource.TestCheckResourceAttr(resourceName, "package_description", ""),
+					resource.TestCheckResourceAttrSet(resourceName, "package_id"),
+					resource.TestCheckResourceAttr(resourceName, "package_name", pkgName),
+					resource.TestCheckResourceAttr(resourceName, "package_source.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "package_type", "TXT-DICTIONARY"),
 				),
 			},
 			{
@@ -50,7 +54,7 @@ func TestAccOpenSearchPackage_basic(t *testing.T) {
 
 func TestAccOpenSearchPackage_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	pkgName := testAccRandomDomainName()
 	resourceName := "aws_opensearch_package.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -60,7 +64,7 @@ func TestAccOpenSearchPackage_disappears(t *testing.T) {
 		CheckDestroy:             testAccCheckPackageDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccPackageConfig_basic(rName),
+				Config: testAccPackageConfig_basic(pkgName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPackageExists(ctx, resourceName),
 					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfopensearch.ResourcePackage(), resourceName),

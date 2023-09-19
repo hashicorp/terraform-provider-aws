@@ -9,7 +9,6 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/opensearchservice"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
@@ -21,7 +20,7 @@ import (
 func TestAccOpenSearchPackageAssociation_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	domainName := testAccRandomDomainName()
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	pkgName := testAccRandomDomainName()
 	resourceName := "aws_opensearch_package_association.test"
 	packageResourceName := "aws_opensearch_package.test"
 	domainResourceName := "aws_opensearch_domain.test"
@@ -33,7 +32,7 @@ func TestAccOpenSearchPackageAssociation_basic(t *testing.T) {
 		CheckDestroy:             testAccCheckPackageAssociationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccPackageAssociationConfig_basic(rName, domainName),
+				Config: testAccPackageAssociationConfig_basic(pkgName, domainName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPackageAssociationExists(ctx, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "domain_name", domainResourceName, "domain_name"),
@@ -47,7 +46,7 @@ func TestAccOpenSearchPackageAssociation_basic(t *testing.T) {
 func TestAccOpenSearchPackageAssociation_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	domainName := testAccRandomDomainName()
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	pkgName := testAccRandomDomainName()
 	resourceName := "aws_opensearch_package_association.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -57,7 +56,7 @@ func TestAccOpenSearchPackageAssociation_disappears(t *testing.T) {
 		CheckDestroy:             testAccCheckPackageAssociationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccPackageAssociationConfig_basic(rName, domainName),
+				Config: testAccPackageAssociationConfig_basic(pkgName, domainName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPackageAssociationExists(ctx, resourceName),
 					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfopensearch.ResourcePackage(), resourceName),
@@ -109,7 +108,7 @@ func testAccCheckPackageAssociationDestroy(ctx context.Context) resource.TestChe
 	}
 }
 
-func testAccPackageAssociationConfig_basic(rName, domainName string) string {
+func testAccPackageAssociationConfig_basic(pkgName, domainName string) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
   bucket = %[1]q
@@ -148,5 +147,5 @@ resource "aws_opensearch_package_association" "test" {
   package_id  = aws_opensearch_package.test.id
   domain_name = aws_opensearch_domain.test.domain_name
 }
-`, rName, domainName)
+`, pkgName, domainName)
 }

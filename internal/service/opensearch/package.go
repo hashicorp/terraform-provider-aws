@@ -45,9 +45,10 @@ func ResourcePackage() *schema.Resource {
 				Computed: true,
 			},
 			"package_name": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
+				Type:         schema.TypeString,
+				Required:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.StringLenBetween(1, 32),
 			},
 			"package_source": {
 				Type:     schema.TypeList,
