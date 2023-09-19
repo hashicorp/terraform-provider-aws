@@ -17,10 +17,17 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	awspolicy "github.com/hashicorp/awspolicyequivalence"
 	"github.com/hashicorp/go-multierror"
+	"github.com/hashicorp/terraform-plugin-framework-validators/int64validator"
+	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
+	"github.com/hashicorp/terraform-plugin-framework/resource"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64default"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/booldefault"
+	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
+	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -28,6 +35,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -39,8 +47,103 @@ const (
 	roleNamePrefixMaxLen = roleNameMaxLen - id.UniqueIDSuffixLength
 )
 
+
+// TODO: finish this how does this work?
+
 // @SDKResource("aws_iam_role", name="Role")
 // @Tags
+// func newIamRole(context.Context) (resource.ResourceWithConfigure, error) {
+	// r := &resourceIamRole{}
+    // // TODO
+	// // r.create = r.createSecurityGroupRule
+	// // r.delete = r.deleteSecurityGroupRule
+	// // r.findByID = r.findSecurityGroupRuleByID
+
+	// return r, nil
+// }
+
+type resourceIamRole struct {
+	framework.ResourceWithConfigure
+}
+
+func (r *resourceIamRole) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
+	response.TypeName = "aws_iam_role"
+}
+
+// TODO: Update this
+func (r *resourceIamRole) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
+	resp.Schema = schema.Schema{
+		Attributes: map[string]schema.Attribute{
+            "arn": schema.StringAttribute{
+                Computed: true,
+            },
+            "assume_role_policy": schema.StringAttribute{
+                Required: true,
+                // TODO: finish this, it get complicated
+            },
+            "create_date": schema.StringAttribute{
+                Computed: true,
+            },
+            "force_detach_policies": schema.BoolAttribute{
+                Optional: true,
+                Default: booldefault.StaticBool(false),
+            },
+            // TODO: inline policy goes crazy, have to figure what this type should look like
+            // also read article again
+            "inline_policy": schema.MapAttribute{
+
+            },
+            "managed_policy_arns": schema.SetAttribute{
+                Computed: true,
+                Optional: true,
+				ElementType: types.StringType,
+                // TODO: validate all elements of set are valid arns
+                // how to do this with helper lib terraform-plugin-framework-validators
+            },
+            "max_session_duration": schema.Int64Attribute{
+                Optional: true,
+                Default: int64default.StaticInt64(3600),
+                Validators: []validator.Int64{
+                    int64validator.Between(3600, 43200),
+                },
+            },
+            "name": schema.StringAttribute{
+                Optional: true,
+                Computed: true,
+                // TODO: ForceNew?
+                // TODO: ConflictsWith?
+                Validators: []validator.String{
+                    stringvalidator.LengthAtMost(roleNameMaxLen),
+                },
+            },
+            "name_prefix": schema.StringAttribute{
+                Optional: true,
+                Computed: true,
+                // TODO: ForceNew?
+                // TODO: ConflictsWith?
+                Validators: []validator.String{
+                    stringvalidator.LengthAtMost(roleNamePrefixMaxLen),
+                },
+            },
+		},
+	}
+}
+
+            // NOTE: current schema resource to convert
+			// "path": {
+				// Type:         schema.TypeString,
+				// Optional:     true,
+				// Default:      "/",
+				// ForceNew:     true,
+				// ValidateFunc: validation.StringLenBetween(0, 512),
+			// },
+
+
+// TODO: Finish this
+func (r *resourceIamRole) createIamrole(ctx context.Context, data *resourceSecurityGroupRuleData) (string, error) {
+    return "", nil
+}
+
 func ResourceRole() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceRoleCreate,
