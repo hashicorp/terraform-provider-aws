@@ -10679,7 +10679,7 @@ resource "aws_db_instance" "test" {
 func testAccInstanceConfig_storageThroughputSSE(rName string, iops, throughput int) string {
 	return fmt.Sprintf(`
 data "aws_rds_engine_version" "default" {
-  engine             = "sqlserver-se"
+  engine = "sqlserver-se"
 }
 
 data "aws_rds_orderable_db_instance" "test" {
