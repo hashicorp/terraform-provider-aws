@@ -52,19 +52,9 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `id` - The Id of the package association.
 
-## Import
+## Timeouts
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import AWS Opensearch Package Associations using the Package Association ID. For example:
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-```terraform
-import {
-  to = aws_opensearch_package_association.foo
-  id = "package-association-id"
-}
-```
-
-Using `terraform import`, import AWS Opensearch Package Associations using the Package Association ID. For example:
-
-```console
-% terraform import aws_opensearch_package_association.foo package-association:<domain-name>-<package-id>
-```
+* `create` - (Default `10m`)
+* `delete` - (Default `10m`)

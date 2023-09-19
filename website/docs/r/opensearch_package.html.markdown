@@ -63,7 +63,7 @@ In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashico
 
 ```terraform
 import {
-  to = aws_opensearch_package.foo
+  to = aws_opensearch_package.example
   id = "package-id"
 }
 ```
@@ -71,5 +71,5 @@ import {
 Using `terraform import`, import AWS Opensearch Packages using the Package ID. For example:
 
 ```console
-% terraform import aws_opensearch_package.foo package-id
+% terraform import aws_opensearch_package.example package-id
 ```
