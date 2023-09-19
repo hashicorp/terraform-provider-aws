@@ -29,10 +29,11 @@ jobs:
     steps:
       - name: 'Generate Token'
         id: token
-        uses: tibdex/github-app-token@0d49dd721133f900ebd5e0dff2810704e8defbc6 # v1.8.2
+        uses: tibdex/github-app-token@0914d50df753bbc42180d982a6550f195390069f # v2.0.0
         with:
           app_id: ${{ secrets.APP_ID }}
-          installation_id: ${{ secrets.INSTALLATION_ID }}
+          installation_retrieval_mode: id
+          installation_retrieval_payload: ${{ secrets.INSTALLATION_ID }}
           private_key: ${{ secrets.APP_PEM }}
 
       - name: 'Add needs-triage for non-maintainer'
@@ -86,10 +87,11 @@ jobs:
     steps:
       - name: 'Generate Token'
         id: token
-        uses: tibdex/github-app-token@0d49dd721133f900ebd5e0dff2810704e8defbc6 # v1.8.2
+        uses: tibdex/github-app-token@0914d50df753bbc42180d982a6550f195390069f # v2.0.0
         with:
           app_id: ${{ secrets.APP_ID }}
-          installation_id: ${{ secrets.INSTALLATION_ID }}
+          installation_retrieval_mode: id
+          installation_retrieval_payload: ${{ secrets.INSTALLATION_ID }}
           private_key: ${{ secrets.APP_PEM }}
 
       - name: 'Maintainer Issues'
