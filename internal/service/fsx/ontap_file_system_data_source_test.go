@@ -9,7 +9,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
-func TestAccFSxOntapFileSystemDataSource_Id(t *testing.T) {
+func TestAccFSxONTAPFileSystemDataSource_Id(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -23,10 +23,9 @@ func TestAccFSxOntapFileSystemDataSource_Id(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, fsx.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckOntapFileSystemDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccOntapFileSystemDataSourceConfigId(rName),
+				Config: testAccONTAPFileSystemDataSourceConfig_id(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(datasourceName, "arn", resourceName, "arn"),
 					resource.TestCheckResourceAttrPair(datasourceName, "automatic_backup_retention_days", resourceName, "automatic_backup_retention_days"),
@@ -54,7 +53,7 @@ func TestAccFSxOntapFileSystemDataSource_Id(t *testing.T) {
 	})
 }
 
-func testAccOntapFileSystemDataSourceConfigId(rName string) string {
+func testAccONTAPFileSystemDataSourceConfig_id(rName string) string {
 	return acctest.ConfigCompose(testAccONTAPFileSystemConfig_basic(rName), `
 data "aws_fsx_ontap_file_system" "test" {
   id = aws_fsx_ontap_file_system.test.id

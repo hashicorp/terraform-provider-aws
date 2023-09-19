@@ -12,9 +12,9 @@ import (
 )
 
 // @SDKDataSource("aws_fsx_ontap_file_system", name="Ontap File System")
-func DataSourceOntapFileSystem() *schema.Resource {
+func DataSourceONTAPFileSystem() *schema.Resource {
 	return &schema.Resource{
-		ReadWithoutTimeout: dataSourceOntapFileSystemRead,
+		ReadWithoutTimeout: dataSourceONTAPFileSystemRead,
 
 		Schema: map[string]*schema.Schema{
 			"arn": {
@@ -161,7 +161,7 @@ const (
 	DSNameOntapFileSystem = "Ontap File System Data Source"
 )
 
-func dataSourceOntapFileSystemRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceONTAPFileSystemRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).FSxConn(ctx)
@@ -169,26 +169,10 @@ func dataSourceOntapFileSystemRead(ctx context.Context, d *schema.ResourceData, 
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	id := d.Get("id").(string)
-	filesystem, err := FindFileSystemByID(ctx, conn, id)
+	filesystem, err := FindONTAPFileSystemByID(ctx, conn, id)
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading FSx Ontap File System (%s): %s", d.Id(), err)
-	}
-
-	if filesystem.LustreConfiguration != nil {
-		return sdkdiag.AppendErrorf(diags, "expected FSx Ontap File System, found FSx Lustre File System: %s", d.Id())
-	}
-
-	if filesystem.WindowsConfiguration != nil {
-		return sdkdiag.AppendErrorf(diags, "expected FSx Ontap File System, found FSx Windows File System: %s", d.Id())
-	}
-
-	if filesystem.OpenZFSConfiguration != nil {
-		return sdkdiag.AppendErrorf(diags, "expected FSx Ontap File System, found FSx OpenZFS File System: %s", d.Id())
-	}
-
-	if filesystem.OntapConfiguration == nil {
-		return sdkdiag.AppendErrorf(diags, "reading FSx Ontap File System (%s): empty OntapConfiguration", d.Id())
+		return sdkdiag.AppendErrorf(diags, "reading FSx for NetApp ONTAP File System (%s): %s", id, err)
 	}
 
 	d.SetId(aws.StringValue(filesystem.FileSystemId))
@@ -204,7 +188,6 @@ func dataSourceOntapFileSystemRead(ctx context.Context, d *schema.ResourceData, 
 	if err := d.Set("endpoints", flattenOntapFileSystemEndpoints(filesystem.OntapConfiguration.Endpoints)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting endpoints: %s", err)
 	}
-	d.Set("id", filesystem.FileSystemId)
 	d.Set("kms_key_id", filesystem.KmsKeyId)
 	d.Set("network_interface_ids", aws.StringValueSlice(filesystem.NetworkInterfaceIds))
 	d.Set("owner_id", filesystem.OwnerId)

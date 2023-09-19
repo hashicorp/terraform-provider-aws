@@ -85,6 +85,42 @@ resource "aws_transfer_server" "example" {
 }
 ```
 
+### Using Structured Logging Destinations
+
+```terraform
+resource "aws_cloudwatch_log_group" "transfer" {
+  name_prefix = "transfer_test_"
+}
+
+data "aws_iam_policy_document" "transfer_assume_role" {
+  statement {
+    effect = "Allow"
+
+    principals {
+      type        = "Service"
+      identifiers = ["transfer.amazonaws.com"]
+    }
+
+    actions = ["sts:AssumeRole"]
+  }
+}
+
+resource "aws_iam_role" "iam_for_transfer" {
+  name_prefix         = "iam_for_transfer_"
+  assume_role_policy  = data.aws_iam_policy_document.transfer_assume_role.json
+  managed_policy_arns = ["arn:aws:iam::aws:policy/service-role/AWSTransferLoggingAccess"]
+}
+
+resource "aws_transfer_server" "transfer" {
+  endpoint_type = "PUBLIC"
+  logging_role  = aws_iam_role.iam_for_transfer.arn
+  protocols     = ["SFTP"]
+  structured_log_destinations = [
+    "${aws_cloudwatch_log_group.transfer.arn}:*"
+  ]
+}
+```
+
 ## Argument Reference
 
 This resource supports the following arguments:
@@ -110,6 +146,7 @@ This resource supports the following arguments:
 * `pre_authentication_login_banner`- (Optional) Specify a string to display when users connect to a server. This string is displayed before the user authenticates.
 * `protocol_details`- (Optional) The protocol settings that are configured for your server.
 * `security_policy_name` - (Optional) Specifies the name of the security policy that is attached to the server. Possible values are `TransferSecurityPolicy-2018-11`, `TransferSecurityPolicy-2020-06`, `TransferSecurityPolicy-FIPS-2020-06`, `TransferSecurityPolicy-2022-03` and `TransferSecurityPolicy-2023-05`. Default value is: `TransferSecurityPolicy-2018-11`.
+* `structured_log_destinations` - (Optional) A set of ARNs of destinations that will receive structured logs from the transfer server such as CloudWatch Log Group ARNs. If provided this enables the transfer server to emit structured logs to the specified locations.
 * `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `workflow_details` - (Optional) Specifies the workflow details. See Workflow Details below.
 

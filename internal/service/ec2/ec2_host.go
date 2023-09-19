@@ -49,6 +49,7 @@ func ResourceHost() *schema.Resource {
 				Optional:     true,
 				ForceNew:     true,
 				RequiredWith: []string{"outpost_arn"},
+				Computed:     true,
 			},
 			"auto_placement": {
 				Type:         schema.TypeString,

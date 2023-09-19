@@ -45,6 +45,15 @@ func ResourceDataLakeSettings() *schema.Resource {
 					ValidateFunc: verify.ValidARN,
 				},
 			},
+			"read_only_admins": {
+				Type:     schema.TypeSet,
+				Computed: true,
+				Optional: true,
+				Elem: &schema.Schema{
+					Type:         schema.TypeString,
+					ValidateFunc: verify.ValidARN,
+				},
+			},
 			"allow_external_data_filtering": {
 				Type:     schema.TypeBool,
 				Optional: true,
@@ -148,6 +157,10 @@ func resourceDataLakeSettingsCreate(ctx context.Context, d *schema.ResourceData,
 		settings.DataLakeAdmins = expandDataLakeSettingsAdmins(v.(*schema.Set))
 	}
 
+	if v, ok := d.GetOk("read_only_admins"); ok {
+		settings.ReadOnlyAdmins = expandDataLakeSettingsAdmins(v.(*schema.Set))
+	}
+
 	if v, ok := d.GetOk("allow_external_data_filtering"); ok {
 		settings.AllowExternalDataFiltering = aws.Bool(v.(bool))
 	}
@@ -237,6 +250,7 @@ func resourceDataLakeSettingsRead(ctx context.Context, d *schema.ResourceData, m
 	settings := output.DataLakeSettings
 
 	d.Set("admins", flattenDataLakeSettingsAdmins(settings.DataLakeAdmins))
+	d.Set("read_only_admins", flattenDataLakeSettingsAdmins(settings.ReadOnlyAdmins))
 	d.Set("allow_external_data_filtering", settings.AllowExternalDataFiltering)
 	d.Set("authorized_session_tag_value_list", flex.FlattenStringList(settings.AuthorizedSessionTagValueList))
 	d.Set("create_database_default_permissions", flattenDataLakeSettingsCreateDefaultPermissions(settings.CreateDatabaseDefaultPermissions))
@@ -256,6 +270,7 @@ func resourceDataLakeSettingsDelete(ctx context.Context, d *schema.ResourceData,
 			CreateDatabaseDefaultPermissions: make([]*lakeformation.PrincipalPermissions, 0),
 			CreateTableDefaultPermissions:    make([]*lakeformation.PrincipalPermissions, 0),
 			DataLakeAdmins:                   make([]*lakeformation.DataLakePrincipal, 0),
+			ReadOnlyAdmins:                   make([]*lakeformation.DataLakePrincipal, 0),
 			TrustedResourceOwners:            make([]*string, 0),
 		},
 	}

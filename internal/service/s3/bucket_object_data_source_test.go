@@ -9,10 +9,10 @@ package s3_test
 
 import (
 	"fmt"
-	"regexp"
 	"testing"
 	"time"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/service/s3"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -22,9 +22,6 @@ import (
 func TestAccS3BucketObjectDataSource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	rInt := sdkacctest.RandInt()
-
-	var rObj s3.GetObjectOutput
-	var dsObj s3.GetObjectOutput
 
 	resourceName := "aws_s3_object.object"
 	dataSourceName := "data.aws_s3_object.obj"
@@ -38,12 +35,10 @@ func TestAccS3BucketObjectDataSource_basic(t *testing.T) {
 			{
 				Config: testAccBucketObjectDataSourceConfig_basic(rInt),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckObjectExists(ctx, resourceName, &rObj),
-					testAccCheckObjectExistsDataSource(ctx, dataSourceName, &dsObj),
 					resource.TestCheckResourceAttr(dataSourceName, "content_length", "11"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "content_type", resourceName, "content_type"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "etag", resourceName, "etag"),
-					resource.TestMatchResourceAttr(dataSourceName, "last_modified", regexp.MustCompile(rfc1123RegexPattern)),
+					resource.TestMatchResourceAttr(dataSourceName, "last_modified", regexache.MustCompile(rfc1123RegexPattern)),
 					resource.TestCheckResourceAttrPair(dataSourceName, "object_lock_legal_hold_status", resourceName, "object_lock_legal_hold_status"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "object_lock_mode", resourceName, "object_lock_mode"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "object_lock_retain_until_date", resourceName, "object_lock_retain_until_date"),
@@ -56,7 +51,6 @@ func TestAccS3BucketObjectDataSource_basic(t *testing.T) {
 
 func TestAccS3BucketObjectDataSource_basicViaAccessPoint(t *testing.T) {
 	ctx := acctest.Context(t)
-	var dsObj, rObj s3.GetObjectOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	dataSourceName := "data.aws_s3_object.test"
@@ -71,9 +65,6 @@ func TestAccS3BucketObjectDataSource_basicViaAccessPoint(t *testing.T) {
 			{
 				Config: testAccBucketObjectDataSourceConfig_basicViaAccessPoint(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckObjectExists(ctx, resourceName, &rObj),
-					testAccCheckObjectExistsDataSource(ctx, dataSourceName, &dsObj),
-					testAccCheckObjectExists(ctx, resourceName, &rObj),
 					resource.TestCheckResourceAttrPair(dataSourceName, "bucket", accessPointResourceName, "arn"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "key", resourceName, "key"),
 				),
@@ -85,9 +76,6 @@ func TestAccS3BucketObjectDataSource_basicViaAccessPoint(t *testing.T) {
 func TestAccS3BucketObjectDataSource_readableBody(t *testing.T) {
 	ctx := acctest.Context(t)
 	rInt := sdkacctest.RandInt()
-
-	var rObj s3.GetObjectOutput
-	var dsObj s3.GetObjectOutput
 
 	resourceName := "aws_s3_object.object"
 	dataSourceName := "data.aws_s3_object.obj"
@@ -101,12 +89,10 @@ func TestAccS3BucketObjectDataSource_readableBody(t *testing.T) {
 			{
 				Config: testAccBucketObjectDataSourceConfig_readableBody(rInt),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckObjectExists(ctx, resourceName, &rObj),
-					testAccCheckObjectExistsDataSource(ctx, dataSourceName, &dsObj),
 					resource.TestCheckResourceAttr(dataSourceName, "content_length", "3"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "content_type", resourceName, "content_type"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "etag", resourceName, "etag"),
-					resource.TestMatchResourceAttr(dataSourceName, "last_modified", regexp.MustCompile(rfc1123RegexPattern)),
+					resource.TestMatchResourceAttr(dataSourceName, "last_modified", regexache.MustCompile(rfc1123RegexPattern)),
 					resource.TestCheckResourceAttrPair(dataSourceName, "object_lock_legal_hold_status", resourceName, "object_lock_legal_hold_status"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "object_lock_mode", resourceName, "object_lock_mode"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "object_lock_retain_until_date", resourceName, "object_lock_retain_until_date"),
@@ -121,9 +107,6 @@ func TestAccS3BucketObjectDataSource_kmsEncrypted(t *testing.T) {
 	ctx := acctest.Context(t)
 	rInt := sdkacctest.RandInt()
 
-	var rObj s3.GetObjectOutput
-	var dsObj s3.GetObjectOutput
-
 	resourceName := "aws_s3_object.object"
 	dataSourceName := "data.aws_s3_object.obj"
 
@@ -136,14 +119,12 @@ func TestAccS3BucketObjectDataSource_kmsEncrypted(t *testing.T) {
 			{
 				Config: testAccBucketObjectDataSourceConfig_kmsEncrypted(rInt),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckObjectExists(ctx, resourceName, &rObj),
-					testAccCheckObjectExistsDataSource(ctx, dataSourceName, &dsObj),
 					resource.TestCheckResourceAttr(dataSourceName, "content_length", "22"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "content_type", resourceName, "content_type"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "etag", resourceName, "etag"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "server_side_encryption", resourceName, "server_side_encryption"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "sse_kms_key_id", resourceName, "kms_key_id"),
-					resource.TestMatchResourceAttr(dataSourceName, "last_modified", regexp.MustCompile(rfc1123RegexPattern)),
+					resource.TestMatchResourceAttr(dataSourceName, "last_modified", regexache.MustCompile(rfc1123RegexPattern)),
 					resource.TestCheckResourceAttrPair(dataSourceName, "object_lock_legal_hold_status", resourceName, "object_lock_legal_hold_status"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "object_lock_mode", resourceName, "object_lock_mode"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "object_lock_retain_until_date", resourceName, "object_lock_retain_until_date"),
@@ -158,9 +139,6 @@ func TestAccS3BucketObjectDataSource_bucketKeyEnabled(t *testing.T) {
 	ctx := acctest.Context(t)
 	rInt := sdkacctest.RandInt()
 
-	var rObj s3.GetObjectOutput
-	var dsObj s3.GetObjectOutput
-
 	resourceName := "aws_s3_object.object"
 	dataSourceName := "data.aws_s3_object.obj"
 
@@ -173,15 +151,13 @@ func TestAccS3BucketObjectDataSource_bucketKeyEnabled(t *testing.T) {
 			{
 				Config: testAccBucketObjectDataSourceConfig_keyEnabled(rInt),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckObjectExists(ctx, resourceName, &rObj),
-					testAccCheckObjectExistsDataSource(ctx, dataSourceName, &dsObj),
 					resource.TestCheckResourceAttr(dataSourceName, "content_length", "22"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "content_type", resourceName, "content_type"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "etag", resourceName, "etag"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "server_side_encryption", resourceName, "server_side_encryption"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "sse_kms_key_id", resourceName, "kms_key_id"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "bucket_key_enabled", resourceName, "bucket_key_enabled"),
-					resource.TestMatchResourceAttr(dataSourceName, "last_modified", regexp.MustCompile(rfc1123RegexPattern)),
+					resource.TestMatchResourceAttr(dataSourceName, "last_modified", regexache.MustCompile(rfc1123RegexPattern)),
 					resource.TestCheckResourceAttrPair(dataSourceName, "object_lock_legal_hold_status", resourceName, "object_lock_legal_hold_status"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "object_lock_mode", resourceName, "object_lock_mode"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "object_lock_retain_until_date", resourceName, "object_lock_retain_until_date"),
@@ -196,9 +172,6 @@ func TestAccS3BucketObjectDataSource_allParams(t *testing.T) {
 	ctx := acctest.Context(t)
 	rInt := sdkacctest.RandInt()
 
-	var rObj s3.GetObjectOutput
-	var dsObj s3.GetObjectOutput
-
 	resourceName := "aws_s3_object.object"
 	dataSourceName := "data.aws_s3_object.obj"
 
@@ -211,12 +184,10 @@ func TestAccS3BucketObjectDataSource_allParams(t *testing.T) {
 			{
 				Config: testAccBucketObjectDataSourceConfig_allParams(rInt),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckObjectExists(ctx, resourceName, &rObj),
-					testAccCheckObjectExistsDataSource(ctx, dataSourceName, &dsObj),
 					resource.TestCheckResourceAttr(dataSourceName, "content_length", "25"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "content_type", resourceName, "content_type"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "etag", resourceName, "etag"),
-					resource.TestMatchResourceAttr(dataSourceName, "last_modified", regexp.MustCompile(rfc1123RegexPattern)),
+					resource.TestMatchResourceAttr(dataSourceName, "last_modified", regexache.MustCompile(rfc1123RegexPattern)),
 					resource.TestCheckResourceAttrPair(dataSourceName, "version_id", resourceName, "version_id"),
 					resource.TestCheckNoResourceAttr(dataSourceName, "body"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "bucket_key_enabled", resourceName, "bucket_key_enabled"),
@@ -248,9 +219,6 @@ func TestAccS3BucketObjectDataSource_objectLockLegalHoldOff(t *testing.T) {
 	ctx := acctest.Context(t)
 	rInt := sdkacctest.RandInt()
 
-	var rObj s3.GetObjectOutput
-	var dsObj s3.GetObjectOutput
-
 	resourceName := "aws_s3_object.object"
 	dataSourceName := "data.aws_s3_object.obj"
 
@@ -263,12 +231,10 @@ func TestAccS3BucketObjectDataSource_objectLockLegalHoldOff(t *testing.T) {
 			{
 				Config: testAccBucketObjectDataSourceConfig_lockLegalHoldOff(rInt),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckObjectExists(ctx, resourceName, &rObj),
-					testAccCheckObjectExistsDataSource(ctx, dataSourceName, &dsObj),
 					resource.TestCheckResourceAttr(dataSourceName, "content_length", "11"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "content_type", resourceName, "content_type"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "etag", resourceName, "etag"),
-					resource.TestMatchResourceAttr(dataSourceName, "last_modified", regexp.MustCompile(rfc1123RegexPattern)),
+					resource.TestMatchResourceAttr(dataSourceName, "last_modified", regexache.MustCompile(rfc1123RegexPattern)),
 					resource.TestCheckResourceAttrPair(dataSourceName, "object_lock_legal_hold_status", resourceName, "object_lock_legal_hold_status"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "object_lock_mode", resourceName, "object_lock_mode"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "object_lock_retain_until_date", resourceName, "object_lock_retain_until_date"),
@@ -284,9 +250,6 @@ func TestAccS3BucketObjectDataSource_objectLockLegalHoldOn(t *testing.T) {
 	rInt := sdkacctest.RandInt()
 	retainUntilDate := time.Now().UTC().AddDate(0, 0, 10).Format(time.RFC3339)
 
-	var rObj s3.GetObjectOutput
-	var dsObj s3.GetObjectOutput
-
 	resourceName := "aws_s3_object.object"
 	dataSourceName := "data.aws_s3_object.obj"
 
@@ -299,12 +262,10 @@ func TestAccS3BucketObjectDataSource_objectLockLegalHoldOn(t *testing.T) {
 			{
 				Config: testAccBucketObjectDataSourceConfig_lockLegalHoldOn(rInt, retainUntilDate),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckObjectExists(ctx, resourceName, &rObj),
-					testAccCheckObjectExistsDataSource(ctx, dataSourceName, &dsObj),
 					resource.TestCheckResourceAttr(dataSourceName, "content_length", "11"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "content_type", resourceName, "content_type"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "etag", resourceName, "etag"),
-					resource.TestMatchResourceAttr(dataSourceName, "last_modified", regexp.MustCompile(rfc1123RegexPattern)),
+					resource.TestMatchResourceAttr(dataSourceName, "last_modified", regexache.MustCompile(rfc1123RegexPattern)),
 					resource.TestCheckResourceAttrPair(dataSourceName, "object_lock_legal_hold_status", resourceName, "object_lock_legal_hold_status"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "object_lock_mode", resourceName, "object_lock_mode"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "object_lock_retain_until_date", resourceName, "object_lock_retain_until_date"),
@@ -317,8 +278,6 @@ func TestAccS3BucketObjectDataSource_objectLockLegalHoldOn(t *testing.T) {
 
 func TestAccS3BucketObjectDataSource_leadingSlash(t *testing.T) {
 	ctx := acctest.Context(t)
-	var rObj s3.GetObjectOutput
-	var dsObj1, dsObj2, dsObj3 s3.GetObjectOutput
 
 	resourceName := "aws_s3_object.object"
 	dataSourceName1 := "data.aws_s3_object.obj1"
@@ -336,32 +295,26 @@ func TestAccS3BucketObjectDataSource_leadingSlash(t *testing.T) {
 		Steps: []resource.TestStep{
 			{ // nosemgrep:ci.test-config-funcs-correct-form
 				Config: resourceOnlyConf,
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckObjectExists(ctx, resourceName, &rObj),
-				),
 			},
 			{ // nosemgrep:ci.test-config-funcs-correct-form
 				Config: conf,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckObjectExistsDataSource(ctx, dataSourceName1, &dsObj1),
 					resource.TestCheckResourceAttr(dataSourceName1, "content_length", "3"),
 					resource.TestCheckResourceAttrPair(dataSourceName1, "content_type", resourceName, "content_type"),
 					resource.TestCheckResourceAttrPair(dataSourceName1, "etag", resourceName, "etag"),
-					resource.TestMatchResourceAttr(dataSourceName1, "last_modified", regexp.MustCompile(rfc1123RegexPattern)),
+					resource.TestMatchResourceAttr(dataSourceName1, "last_modified", regexache.MustCompile(rfc1123RegexPattern)),
 					resource.TestCheckResourceAttr(dataSourceName1, "body", "yes"),
 
-					testAccCheckObjectExistsDataSource(ctx, dataSourceName2, &dsObj2),
 					resource.TestCheckResourceAttr(dataSourceName2, "content_length", "3"),
 					resource.TestCheckResourceAttrPair(dataSourceName2, "content_type", resourceName, "content_type"),
 					resource.TestCheckResourceAttrPair(dataSourceName2, "etag", resourceName, "etag"),
-					resource.TestMatchResourceAttr(dataSourceName2, "last_modified", regexp.MustCompile(rfc1123RegexPattern)),
+					resource.TestMatchResourceAttr(dataSourceName2, "last_modified", regexache.MustCompile(rfc1123RegexPattern)),
 					resource.TestCheckResourceAttr(dataSourceName2, "body", "yes"),
 
-					testAccCheckObjectExistsDataSource(ctx, dataSourceName3, &dsObj3),
 					resource.TestCheckResourceAttr(dataSourceName3, "content_length", "3"),
 					resource.TestCheckResourceAttrPair(dataSourceName3, "content_type", resourceName, "content_type"),
 					resource.TestCheckResourceAttrPair(dataSourceName3, "etag", resourceName, "etag"),
-					resource.TestMatchResourceAttr(dataSourceName3, "last_modified", regexp.MustCompile(rfc1123RegexPattern)),
+					resource.TestMatchResourceAttr(dataSourceName3, "last_modified", regexache.MustCompile(rfc1123RegexPattern)),
 					resource.TestCheckResourceAttr(dataSourceName3, "body", "yes"),
 				),
 			},
@@ -371,8 +324,6 @@ func TestAccS3BucketObjectDataSource_leadingSlash(t *testing.T) {
 
 func TestAccS3BucketObjectDataSource_multipleSlashes(t *testing.T) {
 	ctx := acctest.Context(t)
-	var rObj1, rObj2 s3.GetObjectOutput
-	var dsObj1, dsObj2, dsObj3 s3.GetObjectOutput
 
 	resourceName1 := "aws_s3_object.object1"
 	resourceName2 := "aws_s3_object.object2"
@@ -391,26 +342,18 @@ func TestAccS3BucketObjectDataSource_multipleSlashes(t *testing.T) {
 		Steps: []resource.TestStep{
 			{ // nosemgrep:ci.test-config-funcs-correct-form
 				Config: resourceOnlyConf,
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckObjectExists(ctx, resourceName1, &rObj1),
-					testAccCheckObjectExists(ctx, resourceName2, &rObj2),
-				),
 			},
 			{ // nosemgrep:ci.test-config-funcs-correct-form
 				Config: conf,
 				Check: resource.ComposeTestCheckFunc(
-
-					testAccCheckObjectExistsDataSource(ctx, dataSourceName1, &dsObj1),
 					resource.TestCheckResourceAttr(dataSourceName1, "content_length", "3"),
 					resource.TestCheckResourceAttrPair(dataSourceName1, "content_type", resourceName1, "content_type"),
 					resource.TestCheckResourceAttr(dataSourceName1, "body", "yes"),
 
-					testAccCheckObjectExistsDataSource(ctx, dataSourceName2, &dsObj2),
 					resource.TestCheckResourceAttr(dataSourceName2, "content_length", "3"),
 					resource.TestCheckResourceAttrPair(dataSourceName2, "content_type", resourceName1, "content_type"),
 					resource.TestCheckResourceAttr(dataSourceName2, "body", "yes"),
 
-					testAccCheckObjectExistsDataSource(ctx, dataSourceName3, &dsObj3),
 					resource.TestCheckResourceAttr(dataSourceName3, "content_length", "2"),
 					resource.TestCheckResourceAttrPair(dataSourceName3, "content_type", resourceName2, "content_type"),
 					resource.TestCheckResourceAttr(dataSourceName3, "body", "no"),
@@ -422,8 +365,6 @@ func TestAccS3BucketObjectDataSource_multipleSlashes(t *testing.T) {
 
 func TestAccS3BucketObjectDataSource_singleSlashAsKey(t *testing.T) {
 	ctx := acctest.Context(t)
-	var dsObj s3.GetObjectOutput
-	dataSourceName := "data.aws_s3_object.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -434,9 +375,6 @@ func TestAccS3BucketObjectDataSource_singleSlashAsKey(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBucketObjectDataSourceConfig_singleSlashAsKey(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckObjectExistsDataSource(ctx, dataSourceName, &dsObj),
-				),
 			},
 		},
 	})

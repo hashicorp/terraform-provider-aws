@@ -25,7 +25,7 @@ resource "aws_appstream_fleet" "test_fleet" {
   display_name                       = "test-fleet"
   enable_default_internet_access     = false
   fleet_type                         = "ON_DEMAND"
-  image_name                         = "Amazon-AppStream2-Sample-Image-02-04-2019"
+  image_name                         = "Amazon-AppStream2-Sample-Image-03-11-2023"
   instance_type                      = "stream.standard.large"
   max_user_duration_in_seconds       = 600
 

@@ -60,38 +60,3 @@ func lifecycleConfigurationRulesStatus(ctx context.Context, conn *s3.S3, bucket,
 		return output, LifecycleConfigurationRulesStatusReady, nil
 	}
 }
-
-func bucketVersioningStatus(ctx context.Context, conn *s3.S3, bucket, expectedBucketOwner string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-		input := &s3.GetBucketVersioningInput{
-			Bucket: aws.String(bucket),
-		}
-
-		if expectedBucketOwner != "" {
-			input.ExpectedBucketOwner = aws.String(expectedBucketOwner)
-		}
-
-		output, err := conn.GetBucketVersioningWithContext(ctx, input)
-
-		if tfawserr.ErrCodeEquals(err, s3.ErrCodeNoSuchBucket) {
-			return nil, "", nil
-		}
-
-		if err != nil {
-			return nil, "", err
-		}
-
-		if output == nil {
-			return nil, "", &retry.NotFoundError{
-				Message:     "Empty result",
-				LastRequest: input,
-			}
-		}
-
-		if output.Status == nil {
-			return output, BucketVersioningStatusDisabled, nil
-		}
-
-		return output, aws.StringValue(output.Status), nil
-	}
-}

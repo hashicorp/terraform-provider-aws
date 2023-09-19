@@ -6,10 +6,10 @@ package ec2
 import (
 	"context"
 	"fmt"
-	"regexp"
 	"sort"
 	"time"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -36,7 +36,7 @@ func DataSourceAMIIDs() *schema.Resource {
 				Optional: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"filter": DataSourceFiltersSchema(),
+			"filter": CustomFiltersSchema(),
 			"ids": {
 				Type:     schema.TypeList,
 				Computed: true,
@@ -84,7 +84,7 @@ func dataSourceAMIIDsRead(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 
 	if v, ok := d.GetOk("filter"); ok {
-		input.Filters = BuildFiltersDataSource(v.(*schema.Set))
+		input.Filters = BuildCustomFilterList(v.(*schema.Set))
 	}
 
 	images, err := FindImages(ctx, conn, input)
@@ -97,7 +97,7 @@ func dataSourceAMIIDsRead(ctx context.Context, d *schema.ResourceData, meta inte
 	imageIDs := make([]string, 0)
 
 	if v, ok := d.GetOk("name_regex"); ok {
-		r := regexp.MustCompile(v.(string))
+		r := regexache.MustCompile(v.(string))
 		for _, image := range images {
 			name := aws.StringValue(image.Name)
 
