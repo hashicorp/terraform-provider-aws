@@ -16,7 +16,7 @@ Retrieve information on FSx ONTAP File System.
 
 ```terraform
 data "aws_fsx_ontap_file_system" "example" {
-  id = "fs-12345678
+  id = "fs-12345678"
 }
 ```
 
