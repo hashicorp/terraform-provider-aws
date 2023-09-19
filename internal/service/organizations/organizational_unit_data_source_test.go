@@ -5,9 +5,9 @@ package organizations_test
 
 import (
 	"fmt"
-	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/service/organizations"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -30,7 +30,7 @@ func TestAccOrganizationalUnitDataSource_basic(t *testing.T) {
 			{
 				Config: testAccOrganizationalUnitDataSource(rName),
 				Check: resource.ComposeTestCheckFunc(
-					acctest.MatchResourceAttrGlobalARN(dataSourceName, "arn", "organizations", regexp.MustCompile(".*/.+$")),
+					acctest.MatchResourceAttrGlobalARN(dataSourceName, "arn", "organizations", regexache.MustCompile(".*/.+$")),
 				),
 			},
 		},
