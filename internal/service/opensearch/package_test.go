@@ -89,7 +89,7 @@ func testAccCheckPackageExists(ctx context.Context, n string) resource.TestCheck
 func testAccCheckPackageDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		for _, rs := range s.RootModule().Resources {
-			if rs.Type != "aws_opensearch_domain" {
+			if rs.Type != "aws_opensearch_package" {
 				continue
 			}
 
