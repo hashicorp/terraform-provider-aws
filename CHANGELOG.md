@@ -2,6 +2,7 @@
 
 FEATURES:
 
+* **New Data Source:** `aws_fsx_ontap_file_system` ([#32503](https://github.com/hashicorp/terraform-provider-aws/issues/32503))
 * **New Resource:** `aws_opensearch_package` ([#33227](https://github.com/hashicorp/terraform-provider-aws/issues/33227))
 * **New Resource:** `aws_opensearch_package_association` ([#33227](https://github.com/hashicorp/terraform-provider-aws/issues/33227))
 
