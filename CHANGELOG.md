@@ -1,9 +1,14 @@
 ## 5.18.0 (Unreleased)
 
+ENHANCEMENTS:
+
+* resource/aws_fsx_ontap_storage_virtual_machine: Remove [ForceNew](https://developer.hashicorp.com/terraform/plugin/sdkv2/schemas/schema-behaviors#forcenew) from `active_directory_configuration.self_managed_active_directory_configuration.domain_name`, `active_directory_configuration.self_managed_active_directory_configuration.file_system_administrators_group` and `active_directory_configuration.self_managed_active_directory_configuration.organizational_unit_distinguished_name` allowing an SVM to join AD after creation ([#33466](https://github.com/hashicorp/terraform-provider-aws/issues/33466))
+
 BUG FIXES:
 
 * data-source/aws_sesv2_email_identity: Mark `dkim_signing_attributes.domain_signing_private_key` as sensitive ([#33477](https://github.com/hashicorp/terraform-provider-aws/issues/33477))
 * resource/aws_db_option_group: Avoid erroneous differences being reported when an `option` `port` and/or `version` is not set ([#33511](https://github.com/hashicorp/terraform-provider-aws/issues/33511))
+* resource/aws_fsx_ontap_storage_virtual_machine: Avoid recreating resource when `active_directory_configuration.self_managed_active_directory_configuration.file_system_administrators_group` is configured ([#33466](https://github.com/hashicorp/terraform-provider-aws/issues/33466))
 * resource/aws_sesv2_email_identity: Mark `dkim_signing_attributes.domain_signing_private_key` as sensitive ([#33477](https://github.com/hashicorp/terraform-provider-aws/issues/33477))
 
 ## 5.17.0 (September 14, 2023)
