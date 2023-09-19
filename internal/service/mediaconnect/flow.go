@@ -96,7 +96,6 @@ func ResourceFlow() *schema.Resource {
 							"entitlement_status": {
 								Type:             schema.TypeString,
 								Optional:         true,
-								Computed:         true,
 								Default:          types.EntitlementStatusEnabled,
 								ValidateDiagFunc: enum.Validate[types.EntitlementStatus](),
 							},
@@ -444,7 +443,6 @@ func ResourceFlow() *schema.Resource {
 										"primary_source": {
 											Type:     schema.TypeString,
 											Required: true,
-											Computed: true,
 										},
 									},
 								},
