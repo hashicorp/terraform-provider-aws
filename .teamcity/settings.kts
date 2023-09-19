@@ -55,6 +55,7 @@ project {
     }
 
     buildType(Sanity)
+    buildType(Performance)
 
     params {
         if (acctestParallelism != "") {
@@ -617,6 +618,67 @@ object Sanity : BuildType({
                 buildFailed = true
                 buildFinishedSuccessfully = false
                 firstBuildErrorOccurs = true
+            }
+        }
+    }
+})
+
+object Performance : BuildType({
+    name = "Performance"
+
+    vcs {
+        root(AbsoluteId(DslContext.getParameter("vcs_root_id")))
+
+        cleanCheckout = true
+    }
+
+    steps {
+        script {
+            name = "Configure Go"
+            scriptContent = File("./scripts/configure_goenv.sh").readText()
+        }
+        script {
+            name = "VPC Main"
+            scriptContent = File("./scripts/performance.sh").readText()
+        }
+        script {
+            name = "SSM Main"
+            scriptContent = File("./scripts/performance.sh").readText()
+        }
+        script {
+            name = "VPC Latest Version"
+            scriptContent = File("./scripts/performance.sh").readText()
+        }
+        script {
+            name = "SSM Latest Version"
+            scriptContent = File("./scripts/performance.sh").readText()
+        }
+        script {
+            name = "Analysis"
+            scriptContent = File("./scripts/performance.sh").readText()
+        }
+    }
+
+    val triggerTimeRaw = DslContext.getParameter("performance_trigger_time", "")
+    if (triggerTimeRaw != "") {
+        val formatter = DateTimeFormatter.ofPattern("HH':'mm' 'VV")
+        val triggerTime = formatter.parse(triggerTimeRaw)
+        val enableTestTriggersGlobally = DslContext.getParameter("enable_test_triggers_globally", "true").equals("true", ignoreCase = true)
+        if (enableTestTriggersGlobally) {
+            triggers {
+                schedule {
+                    schedulingPolicy = daily {
+                        val triggerHM = LocalTime.from(triggerTime)
+                        hour = triggerHM.getHour()
+                        minute = triggerHM.getMinute()
+                        timezone = ZoneId.from(triggerTime).toString()
+                    }
+                    branchFilter = "+:refs/heads/main"
+                    triggerBuild = always()
+                    withPendingChangesOnly = false
+                    enableQueueOptimization = false
+                    enforceCleanCheckoutForDependencies = true
+                }
             }
         }
     }
