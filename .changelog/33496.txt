@@ -1,4 +1,0 @@
-```release-note:enhancement
-resource/aws_mq_broker: Update docs to include RabbitMQ as configurable
-resource/aws_mq_configuration: Update docs to include RabbitMQ as configurable
-```
