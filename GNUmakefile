@@ -4,11 +4,11 @@ SWEEP_DIR           ?= ./internal/sweep
 PKG_NAME            ?= internal
 SVC_DIR             ?= ./internal/service
 TEST_COUNT          ?= 1
-ACCTEST_TIMEOUT     ?= 180m
+ACCTEST_TIMEOUT     ?= 360m
 ACCTEST_PARALLELISM ?= 20
 P                   ?= 20
 GO_VER              ?= go
-SWEEP_TIMEOUT       ?= 60m
+SWEEP_TIMEOUT       ?= 360m
 
 ifneq ($(origin PKG), undefined)
 	PKG_NAME = internal/service/$(PKG)

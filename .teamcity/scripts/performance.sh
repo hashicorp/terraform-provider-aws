@@ -57,12 +57,13 @@ function analysis {
     if ! command -v pprof &> /dev/null ; then
         go install github.com/google/pprof@latest
         goenv rehash
-        rehash
     fi
     if ! command -v pprof &> /dev/null ; then
         go install github.com/google/pprof@latest
         goenv rehash
-        rehash
+        if command -v rehash &> /dev/null ; then
+            rehash
+        fi
     fi
     if ! command -v pprof &> /dev/null ; then
         echo "pprof not found after 3 attempts to install"
