@@ -906,7 +906,7 @@ func resourceBucketRead(ctx context.Context, d *schema.ResourceData, meta interf
 	if err != nil && !tfawserr.ErrCodeEquals(err,
 		errCodeMethodNotAllowed,
 		errCodeNotImplemented,
-		ErrCodeNoSuchWebsiteConfiguration,
+		errCodeNoSuchWebsiteConfiguration,
 		errCodeXNotImplemented,
 	) {
 		return sdkdiag.AppendErrorf(diags, "getting S3 Bucket website configuration: %s", err)

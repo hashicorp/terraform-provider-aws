@@ -22,7 +22,7 @@ const (
 	ErrCodeNoSuchPublicAccessBlockConfiguration = "NoSuchPublicAccessBlockConfiguration"
 	errCodeNoSuchTagSet                         = "NoSuchTagSet"
 	errCodeNoSuchTagSetError                    = "NoSuchTagSetError"
-	ErrCodeNoSuchWebsiteConfiguration           = "NoSuchWebsiteConfiguration"
+	errCodeNoSuchWebsiteConfiguration           = "NoSuchWebsiteConfiguration"
 	errCodeNotImplemented                       = "NotImplemented"
 	// errCodeObjectLockConfigurationNotFound should be used with tfawserr.ErrCodeContains, not tfawserr.ErrCodeEquals.
 	// Reference: https://github.com/hashicorp/terraform-provider-aws/pull/26317
