@@ -7,6 +7,7 @@ import (
 	"context"
 
 	aws_sdkv2 "github.com/aws/aws-sdk-go-v2/aws"
+	retry_sdkv2 "github.com/aws/aws-sdk-go-v2/aws/retry"
 	s3_sdkv2 "github.com/aws/aws-sdk-go-v2/service/s3"
 	aws_sdkv1 "github.com/aws/aws-sdk-go/aws"
 	endpoints_sdkv1 "github.com/aws/aws-sdk-go/aws/endpoints"
@@ -58,8 +59,11 @@ func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (
 		}
 		o.UsePathStyle = config["s3_use_path_style"].(bool)
 
-		o.Retryer = conns.AddErrorPredicateRetrier(cfg.Retryer().(aws_sdkv2.RetryerV2), func(err error) bool {
-			return tfawserr_sdkv2.ErrMessageContains(err, errCodeOperationAborted, "A conflicting conditional operation is currently in progress against this resource. Please try again.")
-		})
+		o.Retryer = conns.AddIsErrorRetryables(cfg.Retryer().(aws_sdkv2.RetryerV2), retry_sdkv2.IsErrorRetryableFunc(func(err error) aws_sdkv2.Ternary {
+			if tfawserr_sdkv2.ErrMessageContains(err, errCodeOperationAborted, "A conflicting conditional operation is currently in progress against this resource. Please try again.") {
+				return aws_sdkv2.TrueTernary
+			}
+			return aws_sdkv2.UnknownTernary // Delegate to configured Retryer.
+		}))
 	}), nil
 }
