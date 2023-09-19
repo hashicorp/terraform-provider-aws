@@ -7,15 +7,19 @@ import (
 	"errors"
 	"testing"
 
+	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/aws/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 )
 
-func TestAddErrorPredicateRetrier(t *testing.T) {
+func TestAddIsErrorRetryables(t *testing.T) {
 	t.Parallel()
 
-	f := func(err error) bool {
-		return errs.Contains(err, "testing")
+	f := func(err error) aws.Ternary {
+		if errs.Contains(err, "testing") {
+			return aws.TrueTernary
+		}
+		return aws.UnknownTernary
 	}
 	testCases := []struct {
 		name     string
@@ -41,7 +45,7 @@ func TestAddErrorPredicateRetrier(t *testing.T) {
 		t.Run(testCase.name, func(t *testing.T) {
 			t.Parallel()
 
-			got := AddErrorPredicateRetrier(retry.NewStandard(), f).IsErrorRetryable(testCase.err)
+			got := AddIsErrorRetryables(retry.NewStandard(), retry.IsErrorRetryableFunc(f)).IsErrorRetryable(testCase.err)
 			if got, want := got, testCase.expected; got != want {
 				t.Errorf("IsErrorRetryable(%q) = %v, want %v", testCase.err, got, want)
 			}

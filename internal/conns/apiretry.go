@@ -4,27 +4,26 @@
 package conns
 
 import (
-	aws_sdkv2 "github.com/aws/aws-sdk-go-v2/aws"
-	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/aws/retry"
 )
 
-// AddErrorPredicateRetrier returns a Retryer which runs the specified predicate on any error.
-// If the predicate returns `false` then the specified retrier is called.
-func AddErrorPredicateRetrier(r aws_sdkv2.RetryerV2, predicate tfslices.Predicate[error]) aws_sdkv2.RetryerV2 {
-	return &withErrorPredicate{
-		RetryerV2: r,
-		predicate: predicate,
+// AddIsErrorRetryables returns a Retryer which runs the specified retryables on any error.
+func AddIsErrorRetryables(r aws.RetryerV2, retryables ...retry.IsErrorRetryable) aws.RetryerV2 {
+	return &withIsErrorRetryables{
+		RetryerV2:  r,
+		retryables: retryables,
 	}
 }
 
-type withErrorPredicate struct {
-	aws_sdkv2.RetryerV2
-	predicate tfslices.Predicate[error]
+type withIsErrorRetryables struct {
+	aws.RetryerV2
+	retryables retry.IsErrorRetryables
 }
 
-func (r *withErrorPredicate) IsErrorRetryable(err error) bool {
-	if r.predicate(err) {
-		return true
+func (r *withIsErrorRetryables) IsErrorRetryable(err error) bool {
+	if v := r.retryables.IsErrorRetryable(err); v != aws.UnknownTernary {
+		return v.Bool()
 	}
 	return r.RetryerV2.IsErrorRetryable(err)
 }
