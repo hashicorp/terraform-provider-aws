@@ -181,9 +181,6 @@ func ResourceBucketWebsiteConfiguration() *schema.Resource {
 func resourceBucketWebsiteConfigurationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).S3Client(ctx)
 
-	bucket := d.Get("bucket").(string)
-	expectedBucketOwner := d.Get("expected_bucket_owner").(string)
-
 	websiteConfig := &types.WebsiteConfiguration{}
 
 	if v, ok := d.GetOk("error_document"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
@@ -210,6 +207,8 @@ func resourceBucketWebsiteConfigurationCreate(ctx context.Context, d *schema.Res
 		websiteConfig.RoutingRules = unmarshalledRules
 	}
 
+	bucket := d.Get("bucket").(string)
+	expectedBucketOwner := d.Get("expected_bucket_owner").(string)
 	input := &s3.PutBucketWebsiteInput{
 		Bucket:               aws.String(bucket),
 		WebsiteConfiguration: websiteConfig,
