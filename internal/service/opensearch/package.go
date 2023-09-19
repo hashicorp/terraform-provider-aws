@@ -34,6 +34,10 @@ func ResourcePackage() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"package_description": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
 			"package_id": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -42,16 +46,6 @@ func ResourcePackage() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
-			},
-			"package_description": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"package_type": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringInSlice(opensearchservice.PackageType_Values(), false),
 			},
 			"package_source": {
 				Type:     schema.TypeList,
@@ -72,6 +66,12 @@ func ResourcePackage() *schema.Resource {
 						},
 					},
 				},
+			},
+			"package_type": {
+				Type:         schema.TypeString,
+				Required:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.StringInSlice(opensearchservice.PackageType_Values(), false),
 			},
 		},
 	}
