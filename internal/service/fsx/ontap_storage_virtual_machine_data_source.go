@@ -13,11 +13,11 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-// @SDKDataSource("aws_fsx_ontap_storage_virtual_machine", name="Ontap Storage Virtual Machine")
+// @SDKDataSource("aws_fsx_ontap_storage_virtual_machine", name="ONTAP Storage Virtual Machine")
 func DataSourceOntapStorageVirtualMachine() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceOntapStorageVirtualMachineRead,
@@ -152,7 +152,7 @@ func DataSourceOntapStorageVirtualMachine() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"filter": DataSoureStorageVirtualMachineFiltersSchema(),
+			"filter": DataSourceStorageVirtualMachineFiltersSchema(),
 			"id": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -191,10 +191,6 @@ func DataSourceOntapStorageVirtualMachine() *schema.Resource {
 	}
 }
 
-const (
-	DSNameOntapStorageVirtualMachine = "Ontap Storage Virtual Machine Data Source"
-)
-
 func dataSourceOntapStorageVirtualMachineRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).FSxConn(ctx)
@@ -215,10 +211,10 @@ func dataSourceOntapStorageVirtualMachineRead(ctx context.Context, d *schema.Res
 		input.Filters = nil
 	}
 
-	svm, err := FindStorageVirtualMachine(ctx, conn, input)
+	svm, err := findStorageVirtualMachine(ctx, conn, input, tfslices.PredicateTrue[*fsx.StorageVirtualMachine]())
 
 	if err != nil {
-		return sdkdiag.AppendFromErr(diags, tfresource.SingularDataSourceFindError("FSx StorageVirtualMachine", err))
+		return sdkdiag.AppendErrorf(diags, "reading FSx ONTAP Storage Virtual Machine: %s", err)
 	}
 
 	d.SetId(aws.StringValue(svm.StorageVirtualMachineId))
