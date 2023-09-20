@@ -23,11 +23,11 @@ data "aws_fsx_ontap_storage_virtual_machine" "example" {
 ### Filter Example
 
 ```
-data "aws_fsx_ontap_storage_virtual_machine" "test" {
+data "aws_fsx_ontap_storage_virtual_machine" "example" {
   filter {
-		name = "file-system-id"
-		values = ["fs-12345678"]
-	}
+    name   = "file-system-id"
+    values = ["fs-12345678"]
+  }
 }
 ```
 
