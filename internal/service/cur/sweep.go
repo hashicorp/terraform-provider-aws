@@ -14,6 +14,7 @@ import (
 	cur "github.com/aws/aws-sdk-go/service/costandusagereportservice"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func init() {
@@ -25,6 +26,10 @@ func init() {
 
 func sweepReportDefinitions(region string) error {
 	ctx := sweep.Context(region)
+	if region != names.USEast1RegionID {
+		log.Printf("[WARN] Skipping Cost And Usage Report Definition sweep for region: %s", region)
+		return nil
+	}
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
@@ -50,7 +55,7 @@ func sweepReportDefinitions(region string) error {
 	})
 
 	if sweep.SkipSweepError(err) {
-		log.Printf("[WARN] Skipping EC2 Cost And Usage Report Definition sweep for %s: %s", region, err)
+		log.Printf("[WARN] Skipping Cost And Usage Report Definition sweep for %s: %s", region, err)
 		return nil
 	}
 	if err != nil {

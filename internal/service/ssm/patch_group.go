@@ -113,20 +113,20 @@ func resourcePatchGroupDelete(ctx context.Context, d *schema.ResourceData, meta 
 
 	patchGroup, baselineId, err := ParsePatchGroupID(d.Id())
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "parsing SSM Patch Group ID (%s): %s", d.Id(), err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	params := &ssm.DeregisterPatchBaselineForPatchGroupInput{
+	log.Printf("[WARN] Deleting SSM Patch Group: %s", d.Id())
+	_, err = conn.DeregisterPatchBaselineForPatchGroupWithContext(ctx, &ssm.DeregisterPatchBaselineForPatchGroupInput{
 		BaselineId: aws.String(baselineId),
 		PatchGroup: aws.String(patchGroup),
+	})
+
+	if tfawserr.ErrCodeEquals(err, ssm.ErrCodeDoesNotExistException) {
+		return diags
 	}
 
-	_, err = conn.DeregisterPatchBaselineForPatchGroupWithContext(ctx, params)
-
 	if err != nil {
-		if tfawserr.ErrCodeEquals(err, ssm.ErrCodeDoesNotExistException) {
-			return diags
-		}
 		return sdkdiag.AppendErrorf(diags, "deregistering SSM Patch Baseline (%s) for Patch Group (%s): %s", baselineId, patchGroup, err)
 	}
 
