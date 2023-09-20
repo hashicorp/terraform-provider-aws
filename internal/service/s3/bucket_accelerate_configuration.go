@@ -165,6 +165,14 @@ func resourceBucketAccelerateConfigurationDelete(ctx context.Context, d *schema.
 		return diag.Errorf("deleting S3 Bucket Accelerate Configuration (%s): %s", d.Id(), err)
 	}
 
+	_, err = tfresource.RetryUntilNotFound(ctx, s3BucketPropagationTimeout, func() (interface{}, error) {
+		return findBucketAccelerateConfiguration(ctx, conn, bucket, expectedBucketOwner)
+	})
+
+	if err != nil {
+		return diag.Errorf("waiting for S3 Bucket Accelerate Configuration (%s) delete: %s", d.Id(), err)
+	}
+
 	return nil
 }
 
