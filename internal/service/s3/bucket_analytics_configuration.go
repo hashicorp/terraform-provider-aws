@@ -164,6 +164,14 @@ func resourceBucketAnalyticsConfigurationPut(ctx context.Context, d *schema.Reso
 
 	if d.IsNewResource() {
 		d.SetId(fmt.Sprintf("%s:%s", bucket, name))
+
+		_, err = tfresource.RetryWhenNotFound(ctx, s3BucketPropagationTimeout, func() (interface{}, error) {
+			return findAnalyticsConfiguration(ctx, conn, bucket, name)
+		})
+
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "waiting for S3 Bucket Analytics Configuration (%s) create: %s", d.Id(), err)
+		}
 	}
 
 	return append(diags, resourceBucketAnalyticsConfigurationRead(ctx, d, meta)...)
