@@ -80,6 +80,14 @@ func resourceBucketAccelerateConfigurationCreate(ctx context.Context, d *schema.
 
 	d.SetId(CreateResourceID(bucket, expectedBucketOwner))
 
+	_, err = tfresource.RetryWhenNotFound(ctx, s3BucketPropagationTimeout, func() (interface{}, error) {
+		return findBucketAccelerateConfiguration(ctx, conn, bucket, expectedBucketOwner)
+	})
+
+	if err != nil {
+		return diag.Errorf("waiting for S3 Bucket Accelerate Configuration (%s) create: %s", d.Id(), err)
+	}
+
 	return resourceBucketAccelerateConfigurationRead(ctx, d, meta)
 }
 
