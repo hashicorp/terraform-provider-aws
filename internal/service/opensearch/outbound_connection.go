@@ -108,11 +108,10 @@ func resourceOutboundConnectionRead(ctx context.Context, d *schema.ResourceData,
 func resourceOutboundConnectionDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).OpenSearchConn(ctx)
 
-	req := &opensearchservice.DeleteOutboundConnectionInput{
+	log.Printf("[DEBUG] Deleting OpenSearch Outbound Connection: %s", d.Id())
+	_, err := conn.DeleteOutboundConnectionWithContext(ctx, &opensearchservice.DeleteOutboundConnectionInput{
 		ConnectionId: aws.String(d.Id()),
-	}
-
-	_, err := conn.DeleteOutboundConnectionWithContext(ctx, req)
+	})
 
 	if tfawserr.ErrCodeEquals(err, "ResourceNotFoundException") {
 		return nil
