@@ -178,7 +178,7 @@ func resourceBucketAnalyticsConfigurationRead(ctx context.Context, d *schema.Res
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	output, err := findBucketAnalyticsConfiguration(ctx, conn, bucket)
+	ac, err := findAnalyticsConfiguration(ctx, conn, bucket)
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] S3 Bucket Analytics Configuration (%s) not found, removing from state", d.Id())
@@ -191,11 +191,11 @@ func resourceBucketAnalyticsConfigurationRead(ctx context.Context, d *schema.Res
 	}
 
 	d.Set("bucket", bucket)
-	if err := d.Set("filter", flattenAnalyticsFilter(ctx, output.AnalyticsConfiguration.Filter)); err != nil {
+	if err := d.Set("filter", flattenAnalyticsFilter(ctx, ac.Filter)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting filter: %s", err)
 	}
 	d.Set("name", name)
-	if err = d.Set("storage_class_analysis", flattenStorageClassAnalysis(output.AnalyticsConfiguration.StorageClassAnalysis)); err != nil {
+	if err = d.Set("storage_class_analysis", flattenStorageClassAnalysis(ac.StorageClassAnalysis)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting storage_class_analysis: %s", err)
 	}
 
@@ -226,7 +226,7 @@ func resourceBucketAnalyticsConfigurationDelete(ctx context.Context, d *schema.R
 	}
 
 	_, err = tfresource.RetryUntilNotFound(ctx, s3BucketPropagationTimeout, func() (interface{}, error) {
-		return findBucketAnalyticsConfiguration(ctx, conn, bucket)
+		return findAnalyticsConfiguration(ctx, conn, bucket)
 	})
 
 	if err != nil {
@@ -419,7 +419,7 @@ func flattenAnalyticsBucketDestination(bucketDestination *types.AnalyticsS3Bucke
 	return []interface{}{result}
 }
 
-func findBucketAnalyticsConfiguration(ctx context.Context, conn *s3.Client, bucket string) (*s3.GetBucketAnalyticsConfigurationOutput, error) {
+func findAnalyticsConfiguration(ctx context.Context, conn *s3.Client, bucket string) (*types.AnalyticsConfiguration, error) {
 	input := &s3.GetBucketAnalyticsConfigurationInput{
 		Bucket: aws.String(bucket),
 	}
@@ -437,9 +437,9 @@ func findBucketAnalyticsConfiguration(ctx context.Context, conn *s3.Client, buck
 		return nil, err
 	}
 
-	if output == nil {
+	if output == nil || output.AnalyticsConfiguration == nil {
 		return nil, tfresource.NewEmptyResultError(input)
 	}
 
-	return output, nil
+	return output.AnalyticsConfiguration, nil
 }

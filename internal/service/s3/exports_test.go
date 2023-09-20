@@ -9,6 +9,7 @@ var (
 	EmptyBucket                       = emptyBucket
 	ExpandAnalyticsFilter             = expandAnalyticsFilter
 	ExpandStorageClassAnalysis        = expandStorageClassAnalysis
+	FindAnalyticsConfiguration        = findAnalyticsConfiguration
 	FindBucket                        = findBucket
 	FindBucketAccelerateConfiguration = findBucketAccelerateConfiguration
 	FindBucketPolicy                  = findBucketPolicy
