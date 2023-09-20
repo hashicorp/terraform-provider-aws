@@ -5,14 +5,7 @@ page_title: "AWS: aws_lexv2models_bot"
 description: |-
   Terraform resource for managing an AWS Lex V2 Models Bot.
 ---
-<!---
-TIP: A few guiding principles for writing documentation:
-1. Use simple language while avoiding jargon and figures of speech.
-2. Focus on brevity and clarity to keep a reader's attention.
-3. Use active voice and present tense whenever you can.
-4. Document your feature as it exists now; do not mention the future or past if you can help it.
-5. Use accessible and inclusive language.
---->`
+
 # Resource: aws_lexv2models_bot
 
 Terraform resource for managing an AWS Lex V2 Models Bot.
@@ -23,6 +16,12 @@ Terraform resource for managing an AWS Lex V2 Models Bot.
 
 ```terraform
 resource "aws_lexv2models_bot" "example" {
+  name = "example"
+  data_privacy {
+    child_directed = “boolean”,
+  }
+  idle_session_ttl_in_seconds = 10
+  role_arn = “bot_example_arn”
 }
 ```
 
@@ -30,19 +29,35 @@ resource "aws_lexv2models_bot" "example" {
 
 The following arguments are required:
 
-* `example_arg` - (Required) Concise argument description. Do not begin the description with "An", "The", "Defines", "Indicates", or "Specifies," as these are verbose. In other words, "Indicates the amount of storage," can be rewritten as "Amount of storage," without losing any information.
+* `name` - The name of the bot. The bot name must be unique in the account that creates the bot. Type String. Length Constraints: Minimum length of 1. Maximum length of 100.
+* `data_privacy` - Provides information on additional privacy protections Amazon Lex should use with the bot's data. See [`data_privacy`](#data-privacy)
+* `idle_session_ttl_in_seconds` - The time, in seconds, that Amazon Lex should keep information about a user's conversation with the bot. You can specify between 60 (1 minute) and 86,400 (24 hours) seconds.
+* `role_arn` - The Amazon Resource Name (ARN) of an IAM role that has permission to access the bot.
 
 The following arguments are optional:
 
-* `optional_arg` - (Optional) Concise argument description. Do not begin the description with "An", "The", "Defines", "Indicates", or "Specifies," as these are verbose. In other words, "Indicates the amount of storage," can be rewritten as "Amount of storage," without losing any information.
+* `members` - List of bot members in a network to be created. See [`bot_members`](#bot-members).
+* `bot_tags` - A list of tags to add to the bot. You can only add tags when you create a bot.
+* `bot_type` - The type of a bot to create.
+* `description` - A description of the bot. It appears in lists to help you identify a particular bot.
+* `test_bot_alias_tags` - A list of tags to add to the test alias for a bot. You can only add tags when you create a bot.
 
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `arn` - ARN of the Bot. Do not begin the description with "An", "The", "Defines", "Indicates", or "Specifies," as these are verbose. In other words, "Indicates the amount of storage," can be rewritten as "Amount of storage," without losing any information.
-* `example_attribute` - Concise description. Do not begin the description with "An", "The", "Defines", "Indicates", or "Specifies," as these are verbose. In other words, "Indicates the amount of storage," can be rewritten as "Amount of storage," without losing any information.
+* `id` - A unique identifier for a particular bot.
 
+
+### Data Privacy
+* `child_directed` (Required) -  For each Amazon Lex bot created with the Amazon Lex Model Building Service, you must specify whether your use of Amazon Lex is related to a website, program, or other application that is directed or targeted, in whole or in part, to children under age 13 and subject to the Children's Online Privacy Protection Act (COPPA) by specifying true or false in the childDirected field.
+
+### Bot Members
+* `alias_id` (Required) - The alias ID of a bot that is a member of this network of bots.
+* `alias_name` (Required) - The alias ID of a bot that is a member of this network of bots.
+* `id` (Required) - The unique ID of a bot that is a member of this network of bots.
+* `name` (Required) - The unique name of a bot that is a member of this network of bots.
+* `version` (Required) - The version of a bot that is a member of this network of bots.
 ## Timeouts
 
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
