@@ -29,7 +29,7 @@ func TestAccFSxONTAPStorageVirtualMachineDataSource_Id(t *testing.T) {
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccFSxONTAPStorageVirtualMachineDataSourceConfig_Id(rName),
+				Config: testAccONTAPStorageVirtualMachineDataSourceConfig_Id(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, "arn", resourceName, "arn"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "active_directory_configuration.#", resourceName, "active_directory_configuration.#"),
@@ -62,7 +62,7 @@ func TestAccFSxONTAPStorageVirtualMachineDataSource_Filter(t *testing.T) {
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccFSxONTAPStorageVirtualMachineDataSourceConfig_Filter(rName),
+				Config: testAccONTAPStorageVirtualMachineDataSourceConfig_Filter(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, "arn", resourceName, "arn"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "active_directory_configuration.#", resourceName, "active_directory_configuration.#"),
@@ -78,7 +78,7 @@ func TestAccFSxONTAPStorageVirtualMachineDataSource_Filter(t *testing.T) {
 	})
 }
 
-func testAccFSxONTAPStorageVirtualMachineDataSourceConfig_Id(rName string) string {
+func testAccONTAPStorageVirtualMachineDataSourceConfig_Id(rName string) string {
 	return acctest.ConfigCompose(testAccONTAPStorageVirtualMachineConfig_basic(rName), `
 data "aws_fsx_ontap_storage_virtual_machine" "test" {
   id = aws_fsx_ontap_storage_virtual_machine.test.id
@@ -86,7 +86,7 @@ data "aws_fsx_ontap_storage_virtual_machine" "test" {
 `)
 }
 
-func testAccFSxONTAPStorageVirtualMachineDataSourceConfig_Filter(rName string) string {
+func testAccONTAPStorageVirtualMachineDataSourceConfig_Filter(rName string) string {
 	return acctest.ConfigCompose(testAccONTAPStorageVirtualMachineConfig_basic(rName), `
 data "aws_fsx_ontap_storage_virtual_machine" "test" {
   filter {
