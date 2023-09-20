@@ -6,7 +6,7 @@ description: |-
   This resource can be useful for getting back a set of FSx ONTAP Storage Virtual Machine (SVM) IDs.
 ---
 
-# Data Source: aws_fsx_ontap_storage_virtual_machine
+# Data Source: aws_fsx_ontap_storage_virtual_machines
 
 This resource can be useful for getting back a set of FSx ONTAP Storage Virtual Machine (SVM) IDs.
 
@@ -15,11 +15,11 @@ This resource can be useful for getting back a set of FSx ONTAP Storage Virtual 
 The following shows outputting all SVM IDs for a given FSx ONTAP File System.
 
 ```
-data "aws_fsx_ontap_storage_virtual_machines" "test" {
+data "aws_fsx_ontap_storage_virtual_machines" "example" {
   filter {
-		name = "file-system-id"
-		values = ["fs-12345678"]
-	}
+    name   = "file-system-id"
+    values = ["fs-12345678"]
+  }
 }
 ```
 

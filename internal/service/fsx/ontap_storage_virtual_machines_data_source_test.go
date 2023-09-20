@@ -49,7 +49,7 @@ resource "aws_fsx_ontap_storage_virtual_machine" "test" {
 
 data "aws_fsx_ontap_storage_virtual_machines" "test" {
   filter {
-    name = "file-system-id"
+    name   = "file-system-id"
     values = [aws_fsx_ontap_file_system.test.id]
   }
 
