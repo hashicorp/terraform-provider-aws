@@ -2,155 +2,35 @@
 // SPDX-License-Identifier: MPL-2.0
 
 package lexv2models_test
-// **PLEASE DELETE THIS AND ALL TIP COMMENTS BEFORE SUBMITTING A PR FOR REVIEW!**
-//
-// TIP: ==== INTRODUCTION ====
-// Thank you for trying the skaff tool!
-//
-// You have opted to include these helpful comments. They all include "TIP:"
-// to help you find and remove them when you're done with them.
-//
-// While some aspects of this file are customized to your input, the
-// scaffold tool does *not* look at the AWS API and ensure it has correct
-// function, structure, and variable names. It makes guesses based on
-// commonalities. You will need to make significant adjustments.
-//
-// In other words, as generated, this is a rough outline of the work you will
-// need to do. If something doesn't make sense for your situation, get rid of
-// it.
 
 import (
-	// TIP: ==== IMPORTS ====
-	// This is a common set of imports but not customized to your code since
-	// your code hasn't been written yet. Make sure you, your IDE, or
-	// goimports -w <file> fixes these imports.
-	//
-	// The provider linter wants your imports to be in two groups: first,
-	// standard library (i.e., "fmt" or "strings"), second, everything else.
-	//
-	// Also, AWS Go SDK v2 may handle nested structures differently than v1,
-	// using the services/lexv2models/types package. If so, you'll
-	// need to import types and reference the nested types, e.g., as
-	// types.<Type Name>.
 	"context"
+	"errors"
 	"fmt"
-	"regexp"
-	"strings"
 	"testing"
 
-	"github.com/YakDriver/regexache"
-
-	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/service/lexv2models"
-	"github.com/aws/aws-sdk-go-v2/service/lexv2models/types"
+	"github.com/aws/aws-sdk-go-v2/service/lexmodelsv2"
+	"github.com/aws/aws-sdk-go-v2/service/lexmodelsv2/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/names"
 
-	// TIP: You will often need to import the package that this test file lives
-	// in. Since it is in the "test" context, it must import the package to use
-	// any normal context constants, variables, or functions.
 	tflexv2models "github.com/hashicorp/terraform-provider-aws/internal/service/lexv2models"
 )
 
-// TIP: File Structure. The basic outline for all test files should be as
-// follows. Improve this resource's maintainability by following this
-// outline.
-//
-// 1. Package declaration (add "_test" since this is a test file)
-// 2. Imports
-// 3. Unit tests
-// 4. Basic test
-// 5. Disappears test
-// 6. All the other tests
-// 7. Helper functions (exists, destroy, check, etc.)
-// 8. Functions that return Terraform configurations
-
-// TIP: ==== UNIT TESTS ====
-// This is an example of a unit test. Its name is not prefixed with
-// "TestAcc" like an acceptance test.
-//
-// Unlike acceptance tests, unit tests do not access AWS and are focused on a
-// function (or method). Because of this, they are quick and cheap to run.
-//
-// In designing a resource's implementation, isolate complex bits from AWS bits
-// so that they can be tested through a unit test. We encourage more unit tests
-// in the provider.
-//
-// Cut and dry functions using well-used patterns, like typical flatteners and
-// expanders, don't need unit testing. However, if they are complex or
-// intricate, they should be unit tested.
-func TestBotExampleUnitTest(t *testing.T) {
-	t.Parallel()
-
-	testCases := []struct {
-		TestName string
-		Input    string
-		Expected string
-		Error    bool
-	}{
-		{
-			TestName: "empty",
-			Input:    "",
-			Expected: "",
-			Error:    true,
-		},
-		{
-			TestName: "descriptive name",
-			Input:    "some input",
-			Expected: "some output",
-			Error:    false,
-		},
-		{
-			TestName: "another descriptive name",
-			Input:    "more input",
-			Expected: "more output",
-			Error:    false,
-		},
-	}
-
-	for _, testCase := range testCases {
-		testCase := testCase
-		t.Run(testCase.TestName, func(t *testing.T) {
-			t.Parallel()
-			got, err := tflexv2models.FunctionFromResource(testCase.Input)
-
-			if err != nil && !testCase.Error {
-				t.Errorf("got error (%s), expected no error", err)
-			}
-
-			if err == nil && testCase.Error {
-				t.Errorf("got (%s) and no error, expected error", got)
-			}
-
-			if got != testCase.Expected {
-				t.Errorf("got %s, expected %s", got, testCase.Expected)
-			}
-		})
-	}
-}
-
-// TIP: ==== ACCEPTANCE TESTS ====
-// This is an example of a basic acceptance test. This should test as much of
-// standard functionality of the resource as possible, and test importing, if
-// applicable. We prefix its name with "TestAcc", the service, and the
-// resource name.
-//
-// Acceptance test access AWS and cost money to run.
 func TestAccLexV2ModelsBot_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	// TIP: This is a long-running test guard for tests that run longer than
 	// 300s (5 min) generally.
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
+	// if testing.Short() {
+	// 	t.Skip("skipping long-running test in short mode")
+	// }
 
-	var bot lexv2models.DescribeBotResponse
+	var bot lexmodelsv2.DescribeBotOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_lexv2models_bot.test"
 
@@ -168,22 +48,17 @@ func TestAccLexV2ModelsBot_basic(t *testing.T) {
 				Config: testAccBotConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBotExists(ctx, resourceName, &bot),
-					resource.TestCheckResourceAttr(resourceName, "auto_minor_version_upgrade", "false"),
-					resource.TestCheckResourceAttrSet(resourceName, "maintenance_window_start_time.0.day_of_week"),
-					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "user.*", map[string]string{
-						"console_access": "false",
-						"groups.#":       "0",
-						"username":       "Test",
-						"password":       "TestTest1234",
-					}),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "lexv2models", regexache.MustCompile(`bot:+.`)),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "idle_session_ttl_in_seconds", "5"),
+					resource.TestCheckResourceAttr(resourceName, "role_arn", "bot_role_arn"),
+					resource.TestCheckResourceAttr(resourceName, "data_privacy.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "data_privacy.0.child_directed", "true"),
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"apply_immediately", "user"},
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -195,7 +70,7 @@ func TestAccLexV2ModelsBot_disappears(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var bot lexv2models.DescribeBotResponse
+	var bot lexmodelsv2.DescribeBotOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_lexv2models_bot.test"
 
@@ -203,22 +78,16 @@ func TestAccLexV2ModelsBot_disappears(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.LexV2ModelsEndpointID)
-			testAccPreCheck(t)
+			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.LexV2ModelsEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckBotDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBotConfig_basic(rName, testAccBotVersionNewer),
+				Config: testAccBotConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBotExists(ctx, resourceName, &bot),
-					// TIP: The Plugin-Framework disappears helper is similar to the Plugin-SDK version,
-					// but expects a new resource factory function as the third argument. To expose this
-					// private function to the testing package, you may need to add a line like the following
-					// to exports_test.go:
-					//
-					//   var ResourceBot = newResourceBot
 					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tflexv2models.ResourceBot, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -236,17 +105,13 @@ func testAccCheckBotDestroy(ctx context.Context) resource.TestCheckFunc {
 				continue
 			}
 
-			input := &lexv2models.DescribeBotInput{
-				BotId: aws.String(rs.Primary.ID),
-			}
-			_, err := conn.DescribeBot(ctx, &lexv2models.DescribeBotInput{
-				BotId: aws.String(rs.Primary.ID),
-			})
-			if errs.IsA[*types.ResourceNotFoundException](err){
-				return nil
-			}
+			_, err := tflexv2models.FindBotByID(ctx, conn, rs.Primary.ID)
 			if err != nil {
-				return nil
+				var nfe *types.ResourceNotFoundException
+				if errors.As(err, &nfe) {
+					return nil
+				}
+				return err
 			}
 
 			return create.Error(names.LexV2Models, create.ErrActionCheckingDestroyed, tflexv2models.ResNameBot, rs.Primary.ID, errors.New("not destroyed"))
@@ -256,7 +121,7 @@ func testAccCheckBotDestroy(ctx context.Context) resource.TestCheckFunc {
 	}
 }
 
-func testAccCheckBotExists(ctx context.Context, name string, bot *lexv2models.DescribeBotResponse) resource.TestCheckFunc {
+func testAccCheckBotExists(ctx context.Context, name string, bot *lexmodelsv2.DescribeBotOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -268,10 +133,7 @@ func testAccCheckBotExists(ctx context.Context, name string, bot *lexv2models.De
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).LexV2ModelsClient(ctx)
-		resp, err := conn.DescribeBot(ctx, &lexv2models.DescribeBotInput{
-			BotId: aws.String(rs.Primary.ID),
-		})
-
+		resp, err := tflexv2models.FindBotByID(ctx, conn, rs.Primary.ID)
 		if err != nil {
 			return create.Error(names.LexV2Models, create.ErrActionCheckingExistence, tflexv2models.ResNameBot, rs.Primary.ID, err)
 		}
@@ -285,7 +147,7 @@ func testAccCheckBotExists(ctx context.Context, name string, bot *lexv2models.De
 func testAccPreCheck(ctx context.Context, t *testing.T) {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).LexV2ModelsClient(ctx)
 
-	input := &lexv2models.ListBotsInput{}
+	input := &lexmodelsv2.ListBotsInput{}
 	_, err := conn.ListBots(ctx, input)
 
 	if acctest.PreCheckSkipError(err) {
@@ -296,39 +158,50 @@ func testAccPreCheck(ctx context.Context, t *testing.T) {
 	}
 }
 
-func testAccCheckBotNotRecreated(before, after *lexv2models.DescribeBotResponse) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		if before, after := aws.ToString(before.BotId), aws.ToString(after.BotId); before != after {
-			return create.Error(names.LexV2Models, create.ErrActionCheckingNotRecreated, tflexv2models.ResNameBot, aws.ToString(before.BotId), errors.New("recreated"))
-		}
+// func testAccCheckBotNotRecreated(before, after *lexmodelsv2.DescribeBotOutput) resource.TestCheckFunc {
+// 	return func(s *terraform.State) error {
+// 		if before, after := aws.ToString(before.BotId), aws.ToString(after.BotId); before != after {
+// 			return create.Error(names.LexV2Models, create.ErrActionCheckingNotRecreated, tflexv2models.ResNameBot, aws.ToString(before.BotId), errors.New("recreated"))
+// 		}
 
-		return nil
-	}
-}
+// 		return nil
+// 	}
+// }
 
-func testAccBotConfig_basic(rName, version string) string {
+func testAccBotConfig_basic(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_security_group" "test" {
-  name = %[1]q
-}
-
 resource "aws_lexv2models_bot" "test" {
-  bot_name             = %[1]q
-  engine_type             = "ActiveLexV2Models"
-  engine_version          = %[2]q
-  host_instance_type      = "lexv2models.t2.micro"
-  security_groups         = [aws_security_group.test.id]
-  authentication_strategy = "simple"
-  storage_type            = "efs"
+  name                    = %[1]q
+  idle_session_ttl_in_seconds = "5"
+  role_arn                    = "bot_role_arn"
 
-  logs {
-    general = true
-  }
-
-  user {
-    username = "Test"
-    password = "TestTest1234"
+  data_privacy {
+    child_directed = true
   }
 }
-`, rName, version)
+`, rName)
+}
+
+func testAccBotConfig_optional(rName, description, botType, aliasId, aliasName, memberId, memberName string) string {
+	return fmt.Sprintf(`
+resource "aws_lexv2models_bot" "test" {
+  bot_name                    = %[1]q
+  description                 = %[2]q
+  idle_session_ttl_in_seconds = "5"
+  type                        = %[3]q
+  role_arn                    = "bot_role_arn"
+
+  data_privacy {
+    child_directed = true
+  }
+
+  members {
+    alias_id   = %[4]q
+    alias_name = %[5]q
+    id         = %[6]q
+    name       = %[7]q
+    version    = "2.0"
+  }
+}
+`, rName, description, botType, aliasId, aliasName, memberId, memberName)
 }
