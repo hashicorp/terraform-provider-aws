@@ -12,7 +12,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
-func TestAccFSxOntapStorageVirtualMachineDataSource_Id(t *testing.T) {
+func TestAccFSxONTAPStorageVirtualMachineDataSource_Id(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	if testing.Short() {
@@ -29,7 +29,7 @@ func TestAccFSxOntapStorageVirtualMachineDataSource_Id(t *testing.T) {
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccFSxOntapStorageVirtualMachineDataSourceConfig_Id(rName),
+				Config: testAccFSxONTAPStorageVirtualMachineDataSourceConfig_Id(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, "arn", resourceName, "arn"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "active_directory_configuration.#", resourceName, "active_directory_configuration.#"),
@@ -45,7 +45,7 @@ func TestAccFSxOntapStorageVirtualMachineDataSource_Id(t *testing.T) {
 	})
 }
 
-func TestAccFSxOntapStorageVirtualMachineDataSource_Filter(t *testing.T) {
+func TestAccFSxONTAPStorageVirtualMachineDataSource_Filter(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	if testing.Short() {
@@ -62,7 +62,7 @@ func TestAccFSxOntapStorageVirtualMachineDataSource_Filter(t *testing.T) {
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccFSxOntapStorageVirtualMachineDataSourceConfig_Filter(rName),
+				Config: testAccFSxONTAPStorageVirtualMachineDataSourceConfig_Filter(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, "arn", resourceName, "arn"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "active_directory_configuration.#", resourceName, "active_directory_configuration.#"),
@@ -78,7 +78,7 @@ func TestAccFSxOntapStorageVirtualMachineDataSource_Filter(t *testing.T) {
 	})
 }
 
-func testAccFSxOntapStorageVirtualMachineDataSourceConfig_Id(rName string) string {
+func testAccFSxONTAPStorageVirtualMachineDataSourceConfig_Id(rName string) string {
 	return acctest.ConfigCompose(testAccONTAPStorageVirtualMachineConfig_basic(rName), `
 data "aws_fsx_ontap_storage_virtual_machine" "test" {
   id = aws_fsx_ontap_storage_virtual_machine.test.id
@@ -86,7 +86,7 @@ data "aws_fsx_ontap_storage_virtual_machine" "test" {
 `)
 }
 
-func testAccFSxOntapStorageVirtualMachineDataSourceConfig_Filter(rName string) string {
+func testAccFSxONTAPStorageVirtualMachineDataSourceConfig_Filter(rName string) string {
 	return acctest.ConfigCompose(testAccONTAPStorageVirtualMachineConfig_basic(rName), `
 data "aws_fsx_ontap_storage_virtual_machine" "test" {
   filter {
