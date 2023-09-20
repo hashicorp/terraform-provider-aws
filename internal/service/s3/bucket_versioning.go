@@ -136,6 +136,8 @@ func resourceBucketVersioningCreate(ctx context.Context, d *schema.ResourceData,
 
 	d.SetId(CreateResourceID(bucket, expectedBucketOwner))
 
+	// Waiting for the versioning configuration to appear is done in resource Read.
+
 	return resourceBucketVersioningRead(ctx, d, meta)
 }
 
@@ -339,14 +341,11 @@ func statusBucketVersioning(ctx context.Context, conn *s3.Client, bucket, expect
 }
 
 func waitForBucketVersioningStatus(ctx context.Context, conn *s3.Client, bucket, expectedBucketOwner string) (*s3.GetBucketVersioningOutput, error) {
-	const (
-		timeout = 1 * time.Minute
-	)
 	stateConf := &retry.StateChangeConf{
 		Pending:                   []string{""},
 		Target:                    bucketVersioningStatus_Values(),
 		Refresh:                   statusBucketVersioning(ctx, conn, bucket, expectedBucketOwner),
-		Timeout:                   timeout,
+		Timeout:                   s3BucketPropagationTimeout,
 		ContinuousTargetOccurence: 3,
 		NotFoundChecks:            3,
 		Delay:                     1 * time.Second,
