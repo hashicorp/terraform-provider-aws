@@ -79,6 +79,14 @@ func resourceBucketPolicyPut(ctx context.Context, d *schema.ResourceData, meta i
 
 	if d.IsNewResource() {
 		d.SetId(bucket)
+
+		_, err = tfresource.RetryWhenNotFound(ctx, s3BucketPropagationTimeout, func() (interface{}, error) {
+			return findBucketPolicy(ctx, conn, d.Id())
+		})
+
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "waiting for S3 Bucket Policy (%s) create: %s", d.Id(), err)
+		}
 	}
 
 	return append(diags, resourceBucketPolicyRead(ctx, d, meta)...)
