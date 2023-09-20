@@ -22,8 +22,8 @@ github.com/apparentlymart/go-textseg/v15 v15.0.0/go.mod h1:K8XmNZdhEBkdlyDdvbmms
 github.com/armon/go-radix v0.0.0-20180808171621-7fddfc383310/go.mod h1:ufUuZ+zHj4x4TnLV4JWEpy2hxWSpsRywHrMgIH9cCH8=
 github.com/armon/go-radix v1.0.0 h1:F4z6KzEeeQIMeLFa97iZU6vupzoecKdU5TX24SNppXI=
 github.com/armon/go-radix v1.0.0/go.mod h1:ufUuZ+zHj4x4TnLV4JWEpy2hxWSpsRywHrMgIH9cCH8=
-github.com/aws/aws-sdk-go v1.45.12 h1:+bKbbesGNPp+TeGrcqfrWuZoqcIEhjwKyBMHQPp80Jo=
-github.com/aws/aws-sdk-go v1.45.12/go.mod h1:aVsgQcEevwlmQ7qHE9I3h+dtQgpqhFB+i8Phjh7fkwI=
+github.com/aws/aws-sdk-go v1.45.13 h1:LwD/G+PX7FQnbU8wXekx12e90i1GuKJQC2+pl4IlPAs=
+github.com/aws/aws-sdk-go v1.45.13/go.mod h1:aVsgQcEevwlmQ7qHE9I3h+dtQgpqhFB+i8Phjh7fkwI=
 github.com/aws/aws-sdk-go-v2 v1.21.0 h1:gMT0IW+03wtYJhRqTVYn0wLzwdnK9sRMcxmtfGzRdJc=
 github.com/aws/aws-sdk-go-v2 v1.21.0/go.mod h1:/RfNgGmRxI+iFOB1OeJUyxiU+9s88k3pfHvDagGEp0M=
 github.com/aws/aws-sdk-go-v2/aws/protocol/eventstream v1.4.13 h1:OPLEkmhXf6xFPiz0bLeDArZIDx1NNS4oJyG4nv3Gct0=
@@ -74,8 +74,8 @@ github.com/aws/aws-sdk-go-v2/service/directoryservice v1.18.5 h1:prlnnmX0PYoho7c
 github.com/aws/aws-sdk-go-v2/service/directoryservice v1.18.5/go.mod h1:/kl14i35MzBB4oaVlmFVmTvdzTX5LiphIuRLyOJfoRU=
 github.com/aws/aws-sdk-go-v2/service/docdbelastic v1.3.0 h1:c9Ifajg9VU0b86Xd7B6KGpEUtbXbwAJj/8FAQN6ZBeg=
 github.com/aws/aws-sdk-go-v2/service/docdbelastic v1.3.0/go.mod h1:XLn8/EbqX+qGri306t4IPUBi+VmphNcsR+OJRxPlGqg=
-github.com/aws/aws-sdk-go-v2/service/ec2 v1.118.0 h1:ueSJS07XpOwCFhYTHh/Jjw856+U+u0Dv5LIIPOB1/Ns=
-github.com/aws/aws-sdk-go-v2/service/ec2 v1.118.0/go.mod h1:0FhI2Rzcv5BNM3dNnbcCx2qa2naFZoAidJi11cQgzL0=
+github.com/aws/aws-sdk-go-v2/service/ec2 v1.119.0 h1:oFrb1aQ07i+v63FOTywSG8xL/OYZbk+HmPE8FKSzkRk=
+github.com/aws/aws-sdk-go-v2/service/ec2 v1.119.0/go.mod h1:0FhI2Rzcv5BNM3dNnbcCx2qa2naFZoAidJi11cQgzL0=
 github.com/aws/aws-sdk-go-v2/service/emrserverless v1.10.5 h1:hhQPiPD696RlbY56NsMYVnVsS9ySrZc6eYC9yafauPk=
 github.com/aws/aws-sdk-go-v2/service/emrserverless v1.10.5/go.mod h1:uRIY0k05TXMGGlHeRxDDhWT9oBqcGbbEBN3gqk9Njos=
 github.com/aws/aws-sdk-go-v2/service/finspace v1.12.0 h1:qFaAEplUoebyUb2m0I3IgPK9hEZYL2zSDIW9lGMdfe4=
