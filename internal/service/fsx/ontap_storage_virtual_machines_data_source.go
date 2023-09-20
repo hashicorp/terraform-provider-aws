@@ -12,13 +12,13 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 )
 
-// @SDKDataSource("aws_fsx_ontap_storage_virtual_machines", name="Ontap Storage Virtual Machines")
-func DataSourceOntapStorageVirtualMachines() *schema.Resource {
+// @SDKDataSource("aws_fsx_ontap_storage_virtual_machines", name="ONTAP Storage Virtual Machines")
+func DataSourceONTAPStorageVirtualMachines() *schema.Resource {
 	return &schema.Resource{
-		ReadWithoutTimeout: dataSourceOntapStorageVirtualMachinesRead,
+		ReadWithoutTimeout: dataSourceONTAPStorageVirtualMachinesRead,
 
 		Schema: map[string]*schema.Schema{
 			"filter": DataSourceStorageVirtualMachineFiltersSchema(),
@@ -31,11 +31,7 @@ func DataSourceOntapStorageVirtualMachines() *schema.Resource {
 	}
 }
 
-const (
-	DSNameOntapStorageVirtualMachines = "Ontap Storage Virtual Machines Data Source"
-)
-
-func dataSourceOntapStorageVirtualMachinesRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceONTAPStorageVirtualMachinesRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).FSxConn(ctx)
 
@@ -49,16 +45,16 @@ func dataSourceOntapStorageVirtualMachinesRead(ctx context.Context, d *schema.Re
 		input.Filters = nil
 	}
 
-	output, err := FindStorageVirtualMachines(ctx, conn, input)
+	svms, err := findStorageVirtualMachines(ctx, conn, input, tfslices.PredicateTrue[*fsx.StorageVirtualMachine]())
 
 	if err != nil {
-		return sdkdiag.AppendFromErr(diags, tfresource.SingularDataSourceFindError("FSx StorageVirtualMachines", err))
+		return sdkdiag.AppendErrorf(diags, "reading FSx ONTAP Storage Virtual Machines: %s", err)
 	}
 
 	var svmIDs []string
 
-	for _, v := range output {
-		svmIDs = append(svmIDs, aws.StringValue(v.StorageVirtualMachineId))
+	for _, svm := range svms {
+		svmIDs = append(svmIDs, aws.StringValue(svm.StorageVirtualMachineId))
 	}
 
 	d.SetId(meta.(*conns.AWSClient).Region)
