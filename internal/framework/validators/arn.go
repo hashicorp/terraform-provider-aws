@@ -1,16 +1,29 @@
-var _ validator.String = arnValidator{}
+package validators
 
-type arnValidator struct {
-}
+import (
+	"context"
+    "fmt"
+
+	"github.com/YakDriver/regexache"
+	"github.com/aws/aws-sdk-go/aws/arn"
+	"github.com/hashicorp/terraform-plugin-framework-validators/helpers/validatordiag"
+	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
+)
+
+var accountIDRegexp = regexache.MustCompile(`^(aws|aws-managed|third-party|\d{12}|cw.{10})$`)
+var partitionRegexp = regexache.MustCompile(`^aws(-[a-z]+)*$`)
+var regionRegexp = regexache.MustCompile(`^[a-z]{2}(-[a-z]+)+-\d$`)
+
+type arnValidator struct {}
 
 // Description describes the validation in plain text formatting.
 func (validator arnValidator) Description(_ context.Context) string {
-	return "String must be a valid arn"
+    return "String must be a valid arn"
 }
 
 // MarkdownDescription describes the validation in Markdown formatting.
 func (validator arnValidator) MarkdownDescription(ctx context.Context) string {
-	return validator.Description(ctx)
+    return validator.Description(ctx)
 }
 
 func (v arnValidator) ValidateString(ctx context.Context, request validator.StringRequest, response *validator.StringResponse) {
