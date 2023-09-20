@@ -9,6 +9,7 @@ var (
 	EmptyBucket                           = emptyBucket
 	FindAnalyticsConfiguration            = findAnalyticsConfiguration
 	FindBucket                            = findBucket
+	FindBucketACL                         = findBucketACL
 	FindBucketAccelerateConfiguration     = findBucketAccelerateConfiguration
 	FindBucketPolicy                      = findBucketPolicy
 	FindBucketVersioning                  = findBucketVersioning
