@@ -13,7 +13,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
-func TestAccFSxOntapStorageVirtualMachinesDataSource_Filter(t *testing.T) {
+func TestAccFSxONTAPStorageVirtualMachinesDataSource_Filter(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	if testing.Short() {
@@ -29,7 +29,7 @@ func TestAccFSxOntapStorageVirtualMachinesDataSource_Filter(t *testing.T) {
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccFSxOntapStorageVirtualMachinesDataSourceConfig_Filter(rName),
+				Config: testAccONTAPStorageVirtualMachinesDataSourceConfig_filter(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceName, "ids.#", "2"),
 				),
@@ -38,74 +38,22 @@ func TestAccFSxOntapStorageVirtualMachinesDataSource_Filter(t *testing.T) {
 	})
 }
 
-func testAccOntapStorageVirtualMachinesDataSourceBaseConfig(rName string) string {
-	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
-data "aws_partition" "current" {}
+func testAccONTAPStorageVirtualMachinesDataSourceConfig_filter(rName string) string {
+	return acctest.ConfigCompose(testAccONTAPStorageVirtualMachineConfig_base(rName), fmt.Sprintf(`
+resource "aws_fsx_ontap_storage_virtual_machine" "test" {
+  count = 2
 
-resource "aws_vpc" "test" {
-  cidr_block = "10.0.0.0/16"
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_subnet" "test1" {
-  vpc_id            = aws_vpc.test.id
-  cidr_block        = "10.0.1.0/24"
-  availability_zone = data.aws_availability_zones.available.names[0]
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_subnet" "test2" {
-  vpc_id            = aws_vpc.test.id
-  cidr_block        = "10.0.2.0/24"
-  availability_zone = data.aws_availability_zones.available.names[1]
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_fsx_ontap_file_system" "test" {
-  storage_capacity    = 1024
-  subnet_ids          = [aws_subnet.test1.id]
-  deployment_type     = "SINGLE_AZ_1"
-  throughput_capacity = 512
-  preferred_subnet_id = aws_subnet.test1.id
-
-  tags = {
-    Name = %[1]q
-  }
-}
-`, rName))
-}
-
-func testAccFSxOntapStorageVirtualMachinesDataSourceConfig_Filter(rName string) string {
-	return acctest.ConfigCompose(testAccOntapStorageVirtualMachinesDataSourceBaseConfig(rName), fmt.Sprintf(`
-resource "aws_fsx_ontap_storage_virtual_machine" "test1" {
-	file_system_id = aws_fsx_ontap_file_system.test.id
-	name           = %[1]q
-}
-
-resource "aws_fsx_ontap_storage_virtual_machine" "test2" {
-	file_system_id = aws_fsx_ontap_file_system.test.id
-	name           = %[2]q
+  file_system_id = aws_fsx_ontap_file_system.test.id
+  name           = "%[1]s-${count.index}"
 }
 
 data "aws_fsx_ontap_storage_virtual_machines" "test" {
   filter {
-		name = "file-system-id"
-		values = [aws_fsx_ontap_file_system.test.id]
-	}
+    name = "file-system-id"
+    values = [aws_fsx_ontap_file_system.test.id]
+  }
 
-	depends_on = [
-		aws_fsx_ontap_storage_virtual_machine.test1,
-		aws_fsx_ontap_storage_virtual_machine.test2
-	]
+  depends_on = [aws_fsx_ontap_storage_virtual_machine.test]
 }
-`, rName, fmt.Sprintf(`%s-2`, rName)))
+`, rName))
 }
