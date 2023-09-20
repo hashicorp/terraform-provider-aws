@@ -237,6 +237,14 @@ func resourceBucketVersioningDelete(ctx context.Context, d *schema.ResourceData,
 		return diag.Errorf("deleting S3 Bucket Versioning (%s): %s", d.Id(), err)
 	}
 
+	_, err = tfresource.RetryUntilNotFound(ctx, s3BucketPropagationTimeout, func() (interface{}, error) {
+		return findBucketVersioning(ctx, conn, bucket, expectedBucketOwner)
+	})
+
+	if err != nil {
+		return diag.Errorf("waiting for S3 Bucket Versioning (%s) delete: %s", d.Id(), err)
+	}
+
 	return nil
 }
 
