@@ -236,6 +236,14 @@ func resourceBucketObjectLockConfigurationDelete(ctx context.Context, d *schema.
 		return diag.Errorf("deleting S3 Bucket Object Lock Configuration (%s): %s", d.Id(), err)
 	}
 
+	_, err = tfresource.RetryUntilNotFound(ctx, s3BucketPropagationTimeout, func() (interface{}, error) {
+		return findObjectLockConfiguration(ctx, conn, bucket, expectedBucketOwner)
+	})
+
+	if err != nil {
+		return diag.Errorf("waiting for S3 Bucket Object Lock Configuration (%s) delete: %s", d.Id(), err)
+	}
+
 	return nil
 }
 
