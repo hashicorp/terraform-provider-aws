@@ -178,7 +178,7 @@ func resourceBucketAnalyticsConfigurationRead(ctx context.Context, d *schema.Res
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	ac, err := findAnalyticsConfiguration(ctx, conn, bucket)
+	ac, err := findAnalyticsConfiguration(ctx, conn, bucket, name)
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] S3 Bucket Analytics Configuration (%s) not found, removing from state", d.Id())
@@ -226,7 +226,7 @@ func resourceBucketAnalyticsConfigurationDelete(ctx context.Context, d *schema.R
 	}
 
 	_, err = tfresource.RetryUntilNotFound(ctx, s3BucketPropagationTimeout, func() (interface{}, error) {
-		return findAnalyticsConfiguration(ctx, conn, bucket)
+		return findAnalyticsConfiguration(ctx, conn, bucket, name)
 	})
 
 	if err != nil {
@@ -419,9 +419,10 @@ func flattenAnalyticsBucketDestination(bucketDestination *types.AnalyticsS3Bucke
 	return []interface{}{result}
 }
 
-func findAnalyticsConfiguration(ctx context.Context, conn *s3.Client, bucket string) (*types.AnalyticsConfiguration, error) {
+func findAnalyticsConfiguration(ctx context.Context, conn *s3.Client, bucket, id string) (*types.AnalyticsConfiguration, error) {
 	input := &s3.GetBucketAnalyticsConfigurationInput{
 		Bucket: aws.String(bucket),
+		Id:     aws.String(id),
 	}
 
 	output, err := conn.GetBucketAnalyticsConfiguration(ctx, input)

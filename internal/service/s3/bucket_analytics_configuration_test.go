@@ -472,12 +472,12 @@ func testAccCheckBucketAnalyticsConfigurationDestroy(ctx context.Context) resour
 				continue
 			}
 
-			bucket, _, err := tfs3.BucketAnalyticsConfigurationParseID(rs.Primary.ID)
+			bucket, name, err := tfs3.BucketAnalyticsConfigurationParseID(rs.Primary.ID)
 			if err != nil {
 				return err
 			}
 
-			_, err = tfs3.FindAnalyticsConfiguration(ctx, conn, bucket)
+			_, err = tfs3.FindAnalyticsConfiguration(ctx, conn, bucket, name)
 
 			if tfresource.NotFound(err) {
 				continue
@@ -501,14 +501,14 @@ func testAccCheckBucketAnalyticsConfigurationExists(ctx context.Context, n strin
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		bucket, _, err := tfs3.BucketAnalyticsConfigurationParseID(rs.Primary.ID)
+		bucket, name, err := tfs3.BucketAnalyticsConfigurationParseID(rs.Primary.ID)
 		if err != nil {
 			return err
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Client(ctx)
 
-		output, err := tfs3.FindAnalyticsConfiguration(ctx, conn, bucket)
+		output, err := tfs3.FindAnalyticsConfiguration(ctx, conn, bucket, name)
 
 		if err != nil {
 			return err
