@@ -199,13 +199,7 @@ func resourceBucketServerSideEncryptionConfigurationDelete(ctx context.Context, 
 		return diag.Errorf("deleting S3 Bucket Server-side Encryption Configuration (%s): %s", d.Id(), err)
 	}
 
-	_, err = tfresource.RetryUntilNotFound(ctx, s3BucketPropagationTimeout, func() (interface{}, error) {
-		return findServerSideEncryptionConfiguration(ctx, conn, bucket, expectedBucketOwner)
-	})
-
-	if err != nil {
-		return diag.Errorf("waiting for S3 Bucket Server-side Encryption Configuration (%s) delete: %s", d.Id(), err)
-	}
+	// Don't wait for the SSE configuration to disappear as the bucket now always has one.
 
 	return nil
 }
