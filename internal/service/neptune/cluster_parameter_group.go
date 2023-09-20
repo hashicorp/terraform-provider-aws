@@ -172,19 +172,53 @@ func resourceClusterParameterGroupRead(ctx context.Context, d *schema.ResourceDa
 	arn := aws.StringValue(describeResp.DBClusterParameterGroups[0].DBClusterParameterGroupArn)
 	d.Set("arn", arn)
 
+	var parameters []*neptune.Parameter
+
 	// Only include user customized parameters as there's hundreds of system/default ones
-	describeParametersOpts := neptune.DescribeDBClusterParametersInput{
+	input := neptune.DescribeDBClusterParametersInput{
 		DBClusterParameterGroupName: aws.String(d.Id()),
 		Source:                      aws.String("user"),
 	}
 
-	describeParametersResp, err := conn.DescribeDBClusterParametersWithContext(ctx, &describeParametersOpts)
+	describeParametersRespUser, err := conn.DescribeDBClusterParametersWithContext(ctx, &input)
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading Neptune Cluster Parameter Group (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading Neptune Cluster Parameter Group (%s) parameters: %s", d.Id(), err)
 	}
 
-	if err := d.Set("parameter", flattenParameters(describeParametersResp.Parameters)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting neptune parameter: %s", err)
+	for _, v := range describeParametersRespUser.Parameters {
+		if v != nil {
+			parameters = append(parameters, v)
+		}
+	}
+
+	// add only system parameters that are set in the config
+	p := d.Get("parameter")
+	if p == nil {
+		p = new(schema.Set)
+	}
+	s := p.(*schema.Set)
+	configParameters := expandParameters(s.List())
+
+	input = neptune.DescribeDBClusterParametersInput{
+		DBClusterParameterGroupName: aws.String(d.Id()),
+		Source:                      aws.String("engine-default"),
+	}
+
+	describeParametersRespSystem, err := conn.DescribeDBClusterParametersWithContext(ctx, &input)
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "reading Neptune Cluster Parameter Group (%s) parameters: %s", d.Id(), err)
+	}
+
+	for _, v := range describeParametersRespSystem.Parameters {
+		for _, p := range configParameters {
+			if aws.StringValue(v.ParameterName) == aws.StringValue(p.ParameterName) {
+				parameters = append(parameters, v)
+			}
+		}
+	}
+
+	if err := d.Set("parameter", flattenParameters(parameters)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting parameter: %s", err)
 	}
 
 	return diags

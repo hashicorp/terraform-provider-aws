@@ -240,6 +240,40 @@ func TestAccNeptuneClusterParameterGroup_parameter(t *testing.T) {
 	})
 }
 
+// This test ensures that defining a parameter with a default setting is ignored
+// and returns successfully as no changes being applied.
+func TestAccNeptuneClusterParameterGroup_parameterDefault(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v neptune.DBClusterParameterGroup
+
+	resourceName := "aws_neptune_cluster_parameter_group.test"
+
+	parameterGroupName := sdkacctest.RandomWithPrefix("cluster-parameter-group-test-tf")
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, neptune.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckClusterParameterGroupDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccClusterParameterGroupConfig_one(parameterGroupName, "neptune_enable_audit_log", "0"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusterParameterGroupExists(ctx, resourceName, &v),
+					testAccCheckClusterParameterGroupAttributes(&v, parameterGroupName),
+					resource.TestCheckResourceAttr(resourceName, "parameter.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
+						"apply_method": "pending-reboot",
+						"name":         "neptune_enable_audit_log",
+						"value":        "0",
+					}),
+				),
+				ExpectNonEmptyPlan: false,
+			},
+		},
+	})
+}
+
 func TestAccNeptuneClusterParameterGroup_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v neptune.DBClusterParameterGroup
