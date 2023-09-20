@@ -21,8 +21,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64default"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/booldefault"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64default"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -125,18 +126,35 @@ func (r *resourceIamRole) Schema(ctx context.Context, req resource.SchemaRequest
                     stringvalidator.LengthAtMost(roleNamePrefixMaxLen),
                 },
             },
+            "path": schema.StringAttribute{
+                Optional: true,
+                // TODO: ForceNew
+                Default: stringdefault.StaticString("/"),
+                Validators: []validator.String{
+                    stringvalidator.LengthBetween(0, 512),
+                },
+            },
+            "permissions_boundary": schema.StringAttribute{
+                Optional: true,
+                Validators: []validator.String{
+                    // verify.ValidARN
+                },
+            },
+            "unique_id": schema.StringAttribute{
+                Computed: true,
+            },
+            // TODO: tags?
 		},
 	}
 }
 
             // NOTE: current schema resource to convert
-			// "path": {
-				// Type:         schema.TypeString,
-				// Optional:     true,
-				// Default:      "/",
-				// ForceNew:     true,
-				// ValidateFunc: validation.StringLenBetween(0, 512),
+			// "unique_id": {
+				// Type:     schema.TypeString,
+				// Computed: true,
 			// },
+
+
 
 
 // TODO: Finish this
