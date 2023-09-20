@@ -199,6 +199,7 @@ func ResourceONTAPStorageVirtualMachine() *schema.Resource {
 			"file_system_id": {
 				Type:         schema.TypeString,
 				Required:     true,
+				ForceNew:     true,
 				ValidateFunc: validation.StringLenBetween(11, 21),
 			},
 			"name": {
