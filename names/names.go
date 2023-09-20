@@ -23,7 +23,7 @@ import (
 	"strings"
 )
 
-// This "should" be defined by the AWS Go SDK v2, but currently isn't.
+// These "should" be defined by the AWS Go SDK v2, but currently aren't.
 const (
 	AccessAnalyzerEndpointID             = "access-analyzer"
 	AccountEndpointID                    = "account"
@@ -31,9 +31,12 @@ const (
 	AuditManagerEndpointID               = "auditmanager"
 	CleanRoomsEndpointID                 = "cleanrooms"
 	CloudWatchLogsEndpointID             = "logs"
+	CodeStarConnectionsEndpointID        = "codestar-connections"
+	CodeStarNotificationsEndpointID      = "codestar-notifications"
 	ComprehendEndpointID                 = "comprehend"
 	ComputeOptimizerEndpointID           = "computeoptimizer"
 	DSEndpointID                         = "ds"
+	EMRServerlessEndpointID              = "emrserverless"
 	GlacierEndpointID                    = "glacier"
 	IdentityStoreEndpointID              = "identitystore"
 	Inspector2EndpointID                 = "inspector2"
@@ -48,10 +51,13 @@ const (
 	PipesEndpointID                      = "pipes"
 	PricingEndpointID                    = "pricing"
 	QLDBEndpointID                       = "qldb"
+	RedshiftDataEndpointID               = "redshift-data"
 	ResourceExplorer2EndpointID          = "resource-explorer-2"
 	RolesAnywhereEndpointID              = "rolesanywhere"
 	Route53DomainsEndpointID             = "route53domains"
 	SchedulerEndpointID                  = "scheduler"
+	S3EndpointID                         = "s3"
+	S3ControlEndpointID                  = "s3-control"
 	SESV2EndpointID                      = "sesv2"
 	SSMEndpointID                        = "ssm"
 	SSMContactsEndpointID                = "ssm-contacts"
@@ -61,6 +67,18 @@ const (
 	TranscribeEndpointID                 = "transcribe"
 	VPCLatticeEndpointID                 = "vpc-lattice"
 	XRayEndpointID                       = "xray"
+)
+
+// These should move to aws-sdk-go-base.
+// See https://github.com/hashicorp/aws-sdk-go-base/issues/649.
+const (
+	StandardPartitionID   = "aws"        // AWS Standard partition.
+	USGovCloudPartitionID = "aws-us-gov" // AWS GovCloud (US) partition.
+)
+
+const (
+	USEast1RegionID = "us-east-1" // US East (N. Virginia).
+	USWest2RegionID = "us-west-2" // US West (Oregon).
 )
 
 // Type ServiceDatum corresponds closely to columns in `names_data.csv` and are

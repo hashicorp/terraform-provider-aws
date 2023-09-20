@@ -8,15 +8,14 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ssoadmin"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfssoadmin "github.com/hashicorp/terraform-provider-aws/internal/service/ssoadmin"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func TestAccSSOAdminPermissionSet_basic(t *testing.T) {
@@ -287,20 +286,14 @@ func testAccCheckPermissionSetDestroy(ctx context.Context) resource.TestCheckFun
 				continue
 			}
 
-			arn, instanceArn, err := tfssoadmin.ParseResourceID(rs.Primary.ID)
-
+			permissionSetARN, instanceARN, err := tfssoadmin.ParseResourceID(rs.Primary.ID)
 			if err != nil {
-				return fmt.Errorf("error parsing SSO Permission Set ID (%s): %w", rs.Primary.ID, err)
+				return err
 			}
 
-			input := &ssoadmin.DescribePermissionSetInput{
-				InstanceArn:      aws.String(instanceArn),
-				PermissionSetArn: aws.String(arn),
-			}
+			_, err = tfssoadmin.FindPermissionSet(ctx, conn, permissionSetARN, instanceARN)
 
-			_, err = conn.DescribePermissionSetWithContext(ctx, input)
-
-			if tfawserr.ErrCodeEquals(err, ssoadmin.ErrCodeResourceNotFoundException) {
+			if tfresource.NotFound(err) {
 				continue
 			}
 
@@ -308,36 +301,28 @@ func testAccCheckPermissionSetDestroy(ctx context.Context) resource.TestCheckFun
 				return err
 			}
 
-			return fmt.Errorf("SSO Permission Set (%s) still exists", arn)
+			return fmt.Errorf("SSO Permission Set %s still exists", rs.Primary.ID)
 		}
 
 		return nil
 	}
 }
 
-func testAccCheckSOAdminPermissionSetExists(ctx context.Context, resourceName string) resource.TestCheckFunc {
+func testAccCheckSOAdminPermissionSetExists(ctx context.Context, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[resourceName]
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return fmt.Errorf("Not found: %s", resourceName)
+			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("Resource (%s) ID not set", resourceName)
+		permissionSetARN, instanceARN, err := tfssoadmin.ParseResourceID(rs.Primary.ID)
+		if err != nil {
+			return err
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).SSOAdminConn(ctx)
 
-		arn, instanceArn, err := tfssoadmin.ParseResourceID(rs.Primary.ID)
-
-		if err != nil {
-			return fmt.Errorf("error parsing SSO Permission Set ID (%s): %w", rs.Primary.ID, err)
-		}
-
-		_, err = conn.DescribePermissionSetWithContext(ctx, &ssoadmin.DescribePermissionSetInput{
-			InstanceArn:      aws.String(instanceArn),
-			PermissionSetArn: aws.String(arn),
-		})
+		_, err = tfssoadmin.FindPermissionSet(ctx, conn, permissionSetARN, instanceARN)
 
 		return err
 	}
@@ -348,7 +333,7 @@ func testAccPermissionSetConfig_basic(rName string) string {
 data "aws_ssoadmin_instances" "test" {}
 
 resource "aws_ssoadmin_permission_set" "test" {
-  name         = %q
+  name         = %[1]q
   instance_arn = tolist(data.aws_ssoadmin_instances.test.arns)[0]
 }
 `, rName)
@@ -423,7 +408,7 @@ func testAccPermissionSetConfig_tags1(rName, tagKey1, tagValue1 string) string {
 data "aws_ssoadmin_instances" "test" {}
 
 resource "aws_ssoadmin_permission_set" "test" {
-  name         = %q
+  name         = %[1]q
   instance_arn = tolist(data.aws_ssoadmin_instances.test.arns)[0]
 
   tags = {
@@ -438,7 +423,7 @@ func testAccPermissionSetConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagVal
 data "aws_ssoadmin_instances" "test" {}
 
 resource "aws_ssoadmin_permission_set" "test" {
-  name         = %q
+  name         = %[1]q
   instance_arn = tolist(data.aws_ssoadmin_instances.test.arns)[0]
 
   tags = {
@@ -456,7 +441,7 @@ data "aws_partition" "current" {}
 data "aws_ssoadmin_instances" "test" {}
 
 resource "aws_ssoadmin_permission_set" "test" {
-  name         = %q
+  name         = %[1]q
   instance_arn = tolist(data.aws_ssoadmin_instances.test.arns)[0]
 }
 

@@ -62,7 +62,6 @@ In addition to all arguments above, the following attributes are exported:
 * `lifecycle_status` - The SVM's lifecycle status.
 * `lifecycle_transition_reason` - Describes why the SVM lifecycle state changed. See [Lifecycle Transition Reason](#lifecycle-transition-reason) below.
 * `name` - The name of the SVM, if provisioned.
-* `root_volume_security_style` - The security style of the root volume of the SVM.
 * `subtype` - The SVM's subtype.
 * `uuid` - The SVM's UUID.
 

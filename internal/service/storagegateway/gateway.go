@@ -9,10 +9,10 @@ import (
 	"log"
 	"net"
 	"net/http"
-	"regexp"
 	"strconv"
 	"time"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/storagegateway"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
@@ -100,7 +100,7 @@ func ResourceGateway() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 				ValidateFunc: validation.All(
-					validation.StringMatch(regexp.MustCompile(`^[ -\.0-\[\]-~]*[!-\.0-\[\]-~][ -\.0-\[\]-~]*$`), ""),
+					validation.StringMatch(regexache.MustCompile(`^[ -\.0-\[\]-~]*[!-\.0-\[\]-~][ -\.0-\[\]-~]*$`), ""),
 					validation.StringLenBetween(2, 255),
 				),
 			},
@@ -120,8 +120,8 @@ func ResourceGateway() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 				ValidateFunc: validation.Any(
-					validation.StringMatch(regexp.MustCompile(`^GMT[+-][0-9]{1,2}:[0-9]{2}$`), ""),
-					validation.StringMatch(regexp.MustCompile(`^GMT$`), ""),
+					validation.StringMatch(regexache.MustCompile(`^GMT[+-][0-9]{1,2}:[0-9]{2}$`), ""),
+					validation.StringMatch(regexache.MustCompile(`^GMT$`), ""),
 				),
 			},
 			"gateway_type": {
@@ -192,7 +192,7 @@ func ResourceGateway() *schema.Resource {
 							Elem: &schema.Schema{
 								Type: schema.TypeString,
 								ValidateFunc: validation.All(
-									validation.StringMatch(regexp.MustCompile(`^(([a-zA-Z0-9\-]*[a-zA-Z0-9])\.)*([A-Za-z0-9\-]*[A-Za-z0-9])(:(\d+))?$`), ""),
+									validation.StringMatch(regexache.MustCompile(`^(([0-9A-Za-z-]*[0-9A-Za-z])\.)*([0-9A-Za-z-]*[0-9A-Za-z])(:(\d+))?$`), ""),
 									validation.StringLenBetween(6, 1024),
 								),
 							},
@@ -201,7 +201,7 @@ func ResourceGateway() *schema.Resource {
 							Type:     schema.TypeString,
 							Required: true,
 							ValidateFunc: validation.All(
-								validation.StringMatch(regexp.MustCompile(`^([a-z0-9]+(-[a-z0-9]+)*\.)+[a-z]{2,}$`), ""),
+								validation.StringMatch(regexache.MustCompile(`^([0-9a-z]+(-[0-9a-z]+)*\.)+[a-z]{2,}$`), ""),
 								validation.StringLenBetween(1, 1024),
 							),
 						},
@@ -215,7 +215,7 @@ func ResourceGateway() *schema.Resource {
 							Required:  true,
 							Sensitive: true,
 							ValidateFunc: validation.All(
-								validation.StringMatch(regexp.MustCompile(`^[ -~]+$`), ""),
+								validation.StringMatch(regexache.MustCompile(`^[ -~]+$`), ""),
 								validation.StringLenBetween(1, 1024),
 							),
 						},
@@ -229,7 +229,7 @@ func ResourceGateway() *schema.Resource {
 							Type:     schema.TypeString,
 							Required: true,
 							ValidateFunc: validation.All(
-								validation.StringMatch(regexp.MustCompile(`^\w[\w\.\- ]*$`), ""),
+								validation.StringMatch(regexache.MustCompile(`^\w[\w\.\- ]*$`), ""),
 								validation.StringLenBetween(1, 1024),
 							),
 						},
@@ -245,7 +245,7 @@ func ResourceGateway() *schema.Resource {
 				Optional:  true,
 				Sensitive: true,
 				ValidateFunc: validation.All(
-					validation.StringMatch(regexp.MustCompile(`^[ -~]+$`), ""),
+					validation.StringMatch(regexache.MustCompile(`^[ -~]+$`), ""),
 					validation.StringLenBetween(6, 512),
 				),
 			},

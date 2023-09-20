@@ -26,6 +26,7 @@ website/node_modules
 .vscode
 *.iml
 *.test
+*.prof
 *.iml
 log.txt
 markdown-link-check*.txt

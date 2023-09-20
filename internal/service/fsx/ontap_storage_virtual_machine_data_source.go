@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package fsx
 
 import (
@@ -20,10 +23,6 @@ func DataSourceOntapStorageVirtualMachine() *schema.Resource {
 		ReadWithoutTimeout: dataSourceOntapStorageVirtualMachineRead,
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
 			"active_directory_configuration": {
 				Type:     schema.TypeList,
 				Computed: true,
@@ -64,6 +63,10 @@ func DataSourceOntapStorageVirtualMachine() *schema.Resource {
 						},
 					},
 				},
+			},
+			"arn": {
+				Type:     schema.TypeString,
+				Computed: true,
 			},
 			"creation_time": {
 				Type:     schema.TypeString,
@@ -175,10 +178,6 @@ func DataSourceOntapStorageVirtualMachine() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"root_volume_security_style": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
 			"subtype": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -223,25 +222,22 @@ func dataSourceOntapStorageVirtualMachineRead(ctx context.Context, d *schema.Res
 	}
 
 	d.SetId(aws.StringValue(svm.StorageVirtualMachineId))
-
-	d.Set("arn", svm.ResourceARN)
-	d.Set("endpoints", flattenOntapStorageVirtualMachineEndpoints(svm.Endpoints))
-	d.Set("file_system_id", svm.FileSystemId)
-	d.Set("id", svm.StorageVirtualMachineId)
-	d.Set("lifecycle_status", svm.Lifecycle)
-	d.Set("lifecycle_transition_reason", flattenOntapSvmLifecycleTransitionReason(svm.LifecycleTransitionReason))
-	d.Set("name", svm.Name)
-	d.Set("root_volume_security_style", svm.RootVolumeSecurityStyle)
-	d.Set("subtype", svm.Subtype)
-	d.Set("uuid", svm.UUID)
-
-	if err := d.Set("active_directory_configuration", flattenOntapSvmActiveDirectoryConfiguration(d, svm.ActiveDirectoryConfiguration)); err != nil {
+	if err := d.Set("active_directory_configuration", flattenSvmActiveDirectoryConfiguration(d, svm.ActiveDirectoryConfiguration)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting svm_active_directory: %s", err)
 	}
-
-	if err := d.Set("creation_time", svm.CreationTime.Format(time.RFC3339)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting creation_time: %s", err)
+	d.Set("arn", svm.ResourceARN)
+	d.Set("creation_time", svm.CreationTime.Format(time.RFC3339))
+	if err := d.Set("endpoints", flattenSvmEndpoints(svm.Endpoints)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting endpoints: %s", err)
 	}
+	d.Set("file_system_id", svm.FileSystemId)
+	d.Set("lifecycle_status", svm.Lifecycle)
+	if err := d.Set("lifecycle_transition_reason", flattenLifecycleTransitionReason(svm.LifecycleTransitionReason)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting lifecycle_transition_reason: %s", err)
+	}
+	d.Set("name", svm.Name)
+	d.Set("subtype", svm.Subtype)
+	d.Set("uuid", svm.UUID)
 
 	tags := KeyValueTags(ctx, svm.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
@@ -253,12 +249,13 @@ func dataSourceOntapStorageVirtualMachineRead(ctx context.Context, d *schema.Res
 	return diags
 }
 
-func flattenOntapSvmLifecycleTransitionReason(rs *fsx.LifecycleTransitionReason) []interface{} {
+func flattenLifecycleTransitionReason(rs *fsx.LifecycleTransitionReason) []interface{} {
 	if rs == nil {
 		return []interface{}{}
 	}
 
 	m := make(map[string]interface{})
+
 	if rs.Message != nil {
 		m["message"] = aws.StringValue(rs.Message)
 	}

@@ -678,6 +678,7 @@ The `managed_rule_group_configs` block support the following arguments:
 
 ### `aws_managed_rules_atp_rule_set` Block
 
+* `enable_regex_in_path` - (Optional) Whether or not to allow the use of regular expressions in the login page path.
 * `login_path` - (Required) The path of the login endpoint for your application.
 * `request_inspection` - (Optional) The criteria for inspecting login requests, used by the ATP rule group to validate credentials usage. See [`request_inspection`](#request_inspection-block) for more details.
 * `response_inspection` - (Optional) The criteria for inspecting responses to login requests, used by the ATP rule group to track login failure rates. Note that Response Inspection is available only on web ACLs that protect CloudFront distributions. See [`response_inspection`](#response_inspection-block) for more details.

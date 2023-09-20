@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package fsx_test
 
 import (
@@ -25,18 +28,16 @@ func TestAccFSxOntapStorageVirtualMachineDataSource_Id(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, fsx.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckOntapStorageVirtualMachineDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFSxOntapStorageVirtualMachineDataSourceConfig_Id(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, "arn", resourceName, "arn"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "active_directory_configuration", resourceName, "active_directory_configuration"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "endpoints", resourceName, "endpoints"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "active_directory_configuration.#", resourceName, "active_directory_configuration.#"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "endpoints.#", resourceName, "endpoints.#"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "file_system_id", resourceName, "file_system_id"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "id", resourceName, "id"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "name", resourceName, "name"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "root_volume_security_style", resourceName, "root_volume_security_style"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "subtype", resourceName, "subtype"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "uuid", resourceName, "uuid"),
 				),
@@ -60,18 +61,16 @@ func TestAccFSxOntapStorageVirtualMachineDataSource_Filter(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, fsx.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckOntapStorageVirtualMachineDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFSxOntapStorageVirtualMachineDataSourceConfig_Filter(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, "arn", resourceName, "arn"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "active_directory_configuration", resourceName, "active_directory_configuration"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "endpoints", resourceName, "endpoints"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "active_directory_configuration.#", resourceName, "active_directory_configuration.#"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "endpoints.#", resourceName, "endpoints.#"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "file_system_id", resourceName, "file_system_id"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "id", resourceName, "id"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "name", resourceName, "name"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "root_volume_security_style", resourceName, "root_volume_security_style"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "subtype", resourceName, "subtype"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "uuid", resourceName, "uuid"),
 				),

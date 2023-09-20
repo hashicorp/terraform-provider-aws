@@ -95,6 +95,12 @@ func (p *fwprovider) Schema(ctx context.Context, req provider.SchemaRequest, res
 				Optional:    true,
 				Description: "Set this to true to enable the request to use path-style addressing,\ni.e., https://s3.amazonaws.com/BUCKET/KEY. By default, the S3 client will\nuse virtual hosted bucket addressing when possible\n(https://BUCKET.s3.amazonaws.com/KEY). Specific to the Amazon S3 service.",
 			},
+			"s3_us_east_1_regional_endpoint": schema.StringAttribute{
+				Optional: true,
+				Description: "Specifies whether S3 API calls in the `us-east-1` region use the legacy global endpoint or a regional endpoint. " + //lintignore:AWSAT003
+					"Valid values are `legacy` or `regional`. " +
+					"Can also be configured using the `AWS_S3_US_EAST_1_REGIONAL_ENDPOINT` environment variable or the `s3_us_east_1_regional_endpoint` shared config file parameter",
+			},
 			"secret_key": schema.StringAttribute{
 				Optional:    true,
 				Description: "The secret key for API operations. You can retrieve this\nfrom the 'Security & Credentials' section of the AWS console.",
@@ -285,6 +291,7 @@ func (p *fwprovider) Configure(ctx context.Context, request provider.ConfigureRe
 // The data source type name is determined by the DataSource implementing
 // the Metadata method. All data sources must have unique names.
 func (p *fwprovider) DataSources(ctx context.Context) []func() datasource.DataSource {
+	var errs *multierror.Error
 	var dataSources []func() datasource.DataSource
 
 	for n, sp := range p.Primary.Meta().(*conns.AWSClient).ServicePackages {
@@ -303,6 +310,10 @@ func (p *fwprovider) DataSources(ctx context.Context) []func() datasource.DataSo
 				continue
 			}
 
+			metadataResponse := datasource.MetadataResponse{}
+			inner.Metadata(ctx, datasource.MetadataRequest{}, &metadataResponse)
+			typeName := metadataResponse.TypeName
+
 			// bootstrapContext is run on all wrapped methods before any interceptors.
 			bootstrapContext := func(ctx context.Context, meta *conns.AWSClient) context.Context {
 				ctx = conns.NewDataSourceContext(ctx, servicePackageName, v.Name)
@@ -312,11 +323,37 @@ func (p *fwprovider) DataSources(ctx context.Context) []func() datasource.DataSo
 
 				return ctx
 			}
+			interceptors := dataSourceInterceptors{}
+
+			if v.Tags != nil {
+				// The data source has opted in to transparent tagging.
+				// Ensure that the schema look OK.
+				schemaResponse := datasource.SchemaResponse{}
+				inner.Schema(ctx, datasource.SchemaRequest{}, &schemaResponse)
+
+				if v, ok := schemaResponse.Schema.Attributes[names.AttrTags]; ok {
+					if !v.IsComputed() {
+						errs = multierror.Append(errs, fmt.Errorf("`%s` attribute must be Computed: %s", names.AttrTags, typeName))
+						continue
+					}
+				} else {
+					errs = multierror.Append(errs, fmt.Errorf("no `%s` attribute defined in schema: %s", names.AttrTags, typeName))
+					continue
+				}
+
+				interceptors = append(interceptors, tagsDataSourceInterceptor{tags: v.Tags})
+			}
 
 			dataSources = append(dataSources, func() datasource.DataSource {
-				return newWrappedDataSource(bootstrapContext, inner)
+				return newWrappedDataSource(bootstrapContext, inner, interceptors)
 			})
 		}
+	}
+
+	if err := errs.ErrorOrNil(); err != nil {
+		tflog.Warn(ctx, "registering data sources", map[string]interface{}{
+			"error": err.Error(),
+		})
 	}
 
 	return dataSources
@@ -383,7 +420,7 @@ func (p *fwprovider) Resources(ctx context.Context) []func() resource.Resource {
 					continue
 				}
 
-				interceptors = append(interceptors, tagsInterceptor{tags: v.Tags})
+				interceptors = append(interceptors, tagsResourceInterceptor{tags: v.Tags})
 			}
 
 			resources = append(resources, func() resource.Resource {

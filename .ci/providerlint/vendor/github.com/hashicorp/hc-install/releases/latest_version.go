@@ -28,6 +28,9 @@ type LatestVersion struct {
 	Timeout            time.Duration
 	IncludePrereleases bool
 
+	// Enterprise indicates installation of enterprise version (leave nil for Community editions)
+	Enterprise *EnterpriseOptions
+
 	SkipChecksumVerification bool
 
 	// ArmoredPublicKey is a public PGP key in ASCII/armor format to use
@@ -61,6 +64,10 @@ func (lv *LatestVersion) Validate() error {
 
 	if !validators.IsBinaryNameValid(lv.Product.BinaryName()) {
 		return fmt.Errorf("invalid binary name: %q", lv.Product.BinaryName())
+	}
+
+	if err := validateEnterpriseOptions(lv.Enterprise); err != nil {
+		return err
 	}
 
 	return nil
@@ -122,7 +129,11 @@ func (lv *LatestVersion) Install(ctx context.Context) (string, error) {
 	if lv.apiBaseURL != "" {
 		d.BaseURL = lv.apiBaseURL
 	}
-	zipFilePath, err := d.DownloadAndUnpack(ctx, versionToInstall, dstDir)
+	licenseDir := ""
+	if lv.Enterprise != nil {
+		licenseDir = lv.Enterprise.LicenseDir
+	}
+	zipFilePath, err := d.DownloadAndUnpack(ctx, versionToInstall, dstDir, licenseDir)
 	if zipFilePath != "" {
 		lv.pathsToRemove = append(lv.pathsToRemove, zipFilePath)
 	}
@@ -156,10 +167,15 @@ func (lv *LatestVersion) Remove(ctx context.Context) error {
 }
 
 func (lv *LatestVersion) findLatestMatchingVersion(pvs rjson.ProductVersionsMap, vc version.Constraints) (*rjson.ProductVersion, bool) {
+	expectedMetadata := enterpriseVersionMetadata(lv.Enterprise)
 	versions := make(version.Collection, 0)
 	for _, pv := range pvs.AsSlice() {
 		if !lv.IncludePrereleases && pv.Version.Prerelease() != "" {
 			// skip prereleases if desired
+			continue
+		}
+
+		if pv.Version.Metadata() != expectedMetadata {
 			continue
 		}
 
