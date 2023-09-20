@@ -131,6 +131,14 @@ func resourceBucketObjectLockConfigurationCreate(ctx context.Context, d *schema.
 
 	d.SetId(CreateResourceID(bucket, expectedBucketOwner))
 
+	_, err = tfresource.RetryWhenNotFound(ctx, s3BucketPropagationTimeout, func() (interface{}, error) {
+		return findObjectLockConfiguration(ctx, conn, bucket, expectedBucketOwner)
+	})
+
+	if err != nil {
+		return diag.Errorf("waiting for S3 Bucket Object Lock Configuration (%s) create: %s", d.Id(), err)
+	}
+
 	return resourceBucketObjectLockConfigurationRead(ctx, d, meta)
 }
 
