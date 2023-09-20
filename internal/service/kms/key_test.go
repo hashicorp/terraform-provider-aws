@@ -6,9 +6,9 @@ package kms_test
 import (
 	"context"
 	"fmt"
-	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/kms"
 	awspolicy "github.com/hashicorp/awspolicyequivalence"
@@ -210,7 +210,7 @@ func TestAccKMSKey_Policy_bypass(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccKeyConfig_policyBypass(rName, false),
-				ExpectError: regexp.MustCompile(`The new key policy will not allow you to update the key policy in the future`),
+				ExpectError: regexache.MustCompile(`The new key policy will not allow you to update the key policy in the future`),
 			},
 			{
 				Config: testAccKeyConfig_policyBypass(rName, true),
@@ -516,6 +516,83 @@ func TestAccKMSKey_tags(t *testing.T) {
 	})
 }
 
+// https://github.com/hashicorp/terraform-provider-aws/issues/26174.
+func TestAccKMSKey_ignoreTags(t *testing.T) {
+	ctx := acctest.Context(t)
+	var key kms.KeyMetadata
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_kms_key.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, kms.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckKeyDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccKeyConfig_ignoreTags(rName, "key1", "value1", "key2", "value2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckKeyExists(ctx, resourceName, &key),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+				),
+			},
+			// Add an ignored tag.
+			{
+				Config: testAccKeyConfig_ignoreTags(rName, "key1", "value1", "key2", "value2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckKeyAddTag(ctx, &key, "ignkey1", "ignvalue1"),
+				),
+			},
+			{
+				Config: testAccKeyConfig_ignoreTags(rName, "key1", "value1updated", "key3", "value3"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckKeyExists(ctx, resourceName, &key),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key3", "value3"),
+				),
+			},
+		},
+	})
+}
+
+// https://github.com/hashicorp/terraform-provider-aws/issues/33219.
+func TestAccKMSKey_updateTagsEmptyValue(t *testing.T) {
+	ctx := acctest.Context(t)
+	var key kms.KeyMetadata
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_kms_key.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, kms.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckKeyDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccKeyConfig_tags2(rName, "key1", "value1", "key2", "value2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckKeyExists(ctx, resourceName, &key),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+				),
+			},
+			{
+				Config: testAccKeyConfig_tags2(rName, "key1", "value1", "key2", ""),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckKeyExists(ctx, resourceName, &key),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", ""),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckKeyHasPolicy(ctx context.Context, name string, expectedPolicyText string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
@@ -602,6 +679,24 @@ func testAccCheckKeyExists(ctx context.Context, name string, key *kms.KeyMetadat
 		*key = *(outputRaw.(*kms.KeyMetadata))
 
 		return nil
+	}
+}
+
+func testAccCheckKeyAddTag(ctx context.Context, key *kms.KeyMetadata, tagKey, tagValue string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).KMSConn(ctx)
+
+		input := &kms.TagResourceInput{
+			KeyId: key.KeyId,
+			Tags: []*kms.Tag{{
+				TagKey:   aws.String(tagKey),
+				TagValue: aws.String(tagValue),
+			}},
+		}
+
+		_, err := conn.TagResourceWithContext(ctx, input)
+
+		return err
 	}
 }
 
@@ -1090,4 +1185,30 @@ resource "aws_kms_key" "test" {
   deletion_window_in_days = 7
 }
 `, rName)
+}
+
+func testAccKeyConfig_ignoreTags(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+	// lintignore:AT004
+	return fmt.Sprintf(`
+provider "aws" {
+  default_tags {
+    tags = {
+      "defkey1" = "defvalue1"
+    }
+  }
+  ignore_tags {
+    keys = ["ignkey1"]
+  }
+}
+
+resource "aws_kms_key" "test" {
+  description             = %[1]q
+  deletion_window_in_days = 7
+
+  tags = {
+    %[2]q = %[3]q
+    %[4]q = %[5]q
+  }
+}
+`, rName, tagKey1, tagValue1, tagKey2, tagValue2)
 }

@@ -26,6 +26,16 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePackageSDKDataSource {
 	return []*types.ServicePackageSDKDataSource{
 		{
+			Factory:  DataSourceONTAPFileSystem,
+			TypeName: "aws_fsx_ontap_file_system",
+			Name:     "Ontap File System",
+		},
+		{
+			Factory:  DataSourceOntapStorageVirtualMachine,
+			TypeName: "aws_fsx_ontap_storage_virtual_machine",
+			Name:     "ONTAP Storage Virtual Machine",
+		},
+		{
 			Factory:  DataSourceOntapStorageVirtualMachines,
 			TypeName: "aws_fsx_ontap_storage_virtual_machines",
 			Name:     "Ontap Storage Virtual Machines",
@@ -76,7 +86,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceOntapFileSystem,
+			Factory:  ResourceONTAPFileSystem,
 			TypeName: "aws_fsx_ontap_file_system",
 			Name:     "ONTAP File System",
 			Tags: &types.ServicePackageResourceTags{
@@ -84,7 +94,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceOntapStorageVirtualMachine,
+			Factory:  ResourceONTAPStorageVirtualMachine,
 			TypeName: "aws_fsx_ontap_storage_virtual_machine",
 			Name:     "ONTAP Storage Virtual Machine",
 			Tags: &types.ServicePackageResourceTags{
@@ -100,7 +110,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceOpenzfsFileSystem,
+			Factory:  ResourceOpenZFSFileSystem,
 			TypeName: "aws_fsx_openzfs_file_system",
 			Name:     "OpenZFS File System",
 			Tags: &types.ServicePackageResourceTags{

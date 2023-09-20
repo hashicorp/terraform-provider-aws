@@ -768,6 +768,19 @@ func TestAccNetworkFirewallRuleGroup_StatefulRule_action(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
+			{
+				Config: testAccRuleGroupConfig_statefulAction(rName, networkfirewall.StatefulActionReject),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRuleGroupExists(ctx, resourceName, &ruleGroup),
+					resource.TestCheckResourceAttr(resourceName, "rule_group.0.rules_source.0.stateful_rule.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "rule_group.0.rules_source.0.stateful_rule.0.action", networkfirewall.StatefulActionReject),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
 		},
 	})
 }

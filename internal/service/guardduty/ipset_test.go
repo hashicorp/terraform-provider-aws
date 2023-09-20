@@ -6,9 +6,9 @@ package guardduty_test
 import (
 	"context"
 	"fmt"
-	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/guardduty"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
@@ -39,10 +39,10 @@ func testAccIPSet_basic(t *testing.T) {
 				Config: testAccIPSetConfig_basic(bucketName, keyName1, ipsetName1, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIPSetExists(ctx, resourceName),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "guardduty", regexp.MustCompile("detector/.+/ipset/.+$")),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "guardduty", regexache.MustCompile("detector/.+/ipset/.+$")),
 					resource.TestCheckResourceAttr(resourceName, "name", ipsetName1),
 					resource.TestCheckResourceAttr(resourceName, "activate", "true"),
-					resource.TestMatchResourceAttr(resourceName, "location", regexp.MustCompile(fmt.Sprintf("%s/%s$", bucketName, keyName1))),
+					resource.TestMatchResourceAttr(resourceName, "location", regexache.MustCompile(fmt.Sprintf("%s/%s$", bucketName, keyName1))),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
 			},
@@ -57,7 +57,7 @@ func testAccIPSet_basic(t *testing.T) {
 					testAccCheckIPSetExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "name", ipsetName2),
 					resource.TestCheckResourceAttr(resourceName, "activate", "false"),
-					resource.TestMatchResourceAttr(resourceName, "location", regexp.MustCompile(fmt.Sprintf("%s/%s$", bucketName, keyName2))),
+					resource.TestMatchResourceAttr(resourceName, "location", regexache.MustCompile(fmt.Sprintf("%s/%s$", bucketName, keyName2))),
 				),
 			},
 		},
@@ -178,11 +178,6 @@ resource "aws_s3_bucket" "test" {
   force_destroy = true
 }
 
-resource "aws_s3_bucket_acl" "test" {
-  bucket = aws_s3_bucket.test.id
-  acl    = "private"
-}
-
 resource "aws_s3_object" "test" {
   acl     = "public-read"
   content = "10.0.0.0/8\n"
@@ -207,11 +202,6 @@ resource "aws_guardduty_detector" "test" {}
 resource "aws_s3_bucket" "test" {
   bucket        = %[1]q
   force_destroy = true
-}
-
-resource "aws_s3_bucket_acl" "test" {
-  bucket = aws_s3_bucket.test.id
-  acl    = "private"
 }
 
 resource "aws_s3_object" "test" {
@@ -242,11 +232,6 @@ resource "aws_guardduty_detector" "test" {}
 resource "aws_s3_bucket" "test" {
   bucket        = %[1]q
   force_destroy = true
-}
-
-resource "aws_s3_bucket_acl" "test" {
-  bucket = aws_s3_bucket.test.id
-  acl    = "private"
 }
 
 resource "aws_s3_object" "test" {

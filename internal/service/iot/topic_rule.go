@@ -6,6 +6,7 @@ package iot
 import (
 	"context"
 	"log"
+	"reflect"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/iot"
@@ -1701,6 +1702,10 @@ func expandKafkaAction(tfList []interface{}) *iot.KafkaAction {
 
 	if v, ok := tfMap["topic"].(string); ok && v != "" {
 		apiObject.Topic = aws.String(v)
+	}
+
+	if reflect.DeepEqual(&iot.KafkaAction{}, apiObject) {
+		return nil
 	}
 
 	return apiObject

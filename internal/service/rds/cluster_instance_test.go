@@ -6,10 +6,10 @@ package rds_test
 import (
 	"context"
 	"fmt"
-	"regexp"
 	"strings"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/rds"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
@@ -42,11 +42,12 @@ func TestAccRDSClusterInstance_basic(t *testing.T) {
 				Config: testAccClusterInstanceConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckClusterInstanceExists(ctx, resourceName, &v),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "rds", regexp.MustCompile(`db:.+`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "rds", regexache.MustCompile(`db:.+`)),
 					resource.TestCheckResourceAttr(resourceName, "auto_minor_version_upgrade", "true"),
 					resource.TestCheckResourceAttrSet(resourceName, "availability_zone"),
 					resource.TestCheckResourceAttr(resourceName, "cluster_identifier", rName),
 					resource.TestCheckResourceAttr(resourceName, "copy_tags_to_snapshot", "false"),
+					resource.TestCheckResourceAttr(resourceName, "custom_iam_instance_profile", ""),
 					resource.TestCheckResourceAttrSet(resourceName, "dbi_resource_id"),
 					resource.TestCheckResourceAttr(resourceName, "engine", "aurora-mysql"),
 					resource.TestCheckResourceAttrSet(resourceName, "engine_version"),
@@ -811,7 +812,7 @@ func TestAccRDSClusterInstance_PerformanceInsightsKMSKeyIDAuroraMySQL1_defaultKe
 			},
 			{
 				Config:      testAccClusterInstanceConfig_performanceInsightsKMSKeyIDAuroraMySQL1(rName, engine),
-				ExpectError: regexp.MustCompile(`InvalidParameterCombination: You .* change your Performance Insights KMS key`),
+				ExpectError: regexache.MustCompile(`InvalidParameterCombination: You .* change your Performance Insights KMS key`),
 			},
 		},
 	})
@@ -947,7 +948,7 @@ func TestAccRDSClusterInstance_PerformanceInsightsKMSKeyIDAuroraPostgresql_defau
 			},
 			{
 				Config:      testAccClusterInstanceConfig_performanceInsightsKMSKeyIDAuroraPostgresql(rName, engine),
-				ExpectError: regexp.MustCompile(`InvalidParameterCombination: You .* change your Performance Insights KMS key`),
+				ExpectError: regexache.MustCompile(`InvalidParameterCombination: You .* change your Performance Insights KMS key`),
 			},
 		},
 	})
@@ -1303,6 +1304,9 @@ func testAccClusterInstanceConfig_kmsKey(rName string) string {
 		acctest.ConfigAvailableAZsNoOptIn(),
 		testAccClusterInstanceConfig_orderableEngineBase("aurora-mysql", false),
 		fmt.Sprintf(`
+data "aws_caller_identity" "current" {}
+data "aws_partition" "current" {}
+
 resource "aws_kms_key" "test" {
   description = %[1]q
 
@@ -1315,7 +1319,7 @@ resource "aws_kms_key" "test" {
       "Sid": "Enable IAM User Permissions",
       "Effect": "Allow",
       "Principal": {
-        "AWS": "*"
+        "AWS": "arn:${data.aws_partition.current.partition}:iam::${data.aws_caller_identity.current.account_id}:root"
       },
       "Action": "kms:*",
       "Resource": "*"

@@ -41,7 +41,7 @@ resource "aws_autoscaling_group" "bar" {
 }
 ```
 
-### Create target tarcking scaling policy using metric math
+### Create target tracking scaling policy using metric math
 
 ```terraform
 resource "aws_autoscaling_policy" "example" {

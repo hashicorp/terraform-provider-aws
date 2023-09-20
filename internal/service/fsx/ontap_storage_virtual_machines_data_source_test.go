@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package fsx_test
 
 import (
@@ -24,7 +27,6 @@ func TestAccFSxOntapStorageVirtualMachinesDataSource_Filter(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, fsx.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckOntapStorageVirtualMachineDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFSxOntapStorageVirtualMachinesDataSourceConfig_Filter(rName),

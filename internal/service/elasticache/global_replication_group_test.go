@@ -9,6 +9,7 @@ import (
 	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/elasticache"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
@@ -52,7 +53,7 @@ func TestAccElastiCacheGlobalReplicationGroup_basic(t *testing.T) {
 					testAccCheckGlobalReplicationGroupExists(ctx, resourceName, &globalReplicationGroup),
 					testAccCheckReplicationGroupExists(ctx, primaryReplicationGroupResourceName, &primaryReplicationGroup),
 					testAccCheckReplicationGroupParameterGroup(ctx, &primaryReplicationGroup, &pg),
-					acctest.MatchResourceAttrGlobalARN(resourceName, "arn", "elasticache", regexp.MustCompile(`globalreplicationgroup:`+tfelasticache.GlobalReplicationGroupRegionPrefixFormat+rName)),
+					acctest.MatchResourceAttrGlobalARN(resourceName, "arn", "elasticache", regexache.MustCompile(`globalreplicationgroup:`+tfelasticache.GlobalReplicationGroupRegionPrefixFormat+rName)),
 					resource.TestCheckResourceAttrPair(resourceName, "at_rest_encryption_enabled", primaryReplicationGroupResourceName, "at_rest_encryption_enabled"),
 					resource.TestCheckResourceAttr(resourceName, "auth_token_enabled", "false"),
 					resource.TestCheckResourceAttrPair(resourceName, "automatic_failover_enabled", primaryReplicationGroupResourceName, "automatic_failover_enabled"),
@@ -61,7 +62,7 @@ func TestAccElastiCacheGlobalReplicationGroup_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "engine", primaryReplicationGroupResourceName, "engine"),
 					resource.TestCheckResourceAttrPair(resourceName, "engine_version_actual", primaryReplicationGroupResourceName, "engine_version_actual"),
 					resource.TestCheckResourceAttr(resourceName, "global_replication_group_id_suffix", rName),
-					resource.TestMatchResourceAttr(resourceName, "global_replication_group_id", regexp.MustCompile(tfelasticache.GlobalReplicationGroupRegionPrefixFormat+rName)),
+					resource.TestMatchResourceAttr(resourceName, "global_replication_group_id", regexache.MustCompile(tfelasticache.GlobalReplicationGroupRegionPrefixFormat+rName)),
 					resource.TestCheckResourceAttr(resourceName, "global_replication_group_description", tfelasticache.EmptyDescription),
 					resource.TestCheckResourceAttr(resourceName, "global_node_groups.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "num_node_groups", "0"),
@@ -627,13 +628,13 @@ func TestAccElastiCacheGlobalReplicationGroup_SetNumNodeGroupsOnCreate_Increase(
 					resource.TestCheckResourceAttr(resourceName, "cluster_enabled", "true"),
 					resource.TestCheckResourceAttr(resourceName, "global_node_groups.#", "3"),
 					resource.TestMatchTypeSetElemNestedAttrs(resourceName, "global_node_groups.*", map[string]*regexp.Regexp{
-						"global_node_group_id": regexp.MustCompile(fmt.Sprintf("^[a-z]+-%s-0001$", rName)),
+						"global_node_group_id": regexache.MustCompile(fmt.Sprintf("^[a-z]+-%s-0001$", rName)),
 					}),
 					resource.TestMatchTypeSetElemNestedAttrs(resourceName, "global_node_groups.*", map[string]*regexp.Regexp{
-						"global_node_group_id": regexp.MustCompile(fmt.Sprintf("^[a-z]+-%s-0002$", rName)),
+						"global_node_group_id": regexache.MustCompile(fmt.Sprintf("^[a-z]+-%s-0002$", rName)),
 					}),
 					resource.TestMatchTypeSetElemNestedAttrs(resourceName, "global_node_groups.*", map[string]*regexp.Regexp{
-						"global_node_group_id": regexp.MustCompile(fmt.Sprintf("^[a-z]+-%s-0003$", rName)),
+						"global_node_group_id": regexache.MustCompile(fmt.Sprintf("^[a-z]+-%s-0003$", rName)),
 					}),
 					resource.TestCheckResourceAttr(resourceName, "num_node_groups", "3"),
 					resource.TestCheckResourceAttr(primaryReplicationGroupResourceName, "num_node_groups", "2"),
@@ -676,8 +677,8 @@ func TestAccElastiCacheGlobalReplicationGroup_SetNumNodeGroupsOnCreate_Decrease(
 					resource.TestCheckResourceAttr(resourceName, "cluster_enabled", "true"),
 					resource.TestCheckResourceAttr(resourceName, "global_node_groups.#", "1"),
 					resource.TestMatchTypeSetElemNestedAttrs(resourceName, "global_node_groups.*", map[string]*regexp.Regexp{
-						"global_node_group_id": regexp.MustCompile(fmt.Sprintf("^[a-z]+-%s-0001$", rName)),
-						"slots":                regexp.MustCompile("^0-16383$"), // all slots
+						"global_node_group_id": regexache.MustCompile(fmt.Sprintf("^[a-z]+-%s-0001$", rName)),
+						"slots":                regexache.MustCompile("^0-16383$"), // all slots
 					}),
 					resource.TestCheckResourceAttr(resourceName, "num_node_groups", "1"),
 					resource.TestCheckResourceAttr(primaryReplicationGroupResourceName, "num_node_groups", "3"),
@@ -720,10 +721,10 @@ func TestAccElastiCacheGlobalReplicationGroup_SetNumNodeGroupsOnUpdate_Increase(
 					resource.TestCheckResourceAttr(resourceName, "cluster_enabled", "true"),
 					resource.TestCheckResourceAttr(resourceName, "global_node_groups.#", "2"),
 					resource.TestMatchTypeSetElemNestedAttrs(resourceName, "global_node_groups.*", map[string]*regexp.Regexp{
-						"global_node_group_id": regexp.MustCompile(fmt.Sprintf("^[a-z]+-%s-0001$", rName)),
+						"global_node_group_id": regexache.MustCompile(fmt.Sprintf("^[a-z]+-%s-0001$", rName)),
 					}),
 					resource.TestMatchTypeSetElemNestedAttrs(resourceName, "global_node_groups.*", map[string]*regexp.Regexp{
-						"global_node_group_id": regexp.MustCompile(fmt.Sprintf("^[a-z]+-%s-0002$", rName)),
+						"global_node_group_id": regexache.MustCompile(fmt.Sprintf("^[a-z]+-%s-0002$", rName)),
 					}),
 					resource.TestCheckResourceAttr(resourceName, "num_node_groups", "2"),
 					resource.TestCheckResourceAttr(primaryReplicationGroupResourceName, "num_node_groups", "2"),
@@ -737,13 +738,13 @@ func TestAccElastiCacheGlobalReplicationGroup_SetNumNodeGroupsOnUpdate_Increase(
 					resource.TestCheckResourceAttr(resourceName, "cluster_enabled", "true"),
 					resource.TestCheckResourceAttr(resourceName, "global_node_groups.#", "3"),
 					resource.TestMatchTypeSetElemNestedAttrs(resourceName, "global_node_groups.*", map[string]*regexp.Regexp{
-						"global_node_group_id": regexp.MustCompile(fmt.Sprintf("^[a-z]+-%s-0001$", rName)),
+						"global_node_group_id": regexache.MustCompile(fmt.Sprintf("^[a-z]+-%s-0001$", rName)),
 					}),
 					resource.TestMatchTypeSetElemNestedAttrs(resourceName, "global_node_groups.*", map[string]*regexp.Regexp{
-						"global_node_group_id": regexp.MustCompile(fmt.Sprintf("^[a-z]+-%s-0002$", rName)),
+						"global_node_group_id": regexache.MustCompile(fmt.Sprintf("^[a-z]+-%s-0002$", rName)),
 					}),
 					resource.TestMatchTypeSetElemNestedAttrs(resourceName, "global_node_groups.*", map[string]*regexp.Regexp{
-						"global_node_group_id": regexp.MustCompile(fmt.Sprintf("^[a-z]+-%s-0003$", rName)),
+						"global_node_group_id": regexache.MustCompile(fmt.Sprintf("^[a-z]+-%s-0003$", rName)),
 					}),
 					resource.TestCheckResourceAttr(resourceName, "num_node_groups", "3"),
 					resource.TestCheckResourceAttr(primaryReplicationGroupResourceName, "num_node_groups", "2"),
@@ -786,10 +787,10 @@ func TestAccElastiCacheGlobalReplicationGroup_SetNumNodeGroupsOnUpdate_Decrease(
 					resource.TestCheckResourceAttr(resourceName, "cluster_enabled", "true"),
 					resource.TestCheckResourceAttr(resourceName, "global_node_groups.#", "2"),
 					resource.TestMatchTypeSetElemNestedAttrs(resourceName, "global_node_groups.*", map[string]*regexp.Regexp{
-						"global_node_group_id": regexp.MustCompile(fmt.Sprintf("^[a-z]+-%s-0001$", rName)),
+						"global_node_group_id": regexache.MustCompile(fmt.Sprintf("^[a-z]+-%s-0001$", rName)),
 					}),
 					resource.TestMatchTypeSetElemNestedAttrs(resourceName, "global_node_groups.*", map[string]*regexp.Regexp{
-						"global_node_group_id": regexp.MustCompile(fmt.Sprintf("^[a-z]+-%s-0002$", rName)),
+						"global_node_group_id": regexache.MustCompile(fmt.Sprintf("^[a-z]+-%s-0002$", rName)),
 					}),
 					resource.TestCheckResourceAttr(resourceName, "num_node_groups", "2"),
 					resource.TestCheckResourceAttr(primaryReplicationGroupResourceName, "num_node_groups", "2"),
@@ -803,8 +804,8 @@ func TestAccElastiCacheGlobalReplicationGroup_SetNumNodeGroupsOnUpdate_Decrease(
 					resource.TestCheckResourceAttr(resourceName, "cluster_enabled", "true"),
 					resource.TestCheckResourceAttr(resourceName, "global_node_groups.#", "1"),
 					resource.TestMatchTypeSetElemNestedAttrs(resourceName, "global_node_groups.*", map[string]*regexp.Regexp{
-						"global_node_group_id": regexp.MustCompile(fmt.Sprintf("^[a-z]+-%s-0001$", rName)),
-						"slots":                regexp.MustCompile("^0-16383$"), // all slots
+						"global_node_group_id": regexache.MustCompile(fmt.Sprintf("^[a-z]+-%s-0001$", rName)),
+						"slots":                regexache.MustCompile("^0-16383$"), // all slots
 					}),
 					resource.TestCheckResourceAttr(resourceName, "num_node_groups", "1"),
 					resource.TestCheckResourceAttr(primaryReplicationGroupResourceName, "num_node_groups", "2"),
@@ -840,7 +841,7 @@ func TestAccElastiCacheGlobalReplicationGroup_SetEngineVersionOnCreate_NoChange_
 				Config: testAccGlobalReplicationGroupConfig_engineVersion(rName, primaryReplicationGroupId, "6.2", "6.2"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckGlobalReplicationGroupExists(ctx, resourceName, &globalReplicationGroup),
-					resource.TestMatchResourceAttr(resourceName, "engine_version_actual", regexp.MustCompile(`^6\.2\.[[:digit:]]+$`)),
+					resource.TestMatchResourceAttr(resourceName, "engine_version_actual", regexache.MustCompile(`^6\.2\.[[:digit:]]+$`)),
 				),
 			},
 			{
@@ -873,7 +874,7 @@ func TestAccElastiCacheGlobalReplicationGroup_SetEngineVersionOnCreate_NoChange_
 				Config: testAccGlobalReplicationGroupConfig_engineVersion(rName, primaryReplicationGroupId, "6.2", "6.x"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckGlobalReplicationGroupExists(ctx, resourceName, &globalReplicationGroup),
-					resource.TestMatchResourceAttr(resourceName, "engine_version_actual", regexp.MustCompile(`^6\.2\.[[:digit:]]+$`)),
+					resource.TestMatchResourceAttr(resourceName, "engine_version_actual", regexache.MustCompile(`^6\.2\.[[:digit:]]+$`)),
 				),
 			},
 			{
@@ -944,8 +945,8 @@ func TestAccElastiCacheGlobalReplicationGroup_SetEngineVersionOnCreate_MinorUpgr
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckGlobalReplicationGroupExists(ctx, resourceName, &globalReplicationGroup),
 					testAccCheckReplicationGroupExists(ctx, primaryReplicationGroupResourceName, &rg),
-					resource.TestMatchResourceAttr(resourceName, "engine_version_actual", regexp.MustCompile(`^6\.2\.[[:digit:]]+$`)),
-					testAccMatchReplicationGroupActualVersion(ctx, &rg, regexp.MustCompile(`^6\.2\.[[:digit:]]+$`)),
+					resource.TestMatchResourceAttr(resourceName, "engine_version_actual", regexache.MustCompile(`^6\.2\.[[:digit:]]+$`)),
+					testAccMatchReplicationGroupActualVersion(ctx, &rg, regexache.MustCompile(`^6\.2\.[[:digit:]]+$`)),
 				),
 			},
 			{
@@ -982,8 +983,8 @@ func TestAccElastiCacheGlobalReplicationGroup_SetEngineVersionOnCreate_MinorUpgr
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckGlobalReplicationGroupExists(ctx, resourceName, &globalReplicationGroup),
 					testAccCheckReplicationGroupExists(ctx, primaryReplicationGroupResourceName, &rg),
-					resource.TestMatchResourceAttr(resourceName, "engine_version_actual", regexp.MustCompile(`^6\.0\.[[:digit:]]+$`)),
-					testAccMatchReplicationGroupActualVersion(ctx, &rg, regexp.MustCompile(`^6\.0\.[[:digit:]]+$`)),
+					resource.TestMatchResourceAttr(resourceName, "engine_version_actual", regexache.MustCompile(`^6\.0\.[[:digit:]]+$`)),
+					testAccMatchReplicationGroupActualVersion(ctx, &rg, regexache.MustCompile(`^6\.0\.[[:digit:]]+$`)),
 				),
 			},
 		},
@@ -1015,8 +1016,8 @@ func TestAccElastiCacheGlobalReplicationGroup_SetEngineVersionOnCreate_MajorUpgr
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckGlobalReplicationGroupExists(ctx, resourceName, &globalReplicationGroup),
 					testAccCheckReplicationGroupExists(ctx, primaryReplicationGroupResourceName, &rg),
-					resource.TestMatchResourceAttr(resourceName, "engine_version_actual", regexp.MustCompile(`^6\.2\.[[:digit:]]+$`)),
-					testAccMatchReplicationGroupActualVersion(ctx, &rg, regexp.MustCompile(`^6\.2\.[[:digit:]]+$`)),
+					resource.TestMatchResourceAttr(resourceName, "engine_version_actual", regexache.MustCompile(`^6\.2\.[[:digit:]]+$`)),
+					testAccMatchReplicationGroupActualVersion(ctx, &rg, regexache.MustCompile(`^6\.2\.[[:digit:]]+$`)),
 				),
 			},
 			{
@@ -1054,8 +1055,8 @@ func TestAccElastiCacheGlobalReplicationGroup_SetEngineVersionOnCreate_MajorUpgr
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckGlobalReplicationGroupExists(ctx, resourceName, &globalReplicationGroup),
 					testAccCheckReplicationGroupExists(ctx, primaryReplicationGroupResourceName, &rg),
-					resource.TestMatchResourceAttr(resourceName, "engine_version_actual", regexp.MustCompile(`^6\.2\.[[:digit:]]+$`)),
-					testAccMatchReplicationGroupActualVersion(ctx, &rg, regexp.MustCompile(`^6\.2\.[[:digit:]]+$`)),
+					resource.TestMatchResourceAttr(resourceName, "engine_version_actual", regexache.MustCompile(`^6\.2\.[[:digit:]]+$`)),
+					testAccMatchReplicationGroupActualVersion(ctx, &rg, regexache.MustCompile(`^6\.2\.[[:digit:]]+$`)),
 				),
 			},
 			{
@@ -1085,7 +1086,7 @@ func TestAccElastiCacheGlobalReplicationGroup_SetEngineVersionOnCreate_MinorDown
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccGlobalReplicationGroupConfig_engineVersion(rName, primaryReplicationGroupId, "6.2", "6.0"),
-				ExpectError: regexp.MustCompile(`cannot downgrade version when creating, is 6.2.[[:digit:]]+, want 6.0.[[:digit:]]+`),
+				ExpectError: regexache.MustCompile(`cannot downgrade version when creating, is 6.2.[[:digit:]]+, want 6.0.[[:digit:]]+`),
 			},
 		},
 	})
@@ -1104,7 +1105,7 @@ func TestAccElastiCacheGlobalReplicationGroup_SetParameterGroupOnCreate_NoVersio
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccGlobalReplicationGroupConfig_param(rName, primaryReplicationGroupId, "6.2", "default.redis6.x"),
-				ExpectError: regexp.MustCompile(`cannot change parameter group name without upgrading major engine version`),
+				ExpectError: regexache.MustCompile(`cannot change parameter group name without upgrading major engine version`),
 				PlanOnly:    true,
 			},
 		},
@@ -1124,7 +1125,7 @@ func TestAccElastiCacheGlobalReplicationGroup_SetParameterGroupOnCreate_MinorUpg
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccGlobalReplicationGroupConfig_engineVersionParam(rName, primaryReplicationGroupId, "6.0", "6.2", "default.redis6.x"),
-				ExpectError: regexp.MustCompile(`cannot change parameter group name on minor engine version upgrade, upgrading from 6\.0\.[[:digit:]]+ to 6\.2\.[[:digit:]]+`),
+				ExpectError: regexache.MustCompile(`cannot change parameter group name on minor engine version upgrade, upgrading from 6\.0\.[[:digit:]]+ to 6\.2\.[[:digit:]]+`),
 			},
 		},
 	})
@@ -1153,14 +1154,14 @@ func TestAccElastiCacheGlobalReplicationGroup_SetEngineVersionOnUpdate_MinorUpgr
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckGlobalReplicationGroupExists(ctx, resourceName, &globalReplicationGroup),
 					resource.TestCheckResourceAttrPair(resourceName, "engine_version_actual", primaryReplicationGroupResourceName, "engine_version_actual"),
-					resource.TestMatchResourceAttr(resourceName, "engine_version_actual", regexp.MustCompile(`^6\.0\.[[:digit:]]+$`)),
+					resource.TestMatchResourceAttr(resourceName, "engine_version_actual", regexache.MustCompile(`^6\.0\.[[:digit:]]+$`)),
 				),
 			},
 			{
 				Config: testAccGlobalReplicationGroupConfig_engineVersion(rName, primaryReplicationGroupId, "6.0", "6.2"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckGlobalReplicationGroupExists(ctx, resourceName, &globalReplicationGroup),
-					resource.TestMatchResourceAttr(resourceName, "engine_version_actual", regexp.MustCompile(`^6\.2\.[[:digit:]]+$`)),
+					resource.TestMatchResourceAttr(resourceName, "engine_version_actual", regexache.MustCompile(`^6\.2\.[[:digit:]]+$`)),
 				),
 			},
 		},
@@ -1190,7 +1191,7 @@ func TestAccElastiCacheGlobalReplicationGroup_SetEngineVersionOnUpdate_MinorUpgr
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckGlobalReplicationGroupExists(ctx, resourceName, &globalReplicationGroup),
 					resource.TestCheckResourceAttrPair(resourceName, "engine_version_actual", primaryReplicationGroupResourceName, "engine_version_actual"),
-					resource.TestMatchResourceAttr(resourceName, "engine_version_actual", regexp.MustCompile(`^6\.0\.[[:digit:]]+$`)),
+					resource.TestMatchResourceAttr(resourceName, "engine_version_actual", regexache.MustCompile(`^6\.0\.[[:digit:]]+$`)),
 				),
 			},
 			{
@@ -1224,12 +1225,12 @@ func TestAccElastiCacheGlobalReplicationGroup_SetEngineVersionOnUpdate_MinorDown
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckGlobalReplicationGroupExists(ctx, resourceName, &globalReplicationGroup),
 					resource.TestCheckResourceAttrPair(resourceName, "engine_version_actual", primaryReplicationGroupResourceName, "engine_version_actual"),
-					resource.TestMatchResourceAttr(resourceName, "engine_version_actual", regexp.MustCompile(`^6\.2\.[[:digit:]]+$`)),
+					resource.TestMatchResourceAttr(resourceName, "engine_version_actual", regexache.MustCompile(`^6\.2\.[[:digit:]]+$`)),
 				),
 			},
 			{
 				Config:      testAccGlobalReplicationGroupConfig_engineVersion(rName, primaryReplicationGroupId, "6.2", "6.0"),
-				ExpectError: regexp.MustCompile(`Downgrading ElastiCache Global Replication Group \(.*\) engine version requires replacement`),
+				ExpectError: regexache.MustCompile(`Downgrading ElastiCache Global Replication Group \(.*\) engine version requires replacement`),
 			},
 			// This step fails with: Error running pre-apply refresh
 			// {
@@ -1241,7 +1242,7 @@ func TestAccElastiCacheGlobalReplicationGroup_SetEngineVersionOnUpdate_MinorDown
 			// 	Check: resource.ComposeAggregateTestCheckFunc(
 			// 		testAccCheckGlobalReplicationGroupExists(resourceName, &globalReplicationGroup),
 			// 		resource.TestCheckResourceAttrPair(resourceName, "engine_version_actual", primaryReplicationGroupResourceName, "engine_version_actual"),
-			// 		resource.TestMatchResourceAttr(resourceName, "engine_version_actual", regexp.MustCompile(`^6\.0\.[[:digit:]]+$`)),
+			// 		resource.TestMatchResourceAttr(resourceName, "engine_version_actual", regexache.MustCompile(`^6\.0\.[[:digit:]]+$`)),
 			// 	),
 			// },
 		},
@@ -1283,7 +1284,7 @@ func TestAccElastiCacheGlobalReplicationGroup_SetEngineVersionOnUpdate_MajorUpgr
 				Config: testAccGlobalReplicationGroupConfig_engineVersionParam(rName, primaryReplicationGroupId, "5.0.6", "6.2", "default.redis6.x"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckGlobalReplicationGroupExists(ctx, resourceName, &globalReplicationGroup),
-					resource.TestMatchResourceAttr(resourceName, "engine_version_actual", regexp.MustCompile(`^6\.2\.[[:digit:]]+$`)),
+					resource.TestMatchResourceAttr(resourceName, "engine_version_actual", regexache.MustCompile(`^6\.2\.[[:digit:]]+$`)),
 				),
 			},
 		},
@@ -1325,7 +1326,7 @@ func TestAccElastiCacheGlobalReplicationGroup_SetEngineVersionOnUpdate_MajorUpgr
 				Config: testAccGlobalReplicationGroupConfig_engineVersionParam(rName, primaryReplicationGroupId, "5.0.6", "6.x", "default.redis6.x"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckGlobalReplicationGroupExists(ctx, resourceName, &globalReplicationGroup),
-					resource.TestMatchResourceAttr(resourceName, "engine_version_actual", regexp.MustCompile(`^6\.2\.[[:digit:]]+$`)),
+					resource.TestMatchResourceAttr(resourceName, "engine_version_actual", regexache.MustCompile(`^6\.2\.[[:digit:]]+$`)),
 				),
 			},
 		},
@@ -1355,12 +1356,12 @@ func TestAccElastiCacheGlobalReplicationGroup_SetParameterGroupOnUpdate_NoVersio
 				Config: testAccGlobalReplicationGroupConfig_engineVersionInherit(rName, primaryReplicationGroupId, "6.2"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckGlobalReplicationGroupExists(ctx, resourceName, &globalReplicationGroup),
-					resource.TestMatchResourceAttr(resourceName, "engine_version_actual", regexp.MustCompile(`^6\.2\.[[:digit:]]+$`)),
+					resource.TestMatchResourceAttr(resourceName, "engine_version_actual", regexache.MustCompile(`^6\.2\.[[:digit:]]+$`)),
 				),
 			},
 			{
 				Config:      testAccGlobalReplicationGroupConfig_param(rName, primaryReplicationGroupId, "6.2", "default.redis6.x"),
-				ExpectError: regexp.MustCompile(`cannot change parameter group name without upgrading major engine version`),
+				ExpectError: regexache.MustCompile(`cannot change parameter group name without upgrading major engine version`),
 				PlanOnly:    true,
 			},
 		},
@@ -1390,12 +1391,12 @@ func TestAccElastiCacheGlobalReplicationGroup_SetParameterGroupOnUpdate_MinorUpg
 				Config: testAccGlobalReplicationGroupConfig_engineVersionInherit(rName, primaryReplicationGroupId, "6.0"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckGlobalReplicationGroupExists(ctx, resourceName, &globalReplicationGroup),
-					resource.TestMatchResourceAttr(resourceName, "engine_version_actual", regexp.MustCompile(`^6\.0\.[[:digit:]]+$`)),
+					resource.TestMatchResourceAttr(resourceName, "engine_version_actual", regexache.MustCompile(`^6\.0\.[[:digit:]]+$`)),
 				),
 			},
 			{
 				Config:      testAccGlobalReplicationGroupConfig_engineVersionParam(rName, primaryReplicationGroupId, "6.0", "6.2", "default.redis6.x"),
-				ExpectError: regexp.MustCompile(`cannot change parameter group name on minor engine version upgrade, upgrading from 6\.0\.[[:digit:]]+ to 6\.2\.[[:digit:]]+`),
+				ExpectError: regexache.MustCompile(`cannot change parameter group name on minor engine version upgrade, upgrading from 6\.0\.[[:digit:]]+ to 6\.2\.[[:digit:]]+`),
 				PlanOnly:    true,
 			},
 		},
@@ -1426,12 +1427,12 @@ func TestAccElastiCacheGlobalReplicationGroup_UpdateParameterGroupName(t *testin
 				Config: testAccGlobalReplicationGroupConfig_engineVersionParam(rName, primaryReplicationGroupId, "5.0.6", "6.2", "default.redis6.x"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckGlobalReplicationGroupExists(ctx, resourceName, &globalReplicationGroup),
-					resource.TestMatchResourceAttr(resourceName, "engine_version_actual", regexp.MustCompile(`^6\.2\.[[:digit:]]+$`)),
+					resource.TestMatchResourceAttr(resourceName, "engine_version_actual", regexache.MustCompile(`^6\.2\.[[:digit:]]+$`)),
 				),
 			},
 			{
 				Config:      testAccGlobalReplicationGroupConfig_engineVersionCustomParam(rName, primaryReplicationGroupId, "5.0.6", "6.2", parameterGroupName, "redis6.x"),
-				ExpectError: regexp.MustCompile(`cannot change parameter group name without upgrading major engine version`),
+				ExpectError: regexache.MustCompile(`cannot change parameter group name without upgrading major engine version`),
 				PlanOnly:    true,
 			},
 		},

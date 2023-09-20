@@ -363,6 +363,9 @@ func skipSweepUserError(err error) bool {
 	if tfawserr.ErrMessageContains(err, quicksight.ErrCodeResourceNotFoundException, "not signed up with QuickSight") {
 		return true
 	}
+	if tfawserr.ErrMessageContains(err, quicksight.ErrCodeResourceNotFoundException, "Namespace default not found in account") {
+		return true
+	}
 
 	return sweep.SkipSweepError(err)
 

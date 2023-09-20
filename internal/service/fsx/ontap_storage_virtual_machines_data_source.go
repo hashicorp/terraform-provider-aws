@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package fsx
 
 import (
@@ -18,7 +21,7 @@ func DataSourceOntapStorageVirtualMachines() *schema.Resource {
 		ReadWithoutTimeout: dataSourceOntapStorageVirtualMachinesRead,
 
 		Schema: map[string]*schema.Schema{
-			"filter": DataSoureStorageVirtualMachineFiltersSchema(),
+			"filter": DataSourceStorageVirtualMachineFiltersSchema(),
 			"ids": {
 				Type:     schema.TypeList,
 				Computed: true,

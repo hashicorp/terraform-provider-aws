@@ -64,7 +64,7 @@ func BuildStorageVirtualMachineFiltersDataSource(set *schema.Set) []*fsx.Storage
 	return filters
 }
 
-func DataSoureStorageVirtualMachineFiltersSchema() *schema.Schema {
+func DataSourceStorageVirtualMachineFiltersSchema() *schema.Schema {
 	return &schema.Schema{
 		Type:     schema.TypeSet,
 		Optional: true,

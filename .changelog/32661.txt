@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_sagemaker_domain: Fix validation on `s3_kms_key_id` in `sharing_settings` and `kms_key_id`
+```

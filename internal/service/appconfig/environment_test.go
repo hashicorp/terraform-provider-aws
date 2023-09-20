@@ -6,9 +6,9 @@ package appconfig_test
 import (
 	"context"
 	"fmt"
-	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/appconfig"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
@@ -36,7 +36,7 @@ func TestAccAppConfigEnvironment_basic(t *testing.T) {
 				Config: testAccEnvironmentConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEnvironmentExists(ctx, resourceName),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "appconfig", regexp.MustCompile(`application/[a-z0-9]{4,7}/environment/[a-z0-9]{4,7}`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "appconfig", regexache.MustCompile(`application/[0-9a-z]{4,7}/environment/[0-9a-z]{4,7}`)),
 					resource.TestCheckResourceAttrPair(resourceName, "application_id", appResourceName, "id"),
 					resource.TestCheckResourceAttr(resourceName, "description", ""),
 					resource.TestCheckResourceAttr(resourceName, "monitor.#", "0"),

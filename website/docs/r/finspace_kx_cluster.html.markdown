@@ -134,7 +134,7 @@ The code block supports the following arguments:
 The database block supports the following arguments:
 
 * `database_name` - (Required) Name of the KX database.
-* `cache_configurations` - (Required)  Configuration details for the disk cache to increase performance reading from a KX database mounted to the cluster. See [cache_configurations](#cache_configurations).
+* `cache_configurations` - (Optional) Configuration details for the disk cache to increase performance reading from a KX database mounted to the cluster. See [cache_configurations](#cache_configurations).
 * `changeset_id` - (Optional) A unique identifier of the changeset that is associated with the cluster.
 
 #### cache_configurations
@@ -142,7 +142,7 @@ The database block supports the following arguments:
 The cache_configuration block supports the following arguments:
 
 * `cache_type` - (Required) Type of disk cache.
-* `db_paths` - (Required) Paths within the database to cache.
+* `db_paths` - (Optional) Paths within the database to cache.
 
 ### savedown_storage_configuration
 
@@ -150,7 +150,7 @@ The savedown_storage_configuration block supports the following arguments:
 
 * `type` - (Required) Type of writeable storage space for temporarily storing your savedown data. The valid values are:
     * SDS01 - This type represents 3000 IOPS and io2 ebs volume type.
-* `size` - (Required) Size of temporary storage in bytes.
+* `size` - (Required) Size of temporary storage in gigabytes. Must be between 10 and 16000.
 
 ### vpc_configuration
 

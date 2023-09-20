@@ -7,10 +7,10 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"regexp"
 	"strings"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/rds"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -58,6 +58,7 @@ func TestAccRDSCluster_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "cluster_resource_id"),
 					resource.TestCheckResourceAttr(resourceName, "copy_tags_to_snapshot", "false"),
 					resource.TestCheckResourceAttr(resourceName, "db_cluster_parameter_group_name", "default.aurora-mysql5.7"),
+					resource.TestCheckResourceAttr(resourceName, "db_system_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "enabled_cloudwatch_logs_exports.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "engine", "aurora-mysql"),
 					resource.TestCheckResourceAttrSet(resourceName, "engine_version"),
@@ -168,7 +169,7 @@ func TestAccRDSCluster_identifierGenerated(t *testing.T) {
 				Config: testAccClusterConfig_identifierGenerated(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &v),
-					resource.TestMatchResourceAttr(resourceName, "cluster_identifier", regexp.MustCompile("^tf-")),
+					resource.TestMatchResourceAttr(resourceName, "cluster_identifier", regexache.MustCompile("^tf-")),
 				),
 			},
 		},
@@ -190,7 +191,7 @@ func TestAccRDSCluster_identifierPrefix(t *testing.T) {
 				Config: testAccClusterConfig_identifierPrefix("tf-test-"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &v),
-					resource.TestMatchResourceAttr(resourceName, "cluster_identifier", regexp.MustCompile("^tf-test-")),
+					resource.TestMatchResourceAttr(resourceName, "cluster_identifier", regexache.MustCompile("^tf-test-")),
 				),
 			},
 		},
@@ -922,7 +923,7 @@ func TestAccRDSCluster_missingUserNameCausesError(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccClusterConfig_withoutUserNameAndPassword(sdkacctest.RandInt()),
-				ExpectError: regexp.MustCompile(`InvalidParameterValue: The parameter MasterUsername must be provided`),
+				ExpectError: regexache.MustCompile(`InvalidParameterValue: The parameter MasterUsername must be provided`),
 			},
 		},
 	})
@@ -1359,7 +1360,7 @@ func TestAccRDSCluster_engineVersion(t *testing.T) {
 			},
 			{
 				Config:      testAccClusterConfig_engineVersion(rName, true),
-				ExpectError: regexp.MustCompile(`Cannot modify engine version without a healthy primary instance in DB cluster`),
+				ExpectError: regexache.MustCompile(`Cannot modify engine version without a healthy primary instance in DB cluster`),
 			},
 		},
 	})
@@ -1450,7 +1451,7 @@ func TestAccRDSCluster_GlobalClusterIdentifierEngineModeGlobal_add(t *testing.T)
 			},
 			{
 				Config:      testAccClusterConfig_GlobalClusterID_EngineMode_global(rName),
-				ExpectError: regexp.MustCompile(`(?i)Existing RDS Clusters cannot be added to an existing RDS Global Cluster`),
+				ExpectError: regexache.MustCompile(`(?i)Existing RDS Clusters cannot be added to an existing RDS Global Cluster`),
 			},
 		},
 	})
@@ -1512,7 +1513,7 @@ func TestAccRDSCluster_GlobalClusterIdentifierEngineModeGlobal_update(t *testing
 			},
 			{
 				Config:      testAccClusterConfig_GlobalClusterID_EngineMode_globalUpdate(rName, globalClusterResourceName2),
-				ExpectError: regexp.MustCompile(`(?i)Existing RDS Clusters cannot be migrated between existing RDS Global Clusters`),
+				ExpectError: regexache.MustCompile(`(?i)Existing RDS Clusters cannot be migrated between existing RDS Global Clusters`),
 			},
 		},
 	})
@@ -3197,6 +3198,8 @@ resource "aws_rds_cluster" "test" {
 
 func testAccClusterConfig_kmsKey(n int) string {
 	return fmt.Sprintf(`
+data "aws_caller_identity" "current" {}
+data "aws_partition" "current" {}
 
 resource "aws_kms_key" "foo" {
   description = "Terraform acc test %[1]d"
@@ -3210,7 +3213,7 @@ resource "aws_kms_key" "foo" {
       "Sid": "Enable IAM User Permissions",
       "Effect": "Allow",
       "Principal": {
-        "AWS": "*"
+        "AWS": "arn:${data.aws_partition.current.partition}:iam::${data.aws_caller_identity.current.account_id}:root"
       },
       "Action": "kms:*",
       "Resource": "*"
@@ -3647,7 +3650,7 @@ data "aws_availability_zones" "available" {
 }
 
 data "aws_caller_identity" "current" {}
-
+data "aws_partition" "current" {}
 data "aws_region" "current" {}
 
 resource "aws_rds_cluster_parameter_group" "test" {
@@ -3695,7 +3698,7 @@ resource "aws_kms_key" "test" {
       "Sid": "Enable IAM User Permissions",
       "Effect": "Allow",
       "Principal": {
-        "AWS": "*"
+        "AWS": "arn:${data.aws_partition.current.partition}:iam::${data.aws_caller_identity.current.account_id}:root"
       },
       "Action": "kms:*",
       "Resource": "*"

@@ -6,8 +6,8 @@ package quicksight
 import (
 	"context"
 	"fmt"
-	"regexp"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/quicksight"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -48,7 +48,7 @@ func DataSourceGroup() *schema.Resource {
 					Default:  DefaultGroupNamespace,
 					ValidateFunc: validation.All(
 						validation.StringLenBetween(1, 63),
-						validation.StringMatch(regexp.MustCompile(`^[a-zA-Z0-9._-]*$`), "must contain only alphanumeric characters, hyphens, underscores, and periods"),
+						validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_.-]*$`), "must contain only alphanumeric characters, hyphens, underscores, and periods"),
 					),
 				},
 				"principal_id": {

@@ -6,9 +6,9 @@ package docdb_test
 import (
 	"context"
 	"fmt"
-	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/docdb"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
@@ -90,7 +90,7 @@ func TestAccDocDBSubnetGroup_namePrefix(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSubnetGroupExists(ctx, "aws_docdb_subnet_group.test", &v),
 					resource.TestMatchResourceAttr(
-						"aws_docdb_subnet_group.test", "name", regexp.MustCompile("^tf_test-")),
+						"aws_docdb_subnet_group.test", "name", regexache.MustCompile("^tf_test-")),
 				),
 			},
 			{

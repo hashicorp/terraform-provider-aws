@@ -7,10 +7,10 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"regexp"
 	"strconv"
 	"strings"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/appconfig"
@@ -42,7 +42,7 @@ func ResourceDeployment() *schema.Resource {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
-				ValidateFunc: validation.StringMatch(regexp.MustCompile(`[a-z0-9]{4,7}`), ""),
+				ValidateFunc: validation.StringMatch(regexache.MustCompile(`[0-9a-z]{4,7}`), ""),
 			},
 			"arn": {
 				Type:     schema.TypeString,
@@ -52,7 +52,7 @@ func ResourceDeployment() *schema.Resource {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
-				ValidateFunc: validation.StringMatch(regexp.MustCompile(`[a-z0-9]{4,7}`), ""),
+				ValidateFunc: validation.StringMatch(regexache.MustCompile(`[0-9a-z]{4,7}`), ""),
 			},
 			"configuration_version": {
 				Type:         schema.TypeString,
@@ -68,7 +68,7 @@ func ResourceDeployment() *schema.Resource {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
-				ValidateFunc: validation.StringMatch(regexp.MustCompile(`(^[a-z0-9]{4,7}$|^AppConfig\.[A-Za-z0-9]{9,40}$)`), ""),
+				ValidateFunc: validation.StringMatch(regexache.MustCompile(`(^[0-9a-z]{4,7}$|^AppConfig\.[0-9A-Za-z]{9,40}$)`), ""),
 			},
 			"description": {
 				Type:         schema.TypeString,
@@ -80,7 +80,7 @@ func ResourceDeployment() *schema.Resource {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
-				ValidateFunc: validation.StringMatch(regexp.MustCompile(`[a-z0-9]{4,7}`), ""),
+				ValidateFunc: validation.StringMatch(regexache.MustCompile(`[0-9a-z]{4,7}`), ""),
 			},
 			"state": {
 				Type:     schema.TypeString,

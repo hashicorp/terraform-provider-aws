@@ -39,7 +39,7 @@ func SkipSweepError(err error) bool {
 		return true
 	}
 	// Example: InvalidAction: InvalidAction: Operation (ListPlatformApplications) is not supported in this region
-	if tfawserr.ErrMessageContains(err, "InvalidAction", "is not supported in this region") {
+	if tfawserr.ErrMessageContains(err, "InvalidAction", "is not supported") {
 		return true
 	}
 	// Example: InvalidAction: The action DescribeTransitGatewayAttachments is not valid for this web service
