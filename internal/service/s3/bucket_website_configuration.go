@@ -374,6 +374,14 @@ func resourceBucketWebsiteConfigurationDelete(ctx context.Context, d *schema.Res
 		return diag.Errorf("deleting S3 Bucket Website Configuration (%s): %s", d.Id(), err)
 	}
 
+	_, err = tfresource.RetryUntilNotFound(ctx, s3BucketPropagationTimeout, func() (interface{}, error) {
+		return findBucketWebsite(ctx, conn, bucket, expectedBucketOwner)
+	})
+
+	if err != nil {
+		return diag.Errorf("waiting for S3 Bucket Accelerate Configuration (%s) delete: %s", d.Id(), err)
+	}
+
 	return nil
 }
 
