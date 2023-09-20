@@ -7,8 +7,6 @@ package s3
 var (
 	DeleteAllObjectVersions           = deleteAllObjectVersions
 	EmptyBucket                       = emptyBucket
-	ExpandAnalyticsFilter             = expandAnalyticsFilter
-	ExpandStorageClassAnalysis        = expandStorageClassAnalysis
 	FindAnalyticsConfiguration        = findAnalyticsConfiguration
 	FindBucket                        = findBucket
 	FindBucketAccelerateConfiguration = findBucketAccelerateConfiguration
@@ -17,7 +15,5 @@ var (
 	FindBucketWebsite                 = findBucketWebsite
 	FindObjectByBucketAndKey          = findObjectByBucketAndKey
 	FindObjectLockConfiguration       = findObjectLockConfiguration
-	FlattenAnalyticsFilter            = flattenAnalyticsFilter
-	FlattenStorageClassAnalysis       = flattenStorageClassAnalysis
 	SDKv1CompatibleCleanKey           = sdkv1CompatibleCleanKey
 )
