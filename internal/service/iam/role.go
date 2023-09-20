@@ -48,19 +48,18 @@ const (
 	roleNamePrefixMaxLen = roleNameMaxLen - id.UniqueIDSuffixLength
 )
 
-
 // TODO: finish this how does this work?
 
 // @SDKResource("aws_iam_role", name="Role")
 // @Tags
 // func newIamRole(context.Context) (resource.ResourceWithConfigure, error) {
-	// r := &resourceIamRole{}
-    // // TODO
-	// // r.create = r.createSecurityGroupRule
-	// // r.delete = r.deleteSecurityGroupRule
-	// // r.findByID = r.findSecurityGroupRuleByID
+// r := &resourceIamRole{}
+// // TODO
+// // r.create = r.createSecurityGroupRule
+// // r.delete = r.deleteSecurityGroupRule
+// // r.findByID = r.findSecurityGroupRuleByID
 
-	// return r, nil
+// return r, nil
 // }
 
 type resourceIamRole struct {
@@ -75,91 +74,86 @@ func (r *resourceIamRole) Metadata(_ context.Context, request resource.MetadataR
 func (r *resourceIamRole) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-            "arn": schema.StringAttribute{
-                Computed: true,
-            },
-            "assume_role_policy": schema.StringAttribute{
-                Required: true,
-                // TODO: finish this, it get complicated
-            },
-            "create_date": schema.StringAttribute{
-                Computed: true,
-            },
-            "force_detach_policies": schema.BoolAttribute{
-                Optional: true,
-                Default: booldefault.StaticBool(false),
-            },
-            // TODO: inline policy goes crazy, have to figure what this type should look like
-            // also read article again
-            "inline_policy": schema.MapAttribute{
-
-            },
-            "managed_policy_arns": schema.SetAttribute{
-                Computed: true,
-                Optional: true,
+			"arn": schema.StringAttribute{
+				Computed: true,
+			},
+			"assume_role_policy": schema.StringAttribute{
+				Required: true,
+				// TODO: finish this, it get complicated
+			},
+			"create_date": schema.StringAttribute{
+				Computed: true,
+			},
+			"force_detach_policies": schema.BoolAttribute{
+				Optional: true,
+				Default:  booldefault.StaticBool(false),
+			},
+			// TODO: inline policy goes crazy, have to figure what this type should look like
+			// also read article again
+			"inline_policy": schema.MapAttribute{},
+			"managed_policy_arns": schema.SetAttribute{
+				Computed:    true,
+				Optional:    true,
 				ElementType: types.StringType,
-                // TODO: validate all elements of set are valid arns
-                // how to do this with helper lib terraform-plugin-framework-validators
-            },
-            "max_session_duration": schema.Int64Attribute{
-                Optional: true,
-                Default: int64default.StaticInt64(3600),
-                Validators: []validator.Int64{
-                    int64validator.Between(3600, 43200),
-                },
-            },
-            "name": schema.StringAttribute{
-                Optional: true,
-                Computed: true,
-                // TODO: ForceNew?
-                // TODO: ConflictsWith?
-                Validators: []validator.String{
-                    stringvalidator.LengthAtMost(roleNameMaxLen),
-                },
-            },
-            "name_prefix": schema.StringAttribute{
-                Optional: true,
-                Computed: true,
-                // TODO: ForceNew?
-                // TODO: ConflictsWith?
-                Validators: []validator.String{
-                    stringvalidator.LengthAtMost(roleNamePrefixMaxLen),
-                },
-            },
-            "path": schema.StringAttribute{
-                Optional: true,
-                // TODO: ForceNew
-                Default: stringdefault.StaticString("/"),
-                Validators: []validator.String{
-                    stringvalidator.LengthBetween(0, 512),
-                },
-            },
-            "permissions_boundary": schema.StringAttribute{
-                Optional: true,
-                Validators: []validator.String{
-                    // verify.ValidARN
-                },
-            },
-            "unique_id": schema.StringAttribute{
-                Computed: true,
-            },
-            // TODO: tags?
+				// TODO: validate all elements of set are valid arns
+				// how to do this with helper lib terraform-plugin-framework-validators
+			},
+			"max_session_duration": schema.Int64Attribute{
+				Optional: true,
+				Default:  int64default.StaticInt64(3600),
+				Validators: []validator.Int64{
+					int64validator.Between(3600, 43200),
+				},
+			},
+			"name": schema.StringAttribute{
+				Optional: true,
+				Computed: true,
+				// TODO: ForceNew?
+				// TODO: ConflictsWith?
+				Validators: []validator.String{
+					stringvalidator.LengthAtMost(roleNameMaxLen),
+				},
+			},
+			"name_prefix": schema.StringAttribute{
+				Optional: true,
+				Computed: true,
+				// TODO: ForceNew?
+				// TODO: ConflictsWith?
+				Validators: []validator.String{
+					stringvalidator.LengthAtMost(roleNamePrefixMaxLen),
+				},
+			},
+			"path": schema.StringAttribute{
+				Optional: true,
+				// TODO: ForceNew
+				Default: stringdefault.StaticString("/"),
+				Validators: []validator.String{
+					stringvalidator.LengthBetween(0, 512),
+				},
+			},
+			"permissions_boundary": schema.StringAttribute{
+				Optional:   true,
+				Validators: []validator.String{
+					// verify.ValidARN
+				},
+			},
+			"unique_id": schema.StringAttribute{
+				Computed: true,
+			},
+			// TODO: tags?
 		},
 	}
 }
 
-            // NOTE: current schema resource to convert
-			// "unique_id": {
-				// Type:     schema.TypeString,
-				// Computed: true,
-			// },
-
-
-
+// NOTE: current schema resource to convert
+// "unique_id": {
+// Type:     schema.TypeString,
+// Computed: true,
+// },
 
 // TODO: Finish this
 func (r *resourceIamRole) createIamrole(ctx context.Context, data *resourceSecurityGroupRuleData) (string, error) {
-    return "", nil
+	return "", nil
 }
 
 func ResourceRole() *schema.Resource {
