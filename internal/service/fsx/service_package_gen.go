@@ -31,6 +31,11 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 			Name:     "Ontap File System",
 		},
 		{
+			Factory:  DataSourceOntapStorageVirtualMachine,
+			TypeName: "aws_fsx_ontap_storage_virtual_machine",
+			Name:     "ONTAP Storage Virtual Machine",
+		},
+		{
 			Factory:  DataSourceOpenzfsSnapshot,
 			TypeName: "aws_fsx_openzfs_snapshot",
 		},
