@@ -48,13 +48,13 @@ func ResourceBucketMetric() *schema.Resource {
 						"prefix": {
 							Type:         schema.TypeString,
 							Optional:     true,
-							AtLeastOneOf: filterAtLeastOneOfKeys,
+							AtLeastOneOf: []string{"filter.0.prefix", "filter.0.tags"},
 						},
 						"tags": {
 							Type:         schema.TypeMap,
 							Optional:     true,
 							Elem:         &schema.Schema{Type: schema.TypeString},
-							AtLeastOneOf: filterAtLeastOneOfKeys,
+							AtLeastOneOf: []string{"filter.0.prefix", "filter.0.tags"},
 						},
 					},
 				},
