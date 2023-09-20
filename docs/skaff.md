@@ -6,14 +6,16 @@
 
 1. Figure out what you're trying to do:
     * Create a resource or a data source?
-    * [AWS Go SDK v1 or v2](aws-go-sdk-versions.md) code?
-    * [Terraform Plugin Framework or Plugin SDKv2](terraform-plugin-versions.md) based?
+    * [AWS Go SDK v2 or v1](aws-go-sdk-versions.md) code?\*
+    * [Terraform Plugin Framework or Plugin SDKv2](terraform-plugin-versions.md) based?\*
     * [Name](naming.md) of the new resource or data source?
 2. Use `skaff` to generate provider code
 3. Go through the generated code completing code and customizing for the AWS Go SDK API
 4. Run, test, refine
 5. Remove "TIP" comments
 6. Submit code in pull request
+
+> \*Net-new resources should be implemented with AWS SDK Go V2 and the Terraform Plugin Framework. See [this issue](https://github.com/hashicorp/terraform-provider-aws/issues/32917) for additional information.
 
 ## Running `skaff`
 
@@ -81,7 +83,7 @@ Flags:
   -h, --help               help for datasource
   -t, --include-tags       Indicate that this resource has tags and the code for tagging should be generated
   -n, --name string        name of the entity
-  -p, --plugin-framework   generate for Terraform Plugin-Framework
+  -p, --plugin-sdkv2       generate for Terraform Plugin SDK V2
   -s, --snakename string   if skaff doesn't get it right, explicitly give name in snake case (e.g., db_vpc_instance)
   -o, --v1                 generate for AWS Go SDK v1 (some existing services)
 ```
@@ -103,7 +105,7 @@ Flags:
   -h, --help               help for resource
   -t, --include-tags       Indicate that this resource has tags and the code for tagging should be generated
   -n, --name string        name of the entity
-  -p, --plugin-framework   generate for Terraform Plugin-Framework
+  -p, --plugin-sdkv2       generate for Terraform Plugin SDK V2
   -s, --snakename string   if skaff doesn't get it right, explicitly give name in snake case (e.g., db_vpc_instance)
   -o, --v1                 generate for AWS Go SDK v1 (some existing services)
 ```
