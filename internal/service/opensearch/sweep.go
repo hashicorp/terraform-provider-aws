@@ -78,7 +78,7 @@ func sweepDomains(region string) error {
 		name := aws.StringValue(domainInfo.DomainName)
 
 		if engineType := aws.StringValue(domainInfo.EngineType); engineType != opensearchservice.EngineTypeOpenSearch {
-			log.Printf("[WARN] Skipping OpenSearch Domain %s: EngineType = %s", name, engineType)
+			log.Printf("[INFO] Skipping OpenSearch Domain %s: EngineType = %s", name, engineType)
 			continue
 		}
 

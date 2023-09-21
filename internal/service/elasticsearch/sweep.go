@@ -66,7 +66,7 @@ func sweepDomains(region string) error {
 		name := aws.StringValue(domainInfo.DomainName)
 
 		if engineType := aws.StringValue(domainInfo.EngineType); engineType != elasticsearchservice.EngineTypeElasticsearch {
-			log.Printf("[WARN] Skipping Elasticsearch Domain %s: EngineType = %s", name, engineType)
+			log.Printf("[INFO] Skipping Elasticsearch Domain %s: EngineType = %s", name, engineType)
 			continue
 		}
 

@@ -68,28 +68,25 @@ func init() {
 func sweepHealthChecks(region string) error {
 	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
-
 	if err != nil {
 		return fmt.Errorf("getting client: %s", err)
 	}
-
 	conn := client.Route53Conn(ctx)
-	sweepResources := make([]sweep.Sweepable, 0)
-	var errs *multierror.Error
-
 	input := &route53.ListHealthChecksInput{}
+	sweepResources := make([]sweep.Sweepable, 0)
 
 	err = conn.ListHealthChecksPagesWithContext(ctx, input, func(page *route53.ListHealthChecksOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
 
-		for _, detail := range page.HealthChecks {
-			if detail == nil {
+		for _, v := range page.HealthChecks {
+			id := aws.StringValue(v.Id)
+
+			if v.LinkedService != nil {
+				log.Printf("[INFO] Skipping Route 53 Health Check %s: %s", id, aws.StringValue(v.LinkedService.Description))
 				continue
 			}
-
-			id := aws.StringValue(detail.Id)
 
 			r := ResourceHealthCheck()
 			d := r.Data(nil)
@@ -101,20 +98,22 @@ func sweepHealthChecks(region string) error {
 		return !lastPage
 	})
 
-	if err != nil {
-		errs = multierror.Append(errs, fmt.Errorf("describing Route53 Health Checks for %s: %w", region, err))
-	}
-
-	if err = sweep.SweepOrchestrator(ctx, sweepResources, tfresource.WithDelayRand(1*time.Minute), tfresource.WithMinPollInterval(10*time.Second), tfresource.WithPollInterval(18*time.Second)); err != nil {
-		errs = multierror.Append(errs, fmt.Errorf("sweeping Route53 Health Checks for %s: %w", region, err))
-	}
-
-	if sweep.SkipSweepError(errs.ErrorOrNil()) {
-		log.Printf("[WARN] Skipping Route53 Health Checks sweep for %s: %s", region, errs)
+	if sweep.SkipSweepError(err) {
+		log.Printf("[WARN] Skipping Route 53 Health Check sweep for %s: %s", region, err)
 		return nil
 	}
 
-	return errs.ErrorOrNil()
+	if err != nil {
+		return fmt.Errorf("listing Route 53 Health Checks (%s): %w", region, err)
+	}
+
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
+
+	if err != nil {
+		return fmt.Errorf("sweeping Route 53 Health Checks (%s): %w", region, err)
+	}
+
+	return nil
 }
 
 func sweepKeySigningKeys(region string) error {
