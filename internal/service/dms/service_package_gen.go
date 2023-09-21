@@ -79,7 +79,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			TypeName: "aws_dms_replication_config",
 			Name:     "Replication Config",
 			Tags: &types.ServicePackageResourceTags{
-				IdentifierAttribute: "replication_config_arn",
+				IdentifierAttribute: "id",
 			},
 		},
 		{

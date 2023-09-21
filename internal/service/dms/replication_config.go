@@ -26,7 +26,7 @@ import (
 )
 
 // @SDKResource("aws_dms_replication_config", name="Replication Config")
-// @Tags(identifierAttribute="replication_config_arn")
+// @Tags(identifierAttribute="id")
 func ResourceReplicationConfig() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceReplicationConfigCreate,
