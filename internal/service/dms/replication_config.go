@@ -51,8 +51,8 @@ func ResourceReplicationConfig() *schema.Resource {
 					Schema: map[string]*schema.Schema{
 						"availability_zone": {
 							Type:     schema.TypeString,
-							Computed: true,
 							Optional: true,
+							Computed: true,
 							ForceNew: true,
 						},
 						"dns_name_servers": {
@@ -61,8 +61,8 @@ func ResourceReplicationConfig() *schema.Resource {
 						},
 						"kms_key_id": {
 							Type:         schema.TypeString,
-							Computed:     true,
 							Optional:     true,
+							Computed:     true,
 							ForceNew:     true,
 							ValidateFunc: verify.ValidARN,
 						},
@@ -76,13 +76,13 @@ func ResourceReplicationConfig() *schema.Resource {
 						},
 						"multi_az": {
 							Type:     schema.TypeBool,
-							Computed: true,
 							Optional: true,
+							Computed: true,
 						},
 						"preferred_maintenance_window": {
 							Type:         schema.TypeString,
-							Computed:     true,
 							Optional:     true,
+							Computed:     true,
 							ValidateFunc: verify.ValidOnceAWeekWindowFormat,
 						},
 						"replication_subnet_group_id": {
@@ -93,18 +93,12 @@ func ResourceReplicationConfig() *schema.Resource {
 						},
 						"vpc_security_group_ids": {
 							Type:     schema.TypeSet,
-							Elem:     &schema.Schema{Type: schema.TypeString},
-							Set:      schema.HashString,
-							Computed: true,
 							Optional: true,
+							Computed: true,
+							Elem:     &schema.Schema{Type: schema.TypeString},
 						},
 					},
 				},
-			},
-			"start_replication": {
-				Type:     schema.TypeBool,
-				Default:  false,
-				Optional: true,
 			},
 			"replication_config_arn": {
 				Type:     schema.TypeString,
@@ -114,36 +108,30 @@ func ResourceReplicationConfig() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
+			"replication_settings": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
 			"replication_type": {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: validation.StringInSlice(dms.MigrationTypeValue_Values(), false),
+			},
+			"resource_identifier": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
 			},
 			"source_endpoint_arn": {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: verify.ValidARN,
 			},
-			"table_mappings": {
-				Type:             schema.TypeString,
-				Required:         true,
-				ValidateFunc:     validation.StringIsJSON,
-				DiffSuppressFunc: verify.SuppressEquivalentJSONDiffs,
-			},
-			"target_endpoint_arn": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: verify.ValidARN,
-			},
-			"replication_settings": {
-				Type:     schema.TypeString,
-				Computed: true,
+			"start_replication": {
+				Type:     schema.TypeBool,
 				Optional: true,
-			},
-			"resource_identifier": {
-				Type:     schema.TypeString,
-				Computed: true,
-				Optional: true,
+				Default:  false,
 			},
 			"supplemental_settings": {
 				Type:             schema.TypeString,
@@ -151,8 +139,19 @@ func ResourceReplicationConfig() *schema.Resource {
 				ValidateFunc:     validation.StringIsJSON,
 				DiffSuppressFunc: verify.SuppressEquivalentJSONDiffs,
 			},
+			"table_mappings": {
+				Type:             schema.TypeString,
+				Required:         true,
+				ValidateFunc:     validation.StringIsJSON,
+				DiffSuppressFunc: verify.SuppressEquivalentJSONDiffs,
+			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
+			"target_endpoint_arn": {
+				Type:         schema.TypeString,
+				Required:     true,
+				ValidateFunc: verify.ValidARN,
+			},
 		},
 
 		CustomizeDiff: verify.SetTagsDiff,
