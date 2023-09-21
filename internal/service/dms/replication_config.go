@@ -43,6 +43,10 @@ func ResourceReplicationConfig() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
+			"arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"compute_config": {
 				Type:     schema.TypeList,
 				Required: true,
@@ -100,13 +104,10 @@ func ResourceReplicationConfig() *schema.Resource {
 					},
 				},
 			},
-			"replication_config_arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
 			"replication_config_identifier": {
 				Type:     schema.TypeString,
 				Required: true,
+				ForceNew: true,
 			},
 			"replication_settings": {
 				Type:     schema.TypeString,
@@ -122,6 +123,7 @@ func ResourceReplicationConfig() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
+				ForceNew: true,
 			},
 			"source_endpoint_arn": {
 				Type:         schema.TypeString,
@@ -162,9 +164,9 @@ func resourceReplicationConfigCreate(ctx context.Context, d *schema.ResourceData
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DMSConn(ctx)
 
-	id := d.Get("replication_config_identifier").(string)
+	replicationConfigID := d.Get("replication_config_identifier").(string)
 	input := &dms.CreateReplicationConfigInput{
-		ReplicationConfigIdentifier: aws.String(id),
+		ReplicationConfigIdentifier: aws.String(replicationConfigID),
 		ReplicationType:             aws.String(d.Get("replication_type").(string)),
 		SourceEndpointArn:           aws.String(d.Get("source_endpoint_arn").(string)),
 		TableMappings:               aws.String(d.Get("table_mappings").(string)),
@@ -188,13 +190,13 @@ func resourceReplicationConfigCreate(ctx context.Context, d *schema.ResourceData
 		input.SupplementalSettings = aws.String(v.(string))
 	}
 
-	_, err := conn.CreateReplicationConfigWithContext(ctx, input)
+	output, err := conn.CreateReplicationConfigWithContext(ctx, input)
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating DMS Replication Config (%s): %s", id, err)
+		return sdkdiag.AppendErrorf(diags, "creating DMS Replication Config (%s): %s", replicationConfigID, err)
 	}
 
-	d.SetId(id)
+	d.SetId(aws.StringValue(output.ReplicationConfig.ReplicationConfigArn))
 
 	if d.Get("start_replication").(bool) {
 		if err := startReplication(ctx, d.Id(), conn); err != nil {
@@ -256,76 +258,67 @@ func resourceReplicationConfigUpdate(ctx context.Context, d *schema.ResourceData
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DMSConn(ctx)
 
-	request := &dms.ModifyReplicationConfigInput{
-		ReplicationConfigArn: aws.String(d.Get("replication_config_arn").(string)),
-	}
-	hasChanges := false
-
 	if d.HasChangesExcept("tags", "tags_all", "start_replication") {
+		if err := stopReplication(ctx, d.Id(), conn); err != nil {
+			return sdkdiag.AppendFromErr(diags, err)
+		}
+
+		input := &dms.ModifyReplicationConfigInput{
+			ReplicationConfigArn: aws.String(d.Id()),
+		}
+
 		if d.HasChange("compute_config") {
 			if v, ok := d.GetOk("compute_config"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-				request.ComputeConfig = expandComputeConfigInput(v.([]interface{}))
+				input.ComputeConfig = expandComputeConfigInput(v.([]interface{}))
 			}
-			hasChanges = true
-		}
-
-		if d.HasChange("replication_type") {
-			request.ReplicationType = aws.String(d.Get("replication_type").(string))
-			hasChanges = true
-		}
-
-		if d.HasChange("source_endpoint_arn") {
-			request.SourceEndpointArn = aws.String(d.Get("source_endpoint_arn").(string))
-			hasChanges = true
-		}
-
-		if d.HasChange("table_mappings") {
-			request.TableMappings = aws.String(d.Get("table_mappings").(string))
-			hasChanges = true
-		}
-
-		if d.HasChange("target_endpoint_arn") {
-			request.TargetEndpointArn = aws.String(d.Get("target_endpoint_arn").(string))
-			hasChanges = true
 		}
 
 		if d.HasChange("replication_settings") {
-			request.ReplicationSettings = aws.String(d.Get("replication_settings").(string))
-			hasChanges = true
+			input.ReplicationSettings = aws.String(d.Get("replication_settings").(string))
+		}
+
+		if d.HasChange("replication_type") {
+			input.ReplicationType = aws.String(d.Get("replication_type").(string))
+		}
+
+		if d.HasChange("source_endpoint_arn") {
+			input.SourceEndpointArn = aws.String(d.Get("source_endpoint_arn").(string))
 		}
 
 		if d.HasChange("supplemental_settings") {
-			request.SupplementalSettings = aws.String(d.Get("supplemental_settings").(string))
-			hasChanges = true
+			input.SupplementalSettings = aws.String(d.Get("supplemental_settings").(string))
 		}
 
-		if hasChanges {
-			if err := stopReplication(ctx, d.Id(), conn); err != nil {
+		if d.HasChange("table_mappings") {
+			input.TableMappings = aws.String(d.Get("table_mappings").(string))
+		}
+
+		if d.HasChange("target_endpoint_arn") {
+			input.TargetEndpointArn = aws.String(d.Get("target_endpoint_arn").(string))
+		}
+
+		_, err := conn.ModifyReplicationConfigWithContext(ctx, input)
+
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating DMS Replication Config (%s): %s", d.Id(), err)
+		}
+
+		if d.Get("start_replication").(bool) {
+			if err := startReplication(ctx, d.Id(), conn); err != nil {
 				return sdkdiag.AppendFromErr(diags, err)
-			}
-
-			_, err := conn.ModifyReplicationConfigWithContext(ctx, request)
-			if err != nil {
-				return sdkdiag.AppendErrorf(diags, "modifying DMS Serverless Replication Config (%s): %s", d.Id(), err)
-			}
-
-			if d.Get("start_replication").(bool) {
-				if err := startReplication(ctx, d.Id(), conn); err != nil {
-					return sdkdiag.AppendFromErr(diags, err)
-				}
 			}
 		}
 	}
 
 	if d.HasChange("start_replication") {
+		var err error
 		if d.Get("start_replication").(bool) {
-			if err := startReplication(ctx, d.Id(), conn); err != nil {
-				return sdkdiag.AppendFromErr(diags, err)
-			}
+			err = startReplication(ctx, d.Id(), conn)
 		} else {
-			if err := stopReplication(ctx, d.Id(), conn); err != nil {
-				return sdkdiag.AppendFromErr(diags, err)
-			}
+			err = stopReplication(ctx, d.Id(), conn)
+		}
+		if err != nil {
+			return sdkdiag.AppendFromErr(diags, err)
 		}
 	}
 
@@ -342,7 +335,7 @@ func resourceReplicationConfigDelete(ctx context.Context, d *schema.ResourceData
 
 	log.Printf("[DEBUG] Deleting DMS Replication Config: %s", d.Id())
 	_, err := conn.DeleteReplicationConfigWithContext(ctx, &dms.DeleteReplicationConfigInput{
-		ReplicationConfigArn: aws.String(d.Get("replication_config_arn").(string)),
+		ReplicationConfigArn: aws.String(d.Id()),
 	})
 
 	if tfawserr.ErrCodeEquals(err, dms.ErrCodeResourceNotFoundFault) {

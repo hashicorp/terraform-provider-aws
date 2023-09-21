@@ -40,7 +40,7 @@ This resource supports the following arguments:
 
 * `compute_config` - (Required) Configuration block for provisioning an DMS Serverless replication.
 * `start_replication` - (Optional) Whether to run or stop the serverless replication, default is false.
-* `replication_config_identifier` - (Required) Unique identifier that you want to use to create a `replication_config_arn`.
+* `replication_config_identifier` - (Required) Unique identifier that you want to use to create the config.
 * `replication_type` - (Required) The migration type. Can be one of `full-load | cdc | full-load-and-cdc`.
 * `source_endpoint_arn` - (Required) The Amazon Resource Name (ARN) string that uniquely identifies the source endpoint.
 * `table_mappings` - (Required) An escaped JSON string that contains the table mappings. For information on table mapping see [Using Table Mapping with an AWS Database Migration Service Task to Select and Filter Data](http://docs.aws.amazon.com/dms/latest/userguide/CHAP_Tasks.CustomizingTasks.TableMapping.html)
@@ -72,22 +72,24 @@ This resource supports the following arguments:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `replication_config_arn` - The Amazon Resource Name (ARN) for the serverless replication config.
+* `arn` - The Amazon Resource Name (ARN) for the serverless replication config.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import replication configs using the `replication_config_identifier`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import replication configs using the `arn`. For example:
 
 ```terraform
 import {
-  to = aws_dms_replication_config.test
-  id = "test-dms-serverless-replication-tf"
+  to = aws_dms_replication_config.example
+  id = "arn:aws:dms:us-east-
+1:123456789012:replication-config:UX6OL6MHMMJKFFOXE3H7LLJCMEKBDUG4ZV7DRSI"
 }
 ```
 
-Using `terraform import`, import a replication config using the `replication_config_identifier`. For example:
+Using `terraform import`, import a replication config using the `arn`. For example:
 
 ```console
-% terraform import aws_dms_replication_config.test test-dms-serverless-replication-tf
+% terraform import aws_dms_replication_config.example arn:aws:dms:us-east-
+1:123456789012:replication-config:UX6OL6MHMMJKFFOXE3H7LLJCMEKBDUG4ZV7DRSI
 ```
