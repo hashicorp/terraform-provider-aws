@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_lb_listener: Fixes forward block updates when default action is forward type.
+```
