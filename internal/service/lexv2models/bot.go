@@ -156,11 +156,7 @@ func (r *resourceBot) Create(ctx context.Context, req resource.CreateRequest, re
 		return
 	}
 
-	dpInput, d := expandDataPrivacy(ctx, dp)
-	resp.Diagnostics.Append(d...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
+	dpInput := expandDataPrivacy(ctx, dp)
 
 	in := lexmodelsv2.CreateBotInput{
 		BotName:                 aws.String(plan.Name.ValueString()),
@@ -176,6 +172,12 @@ func (r *resourceBot) Create(ctx context.Context, req resource.CreateRequest, re
 
 	if !plan.Description.IsNull() {
 		in.Description = aws.String(plan.Description.ValueString())
+	}
+
+	var bm []membersData
+	if !plan.Members.IsNull() {
+		bmInput := expandMembers(ctx, bm)
+		in.BotMembers = bmInput
 	}
 
 	out, err := conn.CreateBot(ctx, &in)
@@ -255,7 +257,7 @@ func (r *resourceBot) Read(ctx context.Context, req resource.ReadRequest, resp *
 	state.Description = flex.StringToFramework(ctx, out.Description)
 	state.IdleSessionTTLInSeconds = flex.Int32ToFramework(ctx, out.IdleSessionTTLInSeconds)
 
-	datap, _ := flattenDataPrivacy(ctx, out.DataPrivacy)
+	datap, _ := flattenDataPrivacy(out.DataPrivacy)
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -280,18 +282,13 @@ func (r *resourceBot) Update(ctx context.Context, req resource.UpdateRequest, re
 		!plan.TestBotAliasTags.Equal(state.TestBotAliasTags) ||
 		!plan.DataPrivacy.Equal(state.DataPrivacy) ||
 		!plan.Type.Equal(state.Type) {
-
 		var dp []dataPrivacyData
 		resp.Diagnostics.Append(plan.DataPrivacy.ElementsAs(ctx, &dp, false)...)
 		if resp.Diagnostics.HasError() {
 			return
 		}
 
-		dpInput, d := expandDataPrivacy(ctx, dp)
-		resp.Diagnostics.Append(d...)
-		if resp.Diagnostics.HasError() {
-			return
-		}
+		dpInput := expandDataPrivacy(ctx, dp)
 
 		in := lexmodelsv2.UpdateBotInput{
 			BotId:                   flex.StringFromFramework(ctx, plan.ID),
@@ -481,9 +478,7 @@ func FindBotByID(ctx context.Context, conn *lexmodelsv2.Client, id string) (*lex
 	return out, nil
 }
 
-func flattenDataPrivacy(ctx context.Context, apiObject *awstypes.DataPrivacy) (types.List, diag.Diagnostics) {
-	// attributeTypes := flex.AttributeTypesMust[dataPrivacyData](ctx)
-
+func flattenDataPrivacy(apiObject *awstypes.DataPrivacy) (types.List, diag.Diagnostics) {
 	var diags diag.Diagnostics
 	elemType := types.ObjectType{AttrTypes: dataPrivacyAttrTypes}
 
@@ -503,10 +498,9 @@ func flattenDataPrivacy(ctx context.Context, apiObject *awstypes.DataPrivacy) (t
 	return listVal, diags
 }
 
-func expandDataPrivacy(ctx context.Context, tfList []dataPrivacyData) (*awstypes.DataPrivacy, diag.Diagnostics) {
-	var diags diag.Diagnostics
+func expandDataPrivacy(ctx context.Context, tfList []dataPrivacyData) *awstypes.DataPrivacy {
 	if len(tfList) == 0 {
-		return nil, diags
+		return nil
 	}
 
 	dp := tfList[0]
@@ -514,24 +508,27 @@ func expandDataPrivacy(ctx context.Context, tfList []dataPrivacyData) (*awstypes
 
 	return &awstypes.DataPrivacy{
 		ChildDirected: aws.ToBool(cdBool),
-	}, diags
+	}
 }
 
-func expandMembers(tfList []membersData) (*awstypes.BotMember, diag.Diagnostics) {
-	var diags diag.Diagnostics
-
+func expandMembers(ctx context.Context, tfList []membersData) []awstypes.BotMember {
 	if len(tfList) == 0 {
-		return nil, diags
+		return nil
+	}
+	var mb []awstypes.BotMember
+
+	for _, item := range tfList {
+		new := awstypes.BotMember{
+			BotMemberAliasId:   flex.StringFromFramework(ctx, item.AliasID),
+			BotMemberAliasName: flex.StringFromFramework(ctx, item.AliasName),
+			BotMemberId:        flex.StringFromFramework(ctx, item.ID),
+			BotMemberName:      flex.StringFromFramework(ctx, item.Name),
+			BotMemberVersion:   flex.StringFromFramework(ctx, item.Version),
+		}
+		mb = append(mb, new)
 	}
 
-	mb := tfList[0]
-	return &awstypes.BotMember{
-		BotMemberAliasId:   aws.String(mb.AliasID.ValueString()),
-		BotMemberAliasName: aws.String(mb.AliasName.ValueString()),
-		BotMemberId:        aws.String(mb.ID.ValueString()),
-		BotMemberName:      aws.String(mb.Name.ValueString()),
-		BotMemberVersion:   aws.String(mb.Version.ValueString()),
-	}, diags
+	return mb
 }
 
 func (rd *resourceBotData) refreshFromOutput(ctx context.Context, out *lexmodelsv2.DescribeBotOutput) diag.Diagnostics {
@@ -547,8 +544,7 @@ func (rd *resourceBotData) refreshFromOutput(ctx context.Context, out *lexmodels
 	rd.Description = flex.StringToFramework(ctx, out.Description)
 	rd.IdleSessionTTLInSeconds = flex.Int32ToFramework(ctx, out.IdleSessionTTLInSeconds)
 
-	// TIP: Setting a complex type.
-	datap, d := flattenDataPrivacy(ctx, out.DataPrivacy)
+	datap, d := flattenDataPrivacy(out.DataPrivacy)
 	diags.Append(d...)
 	rd.DataPrivacy = datap
 

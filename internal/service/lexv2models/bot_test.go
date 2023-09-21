@@ -23,11 +23,6 @@ import (
 
 func TestAccLexV2ModelsBot_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	// TIP: This is a long-running test guard for tests that run longer than
-	// 300s (5 min) generally.
-	// if testing.Short() {
-	// 	t.Skip("skipping long-running test in short mode")
-	// }
 
 	var bot lexmodelsv2.DescribeBotOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -209,6 +204,8 @@ func testAccPreCheck(ctx context.Context, t *testing.T) {
 
 func testAccBotBaseConfig(rName string) string {
 	return fmt.Sprintf(`
+data "aws_partition" "current" {}
+
 resource "aws_iam_role" "test_role" {
   name = %[1]q
   assume_role_policy = jsonencode({
@@ -228,7 +225,7 @@ resource "aws_iam_role" "test_role" {
 
 resource "aws_iam_role_policy_attachment" "test-attach" {
   role       = aws_iam_role.test_role.name
-  policy_arn = "arn:aws:iam::aws:policy/AmazonLexFullAccess"
+  policy_arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/AmazonLexFullAccess"
 }
 `, rName)
 }
