@@ -162,34 +162,39 @@ func resourceReplicationConfigCreate(ctx context.Context, d *schema.ResourceData
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DMSConn(ctx)
 
-	apiObject := &dms.CreateReplicationConfigInput{
-		ReplicationConfigIdentifier: aws.String(d.Get("replication_config_identifier").(string)),
+	id := d.Get("replication_config_identifier").(string)
+	input := &dms.CreateReplicationConfigInput{
+		ReplicationConfigIdentifier: aws.String(id),
 		ReplicationType:             aws.String(d.Get("replication_type").(string)),
 		SourceEndpointArn:           aws.String(d.Get("source_endpoint_arn").(string)),
 		TableMappings:               aws.String(d.Get("table_mappings").(string)),
-		TargetEndpointArn:           aws.String(d.Get("target_endpoint_arn").(string)),
-		ReplicationSettings:         aws.String(d.Get("replication_settings").(string)),
-		ResourceIdentifier:          aws.String(d.Get("resource_identifier").(string)),
 		Tags:                        getTagsIn(ctx),
+		TargetEndpointArn:           aws.String(d.Get("target_endpoint_arn").(string)),
 	}
 
 	if v, ok := d.GetOk("compute_config"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		apiObject.ComputeConfig = expandComputeConfigInput(v.([]interface{}))
+		input.ComputeConfig = expandComputeConfigInput(v.([]interface{}))
 	}
 
-	// Field can only be set if the engine type is of type Neptune
-	if v, _ := d.GetOk("supplemental_settings"); len(v.(string)) > 0 {
-		apiObject.SupplementalSettings = aws.String(d.Get("supplemental_settings").(string))
+	if v, ok := d.GetOk("replication_settings"); ok {
+		input.ReplicationSettings = aws.String(v.(string))
 	}
 
-	log.Println("[DEBUG] DMS create serverless replication config:", apiObject)
+	if v, ok := d.GetOk("resource_identifier"); ok {
+		input.ResourceIdentifier = aws.String(v.(string))
+	}
 
-	_, err := conn.CreateReplicationConfigWithContext(ctx, apiObject)
+	if v, ok := d.GetOk("supplemental_settings"); ok {
+		input.SupplementalSettings = aws.String(v.(string))
+	}
+
+	_, err := conn.CreateReplicationConfigWithContext(ctx, input)
+
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating DMS Serverless Replication Config: %s", err)
+		return sdkdiag.AppendErrorf(diags, "creating DMS Replication Config (%s): %s", id, err)
 	}
 
-	d.SetId(d.Get("replication_config_identifier").(string))
+	d.SetId(id)
 
 	if d.Get("start_replication").(bool) {
 		if err := startReplication(ctx, d.Id(), conn); err != nil {
