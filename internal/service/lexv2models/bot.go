@@ -14,7 +14,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/lexmodelsv2"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/lexmodelsv2/types"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
-	"github.com/hashicorp/terraform-plugin-framework-validators/objectvalidator"
+	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
@@ -24,7 +24,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
@@ -121,13 +120,15 @@ func (r *resourceBot) Schema(ctx context.Context, req resource.SchemaRequest, re
 					},
 				},
 			},
-			"data_privacy": schema.SingleNestedBlock{
-				Validators: []validator.Object{
-					objectvalidator.IsRequired(),
+			"data_privacy": schema.ListNestedBlock{
+				Validators: []validator.List{
+					listvalidator.SizeAtLeast(1),
 				},
-				Attributes: map[string]schema.Attribute{
-					"child_directed": schema.BoolAttribute{
-						Required: true,
+				NestedObject: schema.NestedBlockObject{
+					Attributes: map[string]schema.Attribute{
+						"child_directed": schema.BoolAttribute{
+							Required: true,
+						},
 					},
 				},
 			},
@@ -149,7 +150,13 @@ func (r *resourceBot) Create(ctx context.Context, req resource.CreateRequest, re
 		return
 	}
 
-	dpInput, d := expandDataPrivacy(ctx, plan.DataPrivacy)
+	var dp []dataPrivacyData
+	resp.Diagnostics.Append(plan.DataPrivacy.ElementsAs(ctx, &dp, false)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	dpInput, d := expandDataPrivacy(ctx, dp)
 	resp.Diagnostics.Append(d...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -191,14 +198,24 @@ func (r *resourceBot) Create(ctx context.Context, req resource.CreateRequest, re
 		Service:   "lex",
 		Region:    r.Meta().Region,
 		AccountID: r.Meta().AccountID,
-		Resource:  fmt.Sprintf("bot:%s", aws.ToString(out.BotName)),
+		Resource:  fmt.Sprintf("bot/%s", aws.ToString(out.BotId)),
 	}.String()
 	plan.ID = flex.StringToFramework(ctx, out.BotId)
 	state := plan
 	state.Type = flex.StringValueToFramework(ctx, out.BotType)
 	state.ARN = flex.StringValueToFramework(ctx, botArn)
-	// resp.Diagnostics.Append(state.refreshFromOutput(ctx, out.BotId)...)
+
 	resp.Diagnostics.Append(resp.State.Set(ctx, state)...)
+
+	createTimeout := r.CreateTimeout(ctx, state.Timeouts)
+	_, err = waitBotCreated(ctx, conn, state.ID.ValueString(), createTimeout)
+	if err != nil {
+		resp.Diagnostics.AddError(
+			create.ProblemStandardMessage(names.LexV2Models, create.ErrActionWaitingForDeletion, ResNameBot, state.ID.String(), err),
+			err.Error(),
+		)
+		return
+	}
 }
 
 func (r *resourceBot) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
@@ -228,7 +245,7 @@ func (r *resourceBot) Read(ctx context.Context, req resource.ReadRequest, resp *
 		Service:   "lex",
 		Region:    r.Meta().Region,
 		AccountID: r.Meta().AccountID,
-		Resource:  fmt.Sprintf("bot:%s", aws.ToString(out.BotName)),
+		Resource:  fmt.Sprintf("bot/%s", aws.ToString(out.BotId)),
 	}.String()
 	state.ARN = flex.StringValueToFramework(ctx, botArn)
 	state.RoleARN = flex.StringToFrameworkARN(ctx, out.RoleArn, &diags)
@@ -238,7 +255,10 @@ func (r *resourceBot) Read(ctx context.Context, req resource.ReadRequest, resp *
 	state.Description = flex.StringToFramework(ctx, out.Description)
 	state.IdleSessionTTLInSeconds = flex.Int32ToFramework(ctx, out.IdleSessionTTLInSeconds)
 
-	datap := flattenDataPrivacy(ctx, out.DataPrivacy)
+	datap, _ := flattenDataPrivacy(ctx, out.DataPrivacy)
+	if resp.Diagnostics.HasError() {
+		return
+	}
 
 	state.DataPrivacy = datap
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
@@ -261,13 +281,23 @@ func (r *resourceBot) Update(ctx context.Context, req resource.UpdateRequest, re
 		!plan.DataPrivacy.Equal(state.DataPrivacy) ||
 		!plan.Type.Equal(state.Type) {
 
-		dp, _ := expandDataPrivacy(ctx, plan.DataPrivacy)
+		var dp []dataPrivacyData
+		resp.Diagnostics.Append(plan.DataPrivacy.ElementsAs(ctx, &dp, false)...)
+		if resp.Diagnostics.HasError() {
+			return
+		}
+
+		dpInput, d := expandDataPrivacy(ctx, dp)
+		resp.Diagnostics.Append(d...)
+		if resp.Diagnostics.HasError() {
+			return
+		}
 
 		in := lexmodelsv2.UpdateBotInput{
 			BotId:                   flex.StringFromFramework(ctx, plan.ID),
 			BotName:                 flex.StringFromFramework(ctx, plan.Name),
 			IdleSessionTTLInSeconds: aws.Int32(int32(plan.IdleSessionTTLInSeconds.ValueInt64())),
-			DataPrivacy:             dp,
+			DataPrivacy:             dpInput,
 			RoleArn:                 flex.ARNStringFromFramework(ctx, plan.RoleARN),
 		}
 
@@ -451,27 +481,35 @@ func FindBotByID(ctx context.Context, conn *lexmodelsv2.Client, id string) (*lex
 	return out, nil
 }
 
-func flattenDataPrivacy(ctx context.Context, apiObject *awstypes.DataPrivacy) types.Object {
-	attributeTypes := flex.AttributeTypesMust[dataPrivacyData](ctx)
+func flattenDataPrivacy(ctx context.Context, apiObject *awstypes.DataPrivacy) (types.List, diag.Diagnostics) {
+	// attributeTypes := flex.AttributeTypesMust[dataPrivacyData](ctx)
+
+	var diags diag.Diagnostics
+	elemType := types.ObjectType{AttrTypes: dataPrivacyAttrTypes}
 
 	if apiObject == nil {
-		return types.ObjectNull(attributeTypes)
+		return types.ListValueMust(elemType, []attr.Value{}), diags
 	}
 
-	obj := map[string]attr.Value{}
-	obj["child_directed"] = flex.BoolToFramework(ctx, &apiObject.ChildDirected)
+	obj := map[string]attr.Value{
+		"child_directed": types.BoolValue(aws.ToBool(&apiObject.ChildDirected)),
+	}
+	objVal, d := types.ObjectValue(dataPrivacyAttrTypes, obj)
+	diags.Append(d...)
 
-	return types.ObjectValueMust(attributeTypes, obj)
+	listVal, d := types.ListValue(elemType, []attr.Value{objVal})
+	diags.Append(d...)
+
+	return listVal, diags
 }
 
-func expandDataPrivacy(ctx context.Context, object types.Object) (*awstypes.DataPrivacy, diag.Diagnostics) {
+func expandDataPrivacy(ctx context.Context, tfList []dataPrivacyData) (*awstypes.DataPrivacy, diag.Diagnostics) {
 	var diags diag.Diagnostics
-	var dp dataPrivacyData
-	diags.Append(object.As(ctx, &dp, basetypes.ObjectAsOptions{})...)
-	if diags.HasError() {
+	if len(tfList) == 0 {
 		return nil, diags
 	}
 
+	dp := tfList[0]
 	cdBool := flex.BoolFromFramework(ctx, dp.ChildDirected)
 
 	return &awstypes.DataPrivacy{
@@ -510,7 +548,8 @@ func (rd *resourceBotData) refreshFromOutput(ctx context.Context, out *lexmodels
 	rd.IdleSessionTTLInSeconds = flex.Int32ToFramework(ctx, out.IdleSessionTTLInSeconds)
 
 	// TIP: Setting a complex type.
-	datap := flattenDataPrivacy(ctx, out.DataPrivacy)
+	datap, d := flattenDataPrivacy(ctx, out.DataPrivacy)
+	diags.Append(d...)
 	rd.DataPrivacy = datap
 
 	return diags
@@ -518,7 +557,7 @@ func (rd *resourceBotData) refreshFromOutput(ctx context.Context, out *lexmodels
 
 type resourceBotData struct {
 	ARN                     types.String   `tfsdk:"arn"`
-	DataPrivacy             types.Object   `tfsdk:"data_privacy"`
+	DataPrivacy             types.List     `tfsdk:"data_privacy"`
 	Description             types.String   `tfsdk:"description"`
 	ID                      types.String   `tfsdk:"id"`
 	IdleSessionTTLInSeconds types.Int64    `tfsdk:"idle_session_ttl_in_seconds"`
@@ -542,4 +581,8 @@ type membersData struct {
 	ID        types.String `tfsdk:"id"`
 	Name      types.String `tfsdk:"name"`
 	Version   types.String `tfsdk:"version"`
+}
+
+var dataPrivacyAttrTypes = map[string]attr.Type{
+	"child_directed": types.BoolType,
 }

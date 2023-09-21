@@ -18,10 +18,10 @@ Terraform resource for managing an AWS Lex V2 Models Bot.
 resource "aws_lexv2models_bot" "example" {
   name = "example"
   data_privacy {
-    child_directed = “boolean”,
+    child_directed = "boolean"
   }
   idle_session_ttl_in_seconds = 10
-  role_arn = “bot_example_arn”
+  role_arn                    = "bot_example_arn"
 }
 ```
 
@@ -48,16 +48,18 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `id` - A unique identifier for a particular bot.
 
-
 ### Data Privacy
+
 * `child_directed` (Required) -  For each Amazon Lex bot created with the Amazon Lex Model Building Service, you must specify whether your use of Amazon Lex is related to a website, program, or other application that is directed or targeted, in whole or in part, to children under age 13 and subject to the Children's Online Privacy Protection Act (COPPA) by specifying true or false in the childDirected field.
 
 ### Bot Members
+
 * `alias_id` (Required) - The alias ID of a bot that is a member of this network of bots.
 * `alias_name` (Required) - The alias ID of a bot that is a member of this network of bots.
 * `id` (Required) - The unique ID of a bot that is a member of this network of bots.
 * `name` (Required) - The unique name of a bot that is a member of this network of bots.
 * `version` (Required) - The version of a bot that is a member of this network of bots.
+
 ## Timeouts
 
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
