@@ -201,7 +201,7 @@ func resourceReplicationConfigCreate(ctx context.Context, d *schema.ResourceData
 	d.SetId(aws.StringValue(output.ReplicationConfig.ReplicationConfigArn))
 
 	if d.Get("start_replication").(bool) {
-		if err := startReplication(ctx, d.Id(), conn); err != nil {
+		if err := startReplication(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
 			return sdkdiag.AppendFromErr(diags, err)
 		}
 	}
@@ -245,7 +245,7 @@ func resourceReplicationConfigUpdate(ctx context.Context, d *schema.ResourceData
 	conn := meta.(*conns.AWSClient).DMSConn(ctx)
 
 	if d.HasChangesExcept("tags", "tags_all", "start_replication") {
-		if err := stopReplication(ctx, d.Id(), conn); err != nil {
+		if err := stopReplication(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
 			return sdkdiag.AppendFromErr(diags, err)
 		}
 
@@ -290,20 +290,20 @@ func resourceReplicationConfigUpdate(ctx context.Context, d *schema.ResourceData
 		}
 
 		if d.Get("start_replication").(bool) {
-			if err := startReplication(ctx, d.Id(), conn); err != nil {
+			if err := startReplication(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
 				return sdkdiag.AppendFromErr(diags, err)
 			}
 		}
 	}
 
 	if d.HasChange("start_replication") {
-		var err error
+		var f func(context.Context, *dms.DatabaseMigrationService, string, time.Duration) error
 		if d.Get("start_replication").(bool) {
-			err = startReplication(ctx, d.Id(), conn)
+			f = startReplication
 		} else {
-			err = stopReplication(ctx, d.Id(), conn)
+			f = stopReplication
 		}
-		if err != nil {
+		if err := f(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
 			return sdkdiag.AppendFromErr(diags, err)
 		}
 	}
@@ -315,7 +315,7 @@ func resourceReplicationConfigDelete(ctx context.Context, d *schema.ResourceData
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DMSConn(ctx)
 
-	if err := stopReplication(ctx, d.Id(), conn); err != nil {
+	if err := stopReplication(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
@@ -332,11 +332,8 @@ func resourceReplicationConfigDelete(ctx context.Context, d *schema.ResourceData
 		return sdkdiag.AppendErrorf(diags, "deleting DMS Replication Config (%s): %s", d.Id(), err)
 	}
 
-	if err := waitReplicationDeleted(ctx, conn, d.Id()); err != nil {
-		if tfawserr.ErrCodeEquals(err, dms.ErrCodeResourceNotFoundFault) {
-			return diags
-		}
-		return sdkdiag.AppendErrorf(diags, "waiting for DMS Replication config (%s) to be deleted: %s", d.Id(), err)
+	if _, err := waitReplicationDeleted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for  DMS Replication Config (%s) delete: %s", d.Id(), err)
 	}
 
 	return diags
@@ -392,6 +389,205 @@ func findReplicationConfigs(ctx context.Context, conn *dms.DatabaseMigrationServ
 	}
 
 	return output, nil
+}
+
+func findReplicationByReplicationConfigARN(ctx context.Context, conn *dms.DatabaseMigrationService, arn string) (*dms.Replication, error) {
+	input := &dms.DescribeReplicationsInput{
+		Filters: []*dms.Filter{{
+			Name:   aws.String("replication-config-arn"),
+			Values: aws.StringSlice([]string{arn}),
+		}},
+	}
+
+	return findReplication(ctx, conn, input)
+}
+
+func findReplication(ctx context.Context, conn *dms.DatabaseMigrationService, input *dms.DescribeReplicationsInput) (*dms.Replication, error) {
+	output, err := findReplications(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSinglePtrResult(output)
+}
+
+func findReplications(ctx context.Context, conn *dms.DatabaseMigrationService, input *dms.DescribeReplicationsInput) ([]*dms.Replication, error) {
+	var output []*dms.Replication
+
+	err := conn.DescribeReplicationsPagesWithContext(ctx, input, func(page *dms.DescribeReplicationsOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, v := range page.Replications {
+			if v != nil {
+				output = append(output, v)
+			}
+		}
+
+		return !lastPage
+	})
+
+	if tfawserr.ErrCodeEquals(err, dms.ErrCodeResourceNotFoundFault) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	return output, nil
+}
+
+func statusReplication(ctx context.Context, conn *dms.DatabaseMigrationService, arn string) retry.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := findReplicationByReplicationConfigARN(ctx, conn, arn)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, aws.StringValue(output.Status), nil
+	}
+}
+
+func waitReplicationRunning(ctx context.Context, conn *dms.DatabaseMigrationService, arn string, timeout time.Duration) (*dms.Replication, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending: []string{
+			replicationStatusReady,
+			replicationStatusInitialising,
+			replicationStatusMetadataResources,
+			replicationStatusTestingConnection,
+			replicationStatusFetchingMetadata,
+			replicationStatusCalculatingCapacity,
+			replicationStatusProvisioningCapacity,
+			replicationStatusReplicationStarting,
+		},
+		Target:     []string{replicationStatusRunning, replicationStatusStopped},
+		Refresh:    statusReplication(ctx, conn, arn),
+		Timeout:    timeout,
+		MinTimeout: 10 * time.Second,
+		Delay:      30 * time.Second,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*dms.Replication); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitReplicationStopped(ctx context.Context, conn *dms.DatabaseMigrationService, arn string, timeout time.Duration) (*dms.Replication, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending:    []string{replicationStatusStopping, replicationStatusRunning},
+		Target:     []string{replicationStatusStopped},
+		Refresh:    statusReplication(ctx, conn, arn),
+		Timeout:    timeout,
+		MinTimeout: 10 * time.Second,
+		Delay:      60 * time.Second,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*dms.Replication); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitReplicationDeleted(ctx context.Context, conn *dms.DatabaseMigrationService, arn string, timeout time.Duration) (*dms.Replication, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending:    []string{replicationTaskStatusDeleting, replicationStatusStopped},
+		Target:     []string{},
+		Refresh:    statusReplication(ctx, conn, arn),
+		Timeout:    timeout,
+		MinTimeout: 10 * time.Second,
+		Delay:      30 * time.Second,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*dms.Replication); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func startReplication(ctx context.Context, conn *dms.DatabaseMigrationService, arn string, timeout time.Duration) error {
+	replication, err := findReplicationByReplicationConfigARN(ctx, conn, arn)
+
+	if err != nil {
+		return fmt.Errorf("reading DMS Replication Config (%s) replication: %s", arn, err)
+	}
+
+	replicationStatus := aws.StringValue(replication.Status)
+
+	if replicationStatus == replicationStatusRunning {
+		return nil
+	}
+
+	startReplicationType := replicationTypeValueStartReplication
+	if replicationStatus != replicationStatusReady {
+		startReplicationType = replicationTypeValueResumeProcessing
+	}
+	input := &dms.StartReplicationInput{
+		ReplicationConfigArn: aws.String(arn),
+		StartReplicationType: aws.String(startReplicationType),
+	}
+
+	_, err = conn.StartReplicationWithContext(ctx, input)
+
+	if err != nil {
+		return fmt.Errorf("starting DMS Serverless Replication (%s): %w", arn, err)
+	}
+
+	if _, err := waitReplicationRunning(ctx, conn, arn, timeout); err != nil {
+		return fmt.Errorf("waiting for DMS Serverless Replication (%s) start: %w", arn, err)
+	}
+
+	return nil
+}
+
+func stopReplication(ctx context.Context, conn *dms.DatabaseMigrationService, arn string, timeout time.Duration) error {
+	replication, err := findReplicationByReplicationConfigARN(ctx, conn, arn)
+
+	if err != nil {
+		return fmt.Errorf("reading DMS Replication Config (%s) replication: %s", arn, err)
+	}
+
+	replicationStatus := aws.StringValue(replication.Status)
+
+	if replicationStatus == replicationStatusStopped || replicationStatus == replicationStatusCreated || replicationStatus == replicationStatusFailed {
+		return nil
+	}
+
+	input := &dms.StopReplicationInput{
+		ReplicationConfigArn: aws.String(arn),
+	}
+
+	_, err = conn.StopReplicationWithContext(ctx, input)
+
+	if err != nil {
+		return fmt.Errorf("stopping DMS Serverless Replication (%s): %w", arn, err)
+	}
+
+	if _, err := waitReplicationStopped(ctx, conn, arn, timeout); err != nil {
+		return fmt.Errorf("waiting for DMS Serverless Replication (%s) stop: %w", arn, err)
+	}
+
+	return nil
 }
 
 func flattenComputeConfig(apiObject *dms.ComputeConfig) []interface{} {
@@ -458,61 +654,4 @@ func expandComputeConfigInput(tfMap map[string]interface{}) *dms.ComputeConfig {
 	}
 
 	return apiObject
-}
-
-func startReplication(ctx context.Context, id string, conn *dms.DatabaseMigrationService) error {
-	log.Printf("[DEBUG] Starting DMS Serverless Replication: (%s)", id)
-
-	replication, _ := FindReplicationById(ctx, id, conn)
-
-	if aws.StringValue(replication.Status) == replicationStatusRunning {
-		return nil
-	}
-
-	startReplicationType := replicationTypeValueStartReplication
-	if aws.StringValue(replication.Status) != replicationStatusReady {
-		startReplicationType = replicationTypeValueResumeProcessing
-	}
-
-	_, err := conn.StartReplicationWithContext(ctx, &dms.StartReplicationInput{
-		ReplicationConfigArn: replication.ReplicationConfigArn,
-		StartReplicationType: aws.String(startReplicationType),
-	})
-
-	if err != nil {
-		return fmt.Errorf("starting DMS Serverless Replication (%s): %w", id, err)
-	}
-
-	err = waitReplicationRunning(ctx, conn, id)
-	if err != nil {
-		return fmt.Errorf("waiting for DMS Serverless Replication (%s) start: %w", id, err)
-	}
-
-	return nil
-}
-
-func stopReplication(ctx context.Context, id string, conn *dms.DatabaseMigrationService) error {
-	log.Printf("[DEBUG] Stopping DMS Serverless Replication: (%s)", id)
-
-	replication, _ := FindReplicationById(ctx, id, conn)
-	status := aws.StringValue(replication.Status)
-
-	if status == replicationStatusStopped || status == replicationStatusCreated || status == replicationStatusFailed {
-		return nil
-	}
-
-	_, err := conn.StopReplicationWithContext(ctx, &dms.StopReplicationInput{
-		ReplicationConfigArn: aws.String(*replication.ReplicationConfigArn),
-	})
-
-	if err != nil {
-		return fmt.Errorf("stopping DMS Serverless Replication (%s): %w", id, err)
-	}
-
-	err = waitReplicationStopped(ctx, conn, id)
-	if err != nil {
-		return fmt.Errorf("waiting for DMS Replication (%s) stop: %w", id, err)
-	}
-
-	return nil
 }
