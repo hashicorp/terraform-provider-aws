@@ -516,6 +516,7 @@ func sweepProvisionedProducts(region string) error {
 			r := ResourceProvisionedProduct()
 			d := r.Data(nil)
 			d.SetId(aws.StringValue(detail.Id))
+			d.Set("ignore_errors", true)
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
