@@ -340,16 +340,17 @@ func resourceReplicationConfigDelete(ctx context.Context, d *schema.ResourceData
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	request := &dms.DeleteReplicationConfigInput{
+	log.Printf("[DEBUG] Deleting DMS Replication Config: %s", d.Id())
+	_, err := conn.DeleteReplicationConfigWithContext(ctx, &dms.DeleteReplicationConfigInput{
 		ReplicationConfigArn: aws.String(d.Get("replication_config_arn").(string)),
-	}
-
-	log.Printf("[DEBUG] DMS delete serverless replication config: %#v", request)
-
-	_, err := conn.DeleteReplicationConfigWithContext(ctx, request)
+	})
 
 	if tfawserr.ErrCodeEquals(err, dms.ErrCodeResourceNotFoundFault) {
 		return diags
+	}
+
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "deleting DMS Replication Config (%s): %s", d.Id(), err)
 	}
 
 	if err := waitReplicationDeleted(ctx, conn, d.Id()); err != nil {
