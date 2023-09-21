@@ -3,19 +3,18 @@ subcategory: "DMS (Database Migration)"
 layout: "aws"
 page_title: "AWS: aws_dms_replication_config"
 description: |-
-  Provides a DMS (Data Migration Service) serverless replication resource.
+  Provides a DMS Serverless replication config resource.
 ---
 
 # Resource: aws_dms_replication_config
 
-Provides a DMS (Data Migration Service) serverless replication resource. DMS serverless replication can be created, updated, deleted, and imported.
+Provides a DMS Serverless replication config resource.
 
 ~> **NOTE:** Changing most arguments will stop the replication if it is running. You can set `start_replication` to resume the replication afterwards.
 
 ## Example Usage
 
 ```terraform
-# Create a new serverless replication resource
 resource "aws_dms_replication_config" "name" {
   replication_config_identifier = "test-dms-serverless-replication-tf"
   resource_identifier           = "test-dms-serverless-replication-tf"
@@ -78,7 +77,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import replication tasks using the `replication_config_identifier`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import replication configs using the `replication_config_identifier`. For example:
 
 ```terraform
 import {
@@ -87,7 +86,7 @@ import {
 }
 ```
 
-Using `terraform import`, import a serverless replication using the `replication_config_identifier`. For example:
+Using `terraform import`, import a replication config using the `replication_config_identifier`. For example:
 
 ```console
 % terraform import aws_dms_replication_config.test test-dms-serverless-replication-tf
