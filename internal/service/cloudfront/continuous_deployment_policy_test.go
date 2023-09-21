@@ -20,6 +20,10 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+const (
+	defaultDomain = "www.example.com"
+)
+
 func TestAccCloudFrontContinuousDeploymentPolicy_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var policy cloudfront.GetContinuousDeploymentPolicyOutput
@@ -133,7 +137,7 @@ func TestAccCloudFrontContinuousDeploymentPolicy_trafficConfig(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccContinuousDeploymentPolicyConfig_TrafficConfig_singleWeight(false, "0.01", 300, 600),
+				Config: testAccContinuousDeploymentPolicyConfig_TrafficConfig_singleWeight(false, "0.01", 300, 600, defaultDomain),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckContinuousDeploymentPolicyExists(ctx, resourceName, &policy),
 					resource.TestCheckResourceAttr(resourceName, "enabled", "false"),
@@ -153,7 +157,7 @@ func TestAccCloudFrontContinuousDeploymentPolicy_trafficConfig(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccContinuousDeploymentPolicyConfig_TrafficConfig_singleWeight(true, "0.02", 600, 1200),
+				Config: testAccContinuousDeploymentPolicyConfig_TrafficConfig_singleWeight(true, "0.02", 600, 1200, defaultDomain),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckContinuousDeploymentPolicyExists(ctx, resourceName, &policy),
 					resource.TestCheckResourceAttr(resourceName, "enabled", "true"),
@@ -195,6 +199,79 @@ func TestAccCloudFrontContinuousDeploymentPolicy_trafficConfig(t *testing.T) {
 						"single_header_config.#":        "1",
 						"single_header_config.0.header": "aws-cf-cd-test2",
 						"single_header_config.0.value":  "test2",
+					}),
+				),
+			},
+		},
+	})
+}
+
+// https://github.com/hashicorp/terraform-provider-aws/issues/33338
+func TestAccCloudFrontContinuousDeploymentPolicy_domainChange(t *testing.T) {
+	ctx := acctest.Context(t)
+	var policy cloudfront.GetContinuousDeploymentPolicyOutput
+	var stagingDistribution cloudfront.Distribution
+	var productionDistribution cloudfront.Distribution
+	resourceName := "aws_cloudfront_continuous_deployment_policy.test"
+	stagingDistributionResourceName := "aws_cloudfront_distribution.staging"
+	productionDistributionResourceName := "aws_cloudfront_distribution.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, cloudfront.EndpointsID)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, cloudfront.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckContinuousDeploymentPolicyDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccContinuousDeploymentPolicyConfig_init(),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDistributionExists(ctx, stagingDistributionResourceName, &stagingDistribution),
+					testAccCheckDistributionExists(ctx, productionDistributionResourceName, &productionDistribution),
+					testAccCheckContinuousDeploymentPolicyExists(ctx, resourceName, &policy),
+				),
+			},
+			{
+				Config: testAccContinuousDeploymentPolicyConfig_TrafficConfig_singleWeight(true, "0.01", 300, 600, defaultDomain),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckContinuousDeploymentPolicyExists(ctx, resourceName, &policy),
+					resource.TestCheckResourceAttr(resourceName, "enabled", "true"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "traffic_config.*", map[string]string{
+						"type":                          "SingleWeight",
+						"single_weight_config.#":        "1",
+						"single_weight_config.0.weight": "0.01",
+						"single_weight_config.0.session_stickiness_config.#":             "1",
+						"single_weight_config.0.session_stickiness_config.0.idle_ttl":    "300",
+						"single_weight_config.0.session_stickiness_config.0.maximum_ttl": "600",
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(stagingDistributionResourceName, "origin.*", map[string]string{
+						"domain_name": defaultDomain,
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(productionDistributionResourceName, "origin.*", map[string]string{
+						"domain_name": defaultDomain,
+					}),
+				),
+			},
+			{
+				Config: testAccContinuousDeploymentPolicyConfig_TrafficConfig_singleWeight(true, "0.01", 300, 600, "tf33338.example.com"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckContinuousDeploymentPolicyExists(ctx, resourceName, &policy),
+					resource.TestCheckResourceAttr(resourceName, "enabled", "true"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "traffic_config.*", map[string]string{
+						"type":                          "SingleWeight",
+						"single_weight_config.#":        "1",
+						"single_weight_config.0.weight": "0.01",
+						"single_weight_config.0.session_stickiness_config.#":             "1",
+						"single_weight_config.0.session_stickiness_config.0.idle_ttl":    "300",
+						"single_weight_config.0.session_stickiness_config.0.maximum_ttl": "600",
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(stagingDistributionResourceName, "origin.*", map[string]string{
+						"domain_name": "tf33338.example.com",
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(productionDistributionResourceName, "origin.*", map[string]string{
+						"domain_name": "tf33338.example.com",
 					}),
 				),
 			},
@@ -249,8 +326,8 @@ func testAccCheckContinuousDeploymentPolicyExists(ctx context.Context, name stri
 	}
 }
 
-func testAccContinuousDeploymentPolicyConfigBase_staging() string {
-	return `
+func testAccContinuousDeploymentPolicyConfigBase_staging(domain string) string {
+	return fmt.Sprintf(`
 resource "aws_cloudfront_distribution" "staging" {
   enabled          = true
   retain_on_delete = false
@@ -272,7 +349,7 @@ resource "aws_cloudfront_distribution" "staging" {
   }
 
   origin {
-    domain_name = "www.example.com"
+    domain_name = %[1]q
     origin_id   = "test"
 
     custom_origin_config {
@@ -293,15 +370,15 @@ resource "aws_cloudfront_distribution" "staging" {
     cloudfront_default_certificate = true
   }
 }
-`
+`, domain)
 }
 
 // The initial production distribution must be created _without_ the continuous
 // deployment policy attached. Example error:
 //
 // InvalidArgument: Continuous deployment policy is not supported during distribution creation.
-func testAccContinuousDeploymentPolicyConfigBase_productionInit() string {
-	return `
+func testAccContinuousDeploymentPolicyConfigBase_productionInit(domain string) string {
+	return fmt.Sprintf(`
 resource "aws_cloudfront_distribution" "test" {
   enabled          = true
   retain_on_delete = false
@@ -322,7 +399,7 @@ resource "aws_cloudfront_distribution" "test" {
   }
 
   origin {
-    domain_name = "www.example.com"
+    domain_name = %[1]q
     origin_id   = "test"
 
     custom_origin_config {
@@ -343,11 +420,11 @@ resource "aws_cloudfront_distribution" "test" {
     cloudfront_default_certificate = true
   }
 }
-`
+`, domain)
 }
 
-func testAccContinuousDeploymentPolicyConfigBase_production() string {
-	return `
+func testAccContinuousDeploymentPolicyConfigBase_production(domain string) string {
+	return fmt.Sprintf(`
 resource "aws_cloudfront_distribution" "test" {
   enabled          = true
   retain_on_delete = false
@@ -370,7 +447,7 @@ resource "aws_cloudfront_distribution" "test" {
   }
 
   origin {
-    domain_name = "www.example.com"
+    domain_name = %[1]q
     origin_id   = "test"
 
     custom_origin_config {
@@ -391,7 +468,7 @@ resource "aws_cloudfront_distribution" "test" {
     cloudfront_default_certificate = true
   }
 }
-`
+`, domain)
 }
 
 // testAccContinuousDeploymentPolicyConfig_init initializes the staging and production
@@ -407,8 +484,8 @@ resource "aws_cloudfront_distribution" "test" {
 // currently associated with a distribution.
 func testAccContinuousDeploymentPolicyConfig_init() string {
 	return acctest.ConfigCompose(
-		testAccContinuousDeploymentPolicyConfigBase_staging(),
-		testAccContinuousDeploymentPolicyConfigBase_productionInit(),
+		testAccContinuousDeploymentPolicyConfigBase_staging(defaultDomain),
+		testAccContinuousDeploymentPolicyConfigBase_productionInit(defaultDomain),
 		`
 resource "aws_cloudfront_continuous_deployment_policy" "test" {
   enabled = false
@@ -430,8 +507,8 @@ resource "aws_cloudfront_continuous_deployment_policy" "test" {
 
 func testAccContinuousDeploymentPolicyConfig_basic() string {
 	return acctest.ConfigCompose(
-		testAccContinuousDeploymentPolicyConfigBase_staging(),
-		testAccContinuousDeploymentPolicyConfigBase_production(),
+		testAccContinuousDeploymentPolicyConfigBase_staging(defaultDomain),
+		testAccContinuousDeploymentPolicyConfigBase_production(defaultDomain),
 		`
 resource "aws_cloudfront_continuous_deployment_policy" "test" {
   enabled = false
@@ -451,10 +528,10 @@ resource "aws_cloudfront_continuous_deployment_policy" "test" {
 `)
 }
 
-func testAccContinuousDeploymentPolicyConfig_TrafficConfig_singleWeight(enabled bool, weight string, idleTTL, maxTTL int) string {
+func testAccContinuousDeploymentPolicyConfig_TrafficConfig_singleWeight(enabled bool, weight string, idleTTL, maxTTL int, domain string) string {
 	return acctest.ConfigCompose(
-		testAccContinuousDeploymentPolicyConfigBase_staging(),
-		testAccContinuousDeploymentPolicyConfigBase_production(),
+		testAccContinuousDeploymentPolicyConfigBase_staging(domain),
+		testAccContinuousDeploymentPolicyConfigBase_production(domain),
 		fmt.Sprintf(`
 resource "aws_cloudfront_continuous_deployment_policy" "test" {
   enabled = %[1]t
@@ -480,8 +557,8 @@ resource "aws_cloudfront_continuous_deployment_policy" "test" {
 
 func testAccContinuousDeploymentPolicyConfig_TrafficConfig_singleHeader(enabled bool, header, value string) string {
 	return acctest.ConfigCompose(
-		testAccContinuousDeploymentPolicyConfigBase_staging(),
-		testAccContinuousDeploymentPolicyConfigBase_production(),
+		testAccContinuousDeploymentPolicyConfigBase_staging(defaultDomain),
+		testAccContinuousDeploymentPolicyConfigBase_production(defaultDomain),
 		fmt.Sprintf(`
 resource "aws_cloudfront_continuous_deployment_policy" "test" {
   enabled = %[1]t

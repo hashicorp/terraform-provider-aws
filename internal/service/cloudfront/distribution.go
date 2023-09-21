@@ -5,6 +5,7 @@ package cloudfront
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"time"
 
@@ -625,7 +626,7 @@ func ResourceDistribution() *schema.Resource {
 									},
 									"origin_shield_region": {
 										Type:         schema.TypeString,
-										Required:     true,
+										Optional:     true,
 										ValidateFunc: validation.StringMatch(regionRegexp, "must be a valid AWS Region Code"),
 									},
 								},
@@ -929,11 +930,65 @@ func resourceDistributionUpdate(ctx context.Context, d *schema.ResourceData, met
 			IfMatch:            aws.String(d.Get("etag").(string)),
 		}
 
+		fmt.Printf("\nbefore input: %+v\n", input)
+		input.DistributionConfig.Aliases = &cloudfront.Aliases{
+			Quantity: aws.Int64(0),
+			Items:    aws.StringSlice([]string{}),
+		}
+
+		input.DistributionConfig.CacheBehaviors = &cloudfront.CacheBehaviors{
+			Quantity: aws.Int64(0),
+			Items:    []*cloudfront.CacheBehavior{},
+		}
+
+		input.DistributionConfig.OriginGroups = &cloudfront.OriginGroups{
+			Quantity: aws.Int64(0),
+			Items:    []*cloudfront.OriginGroup{},
+		}
+
+		input.DistributionConfig.ViewerCertificate = &cloudfront.ViewerCertificate{
+			MinimumProtocolVersion:       aws.String("TLSv1"),
+			CloudFrontDefaultCertificate: aws.Bool(true),
+			SSLSupportMethod:             aws.String("vip"),
+			CertificateSource:            aws.String("cloudfront"),
+		}
+
+		defaultCacheBehave := input.DistributionConfig.DefaultCacheBehavior
+		defaultCacheBehave.TrustedKeyGroups = &cloudfront.TrustedKeyGroups{
+			Quantity: aws.Int64(0),
+			Items:    aws.StringSlice([]string{}),
+			Enabled:  aws.Bool(false),
+		}
+
+		defaultCacheBehave.ResponseHeadersPolicyId = nil
+
+		defaultCacheBehave.ForwardedValues.Cookies = &cloudfront.CookiePreference{
+			Forward: aws.String("all"),
+			WhitelistedNames: &cloudfront.CookieNames{
+				Items:    aws.StringSlice([]string{}),
+				Quantity: aws.Int64(0),
+			},
+		}
+
+		defaultCacheBehave.TrustedSigners = &cloudfront.TrustedSigners{
+			Items:    aws.StringSlice([]string{}),
+			Enabled:  aws.Bool(false),
+			Quantity: aws.Int64(0),
+		}
+
+		input.DistributionConfig.DefaultCacheBehavior = defaultCacheBehave
+
+		input.DistributionConfig.Origins.Items[0].OriginShield = &cloudfront.OriginShield{
+			Enabled: aws.Bool(false),
+		}
+
+		fmt.Printf("\nafter input: %+v\n", input)
+
 		// ACM and IAM certificate eventual consistency.
 		// InvalidViewerCertificate: The specified SSL certificate doesn't exist, isn't in us-east-1 region, isn't valid, or doesn't include a valid certificate chain.
 		_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, 1*time.Minute, func() (interface{}, error) {
 			return conn.UpdateDistributionWithContext(ctx, input)
-		}, cloudfront.ErrCodeInvalidViewerCertificate)
+		}, cloudfront.ErrCodeInvalidViewerCertificate, cloudfront.ErrCodeIllegalUpdate)
 
 		// Refresh our ETag if it is out of date and attempt update again.
 		if tfawserr.ErrCodeEquals(err, cloudfront.ErrCodePreconditionFailed) {
@@ -1070,7 +1125,7 @@ func resourceDistributionDelete(ctx context.Context, d *schema.ResourceData, met
 		// Occasionally the DeleteDistribution call will return this error as well, in which retries will succeed:
 		//   * PreconditionFailed: The request failed because it didn't meet the preconditions in one or more request-header fields
 		if tfawserr.ErrCodeEquals(err, cloudfront.ErrCodeDistributionNotDisabled, cloudfront.ErrCodePreconditionFailed) {
-			_, err = tfresource.RetryWhenAWSErrCodeEquals(ctx, 2*time.Minute, func() (interface{}, error) {
+			_, err = tfresource.RetryWhenAWSErrCodeEquals(ctx, 5*time.Minute, func() (interface{}, error) {
 				return conn.DeleteDistributionWithContext(ctx, deleteDistroInput)
 			}, cloudfront.ErrCodeDistributionNotDisabled, cloudfront.ErrCodePreconditionFailed)
 		}
