@@ -6,13 +6,15 @@ package lexv2models
 import (
 	"context"
 	"errors"
+	"fmt"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/lexmodelsv2"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/lexmodelsv2/types"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
-	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
+	"github.com/hashicorp/terraform-plugin-framework-validators/objectvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
@@ -28,12 +30,14 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @FrameworkResource(name="Bot")
+// @Tags(identifierAttribute="arn")
 func newResourceBot(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &resourceBot{}
 
@@ -77,7 +81,8 @@ func (r *resourceBot) Schema(ctx context.Context, req resource.SchemaRequest, re
 			names.AttrTags:    tftags.TagsAttribute(),
 			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
 			"role_arn": schema.StringAttribute{
-				Required: true,
+				CustomType: fwtypes.ARNType,
+				Required:   true,
 			},
 			"test_bot_alias_tags": schema.MapAttribute{
 				ElementType: types.StringType,
@@ -86,6 +91,9 @@ func (r *resourceBot) Schema(ctx context.Context, req resource.SchemaRequest, re
 			"type": schema.StringAttribute{
 				Optional: true,
 				Computed: true,
+				Validators: []validator.String{
+					enum.FrameworkValidate[awstypes.BotType](),
+				},
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
 				},
@@ -93,9 +101,6 @@ func (r *resourceBot) Schema(ctx context.Context, req resource.SchemaRequest, re
 		},
 		Blocks: map[string]schema.Block{
 			"members": schema.ListNestedBlock{
-				Validators: []validator.List{
-					listvalidator.SizeAtMost(1),
-				},
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{
 						"alias_id": schema.StringAttribute{
@@ -117,6 +122,9 @@ func (r *resourceBot) Schema(ctx context.Context, req resource.SchemaRequest, re
 				},
 			},
 			"data_privacy": schema.SingleNestedBlock{
+				Validators: []validator.Object{
+					objectvalidator.IsRequired(),
+				},
 				Attributes: map[string]schema.Attribute{
 					"child_directed": schema.BoolAttribute{
 						Required: true,
@@ -151,7 +159,8 @@ func (r *resourceBot) Create(ctx context.Context, req resource.CreateRequest, re
 		BotName:                 aws.String(plan.Name.ValueString()),
 		DataPrivacy:             dpInput,
 		IdleSessionTTLInSeconds: aws.Int32(int32(plan.IdleSessionTTLInSeconds.ValueInt64())),
-		RoleArn:                 aws.String(plan.RoleARN.ValueString()),
+		RoleArn:                 flex.ARNStringFromFramework(ctx, plan.RoleARN),
+		BotTags:                 getTagsIn(ctx),
 	}
 
 	if !plan.TestBotAliasTags.IsNull() {
@@ -177,18 +186,24 @@ func (r *resourceBot) Create(ctx context.Context, req resource.CreateRequest, re
 		)
 		return
 	}
-
+	botArn := arn.ARN{
+		Partition: r.Meta().Partition,
+		Service:   "lex",
+		Region:    r.Meta().Region,
+		AccountID: r.Meta().AccountID,
+		Resource:  fmt.Sprintf("bot:%s", aws.ToString(out.BotName)),
+	}.String()
 	plan.ID = flex.StringToFramework(ctx, out.BotId)
 	state := plan
 	state.Type = flex.StringValueToFramework(ctx, out.BotType)
-	// state.ARN = flex.StringValueToFramework(ctx, out.)
+	state.ARN = flex.StringValueToFramework(ctx, botArn)
 	// resp.Diagnostics.Append(state.refreshFromOutput(ctx, out.BotId)...)
 	resp.Diagnostics.Append(resp.State.Set(ctx, state)...)
 }
 
 func (r *resourceBot) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	conn := r.Meta().LexV2ModelsClient(ctx)
-
+	var diags diag.Diagnostics
 	var state resourceBotData
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
@@ -208,14 +223,22 @@ func (r *resourceBot) Read(ctx context.Context, req resource.ReadRequest, resp *
 		return
 	}
 
-	state.RoleARN = flex.StringToFramework(ctx, out.RoleArn)
+	botArn := arn.ARN{
+		Partition: r.Meta().Partition,
+		Service:   "lex",
+		Region:    r.Meta().Region,
+		AccountID: r.Meta().AccountID,
+		Resource:  fmt.Sprintf("bot:%s", aws.ToString(out.BotName)),
+	}.String()
+	state.ARN = flex.StringValueToFramework(ctx, botArn)
+	state.RoleARN = flex.StringToFrameworkARN(ctx, out.RoleArn, &diags)
 	state.ID = flex.StringToFramework(ctx, out.BotId)
 	state.Name = flex.StringToFramework(ctx, out.BotName)
 	state.Type = flex.StringValueToFramework(ctx, out.BotType)
 	state.Description = flex.StringToFramework(ctx, out.Description)
 	state.IdleSessionTTLInSeconds = flex.Int32ToFramework(ctx, out.IdleSessionTTLInSeconds)
 
-	datap, _ := flattenDataPrivacy(ctx, out.DataPrivacy)
+	datap := flattenDataPrivacy(ctx, out.DataPrivacy)
 
 	state.DataPrivacy = datap
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
@@ -241,11 +264,11 @@ func (r *resourceBot) Update(ctx context.Context, req resource.UpdateRequest, re
 		dp, _ := expandDataPrivacy(ctx, plan.DataPrivacy)
 
 		in := lexmodelsv2.UpdateBotInput{
-			BotId:                   aws.String(plan.ID.ValueString()),
-			BotName:                 aws.String(plan.Name.ValueString()),
+			BotId:                   flex.StringFromFramework(ctx, plan.ID),
+			BotName:                 flex.StringFromFramework(ctx, plan.Name),
 			IdleSessionTTLInSeconds: aws.Int32(int32(plan.IdleSessionTTLInSeconds.ValueInt64())),
 			DataPrivacy:             dp,
-			RoleArn:                 aws.String(plan.RoleARN.ValueString()),
+			RoleArn:                 flex.ARNStringFromFramework(ctx, plan.RoleARN),
 		}
 
 		if !plan.Description.IsNull() {
@@ -428,18 +451,17 @@ func FindBotByID(ctx context.Context, conn *lexmodelsv2.Client, id string) (*lex
 	return out, nil
 }
 
-func flattenDataPrivacy(ctx context.Context, apiObject *awstypes.DataPrivacy) (types.Object, diag.Diagnostics) {
-	var diags diag.Diagnostics
+func flattenDataPrivacy(ctx context.Context, apiObject *awstypes.DataPrivacy) types.Object {
 	attributeTypes := flex.AttributeTypesMust[dataPrivacyData](ctx)
 
 	if apiObject == nil {
-		return types.ObjectNull(attributeTypes), diags
+		return types.ObjectNull(attributeTypes)
 	}
 
 	obj := map[string]attr.Value{}
 	obj["child_directed"] = flex.BoolToFramework(ctx, &apiObject.ChildDirected)
 
-	return types.ObjectValueMust(attributeTypes, obj), diags
+	return types.ObjectValueMust(attributeTypes, obj)
 }
 
 func expandDataPrivacy(ctx context.Context, object types.Object) (*awstypes.DataPrivacy, diag.Diagnostics) {
@@ -457,7 +479,7 @@ func expandDataPrivacy(ctx context.Context, object types.Object) (*awstypes.Data
 	}, diags
 }
 
-func expandMembers(ctx context.Context, tfList []membersData) (*awstypes.BotMember, diag.Diagnostics) {
+func expandMembers(tfList []membersData) (*awstypes.BotMember, diag.Diagnostics) {
 	var diags diag.Diagnostics
 
 	if len(tfList) == 0 {
@@ -480,7 +502,7 @@ func (rd *resourceBotData) refreshFromOutput(ctx context.Context, out *lexmodels
 	if out == nil {
 		return diags
 	}
-	rd.RoleARN = flex.StringToFramework(ctx, out.RoleArn)
+	rd.RoleARN = flex.StringToFrameworkARN(ctx, out.RoleArn, &diags)
 	rd.ID = flex.StringToFramework(ctx, out.BotId)
 	rd.Name = flex.StringToFramework(ctx, out.BotName)
 	rd.Type = flex.StringToFramework(ctx, (*string)(&out.BotType))
@@ -488,8 +510,7 @@ func (rd *resourceBotData) refreshFromOutput(ctx context.Context, out *lexmodels
 	rd.IdleSessionTTLInSeconds = flex.Int32ToFramework(ctx, out.IdleSessionTTLInSeconds)
 
 	// TIP: Setting a complex type.
-	datap, d := flattenDataPrivacy(ctx, out.DataPrivacy)
-	diags.Append(d...)
+	datap := flattenDataPrivacy(ctx, out.DataPrivacy)
 	rd.DataPrivacy = datap
 
 	return diags
@@ -503,7 +524,7 @@ type resourceBotData struct {
 	IdleSessionTTLInSeconds types.Int64    `tfsdk:"idle_session_ttl_in_seconds"`
 	Name                    types.String   `tfsdk:"name"`
 	Members                 types.List     `tfsdk:"members"`
-	RoleARN                 types.String   `tfsdk:"role_arn"`
+	RoleARN                 fwtypes.ARN    `tfsdk:"role_arn"`
 	Tags                    types.Map      `tfsdk:"tags"`
 	TagsAll                 types.Map      `tfsdk:"tags_all"`
 	TestBotAliasTags        types.Map      `tfsdk:"test_bot_alias_tags"`
@@ -521,8 +542,4 @@ type membersData struct {
 	ID        types.String `tfsdk:"id"`
 	Name      types.String `tfsdk:"name"`
 	Version   types.String `tfsdk:"version"`
-}
-
-var dataPrivacyAttrTypes = map[string]attr.Type{
-	"child_directed": types.BoolType,
 }

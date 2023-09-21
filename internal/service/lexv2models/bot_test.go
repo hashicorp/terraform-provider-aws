@@ -9,17 +9,16 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/aws/aws-sdk-go-v2/service/acm/types"
 	"github.com/aws/aws-sdk-go-v2/service/lexmodelsv2"
-	"github.com/aws/aws-sdk-go-v2/service/lexmodelsv2/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
-	"github.com/hashicorp/terraform-provider-aws/names"
-
 	tflexv2models "github.com/hashicorp/terraform-provider-aws/internal/service/lexv2models"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccLexV2ModelsBot_basic(t *testing.T) {
@@ -45,14 +44,13 @@ func TestAccLexV2ModelsBot_basic(t *testing.T) {
 		CheckDestroy:             testAccCheckBotDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBotConfig_basic(rName, 10, true),
+				Config: testAccBotConfig_basic(rName, 60, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBotExists(ctx, resourceName, &bot),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttr(resourceName, "idle_session_ttl_in_seconds", "10"),
-					resource.TestCheckResourceAttr(resourceName, "role_arn", "bot_role_arn"),
-					// resource.TestCheckResourceAttr(resourceName, "data_privacy.#", "1"),
-					// resource.TestCheckResourceAttr(resourceName, "data_privacy.0.child_directed", "true"),
+					resource.TestCheckResourceAttr(resourceName, "idle_session_ttl_in_seconds", "60"),
+					resource.TestCheckResourceAttrSet(resourceName, "role_arn"),
+					resource.TestCheckResourceAttrSet(resourceName, "data_privacy.%"),
 				),
 			},
 			{
@@ -63,6 +61,58 @@ func TestAccLexV2ModelsBot_basic(t *testing.T) {
 		},
 	})
 }
+
+// func TestAccLexV2ModelsBot_tags(t *testing.T) {
+// 	ctx := acctest.Context(t)
+// 	var bot lexmodelsv2.DescribeBotOutput
+// 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+// 	resourceName := "aws_lexv2models_bot.test"
+
+// 	resource.ParallelTest(t, resource.TestCase{
+// 		PreCheck: func() {
+// 			acctest.PreCheck(ctx, t)
+// 			acctest.PreCheckPartitionHasService(t, names.LexV2ModelsEndpointID)
+// 		},
+// 		ErrorCheck:               acctest.ErrorCheck(t, names.LexV2ModelsEndpointID),
+// 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+// 		CheckDestroy:             testAccCheckBotDestroy(ctx),
+// 		Steps: []resource.TestStep{
+// 			{
+// 				Config: testAccBotConfig_tags1(rName, 60, true, "key1", "value1"),
+// 				Check: resource.ComposeTestCheckFunc(
+// 					testAccCheckBotExists(ctx, resourceName, &bot),
+// 					resource.TestCheckResourceAttr(resourceName, "name", rName),
+// 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+// 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+// 				),
+// 			},
+// 			{
+// 				ResourceName:      resourceName,
+// 				ImportState:       true,
+// 				ImportStateVerify: true,
+// 			},
+// 			{
+// 				Config: testAccBotConfig_tags2(rName, 60, true, "key1", "value1updated", "key2", "value2"),
+// 				Check: resource.ComposeTestCheckFunc(
+// 					testAccCheckBotExists(ctx, resourceName, &bot),
+// 					resource.TestCheckResourceAttr(resourceName, "name", rName),
+// 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+// 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
+// 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+// 				),
+// 			},
+// 			{
+// 				Config: testAccBotConfig_tags1(rName, 60, true, "key2", "value2"),
+// 				Check: resource.ComposeTestCheckFunc(
+// 					testAccCheckBotExists(ctx, resourceName, &bot),
+// 					resource.TestCheckResourceAttr(resourceName, "name", rName),
+// 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+// 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+// 				),
+// 			},
+// 		},
+// 	})
+// }
 
 // func TestAccLexV2ModelsBot_disappears(t *testing.T) {
 // 	ctx := acctest.Context(t)
@@ -78,14 +128,13 @@ func TestAccLexV2ModelsBot_basic(t *testing.T) {
 // 		PreCheck: func() {
 // 			acctest.PreCheck(ctx, t)
 // 			acctest.PreCheckPartitionHasService(t, names.LexV2ModelsEndpointID)
-// 			testAccPreCheck(ctx, t)
 // 		},
 // 		ErrorCheck:               acctest.ErrorCheck(t, names.LexV2ModelsEndpointID),
 // 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 // 		CheckDestroy:             testAccCheckBotDestroy(ctx),
 // 		Steps: []resource.TestStep{
 // 			{
-// 				Config: testAccBotConfig_basic(rName),
+// 				Config: testAccBotConfig_basic(rName, 60, true),
 // 				Check: resource.ComposeTestCheckFunc(
 // 					testAccCheckBotExists(ctx, resourceName, &bot),
 // 					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tflexv2models.ResourceBot, resourceName),
@@ -158,27 +207,17 @@ func testAccPreCheck(ctx context.Context, t *testing.T) {
 	}
 }
 
-// func testAccCheckBotNotRecreated(before, after *lexmodelsv2.DescribeBotOutput) resource.TestCheckFunc {
-// 	return func(s *terraform.State) error {
-// 		if before, after := aws.ToString(before.BotId), aws.ToString(after.BotId); before != after {
-// 			return create.Error(names.LexV2Models, create.ErrActionCheckingNotRecreated, tflexv2models.ResNameBot, aws.ToString(before.BotId), errors.New("recreated"))
-// 		}
-
-// 		return nil
-// 	}
-// }
-
 func testAccBotBaseConfig() string {
 	return fmt.Sprintf(`
 resource "aws_iam_role" "test_role" {
-  name               = "test_role"
+  name = "test_role"
   assume_role_policy = jsonencode({
-    Version          = "2012-10-17"
-    Statement        = [
+    Version = "2012-10-17"
+    Statement = [
       {
-        Action    = "sts:AssumeRole"
-        Effect    = "Allow"
-        Sid       = ""
+        Action = "sts:AssumeRole"
+        Effect = "Allow"
+        Sid    = ""
         Principal = {
           Service = "lexv2.amazonaws.com"
         }
@@ -205,7 +244,7 @@ func testAccBotConfig_basic(rName string, ttl int, dp bool) string {
 resource "aws_lexv2models_bot" "test" {
   name                        = %[1]q
   idle_session_ttl_in_seconds = %[2]d
-  role_arn                    = "bot_role_arn"
+  role_arn                    = aws_iam_role.test_role.arn
 
   data_privacy {
     child_directed = %[3]t
@@ -214,26 +253,45 @@ resource "aws_lexv2models_bot" "test" {
 `, rName, ttl, dp))
 }
 
-func testAccBotConfig_optional(rName, description, botType, aliasId, aliasName, memberId, memberName string) string {
-	return fmt.Sprintf(`
+func testAccBotConfig_tags1(rName string, ttl int, dp bool, tagKey1, tagValue1 string) string {
+	return acctest.ConfigCompose(
+		testAccBotBaseConfig(),
+		fmt.Sprintf(`
 resource "aws_lexv2models_bot" "test" {
-  bot_name                    = %[1]q
-  description                 = %[2]q
-  idle_session_ttl_in_seconds = "5"
-  type                        = %[3]q
-  role_arn                    = "bot_role_arn"
+  name                        = %[1]q
+  idle_session_ttl_in_seconds = %[2]d
+  role_arn                    = aws_iam_role.test_role.arn
 
   data_privacy {
-    child_directed = true
-  }
-
-  members {
-    alias_id   = %[4]q
-    alias_name = %[5]q
-    id         = %[6]q
-    name       = %[7]q
-    version    = "2.0"
+    child_directed = %[3]t
   }
 }
-`, rName, description, botType, aliasId, aliasName, memberId, memberName)
+
+  tags = {
+    %[4]q = %[5]q
+  }
+}
+`, rName, ttl, dp, tagKey1, tagValue1))
+}
+
+func testAccBotConfig_tags2(rName string, ttl int, dp bool, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+	return acctest.ConfigCompose(
+		testAccBotBaseConfig(),
+		fmt.Sprintf(`
+resource "aws_lexv2models_bot" "test" {
+  name                        = %[1]q
+  idle_session_ttl_in_seconds = %[2]d
+  role_arn                    = aws_iam_role.test_role.arn
+
+  data_privacy {
+    child_directed = %[3]t
+  }
+}
+
+  tags = {
+    %[4]q = %[5]q
+    %[6]q = %[7]q
+  }
+}
+`, rName, ttl, dp, tagKey1, tagValue1, tagKey2, tagValue2))
 }
