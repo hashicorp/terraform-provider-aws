@@ -79,6 +79,9 @@ const (
 const (
 	USEast1RegionID = "us-east-1" // US East (N. Virginia).
 	USWest2RegionID = "us-west-2" // US West (Oregon).
+
+	USGovEast1RegionID = "us-gov-east-1" // AWS GovCloud (US-East).
+	USGovWest1RegionID = "us-gov-west-1" // AWS GovCloud (US-West).
 )
 
 // Type ServiceDatum corresponds closely to columns in `names_data.csv` and are

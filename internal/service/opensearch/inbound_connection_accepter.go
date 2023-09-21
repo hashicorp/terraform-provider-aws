@@ -98,11 +98,10 @@ func resourceInboundConnectionRead(ctx context.Context, d *schema.ResourceData, 
 func resourceInboundConnectionDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).OpenSearchConn(ctx)
 
-	req := &opensearchservice.DeleteInboundConnectionInput{
+	log.Printf("[DEBUG] Deleting OpenSearch Inbound Connection: %s", d.Id())
+	_, err := conn.DeleteInboundConnectionWithContext(ctx, &opensearchservice.DeleteInboundConnectionInput{
 		ConnectionId: aws.String(d.Id()),
-	}
-
-	_, err := conn.DeleteInboundConnectionWithContext(ctx, req)
+	})
 
 	if tfawserr.ErrCodeEquals(err, "ResourceNotFoundException") {
 		return nil
