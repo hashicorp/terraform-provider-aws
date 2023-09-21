@@ -218,7 +218,7 @@ func TestAccELBV2LoadBalancer_ipv6SubnetMapping(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckLoadBalancerExists(ctx, resourceName, &conf),
 					resource.TestMatchTypeSetElemNestedAttrs(resourceName, "subnet_mapping.*", map[string]*regexp.Regexp{
-						"ipv6_address": regexache.MustCompile("[a-f0-6]+:[a-f0-6:]+"),
+						"ipv6_address": regexache.MustCompile("[0-6a-f]+:[0-6a-f:]+"),
 					}),
 				),
 			},

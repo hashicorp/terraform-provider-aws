@@ -208,10 +208,22 @@ func ResourceGroup() *schema.Resource {
 										Default:      90,
 										ValidateFunc: validation.IntBetween(0, 100),
 									},
+									"scale_in_protected_instances": {
+										Type:         schema.TypeString,
+										Optional:     true,
+										Default:      autoscaling.ScaleInProtectedInstancesIgnore,
+										ValidateFunc: validation.StringInSlice(autoscaling.ScaleInProtectedInstances_Values(), false),
+									},
 									"skip_matching": {
 										Type:     schema.TypeBool,
 										Optional: true,
 										Default:  false,
+									},
+									"standby_instances": {
+										Type:         schema.TypeString,
+										Optional:     true,
+										Default:      autoscaling.StandbyInstancesIgnore,
+										ValidateFunc: validation.StringInSlice(autoscaling.StandbyInstances_Values(), false),
 									},
 								},
 							},
@@ -3243,8 +3255,16 @@ func expandRefreshPreferences(tfMap map[string]interface{}) *autoscaling.Refresh
 		apiObject.MinHealthyPercentage = aws.Int64(int64(v))
 	}
 
+	if v, ok := tfMap["scale_in_protected_instances"].(string); ok {
+		apiObject.ScaleInProtectedInstances = aws.String(v)
+	}
+
 	if v, ok := tfMap["skip_matching"].(bool); ok {
 		apiObject.SkipMatching = aws.Bool(v)
+	}
+
+	if v, ok := tfMap["standby_instances"].(string); ok {
+		apiObject.StandbyInstances = aws.String(v)
 	}
 
 	return apiObject

@@ -52,7 +52,7 @@ func ResourceRegistry() *schema.Resource {
 				ForceNew: true,
 				ValidateFunc: validation.All(
 					validation.StringLenBetween(1, 64),
-					validation.StringMatch(regexache.MustCompile(`^[\.\-_A-Za-z0-9]+`), ""),
+					validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_.-]+`), ""),
 				),
 			},
 			names.AttrTags:    tftags.TagsSchema(),

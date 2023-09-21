@@ -64,7 +64,7 @@ func resourceNotificationRule() *schema.Resource {
 				Required: true,
 				ValidateFunc: validation.All(
 					validation.StringLenBetween(1, 64),
-					validation.StringMatch(regexache.MustCompile(`^[A-Za-z0-9\-_ ]+$`), "must be one or more alphanumeric, hyphen, underscore or space characters"),
+					validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_ -]+$`), "must be one or more alphanumeric, hyphen, underscore or space characters"),
 				),
 			},
 			"resource": {
@@ -170,7 +170,7 @@ func resourceNotificationRuleRead(ctx context.Context, d *schema.ResourceData, m
 			"status":  t.TargetStatus,
 		})
 	}
-	if err = d.Set("target", targets); err != nil {
+	if err := d.Set("target", targets); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting target: %s", err)
 	}
 
@@ -276,7 +276,7 @@ func cleanupNotificationRuleTargets(ctx context.Context, conn *codestarnotificat
 			TargetAddress:       aws.String(target["address"].(string)),
 		}
 
-		_, err := tfresource.RetryWhenAWSErrMessageContainsV2(ctx, targetSubscriptionTimeout, func() (interface{}, error) {
+		_, err := tfresource.RetryWhenAWSErrMessageContains(ctx, targetSubscriptionTimeout, func() (interface{}, error) {
 			return conn.DeleteTarget(ctx, input)
 		}, "ValidationException", notificationRuleErrorSubscribed)
 

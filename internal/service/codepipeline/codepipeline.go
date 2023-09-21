@@ -99,7 +99,7 @@ func ResourcePipeline() *schema.Resource {
 				ForceNew: true,
 				ValidateFunc: validation.All(
 					validation.StringLenBetween(1, 100),
-					validation.StringMatch(regexache.MustCompile(`[A-Za-z0-9.@\-_]+`), ""),
+					validation.StringMatch(regexache.MustCompile(`[0-9A-Za-z_.@-]+`), ""),
 				),
 			},
 			"role_arn": {
@@ -126,7 +126,7 @@ func ResourcePipeline() *schema.Resource {
 									"configuration": {
 										Type:     schema.TypeMap,
 										Optional: true,
-										ValidateDiagFunc: verify.ValidAllDiag(
+										ValidateDiagFunc: validation.AllDiag(
 											validation.MapKeyLenBetween(1, 50),
 											validation.MapKeyLenBetween(1, 1000),
 										),
@@ -143,7 +143,7 @@ func ResourcePipeline() *schema.Resource {
 										Required: true,
 										ValidateFunc: validation.All(
 											validation.StringLenBetween(1, 100),
-											validation.StringMatch(regexache.MustCompile(`[A-Za-z0-9.@\-_]+`), ""),
+											validation.StringMatch(regexache.MustCompile(`[0-9A-Za-z_.@-]+`), ""),
 										),
 									},
 									"namespace": {
@@ -151,7 +151,7 @@ func ResourcePipeline() *schema.Resource {
 										Optional: true,
 										ValidateFunc: validation.All(
 											validation.StringLenBetween(1, 100),
-											validation.StringMatch(regexache.MustCompile(`[A-Za-z0-9@\-_]+`), ""),
+											validation.StringMatch(regexache.MustCompile(`[0-9A-Za-z_@-]+`), ""),
 										),
 									},
 									"output_artifacts": {
@@ -201,7 +201,7 @@ func ResourcePipeline() *schema.Resource {
 							Required: true,
 							ValidateFunc: validation.All(
 								validation.StringLenBetween(1, 100),
-								validation.StringMatch(regexache.MustCompile(`[A-Za-z0-9.@\-_]+`), ""),
+								validation.StringMatch(regexache.MustCompile(`[0-9A-Za-z_.@-]+`), ""),
 							),
 						},
 					},

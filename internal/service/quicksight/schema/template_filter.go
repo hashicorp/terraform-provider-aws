@@ -70,7 +70,7 @@ func categoryFilterSchema() *schema.Schema {
 											Optional: true,
 											ValidateFunc: validation.All(
 												validation.StringLenBetween(1, 2048),
-												validation.StringMatch(regexache.MustCompile(`^[a-zA-Z0-9]+`), ""),
+												validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z]+`), ""),
 											),
 										},
 										"select_all_options": stringSchema(false, validation.StringInSlice(quicksight.CategoryFilterSelectAllOptions_Values(), false)),
@@ -336,7 +336,7 @@ func numericRangeFilterValueSchema() *schema.Schema {
 					Optional: true,
 					ValidateFunc: validation.All(
 						validation.StringLenBetween(1, 2048),
-						validation.StringMatch(regexache.MustCompile(`^[a-zA-Z0-9]+$`), ""),
+						validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z]+$`), ""),
 					),
 				},
 				"static_value": {
@@ -361,7 +361,7 @@ func timeRangeFilterValueSchema() *schema.Schema {
 					Optional: true,
 					ValidateFunc: validation.All(
 						validation.StringLenBetween(1, 2048),
-						validation.StringMatch(regexache.MustCompile(`^[a-zA-Z0-9]+$`), ""),
+						validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z]+$`), ""),
 					),
 				},
 				"rolling_date": rollingDateConfigurationSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_RollingDateConfiguration.html,

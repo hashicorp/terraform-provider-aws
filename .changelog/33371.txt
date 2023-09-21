@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_service_discovery_instance: Fix validation error "expected to match regular expression"
+```

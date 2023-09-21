@@ -15,6 +15,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/emrserverless/types"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
+	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv2"
 )
 
 func init() {
@@ -38,7 +39,7 @@ func sweepApplications(region string) error {
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
 
-		if sweep.SkipSweepError(err) {
+		if awsv2.SkipSweepError(err) {
 			log.Printf("[WARN] Skipping EMR Serverless Application sweep for %s: %s", region, err)
 			return nil
 		}

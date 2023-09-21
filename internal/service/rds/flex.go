@@ -259,9 +259,15 @@ func flattenOptions(apiOptions []*rds.Option, optionConfigurations []*rds.Option
 			"db_security_group_memberships":  schema.NewSet(schema.HashString, dbSecurityGroupMemberships),
 			"option_name":                    aws.StringValue(apiOption.OptionName),
 			"option_settings":                schema.NewSet(schema.HashResource(optionSettingsResource), optionSettings),
-			"port":                           aws.Int64Value(apiOption.Port),
-			"version":                        aws.StringValue(apiOption.OptionVersion),
 			"vpc_security_group_memberships": schema.NewSet(schema.HashString, vpcSecurityGroupMemberships),
+		}
+
+		if apiOption.OptionVersion != nil && configuredOption != nil && configuredOption.OptionVersion != nil {
+			r["version"] = aws.StringValue(apiOption.OptionVersion)
+		}
+
+		if apiOption.Port != nil && configuredOption != nil && configuredOption.Port != nil {
+			r["port"] = aws.Int64Value(apiOption.Port)
 		}
 
 		result = append(result, r)

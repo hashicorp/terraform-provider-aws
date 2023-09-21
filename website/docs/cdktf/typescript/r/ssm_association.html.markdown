@@ -140,16 +140,17 @@ This resource supports the following arguments:
 * `name` - (Required) The name of the SSM document to apply.
 * `applyOnlyAtCronInterval` - (Optional) By default, when you create a new or update associations, the system runs it immediately and then according to the schedule you specified. Enable this option if you do not want an association to run immediately after you create or update it. This parameter is not supported for rate expressions. Default: `false`.
 * `associationName` - (Optional) The descriptive name for the association.
+* `automationTargetParameterName` - (Optional) Specify the target for the association. This target is required for associations that use an `automation` document and target resources by using rate controls. This should be set to the SSM document `parameter` that will define how your automation will branch out.
+* `complianceSeverity` - (Optional) The compliance severity for the association. Can be one of the following: `unspecified`, `low`, `medium`, `high` or `critical`
 * `documentVersion` - (Optional) The document version you want to associate with the target(s). Can be a specific version or the default version.
 * `instanceId` - (Optional, **Deprecated**) The instance ID to apply an SSM document to. Use `targets` with key `instanceIds` for document schema versions 2.0 and above. Use the `targets` attribute instead.
+* `maxConcurrency` - (Optional) The maximum number of targets allowed to run the association at the same time. You can specify a number, for example 10, or a percentage of the target set, for example 10%.
+* `maxErrors` - (Optional) The number of errors that are allowed before the system stops sending requests to run the association on additional targets. You can specify a number, for example 10, or a percentage of the target set, for example 10%. If you specify a threshold of 3, the stop command is sent when the fourth error is returned. If you specify a threshold of 10% for 50 associations, the stop command is sent when the sixth error is returned.
 * `outputLocation` - (Optional) An output location block. Output Location is documented below.
 * `parameters` - (Optional) A block of arbitrary string parameters to pass to the SSM document.
 * `scheduleExpression` - (Optional) A [cron or rate expression](https://docs.aws.amazon.com/systems-manager/latest/userguide/reference-cron-and-rate-expressions.html) that specifies when the association runs.
+* `syncCompliance` - (Optional) The mode for generating association compliance. You can specify `auto` or `manual`.
 * `targets` - (Optional) A block containing the targets of the SSM association. Targets are documented below. AWS currently supports a maximum of 5 targets.
-* `complianceSeverity` - (Optional) The compliance severity for the association. Can be one of the following: `unspecified`, `low`, `medium`, `high` or `critical`
-* `maxConcurrency` - (Optional) The maximum number of targets allowed to run the association at the same time. You can specify a number, for example 10, or a percentage of the target set, for example 10%.
-* `maxErrors` - (Optional) The number of errors that are allowed before the system stops sending requests to run the association on additional targets. You can specify a number, for example 10, or a percentage of the target set, for example 10%. If you specify a threshold of 3, the stop command is sent when the fourth error is returned. If you specify a threshold of 10% for 50 associations, the stop command is sent when the sixth error is returned.
-* `automationTargetParameterName` - (Optional) Specify the target for the association. This target is required for associations that use an `automation` document and target resources by using rate controls. This should be set to the SSM document `parameter` that will define how your automation will branch out.
 * `waitForSuccessTimeoutSeconds` - (Optional) The number of seconds to wait for the association status to be `success`. If `success` status is not reached within the given time, create opration will fail.
 
 Output Location (`outputLocation`) is an S3 bucket where you want to store the results of this association:
@@ -195,4 +196,4 @@ Using `terraform import`, import SSM associations using the `associationId`. For
 % terraform import aws_ssm_association.test-association 10abcdef-0abc-1234-5678-90abcdef123456
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-d7c183a4ee538a086fe856322e2f64dc0a1010abbef9731310f78a9925262485 -->
+<!-- cache-key: cdktf-0.18.0 input-10e8a92532503c7bcda87673db04c7e87ed3c1cf117ab0f43ec4186c48be49c7 -->

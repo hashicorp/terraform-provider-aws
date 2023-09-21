@@ -59,6 +59,7 @@ class MyConvertedCode(TerraformStack):
         aws_docdb_cluster_secondary = DocdbCluster(self, "secondary",
             cluster_identifier="test-secondary-cluster",
             db_subnet_group_name="default",
+            depends_on=[aws_docdb_cluster_primary],
             engine=example.engine,
             engine_version=example.engine_version,
             global_cluster_identifier=example.id,
@@ -188,4 +189,4 @@ class MyConvertedCode(TerraformStack):
         )
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-7e0f84c0c2bf541e702d65ca57662790eabf33b1642d8268615d51150c3b5e17 -->
+<!-- cache-key: cdktf-0.18.0 input-1969b7e5823c37dcaa70faf533c61504633b6662145d39efba4b15fdc30e77b9 -->

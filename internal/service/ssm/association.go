@@ -52,18 +52,22 @@ func ResourceAssociation() *schema.Resource {
 				Optional: true,
 				ValidateFunc: validation.All(
 					validation.StringLenBetween(3, 128),
-					validation.StringMatch(regexache.MustCompile(`^[a-zA-Z0-9_\-.]{3,128}$`), "must contain only alphanumeric, underscore, hyphen, or period characters"),
+					validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_.-]{3,128}$`), "must contain only alphanumeric, underscore, hyphen, or period characters"),
 				),
 			},
 			"association_id": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"instance_id": {
-				Type:       schema.TypeString,
-				ForceNew:   true,
-				Optional:   true,
-				Deprecated: "use 'targets' argument instead. https://docs.aws.amazon.com/systems-manager/latest/APIReference/API_CreateAssociation.html#systemsmanager-CreateAssociation-request-InstanceId",
+			"automation_target_parameter_name": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ValidateFunc: validation.StringLenBetween(1, 50),
+			},
+			"compliance_severity": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ValidateFunc: validation.StringInSlice(ssm.ComplianceSeverity_Values(), false),
 			},
 			"document_version": {
 				Type:         schema.TypeString,
@@ -86,16 +90,11 @@ func ResourceAssociation() *schema.Resource {
 				ForceNew: true,
 				Required: true,
 			},
-			"parameters": {
-				Type:     schema.TypeMap,
-				Optional: true,
-				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			"schedule_expression": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validation.StringLenBetween(1, 256),
+			"instance_id": {
+				Type:       schema.TypeString,
+				ForceNew:   true,
+				Optional:   true,
+				Deprecated: "use 'targets' argument instead. https://docs.aws.amazon.com/systems-manager/latest/APIReference/API_CreateAssociation.html#systemsmanager-CreateAssociation-request-InstanceId",
 			},
 			"output_location": {
 				Type:     schema.TypeList,
@@ -121,6 +120,22 @@ func ResourceAssociation() *schema.Resource {
 					},
 				},
 			},
+			"parameters": {
+				Type:     schema.TypeMap,
+				Optional: true,
+				Computed: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+			},
+			"schedule_expression": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ValidateFunc: validation.StringLenBetween(1, 256),
+			},
+			"sync_compliance": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ValidateFunc: validation.StringInSlice(ssm.AssociationSyncCompliance_Values(), false),
+			},
 			"targets": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -141,16 +156,6 @@ func ResourceAssociation() *schema.Resource {
 						},
 					},
 				},
-			},
-			"compliance_severity": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validation.StringInSlice(ssm.ComplianceSeverity_Values(), false),
-			},
-			"automation_target_parameter_name": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validation.StringLenBetween(1, 50),
 			},
 			"wait_for_success_timeout_seconds": {
 				Type:     schema.TypeInt,
@@ -186,12 +191,16 @@ func resourceAssociationCreate(ctx context.Context, d *schema.ResourceData, meta
 		associationInput.DocumentVersion = aws.String(v.(string))
 	}
 
+	if v, ok := d.GetOk("parameters"); ok {
+		associationInput.Parameters = expandDocumentParameters(v.(map[string]interface{}))
+	}
+
 	if v, ok := d.GetOk("schedule_expression"); ok {
 		associationInput.ScheduleExpression = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("parameters"); ok {
-		associationInput.Parameters = expandDocumentParameters(v.(map[string]interface{}))
+	if v, ok := d.GetOk("sync_compliance"); ok {
+		associationInput.SyncCompliance = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("targets"); ok {
@@ -270,6 +279,7 @@ func resourceAssociationRead(ctx context.Context, d *schema.ResourceData, meta i
 	d.Set("name", association.Name)
 	d.Set("association_id", association.AssociationId)
 	d.Set("schedule_expression", association.ScheduleExpression)
+	d.Set("sync_compliance", association.SyncCompliance)
 	d.Set("document_version", association.DocumentVersion)
 	d.Set("compliance_severity", association.ComplianceSeverity)
 	d.Set("max_concurrency", association.MaxConcurrency)
@@ -316,6 +326,10 @@ func resourceAssociationUpdate(ctx context.Context, d *schema.ResourceData, meta
 
 	if v, ok := d.GetOk("schedule_expression"); ok {
 		associationInput.ScheduleExpression = aws.String(v.(string))
+	}
+
+	if d.HasChange("sync_compliance") {
+		associationInput.SyncCompliance = aws.String(d.Get("sync_compliance").(string))
 	}
 
 	if v, ok := d.GetOk("parameters"); ok {
