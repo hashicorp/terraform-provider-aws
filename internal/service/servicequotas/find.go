@@ -79,10 +79,7 @@ func findServiceQuotaByID(ctx context.Context, conn *servicequotas.Client, servi
 	}
 
 	if output.Quota.ErrorReason != nil {
-		return nil, &retry.NotFoundError{
-			Message:     fmt.Sprintf("%s: %s", output.Quota.ErrorReason.ErrorCode, aws.ToString(output.Quota.ErrorReason.ErrorMessage)),
-			LastRequest: input,
-		}
+		return nil, fmt.Errorf("%s: %s", output.Quota.ErrorReason.ErrorCode, aws.ToString(output.Quota.ErrorReason.ErrorMessage))
 	}
 
 	if output.Quota.Value == nil {
