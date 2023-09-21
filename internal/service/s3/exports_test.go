@@ -19,4 +19,6 @@ var (
 	FindObjectLockConfiguration           = findObjectLockConfiguration
 	FindServerSideEncryptionConfiguration = findServerSideEncryptionConfiguration
 	SDKv1CompatibleCleanKey               = sdkv1CompatibleCleanKey
+
+	ErrCodeNoSuchCORSConfiguration = errCodeNoSuchCORSConfiguration
 )
