@@ -25,6 +25,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -59,6 +60,7 @@ func (r *resourceBot) Metadata(_ context.Context, req resource.MetadataRequest, 
 func (r *resourceBot) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
+			"arn": framework.ARNAttributeComputedOnly(),
 			"description": schema.StringAttribute{
 				Optional: true,
 			},
@@ -77,11 +79,16 @@ func (r *resourceBot) Schema(ctx context.Context, req resource.SchemaRequest, re
 			"role_arn": schema.StringAttribute{
 				Required: true,
 			},
-			"test_bot_alias_tags": schema.StringAttribute{
-				Optional: true,
+			"test_bot_alias_tags": schema.MapAttribute{
+				ElementType: types.StringType,
+				Optional:    true,
 			},
 			"type": schema.StringAttribute{
 				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
 			},
 		},
 		Blocks: map[string]schema.Block{
@@ -147,6 +154,10 @@ func (r *resourceBot) Create(ctx context.Context, req resource.CreateRequest, re
 		RoleArn:                 aws.String(plan.RoleARN.ValueString()),
 	}
 
+	if !plan.TestBotAliasTags.IsNull() {
+		in.TestBotAliasTags = flex.ExpandFrameworkStringValueMap(ctx, plan.TestBotAliasTags)
+	}
+
 	if !plan.Description.IsNull() {
 		in.Description = aws.String(plan.Description.ValueString())
 	}
@@ -169,6 +180,8 @@ func (r *resourceBot) Create(ctx context.Context, req resource.CreateRequest, re
 
 	plan.ID = flex.StringToFramework(ctx, out.BotId)
 	state := plan
+	state.Type = flex.StringValueToFramework(ctx, out.BotType)
+	// state.ARN = flex.StringValueToFramework(ctx, out.)
 	// resp.Diagnostics.Append(state.refreshFromOutput(ctx, out.BotId)...)
 	resp.Diagnostics.Append(resp.State.Set(ctx, state)...)
 }
@@ -198,7 +211,7 @@ func (r *resourceBot) Read(ctx context.Context, req resource.ReadRequest, resp *
 	state.RoleARN = flex.StringToFramework(ctx, out.RoleArn)
 	state.ID = flex.StringToFramework(ctx, out.BotId)
 	state.Name = flex.StringToFramework(ctx, out.BotName)
-	state.Type = flex.StringToFramework(ctx, (*string)(&out.BotType))
+	state.Type = flex.StringValueToFramework(ctx, out.BotType)
 	state.Description = flex.StringToFramework(ctx, out.Description)
 	state.IdleSessionTTLInSeconds = flex.Int32ToFramework(ctx, out.IdleSessionTTLInSeconds)
 
@@ -218,8 +231,7 @@ func (r *resourceBot) Update(ctx context.Context, req resource.UpdateRequest, re
 		return
 	}
 
-	if !plan.Name.Equal(state.Name) ||
-		!plan.Description.Equal(state.Description) ||
+	if !plan.Description.Equal(state.Description) ||
 		!plan.IdleSessionTTLInSeconds.Equal(state.IdleSessionTTLInSeconds) ||
 		!plan.RoleARN.Equal(state.RoleARN) ||
 		!plan.TestBotAliasTags.Equal(state.TestBotAliasTags) ||
@@ -248,7 +260,7 @@ func (r *resourceBot) Update(ctx context.Context, req resource.UpdateRequest, re
 			}
 		}
 
-		out, err := conn.UpdateBot(ctx, &in)
+		_, err := conn.UpdateBot(ctx, &in)
 		if err != nil {
 			resp.Diagnostics.AddError(
 				create.ProblemStandardMessage(names.LexV2Models, create.ErrActionUpdating, ResNameBot, plan.ID.String(), err),
@@ -256,6 +268,16 @@ func (r *resourceBot) Update(ctx context.Context, req resource.UpdateRequest, re
 			)
 			return
 		}
+		updateTimeout := r.UpdateTimeout(ctx, plan.Timeouts)
+		out, err := waitBotUpdated(ctx, conn, plan.ID.ValueString(), updateTimeout)
+		if err != nil {
+			resp.Diagnostics.AddError(
+				create.ProblemStandardMessage(names.LexV2Models, create.ErrActionWaitingForUpdate, ResNameBot, plan.ID.String(), err),
+				err.Error(),
+			)
+			return
+		}
+
 		if out == nil || out.BotId == nil {
 			resp.Diagnostics.AddError(
 				create.ProblemStandardMessage(names.LexV2Models, create.ErrActionUpdating, ResNameBot, plan.ID.String(), nil),
@@ -263,18 +285,7 @@ func (r *resourceBot) Update(ctx context.Context, req resource.UpdateRequest, re
 			)
 			return
 		}
-
-		state.refreshFromOutput(ctx, out)
-	}
-
-	updateTimeout := r.UpdateTimeout(ctx, plan.Timeouts)
-	_, err := waitBotUpdated(ctx, conn, plan.ID.ValueString(), updateTimeout)
-	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.LexV2Models, create.ErrActionWaitingForUpdate, ResNameBot, plan.ID.String(), err),
-			err.Error(),
-		)
-		return
+		resp.Diagnostics.Append(plan.refreshFromOutput(ctx, out)...)
 	}
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
@@ -317,21 +328,18 @@ func (r *resourceBot) Delete(ctx context.Context, req resource.DeleteRequest, re
 	}
 }
 
+func (r *resourceBot) ModifyPlan(ctx context.Context, req resource.ModifyPlanRequest, resp *resource.ModifyPlanResponse) {
+	r.SetTagsAll(ctx, req, resp)
+}
+
 func (r *resourceBot) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
 	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
 }
 
-const (
-	statusChangePending = "Pending"
-	statusDeleting      = "Deleting"
-	statusNormal        = "Normal"
-	statusUpdated       = "Updated"
-)
-
 func waitBotCreated(ctx context.Context, conn *lexmodelsv2.Client, id string, timeout time.Duration) (*lexmodelsv2.DescribeBotOutput, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending:                   []string{},
-		Target:                    []string{statusNormal},
+		Pending:                   enum.Slice(awstypes.BotStatusCreating),
+		Target:                    enum.Slice(awstypes.BotStatusAvailable),
 		Refresh:                   statusBot(ctx, conn, id),
 		Timeout:                   timeout,
 		NotFoundChecks:            20,
@@ -348,8 +356,8 @@ func waitBotCreated(ctx context.Context, conn *lexmodelsv2.Client, id string, ti
 
 func waitBotUpdated(ctx context.Context, conn *lexmodelsv2.Client, id string, timeout time.Duration) (*lexmodelsv2.DescribeBotOutput, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending:                   []string{statusChangePending},
-		Target:                    []string{statusUpdated},
+		Pending:                   enum.Slice(awstypes.BotStatusUpdating),
+		Target:                    enum.Slice(awstypes.BotStatusAvailable),
 		Refresh:                   statusBot(ctx, conn, id),
 		Timeout:                   timeout,
 		NotFoundChecks:            20,
@@ -366,7 +374,7 @@ func waitBotUpdated(ctx context.Context, conn *lexmodelsv2.Client, id string, ti
 
 func waitBotDeleted(ctx context.Context, conn *lexmodelsv2.Client, id string, timeout time.Duration) (*lexmodelsv2.DescribeBotOutput, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending: []string{statusDeleting, statusNormal},
+		Pending: enum.Slice(awstypes.BotStatusDeleting),
 		Target:  []string{},
 		Refresh: statusBot(ctx, conn, id),
 		Timeout: timeout,
@@ -466,7 +474,7 @@ func expandMembers(ctx context.Context, tfList []membersData) (*awstypes.BotMemb
 	}, diags
 }
 
-func (rd *resourceBotData) refreshFromOutput(ctx context.Context, out *lexmodelsv2.UpdateBotOutput) diag.Diagnostics {
+func (rd *resourceBotData) refreshFromOutput(ctx context.Context, out *lexmodelsv2.DescribeBotOutput) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	if out == nil {
@@ -488,6 +496,7 @@ func (rd *resourceBotData) refreshFromOutput(ctx context.Context, out *lexmodels
 }
 
 type resourceBotData struct {
+	ARN                     types.String   `tfsdk:"arn"`
 	DataPrivacy             types.Object   `tfsdk:"data_privacy"`
 	Description             types.String   `tfsdk:"description"`
 	ID                      types.String   `tfsdk:"id"`
@@ -515,5 +524,5 @@ type membersData struct {
 }
 
 var dataPrivacyAttrTypes = map[string]attr.Type{
-	"child_directed": types.StringType,
+	"child_directed": types.BoolType,
 }
