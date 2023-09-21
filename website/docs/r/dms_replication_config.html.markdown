@@ -94,14 +94,12 @@ In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashico
 ```terraform
 import {
   to = aws_dms_replication_config.example
-  id = "arn:aws:dms:us-east-
-1:123456789012:replication-config:UX6OL6MHMMJKFFOXE3H7LLJCMEKBDUG4ZV7DRSI"
+  id = "arn:aws:dms:us-east-1:123456789012:replication-config:UX6OL6MHMMJKFFOXE3H7LLJCMEKBDUG4ZV7DRSI"
 }
 ```
 
 Using `terraform import`, import a replication config using the `arn`. For example:
 
 ```console
-% terraform import aws_dms_replication_config.example arn:aws:dms:us-east-
-1:123456789012:replication-config:UX6OL6MHMMJKFFOXE3H7LLJCMEKBDUG4ZV7DRSI
+% terraform import aws_dms_replication_config.example arn:aws:dms:us-east-1:123456789012:replication-config:UX6OL6MHMMJKFFOXE3H7LLJCMEKBDUG4ZV7DRSI
 ```
