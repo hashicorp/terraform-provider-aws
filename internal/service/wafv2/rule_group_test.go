@@ -2002,6 +2002,7 @@ func TestAccWAFV2RuleGroup_rateBasedStatement(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
 						"statement.#": "1",
+						"statement.0.rate_based_statement.0.custom_key.#":           "0",
 						"statement.0.rate_based_statement.0.aggregate_key_type":     "IP",
 						"statement.0.rate_based_statement.0.forwarded_ip_config.#":  "0",
 						"statement.0.rate_based_statement.0.limit":                  "50000",
@@ -2009,6 +2010,32 @@ func TestAccWAFV2RuleGroup_rateBasedStatement(t *testing.T) {
 					}),
 				),
 			},
+			// {
+			// 	Config: testAccRuleGroupConfig_rateBasedStatement_customkeys_cookies(ruleGroupName),
+			// 	Check: resource.ComposeTestCheckFunc(
+			// 		testAccCheckRuleGroupExists(ctx, resourceName, &v),
+			// 		acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexache.MustCompile(`regional/rulegroup/.+$`)),
+			// 		resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
+			// 		resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
+			// 			"statement.#":                                                       "1",
+			// 			"statement.0.rate_based_statement.#":                                "1",
+			// 			"statement.0.rate_based_statement.0.custom_key.#":                   "1",
+			// 			"statement.0.rate_based_statement.0.aggregate_key_type":             "CUSTOM_KEYS",
+			// 			"statement.0.rate_based_statement.0.forwarded_ip_config.#":          "0",
+			// 			"statement.0.rate_based_statement.0.limit":                          "50000",
+			// 			"statement.0.rate_based_statement.0.scope_down_statement.#":         "0",
+			// 			"statement.0.rate_based_statement.0.custom_key.0.cookie.#":          "1",
+			// 			"statement.0.rate_based_statement.0.custom_key.0.forwarded_ip.#":    "0",
+			// 			"statement.0.rate_based_statement.0.custom_key.0.http_method.#":     "0",
+			// 			"statement.0.rate_based_statement.0.custom_key.0.header.#":          "0",
+			// 			"statement.0.rate_based_statement.0.custom_key.0.ip.#":              "0",
+			// 			"statement.0.rate_based_statement.0.custom_key.0.label_namespace.#": "0",
+			// 			"statement.0.rate_based_statement.0.custom_key.0.query_argument.#":  "0",
+			// 			"statement.0.rate_based_statement.0.custom_key.0.query_string.#":    "0",
+			// 			"statement.0.rate_based_statement.0.custom_key.0.uri_path.#":        "0",
+			// 		}),
+			// 	),
+			// },
 			{
 				Config: testAccRuleGroupConfig_rateBasedStatement_forwardedIPConfig(ruleGroupName, "MATCH", "X-Forwarded-For"),
 				Check: resource.ComposeTestCheckFunc(
@@ -2016,8 +2043,9 @@ func TestAccWAFV2RuleGroup_rateBasedStatement(t *testing.T) {
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexache.MustCompile(`regional/rulegroup/.+$`)),
 					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
-						"statement.#":                        "1",
-						"statement.0.rate_based_statement.#": "1",
+						"statement.#":                                                                "1",
+						"statement.0.rate_based_statement.#":                                         "1",
+						"statement.0.rate_based_statement.0.custom_key.#":                            "0",
 						"statement.0.rate_based_statement.0.aggregate_key_type":                      "FORWARDED_IP",
 						"statement.0.rate_based_statement.0.forwarded_ip_config.#":                   "1",
 						"statement.0.rate_based_statement.0.forwarded_ip_config.0.fallback_behavior": "MATCH",
@@ -2034,8 +2062,9 @@ func TestAccWAFV2RuleGroup_rateBasedStatement(t *testing.T) {
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexache.MustCompile(`regional/rulegroup/.+$`)),
 					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
-						"statement.#":                        "1",
-						"statement.0.rate_based_statement.#": "1",
+						"statement.#":                                                                "1",
+						"statement.0.rate_based_statement.#":                                         "1",
+						"statement.0.rate_based_statement.0.custom_key.#":                            "0",
 						"statement.0.rate_based_statement.0.aggregate_key_type":                      "FORWARDED_IP",
 						"statement.0.rate_based_statement.0.forwarded_ip_config.#":                   "1",
 						"statement.0.rate_based_statement.0.forwarded_ip_config.0.fallback_behavior": "NO_MATCH",
@@ -2052,8 +2081,9 @@ func TestAccWAFV2RuleGroup_rateBasedStatement(t *testing.T) {
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexache.MustCompile(`regional/rulegroup/.+$`)),
 					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
-						"statement.#":                        "1",
-						"statement.0.rate_based_statement.#": "1",
+						"statement.#":                                                                                     "1",
+						"statement.0.rate_based_statement.#":                                                              "1",
+						"statement.0.rate_based_statement.0.custom_key.#":                                                 "0",
 						"statement.0.rate_based_statement.0.aggregate_key_type":                                           "IP",
 						"statement.0.rate_based_statement.0.forwarded_ip_config.#":                                        "0",
 						"statement.0.rate_based_statement.0.limit":                                                        "10000",
@@ -4373,7 +4403,7 @@ resource "aws_wafv2_rule_group" "test" {
 func testAccRuleGroupConfig_rateBasedStatement(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_wafv2_rule_group" "test" {
-  capacity = 3
+  capacity = 100
   name     = %[1]q
   scope    = "REGIONAL"
 
@@ -4410,7 +4440,7 @@ resource "aws_wafv2_rule_group" "test" {
 func testAccRuleGroupConfig_rateBasedStatement_forwardedIPConfig(rName, fallbackBehavior, headerName string) string {
 	return fmt.Sprintf(`
 resource "aws_wafv2_rule_group" "test" {
-  capacity = 3
+  capacity = 100
   name     = %[1]q
   scope    = "REGIONAL"
 
@@ -4447,6 +4477,53 @@ resource "aws_wafv2_rule_group" "test" {
   }
 }
 `, rName, fallbackBehavior, headerName)
+}
+
+func testAccRuleGroupConfig_rateBasedStatement_customkeys_cookies(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_wafv2_rule_group" "test" {
+  capacity = 100
+  name     = %[1]q
+  scope    = "REGIONAL"
+
+  rule {
+    name     = "rule-1"
+    priority = 1
+
+    action {
+      count {}
+    }
+
+    statement {
+      rate_based_statement {
+        aggregate_key_type = "CUSTOM_KEYS"
+        limit = 50000
+		custom_key {
+			cookie {
+				name = "tasty-cookie"
+				text_transformation {
+					type = "NONE"
+					priority = 0
+				}
+			}
+		}
+      }
+    }
+
+    visibility_config {
+      cloudwatch_metrics_enabled = false
+      metric_name                = "friendly-rule-metric-name"
+      sampled_requests_enabled   = false
+    }
+  }
+
+  visibility_config {
+    cloudwatch_metrics_enabled = false
+    metric_name                = "friendly-metric-name"
+    sampled_requests_enabled   = false
+  }
+}
+`, rName)
 }
 
 func testAccRuleGroupConfig_rateBasedStatement_update(rName string) string {
