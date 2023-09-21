@@ -14,6 +14,7 @@ var (
 	FindBucketPolicy                      = findBucketPolicy
 	FindBucketVersioning                  = findBucketVersioning
 	FindBucketWebsite                     = findBucketWebsite
+	FindCORSRules                         = findCORSRules
 	FindObjectByBucketAndKey              = findObjectByBucketAndKey
 	FindObjectLockConfiguration           = findObjectLockConfiguration
 	FindServerSideEncryptionConfiguration = findServerSideEncryptionConfiguration

@@ -875,7 +875,7 @@ func resourceBucketRead(ctx context.Context, d *schema.ResourceData, meta interf
 		return diags
 	}
 
-	if err != nil && !tfawserr.ErrCodeEquals(err, ErrCodeNoSuchCORSConfiguration, errCodeNotImplemented, errCodeXNotImplemented) {
+	if err != nil && !tfawserr.ErrCodeEquals(err, errCodeNoSuchCORSConfiguration, errCodeNotImplemented, errCodeXNotImplemented) {
 		return sdkdiag.AppendErrorf(diags, "getting S3 Bucket CORS configuration: %s", err)
 	}
 
