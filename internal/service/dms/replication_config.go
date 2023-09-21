@@ -25,12 +25,12 @@ import (
 
 // @SDKResource("aws_dms_replication_config", name="Replication Config")
 // @Tags(identifierAttribute="replication_config_arn")
-func ResourceServerlessReplication() *schema.Resource {
+func ResourceReplicationConfig() *schema.Resource {
 	return &schema.Resource{
-		CreateWithoutTimeout: resourceServerlessReplicationCreate,
-		ReadWithoutTimeout:   resourceServerlessReplicationRead,
-		UpdateWithoutTimeout: resourceServerlessReplicationUpdate,
-		DeleteWithoutTimeout: resourceServerlessReplicationDelete,
+		CreateWithoutTimeout: resourceReplicationConfigCreate,
+		ReadWithoutTimeout:   resourceReplicationConfigRead,
+		UpdateWithoutTimeout: resourceReplicationConfigUpdate,
+		DeleteWithoutTimeout: resourceReplicationConfigDelete,
 
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(60 * time.Minute),
@@ -159,7 +159,7 @@ func ResourceServerlessReplication() *schema.Resource {
 	}
 }
 
-func resourceServerlessReplicationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceReplicationConfigCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DMSConn(ctx)
 
@@ -198,10 +198,10 @@ func resourceServerlessReplicationCreate(ctx context.Context, d *schema.Resource
 		}
 	}
 
-	return resourceServerlessReplicationRead(ctx, d, meta)
+	return resourceReplicationConfigRead(ctx, d, meta)
 }
 
-func resourceServerlessReplicationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceReplicationConfigRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DMSConn(ctx)
 
@@ -248,7 +248,7 @@ func resourceServerlessReplicationRead(ctx context.Context, d *schema.ResourceDa
 	return diags
 }
 
-func resourceServerlessReplicationUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceReplicationConfigUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DMSConn(ctx)
 
@@ -325,10 +325,10 @@ func resourceServerlessReplicationUpdate(ctx context.Context, d *schema.Resource
 		}
 	}
 
-	return append(diags, resourceServerlessReplicationRead(ctx, d, meta)...)
+	return append(diags, resourceReplicationConfigRead(ctx, d, meta)...)
 }
 
-func resourceServerlessReplicationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceReplicationConfigDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DMSConn(ctx)
 
