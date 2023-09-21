@@ -939,7 +939,7 @@ func rateBasedStatementSchema(level int) *schema.Schema {
 					Default:      wafv2.RateBasedStatementAggregateKeyTypeIp,
 					ValidateFunc: validation.StringInSlice(wafv2.RateBasedStatementAggregateKeyType_Values(), false),
 				},
-				"custom_keys": {
+				"custom_key": {
 					Type:     schema.TypeList,
 					Optional: true,
 					MinItems: 1,

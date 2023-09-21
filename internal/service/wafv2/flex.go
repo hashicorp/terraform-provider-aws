@@ -1397,7 +1397,7 @@ func expandRateBasedStatement(l []interface{}) *wafv2.RateBasedStatement {
 		r.ForwardedIPConfig = expandForwardedIPConfig(v.([]interface{}))
 	}
 
-	if v, ok := m["custom_keys"]; ok {
+	if v, ok := m["custom_key"]; ok {
 		r.CustomKeys = expandRateBasedStatementCustomKeys(v.([]interface{}))
 	}
 
