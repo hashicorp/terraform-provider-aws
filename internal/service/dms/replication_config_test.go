@@ -33,7 +33,7 @@ func TestAccDMSReplicationConfig_basic(t *testing.T) {
 				Config: testAccReplicationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckReplicationConfigExists(ctx, resourceName),
-					resource.TestCheckResourceAttrSet(resourceName, "replication_config_arn"),
+					resource.TestCheckResourceAttrSet(resourceName, "arn"),
 				),
 			},
 			{
@@ -61,7 +61,7 @@ func TestAccDMSReplicationConfig_update(t *testing.T) {
 				Config: testAccReplicationConfig_update(rName, "cdc", 2, 16),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckReplicationConfigExists(ctx, resourceName),
-					resource.TestCheckResourceAttrSet(resourceName, "replication_config_arn"),
+					resource.TestCheckResourceAttrSet(resourceName, "arn"),
 					resource.TestCheckResourceAttr(resourceName, "replication_type", "cdc"),
 					resource.TestCheckResourceAttr(resourceName, "compute_config.0.max_capacity_units", "16"),
 					resource.TestCheckResourceAttr(resourceName, "compute_config.0.min_capacity_units", "2"),
@@ -71,7 +71,7 @@ func TestAccDMSReplicationConfig_update(t *testing.T) {
 				Config: testAccReplicationConfig_update(rName, "cdc", 4, 32),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckReplicationConfigExists(ctx, resourceName),
-					resource.TestCheckResourceAttrSet(resourceName, "replication_config_arn"),
+					resource.TestCheckResourceAttrSet(resourceName, "arn"),
 					resource.TestCheckResourceAttr(resourceName, "replication_type", "cdc"),
 					resource.TestCheckResourceAttr(resourceName, "compute_config.0.max_capacity_units", "32"),
 					resource.TestCheckResourceAttr(resourceName, "compute_config.0.min_capacity_units", "4"),
@@ -124,13 +124,9 @@ func testAccCheckReplicationConfigExists(ctx context.Context, n string) resource
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No ID is set")
-		}
-
 		conn := acctest.Provider.Meta().(*conns.AWSClient).DMSConn(ctx)
 
-		_, err := tfdms.FindReplicationById(ctx, rs.Primary.ID, conn)
+		_, err := tfdms.FindReplicationConfigByARN(ctx, conn, rs.Primary.ID)
 
 		return err
 	}
@@ -145,7 +141,7 @@ func testAccCheckReplicationConfigDestroy(ctx context.Context) resource.TestChec
 
 			conn := acctest.Provider.Meta().(*conns.AWSClient).DMSConn(ctx)
 
-			_, err := tfdms.FindReplicationById(ctx, rs.Primary.ID, conn)
+			_, err := tfdms.FindReplicationConfigByARN(ctx, conn, rs.Primary.ID)
 
 			if tfresource.NotFound(err) {
 				continue
@@ -155,16 +151,49 @@ func testAccCheckReplicationConfigDestroy(ctx context.Context) resource.TestChec
 				return err
 			}
 
-			return fmt.Errorf("DMS serverless replication config (%s) still exists", rs.Primary.ID)
+			return fmt.Errorf("DMS Replication Config %s still exists", rs.Primary.ID)
 		}
 
 		return nil
 	}
 }
 
-func serverlessReplicationDBToDB(rName string) string {
-	return acctest.ConfigCompose(
-		fmt.Sprintf(`
+func testAccReplicationConfig_base(rName string) string {
+	return acctest.ConfigCompose(acctest.ConfigVPCWithSubnets(rName, 2), fmt.Sprintf(`
+resource "aws_dms_replication_subnet_group" "test" {
+  replication_subnet_group_id          = %[1]q
+  replication_subnet_group_description = "terraform test"
+  subnet_ids                           = aws_subnet.test[*].id
+}
+
+resource "aws_db_subnet_group" "test" {
+  name       = %[1]q
+  subnet_ids = aws_subnet.test[*].id
+}
+
+resource "aws_security_group" "test" {
+  name   = %[1]q
+  vpc_id = aws_vpc.test.id
+
+  ingress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = -1
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
 resource "aws_rds_cluster_parameter_group" "test" {
   name        = "%[1]s-pg-cluster"
   family      = "aurora-mysql5.7"
@@ -256,79 +285,8 @@ resource "aws_dms_endpoint" "source" {
 `, rName))
 }
 
-func testAccReplicationConfig_base(rName string) string {
-	return acctest.ConfigCompose(
-		acctest.ConfigAvailableAZsNoOptIn(),
-		fmt.Sprintf(`
-data "aws_region" "current" {}
-
-resource "aws_vpc" "test" {
-  cidr_block = "10.1.0.0/16"
-
-  tags = {
-    Name = "%[1]s-vpc"
-  }
-}
-
-resource "aws_subnet" "test1" {
-  cidr_block        = "10.1.1.0/24"
-  availability_zone = data.aws_availability_zones.available.names[0]
-  vpc_id            = aws_vpc.test.id
-
-  tags = {
-    Name = "%[1]s-subnet-test1"
-  }
-}
-
-resource "aws_subnet" "test2" {
-  cidr_block        = "10.1.2.0/24"
-  availability_zone = data.aws_availability_zones.available.names[1]
-  vpc_id            = aws_vpc.test.id
-
-  tags = {
-    Name = "%[1]s-subnet-test2"
-  }
-}
-
-resource "aws_dms_replication_subnet_group" "test" {
-  replication_subnet_group_id          = %[1]q
-  replication_subnet_group_description = "terraform test for replication subnet group"
-  subnet_ids                           = [aws_subnet.test1.id, aws_subnet.test2.id]
-}
-
-resource "aws_db_subnet_group" "test" {
-  name = %[1]q
-  subnet_ids = [
-    aws_subnet.test1.id,
-    aws_subnet.test2.id,
-  ]
-}
-
-resource "aws_security_group" "test" {
-  vpc_id = aws_vpc.test.id
-
-  ingress {
-    from_port   = 0
-    to_port     = 0
-    protocol    = -1
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
-  egress {
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-}
-`, rName))
-}
-
 func testAccReplicationConfig_basic(rName string) string {
-	return acctest.ConfigCompose(
-		serverlessReplicationDBToDB(rName),
-		testAccReplicationConfig_base(rName),
-		fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccReplicationConfig_base(rName), fmt.Sprintf(`
 resource "aws_dms_replication_config" "test" {
   replication_config_identifier = %[1]q
   resource_identifier           = %[1]q
@@ -348,10 +306,7 @@ resource "aws_dms_replication_config" "test" {
 }
 
 func testAccReplicationConfig_update(rName, replicationType string, minCapacity, maxCapacity int) string {
-	return acctest.ConfigCompose(
-		serverlessReplicationDBToDB(rName),
-		testAccReplicationConfig_base(rName),
-		fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccReplicationConfig_base(rName), fmt.Sprintf(`
 resource "aws_dms_replication_config" "test" {
   replication_config_identifier = %[1]q
   resource_identifier           = %[1]q
@@ -371,10 +326,7 @@ resource "aws_dms_replication_config" "test" {
 }
 
 func testAccReplicationConfig_startReplication(rName string, start bool) string {
-	return acctest.ConfigCompose(
-		serverlessReplicationDBToDB(rName),
-		testAccReplicationConfig_base(rName),
-		fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccReplicationConfig_base(rName), fmt.Sprintf(`
 resource "aws_dms_replication_config" "test" {
   replication_config_identifier = %[1]q
   resource_identifier           = %[1]q
