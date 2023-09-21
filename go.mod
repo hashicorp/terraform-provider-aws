@@ -5,19 +5,19 @@ go 1.20
 require (
 	github.com/ProtonMail/go-crypto v0.0.0-20230717121422-5aa5874ade95
 	github.com/YakDriver/regexache v0.23.0
-	github.com/aws/aws-sdk-go v1.45.13
+	github.com/aws/aws-sdk-go v1.45.14
 	github.com/aws/aws-sdk-go-v2 v1.21.0
-	github.com/aws/aws-sdk-go-v2/config v1.18.40
+	github.com/aws/aws-sdk-go-v2/config v1.18.41
 	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.13.11
-	github.com/aws/aws-sdk-go-v2/feature/s3/manager v1.11.84
+	github.com/aws/aws-sdk-go-v2/feature/s3/manager v1.11.85
 	github.com/aws/aws-sdk-go-v2/service/accessanalyzer v1.21.0
 	github.com/aws/aws-sdk-go-v2/service/account v1.11.5
 	github.com/aws/aws-sdk-go-v2/service/acm v1.19.0
-	github.com/aws/aws-sdk-go-v2/service/appconfig v1.19.0
+	github.com/aws/aws-sdk-go-v2/service/appconfig v1.20.0
 	github.com/aws/aws-sdk-go-v2/service/auditmanager v1.26.5
 	github.com/aws/aws-sdk-go-v2/service/cleanrooms v1.4.0
 	github.com/aws/aws-sdk-go-v2/service/cloudcontrol v1.12.5
-	github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs v1.23.5
+	github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs v1.24.0
 	github.com/aws/aws-sdk-go-v2/service/codecatalyst v1.5.5
 	github.com/aws/aws-sdk-go-v2/service/codestarconnections v1.15.5
 	github.com/aws/aws-sdk-go-v2/service/codestarnotifications v1.16.0
@@ -46,7 +46,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/mediapackage v1.23.3
 	github.com/aws/aws-sdk-go-v2/service/oam v1.3.0
 	github.com/aws/aws-sdk-go-v2/service/opensearchserverless v1.5.0
-	github.com/aws/aws-sdk-go-v2/service/pipes v1.4.0
+	github.com/aws/aws-sdk-go-v2/service/pipes v1.4.1
 	github.com/aws/aws-sdk-go-v2/service/pricing v1.21.6
 	github.com/aws/aws-sdk-go-v2/service/qldb v1.16.5
 	github.com/aws/aws-sdk-go-v2/service/rbin v1.10.0
@@ -55,7 +55,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/resourceexplorer2 v1.4.0
 	github.com/aws/aws-sdk-go-v2/service/rolesanywhere v1.3.5
 	github.com/aws/aws-sdk-go-v2/service/route53domains v1.17.3
-	github.com/aws/aws-sdk-go-v2/service/s3 v1.38.5
+	github.com/aws/aws-sdk-go-v2/service/s3 v1.39.0
 	github.com/aws/aws-sdk-go-v2/service/s3control v1.33.0
 	github.com/aws/aws-sdk-go-v2/service/scheduler v1.3.0
 	github.com/aws/aws-sdk-go-v2/service/securitylake v1.7.0
@@ -116,7 +116,7 @@ require (
 	github.com/apparentlymart/go-textseg/v15 v15.0.0 // indirect
 	github.com/armon/go-radix v1.0.0 // indirect
 	github.com/aws/aws-sdk-go-v2/aws/protocol/eventstream v1.4.13 // indirect
-	github.com/aws/aws-sdk-go-v2/credentials v1.13.38 // indirect
+	github.com/aws/aws-sdk-go-v2/credentials v1.13.39 // indirect
 	github.com/aws/aws-sdk-go-v2/internal/configsources v1.1.41 // indirect
 	github.com/aws/aws-sdk-go-v2/internal/endpoints/v2 v2.4.35 // indirect
 	github.com/aws/aws-sdk-go-v2/internal/ini v1.3.42 // indirect
@@ -128,7 +128,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/internal/presigned-url v1.9.35 // indirect
 	github.com/aws/aws-sdk-go-v2/service/internal/s3shared v1.15.4 // indirect
 	github.com/aws/aws-sdk-go-v2/service/sso v1.14.0 // indirect
-	github.com/aws/aws-sdk-go-v2/service/ssooidc v1.16.0 // indirect
+	github.com/aws/aws-sdk-go-v2/service/ssooidc v1.17.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/sts v1.22.0 // indirect
 	github.com/aws/smithy-go v1.14.2 // indirect
 	github.com/bgentry/speakeasy v0.1.0 // indirect
