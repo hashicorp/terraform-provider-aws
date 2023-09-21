@@ -21,7 +21,7 @@ import (
 func TestAccDMSServerlessReplication_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_dms_serverless_replication.test"
+	resourceName := "aws_dms_replication_config.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -49,7 +49,7 @@ func TestAccDMSServerlessReplication_basic(t *testing.T) {
 func TestAccDMSServerlessReplication_update(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_dms_serverless_replication.test"
+	resourceName := "aws_dms_replication_config.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -85,7 +85,7 @@ func TestAccDMSServerlessReplication_startReplication(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_dms_serverless_replication.test"
+	resourceName := "aws_dms_replication_config.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -139,7 +139,7 @@ func testAccCheckReplicationExists(ctx context.Context, n string) resource.TestC
 func testAccCheckReplicationDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		for _, rs := range s.RootModule().Resources {
-			if rs.Type != "aws_dms_serverless_replication" {
+			if rs.Type != "aws_dms_replication_config" {
 				continue
 			}
 
@@ -167,7 +167,7 @@ func testAccServerlessReplication_basic(rName string) string {
 		serverlessReplicationDBToDB(rName),
 		serverlessReplicationBase(rName),
 		fmt.Sprintf(`
-resource "aws_dms_serverless_replication" "test" {
+resource "aws_dms_replication_config" "test" {
   replication_config_identifier = %[1]q
   resource_identifier           = %[1]q
   replication_type              = "cdc"
@@ -190,7 +190,7 @@ func testAccServerlessReplication_update(rName, replicationType string, minCapac
 		serverlessReplicationDBToDB(rName),
 		serverlessReplicationBase(rName),
 		fmt.Sprintf(`
-resource "aws_dms_serverless_replication" "test" {
+resource "aws_dms_replication_config" "test" {
   replication_config_identifier = %[1]q
   resource_identifier           = %[1]q
   replication_type              = %[2]q
@@ -213,7 +213,7 @@ func testAccServerlessReplication_startReplication(rName string, start bool) str
 		serverlessReplicationDBToDB(rName),
 		serverlessReplicationBase(rName),
 		fmt.Sprintf(`
-resource "aws_dms_serverless_replication" "test" {
+resource "aws_dms_replication_config" "test" {
   replication_config_identifier = %[1]q
   resource_identifier           = %[1]q
   replication_type              = "cdc"

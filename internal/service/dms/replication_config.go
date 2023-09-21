@@ -23,7 +23,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_dms_serverless_replication", name="Serverless Replication")
+// @SDKResource("aws_dms_replication_config", name="Replication Config")
 // @Tags(identifierAttribute="replication_config_arn")
 func ResourceServerlessReplication() *schema.Resource {
 	return &schema.Resource{

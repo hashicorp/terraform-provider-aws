@@ -75,6 +75,14 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
+			Factory:  ResourceServerlessReplication,
+			TypeName: "aws_dms_replication_config",
+			Name:     "Replication Config",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "replication_config_arn",
+			},
+		},
+		{
 			Factory:  ResourceReplicationInstance,
 			TypeName: "aws_dms_replication_instance",
 			Name:     "Replication Instance",
@@ -104,14 +112,6 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			Name:     "S3 Endpoint",
 			Tags: &types.ServicePackageResourceTags{
 				IdentifierAttribute: "endpoint_arn",
-			},
-		},
-		{
-			Factory:  ResourceServerlessReplication,
-			TypeName: "aws_dms_serverless_replication",
-			Name:     "Serverless Replication",
-			Tags: &types.ServicePackageResourceTags{
-				IdentifierAttribute: "replication_config_arn",
 			},
 		},
 	}

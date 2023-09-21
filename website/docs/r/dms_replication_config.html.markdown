@@ -1,12 +1,12 @@
 ---
 subcategory: "DMS (Database Migration)"
 layout: "aws"
-page_title: "AWS: aws_dms_serverless_replication"
+page_title: "AWS: aws_dms_replication_config"
 description: |-
   Provides a DMS (Data Migration Service) serverless replication resource.
 ---
 
-# Resource: aws_dms_serverless_replication
+# Resource: aws_dms_replication_config
 
 Provides a DMS (Data Migration Service) serverless replication resource. DMS serverless replication can be created, updated, deleted, and imported.
 
@@ -16,7 +16,7 @@ Provides a DMS (Data Migration Service) serverless replication resource. DMS ser
 
 ```terraform
 # Create a new serverless replication resource
-resource "aws_dms_serverless_replication" "name" {
+resource "aws_dms_replication_config" "name" {
   replication_config_identifier = "test-dms-serverless-replication-tf"
   resource_identifier           = "test-dms-serverless-replication-tf"
   replication_type              = "cdc"
@@ -82,7 +82,7 @@ In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashico
 
 ```terraform
 import {
-  to = aws_dms_serverless_replication.test
+  to = aws_dms_replication_config.test
   id = "test-dms-serverless-replication-tf"
 }
 ```
@@ -90,5 +90,5 @@ import {
 Using `terraform import`, import a serverless replication using the `replication_config_identifier`. For example:
 
 ```console
-% terraform import aws_dms_serverless_replication.test test-dms-serverless-replication-tf
+% terraform import aws_dms_replication_config.test test-dms-serverless-replication-tf
 ```
