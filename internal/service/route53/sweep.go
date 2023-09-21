@@ -19,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func init() {
@@ -243,6 +244,10 @@ func sweepQueryLogs(region string) error {
 
 func sweepTrafficPolicies(region string) error {
 	ctx := sweep.Context(region)
+	if region == names.USGovEast1RegionID || region == names.USGovWest1RegionID {
+		log.Printf("[WARN] Skipping Route 53 Traffic Policy sweep for region: %s", region)
+		return nil
+	}
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
 		return fmt.Errorf("getting client: %w", err)
@@ -287,6 +292,10 @@ func sweepTrafficPolicies(region string) error {
 
 func sweepTrafficPolicyInstances(region string) error {
 	ctx := sweep.Context(region)
+	if region == names.USGovEast1RegionID || region == names.USGovWest1RegionID {
+		log.Printf("[WARN] Skipping Route 53 Traffic Policy Instance sweep for region: %s", region)
+		return nil
+	}
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
 		return fmt.Errorf("getting client: %w", err)
