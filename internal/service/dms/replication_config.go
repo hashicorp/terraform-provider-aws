@@ -13,12 +13,14 @@ import (
 	dms "github.com/aws/aws-sdk-go/service/databasemigrationservice"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -175,7 +177,7 @@ func resourceReplicationConfigCreate(ctx context.Context, d *schema.ResourceData
 	}
 
 	if v, ok := d.GetOk("compute_config"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.ComputeConfig = expandComputeConfigInput(v.([]interface{}))
+		input.ComputeConfig = expandComputeConfigInput(v.([]interface{})[0].(map[string]interface{}))
 	}
 
 	if v, ok := d.GetOk("replication_settings"); ok {
@@ -211,45 +213,29 @@ func resourceReplicationConfigRead(ctx context.Context, d *schema.ResourceData, 
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DMSConn(ctx)
 
-	response, err := conn.DescribeReplicationConfigsWithContext(ctx, &dms.DescribeReplicationConfigsInput{
-		Filters: []*dms.Filter{
-			{
-				Name:   aws.String("replication-config-id"),
-				Values: []*string{aws.String(d.Id())},
-			},
-		},
-	})
+	replicationConfig, err := FindReplicationConfigByARN(ctx, conn, d.Id())
 
-	if tfawserr.ErrCodeEquals(err, dms.ErrCodeResourceNotFoundFault) {
-		log.Printf("[WARN] DMS Serverless Replication Config (%s) not found, removing from state", d.Id())
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] DMS Replication Config (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
 	}
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "describing DMS Serverless Replication Config (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading DMS Replication Config (%s): %s", d.Id(), err)
 	}
 
-	if response == nil || len(response.ReplicationConfigs) == 0 || response.ReplicationConfigs[0] == nil {
-		log.Printf("[WARN] DMS Serverless Replication Config (%s) not found, removing from state", d.Id())
-		d.SetId("")
-		return diags
-	}
-
-	replicationConfig := response.ReplicationConfigs[0]
-
-	d.Set("replication_config_arn", replicationConfig.ReplicationConfigArn)
-	d.Set("replication_config_identifier", replicationConfig.ReplicationConfigIdentifier)
-	d.Set("replication_type", replicationConfig.ReplicationType)
-	d.Set("source_endpoint_arn", replicationConfig.SourceEndpointArn)
-	d.Set("table_mappings", replicationConfig.TableMappings)
-	d.Set("target_endpoint_arn", replicationConfig.TargetEndpointArn)
-	d.Set("replication_settings", replicationConfig.ReplicationSettings)
-	d.Set("supplemental_settings", replicationConfig.SupplementalSettings)
-
+	d.Set("arn", replicationConfig.ReplicationConfigArn)
 	if err := d.Set("compute_config", flattenComputeConfig(replicationConfig.ComputeConfig)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting compute_config: %s", err)
 	}
+	d.Set("replication_config_identifier", replicationConfig.ReplicationConfigIdentifier)
+	d.Set("replication_settings", replicationConfig.ReplicationSettings)
+	d.Set("replication_type", replicationConfig.ReplicationType)
+	d.Set("source_endpoint_arn", replicationConfig.SourceEndpointArn)
+	d.Set("supplemental_settings", replicationConfig.SupplementalSettings)
+	d.Set("table_mappings", replicationConfig.TableMappings)
+	d.Set("target_endpoint_arn", replicationConfig.TargetEndpointArn)
 
 	return diags
 }
@@ -269,7 +255,7 @@ func resourceReplicationConfigUpdate(ctx context.Context, d *schema.ResourceData
 
 		if d.HasChange("compute_config") {
 			if v, ok := d.GetOk("compute_config"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-				input.ComputeConfig = expandComputeConfigInput(v.([]interface{}))
+				input.ComputeConfig = expandComputeConfigInput(v.([]interface{})[0].(map[string]interface{}))
 			}
 		}
 
@@ -356,67 +342,122 @@ func resourceReplicationConfigDelete(ctx context.Context, d *schema.ResourceData
 	return diags
 }
 
-func flattenComputeConfig(object *dms.ComputeConfig) []interface{} {
-	computeConfig := map[string]interface{}{
-		"availability_zone":            aws.StringValue(object.AvailabilityZone),
-		"dns_name_servers":             aws.StringValue(object.DnsNameServers),
-		"kms_key_id":                   aws.StringValue(object.KmsKeyId),
-		"max_capacity_units":           aws.Int64Value(object.MaxCapacityUnits),
-		"min_capacity_units":           aws.Int64Value(object.MinCapacityUnits),
-		"multi_az":                     aws.BoolValue(object.MultiAZ),
-		"preferred_maintenance_window": aws.StringValue(object.PreferredMaintenanceWindow),
-		"replication_subnet_group_id":  aws.StringValue(object.ReplicationSubnetGroupId),
-		"vpc_security_group_ids":       flex.FlattenStringSet(object.VpcSecurityGroupIds),
+func FindReplicationConfigByARN(ctx context.Context, conn *dms.DatabaseMigrationService, arn string) (*dms.ReplicationConfig, error) {
+	input := &dms.DescribeReplicationConfigsInput{
+		Filters: []*dms.Filter{{
+			Name:   aws.String("replication-config-arn"),
+			Values: aws.StringSlice([]string{arn}),
+		}},
 	}
 
-	return []interface{}{computeConfig}
+	return findReplicationConfig(ctx, conn, input)
 }
 
-func expandComputeConfigInput(v []interface{}) *dms.ComputeConfig {
-	if v[0] == nil {
+func findReplicationConfig(ctx context.Context, conn *dms.DatabaseMigrationService, input *dms.DescribeReplicationConfigsInput) (*dms.ReplicationConfig, error) {
+	output, err := findReplicationConfigs(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSinglePtrResult(output)
+}
+
+func findReplicationConfigs(ctx context.Context, conn *dms.DatabaseMigrationService, input *dms.DescribeReplicationConfigsInput) ([]*dms.ReplicationConfig, error) {
+	var output []*dms.ReplicationConfig
+
+	err := conn.DescribeReplicationConfigsPagesWithContext(ctx, input, func(page *dms.DescribeReplicationConfigsOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, v := range page.ReplicationConfigs {
+			if v != nil {
+				output = append(output, v)
+			}
+		}
+
+		return !lastPage
+	})
+
+	if tfawserr.ErrCodeEquals(err, dms.ErrCodeResourceNotFoundFault) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	return output, nil
+}
+
+func flattenComputeConfig(apiObject *dms.ComputeConfig) []interface{} {
+	if apiObject == nil {
 		return nil
 	}
 
-	computeConfigResource := v[0].(map[string]interface{})
-	computeConfig := dms.ComputeConfig{}
-
-	if v, ok := computeConfigResource["availability_zone"]; ok && v.(string) != "" {
-		computeConfig.AvailabilityZone = aws.String(v.(string))
+	tfMap := map[string]interface{}{
+		"availability_zone":            aws.StringValue(apiObject.AvailabilityZone),
+		"dns_name_servers":             aws.StringValue(apiObject.DnsNameServers),
+		"kms_key_id":                   aws.StringValue(apiObject.KmsKeyId),
+		"max_capacity_units":           aws.Int64Value(apiObject.MaxCapacityUnits),
+		"min_capacity_units":           aws.Int64Value(apiObject.MinCapacityUnits),
+		"multi_az":                     aws.BoolValue(apiObject.MultiAZ),
+		"preferred_maintenance_window": aws.StringValue(apiObject.PreferredMaintenanceWindow),
+		"replication_subnet_group_id":  aws.StringValue(apiObject.ReplicationSubnetGroupId),
+		"vpc_security_group_ids":       flex.FlattenStringSet(apiObject.VpcSecurityGroupIds),
 	}
 
-	if v, ok := computeConfigResource["dns_name_servers"]; ok && v.(string) != "" {
-		computeConfig.DnsNameServers = aws.String(v.(string))
+	return []interface{}{tfMap}
+}
+
+func expandComputeConfigInput(tfMap map[string]interface{}) *dms.ComputeConfig {
+	if tfMap == nil {
+		return nil
 	}
 
-	if v, ok := computeConfigResource["kms_key_id"]; ok && v.(string) != "" {
-		computeConfig.KmsKeyId = aws.String(v.(string))
+	apiObject := &dms.ComputeConfig{}
+
+	if v, ok := tfMap["availability_zone"].(string); ok && v != "" {
+		apiObject.AvailabilityZone = aws.String(v)
 	}
 
-	if v, ok := computeConfigResource["max_capacity_units"]; ok {
-		computeConfig.MaxCapacityUnits = aws.Int64(int64(v.(int)))
+	if v, ok := tfMap["dns_name_servers"].(string); ok && v != "" {
+		apiObject.DnsNameServers = aws.String(v)
 	}
 
-	if v, ok := computeConfigResource["min_capacity_units"]; ok {
-		computeConfig.MinCapacityUnits = aws.Int64(int64(v.(int)))
+	if v, ok := tfMap["kms_key_id"].(string); ok && v != "" {
+		apiObject.KmsKeyId = aws.String(v)
 	}
 
-	if v, ok := computeConfigResource["multi_az"]; ok {
-		computeConfig.MultiAZ = aws.Bool(v.(bool))
+	if v, ok := tfMap["max_capacity_units"].(int); ok && v != 0 {
+		apiObject.MaxCapacityUnits = aws.Int64(int64(v))
 	}
 
-	if v, ok := computeConfigResource["preferred_maintenance_window"]; ok && v.(string) != "" {
-		computeConfig.PreferredMaintenanceWindow = aws.String(v.(string))
+	if v, ok := tfMap["min_capacity_units"].(int); ok && v != 0 {
+		apiObject.MinCapacityUnits = aws.Int64(int64(v))
 	}
 
-	if v, ok := computeConfigResource["replication_subnet_group_id"]; ok && v.(string) != "" {
-		computeConfig.ReplicationSubnetGroupId = aws.String(v.(string))
+	if v, ok := tfMap["multi_az"].(bool); ok {
+		apiObject.MultiAZ = aws.Bool(v)
 	}
 
-	if v := computeConfigResource["vpc_security_group_ids"].(*schema.Set); v.Len() > 0 {
-		computeConfig.VpcSecurityGroupIds = flex.ExpandStringSet(v)
+	if v, ok := tfMap["preferred_maintenance_window"].(string); ok && v != "" {
+		apiObject.PreferredMaintenanceWindow = aws.String(v)
 	}
 
-	return &computeConfig
+	if v, ok := tfMap["replication_subnet_group_id"].(string); ok && v != "" {
+		apiObject.ReplicationSubnetGroupId = aws.String(v)
+	}
+
+	if v, ok := tfMap["vpc_security_group_ids"].(*schema.Set); ok && v.Len() > 0 {
+		apiObject.VpcSecurityGroupIds = flex.ExpandStringSet(v)
+	}
+
+	return apiObject
 }
 
 func startReplication(ctx context.Context, id string, conn *dms.DatabaseMigrationService) error {
