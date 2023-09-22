@@ -80,6 +80,14 @@ func resourceBucketAccelerateConfigurationCreate(ctx context.Context, d *schema.
 
 	d.SetId(CreateResourceID(bucket, expectedBucketOwner))
 
+	_, err = tfresource.RetryWhenNotFound(ctx, s3BucketPropagationTimeout, func() (interface{}, error) {
+		return findBucketAccelerateConfiguration(ctx, conn, bucket, expectedBucketOwner)
+	})
+
+	if err != nil {
+		return diag.Errorf("waiting for S3 Bucket Accelerate Configuration (%s) create: %s", d.Id(), err)
+	}
+
 	return resourceBucketAccelerateConfigurationRead(ctx, d, meta)
 }
 
@@ -164,6 +172,8 @@ func resourceBucketAccelerateConfigurationDelete(ctx context.Context, d *schema.
 	if err != nil {
 		return diag.Errorf("deleting S3 Bucket Accelerate Configuration (%s): %s", d.Id(), err)
 	}
+
+	// Don't wait for the accelerate configuration to disappear as it still exists after suspension.
 
 	return nil
 }
