@@ -9,6 +9,7 @@ package ds
 import (
 	"fmt"
 	"log"
+	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/directoryservice"
@@ -57,10 +58,17 @@ func sweepDirectories(region string) error {
 			return !lastPage
 		}
 
-		for _, directory := range page.DirectoryDescriptions {
+		for _, v := range page.DirectoryDescriptions {
+			id := aws.StringValue(v.DirectoryId)
+
+			if description := aws.StringValue(v.Description); strings.Contains(description, "do not delete") {
+				log.Printf("[INFO] Skipping Directory Service Directory %s: %s", id, description)
+				continue
+			}
+
 			r := ResourceDirectory()
 			d := r.Data(nil)
-			d.SetId(aws.StringValue(directory.DirectoryId))
+			d.SetId(id)
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
