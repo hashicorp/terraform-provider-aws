@@ -12,6 +12,7 @@ var (
 	FindBucketACL                         = findBucketACL
 	FindBucketAccelerateConfiguration     = findBucketAccelerateConfiguration
 	FindBucketPolicy                      = findBucketPolicy
+	FindBucketRequestPayment              = findBucketRequestPayment
 	FindBucketVersioning                  = findBucketVersioning
 	FindBucketWebsite                     = findBucketWebsite
 	FindCORSRules                         = findCORSRules
