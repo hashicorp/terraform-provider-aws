@@ -322,8 +322,8 @@ resource "aws_lightsail_bucket" "test" {
 func testAccBucketConfig_forceDelete(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_lightsail_bucket" "test" {
-  name      = %[1]q
-  bundle_id = "small_1_0"
+  name         = %[1]q
+  bundle_id    = "small_1_0"
   force_delete = true
 }
 `, rName)
