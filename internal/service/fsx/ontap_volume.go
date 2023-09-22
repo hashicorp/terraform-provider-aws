@@ -29,12 +29,12 @@ import (
 
 // @SDKResource("aws_fsx_ontap_volume", name="ONTAP Volume")
 // @Tags(identifierAttribute="arn")
-func ResourceOntapVolume() *schema.Resource {
+func ResourceONTAPVolume() *schema.Resource {
 	return &schema.Resource{
-		CreateWithoutTimeout: resourceOntapVolumeCreate,
-		ReadWithoutTimeout:   resourceOntapVolumeRead,
-		UpdateWithoutTimeout: resourceOntapVolumeUpdate,
-		DeleteWithoutTimeout: resourceOntapVolumeDelete,
+		CreateWithoutTimeout: resourceONTAPVolumeCreate,
+		ReadWithoutTimeout:   resourceONTAPVolumeRead,
+		UpdateWithoutTimeout: resourceONTAPVolumeUpdate,
+		DeleteWithoutTimeout: resourceONTAPVolumeDelete,
 
 		Importer: &schema.ResourceImporter{
 			StateContext: func(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
@@ -153,7 +153,7 @@ func ResourceOntapVolume() *schema.Resource {
 	}
 }
 
-func resourceOntapVolumeCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceONTAPVolumeCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).FSxConn(ctx)
 
@@ -189,7 +189,7 @@ func resourceOntapVolumeCreate(ctx context.Context, d *schema.ResourceData, meta
 	}
 
 	if v, ok := d.GetOk("tiering_policy"); ok {
-		input.OntapConfiguration.TieringPolicy = expandOntapVolumeTieringPolicy(v.([]interface{}))
+		input.OntapConfiguration.TieringPolicy = expandTieringPolicy(v.([]interface{}))
 	}
 
 	output, err := conn.CreateVolumeWithContext(ctx, input)
@@ -204,10 +204,10 @@ func resourceOntapVolumeCreate(ctx context.Context, d *schema.ResourceData, meta
 		return sdkdiag.AppendErrorf(diags, "waiting for FSx for NetApp ONTAP Volume (%s) create: %s", d.Id(), err)
 	}
 
-	return append(diags, resourceOntapVolumeRead(ctx, d, meta)...)
+	return append(diags, resourceONTAPVolumeRead(ctx, d, meta)...)
 }
 
-func resourceOntapVolumeRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceONTAPVolumeRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).FSxConn(ctx)
 
@@ -235,7 +235,7 @@ func resourceOntapVolumeRead(ctx context.Context, d *schema.ResourceData, meta i
 	d.Set("snapshot_policy", ontapConfig.SnapshotPolicy)
 	d.Set("storage_efficiency_enabled", ontapConfig.StorageEfficiencyEnabled)
 	d.Set("storage_virtual_machine_id", ontapConfig.StorageVirtualMachineId)
-	if err := d.Set("tiering_policy", flattenOntapVolumeTieringPolicy(ontapConfig.TieringPolicy)); err != nil {
+	if err := d.Set("tiering_policy", flattenTieringPolicy(ontapConfig.TieringPolicy)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting tiering_policy: %s", err)
 	}
 	d.Set("uuid", ontapConfig.UUID)
@@ -244,7 +244,7 @@ func resourceOntapVolumeRead(ctx context.Context, d *schema.ResourceData, meta i
 	return diags
 }
 
-func resourceOntapVolumeUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceONTAPVolumeUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).FSxConn(ctx)
 
@@ -276,7 +276,7 @@ func resourceOntapVolumeUpdate(ctx context.Context, d *schema.ResourceData, meta
 		}
 
 		if d.HasChange("tiering_policy") {
-			input.OntapConfiguration.TieringPolicy = expandOntapVolumeTieringPolicy(d.Get("tiering_policy").([]interface{}))
+			input.OntapConfiguration.TieringPolicy = expandTieringPolicy(d.Get("tiering_policy").([]interface{}))
 		}
 
 		startTime := time.Now()
@@ -295,10 +295,10 @@ func resourceOntapVolumeUpdate(ctx context.Context, d *schema.ResourceData, meta
 		}
 	}
 
-	return append(diags, resourceOntapVolumeRead(ctx, d, meta)...)
+	return append(diags, resourceONTAPVolumeRead(ctx, d, meta)...)
 }
 
-func resourceOntapVolumeDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceONTAPVolumeDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).FSxConn(ctx)
 
@@ -325,7 +325,7 @@ func resourceOntapVolumeDelete(ctx context.Context, d *schema.ResourceData, meta
 	return diags
 }
 
-func expandOntapVolumeTieringPolicy(cfg []interface{}) *fsx.TieringPolicy {
+func expandTieringPolicy(cfg []interface{}) *fsx.TieringPolicy {
 	if len(cfg) < 1 {
 		return nil
 	}
@@ -347,7 +347,7 @@ func expandOntapVolumeTieringPolicy(cfg []interface{}) *fsx.TieringPolicy {
 	return &out
 }
 
-func flattenOntapVolumeTieringPolicy(rs *fsx.TieringPolicy) []interface{} {
+func flattenTieringPolicy(rs *fsx.TieringPolicy) []interface{} {
 	if rs == nil {
 		return []interface{}{}
 	}
