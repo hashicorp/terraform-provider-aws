@@ -6,6 +6,7 @@ package fsx
 import (
 	"context"
 	"errors"
+	"fmt"
 	"log"
 	"time"
 
@@ -278,14 +279,19 @@ func resourceOntapVolumeUpdate(ctx context.Context, d *schema.ResourceData, meta
 			input.OntapConfiguration.TieringPolicy = expandOntapVolumeTieringPolicy(d.Get("tiering_policy").([]interface{}))
 		}
 
+		startTime := time.Now()
 		_, err := conn.UpdateVolumeWithContext(ctx, input)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating FSx for NetApp ONTAP Volume (%s): %s", d.Id(), err)
 		}
 
-		if _, err := waitVolumeUpdated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
+		if _, err := waitVolumeUpdated(ctx, conn, d.Id(), startTime, d.Timeout(schema.TimeoutUpdate)); err != nil {
 			return sdkdiag.AppendErrorf(diags, "waiting for FSx for NetApp ONTAP Volume (%s) update: %s", d.Id(), err)
+		}
+
+		if _, err := waitVolumeAdministrativeActionCompleted(ctx, conn, d.Id(), fsx.AdministrativeActionTypeVolumeUpdate, d.Timeout(schema.TimeoutUpdate)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "waiting for FSx for NetApp ONTAP Volume (%s) administrative action (%s) complete: %s", d.Id(), fsx.AdministrativeActionTypeVolumeUpdate, err)
 		}
 	}
 
@@ -462,8 +468,8 @@ func waitVolumeCreated(ctx context.Context, conn *fsx.FSx, id string, timeout ti
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*fsx.Volume); ok {
-		if status, details := aws.StringValue(output.Lifecycle), output.LifecycleTransitionReason; status == fsx.VolumeLifecycleFailed && details != nil {
-			tfresource.SetLastError(err, errors.New(aws.StringValue(output.LifecycleTransitionReason.Message)))
+		if status, reason := aws.StringValue(output.Lifecycle), output.LifecycleTransitionReason; status == fsx.VolumeLifecycleFailed && reason != nil {
+			tfresource.SetLastError(err, errors.New(aws.StringValue(reason.Message)))
 		}
 
 		return output, err
@@ -472,7 +478,7 @@ func waitVolumeCreated(ctx context.Context, conn *fsx.FSx, id string, timeout ti
 	return nil, err
 }
 
-func waitVolumeUpdated(ctx context.Context, conn *fsx.FSx, id string, timeout time.Duration) (*fsx.Volume, error) { //nolint:unparam
+func waitVolumeUpdated(ctx context.Context, conn *fsx.FSx, id string, startTime time.Time, timeout time.Duration) (*fsx.Volume, error) { //nolint:unparam
 	stateConf := &retry.StateChangeConf{
 		Pending: []string{fsx.VolumeLifecyclePending},
 		Target:  []string{fsx.VolumeLifecycleCreated, fsx.VolumeLifecycleMisconfigured, fsx.VolumeLifecycleAvailable},
@@ -484,8 +490,26 @@ func waitVolumeUpdated(ctx context.Context, conn *fsx.FSx, id string, timeout ti
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*fsx.Volume); ok {
-		if status, details := aws.StringValue(output.Lifecycle), output.LifecycleTransitionReason; status == fsx.VolumeLifecycleFailed && details != nil {
-			tfresource.SetLastError(err, errors.New(aws.StringValue(output.LifecycleTransitionReason.Message)))
+		switch status := aws.StringValue(output.Lifecycle); status {
+		case fsx.VolumeLifecycleFailed:
+			// Report any failed non-VOLUME_UPDATE administrative actions.
+			// See https://docs.aws.amazon.com/fsx/latest/APIReference/API_AdministrativeAction.html#FSx-Type-AdministrativeAction-AdministrativeActionType.
+			administrativeActions := tfslices.Filter(output.AdministrativeActions, func(v *fsx.AdministrativeAction) bool {
+				return v != nil && aws.StringValue(v.Status) == fsx.StatusFailed && aws.StringValue(v.AdministrativeActionType) != fsx.AdministrativeActionTypeVolumeUpdate && v.FailureDetails != nil && startTime.Before(aws.TimeValue(v.RequestTime))
+			})
+			administrativeActionsError := errors.Join(tfslices.ApplyToAll(administrativeActions, func(v *fsx.AdministrativeAction) error {
+				return fmt.Errorf("%s: %s", aws.StringValue(v.AdministrativeActionType), aws.StringValue(v.FailureDetails.Message))
+			})...)
+
+			if reason := output.LifecycleTransitionReason; reason != nil {
+				if message := aws.StringValue(reason.Message); administrativeActionsError != nil {
+					tfresource.SetLastError(err, fmt.Errorf("%s: %w", message, administrativeActionsError))
+				} else {
+					tfresource.SetLastError(err, errors.New(message))
+				}
+			} else {
+				tfresource.SetLastError(err, administrativeActionsError)
+			}
 		}
 
 		return output, err
@@ -506,8 +530,67 @@ func waitVolumeDeleted(ctx context.Context, conn *fsx.FSx, id string, timeout ti
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*fsx.Volume); ok {
-		if status, details := aws.StringValue(output.Lifecycle), output.LifecycleTransitionReason; status == fsx.VolumeLifecycleFailed && details != nil {
-			tfresource.SetLastError(err, errors.New(aws.StringValue(output.LifecycleTransitionReason.Message)))
+		if status, reason := aws.StringValue(output.Lifecycle), output.LifecycleTransitionReason; status == fsx.VolumeLifecycleFailed && reason != nil {
+			tfresource.SetLastError(err, errors.New(aws.StringValue(reason.Message)))
+		}
+
+		return output, err
+	}
+
+	return nil, err
+}
+
+func findVolumeAdministrativeAction(ctx context.Context, conn *fsx.FSx, volID, actionType string) (*fsx.AdministrativeAction, error) {
+	output, err := findVolumeByID(ctx, conn, volID)
+
+	if err != nil {
+		return nil, err
+	}
+
+	for _, v := range output.AdministrativeActions {
+		if v == nil {
+			continue
+		}
+
+		if aws.StringValue(v.AdministrativeActionType) == actionType {
+			return v, nil
+		}
+	}
+
+	// If the administrative action isn't found, assume it's complete.
+	return &fsx.AdministrativeAction{Status: aws.String(fsx.StatusCompleted)}, nil
+}
+
+func statusVolumeAdministrativeAction(ctx context.Context, conn *fsx.FSx, volID, actionType string) retry.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := findVolumeAdministrativeAction(ctx, conn, volID, actionType)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, aws.StringValue(output.Status), nil
+	}
+}
+
+func waitVolumeAdministrativeActionCompleted(ctx context.Context, conn *fsx.FSx, volID, actionType string, timeout time.Duration) (*fsx.AdministrativeAction, error) { //nolint:unparam
+	stateConf := &retry.StateChangeConf{
+		Pending: []string{fsx.StatusInProgress, fsx.StatusPending},
+		Target:  []string{fsx.StatusCompleted, fsx.StatusUpdatedOptimizing},
+		Refresh: statusVolumeAdministrativeAction(ctx, conn, volID, actionType),
+		Timeout: timeout,
+		Delay:   30 * time.Second,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*fsx.AdministrativeAction); ok {
+		if status, details := aws.StringValue(output.Status), output.FailureDetails; status == fsx.StatusFailed && details != nil {
+			tfresource.SetLastError(err, errors.New(aws.StringValue(output.FailureDetails.Message)))
 		}
 
 		return output, err

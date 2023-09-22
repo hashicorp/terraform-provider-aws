@@ -363,13 +363,14 @@ func resourceOpenzfsVolumeUpdate(ctx context.Context, d *schema.ResourceData, me
 			input.OpenZFSConfiguration.UserAndGroupQuotas = expandOpenzfsVolumeUserAndGroupQuotas(d.Get("user_and_group_quotas").(*schema.Set).List())
 		}
 
+		startTime := time.Now()
 		_, err := conn.UpdateVolumeWithContext(ctx, input)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating FSx OpenZFS Volume (%s): %s", d.Id(), err)
 		}
 
-		if _, err := waitVolumeUpdated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
+		if _, err := waitVolumeUpdated(ctx, conn, d.Id(), startTime, d.Timeout(schema.TimeoutUpdate)); err != nil {
 			return sdkdiag.AppendErrorf(diags, "waiting for FSx OpenZFS Volume (%s) update: %s", d.Id(), err)
 		}
 	}
