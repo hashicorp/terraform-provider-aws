@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/aws_quicksight_analysis: add support for `theme_arn`.
+```
+
+```release-note:enhancement
+resource/aws_quicksight_dashboard: add support for `theme_arn`.
+```
