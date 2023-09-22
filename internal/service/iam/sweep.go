@@ -53,6 +53,8 @@ func init() {
 			"aws_iam_group",
 			"aws_iam_role",
 			"aws_iam_user",
+			"aws_quicksight_group",
+			"aws_quicksight_user",
 		},
 	})
 
@@ -430,6 +432,12 @@ func sweepPolicies(region string) error {
 
 		for _, v := range page.Policies {
 			arn := aws.StringValue(v.Arn)
+
+			if n := aws.Int64Value(v.AttachmentCount); n > 0 {
+				log.Printf("[INFO] Skipping IAM Policy %s: AttachmentCount=%d", arn, n)
+				continue
+			}
+
 			r := ResourcePolicy()
 			d := r.Data(nil)
 			d.SetId(arn)
