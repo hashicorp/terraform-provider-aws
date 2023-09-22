@@ -2010,32 +2010,6 @@ func TestAccWAFV2RuleGroup_rateBasedStatement(t *testing.T) {
 					}),
 				),
 			},
-			// {
-			// 	Config: testAccRuleGroupConfig_rateBasedStatement_customkeys_cookies(ruleGroupName),
-			// 	Check: resource.ComposeTestCheckFunc(
-			// 		testAccCheckRuleGroupExists(ctx, resourceName, &v),
-			// 		acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexache.MustCompile(`regional/rulegroup/.+$`)),
-			// 		resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
-			// 		resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
-			// 			"statement.#":                                                       "1",
-			// 			"statement.0.rate_based_statement.#":                                "1",
-			// 			"statement.0.rate_based_statement.0.custom_key.#":                   "1",
-			// 			"statement.0.rate_based_statement.0.aggregate_key_type":             "CUSTOM_KEYS",
-			// 			"statement.0.rate_based_statement.0.forwarded_ip_config.#":          "0",
-			// 			"statement.0.rate_based_statement.0.limit":                          "50000",
-			// 			"statement.0.rate_based_statement.0.scope_down_statement.#":         "0",
-			// 			"statement.0.rate_based_statement.0.custom_key.0.cookie.#":          "1",
-			// 			"statement.0.rate_based_statement.0.custom_key.0.forwarded_ip.#":    "0",
-			// 			"statement.0.rate_based_statement.0.custom_key.0.http_method.#":     "0",
-			// 			"statement.0.rate_based_statement.0.custom_key.0.header.#":          "0",
-			// 			"statement.0.rate_based_statement.0.custom_key.0.ip.#":              "0",
-			// 			"statement.0.rate_based_statement.0.custom_key.0.label_namespace.#": "0",
-			// 			"statement.0.rate_based_statement.0.custom_key.0.query_argument.#":  "0",
-			// 			"statement.0.rate_based_statement.0.custom_key.0.query_string.#":    "0",
-			// 			"statement.0.rate_based_statement.0.custom_key.0.uri_path.#":        "0",
-			// 		}),
-			// 	),
-			// },
 			{
 				Config: testAccRuleGroupConfig_rateBasedStatement_forwardedIPConfig(ruleGroupName, "MATCH", "X-Forwarded-For"),
 				Check: resource.ComposeTestCheckFunc(
@@ -2071,6 +2045,216 @@ func TestAccWAFV2RuleGroup_rateBasedStatement(t *testing.T) {
 						"statement.0.rate_based_statement.0.forwarded_ip_config.0.header_name":       "Updated",
 						"statement.0.rate_based_statement.0.limit":                                   "50000",
 						"statement.0.rate_based_statement.0.scope_down_statement.#":                  "0",
+					}),
+				),
+			},
+			{
+				Config: testAccRuleGroupConfig_rateBasedStatement_customkeysBasic(ruleGroupName, "cookie", "testcookie"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRuleGroupExists(ctx, resourceName, &v),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexache.MustCompile(`regional/rulegroup/.+$`)),
+					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
+						"statement.#":                                                       "1",
+						"statement.0.rate_based_statement.#":                                "1",
+						"statement.0.rate_based_statement.0.custom_key.#":                   "1",
+						"statement.0.rate_based_statement.0.aggregate_key_type":             "CUSTOM_KEYS",
+						"statement.0.rate_based_statement.0.forwarded_ip_config.#":          "0",
+						"statement.0.rate_based_statement.0.limit":                          "50000",
+						"statement.0.rate_based_statement.0.scope_down_statement.#":         "0",
+						"statement.0.rate_based_statement.0.custom_key.0.cookie.#":          "1",
+						"statement.0.rate_based_statement.0.custom_key.0.forwarded_ip.#":    "0",
+						"statement.0.rate_based_statement.0.custom_key.0.http_method.#":     "0",
+						"statement.0.rate_based_statement.0.custom_key.0.header.#":          "0",
+						"statement.0.rate_based_statement.0.custom_key.0.ip.#":              "0",
+						"statement.0.rate_based_statement.0.custom_key.0.label_namespace.#": "0",
+						"statement.0.rate_based_statement.0.custom_key.0.query_argument.#":  "0",
+						"statement.0.rate_based_statement.0.custom_key.0.query_string.#":    "0",
+						"statement.0.rate_based_statement.0.custom_key.0.uri_path.#":        "0",
+					}),
+				),
+			},
+			// {
+			// 	Config: testAccRuleGroupConfig_rateBasedStatement_customkeysComplex(ruleGroupName, "forwarded_ip"),
+			// 	Check: resource.ComposeTestCheckFunc(
+			// 		testAccCheckRuleGroupExists(ctx, resourceName, &v),
+			// 		acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexache.MustCompile(`regional/rulegroup/.+$`)),
+			// 		resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
+			// 		resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
+			// 			"statement.#":                                                       "1",
+			// 			"statement.0.rate_based_statement.#":                                "1",
+			// 			"statement.0.rate_based_statement.0.custom_key.#":                   "2",
+			// 			"statement.0.rate_based_statement.0.aggregate_key_type":             "CUSTOM_KEYS",
+			// 			"statement.0.rate_based_statement.0.forwarded_ip_config.#":          "0",
+			// 			"statement.0.rate_based_statement.0.limit":                          "50000",
+			// 			"statement.0.rate_based_statement.0.scope_down_statement.#":         "0",
+			// 			"statement.0.rate_based_statement.0.custom_key.0.cookie.#":          "1",
+			// 			"statement.0.rate_based_statement.0.custom_key.0.forwarded_ip.#":    "0",
+			// 			"statement.0.rate_based_statement.0.custom_key.0.http_method.#":     "0",
+			// 			"statement.0.rate_based_statement.0.custom_key.0.header.#":          "0",
+			// 			"statement.0.rate_based_statement.0.custom_key.0.ip.#":              "0",
+			// 			"statement.0.rate_based_statement.0.custom_key.0.label_namespace.#": "0",
+			// 			"statement.0.rate_based_statement.0.custom_key.0.query_argument.#":  "0",
+			// 			"statement.0.rate_based_statement.0.custom_key.0.query_string.#":    "0",
+			// 			"statement.0.rate_based_statement.0.custom_key.0.uri_path.#":        "0",
+			// 			"statement.0.rate_based_statement.0.custom_key.1.forwarded_ip.#":    "1",
+			// 		}),
+			// 	),
+			// },
+			{
+				Config: testAccRuleGroupConfig_rateBasedStatement_customkeysHTTPMethod(ruleGroupName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRuleGroupExists(ctx, resourceName, &v),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexache.MustCompile(`regional/rulegroup/.+$`)),
+					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
+						"statement.#":                                                       "1",
+						"statement.0.rate_based_statement.#":                                "1",
+						"statement.0.rate_based_statement.0.custom_key.#":                   "1",
+						"statement.0.rate_based_statement.0.aggregate_key_type":             "CUSTOM_KEYS",
+						"statement.0.rate_based_statement.0.forwarded_ip_config.#":          "0",
+						"statement.0.rate_based_statement.0.limit":                          "50000",
+						"statement.0.rate_based_statement.0.scope_down_statement.#":         "0",
+						"statement.0.rate_based_statement.0.custom_key.0.cookie.#":          "0",
+						"statement.0.rate_based_statement.0.custom_key.0.forwarded_ip.#":    "0",
+						"statement.0.rate_based_statement.0.custom_key.0.http_method.#":     "1",
+						"statement.0.rate_based_statement.0.custom_key.0.header.#":          "0",
+						"statement.0.rate_based_statement.0.custom_key.0.ip.#":              "0",
+						"statement.0.rate_based_statement.0.custom_key.0.label_namespace.#": "0",
+						"statement.0.rate_based_statement.0.custom_key.0.query_argument.#":  "0",
+						"statement.0.rate_based_statement.0.custom_key.0.query_string.#":    "0",
+						"statement.0.rate_based_statement.0.custom_key.0.uri_path.#":        "0",
+					}),
+				),
+			},
+			{
+				Config: testAccRuleGroupConfig_rateBasedStatement_customkeysBasic(ruleGroupName, "header", "x-forwrded-for"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRuleGroupExists(ctx, resourceName, &v),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexache.MustCompile(`regional/rulegroup/.+$`)),
+					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
+						"statement.#":                                                       "1",
+						"statement.0.rate_based_statement.#":                                "1",
+						"statement.0.rate_based_statement.0.custom_key.#":                   "1",
+						"statement.0.rate_based_statement.0.aggregate_key_type":             "CUSTOM_KEYS",
+						"statement.0.rate_based_statement.0.forwarded_ip_config.#":          "0",
+						"statement.0.rate_based_statement.0.limit":                          "50000",
+						"statement.0.rate_based_statement.0.scope_down_statement.#":         "0",
+						"statement.0.rate_based_statement.0.custom_key.0.cookie.#":          "0",
+						"statement.0.rate_based_statement.0.custom_key.0.forwarded_ip.#":    "0",
+						"statement.0.rate_based_statement.0.custom_key.0.http_method.#":     "0",
+						"statement.0.rate_based_statement.0.custom_key.0.header.#":          "1",
+						"statement.0.rate_based_statement.0.custom_key.0.ip.#":              "0",
+						"statement.0.rate_based_statement.0.custom_key.0.label_namespace.#": "0",
+						"statement.0.rate_based_statement.0.custom_key.0.query_argument.#":  "0",
+						"statement.0.rate_based_statement.0.custom_key.0.query_string.#":    "0",
+						"statement.0.rate_based_statement.0.custom_key.0.uri_path.#":        "0",
+					}),
+				),
+			},
+			{
+				Config: testAccRuleGroupConfig_rateBasedStatement_customkeysComplex(ruleGroupName, "ip"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRuleGroupExists(ctx, resourceName, &v),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexache.MustCompile(`regional/rulegroup/.+$`)),
+					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
+						"statement.#":                                                       "1",
+						"statement.0.rate_based_statement.#":                                "1",
+						"statement.0.rate_based_statement.0.custom_key.#":                   "2",
+						"statement.0.rate_based_statement.0.aggregate_key_type":             "CUSTOM_KEYS",
+						"statement.0.rate_based_statement.0.forwarded_ip_config.#":          "0",
+						"statement.0.rate_based_statement.0.limit":                          "50000",
+						"statement.0.rate_based_statement.0.scope_down_statement.#":         "0",
+						"statement.0.rate_based_statement.0.custom_key.0.cookie.#":          "1",
+						"statement.0.rate_based_statement.0.custom_key.0.forwarded_ip.#":    "0",
+						"statement.0.rate_based_statement.0.custom_key.0.http_method.#":     "0",
+						"statement.0.rate_based_statement.0.custom_key.0.header.#":          "0",
+						"statement.0.rate_based_statement.0.custom_key.0.ip.#":              "0",
+						"statement.0.rate_based_statement.0.custom_key.0.label_namespace.#": "0",
+						"statement.0.rate_based_statement.0.custom_key.0.query_argument.#":  "0",
+						"statement.0.rate_based_statement.0.custom_key.0.query_string.#":    "0",
+						"statement.0.rate_based_statement.0.custom_key.0.uri_path.#":        "0",
+						"statement.0.rate_based_statement.0.custom_key.1.ip.#":              "1",
+					}),
+				),
+			},
+			{
+				Config: testAccRuleGroupConfig_rateBasedStatement_customkeysBasic(ruleGroupName, "query_argument", "key"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRuleGroupExists(ctx, resourceName, &v),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexache.MustCompile(`regional/rulegroup/.+$`)),
+					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
+						"statement.#":                                                       "1",
+						"statement.0.rate_based_statement.#":                                "1",
+						"statement.0.rate_based_statement.0.custom_key.#":                   "1",
+						"statement.0.rate_based_statement.0.aggregate_key_type":             "CUSTOM_KEYS",
+						"statement.0.rate_based_statement.0.forwarded_ip_config.#":          "0",
+						"statement.0.rate_based_statement.0.limit":                          "50000",
+						"statement.0.rate_based_statement.0.scope_down_statement.#":         "0",
+						"statement.0.rate_based_statement.0.custom_key.0.cookie.#":          "0",
+						"statement.0.rate_based_statement.0.custom_key.0.forwarded_ip.#":    "0",
+						"statement.0.rate_based_statement.0.custom_key.0.http_method.#":     "0",
+						"statement.0.rate_based_statement.0.custom_key.0.header.#":          "0",
+						"statement.0.rate_based_statement.0.custom_key.0.ip.#":              "0",
+						"statement.0.rate_based_statement.0.custom_key.0.label_namespace.#": "0",
+						"statement.0.rate_based_statement.0.custom_key.0.query_argument.#":  "1",
+						"statement.0.rate_based_statement.0.custom_key.0.query_string.#":    "0",
+						"statement.0.rate_based_statement.0.custom_key.0.uri_path.#":        "0",
+					}),
+				),
+			},
+			{
+				Config: testAccRuleGroupConfig_rateBasedStatement_customkeysMinimal(ruleGroupName, "query_string"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRuleGroupExists(ctx, resourceName, &v),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexache.MustCompile(`regional/rulegroup/.+$`)),
+					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
+						"statement.#":                                                       "1",
+						"statement.0.rate_based_statement.#":                                "1",
+						"statement.0.rate_based_statement.0.custom_key.#":                   "1",
+						"statement.0.rate_based_statement.0.aggregate_key_type":             "CUSTOM_KEYS",
+						"statement.0.rate_based_statement.0.forwarded_ip_config.#":          "0",
+						"statement.0.rate_based_statement.0.limit":                          "50000",
+						"statement.0.rate_based_statement.0.scope_down_statement.#":         "0",
+						"statement.0.rate_based_statement.0.custom_key.0.cookie.#":          "0",
+						"statement.0.rate_based_statement.0.custom_key.0.forwarded_ip.#":    "0",
+						"statement.0.rate_based_statement.0.custom_key.0.http_method.#":     "0",
+						"statement.0.rate_based_statement.0.custom_key.0.header.#":          "0",
+						"statement.0.rate_based_statement.0.custom_key.0.ip.#":              "0",
+						"statement.0.rate_based_statement.0.custom_key.0.label_namespace.#": "0",
+						"statement.0.rate_based_statement.0.custom_key.0.query_argument.#":  "0",
+						"statement.0.rate_based_statement.0.custom_key.0.query_string.#":    "1",
+						"statement.0.rate_based_statement.0.custom_key.0.uri_path.#":        "0",
+					}),
+				),
+			},
+			{
+				Config: testAccRuleGroupConfig_rateBasedStatement_customkeysMinimal(ruleGroupName, "uri_path"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRuleGroupExists(ctx, resourceName, &v),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexache.MustCompile(`regional/rulegroup/.+$`)),
+					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
+						"statement.#":                                                       "1",
+						"statement.0.rate_based_statement.#":                                "1",
+						"statement.0.rate_based_statement.0.custom_key.#":                   "1",
+						"statement.0.rate_based_statement.0.aggregate_key_type":             "CUSTOM_KEYS",
+						"statement.0.rate_based_statement.0.forwarded_ip_config.#":          "0",
+						"statement.0.rate_based_statement.0.limit":                          "50000",
+						"statement.0.rate_based_statement.0.scope_down_statement.#":         "0",
+						"statement.0.rate_based_statement.0.custom_key.0.cookie.#":          "0",
+						"statement.0.rate_based_statement.0.custom_key.0.forwarded_ip.#":    "0",
+						"statement.0.rate_based_statement.0.custom_key.0.http_method.#":     "0",
+						"statement.0.rate_based_statement.0.custom_key.0.header.#":          "0",
+						"statement.0.rate_based_statement.0.custom_key.0.ip.#":              "0",
+						"statement.0.rate_based_statement.0.custom_key.0.label_namespace.#": "0",
+						"statement.0.rate_based_statement.0.custom_key.0.query_argument.#":  "0",
+						"statement.0.rate_based_statement.0.custom_key.0.query_string.#":    "0",
+						"statement.0.rate_based_statement.0.custom_key.0.uri_path.#":        "1",
 					}),
 				),
 			},
@@ -4479,7 +4663,100 @@ resource "aws_wafv2_rule_group" "test" {
 `, rName, fallbackBehavior, headerName)
 }
 
-func testAccRuleGroupConfig_rateBasedStatement_customkeys_cookies(rName string) string {
+func testAccRuleGroupConfig_rateBasedStatement_customkeysBasic(rName, customKey, customKeyName string) string {
+	return fmt.Sprintf(`
+resource "aws_wafv2_rule_group" "test" {
+  capacity = 100
+  name     = %[1]q
+  scope    = "REGIONAL"
+
+  rule {
+    name     = "rule-1"
+    priority = 1
+
+    action {
+      count {}
+    }
+
+    statement {
+      rate_based_statement {
+        aggregate_key_type = "CUSTOM_KEYS"
+        limit = 50000
+		custom_key {
+			%[2]s {
+				name = %[3]q
+				text_transformation {
+					type = "NONE"
+					priority = 0
+				}
+			}
+		}
+      }
+    }
+
+    visibility_config {
+      cloudwatch_metrics_enabled = false
+      metric_name                = "friendly-rule-metric-name"
+      sampled_requests_enabled   = false
+    }
+  }
+
+  visibility_config {
+    cloudwatch_metrics_enabled = false
+    metric_name                = "friendly-metric-name"
+    sampled_requests_enabled   = false
+  }
+}
+`, rName, customKey, customKeyName)
+}
+
+func testAccRuleGroupConfig_rateBasedStatement_customkeysMinimal(rName, customKey string) string {
+	return fmt.Sprintf(`
+resource "aws_wafv2_rule_group" "test" {
+  capacity = 100
+  name     = %[1]q
+  scope    = "REGIONAL"
+
+  rule {
+    name     = "rule-1"
+    priority = 1
+
+    action {
+      count {}
+    }
+
+    statement {
+      rate_based_statement {
+        aggregate_key_type = "CUSTOM_KEYS"
+        limit = 50000
+		custom_key {
+			%[2]s {
+				text_transformation {
+					type = "NONE"
+					priority = 0
+				}
+			}
+		}
+      }
+    }
+
+    visibility_config {
+      cloudwatch_metrics_enabled = false
+      metric_name                = "friendly-rule-metric-name"
+      sampled_requests_enabled   = false
+    }
+  }
+
+  visibility_config {
+    cloudwatch_metrics_enabled = false
+    metric_name                = "friendly-metric-name"
+    sampled_requests_enabled   = false
+  }
+}
+`, rName, customKey)
+}
+
+func testAccRuleGroupConfig_rateBasedStatement_customkeysComplex(rName, customKeyName string) string {
 	return fmt.Sprintf(`
 resource "aws_wafv2_rule_group" "test" {
   capacity = 100
@@ -4500,11 +4777,58 @@ resource "aws_wafv2_rule_group" "test" {
         limit = 50000
 		custom_key {
 			cookie {
-				name = "tasty-cookie"
+				name = "cookie-name"
 				text_transformation {
 					type = "NONE"
 					priority = 0
 				}
+			}
+		}
+		custom_key {
+			ip {
+
+			}
+		}
+      }
+    }
+
+    visibility_config {
+      cloudwatch_metrics_enabled = false
+      metric_name                = "friendly-rule-metric-name"
+      sampled_requests_enabled   = false
+    }
+  }
+
+  visibility_config {
+    cloudwatch_metrics_enabled = false
+    metric_name                = "friendly-metric-name"
+    sampled_requests_enabled   = false
+  }
+}
+`, rName, customKeyName)
+}
+
+func testAccRuleGroupConfig_rateBasedStatement_customkeysHTTPMethod(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_wafv2_rule_group" "test" {
+  capacity = 100
+  name     = %[1]q
+  scope    = "REGIONAL"
+
+  rule {
+    name     = "rule-1"
+    priority = 1
+
+    action {
+      count {}
+    }
+
+    statement {
+      rate_based_statement {
+        aggregate_key_type = "CUSTOM_KEYS"
+        limit = 50000
+		custom_key {
+			http_method {
 			}
 		}
       }

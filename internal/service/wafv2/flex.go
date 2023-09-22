@@ -2534,20 +2534,86 @@ func flattenStatusCode(apiObject *wafv2.ResponseInspectionStatusCode) []interfac
 	return []interface{}{m}
 }
 
+func flattenRateLimitCookie(apiObject *wafv2.RateLimitCookie) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+	return []interface{}{
+		map[string]interface{}{
+			"name":                aws.StringValue(apiObject.Name),
+			"text_transformation": flattenTextTransformations(apiObject.TextTransformations),
+		},
+	}
+}
+
+func flattenRateLimitHeader(apiObject *wafv2.RateLimitHeader) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+	return []interface{}{
+		map[string]interface{}{
+			"name":                aws.StringValue(apiObject.Name),
+			"text_transformation": flattenTextTransformations(apiObject.TextTransformations),
+		},
+	}
+}
+
+func flattenRateLimitLabelNamespace(apiObject *wafv2.RateLimitLabelNamespace) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+	return []interface{}{
+		map[string]interface{}{
+			"namespace": aws.StringValue(apiObject.Namespace),
+		},
+	}
+}
+
+func flattenRateLimitQueryArgument(apiObject *wafv2.RateLimitQueryArgument) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+	return []interface{}{
+		map[string]interface{}{
+			"name":                aws.StringValue(apiObject.Name),
+			"text_transformation": flattenTextTransformations(apiObject.TextTransformations),
+		},
+	}
+}
+
+func flattenRateLimitQueryString(apiObject *wafv2.RateLimitQueryString) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+	return []interface{}{
+		map[string]interface{}{
+			"text_transformation": flattenTextTransformations(apiObject.TextTransformations),
+		},
+	}
+}
+
+func flattenRateLimitUriPath(apiObject *wafv2.RateLimitUriPath) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+	return []interface{}{
+		map[string]interface{}{
+			"text_transformation": flattenTextTransformations(apiObject.TextTransformations),
+		},
+	}
+}
+
 func flattenRateBasedStatementCustomKeys(apiObject []*wafv2.RateBasedStatementCustomKey) []interface{} {
 	if apiObject == nil {
 		return nil
 	}
+
 	out := make([]interface{}, len(apiObject))
 	for i, o := range apiObject {
 		tfMap := map[string]interface{}{}
+
 		if o.Cookie != nil {
-			tfMap["cookie"] = []interface{}{
-				map[string]interface{}{
-					"name":                aws.StringValue(o.Cookie.Name),
-					"text_transformation": flattenTextTransformations(o.Cookie.TextTransformations),
-				},
-			}
+			tfMap["cookie"] = flattenRateLimitCookie(o.Cookie)
 		}
 		if o.ForwardedIP != nil {
 			tfMap["forwarded_ip"] = []interface{}{
@@ -2560,46 +2626,24 @@ func flattenRateBasedStatementCustomKeys(apiObject []*wafv2.RateBasedStatementCu
 			}
 		}
 		if o.Header != nil {
-			tfMap["header"] = []interface{}{
-				map[string]interface{}{
-					"name":                aws.StringValue(o.Header.Name),
-					"text_transformation": flattenTextTransformations(o.Header.TextTransformations),
-				},
-			}
+			tfMap["header"] = flattenRateLimitHeader(o.Header)
 		}
-		if o.HTTPMethod != nil {
+		if o.IP != nil {
 			tfMap["ip"] = []interface{}{
 				map[string]interface{}{},
 			}
 		}
 		if o.LabelNamespace != nil {
-			tfMap["label_namespace"] = []interface{}{
-				map[string]interface{}{
-					"namespace": aws.StringValue(o.LabelNamespace.Namespace),
-				},
-			}
+			tfMap["label_namespace"] = flattenRateLimitLabelNamespace(o.LabelNamespace)
 		}
 		if o.QueryArgument != nil {
-			tfMap["query_argument"] = []interface{}{
-				map[string]interface{}{
-					"name":                aws.StringValue(o.QueryArgument.Name),
-					"text_transformation": flattenTextTransformations(o.QueryArgument.TextTransformations),
-				},
-			}
+			tfMap["query_argument"] = flattenRateLimitQueryArgument(o.QueryArgument)
 		}
 		if o.QueryString != nil {
-			tfMap["query_string"] = []interface{}{
-				map[string]interface{}{
-					"text_transformation": flattenTextTransformations(o.QueryString.TextTransformations),
-				},
-			}
+			tfMap["query_string"] = flattenRateLimitQueryString(o.QueryString)
 		}
 		if o.UriPath != nil {
-			tfMap["uri_path"] = []interface{}{
-				map[string]interface{}{
-					"text_transformation": flattenTextTransformations(o.UriPath.TextTransformations),
-				},
-			}
+			tfMap["uri_path"] = flattenRateLimitUriPath(o.UriPath)
 		}
 		out[i] = tfMap
 	}
