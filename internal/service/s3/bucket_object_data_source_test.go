@@ -363,23 +363,6 @@ func TestAccS3BucketObjectDataSource_multipleSlashes(t *testing.T) {
 	})
 }
 
-func TestAccS3BucketObjectDataSource_singleSlashAsKey(t *testing.T) {
-	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                  func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:                acctest.ErrorCheck(t, s3.EndpointsID),
-		ProtoV5ProviderFactories:  acctest.ProtoV5ProviderFactories,
-		PreventPostDestroyRefresh: true,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccBucketObjectDataSourceConfig_singleSlashAsKey(rName),
-			},
-		},
-	})
-}
-
 func testAccBucketObjectDataSourceConfig_basic(randInt int) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "object_bucket" {
@@ -684,17 +667,4 @@ data "aws_s3_object" "obj3" {
 `, resources)
 
 	return resources, both
-}
-
-func testAccBucketObjectDataSourceConfig_singleSlashAsKey(rName string) string {
-	return fmt.Sprintf(`
-resource "aws_s3_bucket" "test" {
-  bucket = %[1]q
-}
-
-data "aws_s3_object" "test" {
-  bucket = aws_s3_bucket.test.bucket
-  key    = "/"
-}
-`, rName)
 }

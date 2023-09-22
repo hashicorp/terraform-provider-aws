@@ -594,32 +594,6 @@ object Sanity : BuildType({
             type = "JetBrains.SharedResources"
             param("locks-param", "${DslContext.getParameter("aws_account.lock_id")} writeLock")
         }
-        
-        val notifierConnectionID = DslContext.getParameter("notifier.id", "")
-        val notifier: Notifier? = if (notifierConnectionID != "") {
-            Notifier(notifierConnectionID, DslContext.getParameter("notifier.destination"))
-        } else {
-            null
-        }
-
-        if (notifier != null) {
-            val branchRef = DslContext.getParameter("branch_name", "")
-            notifications {
-                notifierSettings = slackNotifier {
-                    connection = notifier.connectionID
-                    sendTo = notifier.destination
-                    messageFormat = verboseMessageFormat {
-                        addBranch = branchRef != "refs/heads/main"
-                        addStatusText = true
-                    }
-                }
-                buildStarted = false
-                buildFailedToStart = true
-                buildFailed = true
-                buildFinishedSuccessfully = false
-                firstBuildErrorOccurs = true
-            }
-        }
     }
 })
 

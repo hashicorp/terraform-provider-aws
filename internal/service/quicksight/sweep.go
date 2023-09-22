@@ -35,6 +35,10 @@ func init() {
 		Name: "aws_quicksight_folder",
 		F:    sweepFolders,
 	})
+	resource.AddTestSweepers("aws_quicksight_group", &resource.Sweeper{
+		Name: "aws_quicksight_group",
+		F:    sweepGroups,
+	})
 	resource.AddTestSweepers("aws_quicksight_template", &resource.Sweeper{
 		Name: "aws_quicksight_template",
 		F:    sweepTemplates,
@@ -42,6 +46,9 @@ func init() {
 	resource.AddTestSweepers("aws_quicksight_user", &resource.Sweeper{
 		Name: "aws_quicksight_user",
 		F:    sweepUsers,
+		Dependencies: []string{
+			"aws_quicksight_group",
+		},
 	})
 }
 
@@ -49,6 +56,10 @@ const (
 	// Defined locally to avoid cyclic import from internal/acctest
 	acctestResourcePrefix = "tf-acc-test"
 )
+
+// TODO
+// TODO Use paginated listers.
+// TODO
 
 func sweepDashboards(region string) error {
 	ctx := sweep.Context(region)
@@ -248,7 +259,52 @@ func sweepFolders(region string) error {
 	}
 
 	return nil
+}
 
+func sweepGroups(region string) error {
+	ctx := sweep.Context(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
+
+	if err != nil {
+		return fmt.Errorf("getting client: %w", err)
+	}
+
+	conn := client.QuickSightConn(ctx)
+	awsAccountId := client.AccountID
+	sweepResources := make([]sweep.Sweepable, 0)
+
+	input := &quicksight.ListGroupsInput{
+		AwsAccountId: aws.String(awsAccountId),
+		Namespace:    aws.String(DefaultUserNamespace),
+	}
+
+	out, err := conn.ListGroupsWithContext(ctx, input)
+	for _, user := range out.GroupList {
+		groupname := aws.StringValue(user.GroupName)
+		if !strings.HasPrefix(groupname, acctestResourcePrefix) {
+			continue
+		}
+
+		r := ResourceGroup()
+		d := r.Data(nil)
+		d.SetId(fmt.Sprintf("%s/%s/%s", awsAccountId, DefaultUserNamespace, groupname))
+
+		sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
+	}
+
+	if skipSweepUserError(err) {
+		log.Printf("[WARN] Skipping QuickSight Group sweep for %s: %s", region, err)
+		return nil
+	}
+	if err != nil {
+		return fmt.Errorf("listing QuickSight Groups: %w", err)
+	}
+
+	if err := sweep.SweepOrchestrator(ctx, sweepResources); err != nil {
+		return fmt.Errorf("sweeping QuickSight Groups for %s: %w", region, err)
+	}
+
+	return nil
 }
 
 func sweepTemplates(region string) error {
