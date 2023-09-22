@@ -1,4 +1,13 @@
 ## 5.19.0 (Unreleased)
+
+FEATURES:
+
+* **New Resource:** `aws_dms_replication_config` ([#32908](https://github.com/hashicorp/terraform-provider-aws/issues/32908))
+
+BUG FIXES:
+
+* resource/aws_s3_bucket_policy: Fix intermittent `couldn't find resource` errors on resource Create ([#33537](https://github.com/hashicorp/terraform-provider-aws/issues/33537))
+
 ## 5.18.0 (September 21, 2023)
 
 FEATURES:
