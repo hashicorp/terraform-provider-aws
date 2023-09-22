@@ -281,11 +281,11 @@ func resourceOntapVolumeUpdate(ctx context.Context, d *schema.ResourceData, meta
 		_, err := conn.UpdateVolumeWithContext(ctx, input)
 
 		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating FSx ONTAP Volume (%s): %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "updating FSx for NetApp ONTAP Volume (%s): %s", d.Id(), err)
 		}
 
 		if _, err := waitVolumeUpdated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
-			return sdkdiag.AppendErrorf(diags, "waiting for FSx ONTAP Volume (%s) update: %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "waiting for FSx for NetApp ONTAP Volume (%s) update: %s", d.Id(), err)
 		}
 	}
 
@@ -296,7 +296,7 @@ func resourceOntapVolumeDelete(ctx context.Context, d *schema.ResourceData, meta
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).FSxConn(ctx)
 
-	log.Printf("[DEBUG] Deleting FSx ONTAP Volume: %s", d.Id())
+	log.Printf("[DEBUG] Deleting FSx for NetApp ONTAP Volume: %s", d.Id())
 	_, err := conn.DeleteVolumeWithContext(ctx, &fsx.DeleteVolumeInput{
 		OntapConfiguration: &fsx.DeleteVolumeOntapConfiguration{
 			SkipFinalBackup: aws.Bool(d.Get("skip_final_backup").(bool)),
@@ -309,11 +309,11 @@ func resourceOntapVolumeDelete(ctx context.Context, d *schema.ResourceData, meta
 	}
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "deleting FSx ONTAP Volume (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting FSx for NetApp ONTAP Volume (%s): %s", d.Id(), err)
 	}
 
 	if _, err := waitVolumeDeleted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "waiting for FSx ONTAP Volume (%s) delete: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for FSx for NetApp ONTAP Volume (%s) delete: %s", d.Id(), err)
 	}
 
 	return diags
