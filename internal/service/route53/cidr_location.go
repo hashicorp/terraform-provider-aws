@@ -6,13 +6,14 @@ package route53
 import (
 	"context"
 	"fmt"
-	"regexp"
 	"strings"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/route53"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
+	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -65,7 +66,7 @@ func (r *resourceCIDRLocation) Schema(ctx context.Context, req resource.SchemaRe
 				},
 				Validators: []validator.String{
 					stringvalidator.LengthAtMost(16),
-					stringvalidator.RegexMatches(regexp.MustCompile(`^[a-zA-Z0-9_\-]+$`), `can include letters, digits, underscore (_) and the dash (-) character`),
+					stringvalidator.RegexMatches(regexache.MustCompile(`^[0-9A-Za-z_-]+$`), `can include letters, digits, underscore (_) and the dash (-) character`),
 				},
 			},
 		},
@@ -150,7 +151,15 @@ func (r *resourceCIDRLocation) Read(ctx context.Context, request resource.ReadRe
 		return
 	}
 
-	data.CIDRBlocks = flex.FlattenFrameworkStringValueSet(ctx, cidrBlocks)
+	if n := len(cidrBlocks); n > 0 {
+		elems := make([]attr.Value, n)
+		for i, cidrBlock := range cidrBlocks {
+			elems[i] = fwtypes.CIDRBlockValue(cidrBlock)
+		}
+		data.CIDRBlocks = types.SetValueMust(fwtypes.CIDRBlockType, elems)
+	} else {
+		data.CIDRBlocks = types.SetNull(fwtypes.CIDRBlockType)
+	}
 	data.CIDRCollectionID = types.StringValue(collectionID)
 	data.Name = types.StringValue(name)
 

@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/aws_lb: Changes to `security_groups` for Network Load Balancers force a new resource if either the old or new set of security group IDs is empty
+```

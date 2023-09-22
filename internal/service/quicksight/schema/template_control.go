@@ -1209,7 +1209,7 @@ func flattenFontConfiguration(apiObject *quicksight.FontConfiguration) []interfa
 }
 
 func flattenFontSize(apiObject *quicksight.FontSize) []interface{} {
-	if apiObject == nil {
+	if apiObject == nil || apiObject.Relative == nil {
 		return nil
 	}
 
@@ -1222,7 +1222,7 @@ func flattenFontSize(apiObject *quicksight.FontSize) []interface{} {
 }
 
 func flattenFontWeight(apiObject *quicksight.FontWeight) []interface{} {
-	if apiObject == nil {
+	if apiObject == nil || apiObject.Name == nil {
 		return nil
 	}
 

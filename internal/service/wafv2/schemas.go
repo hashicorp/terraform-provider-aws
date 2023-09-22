@@ -5,8 +5,8 @@ package wafv2
 
 import (
 	"math"
-	"regexp"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/service/wafv2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -37,7 +37,7 @@ func ruleLabelsSchema() *schema.Schema {
 					Required: true,
 					ValidateFunc: validation.All(
 						validation.StringLenBetween(1, 1024),
-						validation.StringMatch(regexp.MustCompile(`^[0-9A-Za-z_\-:]+$`), "must contain only alphanumeric, underscore, hyphen, and colon characters"),
+						validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_\-:]+$`), "must contain only alphanumeric, underscore, hyphen, and colon characters"),
 					),
 				},
 			},
@@ -202,7 +202,7 @@ func ipSetReferenceStatementSchema() *schema.Schema {
 								Required: true,
 								ValidateFunc: validation.All(
 									validation.StringLenBetween(1, 255),
-									validation.StringMatch(regexp.MustCompile(`^[a-zA-Z0-9-]+$`), "must contain only alphanumeric and hyphen characters"),
+									validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z-]+$`), "must contain only alphanumeric and hyphen characters"),
 								),
 							},
 							"position": {
@@ -230,7 +230,7 @@ func labelMatchStatementSchema() *schema.Schema {
 					Required: true,
 					ValidateFunc: validation.All(
 						validation.StringLenBetween(1, 1024),
-						validation.StringMatch(regexp.MustCompile(`^[0-9A-Za-z_\-:]+$`), "must contain only alphanumeric, underscore, hyphen, and colon characters"),
+						validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_\-:]+$`), "must contain only alphanumeric, underscore, hyphen, and colon characters"),
 					),
 				},
 				"scope": {
@@ -359,7 +359,7 @@ func fieldToMatchBaseSchema() *schema.Resource {
 								validation.StringLenBetween(1, 40),
 								// The value is returned in lower case by the API.
 								// Trying to solve it with StateFunc and/or DiffSuppressFunc resulted in hash problem of the rule field or didn't work.
-								validation.StringMatch(regexp.MustCompile(`^[a-z0-9-_]+$`), "must contain only lowercase alphanumeric characters, underscores, and hyphens"),
+								validation.StringMatch(regexache.MustCompile(`^[0-9a-z_-]+$`), "must contain only lowercase alphanumeric characters, underscores, and hyphens"),
 							),
 						},
 					},
@@ -378,7 +378,7 @@ func fieldToMatchBaseSchema() *schema.Resource {
 								validation.StringLenBetween(1, 30),
 								// The value is returned in lower case by the API.
 								// Trying to solve it with StateFunc and/or DiffSuppressFunc resulted in hash problem of the rule field or didn't work.
-								validation.StringMatch(regexp.MustCompile(`^[a-z0-9-_]+$`), "must contain only lowercase alphanumeric characters, underscores, and hyphens"),
+								validation.StringMatch(regexache.MustCompile(`^[0-9a-z_-]+$`), "must contain only lowercase alphanumeric characters, underscores, and hyphens"),
 							),
 						},
 					},
@@ -438,7 +438,7 @@ func jsonBodyMatchPatternSchema() *schema.Schema {
 						Type: schema.TypeString,
 						ValidateFunc: validation.All(
 							validation.StringLenBetween(1, 512),
-							validation.StringMatch(regexp.MustCompile(`(/)|(/(([^~])|(~[01]))+)`), "must be a valid JSON pointer")),
+							validation.StringMatch(regexache.MustCompile(`(/)|(/(([^~])|(~[01]))+)`), "must be a valid JSON pointer")),
 					},
 				},
 			},
@@ -504,12 +504,49 @@ func visibilityConfigSchema() *schema.Schema {
 					Required: true,
 					ValidateFunc: validation.All(
 						validation.StringLenBetween(1, 128),
-						validation.StringMatch(regexp.MustCompile(`^[a-zA-Z0-9-_]+$`), "must contain only alphanumeric hyphen and underscore characters"),
+						validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_-]+$`), "must contain only alphanumeric hyphen and underscore characters"),
 					),
 				},
 				"sampled_requests_enabled": {
 					Type:     schema.TypeBool,
 					Required: true,
+				},
+			},
+		},
+	}
+}
+
+func associationConfigSchema() *schema.Schema {
+	return &schema.Schema{
+		Type:     schema.TypeList,
+		Optional: true,
+		MaxItems: 1,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"request_body": requestBodySchema(),
+			},
+		},
+	}
+}
+
+func requestBodySchema() *schema.Schema {
+	return &schema.Schema{
+		Type:     schema.TypeList,
+		Optional: true,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"cloudfront": {
+					Type:     schema.TypeList,
+					Optional: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"default_size_inspection_limit": {
+								Type:         schema.TypeString,
+								Required:     true,
+								ValidateFunc: validation.StringInSlice(wafv2.SizeInspectionLimit_Values(), false),
+							},
+						},
+					},
 				},
 			},
 		},
@@ -624,7 +661,7 @@ func customRequestHandlingSchema() *schema.Schema {
 								Required: true,
 								ValidateFunc: validation.All(
 									validation.StringLenBetween(1, 64),
-									validation.StringMatch(regexp.MustCompile(`^[a-zA-Z0-9._$-]+$`), "must contain only alphanumeric, hyphen, underscore, dot and $ characters"),
+									validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_$.-]+$`), "must contain only alphanumeric, hyphen, underscore, dot and $ characters"),
 								),
 							},
 							"value": {
@@ -652,7 +689,7 @@ func customResponseSchema() *schema.Schema {
 					Optional: true,
 					ValidateFunc: validation.All(
 						validation.StringLenBetween(1, 128),
-						validation.StringMatch(regexp.MustCompile(`^[\w\-]+$`), "must contain only alphanumeric, hyphen, and underscore characters"),
+						validation.StringMatch(regexache.MustCompile(`^[\w\-]+$`), "must contain only alphanumeric, hyphen, and underscore characters"),
 					),
 				},
 				"response_code": {
@@ -670,7 +707,7 @@ func customResponseSchema() *schema.Schema {
 								Required: true,
 								ValidateFunc: validation.All(
 									validation.StringLenBetween(1, 64),
-									validation.StringMatch(regexp.MustCompile(`^[a-zA-Z0-9._$-]+$`), "must contain only alphanumeric, hyphen, underscore, dot and $ characters"),
+									validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_$.-]+$`), "must contain only alphanumeric, hyphen, underscore, dot and $ characters"),
 								),
 							},
 							"value": {
@@ -697,7 +734,7 @@ func customResponseBodySchema() *schema.Schema {
 					Required: true,
 					ValidateFunc: validation.All(
 						validation.StringLenBetween(1, 128),
-						validation.StringMatch(regexp.MustCompile(`^[\w\-]+$`), "must contain only alphanumeric, hyphen, and underscore characters"),
+						validation.StringMatch(regexache.MustCompile(`^[\w\-]+$`), "must contain only alphanumeric, hyphen, and underscore characters"),
 					),
 				},
 				"content": {
@@ -826,7 +863,7 @@ func headersMatchPatternBaseSchema() *schema.Schema {
 			Type: schema.TypeString,
 			ValidateFunc: validation.All(
 				validation.StringLenBetween(1, 64),
-				validation.StringMatch(regexp.MustCompile(`.*\S.*`), ""),
+				validation.StringMatch(regexache.MustCompile(`.*\S.*`), ""),
 			),
 		},
 	}
@@ -962,6 +999,29 @@ func managedRuleGroupConfigSchema() *schema.Schema {
 		Optional: true,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
+				"aws_managed_rules_atp_rule_set": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"enable_regex_in_path": {
+								Type:     schema.TypeBool,
+								Optional: true,
+							},
+							"login_path": {
+								Type:     schema.TypeString,
+								Required: true,
+								ValidateFunc: validation.All(
+									validation.StringLenBetween(1, 256),
+									validation.StringMatch(regexache.MustCompile(`.*\S.*`), `must conform to pattern .*\S.* `),
+								),
+							},
+							"request_inspection":  managedRuleGroupConfigATPRequestInspectionSchema(),
+							"response_inspection": managedRuleGroupConfigATPResponseInspectionSchema(),
+						},
+					},
+				},
 				"aws_managed_rules_bot_control_rule_set": {
 					Type:     schema.TypeList,
 					Optional: true,
@@ -976,31 +1036,12 @@ func managedRuleGroupConfigSchema() *schema.Schema {
 						},
 					},
 				},
-				"aws_managed_rules_atp_rule_set": {
-					Type:     schema.TypeList,
-					Optional: true,
-					MaxItems: 1,
-					Elem: &schema.Resource{
-						Schema: map[string]*schema.Schema{
-							"login_path": {
-								Type:     schema.TypeString,
-								Required: true,
-								ValidateFunc: validation.All(
-									validation.StringLenBetween(1, 256),
-									validation.StringMatch(regexp.MustCompile(`.*\S.*`), `must conform to pattern .*\S.* `),
-								),
-							},
-							"request_inspection":  managedRuleGroupConfigATPRequestInspectionSchema(),
-							"response_inspection": managedRuleGroupConfigATPResponseInspectionSchema(),
-						},
-					},
-				},
 				"login_path": {
 					Type:     schema.TypeString,
 					Optional: true,
 					ValidateFunc: validation.All(
 						validation.StringLenBetween(1, 256),
-						validation.StringMatch(regexp.MustCompile(`.*\S.*`), `must conform to pattern .*\S.* `),
+						validation.StringMatch(regexache.MustCompile(`.*\S.*`), `must conform to pattern .*\S.* `),
 					),
 				},
 				"password_field": {
@@ -1014,7 +1055,7 @@ func managedRuleGroupConfigSchema() *schema.Schema {
 								Required: true,
 								ValidateFunc: validation.All(
 									validation.StringLenBetween(1, 512),
-									validation.StringMatch(regexp.MustCompile(`.*\S.*`), `must conform to pattern .*\S.* `),
+									validation.StringMatch(regexache.MustCompile(`.*\S.*`), `must conform to pattern .*\S.* `),
 								),
 							},
 						},
@@ -1036,7 +1077,7 @@ func managedRuleGroupConfigSchema() *schema.Schema {
 								Required: true,
 								ValidateFunc: validation.All(
 									validation.StringLenBetween(1, 512),
-									validation.StringMatch(regexp.MustCompile(`.*\S.*`), `must conform to pattern .*\S.* `),
+									validation.StringMatch(regexache.MustCompile(`.*\S.*`), `must conform to pattern .*\S.* `),
 								),
 							},
 						},
@@ -1054,10 +1095,11 @@ func actionToUseSchema() *schema.Schema {
 		MaxItems: 1,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				"allow":   allowConfigSchema(),
-				"block":   blockConfigSchema(),
-				"captcha": captchaConfigSchema(),
-				"count":   countConfigSchema(),
+				"allow":     allowConfigSchema(),
+				"block":     blockConfigSchema(),
+				"captcha":   captchaConfigSchema(),
+				"challenge": challengeConfigSchema(),
+				"count":     countConfigSchema(),
 			},
 		},
 	}
@@ -1099,7 +1141,7 @@ func managedRuleGroupConfigATPRequestInspectionSchema() *schema.Schema {
 								Required: true,
 								ValidateFunc: validation.All(
 									validation.StringLenBetween(1, 512),
-									validation.StringMatch(regexp.MustCompile(`.*\S.*`), `must conform to pattern .*\S.* `),
+									validation.StringMatch(regexache.MustCompile(`.*\S.*`), `must conform to pattern .*\S.* `),
 								),
 							},
 						},
@@ -1121,7 +1163,7 @@ func managedRuleGroupConfigATPRequestInspectionSchema() *schema.Schema {
 								Required: true,
 								ValidateFunc: validation.All(
 									validation.StringLenBetween(1, 512),
-									validation.StringMatch(regexp.MustCompile(`.*\S.*`), `must conform to pattern .*\S.* `),
+									validation.StringMatch(regexache.MustCompile(`.*\S.*`), `must conform to pattern .*\S.* `),
 								),
 							},
 						},

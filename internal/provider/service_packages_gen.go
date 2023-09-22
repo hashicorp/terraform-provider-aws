@@ -45,6 +45,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/cloudwatch"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/codeartifact"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/codebuild"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/codecatalyst"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/codecommit"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/codegurureviewer"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/codepipeline"
@@ -125,6 +126,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/lakeformation"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/lambda"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/lexmodels"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/lexv2models"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/licensemanager"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/lightsail"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/location"
@@ -253,6 +255,7 @@ func servicePackages(ctx context.Context) []conns.ServicePackage {
 		cloudwatch.ServicePackage(ctx),
 		codeartifact.ServicePackage(ctx),
 		codebuild.ServicePackage(ctx),
+		codecatalyst.ServicePackage(ctx),
 		codecommit.ServicePackage(ctx),
 		codegurureviewer.ServicePackage(ctx),
 		codepipeline.ServicePackage(ctx),
@@ -333,6 +336,7 @@ func servicePackages(ctx context.Context) []conns.ServicePackage {
 		lakeformation.ServicePackage(ctx),
 		lambda.ServicePackage(ctx),
 		lexmodels.ServicePackage(ctx),
+		lexv2models.ServicePackage(ctx),
 		licensemanager.ServicePackage(ctx),
 		lightsail.ServicePackage(ctx),
 		location.ServicePackage(ctx),

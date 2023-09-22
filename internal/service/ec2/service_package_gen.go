@@ -237,6 +237,10 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 			TypeName: "aws_ec2_transit_gateway_route_table_propagations",
 		},
 		{
+			Factory:  DataSourceTransitGatewayRouteTableRoutes,
+			TypeName: "aws_ec2_transit_gateway_route_table_routes",
+		},
+		{
 			Factory:  DataSourceTransitGatewayRouteTables,
 			TypeName: "aws_ec2_transit_gateway_route_tables",
 		},
@@ -335,6 +339,8 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 		{
 			Factory:  DataSourceVPC,
 			TypeName: "aws_vpc",
+			Name:     "VPC",
+			Tags:     &types.ServicePackageResourceTags{},
 		},
 		{
 			Factory:  DataSourceVPCDHCPOptions,
@@ -938,6 +944,22 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
+			Factory:  ResourceVerifiedAccessInstance,
+			TypeName: "aws_verifiedaccess_instance",
+			Name:     "Verified Access Instance",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "id",
+			},
+		},
+		{
+			Factory:  ResourceVerifiedAccessTrustProvider,
+			TypeName: "aws_verifiedaccess_trust_provider",
+			Name:     "Verified Access Trust Provider",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "id",
+			},
+		},
+		{
 			Factory:  ResourceVolumeAttachment,
 			TypeName: "aws_volume_attachment",
 		},
@@ -1141,7 +1163,7 @@ func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (
 
 	return ec2_sdkv2.NewFromConfig(cfg, func(o *ec2_sdkv2.Options) {
 		if endpoint := config["endpoint"].(string); endpoint != "" {
-			o.EndpointResolver = ec2_sdkv2.EndpointResolverFromURL(endpoint)
+			o.BaseEndpoint = aws_sdkv2.String(endpoint)
 		}
 	}), nil
 }

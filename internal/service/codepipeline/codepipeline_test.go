@@ -6,9 +6,9 @@ package codepipeline_test
 import (
 	"context"
 	"fmt"
-	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/service/codepipeline"
 	"github.com/aws/aws-sdk-go/service/codestarconnections"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
@@ -43,7 +43,7 @@ func TestAccCodePipeline_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPipelineExists(ctx, resourceName, &p1),
 					resource.TestCheckResourceAttrPair(resourceName, "role_arn", "aws_iam_role.codepipeline_role", "arn"),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "codepipeline", regexp.MustCompile(fmt.Sprintf("test-pipeline-%s", name))),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "codepipeline", regexache.MustCompile(fmt.Sprintf("test-pipeline-%s", name))),
 					resource.TestCheckResourceAttr(resourceName, "artifact_store.#", "1"),
 
 					resource.TestCheckResourceAttr(resourceName, "stage.#", "2"),
@@ -176,7 +176,7 @@ func TestAccCodePipeline_emptyStageArtifacts(t *testing.T) {
 				Config: testAccCodePipelineConfig_emptyStageArtifacts(name),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPipelineExists(ctx, resourceName, &p),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "codepipeline", regexp.MustCompile(fmt.Sprintf("test-pipeline-%s$", name))),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "codepipeline", regexache.MustCompile(fmt.Sprintf("test-pipeline-%s$", name))),
 					resource.TestCheckResourceAttr(resourceName, "artifact_store.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "stage.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "stage.1.name", "Build"),
@@ -474,7 +474,7 @@ func TestAccCodePipeline_withNamespace(t *testing.T) {
 				Config: testAccCodePipelineConfig_namespace(name),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPipelineExists(ctx, resourceName, &p1),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "codepipeline", regexp.MustCompile(fmt.Sprintf("test-pipeline-%s", name))),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "codepipeline", regexache.MustCompile(fmt.Sprintf("test-pipeline-%s", name))),
 					resource.TestCheckResourceAttr(resourceName, "stage.0.action.0.namespace", "SourceVariables"),
 				),
 			},
@@ -670,7 +670,7 @@ func testAccPreCheckSupported(ctx context.Context, t *testing.T, regions ...stri
 		conf := &conns.Config{
 			Region: region,
 		}
-		client, diags := conf.ConfigureProvider(ctx, &conns.AWSClient{})
+		client, diags := conf.ConfigureProvider(ctx, acctest.Provider.Meta().(*conns.AWSClient))
 
 		if diags.HasError() {
 			t.Fatalf("error getting AWS client for region %s", region)
@@ -1405,11 +1405,6 @@ func testAccS3Bucket(bucket, rName string) string {
 resource "aws_s3_bucket" "%[1]s" {
   bucket = "tf-test-pipeline-%[1]s-%[2]s"
 }
-
-resource "aws_s3_bucket_acl" "%[1]s" {
-  bucket = aws_s3_bucket.%[1]s.id
-  acl    = "private"
-}
 `, bucket, rName)
 }
 
@@ -1417,12 +1412,6 @@ func testAccS3BucketWithProvider(bucket, rName, provider string) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "%[1]s" {
   bucket   = "tf-test-pipeline-%[1]s-%[2]s"
-  provider = %[3]s
-}
-
-resource "aws_s3_bucket_acl" "%[1]s" {
-  bucket   = aws_s3_bucket.%[1]s.id
-  acl      = "private"
   provider = %[3]s
 }
 `, bucket, rName, provider)
@@ -1492,11 +1481,6 @@ resource "aws_codestarconnections_connection" "test" {
 
 resource "aws_s3_bucket" "foo" {
   bucket = "tf-test-pipeline-%[1]s"
-}
-
-resource "aws_s3_bucket_acl" "foo_acl" {
-  bucket = aws_s3_bucket.foo.id
-  acl    = "private"
 }
 `, rName))
 }

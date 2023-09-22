@@ -7,7 +7,6 @@ import (
 	"errors"
 	"fmt"
 
-	multierror "github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 )
@@ -24,7 +23,7 @@ func Warnings(diags diag.Diagnostics) diag.Diagnostics {
 	return tfslices.Filter(diags, severityFilter(diag.Warning))
 }
 
-func severityFilter(s diag.Severity) tfslices.FilterFunc[diag.Diagnostic] {
+func severityFilter(s diag.Severity) tfslices.Predicate[diag.Diagnostic] {
 	return func(d diag.Diagnostic) bool {
 		return d.Severity == s
 	}
@@ -32,26 +31,13 @@ func severityFilter(s diag.Severity) tfslices.FilterFunc[diag.Diagnostic] {
 
 // DiagnosticsError returns an error containing all Diagnostic with SeverityError
 func DiagnosticsError(diags diag.Diagnostics) error {
-	if !diags.HasError() {
-		return nil
+	var errs []error
+
+	for _, d := range Errors(diags) {
+		errs = append(errs, errors.New(DiagnosticString(d)))
 	}
 
-	errDiags := Errors(diags)
-
-	if len(errDiags) == 1 {
-		return diagnosticError(errDiags[0])
-	}
-
-	var errs error
-	for _, d := range errDiags {
-		errs = multierror.Append(errs, diagnosticError(d))
-	}
-
-	return errs
-}
-
-func diagnosticError(diag diag.Diagnostic) error {
-	return errors.New(DiagnosticString(diag))
+	return errors.Join(errs...)
 }
 
 // DiagnosticString formats a Diagnostic

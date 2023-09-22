@@ -5,9 +5,9 @@ package ssoadmin_test
 
 import (
 	"fmt"
-	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/service/ssoadmin"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -75,7 +75,7 @@ func TestAccSSOAdminPermissionSetDataSource_nonExistent(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccPermissionSetDataSourceConfig_ssoByNameNonExistent,
-				ExpectError: regexp.MustCompile(`not found`),
+				ExpectError: regexache.MustCompile(`not found`),
 			},
 		},
 	})

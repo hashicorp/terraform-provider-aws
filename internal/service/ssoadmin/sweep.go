@@ -9,8 +9,8 @@ package ssoadmin
 import (
 	"fmt"
 	"log"
-	"regexp"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ssoadmin"
 	"github.com/hashicorp/go-multierror"
@@ -46,25 +46,22 @@ func sweepAccountAssignments(region string) error {
 	sweepResources := make([]sweep.Sweepable, 0)
 	var sweeperErrs *multierror.Error
 
-	accessDenied := regexp.MustCompile(`AccessDeniedException: .+ is not authorized to perform:`)
+	accessDenied := regexache.MustCompile(`AccessDeniedException: .+ is not authorized to perform:`)
 
 	// Need to Read the SSO Instance first; assumes the first instance returned
 	// is where the permission sets exist as AWS SSO currently supports only 1 instance
 	ds := DataSourceInstances()
 	dsData := ds.Data(nil)
 
-	err = sdk.ReadResource(ctx, ds, dsData, client)
-
-	if accessDenied.MatchString(err.Error()) {
-		log.Printf("[WARN] Skipping SSO Account Assignment sweep for %s: %s", region, err)
-		return nil
-	}
-
-	if err != nil {
+	if err := sdk.ReadResource(ctx, ds, dsData, client); err != nil {
+		if accessDenied.MatchString(err.Error()) {
+			log.Printf("[WARN] Skipping SSO Account Assignment sweep for %s: %s", region, err)
+			return nil
+		}
 		return err
 	}
 
-	instanceArn := dsData.Get("arns").(*schema.Set).List()[0].(string)
+	instanceArn := dsData.Get("arns").([]interface{})[0].(string)
 
 	// To sweep account assignments, we need to first determine which Permission Sets
 	// are available and then search for their respective assignments
@@ -153,21 +150,18 @@ func sweepPermissionSets(region string) error {
 	sweepResources := make([]sweep.Sweepable, 0)
 	var sweeperErrs *multierror.Error
 
-	accessDenied := regexp.MustCompile(`AccessDeniedException: .+ is not authorized to perform:`)
+	accessDenied := regexache.MustCompile(`AccessDeniedException: .+ is not authorized to perform:`)
 
 	// Need to Read the SSO Instance first; assumes the first instance returned
 	// is where the permission sets exist as AWS SSO currently supports only 1 instance
 	ds := DataSourceInstances()
 	dsData := ds.Data(nil)
 
-	err = sdk.ReadResource(ctx, ds, dsData, client)
-
-	if accessDenied.MatchString(err.Error()) {
-		log.Printf("[WARN] Skipping SSO Permission Set sweep for %s: %s", region, err)
-		return nil
-	}
-
-	if err != nil {
+	if err := sdk.ReadResource(ctx, ds, dsData, client); err != nil {
+		if accessDenied.MatchString(err.Error()) {
+			log.Printf("[WARN] Skipping SSO Permission Set sweep for %s: %s", region, err)
+			return nil
+		}
 		return err
 	}
 

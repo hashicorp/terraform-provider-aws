@@ -6,9 +6,9 @@ package cloudhsmv2_test
 import (
 	"context"
 	"fmt"
-	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/service/cloudhsmv2"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -34,10 +34,10 @@ func testAccCluster_basic(t *testing.T) {
 				Config: testAccClusterConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName),
-					resource.TestMatchResourceAttr(resourceName, "cluster_id", regexp.MustCompile(`^cluster-.+`)),
+					resource.TestMatchResourceAttr(resourceName, "cluster_id", regexache.MustCompile(`^cluster-.+`)),
 					resource.TestCheckResourceAttr(resourceName, "cluster_state", cloudhsmv2.ClusterStateUninitialized),
 					resource.TestCheckResourceAttr(resourceName, "hsm_type", "hsm1.medium"),
-					resource.TestMatchResourceAttr(resourceName, "security_group_id", regexp.MustCompile(`^sg-.+`)),
+					resource.TestMatchResourceAttr(resourceName, "security_group_id", regexache.MustCompile(`^sg-.+`)),
 					resource.TestCheckResourceAttr(resourceName, "source_backup_identifier", ""),
 					resource.TestCheckResourceAttr(resourceName, "subnet_ids.#", "2"),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "subnet_ids.*", "aws_subnet.test.0", "id"),
