@@ -19,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -209,22 +210,19 @@ func resourceOntapVolumeRead(ctx context.Context, d *schema.ResourceData, meta i
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).FSxConn(ctx)
 
-	volume, err := FindVolumeByID(ctx, conn, d.Id())
+	volume, err := FindONTAPVolumeByID(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
-		log.Printf("[WARN] FSx ONTAP Volume (%s) not found, removing from state", d.Id())
+		log.Printf("[WARN] FSx for NetApp ONTAP Volume (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
 	}
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading FSx ONTAP Volume (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading FSx for NetApp ONTAP Volume (%s): %s", d.Id(), err)
 	}
 
 	ontapConfig := volume.OntapConfiguration
-	if ontapConfig == nil {
-		return sdkdiag.AppendErrorf(diags, "reading FSx ONTAP Volume (%s): empty ONTAP configuration", d.Id())
-	}
 
 	d.Set("arn", volume.ResourceARN)
 	d.Set("name", volume.Name)
@@ -362,16 +360,41 @@ func flattenOntapVolumeTieringPolicy(rs *fsx.TieringPolicy) []interface{} {
 	return []interface{}{m}
 }
 
-func FindVolumeByID(ctx context.Context, conn *fsx.FSx, id string) (*fsx.Volume, error) {
+func FindONTAPVolumeByID(ctx context.Context, conn *fsx.FSx, id string) (*fsx.Volume, error) {
+	output, err := findVolumeByIDAndType(ctx, conn, id, fsx.VolumeTypeOntap)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output.OntapConfiguration == nil {
+		return nil, tfresource.NewEmptyResultError(nil)
+	}
+
+	return output, nil
+}
+
+func findVolumeByID(ctx context.Context, conn *fsx.FSx, id string) (*fsx.Volume, error) {
 	input := &fsx.DescribeVolumesInput{
 		VolumeIds: aws.StringSlice([]string{id}),
 	}
 
-	return findVolume(ctx, conn, input)
+	return findVolume(ctx, conn, input, tfslices.PredicateTrue[*fsx.Volume]())
 }
 
-func findVolume(ctx context.Context, conn *fsx.FSx, input *fsx.DescribeVolumesInput) (*fsx.Volume, error) {
-	output, err := findVolumes(ctx, conn, input)
+func findVolumeByIDAndType(ctx context.Context, conn *fsx.FSx, volID, volType string) (*fsx.Volume, error) {
+	input := &fsx.DescribeVolumesInput{
+		VolumeIds: aws.StringSlice([]string{volID}),
+	}
+	filter := func(fs *fsx.Volume) bool {
+		return aws.StringValue(fs.VolumeType) == volType
+	}
+
+	return findVolume(ctx, conn, input, filter)
+}
+
+func findVolume(ctx context.Context, conn *fsx.FSx, input *fsx.DescribeVolumesInput, filter tfslices.Predicate[*fsx.Volume]) (*fsx.Volume, error) {
+	output, err := findVolumes(ctx, conn, input, filter)
 
 	if err != nil {
 		return nil, err
@@ -380,7 +403,7 @@ func findVolume(ctx context.Context, conn *fsx.FSx, input *fsx.DescribeVolumesIn
 	return tfresource.AssertSinglePtrResult(output)
 }
 
-func findVolumes(ctx context.Context, conn *fsx.FSx, input *fsx.DescribeVolumesInput) ([]*fsx.Volume, error) {
+func findVolumes(ctx context.Context, conn *fsx.FSx, input *fsx.DescribeVolumesInput, filter tfslices.Predicate[*fsx.Volume]) ([]*fsx.Volume, error) {
 	var output []*fsx.Volume
 
 	err := conn.DescribeVolumesPagesWithContext(ctx, input, func(page *fsx.DescribeVolumesOutput, lastPage bool) bool {
@@ -389,7 +412,7 @@ func findVolumes(ctx context.Context, conn *fsx.FSx, input *fsx.DescribeVolumesI
 		}
 
 		for _, v := range page.Volumes {
-			if v != nil {
+			if v != nil && filter(v) {
 				output = append(output, v)
 			}
 		}
@@ -413,7 +436,7 @@ func findVolumes(ctx context.Context, conn *fsx.FSx, input *fsx.DescribeVolumesI
 
 func statusVolume(ctx context.Context, conn *fsx.FSx, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := FindVolumeByID(ctx, conn, id)
+		output, err := findVolumeByID(ctx, conn, id)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil

@@ -487,7 +487,7 @@ func testAccCheckOpenzfsVolumeExists(ctx context.Context, resourceName string, v
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).FSxConn(ctx)
 
-		volume1, err := tffsx.FindVolumeByID(ctx, conn, rs.Primary.ID)
+		volume1, err := tffsx.FindOpenZFSVolumeByID(ctx, conn, rs.Primary.ID)
 		if err != nil {
 			return err
 		}
@@ -511,7 +511,7 @@ func testAccCheckOpenzfsVolumeDestroy(ctx context.Context) resource.TestCheckFun
 				continue
 			}
 
-			volume, err := tffsx.FindVolumeByID(ctx, conn, rs.Primary.ID)
+			volume, err := tffsx.FindOpenZFSVolumeByID(ctx, conn, rs.Primary.ID)
 			if tfresource.NotFound(err) {
 				continue
 			}

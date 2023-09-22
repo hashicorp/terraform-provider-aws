@@ -481,7 +481,7 @@ func testAccCheckOntapVolumeExists(ctx context.Context, n string, v *fsx.Volume)
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).FSxConn(ctx)
 
-		output, err := tffsx.FindVolumeByID(ctx, conn, rs.Primary.ID)
+		output, err := tffsx.FindONTAPVolumeByID(ctx, conn, rs.Primary.ID)
 
 		if err != nil {
 			return err
@@ -502,7 +502,7 @@ func testAccCheckOntapVolumeDestroy(ctx context.Context) resource.TestCheckFunc 
 				continue
 			}
 
-			volume, err := tffsx.FindVolumeByID(ctx, conn, rs.Primary.ID)
+			volume, err := tffsx.FindONTAPVolumeByID(ctx, conn, rs.Primary.ID)
 
 			if tfresource.NotFound(err) {
 				continue

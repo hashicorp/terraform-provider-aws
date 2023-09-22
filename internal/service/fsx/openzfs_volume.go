@@ -272,7 +272,8 @@ func resourceOpenzfsVolumeRead(ctx context.Context, d *schema.ResourceData, meta
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).FSxConn(ctx)
 
-	volume, err := FindVolumeByID(ctx, conn, d.Id())
+	volume, err := FindOpenZFSVolumeByID(ctx, conn, d.Id())
+
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] FSx OpenZFS volume (%s) not found, removing from state", d.Id())
 		d.SetId("")
@@ -576,4 +577,18 @@ func flattenOpenzfsVolumeOriginSnapshot(rs *fsx.OpenZFSOriginSnapshotConfigurati
 	}
 
 	return []interface{}{m}
+}
+
+func FindOpenZFSVolumeByID(ctx context.Context, conn *fsx.FSx, id string) (*fsx.Volume, error) {
+	output, err := findVolumeByIDAndType(ctx, conn, id, fsx.VolumeTypeOpenzfs)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output.OpenZFSConfiguration == nil {
+		return nil, tfresource.NewEmptyResultError(nil)
+	}
+
+	return output, nil
 }
