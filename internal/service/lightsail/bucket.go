@@ -60,6 +60,11 @@ func ResourceBucket() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"force_delete": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
+			},
 			"support_code": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -157,8 +162,12 @@ func resourceBucketUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 
 func resourceBucketDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).LightsailClient(ctx)
+
+	forceDelete := d.Get("force_delete").(bool)
+
 	out, err := conn.DeleteBucket(ctx, &lightsail.DeleteBucketInput{
-		BucketName: aws.String(d.Id()),
+		BucketName:  aws.String(d.Id()),
+		ForceDelete: aws.Bool(forceDelete),
 	})
 
 	if err != nil && errs.IsA[*types.NotFoundException](err) {
