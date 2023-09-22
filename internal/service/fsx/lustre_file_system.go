@@ -658,14 +658,6 @@ func logStateFunc(v interface{}) string {
 	return value
 }
 
-func findFileSystemByID(ctx context.Context, conn *fsx.FSx, id string) (*fsx.FileSystem, error) {
-	input := &fsx.DescribeFileSystemsInput{
-		FileSystemIds: aws.StringSlice([]string{id}),
-	}
-
-	return findFileSystem(ctx, conn, input, tfslices.PredicateTrue[*fsx.FileSystem]())
-}
-
 func FindLustreFileSystemByID(ctx context.Context, conn *fsx.FSx, id string) (*fsx.FileSystem, error) {
 	output, err := findFileSystemByIDAndType(ctx, conn, id, fsx.FileSystemTypeLustre)
 
@@ -678,6 +670,14 @@ func FindLustreFileSystemByID(ctx context.Context, conn *fsx.FSx, id string) (*f
 	}
 
 	return output, nil
+}
+
+func findFileSystemByID(ctx context.Context, conn *fsx.FSx, id string) (*fsx.FileSystem, error) {
+	input := &fsx.DescribeFileSystemsInput{
+		FileSystemIds: aws.StringSlice([]string{id}),
+	}
+
+	return findFileSystem(ctx, conn, input, tfslices.PredicateTrue[*fsx.FileSystem]())
 }
 
 func findFileSystemByIDAndType(ctx context.Context, conn *fsx.FSx, fsID, fsType string) (*fsx.FileSystem, error) {

@@ -16,7 +16,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -921,55 +920,6 @@ func FindOpenZFSFileSystemByID(ctx context.Context, conn *fsx.FSx, id string) (*
 
 	if output.OpenZFSConfiguration == nil {
 		return nil, tfresource.NewEmptyResultError(nil)
-	}
-
-	return output, nil
-}
-
-func FindVolumeByID(ctx context.Context, conn *fsx.FSx, id string) (*fsx.Volume, error) {
-	input := &fsx.DescribeVolumesInput{
-		VolumeIds: aws.StringSlice([]string{id}),
-	}
-
-	return findVolume(ctx, conn, input)
-}
-
-func findVolume(ctx context.Context, conn *fsx.FSx, input *fsx.DescribeVolumesInput) (*fsx.Volume, error) {
-	output, err := findVolumes(ctx, conn, input)
-
-	if err != nil {
-		return nil, err
-	}
-
-	return tfresource.AssertSinglePtrResult(output)
-}
-
-func findVolumes(ctx context.Context, conn *fsx.FSx, input *fsx.DescribeVolumesInput) ([]*fsx.Volume, error) {
-	var output []*fsx.Volume
-
-	err := conn.DescribeVolumesPagesWithContext(ctx, input, func(page *fsx.DescribeVolumesOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
-		}
-
-		for _, v := range page.Volumes {
-			if v != nil {
-				output = append(output, v)
-			}
-		}
-
-		return !lastPage
-	})
-
-	if tfawserr.ErrCodeEquals(err, fsx.ErrCodeVolumeNotFound) {
-		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
-		}
-	}
-
-	if err != nil {
-		return nil, err
 	}
 
 	return output, nil

@@ -5,6 +5,7 @@ package fsx
 
 import (
 	"context"
+	"errors"
 	"log"
 	"time"
 
@@ -13,6 +14,7 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -144,6 +146,7 @@ func ResourceOntapVolume() *schema.Resource {
 				ValidateFunc: validation.StringInSlice(fsx.VolumeType_Values(), false),
 			},
 		},
+
 		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
@@ -187,16 +190,16 @@ func resourceOntapVolumeCreate(ctx context.Context, d *schema.ResourceData, meta
 		input.OntapConfiguration.TieringPolicy = expandOntapVolumeTieringPolicy(v.([]interface{}))
 	}
 
-	result, err := conn.CreateVolumeWithContext(ctx, input)
+	output, err := conn.CreateVolumeWithContext(ctx, input)
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating FSx ONTAP Volume (%s): %s", name, err)
+		return sdkdiag.AppendErrorf(diags, "creating FSx for NetApp ONTAP Volume (%s): %s", name, err)
 	}
 
-	d.SetId(aws.StringValue(result.Volume.VolumeId))
+	d.SetId(aws.StringValue(output.Volume.VolumeId))
 
 	if _, err := waitVolumeCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "waiting for FSx ONTAP Volume (%s) create: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for FSx for NetApp ONTAP Volume (%s) create: %s", d.Id(), err)
 	}
 
 	return append(diags, resourceOntapVolumeRead(ctx, d, meta)...)
@@ -357,4 +360,135 @@ func flattenOntapVolumeTieringPolicy(rs *fsx.TieringPolicy) []interface{} {
 	}
 
 	return []interface{}{m}
+}
+
+func FindVolumeByID(ctx context.Context, conn *fsx.FSx, id string) (*fsx.Volume, error) {
+	input := &fsx.DescribeVolumesInput{
+		VolumeIds: aws.StringSlice([]string{id}),
+	}
+
+	return findVolume(ctx, conn, input)
+}
+
+func findVolume(ctx context.Context, conn *fsx.FSx, input *fsx.DescribeVolumesInput) (*fsx.Volume, error) {
+	output, err := findVolumes(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSinglePtrResult(output)
+}
+
+func findVolumes(ctx context.Context, conn *fsx.FSx, input *fsx.DescribeVolumesInput) ([]*fsx.Volume, error) {
+	var output []*fsx.Volume
+
+	err := conn.DescribeVolumesPagesWithContext(ctx, input, func(page *fsx.DescribeVolumesOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, v := range page.Volumes {
+			if v != nil {
+				output = append(output, v)
+			}
+		}
+
+		return !lastPage
+	})
+
+	if tfawserr.ErrCodeEquals(err, fsx.ErrCodeVolumeNotFound) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	return output, nil
+}
+
+func statusVolume(ctx context.Context, conn *fsx.FSx, id string) retry.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := FindVolumeByID(ctx, conn, id)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, aws.StringValue(output.Lifecycle), nil
+	}
+}
+
+func waitVolumeCreated(ctx context.Context, conn *fsx.FSx, id string, timeout time.Duration) (*fsx.Volume, error) { //nolint:unparam
+	stateConf := &retry.StateChangeConf{
+		Pending: []string{fsx.VolumeLifecycleCreating, fsx.VolumeLifecyclePending},
+		Target:  []string{fsx.VolumeLifecycleCreated, fsx.VolumeLifecycleMisconfigured, fsx.VolumeLifecycleAvailable},
+		Refresh: statusVolume(ctx, conn, id),
+		Timeout: timeout,
+		Delay:   30 * time.Second,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*fsx.Volume); ok {
+		if status, details := aws.StringValue(output.Lifecycle), output.LifecycleTransitionReason; status == fsx.VolumeLifecycleFailed && details != nil {
+			tfresource.SetLastError(err, errors.New(aws.StringValue(output.LifecycleTransitionReason.Message)))
+		}
+
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitVolumeUpdated(ctx context.Context, conn *fsx.FSx, id string, timeout time.Duration) (*fsx.Volume, error) { //nolint:unparam
+	stateConf := &retry.StateChangeConf{
+		Pending: []string{fsx.VolumeLifecyclePending},
+		Target:  []string{fsx.VolumeLifecycleCreated, fsx.VolumeLifecycleMisconfigured, fsx.VolumeLifecycleAvailable},
+		Refresh: statusVolume(ctx, conn, id),
+		Timeout: timeout,
+		Delay:   150 * time.Second,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*fsx.Volume); ok {
+		if status, details := aws.StringValue(output.Lifecycle), output.LifecycleTransitionReason; status == fsx.VolumeLifecycleFailed && details != nil {
+			tfresource.SetLastError(err, errors.New(aws.StringValue(output.LifecycleTransitionReason.Message)))
+		}
+
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitVolumeDeleted(ctx context.Context, conn *fsx.FSx, id string, timeout time.Duration) (*fsx.Volume, error) { //nolint:unparam
+	stateConf := &retry.StateChangeConf{
+		Pending: []string{fsx.VolumeLifecycleCreated, fsx.VolumeLifecycleMisconfigured, fsx.VolumeLifecycleAvailable, fsx.VolumeLifecycleDeleting},
+		Target:  []string{},
+		Refresh: statusVolume(ctx, conn, id),
+		Timeout: timeout,
+		Delay:   30 * time.Second,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*fsx.Volume); ok {
+		if status, details := aws.StringValue(output.Lifecycle), output.LifecycleTransitionReason; status == fsx.VolumeLifecycleFailed && details != nil {
+			tfresource.SetLastError(err, errors.New(aws.StringValue(output.LifecycleTransitionReason.Message)))
+		}
+
+		return output, err
+	}
+
+	return nil, err
 }
