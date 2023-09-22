@@ -183,6 +183,10 @@ func resourceDashboardCreate(ctx context.Context, d *schema.ResourceData, meta i
 		input.Permissions = expandResourcePermissions(v.List())
 	}
 
+	if v, ok := d.Get("theme_arn").(string); ok && v != "" {
+		input.ThemeArn = aws.String(v)
+	}
+
 	_, err := conn.CreateDashboardWithContext(ctx, input)
 	if err != nil {
 		return create.DiagError(names.QuickSight, create.ErrActionCreating, ResNameDashboard, d.Get("name").(string), err)
@@ -223,6 +227,7 @@ func resourceDashboardRead(ctx context.Context, d *schema.ResourceData, meta int
 	d.Set("status", out.Version.Status)
 	d.Set("source_entity_arn", out.Version.SourceEntityArn)
 	d.Set("dashboard_id", out.DashboardId)
+	d.Set("theme_arn", out.Version.ThemeArn)
 	d.Set("version_description", out.Version.Description)
 	d.Set("version_number", out.Version.VersionNumber)
 
@@ -289,6 +294,10 @@ func resourceDashboardUpdate(ctx context.Context, d *schema.ResourceData, meta i
 
 		if v, ok := d.GetOk("dashboard_publish_options"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 			in.DashboardPublishOptions = quicksightschema.ExpandDashboardPublishOptions(d.Get("dashboard_publish_options").([]interface{}))
+		}
+
+		if v, ok := d.Get("theme_arn").(string); ok && v != "" {
+			in.ThemeArn = aws.String(v)
 		}
 
 		log.Printf("[DEBUG] Updating QuickSight Dashboard (%s): %#v", d.Id(), in)

@@ -178,6 +178,10 @@ func resourceAnalysisCreate(ctx context.Context, d *schema.ResourceData, meta in
 		input.Permissions = expandResourcePermissions(v.List())
 	}
 
+	if v, ok := d.Get("theme_arn").(string); ok && v != "" {
+		input.ThemeArn = aws.String(v)
+	}
+
 	_, err := conn.CreateAnalysisWithContext(ctx, input)
 	if err != nil {
 		return create.DiagError(names.QuickSight, create.ErrActionCreating, ResNameAnalysis, d.Get("name").(string), err)
@@ -224,6 +228,7 @@ func resourceAnalysisRead(ctx context.Context, d *schema.ResourceData, meta inte
 	d.Set("name", out.Name)
 	d.Set("status", out.Status)
 	d.Set("analysis_id", out.AnalysisId)
+	d.Set("theme_arn", out.ThemeArn)
 
 	descResp, err := conn.DescribeAnalysisDefinitionWithContext(ctx, &quicksight.DescribeAnalysisDefinitionInput{
 		AwsAccountId: aws.String(awsAccountId),
@@ -278,6 +283,10 @@ func resourceAnalysisUpdate(ctx context.Context, d *schema.ResourceData, meta in
 
 		if v, ok := d.GetOk("parameters"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 			in.Parameters = quicksightschema.ExpandParameters(d.Get("parameters").([]interface{}))
+		}
+
+		if v, ok := d.Get("theme_arn").(string); ok && v != "" {
+			in.ThemeArn = aws.String(v)
 		}
 
 		log.Printf("[DEBUG] Updating QuickSight Analysis (%s): %#v", d.Id(), in)
