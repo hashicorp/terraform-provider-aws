@@ -47,7 +47,7 @@ func TestAccDMSReplicationConfig_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "replication_config_identifier", rName),
 					resource.TestCheckResourceAttrSet(resourceName, "replication_settings"),
 					resource.TestCheckResourceAttr(resourceName, "replication_type", "cdc"),
-					resource.TestCheckResourceAttr(resourceName, "resource_identifier", ""),
+					resource.TestCheckNoResourceAttr(resourceName, "resource_identifier"),
 					resource.TestCheckResourceAttrSet(resourceName, "source_endpoint_arn"),
 					resource.TestCheckResourceAttr(resourceName, "start_replication", "false"),
 					resource.TestCheckResourceAttr(resourceName, "supplemental_settings", ""),
