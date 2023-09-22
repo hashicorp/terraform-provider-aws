@@ -55,6 +55,11 @@ func ResourceONTAPVolume() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"copy_tags_to_backups": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
+			},
 			"file_system_id": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -168,6 +173,10 @@ func resourceONTAPVolumeCreate(ctx context.Context, d *schema.ResourceData, meta
 		VolumeType: aws.String(d.Get("volume_type").(string)),
 	}
 
+	if v, ok := d.GetOk("copy_tags_to_backups"); ok {
+		input.OntapConfiguration.CopyTagsToBackups = aws.Bool(v.(bool))
+	}
+
 	if v, ok := d.GetOk("junction_path"); ok {
 		input.OntapConfiguration.JunctionPath = aws.String(v.(string))
 	}
@@ -226,9 +235,10 @@ func resourceONTAPVolumeRead(ctx context.Context, d *schema.ResourceData, meta i
 	ontapConfig := volume.OntapConfiguration
 
 	d.Set("arn", volume.ResourceARN)
-	d.Set("name", volume.Name)
+	d.Set("copy_tags_to_backups", ontapConfig.CopyTagsToBackups)
 	d.Set("file_system_id", volume.FileSystemId)
 	d.Set("junction_path", ontapConfig.JunctionPath)
+	d.Set("name", volume.Name)
 	d.Set("ontap_volume_type", ontapConfig.OntapVolumeType)
 	d.Set("security_style", ontapConfig.SecurityStyle)
 	d.Set("size_in_megabytes", ontapConfig.SizeInMegabytes)
@@ -248,11 +258,15 @@ func resourceONTAPVolumeUpdate(ctx context.Context, d *schema.ResourceData, meta
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).FSxConn(ctx)
 
-	if d.HasChangesExcept("tags_all", "tags") {
+	if d.HasChangesExcept("tags", "tags_all") {
 		input := &fsx.UpdateVolumeInput{
 			ClientRequestToken: aws.String(id.UniqueId()),
 			OntapConfiguration: &fsx.UpdateOntapVolumeConfiguration{},
 			VolumeId:           aws.String(d.Id()),
+		}
+
+		if d.HasChange("copy_tags_to_backups") {
+			input.OntapConfiguration.CopyTagsToBackups = aws.Bool(d.Get("copy_tags_to_backups").(bool))
 		}
 
 		if d.HasChange("junction_path") {

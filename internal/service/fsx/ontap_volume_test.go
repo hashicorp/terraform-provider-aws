@@ -34,9 +34,10 @@ func TestAccFSxONTAPVolume_basic(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccONTAPVolumeConfig_basic(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckONTAPVolumeExists(ctx, resourceName, &volume),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "fsx", regexache.MustCompile(`volume/fs-.+/fsvol-.+`)),
+					resource.TestCheckResourceAttr(resourceName, "copy_tags_to_backups", "false"),
 					resource.TestCheckResourceAttrSet(resourceName, "file_system_id"),
 					resource.TestCheckResourceAttr(resourceName, "junction_path", fmt.Sprintf("/%[1]s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "ontap_volume_type", "RW"),
@@ -86,12 +87,11 @@ func TestAccFSxONTAPVolume_disappears(t *testing.T) {
 	})
 }
 
-func TestAccFSxONTAPVolume_name(t *testing.T) {
+func TestAccFSxONTAPVolume_copyTagsToBackups(t *testing.T) {
 	ctx := acctest.Context(t)
 	var volume1, volume2 fsx.Volume
 	resourceName := "aws_fsx_ontap_volume.test"
 	rName := fmt.Sprintf("tf_acc_test_%d", sdkacctest.RandInt())
-	rName2 := fmt.Sprintf("tf_acc_test_%d", sdkacctest.RandInt())
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, fsx.EndpointsID) },
@@ -100,10 +100,10 @@ func TestAccFSxONTAPVolume_name(t *testing.T) {
 		CheckDestroy:             testAccCheckONTAPVolumeDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccONTAPVolumeConfig_basic(rName),
+				Config: testAccONTAPVolumeConfig_copyTagsToBackups(rName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckONTAPVolumeExists(ctx, resourceName, &volume1),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "copy_tags_to_backups", "true"),
 				),
 			},
 			{
@@ -113,11 +113,11 @@ func TestAccFSxONTAPVolume_name(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"skip_final_backup"},
 			},
 			{
-				Config: testAccONTAPVolumeConfig_basic(rName2),
+				Config: testAccONTAPVolumeConfig_copyTagsToBackups(rName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckONTAPVolumeExists(ctx, resourceName, &volume2),
-					testAccCheckONTAPVolumeRecreated(&volume1, &volume2),
-					resource.TestCheckResourceAttr(resourceName, "name", rName2),
+					testAccCheckONTAPVolumeNotRecreated(&volume1, &volume2),
+					resource.TestCheckResourceAttr(resourceName, "copy_tags_to_backups", "false"),
 				),
 			},
 		},
@@ -159,6 +159,44 @@ func TestAccFSxONTAPVolume_junctionPath(t *testing.T) {
 					testAccCheckONTAPVolumeNotRecreated(&volume1, &volume2),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "junction_path", jPath2),
+				),
+			},
+		},
+	})
+}
+
+func TestAccFSxONTAPVolume_name(t *testing.T) {
+	ctx := acctest.Context(t)
+	var volume1, volume2 fsx.Volume
+	resourceName := "aws_fsx_ontap_volume.test"
+	rName := fmt.Sprintf("tf_acc_test_%d", sdkacctest.RandInt())
+	rName2 := fmt.Sprintf("tf_acc_test_%d", sdkacctest.RandInt())
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, fsx.EndpointsID) },
+		ErrorCheck:               acctest.ErrorCheck(t, fsx.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckONTAPVolumeDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccONTAPVolumeConfig_basic(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckONTAPVolumeExists(ctx, resourceName, &volume1),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"skip_final_backup"},
+			},
+			{
+				Config: testAccONTAPVolumeConfig_basic(rName2),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckONTAPVolumeExists(ctx, resourceName, &volume2),
+					testAccCheckONTAPVolumeRecreated(&volume1, &volume2),
+					resource.TestCheckResourceAttr(resourceName, "name", rName2),
 				),
 			},
 		},
@@ -569,7 +607,20 @@ resource "aws_fsx_ontap_volume" "test" {
 `, rName))
 }
 
-func testAccONTAPVolumeConfig_junctionPath(rName string, junctionPath string) string {
+func testAccONTAPVolumeConfig_copyTagsToBackups(rName string, copyTagsToBackups bool) string {
+	return acctest.ConfigCompose(testAccONTAPVolumeConfig_base(rName), fmt.Sprintf(`
+resource "aws_fsx_ontap_volume" "test" {
+  name                       = %[1]q
+  junction_path              = "/%[1]s"
+  size_in_megabytes          = 1024
+  storage_efficiency_enabled = true
+  storage_virtual_machine_id = aws_fsx_ontap_storage_virtual_machine.test.id
+  copy_tags_to_backups       = %[2]t
+}
+`, rName, copyTagsToBackups))
+}
+
+func testAccONTAPVolumeConfig_junctionPath(rName, junctionPath string) string {
 	return acctest.ConfigCompose(testAccONTAPVolumeConfig_base(rName), fmt.Sprintf(`
 resource "aws_fsx_ontap_volume" "test" {
   name                       = %[1]q
@@ -593,7 +644,7 @@ resource "aws_fsx_ontap_volume" "test" {
 `, rName))
 }
 
-func testAccONTAPVolumeConfig_securityStyle(rName string, securityStyle string) string {
+func testAccONTAPVolumeConfig_securityStyle(rName, securityStyle string) string {
 	return acctest.ConfigCompose(testAccONTAPVolumeConfig_base(rName), fmt.Sprintf(`
 resource "aws_fsx_ontap_volume" "test" {
   name                       = %[1]q
@@ -618,7 +669,7 @@ resource "aws_fsx_ontap_volume" "test" {
 `, rName, size))
 }
 
-func testAccONTAPVolumeConfig_snapshotPolicy(rName string, snapshotPolicy string) string {
+func testAccONTAPVolumeConfig_snapshotPolicy(rName, snapshotPolicy string) string {
 	return acctest.ConfigCompose(testAccONTAPVolumeConfig_base(rName), fmt.Sprintf(`
 resource "aws_fsx_ontap_volume" "test" {
   name                       = %[1]q
@@ -643,7 +694,7 @@ resource "aws_fsx_ontap_volume" "test" {
 `, rName, storageEfficiencyEnabled))
 }
 
-func testAccONTAPVolumeConfig_tieringPolicy(rName string, policy string, coolingPeriod int) string {
+func testAccONTAPVolumeConfig_tieringPolicy(rName, policy string, coolingPeriod int) string {
 	return acctest.ConfigCompose(testAccONTAPVolumeConfig_base(rName), fmt.Sprintf(`
 resource "aws_fsx_ontap_volume" "test" {
   name                       = %[1]q
@@ -660,7 +711,7 @@ resource "aws_fsx_ontap_volume" "test" {
 `, rName, policy, coolingPeriod))
 }
 
-func testAccONTAPVolumeConfig_tieringPolicyNoCooling(rName string, policy string) string {
+func testAccONTAPVolumeConfig_tieringPolicyNoCooling(rName, policy string) string {
 	return acctest.ConfigCompose(testAccONTAPVolumeConfig_base(rName), fmt.Sprintf(`
 resource "aws_fsx_ontap_volume" "test" {
   name                       = %[1]q
