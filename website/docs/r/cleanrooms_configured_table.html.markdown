@@ -8,11 +8,11 @@ description: |-
 
 # Resource: aws_cleanrooms_configured_table
 
-Provides a AWS Clean Rooms configured table. Configured tables are used to define the schema for a table which will be created in a Clean Rooms collaboration.
+Provides a AWS Clean Rooms configured table. Configured tables are used to represent references to existing tables in the AWS Glue Data Catalog.
 
 ## Example Usage
 
-### Collaboration with tags
+### Configured table with tags
 
 ```terraform
 resource "aws_cleanrooms_configured_table" "test_configured_table" {
