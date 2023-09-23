@@ -34,7 +34,7 @@ func TestAccFSxOpenZFSVolume_basic(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccOpenZFSVolumeConfig_basic(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckOpenZFSVolumeExists(ctx, resourceName, &volume),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "fsx", regexache.MustCompile(`volume/fs-.+/fsvol-.+`)),
 					resource.TestCheckResourceAttr(resourceName, "copy_tags_to_snapshots", "false"),
@@ -55,6 +55,30 @@ func TestAccFSxOpenZFSVolume_basic(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccFSxOpenZFSVolume_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
+	var volume fsx.Volume
+	resourceName := "aws_fsx_openzfs_volume.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, fsx.EndpointsID) },
+		ErrorCheck:               acctest.ErrorCheck(t, fsx.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckOpenZFSVolumeDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccOpenZFSVolumeConfig_basic(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckOpenZFSVolumeExists(ctx, resourceName, &volume),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tffsx.ResourceOpenZFSVolume(), resourceName),
+				),
+				ExpectNonEmptyPlan: true,
 			},
 		},
 	})
