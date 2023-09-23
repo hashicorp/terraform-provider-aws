@@ -105,7 +105,7 @@ func ResourceONTAPVolume() *schema.Resource {
 			"snapshot_policy": {
 				Type:         schema.TypeString,
 				Optional:     true,
-				Default:      "default",
+				Computed:     true,
 				ValidateFunc: validation.StringLenBetween(1, 255),
 			},
 			"storage_efficiency_enabled": {

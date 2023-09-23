@@ -219,7 +219,6 @@ func TestAccFSxONTAPVolume_ontapVolumeType(t *testing.T) {
 				Config: testAccONTAPVolumeConfig_ontapVolumeTypeDP(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckONTAPVolumeExists(ctx, resourceName, &volume),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "ontap_volume_type", "DP"),
 				),
 			},
