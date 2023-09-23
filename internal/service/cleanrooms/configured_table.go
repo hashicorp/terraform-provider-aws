@@ -14,12 +14,15 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/cleanrooms"
 	"github.com/aws/aws-sdk-go-v2/service/cleanrooms/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -98,6 +101,7 @@ func ResourceConfiguredTable() *schema.Resource {
 				Computed: true,
 			},
 		},
+		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
@@ -216,6 +220,14 @@ func findConfiguredTableByID(ctx context.Context, conn *cleanrooms.Client, id st
 	}
 
 	out, err := conn.GetConfiguredTable(ctx, in)
+
+	if errs.IsA[*types.ResourceNotFoundException](err) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: in,
+		}
+	}
+
 	if err != nil {
 		return nil, err
 	}
@@ -232,7 +244,7 @@ func expandAnalysisMethod(analysisMethod string) (types.AnalysisMethod, error) {
 	case "DIRECT_QUERY":
 		return types.AnalysisMethodDirectQuery, nil
 	default:
-		return types.AnalysisMethodDirectQuery, fmt.Errorf("Invalid analysis method. The only valid value is currently `DIRECT_QUERY`")
+		return types.AnalysisMethodDirectQuery, fmt.Errorf("Invalid analysis method type: %s", analysisMethod)
 	}
 }
 
