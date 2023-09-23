@@ -405,7 +405,7 @@ resource "aws_glue_catalog_table" "test_2" {
 resource "aws_glue_catalog_table" "test_3" {
   name          = %[7]q
   database_name = aws_glue_catalog_database.test_2.name
-  
+
   %[6]s
 }
 

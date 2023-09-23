@@ -244,7 +244,7 @@ func expandAnalysisMethod(analysisMethod string) (types.AnalysisMethod, error) {
 	case "DIRECT_QUERY":
 		return types.AnalysisMethodDirectQuery, nil
 	default:
-		return types.AnalysisMethodDirectQuery, fmt.Errorf("Invalid analysis method type: %s. Currently the only valid value is `DIRECT_QUERY`", analysisMethod)
+		return "", fmt.Errorf("Invalid analysis method type: %s. Currently the only valid value is `DIRECT_QUERY`", analysisMethod)
 	}
 }
 
