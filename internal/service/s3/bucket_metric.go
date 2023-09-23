@@ -9,9 +9,10 @@ import (
 	"log"
 	"strings"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/s3"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/s3"
+	"github.com/aws/aws-sdk-go-v2/service/s3/types"
+	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -29,6 +30,7 @@ func ResourceBucketMetric() *schema.Resource {
 		ReadWithoutTimeout:   resourceBucketMetricRead,
 		UpdateWithoutTimeout: resourceBucketMetricPut,
 		DeleteWithoutTimeout: resourceBucketMetricDelete,
+
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
@@ -71,182 +73,173 @@ func ResourceBucketMetric() *schema.Resource {
 
 func resourceBucketMetricPut(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).S3Conn(ctx)
-	bucket := d.Get("bucket").(string)
-	name := d.Get("name").(string)
+	conn := meta.(*conns.AWSClient).S3Client(ctx)
 
-	metricsConfiguration := &s3.MetricsConfiguration{
+	name := d.Get("name").(string)
+	metricsConfiguration := &types.MetricsConfiguration{
 		Id: aws.String(name),
 	}
 
 	if v, ok := d.GetOk("filter"); ok {
-		filterList := v.([]interface{})
-		if filterMap, ok := filterList[0].(map[string]interface{}); ok {
-			metricsConfiguration.Filter = ExpandMetricsFilter(ctx, filterMap)
+		if tfMap, ok := v.([]interface{})[0].(map[string]interface{}); ok {
+			metricsConfiguration.Filter = expandMetricsFilter(ctx, tfMap)
 		}
 	}
 
+	bucket := d.Get("bucket").(string)
 	input := &s3.PutBucketMetricsConfigurationInput{
 		Bucket:               aws.String(bucket),
 		Id:                   aws.String(name),
 		MetricsConfiguration: metricsConfiguration,
 	}
 
-	log.Printf("[DEBUG] Putting S3 Bucket Metrics Configuration: %s", input)
-	err := retry.RetryContext(ctx, s3BucketPropagationTimeout, func() *retry.RetryError {
-		_, err := conn.PutBucketMetricsConfigurationWithContext(ctx, input)
-
-		if tfawserr.ErrCodeEquals(err, s3.ErrCodeNoSuchBucket) {
-			return retry.RetryableError(err)
-		}
-
-		if err != nil {
-			return retry.NonRetryableError(err)
-		}
-
-		return nil
-	})
-
-	if tfresource.TimedOut(err) {
-		_, err = conn.PutBucketMetricsConfigurationWithContext(ctx, input)
-	}
+	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, s3BucketPropagationTimeout, func() (interface{}, error) {
+		return conn.PutBucketMetricsConfiguration(ctx, input)
+	}, errCodeNoSuchBucket)
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "putting S3 Bucket Metrics Configuration: %s", err)
+		return sdkdiag.AppendErrorf(diags, "creating S3 Bucket (%s) Metric: %s", bucket, err)
 	}
 
-	d.SetId(fmt.Sprintf("%s:%s", bucket, name))
+	if d.IsNewResource() {
+		d.SetId(fmt.Sprintf("%s:%s", bucket, name))
+
+		_, err = tfresource.RetryWhenNotFound(ctx, s3BucketPropagationTimeout, func() (interface{}, error) {
+			return findMetricsConfiguration(ctx, conn, bucket, name)
+		})
+
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "waiting for S3 Bucket Metric (%s) create: %s", d.Id(), err)
+		}
+	}
 
 	return append(diags, resourceBucketMetricRead(ctx, d, meta)...)
 }
 
-func resourceBucketMetricDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).S3Conn(ctx)
-
-	bucket, name, err := BucketMetricParseID(d.Id())
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "deleting S3 Bucket Metrics Configuration (%s): %s", d.Id(), err)
-	}
-
-	input := &s3.DeleteBucketMetricsConfigurationInput{
-		Bucket: aws.String(bucket),
-		Id:     aws.String(name),
-	}
-
-	log.Printf("[DEBUG] Deleting S3 Bucket Metrics Configuration: %s", input)
-	_, err = conn.DeleteBucketMetricsConfigurationWithContext(ctx, input)
-
-	if tfawserr.ErrCodeEquals(err, s3.ErrCodeNoSuchBucket) {
-		return diags
-	}
-
-	if tfawserr.ErrCodeEquals(err, errCodeNoSuchConfiguration) {
-		return diags
-	}
-
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "deleting S3 Bucket Metrics Configuration (%s): %s", d.Id(), err)
-	}
-
-	return diags
-}
-
 func resourceBucketMetricRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).S3Conn(ctx)
+	conn := meta.(*conns.AWSClient).S3Client(ctx)
 
 	bucket, name, err := BucketMetricParseID(d.Id())
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading S3 Bucket Metrics Configuration (%s): %s", d.Id(), err)
+		return sdkdiag.AppendFromErr(diags, err)
+	}
+
+	mc, err := findMetricsConfiguration(ctx, conn, bucket, name)
+
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] S3 Bucket Metric (%s) not found, removing from state", d.Id())
+		d.SetId("")
+		return nil
+	}
+
+	if err != nil {
+		return diag.Errorf("reading S3 Bucket Metric (%s): %s", d.Id(), err)
 	}
 
 	d.Set("bucket", bucket)
+	if mc.Filter != nil {
+		if err := d.Set("filter", []interface{}{flattenMetricsFilter(ctx, mc.Filter)}); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting filter")
+		}
+	}
 	d.Set("name", name)
 
-	input := &s3.GetBucketMetricsConfigurationInput{
+	return diags
+}
+
+func resourceBucketMetricDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).S3Client(ctx)
+
+	bucket, name, err := BucketMetricParseID(d.Id())
+	if err != nil {
+		return sdkdiag.AppendFromErr(diags, err)
+	}
+
+	log.Printf("[DEBUG] Deleting S3 Bucket Metric: %s", d.Id())
+	_, err = conn.DeleteBucketMetricsConfiguration(ctx, &s3.DeleteBucketMetricsConfigurationInput{
 		Bucket: aws.String(bucket),
 		Id:     aws.String(name),
-	}
+	})
 
-	log.Printf("[DEBUG] Reading S3 Bucket Metrics Configuration: %s", input)
-	output, err := conn.GetBucketMetricsConfigurationWithContext(ctx, input)
-
-	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, s3.ErrCodeNoSuchBucket) {
-		log.Printf("[WARN] S3 Bucket Metrics Configuration (%s) not found, removing from state", d.Id())
-		d.SetId("")
-		return diags
-	}
-
-	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, errCodeNoSuchConfiguration) {
-		log.Printf("[WARN] S3 Bucket Metrics Configuration (%s) not found, removing from state", d.Id())
-		d.SetId("")
+	if tfawserr.ErrCodeEquals(err, errCodeNoSuchBucket, errCodeNoSuchConfiguration) {
 		return diags
 	}
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading S3 Bucket Metrics Configuration (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting S3 Bucket Metric (%s): %s", d.Id(), err)
 	}
 
-	if output == nil || output.MetricsConfiguration == nil {
-		return sdkdiag.AppendErrorf(diags, "reading S3 Bucket Metrics Configuration (%s): empty response", d.Id())
-	}
+	_, err = tfresource.RetryUntilNotFound(ctx, s3BucketPropagationTimeout, func() (interface{}, error) {
+		return findMetricsConfiguration(ctx, conn, bucket, name)
+	})
 
-	if output.MetricsConfiguration.Filter != nil {
-		if err := d.Set("filter", []interface{}{FlattenMetricsFilter(ctx, output.MetricsConfiguration.Filter)}); err != nil {
-			return sdkdiag.AppendErrorf(diags, "setting filter")
-		}
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for S3 Bucket Metric (%s) delete: %s", d.Id(), err)
 	}
 
 	return diags
 }
 
-func ExpandMetricsFilter(ctx context.Context, m map[string]interface{}) *s3.MetricsFilter {
+func expandMetricsFilter(ctx context.Context, m map[string]interface{}) types.MetricsFilter {
 	var prefix string
 	if v, ok := m["prefix"]; ok {
 		prefix = v.(string)
 	}
 
-	var tags []*s3.Tag
+	var tags []types.Tag
 	if v, ok := m["tags"]; ok {
-		tags = Tags(tftags.New(ctx, v).IgnoreAWS())
+		tags = tagsV2(tftags.New(ctx, v).IgnoreAWS())
 	}
 
-	metricsFilter := &s3.MetricsFilter{}
+	var metricsFilter types.MetricsFilter
+
 	if prefix != "" && len(tags) > 0 {
-		metricsFilter.And = &s3.MetricsAndOperator{
-			Prefix: aws.String(prefix),
-			Tags:   tags,
+		metricsFilter = &types.MetricsFilterMemberAnd{
+			Value: types.MetricsAndOperator{
+				Prefix: aws.String(prefix),
+				Tags:   tags,
+			},
 		}
 	} else if len(tags) > 1 {
-		metricsFilter.And = &s3.MetricsAndOperator{
-			Tags: tags,
+		metricsFilter = &types.MetricsFilterMemberAnd{
+			Value: types.MetricsAndOperator{
+				Tags: tags,
+			},
 		}
 	} else if len(tags) == 1 {
-		metricsFilter.Tag = tags[0]
+		metricsFilter = &types.MetricsFilterMemberTag{
+			Value: tags[0],
+		}
 	} else {
-		metricsFilter.Prefix = aws.String(prefix)
+		metricsFilter = &types.MetricsFilterMemberPrefix{
+			Value: prefix,
+		}
 	}
 	return metricsFilter
 }
 
-func FlattenMetricsFilter(ctx context.Context, metricsFilter *s3.MetricsFilter) map[string]interface{} {
+func flattenMetricsFilter(ctx context.Context, metricsFilter types.MetricsFilter) map[string]interface{} {
 	m := make(map[string]interface{})
 
-	if and := metricsFilter.And; and != nil {
-		if and.Prefix != nil {
-			m["prefix"] = aws.StringValue(and.Prefix)
+	switch v := metricsFilter.(type) {
+	case *types.MetricsFilterMemberAnd:
+		if v := v.Value.Prefix; v != nil {
+			m["prefix"] = aws.ToString(v)
 		}
-		if and.Tags != nil {
-			m["tags"] = KeyValueTags(ctx, and.Tags).IgnoreAWS().Map()
+		if v := v.Value.Tags; v != nil {
+			m["tags"] = keyValueTagsV2(ctx, v).IgnoreAWS().Map()
 		}
-	} else if metricsFilter.Prefix != nil {
-		m["prefix"] = aws.StringValue(metricsFilter.Prefix)
-	} else if metricsFilter.Tag != nil {
-		tags := []*s3.Tag{
-			metricsFilter.Tag,
+	case *types.MetricsFilterMemberPrefix:
+		m["prefix"] = v.Value
+	case *types.MetricsFilterMemberTag:
+		tags := []types.Tag{
+			v.Value,
 		}
-		m["tags"] = KeyValueTags(ctx, tags).IgnoreAWS().Map()
+		m["tags"] = keyValueTagsV2(ctx, tags).IgnoreAWS().Map()
+	default:
+		return nil
 	}
 	return m
 }
@@ -259,4 +252,30 @@ func BucketMetricParseID(id string) (string, string, error) {
 	bucket := idParts[0]
 	name := idParts[1]
 	return bucket, name, nil
+}
+
+func findMetricsConfiguration(ctx context.Context, conn *s3.Client, bucket, id string) (*types.MetricsConfiguration, error) {
+	input := &s3.GetBucketMetricsConfigurationInput{
+		Bucket: aws.String(bucket),
+		Id:     aws.String(id),
+	}
+
+	output, err := conn.GetBucketMetricsConfiguration(ctx, input)
+
+	if tfawserr.ErrCodeEquals(err, errCodeNoSuchBucket, errCodeNoSuchConfiguration) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || output.MetricsConfiguration == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output.MetricsConfiguration, nil
 }

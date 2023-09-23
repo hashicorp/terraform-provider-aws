@@ -19,6 +19,7 @@ var (
 	FindIntelligentTieringConfiguration   = findIntelligentTieringConfiguration
 	FindInventoryConfiguration            = findInventoryConfiguration
 	FindLoggingEnabled                    = findLoggingEnabled
+	FindMetricsConfiguration              = findMetricsConfiguration
 	FindObjectByBucketAndKey              = findObjectByBucketAndKey
 	FindObjectLockConfiguration           = findObjectLockConfiguration
 	FindServerSideEncryptionConfiguration = findServerSideEncryptionConfiguration
