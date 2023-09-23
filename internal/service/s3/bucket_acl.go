@@ -20,6 +20,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
@@ -112,10 +113,10 @@ func ResourceBucketACL() *schema.Resource {
 				},
 			},
 			"acl": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				ConflictsWith:    []string{"access_control_policy"},
-				ValidateDiagFunc: enum.Validate[types.BucketCannedACL](),
+				Type:          schema.TypeString,
+				Optional:      true,
+				ConflictsWith: []string{"access_control_policy"},
+				ValidateFunc:  validation.StringInSlice(bucketCannedACL_Values(), false),
 			},
 			"bucket": {
 				Type:         schema.TypeString,
@@ -522,4 +523,14 @@ func findBucketACL(ctx context.Context, conn *s3.Client, bucket, expectedBucketO
 	}
 
 	return output, nil
+}
+
+// These should be defined in the AWS SDK for Go. There is an issue, https://github.com/aws/aws-sdk-go/issues/2683.
+const (
+	bucketCannedACLExecRead         = "aws-exec-read"
+	bucketCannedACLLogDeliveryWrite = "log-delivery-write"
+)
+
+func bucketCannedACL_Values() []string {
+	return tfslices.AppendUnique(enum.Values[types.BucketCannedACL](), bucketCannedACLExecRead, bucketCannedACLLogDeliveryWrite)
 }
