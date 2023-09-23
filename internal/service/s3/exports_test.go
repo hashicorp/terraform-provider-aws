@@ -18,6 +18,7 @@ var (
 	FindCORSRules                         = findCORSRules
 	FindIntelligentTieringConfiguration   = findIntelligentTieringConfiguration
 	FindInventoryConfiguration            = findInventoryConfiguration
+	FindLoggingEnabled                    = findLoggingEnabled
 	FindObjectByBucketAndKey              = findObjectByBucketAndKey
 	FindObjectLockConfiguration           = findObjectLockConfiguration
 	FindServerSideEncryptionConfiguration = findServerSideEncryptionConfiguration
