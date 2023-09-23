@@ -797,20 +797,6 @@ func expandOpenZFSClinetConfigurations(cfg []interface{}) []*fsx.OpenZFSClientCo
 	return configurations
 }
 
-func expandOpenZFSClientConfiguration(conf map[string]interface{}) *fsx.OpenZFSClientConfiguration {
-	out := fsx.OpenZFSClientConfiguration{}
-
-	if v, ok := conf["clients"].(string); ok && len(v) > 0 {
-		out.Clients = aws.String(v)
-	}
-
-	if v, ok := conf["options"].([]interface{}); ok {
-		out.Options = flex.ExpandStringList(v)
-	}
-
-	return &out
-}
-
 func flattenOpenZFSFileDiskIopsConfiguration(rs *fsx.DiskIopsConfiguration) []interface{} {
 	if rs == nil {
 		return []interface{}{}
@@ -868,25 +854,6 @@ func flattenOpenZFSFileNFSExports(rs []*fsx.OpenZFSNfsExport) []map[string]inter
 
 	if len(exports) > 0 {
 		return exports
-	}
-
-	return nil
-}
-
-func flattenOpenZFSClientConfigurations(rs []*fsx.OpenZFSClientConfiguration) []map[string]interface{} {
-	configurations := make([]map[string]interface{}, 0)
-
-	for _, configuration := range rs {
-		if configuration != nil {
-			cfg := make(map[string]interface{})
-			cfg["clients"] = aws.StringValue(configuration.Clients)
-			cfg["options"] = flex.FlattenStringList(configuration.Options)
-			configurations = append(configurations, cfg)
-		}
-	}
-
-	if len(configurations) > 0 {
-		return configurations
 	}
 
 	return nil

@@ -539,15 +539,17 @@ func testAccCheckONTAPVolumeDestroy(ctx context.Context) resource.TestCheckFunc 
 				continue
 			}
 
-			volume, err := tffsx.FindONTAPVolumeByID(ctx, conn, rs.Primary.ID)
+			_, err := tffsx.FindONTAPVolumeByID(ctx, conn, rs.Primary.ID)
 
 			if tfresource.NotFound(err) {
 				continue
 			}
 
-			if volume != nil {
-				return fmt.Errorf("FSx for NetApp ONTAP Volume (%s) still exists", rs.Primary.ID)
+			if err != nil {
+				return err
 			}
+
+			return fmt.Errorf("FSx for NetApp ONTAP Volume %s still exists", rs.Primary.ID)
 		}
 		return nil
 	}
