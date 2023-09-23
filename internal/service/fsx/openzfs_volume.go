@@ -423,7 +423,7 @@ func expandOpenZFSUserOrGroupQuota(conf map[string]interface{}) *fsx.OpenZFSUser
 	return &out
 }
 
-func expandOpenZFSNfsExports(cfg []interface{}) []*fsx.OpenZFSNfsExport {
+func expandOpenZFSNfsExports(cfg []interface{}) []*fsx.OpenZFSNfsExport { // nosemgrep:ci.caps4-in-func-name
 	exports := []*fsx.OpenZFSNfsExport{}
 
 	for _, export := range cfg {
@@ -436,7 +436,7 @@ func expandOpenZFSNfsExports(cfg []interface{}) []*fsx.OpenZFSNfsExport {
 	return exports
 }
 
-func expandOpenZFSNfsExport(cfg map[string]interface{}) *fsx.OpenZFSNfsExport {
+func expandOpenZFSNfsExport(cfg map[string]interface{}) *fsx.OpenZFSNfsExport { // nosemgrep:ci.caps4-in-func-name
 	out := fsx.OpenZFSNfsExport{}
 
 	if v, ok := cfg["client_configurations"]; ok {
@@ -493,7 +493,7 @@ func expandCreateOpenZFSOriginSnapshotConfiguration(cfg []interface{}) *fsx.Crea
 	return &out
 }
 
-func flattenOpenZFSNfsExports(rs []*fsx.OpenZFSNfsExport) []map[string]interface{} {
+func flattenOpenZFSNfsExports(rs []*fsx.OpenZFSNfsExport) []map[string]interface{} { // nosemgrep:ci.caps4-in-func-name
 	exports := make([]map[string]interface{}, 0)
 
 	for _, export := range rs {
