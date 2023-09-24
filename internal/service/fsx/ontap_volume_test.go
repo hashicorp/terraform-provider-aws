@@ -323,6 +323,66 @@ func TestAccFSxONTAPVolume_size(t *testing.T) {
 	})
 }
 
+func TestAccFSxONTAPVolume_snaplock(t *testing.T) {
+	ctx := acctest.Context(t)
+	var volume1, volume2 fsx.Volume
+	resourceName := "aws_fsx_ontap_volume.test"
+	rName := fmt.Sprintf("tf_acc_test_%d", sdkacctest.RandInt())
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, fsx.EndpointsID) },
+		ErrorCheck:               acctest.ErrorCheck(t, fsx.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckONTAPVolumeDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccONTAPVolumeConfig_snaplockCreate(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckONTAPVolumeExists(ctx, resourceName, &volume1),
+					resource.TestCheckResourceAttr(resourceName, "snaplock_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "snaplock_configuration.0.audit_log_volume", "false"),
+					resource.TestCheckResourceAttr(resourceName, "snaplock_configuration.0.autocommit_period.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "snaplock_configuration.0.privileged_delete", "DISABLED"),
+					resource.TestCheckResourceAttr(resourceName, "snaplock_configuration.0.retention_period.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "snaplock_configuration.0.snaplock_type", "ENTERPRISE"),
+					resource.TestCheckResourceAttr(resourceName, "snaplock_configuration.0.volume_append_mode_enabled", "false"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"skip_final_backup"},
+			},
+			{
+				Config: testAccONTAPVolumeConfig_snaplockUpdate(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckONTAPVolumeExists(ctx, resourceName, &volume2),
+					testAccCheckONTAPVolumeNotRecreated(&volume1, &volume2),
+					resource.TestCheckResourceAttr(resourceName, "snaplock_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "snaplock_configuration.0.audit_log_volume", "true"),
+					resource.TestCheckResourceAttr(resourceName, "snaplock_configuration.0.autocommit_period.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "snaplock_configuration.0.autocommit_period.0.type", "DAYS"),
+					resource.TestCheckResourceAttr(resourceName, "snaplock_configuration.0.autocommit_period.0.value", "14"),
+					resource.TestCheckResourceAttr(resourceName, "snaplock_configuration.0.privileged_delete", "ENABLED"),
+					resource.TestCheckResourceAttr(resourceName, "snaplock_configuration.0.retention_period.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "snaplock_configuration.0.retention_period.0.default_retention.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "snaplock_configuration.0.retention_period.0.default_retention.0.type", "DAYS"),
+					resource.TestCheckResourceAttr(resourceName, "snaplock_configuration.0.retention_period.0.default_retention.0.value", "30"),
+					resource.TestCheckResourceAttr(resourceName, "snaplock_configuration.0.retention_period.0.maximum_retention.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "snaplock_configuration.0.retention_period.0.maximum_retention.0.type", "MONTHS"),
+					resource.TestCheckResourceAttr(resourceName, "snaplock_configuration.0.retention_period.0.maximum_retention.0.value", "9"),
+					resource.TestCheckResourceAttr(resourceName, "snaplock_configuration.0.retention_period.0.minimum_retention.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "snaplock_configuration.0.retention_period.0.minimum_retention.0.type", "HOURS"),
+					resource.TestCheckResourceAttr(resourceName, "snaplock_configuration.0.retention_period.0.minimum_retention.0.value", "24"),
+					resource.TestCheckResourceAttr(resourceName, "snaplock_configuration.0.snaplock_type", "ENTERPRISE"),
+					resource.TestCheckResourceAttr(resourceName, "snaplock_configuration.0.volume_append_mode_enabled", "true"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccFSxONTAPVolume_snapshotPolicy(t *testing.T) {
 	ctx := acctest.Context(t)
 	var volume1, volume2 fsx.Volume
@@ -670,6 +730,63 @@ resource "aws_fsx_ontap_volume" "test" {
   storage_virtual_machine_id = aws_fsx_ontap_storage_virtual_machine.test.id
 }
 `, rName, size))
+}
+
+func testAccONTAPVolumeConfig_snaplockCreate(rName string) string {
+	return acctest.ConfigCompose(testAccONTAPVolumeConfig_base(rName), fmt.Sprintf(`
+resource "aws_fsx_ontap_volume" "test" {
+  name                       = %[1]q
+  junction_path              = "/%[1]s"
+  size_in_megabytes          = 1024
+  storage_efficiency_enabled = true
+  storage_virtual_machine_id = aws_fsx_ontap_storage_virtual_machine.test.id
+
+  snaplock_configuration {
+    snaplock_type = "ENTERPRISE"
+  }
+}
+`, rName))
+}
+
+func testAccONTAPVolumeConfig_snaplockUpdate(rName string) string {
+	return acctest.ConfigCompose(testAccONTAPVolumeConfig_base(rName), fmt.Sprintf(`
+resource "aws_fsx_ontap_volume" "test" {
+  name                       = %[1]q
+  junction_path              = "/%[1]s"
+  size_in_megabytes          = 1024
+  storage_efficiency_enabled = true
+  storage_virtual_machine_id = aws_fsx_ontap_storage_virtual_machine.test.id
+
+  snaplock_configuration {
+    audit_log_volume           = true
+    privileged_delete          = "ENABLED"
+    snaplock_type              = "ENTERPRISE"
+    volume_append_mode_enabled = true
+
+    autocommit_period {
+      type  = "DAYS"
+      value = 14
+    }
+
+    retention_period {
+      default_retention {
+        type  = "DAYS"
+        value = 30
+      }
+
+      maximum_retention {
+        type  = "MONTHS"
+        value = 9
+      }
+
+      minimum_retention {
+        type  = "HOURS"
+        value = 24
+      }
+    }
+  }
+}
+`, rName))
 }
 
 func testAccONTAPVolumeConfig_snapshotPolicy(rName, snapshotPolicy string) string {
