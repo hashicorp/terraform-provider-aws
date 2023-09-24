@@ -199,51 +199,53 @@ func resourceOpenZFSVolumeCreate(ctx context.Context, d *schema.ResourceData, me
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).FSxConn(ctx)
 
-	name := d.Get("name").(string)
-	input := &fsx.CreateVolumeInput{
-		ClientRequestToken: aws.String(id.UniqueId()),
-		Name:               aws.String(name),
-		OpenZFSConfiguration: &fsx.CreateOpenZFSVolumeConfiguration{
-			ParentVolumeId: aws.String(d.Get("parent_volume_id").(string)),
-		},
-		Tags:       getTagsIn(ctx),
-		VolumeType: aws.String(d.Get("volume_type").(string)),
+	openzfsConfig := &fsx.CreateOpenZFSVolumeConfiguration{
+		ParentVolumeId: aws.String(d.Get("parent_volume_id").(string)),
 	}
 
 	if v, ok := d.GetOk("copy_tags_to_snapshots"); ok {
-		input.OpenZFSConfiguration.CopyTagsToSnapshots = aws.Bool(v.(bool))
+		openzfsConfig.CopyTagsToSnapshots = aws.Bool(v.(bool))
 	}
 
 	if v, ok := d.GetOk("data_compression_type"); ok {
-		input.OpenZFSConfiguration.DataCompressionType = aws.String(v.(string))
+		openzfsConfig.DataCompressionType = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("nfs_exports"); ok {
-		input.OpenZFSConfiguration.NfsExports = expandOpenZFSNfsExports(v.([]interface{}))
+		openzfsConfig.NfsExports = expandOpenZFSNfsExports(v.([]interface{}))
 	}
 
 	if v, ok := d.GetOk("origin_snapshot"); ok {
-		input.OpenZFSConfiguration.OriginSnapshot = expandCreateOpenZFSOriginSnapshotConfiguration(v.([]interface{}))
+		openzfsConfig.OriginSnapshot = expandCreateOpenZFSOriginSnapshotConfiguration(v.([]interface{}))
 	}
 
 	if v, ok := d.GetOk("read_only"); ok {
-		input.OpenZFSConfiguration.ReadOnly = aws.Bool(v.(bool))
+		openzfsConfig.ReadOnly = aws.Bool(v.(bool))
 	}
 
 	if v, ok := d.GetOk("record_size_kib"); ok {
-		input.OpenZFSConfiguration.RecordSizeKiB = aws.Int64(int64(v.(int)))
+		openzfsConfig.RecordSizeKiB = aws.Int64(int64(v.(int)))
 	}
 
 	if v, ok := d.GetOk("storage_capacity_quota_gib"); ok {
-		input.OpenZFSConfiguration.StorageCapacityQuotaGiB = aws.Int64(int64(v.(int)))
+		openzfsConfig.StorageCapacityQuotaGiB = aws.Int64(int64(v.(int)))
 	}
 
 	if v, ok := d.GetOk("storage_capacity_reservation_gib"); ok {
-		input.OpenZFSConfiguration.StorageCapacityReservationGiB = aws.Int64(int64(v.(int)))
+		openzfsConfig.StorageCapacityReservationGiB = aws.Int64(int64(v.(int)))
 	}
 
 	if v, ok := d.GetOk("user_and_group_quotas"); ok {
-		input.OpenZFSConfiguration.UserAndGroupQuotas = expandOpenZFSUserOrGroupQuotas(v.(*schema.Set).List())
+		openzfsConfig.UserAndGroupQuotas = expandOpenZFSUserOrGroupQuotas(v.(*schema.Set).List())
+	}
+
+	name := d.Get("name").(string)
+	input := &fsx.CreateVolumeInput{
+		ClientRequestToken:   aws.String(id.UniqueId()),
+		Name:                 aws.String(name),
+		OpenZFSConfiguration: openzfsConfig,
+		Tags:                 getTagsIn(ctx),
+		VolumeType:           aws.String(d.Get("volume_type").(string)),
 	}
 
 	output, err := conn.CreateVolumeWithContext(ctx, input)
@@ -307,42 +309,44 @@ func resourceOpenZFSVolumeUpdate(ctx context.Context, d *schema.ResourceData, me
 	conn := meta.(*conns.AWSClient).FSxConn(ctx)
 
 	if d.HasChangesExcept("tags", "tags_all") {
-		input := &fsx.UpdateVolumeInput{
-			ClientRequestToken:   aws.String(id.UniqueId()),
-			OpenZFSConfiguration: &fsx.UpdateOpenZFSVolumeConfiguration{},
-			VolumeId:             aws.String(d.Id()),
-		}
+		openzfsConfig := &fsx.UpdateOpenZFSVolumeConfiguration{}
 
 		if d.HasChange("data_compression_type") {
-			input.OpenZFSConfiguration.DataCompressionType = aws.String(d.Get("data_compression_type").(string))
+			openzfsConfig.DataCompressionType = aws.String(d.Get("data_compression_type").(string))
+		}
+
+		if d.HasChange("nfs_exports") {
+			openzfsConfig.NfsExports = expandOpenZFSNfsExports(d.Get("nfs_exports").([]interface{}))
+		}
+
+		if d.HasChange("read_only") {
+			openzfsConfig.ReadOnly = aws.Bool(d.Get("read_only").(bool))
+		}
+
+		if d.HasChange("record_size_kib") {
+			openzfsConfig.RecordSizeKiB = aws.Int64(int64(d.Get("record_size_kib").(int)))
+		}
+
+		if d.HasChange("storage_capacity_quota_gib") {
+			openzfsConfig.StorageCapacityQuotaGiB = aws.Int64(int64(d.Get("storage_capacity_quota_gib").(int)))
+		}
+
+		if d.HasChange("storage_capacity_reservation_gib") {
+			openzfsConfig.StorageCapacityReservationGiB = aws.Int64(int64(d.Get("storage_capacity_reservation_gib").(int)))
+		}
+
+		if d.HasChange("user_and_group_quotas") {
+			openzfsConfig.UserAndGroupQuotas = expandOpenZFSUserOrGroupQuotas(d.Get("user_and_group_quotas").(*schema.Set).List())
+		}
+
+		input := &fsx.UpdateVolumeInput{
+			ClientRequestToken:   aws.String(id.UniqueId()),
+			OpenZFSConfiguration: openzfsConfig,
+			VolumeId:             aws.String(d.Id()),
 		}
 
 		if d.HasChange("name") {
 			input.Name = aws.String(d.Get("name").(string))
-		}
-
-		if d.HasChange("nfs_exports") {
-			input.OpenZFSConfiguration.NfsExports = expandOpenZFSNfsExports(d.Get("nfs_exports").([]interface{}))
-		}
-
-		if d.HasChange("read_only") {
-			input.OpenZFSConfiguration.ReadOnly = aws.Bool(d.Get("read_only").(bool))
-		}
-
-		if d.HasChange("record_size_kib") {
-			input.OpenZFSConfiguration.RecordSizeKiB = aws.Int64(int64(d.Get("record_size_kib").(int)))
-		}
-
-		if d.HasChange("storage_capacity_quota_gib") {
-			input.OpenZFSConfiguration.StorageCapacityQuotaGiB = aws.Int64(int64(d.Get("storage_capacity_quota_gib").(int)))
-		}
-
-		if d.HasChange("storage_capacity_reservation_gib") {
-			input.OpenZFSConfiguration.StorageCapacityReservationGiB = aws.Int64(int64(d.Get("storage_capacity_reservation_gib").(int)))
-		}
-
-		if d.HasChange("user_and_group_quotas") {
-			input.OpenZFSConfiguration.UserAndGroupQuotas = expandOpenZFSUserOrGroupQuotas(d.Get("user_and_group_quotas").(*schema.Set).List())
 		}
 
 		startTime := time.Now()

@@ -278,47 +278,49 @@ func resourceONTAPVolumeCreate(ctx context.Context, d *schema.ResourceData, meta
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).FSxConn(ctx)
 
-	name := d.Get("name").(string)
-	input := &fsx.CreateVolumeInput{
-		Name: aws.String(name),
-		OntapConfiguration: &fsx.CreateOntapVolumeConfiguration{
-			SizeInMegabytes:         aws.Int64(int64(d.Get("size_in_megabytes").(int))),
-			StorageVirtualMachineId: aws.String(d.Get("storage_virtual_machine_id").(string)),
-		},
-		Tags:       getTagsIn(ctx),
-		VolumeType: aws.String(d.Get("volume_type").(string)),
+	ontapConfig := &fsx.CreateOntapVolumeConfiguration{
+		SizeInMegabytes:         aws.Int64(int64(d.Get("size_in_megabytes").(int))),
+		StorageVirtualMachineId: aws.String(d.Get("storage_virtual_machine_id").(string)),
 	}
 
 	if v, ok := d.GetOk("copy_tags_to_backups"); ok {
-		input.OntapConfiguration.CopyTagsToBackups = aws.Bool(v.(bool))
+		ontapConfig.CopyTagsToBackups = aws.Bool(v.(bool))
 	}
 
 	if v, ok := d.GetOk("junction_path"); ok {
-		input.OntapConfiguration.JunctionPath = aws.String(v.(string))
+		ontapConfig.JunctionPath = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("ontap_volume_type"); ok {
-		input.OntapConfiguration.OntapVolumeType = aws.String(v.(string))
+		ontapConfig.OntapVolumeType = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("security_style"); ok {
-		input.OntapConfiguration.SecurityStyle = aws.String(v.(string))
+		ontapConfig.SecurityStyle = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("snaplock_configuration"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.OntapConfiguration.SnaplockConfiguration = expandCreateSnaplockConfiguration(v.([]interface{})[0].(map[string]interface{}))
+		ontapConfig.SnaplockConfiguration = expandCreateSnaplockConfiguration(v.([]interface{})[0].(map[string]interface{}))
 	}
 
 	if v, ok := d.GetOk("snapshot_policy"); ok {
-		input.OntapConfiguration.SnapshotPolicy = aws.String(v.(string))
+		ontapConfig.SnapshotPolicy = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOkExists("storage_efficiency_enabled"); ok {
-		input.OntapConfiguration.StorageEfficiencyEnabled = aws.Bool(v.(bool))
+		ontapConfig.StorageEfficiencyEnabled = aws.Bool(v.(bool))
 	}
 
 	if v, ok := d.GetOk("tiering_policy"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.OntapConfiguration.TieringPolicy = expandTieringPolicy(v.([]interface{})[0].(map[string]interface{}))
+		ontapConfig.TieringPolicy = expandTieringPolicy(v.([]interface{})[0].(map[string]interface{}))
+	}
+
+	name := d.Get("name").(string)
+	input := &fsx.CreateVolumeInput{
+		Name:               aws.String(name),
+		OntapConfiguration: ontapConfig,
+		Tags:               getTagsIn(ctx),
+		VolumeType:         aws.String(d.Get("volume_type").(string)),
 	}
 
 	output, err := conn.CreateVolumeWithContext(ctx, input)
@@ -390,46 +392,48 @@ func resourceONTAPVolumeUpdate(ctx context.Context, d *schema.ResourceData, meta
 	conn := meta.(*conns.AWSClient).FSxConn(ctx)
 
 	if d.HasChangesExcept("tags", "tags_all") {
-		input := &fsx.UpdateVolumeInput{
-			ClientRequestToken: aws.String(id.UniqueId()),
-			OntapConfiguration: &fsx.UpdateOntapVolumeConfiguration{},
-			VolumeId:           aws.String(d.Id()),
-		}
+		ontapConfig := &fsx.UpdateOntapVolumeConfiguration{}
 
 		if d.HasChange("copy_tags_to_backups") {
-			input.OntapConfiguration.CopyTagsToBackups = aws.Bool(d.Get("copy_tags_to_backups").(bool))
+			ontapConfig.CopyTagsToBackups = aws.Bool(d.Get("copy_tags_to_backups").(bool))
 		}
 
 		if d.HasChange("junction_path") {
-			input.OntapConfiguration.JunctionPath = aws.String(d.Get("junction_path").(string))
+			ontapConfig.JunctionPath = aws.String(d.Get("junction_path").(string))
 		}
 
 		if d.HasChange("security_style") {
-			input.OntapConfiguration.SecurityStyle = aws.String(d.Get("security_style").(string))
+			ontapConfig.SecurityStyle = aws.String(d.Get("security_style").(string))
 		}
 
 		if d.HasChange("size_in_megabytes") {
-			input.OntapConfiguration.SizeInMegabytes = aws.Int64(int64(d.Get("size_in_megabytes").(int)))
+			ontapConfig.SizeInMegabytes = aws.Int64(int64(d.Get("size_in_megabytes").(int)))
 		}
 
 		if d.HasChange("snaplock_configuration") {
 			if v, ok := d.GetOk("snaplock_configuration"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-				input.OntapConfiguration.SnaplockConfiguration = expandUpdateSnaplockConfiguration(v.([]interface{})[0].(map[string]interface{}))
+				ontapConfig.SnaplockConfiguration = expandUpdateSnaplockConfiguration(v.([]interface{})[0].(map[string]interface{}))
 			}
 		}
 
 		if d.HasChange("snapshot_policy") {
-			input.OntapConfiguration.SnapshotPolicy = aws.String(d.Get("snapshot_policy").(string))
+			ontapConfig.SnapshotPolicy = aws.String(d.Get("snapshot_policy").(string))
 		}
 
 		if d.HasChange("storage_efficiency_enabled") {
-			input.OntapConfiguration.StorageEfficiencyEnabled = aws.Bool(d.Get("storage_efficiency_enabled").(bool))
+			ontapConfig.StorageEfficiencyEnabled = aws.Bool(d.Get("storage_efficiency_enabled").(bool))
 		}
 
 		if d.HasChange("tiering_policy") {
 			if v, ok := d.GetOk("tiering_policy"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-				input.OntapConfiguration.TieringPolicy = expandTieringPolicy(v.([]interface{})[0].(map[string]interface{}))
+				ontapConfig.TieringPolicy = expandTieringPolicy(v.([]interface{})[0].(map[string]interface{}))
 			}
+		}
+
+		input := &fsx.UpdateVolumeInput{
+			ClientRequestToken: aws.String(id.UniqueId()),
+			OntapConfiguration: ontapConfig,
+			VolumeId:           aws.String(d.Id()),
 		}
 
 		startTime := time.Now()
