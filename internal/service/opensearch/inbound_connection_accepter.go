@@ -112,6 +112,8 @@ func resourceInboundConnectionDelete(ctx context.Context, d *schema.ResourceData
 		if _, err := waitInboundConnectionRejected(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
 			return diag.Errorf("waiting for OpenSearch Inbound Connection (%s) reject: %s", d.Id(), err)
 		}
+
+		return nil
 	}
 
 	log.Printf("[DEBUG] Deleting OpenSearch Inbound Connection: %s", d.Id())
@@ -154,7 +156,7 @@ func FindInboundConnectionByID(ctx context.Context, conn *opensearchservice.Open
 		return nil, tfresource.NewEmptyResultError(input)
 	}
 
-	if status := aws.StringValue(output.ConnectionStatus.StatusCode); status == opensearchservice.InboundConnectionStatusCodeDeleted {
+	if status := aws.StringValue(output.ConnectionStatus.StatusCode); status == opensearchservice.InboundConnectionStatusCodeDeleted || status == opensearchservice.InboundConnectionStatusCodeRejected {
 		return nil, &retry.NotFoundError{
 			Message:     status,
 			LastRequest: input,
@@ -236,7 +238,7 @@ func waitInboundConnectionAccepted(ctx context.Context, conn *opensearchservice.
 func waitInboundConnectionRejected(ctx context.Context, conn *opensearchservice.OpenSearchService, id string, timeout time.Duration) (*opensearchservice.InboundConnection, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending: []string{opensearchservice.InboundConnectionStatusCodeRejecting},
-		Target:  []string{opensearchservice.InboundConnectionStatusCodeRejected},
+		Target:  []string{},
 		Refresh: statusInboundConnection(ctx, conn, id),
 		Timeout: timeout,
 	}
