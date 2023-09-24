@@ -22,6 +22,7 @@ var (
 	FindMetricsConfiguration              = findMetricsConfiguration
 	FindObjectByBucketAndKey              = findObjectByBucketAndKey
 	FindObjectLockConfiguration           = findObjectLockConfiguration
+	FindOwnershipControls                 = findOwnershipControls
 	FindServerSideEncryptionConfiguration = findServerSideEncryptionConfiguration
 	SDKv1CompatibleCleanKey               = sdkv1CompatibleCleanKey
 
