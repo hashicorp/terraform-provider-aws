@@ -113,7 +113,7 @@ func resourceOutboundConnectionDelete(ctx context.Context, d *schema.ResourceDat
 		ConnectionId: aws.String(d.Id()),
 	})
 
-	if tfawserr.ErrCodeEquals(err, "ResourceNotFoundException") {
+	if tfawserr.ErrCodeEquals(err, opensearchservice.ErrCodeResourceNotFoundException) {
 		return nil
 	}
 
