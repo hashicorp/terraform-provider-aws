@@ -1,3 +1,7 @@
 ```release-note:enhancement
 resource/aws_fsx_ontap_volume: Add `copy_tags_to_backups` and `snapshot_policy` arguments
 ```
+
+```release-note:enhancement
+resource/aws_fsx_ontap_volume: Add `snaplock_configuration` configuration block to support [SnapLock](https://docs.aws.amazon.com/fsx/latest/ONTAPGuide/snaplock.html)
+```
