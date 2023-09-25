@@ -114,14 +114,17 @@ func ResourceONTAPVolume() *schema.Resource {
 							Default:  false,
 						},
 						"autocommit_period": {
-							Type:     schema.TypeList,
-							Optional: true,
-							MaxItems: 1,
+							Type:             schema.TypeList,
+							Optional:         true,
+							Computed:         true,
+							DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
+							MaxItems:         1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"type": {
 										Type:         schema.TypeString,
-										Required:     true,
+										Optional:     true,
+										Computed:     true,
 										ValidateFunc: validation.StringInSlice(fsx.AutocommitPeriodType_Values(), false),
 									},
 									"value": {
@@ -139,20 +142,24 @@ func ResourceONTAPVolume() *schema.Resource {
 							ValidateFunc: validation.StringInSlice(fsx.PrivilegedDelete_Values(), false),
 						},
 						"retention_period": {
-							Type:     schema.TypeList,
-							Optional: true,
-							MaxItems: 1,
+							Type:             schema.TypeList,
+							Optional:         true,
+							Computed:         true,
+							DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
+							MaxItems:         1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"default_retention": {
 										Type:     schema.TypeList,
-										Required: true,
+										Optional: true,
+										Computed: true,
 										MaxItems: 1,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
 												"type": {
 													Type:         schema.TypeString,
-													Required:     true,
+													Optional:     true,
+													Computed:     true,
 													ValidateFunc: validation.StringInSlice(fsx.RetentionPeriodType_Values(), false),
 												},
 												"value": {
@@ -165,13 +172,15 @@ func ResourceONTAPVolume() *schema.Resource {
 									},
 									"maximum_retention": {
 										Type:     schema.TypeList,
-										Required: true,
+										Optional: true,
+										Computed: true,
 										MaxItems: 1,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
 												"type": {
 													Type:         schema.TypeString,
-													Required:     true,
+													Optional:     true,
+													Computed:     true,
 													ValidateFunc: validation.StringInSlice(fsx.RetentionPeriodType_Values(), false),
 												},
 												"value": {
@@ -184,13 +193,15 @@ func ResourceONTAPVolume() *schema.Resource {
 									},
 									"minimum_retention": {
 										Type:     schema.TypeList,
-										Required: true,
+										Optional: true,
+										Computed: true,
 										MaxItems: 1,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
 												"type": {
 													Type:         schema.TypeString,
-													Required:     true,
+													Optional:     true,
+													Computed:     true,
 													ValidateFunc: validation.StringInSlice(fsx.RetentionPeriodType_Values(), false),
 												},
 												"value": {
@@ -205,7 +216,7 @@ func ResourceONTAPVolume() *schema.Resource {
 							},
 						},
 						"snaplock_type": {
-							Type:         schema.TypeInt,
+							Type:         schema.TypeString,
 							Required:     true,
 							ForceNew:     true,
 							ValidateFunc: validation.StringInSlice(fsx.SnaplockType_Values(), false),
@@ -658,7 +669,7 @@ func flattenSnaplockConfiguration(apiObject *fsx.SnaplockConfiguration) map[stri
 	}
 
 	if v := apiObject.AutocommitPeriod; v != nil {
-		tfMap["nested_attribute_name"] = []interface{}{flattenAutocommitPeriod(v)}
+		tfMap["autocommit_period"] = []interface{}{flattenAutocommitPeriod(v)}
 	}
 
 	if v := apiObject.PrivilegedDelete; v != nil {

@@ -341,9 +341,20 @@ func TestAccFSxONTAPVolume_snaplock(t *testing.T) {
 					testAccCheckONTAPVolumeExists(ctx, resourceName, &volume1),
 					resource.TestCheckResourceAttr(resourceName, "snaplock_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "snaplock_configuration.0.audit_log_volume", "false"),
-					resource.TestCheckResourceAttr(resourceName, "snaplock_configuration.0.autocommit_period.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "snaplock_configuration.0.autocommit_period.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "snaplock_configuration.0.autocommit_period.0.type", "NONE"),
+					resource.TestCheckResourceAttr(resourceName, "snaplock_configuration.0.autocommit_period.0.value", "0"),
 					resource.TestCheckResourceAttr(resourceName, "snaplock_configuration.0.privileged_delete", "DISABLED"),
-					resource.TestCheckResourceAttr(resourceName, "snaplock_configuration.0.retention_period.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "snaplock_configuration.0.retention_period.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "snaplock_configuration.0.retention_period.0.default_retention.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "snaplock_configuration.0.retention_period.0.default_retention.0.type", "YEARS"),
+					resource.TestCheckResourceAttr(resourceName, "snaplock_configuration.0.retention_period.0.default_retention.0.value", "0"),
+					resource.TestCheckResourceAttr(resourceName, "snaplock_configuration.0.retention_period.0.maximum_retention.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "snaplock_configuration.0.retention_period.0.maximum_retention.0.type", "YEARS"),
+					resource.TestCheckResourceAttr(resourceName, "snaplock_configuration.0.retention_period.0.maximum_retention.0.value", "30"),
+					resource.TestCheckResourceAttr(resourceName, "snaplock_configuration.0.retention_period.0.minimum_retention.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "snaplock_configuration.0.retention_period.0.minimum_retention.0.type", "YEARS"),
+					resource.TestCheckResourceAttr(resourceName, "snaplock_configuration.0.retention_period.0.minimum_retention.0.value", "0"),
 					resource.TestCheckResourceAttr(resourceName, "snaplock_configuration.0.snaplock_type", "ENTERPRISE"),
 					resource.TestCheckResourceAttr(resourceName, "snaplock_configuration.0.volume_append_mode_enabled", "false"),
 				),
@@ -364,7 +375,7 @@ func TestAccFSxONTAPVolume_snaplock(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "snaplock_configuration.0.autocommit_period.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "snaplock_configuration.0.autocommit_period.0.type", "DAYS"),
 					resource.TestCheckResourceAttr(resourceName, "snaplock_configuration.0.autocommit_period.0.value", "14"),
-					resource.TestCheckResourceAttr(resourceName, "snaplock_configuration.0.privileged_delete", "ENABLED"),
+					resource.TestCheckResourceAttr(resourceName, "snaplock_configuration.0.privileged_delete", "PERMANENTLY_DISABLED"),
 					resource.TestCheckResourceAttr(resourceName, "snaplock_configuration.0.retention_period.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "snaplock_configuration.0.retention_period.0.default_retention.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "snaplock_configuration.0.retention_period.0.default_retention.0.type", "DAYS"),
@@ -752,14 +763,14 @@ func testAccONTAPVolumeConfig_snaplockUpdate(rName string) string {
 	return acctest.ConfigCompose(testAccONTAPVolumeConfig_base(rName), fmt.Sprintf(`
 resource "aws_fsx_ontap_volume" "test" {
   name                       = %[1]q
-  junction_path              = "/%[1]s"
+  junction_path              = "/snaplock_audit_log"
   size_in_megabytes          = 1024
   storage_efficiency_enabled = true
   storage_virtual_machine_id = aws_fsx_ontap_storage_virtual_machine.test.id
 
   snaplock_configuration {
     audit_log_volume           = true
-    privileged_delete          = "ENABLED"
+    privileged_delete          = "PERMANENTLY_DISABLED"
     snaplock_type              = "ENTERPRISE"
     volume_append_mode_enabled = true
 
