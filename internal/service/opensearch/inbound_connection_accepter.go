@@ -5,7 +5,7 @@ package opensearch
 
 import (
 	"context"
-	"fmt"
+	"errors"
 	"log"
 	"time"
 
@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 // @SDKResource("aws_opensearch_inbound_connection_accepter")
@@ -24,6 +25,7 @@ func ResourceInboundConnectionAccepter() *schema.Resource {
 		CreateWithoutTimeout: resourceInboundConnectionAccepterCreate,
 		ReadWithoutTimeout:   resourceInboundConnectionRead,
 		DeleteWithoutTimeout: resourceInboundConnectionDelete,
+
 		Importer: &schema.ResourceImporter{
 			StateContext: func(ctx context.Context, d *schema.ResourceData, m interface{}) (result []*schema.ResourceData, err error) {
 				d.Set("connection_id", d.Id())
@@ -54,25 +56,21 @@ func ResourceInboundConnectionAccepter() *schema.Resource {
 func resourceInboundConnectionAccepterCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).OpenSearchConn(ctx)
 
-	// Create the Inbound Connection
-	acceptOpts := &opensearchservice.AcceptInboundConnectionInput{
-		ConnectionId: aws.String(d.Get("connection_id").(string)),
+	connectionID := d.Get("connection_id").(string)
+	input := &opensearchservice.AcceptInboundConnectionInput{
+		ConnectionId: aws.String(connectionID),
 	}
 
-	log.Printf("[DEBUG] Inbound Connection Accept options: %#v", acceptOpts)
+	_, err := conn.AcceptInboundConnectionWithContext(ctx, input)
 
-	resp, err := conn.AcceptInboundConnectionWithContext(ctx, acceptOpts)
 	if err != nil {
-		return diag.Errorf("accepting Inbound Connection: %s", err)
+		return diag.Errorf("accepting OpenSearch Inbound Connection (%s): %s", connectionID, err)
 	}
 
-	// Get the ID and store it
-	d.SetId(aws.StringValue(resp.Connection.ConnectionId))
-	log.Printf("[INFO] Inbound Connection ID: %s", d.Id())
+	d.SetId(connectionID)
 
-	err = inboundConnectionWaitUntilActive(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate))
-	if err != nil {
-		return diag.Errorf("waiting for Inbound Connection to become active: %s", err)
+	if _, err := waitInboundConnectionAccepted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
+		return diag.Errorf("waiting for OpenSearch Inbound Connection (%s) accept: %s", d.Id(), err)
 	}
 
 	return resourceInboundConnectionRead(ctx, d, meta)
@@ -81,107 +79,196 @@ func resourceInboundConnectionAccepterCreate(ctx context.Context, d *schema.Reso
 func resourceInboundConnectionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).OpenSearchConn(ctx)
 
-	ccscRaw, statusCode, err := inboundConnectionRefreshState(ctx, conn, d.Id())()
+	connection, err := FindInboundConnectionByID(ctx, conn, d.Id())
 
-	if err != nil {
-		return diag.Errorf("reading Inbound Connection: %s", err)
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] OpenSearch Inbound Connection (%s) not found, removing from state", d.Id())
+		d.SetId("")
+		return nil
 	}
 
-	ccsc := ccscRaw.(*opensearchservice.InboundConnection)
-	log.Printf("[DEBUG] Inbound Connection response: %#v", ccsc)
+	if err != nil {
+		return diag.Errorf("reading OpenSearch Inbound Connection (%s): %s", d.Id(), err)
+	}
 
-	d.Set("connection_id", ccsc.ConnectionId)
-	d.Set("connection_status", statusCode)
+	d.Set("connection_id", connection.ConnectionId)
+	d.Set("connection_status", connection.ConnectionStatus.StatusCode)
 	return nil
 }
 
 func resourceInboundConnectionDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).OpenSearchConn(ctx)
 
+	if d.Get("connection_status").(string) == opensearchservice.InboundConnectionStatusCodePendingAcceptance {
+		log.Printf("[DEBUG] Rejecting OpenSearch Inbound Connection: %s", d.Id())
+		_, err := conn.RejectInboundConnectionWithContext(ctx, &opensearchservice.RejectInboundConnectionInput{
+			ConnectionId: aws.String(d.Id()),
+		})
+
+		if err != nil {
+			return diag.Errorf("rejecting OpenSearch Inbound Connection (%s): %s", d.Id(), err)
+		}
+
+		if _, err := waitInboundConnectionRejected(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
+			return diag.Errorf("waiting for OpenSearch Inbound Connection (%s) reject: %s", d.Id(), err)
+		}
+
+		return nil
+	}
+
 	log.Printf("[DEBUG] Deleting OpenSearch Inbound Connection: %s", d.Id())
 	_, err := conn.DeleteInboundConnectionWithContext(ctx, &opensearchservice.DeleteInboundConnectionInput{
 		ConnectionId: aws.String(d.Id()),
 	})
 
-	if tfawserr.ErrCodeEquals(err, "ResourceNotFoundException") {
+	if tfawserr.ErrCodeEquals(err, opensearchservice.ErrCodeResourceNotFoundException) {
 		return nil
 	}
 
 	if err != nil {
-		return diag.Errorf("deleting Inbound Connection (%s): %s", d.Id(), err)
+		return diag.Errorf("deleting OpenSearch Inbound Connection (%s): %s", d.Id(), err)
 	}
 
-	if err := waitForInboundConnectionDeletion(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
-		return diag.Errorf("waiting for VPC Peering Connection (%s) to be deleted: %s", d.Id(), err)
+	if _, err := waitInboundConnectionDeleted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
+		return diag.Errorf("waiting for OpenSearch Inbound Connection (%s) delete: %s", d.Id(), err)
 	}
 
 	return nil
 }
 
-func inboundConnectionRefreshState(ctx context.Context, conn *opensearchservice.OpenSearchService, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-		resp, err := conn.DescribeInboundConnectionsWithContext(ctx, &opensearchservice.DescribeInboundConnectionsInput{
-			Filters: []*opensearchservice.Filter{
-				{
-					Name:   aws.String("connection-id"),
-					Values: []*string{aws.String(id)},
-				},
+func FindInboundConnectionByID(ctx context.Context, conn *opensearchservice.OpenSearchService, id string) (*opensearchservice.InboundConnection, error) {
+	input := &opensearchservice.DescribeInboundConnectionsInput{
+		Filters: []*opensearchservice.Filter{
+			{
+				Name:   aws.String("connection-id"),
+				Values: aws.StringSlice([]string{id}),
 			},
-		})
+		},
+	}
+
+	output, err := findInboundConnection(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output.ConnectionStatus == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	if status := aws.StringValue(output.ConnectionStatus.StatusCode); status == opensearchservice.InboundConnectionStatusCodeDeleted || status == opensearchservice.InboundConnectionStatusCodeRejected {
+		return nil, &retry.NotFoundError{
+			Message:     status,
+			LastRequest: input,
+		}
+	}
+
+	return output, err
+}
+
+func findInboundConnection(ctx context.Context, conn *opensearchservice.OpenSearchService, input *opensearchservice.DescribeInboundConnectionsInput) (*opensearchservice.InboundConnection, error) {
+	output, err := findInboundConnections(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSinglePtrResult(output)
+}
+
+func findInboundConnections(ctx context.Context, conn *opensearchservice.OpenSearchService, input *opensearchservice.DescribeInboundConnectionsInput) ([]*opensearchservice.InboundConnection, error) {
+	var output []*opensearchservice.InboundConnection
+
+	err := conn.DescribeInboundConnectionsPagesWithContext(ctx, input, func(page *opensearchservice.DescribeInboundConnectionsOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, v := range page.Connections {
+			if v != nil {
+				output = append(output, v)
+			}
+		}
+
+		return !lastPage
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	return output, nil
+}
+
+func statusInboundConnection(ctx context.Context, conn *opensearchservice.OpenSearchService, id string) retry.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := FindInboundConnectionByID(ctx, conn, id)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
 		if err != nil {
 			return nil, "", err
 		}
 
-		if resp == nil || resp.Connections == nil ||
-			len(resp.Connections) == 0 || resp.Connections[0] == nil {
-			// Sometimes AWS just has consistency issues and doesn't see
-			// our connection yet. Return an empty state.
-			return nil, "", nil
-		}
-		ccsc := resp.Connections[0]
-		if ccsc.ConnectionStatus == nil {
-			// Sometimes AWS just has consistency issues and doesn't see
-			// our connection yet. Return an empty state.
-			return nil, "", nil
-		}
-		statusCode := aws.StringValue(ccsc.ConnectionStatus.StatusCode)
-
-		return ccsc, statusCode, nil
+		return output, aws.StringValue(output.ConnectionStatus.StatusCode), nil
 	}
 }
 
-func inboundConnectionWaitUntilActive(ctx context.Context, conn *opensearchservice.OpenSearchService, id string, timeout time.Duration) error {
-	log.Printf("[DEBUG] Waiting for Inbound Connection (%s) to become available.", id)
+func waitInboundConnectionAccepted(ctx context.Context, conn *opensearchservice.OpenSearchService, id string, timeout time.Duration) (*opensearchservice.InboundConnection, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending: []string{
-			opensearchservice.InboundConnectionStatusCodeProvisioning,
-			opensearchservice.InboundConnectionStatusCodeApproved,
-		},
-		Target: []string{
-			opensearchservice.InboundConnectionStatusCodeActive,
-		},
-		Refresh: inboundConnectionRefreshState(ctx, conn, id),
+		Pending: []string{opensearchservice.InboundConnectionStatusCodeProvisioning, opensearchservice.InboundConnectionStatusCodeApproved},
+		Target:  []string{opensearchservice.InboundConnectionStatusCodeActive},
+		Refresh: statusInboundConnection(ctx, conn, id),
 		Timeout: timeout,
 	}
-	if _, err := stateConf.WaitForStateContext(ctx); err != nil {
-		return fmt.Errorf("waiting for Inbound Connection (%s) to become available: %s", id, err)
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*opensearchservice.InboundConnection); ok {
+		tfresource.SetLastError(err, errors.New(aws.StringValue(output.ConnectionStatus.Message)))
+
+		return output, err
 	}
-	return nil
+
+	return nil, err
 }
 
-func waitForInboundConnectionDeletion(ctx context.Context, conn *opensearchservice.OpenSearchService, id string, timeout time.Duration) error {
+func waitInboundConnectionRejected(ctx context.Context, conn *opensearchservice.OpenSearchService, id string, timeout time.Duration) (*opensearchservice.InboundConnection, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending: []string{
-			opensearchservice.InboundConnectionStatusCodeDeleting,
-		},
-		Target: []string{
-			opensearchservice.InboundConnectionStatusCodeDeleted,
-		},
-		Refresh: inboundConnectionRefreshState(ctx, conn, id),
+		Pending: []string{opensearchservice.InboundConnectionStatusCodeRejecting},
+		Target:  []string{},
+		Refresh: statusInboundConnection(ctx, conn, id),
 		Timeout: timeout,
 	}
 
-	_, err := stateConf.WaitForStateContext(ctx)
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
-	return err
+	if output, ok := outputRaw.(*opensearchservice.InboundConnection); ok {
+		tfresource.SetLastError(err, errors.New(aws.StringValue(output.ConnectionStatus.Message)))
+
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitInboundConnectionDeleted(ctx context.Context, conn *opensearchservice.OpenSearchService, id string, timeout time.Duration) (*opensearchservice.InboundConnection, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending: []string{opensearchservice.InboundConnectionStatusCodeDeleting},
+		Target:  []string{},
+		Refresh: statusInboundConnection(ctx, conn, id),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*opensearchservice.InboundConnection); ok {
+		tfresource.SetLastError(err, errors.New(aws.StringValue(output.ConnectionStatus.Message)))
+
+		return output, err
+	}
+
+	return nil, err
 }

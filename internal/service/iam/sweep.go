@@ -84,6 +84,7 @@ func init() {
 			"aws_redshift_cluster",
 			"aws_redshift_scheduled_action",
 			"aws_spot_fleet_request",
+			"aws_vpc",
 		},
 		F: sweepRoles,
 	})
