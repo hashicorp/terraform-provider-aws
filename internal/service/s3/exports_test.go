@@ -24,6 +24,7 @@ var (
 	FindObjectByBucketAndKey              = findObjectByBucketAndKey
 	FindObjectLockConfiguration           = findObjectLockConfiguration
 	FindOwnershipControls                 = findOwnershipControls
+	FindReplicationConfiguration          = findReplicationConfiguration
 	FindServerSideEncryptionConfiguration = findServerSideEncryptionConfiguration
 	SDKv1CompatibleCleanKey               = sdkv1CompatibleCleanKey
 
