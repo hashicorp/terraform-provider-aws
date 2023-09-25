@@ -291,10 +291,10 @@ func resourceReplicatorRead(ctx context.Context, d *schema.ResourceData, meta in
 	var targetARN *string
 
 	for _, arn := range clustersArn {
-		clusterAlias := *arn.KafkaClusterAlias
-		if clusterAlias == *sourceAlias {
+		clusterAlias := aws.ToString(arn.KafkaClusterAlias)
+		if clusterAlias == aws.ToString(sourceAlias) {
 			sourceARN = arn.AmazonMskCluster.MskClusterArn
-		} else if clusterAlias == *targetAlias {
+		} else if clusterAlias == aws.ToString(targetAlias) {
 			targetARN = arn.AmazonMskCluster.MskClusterArn
 		}
 	}

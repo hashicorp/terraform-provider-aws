@@ -1,7 +1,7 @@
 ---
 subcategory: "Managed Streaming for Kafka"
 layout: "aws"
-page_title: "AWS: aws_kafka_replicator"
+page_title: "AWS: aws_msk_replicator"
 description: |-
   Terraform resource for managing an AWS Managed Streaming for Kafka Replicator.
 ---
@@ -22,7 +22,47 @@ Terraform resource for managing an AWS Managed Streaming for Kafka Replicator.
 ### Basic Usage
 
 ```terraform
-resource "aws_kafka_replicator" "example" {
+resource "aws_msk_replicator" "test" {
+  replicator_name            = "test-name"
+  description                = "test-description"
+  service_execution_role_arn = aws_iam_role.source.arn
+
+  kafka_clusters {
+    amazon_msk_cluster {
+      msk_cluster_arn = aws_msk_cluster.source.arn
+    }
+
+    vpc_config {
+      subnet_ids          = aws_subnet.source[*].id
+      security_groups_ids = [aws_security_group.source.id]
+    }
+  }
+
+  kafka_clusters {
+    amazon_msk_cluster {
+      msk_cluster_arn = aws_msk_cluster.target.arn
+    }
+
+    vpc_config {
+      subnet_ids          = aws_subnet.target[*].id
+      security_groups_ids = [aws_security_group.target.id]
+    }
+  }
+
+  replication_info_list {
+    source_kafka_cluster_arn = aws_msk_cluster.source.arn
+    target_kafka_cluster_arn = aws_msk_cluster.target.arn
+    target_compression_type  = "NONE"
+
+
+    topic_replication {
+      topics_to_replicate = [".*"]
+    }
+
+    consumer_group_replication {
+      consumer_groups_to_replicate = [".*"]
+    }
+  }
 }
 ```
 

@@ -575,8 +575,8 @@ resource "aws_msk_replicator" "test" {
   }
 
   replication_info_list {
-    target_kafka_cluster_arn = aws_msk_cluster.source.arn
-    source_kafka_cluster_arn = aws_msk_cluster.target.arn
+    source_kafka_cluster_arn = aws_msk_cluster.source.arn
+    target_kafka_cluster_arn = aws_msk_cluster.target.arn
     target_compression_type  = "NONE"
 
 
@@ -626,8 +626,8 @@ resource "aws_msk_replicator" "test" {
   }
 
   replication_info_list {
-    target_kafka_cluster_arn = aws_msk_cluster.source.arn
-    source_kafka_cluster_arn = aws_msk_cluster.target.arn
+    source_kafka_cluster_arn = aws_msk_cluster.source.arn
+    target_kafka_cluster_arn = aws_msk_cluster.target.arn
     target_compression_type  = "NONE"
 
     topic_replication {
@@ -683,8 +683,8 @@ resource "aws_msk_replicator" "test" {
   }
 
   replication_info_list {
-    target_kafka_cluster_arn = aws_msk_cluster.source.arn
-    source_kafka_cluster_arn = aws_msk_cluster.target.arn
+    source_kafka_cluster_arn = aws_msk_cluster.source.arn
+    target_kafka_cluster_arn = aws_msk_cluster.target.arn
     target_compression_type  = "NONE"
 
 
@@ -738,8 +738,8 @@ resource "aws_msk_replicator" "test" {
   }
 
   replication_info_list {
-    target_kafka_cluster_arn = aws_msk_cluster.source.arn
-    source_kafka_cluster_arn = aws_msk_cluster.target.arn
+    source_kafka_cluster_arn = aws_msk_cluster.source.arn
+    target_kafka_cluster_arn = aws_msk_cluster.target.arn
     target_compression_type  = "NONE"
 
 
