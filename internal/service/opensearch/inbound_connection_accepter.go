@@ -216,7 +216,7 @@ func statusInboundConnection(ctx context.Context, conn *opensearchservice.OpenSe
 	}
 }
 
-func waitInboundConnectionAccepted(ctx context.Context, conn *opensearchservice.OpenSearchService, id string, timeout time.Duration) (*opensearchservice.InboundConnection, error) {
+func waitInboundConnectionAccepted(ctx context.Context, conn *opensearchservice.OpenSearchService, id string, timeout time.Duration) (*opensearchservice.InboundConnection, error) { //nolint:unparam
 	stateConf := &retry.StateChangeConf{
 		Pending: []string{opensearchservice.InboundConnectionStatusCodeProvisioning, opensearchservice.InboundConnectionStatusCodeApproved},
 		Target:  []string{opensearchservice.InboundConnectionStatusCodeActive},
