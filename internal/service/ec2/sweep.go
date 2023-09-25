@@ -365,6 +365,8 @@ func init() {
 			"aws_subnet",
 			"aws_vpc_peering_connection",
 			"aws_vpn_gateway",
+			"aws_vpclattice_service_network",
+			"aws_vpclattice_target_group",
 		},
 		F: sweepVPCs,
 	})
