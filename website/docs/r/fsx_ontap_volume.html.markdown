@@ -78,8 +78,7 @@ This resource supports the following arguments:
 
 ### SnapLock Retention Period
 
-* `default_retention` - (Required) The retention period assigned to a write once, read many (WORM) file by default 
-if an explicit retention period is not set for an FSx for ONTAP SnapLock volume. The default retention period must be greater than or equal to the minimum retention period and less than or equal to the maximum retention period. See [Retention Period](#retention-period) below.
+* `default_retention` - (Required) The retention period assigned to a write once, read many (WORM) file by default if an explicit retention period is not set for an FSx for ONTAP SnapLock volume. The default retention period must be greater than or equal to the minimum retention period and less than or equal to the maximum retention period. See [Retention Period](#retention-period) below.
 * `maximum_retention` - (Required) The longest retention period that can be assigned to a WORM file on an FSx for ONTAP SnapLock volume. See [Retention Period](#retention-period) below.
 * `minimum_retention` - (Required) The shortest retention period that can be assigned to a WORM file on an FSx for ONTAP SnapLock volume. See [Retention Period](#retention-period) below.
 
