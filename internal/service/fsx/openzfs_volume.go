@@ -35,7 +35,11 @@ func ResourceOpenZFSVolume() *schema.Resource {
 		DeleteWithoutTimeout: resourceOpenZFSVolumeDelete,
 
 		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
+			StateContext: func(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+				d.Set("delete_volume_options", nil)
+
+				return []*schema.ResourceData{d}, nil
+			},
 		},
 
 		Timeouts: &schema.ResourceTimeout{
@@ -59,6 +63,15 @@ func ResourceOpenZFSVolume() *schema.Resource {
 				Optional:     true,
 				Default:      "NONE",
 				ValidateFunc: validation.StringInSlice(fsx.OpenZFSDataCompressionType_Values(), false),
+			},
+			"delete_volume_options": {
+				Type:     schema.TypeList,
+				Optional: true,
+				MaxItems: 1,
+				Elem: &schema.Schema{
+					Type:         schema.TypeString,
+					ValidateFunc: validation.StringInSlice(fsx.DeleteFileSystemOpenZFSOption_Values(), false),
+				},
 			},
 			"name": {
 				Type:         schema.TypeString,
@@ -372,10 +385,18 @@ func resourceOpenZFSVolumeDelete(ctx context.Context, d *schema.ResourceData, me
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).FSxConn(ctx)
 
-	log.Printf("[DEBUG] Deleting FSx for OpenZFS Volume: %s", d.Id())
-	_, err := conn.DeleteVolumeWithContext(ctx, &fsx.DeleteVolumeInput{
+	input := &fsx.DeleteVolumeInput{
 		VolumeId: aws.String(d.Id()),
-	})
+	}
+
+	if v, ok := d.GetOk("delete_volume_options"); ok && len(v.([]interface{})) > 0 {
+		input.OpenZFSConfiguration = &fsx.DeleteVolumeOpenZFSConfiguration{
+			Options: flex.ExpandStringList(v.([]interface{})),
+		}
+	}
+
+	log.Printf("[DEBUG] Deleting FSx for OpenZFS Volume: %s", d.Id())
+	_, err := conn.DeleteVolumeWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, fsx.ErrCodeVolumeNotFound) {
 		return diags

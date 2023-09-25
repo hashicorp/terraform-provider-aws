@@ -39,6 +39,7 @@ func TestAccFSxOpenZFSVolume_basic(t *testing.T) {
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "fsx", regexache.MustCompile(`volume/fs-.+/fsvol-.+`)),
 					resource.TestCheckResourceAttr(resourceName, "copy_tags_to_snapshots", "false"),
 					resource.TestCheckResourceAttr(resourceName, "data_compression_type", "NONE"),
+					resource.TestCheckResourceAttr(resourceName, "delete_volume_options.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "nfs_exports.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "nfs_exports.0.client_configurations.#", "1"),
@@ -181,23 +182,31 @@ func TestAccFSxOpenZFSVolume_copyTags(t *testing.T) {
 				Config: testAccOpenZFSVolumeConfig_copyTags(rName, "key1", "value1", "true"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOpenZFSVolumeExists(ctx, resourceName, &volume1),
+					resource.TestCheckResourceAttr(resourceName, "copy_tags_to_snapshots", "true"),
+					resource.TestCheckResourceAttr(resourceName, "delete_volume_options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "delete_volume_options.0", "DELETE_CHILD_VOLUMES_AND_SNAPSHOTS"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
-					resource.TestCheckResourceAttr(resourceName, "copy_tags_to_snapshots", "true"),
 				),
 			},
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"delete_volume_options",
+				},
 			},
 			{
 				Config: testAccOpenZFSVolumeConfig_copyTags(rName, "key1", "value1", "false"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOpenZFSVolumeExists(ctx, resourceName, &volume2),
 					testAccCheckOpenZFSVolumeRecreated(&volume1, &volume2),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 					resource.TestCheckResourceAttr(resourceName, "copy_tags_to_snapshots", "false"),
+					resource.TestCheckResourceAttr(resourceName, "delete_volume_options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "delete_volume_options.0", "DELETE_CHILD_VOLUMES_AND_SNAPSHOTS"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
 		},
@@ -642,6 +651,8 @@ resource "aws_fsx_openzfs_volume" "test" {
   tags = {
     %[2]q = %[3]q
   }
+
+  delete_volume_options = ["DELETE_CHILD_VOLUMES_AND_SNAPSHOTS"]
 }
 `, rName, tagKey1, tagValue1, copyTags))
 }
