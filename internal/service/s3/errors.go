@@ -30,7 +30,7 @@ const (
 	errCodeObjectLockConfigurationNotFoundError      = "ObjectLockConfigurationNotFoundError"
 	errCodeOperationAborted                          = "OperationAborted"
 	errCodeOwnershipControlsNotFoundError            = "OwnershipControlsNotFoundError"
-	ErrCodeReplicationConfigurationNotFound          = "ReplicationConfigurationNotFoundError"
+	errCodeReplicationConfigurationNotFound          = "ReplicationConfigurationNotFoundError"
 	errCodeServerSideEncryptionConfigurationNotFound = "ServerSideEncryptionConfigurationNotFoundError"
 	errCodeUnsupportedArgument                       = "UnsupportedArgument"
 	// errCodeXNotImplemented is returned from Third Party S3 implementations

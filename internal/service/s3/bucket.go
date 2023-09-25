@@ -1076,7 +1076,7 @@ func resourceBucketRead(ctx context.Context, d *schema.ResourceData, meta interf
 		return diags
 	}
 
-	if err != nil && !tfawserr.ErrCodeEquals(err, ErrCodeReplicationConfigurationNotFound, errCodeNotImplemented, errCodeXNotImplemented) {
+	if err != nil && !tfawserr.ErrCodeEquals(err, errCodeReplicationConfigurationNotFound, errCodeNotImplemented, errCodeXNotImplemented) {
 		return sdkdiag.AppendErrorf(diags, "getting S3 Bucket replication: %s", err)
 	}
 
