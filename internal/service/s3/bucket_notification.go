@@ -305,7 +305,7 @@ func resourceBucketNotificationPut(ctx context.Context, d *schema.ResourceData, 
 	}, errCodeNoSuchBucket)
 
 	if err != nil {
-		return diag.Errorf("creating S3 Bucket (%s) Notification Configuration: %s", bucket, err)
+		return diag.Errorf("creating S3 Bucket (%s) Notification: %s", bucket, err)
 	}
 
 	if d.IsNewResource() {
@@ -316,7 +316,7 @@ func resourceBucketNotificationPut(ctx context.Context, d *schema.ResourceData, 
 		})
 
 		if err != nil {
-			return diag.Errorf("waiting for S3 Bucket Notification Configuration (%s) create: %s", d.Id(), err)
+			return diag.Errorf("waiting for S3 Bucket Notification (%s) create: %s", d.Id(), err)
 		}
 	}
 
@@ -330,13 +330,13 @@ func resourceBucketNotificationRead(ctx context.Context, d *schema.ResourceData,
 	output, err := findBucketNotificationConfiguration(ctx, conn, d.Id(), "")
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
-		log.Printf("[WARN] S3 Bucket Notification Configuration (%s) not found, removing from state", d.Id())
+		log.Printf("[WARN] S3 Bucket Notification (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
 	}
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading S3 Bucket Notification Configuration (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading S3 Bucket Notification (%s): %s", d.Id(), err)
 	}
 
 	d.Set("bucket", d.Id())
@@ -363,7 +363,7 @@ func resourceBucketNotificationDelete(ctx context.Context, d *schema.ResourceDat
 		NotificationConfiguration: &types.NotificationConfiguration{},
 	}
 
-	log.Printf("[DEBUG] Deleting S3 Bucket Notification Configuration: %s", d.Id())
+	log.Printf("[DEBUG] Deleting S3 Bucket Notification: %s", d.Id())
 	_, err := conn.PutBucketNotificationConfiguration(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, errCodeNoSuchBucket) {
@@ -371,7 +371,7 @@ func resourceBucketNotificationDelete(ctx context.Context, d *schema.ResourceDat
 	}
 
 	if err != nil {
-		return diag.Errorf("deleting S3 Bucket Notification Configuration (%s): %s", d.Id(), err)
+		return diag.Errorf("deleting S3 Bucket Notification (%s): %s", d.Id(), err)
 	}
 
 	// Don't wait for the notification configuration to disappear as it still exists after update.

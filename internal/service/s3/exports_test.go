@@ -11,6 +11,7 @@ var (
 	FindBucket                            = findBucket
 	FindBucketACL                         = findBucketACL
 	FindBucketAccelerateConfiguration     = findBucketAccelerateConfiguration
+	FindBucketNotificationConfiguration   = findBucketNotificationConfiguration
 	FindBucketPolicy                      = findBucketPolicy
 	FindBucketRequestPayment              = findBucketRequestPayment
 	FindBucketVersioning                  = findBucketVersioning
